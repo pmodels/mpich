@@ -6,7 +6,7 @@
 #include "mpidimpl.h"
 #include "ucx_impl.h"
 #include <ucp/api/ucp.h>
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
 #include "../../../common/hcoll/hcoll.h"
 #endif
 
@@ -108,7 +108,7 @@ int MPIDI_UCX_mpi_type_free_hook(MPIR_Datatype * datatype_p)
         ucp_dt_destroy(datatype_p->dev.netmod.ucx.ucp_datatype);
         datatype_p->dev.netmod.ucx.ucp_datatype = -1;
     }
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     hcoll_type_free_hook(datatype_p);
 #endif
 
@@ -139,7 +139,7 @@ int MPIDI_UCX_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
         datatype_p->dev.netmod.ucx.ucp_datatype = ucp_datatype;
 
     }
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     hcoll_type_commit_hook(datatype_p);
 #endif
 

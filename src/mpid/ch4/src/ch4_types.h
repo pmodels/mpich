@@ -9,7 +9,6 @@
 #include <mpidimpl.h>
 #include <stdio.h>
 #include "mpir_cvars.h"
-#include "ch4i_workq_types.h"
 #include "mpidu_genq.h"
 
 /* Macros and inlines */
@@ -222,7 +221,7 @@ typedef struct {
 
 #define MPIDIU_THREAD_SCHED_LIST_MUTEX    MPIDI_global.m[3]
 #define MPIDIU_THREAD_TSP_QUEUE_MUTEX     MPIDI_global.m[4]
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
 #define MPIDIU_THREAD_HCOLL_MUTEX         MPIDI_global.m[5]
 #endif
 
@@ -285,10 +284,6 @@ typedef struct MPIDI_CH4_Global_t {
     int n_total_vcis;           /* total num of vcis, must > n_vcis + n_reserved_vcis */
     MPIDI_per_vci_t per_vci[MPIDI_CH4_MAX_VCIS];
 
-#if defined(MPIDI_CH4_USE_WORK_QUEUES)
-    /* TODO: move into MPIDI_vci to have per-vci workqueue */
-    MPIDI_workq_t workqueue;
-#endif
     MPIDI_CH4_configurations_t settings;
     void *csel_root;
 

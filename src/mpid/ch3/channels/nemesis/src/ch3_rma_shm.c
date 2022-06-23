@@ -80,6 +80,7 @@ int MPIDI_CH3_SHM_Init(void)
 int MPIDI_CH3_SHM_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpl_err = 0;
     struct shm_mutex_entry *p;
 
     for (p = (struct shm_mutex_entry *) utarray_front(shm_mutex_free_list); p != NULL;
@@ -89,9 +90,9 @@ int MPIDI_CH3_SHM_Finalize(void)
         }
 
         /* detach from shared memory segment */
-        mpi_errno = MPL_shm_seg_detach(p->shm_hnd, (void **) &p->shm_mutex,
-                                       sizeof(MPIDI_CH3I_SHM_MUTEX));
-        MPIR_ERR_CHECK(mpi_errno);
+        mpl_err = MPL_shm_seg_detach(p->shm_hnd, (void **) &p->shm_mutex,
+                                     sizeof(MPIDI_CH3I_SHM_MUTEX));
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**detach_shar_mem");
 
         MPL_shm_hnd_finalize(&p->shm_hnd);
     }
@@ -117,15 +118,16 @@ static int delay_shm_mutex_destroy(int rank, MPIR_Win *win_ptr)
     return 0;
 #else
     int mpi_errno = MPI_SUCCESS;
+    int mpl_err = 0;
 
     if (rank == 0) {
         MPIDI_CH3I_SHM_MUTEX_DESTROY_DIRECT(win_ptr->shm_mutex);
     }
 
     /* detach from shared memory segment */
-    mpi_errno = MPL_shm_seg_detach(win_ptr->shm_mutex_segment_handle, (void **) &win_ptr->shm_mutex,
-                                    sizeof(MPIDI_CH3I_SHM_MUTEX));
-    MPIR_ERR_CHECK(mpi_errno);
+    mpl_err = MPL_shm_seg_detach(win_ptr->shm_mutex_segment_handle, (void **) &win_ptr->shm_mutex,
+                                 sizeof(MPIDI_CH3I_SHM_MUTEX));
+    MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
 
     MPL_shm_hnd_finalize(&win_ptr->shm_mutex_segment_handle);
 
@@ -139,6 +141,7 @@ static int delay_shm_mutex_destroy(int rank, MPIR_Win *win_ptr)
 int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpl_err = 0;
 
     MPIR_FUNC_ENTER;
 
@@ -156,11 +159,10 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
              (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) &&
             (*win_ptr)->shm_segment_len > 0) {
             /* detach from shared memory segment */
-            mpi_errno =
-                MPL_shm_seg_detach((*win_ptr)->shm_segment_handle,
-                                     &(*win_ptr)->shm_base_addr,
-                                     (*win_ptr)->shm_segment_len);
-            MPIR_ERR_CHECK(mpi_errno);
+            mpl_err = MPL_shm_seg_detach((*win_ptr)->shm_segment_handle,
+                                         &(*win_ptr)->shm_base_addr,
+                                         (*win_ptr)->shm_segment_len);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**detach_shar_mem");
 
             MPL_shm_hnd_finalize(&(*win_ptr)->shm_segment_handle);
         }
@@ -186,10 +188,10 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
 
     /* Free shared memory region for window info */
     if ((*win_ptr)->info_shm_base_addr != NULL) {
-        mpi_errno = MPL_shm_seg_detach((*win_ptr)->info_shm_segment_handle,
-                                         &(*win_ptr)->info_shm_base_addr,
-                                         (*win_ptr)->info_shm_segment_len);
-        MPIR_ERR_CHECK(mpi_errno);
+        mpl_err = MPL_shm_seg_detach((*win_ptr)->info_shm_segment_handle,
+                                     &(*win_ptr)->info_shm_base_addr,
+                                     (*win_ptr)->info_shm_segment_len);
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**detach_shar_mem");
 
         MPL_shm_hnd_finalize(&(*win_ptr)->info_shm_segment_handle);
 

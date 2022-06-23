@@ -6,7 +6,7 @@
 #ifndef MPIR_COMM_H_INCLUDED
 #define MPIR_COMM_H_INCLUDED
 
-#if defined HAVE_LIBHCOLL
+#if defined HAVE_HCOLL
 #include "../mpid/common/hcoll/hcollpre.h"
 #endif
 
@@ -234,9 +234,9 @@ struct MPIR_Comm {
     } coll;
 
     void *csel_comm;            /* collective selector handle */
-#if defined HAVE_LIBHCOLL
+#if defined HAVE_HCOLL
     hcoll_comm_priv_t hcoll_priv;
-#endif                          /* HAVE_LIBHCOLL */
+#endif                          /* HAVE_HCOLL */
 
     /* the mapper is temporarily filled out in order to allow the
      * device to setup its network addresses.  it will be freed after
@@ -306,6 +306,8 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
 {
     int mpi_errno = MPI_SUCCESS;
 
+    *attr_out = MPIR_CONTEXT_INTRA_PT2PT;
+
     MPIR_ERR_CHKANDJUMP(comm->stream_comm_type != MPIR_STREAM_COMM_MULTIPLEX,
                         mpi_errno, MPI_ERR_OTHER, "**streamcomm_notmult");
 
@@ -319,10 +321,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
     int src_vci = comm->stream_comm.multiplex.vci_table[displs[src_rank] + src_index];
     int dst_vci = comm->stream_comm.multiplex.vci_table[displs[src_rank] + dst_index];
 
-    int attr = MPIR_CONTEXT_INTRA_PT2PT;
-    MPIR_PT2PT_ATTR_SET_VCIS(attr, src_vci, dst_vci);
-
-    *attr_out = attr;
+    MPIR_PT2PT_ATTR_SET_VCIS(*attr_out, src_vci, dst_vci);
 
   fn_exit:
     return mpi_errno;

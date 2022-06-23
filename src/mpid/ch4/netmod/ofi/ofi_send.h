@@ -161,15 +161,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
     MPIR_FUNC_ENTER;
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    /* TODO: what cases when *request is NULL under workq? */
-    if (*request) {
-        MPIR_Request_add_ref(*request);
-    } else
-#endif
-    {
-        MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vni_src);
-    }
+    MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vni_src);
 
     MPIR_Request *sreq = *request;
 

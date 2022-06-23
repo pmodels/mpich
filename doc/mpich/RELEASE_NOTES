@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
-MPICH DROP 45 - Release Notes
+MPICH DROP 47 - Release Notes
 -------------------------------------------------------------------------------
 
 CONTENTS:
@@ -19,25 +19,21 @@ This is an evaluation release of mpich provided by Intel Corporation.
 2. NEW FEATURES
 -------------------------------------------------------------------------------
 
-* Disable GPU IPC and the GPU low-latency transfer path by default due to
-  incompatibility with implicit scaling
-
-* Add support for GPU RDMA for providers with FI_HMEM support
-
-* Add support for low-latency path for small message transfers using GPU
-  buffers
+* Improved intra-node performance with Intel GPUs.
+* Optimized performance of broadcast and allreduce with GPU buffers. 
+* Fixed bugs with multi-nic communicator.
 
 -------------------------------------------------------------------------------
 2.1 DETAILS
 -------------------------------------------------------------------------------
 
-*
+
 
 -------------------------------------------------------------------------------
 2.2 KNOWN ISSUES
 -------------------------------------------------------------------------------
 
-* Message transfers using multi-NIC striping fail with MPI_THREAD_MULTIPLE
+* Message transfers using multi-NIC striping fail with MPI_THREAD_MULTIPLE.
 
 * Allowing compute engines as subdevices when defining ZE_AFFINITY_MASK is not
   currently supported. EngineInstancedSubDevices=0 is set in the modulefiles to
@@ -47,8 +43,8 @@ This is an evaluation release of mpich provided by Intel Corporation.
   scaling. In order to enable these features and disable implicit scaling, the
   following must be performed:
 
-    unset EnableWalkerPartition
-    unset EnableImplicitScaling
+    export EnableWalkerPartition=0
+    export EnableImplicitScaling=0
     export MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD=1
 
 -------------------------------------------------------------------------------
@@ -74,7 +70,7 @@ compiler: icc or gnu
   either.
 - Note: currently icc represents icx compiler.
 
-provider: sockets, psm2
+provider: tcp, psm2
 
 build_type: default, debug, or deterministic.
 - default build is an optimized version. For installation, it will not append
@@ -87,7 +83,7 @@ build_type: default, debug, or deterministic.
   additional runtime configuration variables.
 
 flavor: ats (represents the target gpu type)
-- ats: no XPMEM, no DAOS, libfabric embedded, level-zero linked, ATS-specific
+- ats: no XPMEM, no DAOS, libfabric linked, level-zero linked, ATS-specific
   kernels generated
 
 version and release: represent the drop release numbers

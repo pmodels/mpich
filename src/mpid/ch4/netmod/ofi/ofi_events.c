@@ -822,10 +822,23 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret)
 
                 case FI_ECANCELED:
                     req = MPIDI_OFI_context_to_request(e.op_context);
-                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
                     MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
                     MPIR_STATUS_SET_COUNT(req->status, 0);
-                    MPIDIU_request_complete(req);
+                    /* Clean up the request. Reference MPIDI_OFI_recv_event.
+                     * NOTE: assuming only the receive request can be cancelled and reach here
+                     */
+                    int event_id = MPIDI_OFI_REQUEST(req, event_id);
+                    if ((event_id == MPIDI_OFI_EVENT_RECV_PACK ||
+                         event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
+                        MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
+                        MPIR_gpu_free_host(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
+                    } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK &&
+                               event_id == MPIDI_OFI_EVENT_RECV_NOPACK &&
+                               MPIDI_OFI_REQUEST(req, noncontig.nopack)) {
+                        MPL_free(MPIDI_OFI_REQUEST(req, noncontig.nopack));
+                    }
+                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
+                    MPIDI_Request_complete_fast(req);
                     break;
 
                 case FI_ENOMSG:

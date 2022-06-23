@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
     MPIDI_POSIX_RECV_VSI(vsi);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vsi).lock);
 
-    *request = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vsi, 1);
+    MPIDI_CH4_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vsi, 1);
     MPIR_Assert(*request);
 #endif
 
@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
         mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr,
                                        av, &nm_rreq, *request);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_REQUEST_ANYSOURCE_PARTNER(*request) = nm_rreq;
+        (*request)->dev.anysrc_partner = nm_rreq;
 
         /* cancel the shm request if netmod/am handles the request from unexpected queue. */
         if (MPIR_Request_is_complete(nm_rreq)) {
@@ -71,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
     mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq, false);
 #else
     if (MPIDI_REQUEST(rreq, is_local)) {
-        MPIR_Request *partner_rreq = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
+        MPIR_Request *partner_rreq = rreq->dev.anysrc_partner;
         if (unlikely(partner_rreq)) {
             /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
             mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq, false);
@@ -103,17 +103,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv(void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    *(req) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, 0, 1);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    MPIDI_workq_pt2pt_enqueue(IRECV, NULL /*send_buf */ , buf, count, datatype,
-                              rank, tag, comm, attr, av,
-                              NULL /*status */ , *req, NULL /*flag */ , NULL /*message */ ,
-                              NULL /*processed */);
-#else
     *(req) = NULL;
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, av, req, NULL);
@@ -130,7 +119,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv(void *buf,
     }
 #endif
     MPIR_ERR_CHECK(mpi_errno);
-#endif
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -147,18 +135,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv(void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIR_Request *request = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, 0, 1);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_ERR_CHKANDSTMT(request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    MPIDI_workq_pt2pt_enqueue(IMRECV, NULL /*send_buf */ , buf, count, datatype,
-                              0 /*rank */ , 0 /*tag */ , NULL /*comm */ ,
-                              0 /*attr */ , NULL /*av */ ,
-                              NULL /*status */ , request, NULL /*flag */ ,
-                              &message, NULL /*processed */);
-#else
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message);
 #else
@@ -168,7 +144,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv(void *buf,
         mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message);
 #endif
     MPIR_ERR_CHECK(mpi_errno);
-#endif
 
   fn_exit:
     MPIR_FUNC_EXIT;

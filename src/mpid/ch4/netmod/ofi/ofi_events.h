@@ -133,7 +133,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
                                             ss_bits), vni_local, tinjectdata, FALSE /* eagain */);
     }
 
-    MPIDIU_request_complete(rreq);
+    MPIDI_Request_complete_fast(rreq);
 
   fn_exit:
     MPIR_FUNC_EXIT;

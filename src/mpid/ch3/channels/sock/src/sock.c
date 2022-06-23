@@ -205,7 +205,7 @@ static int MPIDI_CH3I_Socki_os_to_mpi_errno(struct pollinfo *pollinfo,
                                             int os_errno, const char *fcname, int line,
                                             int *conn_failed);
 
-static int MPIDI_CH3I_Socki_adjust_iov(ssize_t nb, struct iovec * const iov,
+static int MPIDI_CH3I_Socki_adjust_iov(ssize_t nb, struct iovec *const iov,
                                        const int count, int *const offsetp);
 
 static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set *sock_set,
@@ -712,7 +712,7 @@ static int MPIDI_CH3I_Socki_os_to_mpi_errno(struct pollinfo *pollinfo, int os_er
  * making a copy to shift down elements when only part of the iov is
  * consumed.
  */
-static int MPIDI_CH3I_Socki_adjust_iov(ssize_t nb, struct iovec * const iov, const int count,
+static int MPIDI_CH3I_Socki_adjust_iov(ssize_t nb, struct iovec *const iov, const int count,
                                        int *const offsetp)
 {
     int offset = *offsetp;
@@ -1235,7 +1235,6 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
 {
     struct MPIDI_CH3I_Sock_set *sock_set = NULL;
     int mpi_errno = MPI_SUCCESS;
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     MPIR_FUNC_ENTER;
 
@@ -1284,6 +1283,7 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set **sock_setp)
         struct pollinfo *pollinfo;
         long flags;
         int rc;
+        char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
         /*
          * Acquire a pipe (the interrupter) to wake up a blocking poll should
@@ -1660,8 +1660,7 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set *sock_set, vo
                                                                 pollinfo->sock_id, errno,
                                                                 MPIR_Strerror(errno, strerrbuf,
                                                                               MPIR_STRERROR_BUF_SIZE)),
-                                           mpi_errno,
-                                           fn_fail);
+                                           mpi_errno, fn_fail);
         }
     }
     /* --END ERROR HANDLING-- */
@@ -1943,7 +1942,7 @@ int MPIDI_CH3I_Sock_post_read(struct MPIDI_CH3I_Sock *sock, void *buf, size_t mi
 /* end MPIDI_CH3I_Sock_post_read() */
 
 
-int MPIDI_CH3I_Sock_post_readv(struct MPIDI_CH3I_Sock *sock, struct iovec * iov, int iov_n,
+int MPIDI_CH3I_Sock_post_readv(struct MPIDI_CH3I_Sock *sock, struct iovec *iov, int iov_n,
                                MPIDI_CH3I_Sock_progress_update_func_t fn)
 {
     struct pollfd *pollfd;
@@ -2037,7 +2036,7 @@ int MPIDI_CH3I_Sock_post_write(struct MPIDI_CH3I_Sock *sock, void *buf, size_t m
 /* end MPIDI_CH3I_Sock_post_write() */
 
 
-int MPIDI_CH3I_Sock_post_writev(struct MPIDI_CH3I_Sock *sock, struct iovec * iov, int iov_n,
+int MPIDI_CH3I_Sock_post_writev(struct MPIDI_CH3I_Sock *sock, struct iovec *iov, int iov_n,
                                 MPIDI_CH3I_Sock_progress_update_func_t fn)
 {
     struct pollfd *pollfd;
@@ -2248,7 +2247,8 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
                                              __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_NO_NEW_SOCK,
                                              "**sock|poll|accept", "**sock|poll|accept %d %s",
                                              errno,
-                                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
+                                             MPIR_Strerror(errno, strerrbuf,
+                                                           MPIR_STRERROR_BUF_SIZE));
         }
 
         goto fn_fail;
@@ -2286,7 +2286,8 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock *listener,
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                          __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,
                                          "**sock|poll|nodelay", "**sock|poll|nodelay %d %s",
-                                         errno, MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
+                                         errno, MPIR_Strerror(errno, strerrbuf,
+                                                              MPIR_STRERROR_BUF_SIZE));
         goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
@@ -2487,7 +2488,7 @@ int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t *
 /* end MPIDI_CH3I_Sock_read() */
 
 
-int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, struct iovec * iov, int iov_n, size_t * num_read)
+int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, struct iovec *iov, int iov_n, size_t * num_read)
 {
     struct pollfd *pollfd;
     struct pollinfo *pollinfo;
@@ -2657,7 +2658,8 @@ int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t 
 /* end MPIDI_CH3I_Sock_write() */
 
 
-int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, struct iovec * iov, int iov_n, size_t * num_written)
+int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, struct iovec *iov, int iov_n,
+                           size_t * num_written)
 {
     struct pollinfo *pollinfo;
     ssize_t nb;
@@ -3782,7 +3784,8 @@ static int MPIDI_CH3I_Socki_handle_connect(struct pollfd *const pollfd,
                                  MPIDI_CH3I_SOCK_ERR_CONN_FAILED, "**sock|connfailed",
                                  "**sock|poll|connfailed %d %d %d %s", pollinfo->sock_set->id,
                                  pollinfo->sock_id, pollinfo->os_errno,
-                                 MPIR_Strerror(pollinfo->os_errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
+                                 MPIR_Strerror(pollinfo->os_errno, strerrbuf,
+                                               MPIR_STRERROR_BUF_SIZE));
         MPIDI_CH3I_SOCKI_EVENT_ENQUEUE(pollinfo, MPIDI_CH3I_SOCK_OP_CONNECT, 0, pollinfo->user_ptr,
                                        event_mpi_errno, mpi_errno, fn_exit);
         pollinfo->state = MPIDI_CH3I_SOCKI_STATE_DISCONNECTED;

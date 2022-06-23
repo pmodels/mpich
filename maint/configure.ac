@@ -42,4 +42,4 @@ CXXFLAGS='@CXXFLAGS@'
 # autoconf replacement.
 # Note that top_srcdir and srcdir are special cases (they must not
 # be changed in configure.ac because configure uses them to find other files)
-AC_OUTPUT(checkbuilds getcoverage clmake extractstrings extractcvars extractfixme createcoverage gcovmerge cvardirs getfuncstack)
+AC_OUTPUT(checkbuilds getcoverage clmake extractstrings extractfixme createcoverage gcovmerge getfuncstack)

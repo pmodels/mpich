@@ -99,20 +99,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_to_context(const MPIR_Win 
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIU_request_complete(MPIR_Request * req)
-{
-    int incomplete;
-
-    MPIR_FUNC_ENTER;
-
-    MPIR_cc_decr(req->cc_ptr, &incomplete);
-    if (!incomplete) {
-        MPIDI_CH4_REQUEST_FREE(req);
-    }
-
-    MPIR_FUNC_EXIT;
-}
-
 MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_add(MPIR_Win * win, int rank)
 {
     MPIR_FUNC_ENTER;

@@ -173,7 +173,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
 
 #ifdef MPL_USE_DBG_LOGGING
     {
-        MPI_Aint s_type_size;
+        MPI_Aint s_type_size ATTRIBUTE((unused));
         MPIR_Datatype_get_size_macro(sendtype, s_type_size);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,

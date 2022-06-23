@@ -16,12 +16,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe(int source,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-#endif
-
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, attr, av, flag, status);
 #else
@@ -54,12 +48,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe(int source,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-#endif
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, attr, av, flag, message, status);

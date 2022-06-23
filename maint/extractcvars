@@ -1,0 +1,765 @@
+#! /usr/bin/env perl
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
+# Parse C or header files to search for MPI_T control variable
+# and category info, then output the info in source code form.
+
+use strict;
+use warnings;
+use File::Basename qw(basename);
+use Data::Dumper;
+use Getopt::Long;
+
+# Help perl find the YAML parsing module
+use lib 'maint/local_perl/lib';
+use YAML::Tiny qw();
+
+# To format README file
+use Text::Wrap;
+$Text::Wrap::unexpand = 0; # disable hard tabs in output
+
+##################################################
+
+my @dirs = qw(src/mpi src/mpi_t src/nameserv src/util src/binding src/include src/mpid src/pmi);
+
+# set true to enable debug output
+my $debug = 0;
+my @cvars = ();
+my %cvars; # used for duplication detection
+my @categories=();
+my $yaml = YAML::Tiny->new();
+my @cfiles = ();
+my %skipfiles = ();
+
+# namespace prefix for function names
+my $fn_ns = "MPIR_T_cvar";
+# namespace prefix for variable and type names
+my $ns = "MPIR_CVAR";
+# an alternative namespace used for environment variables, unused if set to ""
+my $alt_ns = "MPIR_PARAM";
+# deprecated prefix for backward compatibility
+my $dep_ns = "MPICH";
+
+# Default :output source files
+# NOTE: it's important to use single quote. abs_srcdir may contain sigils
+#   e.g. /var/lib/jenkins/workspace/hzhou-custom@2/config/ch3-sock/label/centos64
+my $header_file = 'src/include/mpir_cvars.h';
+my $c_file      = 'src/util/mpir_cvars.c';
+my $readme_file = 'README.envvar';
+
+sub Usage {
+    print <<EOT;
+
+Usage: $0 [OPTIONS]
+
+Supported options:
+    --help              - this output (optional)
+    --debug             - enable some debugging output (optional)
+    --namespace=STR     - use STR as variable/type prefix in generated code (optional, default=$ns)
+    --alt-namespace=STR - use STR as alternative variable/type prefix in generated code (optional, default=$alt_ns)
+    --header=STR        - specify the header file name (optional, default=$header_file)
+    --c-file=STR        - specify the C file name (optional, default=$c_file)
+    --readme-file=STR   - specify the readme file name (optional, default=$readme_file)
+    --skip=STR          - skip parsing files as specified (optional)
+
+EOT
+    exit 1;
+}
+
+# Step 1: Process options
+my $skipline = "";
+GetOptions(
+    "help!"           => \&Usage,
+    "debug!"          => \$debug,
+    "namespace=s"     => \$ns,
+    "alt-namespace=s" => \$alt_ns,
+    "header=s"        => \$header_file,
+    "c-file=s"        => \$c_file,
+    "readme-file=s"   => \$readme_file,
+    "skips=s"         => \$skipline
+) or Usage();
+
+my @skips = split(/[:,;\s]+/, $skipline);
+%skipfiles = map {$_ => 1} @skips;
+
+# Step 2: Search all cfiles and put them in @cfiles.
+foreach my $dir (@dirs) {
+    ExpandDir($dir);
+}
+
+# Step 3: Parse each cfile and put results in  @cvars and @categories.
+foreach my $cfile (@cfiles) {
+    ProcessFile($cfile);
+}
+
+# Step 4: Preprocess cvars:
+# *) Make sure that all categories referenced by cvars actually exist
+# *) Strip out the prefix of their name (normally, MPIR_CVAR)
+die "missing 'cvars', stopped" unless (@cvars);
+my %cat_hash = map {$_->{name} => 1} @categories;
+
+foreach my $p (@cvars) {
+    unless (exists $cat_hash{$p->{category}}) {
+        warn "Category '".$p->{category}."' referenced by '".$p->{name}."' was not found";
+    }
+    $p->{name} =~ s/${ns}_//;
+    if (exists $p->{'alt-env'}) {
+        my @alts = split(/[:,;\s]+/, $p->{'alt-env'});
+        foreach my $elmt (@alts) {
+            $elmt =~ s/${ns}_//;
+        }
+        $p->{'alt-env'} = [@alts];
+    }
+}
+
+# Step 5: Output cvars and categories
+print "Categories include: \n".Dumper(@categories) if $debug;
+print "Cvars include :\n".Dumper(@cvars)."\n" if $debug;
+
+my $run_timestamp = gmtime($ENV{SOURCE_DATE_EPOCH} || time)." UTC";
+my $uc_ns = uc($ns);
+
+# Setup output files
+open(OUTPUT_H,      '>', $header_file);
+open(OUTPUT_C,      '>', $c_file);
+open(OUTPUT_README, '>', $readme_file);
+
+#===============================================================
+# Step 5.1: Dump the header file.
+my $hdr_guard = Header2InclGuard($header_file);
+print OUTPUT_H <<EOT;
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
+/* Automatically generated
+ *   by:   $0
+ *   on:   $run_timestamp
+ *
+ * DO NOT EDIT!!!
+ */
+
+#if !defined($hdr_guard)
+#define $hdr_guard
+
+#include "mpitimpl.h" /* for MPIR_T_cvar_range_value_t */
+
+/* Initializes cvar values from the environment */
+int ${fn_ns}_init(void);
+int ${fn_ns}_finalize(void);
+
+/* Extern declarations for each cvar
+ * (definitions in $c_file) */
+
+EOT
+
+our %enum_groups;
+foreach my $p (@cvars) {
+    printf OUTPUT_H "/* declared in $p->{location} */\n";
+    printf OUTPUT_H "extern %s ${uc_ns}_%s;\n", Type2Ctype($p->{type}), $p->{name};
+    if($p->{type} eq "enum"){
+        my @enum;
+        while($p->{description}=~/^\s*(\w+)\s+-\s/mg){
+            # i.e. leading word followed with ' - '
+            push @enum, $1;
+        }
+        $p->{enum} = \@enum;
+        my @t;
+        foreach my $a (@enum){
+            push @t, "    MPIR_CVAR_$p->{name}_$a,";
+        }
+        die "Failed to parse enum lists in $p->{name}\n" if !@t;
+
+        if ($p->{group}) {
+            if (!$enum_groups{$p->{group}}) {
+                $enum_groups{$p->{group}} = [];
+            }
+            my $g = $enum_groups{$p->{group}};
+            push @$g, @t;
+        }
+        else {
+            $t[-1]=~s/,$//;
+            print OUTPUT_H "enum $p->{name}_choice {\n";
+            foreach my $l (@t){
+                print OUTPUT_H "$l\n";
+            }
+            print OUTPUT_H "};\n";
+        }
+    }
+}
+foreach my $g (sort keys %enum_groups){
+    my $t = $enum_groups{$g};
+    print OUTPUT_H "int MPIR_$g\_from_str(const char *s);\n";
+    $t->[-1]=~s/,$//;
+    print OUTPUT_H "enum $g\_group_t {\n";
+    foreach my $l (@$t){
+        print OUTPUT_H "$l\n";
+    }
+    print OUTPUT_H "};\n";
+}
+
+print OUTPUT_H <<EOT;
+
+/* TODO: this should be defined elsewhere */
+#define ${ns}_assert MPIR_Assert
+
+/* Arbitrary, simplifies interaction with external interfaces like MPI_T_ */
+#define ${uc_ns}_MAX_STRLEN (384)
+
+/* Shortens enum value comparisons */
+#define ${uc_ns}_ENUM_IS(A, a) (${uc_ns}_ ## A == ${uc_ns}_ ## A ## _ ## a)
+
+#endif /* $hdr_guard */
+EOT
+close(OUTPUT_H);
+
+#===============================================================
+# Step 5.2: Dump the C file.
+print OUTPUT_C <<EOT;
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+/* automatically generated
+ *   by:   $0
+ *   at:   $run_timestamp
+ *
+ * DO NOT EDIT!!!
+ */
+
+#include "mpiimpl.h"
+
+/* Actual storage for cvars */
+EOT
+# Output the definitions
+foreach my $p (@cvars) {
+    my $type = Type2Ctype($p->{type});
+    print OUTPUT_C "$type ${uc_ns}_$p->{name};\n";
+}
+
+# Generate the init function.
+print OUTPUT_C <<EOT;
+
+int ${fn_ns}_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int rc, got_rc;
+    const char *tmp_str;
+    static int initialized = FALSE;
+    MPIR_T_cvar_value_t defaultval;
+
+    int debug = 0;
+    rc = MPL_env2bool("MPIR_CVAR_DEBUG_CVARS", &debug);
+    MPIR_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","MPIR_CVAR_DEBUG_CVARS");
+
+    /* FIXME any MT issues here? */
+    if (initialized)
+        return MPI_SUCCESS;
+    initialized = TRUE;
+
+EOT
+
+# Register categories
+foreach my $cat (@categories) {
+    my $desc = $cat->{description};
+    $desc =~ s/"/\\"/g;
+    printf OUTPUT_C qq(    /* declared in $cat->{location} */\n);
+    printf OUTPUT_C qq(    MPIR_T_cat_add_desc(%s\n%s);\n\n),
+        qq("$cat->{name}",),
+        qq(        "$desc");
+}
+
+# Register and init cvars
+foreach my $p (@cvars) {
+    my $count = get_cvar_count($p);
+    my $mpi_dtype = get_cvar_mpi_dtype($p);
+    my ($dftvar, $dftval) = get_cvar_dft_var_val($p);
+
+    if ($p->{class} eq 'device') {
+        print OUTPUT_C "#if defined MPID_$p->{name}\n";
+        print OUTPUT_C "    $dftvar = MPID_$p->{name};\n";
+        print OUTPUT_C "#else\n";
+        print OUTPUT_C "    $dftvar = $dftval;\n";
+        print OUTPUT_C "#endif /* MPID_$p->{name} */\n\n";
+    } else {
+        print OUTPUT_C "    $dftvar = $dftval;\n";
+    }
+
+    # Register the cvar
+    my $desc = $p->{description};
+    $desc =~ s/"/\\"/g;
+    $desc =~ s/\n/\\n"\n"/g;
+    printf OUTPUT_C qq(    MPIR_T_CVAR_REGISTER_STATIC(\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s);\n),
+        qq(        $mpi_dtype,),
+        qq(        ${uc_ns}_$p->{name}, /* name */),
+        qq(        &${uc_ns}_$p->{name}, /* address */),
+        qq(        $count, /* count */),
+        qq(        $p->{verbosity},),
+        qq(        $p->{scope},),
+        qq(        defaultval,),
+        qq(        "$p->{category}", /* category */),
+        qq(        "$desc");
+
+    my $var_name = "${uc_ns}_" . $p->{name};
+    if ($p->{type} ne 'string') {
+        print OUTPUT_C "    $var_name = $dftvar;\n";
+    }
+
+    if ($p->{type} eq 'string') {
+        # we will strdup the tmp_str
+        print OUTPUT_C "    tmp_str = defaultval.str;\n";
+    }
+    elsif ($p->{type} eq 'enum') {
+        print OUTPUT_C "    tmp_str=NULL;\n";
+    }
+
+    # Get the env variable value.
+    my $env_fn = Type2EnvFn($p->{type});
+    my @env_names = ();
+
+    # Process extra envs first so the primary always wins
+    push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, "${dep_ns}_" . $p->{name};
+    push @env_names, "${alt_ns}_" . $p->{name};
+    push @env_names, "${uc_ns}_" . $p->{name};
+
+    print OUTPUT_C "    got_rc = 0;\n";
+    foreach my $env_name (@env_names) {
+        # assumes rc is defined
+        if ($p->{type} eq 'range') {
+print OUTPUT_C <<EOT;
+    rc = MPL_env2${env_fn}("$env_name", &($var_name.low), &($var_name.high));
+    MPIR_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
+    got_rc += rc;
+EOT
+        }
+        elsif ($p->{type} eq 'string' or $p->{type} eq 'enum') {
+print OUTPUT_C <<EOT;
+    rc = MPL_env2${env_fn}("$env_name", &tmp_str);
+    MPIR_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
+    got_rc += rc;
+EOT
+        }
+        else {
+print OUTPUT_C <<EOT;
+    rc = MPL_env2${env_fn}("$env_name", &($var_name));
+    MPIR_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
+    got_rc += rc;
+EOT
+        }
+    }
+
+    # debugging
+    print OUTPUT_C "    if (got_rc && debug) {\n";
+    if ($p->{type} eq 'string' or $p->{type} eq 'enum') {
+        print OUTPUT_C "        printf(\"CVAR: $var_name = %s\\n\", tmp_str);\n";
+    } elsif ($p->{type} eq "range") {
+        print OUTPUT_C "        printf(\"CVAR: $var_name = %d-%d\\n\", $var_name.low, $var_name.high);\n";
+    } else {
+        print OUTPUT_C "        printf(\"CVAR: $var_name = %d\\n\", $var_name);\n";
+    }
+    print OUTPUT_C "    }\n";
+
+    # post process
+    if ($p->{type} eq 'string') {
+print OUTPUT_C <<EOT;
+    if (tmp_str != NULL) {
+        ${var_name} = MPL_strdup(tmp_str);
+        ${ns}_assert(${var_name});
+        if (${var_name} == NULL) {
+            MPIR_CHKMEM_SETERR(mpi_errno, strlen(tmp_str), "dup of string for ${var_name}");
+            goto fn_fail;
+        }
+    }
+    else {
+        ${var_name} = NULL;
+    }
+EOT
+    }
+    elsif ($p->{type} eq 'enum') {
+        print OUTPUT_C "    if (tmp_str != NULL) {\n";
+        my $c = "if";
+        my $sp = ' ' x 8;
+        foreach my $a (@{$p->{enum}}){
+            print OUTPUT_C $sp, "$c (0 == strcmp(tmp_str, \"$a\"))\n";
+            print OUTPUT_C $sp, "    $var_name = $var_name\_$a;\n";
+            $c = "else if";
+        }
+        print OUTPUT_C $sp, "else {\n";
+        print OUTPUT_C $sp, "    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,MPI_ERR_OTHER, \"**cvar_val\", \"**cvar_val %s %s\", \"$var_name\", tmp_str);\n";
+        print OUTPUT_C $sp, "    goto fn_fail;\n";
+        print OUTPUT_C $sp, "}\n";
+        print OUTPUT_C "    }\n";
+    }
+    print OUTPUT_C "\n";
+}
+
+print OUTPUT_C <<EOT;
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+EOT
+
+print OUTPUT_C <<EOT;
+int ${fn_ns}_finalize(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+EOT
+
+foreach my $p (@cvars) {
+    my $var_name = "${uc_ns}_" . $p->{name};
+
+    if ($p->{type} eq 'string') {
+        # Need to cleanup after whatever was strduped by the init routine
+print OUTPUT_C <<EOT;
+    MPL_free((char *)${var_name});
+    ${var_name} = NULL;
+
+EOT
+    }
+}
+
+print OUTPUT_C <<EOT;
+    return mpi_errno;
+}
+
+EOT
+
+foreach my $g (sort keys %enum_groups){
+    my $t = $enum_groups{$g};
+    print OUTPUT_C "int MPIR_$g\_from_str(const char *s) {\n";
+    my $t_if="if";
+    foreach my $l (@$t){
+        $l=~s/,$//;
+        print OUTPUT_C "    $t_if (strcmp(s, \"$l\")==0) return $l;\n";
+        $t_if = "else if";
+    }
+    print OUTPUT_C "    else return -1;\n";
+    print OUTPUT_C "}\n";
+}
+
+close(OUTPUT_C);
+
+#===============================================================
+#Step 5.3 Dump the readme file
+print OUTPUT_README <<EOT;
+Copyright (C) by Argonne National Laboratory
+    See COPYRIGHT in top-level directory
+
+Automatically generated
+  by:   $0
+  at:   $run_timestamp
+DO NOT EDIT!!!
+
+This file lists the various environment variables available to change the
+behavior of the MPICH library.  These are intended to be used by advanced
+users.
+---------------------------------------------------------------------------
+
+EOT
+
+foreach my $p (@cvars) {
+    my @env_names = ();
+    my $first;
+    my $alt;
+    my $default;
+
+    # process extra envs first so the primary always wins
+    push @env_names, "${alt_ns}_" . $p->{name};
+    push @env_names, "${dep_ns}_" . $p->{name};
+    push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
+
+    print OUTPUT_README "${uc_ns}_$p->{name}\n";
+
+    $first = 1;
+    foreach $alt (@env_names) {
+        if ($first) {
+            print OUTPUT_README "    Aliases: $alt\n";
+        } else {
+            print OUTPUT_README "             $alt\n";
+        }
+        $first = 0;
+    }
+
+    print OUTPUT_README wrap("    Description: ", "        ", $p->{description} . "\n");
+    $default = FmtDefault($p->{name}, $p->{default}, $p->{type});
+    print OUTPUT_README "    Default: $default\n";
+    print OUTPUT_README "\n";
+}
+
+close(OUTPUT_README);
+
+#===============================================================
+# Helper subroutines used in this script
+
+sub get_cvar_count {
+    my $p = shift;
+
+    if ($p->{type} eq "string") {
+        return "${uc_ns}_MAX_STRLEN";
+    }
+    elsif ($p->{type} eq 'range') {
+        return 2;
+    }
+    else {
+        return 1;
+    }
+}
+
+sub get_cvar_mpi_dtype {
+    my $p = shift;
+
+    if ($p->{type} eq 'string') {
+        return "MPI_CHAR";
+    }
+    elsif ($p->{type} eq 'int' or $p->{type} eq 'boolean') {
+        return "MPI_INT";
+    }
+    elsif ($p->{type} eq 'double') {
+        return "MPI_DOUBLE";
+    }
+    elsif ($p->{type} eq 'range') {
+        return "MPI_INT";
+    }
+    elsif ($p->{type} eq 'enum') {
+        return "MPI_INT";
+    }
+    else {
+        die "unknown type $p->{type}, stopped";
+    }
+}
+
+sub get_cvar_dft_var_val {
+    my $p = shift;
+
+    my $dftvar;
+    my $dftval = FmtDefault($p->{name}, $p->{default}, $p->{type});
+    if ($p->{type} eq 'string') {
+        $dftvar = "defaultval.str";
+        $dftval = "(const char *) $dftval";
+    }
+    elsif ($p->{type} eq 'int' or $p->{type} eq 'boolean') {
+        $dftvar = "defaultval.d";
+    }
+    elsif ($p->{type} eq 'double') {
+        $dftvar = "defaultval.f";
+    }
+    elsif ($p->{type} eq 'range') {
+        $dftvar = "defaultval.range";
+        $dftval = "(MPIR_T_cvar_range_value_t) $dftval";
+    }
+    elsif ($p->{type} eq 'enum') {
+        $dftvar = "defaultval.d";
+    }
+    else {
+        die "unknown type $p->{type}, stopped";
+    }
+    return ($dftvar, $dftval);
+}
+
+#---------------------------------------------------------------
+# Transform a cvar type to a C-language type
+sub Type2Ctype {
+    my $type = shift;
+    my %typemap = (
+        'int'     => 'int',
+        'double'  => 'double',
+        'string'  => 'const char *',
+        'boolean' => 'int',
+        'range'   => "MPIR_T_cvar_range_value_t",
+        'enum'    => 'int',
+    );
+    die "unknown type '$type', stopped" unless exists $typemap{$type};
+    return $typemap{$type};
+}
+
+# Transform a default value into a C value
+sub FmtDefault {
+    my $name = shift;
+    my $val = shift;
+    my $type = shift;
+
+    if ($type eq 'string') {
+        $val =~ s/"/\\"/g;
+        if ($val eq 'NULL' or $val eq 'null') { return "NULL"; }
+        else { return qq("$val"); }
+    }
+    elsif ($type eq 'boolean') {
+        if    ($val =~ m/^(0|f(alse)?|no?)$/i)   { return qq(0); }
+        elsif ($val =~ m/^(1|t(rue)?|y(es)?)$/i) { return qq(1); }
+        else {
+            warn "WARNING: type='$type', bad val='$val', continuing";
+            return qq(0); # fail-false
+        }
+    }
+    elsif ($type eq 'range') {
+        if ($val !~ "-?[0-9]+:-?[0-9]+") {
+            die "Unable to parse range value '$val', stopped";
+        }
+        $val =~ s/:/,/;
+        return qq({$val});
+    }
+    elsif ($type eq 'enum') {
+        return "MPIR_CVAR_$name\_$val";
+    }
+    else {
+        return qq($val);
+    }
+}
+
+# turns /path/foo_BAR-baz.h into FOO_BAR_BAZ_H_INCLUDED
+sub Header2InclGuard {
+    my $header_file = shift;
+    my $guard = basename($header_file);
+    $guard =~ tr/a-z\-./A-Z__/;
+    $guard .= "_INCLUDED";
+    die "guard contains whitespace, stopped" if ($guard =~ m/\s/);
+    return $guard;
+}
+
+sub Type2EnvFn {
+    my $type = shift;
+    my %typemap = (
+        'int' =>  'int',
+        'string' => 'str',
+        'boolean' => 'bool',
+        'double' => 'double',
+        'range' => 'range',
+        'enum' => 'str',
+    );
+
+    die "unknown type '$type', stopped" unless exists $typemap{$type};
+    return $typemap{$type};
+}
+
+# Parse a file, search the MPI_T_CVAR_INFO_BLOCK if any.
+# Distill cvars and categories from the block.
+# Push the results to back of @cvars and @categories respectively.
+sub ProcessFile {
+    my $cfile = $_[0];
+    my $cvar_info_block = undef;
+    my $in_cvar_info_block = 0;
+
+    #print "Processing file $cfile\n" if $debug;
+    open my $CFILE_HANDLE, "< $cfile" or die "Error: open file $cfile -- $!\n";
+    while (<$CFILE_HANDLE>) {
+        if (/END_MPI_T_CVAR_INFO_BLOCK/) {
+            last;
+        } elsif ($in_cvar_info_block) {
+            $cvar_info_block .= $_;
+        } elsif (/BEGIN_MPI_T_CVAR_INFO_BLOCK/) {
+            $in_cvar_info_block = 1;
+            print "Found MPI_T_CVAR_INFO_BLOCK in $cfile\n" if $debug;
+        }
+    }
+    close $CFILE_HANDLE;
+
+    # Do some checking to ensure a correct cvar info block, also
+    # add file locations to help users' debugging.
+    if ($cvar_info_block) {
+        my $info = ($yaml->read_string($cvar_info_block))->[0];
+        if (exists $info->{cvars}) {
+            # Remember location where the cvar is defined. Put that into
+            # comments of the generated *.h file so that users know where
+            # to look when meeting compilation errors.
+            foreach my $cvar (@{$info->{cvars}}) {
+                $cvar->{location} = $cfile;
+                die "ERROR: cvar has no name in $cfile\n" unless exists $cvar->{name};
+                die "ERROR: cvar $cvar->{name} has no type in $cfile\n" unless exists $cvar->{type};
+                die "ERROR: cvar $cvar->{name} has no verbosity in $cfile\n" unless exists $cvar->{verbosity};
+                die "ERROR: cvar $cvar->{name} has no scope in $cfile\n" unless exists $cvar->{scope};
+                die "ERROR: cvar $cvar->{name} has no class in $cfile\n" unless exists $cvar->{class};
+                die "ERROR: cvar $cvar->{name} has no description in $cfile\n" unless exists $cvar->{description};
+            }
+            foreach my $cvar (@{$info->{cvars}}) {
+                if (!$cvars{$cvar->{name}}) {
+                    $cvars{$cvar->{name}} = $cvar;
+                    push (@cvars, $cvar);
+                } else {
+                    my $prev = $cvars{$cvar->{name}};
+                    if (cvar_cmp($prev, $cvar) != 0) {
+                        die "ERROR: duplicate CVAR definition, $cvar->{name}, and they are not the same\n";
+                    }
+                }
+            }
+        }
+
+        if (exists $info->{categories}) {
+            # Do the same trick to categories
+            foreach my $cat (@{$info->{categories}}) {
+                $cat->{location} = $cfile;
+                die "ERROR: category has no name in $cfile\n" unless exists $cat->{name};
+                die "ERROR: category $cat->{name} has no description in $cfile\n"
+                    unless exists $cat->{description};
+            }
+            push (@categories, @{$info->{categories}});
+        }
+    }
+}
+
+# Search cfiles recursively in the directory passed in.
+# Push file names along with their paths to back of @cfiles.
+sub ExpandDir {
+    my $dir = $_[0];
+    my @subdirs = ();
+    my $DIR_HANDLE;
+    opendir $DIR_HANDLE, "$dir" or die "Error: open directory $dir -- $!\n";
+    for my $filename (sort readdir $DIR_HANDLE) {
+        if ($filename =~ /^\./) {
+            next;
+        } elsif (-d "$dir/$filename") {
+            $subdirs[$#subdirs + 1] = "$dir/$filename";
+        } elsif ($filename =~ /^cvars.txt$/) {
+            $cfiles[$#cfiles + 1] = "$dir/$filename";
+        } elsif ($filename =~ /(.*\.[Cchi])(pp){0,1}$/) {
+            if (!defined($skipfiles{"$dir/$filename"}))
+            {
+                $cfiles[$#cfiles + 1] = "$dir/$filename";
+            }
+        }
+    }
+    closedir $DIR_HANDLE;
+
+    # Recursively search subdirs
+    foreach $dir (@subdirs) {
+        ExpandDir($dir);
+    }
+}
+
+# Compare two cvar, return 0 if they are duplicate and compatible. Other wise, return non-zero.
+# This is useful so we can have duplicated cvar definition is separate modules, e.g. ch3:ofi and ch4:ofi.
+sub cvar_cmp {
+    my ($a, $b) = @_;
+    if ($a->{category} ne $b->{category}) {
+        return 1;
+    }
+    if ($a->{type} ne $b->{type}) {
+        return 1;
+    }
+    if ($a->{default} ne $b->{default}) {
+        return 1;
+    }
+    if ($a->{scope} ne $b->{scope}) {
+        return 1;
+    }
+    if ($a->{class} ne $b->{class}) {
+        return 1;
+    }
+    if ($a->{verbosity} ne $b->{verbosity}) {
+        return 1;
+    }
+    # they are the same
+    return 0;
+}

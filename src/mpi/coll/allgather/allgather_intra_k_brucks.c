@@ -43,7 +43,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
 #ifdef MPL_USE_DBG_LOGGING
-    MPI_Aint recvtype_size, sendtype_size;
+    MPI_Aint recvtype_size ATTRIBUTE((unused)), sendtype_size ATTRIBUTE((unused));
 #endif
 
     int delta = 1;
