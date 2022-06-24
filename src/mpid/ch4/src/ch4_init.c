@@ -113,6 +113,37 @@ cvars:
       description : >-
         Defines the threshold of high-density datatype. The
         density is calculated by (datatype_size / datatype_num_contig_blocks).
+
+    - name        : MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ
+      category    : CH4_OFI
+      type        : int
+      default     : 1048576
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the buffer size (in bytes) for GPU collectives data transfer.
+
+    - name        : MPIR_CVAR_CH4_GPU_COLL_NUM_BUFFERS_PER_CHUNK
+      category    : CH4_OFI
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of buffers for GPU collectives data transfer in
+        each block/chunk of the pool.
+
+    - name        : MPIR_CVAR_CH4_GPU_COLL_MAX_NUM_BUFFERS
+      category    : CH4_OFI
+      type        : int
+      default     : 256
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the total number of buffers for GPU collectives data transfer.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -327,6 +358,22 @@ static void register_comm_hints(void)
                             MPIR_COMM_HINT_TYPE_INT, 0, MPIDI_VCI_INVALID);
 }
 
+/* Register host buffer with GPU driver */
+static void *host_alloc_registered(uintptr_t size)
+{
+    void *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
+    MPIR_Assert(ptr);
+    MPIR_gpu_register_host(ptr, size);
+    return ptr;
+}
+
+/* Unregister host buffer with GPU driver */
+static void host_free_registered(void *ptr)
+{
+    MPIR_gpu_unregister_host(ptr);
+    MPL_free(ptr);
+}
+
 int MPID_Init(int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -479,6 +526,15 @@ int MPID_Init(int requested, int *provided)
 
     register_comm_hints();
 
+    /* Create genq for GPU collectives */
+    mpi_errno =
+        MPIDU_genq_private_pool_create_unsafe(MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ,
+                                              MPIR_CVAR_CH4_GPU_COLL_NUM_BUFFERS_PER_CHUNK,
+                                              MPIR_CVAR_CH4_GPU_COLL_MAX_NUM_BUFFERS,
+                                              host_alloc_registered,
+                                              host_free_registered, &MPIDI_global.gpu_coll_pool);
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -562,6 +618,8 @@ int MPID_Finalize(void)
     }
 
     MPIDIG_am_finalize();
+
+    MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.gpu_coll_pool);
 
     MPIDIU_avt_destroy();
 
