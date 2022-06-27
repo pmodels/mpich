@@ -169,6 +169,9 @@ int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
 
     MPIR_Object_set_ref(stream_ptr, 1);
     stream_ptr->vci = 0;
+#ifdef MPID_DEV_STREAM_DECL
+    memset(&stream_ptr->dev, 0, sizeof(stream_ptr->dev));
+#endif
 
     const char *s_type;
     s_type = MPIR_Info_lookup(info_ptr, "type");
