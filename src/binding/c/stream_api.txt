@@ -27,6 +27,12 @@ MPIX_Stream_progress:
     stream: STREAM, [stream object]
     .impl: mpid
 
+MPIX_Start_progress_thread:
+    stream: STREAM, [stream object]
+
+MPIX_Stop_progress_thread:
+    stream: STREAM, [stream object]
+
 MPIX_Stream_send:
     buf: BUFFER, constant=True, [initial address of send buffer]
     count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
