@@ -48,12 +48,12 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(MPIR_Request * req)
 */
 MPL_STATIC_INLINE_PREFIX int MPID_Init_async_thread(void)
 {
-    return MPIR_Init_async_thread();
+    return MPIR_Start_progress_thread_impl(NULL);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Finalize_async_thread(void)
 {
-    return MPIR_Finalize_async_thread();
+    return MPIR_Stop_progress_thread_impl(NULL);
 }
 
 #endif /* MPIDPOST_H_INCLUDED */

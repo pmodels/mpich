@@ -352,13 +352,14 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
         }
 
         MPII_world_set_initilized();
-
-        mpi_errno = MPII_init_async();
-        MPIR_ERR_CHECK(mpi_errno);
     }
     if (provided) {
         *provided = MPIR_ThreadInfo.thread_provided;
     }
+
+    mpi_errno = MPII_init_async();
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPL_initlock_unlock(&MPIR_init_lock);
     return mpi_errno;
 
