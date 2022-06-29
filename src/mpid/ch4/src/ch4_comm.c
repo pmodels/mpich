@@ -194,6 +194,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     MPIDI_COMM(comm, sub_node_comm) = NULL;
     MPIDI_COMM(comm, intra_node_leads_comm) = NULL;
     MPIDI_COMM(comm, spanned_num_nodes) = -1;
+    MPIDI_COMM(comm, alltoall_comp_info) = NULL;
+    MPIDI_COMM(comm, allgather_comp_info) = NULL;
     MPIDI_COMM(comm, allreduce_comp_info) = NULL;
 
     mpi_errno = MPIDIG_init_comm(comm);
@@ -269,6 +271,26 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     }
 
 
+    if (MPIDI_COMM(comm, alltoall_comp_info) != NULL) {
+        /* Destroy the associated shared memory region used by multi-leads Alltoall */
+        if (MPIDI_COMM_ALLTOALL(comm, shm_addr) != NULL) {
+            mpi_errno = MPIDU_shm_free(MPIDI_COMM_ALLTOALL(comm, shm_addr));
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+        }
+        MPL_free(MPIDI_COMM(comm, alltoall_comp_info));
+    }
+    if (MPIDI_COMM(comm, allgather_comp_info) != NULL) {
+        /* Destroy the associated shared memory region used by multi-leads Allgather */
+        if (MPIDI_COMM_ALLGATHER(comm, shm_addr) != NULL) {
+            mpi_errno = MPIDU_shm_free(MPIDI_COMM_ALLGATHER(comm, shm_addr));
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIR_ERR_POP(mpi_errno);
+            }
+        }
+        MPL_free(MPIDI_COMM(comm, allgather_comp_info));
+    }
     if (MPIDI_COMM(comm, allreduce_comp_info) != NULL) {
         /* Destroy the associated shared memory region used by multi-leads Allreduce */
         if (MPIDI_COMM_ALLREDUCE(comm, shm_addr) != NULL) {
@@ -672,6 +694,117 @@ int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const ui
 
   fn_exit:
     MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* Create multi-leaders communicator */
+/* Create a comm with rank 0 of each node. A comm with rank 1 of each node and so on. Since these
+ * new comms do no overlap, it uses the same context id */
+int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int num_local = -1, num_external = -1;
+    int local_rank = -1, external_rank = -1, rank;
+    int i = 0;
+    int *local_procs = NULL, *external_procs = NULL;
+    int *intranode_table = NULL, *internode_table = NULL;
+    MPIR_FUNC_TERSE_ENTER;
+
+    mpi_errno = MPIR_Find_local(comm, &num_local, &local_rank, &local_procs, &intranode_table);
+    if (mpi_errno) {
+        if (MPIR_Err_is_fatal(mpi_errno))
+            MPIR_ERR_POP(mpi_errno);
+
+        MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE,
+                      "MPIR_Find_local_and_external failed for comm_ptr=%p", comm);
+        if (intranode_table)
+            MPL_free(intranode_table);
+
+        mpi_errno = MPI_SUCCESS;
+        goto fn_exit;
+    }
+
+    mpi_errno = MPIR_Find_external(comm, &num_external, &external_rank, &external_procs,
+                                   &internode_table);
+    if (mpi_errno) {
+        if (MPIR_Err_is_fatal(mpi_errno))
+            MPIR_ERR_POP(mpi_errno);
+
+        MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE,
+                      "MPIR_Find_local_and_external failed for comm_ptr=%p", comm);
+        if (internode_table)
+            MPL_free(internode_table);
+
+        mpi_errno = MPI_SUCCESS;
+        goto fn_exit;
+    }
+
+    MPIR_Assert(num_local > 0);
+    MPIR_Assert(num_local > 1 || external_rank >= 0);
+    MPIR_Assert(external_rank < 0 || external_procs != NULL);
+    rank = MPIR_Comm_rank(comm);
+
+    external_rank = comm->internode_table[rank];
+    for (i = 0; i < num_external; ++i) {
+        external_procs[i] = i * num_local + local_rank;
+    }
+
+    for (i = 0; i < num_local; i++) {
+        if (local_rank == i) {
+            mpi_errno = MPIR_Comm_create(&MPIDI_COMM(comm, multi_leads_comm));
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+
+            MPIDI_COMM(comm, multi_leads_comm)->context_id =
+                comm->context_id + MPIR_CONTEXT_MULTILEADS_OFFSET;
+            MPIDI_COMM(comm, multi_leads_comm)->recvcontext_id =
+                MPIDI_COMM(comm, multi_leads_comm)->context_id;
+            MPIDI_COMM(comm, multi_leads_comm)->rank = internode_table[rank];
+            MPIDI_COMM(comm, multi_leads_comm)->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+            MPIDI_COMM(comm, multi_leads_comm)->hierarchy_kind =
+                MPIR_COMM_HIERARCHY_KIND__MULTI_LEADS;
+            MPIDI_COMM(comm, multi_leads_comm)->local_comm = NULL;
+            MPIDI_COMM(comm, multi_leads_comm)->node_comm = NULL;
+            MPIDI_COMM(comm, multi_leads_comm)->node_roots_comm = NULL;
+            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create multi-leaders_comm=%p\n",
+                          MPIDI_COMM(comm, multi_leads_comm));
+
+            MPIDI_COMM(comm, multi_leads_comm)->local_size = num_external;
+            MPIDI_COMM(comm, multi_leads_comm)->coll.pof2 =
+                MPL_pof2(MPIDI_COMM(comm, multi_leads_comm)->local_size);
+            MPIDI_COMM(comm, multi_leads_comm)->remote_size = num_external;
+
+            MPIR_Comm_map_irregular(MPIDI_COMM(comm, multi_leads_comm), comm,
+                                    external_procs, num_external, MPIR_COMM_MAP_DIR__L2L, NULL);
+
+            /* Notify device of communicator creation */
+            mpi_errno = MPID_Comm_commit_pre_hook(MPIDI_COMM(comm, multi_leads_comm));
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+            /* don't call MPIR_Comm_commit here */
+
+            /* Create collectives-specific infrastructure */
+            mpi_errno = MPIR_Coll_comm_init(MPIDI_COMM(comm, multi_leads_comm));
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+
+            MPIR_Comm_map_free(MPIDI_COMM(comm, multi_leads_comm));
+        }
+    }
+
+  fn_exit:
+    if (external_procs != NULL)
+        MPL_free(external_procs);
+    if (local_procs != NULL)
+        MPL_free(local_procs);
+    if (intranode_table != NULL)
+        MPL_free(intranode_table);
+    if (internode_table != NULL)
+        MPL_free(internode_table);
+
+    MPIR_FUNC_TERSE_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

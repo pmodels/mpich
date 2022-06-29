@@ -626,7 +626,8 @@ typedef struct MPIDI_Devcomm_t {
         struct MPIR_Comm *inter_node_leads_comm, *sub_node_comm, *intra_node_leads_comm;
         int spanned_num_nodes;  /* comm spans over these number of nodes */
         /* Pointers to store info of multi-leaders based compositions */
-        struct MPIDI_Multileads_comp_info_t *allreduce_comp_info;
+        struct MPIDI_Multileads_comp_info_t *alltoall_comp_info, *allgather_comp_info,
+            *allreduce_comp_info;
         int shm_size_per_lead;
 
         void *csel_comm;        /* collective selection handle */
@@ -640,6 +641,8 @@ typedef struct MPIDI_Multileads_comp_info_t {
 
 #define MPIDIG_COMM(comm,field) ((comm)->dev.ch4.am).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
+#define MPIDI_COMM_ALLTOALL(comm,field) ((comm)->dev.ch4.alltoall_comp_info)->field
+#define MPIDI_COMM_ALLGATHER(comm,field) ((comm)->dev.ch4.allgather_comp_info)->field
 #define MPIDI_COMM_ALLREDUCE(comm,field) ((comm)->dev.ch4.allreduce_comp_info)->field
 
 
