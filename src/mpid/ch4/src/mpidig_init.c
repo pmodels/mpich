@@ -79,11 +79,11 @@ int MPIDIG_am_init(void)
         MPIDI_global.per_vci[vci].posted_list = NULL;
         MPIDI_global.per_vci[vci].unexp_list = NULL;
 
-        mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIDIU_REQUEST_POOL_CELL_SIZE,
-                                                          MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK,
-                                                          0 /* unlimited */ ,
-                                                          host_alloc, host_free,
-                                                          &MPIDI_global.per_vci[vci].request_pool);
+        mpi_errno = MPIDU_genq_private_pool_create(MPIDIU_REQUEST_POOL_CELL_SIZE,
+                                                   MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK,
+                                                   0 /* unlimited */ ,
+                                                   host_alloc, host_free,
+                                                   &MPIDI_global.per_vci[vci].request_pool);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDI_global.per_vci[vci].cmpl_list = NULL;
@@ -171,7 +171,7 @@ void MPIDIG_am_finalize(void)
 
     MPIDIU_map_destroy(MPIDI_global.win_map);
     for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
-        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.per_vci[vci].request_pool);
+        MPIDU_genq_private_pool_destroy(MPIDI_global.per_vci[vci].request_pool);
     }
 
     MPIR_FUNC_EXIT;
