@@ -113,6 +113,41 @@ cvars:
       description : >-
         Defines the threshold of high-density datatype. The
         density is calculated by (datatype_size / datatype_num_contig_blocks).
+
+    - name        : MPIR_CVAR_CH4_PACK_BUFFER_SIZE
+      category    : CH4
+      type        : int
+      default     : 16384
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of buffers for packing/unpacking active messages in
+        each block of the pool. The size here should be greater or equal to the
+        max of the eager buffer limit of SHM and NETMOD.
+
+    - name        : MPIR_CVAR_CH4_NUM_PACK_BUFFERS_PER_CHUNK
+      category    : CH4
+      type        : int
+      default     : 64
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of buffers for packing/unpacking active messages in
+        each block of the pool.
+
+    - name        : MPIR_CVAR_CH4_MAX_NUM_PACK_BUFFERS
+      category    : CH4
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the max number of buffers for packing/unpacking buffers in the
+        pool. Use 0 for unlimited.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -313,6 +348,20 @@ static int set_runtime_configurations(void)
 #error "Thread Granularity:  Invalid"
 #endif
 
+static void *host_alloc_registered(uintptr_t size)
+{
+    void *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
+    MPIR_Assert(ptr);
+    MPIR_gpu_register_host(ptr, size);
+    return ptr;
+}
+
+static void host_free_registered(void *ptr)
+{
+    MPIR_gpu_unregister_host(ptr);
+    MPL_free(ptr);
+}
+
 /* Register CH4-specific hints */
 static void register_comm_hints(void)
 {
@@ -428,8 +477,17 @@ int MPID_Init(int requested, int *provided)
         else
             MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
 
-        /* TODO: workq */
+        /* Initialize registered host buffer pool to be used as temporary unpack buffers */
+        mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIR_CVAR_CH4_PACK_BUFFER_SIZE,
+                                                          MPIR_CVAR_CH4_NUM_PACK_BUFFERS_PER_CHUNK,
+                                                          MPIR_CVAR_CH4_MAX_NUM_PACK_BUFFERS,
+                                                          host_alloc_registered,
+                                                          host_free_registered,
+                                                          &MPIDI_global.per_vci[i].pack_buf_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+
     }
+
 
     /* internally does per-vci am initialization */
     MPIDIG_am_init();
@@ -577,6 +635,8 @@ int MPID_Finalize(void)
     }
 
     for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.per_vci[i].pack_buf_pool);
+
         int err;
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
