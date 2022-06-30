@@ -478,12 +478,12 @@ int MPID_Init(int requested, int *provided)
             MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
 
         /* Initialize registered host buffer pool to be used as temporary unpack buffers */
-        mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIR_CVAR_CH4_PACK_BUFFER_SIZE,
-                                                          MPIR_CVAR_CH4_NUM_PACK_BUFFERS_PER_CHUNK,
-                                                          MPIR_CVAR_CH4_MAX_NUM_PACK_BUFFERS,
-                                                          host_alloc_registered,
-                                                          host_free_registered,
-                                                          &MPIDI_global.per_vci[i].pack_buf_pool);
+        mpi_errno = MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_PACK_BUFFER_SIZE,
+                                                   MPIR_CVAR_CH4_NUM_PACK_BUFFERS_PER_CHUNK,
+                                                   MPIR_CVAR_CH4_MAX_NUM_PACK_BUFFERS,
+                                                   host_alloc_registered,
+                                                   host_free_registered,
+                                                   &MPIDI_global.per_vci[i].pack_buf_pool);
         MPIR_ERR_CHECK(mpi_errno);
 
     }
@@ -635,7 +635,7 @@ int MPID_Finalize(void)
     }
 
     for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
-        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.per_vci[i].pack_buf_pool);
+        MPIDU_genq_private_pool_destroy(MPIDI_global.per_vci[i].pack_buf_pool);
 
         int err;
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);

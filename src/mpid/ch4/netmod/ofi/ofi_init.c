@@ -867,7 +867,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
                 MPIR_gpu_free_host(MPIDI_OFI_global.per_vni[vni].am_bufs[i]);
 
-            MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.per_vni[vni].am_hdr_buf_pool);
+            MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vni[vni].am_hdr_buf_pool);
 
             MPIR_Assert(MPIDI_OFI_global.per_vni[vni].cq_buffered_static_head ==
                         MPIDI_OFI_global.per_vni[vni].cq_buffered_static_tail);
@@ -1459,12 +1459,12 @@ int ofi_am_init(void)
         MPL_COMPILE_TIME_ASSERT(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE
                                 >= sizeof(MPIDI_OFI_am_send_pipeline_request_t));
         for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
-            mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
-                                                              MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
-                                                              0 /* unlimited */ ,
-                                                              host_alloc, host_free,
-                                                              &MPIDI_OFI_global.
-                                                              per_vni[vni].am_hdr_buf_pool);
+            mpi_errno = MPIDU_genq_private_pool_create(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
+                                                       MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
+                                                       0 /* unlimited */ ,
+                                                       host_alloc, host_free,
+                                                       &MPIDI_OFI_global.
+                                                       per_vni[vni].am_hdr_buf_pool);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIDI_OFI_global.per_vni[vni].cq_buffered_dynamic_head = NULL;
