@@ -452,7 +452,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
 
 #define ALLOCATE_PACK_BUFFER_OR_DEFER(pack_buffer) \
     do { \
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vni[vni_src].pack_buf_pool, (void **) &(pack_buffer)); \
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vni_src].pack_buf_pool, (void **) &(pack_buffer)); \
         if (pack_buffer == NULL) { \
             if (!issue_deferred) { \
                 goto fn_deferred; \
