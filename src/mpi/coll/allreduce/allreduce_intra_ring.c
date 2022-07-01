@@ -22,14 +22,11 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     int send_rank, recv_rank, total_count;
     void *tmpbuf;
     int tag;
-    MPIR_Request **reqs;
-    int num_reqs = 2;           /* one send and one recv per transfer */
+    MPIR_Request *reqs[2];      /* one send and one recv per transfer */
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     nranks = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
-
-    MPIR_CHKLMEM_DECL(1);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
@@ -39,9 +36,6 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     MPIR_ERR_CHKANDJUMP(!cnts, mpi_errno, MPI_ERR_OTHER, "**nomem");
     displs = (MPI_Aint *) MPL_malloc(nranks * sizeof(MPI_Aint), MPL_MEM_COLL);
     MPIR_ERR_CHKANDJUMP(!displs, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    MPIR_CHKLMEM_MALLOC(reqs, MPIR_Request **, (num_reqs * sizeof(MPIR_Request *)), mpi_errno,
-                        "reqs", MPL_MEM_BUFFER);
 
     for (i = 0; i < nranks; i++)
         cnts[i] = 0;
@@ -77,7 +71,6 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     dst = (rank + 1) % nranks;
 
     for (i = 0; i < nranks - 1; i++) {
-        num_reqs = 0;
         recv_rank = (nranks + rank - 2 - i) % nranks;
         send_rank = (nranks + rank - 1 - i) % nranks;
 
@@ -86,8 +79,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno =
-            MPIC_Irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, &reqs[num_reqs++]);
+        mpi_errno = MPIC_Irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, &reqs[0]);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_OTHER;
@@ -97,7 +89,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
 
 
         mpi_errno = MPIC_Isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
-                               datatype, dst, tag, comm, &reqs[num_reqs++], errflag);
+                               datatype, dst, tag, comm, &reqs[1], errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_OTHER;
@@ -105,7 +97,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
 
-        mpi_errno = MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE, errflag);
+        mpi_errno = MPIC_Waitall(2, reqs, MPI_STATUSES_IGNORE, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_OTHER;
@@ -138,7 +130,6 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     MPL_free(cnts);
     MPL_free(displs);
     MPL_free(tmpbuf);
-    MPIR_CHKLMEM_FREEALL();
 
   fn_exit:
     if (mpi_errno_ret)
