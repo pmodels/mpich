@@ -24,12 +24,12 @@ cvars:
     - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE
       category    : CH4
       type        : int
-      default     : 69632
+      default     : 16384
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Size of each cell. 4KB * 17 is default to avoid a cache aliasing issue.
+        Size of each cell.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
