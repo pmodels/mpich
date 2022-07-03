@@ -856,7 +856,7 @@ static int MPIDI_OFI_gpu_progress_task(int vni);
 static int MPIDI_OFI_gpu_progress_send(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int engine_type = MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+    int engine_type = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_ENGINE_TYPE;
 
     while (MPIDI_OFI_global.gpu_send_queue) {
         char *host_buf = NULL;

@@ -129,7 +129,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
     void *wc_buf = NULL;
     int in_use MPL_UNUSED;
     MPIDI_OFI_gpu_task_t *task = NULL;
-    int engine_type = MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+    int engine_type = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_ENGINE_TYPE;
 
     MPIR_FUNC_ENTER;
 

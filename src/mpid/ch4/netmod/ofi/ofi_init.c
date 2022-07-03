@@ -511,6 +511,17 @@ cvars:
       description : >-
         Specifies the total number of buffers for GPU pipeline data transfer
 
+    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_ENGINE_TYPE
+      category    : CH4_OFI
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the GPU engine type for GPU pipeline, default is
+        MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
