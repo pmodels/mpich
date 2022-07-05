@@ -457,11 +457,6 @@ typedef struct {
     int num_comms_enabled_striping;     /* Number of active communicators with striping enabled */
     int num_comms_enabled_hashing;      /* Number of active communicators with hashingenabled */
 
-    /* GPU Queues */
-    MPIDI_OFI_gpu_task_t *gpu_queue[MPIDI_OFI_MAX_VNIS];
-    MPIDI_OFI_gpu_pending_recv_t *gpu_recv_queue;
-    MPIDI_OFI_gpu_pending_send_t *gpu_send_queue;
-
     /* Window/RMA Globals */
     void *win_map;
     /* OFI atomics limitation of each pair of <dtype, op> returned by the
@@ -476,8 +471,12 @@ typedef struct {
     /* stores the maximum of last recently used regular memory region key */
     uint64_t global_max_regular_mr_key;
 
-    /* pack buffers for GPU pipeline */
-    MPIDU_genq_private_pool_t gpu_pipeline_pool;
+    /* GPU pipeline */
+    MPIDU_genq_private_pool_t gpu_pipeline_send_pool;
+    MPIDU_genq_private_pool_t gpu_pipeline_recv_pool;
+    MPIDI_OFI_gpu_task_t *gpu_queue[MPIDI_OFI_MAX_VNIS];
+    MPIDI_OFI_gpu_pending_recv_t *gpu_recv_queue;
+    MPIDI_OFI_gpu_pending_send_t *gpu_send_queue;
 
     /* Process management and PMI globals */
     int pname_set;
