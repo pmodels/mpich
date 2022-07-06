@@ -47,10 +47,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
         goto unpack;
 
     /* Calculate the correct NICs. */
-    sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->recvcontext_id, MPIR_Process.rank,
-                                                  MPIDI_OFI_init_get_tag(match_bits));
-    receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank,
-                                                      MPIDI_OFI_init_get_tag(match_bits));
+    sender_nic =
+        MPIDI_OFI_multx_sender_nic_index(comm, comm->recvcontext_id, rank, comm->rank,
+                                         MPIDI_OFI_init_get_tag(match_bits));
+    receiver_nic =
+        MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank, comm->rank,
+                                           MPIDI_OFI_init_get_tag(match_bits));
     MPIDI_OFI_REQUEST(rreq, nic_num) = receiver_nic;
     ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
 
@@ -157,9 +159,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
 
     /* Calculate the correct NICs. */
-    sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->recvcontext_id, MPIR_Process.rank,
-                                                  tag);
-    receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank, tag);
+    sender_nic =
+        MPIDI_OFI_multx_sender_nic_index(comm, comm->recvcontext_id, rank, comm->rank, tag);
+    receiver_nic =
+        MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank, comm->rank, tag);
     MPIDI_OFI_REQUEST(rreq, nic_num) = receiver_nic;
     ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
 
