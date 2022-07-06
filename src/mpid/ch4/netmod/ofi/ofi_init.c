@@ -87,6 +87,16 @@ cvars:
         for OFI versions 1.5+. It is equivalent to using FI_MR_BASIC in versions of
         OFI older than 1.5.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_REGISTER_NULL
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, memory registration call supports registering with NULL addresses.
+
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_PROV_KEY
       category    : CH4_OFI
       type        : int
@@ -1420,6 +1430,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_ENABLE_SHARED_CONTEXTS: %d\n", MPIDI_OFI_ENABLE_SHARED_CONTEXTS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS: %d\n", MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_MR_ALLOCATED: %d\n", MPIDI_OFI_ENABLE_MR_ALLOCATED);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_MR_REGISTER_NULL: %d\n", MPIDI_OFI_ENABLE_MR_REGISTER_NULL);
     fprintf(stdout, "MPIDI_OFI_ENABLE_MR_PROV_KEY: %d\n", MPIDI_OFI_ENABLE_MR_PROV_KEY);
     fprintf(stdout, "MPIDI_OFI_ENABLE_TAGGED: %d\n", MPIDI_OFI_ENABLE_TAGGED);
     fprintf(stdout, "MPIDI_OFI_ENABLE_AM: %d\n", MPIDI_OFI_ENABLE_AM);
