@@ -954,7 +954,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
                                         0ULL,   /* In:  flags               */
                                         &mr,    /* Out: memregion object    */
                                         NULL), rc);     /* In:  context             */
-        mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], MPIDI_OFI_WIN(win).mr,
+        mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], mr,
                                       MPIDI_OFI_WIN(win).ep, MPIDI_OFI_WIN(win).cmpl_cntr);
         MPIR_ERR_CHECK(mpi_errno);
     }
