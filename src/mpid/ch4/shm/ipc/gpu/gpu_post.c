@@ -200,7 +200,9 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     MPIR_ERR_CHECK(mpi_errno);
 
     if (handle_obj == NULL) {
-        mpl_err = MPL_gpu_ipc_handle_create(pbase, &ipc_attr->ipc_handle.gpu.ipc_handle);
+        mpl_err =
+            MPL_gpu_ipc_handle_create(pbase, &ipc_attr->gpu_attr.device_attr,
+                                      &ipc_attr->ipc_handle.gpu.ipc_handle);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_create");
         ipc_attr->ipc_handle.gpu.handle_status = MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED;

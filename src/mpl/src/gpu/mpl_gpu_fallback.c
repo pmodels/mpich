@@ -31,7 +31,8 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id)
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
+int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
+                              MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     abort();
     return MPL_ERR_GPU_INTERNAL;
