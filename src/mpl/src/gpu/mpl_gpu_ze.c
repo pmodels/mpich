@@ -1171,25 +1171,18 @@ int MPL_gpu_ipc_get_handle_type(MPL_gpu_ipc_handle_type_t * type)
 }
 
 /* given a local device pointer, create an IPC handle */
-int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
+int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
+                              MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     int mpl_err = MPL_SUCCESS;
-    ze_result_t ret;
     int local_dev_id = -1;
     MPL_ze_ipc_handle_entry_t *cache_entry = NULL;
     MPL_ze_mem_id_entry_t *memid_entry = NULL;
-    MPL_gpu_device_attr ptr_attr;
     uint64_t mem_id = 0;
     void *pbase = NULL;
     uintptr_t len;
 
-    memset(ipc_handle, 0, sizeof(MPL_gpu_ipc_mem_handle_t));
-
-    memset(&ptr_attr, 0, sizeof(MPL_gpu_device_attr));
-    ret = zeMemGetAllocProperties(ze_context, ptr, &ptr_attr.prop, &ptr_attr.device);
-    ZE_ERR_CHECK(ret);
-
-    local_dev_id = device_to_dev_id(ptr_attr.device);
+    local_dev_id = device_to_dev_id(ptr_attr->device);
     if (local_dev_id == -1) {
         goto fn_fail;
     }
@@ -1201,7 +1194,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
 
     /* First check if a removal from the cache is needed */
     if (likely(ze_info.specialized_cache)) {
-        mem_id = ptr_attr.prop.id;
+        mem_id = ptr_attr->prop.id;
         HASH_FIND(hh, mem_id_cache, &pbase, sizeof(void *), memid_entry);
 
         if (memid_entry && memid_entry->mem_id != mem_id) {
@@ -1226,7 +1219,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     if (cache_entry && cache_entry->handle_cached) {
         memcpy(ipc_handle, &cache_entry->ipc_handle, sizeof(MPL_gpu_ipc_mem_handle_t));
     } else {
-        mpl_err = MPL_ze_ipc_handle_create(ptr, &ptr_attr, local_dev_id, true, ipc_handle);
+        mpl_err = MPL_ze_ipc_handle_create(ptr, ptr_attr, local_dev_id, true, ipc_handle);
         if (mpl_err != MPL_SUCCESS) {
             goto fn_fail;
         }
@@ -2094,6 +2087,8 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 
     h.pid = mypid;
     h.mem_id = mem_id;
+
+    memset(ipc_handle, 0, sizeof(MPL_gpu_ipc_mem_handle_t));
     memcpy(ipc_handle, &h, sizeof(fd_pid_t));
 
   fn_exit:
