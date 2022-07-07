@@ -84,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
 
         mpi_errno = MPIDI_GPU_get_ipc_type(&ipc_attr.ipc_type);
         MPIR_ERR_CHECK(mpi_errno);
-    } else {
+    } else if (!MPL_gpu_query_pointer_is_dev(buf, &ipc_attr.gpu_attr)) {
         mpi_errno = MPIDI_XPMEM_get_ipc_threshold(&ipc_attr.threshold.send_lmt_sz);
         MPIR_ERR_CHECK(mpi_errno);
 
