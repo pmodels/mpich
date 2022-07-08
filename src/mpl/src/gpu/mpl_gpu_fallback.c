@@ -4,6 +4,7 @@
  */
 
 #include "mpl.h"
+#include <assert.h>
 
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
@@ -148,10 +149,27 @@ bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
     return false;
 }
 
-void MPL_gpu_enqueue_trigger(volatile int *var, MPL_gpu_stream_t stream)
+void MPL_gpu_enqueue_trigger(MPL_gpu_event_t * var, MPL_gpu_stream_t stream)
 {
+    assert(0);
 }
 
-void MPL_gpu_enqueue_wait(volatile int *var, MPL_gpu_stream_t stream)
+void MPL_gpu_enqueue_wait(MPL_gpu_event_t * var, MPL_gpu_stream_t stream)
 {
+    assert(0);
+}
+
+void MPL_gpu_event_init_count(MPL_gpu_event_t * var, int count)
+{
+    *var = count;
+}
+
+void MPL_gpu_event_complete(MPL_gpu_event_t * var)
+{
+    *var -= 1;
+}
+
+bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var)
+{
+    return (*var) <= 0;
 }
