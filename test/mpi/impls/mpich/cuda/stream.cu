@@ -36,9 +36,21 @@ void saxpy(int n, float a, float *x, float *y)
   if (i < n) y[i] = a*x[i] + y[i];
 }
 
-int main(void)
+static int need_progress_thread = 0;
+static void parse_args(int argc, char **argv)
+{
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-progress-thread") == 0) {
+            need_progress_thread = 1;
+        }
+    }
+}
+
+int main(int argc, char **argv)
 {
     int errs = 0;
+
+    parse_args(argc, argv);
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -70,6 +82,10 @@ int main(void)
     MPIX_Stream_create(info, &mpi_stream);
 
     MPI_Info_free(&info);
+
+    if (need_progress_thread) {
+        MPIX_Start_progress_thread(mpi_stream);
+    }
 
     MPI_Comm stream_comm;
     MPIX_Stream_comm_create(MPI_COMM_WORLD, mpi_stream, &stream_comm);
@@ -135,6 +151,9 @@ int main(void)
         errs += check_result(y);
     }
 
+    if (need_progress_thread) {
+        MPIX_Stop_progress_thread(mpi_stream);
+    }
 
     MPI_Comm_free(&stream_comm);
     MPIX_Stream_free(&mpi_stream);
