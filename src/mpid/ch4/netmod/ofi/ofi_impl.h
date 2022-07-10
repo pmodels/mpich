@@ -856,7 +856,7 @@ static int MPIDI_OFI_gpu_progress_task(int vni);
 static int MPIDI_OFI_gpu_progress_send(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int engine_type = MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+    int engine_type = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_ENGINE_TYPE;
 
     while (MPIDI_OFI_global.gpu_send_queue) {
         char *host_buf = NULL;
@@ -873,7 +873,7 @@ static int MPIDI_OFI_gpu_progress_send(void)
                 MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ ? MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ
                 : send_task->left_sz;
             host_buf = NULL;
-            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_pool,
+            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_send_pool,
                                                (void **) &host_buf);
             if (host_buf == NULL) {
                 goto fn_exit;
@@ -928,7 +928,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_progress_recv(void)
         MPIR_Request *rreq = chunk_req->parent;
         void *host_buf = chunk_req->buf;
         if (!host_buf) {
-            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_pool,
+            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool,
                                                (void **) &host_buf);
             if (!host_buf) {
                 break;
@@ -972,13 +972,13 @@ static int MPIDI_OFI_gpu_progress_task(int vni)
             goto fn_exit;
         }
 
-        MPIR_gpu_req yreq = task->yreq;
+        MPIR_gpu_req *yreq = &task->yreq;
         int completed = 0;
-        if (yreq.type == MPIR_GPU_REQUEST) {
-            mpi_errno = MPL_gpu_test(&yreq.u.gpu_req, &completed);
+        if (yreq->type == MPIR_GPU_REQUEST) {
+            mpi_errno = MPL_gpu_test(&yreq->u.gpu_req, &completed);
             MPIR_ERR_CHECK(mpi_errno);
-        } else if (yreq.type == MPIR_TYPEREP_REQUEST) {
-            MPIR_Typerep_test(yreq.u.y_req, &completed);
+        } else if (yreq->type == MPIR_TYPEREP_REQUEST) {
+            MPIR_Typerep_test(yreq->u.y_req, &completed);
         } else {
             completed = 1;
         }
@@ -1049,7 +1049,7 @@ static int MPIDI_OFI_gpu_progress_task(int vni)
                 DL_DELETE(MPIDI_OFI_global.gpu_queue[vni], task);
                 /* Free host buffer, yaksa request and task. */
                 if (task->type == MPIDI_OFI_PIPELINE_RECV)
-                    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.gpu_pipeline_pool,
+                    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool,
                                                       task->buf);
                 else
                     MPIDI_OFI_gpu_free_pack_buffer(task->buf);

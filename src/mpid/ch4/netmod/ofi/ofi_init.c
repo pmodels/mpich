@@ -511,6 +511,17 @@ cvars:
       description : >-
         Specifies the total number of buffers for GPU pipeline data transfer
 
+    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_ENGINE_TYPE
+      category    : CH4_OFI
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the GPU engine type for GPU pipeline, default is
+        MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -899,7 +910,15 @@ int MPIDI_OFI_init_local(int *tag_bits)
                                                   MPIR_CVAR_CH4_OFI_GPU_PIPELINE_MAX_NUM_BUFFERS,
                                                   host_alloc_registered,
                                                   host_free_registered,
-                                                  &MPIDI_OFI_global.gpu_pipeline_pool);
+                                                  &MPIDI_OFI_global.gpu_pipeline_send_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno =
+            MPIDU_genq_private_pool_create_unsafe(MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ,
+                                                  MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK,
+                                                  MPIR_CVAR_CH4_OFI_GPU_PIPELINE_MAX_NUM_BUFFERS,
+                                                  host_alloc_registered,
+                                                  host_free_registered,
+                                                  &MPIDI_OFI_global.gpu_pipeline_recv_pool);
         MPIR_ERR_CHECK(mpi_errno);
         MPIDI_OFI_global.gpu_send_queue = NULL;
         MPIDI_OFI_global.gpu_recv_queue = NULL;
@@ -1295,7 +1314,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     }
 
     if (MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE) {
-        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.gpu_pipeline_pool);
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.gpu_pipeline_send_pool);
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.gpu_pipeline_recv_pool);
     }
 
     int err;

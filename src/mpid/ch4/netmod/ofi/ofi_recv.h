@@ -225,7 +225,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT;
             /* Only post first recv with pipeline chunk size. */
             char *host_buf = NULL;
-            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_pool,
+            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool,
                                                (void **) &host_buf);
 
             fi_addr_t remote_addr;
