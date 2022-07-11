@@ -168,11 +168,15 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
      * we skip trial and return immediately. When FI_MR_ALLOCATED is not set, however,
      * it lacks documentation defining whether the provider can accept NULL and whether
      * it means registration of the entire virtual address space, although we have observed
-     * successful use in existing providers. Thus, we take a try here. */
-
+     * successful use in most of the existing providers. Thus, we take a try here for most
+     * providers. For providers like CXI, FI_MR_ALLOCATED is not set but registration with
+     * non-zero address is not supported. For such providers, registration is skipped by
+     * using the MPIDI_OFI_ENABLE_MR_REGISTER_NULL capability set variable. */
     int rc = 0, allrc = 0;
     MPIDI_OFI_WIN(win).mr = NULL;
-    if (base || (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC && !MPIDI_OFI_ENABLE_MR_ALLOCATED)) {
+
+    if (base || (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC &&
+                 !MPIDI_OFI_ENABLE_MR_ALLOCATED && MPIDI_OFI_ENABLE_MR_REGISTER_NULL)) {
         size_t len;
         if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
             len = UINTPTR_MAX - (uintptr_t) base;
@@ -202,7 +206,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
         load_acc_hint(win);
         goto fn_exit;
     } else {
-        /* FIXME: what's in the branch? If it can't happen, add an assertion here */
+        /* Do nothing */
     }
 
     /* Check if any process fails to register. If so, release local MR and force AM path. */
@@ -950,7 +954,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
                                         0ULL,   /* In:  flags               */
                                         &mr,    /* Out: memregion object    */
                                         NULL), rc);     /* In:  context             */
-        mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], MPIDI_OFI_WIN(win).mr,
+        mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], mr,
                                       MPIDI_OFI_WIN(win).ep, MPIDI_OFI_WIN(win).cmpl_cntr);
         MPIR_ERR_CHECK(mpi_errno);
     }
