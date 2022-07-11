@@ -293,6 +293,7 @@ typedef struct {
     unsigned enable_tagged:1;
     unsigned enable_am:1;
     unsigned enable_rma:1;
+    unsigned enable_mr_register_null:1;
     unsigned enable_atomics:1;
     unsigned enable_pt2pt_nopack:1;
     unsigned enable_hmem:1;
