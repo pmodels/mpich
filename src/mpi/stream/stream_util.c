@@ -34,7 +34,7 @@ int MPIR_allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req)
 
     /* stream vci are only accessed within a serialized context */
     (*req) = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__ENQUEUE, vci, 1);
-    (*req)->u.enqueue.gpu_stream = stream_ptr->u.gpu_stream;
+    (*req)->u.enqueue.stream_ptr = stream_ptr;
     (*req)->u.enqueue.real_request = NULL;
 
   fn_exit:
