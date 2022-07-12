@@ -214,7 +214,7 @@ struct MPIR_Request {
                                                  * Value is 0 or 1. */
         } part;                 /* kind : MPIR_REQUEST_KIND__PART_SEND or MPIR_REQUEST_KIND__PART_RECV */
         struct {
-            MPL_gpu_stream_t gpu_stream;
+            MPIR_Stream *stream_ptr;
             struct MPIR_Request *real_request;
             bool is_send;
             void *data;

@@ -381,7 +381,7 @@ int MPIR_Wait_enqueue_impl(MPIR_Request * req_ptr, MPI_Status * status)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Assert(req_ptr && req_ptr->kind == MPIR_REQUEST_KIND__ENQUEUE);
 
-    MPL_gpu_stream_t gpu_stream = req_ptr->u.enqueue.gpu_stream;
+    MPL_gpu_stream_t gpu_stream = req_ptr->u.enqueue.stream_ptr->u.gpu_stream;
     if (!req_ptr->u.enqueue.is_send) {
         struct recv_data *p = req_ptr->u.enqueue.data;
         p->status = status;
@@ -465,9 +465,9 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
 
         MPIR_Assert(enqueue_req && enqueue_req->kind == MPIR_REQUEST_KIND__ENQUEUE);
         if (i == 0) {
-            gpu_stream = enqueue_req->u.enqueue.gpu_stream;
+            gpu_stream = enqueue_req->u.enqueue.stream_ptr->u.gpu_stream;
         } else {
-            MPIR_Assert(gpu_stream == enqueue_req->u.enqueue.gpu_stream);
+            MPIR_Assert(gpu_stream == enqueue_req->u.enqueue.stream_ptr->u.gpu_stream);
         }
     }
 
