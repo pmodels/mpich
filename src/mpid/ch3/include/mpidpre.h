@@ -821,6 +821,9 @@ int MPID_Isend_enqueue(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                        int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** req);
 int MPID_Irecv_enqueue(void *buf, MPI_Aint count, MPI_Datatype datatype,
                        int source, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** req);
+int MPID_Wait_enqueue(MPIR_Request * req_ptr, MPI_Status * status);
+int MPID_Waitall_enqueue(int count, MPI_Request * array_of_requests,
+                         MPI_Status * array_of_statuses);
 
 void MPID_Progress_start(MPID_Progress_state * state);
 int MPID_Progress_wait(MPID_Progress_state * state);

@@ -34,6 +34,13 @@ cvars:
         workq = stream_ptr->dev.workq; \
     } while (0)
 
+#define REQUEST_GET_STREAM_AND_WORKQ(req, gpu_stream, workq) \
+    do { \
+        MPIR_Stream *stream_ptr = req->u.enqueue.stream_ptr; \
+        gpu_stream = stream_ptr->u.gpu_stream; \
+        workq = stream_ptr->dev.workq; \
+    } while (0)
+
 /* ---- send enqueue ---- */
 struct send_data {
     const void *buf;
@@ -330,6 +337,112 @@ int MPID_Irecv_enqueue(void *buf, MPI_Aint count, MPI_Datatype datatype,
 
     MPL_gpu_enqueue_trigger(trigger_event, gpu_stream);
     MPIDU_stream_workq_enqueue(workq, op);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* ---- wait enqueue ---- */
+int MPID_Wait_enqueue(MPIR_Request * req_ptr, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    if (!MPIR_CVAR_CH4_ENABLE_STREAM_WORKQ) {
+        mpi_errno = MPIR_Wait_enqueue_impl(req_ptr, status);
+        goto fn_exit;
+    }
+
+    MPL_gpu_stream_t gpu_stream;
+    MPIDU_stream_workq_t *workq;
+    REQUEST_GET_STREAM_AND_WORKQ(req_ptr, gpu_stream, workq);
+
+    MPIDU_stream_workq_op_t *op;
+    op = MPL_malloc(sizeof(MPIDU_stream_workq_op_t), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!op, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPL_gpu_event_t *trigger_event;
+    MPL_gpu_event_t *done_event;
+    MPIDU_stream_workq_alloc_event(&trigger_event);
+    MPIDU_stream_workq_alloc_event(&done_event);
+
+    op->cb = NULL;
+    op->data = NULL;
+    op->trigger_event = trigger_event;
+    op->done_event = done_event;
+    op->request = &req_ptr->u.enqueue.real_request;
+    if (status != MPI_STATUS_IGNORE) {
+        op->status = status;
+    } else {
+        op->status = NULL;
+    }
+
+    MPL_gpu_enqueue_trigger(trigger_event, gpu_stream);
+    MPL_gpu_enqueue_wait(done_event, gpu_stream);
+    MPIDU_stream_workq_enqueue(workq, op);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* ---- waitall enqueue ---- */
+int MPID_Waitall_enqueue(int count, MPI_Request * array_of_requests, MPI_Status * array_of_statuses)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    if (!MPIR_CVAR_CH4_ENABLE_STREAM_WORKQ) {
+        mpi_errno = MPIR_Waitall_enqueue_impl(count, array_of_requests, array_of_statuses);
+        goto fn_exit;
+    }
+
+    MPL_gpu_event_t *trigger_event;
+    MPL_gpu_event_t *done_event;
+    MPIDU_stream_workq_alloc_event(&trigger_event);
+    MPIDU_stream_workq_alloc_event(&done_event);
+    MPL_gpu_event_init_count(done_event, count);
+
+    MPL_gpu_stream_t the_gpu_stream;
+    for (int i = 0; i < count; i++) {
+        MPIR_Request *req_ptr;
+        MPIR_Request_get_ptr(array_of_requests[i], req_ptr);
+        MPIR_Assert(req_ptr && req_ptr->kind == MPIR_REQUEST_KIND__ENQUEUE);
+
+        MPL_gpu_stream_t gpu_stream;
+        MPIDU_stream_workq_t *workq;
+        REQUEST_GET_STREAM_AND_WORKQ(req_ptr, gpu_stream, workq);
+
+        if (i == 0) {
+            MPL_gpu_enqueue_trigger(trigger_event, gpu_stream);
+            MPL_gpu_enqueue_wait(done_event, gpu_stream);
+            the_gpu_stream = gpu_stream;
+        } else {
+            MPIR_Assertp(the_gpu_stream == gpu_stream);
+        }
+
+        MPIDU_stream_workq_op_t *op;
+        op = MPL_malloc(sizeof(MPIDU_stream_workq_op_t), MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!op, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+        op->cb = NULL;
+        op->data = NULL;
+        op->trigger_event = trigger_event;
+        op->done_event = done_event;
+        op->request = &req_ptr->u.enqueue.real_request;
+        if (array_of_statuses != MPI_STATUSES_IGNORE) {
+            op->status = &array_of_statuses[i];
+        } else {
+            op->status = NULL;
+        }
+
+        MPIDU_stream_workq_enqueue(workq, op);
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
