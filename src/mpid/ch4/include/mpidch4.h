@@ -317,6 +317,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *, const MPI_Aint *, cons
                                             MPIR_Comm *, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Send_enqueue(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                       int dest, int tag, MPIR_Comm * comm_ptr);
+int MPID_Recv_enqueue(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                      int source, int tag, MPIR_Comm * comm_ptr, MPI_Status * status);
 int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg);
 
 /* This function is not exposed to the upper layers but functions in a way

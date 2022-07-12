@@ -176,6 +176,8 @@ MPIX_Recv_enqueue:
     tag: TAG, [message tag or MPI_ANY_TAG]
     comm: COMMUNICATOR
     status: STATUS, direction=out
+    .impl: mpid
+    .decl: MPIR_Recv_enqueue_impl
 
 MPIX_Isend_enqueue:
     buf: BUFFER, constant=True, [initial address of send buffer]
