@@ -204,11 +204,15 @@ MPIX_Irecv_enqueue:
 MPIX_Wait_enqueue:
     request: REQUEST, direction=inout, [request]
     status: STATUS, direction=out
+    .impl: mpid
+    .decl: MPIR_Wait_enqueue_impl
 
 MPIX_Waitall_enqueue:
     count: ARRAY_LENGTH_NNI, [lists length]
     array_of_requests: REQUEST, direction=inout, length=count, [array of requests]
     array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects]
+    .impl: mpid
+    .decl: MPIR_Waitall_enqueue_impl
 { -- error_check -- array_of_statuses
     if (count > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);

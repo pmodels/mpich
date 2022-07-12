@@ -323,6 +323,9 @@ int MPID_Isend_enqueue(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                        int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** req);
 int MPID_Irecv_enqueue(void *buf, MPI_Aint count, MPI_Datatype datatype,
                        int source, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** req);
+int MPID_Wait_enqueue(MPIR_Request * req_ptr, MPI_Status * status);
+int MPID_Waitall_enqueue(int count, MPI_Request * array_of_requests,
+                         MPI_Status * array_of_statuses);
 int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg);
 
 /* This function is not exposed to the upper layers but functions in a way
