@@ -187,6 +187,8 @@ MPIX_Isend_enqueue:
     tag: TAG, [message tag]
     comm: COMMUNICATOR
     request: REQUEST, direction=out
+    .impl: mpid
+    .decl: MPIR_Isend_enqueue_impl
 
 MPIX_Irecv_enqueue:
     buf: BUFFER, direction=out, [initial address of receive buffer]
@@ -194,9 +196,10 @@ MPIX_Irecv_enqueue:
     datatype: DATATYPE, [datatype of each receive buffer element]
     source: RANK, [rank of source or MPI_ANY_SOURCE]
     tag: TAG, [message tag or MPI_ANY_TAG]
-
     comm: COMMUNICATOR
     request: REQUEST, direction=out
+    .impl: mpid
+    .decl: MPIR_Irecv_enqueue_impl
 
 MPIX_Wait_enqueue:
     request: REQUEST, direction=inout, [request]
