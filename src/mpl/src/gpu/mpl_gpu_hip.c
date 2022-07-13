@@ -123,6 +123,17 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     goto fn_exit;
 }
 
+int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
+{
+    MPL_pointer_attr_t a;
+
+    if (attr == NULL) {
+        MPL_gpu_query_pointer_attr(ptr, &a);
+        attr = &a;
+    }
+    return attr->type == MPL_GPU_POINTER_DEV;
+}
+
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
                               MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
