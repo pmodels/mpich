@@ -123,7 +123,7 @@ mpl_includedir=""
 AC_SUBST([mpl_includedir])
 mpl_lib=""
 AC_SUBST([mpl_lib])
-m4_define([mpl_embedded_dir],[mpl])
+m4_define([mpl_embedded_dir],[modules/mpl])
 PAC_CONFIG_MPL
 
 # Documentation
@@ -374,7 +374,7 @@ AC_SUBST([hwloc_lib])
 for hydra_topolib in ${hydra_topolibs}; do
     case "$hydra_topolib" in
 	hwloc)
-                m4_define([hwloc_embedded_dir],[tools/topo/hwloc/hwloc])
+                m4_define([hwloc_embedded_dir],[modules/hwloc])
                 PAC_CONFIG_HWLOC
 
 		if test "$pac_have_hwloc" = "yes" ; then
