@@ -24,12 +24,12 @@ cvars:
     - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE
       category    : CH4
       type        : int
-      default     : 69632
+      default     : 16384
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Size of each cell. 4KB * 17 is default to avoid a cache aliasing issue.
+        Size of each cell.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -59,10 +59,10 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
             transport->size_of_cell = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE;
 
             mpi_errno =
-                MPIDU_genq_shmem_pool_create_unsafe(transport->size_of_cell, transport->num_cells,
-                                                    MPIDI_POSIX_global.num_local,
-                                                    MPIDI_POSIX_global.my_local_rank,
-                                                    &transport->cell_pool);
+                MPIDU_genq_shmem_pool_create(transport->size_of_cell, transport->num_cells,
+                                             MPIDI_POSIX_global.num_local,
+                                             MPIDI_POSIX_global.my_local_rank,
+                                             &transport->cell_pool);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* Create the shared memory regions that will be used for the iqueue cells and terminals. */
@@ -101,7 +101,7 @@ int MPIDI_POSIX_iqueue_finalize(void)
 
             mpi_errno = MPIDU_Init_shm_free(transport->terminals);
             MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno = MPIDU_genq_shmem_pool_destroy_unsafe(transport->cell_pool);
+            mpi_errno = MPIDU_genq_shmem_pool_destroy(transport->cell_pool);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

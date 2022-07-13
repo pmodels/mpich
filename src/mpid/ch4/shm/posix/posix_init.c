@@ -153,12 +153,12 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
     MPIDI_POSIX_global.num_vsis = MPIDI_global.n_total_vcis;
     /* This is used to track messages that the eager submodule was not ready to send. */
     for (int vsi = 0; vsi < MPIDI_global.n_total_vcis; vsi++) {
-        mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE,
-                                                          MPIDI_POSIX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
-                                                          0 /* unlimited */ ,
-                                                          host_alloc, host_free,
-                                                          &MPIDI_POSIX_global.
-                                                          per_vsi[vsi].am_hdr_buf_pool);
+        mpi_errno = MPIDU_genq_private_pool_create(MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE,
+                                                   MPIDI_POSIX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
+                                                   0 /* unlimited */ ,
+                                                   host_alloc, host_free,
+                                                   &MPIDI_POSIX_global.
+                                                   per_vsi[vsi].am_hdr_buf_pool);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDI_POSIX_global.per_vsi[vsi].postponed_queue = NULL;
@@ -252,7 +252,7 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     }
 
     for (int vsi = 0; vsi < MPIDI_global.n_total_vcis; vsi++) {
-        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_POSIX_global.per_vsi[vsi].am_hdr_buf_pool);
+        MPIDU_genq_private_pool_destroy(MPIDI_POSIX_global.per_vsi[vsi].am_hdr_buf_pool);
         MPL_free(MPIDI_POSIX_global.per_vsi[vsi].active_rreq);
     }
 

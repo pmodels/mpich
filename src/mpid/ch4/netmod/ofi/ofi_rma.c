@@ -42,7 +42,7 @@ void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq)
         }
 
         MPIDI_OFI_pack_chunk *next = chunk->next;
-        MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vni[vni].pack_buf_pool,
+        MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vni].pack_buf_pool,
                                           chunk->pack_buffer);
         MPL_free(chunk);
         chunk = next;
@@ -195,8 +195,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     int j = req->noncontig.put.target.iov_cur;
     size_t msg_len;
     while (req->noncontig.put.origin.pack_offset < req->noncontig.put.origin.total_bytes) {
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vni[vni].pack_buf_pool,
-                                           &pack_buffer);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vni].pack_buf_pool, &pack_buffer);
         if (pack_buffer == NULL)
             break;
 
@@ -286,8 +285,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     int j = req->noncontig.get.target.iov_cur;
     size_t msg_len;
     while (req->noncontig.get.origin.pack_offset < req->noncontig.get.origin.total_bytes) {
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vni[vni].pack_buf_pool,
-                                           &pack_buffer);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vni].pack_buf_pool, &pack_buffer);
         if (pack_buffer == NULL)
             break;
 
