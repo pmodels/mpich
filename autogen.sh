@@ -314,11 +314,12 @@ fn_copy_confdb_etc() {
     if test "$do_hydra" = "yes" ; then
         confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
         if test "$do_quick" = "no" ; then
-            sync_external src/mpl src/pm/hydra/mpl
-            sync_external modules/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
+            mkdir -p src/pm/hydra/modules
+            sync_external src/mpl src/pm/hydra/modules/mpl
+            sync_external modules/hwloc src/pm/hydra/modules/hwloc
             # remove .git directories to avoid confusing git clean
-            rm -rf src/pm/hydra/tools/topo/hwloc/hwloc/.git
-            confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
+            rm -rf src/pm/hydra/modules/hwloc/.git
+            confdb_dirs="${confdb_dirs} src/pm/hydra/modules/mpl/confdb"
         fi
     fi
     if test "$do_hydra2" = "yes" ; then

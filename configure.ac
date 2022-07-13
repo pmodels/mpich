@@ -97,6 +97,7 @@ dnl
 dnl Note that no executable statements are allowed (and any are silently
 dnl dropped) before AC_INIT.
 
+m4_define([MPICH_CONFIGURE], 1)
 m4_include([maint/version.m4])
 dnl 2nd arg is intentionally underquoted
 AC_INIT([MPICH],

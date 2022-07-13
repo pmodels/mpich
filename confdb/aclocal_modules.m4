@@ -13,7 +13,7 @@ AC_DEFUN([PAC_CONFIG_MPL_EMBEDDED],[
 
 AC_DEFUN([PAC_CONFIG_MPL],[
     dnl NOTE: we only support embedded mpl
-    m4_if(mpl_embedded_dir, [src/mpl], [
+    m4_ifdef([MPICH_CONFIGURE], [
         dnl ---- the main MPICH configure ----
         PAC_CONFIG_MPL_EMBEDDED
         PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
@@ -84,7 +84,7 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
     fi
 
     if test "$with_hwloc" = "embedded" ; then
-        m4_if(hwloc_embedded_dir, [modules/hwloc], [
+        m4_ifdef([MPICH_CONFIGURE], [
             dnl ---- the main MPICH configure ----
             hwloclib="modules/hwloc/hwloc/libhwloc_embedded.la"
             if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$hwloclib"; then
