@@ -51,10 +51,9 @@ typedef struct MPIDU_genq_private_pool {
 
 static int cell_block_alloc(private_pool_s * pool, cell_block_s ** block);
 
-int MPIDU_genq_private_pool_create_unsafe(intptr_t cell_size, intptr_t num_cells_in_block,
-                                          intptr_t max_num_cells, MPIDU_genq_malloc_fn malloc_fn,
-                                          MPIDU_genq_free_fn free_fn,
-                                          MPIDU_genq_private_pool_t * pool)
+int MPIDU_genq_private_pool_create(intptr_t cell_size, intptr_t num_cells_in_block,
+                                   intptr_t max_num_cells, MPIDU_genq_malloc_fn malloc_fn,
+                                   MPIDU_genq_free_fn free_fn, MPIDU_genq_private_pool_t * pool)
 {
     int rc = MPI_SUCCESS;
     private_pool_s *pool_obj;
@@ -89,7 +88,7 @@ int MPIDU_genq_private_pool_create_unsafe(intptr_t cell_size, intptr_t num_cells
     return rc;
 }
 
-int MPIDU_genq_private_pool_destroy_unsafe(MPIDU_genq_private_pool_t pool)
+int MPIDU_genq_private_pool_destroy(MPIDU_genq_private_pool_t pool)
 {
     int rc = MPI_SUCCESS;
     private_pool_s *pool_obj = (private_pool_s *) pool;
@@ -263,7 +262,7 @@ int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell
     } else if (block->num_used_cells == 0) {
         /* Avoid frequent re-allocation by preserving the last block.
          * All blocks will be freed when the pool is destroyed */
-        if (pool_obj->num_blocks > 1) {
+        if (pool_obj->num_blocks > 1 && pool_obj->max_num_blocks == 0) {
             remove_free_blocks(pool_obj, block);
             DL_DELETE(pool_obj->cell_blocks, block);
             cell_block_free(pool_obj, block);

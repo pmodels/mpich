@@ -199,7 +199,7 @@ static int am_isend_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request *
     msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
     MPID_Request_complete(sreq);
 
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vni[vni].pack_buf_pool,
+    MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vni].pack_buf_pool,
                                       MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer));
     MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer) = NULL;
     mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
@@ -230,18 +230,17 @@ static int am_isend_pipeline_event(int vni, struct fi_cq_tagged_entry *wc,
                                    MPIR_Request * dont_use_me)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_am_header_t *msg_hdr;
     MPIDI_OFI_am_send_pipeline_request_t *ofi_req;
     MPIR_Request *sreq = NULL;
 
     MPIR_FUNC_ENTER;
 
     ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_send_pipeline_request_t, context);
-    msg_hdr = ofi_req->msg_hdr;
+    int handler_id = ((MPIDI_OFI_am_header_t *) ofi_req->msg_hdr)->handler_id;
     sreq = ofi_req->sreq;
     MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
 
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vni[vni].pack_buf_pool,
+    MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vni].pack_buf_pool,
                                       ofi_req->pack_buffer);
 
     MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.per_vni[vni].am_hdr_buf_pool, ofi_req);
@@ -249,7 +248,7 @@ static int am_isend_pipeline_event(int vni, struct fi_cq_tagged_entry *wc,
     int is_done = MPIDIG_am_send_async_finish_seg(sreq);
 
     if (is_done) {
-        mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
+        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
     }
 
     MPIR_ERR_CHECK(mpi_errno);

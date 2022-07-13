@@ -324,28 +324,6 @@ cvars:
         Specifies the maximum number of iovecs to allocate for RMA operations
         to/from noncontiguous buffers.
 
-    - name        : MPIR_CVAR_CH4_OFI_NUM_PACK_BUFFERS_PER_CHUNK
-      category    : CH4_OFI
-      type        : int
-      default     : 16
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Specifies the number of buffers for packing/unpacking messages in
-        each block of the pool.
-
-    - name        : MPIR_CVAR_CH4_OFI_MAX_NUM_PACK_BUFFERS
-      category    : CH4_OFI
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Specifies the max number of buffers for packing/unpacking messages
-        in the pool. Use 0 for unlimited.
-
     - name        : MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE
       category    : CH4_OFI
       type        : int
@@ -433,9 +411,7 @@ static int ofi_am_init(void);
 static int ofi_am_post_recv(int vni, int nic);
 
 static void *host_alloc(uintptr_t size);
-static void *host_alloc_registered(uintptr_t size);
 static void host_free(void *ptr);
-static void host_free_registered(void *ptr);
 
 static int ofi_pvar_init(void)
 {
@@ -501,22 +477,8 @@ static void *host_alloc(uintptr_t size)
     return MPL_malloc(size, MPL_MEM_BUFFER);
 }
 
-static void *host_alloc_registered(uintptr_t size)
-{
-    void *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
-    MPIR_Assert(ptr);
-    MPIR_gpu_register_host(ptr, size);
-    return ptr;
-}
-
 static void host_free(void *ptr)
 {
-    MPL_free(ptr);
-}
-
-static void host_free_registered(void *ptr)
-{
-    MPIR_gpu_unregister_host(ptr);
     MPL_free(ptr);
 }
 
@@ -634,17 +596,8 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* index datatypes for RMA atomics. */
     MPIDI_OFI_index_datatypes(MPIDI_OFI_global.ctx[0].tx);
 
-    /* Create pack buffer pool */
-    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
-        mpi_errno =
-            MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE,
-                                                  MPIR_CVAR_CH4_OFI_NUM_PACK_BUFFERS_PER_CHUNK,
-                                                  MPIR_CVAR_CH4_OFI_MAX_NUM_PACK_BUFFERS,
-                                                  host_alloc_registered,
-                                                  host_free_registered,
-                                                  &MPIDI_OFI_global.per_vni[vni].pack_buf_pool);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+    /* make sure ch4 pack buffer pool has sufficient cell size */
+    MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
 
     ofi_am_init();
     ofi_am_post_recv(0, 0);
@@ -914,16 +867,12 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
                 MPIR_gpu_free_host(MPIDI_OFI_global.per_vni[vni].am_bufs[i]);
 
-            MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.per_vni[vni].am_hdr_buf_pool);
+            MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vni[vni].am_hdr_buf_pool);
 
             MPIR_Assert(MPIDI_OFI_global.per_vni[vni].cq_buffered_static_head ==
                         MPIDI_OFI_global.per_vni[vni].cq_buffered_static_tail);
             MPIR_Assert(NULL == MPIDI_OFI_global.per_vni[vni].cq_buffered_dynamic_head);
         }
-    }
-
-    for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
-        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.per_vni[vni].pack_buf_pool);
     }
 
     int err;
@@ -1510,12 +1459,12 @@ int ofi_am_init(void)
         MPL_COMPILE_TIME_ASSERT(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE
                                 >= sizeof(MPIDI_OFI_am_send_pipeline_request_t));
         for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
-            mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
-                                                              MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
-                                                              0 /* unlimited */ ,
-                                                              host_alloc, host_free,
-                                                              &MPIDI_OFI_global.
-                                                              per_vni[vni].am_hdr_buf_pool);
+            mpi_errno = MPIDU_genq_private_pool_create(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
+                                                       MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
+                                                       0 /* unlimited */ ,
+                                                       host_alloc, host_free,
+                                                       &MPIDI_OFI_global.
+                                                       per_vni[vni].am_hdr_buf_pool);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIDI_OFI_global.per_vni[vni].cq_buffered_dynamic_head = NULL;
