@@ -102,7 +102,8 @@ int hcoll_initialize(void)
 
         MPIR_Progress_hook_activate(hcoll_progress_hook_id);
     }
-    MPIR_Add_finalize(hcoll_destroy, 0, 0);
+    /* set priority to finalize before finalizing world comm */
+    MPIR_Add_finalize(hcoll_destroy, 0, MPIR_FINALIZE_CALLBACK_PRIO + 1);
 
     CHECK_ENABLE_ENV_VARS(BARRIER, barrier);
     CHECK_ENABLE_ENV_VARS(BCAST, bcast);
