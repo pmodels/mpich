@@ -1534,6 +1534,30 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     goto fn_exit;
 }
 
+int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
+{
+    ze_result_t ret ATTRIBUTE((unused));
+    ze_memory_type_t type;
+
+    if (attr == NULL) {
+        ze_memory_allocation_properties_t prop = {
+            .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
+            .pNext = NULL,
+            .type = 0,
+            .id = 0,
+            .pageSize = 0,
+        };
+        ze_device_handle_t device = NULL;
+
+        ret = zeMemGetAllocProperties(ze_context, ptr, &prop, &device);
+        assert(ret == ZE_RESULT_SUCCESS);
+        type = prop.type;
+    } else {
+        type = attr->device_attr.prop.type;
+    }
+    return type != ZE_MEMORY_TYPE_UNKNOWN;
+}
+
 int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
 {
     int mpl_err = MPL_SUCCESS;
