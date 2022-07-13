@@ -377,7 +377,7 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Call the low-priority (post Finalize) callbacks */
-    MPII_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+    MPII_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO);
 
     MPII_hwtopo_finalize();
     MPII_nettopo_finalize();
