@@ -357,11 +357,11 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPIR_ThreadInfo.isThreaded = 0;
 #endif
 
-    mpi_errno = MPIR_finalize_builtin_comms();
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Call the high-priority callbacks */
     MPII_Call_finalize_callbacks(MPIR_FINALIZE_CALLBACK_PRIO + 1, MPIR_FINALIZE_CALLBACK_MAX_PRIO);
+
+    mpi_errno = MPIR_finalize_builtin_comms();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Signal the debugger that we are about to exit. */
     MPIR_Debugger_set_aborting(NULL);
