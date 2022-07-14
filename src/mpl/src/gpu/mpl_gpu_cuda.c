@@ -143,6 +143,11 @@ int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
     return attr->type == MPL_GPU_POINTER_DEV;
 }
 
+int MPL_gpu_query_is_same_dev(int dev1, int dev2)
+{
+    return dev1 == dev2;
+}
+
 int MPL_gpu_ipc_get_handle_type(MPL_gpu_ipc_handle_type_t * type)
 {
     *type = MPL_GPU_IPC_HANDLE_SHAREABLE;
