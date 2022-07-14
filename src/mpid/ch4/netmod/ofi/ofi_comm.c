@@ -83,10 +83,10 @@ static int update_nic_preferences(MPIR_Comm * comm)
          * it in the communciator object. If this happens while traffic is outstanding, it will
          * cause problems so the user needs to quiesce traffic first. */
         if (comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC] != -1) {
-            if (MPIDI_OFI_COMM(comm).pref_nic == NULL) {
-                MPIDI_OFI_COMM(comm).pref_nic = MPL_malloc(sizeof(int) * comm->remote_size,
-                                                           MPL_MEM_ADDRESS);
-            }
+            /* comm is used to exchange its pref_nic hints. So, to avoid its behavior change while it is
+             * under use, exchange pref_nic using a local copy first, then copy it to comm.pref_nic */
+            int *pref_nic_copy = MPL_malloc(sizeof(int) * comm->remote_size, MPL_MEM_ADDRESS);
+            MPIR_ERR_CHKANDJUMP(pref_nic_copy == NULL, mpi_errno, MPI_ERR_NO_MEM, "**nomem");
 
             /* Make sure the NIC id is in a valid range. If the user went over the number of NICs,
              * loop back around to the first NIC. */
@@ -99,7 +99,7 @@ static int update_nic_preferences(MPIR_Comm * comm)
             for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
                 if (MPIDI_OFI_global.nic_info[i].id ==
                     comm->hints[MPIR_COMM_HINT_MULTI_NIC_PREF_NIC]) {
-                    MPIDI_OFI_COMM(comm).pref_nic[comm->rank] = i;
+                    pref_nic_copy[comm->rank] = i;
                     break;
                 }
             }
@@ -108,9 +108,21 @@ static int update_nic_preferences(MPIR_Comm * comm)
             /* Collect the NIC IDs set for the other ranks. We always expect to receive a single
              * NIC id from each rank, i.e., one MPI_INT. */
             mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_INT,
-                                                    MPIDI_OFI_COMM(comm).pref_nic,
-                                                    1, MPI_INT, comm, &errflag);
+                                                    pref_nic_copy, 1, MPI_INT, comm, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
+
+            if (MPIDI_OFI_COMM(comm).pref_nic == NULL) {
+                MPIDI_OFI_COMM(comm).pref_nic = MPL_malloc(sizeof(int) * comm->remote_size,
+                                                           MPL_MEM_ADDRESS);
+                MPIR_ERR_CHKANDJUMP(MPIDI_OFI_COMM(comm).pref_nic == NULL, mpi_errno,
+                                    MPI_ERR_NO_MEM, "**nomem");
+            }
+
+            /* Update comm.pref_nic */
+            for (int i = 0; i < comm->remote_size; ++i) {
+                MPIDI_OFI_COMM(comm).pref_nic[i] = pref_nic_copy[i];
+            }
+            MPL_free(pref_nic_copy);
         }
     }
 

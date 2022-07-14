@@ -579,12 +579,13 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_sender_nic_index(MPIR_Comm * comm,
                                                               MPIR_Context_id_t ctxid_in_effect,
-                                                              int receiver_rank, int tag)
+                                                              int sender_rank, int receiver_rank,
+                                                              int tag)
 {
     int nic_idx = 0;
 
     if (MPIDI_OFI_COMM(comm).pref_nic) {
-        nic_idx = MPIDI_OFI_COMM(comm).pref_nic[comm->rank];
+        nic_idx = MPIDI_OFI_COMM(comm).pref_nic[sender_rank];
     } else if (MPIDI_OFI_COMM(comm).enable_hashing) {
         /* TODO - We should use the per-communicator value for the maximum number of NICs in this
          *        calculation once we have a per-communicator value for it. */
@@ -606,12 +607,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_sender_nic_index(MPIR_Comm * comm,
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm,
                                                                 MPIR_Context_id_t ctxid_in_effect,
-                                                                int sender_rank, int tag)
+                                                                int sender_rank, int receiver_rank,
+                                                                int tag)
 {
     int nic_idx = 0;
 
     if (MPIDI_OFI_COMM(comm).pref_nic) {
-        nic_idx = MPIDI_OFI_COMM(comm).pref_nic[comm->rank];
+        nic_idx = MPIDI_OFI_COMM(comm).pref_nic[receiver_rank];
     } else if (MPIDI_OFI_COMM(comm).enable_hashing) {
         /* TODO - We should use the per-communicator value for the maximum number of NICs in this
          *        calculation once we have a per-communicator value for it. */
