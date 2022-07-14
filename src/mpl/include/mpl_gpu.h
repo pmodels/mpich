@@ -81,11 +81,17 @@ static inline int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr
 {
     return 0;
 }
+
+static inline int MPL_gpu_query_is_same_dev(int dev1, int dev2)
+{
+    return dev1 == dev2;
+}
 #endif /* ! MPL_HAVE_GPU */
 
 int MPL_gpu_query_support(MPL_gpu_type_t * type);
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
 int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr);
+int MPL_gpu_query_is_same_dev(int dev1, int dev2);
 
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
                               MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle);

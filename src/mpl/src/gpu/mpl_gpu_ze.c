@@ -63,6 +63,10 @@ typedef struct {
     unsigned int numQueueGroups;
     ze_event_handle_t prev_event;       /* for imemcpy */
     MPL_cmdlist_pool_t *last_cmdList_entry;     /* for imemcpy */
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+    ze_pci_address_ext_t pci;
+    int pci_avail;
+#endif
 } MPL_ze_device_entry_t;
 
 static MPL_ze_device_entry_t *device_states;
@@ -956,6 +960,19 @@ static int gpu_ze_init_driver(void)
                 }
             }
         }
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+        ze_pci_ext_properties_t pci_property = {
+            .stype = ZE_STRUCTURE_TYPE_PCI_EXT_PROPERTIES,
+            .pNext = NULL,
+        };
+        ret = zeDevicePciGetPropertiesExt(ze_devices_handle[d], &pci_property);
+        if (ret == ZE_RESULT_SUCCESS) {
+            device_state->pci_avail = 1;
+            device_state->pci = pci_property.address;
+        } else {
+            device_state->pci_avail = 0;
+        }
+#endif
         MPL_free(queueProperties);
     }
 
@@ -1624,6 +1641,38 @@ int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
     return type != ZE_MEMORY_TYPE_UNKNOWN;
 }
 
+int MPL_gpu_query_is_same_dev(int global_dev1, int global_dev2)
+{
+    MPL_ze_device_entry_t *device_state1, *device_state2;
+    int local_dev1, local_dev2;
+
+    assert(global_dev1 >= 0 && global_dev1 < global_ze_device_count);
+    assert(global_dev2 >= 0 && global_dev2 < global_ze_device_count);
+
+    local_dev1 = MPL_gpu_global_to_local_dev_id(global_dev1);
+    local_dev2 = MPL_gpu_global_to_local_dev_id(global_dev2);
+    /* check if invisible devices */
+    if (local_dev1 == -1 || local_dev2 == -1)
+        return 0;
+
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+    if (MPL_gpu_get_root_device(local_dev1) == MPL_gpu_get_root_device(local_dev2))
+        return 1;
+
+    device_state1 = device_states + local_dev1;
+    device_state2 = device_states + local_dev2;
+    if (device_state1->pci_avail && device_state2->pci_avail)
+        return device_state1->pci.domain == device_state2->pci.domain &&
+            device_state1->pci.bus == device_state2->pci.bus &&
+            device_state1->pci.device == device_state2->pci.device &&
+            device_state1->pci.function == device_state2->pci.function;
+    else
+        return 0;
+#else
+    return MPL_gpu_get_root_device(local_dev1) == MPL_gpu_get_root_device(local_dev2);
+#endif
+}
+
 int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
 {
     int mpl_err = MPL_SUCCESS;
@@ -1824,6 +1873,8 @@ int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
     int ret;
     int orig_dev = dev;
     int engine = engine_conversion[engine_type];
+
+    assert(dev >= 0 && dev < local_ze_device_count);
 
     if (dest_ptr && src_ptr) {
         ret = get_next_event(&event);
