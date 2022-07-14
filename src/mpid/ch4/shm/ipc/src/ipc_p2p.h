@@ -151,6 +151,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_IPCI_choose_engine(int dev1, int dev2)
+{
+    MPL_gpu_engine_type_t engine = MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
+    if (dev1 == -1 || dev2 == -1) {
+        return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+    }
+    assert(dev1 != -1 && dev2 != -1);
+    if (MPL_gpu_query_is_same_dev(dev1, dev2))
+        engine = MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+    return engine;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
                                                         size_t src_data_sz,
                                                         MPIR_Request * sreq_ptr,
@@ -200,11 +212,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
         MPIR_ERR_CHECK(mpi_errno);
         /* copy */
         if (ipc_hdr->is_contig && dt_contig) {
-            mpi_errno = MPIR_Localcopy_gpu(src_buf, src_data_sz, MPI_BYTE, NULL,
-                                           MPIDIG_REQUEST(rreq, buffer),
-                                           MPIDIG_REQUEST(rreq, count),
-                                           MPIDIG_REQUEST(rreq, datatype), &attr,
-                                           MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
+            MPL_gpu_engine_type_t engine =
+                MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
+            mpi_errno =
+                MPIR_Localcopy_gpu(src_buf, src_data_sz, MPI_BYTE, NULL,
+                                   MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                                   MPIDIG_REQUEST(rreq, datatype), &attr, engine, true);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             /* TODO: get sender datatype and call MPIR_Typerep_op with mapped_device set to dev_id */
