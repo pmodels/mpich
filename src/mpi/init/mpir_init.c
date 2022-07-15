@@ -45,6 +45,19 @@ cvars:
         in order to allow the process to continue (e.g., in gdb, "set
         hold=0").
 
+    - name        : MPIR_CVAR_NO_COLLECTIVE_FINALIZE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, prevent MPI_Finalize to invoke collective behavior such as
+        barrier or communicating to other processes. Consequently, it may result
+        in leaking memory or losing messages due to pre-mature exiting. The
+        default is false, which may invoke collective behaviors at finalize.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
