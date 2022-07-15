@@ -489,6 +489,7 @@ unexpected messages queued.
 #**argnull:Invalid null parameter
 #**argnull %s:Invalid null parameter %s
 **commstack:Internal overflow in stack used for MPI_Comm_split
+**timeout:Operation timed out
 
 **cond_create:MPID_Thread_cond_create failed
 **cond_create %s:MPID_Thread_cond_create failed: %s
