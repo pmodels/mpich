@@ -61,7 +61,7 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
                                         int *control_fd)
 {
     int num_hosts, idx, i;
-    int *pid, *fd_list;
+    int *fd_list;
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
     char *path = NULL, *extra_arg_list = NULL, *extra_arg;
     struct HYD_proxy *proxy;
@@ -123,11 +123,7 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
         targs[idx++] = MPL_strdup(args[i]);
 
     /* Increase pid list to accommodate the new pid */
-    HYDU_MALLOC_OR_JUMP(pid, int *, (HYD_bscu_pid_count + 1) * sizeof(int), status);
-    for (i = 0; i < HYD_bscu_pid_count; i++)
-        pid[i] = HYD_bscu_pid_list[i];
-    MPL_free(HYD_bscu_pid_list);
-    HYD_bscu_pid_list = pid;
+    HYDT_bscu_pid_list_grow(1);
 
     /* Increase fd list to accommodate these new fds */
     HYDU_MALLOC_OR_JUMP(fd_list, int *, (HYD_bscu_fd_count + 3) * sizeof(int), status);
@@ -145,9 +141,10 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
         HYDU_print_strlist(targs);
     }
 
-    status = HYDU_create_process(targs, NULL, NULL, &fd_stdout, &fd_stderr,
-                                 &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
+    int pid;
+    status = HYDU_create_process(targs, NULL, NULL, &fd_stdout, &fd_stderr, &pid, -1);
     HYDU_ERR_POP(status, "create process returned error\n");
+    HYDT_bscu_pid_list_push(NULL, pid);
 
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;

@@ -38,6 +38,8 @@ static void signal_cb(int signum)
         /* First Ctrl-C */
         HYDU_dump(stdout, "Sending Ctrl-C to processes as requested\n");
         HYDU_dump(stdout, "Press Ctrl-C again to force abort\n");
+    } else if (signum == SIGCHLD) {
+        cmd.type = HYD_SIGCHLD;
     }
 
     HYDU_sock_write(HYD_server_info.cmd_pipe[1], &cmd, sizeof(cmd), &sent, &closed,
@@ -121,6 +123,9 @@ int main(int argc, char **argv)
 
     status = HYDU_set_common_signals(signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
+
+    status = HYDU_set_signal(SIGCHLD, signal_cb);
+    HYDU_ERR_POP(status, "unable to set SIGCHLD\n");
 
     /* Get user preferences */
     status = HYD_uii_mpx_get_parameters(argv);
