@@ -20,14 +20,8 @@ HYD_status HYDT_bscu_pid_list_grow(int add_count)
 
     HYD_bscu_pid_size += add_count;
 
-    struct HYD_proxy_pid *pid;
-    HYDU_MALLOC_OR_JUMP(pid, struct HYD_proxy_pid *,
-                        HYD_bscu_pid_size * sizeof(struct HYD_proxy_pid), status);
-    for (int i = 0; i < HYD_bscu_pid_count; i++) {
-        pid[i] = HYD_bscu_pid_list[i];
-    }
-    MPL_free(HYD_bscu_pid_list);
-    HYD_bscu_pid_list = pid;
+    HYDU_REALLOC_OR_JUMP(HYD_bscu_pid_list, struct HYD_proxy_pid *,
+                         HYD_bscu_pid_size * sizeof(struct HYD_proxy_pid), status);
 
   fn_exit:
     return status;
