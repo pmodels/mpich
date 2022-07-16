@@ -62,7 +62,6 @@ do_json=yes
 do_yaksa=yes
 do_test=yes
 do_hydra=yes
-do_hydra2=yes
 do_romio=yes
 do_pmi=yes
 do_doc=no
@@ -81,7 +80,6 @@ for arg in "$@" ; do
         do_yaksa=no
         do_test=yes
         do_hydra=yes
-        do_hydra2=no
         do_romio=no
 
         if test -e 'modules.tar.gz' -a ! -e 'modules/PREBUILT' ; then
@@ -201,10 +199,6 @@ set_externals() {
             externals="${externals} src/pm/hydra"
         fi
 
-        if [ "yes" = "$do_hydra2" ] ; then
-            externals="${externals} src/pm/hydra2"
-        fi
-
         if [ "yes" = "$do_romio" ] ; then
             externals="${externals} src/mpi/romio"
         fi
@@ -322,14 +316,6 @@ fn_copy_confdb_etc() {
             confdb_dirs="${confdb_dirs} src/pm/hydra/modules/mpl/confdb"
         fi
     fi
-    if test "$do_hydra2" = "yes" ; then
-        confdb_dirs="${confdb_dirs} src/pm/hydra2/confdb"
-        sync_external src/mpl src/pm/hydra2/mpl
-        sync_external modules/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
-        # remove .git directories to avoid confusing git clean
-        rm -rf src/pm/hydra2/libhydra/topo/hwloc/hwloc/.git
-        confdb_dirs="${confdb_dirs} src/pm/hydra2/mpl/confdb"
-    fi
     if test "$do_test" = "yes" ; then
         confdb_dirs="${confdb_dirs} test/mpi/confdb"
         confdb_dirs="${confdb_dirs} test/mpi/dtpools/confdb"
@@ -343,7 +329,6 @@ fn_copy_confdb_etc() {
     # a couple of other random files
     if [ -f maint/version.m4 ] ; then
         cp -pPR maint/version.m4 src/pm/hydra/version.m4
-        cp -pPR maint/version.m4 src/pm/hydra2/version.m4
         cp -pPR maint/version.m4 src/mpi/romio/version.m4
         cp -pPR maint/version.m4 src/pmi/version.m4
         cp -pPR maint/version.m4 test/mpi/version.m4
