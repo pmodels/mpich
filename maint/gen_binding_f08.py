@@ -28,12 +28,6 @@ def main():
     func_list.extend(get_type_create_f90_func_list())
     func_list.append(G.FUNCS['mpi_f_sync_reg'])
 
-    skip_large_list = []
-    # skip File large count functions because it is not implemented yet
-    for func in func_list:
-        if func['name'].startswith('MPI_File_') or func['name'] == 'MPI_Register_datarep':
-            skip_large_list.append(func['name'])
-
     # preprocess
     get_real_POLY_kinds()
     for func in func_list:
@@ -44,7 +38,7 @@ def main():
             func['_need_large'] = True
             # need separate interface, e.g. MPI_Op_create_c
             func['_need_large_separate'] = True
-        elif function_has_real_POLY_parameters(func) and func['name'] not in skip_large_list:
+        elif function_has_real_POLY_parameters(func):
             func['_need_large'] = True
         else:
             func['_need_large'] = False
