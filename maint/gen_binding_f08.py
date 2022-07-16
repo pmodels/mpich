@@ -40,7 +40,11 @@ def main():
         check_func_directives(func)
         if '_skip_fortran' in func:
             continue
-        if function_has_real_POLY_parameters(func) and func['name'] not in skip_large_list:
+        if re.match(r'mpi_op_create|mpi_register_datarep', func['name'], re.IGNORECASE):
+            func['_need_large'] = True
+            # need separate interface, e.g. MPI_Op_create_c
+            func['_need_large_separate'] = True
+        elif function_has_real_POLY_parameters(func) and func['name'] not in skip_large_list:
             func['_need_large'] = True
         else:
             func['_need_large'] = False
@@ -120,11 +124,20 @@ def main():
         G.out.append("INTERFACE %s" % func_name)
         G.out.append("INDENT")
         dump_mpi_f08(func, False)
-        if func['_need_large']:
+        if func['_need_large'] and '_need_large_separate' not in func:
             G.out.append("")
             dump_mpi_f08(func, True)
         G.out.append("DEDENT")
         G.out.append("END INTERFACE %s" % func_name)
+
+        if '_need_large_separate' in func:
+            G.out.append("")
+            func_name = get_function_name(func, False) + "_c"
+            G.out.append("INTERFACE %s" % func_name)
+            G.out.append("INDENT")
+            dump_mpi_f08(func, True)
+            G.out.append("DEDENT")
+            G.out.append("END INTERFACE %s" % func_name)
     G.out.append("")
     dump_F_module_close("mpi_f08")
 
