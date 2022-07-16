@@ -56,7 +56,6 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 
     /* setup_socket */
     *listen_fd = MPL_socket();
-    /* FIXME: duplicate with pm/hydra2/libhydra/sock/hydra_sock.c */
     if (*listen_fd < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
                             MPL_strerror(errno));
