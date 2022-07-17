@@ -57,6 +57,7 @@ typedef enum {
 
 typedef struct {
     bool specialized_cache;
+    bool print_debug_info;
 } MPL_gpu_info_t;
 
 #ifndef MPL_HAVE_GPU
