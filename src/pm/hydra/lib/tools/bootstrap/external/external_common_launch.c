@@ -150,11 +150,13 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     }
 
     if (MPL_env2str("HYDRA_LAUNCHER_EXTRA_ARGS", (const char **) &extra_arg_list)) {
-        extra_arg = strtok(extra_arg_list, " ");
+        char *s = MPL_strdup(extra_arg_list);
+        extra_arg = strtok(s, " ");
         while (extra_arg) {
             targs[idx++] = MPL_strdup(extra_arg);
             extra_arg = strtok(NULL, " ");
         }
+        MPL_free(s);
     }
 
     host_idx = idx++;   /* Hostname will come here */
