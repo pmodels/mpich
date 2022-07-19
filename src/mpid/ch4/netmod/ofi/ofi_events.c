@@ -838,7 +838,7 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret)
                         if ((event_id == MPIDI_OFI_EVENT_RECV_PACK ||
                              event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
                             MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
-                            MPL_free(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
+                            MPIR_gpu_free_host(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
                         } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK &&
                                    event_id == MPIDI_OFI_EVENT_RECV_NOPACK &&
                                    MPIDI_OFI_REQUEST(req, noncontig.nopack)) {

@@ -16,7 +16,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_callback(void *request, ucs_sta
 
     MPIR_FUNC_ENTER;
 
-    MPL_free(req->dev.ch4.am.netmod_am.ucx.pack_buffer);
+    MPIR_gpu_free_host(req->dev.ch4.am.netmod_am.ucx.pack_buffer);
     req->dev.ch4.am.netmod_am.ucx.pack_buffer = NULL;
     MPIDIG_global.origin_cbs[handler_id] (req);
     ucp_request->req = NULL;
@@ -84,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     size_t total_sz;
     ucp_datatype_t dt;
     if (dt_contig) {
-        send_buf = MPL_malloc(sizeof(ucx_hdr) + am_hdr_sz, MPL_MEM_OTHER);
+        MPIR_gpu_malloc_host((void **) &send_buf, sizeof(ucx_hdr) + am_hdr_sz);
         MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
 
@@ -98,7 +98,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         dt = ucp_dt_make_iov();
         total_sz = 2;
     } else {
-        send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_OTHER);
+        MPIR_gpu_malloc_host((void **) &send_buf, data_sz + am_hdr_sz + sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
 
@@ -121,7 +121,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
     /* send is done. free all resources and complete the request */
     if (ucp_request == NULL) {
-        MPL_free(send_buf);
+        MPIR_gpu_free_host(send_buf);
         MPIDIG_global.origin_cbs[handler_id] (sreq);
         goto fn_exit;
     }
