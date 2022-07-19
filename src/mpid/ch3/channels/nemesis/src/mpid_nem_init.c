@@ -409,6 +409,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     mpi_errno = MPIDI_CH3_SHM_Init();
     MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIDU_Init_shm_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifdef PAPI_MONITOR
     my_papi_start( pg_rank );

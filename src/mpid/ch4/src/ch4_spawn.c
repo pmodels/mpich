@@ -466,6 +466,12 @@ int MPID_Comm_connect(const char *port_name, MPIR_Info * info, int root, MPIR_Co
     bool is_sender = true;
     mpi_errno = dynamic_intercomm_create(port_name, info, root, comm,
                                          timeout, is_sender, newcomm_ptr);
+    if (MPIR_ERR_GET_CLASS(mpi_errno) == MPIX_ERR_TIMEOUT) {
+        /* when connect timeout, a likely reason is the server not ready.
+         * By convention, we return MPI_ERR_PORT.
+         */
+        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_PORT, goto fn_fail, "**fail");
+    }
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

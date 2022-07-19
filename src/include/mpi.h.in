@@ -938,8 +938,9 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPIX_ERR_EAGAIN               MPICH_ERR_FIRST_MPIX+4 /* Operation could not be issued */
 #define MPIX_ERR_NOREQ                MPICH_ERR_FIRST_MPIX+5 /* Cannot allocate request */
 #define MPIX_ERR_STREAM               MPICH_ERR_FIRST_MPIX+6 /* Invalid stream */
+#define MPIX_ERR_TIMEOUT              MPICH_ERR_FIRST_MPIX+7 /* Operation timed out */
 
-#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+6
+#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+7
 
 
 /* End of MPI's error classes */

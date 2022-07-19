@@ -247,7 +247,7 @@ typedef struct MPIDI_per_vci {
     MPIR_Request *posted_list;
     MPIR_Request *unexp_list;
     MPIDU_genq_private_pool_t request_pool;
-    MPIDU_genq_private_pool_t unexp_pack_buf_pool;
+    MPIDU_genq_private_pool_t pack_buf_pool;
 
     MPIDIG_req_ext_t *cmpl_list;
     MPL_atomic_uint64_t exp_seq_no;

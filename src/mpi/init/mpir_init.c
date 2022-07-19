@@ -55,6 +55,19 @@ cvars:
       description : >-
         If true, print GPU debug info
 
+    - name        : MPIR_CVAR_NO_COLLECTIVE_FINALIZE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, prevent MPI_Finalize to invoke collective behavior such as
+        barrier or communicating to other processes. Consequently, it may result
+        in leaking memory or losing messages due to pre-mature exiting. The
+        default is false, which may invoke collective behaviors at finalize.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -385,11 +398,11 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPIR_ThreadInfo.isThreaded = 0;
 #endif
 
-    mpi_errno = MPIR_finalize_builtin_comms();
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Call the high-priority callbacks */
     MPII_Call_finalize_callbacks(MPIR_FINALIZE_CALLBACK_PRIO + 1, MPIR_FINALIZE_CALLBACK_MAX_PRIO);
+
+    mpi_errno = MPIR_finalize_builtin_comms();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Signal the debugger that we are about to exit. */
     MPIR_Debugger_set_aborting(NULL);
@@ -405,7 +418,7 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Call the low-priority (post Finalize) callbacks */
-    MPII_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+    MPII_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO);
 
     MPII_hwtopo_finalize();
     MPII_nettopo_finalize();
