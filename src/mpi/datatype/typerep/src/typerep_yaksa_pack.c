@@ -198,6 +198,20 @@ int MPIR_Typerep_reduce_is_supported(MPI_Op op, MPI_Datatype datatype)
     if (!MPIR_CVAR_ENABLE_YAKSA_REDUCTION)
         return 0;
 
+    /* yaksa pup code currently treat unsigned integer type the same as
+     * the corresponding signed integer type, which will not work with
+     * most op other than REPLACE.
+     */
+    if (datatype == MPI_UNSIGNED_CHAR ||
+        datatype == MPI_UNSIGNED_SHORT ||
+        datatype == MPI_UNSIGNED ||
+        datatype == MPI_UNSIGNED_LONG ||
+        datatype == MPI_UNSIGNED_LONG_LONG ||
+        datatype == MPI_UINT8_T ||
+        datatype == MPI_UINT16_T || datatype == MPI_UINT32_T || datatype == MPI_UINT64_T) {
+        return 0;
+    }
+
     if ((datatype == MPI_DOUBLE || datatype == MPI_C_DOUBLE_COMPLEX) &&
         (!MPIR_CVAR_GPU_DOUBLE_SUPPORT))
         return 0;
