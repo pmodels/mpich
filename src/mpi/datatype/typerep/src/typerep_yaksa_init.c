@@ -404,7 +404,13 @@ void MPIR_Typerep_init(void)
     yaksa_info_keyval_append(MPII_yaksa_info_nogpu, "yaksa_gpu_driver", "nogpu", 6);
 
     if (MPIR_CVAR_ENABLE_GPU) {
-        yaksa_init(NULL);
+        yaksa_info_t info = NULL;
+        if (MPIR_CVAR_GPU_HAS_WAIT_KERNEL) {
+            yaksa_info_create(&info);
+            yaksa_info_keyval_append(info, "yaksa_has_wait_kernel", "1", 2);
+        }
+
+        yaksa_init(info);
     } else {
         /* prevent yaksa to query gpu devices, which can be very expensive */
         yaksa_init(MPII_yaksa_info_nogpu);

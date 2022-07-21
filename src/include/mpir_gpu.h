@@ -28,6 +28,18 @@ cvars:
         and we do not query the buffer type internally because we assume
         no GPU buffer is use.
 
+    - name        : MPIR_CVAR_GPU_HAS_WAIT_KERNEL
+      category    : GPU
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to 1, avoid allocate allocating GPU registered host buffers
+        for temporary buffers. When stream workq and GPU wait kernels are
+        in use, access APIs for GPU registered memory may cause deadlock.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
