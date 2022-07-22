@@ -111,27 +111,4 @@ configure
 /tools/rmk/src/rmki_init.c
 
 # hwloc in hydra
-/tools/topo/hwloc/hwloc/config/ar-lib
-/tools/topo/hwloc/hwloc/config/argz.m4
-/tools/topo/hwloc/hwloc/config/compile
-/tools/topo/hwloc/hwloc/config/config.guess
-/tools/topo/hwloc/hwloc/config/config.sub
-/tools/topo/hwloc/hwloc/config/depcomp
-/tools/topo/hwloc/hwloc/config/install-sh
-/tools/topo/hwloc/hwloc/config/libtool.m4
-/tools/topo/hwloc/hwloc/config/ltdl.m4
-/tools/topo/hwloc/hwloc/config/ltmain.sh
-/tools/topo/hwloc/hwloc/config/ltoptions.m4
-/tools/topo/hwloc/hwloc/config/ltsugar.m4
-/tools/topo/hwloc/hwloc/config/ltversion.m4
-/tools/topo/hwloc/hwloc/config/lt~obsolete.m4
-/tools/topo/hwloc/hwloc/config/missing
-/tools/topo/hwloc/hwloc/config/test-driver
-/tools/topo/hwloc/hwloc/include/hwloc/autogen/config.h
-/tools/topo/hwloc/hwloc/include/hwloc/autogen/stamp-h2
-/tools/topo/hwloc/hwloc/include/hwloc/autogen/stamp-h3
-/tools/topo/hwloc/hwloc/include/private/autogen/config.h
-/tools/topo/hwloc/hwloc/include/private/autogen/stamp-h2
-/tools/topo/hwloc/hwloc/src/libltdl/
-/tools/topo/hwloc/hwloc/src/static-components.h
-
+/modules

@@ -88,9 +88,8 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx)
     goto fn_exit;
 }
 
-int MPIDU_genq_shmem_pool_create_unsafe(uintptr_t cell_size, uintptr_t cells_per_proc,
-                                        uintptr_t num_proc, int rank,
-                                        MPIDU_genq_shmem_pool_t * pool)
+int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_proc,
+                                 uintptr_t num_proc, int rank, MPIDU_genq_shmem_pool_t * pool)
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_pool_s *pool_obj;
@@ -148,7 +147,7 @@ int MPIDU_genq_shmem_pool_create_unsafe(uintptr_t cell_size, uintptr_t cells_per
     goto fn_exit;
 }
 
-int MPIDU_genq_shmem_pool_destroy_unsafe(MPIDU_genq_shmem_pool_t pool)
+int MPIDU_genq_shmem_pool_destroy(MPIDU_genq_shmem_pool_t pool)
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_pool_s *pool_obj = (MPIDU_genqi_shmem_pool_s *) pool;

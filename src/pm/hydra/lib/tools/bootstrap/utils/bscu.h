@@ -9,11 +9,17 @@
 #include "hydra.h"
 #include "demux.h"
 
+struct HYD_proxy_pid {
+    struct HYD_proxy *proxy;
+    int pid;
+};
+
 extern int *HYD_bscu_fd_list;
 extern int HYD_bscu_fd_count;
-extern int *HYD_bscu_pid_list;
-extern int HYD_bscu_pid_count;
 
+HYD_status HYDT_bscu_pid_list_grow(int add_count);
+void HYDT_bscu_pid_list_push(struct HYD_proxy *proxy, int pid);
+struct HYD_proxy_pid *HYDT_bscu_pid_list_find(int pid);
 HYD_status HYDT_bscu_wait_for_completion(int timeout);
 HYD_status HYDT_bscu_stdio_cb(int fd, HYD_event_t events, void *userp);
 

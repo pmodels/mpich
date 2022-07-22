@@ -250,7 +250,6 @@ sub CreateErrMsgMapping {
     # For the case of classes only, output the strings for the class 
     # messages
     print $OUTFD "#if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__CLASS\n";
-    print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $#class_msgs+1\n";
     print $OUTFD "static const char *classToMsg[] = {\n";
     for (my $i=0; $i<=$max_err_class; $i++) {
 	my $shortname = $class_msgs[$i];
@@ -366,7 +365,6 @@ sub CreateErrMsgMapping {
 
     print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS\n";
     my $maxval = $max_err_class + 1;
-    print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $maxval\n";
     print $OUTFD "static int class_to_index[] = {\n    ";
     for (my $i=0; $i<=$max_err_class; $i++) {
         my $idx = $short_to_num{$class_msgs[$i]};

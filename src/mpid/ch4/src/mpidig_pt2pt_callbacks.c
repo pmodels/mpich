@@ -259,10 +259,9 @@ static int allocate_unexp_req_pack_buf(MPIR_Request * rreq, MPI_Aint data_sz)
     int vci = MPIDI_Request_get_vci(rreq);
     if (data_sz > 0) {
         void *pack_buf;
-        MPIR_Assert(data_sz <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE);
-        mpi_errno =
-            MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vci].unexp_pack_buf_pool,
-                                               &pack_buf);
+        MPIR_Assert(data_sz <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
+        mpi_errno = MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vci].pack_buf_pool,
+                                                       &pack_buf);
         MPIR_Assert(pack_buf);
         MPIDIG_REQUEST(rreq, buffer) = pack_buf;
     }

@@ -90,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_copy_from_unexp_req(MPIR_Request * req, void
     }
 
     int vci = MPIDI_Request_get_vci(req);
-    MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vci].unexp_pack_buf_pool,
+    MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vci].pack_buf_pool,
                                       MPIDIG_REQUEST(req, buffer));
 
     return mpi_errno;
