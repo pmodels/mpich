@@ -10,6 +10,7 @@
 **finalized:MPI has already called MPI_Finalize
 **inittwice:Cannot call MPI_INIT or MPI_INIT_THREAD more than once
 **psetinvalidn:Invalid pset number
+**psetinvalidn %d:Invalid pset number - %d
 **psetinvalidname:Invalid pset name
 **session:Invalid MPI_Session handle
 **sessionnull: NULL MPI_Session
