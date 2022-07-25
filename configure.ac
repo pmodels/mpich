@@ -1579,12 +1579,6 @@ for pm_name in $pm_names ; do
         fi
         subsystems="$subsystems src/pm/hydra"
         ;;
-      hydra2)
-        if test "$with_pmi" = "pmix" ; then
-            AC_MSG_ERROR([$pm_name does not support $with_pmi.])
-        fi
-        subsystems="$subsystems src/pm/hydra2"
-        ;;
       *)
         AC_MSG_WARN([PM $pm_name is unknown])
 	hasError=yes
