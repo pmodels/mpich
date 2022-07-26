@@ -33,7 +33,7 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 {
     int ret = MPL_SUCCESS;
     if (!gpu_initialized) {
-        ret = MPL_gpu_init();
+        ret = MPL_gpu_init(0);
     }
 
     *dev_cnt = device_count;
@@ -215,7 +215,7 @@ int MPL_gpu_free(void *ptr)
     goto fn_exit;
 }
 
-int MPL_gpu_init(void)
+int MPL_gpu_init(int debug_summary)
 {
     int mpl_err = MPL_SUCCESS;
     if (gpu_initialized) {
@@ -273,6 +273,15 @@ int MPL_gpu_init(void)
      * for result correctness. */
     gpu_mem_hook_init();
     gpu_initialized = 1;
+
+    if (debug_summary) {
+        printf("==== GPU Init (CUDA) ====\n");
+        printf("device_count: %d\n", device_count);
+        if (visible_devices) {
+            printf("CUDA_VISIBLE_DEVICES: %s\n", visible_devices);
+        }
+        printf("=========================\n");
+    }
 
   fn_exit:
     return mpl_err;
