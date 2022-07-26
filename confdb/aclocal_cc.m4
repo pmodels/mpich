@@ -315,25 +315,18 @@ if test "$pac_cv_prog_c_weak_symbols" != "no" ; then
         ;;
     esac
 fi
-AC_CACHE_CHECK([whether __attribute__ ((weak)) allowed], pac_cv_attr_weak,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[int foo(int) __attribute__ ((weak));]],[[int a;]])],
-        pac_cv_attr_weak=yes,pac_cv_attr_weak=no)
-])
-# Note that being able to compile with weak_import doesn't mean that
-# it works.
-AC_CACHE_CHECK([whether __attribute__ ((weak_import)) allowed], pac_cv_attr_weak_import,[
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[int foo(int) __attribute__ ((weak_import));]],[[int a;]])],
-        pac_cv_attr_weak_import=yes,pac_cv_attr_weak_import=no)
-])
-# Check if the alias option for weak attributes is allowed
-AC_CACHE_CHECK([whether __attribute__((weak,alias(...))) allowed], pac_cv_attr_weak_alias,[
-    PAC_PUSH_FLAG([CFLAGS])
-    # force an error exit if the weak attribute isn't understood
-    CFLAGS=-Werror
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[int __foo(int a){return 0;} int foo(int) __attribute__((weak,alias("__foo")));]],[[int a;]])],
-        pac_cv_attr_weak_alias=yes,pac_cv_attr_weak_alias=no)
-    # Restore original CFLAGS
-    PAC_POP_FLAG([CFLAGS])
+AC_CACHE_CHECK([whether __attribute__ ((weak,alias(...))) allowed], pac_cv_attr_weak_alias,[
+    PAC_COMPLINK_IFELSE(
+	[AC_LANG_SOURCE([[
+	    int PFoo(int) __attribute__ ((weak,alias("Foo")));
+	    int Foo(int a) { return a; }
+	]])],
+	[AC_LANG_PROGRAM([[
+		int PFoo(int);
+	]],[[
+		return PFoo(1);
+	]])],
+	pac_cv_attr_weak_alias=yes,pac_cv_attr_weak_alias=no)
 ])
 
 if test "$pac_cv_attr_weak_alias" = "yes" ; then
