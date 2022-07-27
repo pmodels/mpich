@@ -1573,7 +1573,6 @@ struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     {"demux", demux_fn, demux_help_fn},
 
     /* Other hydra options */
-    {"dac", auto_cleanup_fn, auto_cleanup_help_fn},
     {"debug", verbose_fn, verbose_help_fn},
     {"disable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
     {"disable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
