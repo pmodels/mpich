@@ -95,6 +95,7 @@ static void help_help_fn(void)
     printf("    -disable-hostname-propagation    let MPICH auto-detect the hostname\n");
     printf("    -errfile-pattern                 direct stderr to file\n");
     printf("    -gpus-per-proc                   number of GPUs per process (default: auto)\n");
+    printf("    -hybrid-hosts                    assume hosts do not share paths\n");
     printf("    -iface                           network interface to use\n");
     printf("    -info                            build information\n");
     printf("    -localhost                       local hostname for the launching node\n");
@@ -1505,6 +1506,24 @@ static HYD_status gpus_per_proc_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void hybrid_hosts_help_fn(void)
+{
+    printf("\n");
+    printf("-hybrid_hosts:\n");
+    printf("   Assume hosts do not share PATH and working directories. For it\n");
+    printf("   to work, hydra need be installed to PATH on individual hosts.\n");
+    printf("   Working directory will not be set by default.\n");
+}
+
+static HYD_status hybrid_hosts_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_server_info.hybrid_hosts = true;
+
+    return status;
+}
+
 struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     /* help options */
     {"help", help_fn, help_help_fn},
@@ -1580,6 +1599,7 @@ struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"g", gpus_per_proc_fn, gpus_per_proc_help_fn},
     {"gpus-per-proc", gpus_per_proc_fn, gpus_per_proc_help_fn},
+    {"hybrid-hosts", hybrid_hosts_fn, hybrid_hosts_help_fn},
     {"iface", iface_fn, iface_help_fn},
     {"info", info_fn, info_help_fn},
     {"localhost", localhost_fn, localhost_help_fn},
