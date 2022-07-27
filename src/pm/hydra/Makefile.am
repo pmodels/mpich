@@ -24,8 +24,6 @@ ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include $(external_includes)
 AM_CFLAGS =
 
-noinst_HEADERS += include/hydra.h include/hydra_server.h
-
 EXTRA_DIST += autogen.sh
 
 noinst_LTLIBRARIES = libhydra.la
