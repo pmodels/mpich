@@ -236,7 +236,7 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                 json_object_object_foreach(obj, key, val) {
                     ckey = MPL_strdup_no_spaces(key);
                     if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.alltoall.intra_k_brucks.k = atoi(ckey + strlen("k="));
+                        cnt->u.allgather.intra_k_brucks.k = atoi(ckey + strlen("k="));
                     MPL_free(ckey);
                 }
             }
