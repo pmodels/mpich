@@ -44,6 +44,21 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
     return ret;
 }
 
+int MPL_gpu_get_dev_list(int *dev_count, char **dev_list, bool is_subdev)
+{
+    int ret = MPL_SUCCESS;
+    *dev_count = 0;
+    *dev_list = NULL;
+    return ret;
+}
+
+int MPL_gpu_dev_affinity_to_env(int dev_count, char ***dev_list, char **env)
+{
+    int ret = MPL_SUCCESS;
+    *env = NULL;
+    return ret;
+}
+
 int MPL_gpu_init(int debug_summary)
 {
     int mpl_err;
