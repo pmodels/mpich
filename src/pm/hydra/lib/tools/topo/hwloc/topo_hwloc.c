@@ -266,16 +266,34 @@ static HYD_status get_hw_obj_list(const char *resource, hwloc_obj_t ** resource_
         *resource_list_length = 1;
         obj_type_prefix = MPL_strdup(resource);
         obj_type = HWLOC_OBJ_OS_DEVICE;
+    } else if (!strncmp(resource, "gpu-subdev", strlen("gpu-subdev"))) {
+        hwloc_obj_t io_device = NULL;
+
+        obj_type_prefix = MPL_strdup("gpu-subdev");
+        obj_type = HWLOC_OBJ_OS_DEVICE;
+        while ((io_device = hwloc_get_next_osdev(topology, io_device))) {
+            int gpuid = atoi(resource + strlen("gpu-subdev"));
+            if (io_device->attr->osdev.type != HWLOC_OBJ_OSDEV_COPROC ||
+                (strlen(io_device->name)) == 3 || strncmp(io_device->name, "ze", strlen("ze")))
+                continue;
+
+            if (*(resource + strlen("gpu-subdev")) == '\0' ||
+                *(resource + strlen("gpu-subdev")) == ':' || gpuid == io_device->logical_index) {
+                HYDU_REALLOC_OR_JUMP(resource_obj, hwloc_obj_t *,
+                                     (count + 1) * sizeof(hwloc_obj_t), status);
+                resource_obj[count++] = hwloc_get_non_io_ancestor_obj(topology, io_device);
+            }
+        }
+        *resource_list_length = count;
     } else if (!strncmp(resource, "gpu", strlen("gpu"))) {
         hwloc_obj_t io_device = NULL;
 
         obj_type_prefix = MPL_strdup("gpu");
         obj_type = HWLOC_OBJ_OS_DEVICE;
-
         while ((io_device = hwloc_get_next_osdev(topology, io_device))) {
             int gpuid = atoi(resource + strlen("gpu"));
-
-            if (io_device->attr->osdev.type != HWLOC_OBJ_OSDEV_GPU)
+            if (io_device->attr->osdev.type != HWLOC_OBJ_OSDEV_COPROC ||
+                (strlen(io_device->name)) != 3)
                 continue;
 
             if (*(resource + strlen("gpu")) == '\0' ||
@@ -674,6 +692,7 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
         hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id],
                           HYDT_topo_hwloc_info.membind, 0);
     }
+
 
   fn_exit:
     HYDU_FUNC_EXIT();
