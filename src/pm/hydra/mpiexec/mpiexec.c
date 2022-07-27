@@ -9,109 +9,23 @@
 #include "pmci.h"
 #include "bsci.h"
 #include "demux.h"
-#include "ui.h"
 #include "uiu.h"
 
 struct HYD_server_info_s HYD_server_info;
 
 struct HYD_exec *HYD_uii_mpx_exec_list = NULL;
-struct HYD_ui_info_s HYD_ui_info;
 struct HYD_ui_mpich_info_s HYD_ui_mpich_info;
 
-static void signal_cb(int signum)
-{
-    struct HYD_cmd cmd;
-    static int sigint_count = 0;
-    int sent, closed;
-
-    HYDU_FUNC_ENTER();
-
-    cmd.type = HYD_SIGNAL;
-    cmd.signum = signum;
-
-    /* SIGINT is a partially special signal. The first time we see it,
-     * we will send it to the processes. The next time, we will treat
-     * it as a SIGKILL (user convenience to force kill processes). */
-    if (signum == SIGINT && ++sigint_count > 1)
-        cmd.type = HYD_CLEANUP;
-    else if (signum == SIGINT) {
-        /* First Ctrl-C */
-        HYDU_dump(stdout, "Sending Ctrl-C to processes as requested\n");
-        HYDU_dump(stdout, "Press Ctrl-C again to force abort\n");
-    } else if (signum == SIGCHLD) {
-        cmd.type = HYD_SIGCHLD;
-    }
-
-    HYDU_sock_write(HYD_server_info.cmd_pipe[1], &cmd, sizeof(cmd), &sent, &closed,
-                    HYDU_SOCK_COMM_MSGWAIT);
-
-    HYDU_FUNC_EXIT();
-    return;
-}
-
-#define ordered(n1, n2) \
-    (((HYD_ui_mpich_info.sort_order == ASCENDING) && ((n1)->core_count <= (n2)->core_count)) || \
-     ((HYD_ui_mpich_info.sort_order == DESCENDING) && ((n1)->core_count >= (n2)->core_count)))
-
-static int compar(const void *_n1, const void *_n2)
-{
-    struct HYD_node *n1, *n2;
-    int ret;
-
-    n1 = *((struct HYD_node **) _n1);
-    n2 = *((struct HYD_node **) _n2);
-
-    if (n1->core_count == n2->core_count)
-        ret = 0;
-    else if (n1->core_count < n2->core_count)
-        ret = -1;
-    else
-        ret = 1;
-
-    if (HYD_ui_mpich_info.sort_order == DESCENDING)
-        ret *= -1;
-
-    return ret;
-}
-
-static HYD_status qsort_node_list(void)
-{
-    struct HYD_node **node_list, *node, *new_list, *r1;
-    int count, i;
-    HYD_status status = HYD_SUCCESS;
-
-    for (count = 0, node = HYD_server_info.node_list; node; node = node->next, count++)
-        /* skip */ ;
-
-    HYDU_MALLOC_OR_JUMP(node_list, struct HYD_node **, count * sizeof(struct HYD_node *), status);
-    for (i = 0, node = HYD_server_info.node_list; node; node = node->next, i++)
-        node_list[i] = node;
-
-    qsort((void *) node_list, (size_t) count, sizeof(struct HYD_node *), compar);
-
-    r1 = new_list = node_list[0];
-    for (i = 1; i < count; i++) {
-        r1->next = node_list[i];
-        r1 = r1->next;
-        r1->next = NULL;
-    }
-    HYD_server_info.node_list = new_list;
-
-    MPL_free(node_list);
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
+static void signal_cb(int signum);
+static HYD_status qsort_node_list(void);
+static void HYD_ui_mpich_debug_print(void);
 
 int main(int argc, char **argv)
 {
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int exit_status = 0, i, timeout, user_provided_host_list, global_core_count;
+    int exit_status = 0, i, user_provided_host_list, global_core_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -202,10 +116,6 @@ int main(int argc, char **argv)
         }
     }
 
-    if (HYD_server_info.user_global.debug)
-        for (node = HYD_server_info.node_list; node; node = node->next)
-            HYDU_dump_noprefix(stdout, "host: %s\n", node->hostname);
-
     /* Reset the host list to use only the number of processes per
      * node as specified by the ppn option. */
     if (HYD_ui_mpich_info.ppn != -1) {
@@ -289,29 +199,10 @@ int main(int argc, char **argv)
         }
     }
 
-    if (HYD_server_info.user_global.debug)
+    if (HYD_server_info.user_global.debug) {
+        HYD_ui_mpich_debug_print();
         HYD_uiu_print_params();
-
-    if (MPL_env2int("MPIEXEC_TIMEOUT", &timeout) == 0)
-        timeout = -1;   /* Infinite timeout */
-
-    if (HYD_server_info.user_global.debug)
-        HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
-
-    /* Check if the user wants us to use a port within a certain
-     * range. */
-    if (MPL_env2str("MPIR_CVAR_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_PARAM_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPICH_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_CVAR_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_CVAR_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_PARAM_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_PARAM_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPICH_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPICH_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &HYD_server_info.port_range))
-        HYD_server_info.port_range = MPL_strdup(HYD_server_info.port_range);
+    }
 
     /* Add the stdout/stderr callback handlers */
     HYD_server_info.stdout_cb = HYD_uiu_stdout_cb;
@@ -326,7 +217,7 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "process manager returned error launching processes\n");
 
     /* Wait for their completion */
-    status = HYD_pmci_wait_for_completion(timeout);
+    status = HYD_pmci_wait_for_completion(HYD_ui_mpich_info.timeout);
     HYDU_ERR_POP(status, "process manager error waiting for completion\n");
 
     /* Check for the exit status for all the processes */
@@ -399,4 +290,124 @@ int main(int argc, char **argv)
 
   fn_fail:
     goto fn_exit;
+}
+
+HYD_status HYD_uii_get_current_exec(struct HYD_exec **exec)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (HYD_uii_mpx_exec_list == NULL) {
+        status = HYDU_alloc_exec(&HYD_uii_mpx_exec_list);
+        HYDU_ERR_POP(status, "unable to allocate exec\n");
+        HYD_uii_mpx_exec_list->appnum = 0;
+    }
+
+    *exec = HYD_uii_mpx_exec_list;
+    while ((*exec)->next)
+        *exec = (*exec)->next;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+/* ---- internal routines ---- */
+
+static void signal_cb(int signum)
+{
+    struct HYD_cmd cmd;
+    static int sigint_count = 0;
+    int sent, closed;
+
+    HYDU_FUNC_ENTER();
+
+    cmd.type = HYD_SIGNAL;
+    cmd.signum = signum;
+
+    /* SIGINT is a partially special signal. The first time we see it,
+     * we will send it to the processes. The next time, we will treat
+     * it as a SIGKILL (user convenience to force kill processes). */
+    if (signum == SIGINT && ++sigint_count > 1)
+        cmd.type = HYD_CLEANUP;
+    else if (signum == SIGINT) {
+        /* First Ctrl-C */
+        HYDU_dump(stdout, "Sending Ctrl-C to processes as requested\n");
+        HYDU_dump(stdout, "Press Ctrl-C again to force abort\n");
+    } else if (signum == SIGCHLD) {
+        cmd.type = HYD_SIGCHLD;
+    }
+
+    HYDU_sock_write(HYD_server_info.cmd_pipe[1], &cmd, sizeof(cmd), &sent, &closed,
+                    HYDU_SOCK_COMM_MSGWAIT);
+
+    HYDU_FUNC_EXIT();
+    return;
+}
+
+#define ordered(n1, n2) \
+    (((HYD_ui_mpich_info.sort_order == ASCENDING) && ((n1)->core_count <= (n2)->core_count)) || \
+     ((HYD_ui_mpich_info.sort_order == DESCENDING) && ((n1)->core_count >= (n2)->core_count)))
+
+static int compar(const void *_n1, const void *_n2)
+{
+    struct HYD_node *n1, *n2;
+    int ret;
+
+    n1 = *((struct HYD_node **) _n1);
+    n2 = *((struct HYD_node **) _n2);
+
+    if (n1->core_count == n2->core_count)
+        ret = 0;
+    else if (n1->core_count < n2->core_count)
+        ret = -1;
+    else
+        ret = 1;
+
+    if (HYD_ui_mpich_info.sort_order == DESCENDING)
+        ret *= -1;
+
+    return ret;
+}
+
+static HYD_status qsort_node_list(void)
+{
+    struct HYD_node **node_list, *node, *new_list, *r1;
+    int count, i;
+    HYD_status status = HYD_SUCCESS;
+
+    for (count = 0, node = HYD_server_info.node_list; node; node = node->next, count++)
+        /* skip */ ;
+
+    HYDU_MALLOC_OR_JUMP(node_list, struct HYD_node **, count * sizeof(struct HYD_node *), status);
+    for (i = 0, node = HYD_server_info.node_list; node; node = node->next, i++)
+        node_list[i] = node;
+
+    qsort((void *) node_list, (size_t) count, sizeof(struct HYD_node *), compar);
+
+    r1 = new_list = node_list[0];
+    for (i = 1; i < count; i++) {
+        r1->next = node_list[i];
+        r1 = r1->next;
+        r1->next = NULL;
+    }
+    HYD_server_info.node_list = new_list;
+
+    MPL_free(node_list);
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static void HYD_ui_mpich_debug_print(void)
+{
+    for (struct HYD_node * node = HYD_server_info.node_list; node; node = node->next) {
+        HYDU_dump_noprefix(stdout, "host: %s\n", node->hostname);
+    }
+
+    HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", HYD_ui_mpich_info.timeout);
 }
