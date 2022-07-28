@@ -65,9 +65,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
             MPIR_Typerep_unpack(MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz, recvbuf,
                                 recvcount, recvtype, 0, &actual_unpack_bytes,
                                 MPIR_TYPEREP_FLAG_NONE);
+            MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
+                                "**dtypemismatch");
         }
-        MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
-                            "**dtypemismatch");
     } else if (recvtype_iscontig) {
         MPI_Aint actual_pack_bytes;
         if (typereq_req) {
@@ -78,9 +78,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
             MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0,
                               MPIR_get_contig_ptr(recvbuf, recvtype_true_lb), copy_sz,
                               &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+            MPIR_ERR_CHKANDJUMP(actual_pack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
+                                "**dtypemismatch");
         }
-        MPIR_ERR_CHKANDJUMP(actual_pack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
-                            "**dtypemismatch");
     } else {
         /* For multi-step pack/unpack, using only blocking version for simplicity. */
 
