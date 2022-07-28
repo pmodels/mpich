@@ -1822,6 +1822,7 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/threads/Makefile \
           impls/mpich/threads/pt2pt/Makefile \
           impls/mpich/cuda/Makefile \
+          impls/mpich/hip/Makefile \
           impls/mpich/misc/Makefile \
           impls/mpich/ulfm/Makefile \
           )
