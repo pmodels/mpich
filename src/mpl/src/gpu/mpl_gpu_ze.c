@@ -13,6 +13,9 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 static int gpu_initialized = 0;
 static int device_count;
 static int max_dev_id;
+static char **device_list = NULL;
+#define MAX_GPU_STR_LEN 256
+static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
 
 static int *local_to_global_map;        /* [device_count] */
 static int *global_to_local_map;        /* [max_dev_id + 1]   */
@@ -44,18 +47,114 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
     return ret;
 }
 
-int MPL_gpu_get_dev_list(int *dev_count, char **dev_list, bool is_subdev)
+int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev)
 {
     int ret = MPL_SUCCESS;
-    *dev_count = 0;
-    *dev_list = NULL;
+    if (!gpu_initialized) {
+        ret = MPL_gpu_init(0);
+    }
+
+    if (!is_subdev) {
+        device_list = (char **) MPL_malloc(device_count * sizeof(char *), MPL_MEM_OTHER);
+        assert(device_list != NULL);
+
+        for (int i = 0; i < device_count; ++i) {
+            int str_len = snprintf(NULL, 0, "%d", i);
+            device_list[i] = (char *) MPL_malloc((str_len + 1) * sizeof(char *), MPL_MEM_OTHER);
+            sprintf(device_list[i], "%d", i);
+        }
+
+        *dev_count = device_count;
+        *dev_list = device_list;
+    } else {
+        int driver_count = 0;
+        int *subdev_counts = NULL;
+        int total_subdev_count = 0;
+        ze_driver_handle_t *all_drivers = NULL;
+
+        ret = zeDriverGet(&driver_count, NULL);
+        assert(ret == ZE_RESULT_SUCCESS);
+        assert(device_count);
+
+        all_drivers = MPL_malloc(driver_count * sizeof(ze_driver_handle_t), MPL_MEM_OTHER);
+        assert(all_drivers);
+        ret = zeDriverGet(&driver_count, all_drivers);
+        assert(ret == ZE_RESULT_SUCCESS);
+
+        /* Find a driver instance with a GPU device */
+        for (int i = 0; i < driver_count; ++i) {
+            global_ze_device_count = 0;
+            ret = zeDeviceGet(all_drivers[i], &global_ze_device_count, NULL);
+            global_ze_devices_handle =
+                MPL_malloc(global_ze_device_count * sizeof(ze_device_handle_t), MPL_MEM_OTHER);
+            assert(global_ze_devices_handle);
+            subdev_counts = MPL_malloc(global_ze_device_count * sizeof(int), MPL_MEM_OTHER);
+            memset(subdev_counts, 0, global_ze_device_count * sizeof(int));
+            assert(subdev_counts);
+
+            ret = zeDeviceGet(all_drivers[i], &global_ze_device_count, global_ze_devices_handle);
+            assert(ret == ZE_RESULT_SUCCESS);
+
+            /* Check if the driver supports a gpu */
+            for (int d = 0; d < global_ze_device_count; ++d) {
+                ze_device_properties_t device_properties;
+                ret = zeDeviceGetProperties(global_ze_devices_handle[d], &device_properties);
+                assert(ret == ZE_RESULT_SUCCESS);
+
+                if (!(device_properties.flags & ZE_DEVICE_PROPERTY_FLAG_SUBDEVICE)) {
+                    zeDeviceGetSubDevices(global_ze_devices_handle[d], &subdev_counts[d], NULL);
+                    if (subdev_counts[d] == 0) {
+                        /* ZE reports no subdevice when there is only one subdevice */
+                        subdev_counts[d] = 1;
+                    }
+                    total_subdev_count += subdev_counts[d];
+
+                }
+            }
+            MPL_free(global_ze_devices_handle);
+        }
+
+        device_list = (char **) MPL_malloc(total_subdev_count * sizeof(char *), MPL_MEM_OTHER);
+        assert(device_list != NULL);
+
+        int idx = 0;
+        for (int i = 0; i < device_count; ++i) {
+            for (int j = 0; j < subdev_counts[i]; j++) {
+                int str_len = snprintf(NULL, 0, "%d.%d", i, j);
+                device_list[idx] =
+                    (char *) MPL_malloc((str_len + 1) * sizeof(char *), MPL_MEM_OTHER);
+                sprintf(device_list[idx], "%d.%d", i, j);
+                device_list[idx][str_len] = 0;
+                idx++;
+            }
+        }
+
+        MPL_free(subdev_counts);
+
+        *dev_count = total_subdev_count;
+        *dev_list = device_list;
+    }
     return ret;
 }
 
-int MPL_gpu_dev_affinity_to_env(int dev_count, char ***dev_list, char **env)
+int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
 {
     int ret = MPL_SUCCESS;
-    *env = NULL;
+    memset(affinity_env, 0, MAX_GPU_STR_LEN);
+    if (dev_count == 0) {
+        MPL_snprintf(affinity_env, 3, "-1");
+    } else {
+        int str_offset = 0;
+        for (int i = 0; i < dev_count; ++i) {
+            if (i) {
+                MPL_strncpy(affinity_env + str_offset, ",", MAX_GPU_STR_LEN - str_offset);
+                str_offset++;
+            }
+            MPL_strncpy(affinity_env + str_offset, dev_list[i], MAX_GPU_STR_LEN - str_offset);
+            str_offset += strlen(dev_list[i]);
+        }
+    }
+    *env = affinity_env;
     return ret;
 }
 
