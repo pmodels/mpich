@@ -63,7 +63,7 @@ int MPL_gpu_free(void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_init(void)
+int MPL_gpu_init(int debug_summary)
 {
     return MPL_SUCCESS;
 }
