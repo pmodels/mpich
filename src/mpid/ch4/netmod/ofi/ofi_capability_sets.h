@@ -400,7 +400,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_CXI     MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_CXI  MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_CXI           MPIDI_OFI_ON
-#define MPIDI_OFI_ENABLE_HMEM_CXI                   MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_HMEM_CXI                   MPIDI_OFI_ON
 #define MPIDI_OFI_NUM_AM_BUFFERS_CXI                MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_CXI  (0) /* This will be added to the CXI provider as
                                                          * RMA support is fixed. */
