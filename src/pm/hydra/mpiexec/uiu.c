@@ -5,7 +5,7 @@
 
 #include "hydra_server.h"
 #include "hydra.h"
-#include "ui.h"
+#include "mpiexec.h"
 #include "uiu.h"
 
 static struct stdoe_fd {
@@ -45,11 +45,6 @@ void HYD_uiu_init_params(void)
     HYD_server_info.num_pmi_calls = 0;
 #endif /* ENABLE_PROFILING */
 
-    HYD_ui_info.output_from = -1;
-    HYD_ui_info.prepend_pattern = NULL;
-    HYD_ui_info.outfile_pattern = NULL;
-    HYD_ui_info.errfile_pattern = NULL;
-
     stdoe_fd_list = NULL;
 }
 
@@ -67,9 +62,9 @@ void HYD_uiu_free_params(void)
     HYDU_free_node_list(HYD_server_info.node_list);
     HYDU_free_proxy_list(HYD_server_info.pg_list.proxy_list);
     HYDU_free_pg_list(HYD_server_info.pg_list.next);
-    MPL_free(HYD_ui_info.prepend_pattern);
-    MPL_free(HYD_ui_info.outfile_pattern);
-    MPL_free(HYD_ui_info.errfile_pattern);
+    MPL_free(HYD_ui_mpich_info.prepend_pattern);
+    MPL_free(HYD_ui_mpich_info.outfile_pattern);
+    MPL_free(HYD_ui_mpich_info.errfile_pattern);
 
     for (run = stdoe_fd_list; run;) {
         close(run->fd);
@@ -256,12 +251,12 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
 
     HYDU_FUNC_ENTER();
 
-    if (HYD_ui_info.output_from != -1 && rank != HYD_ui_info.output_from) {
+    if (HYD_ui_mpich_info.output_from != -1 && rank != HYD_ui_mpich_info.output_from) {
         goto fn_exit;
     }
 
-    pattern = (_fd == STDOUT_FILENO) ? HYD_ui_info.outfile_pattern :
-        (_fd == STDERR_FILENO) ? HYD_ui_info.errfile_pattern : NULL;
+    pattern = (_fd == STDOUT_FILENO) ? HYD_ui_mpich_info.outfile_pattern :
+        (_fd == STDERR_FILENO) ? HYD_ui_mpich_info.errfile_pattern : NULL;
 
     if (pattern) {
         /* See if the pattern already exists */
@@ -293,12 +288,12 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
         }
     }
 
-    if (HYD_ui_info.prepend_pattern == NULL) {
+    if (HYD_ui_mpich_info.prepend_pattern == NULL) {
         status = HYDU_sock_write(fd, buf, buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
         HYDU_ASSERT(!closed, status);
     } else {
-        status = resolve_pattern_string(HYD_ui_info.prepend_pattern, &prepend, pgid, proxy_id,
+        status = resolve_pattern_string(HYD_ui_mpich_info.prepend_pattern, &prepend, pgid, proxy_id,
                                         rank);
         HYDU_ERR_POP(status, "error resolving pattern\n");
 

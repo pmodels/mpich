@@ -439,7 +439,7 @@ int MPL_ze_ipc_event_pool_handle_size(void)
     return ZE_MAX_IPC_HANDLE_SIZE;
 }
 
-int MPL_gpu_init(MPL_gpu_info_t * info)
+int MPL_gpu_init(MPL_gpu_info_t * info, int debug_summary)
 {
     int mpl_err = MPL_SUCCESS;
     if (gpu_initialized) {
@@ -458,6 +458,12 @@ int MPL_gpu_init(MPL_gpu_info_t * info)
     if (local_ze_device_count <= 0) {
         gpu_initialized = 1;
         goto fn_exit;
+    }
+
+    if (debug_summary) {
+        printf("==== GPU Init (ZE) ====\n");
+        printf("device_count: %d\n", device_count);
+        printf("=========================\n");
     }
 
     /* Parse ZE_AFFINITY_MASK to get max_dev_id and max_subdev_id */

@@ -7,7 +7,8 @@ bin_PROGRAMS += mpiexec.hydra
 
 mpiexec_hydra_SOURCES = \
     mpiexec/mpiexec.c \
-    mpiexec/utils.c \
+    mpiexec/options.c \
+    mpiexec/get_parameters.c \
     mpiexec/uiu.c \
     mpiexec/pmiserv_cb.c \
     mpiexec/pmiserv_pmi.c \

@@ -101,7 +101,7 @@ int MPL_gpu_unregister_host(const void *ptr);
 int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device);
 int MPL_gpu_free(void *ptr);
 
-int MPL_gpu_init(MPL_gpu_info_t * info);
+int MPL_gpu_init(MPL_gpu_info_t * info, int debug_summary);
 int MPL_gpu_finalize(void);
 
 int MPL_gpu_global_to_local_dev_id(int global_dev_id);
