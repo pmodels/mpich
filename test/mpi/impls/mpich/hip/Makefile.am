@@ -8,4 +8,6 @@ include $(top_srcdir)/Makefile_hip.mtest
 LDADD += -lm
 
 noinst_PROGRAMS = \
-    saxpy
+    saxpy \
+    stream \
+    stream_allred
