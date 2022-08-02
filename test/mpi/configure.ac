@@ -785,6 +785,9 @@ fi
 AM_CONDITIONAL([HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
 
 # Check HIP availability
+hipdir=
+AC_SUBST(hipdir)
+AC_ARG_VAR([HIPCC], [hipcc compiler to use])
 if test "$have_gpu" = "no" ; then
     AC_DEFINE([__HIP_PLATFORM_AMD__],[1],[AMD GPU HIP available])
     PAC_CHECK_HEADER_LIB_OPTIONAL([hip],[hip/hip_runtime_api.h],[amdhip64],[hipStreamSynchronize])
@@ -803,6 +806,16 @@ if test "$have_gpu" = "no" ; then
           fi
        fi
        hip_LIBS="-lamdhip64"
+
+       if test -z "$HIPCC" ; then
+           if test -n "${with_hip}" -a "$with_hip" != "no" ; then
+               AC_PATH_PROG([HIPCC], [hipcc], [hipcc_not_found], [$with_hip/bin:$PATH])
+           else
+               AC_PATH_PROG([HIPCC], [hipcc], [hipcc_not_found])
+           fi
+       fi
+
+       hipdir="hip"
     fi
     AC_SUBST([hip_CPPFLAGS])
     AC_SUBST([hip_LDFLAGS])
@@ -1809,6 +1822,7 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/threads/Makefile \
           impls/mpich/threads/pt2pt/Makefile \
           impls/mpich/cuda/Makefile \
+          impls/mpich/hip/Makefile \
           impls/mpich/misc/Makefile \
           impls/mpich/ulfm/Makefile \
           )
