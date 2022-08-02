@@ -698,6 +698,24 @@ AS_IF([test "x$enable_fc"  = "xno"],[FC=no])
 # suppress default "-g -O2" from AC_PROG_CXX
 : ${CXXFLAGS=""}
 AC_PROG_CXX
+AC_CACHE_CHECK([whether the C++ compiler $CXX can build an executable],
+    pac_cv_cxx_builds_exe,[
+    AC_LANG_PUSH([C++])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+        class mytest {
+            int a;
+        public:
+            mytest(void) : a(1) {}
+            ~mytest(void) {}
+        };
+        ]],[[mytest a;]])],
+        pac_cv_cxx_builds_exe=yes, pac_cv_cxx_builds_exe=no)
+    AC_LANG_POP([C++])
+])
+if test "$pac_cv_cxx_builds_exe" = "no" ; then
+    # clear $CXX if C++ compiler does not work
+    CXX=
+fi
 
 enable_f77=no
 enable_fc=no
@@ -2231,21 +2249,7 @@ if test "$enable_cxx" = "yes" ; then
     # to link programs that are really C++.  For that reason,
     # we've added a test to see if the C++ compiler can produce
     # an executable.
-    AC_CACHE_CHECK([whether the C++ compiler $CXX can build an executable],
-    pac_cv_cxx_builds_exe,[
- AC_LANG_PUSH([C++])
- AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-    class mytest {
-        int a;
-      public:
-        mytest(void) : a(1) {}
-        ~mytest(void) {}
-    };
-    ]],[[mytest a;]])],
-    pac_cv_cxx_builds_exe=yes, pac_cv_cxx_builds_exe=no)
- AC_LANG_POP([C++])
-])
-    if test "$pac_cv_cxx_builds_exe" != yes ; then
+    if test -z "$CXX" ; then
         AC_MSG_ERROR([Aborting because C++ compiler does not work.  If you do not need a C++ compiler, configure with --disable-cxx])
     fi
     # Recent failures have come when a standard header is loaded
@@ -3206,9 +3210,9 @@ else
     AC_DEFINE(HAVE_NO_FORTRAN_MPI_TYPES_IN_C,1,[Define if the Fortran types are not available in C])
 fi
 # ----------------------------------------------------------------------------
-# C++ types
+# C++ types - we support CXX datatypes if there is a working CXX compiler
 
-if test "$enable_cxx" = "yes" ; then
+if test -n "$CXX" ; then
     AC_LANG([C++])
     AC_CHECK_SIZEOF(bool)
 
