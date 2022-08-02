@@ -543,6 +543,66 @@ static int allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req)
     return mpi_errno;
 }
 
+/* ---- collectives --------------------- */
+
+/* Buffer swapping macros for collectives */
+
+/* NOTE: for non-contig datatype, the localcopy is split between "xxx_impl" and "xxx_cb"
+ *       because the hostbuf to tmpbuf are host-to-host copy and MPIR_Typerep_(un)pack_stream
+ *       won't work and it has to be called from the callback function.
+ */
+#define HOST_SWAP_STREAM(hostbuf, devbuf, count, datatype, stream, is_contig, tmpbuf, data_sz) \
+    do { \
+        if (is_contig) { \
+            mpi_errno = MPIR_Localcopy_stream(devbuf, count, datatype, hostbuf, count, datatype, stream); \
+            MPIR_ERR_CHECK(mpi_errno); \
+        } else { \
+            if (!tmpbuf) { \
+                tmpbuf = MPL_malloc(data_sz, MPL_MEM_OTHER); \
+            } \
+            MPI_Aint actual_pack_bytes; \
+            mpi_errno = MPIR_Typerep_pack_stream(devbuf, count, datatype, 0, tmpbuf, data_sz, &actual_pack_bytes, stream); \
+            MPIR_ERR_CHECK(mpi_errno); \
+            MPIR_ERR_CHKANDJUMP(actual_pack_bytes != data_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch"); \
+            /* unpack in xxx_cb */ \
+        } \
+    } while (0)
+
+#define HOST_SWAPBACK_STREAM(hostbuf, devbuf, count, datatype, stream, is_contig, tmpbuf, data_sz) \
+    do { \
+        if (is_contig) { \
+            mpi_errno = MPIR_Localcopy_stream(hostbuf, count, datatype, devbuf, count, datatype, stream); \
+        } else { \
+            /* pack in xxx_cb */ \
+            MPI_Aint actual_unpack_bytes; \
+            mpi_errno = MPIR_Typerep_unpack_stream(tmpbuf, data_sz, devbuf, count, datatype, 0, &actual_unpack_bytes, stream); \
+            MPIR_ERR_CHECK(mpi_errno); \
+            MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != data_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch"); \
+        } \
+        MPIR_ERR_CHECK(mpi_errno); \
+    } while (0)
+
+/* macros for part of localcopy called from callback */
+#define HOST_SWAP_IN_CB(hostbuf, count, datatype, tmpbuf, data_sz) \
+    do { \
+        if (tmpbuf) { \
+            MPI_Aint actual_unpack_bytes; \
+            mpi_errno = MPIR_Typerep_unpack(tmpbuf, data_sz, hostbuf, count, datatype, 0, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE); \
+            MPIR_Assertp(mpi_errno == MPI_SUCCESS); \
+            MPIR_Assertp(actual_unpack_bytes == data_sz); \
+        } \
+    } while (0)
+
+#define HOST_SWAPBACK_IN_CB(hostbuf, count, datatype, tmpbuf, data_sz) \
+    do { \
+        if (tmpbuf) { \
+            MPI_Aint actual_pack_bytes; \
+            mpi_errno = MPIR_Typerep_pack(hostbuf, count, datatype, 0, tmpbuf, data_sz, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE); \
+            MPIR_Assertp(mpi_errno == MPI_SUCCESS); \
+            MPIR_Assertp(actual_pack_bytes == data_sz); \
+        } \
+    } while (0)
+
 /* allreduce enqueue */
 struct allreduce_data {
     const void *sendbuf;
@@ -554,6 +614,8 @@ struct allreduce_data {
 
     void *host_sendbuf;
     void *host_recvbuf;
+    void *tmp_sendbuf;          /* noncontig datatype may require tmp_buf for localcopy */
+    void *tmp_recvbuf;
     MPI_Aint data_sz;
     MPI_Aint actual_pack_bytes;
 };
@@ -566,36 +628,15 @@ static void allreduce_enqueue_cb(void *data)
     MPIR_disable_gpu = true;
 
     struct allreduce_data *p = data;
-    void *sendbuf = (void *) p->sendbuf;
+
+    const void *sendbuf = p->sendbuf;
     void *recvbuf = p->recvbuf;
-
-    int is_contig;
-    MPI_Aint true_lb;
-    MPIR_Datatype_is_contig(p->datatype, &is_contig);
-    MPIR_Datatype_get_true_lb(p->datatype, &true_lb);
-
-    if (p->host_sendbuf || p->host_recvbuf) {
-        if (p->host_sendbuf) {
-            MPIR_Assertp(p->actual_pack_bytes == p->data_sz);
-            if (is_contig) {
-                sendbuf = (char *) p->host_sendbuf - true_lb;
-            } else {
-                sendbuf = MPIR_alloc_buffer(p->count, p->datatype);
-                MPIR_Assertp(sendbuf);
-                MPI_Aint actual_unpack_bytes;
-                MPIR_Typerep_unpack(p->host_sendbuf, p->data_sz, sendbuf, p->count, p->datatype,
-                                    0, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
-                MPIR_Assertp(actual_unpack_bytes == p->data_sz);
-            }
-        }
-        if (p->host_recvbuf) {
-            if (is_contig) {
-                recvbuf = (char *) p->host_recvbuf - true_lb;
-            } else {
-                recvbuf = MPIR_alloc_buffer(p->count, p->datatype);
-                MPIR_Assertp(recvbuf);
-            }
-        }
+    if (p->host_sendbuf) {
+        HOST_SWAP_IN_CB(p->host_sendbuf, p->count, p->datatype, p->tmp_sendbuf, p->data_sz);
+        sendbuf = p->host_sendbuf;
+    }
+    if (p->host_recvbuf) {
+        recvbuf = p->host_recvbuf;
     }
 
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -604,39 +645,29 @@ static void allreduce_enqueue_cb(void *data)
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
     if (p->host_sendbuf) {
-        if (!is_contig) {
-            MPL_free(sendbuf);
-        }
+        MPL_free(p->tmp_sendbuf);
+        MPIR_gpu_host_free(p->host_sendbuf, count, datatype);
+    }
+    if (p->host_recvbuf) {
+        HOST_SWAPBACK_IN_CB(p->host_recvbuf, p->count, p->datatype, p->tmp_recvbuf, p->data_sz);
     }
 
-    if (p->host_recvbuf) {
-        if (!is_contig) {
-            MPI_Aint actual_pack_bytes;
-            MPIR_Typerep_pack(recvbuf, p->count, p->datatype, 0, p->host_recvbuf, p->data_sz,
-                              &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
-            MPIR_Assertp(actual_pack_bytes == p->data_sz);
-            MPL_free(recvbuf);
-        }
-        /* unpack stream + cleanup_cb */
-    } else {
+    if (!p->host_recvbuf) {
         /* we are done */
         MPL_free(p);
     }
 
     MPIR_disable_gpu = false;
-
-    if (p->host_sendbuf) {
-        MPIR_gpu_free_host(p->host_sendbuf);
-    }
 }
 
 static void allred_stream_cleanup_cb(void *data)
 {
     struct allreduce_data *p = data;
-    MPIR_Assertp(p->actual_pack_bytes == p->data_sz);
 
-    MPIR_gpu_free_host(p->host_recvbuf);
-    MPL_free(data);
+    MPL_free(p->tmp_recvbuf);
+    MPIR_gpu_host_free(p->host_recvbuf, p->count, p->datatype);
+
+    MPL_free(p);
 }
 
 int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
@@ -649,12 +680,13 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
     mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
+    int is_contig;
+    MPIR_Datatype_is_contig(datatype, &is_contig);
+
 #ifndef MPL_HAS_TLS
     /* FIXME: check for non-contig case and bail. We can't ensure the callback
      *        won't call GPU functions.
      */
-    int is_contig;
-    MPIR_Datatype_is_contig(datatype, &is_contig);
     MPIR_ERR_CHKANDJUMP(!is_contig, mpi_errno, MPI_ERR_OTHER, "**gpu_enqueue_noncontig");
 #endif
 
@@ -671,29 +703,30 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
 
     p->host_sendbuf = NULL;
     p->host_recvbuf = NULL;
+    p->tmp_sendbuf = NULL;
+    p->tmp_recvbuf = NULL;
 
     MPI_Aint dt_size;
     MPIR_Datatype_get_size_macro(datatype, dt_size);
     p->data_sz = dt_size * count;
 
+    /* Buffer swap. We need additional temp buffer size for noncontig datatype */
     if (MPIR_GPU_query_pointer_is_dev(sendbuf)) {
-        MPIR_gpu_malloc_host(&p->host_sendbuf, p->data_sz);
-        mpi_errno = MPIR_Typerep_pack_stream(sendbuf, count, datatype, 0,
-                                             p->host_sendbuf, p->data_sz,
-                                             &p->actual_pack_bytes, &gpu_stream);
-        MPIR_ERR_CHECK(mpi_errno);
+        p->host_sendbuf = MPIR_alloc_buffer(count, datatype);
+        HOST_SWAP_STREAM(p->host_sendbuf, sendbuf, count, datatype, &gpu_stream,
+                         is_contig, p->tmp_sendbuf, p->data_sz);
     }
     if (MPIR_GPU_query_pointer_is_dev(recvbuf)) {
-        MPIR_gpu_malloc_host(&p->host_recvbuf, p->data_sz);
+        p->host_recvbuf = MPIR_alloc_buffer(count, datatype);
+        HOST_SWAP_STREAM(p->host_recvbuf, recvbuf, count, datatype, &gpu_stream,
+                         is_contig, p->tmp_recvbuf, p->data_sz);
     }
 
     MPL_gpu_launch_hostfn(gpu_stream, allreduce_enqueue_cb, p);
 
     if (p->host_recvbuf) {
-        mpi_errno = MPIR_Typerep_unpack_stream(p->host_recvbuf, p->data_sz,
-                                               recvbuf, count, datatype, 0,
-                                               &p->actual_pack_bytes, &gpu_stream);
-        MPIR_ERR_CHECK(mpi_errno);
+        HOST_SWAPBACK_STREAM(p->host_recvbuf, recvbuf, count, datatype, &gpu_stream,
+                             is_contig, p->tmp_recvbuf, p->data_sz);
 
         MPL_gpu_launch_hostfn(gpu_stream, allred_stream_cleanup_cb, p);
     }
