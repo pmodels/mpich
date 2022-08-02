@@ -1016,7 +1016,7 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
                                (const INFO_TYPE **) info_keyval_vectors,
                                num_preput_keyval, preput_vector, NULL, 0, pmi_errcodes);
     MPL_free(argcs);
-    MPIR_ERR_CHKANDJUMP1(mpi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
 #elif defined(USE_PMIX_API)
     /* not supported yet */
