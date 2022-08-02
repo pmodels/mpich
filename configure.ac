@@ -3221,6 +3221,9 @@ if test -n "$CXX" ; then
     AC_MSG_RESULT([$pac_retval])
     AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_CTYPE],[$pac_retval],
 			[a C type used to compute C++ bool reductions])
+    if test "$ac_cv_sizeof_bool" != 0 ; then
+        AC_DEFINE(HAVE_CXX_BOOL,1,[Define is C++ supports bool types])
+    fi
 
     AC_CHECK_HEADER(complex)
     if test "$ac_cv_header_complex" = "yes" ; then
