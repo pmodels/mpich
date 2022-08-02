@@ -60,9 +60,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     if (sendtype_iscontig) {
         MPI_Aint actual_unpack_bytes;
         if (localcopy_kind == LOCALCOPY_NONBLOCKING) {
-            MPIR_Typerep_req *typereq_req = extra_param;
+            MPIR_Typerep_req *typerep_req = extra_param;
             MPIR_Typerep_iunpack(MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz, recvbuf,
-                                 recvcount, recvtype, 0, &actual_unpack_bytes, typereq_req,
+                                 recvcount, recvtype, 0, &actual_unpack_bytes, typerep_req,
                                  MPIR_TYPEREP_FLAG_NONE);
         } else {
             /* LOCALCOPY_BLOCKING */
@@ -75,10 +75,10 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     } else if (recvtype_iscontig) {
         MPI_Aint actual_pack_bytes;
         if (localcopy_kind == LOCALCOPY_NONBLOCKING) {
-            MPIR_Typerep_req *typereq_req = extra_param;
+            MPIR_Typerep_req *typerep_req = extra_param;
             MPIR_Typerep_ipack(sendbuf, sendcount, sendtype, 0,
                                MPIR_get_contig_ptr(recvbuf, recvtype_true_lb), copy_sz,
-                               &actual_pack_bytes, typereq_req, MPIR_TYPEREP_FLAG_NONE);
+                               &actual_pack_bytes, typerep_req, MPIR_TYPEREP_FLAG_NONE);
         } else {
             /* LOCALCOPY_BLOCKING */
             MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0,
@@ -183,14 +183,14 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
 int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                    MPIR_Typerep_req * typereq_req)
+                    MPIR_Typerep_req * typerep_req)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
     mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                             LOCALCOPY_NONBLOCKING, typereq_req);
+                             LOCALCOPY_NONBLOCKING, typerep_req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

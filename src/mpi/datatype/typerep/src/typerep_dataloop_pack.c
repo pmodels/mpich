@@ -9,7 +9,7 @@
 #include "typerep_internal.h"
 
 int MPIR_Typerep_icopy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
-                       MPIR_Typerep_req * typereq_req, uint32_t flags)
+                       MPIR_Typerep_req * typerep_req, uint32_t flags)
 {
     MPIR_FUNC_ENTER;
 
@@ -30,7 +30,7 @@ int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes, uint3
 
 int MPIR_Typerep_ipack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
                        MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
-                       MPI_Aint * actual_pack_bytes, MPIR_Typerep_req * typereq_req, uint32_t flags)
+                       MPI_Aint * actual_pack_bytes, MPIR_Typerep_req * typerep_req, uint32_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Segment *segp;
@@ -96,7 +96,7 @@ int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype
 
 int MPIR_Typerep_iunpack(const void *inbuf, MPI_Aint insize,
                          void *outbuf, MPI_Aint outcount, MPI_Datatype datatype, MPI_Aint outoffset,
-                         MPI_Aint * actual_unpack_bytes, MPIR_Typerep_req * typereq_req,
+                         MPI_Aint * actual_unpack_bytes, MPIR_Typerep_req * typerep_req,
                          uint32_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -161,7 +161,7 @@ int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize,
                                 actual_unpack_bytes, NULL, flags);
 }
 
-int MPIR_Typerep_wait(MPIR_Typerep_req typereq_req)
+int MPIR_Typerep_wait(MPIR_Typerep_req typerep_req)
 {
     /* All nonblocking operations are actually blocking. Thus, do nothing in wait. */
     return MPI_SUCCESS;
