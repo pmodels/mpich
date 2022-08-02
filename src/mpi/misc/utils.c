@@ -8,9 +8,16 @@
 
 #define COPY_BUFFER_SZ 16384
 
+/* localcopy_kind */
+enum {
+    LOCALCOPY_BLOCKING,
+    LOCALCOPY_NONBLOCKING,
+    LOCALCOPY_STREAM,
+};
+
 static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                         void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                        MPIR_Typerep_req * typereq_req)
+                        int localcopy_kind, void *extra_param)
 {
     int mpi_errno = MPI_SUCCESS;
     int sendtype_iscontig, recvtype_iscontig;
@@ -21,9 +28,6 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_ENTER;
-
-    if (typereq_req)
-        *typereq_req = MPIR_TYPEREP_REQ_NULL;
 
     MPIR_Datatype_get_size_macro(sendtype, sendsize);
     MPIR_Datatype_get_size_macro(recvtype, recvsize);
@@ -53,15 +57,15 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_true_lb, &true_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &true_extent);
 
-    /* For single pack/unpack cases, using nonblocking version for better throughput
-     * when typereq_req is expected; otherwise using blocking version to minimize latency */
     if (sendtype_iscontig) {
         MPI_Aint actual_unpack_bytes;
-        if (typereq_req) {
+        if (localcopy_kind == LOCALCOPY_NONBLOCKING) {
+            MPIR_Typerep_req *typereq_req = extra_param;
             MPIR_Typerep_iunpack(MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz, recvbuf,
                                  recvcount, recvtype, 0, &actual_unpack_bytes, typereq_req,
                                  MPIR_TYPEREP_FLAG_NONE);
         } else {
+            /* LOCALCOPY_BLOCKING */
             MPIR_Typerep_unpack(MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz, recvbuf,
                                 recvcount, recvtype, 0, &actual_unpack_bytes,
                                 MPIR_TYPEREP_FLAG_NONE);
@@ -70,11 +74,13 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
                             "**dtypemismatch");
     } else if (recvtype_iscontig) {
         MPI_Aint actual_pack_bytes;
-        if (typereq_req) {
+        if (localcopy_kind == LOCALCOPY_NONBLOCKING) {
+            MPIR_Typerep_req *typereq_req = extra_param;
             MPIR_Typerep_ipack(sendbuf, sendcount, sendtype, 0,
                                MPIR_get_contig_ptr(recvbuf, recvtype_true_lb), copy_sz,
                                &actual_pack_bytes, typereq_req, MPIR_TYPEREP_FLAG_NONE);
         } else {
+            /* LOCALCOPY_BLOCKING */
             MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0,
                               MPIR_get_contig_ptr(recvbuf, recvtype_true_lb), copy_sz,
                               &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
@@ -164,7 +170,8 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, NULL);
+    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                             LOCALCOPY_BLOCKING, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -182,8 +189,8 @@ int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendty
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                             recvtype, typereq_req);
+    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                             LOCALCOPY_NONBLOCKING, typereq_req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
