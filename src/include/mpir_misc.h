@@ -64,7 +64,7 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
 int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                    MPIR_Typerep_req * typereq_req);
+                    MPIR_Typerep_req * typerep_req);
 
 /* Contiguous datatype calculates buffer address with `(char *) buf + dt_true_lb`.
  * However, dt_true_lb is treated as ptrdiff_t (signed), and when buf is MPI_BOTTOM
