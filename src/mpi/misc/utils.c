@@ -57,6 +57,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_true_lb, &true_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &true_extent);
 
+    /* NOTE: actual_unpack_bytes is a local variable. It works because yaksa
+     *       updates it at issuing time regardless of nonblocking or stream.
+     */
     if (sendtype_iscontig) {
         MPI_Aint actual_unpack_bytes;
         const void *bufptr = MPIR_get_contig_ptr(sendbuf, sendtype_true_lb);
@@ -64,6 +67,10 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
             MPIR_Typerep_req *typerep_req = extra_param;
             MPIR_Typerep_iunpack(bufptr, copy_sz, recvbuf, recvcount, recvtype, 0,
                                  &actual_unpack_bytes, typerep_req, MPIR_TYPEREP_FLAG_NONE);
+        } else if (localcopy_kind == LOCALCOPY_STREAM) {
+            void *stream = extra_param;
+            MPIR_Typerep_unpack_stream(bufptr, copy_sz, recvbuf, recvcount, recvtype, 0,
+                                       &actual_unpack_bytes, stream);
         } else {
             /* LOCALCOPY_BLOCKING */
             MPIR_Typerep_unpack(bufptr, copy_sz, recvbuf, recvcount, recvtype, 0,
@@ -78,6 +85,10 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
             MPIR_Typerep_req *typerep_req = extra_param;
             MPIR_Typerep_ipack(sendbuf, sendcount, sendtype, 0, bufptr, copy_sz,
                                &actual_pack_bytes, typerep_req, MPIR_TYPEREP_FLAG_NONE);
+        } else if (localcopy_kind == LOCALCOPY_STREAM) {
+            void *stream = extra_param;
+            MPIR_Typerep_pack_stream(sendbuf, sendcount, sendtype, 0, bufptr, copy_sz,
+                                     &actual_pack_bytes, stream);
         } else {
             /* LOCALCOPY_BLOCKING */
             MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0, bufptr, copy_sz,
@@ -86,7 +97,15 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         MPIR_ERR_CHKANDJUMP(actual_pack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
     } else {
-        /* For multi-step pack/unpack, using only blocking version for simplicity. */
+        /* Non-contig to non-contig, we allocate a temp buffer of COPY_BUFFER_SZ,
+         * unpack to the temp buffer followed with pack to recv buffer.
+         *
+         * Use blocking version for nonblocking kind, since it is less worth of
+         * optimization.
+         */
+
+        /* non-contig to non-contig stream enqueue is not supported. */
+        MPIR_Assert(localcopy_kind != LOCALCOPY_STREAM);
 
         intptr_t sfirst;
         intptr_t rfirst;
@@ -189,6 +208,29 @@ int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendty
 
     mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
                              LOCALCOPY_NONBLOCKING, typerep_req);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* Only single chunk copy (either sendtype or recvtype is contig) works with do_localcopy.
+ * For noncontig to noncontig, the copy consists of pacc/unpack to/from an intermediary
+ * temporary buffer. Since MPIR_Typerep_(un)pack_stream cannot handle host-host copy, non-
+ * contig local copy needs to be separately handled by caller.
+ */
+int MPIR_Localcopy_stream(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                          void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, void *stream)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                             LOCALCOPY_STREAM, stream);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
