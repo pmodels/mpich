@@ -59,30 +59,28 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
 
     if (sendtype_iscontig) {
         MPI_Aint actual_unpack_bytes;
+        const void *bufptr = MPIR_get_contig_ptr(sendbuf, sendtype_true_lb);
         if (localcopy_kind == LOCALCOPY_NONBLOCKING) {
             MPIR_Typerep_req *typerep_req = extra_param;
-            MPIR_Typerep_iunpack(MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz, recvbuf,
-                                 recvcount, recvtype, 0, &actual_unpack_bytes, typerep_req,
-                                 MPIR_TYPEREP_FLAG_NONE);
+            MPIR_Typerep_iunpack(bufptr, copy_sz, recvbuf, recvcount, recvtype, 0,
+                                 &actual_unpack_bytes, typerep_req, MPIR_TYPEREP_FLAG_NONE);
         } else {
             /* LOCALCOPY_BLOCKING */
-            MPIR_Typerep_unpack(MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz, recvbuf,
-                                recvcount, recvtype, 0, &actual_unpack_bytes,
-                                MPIR_TYPEREP_FLAG_NONE);
+            MPIR_Typerep_unpack(bufptr, copy_sz, recvbuf, recvcount, recvtype, 0,
+                                &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
         }
         MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
     } else if (recvtype_iscontig) {
+        void *bufptr = MPIR_get_contig_ptr(recvbuf, recvtype_true_lb);
         MPI_Aint actual_pack_bytes;
         if (localcopy_kind == LOCALCOPY_NONBLOCKING) {
             MPIR_Typerep_req *typerep_req = extra_param;
-            MPIR_Typerep_ipack(sendbuf, sendcount, sendtype, 0,
-                               MPIR_get_contig_ptr(recvbuf, recvtype_true_lb), copy_sz,
+            MPIR_Typerep_ipack(sendbuf, sendcount, sendtype, 0, bufptr, copy_sz,
                                &actual_pack_bytes, typerep_req, MPIR_TYPEREP_FLAG_NONE);
         } else {
             /* LOCALCOPY_BLOCKING */
-            MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0,
-                              MPIR_get_contig_ptr(recvbuf, recvtype_true_lb), copy_sz,
+            MPIR_Typerep_pack(sendbuf, sendcount, sendtype, 0, bufptr, copy_sz,
                               &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
         }
         MPIR_ERR_CHKANDJUMP(actual_pack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
