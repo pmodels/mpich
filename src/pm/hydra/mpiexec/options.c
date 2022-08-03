@@ -91,25 +91,26 @@ static void help_help_fn(void)
 
     printf("\n");
     printf("  Other Hydra options:\n");
-    printf("    -verbose                         verbose mode\n");
-    printf("    -info                            build information\n");
-    printf("    -print-all-exitcodes             print exit codes of all processes\n");
-    printf("    -iface                           network interface to use\n");
-    printf("    -ppn                             processes per node\n");
-    printf("    -profile                         turn on internal profiling\n");
-    printf("    -prepend-rank                    prepend rank to output\n");
-    printf("    -prepend-pattern                 prepend pattern to output\n");
-    printf("    -outfile-pattern                 direct stdout to file\n");
-    printf("    -errfile-pattern                 direct stderr to file\n");
-    printf("    -nameserver                      name server information (host:port format)\n");
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
     printf("    -disable-hostname-propagation    let MPICH auto-detect the hostname\n");
-    printf("    -order-nodes                     order nodes as ascending/descending cores\n");
-    printf("    -localhost                       local hostname for the launching node\n");
-    printf("    -usize                           universe size (SYSTEM, INFINITE, <value>)\n");
-    printf("    -pmi-port                        use the PMI_PORT model\n");
-    printf("    -skip-launch-node                do not run MPI processes on the launch node\n");
+    printf("    -errfile-pattern                 direct stderr to file\n");
     printf("    -gpus-per-proc                   number of GPUs per process (default: auto)\n");
+    printf("    -hybrid-hosts                    assume hosts do not share paths\n");
+    printf("    -iface                           network interface to use\n");
+    printf("    -info                            build information\n");
+    printf("    -localhost                       local hostname for the launching node\n");
+    printf("    -nameserver                      name server information (host:port format)\n");
+    printf("    -order-nodes                     order nodes as ascending/descending cores\n");
+    printf("    -outfile-pattern                 direct stdout to file\n");
+    printf("    -pmi-port                        use the PMI_PORT model\n");
+    printf("    -ppn                             processes per node\n");
+    printf("    -prepend-pattern                 prepend pattern to output\n");
+    printf("    -prepend-rank                    prepend rank to output\n");
+    printf("    -print-all-exitcodes             print exit codes of all processes\n");
+    printf("    -profile                         turn on internal profiling\n");
+    printf("    -skip-launch-node                do not run MPI processes on the launch node\n");
+    printf("    -usize                           universe size (SYSTEM, INFINITE, <value>)\n");
+    printf("    -verbose                         verbose mode\n");
 
     printf("\n");
     printf("Please see the instructions provided at\n");
@@ -1505,6 +1506,24 @@ static HYD_status gpus_per_proc_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void hybrid_hosts_help_fn(void)
+{
+    printf("\n");
+    printf("-hybrid_hosts:\n");
+    printf("   Assume hosts do not share PATH and working directories. For it\n");
+    printf("   to work, hydra need be installed to PATH on individual hosts.\n");
+    printf("   Working directory will not be set by default.\n");
+}
+
+static HYD_status hybrid_hosts_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_server_info.hybrid_hosts = true;
+
+    return status;
+}
+
 struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     /* help options */
     {"help", help_fn, help_help_fn},
@@ -1573,26 +1592,26 @@ struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     {"demux", demux_fn, demux_help_fn},
 
     /* Other hydra options */
-    {"verbose", verbose_fn, verbose_help_fn},
-    {"v", verbose_fn, verbose_help_fn},
     {"debug", verbose_fn, verbose_help_fn},
-    {"info", info_fn, info_help_fn},
-    {"version", info_fn, info_help_fn},
-    {"print-all-exitcodes", print_all_exitcodes_fn, print_all_exitcodes_help_fn},
-    {"iface", iface_fn, iface_help_fn},
-    {"nameserver", nameserver_fn, nameserver_help_fn},
     {"disable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
-    {"dac", auto_cleanup_fn, auto_cleanup_help_fn},
-    {"enable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
     {"disable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
+    {"enable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
     {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
-    {"order-nodes", order_nodes_fn, order_nodes_help_fn},
-    {"localhost", localhost_fn, localhost_help_fn},
-    {"usize", usize_fn, usize_help_fn},
-    {"pmi-port", pmi_port_fn, pmi_port_help_fn},
-    {"skip-launch-node", skip_launch_node_fn, skip_launch_node_help_fn},
-    {"gpus-per-proc", gpus_per_proc_fn, gpus_per_proc_help_fn},
     {"g", gpus_per_proc_fn, gpus_per_proc_help_fn},
+    {"gpus-per-proc", gpus_per_proc_fn, gpus_per_proc_help_fn},
+    {"hybrid-hosts", hybrid_hosts_fn, hybrid_hosts_help_fn},
+    {"iface", iface_fn, iface_help_fn},
+    {"info", info_fn, info_help_fn},
+    {"localhost", localhost_fn, localhost_help_fn},
+    {"nameserver", nameserver_fn, nameserver_help_fn},
+    {"order-nodes", order_nodes_fn, order_nodes_help_fn},
+    {"pmi-port", pmi_port_fn, pmi_port_help_fn},
+    {"print-all-exitcodes", print_all_exitcodes_fn, print_all_exitcodes_help_fn},
+    {"skip-launch-node", skip_launch_node_fn, skip_launch_node_help_fn},
+    {"usize", usize_fn, usize_help_fn},
+    {"v", verbose_fn, verbose_help_fn},
+    {"verbose", verbose_fn, verbose_help_fn},
+    {"version", info_fn, info_help_fn},
 
     /* Singleton init */
     {"pmi_args", pmi_args_fn, pmi_args_help_fn},
