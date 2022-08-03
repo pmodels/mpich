@@ -614,8 +614,7 @@ struct allreduce_data {
 
     void *host_sendbuf;
     void *host_recvbuf;
-    void *tmp_sendbuf;          /* noncontig datatype may require tmp_buf for localcopy */
-    void *tmp_recvbuf;
+    void *tmp_buf;              /* noncontig datatype may require tmp_buf for localcopy */
     MPI_Aint data_sz;
     MPI_Aint actual_pack_bytes;
 };
@@ -633,12 +632,12 @@ static void allreduce_enqueue_cb(void *data)
     void *recvbuf = p->recvbuf;
     if (p->sendbuf == MPI_IN_PLACE) {
         if (p->host_recvbuf) {
-            HOST_SWAP_IN_CB(p->host_recvbuf, p->count, p->datatype, p->tmp_recvbuf, p->data_sz);
+            HOST_SWAP_IN_CB(p->host_recvbuf, p->count, p->datatype, p->tmp_buf, p->data_sz);
             recvbuf = p->host_recvbuf;
         }
     } else {
         if (p->host_sendbuf) {
-            HOST_SWAP_IN_CB(p->host_sendbuf, p->count, p->datatype, p->tmp_sendbuf, p->data_sz);
+            HOST_SWAP_IN_CB(p->host_sendbuf, p->count, p->datatype, p->tmp_buf, p->data_sz);
             sendbuf = p->host_sendbuf;
         }
         if (p->host_recvbuf) {
@@ -652,15 +651,15 @@ static void allreduce_enqueue_cb(void *data)
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
     if (p->host_sendbuf) {
-        MPL_free(p->tmp_sendbuf);
         MPIR_gpu_host_free(p->host_sendbuf, count, datatype);
     }
     if (p->host_recvbuf) {
-        HOST_SWAPBACK_IN_CB(p->host_recvbuf, p->count, p->datatype, p->tmp_recvbuf, p->data_sz);
+        HOST_SWAPBACK_IN_CB(p->host_recvbuf, p->count, p->datatype, p->tmp_buf, p->data_sz);
     }
 
     if (!p->host_recvbuf) {
         /* we are done */
+        MPL_free(p->tmp_buf);
         MPL_free(p);
     }
 
@@ -671,9 +670,9 @@ static void allred_stream_cleanup_cb(void *data)
 {
     struct allreduce_data *p = data;
 
-    MPL_free(p->tmp_recvbuf);
     MPIR_gpu_host_free(p->host_recvbuf, p->count, p->datatype);
 
+    MPL_free(p->tmp_buf);
     MPL_free(p);
 }
 
@@ -710,8 +709,7 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
 
     p->host_sendbuf = NULL;
     p->host_recvbuf = NULL;
-    p->tmp_sendbuf = NULL;
-    p->tmp_recvbuf = NULL;
+    p->tmp_buf = NULL;
 
     MPI_Aint dt_size;
     MPIR_Datatype_get_size_macro(datatype, dt_size);
@@ -722,13 +720,13 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
         if (MPIR_GPU_query_pointer_is_dev(recvbuf)) {
             p->host_recvbuf = MPIR_alloc_buffer(count, datatype);
             HOST_SWAP_STREAM(p->host_recvbuf, recvbuf, count, datatype, &gpu_stream,
-                             is_contig, p->tmp_recvbuf, p->data_sz);
+                             is_contig, p->tmp_buf, p->data_sz);
         }
     } else {
         if (MPIR_GPU_query_pointer_is_dev(sendbuf)) {
             p->host_sendbuf = MPIR_alloc_buffer(count, datatype);
             HOST_SWAP_STREAM(p->host_sendbuf, sendbuf, count, datatype, &gpu_stream,
-                             is_contig, p->tmp_sendbuf, p->data_sz);
+                             is_contig, p->tmp_buf, p->data_sz);
         }
         if (MPIR_GPU_query_pointer_is_dev(recvbuf)) {
             p->host_recvbuf = MPIR_alloc_buffer(count, datatype);
@@ -739,7 +737,7 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
 
     if (p->host_recvbuf) {
         HOST_SWAPBACK_STREAM(p->host_recvbuf, recvbuf, count, datatype, &gpu_stream,
-                             is_contig, p->tmp_recvbuf, p->data_sz);
+                             is_contig, p->tmp_buf, p->data_sz);
 
         MPL_gpu_launch_hostfn(gpu_stream, allred_stream_cleanup_cb, p);
     }
