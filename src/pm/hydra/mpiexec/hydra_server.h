@@ -22,6 +22,7 @@ struct HYD_cmd {
 struct HYD_server_info_s {
     struct HYD_user_global user_global;
 
+    bool hybrid_hosts;
     char *base_path;
     char *port_range;
     char *iface_ip_env_name;

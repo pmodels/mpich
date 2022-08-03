@@ -344,8 +344,12 @@ static HYD_status post_process(void)
     HYD_status status = HYD_SUCCESS;
 
     for (struct HYD_exec * exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        status = HYDU_correct_wdir(&exec->wdir);
-        HYDU_ERR_POP(status, "unable to correct wdir\n");
+        if (HYD_server_info.hybrid_hosts) {
+            /* Do not convert to abs path when hybrid_hosts option is set */
+        } else {
+            status = HYDU_correct_wdir(&exec->wdir);
+            HYDU_ERR_POP(status, "unable to correct wdir\n");
+        }
     }
 
     /* If an interface is provided, set that */
