@@ -3189,7 +3189,7 @@ if test -n "$CXX" ; then
     AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_CTYPE],[$pac_retval],
 			[a C type used to compute C++ bool reductions])
     if test "$ac_cv_sizeof_bool" != 0 ; then
-        AC_DEFINE(HAVE_CXX_BOOL,1,[Define is C++ supports bool types])
+        AC_DEFINE(HAVE_CXX_BOOL,1,[Define if C++ supports bool types])
     fi
 
     AC_CHECK_HEADER(complex)
@@ -3218,7 +3218,7 @@ using namespace std;
         # c++ complex as unavailable
         if test "$ac_cv_sizeof_Complex" != 0 -a \
                 "$ac_cv_sizeof_DoubleComplex" != 0 ; then
-            AC_DEFINE(HAVE_CXX_COMPLEX,1,[Define is C++ supports complex types])
+            AC_DEFINE(HAVE_CXX_COMPLEX,1,[Define if C++ supports complex types])
         fi
         # mark availability of c++ long double complex
         if test $ac_cv_sizeof_long_double__Complex != 0 ; then
@@ -3777,7 +3777,7 @@ if test "$ac_cv_func_thread_policy_set" = yes ; then
             pac_cv_have_thread_affinity_policy=no)
     ])
     if test "$pac_cv_have_thread_affinity_policy" = yes ; then
-        AC_DEFINE(HAVE_OSX_THREAD_AFFINITY,1,[Define is the OSX thread affinity policy macros defined])
+        AC_DEFINE(HAVE_OSX_THREAD_AFFINITY,1,[Define if the OSX thread affinity policy macros defined])
     fi
 fi
 
