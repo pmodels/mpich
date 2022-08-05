@@ -261,12 +261,14 @@ char *HYDU_getcwd(void)
     goto fn_exit;
 }
 
-HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **node_list)
+HYD_status HYDU_process_mfile_token(char *token, int newline, void *data)
 {
     int num_procs;
     char *hostname, *procs, *binding, *tmp, *user, *saveptr = NULL;
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
+
+    struct HYD_node **node_list = data;
 
     if (newline) {      /* The first entry gives the hostname and processes */
         hostname = strtok_r(token, ":", &saveptr);
@@ -307,9 +309,8 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
     goto fn_exit;
 }
 
-HYD_status HYDU_parse_hostfile(const char *hostfile, struct HYD_node **node_list,
-                               HYD_status(*process_token) (char *token, int newline,
-                                                           struct HYD_node ** node_list))
+HYD_status HYDU_parse_hostfile(const char *hostfile, void *data,
+                               HYD_status(*process_token) (char *token, int newline, void *data))
 {
     char line[HYD_TMP_STRLEN], **tokens;
     FILE *fp = NULL;
@@ -321,8 +322,6 @@ HYD_status HYDU_parse_hostfile(const char *hostfile, struct HYD_node **node_list
     if ((fp = fopen(hostfile, "r")) == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unable to open host file: %s\n", hostfile);
 
-    if (node_list)
-        *node_list = NULL;
     while (fgets(line, HYD_TMP_STRLEN, fp)) {
         char *linep = NULL;
 
@@ -342,7 +341,7 @@ HYD_status HYDU_parse_hostfile(const char *hostfile, struct HYD_node **node_list
                                 "Unable to convert host file entry to strlist\n");
 
         for (i = 0; tokens[i]; i++) {
-            status = process_token(tokens[i], !i, node_list);
+            status = process_token(tokens[i], !i, data);
             HYDU_ERR_POP(status, "unable to process token\n");
         }
 

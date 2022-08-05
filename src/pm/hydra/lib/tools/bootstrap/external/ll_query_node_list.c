@@ -24,6 +24,7 @@ HYD_status HYDT_bscd_ll_query_node_list(struct HYD_node **node_list)
         *node_list = NULL;
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "No LL nodefile found\n");
     } else {
+        *node_list = NULL;
         status = HYDU_parse_hostfile(hostfile, node_list, HYDU_process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
@@ -36,7 +37,7 @@ HYD_status HYDT_bscd_ll_query_node_list(struct HYD_node **node_list)
     goto fn_exit;
 }
 
-static HYD_status process_mfile_count(char *token, int newline, struct HYD_node **node_list)
+static HYD_status process_mfile_count(char *token, int newline, void *data)
 {
     HYD_status status = HYD_SUCCESS;
 

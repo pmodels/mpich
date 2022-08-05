@@ -54,7 +54,7 @@ while (<RESULTS>) {
 	while (<RFD>) {
 	    chop;
 	    $outLine = $_;
-	    if ($outLine =~ /^\s+No [Ee]rrors\s*$/) {
+	    if ($outLine =~ /^\s*No [Ee]rrors\s*$/) {
 		$sawNoerrors = 1;
 	    }
 	    else {

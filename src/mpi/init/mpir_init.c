@@ -231,7 +231,11 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
         info.specialized_cache = specialized_cache;
         info.print_debug_info = MPIR_CVAR_GPU_DEBUG_INFO;
 
-        int mpl_errno = MPL_gpu_init(&info);
+        int debug_summary = 0;
+        if (MPIR_CVAR_DEBUG_SUMMARY) {
+            debug_summary = (MPIR_Process.rank == 0);
+        }
+        int mpl_errno = MPL_gpu_init(&info, debug_summary);
 
         /* Disable GPUs if no devices are found */
         if (mpl_errno == MPL_ERR_GPU_NODEVICE) {

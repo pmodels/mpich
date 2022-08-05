@@ -6,6 +6,10 @@
 #ifndef MPL_GPU_HIP_H_INCLUDED
 #define MPL_GPU_HIP_H_INCLUDED
 
+#if !defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_PLATFORM_NVIDIA__)
+#define __HIP_PLATFORM_AMD__
+#endif
+
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
 
