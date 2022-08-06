@@ -114,7 +114,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
     const char *key;
     char *thrid, *val, *cmd;
     struct HYD_string_stash stash;
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -184,7 +184,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     int ret;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     int token_count;
     struct HYD_pmcd_pmi_v2_reqs *req;
     HYD_status status = HYD_SUCCESS;
@@ -257,7 +257,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
     struct HYD_pmcd_pmi_kvs_pair *run;
     char *key, *thrid, *cmd;
     struct HYD_string_stash stash;
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -346,7 +346,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_string_stash stash;
     char *cmd, *thrid;
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     int token_count, i;
     HYD_status status = HYD_SUCCESS;
 
@@ -425,7 +425,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static void segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
+static void segment_tokens(struct PMIU_token *tokens, int token_count,
                            struct HYD_pmcd_token_segment *segment_list, int *num_segments)
 {
     int i, j;
@@ -450,7 +450,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_proxy *proxy;
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     struct HYD_exec *exec_list = NULL, *exec;
     struct HYD_env *env;
     struct HYD_node *node;
@@ -753,7 +753,7 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
     struct HYD_string_stash stash;
     char *cmd, *thrid, *val, *name = NULL, *port = NULL;
     int token_count, success;
-    struct HYD_pmcd_token *tokens = NULL;
+    struct PMIU_token *tokens = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -812,7 +812,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     struct HYD_string_stash stash;
     char *cmd, *thrid, *name;
     int token_count, success;
-    struct HYD_pmcd_token *tokens = NULL;
+    struct PMIU_token *tokens = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -864,7 +864,7 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
     struct HYD_string_stash stash;
     char *cmd, *thrid, *name, *value;
     int token_count;
-    struct HYD_pmcd_token *tokens = NULL;
+    struct PMIU_token *tokens = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

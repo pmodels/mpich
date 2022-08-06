@@ -192,7 +192,7 @@ static HYD_status fn_initack(int fd, char *args[])
 {
     int id, i;
     char *val, *cmd;
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     int token_count;
     struct HYD_string_stash stash;
     HYD_status status = HYD_SUCCESS;
@@ -382,7 +382,7 @@ static HYD_status fn_get(int fd, char *args[])
 {
     struct HYD_string_stash stash;
     char *cmd, *key;
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     int token_count;
     struct cache_elem *found = NULL;
     HYD_status status = HYD_SUCCESS;
@@ -448,7 +448,7 @@ static HYD_status fn_put(int fd, char *args[])
     struct HYD_string_stash stash;
     char *cmd;
     char *key, *val;
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -493,7 +493,7 @@ static HYD_status fn_put(int fd, char *args[])
 
 static HYD_status fn_keyval_cache(int fd, char *args[])
 {
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     int token_count, i;
     HYD_status status = HYD_SUCCESS;
 
