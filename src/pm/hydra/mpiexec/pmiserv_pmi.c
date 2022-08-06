@@ -27,3 +27,12 @@ HYD_status HYD_pmcd_pmi_finalize(void)
     HYDU_FUNC_EXIT();
     return status;
 }
+
+HYD_status HYD_pmiserv_pmi_reply(int fd, int pid, struct PMIU_cmd * pmi)
+{
+    struct HYD_pmcd_hdr hdr;
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = CMD_PMI_RESPONSE;
+    hdr.u.pmi.pid = pid;
+    return HYD_pmcd_pmi_send(fd, pmi, &hdr, HYD_server_info.user_global.debug);
+}
