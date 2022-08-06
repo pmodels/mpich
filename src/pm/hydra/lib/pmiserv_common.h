@@ -7,14 +7,12 @@
 #define COMMON_H_INCLUDED
 
 #include "hydra.h"
+#include "pmi_wire.h"   /* from libpmi */
 
 /* Generic definitions */
 #define PMI_MAXKEYLEN    (64)   /* max length of key in keyval space */
 #define PMI_MAXVALLEN    (1024) /* max length of value in keyval space */
 #define PMI_MAXKVSLEN    (256)  /* max length of various names */
-
-#define MAX_PMI_ARGS  (65536)   /* number of arguments in a PMI command */
-#define MAX_PMI_INTERNAL_ARGS   (65536) /* number of arguments in internal communication */
 
 struct HYD_pmcd_pmi_kvs_pair {
     char key[PMI_MAXKEYLEN];

@@ -85,7 +85,7 @@ static HYD_status bcast_keyvals(int fd, int pid)
             tmp[i++] = MPL_strdup(" ");
 
             arg_count++;
-            if (arg_count >= MAX_PMI_INTERNAL_ARGS) {
+            if (arg_count >= MAX_PMI_ARGS) {
                 tmp[i++] = MPL_strdup("\n");
                 tmp[i++] = NULL;
 
