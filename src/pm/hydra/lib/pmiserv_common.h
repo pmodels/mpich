@@ -83,4 +83,57 @@ HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid);
 void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs, int *ret);
 
+/* macros for retrieving key/val from struct PMIU_cmd */
+#define HYD_PMI_GET_STRVAL(pmi, key, val) \
+    do { \
+        const char *tmp = PMIU_cmd_find_keyval(pmi, key); \
+        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
+                            "PMI command missing key %s\n", key); \
+        val = tmp; \
+    } while (0)
+
+#define HYD_PMI_GET_INTVAL(pmi, key, val) \
+    do { \
+        const char *tmp = PMIU_cmd_find_keyval(pmi, key); \
+        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
+                            "PMI command missing key %s\n", key); \
+        val = atoi(tmp); \
+    } while (0)
+
+#define HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, key, val, dflt) \
+    PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmi, key, val, dflt)
+
+#define HYD_PMI_GET_INTVAL_WITH_DEFAULT(pmi, key, val, dflt) \
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmi, key, val, dflt)
+
+#define HYD_PMI_GET_BOOLVAL_WITH_DEFAULT(pmi, key, val, dflt) \
+    PMIU_CMD_GET_BOOLVAL_WITH_DEFAULT(pmi, key, val, dflt)
+
+/* Macro for parsing keyval within a spawn segment */
+#define HYD_PMI_GET_STRVAL_J(pmi, key, j, val) \
+    do { \
+        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
+        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
+                            "PMI command missing key %s\n", key); \
+        val = tmp; \
+    } while (0)
+
+#define HYD_PMI_GET_INTVAL_J(pmi, key, j, val) \
+    do { \
+        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
+        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
+                            "PMI command missing key %s\n", key); \
+        val = atoi(tmp); \
+    } while (0)
+
+#define HYD_PMI_GET_INTVAL_J_WITH_DEFAULT(pmi, key, j, val, dflt) \
+    do { \
+        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
+        if (tmp) { \
+            val = atoi(tmp); \
+        } else { \
+            val = dflt; \
+        } \
+    } while (0)
+
 #endif /* COMMON_H_INCLUDED */
