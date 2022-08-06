@@ -10,15 +10,6 @@
 #include "pmiserv_pmi.h"
 #include "pmiserv_utils.h"
 
-static HYD_status cmd_response(int fd, int pid, struct PMIU_cmd *pmi)
-{
-    struct HYD_pmcd_hdr hdr;
-    HYD_pmcd_init_header(&hdr);
-    hdr.cmd = CMD_PMI_RESPONSE;
-    hdr.u.pmi.pid = pid;
-    return HYD_pmcd_pmi_send(fd, pmi, &hdr, HYD_server_info.user_global.debug);
-}
-
 static HYD_status bcast_keyvals(int fd, int pid)
 {
     int keyval_count, arg_count, j;
@@ -54,7 +45,7 @@ static HYD_status bcast_keyvals(int fd, int pid)
             if (arg_count >= MAX_PMI_ARGS) {
                 pg_scratch->keyval_dist_count += (arg_count - 1);
                 for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
-                    status = cmd_response(tproxy->control_fd, pid, &pmi);
+                    status = HYD_pmiserv_pmi_reply(tproxy->control_fd, pid, &pmi);
                     HYDU_ERR_POP(status, "error writing PMI line\n");
                 }
 
@@ -66,7 +57,7 @@ static HYD_status bcast_keyvals(int fd, int pid)
         if (arg_count > 1) {
             pg_scratch->keyval_dist_count += (arg_count - 1);
             for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
-                status = cmd_response(tproxy->control_fd, pid, &pmi);
+                status = HYD_pmiserv_pmi_reply(tproxy->control_fd, pid, &pmi);
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
         }
@@ -99,7 +90,7 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
         struct PMIU_cmd pmi_response;
         PMIU_cmd_init_static(&pmi_response, 1, "barrier_out");
         for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
-            status = cmd_response(tproxy->control_fd, pid, &pmi_response);
+            status = HYD_pmiserv_pmi_reply(tproxy->control_fd, pid, &pmi_response);
             HYDU_ERR_POP(status, "error writing PMI line\n");
         }
     }
@@ -198,7 +189,7 @@ static HYD_status fn_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
         PMIU_cmd_add_str(&pmi_response, "value", "unknown");
     }
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
   fn_exit:
@@ -482,7 +473,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
         PMIU_cmd_init_static(&pmi_response, 1, "spawn_result");
         PMIU_cmd_add_str(&pmi_response, "rc", "0");
 
-        status = cmd_response(fd, pid, &pmi_response);
+        status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
         HYDU_ERR_POP(status, "error writing PMI line\n");
     }
 
@@ -531,7 +522,7 @@ static HYD_status fn_publish_name(int fd, int pid, int pgid, struct PMIU_cmd *pm
         PMIU_cmd_add_str(&pmi_response, "msg", "key_already_present");
     }
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
@@ -573,7 +564,7 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, struct PMIU_cmd *
         PMIU_cmd_add_str(&pmi_response, "msg", "service_not_found");
     }
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
@@ -608,7 +599,7 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, struct PMIU_cmd *pmi
         PMIU_cmd_add_str(&pmi_response, "msg", "service_not_found");
     }
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:

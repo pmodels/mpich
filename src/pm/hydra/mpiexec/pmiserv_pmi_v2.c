@@ -18,15 +18,6 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
 
 static struct HYD_pmcd_pmi_v2_reqs *pending_reqs = NULL;
 
-static HYD_status cmd_response(int fd, int pid, struct PMIU_cmd *pmi)
-{
-    struct HYD_pmcd_hdr hdr;
-    HYD_pmcd_init_header(&hdr);
-    hdr.cmd = CMD_PMI_RESPONSE;
-    hdr.u.pmi.pid = pid;
-    return HYD_pmcd_pmi_send(fd, pmi, &hdr, HYD_server_info.user_global.debug);
-}
-
 static HYD_status poke_progress(const char *key)
 {
     struct HYD_pmcd_pmi_v2_reqs *req, *list_head = NULL, *list_tail = NULL;
@@ -124,7 +115,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, struct PMIU_cmd 
         PMIU_cmd_add_str(&pmi_response, "rc", "0");
     }
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
@@ -172,7 +163,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
     PMIU_cmd_add_int(&pmi_response, "rc", ret);
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
     for (req = pending_reqs; req; req = req->next) {
@@ -261,7 +252,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
     PMIU_cmd_add_str(&pmi_response, "rc", "0");
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
@@ -318,7 +309,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
     PMIU_cmd_add_str(&pmi_response, "rc", "0");
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
     if (cur_epoch == pg_scratch->epoch) {
@@ -605,7 +596,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
         PMIU_cmd_add_str(&pmi_response, "jobid", pg_scratch->kvs->kvsname);
         PMIU_cmd_add_str(&pmi_response, "nerrs", "0");;
 
-        status = cmd_response(fd, pid, &pmi_response);
+        status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
         HYDU_ERR_POP(status, "send command failed\n");
     }
 
@@ -656,7 +647,7 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, struct PMIU_cmd *pm
         PMIU_cmd_add_str(&pmi_response, "rc", "0");
     }
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
@@ -700,7 +691,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *
         PMIU_cmd_add_str(&pmi_response, "errmsg", tmp);
     }
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
@@ -740,7 +731,7 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, struct PMIU_cmd *pmi
         PMIU_cmd_add_str(&pmi_response, "rc", "1");
     }
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
