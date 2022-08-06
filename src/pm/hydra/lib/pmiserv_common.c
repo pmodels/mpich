@@ -72,7 +72,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count)
+HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct PMIU_token **tokens, int *count)
 {
     int i, j;
     char *arg;
@@ -80,8 +80,7 @@ HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tok
 
     for (i = 0; args[i]; i++);
     *count = i;
-    HYDU_MALLOC_OR_JUMP(*tokens, struct HYD_pmcd_token *, *count * sizeof(struct HYD_pmcd_token),
-                        status);
+    HYDU_MALLOC_OR_JUMP(*tokens, struct PMIU_token *, *count * sizeof(struct PMIU_token), status);
 
     for (i = 0; args[i]; i++) {
         arg = MPL_strdup(args[i]);
@@ -103,7 +102,7 @@ HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tok
     goto fn_exit;
 }
 
-void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count)
+void HYD_pmcd_pmi_free_tokens(struct PMIU_token *tokens, int token_count)
 {
     int i;
 
@@ -112,7 +111,7 @@ void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count)
     MPL_free(tokens);
 }
 
-char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key)
+char *HYD_pmcd_pmi_find_token_keyval(struct PMIU_token *tokens, int count, const char *key)
 {
     int i;
 
