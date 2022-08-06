@@ -150,7 +150,7 @@ static HYD_status fn_fullinit(int fd, char *args[])
     char *rank_str;
     struct HYD_string_stash stash;
     char *cmd;
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -219,7 +219,7 @@ static HYD_status fn_job_getid(int fd, char *args[])
 {
     struct HYD_string_stash stash;
     char *cmd, *thrid;
-    struct HYD_pmcd_token *tokens = NULL;
+    struct PMIU_token *tokens = NULL;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -260,7 +260,7 @@ static HYD_status fn_info_putnodeattr(int fd, char *args[])
 {
     struct HYD_string_stash stash;
     char *key, *val, *thrid, *cmd;
-    struct HYD_pmcd_token *tokens = NULL;
+    struct PMIU_token *tokens = NULL;
     int token_count, ret;
     struct HYD_pmcd_pmi_v2_reqs *req;
     HYD_status status = HYD_SUCCESS;
@@ -323,7 +323,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     char *key, *waitval, *thrid;
     struct HYD_string_stash stash;
     char *cmd;
-    struct HYD_pmcd_token *tokens = NULL;
+    struct PMIU_token *tokens = NULL;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -402,7 +402,7 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
 {
     struct HYD_string_stash stash;
     char *cmd, *key, *thrid;
-    struct HYD_pmcd_token *tokens;
+    struct PMIU_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -457,7 +457,7 @@ static HYD_status fn_finalize(int fd, char *args[])
     char *thrid;
     struct HYD_string_stash stash;
     char *cmd;
-    struct HYD_pmcd_token *tokens = NULL;
+    struct PMIU_token *tokens = NULL;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
