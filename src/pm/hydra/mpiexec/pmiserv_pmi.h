@@ -52,5 +52,6 @@ struct HYD_pmcd_pmi_handle {
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle;
 
 HYD_status HYD_pmiserv_pmi_reply(int fd, int pid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_bcast_keyvals(int fd, int pid);
 
 #endif /* PMISERV_PMI_H_INCLUDED */
