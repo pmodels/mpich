@@ -24,6 +24,4 @@ extern int PMI_fd;
 extern int PMI_size;
 extern int PMI_rank;
 
-extern int PMI_debug;
-
 #endif
