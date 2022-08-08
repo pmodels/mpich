@@ -78,7 +78,6 @@ void PMIU_chgval(const char *keystr, char *valstr);
 #define PMIU_ERR_NOMEM 2
 
 extern int PMIU_verbose;        /* Set this to true to print PMI debugging info */
-#define printf_d(...)  do { if (PMIU_verbose) printf(__VA_ARGS__); } while (0)
 
 /* error reporting macros */
 /* NOTE: we assume error codes are matching between PMI-1 and PMI-2 */
@@ -86,43 +85,43 @@ extern int PMIU_verbose;        /* Set this to true to print PMI debugging info 
 
 #define PMIU_ERR_POP(err) do { \
     if (err) { \
-        printf_d("ERROR: %s (%d)\n", __func__, __LINE__); \
+        PMIU_printf(PMIU_verbose, "ERROR: %s (%d)\n", __func__, __LINE__); \
         goto fn_fail; \
     } \
 } while (0)
 
 #define PMIU_ERR_SETANDJUMP(err, class, str) do {                              \
-        printf_d("ERROR: "str" in %s (%d)\n", __func__, __LINE__);     \
+        PMIU_printf(PMIU_verbose, "ERROR: "str" in %s (%d)\n", __func__, __LINE__);     \
         err = class;                                                      \
         goto fn_fail;                                                           \
     } while (0)
 #define PMIU_ERR_SETANDJUMP1(err, class, str, arg) do {                          \
-        printf_d("ERROR: "str" in %s (%d)\n", arg, __func__, __LINE__);       \
+        PMIU_printf(PMIU_verbose, "ERROR: "str" in %s (%d)\n", arg, __func__, __LINE__);       \
         err = class;                                                              \
         goto fn_fail;                                                                   \
     } while (0)
 #define PMIU_ERR_SETANDJUMP2(err, class, str, arg1, arg2) do {                           \
-        printf_d("ERROR: "str" in %s (%d)\n", arg1, arg2, __func__, __LINE__);        \
+        PMIU_printf(PMIU_verbose, "ERROR: "str" in %s (%d)\n", arg1, arg2, __func__, __LINE__);        \
         err = class;                                                                      \
         goto fn_fail;                                                                           \
     } while (0)
 #define PMIU_ERR_SETANDJUMP3(err, class, str, arg1, arg2, arg3) do {                     \
-        printf_d("ERROR: "str" in %s (%d)\n", arg1, arg2, arg3, __func__, __LINE__);  \
+        PMIU_printf(PMIU_verbose, "ERROR: "str" in %s (%d)\n", arg1, arg2, arg3, __func__, __LINE__);  \
         err = class;                                                                      \
         goto fn_fail;                                                                           \
     } while (0)
 #define PMIU_ERR_SETANDJUMP4(err, class, str, arg1, arg2, arg3, arg4) do {                       \
-        printf_d("ERROR: "str" in %s (%d)\n", arg1, arg2, arg3, arg4, __func__, __LINE__);    \
+        PMIU_printf(PMIU_verbose, "ERROR: "str" in %s (%d)\n", arg1, arg2, arg3, arg4, __func__, __LINE__);    \
         err = class;                                                                              \
         goto fn_fail;                                                                                   \
     } while (0)
 #define PMIU_ERR_SETANDJUMP5(err, class, str, arg1, arg2, arg3, arg4, arg5) do {                         \
-        printf_d("ERROR: "str" in %s (%d)\n", arg1, arg2, arg3, arg4, arg5, __func__, __LINE__);      \
+        PMIU_printf(PMIU_verbose, "ERROR: "str" in %s (%d)\n", arg1, arg2, arg3, arg4, arg5, __func__, __LINE__);      \
         err = class;                                                                                      \
         goto fn_fail;                                                                                           \
     } while (0)
 #define PMIU_ERR_SETANDJUMP6(err, class, str, arg1, arg2, arg3, arg4, arg5, arg6) do {                           \
-        printf_d("ERROR: "str" in %s (%d)\n", arg1, arg2, arg3, arg4, arg5, arg6, __func__, __LINE__);        \
+        PMIU_printf(PMIU_verbose, "ERROR: "str" in %s (%d)\n", arg1, arg2, arg3, arg4, arg5, arg6, __func__, __LINE__);        \
         err = class;                                                                                              \
         goto fn_fail;                                                                                                   \
     } while (0)
@@ -169,8 +168,8 @@ extern int PMIU_verbose;        /* Set this to true to print PMI debugging info 
 #ifdef HAVE_ERROR_CHECKING
 #define PMIU_CHKMEM_SETERR(rc_, errcode, nbytes_, name_) do { \
         rc_ = errcode; \
-        printf_d("ERROR: memory allocation of %lu bytes failed for %s in %s (%d)\n",     \
-                (size_t)nbytes_, name_, __func__, __LINE__);                                  \
+        PMIU_printf(PMIU_verbose, "ERROR: memory allocation of %lu bytes failed for %s in %s (%d)\n",     \
+                    (size_t)nbytes_, name_, __func__, __LINE__);                                  \
     } while (0)
 #else
 #define PMIU_CHKMEM_SETERR(rc_, errcode, nbytes_, name_) do { \
