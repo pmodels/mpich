@@ -753,6 +753,8 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
         n = PMIU_readline(fd, recvbuf, PMIU_MAXLINE);
         PMIU_ERR_CHKANDJUMP(n <= 0, pmi_errno, PMIU_FAIL, "readline failed\n");
 
+        PMIU_printf(PMIU_verbose, "got pmi response: %s", recvbuf);
+
         if (strncmp(recvbuf, "cmd=", 4) == 0) {
             pmi_errno = PMIU_cmd_parse(recvbuf, strlen(recvbuf), PMIU_WIRE_V1, pmicmd);
         } else {
@@ -793,7 +795,7 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
 
     PMIU_cmd_output(pmicmd, &buf, &buflen);
 
-    PMIU_printf(PMIU_verbose, "send to fd=%d pmi: %s", fd, buf);
+    PMIU_printf(PMIU_verbose, "send to fd=%d pmi: %s\n", fd, buf);
 
     pmi_errno = PMIU_write(fd, buf, buflen);
     PMIU_ERR_POP(pmi_errno);
