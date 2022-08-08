@@ -16,5 +16,3 @@ PMIState PMI_initialized = PMI_UNINITIALIZED;
 int PMI_fd = -1;
 int PMI_size = 1;
 int PMI_rank = 0;
-
-int PMI_debug = 0;

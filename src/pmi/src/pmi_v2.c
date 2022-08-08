@@ -69,8 +69,9 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
      * we may have set it to help debug the setup process */
     char *p;
     p = getenv("PMI2_DEBUG");
-    if (p)
-        PMI_debug = atoi(p);
+    if (p) {
+        PMIU_verbose = atoi(p);
+    }
 
     /* Get the fd for PMI commands; if none, we're a singleton */
     pmi_errno = getPMIFD();
@@ -135,8 +136,10 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
         *spawned = PMIU_FALSE;
     }
 
-    PMI_debug |= PMIU_cmd_get_intval_with_default(&pmicmd, "debugged", 0);
-    PMIU_verbose = PMIU_cmd_get_intval_with_default(&pmicmd, "pmiverbose", 0);
+    int debugged, pmiverbose;
+    debugged = PMIU_cmd_get_intval_with_default(&pmicmd, "debugged", 0);
+    pmiverbose = PMIU_cmd_get_intval_with_default(&pmicmd, "pmiverbose", 0);
+    PMIU_verbose = debugged | pmiverbose;
 
     if (!PMI_initialized) {
         PMI_initialized = NORMAL_INIT_WITH_PM;
