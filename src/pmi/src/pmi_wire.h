@@ -57,7 +57,39 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd);
 const char *PMIU_cmd_find_keyval(struct PMIU_cmd *pmicmd, const char *key);
 const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key,
                                          const char *segment_key, int segment_index);
-int PMIU_cmd_get_intval_with_default(struct PMIU_cmd *pmicmd, const char *key, int dfltval);
+
+#define PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmicmd, key, val, dfltval) do { \
+    const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
+    if (tmp) { \
+        val = tmp; \
+    } else { \
+        val = dfltval; \
+    } \
+} while (0)
+
+#define PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmicmd, key, val, dfltval) do { \
+    const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
+    if (tmp) { \
+        val = atoi(tmp); \
+    } else { \
+        val = dfltval; \
+    } \
+} while (0)
+
+#define PMIU_CMD_GET_BOOLVAL_WITH_DEFAULT(pmicmd, key, val, dfltval) do { \
+    const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
+    if (tmp) { \
+        if (strcmp(tmp, "TRUE") == 0) { \
+            val = PMIU_TRUE; \
+        } else if (strcmp(tmp, "FALSE") == 0) { \
+            val = PMIU_FALSE; \
+        } else { \
+            val = dfltval; \
+        } \
+    } else { \
+        val = dfltval; \
+    } \
+} while (0)
 
 #define PMIU_CMD_GET_STRVAL(pmicmd, key, val) do { \
     const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \

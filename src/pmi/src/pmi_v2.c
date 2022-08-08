@@ -142,8 +142,8 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     }
 
     int debugged, pmiverbose;
-    debugged = PMIU_cmd_get_intval_with_default(&pmicmd, "debugged", 0);
-    pmiverbose = PMIU_cmd_get_intval_with_default(&pmicmd, "pmiverbose", 0);
+    PMIU_CMD_GET_BOOLVAL_WITH_DEFAULT(&pmicmd, "debugged", debugged, 0);
+    PMIU_CMD_GET_BOOLVAL_WITH_DEFAULT(&pmicmd, "pmiverbose", pmiverbose, 0);
     PMIU_verbose = debugged | pmiverbose;
 
     if (!PMI_initialized) {
