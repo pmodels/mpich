@@ -1,0 +1,32 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
+## This is an automake makefile fragment that should be included by:
+##
+##   include $(top_srcdir)/Makefile_hip.mtest
+##
+## This makefile is for HIP tests (compiled with nvcc).
+
+include $(top_srcdir)/Makefile_single.mtest
+
+AM_DEFAULT_SOURCE_EXT = .hip
+
+# Because libtool does not have a .hip language tag yet, some of the key
+# variables and patter rule is not generated. We manually supply them here.
+
+# Automake silent build macros
+AM_V_CCLD = $(am__v_CCLD_$(V))
+am__v_CCLD_ = $(am__v_CCLD_0)
+am__v_CCLD_0 = @echo "  CCLD    " $@;
+am__v_CCLD_1 =
+
+# the LINK variable
+LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+       $(LIBTOOLFLAGS) --mode=link $(CXX) $(AM_CFLAGS) $(CFLAGS) \
+       $(AM_LDFLAGS) $(LDFLAGS) -o $@
+
+# How to compile .hip files -- compile with mpicc, but using nvcc
+.hip.o:
+	MPICH_CC="$(HIPCC)" $(CC) -c -o $@ $<

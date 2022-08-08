@@ -72,7 +72,7 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
 #define MPIR_OP_TYPE_MACRO_HAVE_REAL4_CTYPE(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_REAL8_CTYPE(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_CXX(mpi_type_,c_type_,type_name_)
+#define MPIR_OP_TYPE_MACRO_HAVE_CXX_BOOL(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_INT8_T(mpi_type_,c_type_,type_name_)
@@ -145,9 +145,9 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
 #define MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
 #endif
 /* general C++ types */
-#if defined(HAVE_CXX_BINDING)
-#undef MPIR_OP_TYPE_MACRO_HAVE_CXX
-#define MPIR_OP_TYPE_MACRO_HAVE_CXX(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#if defined(HAVE_CXX_BOOL)
+#undef MPIR_OP_TYPE_MACRO_HAVE_CXX_BOOL
+#define MPIR_OP_TYPE_MACRO_HAVE_CXX_BOOL(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
 #endif
 /* C++ complex types */
 #if defined(HAVE_CXX_COMPLEX)
@@ -321,7 +321,7 @@ typedef struct {
 #define MPIR_OP_TYPE_GROUP_LOGICAL                                                    \
     MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_LOGICAL, MPI_Fint, mpir_typename_logical)     \
     MPIR_OP_TYPE_MACRO_HAVE_C_BOOL(MPI_C_BOOL, _Bool, mpir_typename_c_bool)           \
-    MPIR_OP_TYPE_MACRO_HAVE_CXX(MPI_CXX_BOOL, MPIR_CXX_BOOL_CTYPE, mpir_typename_cxx_bool_value)
+    MPIR_OP_TYPE_MACRO_HAVE_CXX_BOOL(MPI_CXX_BOOL, MPIR_CXX_BOOL_CTYPE, mpir_typename_cxx_bool_value)
 #define MPIR_OP_TYPE_GROUP_LOGICAL_EXTRA        /* empty, provided for consistency */
 
 /* complex group */

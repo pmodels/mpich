@@ -425,14 +425,34 @@ hipError_t hipFree(void *dptr)
     return result;
 }
 
-int MPL_gpu_launch_hostfn(hipStream_t stream, MPL_gpu_hostfn fn, void *data)
+/* ---- */
+struct stream_callback_wrapper {
+    MPL_gpu_hostfn fn;
+    void *data;
+};
+
+static void stream_callback(hipStream_t stream, hipError_t status, void *wrapper_data)
 {
-    return -1;
+    struct stream_callback_wrapper *p = wrapper_data;
+    p->fn(p->data);
+    MPL_free(p);
 }
 
+int MPL_gpu_launch_hostfn(hipStream_t stream, MPL_gpu_hostfn fn, void *data)
+{
+    hipError_t result;
+    struct stream_callback_wrapper *p =
+        MPL_malloc(sizeof(struct stream_callback_wrapper), MPL_MEM_OTHER);
+    p->fn = fn;
+    p->data = data;
+    result = hipStreamAddCallback(stream, stream_callback, p, 0);
+    return result;
+}
+
+/* ---- */
 bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
 {
-    return false;
+    return true;
 }
 
 #endif /* MPL_HAVE_HIP */

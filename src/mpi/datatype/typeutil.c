@@ -315,7 +315,6 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
             return ALIGNOF_LONG_DOUBLE;
 #endif /* HAVE_FORTRAN_BINDING */
 
-#ifdef HAVE_CXX_BINDING
     } else if (type == MPI_CXX_BOOL) {
         return ALIGNOF_BOOL;
     } else if (type == MPI_CXX_FLOAT_COMPLEX) {
@@ -324,7 +323,6 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
         return ALIGNOF_DOUBLE;
     } else if (type == MPI_CXX_LONG_DOUBLE_COMPLEX) {
         return ALIGNOF_LONG_DOUBLE;
-#endif /* HAVE_CXX_BINDING */
     }
 
     return 1;

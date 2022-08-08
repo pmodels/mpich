@@ -18,6 +18,7 @@ void HYD_uiu_init_params(void)
 {
     HYDU_init_user_global(&HYD_server_info.user_global);
 
+    HYD_server_info.hybrid_hosts = false;
     HYD_server_info.base_path = NULL;
 
     HYD_server_info.port_range = NULL;

@@ -180,7 +180,16 @@ int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
         MPIR_Assert(0 && "CUDA not enabled");
 #endif
         stream_ptr->type = MPIR_STREAM_GPU;
+    } else if (s_type && strcmp(s_type, "hipStream_t") == 0) {
+#ifndef MPL_HAVE_HIP
+        MPIR_Assert(0 && "HIP not enabled");
+#endif
+        stream_ptr->type = MPIR_STREAM_GPU;
+    } else {
+        stream_ptr->type = MPIR_STREAM_GENERAL;
+    }
 
+    if (stream_ptr->type == MPIR_STREAM_GPU) {
         /* TODO: proper conversion for each gpu stream type */
         const char *s_value = MPIR_Info_lookup(info_ptr, "value");
         MPIR_ERR_CHKANDJUMP(!s_value, mpi_errno, MPI_ERR_OTHER, "**missinggpustream");
@@ -190,8 +199,6 @@ int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(!MPL_gpu_stream_is_valid(stream_ptr->u.gpu_stream),
                             mpi_errno, MPI_ERR_OTHER, "**invalidgpustream");
-    } else {
-        stream_ptr->type = MPIR_STREAM_GENERAL;
     }
 
     mpi_errno = allocate_vci(&stream_ptr->vci, stream_ptr->type == MPIR_STREAM_GPU);

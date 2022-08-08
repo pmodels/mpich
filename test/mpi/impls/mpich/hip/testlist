@@ -1,0 +1,3 @@
+saxpy 2
+stream 2 env=MPIR_CVAR_CH4_RESERVE_VCIS=1
+stream_allred 4 env=MPIR_CVAR_CH4_RESERVE_VCIS=1
