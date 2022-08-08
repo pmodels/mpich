@@ -12,12 +12,17 @@
 #include <ctype.h>
 
 #define IS_SPACE(c) ((c) == ' ')
+#define IS_EOS(c) ((c) == '\0')
 #define IS_EOL(c) ((c) == '\n' || (c) == '\0')
 #define IS_KEY(c) (isalnum(c) || (c) == '_' || (c) == '-' || (c) == '/')
 #define IS_NONVAL(c) (IS_SPACE(c) || IS_EOL(c))
 
 #define SKIP_SPACES(s) do { \
     while (IS_SPACE(*s)) s++; \
+} while (0)
+
+#define SKIP_EOL(s) do { \
+    while (IS_SPACE(*s) || *s == '\n') s++; \
 } while (0)
 
 #define SKIP_KEY(s) do { \
@@ -34,6 +39,14 @@
     } \
 } while (1)
 
+#define SKIP_VAL_MCMD(s) do { \
+    if (IS_EOL(*s)) { \
+        break; \
+    } else { \
+        s++; \
+    } \
+} while (1)
+
 #define TERMINATE_STR(s) do { \
     if (*s) { \
         *s = '\0'; \
@@ -41,6 +54,8 @@
     } \
 } while (0)
 
+/* PMI-v1-mcmd wire protocol uses \n deliminator */
+#define IS_NONVAL_MCMD(c) ((c) == '\n' || (c) == '\0')
 /* PMI-v2 wire protocol uses ; deliminator */
 #define IS_NONVAL_2(c) ((c) == ';' || (c) == '\0')
 
@@ -144,6 +159,71 @@ static int parse_v1(char *buf, struct PMIU_cmd *pmicmd)
     goto fn_exit;
 }
 
+static int parse_v1_mcmd(char *buf, struct PMIU_cmd *pmicmd)
+{
+    int pmi_errno = PMIU_SUCCESS;
+
+    char *p = buf;
+    int idx = 0;
+
+    if (strncmp(buf, "mcmd=", 5) != 0) {
+        PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, "Expecting cmd=");
+    }
+
+    while (1) {
+        char *key = NULL;
+        char *val = NULL;
+
+        SKIP_EOL(p);
+        if (IS_EOS(*p)) {
+            break;
+        }
+        /* expect key */
+        if (IS_KEY(*p)) {
+            key = p;
+        } else {
+            PMIU_ERR_SETANDJUMP1(pmi_errno, PMIU_FAIL, "Expecting key, got %c", *p);
+        }
+        SKIP_KEY(p);
+        if (*p && *p != '=' && !IS_SPACE(*p) && !IS_EOL(*p)) {
+            PMIU_ERR_SETANDJUMP1(pmi_errno, PMIU_FAIL, "Invalid char after key, got %c", *p);
+        }
+
+        /* expect =value or space or EOL */
+        if (*p == '=') {
+            TERMINATE_STR(p);   /* terminate key */
+            if (IS_NONVAL_MCMD(*p)) {
+                PMIU_ERR_SETANDJUMP1(pmi_errno, PMIU_FAIL, "Expecting value after %s=", key);
+            }
+            val = p;
+            /* value in mcmd can contain anything except '\n' and '\0' */
+            SKIP_VAL_MCMD(p);
+            TERMINATE_STR(p);   /* terminate value */
+        } else {
+            TERMINATE_STR(p);   /* terminate key */
+        }
+
+        if (val) {
+            unescape_val(val);
+        }
+
+        if (strcmp(key, "mcmd") == 0) {
+            pmicmd->cmd = val;
+        } else {
+            pmicmd->tokens[idx].key = key;
+            pmicmd->tokens[idx].val = val;
+            idx++;
+            PMIU_Assert(idx < MAX_PMI_ARGS);
+        }
+    }
+    pmicmd->num_tokens = idx;
+
+  fn_exit:
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static int parse_v2(char *buf, struct PMIU_cmd *pmicmd)
 {
     int pmi_errno = PMIU_SUCCESS;
@@ -215,7 +295,11 @@ int PMIU_cmd_parse(char *buf, int buflen, int version, struct PMIU_cmd *pmicmd)
     pmicmd->buf = buf;
 
     if (version == PMIU_WIRE_V1) {
-        pmi_errno = parse_v1(buf, pmicmd);
+        if (strncmp(buf, "mcmd=", 5) == 0) {
+            pmi_errno = parse_v1_mcmd(buf, pmicmd);
+        } else {
+            pmi_errno = parse_v1(buf, pmicmd);
+        }
     } else {
         /* PMIU_WIRE_V2 */
         pmi_errno = parse_v2(buf, pmicmd);
@@ -708,6 +792,8 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
     int buflen = 0;
 
     PMIU_cmd_output(pmicmd, &buf, &buflen);
+
+    PMIU_printf(PMIU_verbose, "send to fd=%d pmi: %s", fd, buf);
 
     pmi_errno = PMIU_write(fd, buf, buflen);
     PMIU_ERR_POP(pmi_errno);
