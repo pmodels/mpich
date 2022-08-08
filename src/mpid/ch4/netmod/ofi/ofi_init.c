@@ -193,16 +193,6 @@ cvars:
       description : >-
         If true, enable iovec for pt2pt.
 
-    - name        : MPIR_CVAR_CH4_OFI_ENABLE_HMEM
-      category    : CH4_OFI
-      type        : int
-      default     : -1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If true, enable OFI HMEM support.
-
     - name        : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS
       category    : CH4_OFI
       type        : int
