@@ -84,6 +84,12 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
                               int *count_my_req_procs_ptr,
                               int **count_my_req_per_proc_ptr,
                               ADIOI_Access ** my_req_ptr, ADIO_Offset *** buf_idx_ptr);
+void ADIOI_LUSTRE_TAM_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
+                                  ADIO_Offset * len_list, int contig_access_count,
+                                  int *striping_info, int nprocs,
+                                  int *count_my_req_procs_ptr,
+                                  int **count_my_req_per_proc_ptr,
+                                  ADIOI_Access ** my_req_ptr, ADIO_Offset *** buf_idx_ptr);
 void ADIOI_LUSTRE_Free_my_req(int nprocs, int *count_my_req_per_proc,
                               ADIOI_Access * my_req, ADIO_Offset ** buf_idx);
 

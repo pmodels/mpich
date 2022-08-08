@@ -197,6 +197,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
         buf_idx[i] = buf_idx[i - 1] + count_my_req_per_proc[i - 1] + 1;
     ptr += memLen + nprocs;     /* "+ nprocs" puts a terminal index at the end */
 
+
     /* now allocate space for my_req, offset, and len */
     *my_req_ptr = (ADIOI_Access *) ADIOI_Malloc(nprocs * sizeof(ADIOI_Access));
     my_req = *my_req_ptr;
@@ -212,6 +213,193 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
             count_my_req_procs++;
         }
         my_req[i].count = 0;    /* will be incremented where needed later */
+    }
+
+    /* now fill in my_req */
+    curr_idx = 0;
+    for (i = 0; i < contig_access_count; i++) {
+        /* short circuit offset/len processing if len == 0
+         *      (zero-byte  read/write */
+        if (len_list[i] == 0)
+            continue;
+        off = offset_list[i];
+        avail_len = len_list[i];
+        proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len, striping_info);
+
+        l = my_req[proc].count;
+
+        ADIOI_Assert(l < count_my_req_per_proc[proc]);
+        buf_idx[proc][l] = curr_idx;
+        curr_idx += avail_len;
+
+        rem_len = len_list[i] - avail_len;
+
+        /* store the proc, offset, and len information in an array
+         * of structures, my_req. Each structure contains the
+         * offsets and lengths located in that process's FD,
+         * and the associated count.
+         */
+        my_req[proc].offsets[l] = off;
+        ADIOI_Assert(avail_len == (int) avail_len);
+        my_req[proc].lens[l] = (int) avail_len;
+        my_req[proc].count++;
+
+        while (rem_len != 0) {
+            off += avail_len;
+            avail_len = rem_len;
+            proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len, striping_info);
+
+            l = my_req[proc].count;
+            ADIOI_Assert(l < count_my_req_per_proc[proc]);
+            buf_idx[proc][l] = curr_idx;
+
+            curr_idx += avail_len;
+            rem_len -= avail_len;
+
+            my_req[proc].offsets[l] = off;
+            ADIOI_Assert(avail_len == (int) avail_len);
+            my_req[proc].lens[l] = (int) avail_len;
+            my_req[proc].count++;
+        }
+    }
+
+#ifdef AGG_DEBUG
+    for (i = 0; i < nprocs; i++) {
+        if (count_my_req_per_proc[i] > 0) {
+            FPRINTF(stdout, "data needed from %d (count = %d):\n", i, my_req[i].count);
+            for (l = 0; l < my_req[i].count; l++) {
+                FPRINTF(stdout, "   off[%d] = %lld, len[%d] = %d\n",
+                        l, (long long) my_req[i].offsets[l], l, (long long) my_req[i].lens[l]);
+            }
+        }
+    }
+#endif
+
+    *count_my_req_procs_ptr = count_my_req_procs;
+    *buf_idx_ptr = buf_idx;
+}
+
+/* ADIOI_LUSTRE_Calc_my_req() - calculate what portions of the access requests
+ * of this process are located in the file domains of various processes
+ * (including this one)
+ */
+
+
+void ADIOI_LUSTRE_TAM_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
+                                  ADIO_Offset * len_list, int contig_access_count,
+                                  int *striping_info, int nprocs,
+                                  int *count_my_req_procs_ptr,
+                                  int **count_my_req_per_proc_ptr,
+                                  ADIOI_Access ** my_req_ptr, ADIO_Offset *** buf_idx_ptr)
+{
+    /* Nothing different from ADIOI_Calc_my_req(), except calling
+     * ADIOI_Lustre_Calc_aggregator() instead of the old one */
+    int *count_my_req_per_proc, count_my_req_procs;
+    int i, l, proc;
+    size_t memLen;
+    ADIO_Offset avail_len, rem_len, curr_idx, off, **buf_idx, *ptr;
+    ADIOI_Access *my_req;
+    int myrank;
+
+    MPI_Comm_rank(fd->comm, &myrank);
+
+    *count_my_req_per_proc_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int));
+    count_my_req_per_proc = *count_my_req_per_proc_ptr;
+    /* count_my_req_per_proc[i] gives the no. of contig. requests of this
+     * process in process i's file domain. calloc initializes to zero.
+     * I'm allocating memory of size nprocs, so that I can do an
+     * MPI_Alltoall later on.
+     */
+
+    /* one pass just to calculate how much space to allocate for my_req;
+     * contig_access_count was calculated way back in ADIOI_Calc_my_off_len()
+     */
+    for (i = 0; i < contig_access_count; i++) {
+        /* short circuit offset/len processing if len == 0
+         * (zero-byte  read/write
+         */
+        if (len_list[i] == 0)
+            continue;
+        off = offset_list[i];
+        avail_len = len_list[i];
+        /* note: we set avail_len to be the total size of the access.
+         * then ADIOI_LUSTRE_Calc_aggregator() will modify the value to return
+         * the amount that was available.
+         */
+        proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len, striping_info);
+        count_my_req_per_proc[proc]++;
+
+        /* figure out how many data is remaining in the access
+         * we'll take care of this data (if there is any)
+         * in the while loop below.
+         */
+        rem_len = len_list[i] - avail_len;
+
+        while (rem_len != 0) {
+            off += avail_len;   /* point to first remaining byte */
+            avail_len = rem_len;        /* save remaining size, pass to calc */
+            proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len, striping_info);
+            count_my_req_per_proc[proc]++;
+            rem_len -= avail_len;       /* reduce remaining length by amount from fd */
+        }
+    }
+
+    /* buf_idx is relevant only if buftype_is_contig.
+     * buf_idx[i] gives the index into user_buf where data received
+     * from proc 'i' should be placed. This allows receives to be done
+     * without extra buffer. This can't be done if buftype is not contig.
+     */
+
+    memLen = 0;
+    for (i = 0; i < nprocs; i++)
+        memLen += count_my_req_per_proc[i];
+    ptr = (ADIO_Offset *) ADIOI_Malloc((memLen * 3 + nprocs) * sizeof(ADIO_Offset));
+
+    /* initialize buf_idx vectors */
+    buf_idx = (ADIO_Offset **) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset *));
+    buf_idx[0] = ptr;
+    for (i = 1; i < nprocs; i++)
+        buf_idx[i] = buf_idx[i - 1] + count_my_req_per_proc[i - 1] + 1;
+    ptr += memLen + nprocs;     /* "+ nprocs" puts a terminal index at the end */
+
+    /* now allocate space for my_req, offset, and len */
+    *my_req_ptr = (ADIOI_Access *) ADIOI_Malloc(nprocs * sizeof(ADIOI_Access));
+    my_req = *my_req_ptr;
+    //my_req[0].offsets = ptr;
+
+    count_my_req_procs = 0;
+
+    fd->my_req_buf = (char *) ptr;
+    for (i = 0; i < nprocs; ++i) {
+        my_req[i].count = 0;
+    }
+    if (fd->is_agg) {
+        for (i = 0; i < fd->hints->cb_nodes; i++) {
+            if (fd->hints->ranklist[i] != myrank && count_my_req_per_proc[fd->hints->ranklist[i]]) {
+                my_req[fd->hints->ranklist[i]].offsets = ptr;
+                ptr += count_my_req_per_proc[fd->hints->ranklist[i]];
+                my_req[fd->hints->ranklist[i]].lens = ptr;
+                ptr += count_my_req_per_proc[fd->hints->ranklist[i]];
+                count_my_req_procs++;
+            }
+        }
+        if (count_my_req_per_proc[myrank]) {
+            my_req[myrank].offsets = ptr;
+            ptr += count_my_req_per_proc[myrank];
+            my_req[myrank].lens = ptr;
+            ptr += count_my_req_per_proc[myrank];
+            count_my_req_procs++;
+        }
+    } else {
+        for (i = 0; i < fd->hints->cb_nodes; i++) {
+            if (count_my_req_per_proc[fd->hints->ranklist[i]]) {
+                my_req[fd->hints->ranklist[i]].offsets = ptr;
+                ptr += count_my_req_per_proc[fd->hints->ranklist[i]];
+                my_req[fd->hints->ranklist[i]].lens = ptr;
+                ptr += count_my_req_per_proc[fd->hints->ranklist[i]];
+                count_my_req_procs++;
+            }
+        }
     }
 
     /* now fill in my_req */
