@@ -71,6 +71,11 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     p = getenv("PMI2_DEBUG");
     if (p) {
         PMIU_verbose = atoi(p);
+    } else {
+        p = getenv("PMI_DEBUG");
+        if (p) {
+            PMIU_verbose = atoi(p);
+        }
     }
 
     /* Get the fd for PMI commands; if none, we're a singleton */
