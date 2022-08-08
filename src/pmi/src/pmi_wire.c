@@ -493,16 +493,6 @@ const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key,
     return NULL;
 }
 
-int PMIU_cmd_get_intval_with_default(struct PMIU_cmd *pmicmd, const char *key, int dfltval)
-{
-    const char *tmp = PMIU_cmd_find_keyval(pmicmd, key);
-    if (tmp) {
-        return atoi(tmp);
-    } else {
-        return dfltval;
-    }
-}
-
 /* duplicate a pmicmd (for the purpose of enqueue) */
 struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
 {
