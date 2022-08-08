@@ -33,13 +33,13 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
     if (recvd) {
         if (stdfd == STDOUT_FILENO) {
             HYD_pmcd_init_header(&hdr);
-            hdr.cmd = STDOUT;
+            hdr.cmd = CMD_STDOUT;
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.out[i] == fd)
                     break;
         } else {
             HYD_pmcd_init_header(&hdr);
-            hdr.cmd = STDERR;
+            hdr.cmd = CMD_STDERR;
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.err[i] == fd)
                     break;
@@ -47,9 +47,9 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
 
         HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
-        hdr.pgid = HYD_pmcd_pmip.local.pgid;
-        hdr.proxy_id = HYD_pmcd_pmip.local.id;
-        hdr.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
+        hdr.u.io.pgid = HYD_pmcd_pmip.local.pgid;
+        hdr.u.io.proxy_id = HYD_pmcd_pmip.local.id;
+        hdr.u.io.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
         hdr.buflen = recvd;
 
         {
@@ -102,7 +102,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
 
     HYDU_FUNC_ENTER();
 
-    if (hdr.pmi_version == 1)
+    if (hdr.u.pmi.pmi_version == 1)
         HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
     else
         HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
@@ -111,7 +111,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
     for (int i = 0; i < MAX_PMI_ARGS; i++)
         args[i] = NULL;
 
-    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
+    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.u.pmi.pmi_version, &pmi_cmd, args);
     HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
     if (HYD_pmcd_pmip.user_global.debug) {
@@ -134,8 +134,8 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
     }
 
     /* We don't understand the command; forward it upstream */
-    hdr.cmd = PMI_CMD;
-    hdr.pid = fd;
+    hdr.cmd = CMD_PMI;
+    hdr.u.pmi.pid = fd;
     hdr.buflen = strlen(buf);
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
@@ -165,8 +165,6 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
 
 static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 {
-    int full_command, buflen, cmdlen;
-    char *bufptr, lenptr[7];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -192,8 +190,9 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
      * other PMs might rely on the "incorrect order of commands".
      */
 
+    int full_command, buflen;
     /* Parse the string and if a full command is found, make sure that
-     * bufptr points to the last byte of the command */
+     * buflen is the length of the buffer and NUL-terminated if necessary */
     full_command = 0;
     if (!strncmp(sptr, "cmd=", strlen("cmd=")) || !strncmp(sptr, "mcmd=", strlen("mcmd="))) {
         /* PMI-1 format command; read the rest of it */
@@ -201,18 +200,23 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 
         if (!strncmp(sptr, "cmd=", strlen("cmd="))) {
             /* A newline marks the end of the command */
+            char *bufptr;
             for (bufptr = sptr; bufptr < sptr + pmi_storage_len; bufptr++) {
                 if (*bufptr == '\n') {
                     full_command = 1;
+                    *bufptr = '\0';
+                    buflen = bufptr - sptr + 1;
                     break;
                 }
             }
         } else {        /* multi commands */
+            char *bufptr;
             for (bufptr = sptr; bufptr < sptr + pmi_storage_len - strlen("endcmd\n") + 1; bufptr++) {
-                if (bufptr[0] == 'e' && bufptr[1] == 'n' && bufptr[2] == 'd' &&
-                    bufptr[3] == 'c' && bufptr[4] == 'm' && bufptr[5] == 'd' && bufptr[6] == '\n') {
+                if (strncmp(bufptr, "endcmd\n", 7) == 0) {
                     full_command = 1;
                     bufptr += strlen("endcmd\n") - 1;
+                    *bufptr = '\0';
+                    buflen = bufptr - sptr + 1;
                     break;
                 }
             }
@@ -221,24 +225,24 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
         *pmi_version = 2;
 
         /* We already made sure we had at least 6 bytes */
+        char lenptr[7];
         memcpy(lenptr, sptr, 6);
         lenptr[6] = 0;
-        cmdlen = atoi(lenptr);
+        int cmdlen = atoi(lenptr);
 
         if (pmi_storage_len >= cmdlen + 6) {
             full_command = 1;
-            bufptr = sptr + 6 + cmdlen - 1;
+            char *bufptr = sptr + 6 + cmdlen - 1;
+            *bufptr = '\0';
+            buflen = bufptr - sptr + 1;
         }
     }
 
     if (full_command) {
         /* We have a full command */
-        buflen = bufptr - sptr + 1;
-        HYDU_MALLOC_OR_JUMP(*buf, char *, buflen, status);
-        memcpy(*buf, sptr, buflen);
+        *buf = sptr;
         sptr += buflen;
         pmi_storage_len -= buflen;
-        (*buf)[buflen - 1] = '\0';
 
         if (pmi_storage_len == 0)
             sptr = pmi_storage;
@@ -258,9 +262,6 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
@@ -329,8 +330,9 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                  * SIGUSR1 signal to a PMI-2 notification message. */
                 HYD_pmcd_pmip_send_signal(SIGUSR1);
 
-                hdr.cmd = PROCESS_TERMINATED;
-                hdr.pid = HYD_pmcd_pmip.downstream.pmi_rank[pid];
+                hdr.cmd = CMD_PROCESS_TERMINATED;
+                /* global rank for the terminated process */
+                hdr.u.data = HYD_pmcd_pmip.downstream.pmi_rank[pid];
                 status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr),
                                          &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
                 HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
@@ -344,7 +346,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     }
 
   check_cmd:
-    status = check_pmi_cmd(&buf, &hdr.pmi_version, &repeat);
+    status = check_pmi_cmd(&buf, &hdr.u.pmi.pmi_version, &repeat);
     HYDU_ERR_POP(status, "error checking the PMI command\n");
 
     if (buf == NULL)
@@ -359,7 +361,6 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         HYD_pmcd_pmip.downstream.pmi_fd_active[pid] = 1;
 
     status = handle_pmi_cmd(fd, buf, hdr);
-    MPL_free(buf);
     HYDU_ERR_POP(status, "unable to handle PMI command\n");
 
     if (repeat)
@@ -391,11 +392,13 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
 
     buf[hdr.buflen] = 0;
 
+    int pmi_version = hdr.u.pmi.pmi_version;
+    int pmi_rank = hdr.u.pmi.pid;
     HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_INTERNAL_ARGS * sizeof(char *), status);
     for (i = 0; i < MAX_PMI_INTERNAL_ARGS; i++)
         args[i] = NULL;
 
-    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
+    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, pmi_version, &pmi_cmd, args);
     HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
     h = HYD_pmcd_pmip_pmi_handle;
@@ -412,7 +415,7 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
         HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n", pmi_cmd);
     }
 
-    status = HYDU_sock_write(hdr.pid, buf, hdr.buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_write(pmi_rank, buf, hdr.buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to forward PMI response to MPI process\n");
 
     if (HYD_pmcd_pmip.user_global.auto_cleanup) {
@@ -522,7 +525,7 @@ static HYD_status singleton_init(void)
     /* Send the PID list upstream */
     struct HYD_pmcd_hdr hdr;
     HYD_pmcd_init_header(&hdr);
-    hdr.cmd = PID_LIST;
+    hdr.cmd = CMD_PID_LIST;
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
                         HYDU_SOCK_COMM_MSGWAIT);
@@ -821,7 +824,7 @@ static HYD_status launch_procs(void)
 
     /* Send the PID list upstream */
     HYD_pmcd_init_header(&hdr);
-    hdr.cmd = PID_LIST;
+    hdr.cmd = CMD_PID_LIST;
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
                         HYDU_SOCK_COMM_MSGWAIT);
@@ -969,7 +972,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ERR_POP(status, "error reading command from launcher\n");
     HYDU_ASSERT(!closed, status);
 
-    if (hdr.cmd == PROC_INFO) {
+    if (hdr.cmd == CMD_PROC_INFO) {
         status = procinfo(fd);
         HYDU_ERR_POP(status, "error parsing process info\n");
 
@@ -980,14 +983,15 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
             status = launch_procs();
             HYDU_ERR_POP(status, "launch_procs returned error\n");
         }
-    } else if (hdr.cmd == PMI_RESPONSE) {
+    } else if (hdr.cmd == CMD_PMI_RESPONSE) {
         status = handle_pmi_response(fd, hdr);
         HYDU_ERR_POP(status, "unable to handle PMI response\n");
-    } else if (hdr.cmd == SIGNAL) {
+    } else if (hdr.cmd == CMD_SIGNAL) {
+        int signum = hdr.u.data;
         /* FIXME: This code needs to change from sending the signal to
          * a PMI-2 notification message. */
-        HYD_pmcd_pmip_send_signal(hdr.signum);
-    } else if (hdr.cmd == STDIN) {
+        HYD_pmcd_pmip_send_signal(signum);
+    } else if (hdr.cmd == CMD_STDIN) {
         int count;
 
         if (hdr.buflen) {
