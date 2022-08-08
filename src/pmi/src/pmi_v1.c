@@ -40,8 +40,6 @@ static int PMI_kvsname_max = 0;
 static int PMI_keylen_max = 0;
 static int PMI_vallen_max = 0;
 
-static int PMI_debug_init = 0;  /* Set this to true to debug the init
-                                 * handshakes */
 static int PMI_spawned = 0;
 
 /* Function prototypes for internal routines */
@@ -86,8 +84,9 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
     /* Get the value of PMI_DEBUG from the environment if possible, since
      * we may have set it to help debug the setup process */
     p = getenv("PMI_DEBUG");
-    if (p)
-        PMI_debug = atoi(p);
+    if (p) {
+        PMIU_verbose = atoi(p);
+    }
 
     /* Get the fd for PMI commands; if none, we're a singleton */
     rc = getPMIFD(&notset);
@@ -127,10 +126,9 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
         } else
             PMI_rank = 0;
 
-        if ((p = getenv("PMI_DEBUG")))
-            PMI_debug = atoi(p);
-        else
-            PMI_debug = 0;
+        if ((p = getenv("PMI_DEBUG"))) {
+            PMIU_verbose = atoi(p);
+        }
 
         /* Leave unchanged otherwise, which indicates that no value
          * was set */
@@ -309,7 +307,7 @@ PMI_API_PUBLIC int PMI_Abort(int exit_code, const char error_msg[])
 {
     int pmi_errno = PMI_SUCCESS;
 
-    PMIU_printf(PMI_debug, "aborting job:\n%s\n", error_msg);
+    PMIU_printf(PMIU_verbose, "aborting job:\n%s\n", error_msg);
 
     struct PMIU_cmd pmicmd;
     PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "abort");
@@ -806,9 +804,8 @@ static int PMII_Set_from_port(int id)
     PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "initack");
 
     /* We start by sending a startup message to the server */
-    if (PMI_debug) {
-        PMIU_printf(1, "Writing initack to destination fd %d\n", PMI_fd);
-    }
+    PMIU_printf(PMIU_verbose, "Writing initack to destination fd %d\n", PMI_fd);
+
     /* Handshake and initialize from a port */
 
     PMIU_cmd_add_int(&pmicmd, "pmiid", id);
@@ -823,7 +820,7 @@ static int PMII_Set_from_port(int id)
     PMIU_ERR_POP(pmi_errno);
     pmi_errno = GetResponse_set_int("rank", &PMI_rank);
     PMIU_ERR_POP(pmi_errno);
-    pmi_errno = GetResponse_set_int("debug", &PMI_debug);
+    pmi_errno = GetResponse_set_int("debug", &PMIU_verbose);
     PMIU_ERR_POP(pmi_errno);
 
   fn_exit:
@@ -914,7 +911,7 @@ static int PMII_singinit(void)
 
     MPL_snprintf(port_c, sizeof(port_c), "%d", port);
 
-    PMIU_printf(PMI_debug_init, "Starting mpiexec with %s\n", port_c);
+    PMIU_printf(PMIU_verbose, "Starting mpiexec with %s\n", port_c);
 
     /* Launch the mpiexec process with the name of this port */
     int pid;
@@ -973,17 +970,17 @@ static int PMII_singinit(void)
         const char *p;
         PMIU_CMD_GET_STRVAL(&pmicmd, "stdio", p);
         if (p && strcmp(p, "yes") == 0) {
-            PMIU_printf(PMI_debug_init, "PM agreed to connect stdio\n");
+            PMIU_printf(PMIU_verbose, "PM agreed to connect stdio\n");
             connectStdio = 1;
         }
 
         PMIU_CMD_GET_STRVAL(&pmicmd, "kvsname", p);
         MPL_strncpy(singinit_kvsname, p, MAX_SINGINIT_KVSNAME);
-        PMIU_printf(PMI_debug_init, "kvsname to use is %s\n", singinit_kvsname);
+        PMIU_printf(PMIU_verbose, "kvsname to use is %s\n", singinit_kvsname);
 
         if (connectStdio) {
             int stdin_sock, stdout_sock, stderr_sock;
-            PMIU_printf(PMI_debug_init, "Accepting three connections for stdin, out, err\n");
+            PMIU_printf(PMIU_verbose, "Accepting three connections for stdin, out, err\n");
             stdin_sock = accept_one_connection(singinit_listen_sock);
             dup2(stdin_sock, 0);
             stdout_sock = accept_one_connection(singinit_listen_sock);
@@ -991,7 +988,7 @@ static int PMII_singinit(void)
             stderr_sock = accept_one_connection(singinit_listen_sock);
             dup2(stderr_sock, 2);
         }
-        PMIU_printf(PMI_debug_init, "Done with singinit handshake\n");
+        PMIU_printf(PMIU_verbose, "Done with singinit handshake\n");
     }
 
   fn_exit:
@@ -1023,7 +1020,6 @@ static int PMIi_InitIfSingleton(void)
     PMI_initialized = SINGLETON_INIT_WITH_PM;   /* do this right away */
     PMI_size = 1;
     PMI_rank = 0;
-    PMI_debug = 0;
     PMI_spawned = 0;
 
     PMII_getmaxes(&PMI_kvsname_max, &PMI_keylen_max, &PMI_vallen_max);
