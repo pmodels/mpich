@@ -13,7 +13,7 @@
 
 #define IS_SPACE(c) ((c) == ' ')
 #define IS_EOL(c) ((c) == '\n' || (c) == '\0')
-#define IS_KEY(c) (isalnum(c) || (c) == '_' || (c) == '-')
+#define IS_KEY(c) (isalnum(c) || (c) == '_' || (c) == '-' || (c) == '/')
 #define IS_NONVAL(c) (IS_SPACE(c) || IS_EOL(c))
 
 #define SKIP_SPACES(s) do { \
