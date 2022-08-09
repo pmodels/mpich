@@ -180,7 +180,7 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
 
     for (i = 0; i < token_count; i++) {
-        status = HYD_pmcd_pmi_add_kvs(tokens[i].key, tokens[i].val, pg_scratch->kvs, &ret);
+        status = HYD_pmcd_pmi_add_kvs(tokens[i].key, (char *) tokens[i].val, pg_scratch->kvs, &ret);
         HYDU_ERR_POP(status, "unable to add key pair to kvs\n");
     }
 
