@@ -204,15 +204,14 @@ HYD_status HYDT_dmxi_stdin_valid(int *out)
 
     HYDU_FUNC_ENTER();
 
-    /* This is an extremely round-about way of solving a simple
-     * problem. isatty(STDIN_FILENO) seems to return 1, even when
-     * mpiexec is run in the background. So, instead of relying on
-     * that, we catch SIGTTIN and ignore it. But that causes the
-     * read() call to return an error (with errno == EINTR) when we
-     * are not attached to the terminal. */
-
+    /* This function is called to determine whether we should poll/select STDIN.
+     * It is not clear why we need check that. It is likely in the past we have
+     * encountered issue of polling a non-readable STDIN. This is likely OS-
+     * dependent, but having the check should be either on the safeside or it is
+     * unnecessary but harmless.
+     */
     /*
-     * We need to allow for the following cases:
+     * The cases can be quite complicated, consider:
      *
      *  1. mpiexec -n 2 ./foo  --> type something on the terminal
      *     Attached to terminal, and can read from stdin
@@ -231,6 +230,11 @@ HYD_status HYDT_dmxi_stdin_valid(int *out)
      *
      *  6. mpiexec -n 2 ./foo < /dev/null &
      *     Not attached to terminal, and can read from stdin
+     *
+     *  7. [job.sh &] -> mpiexec -n 2 ./foo
+     *     Launched as part of background job. Attached to terminal,
+     *     but cannot read from stdin. Ref. issue #2022
+     *
      */
 
 #if defined(SIGTTIN)
