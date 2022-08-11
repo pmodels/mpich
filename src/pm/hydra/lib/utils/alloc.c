@@ -281,7 +281,7 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
             proxy->exec_list->exec[i] = MPL_strdup(exec->exec[i]);
         proxy->exec_list->exec[i] = NULL;
 
-        proxy->exec_list->wdir = MPL_strdup(exec->wdir);
+        proxy->exec_list->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
         proxy->exec_list->proc_count = num_procs;
         proxy->exec_list->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
         proxy->exec_list->user_env = HYDU_env_list_dup(exec->user_env);
@@ -297,7 +297,7 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
             texec->exec[i] = MPL_strdup(exec->exec[i]);
         texec->exec[i] = NULL;
 
-        texec->wdir = MPL_strdup(exec->wdir);
+        texec->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
         texec->proc_count = num_procs;
         texec->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
         texec->user_env = HYDU_env_list_dup(exec->user_env);

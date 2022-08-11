@@ -683,6 +683,24 @@ dnl lead to weird AM_CONDITIONAL errors and potentially other problems.
 # suppress default "-g -O2" from AC_PROG_CXX
 : ${CXXFLAGS=""}
 AC_PROG_CXX
+AC_CACHE_CHECK([whether the C++ compiler $CXX can build an executable],
+    pac_cv_cxx_builds_exe,[
+    AC_LANG_PUSH([C++])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+        class mytest {
+            int a;
+        public:
+            mytest(void) : a(1) {}
+            ~mytest(void) {}
+        };
+        ]],[[mytest a;]])],
+        pac_cv_cxx_builds_exe=yes, pac_cv_cxx_builds_exe=no)
+    AC_LANG_POP([C++])
+])
+if test "$pac_cv_cxx_builds_exe" = "no" ; then
+    # clear $CXX if C++ compiler does not work
+    CXX=
+fi
 
 if test "$enable_fortran" = "no" ; then
     enable_f77=no
@@ -2246,21 +2264,7 @@ if test "$enable_cxx" = "yes" ; then
     # to link programs that are really C++.  For that reason,
     # we've added a test to see if the C++ compiler can produce
     # an executable.
-    AC_CACHE_CHECK([whether the C++ compiler $CXX can build an executable],
-    pac_cv_cxx_builds_exe,[
- AC_LANG_PUSH([C++])
- AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-    class mytest {
-        int a;
-      public:
-        mytest(void) : a(1) {}
-        ~mytest(void) {}
-    };
-    ]],[[mytest a;]])],
-    pac_cv_cxx_builds_exe=yes, pac_cv_cxx_builds_exe=no)
- AC_LANG_POP([C++])
-])
-    if test "$pac_cv_cxx_builds_exe" != yes ; then
+    if test -z "$CXX" ; then
         AC_MSG_ERROR([Aborting because C++ compiler does not work.  If you do not need a C++ compiler, configure with --disable-cxx])
     fi
     # Recent failures have come when a standard header is loaded
@@ -3176,9 +3180,9 @@ else
     AC_DEFINE(HAVE_NO_FORTRAN_MPI_TYPES_IN_C,1,[Define if the Fortran types are not available in C])
 fi
 # ----------------------------------------------------------------------------
-# C++ types
+# C++ types - we support CXX datatypes if there is a working CXX compiler
 
-if test "$enable_cxx" = "yes" ; then
+if test -n "$CXX" ; then
     AC_LANG([C++])
     AC_CHECK_SIZEOF(bool)
 
@@ -3187,6 +3191,9 @@ if test "$enable_cxx" = "yes" ; then
     AC_MSG_RESULT([$pac_retval])
     AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_CTYPE],[$pac_retval],
 			[a C type used to compute C++ bool reductions])
+    if test "$ac_cv_sizeof_bool" != 0 ; then
+        AC_DEFINE(HAVE_CXX_BOOL,1,[Define if C++ supports bool types])
+    fi
 
     AC_CHECK_HEADER(complex)
     if test "$ac_cv_header_complex" = "yes" ; then
@@ -3214,7 +3221,7 @@ using namespace std;
         # c++ complex as unavailable
         if test "$ac_cv_sizeof_Complex" != 0 -a \
                 "$ac_cv_sizeof_DoubleComplex" != 0 ; then
-            AC_DEFINE(HAVE_CXX_COMPLEX,1,[Define is C++ supports complex types])
+            AC_DEFINE(HAVE_CXX_COMPLEX,1,[Define if C++ supports complex types])
         fi
         # mark availability of c++ long double complex
         if test $ac_cv_sizeof_long_double__Complex != 0 ; then
@@ -3773,7 +3780,7 @@ if test "$ac_cv_func_thread_policy_set" = yes ; then
             pac_cv_have_thread_affinity_policy=no)
     ])
     if test "$pac_cv_have_thread_affinity_policy" = yes ; then
-        AC_DEFINE(HAVE_OSX_THREAD_AFFINITY,1,[Define is the OSX thread affinity policy macros defined])
+        AC_DEFINE(HAVE_OSX_THREAD_AFFINITY,1,[Define if the OSX thread affinity policy macros defined])
     fi
 fi
 

@@ -153,9 +153,9 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
         case MPI_INTEGER4:
         case MPI_INTEGER8:
 #endif /* HAVE_FORTRAN_BINDING */
-#ifdef HAVE_CXX_BINDING
+#ifdef HAVE_CXX_BOOL
         case MPI_CXX_BOOL:
-#endif /* HAVE_CXX_BINDING */
+#endif /* HAVE_CXX_BOOL */
             switch (basic_type_size) {
                 case 1:
                     yaksa_type = YAKSA_TYPE__INT8_T;
