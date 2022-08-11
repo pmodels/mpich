@@ -348,7 +348,6 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     char *cmd, *thrid;
     struct HYD_pmcd_token *tokens;
     int token_count, i;
-    static int fence_count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -363,10 +362,12 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
 
+    int cur_epoch = -1;
     /* Try to find the epoch point of this process */
     for (i = 0; i < proxy->pg->pg_process_count; i++)
         if (pg_scratch->ecount[i].fd == fd && pg_scratch->ecount[i].pid == pid) {
             pg_scratch->ecount[i].epoch++;
+            cur_epoch = pg_scratch->ecount[i].epoch;
             break;
         }
 
@@ -379,7 +380,8 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
 
         pg_scratch->ecount[i].fd = fd;
         pg_scratch->ecount[i].pid = pid;
-        pg_scratch->ecount[i].epoch = 1;
+        pg_scratch->ecount[i].epoch = 0;
+        cur_epoch = pg_scratch->ecount[i].epoch;
     }
 
     HYD_STRING_STASH_INIT(stash);
@@ -397,11 +399,21 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "send command failed\n");
     MPL_free(cmd);
 
-    fence_count++;
-    if (fence_count % proxy->pg->pg_process_count == 0) {
-        /* Poke the progress engine before exiting */
-        status = poke_progress(NULL);
-        HYDU_ERR_POP(status, "poke progress error\n");
+    if (cur_epoch == pg_scratch->epoch) {
+        pg_scratch->fence_count++;
+        if (pg_scratch->fence_count % proxy->pg->pg_process_count == 0) {
+            /* Poke the progress engine before exiting */
+            status = poke_progress(NULL);
+            HYDU_ERR_POP(status, "poke progress error\n");
+            /* reset fence_count */
+            pg_scratch->epoch++;
+            pg_scratch->fence_count = 0;
+            for (i = 0; i < proxy->pg->pg_process_count; i++) {
+                if (pg_scratch->ecount[i].epoch >= pg_scratch->epoch) {
+                    pg_scratch->fence_count++;
+                }
+            }
+        }
     }
 
   fn_exit:

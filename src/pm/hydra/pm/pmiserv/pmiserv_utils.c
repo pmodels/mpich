@@ -507,6 +507,8 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     pg_scratch->barrier_count = 0;
+    pg_scratch->epoch = 0;
+    pg_scratch->fence_count = 0;
 
     HYDU_MALLOC_OR_JUMP(pg_scratch->ecount, struct HYD_pmcd_pmi_ecount *,
                         pg->pg_process_count * sizeof(struct HYD_pmcd_pmi_ecount), status);
