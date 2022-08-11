@@ -120,6 +120,7 @@ $g_opt{junitfile} = '';
 my $xmloutput;
 my $tapoutput;
 my $junitoutput;
+my ($xml_state, $tap_state, $junit_state);
 
 # Total number of tests checked and run
 my $g_total_seen = 0;         # $g_ok_count + $g_err_count + $g_skip_count
@@ -244,15 +245,6 @@ foreach $_ (@ARGV) {
     elsif (/--?xmlfile=(.*)/) {
         $g_opt{xmlfile}   = $1;
         $xmloutput = 1;
-        open( XMLOUT, ">$g_opt{xmlfile}" ) || die "Cannot open $g_opt{xmlfile}\n";
-        my $date = `date "+%Y-%m-%d-%H-%M"`;
-        $date =~ s/\r?\n//;
-        # MPISOURCE can be used to describe the source of MPI for this
-        # test.
-        print XMLOUT "<?xml version='1.0' ?>$g_opt{newline}";
-        print XMLOUT "<?xml-stylesheet href=\"TestResults.xsl\" type=\"text/xsl\" ?>$g_opt{newline}";
-        print XMLOUT "<MPITESTRESULTS>$g_opt{newline}";
-        print XMLOUT "<DATE>$date</DATE>$g_opt{newline}";
     }
     elsif (/--?noxmlclose/) {
         $g_opt{noxmlclose} = 1;
@@ -260,19 +252,10 @@ foreach $_ (@ARGV) {
     elsif (/--?tapfile=(.*)/) {
         $g_opt{tapfile} = $1;
         $tapoutput = 1;
-        open( TAPOUT, ">$g_opt{tapfile}" ) || die "Cannot open $g_opt{tapfile}\n";
-        my $date = `date "+%Y-%m-%d-%H-%M"`;
-        $date =~ s/\r?\n//;
-        print TAPOUT "TAP version 13\n";
-        print TAPOUT "# MPICH test suite results (TAP format)\n";
-        print TAPOUT "# date ${date}\n";
-        # we do not know at this point how many tests will be run, so do
-        # not print a test plan line like "1..450" until the very end
     }
     elsif (/--?junitfile=(.*)/) {
         $g_opt{junitfile} = $1;
         $junitoutput = 1;
-        open( JUNITOUT, ">$g_opt{junitfile}" ) || die "Cannot open $g_opt{junitfile}\n";
     }
     else {
         print STDERR "Unrecognized argument $_\n";
@@ -302,6 +285,8 @@ if ($g_opt{batchRun}) {
     open( BATOUT, ">$g_opt{batrundir}/runtests.batch" ) || die "Could not open $g_opt{batrundir}/runtests.batch\n";
 }
 
+OpenOutputs();
+
 #
 # Process any files
 
@@ -328,45 +313,7 @@ else {
 }
 
 RunTests(\@all_tests);
-
-if ($xmloutput && !$g_opt{noxmlclose}) { 
-    print XMLOUT "</MPITESTRESULTS>$g_opt{newline}";
-    close XMLOUT; 
-}
-
-if ($tapoutput) {
-    print TAPOUT "1..$g_total_seen\n";
-    close TAPOUT;
-}
-
-if ($junitoutput) {
-    print JUNITOUT "    <system-out></system-out>\n";
-    print JUNITOUT "    <system-err></system-err>\n";
-    print JUNITOUT "  </testsuite>\n";
-    print JUNITOUT "</testsuites>\n";
-    close JUNITOUT;
-
-    # the second pass: insert the header
-    # Note: the field "errors" is not used now, but reserved for future uses.
-    open my $JUNITIN,  '<',  $g_opt{junitfile}      or die "Can't read old file: $!";
-    open my $JUNITOUTNEW, '>', "$g_opt{junitfile}.new" or die "Can't write new file: $!";
-    my $date = `date "+%Y-%m-%dT%H:%M:%S"`;
-    $date =~ s/\r?\n//;
-    print $JUNITOUTNEW "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    print $JUNITOUTNEW "<testsuites>\n";
-    print $JUNITOUTNEW "  <testsuite failures=\"$g_err_count\"\n";
-    print $JUNITOUTNEW "             errors=\"0\"\n";
-    print $JUNITOUTNEW "             skipped=\"$g_skip_count\"\n";
-    print $JUNITOUTNEW "             tests=\"$g_total_run\"\n";
-    print $JUNITOUTNEW "             timestamp=\"${date}\"\n";
-    print $JUNITOUTNEW "             name=\"summary_junit_xml\">\n";
-    while( <$JUNITIN> ) {
-        print $JUNITOUTNEW $_;
-    }
-    close $JUNITIN;
-    close $JUNITOUTNEW;
-    move("$g_opt{junitfile}.new","$g_opt{junitfile}");
-}
+CloseOutputs();
 
 # Output a summary:
 if ($g_opt{batchRun}) {
@@ -1150,10 +1097,79 @@ sub TestErrFatal {
 
 # ----------------------------------------------------------------------------
 # Output routines:
+#  OpenOutputs               - Open report files and print initial lines
 #  RunPreMsg( programname, np, workdir ) - Call before running a program
 #  RunTestFailed, RunTestPassed - Call after test
 #  RunPostMsg               - Call at end of each test
 #
+sub OpenOutputs {
+    if ($xmloutput) {
+        open( XMLOUT, ">$g_opt{xmlfile}" ) || die "Cannot open $g_opt{xmlfile}\n";
+        my $date = `date "+%Y-%m-%d-%H-%M"`;
+        $date =~ s/\r?\n//;
+        # MPISOURCE can be used to describe the source of MPI for this
+        # test.
+        print XMLOUT "<?xml version='1.0' ?>$g_opt{newline}";
+        print XMLOUT "<?xml-stylesheet href=\"TestResults.xsl\" type=\"text/xsl\" ?>$g_opt{newline}";
+        print XMLOUT "<MPITESTRESULTS>$g_opt{newline}";
+        print XMLOUT "<DATE>$date</DATE>$g_opt{newline}";
+    }
+    if ($tapoutput) {
+        open( TAPOUT, ">$g_opt{tapfile}" ) || die "Cannot open $g_opt{tapfile}\n";
+        my $date = `date "+%Y-%m-%d-%H-%M"`;
+        $date =~ s/\r?\n//;
+        print TAPOUT "TAP version 13\n";
+        print TAPOUT "# MPICH test suite results (TAP format)\n";
+        print TAPOUT "# date ${date}\n";
+        # we do not know at this point how many tests will be run, so do
+        # not print a test plan line like "1..450" until the very end
+    }
+    if ($junitoutput) {
+        open( JUNITOUT, ">$g_opt{junitfile}" ) || die "Cannot open $g_opt{junitfile}\n";
+    }
+}
+
+sub CloseOutputs {
+    if ($xmloutput) {
+        if (!$g_opt{noxmlclose}) {
+            print XMLOUT "</MPITESTRESULTS>$g_opt{newline}";
+        }
+        close XMLOUT;
+    }
+    if ($tapoutput) {
+        print TAPOUT "1..$g_total_seen\n";
+        close TAPOUT;
+    }
+    if ($junitoutput) {
+        print JUNITOUT "    <system-out></system-out>\n";
+        print JUNITOUT "    <system-err></system-err>\n";
+        print JUNITOUT "  </testsuite>\n";
+        print JUNITOUT "</testsuites>\n";
+        close JUNITOUT;
+
+        # the second pass: insert the header
+        # Note: the field "errors" is not used now, but reserved for future uses.
+        open my $JUNITIN,  '<',  $g_opt{junitfile}      or die "Can't read old file: $!";
+        open my $JUNITOUTNEW, '>', "$g_opt{junitfile}.new" or die "Can't write new file: $!";
+        my $date = `date "+%Y-%m-%dT%H:%M:%S"`;
+        $date =~ s/\r?\n//;
+        print $JUNITOUTNEW "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        print $JUNITOUTNEW "<testsuites>\n";
+        print $JUNITOUTNEW "  <testsuite failures=\"$g_err_count\"\n";
+        print $JUNITOUTNEW "             errors=\"0\"\n";
+        print $JUNITOUTNEW "             skipped=\"$g_skip_count\"\n";
+        print $JUNITOUTNEW "             tests=\"$g_total_run\"\n";
+        print $JUNITOUTNEW "             timestamp=\"${date}\"\n";
+        print $JUNITOUTNEW "             name=\"summary_junit_xml\">\n";
+        while( <$JUNITIN> ) {
+            print $JUNITOUTNEW $_;
+        }
+        close $JUNITIN;
+        close $JUNITOUTNEW;
+        move("$g_opt{junitfile}.new","$g_opt{junitfile}");
+    }
+}
+
 sub RunPreMsg {
     my ($test_opt) = @_;
     my $programname = $test_opt->{name};
