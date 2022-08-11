@@ -199,11 +199,6 @@ static HYD_status fn_fullinit(int fd, char *args[])
         HYD_STRING_STASH(stash, MPL_strdup(";spawner-jobid="), status);
         HYD_STRING_STASH(stash, MPL_strdup(HYD_pmcd_pmip.local.spawner_kvsname), status);
     }
-    if (HYD_pmcd_pmip.user_global.debug) {
-        HYD_STRING_STASH(stash, MPL_strdup(";debugged=TRUE;pmiverbose=TRUE"), status);
-    } else {
-        HYD_STRING_STASH(stash, MPL_strdup(";debugged=FALSE;pmiverbose=FALSE"), status);
-    }
     HYD_STRING_STASH(stash, MPL_strdup(";rc=0;"), status);
 
     HYD_STRING_SPIT(stash, cmd, status);
