@@ -350,14 +350,15 @@ if ($junitoutput) {
     # Note: the field "errors" is not used now, but reserved for future uses.
     open my $JUNITIN,  '<',  $g_opt{junitfile}      or die "Can't read old file: $!";
     open my $JUNITOUTNEW, '>', "$g_opt{junitfile}.new" or die "Can't write new file: $!";
-    my $date = `date "+%Y-%m-%d-%H-%M"`;
+    my $date = `date "+%Y-%m-%dT%H:%M:%S"`;
     $date =~ s/\r?\n//;
+    print $JUNITOUTNEW "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     print $JUNITOUTNEW "<testsuites>\n";
     print $JUNITOUTNEW "  <testsuite failures=\"$g_err_count\"\n";
     print $JUNITOUTNEW "             errors=\"0\"\n";
     print $JUNITOUTNEW "             skipped=\"$g_skip_count\"\n";
     print $JUNITOUTNEW "             tests=\"$g_total_run\"\n";
-    print $JUNITOUTNEW "             date=\"${date}\"\n";
+    print $JUNITOUTNEW "             timestamp=\"${date}\"\n";
     print $JUNITOUTNEW "             name=\"summary_junit_xml\">\n";
     while( <$JUNITIN> ) {
         print $JUNITOUTNEW $_;
