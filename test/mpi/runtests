@@ -1102,6 +1102,13 @@ sub TestErrFatal {
 #  RunTestFailed, RunTestPassed - Call after test
 #  RunPostMsg               - Call at end of each test
 #
+sub on_SIGINT {
+    chdir $g_cwd or die;
+    RunPostMsg();
+    CloseOutputs();
+    die "Killed: $!\n";
+}
+
 sub OpenOutputs {
     if ($xmloutput) {
         open( XMLOUT, ">$g_opt{xmlfile}" ) || die "Cannot open $g_opt{xmlfile}\n";
@@ -1127,6 +1134,10 @@ sub OpenOutputs {
     if ($junitoutput) {
         open( JUNITOUT, ">$g_opt{junitfile}" ) || die "Cannot open $g_opt{junitfile}\n";
     }
+
+    # Catch signals to wrap the output
+    $SIG{INT} = \&on_SIGINT;
+    $SIG{TERM} = \&on_SIGINT;
 }
 
 sub CloseOutputs {
@@ -1149,7 +1160,7 @@ sub CloseOutputs {
 
         # the second pass: insert the header
         # Note: the field "errors" is not used now, but reserved for future uses.
-        open my $JUNITIN,  '<',  $g_opt{junitfile}      or die "Can't read old file: $!";
+        open my $JUNITIN,  '<',  $g_opt{junitfile}      or die "Can't read old file $g_opt{junitfile}: $!";
         open my $JUNITOUTNEW, '>', "$g_opt{junitfile}.new" or die "Can't write new file: $!";
         my $date = `date "+%Y-%m-%dT%H:%M:%S"`;
         $date =~ s/\r?\n//;
