@@ -22,7 +22,7 @@ struct ADIOI_GEN_IwriteStridedColl_vars {
     /* parameters */
     ADIO_File fd;
     const void *buf;
-    int count;
+    MPI_Aint count;
     MPI_Datatype datatype;
     int file_ptr_type;
     ADIO_Offset offset;
@@ -217,7 +217,7 @@ static int ADIOI_GEN_iwc_wait_fn(int count, void **array_of_states,
 
 
 /* Non-blocking version of ADIOI_GEN_WriteStridedColl() */
-void ADIOI_GEN_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
+void ADIOI_GEN_IwriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count,
                                  MPI_Datatype datatype, int file_ptr_type,
                                  ADIO_Offset offset, MPI_Request * request, int *error_code)
 {
@@ -342,7 +342,8 @@ static void ADIOI_GEN_IwriteStridedColl_indio(ADIOI_NBC_Request * nbc_req, int *
     ADIOI_Icalc_others_req_vars *cor_vars = NULL;
     ADIO_File fd = vars->fd;
     const void *buf;
-    int count, file_ptr_type;
+    MPI_Aint count;
+    int file_ptr_type;
     MPI_Datatype datatype = vars->datatype;
     ADIO_Offset offset;
     int filetype_is_contig;

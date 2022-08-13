@@ -13,7 +13,7 @@
  *
  * Implemented by immediately calling WriteContig()
  */
-void ADIOI_TESTFS_IwriteContig(ADIO_File fd, const void *buf, int count,
+void ADIOI_TESTFS_IwriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                                MPI_Datatype datatype, int file_ptr_type,
                                ADIO_Offset offset, ADIO_Request * request, int
                                *error_code)
@@ -37,7 +37,7 @@ void ADIOI_TESTFS_IwriteContig(ADIO_File fd, const void *buf, int count,
 
 }
 
-void ADIOI_TESTFS_IwriteStrided(ADIO_File fd, const void *buf, int count,
+void ADIOI_TESTFS_IwriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                                 MPI_Datatype datatype, int file_ptr_type,
                                 ADIO_Offset offset, ADIO_Request * request, int
                                 *error_code)

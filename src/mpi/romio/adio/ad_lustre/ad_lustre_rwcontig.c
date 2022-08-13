@@ -136,11 +136,11 @@ static ssize_t ADIOI_LUSTRE_Directio(ADIO_File fd, const void *buf, MPI_Count le
     return nbytes;
 }
 
-static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, int count,
+static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, MPI_Aint count,
                                   MPI_Datatype datatype, int file_ptr_type,
                                   ADIO_Offset offset, ADIO_Status * status,
                                   int io_mode, int *error_code);
-static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, int count,
+static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, MPI_Aint count,
                                   MPI_Datatype datatype, int file_ptr_type,
                                   ADIO_Offset offset, ADIO_Status * status,
                                   int io_mode, int *error_code)
@@ -235,14 +235,14 @@ static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, int count,
     /* --END ERROR HANDLING-- */
 }
 
-void ADIOI_LUSTRE_WriteContig(ADIO_File fd, const void *buf, int count,
+void ADIOI_LUSTRE_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                               MPI_Datatype datatype, int file_ptr_type,
                               ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
     ADIOI_LUSTRE_IOContig(fd, buf, count, datatype, file_ptr_type, offset, status, 1, error_code);
 }
 
-void ADIOI_LUSTRE_ReadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_LUSTRE_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
                              MPI_Datatype datatype, int file_ptr_type,
                              ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {

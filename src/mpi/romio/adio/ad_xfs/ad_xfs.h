@@ -21,11 +21,11 @@ typedef struct aiocb64 aiocb64_t;
 
 void ADIOI_XFS_Open(ADIO_File fd, int *error_code);
 void ADIOI_XFS_Close(ADIO_File fd, int *error_code);
-void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
                           MPI_Datatype datatype, int file_ptr_type,
                           ADIO_Offset offset, ADIO_Status * status, int
                           *error_code);
-void ADIOI_XFS_WriteContig(ADIO_File fd, void *buf, int count,
+void ADIOI_XFS_WriteContig(ADIO_File fd, void *buf, MPI_Aint count,
                            MPI_Datatype datatype, int file_ptr_type,
                            ADIO_Offset offset, ADIO_Status * status, int
                            *error_code);

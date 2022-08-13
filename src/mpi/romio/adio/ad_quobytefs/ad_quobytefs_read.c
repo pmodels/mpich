@@ -8,7 +8,7 @@
 
 #include "ad_quobytefs.h"
 
-void ADIOI_QUOBYTEFS_ReadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_QUOBYTEFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
                                 MPI_Datatype datatype, int file_ptr_type,
                                 ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {

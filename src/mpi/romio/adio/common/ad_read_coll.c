@@ -68,7 +68,7 @@ if ((fd->file_system == ADIO_LUSTRE) && (fd->hints->fs_hints.lustre.lock_ahead_r
 #define ADIOI_LUSTRE_RD_LOCK_AHEAD(fd,cb_nodes,offset,error_code)
 #endif
 
-void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
+void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
                                MPI_Datatype datatype, int file_ptr_type,
                                ADIO_Offset offset, ADIO_Status * status, int
                                *error_code)
@@ -256,7 +256,7 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
     fd->fp_sys_posn = -1;       /* set it to null. */
 }
 
-void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
+void ADIOI_Calc_my_off_len(ADIO_File fd, MPI_Aint bufcount, MPI_Datatype
                            datatype, int file_ptr_type, ADIO_Offset
                            offset, ADIO_Offset ** offset_list_ptr, ADIO_Offset
                            ** len_list_ptr, ADIO_Offset * start_offset_ptr,

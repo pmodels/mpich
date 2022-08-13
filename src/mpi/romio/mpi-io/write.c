@@ -96,7 +96,6 @@ Output Parameters:
 int MPI_File_write_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
                      MPI_Datatype datatype, MPI_Status * status)
 {
-    assert(count <= INT_MAX);
     int error_code;
     static char myname[] = "MPI_FILE_WRITE";
 #ifdef MPI_hpux
@@ -121,9 +120,8 @@ int MPIOI_File_write(MPI_File fh,
                      MPI_Offset offset,
                      int file_ptr_type,
                      const void *buf,
-                     int count, MPI_Datatype datatype, char *myname, MPI_Status * status)
+                     MPI_Aint count, MPI_Datatype datatype, char *myname, MPI_Status * status)
 {
-    assert(count <= INT_MAX);
     int error_code, buftype_is_contig, filetype_is_contig;
     MPI_Count datatype_size;
     ADIO_Offset off, bufsize;

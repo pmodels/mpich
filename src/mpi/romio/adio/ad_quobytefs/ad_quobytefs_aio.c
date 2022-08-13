@@ -30,7 +30,7 @@ static void quobyte_io_event_finished(void *event, int ret)
     }
 }
 
-int ADIOI_QUOBYTEFS_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
+int ADIOI_QUOBYTEFS_aio(ADIO_File fd, void *buf, MPI_Aint count, MPI_Datatype type,
                         ADIO_Offset offset, int wr, MPI_Request * request)
 {
 
@@ -86,7 +86,7 @@ int ADIOI_QUOBYTEFS_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
     return 0;
 }
 
-void ADIOI_QUOBYTEFS_IreadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_QUOBYTEFS_IreadContig(ADIO_File fd, void *buf, MPI_Aint count,
                                  MPI_Datatype datatype, int file_ptr_type,
                                  ADIO_Offset offset, MPI_Request * request, int *error_code)
 {
@@ -116,7 +116,7 @@ void ADIOI_QUOBYTEFS_IreadContig(ADIO_File fd, void *buf, int count,
     *error_code = MPI_SUCCESS;
 }
 
-void ADIOI_QUOBYTEFS_IwriteContig(ADIO_File fd, const void *buf, int count,
+void ADIOI_QUOBYTEFS_IwriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                                   MPI_Datatype datatype, int file_ptr_type,
                                   ADIO_Offset offset, ADIO_Request * request, int *error_code)
 {

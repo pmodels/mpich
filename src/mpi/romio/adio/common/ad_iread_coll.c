@@ -24,7 +24,7 @@ struct ADIOI_GEN_IreadStridedColl_vars {
     /* parameters */
     ADIO_File fd;
     void *buf;
-    int count;
+    MPI_Aint count;
     MPI_Datatype datatype;
     int file_ptr_type;
     ADIO_Offset offset;
@@ -194,7 +194,7 @@ static int ADIOI_GEN_irc_wait_fn(int count, void **array_of_states,
 
 
 /* Nonblocking version of ADIOI_GEN_ReadStridedColl() */
-void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, int count,
+void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
                                 MPI_Datatype datatype, int file_ptr_type,
                                 ADIO_Offset offset, MPI_Request * request, int *error_code)
 {
@@ -324,7 +324,8 @@ static void ADIOI_GEN_IreadStridedColl_indio(ADIOI_NBC_Request * nbc_req, int *e
     ADIOI_Icalc_others_req_vars *cor_vars = NULL;
     ADIO_File fd = vars->fd;
     void *buf;
-    int count, file_ptr_type;
+    MPI_Aint count;
+    int file_ptr_type;
     MPI_Datatype datatype = vars->datatype;
     ADIO_Offset offset;
     int filetype_is_contig;
