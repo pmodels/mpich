@@ -88,7 +88,7 @@ static void ADIOI_Heap_merge(ADIOI_Access * others_req, int *count,
                              int nprocs, int nprocs_recv, int total_elements);
 
 
-void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
+void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count,
                                  MPI_Datatype datatype, int file_ptr_type,
                                  ADIO_Offset offset, ADIO_Status * status, int
                                  *error_code)

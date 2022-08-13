@@ -33,7 +33,7 @@
  * In the aio case we rely on ADIOI_GEN_aio(), which is implemented in
  * common/ad_iwrite.c.
  */
-void ADIOI_GEN_IreadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_GEN_IreadContig(ADIO_File fd, void *buf, MPI_Aint count,
                            MPI_Datatype datatype, int file_ptr_type,
                            ADIO_Offset offset, MPI_Request * request, int *error_code)
 {
@@ -66,7 +66,7 @@ void ADIOI_GEN_IreadContig(ADIO_File fd, void *buf, int count,
 /* Generic implementation of IreadStrided calls the blocking ReadStrided
  * immediately.
  */
-void ADIOI_GEN_IreadStrided(ADIO_File fd, void *buf, int count,
+void ADIOI_GEN_IreadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                             MPI_Datatype datatype, int file_ptr_type,
                             ADIO_Offset offset, ADIO_Request * request, int *error_code)
 {

@@ -83,12 +83,11 @@ Output Parameters:
 int MPI_File_write_shared_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
                             MPI_Datatype datatype, MPI_Status * status)
 {
-    assert(count <= INT_MAX);
     return MPIOI_File_write_shared(fh, buf, count, datatype, status);
 }
 
 #ifdef MPIO_BUILD_PROFILING
-int MPIOI_File_write_shared(MPI_File fh, const void *buf, int count,
+int MPIOI_File_write_shared(MPI_File fh, const void *buf, MPI_Aint count,
                             MPI_Datatype datatype, MPI_Status * status)
 {
     int error_code, buftype_is_contig, filetype_is_contig;
