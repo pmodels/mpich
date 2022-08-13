@@ -248,6 +248,14 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
         if (specialized_cache && !info.specialized_cache) {
             MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE = MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic;
         }
+
+        int device_count, max_dev_id, max_subdev_id;
+        mpi_errno = MPL_gpu_get_dev_count(&device_count, &max_dev_id, &max_subdev_id);
+        MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
+
+        if (device_count <= 0) {
+            MPIR_CVAR_ENABLE_GPU = 0;
+        }
     }
 
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
