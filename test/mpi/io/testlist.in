@@ -1,4 +1,5 @@
 rdwrord 4
+rdwrord 2 -large-count
 rdwrzero 4
 getextent 2
 setinfo 4
