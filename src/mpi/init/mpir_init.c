@@ -207,6 +207,14 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
         }
         int mpl_errno = MPL_gpu_init(debug_summary);
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
+
+        int device_count, max_dev_id;
+        mpi_errno = MPL_gpu_get_dev_count(&device_count, &max_dev_id);
+        MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
+
+        if (device_count <= 0) {
+            MPIR_CVAR_ENABLE_GPU = 0;
+        }
     }
 
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
