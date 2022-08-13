@@ -110,7 +110,6 @@ Output Parameters:
 int MPI_File_iread_at_all_c(MPI_File fh, MPI_Offset offset, void *buf,
                             MPI_Count count, MPI_Datatype datatype, MPI_Request * request)
 {
-    assert(count <= INT_MAX);
     int error_code;
     static char myname[] = "MPI_FILE_IREAD_AT_ALL";
 #ifdef MPI_hpux

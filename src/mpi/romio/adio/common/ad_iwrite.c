@@ -44,7 +44,7 @@ static MPIX_Grequest_class ADIOI_GEN_greq_class = 0;
  * routines.  Otherwise, the ADIOI_Fns_struct will point to the FAKE
  * version.
  */
-void ADIOI_GEN_IwriteContig(ADIO_File fd, const void *buf, int count,
+void ADIOI_GEN_IwriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                             MPI_Datatype datatype, int file_ptr_type,
                             ADIO_Offset offset, ADIO_Request * request, int *error_code)
 {
@@ -81,7 +81,7 @@ void ADIOI_GEN_IwriteContig(ADIO_File fd, const void *buf, int count,
  *
  * Returns 0 on success, -errno on failure.
  */
-int ADIOI_GEN_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
+int ADIOI_GEN_aio(ADIO_File fd, void *buf, MPI_Aint count, MPI_Datatype type,
                   ADIO_Offset offset, int wr, MPI_Request * request)
 {
     int err = -1, fd_sys;
@@ -195,7 +195,7 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
 /* Generic implementation of IwriteStrided calls the blocking WriteStrided
  * immediately.
  */
-void ADIOI_GEN_IwriteStrided(ADIO_File fd, const void *buf, int count,
+void ADIOI_GEN_IwriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                              MPI_Datatype datatype, int file_ptr_type,
                              ADIO_Offset offset, MPI_Request * request, int *error_code)
 {

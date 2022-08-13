@@ -7,7 +7,7 @@
 
 #ifdef ROMIO_HAVE_WORKING_AIO
 /* nearly identical to ADIOI_GEN_IreadContig, except we lock around I/O */
-void ADIOI_NFS_IreadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_NFS_IreadContig(ADIO_File fd, void *buf, MPI_Aint count,
                            MPI_Datatype datatype, int file_ptr_type,
                            ADIO_Offset offset, ADIO_Request * request, int *error_code)
 {

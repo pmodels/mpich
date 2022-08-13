@@ -71,7 +71,7 @@ static void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                    ADIO_Offset fd_size, ADIO_Offset * fd_start,
                                    ADIO_Offset * fd_end, MPI_Aint buftype_extent);
 
-extern void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
+extern void ADIOI_Calc_my_off_len(ADIO_File fd, MPI_Aint bufcount, MPI_Datatype
                                   datatype, int file_ptr_type, ADIO_Offset
                                   offset, ADIO_Offset ** offset_list_ptr, ADIO_Offset
                                   ** len_list_ptr, ADIO_Offset * start_offset_ptr,
@@ -80,7 +80,7 @@ extern void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 
 
 
-void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
+void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
                                 MPI_Datatype datatype, int file_ptr_type,
                                 ADIO_Offset offset, ADIO_Status * status, int
                                 *error_code)

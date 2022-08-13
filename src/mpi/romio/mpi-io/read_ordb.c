@@ -74,12 +74,11 @@ Output Parameters:
 @*/
 int MPI_File_read_ordered_begin_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datatype)
 {
-    assert(count <= INT_MAX);
     return MPIOI_File_read_ordered_begin(fh, buf, count, datatype);
 }
 
 #ifdef MPIO_BUILD_PROFILING
-int MPIOI_File_read_ordered_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype)
+int MPIOI_File_read_ordered_begin(MPI_File fh, void *buf, MPI_Aint count, MPI_Datatype datatype)
 {
     int error_code, nprocs, myrank;
     MPI_Count datatype_size;

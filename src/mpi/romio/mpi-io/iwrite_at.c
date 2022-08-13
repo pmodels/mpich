@@ -114,7 +114,6 @@ Output Parameters:
 int MPI_File_iwrite_at_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
                          MPI_Count count, MPI_Datatype datatype, MPIO_Request * request)
 {
-    assert(count <= INT_MAX);
     int error_code;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_IWRITE_AT";

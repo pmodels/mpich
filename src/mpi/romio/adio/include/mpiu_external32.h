@@ -15,6 +15,6 @@ int MPIU_datatype_full_size(MPI_Datatype datatype, MPI_Aint * size);
 /* given a buffer, count, and datatype, return an appropriately sized and
  *  * external32-formatted buffer, suitable for handing off to a subsequent write
  *   * routine */
-int MPIU_external32_buffer_setup(const void *buf, int count, MPI_Datatype type, void **newbuf);
+int MPIU_external32_buffer_setup(const void *buf, MPI_Aint count, MPI_Datatype type, void **newbuf);
 
 #endif /* MPIU_EXTERNAL32_H_INCLUDED */
