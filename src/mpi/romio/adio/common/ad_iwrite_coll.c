@@ -109,7 +109,7 @@ struct ADIOI_Iexch_and_write_vars {
     int *done_to_proc;
     ADIOI_Flatlist_node *flat_buf;
     MPI_Aint buftype_extent;
-    int coll_bufsize;
+    MPI_Aint coll_bufsize;
 
     /* next function to be called */
     void (*next_fn) (ADIOI_NBC_Request *, int *);
@@ -590,7 +590,8 @@ static void ADIOI_Iexch_and_write(ADIOI_NBC_Request * nbc_req, int *error_code)
 
     int i, j;
     ADIO_Offset st_loc = -1, end_loc = -1;
-    int info_flag, coll_bufsize;
+    int info_flag;
+    MPI_Aint coll_bufsize;
     char *value;
 
     *error_code = MPI_SUCCESS;  /* changed below if error */
@@ -747,7 +748,7 @@ static void ADIOI_Iexch_and_write_l1_begin(ADIOI_NBC_Request * nbc_req, int *err
     for (i = 0; i < nprocs; i++)
         count[i] = recv_size[i] = 0;
 
-    size = MPL_MIN((unsigned) vars->coll_bufsize, vars->end_loc - vars->st_loc + 1 - vars->done);
+    size = MPL_MIN(vars->coll_bufsize, vars->end_loc - vars->st_loc + 1 - vars->done);
     vars->size = size;
 
     for (i = 0; i < nprocs; i++) {
