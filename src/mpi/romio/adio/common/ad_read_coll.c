@@ -499,7 +499,8 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
     int *partial_send, *recd_from_proc, *start_pos;
     /* Not convinced end_loc-st_loc couldn't be > int, so make these offsets */
     ADIO_Offset real_size, size, for_curr_iter, for_next_iter;
-    int req_len, flag, rank;
+    ADIO_Offset req_len;
+    int flag, rank;
     MPI_Status status;
     ADIOI_Flatlist_node *flat_buf = NULL;
     MPI_Aint lb, buftype_extent;
@@ -662,12 +663,9 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                                         &(others_req[i].mem_ptrs[j]));
                         ADIOI_Assert((real_off + real_size - req_off) ==
                                      (int) (real_off + real_size - req_off));
-                        send_size[i] +=
-                            (int) (MPL_MIN
-                                   (real_off + real_size - req_off,
-                                    (ADIO_Offset) (unsigned) req_len));
+                        send_size[i] += (int) (MPL_MIN(real_off + real_size - req_off, req_len));
 
-                        if (real_off + real_size - req_off < (ADIO_Offset) (unsigned) req_len) {
+                        if (real_off + real_size - req_off < req_len) {
                             partial_send[i] = (int) (real_off + real_size - req_off);
                             if ((j + 1 < others_req[i].count) &&
                                 (others_req[i].offsets[j + 1] < real_off + real_size)) {
@@ -757,7 +755,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                   ADIOI_Access * others_req,
                                   int iter, MPI_Aint buftype_extent, MPI_Aint * buf_idx)
 {
-    int i, j, k = 0, tmp = 0, nprocs_recv, nprocs_send;
+    int i, j, k = 0, nprocs_recv, nprocs_send;
     char **recv_buf = NULL;
     size_t memLen;
     MPI_Request *requests;
@@ -827,7 +825,8 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     j = 0;
     for (i = 0; i < nprocs; i++) {
         if (send_size[i]) {
-/* take care if the last off-len pair is a partial send */
+            /* take care if the last off-len pair is a partial send */
+            ADIO_Offset tmp;
             if (partial_send[i]) {
                 k = start_pos[i] + count[i] - 1;
                 tmp = others_req[i].lens[k];
