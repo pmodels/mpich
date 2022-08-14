@@ -476,7 +476,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
     MPI_Status status;
     ADIOI_Flatlist_node *flat_buf = NULL;
     MPI_Aint lb, buftype_extent;
-    int coll_bufsize;
+    MPI_Aint coll_bufsize;
 #ifdef RDCOLL_DEBUG
     int iii;
 #endif
@@ -608,7 +608,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 #ifdef PROFILE
         MPE_Log_event(13, 0, "start computation");
 #endif
-        size = MPL_MIN((unsigned) coll_bufsize, end_loc - st_loc + 1 - done);
+        size = MPL_MIN(coll_bufsize, end_loc - st_loc + 1 - done);
         real_off = off - for_curr_iter;
         real_size = size + for_curr_iter;
 
