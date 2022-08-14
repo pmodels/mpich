@@ -607,7 +607,8 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     MPI_Status status;
     ADIOI_Flatlist_node *flat_buf = NULL;
     MPI_Aint lb, buftype_extent;
-    int info_flag, coll_bufsize;
+    int info_flag;
+    MPI_Aint coll_bufsize;
     char *value;
     static char myname[] = "ADIOI_EXCH_AND_WRITE";
     pthread_t io_thread;
@@ -767,7 +768,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
         for (i = 0; i < nprocs; i++)
             count[i] = recv_size[i] = 0;
 
-        size = MPL_MIN((unsigned) coll_bufsize, end_loc - st_loc + 1 - done);
+        size = MPL_MIN(coll_bufsize, end_loc - st_loc + 1 - done);
 
         for (i = 0; i < nprocs; i++) {
             if (others_req[i].count) {
