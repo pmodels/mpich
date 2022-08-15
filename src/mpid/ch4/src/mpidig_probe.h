@@ -16,7 +16,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
     MPIR_Request *unexp_req;
     MPIR_FUNC_ENTER;
 
-    MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
+    MPIR_Context_id_t context_id = (MPIR_Context_id_t) (comm->recvcontext_id + context_offset);
 
     unexp_req =
         MPIDIG_rreq_find(source, tag, context_id, &MPIDI_global.per_vci[vci].unexp_list,
@@ -47,7 +47,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
+    MPIR_Context_id_t context_id = (MPIR_Context_id_t) (comm->recvcontext_id + context_offset);
 
     unexp_req =
         MPIDIG_rreq_dequeue(source, tag, context_id, &MPIDI_global.per_vci[vci].unexp_list,

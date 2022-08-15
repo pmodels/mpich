@@ -100,7 +100,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     };
 
     tag_mask = MPIDI_UCX_tag_mask(tag, rank);
-    ucp_tag = MPIDI_UCX_recv_tag(tag, rank, comm->recvcontext_id + context_offset);
+    ucp_tag = MPIDI_UCX_recv_tag(tag, rank,
+                                 (MPIR_Context_id_t) (comm->recvcontext_id + context_offset));
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     void *recv_buf;

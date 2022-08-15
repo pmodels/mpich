@@ -63,7 +63,7 @@ int MPID_Irsend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int ran
     MPIDI_Pkt_init(ready_pkt, MPIDI_CH3_PKT_READY_SEND);
     ready_pkt->match.parts.rank = comm->rank;
     ready_pkt->match.parts.tag = tag;
-    ready_pkt->match.parts.context_id = comm->context_id + context_offset;
+    ready_pkt->match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
     ready_pkt->sender_req_id = MPI_REQUEST_NULL;
     ready_pkt->data_sz = data_sz;
 
