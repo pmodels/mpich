@@ -671,7 +671,8 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         mpi_errno = MPIR_Comm_create(&comm->node_comm);
         MPIR_ERR_CHECK(mpi_errno);
 
-        comm->node_comm->context_id = comm->context_id + MPIR_CONTEXT_INTRANODE_OFFSET;
+        comm->node_comm->context_id =
+            (MPIR_Context_id_t) (comm->context_id + MPIR_CONTEXT_INTRANODE_OFFSET);
         comm->node_comm->recvcontext_id = comm->node_comm->context_id;
         comm->node_comm->rank = local_rank;
         comm->node_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
@@ -698,7 +699,8 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         mpi_errno = MPIR_Comm_create(&comm->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
 
-        comm->node_roots_comm->context_id = comm->context_id + MPIR_CONTEXT_INTERNODE_OFFSET;
+        comm->node_roots_comm->context_id =
+            (MPIR_Context_id_t) (comm->context_id + MPIR_CONTEXT_INTERNODE_OFFSET);
         comm->node_roots_comm->recvcontext_id = comm->node_roots_comm->context_id;
         comm->node_roots_comm->rank = external_rank;
         comm->node_roots_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;

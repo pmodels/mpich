@@ -43,7 +43,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **sreq_p,
     MPIDI_Pkt_init(es_pkt, MPIDI_CH3_PKT_EAGER_SYNC_SEND);
     es_pkt->match.parts.rank = comm->rank;
     es_pkt->match.parts.tag = tag;
-    es_pkt->match.parts.context_id = comm->context_id + context_offset;
+    es_pkt->match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
     es_pkt->sender_req_id = sreq->handle;
     es_pkt->data_sz = data_sz;
 
@@ -126,7 +126,7 @@ int MPIDI_CH3_EagerSyncZero(MPIR_Request **sreq_p, int rank, int tag,
     MPIDI_Pkt_init(es_pkt, MPIDI_CH3_PKT_EAGER_SYNC_SEND);
     es_pkt->match.parts.rank = comm->rank;
     es_pkt->match.parts.tag = tag;
-    es_pkt->match.parts.context_id = comm->context_id + context_offset;
+    es_pkt->match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
     es_pkt->sender_req_id = sreq->handle;
     es_pkt->data_sz = 0;
     

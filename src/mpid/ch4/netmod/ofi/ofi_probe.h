@@ -54,8 +54,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     rreq->comm = comm;
     MPIR_Comm_add_ref(comm);
 
-    match_bits =
-        MPIDI_OFI_init_recvtag(&mask_bits, MPIDI_OFI_REQUEST(rreq, context_id), source, tag);
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits,
+                                        (MPIR_Context_id_t) MPIDI_OFI_REQUEST(rreq, context_id),
+                                        source, tag);
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_PEEK;
     MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, peek_status)), MPIDI_OFI_PEEK_START);

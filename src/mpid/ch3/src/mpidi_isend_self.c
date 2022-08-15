@@ -32,7 +32,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
     
     match.parts.rank = rank;
     match.parts.tag = tag;
-    match.parts.context_id = comm->context_id + context_offset;
+    match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
 
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&match, &found);
     /* --BEGIN ERROR HANDLING-- */

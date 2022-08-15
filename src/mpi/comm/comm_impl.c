@@ -475,7 +475,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
                                   MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         if (*newcomm_ptr != NULL) {
-            (*newcomm_ptr)->context_id = rinfo[0];
+            (*newcomm_ptr)->context_id = (MPIR_Context_id_t) rinfo[0];
         }
         remote_size = rinfo[1];
 
@@ -501,7 +501,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         mpi_errno = MPIR_Bcast(rinfo, 2, MPI_INT, 0, comm_ptr->local_comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         if (*newcomm_ptr != NULL) {
-            (*newcomm_ptr)->context_id = rinfo[0];
+            (*newcomm_ptr)->context_id = (MPIR_Context_id_t) rinfo[0];
         }
         remote_size = rinfo[1];
         MPIR_CHKLMEM_MALLOC(remote_mapping, int *,
@@ -700,7 +700,7 @@ int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Co
 static int get_tag_from_stringtag(const char *stringtag)
 {
     unsigned hash;
-    int n = strlen(stringtag);
+    int n = (int) strlen(stringtag);
     HASH_VALUE(stringtag, n, hash);
 
     return hash % (MPIR_Process.attrs.tag_ub);
@@ -1049,7 +1049,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Extract the context and group sign information */
-        final_context_id = comm_info[0];
+        final_context_id = (MPIR_Context_id_t) comm_info[0];
     }
 
     /* At last, we now have the information that we need to build the

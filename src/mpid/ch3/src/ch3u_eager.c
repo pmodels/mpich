@@ -225,7 +225,7 @@ int MPIDI_CH3_EagerContigShortSend( MPIR_Request **sreq_p,
     MPIDI_Pkt_init(eagershort_pkt, reqtype);
     eagershort_pkt->match.parts.rank	     = comm->rank;
     eagershort_pkt->match.parts.tag	     = tag;
-    eagershort_pkt->match.parts.context_id = comm->context_id + context_offset;
+    eagershort_pkt->match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
     eagershort_pkt->data_sz	     = data_sz;
     
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,

@@ -71,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     MPIDIG_hdr_t am_hdr;
     am_hdr.src_rank = comm->rank;
     am_hdr.tag = tag;
-    am_hdr.context_id = comm->context_id + context_offset;
+    am_hdr.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
     am_hdr.error_bits = errflag;
     am_hdr.sreq_ptr = sreq;
     am_hdr.flags = flags;

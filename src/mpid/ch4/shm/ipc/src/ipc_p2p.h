@@ -92,7 +92,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     /* message matching info */
     am_hdr.hdr.src_rank = comm->rank;
     am_hdr.hdr.tag = tag;
-    am_hdr.hdr.context_id = comm->context_id + context_offset;
+    am_hdr.hdr.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
     am_hdr.hdr.data_sz = data_sz;
     am_hdr.hdr.rndv_hdr_sz = sizeof(MPIDI_IPC_hdr);
     am_hdr.hdr.sreq_ptr = sreq;
