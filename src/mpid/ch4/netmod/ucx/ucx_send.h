@@ -56,7 +56,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     };
 
     ep = MPIDI_UCX_AV_TO_EP(addr, vni_src, vni_dst);
-    ucx_tag = MPIDI_UCX_init_tag(comm->context_id + context_offset, comm->rank, tag);
+    ucx_tag = MPIDI_UCX_init_tag((MPIR_Context_id_t) (comm->context_id + context_offset),
+                                 comm->rank, tag);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     const void *send_buf;

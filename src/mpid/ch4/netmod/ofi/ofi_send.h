@@ -33,7 +33,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
         MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, comm->rank, dst_rank, tag);
     ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, sender_nic);
 
-    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
+    match_bits = MPIDI_OFI_init_sendtag((MPIR_Context_id_t) (comm->context_id + context_offset),
+                                        tag, 0);
     MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                         buf,
                                         data_sz,
@@ -177,7 +178,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         type = 0;
     }
 
-    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, type);
+    MPIR_Context_id_t context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
+    match_bits = MPIDI_OFI_init_sendtag(context_id, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
@@ -199,7 +201,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         ackreq->event_id = MPIDI_OFI_EVENT_SSEND_ACK;
         ackreq->signal_req = sreq;
         MPIR_cc_inc(sreq->cc_ptr);
-        ssend_match = MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, tag);
+        ssend_match = MPIDI_OFI_init_recvtag(&ssend_mask, context_id, tag);
         ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(comm, vni_local, receiver_nic)].rx,  /* endpoint    */
                                       NULL,     /* recvbuf     */

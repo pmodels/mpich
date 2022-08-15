@@ -14,7 +14,7 @@ int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int attr,
 {
     int mpi_errno = MPI_SUCCESS;
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    int context_id = comm->recvcontext_id + context_offset;
+    int context_id = (MPIR_Context_id_t) (comm->recvcontext_id + context_offset);
 
     *message = NULL;
 

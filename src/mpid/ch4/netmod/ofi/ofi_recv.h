@@ -121,7 +121,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
     uint64_t match_bits, mask_bits;
-    MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
+    MPIR_Context_id_t context_id = (MPIR_Context_id_t) (comm->recvcontext_id + context_offset);
     size_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;

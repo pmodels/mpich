@@ -111,10 +111,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
     /* If synchronous, ack and complete when the ack is done */
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
         /* Read ordering unnecessary for context_id stored in util_id here, so use relaxed load */
-        uint64_t ss_bits =
-            MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int(&MPIDI_OFI_REQUEST(rreq, util_id)),
-                                   rreq->status.MPI_TAG,
-                                   MPIDI_OFI_SYNC_SEND_ACK);
+        MPIR_Context_id_t context_id =
+            (MPIR_Context_id_t) MPL_atomic_relaxed_load_int(&MPIDI_OFI_REQUEST(rreq, util_id));
+        uint64_t ss_bits = MPIDI_OFI_init_sendtag(context_id, rreq->status.MPI_TAG,
+                                                  MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = rreq->comm;
         int r = rreq->status.MPI_SOURCE;
         /* NOTE: use target rank, reply to src */
