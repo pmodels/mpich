@@ -1223,7 +1223,8 @@ sub RunTestPassed {
         print TAPOUT "ok $g_total_seen - $workdir/$programname ${np} # time=$runtime\n";
     }
     if ($junitoutput) {
-        print JUNITOUT "    <testcase name=\"$g_total_run - $workdir/$programname ${np} ${progArgs} ${progEnv}\" time=\"$runtime\"></testcase>\n";
+        # Use %05d since the Junit plugin in Jenkins sort tests by name
+        printf JUNITOUT "    <testcase name=\"%05d - $workdir/$programname ${np} ${progArgs} ${progEnv}\" time=\"$runtime\"></testcase>\n", $g_total_seen;
     }
 }
 sub RunTestFailed {
@@ -1306,10 +1307,10 @@ sub RunTestFailed {
             $xfailstr = " # TODO $test_opt->{xfail}";
             $testtag  = "skipped";
         }
-        print JUNITOUT "    <testcase name=\"$g_total_run - $workdir/$programname ${np} ${progArgs} ${progEnv}\" time=\"$runtime\">\n";
+        printf JUNITOUT "    <testcase name=\"%05d - $workdir/$programname ${np} ${progArgs} ${progEnv}\" time=\"$runtime\">\n", $g_total_seen;
         print JUNITOUT "      <${testtag} type=\"TestFailed\"\n";
-        print JUNITOUT "               message=\"not ok $g_total_run - $workdir/$programname ${np}${xfailstr}\"><![CDATA[";
-        print JUNITOUT "not ok $g_total_run - $workdir/$programname ${np}${xfailstr}\n";
+        print JUNITOUT "               message=\"not ok $g_total_seen - $workdir/$programname ${np}${xfailstr}\"><![CDATA[";
+        print JUNITOUT "not ok $g_total_seen - $workdir/$programname ${np}${xfailstr}\n";
         print JUNITOUT "  ---\n";
         print JUNITOUT "  Directory: $workdir\n";
         print JUNITOUT "  File: $programname\n";
@@ -1350,7 +1351,7 @@ sub SkippedTest {
         print TAPOUT "ok $g_total_seen - $workdir/$programname $np  # SKIP $reason\n";
     }
     if ($junitoutput) {
-        print JUNITOUT "    <testcase name=\"$g_total_seen - $workdir/$programname ${np} ${progArgs} ${progEnv}\">\n";
+        printf JUNITOUT "    <testcase name=\"%05d - $workdir/$programname ${np} ${progArgs} ${progEnv}\">\n", $g_total_seen;
         print JUNITOUT "      <skipped type=\"TodoTestSkipped\">\n";
         print JUNITOUT "             message=\"$reason\"><![CDATA[ok $g_total_seen - $workdir/$programname $np  # SKIP $reason]]></skipped>\n";
         print JUNITOUT "    </testcase>\n";
