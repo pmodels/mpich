@@ -25,8 +25,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_request_init_internal(MPIR_Request * req,
     MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[local_vci].request_pool,
                                        (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
-    MPIDIG_REQUEST(req, req->local_vci) = local_vci;
-    MPIDIG_REQUEST(req, req->remote_vci) = remote_vci;
+    MPIDIG_REQUEST(req, req->local_vci) = (uint8_t) local_vci;
+    MPIDIG_REQUEST(req, req->remote_vci) = (uint8_t) remote_vci;
     MPIDIG_REQUEST(req, req->status) = 0;
     MPIDIG_REQUEST(req, req->recv_async).data_copy_cb = NULL;
     MPIDIG_REQUEST(req, req->recv_async).recv_type = MPIDIG_RECV_NONE;

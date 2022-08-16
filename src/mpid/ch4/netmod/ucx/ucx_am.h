@@ -67,9 +67,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     /* initialize our portion of the hdr */
-    ucx_hdr.handler_id = handler_id;
-    ucx_hdr.src_vci = src_vni;
-    ucx_hdr.dst_vci = dst_vni;
+    ucx_hdr.handler_id = (uint16_t) handler_id;
+    ucx_hdr.src_vci = (uint8_t) src_vni;
+    ucx_hdr.dst_vci = (uint8_t) dst_vni;
     ucx_hdr.data_sz = data_sz;
 
     MPL_pointer_attr_t attr;
@@ -195,9 +195,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank, src_vni, dst_vni);
 
     /* initialize our portion of the hdr */
-    ucx_hdr.handler_id = handler_id;
-    ucx_hdr.src_vci = src_vni;
-    ucx_hdr.dst_vci = dst_vni;
+    ucx_hdr.handler_id = (uint16_t) handler_id;
+    ucx_hdr.src_vci = (uint8_t) src_vni;
+    ucx_hdr.dst_vci = (uint8_t) dst_vni;
     ucx_hdr.data_sz = 0;
 
     /* just pack and send for now */
