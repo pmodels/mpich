@@ -80,7 +80,7 @@ typedef enum {
 typedef struct MPIDIG_rreq_t {
     /* mrecv fields */
     void *mrcv_buffer;
-    uint64_t mrcv_count;
+    MPI_Aint mrcv_count;
     MPI_Datatype mrcv_datatype;
 
     MPIR_Request *peer_req_ptr;

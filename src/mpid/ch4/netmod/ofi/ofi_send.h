@@ -284,7 +284,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         int num_nics = MPIDI_OFI_global.num_nics;
         uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
         struct fid_mr **huge_send_mrs;
-        uint64_t msg_size = MPIDI_OFI_STRIPE_CHUNK_SIZE;
+        MPI_Aint msg_size = MPIDI_OFI_STRIPE_CHUNK_SIZE;
 
         MPIR_cc_inc(sreq->cc_ptr);
         if (!MPIDI_OFI_COMM(comm).enable_striping) {
