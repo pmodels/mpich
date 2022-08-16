@@ -24,14 +24,6 @@
 #define MPIDI_OFI_VNI_USE_SEPCTX       1
 #endif
 
-#define MPIDI_OFI_MAX_AM_HDR_SIZE      ((1 << MPIDI_OFI_AM_HDR_SZ_BITS) - 1)
-#define MPIDI_OFI_AM_HANDLER_ID_BITS   8
-#define MPIDI_OFI_AM_TYPE_BITS         8
-#define MPIDI_OFI_AM_HDR_SZ_BITS       8
-#define MPIDI_OFI_AM_PAYLOAD_SZ_BITS  24
-#define MPIDI_OFI_AM_RANK_BITS        32
-#define MPIDI_OFI_AM_MSG_HEADER_SIZE (sizeof(MPIDI_OFI_am_header_t))
-
 /* Typedefs */
 
 struct MPIR_Comm;
@@ -79,13 +71,15 @@ typedef struct {
     MPIR_Request *sreq_ptr;
 } MPIDI_OFI_am_rdma_read_ack_msg_t;
 
+#define MPIDI_OFI_MAX_AM_HDR_SIZE      255
+
 typedef struct MPIDI_OFI_am_header_t {
-    uint64_t handler_id:MPIDI_OFI_AM_HANDLER_ID_BITS;
-    uint64_t am_type:MPIDI_OFI_AM_TYPE_BITS;
-    uint64_t am_hdr_sz:MPIDI_OFI_AM_HDR_SZ_BITS;
-    uint64_t payload_sz:MPIDI_OFI_AM_PAYLOAD_SZ_BITS;   /* data size on this OFI message. This
-                                                         * could be the size of a pipeline segment
-                                                         * */
+    uint8_t handler_id;
+    uint8_t am_type;
+    uint16_t am_hdr_sz;
+    uint32_t payload_sz;        /* data size on this OFI message. This
+                                 * could be the size of a pipeline segment
+                                 */
     /* vnis are needed for callbacks and to reply.
      * Note: technically the vni_dst don't need be transported since the receiver
      * always know which vni it receives the message. However, having both of them

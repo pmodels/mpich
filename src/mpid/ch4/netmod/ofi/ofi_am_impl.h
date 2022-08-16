@@ -184,7 +184,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
     MPIDI_OFI_am_request_header_t *sreq_hdr;
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
+    MPIR_Assert(am_hdr_sz <= MPIDI_OFI_MAX_AM_HDR_SIZE);
 
     if (MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) == NULL) {
         int vni = MPIDI_Request_get_vci(sreq);
@@ -243,12 +243,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
     MPI_Aint am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
     MPI_Aint total_msg_sz = sizeof(*msg_hdr) + am_hdr_sz + sizeof(*lmt_info);
 
-    MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
-    MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
+    MPIR_Assert(handler_id <= UINT8_MAX);
     MPIR_Assert(total_msg_sz <= MPIDI_OFI_AM_MAX_MSG_SIZE);
 
     msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
-    msg_hdr->handler_id = handler_id;
+    msg_hdr->handler_id = (uint8_t) handler_id;
     msg_hdr->am_hdr_sz = (uint16_t) am_hdr_sz;
     msg_hdr->payload_sz = 0;    /* LMT info sent as header */
     msg_hdr->am_type = MPIDI_AMTYPE_RDMA_READ;
@@ -317,9 +316,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
-    MPIR_Assert(data_sz < (1ULL << MPIDI_OFI_AM_PAYLOAD_SZ_BITS));
-    MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
+    MPIR_Assert(handler_id <= UINT8_MAX);
+    MPIR_Assert(data_sz <= UINT32_MAX);
 
     MPI_Aint am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
 
@@ -330,12 +328,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
         msg_hdr = MPIDI_OFI_AM_SREQ_HDR(sreq, pack_buffer);
         /* The completion callback need the handler_id in the same place
          * FIXME: maybe we should have a separate msg_hdr pointer just like isend_pipeline? */
-        MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr).handler_id = handler_id;
+        MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr).handler_id = (uint8_t) handler_id;
     }
 
-    msg_hdr->handler_id = handler_id;
+    msg_hdr->handler_id = (uint8_t) handler_id;
     msg_hdr->am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
-    msg_hdr->payload_sz = data_sz;
+    msg_hdr->payload_sz = (uint32_t) data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
     msg_hdr->vni_src = (uint8_t) vni_src;
     msg_hdr->vni_dst = (uint8_t) vni_dst;
@@ -385,8 +383,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
-    MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
+    MPIR_Assert(handler_id <= UINT8_MAX);
 
     msg_hdr = send_req->msg_hdr;
     MPI_Aint am_hdr_sz = 0;
@@ -395,12 +392,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     }
     MPI_Aint seg_sz = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_OFI_am_header_t) - am_hdr_sz;
     seg_sz = MPL_MIN(seg_sz, MPIDIG_am_send_async_get_data_sz_left(sreq));
-    MPIR_Assert(seg_sz < (1ULL << MPIDI_OFI_AM_PAYLOAD_SZ_BITS));
+    MPIR_Assert(seg_sz <= UINT32_MAX);
 
     msg_hdr = (MPIDI_OFI_am_header_t *) send_req->msg_hdr;
-    msg_hdr->handler_id = handler_id;
+    msg_hdr->handler_id = (uint8_t) handler_id;
     msg_hdr->am_hdr_sz = (uint16_t) am_hdr_sz;
-    msg_hdr->payload_sz = seg_sz;
+    msg_hdr->payload_sz = (uint32_t) seg_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_PIPELINE;
     msg_hdr->vni_src = (uint8_t) vni_src;
     msg_hdr->vni_dst = (uint8_t) vni_dst;
@@ -438,7 +435,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->op = am_op; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->rank = rank; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->comm = comm; \
-        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->handler_id = handler_id; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->handler_id = (uint8_t) handler_id; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->buf = buf; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->count = count; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->datatype = datatype; \
@@ -580,10 +577,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
-    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
+    MPIR_Assert(handler_id <= UINT8_MAX);
+    MPIR_Assert(am_hdr_sz <= MPIDI_OFI_MAX_AM_HDR_SIZE);
 
-    msg_hdr.handler_id = handler_id;
+    msg_hdr.handler_id = (uint8_t) handler_id;
     msg_hdr.am_hdr_sz = (uint16_t) am_hdr_sz;
     msg_hdr.payload_sz = 0;
     msg_hdr.am_type = MPIDI_AMTYPE_SHORT_HDR;
@@ -592,7 +589,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
     msg_hdr.seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vni_src, dst_addr);
     msg_hdr.fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vni_src, vni_src);
 
-    MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
     if (unlikely(am_hdr_sz + sizeof(msg_hdr) > MPIDI_OFI_global.max_buffered_send)) {
         mpi_errno = MPIDI_OFI_do_emulated_inject(comm, dst_addr, &msg_hdr,

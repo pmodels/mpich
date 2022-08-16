@@ -275,9 +275,9 @@ static int am_recv_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * 
 #ifdef NEEDS_STRICT_ALIGNMENT
     /* FI_MULTI_RECV may pack the message at lesser alignment, copy the header
      * when that's the case */
-#define MAX_HDR_SIZE 280        /* MPIDI_OFI_AM_MSG_HEADER_SIZE + MPIDI_OFI_MAX_AM_HDR_SIZE */
-    MPL_COMPILE_TIME_ASSERT(MAX_HDR_SIZE >=
-                            MPIDI_OFI_AM_MSG_HEADER_SIZE + MPIDI_OFI_MAX_AM_HDR_SIZE);
+#define MPIDI_OFI_MAX_AM_MSG_HEADER_SIZE 32
+#define MAX_HDR_SIZE MPIDI_OFI_MAX_AM_MSG_HEADER_SIZE + MPIDI_OFI_MAX_AM_HDR_SIZE
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_OFI_am_header_t) <= MPIDI_OFI_MAX_AM_MSG_HEADER_SIZE);
     /* if has_alignment_copy is 0 and the message contains extended header, the
      * header needs to be copied out for alignment to access */
     int has_alignment_copy = 0;
