@@ -231,7 +231,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
                             (MPL_DBG_FDEST,
                              "comm-create - mapping into world[%d] = %" PRIu64, i, g_lpid));
             if (g_lpid < wsize) {
-                mapping[i] = g_lpid;
+                mapping[i] = (int) g_lpid;
             } else {
                 subsetOfWorld = 0;
                 break;
