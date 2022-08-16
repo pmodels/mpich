@@ -71,10 +71,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-/* This will help force the load of initinfo.o, which contains data about
-   how MPICH was configured. */
-extern const char MPII_Version_device[];
-
 /* MPIR_world_model_state tracks so we only init and finalize once in world model */
 MPL_atomic_int_t MPIR_world_model_state = MPL_ATOMIC_INT_T_INITIALIZER(0);
 

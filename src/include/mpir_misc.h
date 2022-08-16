@@ -45,17 +45,6 @@ typedef enum MPIR_Lang_t {
 #endif
 } MPIR_Lang_t;
 
-extern const char MPII_Version_string[] MPICH_API_PUBLIC;
-extern const char MPII_Version_date[] MPICH_API_PUBLIC;
-extern const char MPII_Version_ABI[] MPICH_API_PUBLIC;
-extern const char MPII_Version_configure[] MPICH_API_PUBLIC;
-extern const char MPII_Version_device[] MPICH_API_PUBLIC;
-extern const char MPII_Version_CC[] MPICH_API_PUBLIC;
-extern const char MPII_Version_CXX[] MPICH_API_PUBLIC;
-extern const char MPII_Version_F77[] MPICH_API_PUBLIC;
-extern const char MPII_Version_FC[] MPICH_API_PUBLIC;
-extern const char MPII_Version_custom[] MPICH_API_PUBLIC;
-
 extern MPL_initlock_t MPIR_init_lock;
 
 #include "typerep_pre.h"        /* needed for MPIR_Typerep_req */
