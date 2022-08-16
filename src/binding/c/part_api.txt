@@ -4,7 +4,7 @@ MPI_Psend_init:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Psend_init(buf, partitions, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Psend_init(buf, partitions, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                                 info_ptr, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -19,7 +19,7 @@ MPI_Precv_init:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Precv_init(buf, partitions, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Precv_init(buf, partitions, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                                 info_ptr, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;

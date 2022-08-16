@@ -1596,7 +1596,7 @@ def dump_poly_pre_filter(func):
                 G.out.append("MPI_Aint %s_c;" % p['name'])
         for p in func['_poly_inout_list']:
             if not check_poly_is_aint(func, p):
-                G.out.append("MPI_Aint %s_c = *%s;" % (p['name'], p['name']))
+                G.out.append("MPI_Aint %s_c = (MPI_Aint) *%s;" % (p['name'], p['name']))
 
         for p in func['_poly_out_list'] + func['_poly_inout_list']:
             if not check_poly_is_aint(func, p):
@@ -1635,13 +1635,13 @@ def dump_poly_post_filter(func):
                         dump_if_open("%s > %s" % (val, int_max))
                         G.out.append("*%s = MPI_UNDEFINED;" % p['name'])
                         dump_else()
-                        G.out.append("*%s = %s;" % (p['name'], val))
+                        G.out.append("*%s = (int) %s;" % (p['name'], val))
                         dump_if_close()
                     else:
                         dump_if_open("%s > %s" % (val, int_max))
                         dump_error("too_big_for_output", "%s", "\"%s\"" % val)
                         dump_if_close()
-                        G.out.append("*%s = %s;" % (p['name'], val))
+                        G.out.append("*%s = (int) %s;" % (p['name'], val))
                 else:
                     G.out.append("*%s = %s;" % (p['name'], val))
 
@@ -1664,10 +1664,10 @@ def dump_type_create_swap(func):
         if RE.search(r'create_(d|sub)array', func['name'], re.IGNORECASE):
             n = "ndims"
         new_name = p['name'] + '_c'
-        G.out.append("MPI_Aint *%s = MPL_malloc(%s * sizeof(MPI_Aint), MPL_MEM_OTHER);" % (new_name, n))
+        G.out.append("MPI_Aint *%s = MPL_malloc((size_t) %s * sizeof(MPI_Aint), MPL_MEM_OTHER);" % (new_name, n))
         dump_for_open("i", n)
         check_aint_fits(func['_is_large'], "%s[i]" % p['name'])
-        G.out.append("%s[i] = %s[i];" % (new_name, p['name']))
+        G.out.append("%s[i] = (MPI_Aint) %s[i];" % (new_name, p['name']))
         dump_for_close()
         replace_impl_arg_list(func['_impl_arg_list'], p['name'], new_name)
 
@@ -1758,12 +1758,12 @@ def dump_coll_v_swap(func):
     def swap_one(n, counts):
         dump_for_open("i", n)
         check_fit("%s[i]" % counts)
-        G.out.append("tmp_array[i] = %s[i];" % counts)
+        G.out.append("tmp_array[i] = (MPI_Aint) %s[i];" % counts)
         dump_for_close()
     def swap_next(base, n, counts):
         dump_for_open("i", n)
         check_fit("%s[i]" % counts)
-        G.out.append("tmp_array[%s + i] = %s[i];" % (base, counts))
+        G.out.append("tmp_array[%s + i] = (MPI_Aint) %s[i];" % (base, counts))
         dump_for_close()
 
     # -------------------------
