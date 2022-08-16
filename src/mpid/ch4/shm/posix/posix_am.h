@@ -61,8 +61,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
     curr_sreq_hdr->msg_hdr_buf = *msg_hdr_p;
 
     curr_sreq_hdr->request = sreq;
-    curr_sreq_hdr->src_vsi = src_vsi;
-    curr_sreq_hdr->dst_vsi = dst_vsi;
+    curr_sreq_hdr->src_vsi = (uint8_t) src_vsi;
+    curr_sreq_hdr->dst_vsi = (uint8_t) dst_vsi;
 
     DL_APPEND(MPIDI_POSIX_global.per_vsi[src_vsi].postponed_queue, curr_sreq_hdr);
 
@@ -89,8 +89,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
 
     MPIR_FUNC_ENTER;
 
-    msg_hdr.handler_id = handler_id;
-    msg_hdr.am_hdr_sz = am_hdr_sz;
+    msg_hdr.handler_id = (uint8_t) handler_id;
+    msg_hdr.am_hdr_sz = (uint16_t) am_hdr_sz;
 
     MPIR_Assert(src_vci < MPIDI_POSIX_global.num_vsis);
     MPIR_Assert(dst_vci < MPIDI_POSIX_global.num_vsis);
@@ -159,8 +159,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, 
     MPIR_ERR_CHECK(mpi_errno);
 
     curr_sreq_hdr->dst_grank = grank;
-    curr_sreq_hdr->src_vsi = src_vsi;
-    curr_sreq_hdr->dst_vsi = dst_vsi;
+    curr_sreq_hdr->src_vsi = (uint8_t) src_vsi;
+    curr_sreq_hdr->dst_vsi = (uint8_t) dst_vsi;
 
     /* Header hasn't been sent so we should copy it from stack */
     curr_sreq_hdr->msg_hdr = &curr_sreq_hdr->msg_hdr_buf;
@@ -186,8 +186,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank, MPIR_Comm * comm,
 
     MPIR_FUNC_ENTER;
 
-    msg_hdr.handler_id = handler_id;
-    msg_hdr.am_hdr_sz = am_hdr_sz;
+    msg_hdr.handler_id = (uint8_t) handler_id;
+    msg_hdr.am_hdr_sz = (uint16_t) am_hdr_sz;
     msg_hdr.am_type = MPIDI_POSIX_AM_TYPE__HDR;
 
     MPIR_Assert(src_vci < MPIDI_POSIX_global.num_vsis);
