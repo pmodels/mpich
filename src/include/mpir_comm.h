@@ -254,7 +254,7 @@ struct MPIR_Comm {
         } single;
         struct {
             struct MPIR_Stream **local_streams;
-            MPI_Aint *vci_displs;       /* comm size + 1 */
+            int *vci_displs;    /* comm size + 1 */
             int *vci_table;     /* comm size */
         } multiplex;
     } stream_comm;
@@ -324,7 +324,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
     MPIR_ERR_CHKANDJUMP(comm->stream_comm_type != MPIR_STREAM_COMM_MULTIPLEX,
                         mpi_errno, MPI_ERR_OTHER, "**streamcomm_notmult");
 
-    MPI_Aint *displs = comm->stream_comm.multiplex.vci_displs;
+    int *displs = comm->stream_comm.multiplex.vci_displs;
 
     MPIR_ERR_CHKANDJUMP(displs[src_rank] + src_index >= displs[src_rank + 1],
                         mpi_errno, MPI_ERR_OTHER, "**streamcomm_srcidx");

@@ -117,9 +117,9 @@ int MPIR_Comm_copy_stream(MPIR_Comm * oldcomm, MPIR_Comm * newcomm)
         int size = oldcomm->local_size;
         int rank = oldcomm->rank;
 
-        MPI_Aint *displs;
+        int *displs;
         /* note: we allocate (size + 1) so the counts can be calculated from displs table */
-        displs = MPL_malloc((size + 1) * sizeof(MPI_Aint), MPL_MEM_OTHER);
+        displs = MPL_malloc((size + 1) * sizeof(int), MPL_MEM_OTHER);
         MPIR_ERR_CHKANDJUMP(!displs, mpi_errno, MPI_ERR_OTHER, "**nomem");
         for (int i = 0; i < size + 1; i++) {
             displs[i] = oldcomm->stream_comm.multiplex.vci_displs[i];
@@ -302,6 +302,7 @@ int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
     mpi_errno = MPII_Comm_dup(comm_ptr, NULL, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* use MPI_Aint because MPIR_Allgatherv_impl require Aint counts */
     MPI_Aint *num_table;
     num_table = MPL_malloc(comm_ptr->local_size * sizeof(MPI_Aint), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!num_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -353,10 +354,21 @@ int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
 
     (*newcomm_ptr)->stream_comm_type = MPIR_STREAM_COMM_MULTIPLEX;
     (*newcomm_ptr)->stream_comm.multiplex.local_streams = local_streams;
-    (*newcomm_ptr)->stream_comm.multiplex.vci_displs = displs;
     (*newcomm_ptr)->stream_comm.multiplex.vci_table = vci_table;
 
+    /* transcribe from MPI_Aint array to int array */
+    int *vci_displs;
+    vci_displs = MPL_malloc((comm_ptr->local_size + 1) * sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!vci_displs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    for (int i = 0; i < comm_ptr->local_size + 1; i++) {
+        MPIR_Assert(displs[i] <= INT_MAX);
+        vci_displs[i] = (int) displs[i];
+    }
+    (*newcomm_ptr)->stream_comm.multiplex.vci_displs = vci_displs;
+
     MPL_free(local_vcis);
+    MPL_free(displs);
     MPL_free(num_table);
 
   fn_exit:
@@ -376,7 +388,7 @@ int MPIR_Comm_get_stream_impl(MPIR_Comm * comm_ptr, int idx, MPIR_Stream ** stre
         }
     } else if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
         int rank = comm_ptr->rank;
-        MPI_Aint *displs = comm_ptr->stream_comm.multiplex.vci_displs;
+        int *displs = comm_ptr->stream_comm.multiplex.vci_displs;
         int num_streams = displs[rank + 1] - displs[rank];
         if (idx >= 0 && idx < num_streams) {
             *stream_out = comm_ptr->stream_comm.multiplex.local_streams[displs[rank] + idx];
