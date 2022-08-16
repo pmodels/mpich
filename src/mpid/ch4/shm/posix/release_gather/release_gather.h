@@ -78,7 +78,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
-    int segment, rank;
+    int rank;
+    MPI_Aint segment;
     void *bcast_data_addr = NULL;
     MPL_atomic_uint64_t *parent_flag_addr;
     /* Set the relaxation to 0 because in Bcast, gather step is "relaxed" to make sure multiple
@@ -255,7 +256,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     MPIR_FUNC_ENTER;
 
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
-    int segment, rank, num_children;
+    int rank, num_children;
+    MPI_Aint segment;
     void *child_data_addr;
     MPL_atomic_uint64_t *child_flag_addr;
     void *reduce_data_addr = NULL;
