@@ -204,7 +204,7 @@ int MPIR_Bsend_detach(void *bufferp, MPI_Aint * size)
 /*
  * Initiate an ibsend.  We'll used this for Bsend as well.
  */
-int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
+int MPIR_Bsend_isend(const void *buf, MPI_Aint count, MPI_Datatype dtype,
                      int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;

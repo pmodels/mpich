@@ -408,7 +408,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
  * commutative.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void *sendbuf,
-                                                                     void *recvbuf, int count,
+                                                                     void *recvbuf, MPI_Aint count,
                                                                      MPI_Datatype datatype,
                                                                      MPI_Op op,
                                                                      int num_leads,
@@ -866,10 +866,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_gamma(const void *se
  * the data for ranks sitting on other nodes into a shared memory buffer. Next each rank participates
  * as a leader in inter-node Alltoall */
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *sendbuf,
-                                                                    int sendcount,
+                                                                    MPI_Aint sendcount,
                                                                     MPI_Datatype sendtype,
                                                                     void *recvbuf,
-                                                                    int recvcount,
+                                                                    MPI_Aint recvcount,
                                                                     MPI_Datatype recvtype,
                                                                     MPIR_Comm * comm_ptr,
                                                                     MPIR_Errflag_t * errflag)
@@ -1087,10 +1087,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void *sendbuf,
-                                                                     int sendcount,
+                                                                     MPI_Aint sendcount,
                                                                      MPI_Datatype sendtype,
                                                                      void *recvbuf,
-                                                                     int recvcount,
+                                                                     MPI_Aint recvcount,
                                                                      MPI_Datatype recvtype,
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag)
