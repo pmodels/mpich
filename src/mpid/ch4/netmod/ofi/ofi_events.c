@@ -285,7 +285,7 @@ static int am_recv_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * 
     if ((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) {
         int temp_size = MAX_HDR_SIZE;
         if (temp_size > wc->len) {
-            temp_size = wc->len;
+            temp_size = (int) wc->len;
         }
         memcpy(temp, orig_buf, temp_size);
         am_hdr = (void *) temp;

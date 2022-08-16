@@ -130,11 +130,12 @@ void MPIDI_OFI_mr_key_free(int key_type, uint64_t alloc_key)
     switch (key_type) {
         case MPIDI_OFI_LOCAL_MR_KEY:
             {
-                uint64_t int_index, bitpos, numbits;
+                int int_index;
+                uint64_t bitpos, numbits;
 
                 MPID_THREAD_CS_ENTER(VCI, mr_key_allocator_lock);
                 numbits = sizeof(uint64_t) * 8;
-                int_index = alloc_key / numbits;
+                int_index = (int) (alloc_key / numbits);
                 bitpos = alloc_key % numbits;
                 mr_key_allocator.last_free_mr_key =
                     MPL_MIN(int_index, mr_key_allocator.last_free_mr_key);
@@ -235,7 +236,7 @@ static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum
     *fi_dt = FI_DATATYPE_LAST;
     *fi_op = FI_ATOMIC_OP_LAST;
 
-    int dt_size;
+    MPI_Aint dt_size;
     MPIR_Datatype_get_size_macro(dt, dt_size);
 
     if (dt == MPI_BYTE || dt == MPI_CHAR || dt == MPI_SIGNED_CHAR || dt == MPI_SHORT ||
@@ -410,8 +411,8 @@ static void create_dt_map(struct fid_ep *ep)
             mpi_to_ofi(dt, &fi_dt, op, &fi_op);
             MPIR_Assert(fi_dt != (enum fi_datatype) -1);
             MPIR_Assert(fi_op != (enum fi_op) -1);
-            _TBL.dt = fi_dt;
-            _TBL.op = fi_op;
+            _TBL.dt = (uint8_t) fi_dt;
+            _TBL.op = (uint8_t) fi_op;
             _TBL.atomic_valid = 0;
             _TBL.max_atomic_count = 0;
             _TBL.max_fetch_atomic_count = 0;
@@ -423,7 +424,7 @@ static void create_dt_map(struct fid_ep *ep)
                 CHECK_ATOMIC(fi_fetch_atomicvalid, fetch_atomic_valid, max_fetch_atomic_count);
                 CHECK_ATOMIC(fi_compare_atomicvalid, compare_atomic_valid,
                              max_compare_atomic_count);
-                _TBL.dtsize = dtsize[fi_dt];
+                _TBL.dtsize = (int) dtsize[fi_dt];      /* cast from size_t to int */
             }
         }
     }

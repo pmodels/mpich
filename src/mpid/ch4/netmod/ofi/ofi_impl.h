@@ -348,7 +348,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
     }
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_load_iov(const void *buffer, int count,
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_load_iov(const void *buffer, MPI_Aint count,
                                                  MPI_Datatype datatype, MPI_Aint max_len,
                                                  MPI_Aint * loaded_iov_offset, struct iovec *iov)
 {

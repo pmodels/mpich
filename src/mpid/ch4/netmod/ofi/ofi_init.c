@@ -496,9 +496,10 @@ static void set_sep_counters(int nic)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int num_ctx_per_nic = MPIDI_OFI_global.num_vnis;
-        int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[nic]->domain_attr->tx_ctx_cnt,
-                                  MPIDI_OFI_global.prov_use[nic]->domain_attr->rx_ctx_cnt);
-        num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
+        size_t max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[nic]->domain_attr->tx_ctx_cnt,
+                                     MPIDI_OFI_global.prov_use[nic]->domain_attr->rx_ctx_cnt);
+        MPIR_Assert(max_by_prov <= INT_MAX);
+        num_ctx_per_nic = (int) MPL_MIN(num_ctx_per_nic, max_by_prov);
         MPIDI_OFI_global.prov_use[nic]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
         MPIDI_OFI_global.prov_use[nic]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
     }

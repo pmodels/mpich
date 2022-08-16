@@ -448,14 +448,14 @@ typedef struct MPIDI_OFI_win_request {
         struct {
             struct {
                 const void *addr;
-                int count;
+                MPI_Aint count;
                 MPI_Datatype datatype;
                 MPI_Aint total_bytes;
                 MPI_Aint pack_offset;
             } origin;
             struct {
                 void *base;
-                int count;
+                MPI_Aint count;
                 MPI_Datatype datatype;
                 struct iovec *iov;
                 MPI_Aint iov_len;
@@ -469,14 +469,14 @@ typedef struct MPIDI_OFI_win_request {
         struct {
             struct {
                 void *addr;
-                int count;
+                MPI_Aint count;
                 MPI_Datatype datatype;
                 MPI_Aint total_bytes;
                 MPI_Aint pack_offset;
             } origin;
             struct {
                 void *base;
-                int count;
+                MPI_Aint count;
                 MPI_Datatype datatype;
                 struct iovec *iov;
                 MPI_Aint iov_len;

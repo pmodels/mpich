@@ -267,7 +267,7 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv_iov(struct iovec *iov, MPI_Aint iov
         rem -= curr_len;
     }
 
-    int done = 0;
+    MPI_Aint done = 0;
     rem = in_data_sz;
     for (int i = 0; i < iov_len && rem > 0; i++) {
         curr_len = MPL_MIN(rem, iov[i].iov_len);
