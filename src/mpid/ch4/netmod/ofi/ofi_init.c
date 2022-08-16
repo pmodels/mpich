@@ -1333,8 +1333,8 @@ static int update_global_limits(struct fi_info *prov)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
-    MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
+    MPIDI_OFI_global.max_buffered_send = MPL_MIN(prov->tx_attr->inject_size, MPIR_AINT_MAX);
+    MPIDI_OFI_global.max_buffered_write = MPL_MIN(prov->tx_attr->inject_size, MPIR_AINT_MAX);
     if (MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE > 0 &&
         MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE <= prov->ep_attr->max_msg_size) {
         /* Truncate max_msg_size to a user-selected value */
@@ -1361,7 +1361,7 @@ static int update_global_limits(struct fi_info *prov)
     MPIDI_OFI_global.tx_iov_limit = MPL_MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.rx_iov_limit = MPL_MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.rma_iov_limit = MPL_MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
+    MPIDI_OFI_global.max_mr_key_size = MPL_MIN(prov->domain_attr->mr_key_size, MPIR_AINT_MAX);
 
     /* Ensure that we aren't trying to shove too many bits into the match_bits.
      * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */

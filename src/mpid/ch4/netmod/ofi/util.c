@@ -358,13 +358,16 @@ static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum
 }
 
 #define _TBL MPIDI_OFI_global.win_op_table[i][j]
-#define CHECK_ATOMIC(fcn,field1,field2)            \
+#define CHECK_ATOMIC(fcn,field1,field2)  do { \
+  ssize_t ret;                                     \
+  size_t atomic_count;                             \
   atomic_count = 0;                                \
   ret = fcn(ep, fi_dt, fi_op, &atomic_count);      \
   if (ret == 0 && atomic_count != 0) {             \
     _TBL.field1 = 1;                               \
-    _TBL.field2 = atomic_count;                    \
-  }
+    _TBL.field2 = MPL_MIN(atomic_count, MPIR_AINT_MAX); \
+  } \
+} while (0)
 
 static void create_dt_map(struct fid_ep *ep)
 {
@@ -414,8 +417,6 @@ static void create_dt_map(struct fid_ep *ep)
             _TBL.max_fetch_atomic_count = 0;
             _TBL.max_compare_atomic_count = 0;
             _TBL.mpi_acc_valid = check_mpi_acc_valid(dt, op);
-            ssize_t ret;
-            size_t atomic_count;
 
             if (fi_dt != FI_DATATYPE_LAST && fi_op != FI_ATOMIC_OP_LAST) {
                 CHECK_ATOMIC(fi_atomicvalid, atomic_valid, max_atomic_count);
