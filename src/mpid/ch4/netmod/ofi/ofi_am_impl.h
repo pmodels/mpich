@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(int vni, fi
     else
         old_seq = (uint16_t) (uintptr_t) ret;
 
-    seq = old_seq + 1;
+    seq = (uint16_t) (old_seq + 1);
     MPIDIU_map_update(MPIDI_OFI_global.per_vni[vni].am_send_seq_tracker, id,
                       (void *) (uintptr_t) seq, MPL_MEM_OTHER);
 

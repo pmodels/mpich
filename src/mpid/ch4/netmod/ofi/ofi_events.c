@@ -311,7 +311,7 @@ static int am_recv_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * 
     /* Received an expected message */
   fn_repeat:
     fi_src_addr = am_hdr->fi_src_addr;
-    next_seqno = am_hdr->seqno + 1;
+    next_seqno = (uint16_t) (am_hdr->seqno + 1);
 
     void *p_data;
     switch (am_hdr->am_type) {
