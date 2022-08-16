@@ -66,7 +66,7 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
                               __SHORT_FILE__,               \
                               __LINE__,                     \
                               __func__,                       \
-                              fi_strerror(-_ret));          \
+                              fi_strerror((int) (-_ret)));  \
     } while (0)
 
 #define MPIDI_OFI_CALL_RETRY(FUNC,vci_,STR,EAGAIN)      \
@@ -84,7 +84,7 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
                               __SHORT_FILE__,               \
                               __LINE__,                     \
                               __func__,                       \
-                              fi_strerror(-_ret));          \
+                              fi_strerror((int) (-_ret)));  \
         MPIR_ERR_CHKANDJUMP(_retry == 0 && EAGAIN,          \
                             mpi_errno,                      \
                             MPIX_ERR_EAGAIN,                \
@@ -139,7 +139,7 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
                               __SHORT_FILE__,               \
                               __LINE__,                     \
                               __func__,                     \
-                              fi_strerror(-_ret));          \
+                              fi_strerror((int) (-_ret)));  \
     } while (0)
 
 #define MPIDI_OFI_VCI_CALL_RETRY(FUNC,vci_,STR,EAGAIN)      \
@@ -159,7 +159,7 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
                               __SHORT_FILE__,               \
                               __LINE__,                     \
                               __func__,                     \
-                              fi_strerror(-_ret));          \
+                              fi_strerror((int) (-_ret)));  \
         MPIR_ERR_CHKANDJUMP(_retry == 0 && EAGAIN,          \
                             mpi_errno,                      \
                             MPIX_ERR_EAGAIN,                \
@@ -603,7 +603,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_has_cq_buffered(int vni)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
 {
-    int mpi_errno = MPI_SUCCESS, ret = 0;
+    int mpi_errno = MPI_SUCCESS;
     struct fi_cq_tagged_entry cq_entry;
     MPIR_FUNC_ENTER;
 
@@ -611,7 +611,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
 
     for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
         int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
-        ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, &cq_entry, 1);
+        ssize_t ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, &cq_entry, 1);
 
         if (unlikely(ret == -FI_EAGAIN))
             goto fn_exit;
