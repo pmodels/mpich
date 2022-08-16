@@ -16,9 +16,9 @@ int MPIDI_OFI_retry_progress(void)
 }
 
 typedef struct MPIDI_OFI_mr_key_allocator_t {
-    uint64_t chunk_size;
-    uint64_t num_ints;
-    uint64_t last_free_mr_key;
+    int chunk_size;
+    int num_ints;
+    int last_free_mr_key;
     uint64_t *bitmask;
 } MPIDI_OFI_mr_key_allocator_t;
 
