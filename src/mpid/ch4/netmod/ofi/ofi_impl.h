@@ -193,23 +193,8 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
 
 #define MPIDI_OFI_CALL_RETURN(FUNC, _ret)                               \
         do {                                                            \
-            (_ret) = FUNC;                                              \
+            (_ret) = (int) FUNC;                                        \
         } while (0)
-
-#define MPIDI_OFI_STR_CALL(FUNC,STR)                                   \
-  do                                                            \
-    {                                                           \
-      str_errno = FUNC;                                         \
-      MPIDI_OFI_ERR(str_errno!=MPL_SUCCESS,        \
-                            mpi_errno,                          \
-                            MPI_ERR_OTHER,                      \
-                            "**"#STR,                           \
-                            "**"#STR" %s %d %s %s",             \
-                            __SHORT_FILE__,                     \
-                            __LINE__,                           \
-                            __func__,                             \
-                            #STR);                              \
-    } while (0)
 
 #define MPIDI_OFI_REQUEST_CREATE(req, kind, vni) \
     do {                                                      \

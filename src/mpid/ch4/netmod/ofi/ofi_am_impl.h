@@ -148,7 +148,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_am_unordered_msg_t
                                    __SHORT_FILE__,                      \
                                    __LINE__,                            \
                                    __func__,                              \
-                                   fi_strerror(-_ret));                 \
+                                   fi_strerror((int) (-_ret)));          \
             mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vni_idx */);    \
             if (mpi_errno != MPI_SUCCESS)                                \
                 MPIR_ERR_CHECK(mpi_errno);                               \
