@@ -323,7 +323,7 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
         intptr_t buf_size = 0;
         MPIR_Request *req = NULL;
         MPI_Datatype target_dtp;
-        int target_count;
+        MPI_Aint target_count;
         int complete = 0;
         intptr_t data_len;
         int pkt_flags;
@@ -803,8 +803,8 @@ static inline int MPIDI_CH3I_RMA_Handle_ack(MPIR_Win * win_ptr, int target_rank)
 }
 
 
-static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
-                                   void *target_buf, int target_count, MPI_Datatype target_dtp,
+static inline int do_accumulate_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source_dtp,
+                                   void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp,
                                    MPI_Aint stream_offset, MPI_Op acc_op,
                                    MPIDI_RMA_Acc_srcbuf_kind_t srckind)
 {
@@ -866,7 +866,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         MPIR_Datatype*dtp;
         MPI_Aint curr_len;
         void *curr_loc;
-        int accumulated_count;
+        MPI_Aint accumulated_count;
 
         MPIR_Datatype_get_ptr(target_dtp, dtp);
         vec_len = dtp->typerep.num_contig_blocks * target_count + 1;

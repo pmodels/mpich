@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 
-int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
+int MPID_Mrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                MPIR_Request *message, MPI_Status *status, MPIR_Request **rreq)
 {
     int mpi_errno = MPI_SUCCESS;
