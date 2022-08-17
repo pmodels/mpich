@@ -391,7 +391,8 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
             }
             else {
                 win_ptr->current_target_lock_data_bytes += buf_size;
-                new_ptr->buf_size = buf_size;
+                MPIR_Assert(buf_size <= INT_MAX);
+                new_ptr->buf_size = (int) buf_size;
             }
         }
 

@@ -109,9 +109,9 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
     sreq->dev.OnFinal = 0;
 
     MPIDI_Pkt_init(eager_pkt, reqtype);
-    eager_pkt->match.parts.rank	= comm->rank;
+    eager_pkt->match.parts.rank	= (MPIDI_Rank_t) comm->rank;
     eager_pkt->match.parts.tag	= tag;
-    eager_pkt->match.parts.context_id	= comm->context_id + context_offset;
+    eager_pkt->match.parts.context_id	= (MPIR_Context_id_t) (comm->context_id + context_offset);
     eager_pkt->sender_req_id	= MPI_REQUEST_NULL;
     eager_pkt->data_sz		= data_sz;
     
@@ -161,9 +161,9 @@ int MPIDI_CH3_EagerContigSend( MPIR_Request **sreq_p,
     struct iovec iov[2];
     
     MPIDI_Pkt_init(eager_pkt, reqtype);
-    eager_pkt->match.parts.rank	= comm->rank;
+    eager_pkt->match.parts.rank	= (MPIDI_Rank_t) comm->rank;
     eager_pkt->match.parts.tag	= tag;
-    eager_pkt->match.parts.context_id	= comm->context_id + context_offset;
+    eager_pkt->match.parts.context_id	= (MPIR_Context_id_t) (comm->context_id + context_offset);
     eager_pkt->sender_req_id	= MPI_REQUEST_NULL;
     eager_pkt->data_sz		= data_sz;
     
@@ -223,7 +223,7 @@ int MPIDI_CH3_EagerContigShortSend( MPIR_Request **sreq_p,
     
     /*    printf( "Sending short eager\n"); fflush(stdout); */
     MPIDI_Pkt_init(eagershort_pkt, reqtype);
-    eagershort_pkt->match.parts.rank	     = comm->rank;
+    eagershort_pkt->match.parts.rank	     = (MPIDI_Rank_t) comm->rank;
     eagershort_pkt->match.parts.tag	     = tag;
     eagershort_pkt->match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
     eagershort_pkt->data_sz	     = data_sz;
@@ -508,9 +508,9 @@ int MPIDI_CH3_EagerContigIsend( MPIR_Request **sreq_p,
     sreq->dev.OnDataAvail = 0;
     
     MPIDI_Pkt_init(eager_pkt, reqtype);
-    eager_pkt->match.parts.rank	= comm->rank;
+    eager_pkt->match.parts.rank	= (MPIDI_Rank_t) comm->rank;
     eager_pkt->match.parts.tag	= tag;
-    eager_pkt->match.parts.context_id	= comm->context_id + context_offset;
+    eager_pkt->match.parts.context_id	= (MPIR_Context_id_t) (comm->context_id + context_offset);
     eager_pkt->sender_req_id	= sreq->handle;
     eager_pkt->data_sz		= data_sz;
     

@@ -98,7 +98,7 @@ int MPID_Isend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
 	    
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending zero length message");
 	MPIDI_Pkt_init(eager_pkt, MPIDI_CH3_PKT_EAGER_SEND);
-	eager_pkt->match.parts.rank = comm->rank;
+	eager_pkt->match.parts.rank = (MPIDI_Rank_t) comm->rank;
 	eager_pkt->match.parts.tag = tag;
 	eager_pkt->match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
 	eager_pkt->sender_req_id = sreq->handle;

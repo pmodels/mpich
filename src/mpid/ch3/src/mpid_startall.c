@@ -29,7 +29,7 @@
     MPIR_cc_set(&(sreq_)->cc, 0);                                       \
     (sreq_)->comm = comm;						\
     MPIR_Comm_add_ref(comm);						\
-    (sreq_)->dev.match.parts.rank = rank;				\
+    (sreq_)->dev.match.parts.rank = (MPIDI_Rank_t) rank;                \
     (sreq_)->dev.match.parts.tag = tag;					\
     (sreq_)->dev.match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset); \
     (sreq_)->dev.user_buf = (void *) buf;				\
@@ -295,7 +295,7 @@ int MPID_Recv_init(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, 
     rreq->comm = comm;
     MPIR_cc_set(&rreq->cc, 0);
     MPIR_Comm_add_ref(comm);
-    rreq->dev.match.parts.rank = rank;
+    rreq->dev.match.parts.rank = (MPIDI_Rank_t) rank;
     rreq->dev.match.parts.tag = tag;
     rreq->dev.match.parts.context_id = (MPIR_Context_id_t) (comm->recvcontext_id + context_offset);
     rreq->dev.user_buf = (void *) buf;

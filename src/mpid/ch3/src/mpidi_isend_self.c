@@ -30,7 +30,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
     MPIDI_Request_set_type(sreq, type);
     MPIDI_Request_set_msg_type(sreq, MPIDI_REQUEST_SELF_MSG);
     
-    match.parts.rank = rank;
+    match.parts.rank = (MPIDI_Rank_t) rank;
     match.parts.tag = tag;
     match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
 

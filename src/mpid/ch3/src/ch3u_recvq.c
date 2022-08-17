@@ -211,11 +211,13 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
 
     rreq = recvq_unexpected_head;
 
-    match.parts.context_id = context_id;
+    match.parts.context_id = (MPIR_Context_id_t) context_id;
     match.parts.tag = tag;
-    match.parts.rank = source;
+    match.parts.rank = (MPIDI_Rank_t) source;
 
-    mask.parts.context_id = mask.parts.rank = mask.parts.tag = ~0;
+    mask.parts.context_id = (MPIR_Context_id_t) ~0;
+    mask.parts.rank = (MPIDI_Rank_t) ~0;
+    mask.parts.tag = ~0;
     /* Mask the error bit that might be set on incoming messages. It is
      * assumed that the local receive operation won't have the error bit set
      * (or it is masked away at some other level). */
@@ -291,7 +293,9 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
     matching_cur_rreq = NULL;
     prev_rreq = NULL;
 
-    mask.parts.context_id = mask.parts.rank = mask.parts.tag = ~0;
+    mask.parts.context_id = (MPIR_Context_id_t) ~0;
+    mask.parts.rank = (MPIDI_Rank_t) ~0;
+    mask.parts.tag = ~0;
     /* Mask the error bit that might be set on incoming messages. It is
      * assumed that the local receive operation won't have the error bit set
      * (or it is masked away at some other level). */
@@ -371,11 +375,13 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
     if (rreq) {
         prev_rreq = NULL;
 
-        match.parts.context_id = context_id;
+        match.parts.context_id = (MPIR_Context_id_t) context_id;
         match.parts.tag = tag;
-        match.parts.rank = source;
+        match.parts.rank = (MPIDI_Rank_t) source;
 
-        mask.parts.context_id = mask.parts.rank = mask.parts.tag = ~0;
+        mask.parts.context_id = (MPIR_Context_id_t) ~0;
+        mask.parts.rank = (MPIDI_Rank_t) ~0;
+        mask.parts.tag = ~0;
         /* Mask the error bit that might be set on incoming messages. It is
          * assumed that the local receive operation won't have the error bit set
          * (or it is masked away at some other level). */
@@ -488,11 +494,13 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
     if (rreq) {
 	prev_rreq = NULL;
 
-	match.parts.context_id = context_id;
+	match.parts.context_id = (MPIR_Context_id_t) context_id;
 	match.parts.tag = tag;
-	match.parts.rank = source;
+	match.parts.rank = (MPIDI_Rank_t) source;
 
-    mask.parts.context_id = mask.parts.rank = mask.parts.tag = ~0;
+        mask.parts.context_id = (MPIR_Context_id_t) ~0;
+        mask.parts.rank = (MPIDI_Rank_t) ~0;
+        mask.parts.tag = ~0;
     /* Mask the error bit that might be set on incoming messages. It is
      * assumed that the local receive operation won't have the error bit set
      * (or it is masked away at some other level). */
@@ -578,8 +586,8 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 
 	MPIDI_Request_create_rreq( rreq, mpi_errno, goto lock_exit );
 	rreq->dev.match.parts.tag	   = tag;
-	rreq->dev.match.parts.rank	   = source;
-	rreq->dev.match.parts.context_id   = context_id;
+	rreq->dev.match.parts.rank	   = (MPIDI_Rank_t) source;
+	rreq->dev.match.parts.context_id   = (MPIR_Context_id_t) context_id;
 
 	/* Added a mask for faster search on 64-bit capable
 	 * platforms */
@@ -886,8 +894,9 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
     MPIR_ERR_SETSIMPLE(error, MPIX_ERR_REVOKED, "**revoked");
 
     rreq = recvq_unexpected_head;
-    mask.parts.context_id = ~0;
-    mask.parts.rank = mask.parts.tag = 0;
+    mask.parts.context_id = (MPIR_Context_id_t) ~0;
+    mask.parts.rank = 0;
+    mask.parts.tag = 0;
 
     /* Clear the error bit in the tag since we don't care about whether or
      * not we're trying to report an error anymore. */

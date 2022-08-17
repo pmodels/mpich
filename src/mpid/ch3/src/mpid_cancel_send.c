@@ -181,7 +181,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
 	}
 
 	MPIDI_Pkt_init(csr_pkt, MPIDI_CH3_PKT_CANCEL_SEND_REQ);
-	csr_pkt->match.parts.rank = sreq->comm->rank;
+	csr_pkt->match.parts.rank = (MPIDI_Rank_t) sreq->comm->rank;
 	csr_pkt->match.parts.tag = sreq->dev.match.parts.tag;
 	csr_pkt->match.parts.context_id = sreq->dev.match.parts.context_id;
 	csr_pkt->sender_req_id = sreq->handle;

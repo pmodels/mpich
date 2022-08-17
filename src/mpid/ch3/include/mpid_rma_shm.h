@@ -18,14 +18,13 @@ static inline int do_accumulate_op(void *source_buf, MPI_Aint source_count, MPI_
     {                                           \
         type *src_ = (type *) src;              \
         type *dest_ = (type *) dest;            \
-        int i;                                  \
-        for (i = 0; i < count; i++)             \
+        for (MPI_Aint i = 0; i < count; i++)    \
             dest_[i] = src_[i];                 \
         goto fn_exit;                           \
     }
 
-static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
-                           void *dest, int dcount, MPI_Datatype dtype)
+static inline int shm_copy(const void *src, MPI_Aint scount, MPI_Datatype stype,
+                           void *dest, MPI_Aint dcount, MPI_Datatype dtype)
 {
     int mpi_errno = MPI_SUCCESS;
 

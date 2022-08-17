@@ -270,7 +270,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->comm = comm;					\
     (sreq_)->dev.partner_request   = NULL;                         \
     MPIR_Comm_add_ref(comm);					\
-    (sreq_)->dev.match.parts.rank = rank;			\
+    (sreq_)->dev.match.parts.rank = (MPIDI_Rank_t) rank;        \
     (sreq_)->dev.match.parts.tag = tag;				\
     (sreq_)->dev.match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset); \
     (sreq_)->dev.user_buf = (void *) buf;			\
