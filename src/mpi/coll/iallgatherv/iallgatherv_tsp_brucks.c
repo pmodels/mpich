@@ -46,7 +46,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     int tag;
     int *recv_id = NULL;
-    int *recv_index = NULL;
+    MPI_Aint *recv_index = NULL;
     int *scount_lookup = NULL;
     MPIR_CHKLMEM_DECL(3);
     void *tmp_recvbuf = NULL;
@@ -54,7 +54,6 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int **r_counts = NULL;
     int tmp_sum = 0;
     int idx = 0, vtx_id;
-    int index_sum = 0;
     int prev_delta = 0;
     int count_length, top_count, bottom_count, left_count;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
@@ -104,8 +103,8 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                         MPL_MEM_COLL);
 
     /* To store the index to receive in various phases and steps within */
-    MPIR_CHKLMEM_MALLOC(recv_index, int *, sizeof(int) * nphases * (k - 1), mpi_errno, "recv_index",
-                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(recv_index, MPI_Aint *, sizeof(MPI_Aint) * nphases * (k - 1), mpi_errno,
+                        "recv_index", MPL_MEM_COLL);
 
     for (i = 0; i < size; i++)
         total_recvcount += recvcounts[i];
@@ -132,6 +131,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
         MPIR_ERR_CHKANDJUMP(!s_counts[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
+    MPI_Aint index_sum;
     index_sum = recvcounts[rank];       /* because in initially you copy your own data to the top of recv_buf */
     if (nphases > 0)
         recv_index[idx++] = index_sum;

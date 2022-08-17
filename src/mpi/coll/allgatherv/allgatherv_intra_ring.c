@@ -50,12 +50,6 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
-    char *sbuf = NULL, *rbuf = NULL;
-    int soffset, roffset;
-    int torecv, tosend, max, chunk_count = 0;
-    int sendnow, recvnow;
-    int sidx, ridx;
-
     if (sendbuf != MPI_IN_PLACE) {
         /* First, load the "local" version in the recvbuf. */
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
@@ -67,9 +61,11 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     left = (comm_size + rank - 1) % comm_size;
     right = (rank + 1) % comm_size;
 
+    MPI_Aint torecv, tosend, max, chunk_count;
     torecv = total_count - recvcounts[rank];
     tosend = total_count - recvcounts[right];
 
+    chunk_count = 0;
     max = recvcounts[0];
     for (i = 1; i < comm_size; i++)
         if (max < recvcounts[i])
@@ -86,15 +82,20 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     if (!chunk_count)
         chunk_count = max;
 
+    int soffset, roffset;
+    int sidx, ridx;
     sidx = rank;
     ridx = left;
     soffset = 0;
     roffset = 0;
     while (tosend || torecv) {  /* While we have data to send or receive */
+        MPI_Aint sendnow, recvnow;
         sendnow = ((recvcounts[sidx] - soffset) >
                    chunk_count) ? chunk_count : (recvcounts[sidx] - soffset);
         recvnow = ((recvcounts[ridx] - roffset) >
                    chunk_count) ? chunk_count : (recvcounts[ridx] - roffset);
+
+        char *sbuf, *rbuf;
         sbuf = (char *) recvbuf + ((displs[sidx] + soffset) * recvtype_extent);
         rbuf = (char *) recvbuf + ((displs[ridx] + roffset) * recvtype_extent);
 

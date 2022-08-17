@@ -21,7 +21,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
     int nranks, is_inplace, rank;
     int send_rank, recv_rank;
     void *data_buf, *buf1, *buf2, *sbuf, *rbuf;
-    int max_count;
     int tag, vtx_id;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
@@ -43,6 +42,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
     MPIR_Type_get_true_extent_impl(recvtype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
 
+    MPI_Aint max_count;
     max_count = recvcounts[0];
     for (i = 1; i < nranks; i++) {
         if (recvcounts[i] > max_count)

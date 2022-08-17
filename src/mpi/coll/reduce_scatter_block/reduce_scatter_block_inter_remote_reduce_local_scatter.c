@@ -20,7 +20,7 @@ int MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(const void *send
                                                                 MPIR_Comm * comm_ptr,
                                                                 MPIR_Errflag_t * errflag)
 {
-    int rank, mpi_errno, root, local_size, total_count;
+    int rank, mpi_errno, root, local_size;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb = 0, extent;
     void *tmp_buf = NULL;
@@ -30,7 +30,7 @@ int MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(const void *send
     rank = comm_ptr->rank;
     local_size = comm_ptr->local_size;
 
-    total_count = local_size * recvcount;
+    MPI_Aint total_count = local_size * recvcount;
 
     if (rank == 0) {
         /* In each group, rank 0 allocates a temp. buffer for the

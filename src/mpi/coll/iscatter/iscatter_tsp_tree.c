@@ -27,8 +27,9 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     int tree_type;
     MPIR_Treealgo_tree_t my_tree, parents_tree;
     int next_child;
-    int num_children, *child_subtree_size = NULL, *child_data_offset = NULL;
-    int offset, recv_size;
+    int num_children, *child_subtree_size = NULL;
+    MPI_Aint *child_data_offset = NULL;
+    MPI_Aint offset, recv_size;
     int tag;
     int num_send_dependencies;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
@@ -69,7 +70,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
 
     num_children = my_tree.num_children;
     MPIR_CHKLMEM_MALLOC(child_subtree_size, int *, sizeof(int) * num_children, mpi_errno, "child_subtree_size buffer", MPL_MEM_COLL);   /* to store size of subtree of each child */
-    MPIR_CHKLMEM_MALLOC(child_data_offset, int *, sizeof(int) * num_children, mpi_errno, "child_data_offset buffer", MPL_MEM_COLL);     /* to store the offset of the data to be sent to each child  */
+    MPIR_CHKLMEM_MALLOC(child_data_offset, MPI_Aint *, sizeof(MPI_Aint) * num_children, mpi_errno, "child_data_offset buffer", MPL_MEM_COLL);   /* to store the offset of the data to be sent to each child  */
 
     /* calculate size of subtree of each child */
 

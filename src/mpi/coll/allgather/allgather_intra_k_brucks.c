@@ -28,7 +28,6 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
     int mpi_errno = MPI_SUCCESS;
     int i, j;
     int nphases = 0;
-    int count, left_count;
     int src, dst, p_of_k = 0;   /* Largest power of k that is smaller than 'size' */
 
     int rank = MPIR_Comm_rank(comm);
@@ -127,9 +126,10 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Amount of data sent in each cycle = k^i, where i = phase_number.
              * if (size != MPL_ipow(k, power_of_k) send less data in the last phase.
              * This might differ for the different values of j in the last phase. */
+            MPI_Aint count;
             if ((i == (nphases - 1)) && (!p_of_k)) {
                 count = recvcount * delta;
-                left_count = recvcount * (size - delta * j);
+                MPI_Aint left_count = recvcount * (size - delta * j);
                 if (j == k - 1)
                     count = left_count;
                 else

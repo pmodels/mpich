@@ -30,7 +30,7 @@ cvars:
  * is MPL_ipow(k, phase) where  phase corresponds to the phase in
  * the brucks algorithm. */
 static int
-brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int count,
+brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Aint count,
                  int pow_k_phase, int k, int digitval, int comm_size, int *pupsize)
 {
     MPI_Aint type_extent, type_lb, type_true_extent;

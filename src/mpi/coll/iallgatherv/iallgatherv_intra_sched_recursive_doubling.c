@@ -13,8 +13,7 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, i, j, k;
-    int curr_count, send_offset, incoming_count, recv_offset;
-    int mask, dst, total_count, position, offset, my_tree_root, dst_tree_root;
+    int mask, dst, position, offset, my_tree_root, dst_tree_root;
     MPI_Aint recvtype_extent, recvtype_sz;
     void *tmp_buf = NULL;
 
@@ -32,6 +31,7 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
     MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < comm_size; i++)
         total_count += recvcounts[i];
@@ -60,9 +60,11 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+    MPI_Aint curr_count;
     curr_count = recvcounts[rank];
 
     /* never used uninitialized w/o this, but compiler can't tell that */
+    MPI_Aint incoming_count;
     incoming_count = -1;
 
     /* [goodell@] random notes that help slightly when deciphering this code:
@@ -91,6 +93,8 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
         my_tree_root <<= i;
 
         if (dst < comm_size) {
+            MPI_Aint send_offset, recv_offset;
+
             send_offset = 0;
             for (j = 0; j < my_tree_root; j++)
                 send_offset += recvcounts[j];

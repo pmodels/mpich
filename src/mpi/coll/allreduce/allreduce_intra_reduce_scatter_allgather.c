@@ -49,8 +49,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int mask, dst, pof2, newrank, rem, newdst, i,
-        send_idx, recv_idx, last_idx, send_cnt, recv_cnt, *cnts, *disps;
+    int mask, dst, pof2, newrank, rem, newdst, i, send_idx, recv_idx, last_idx;
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
 
@@ -141,8 +140,10 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
 #endif /* HAVE_ERROR_CHECKING */
 
     if (newrank != -1) {
-        MPIR_CHKLMEM_MALLOC(cnts, int *, pof2 * sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(disps, int *, pof2 * sizeof(int), mpi_errno, "displacements",
+        MPI_Aint *cnts, *disps;
+        MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "counts",
+                            MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "displacements",
                             MPL_MEM_BUFFER);
 
         for (i = 0; i < pof2; i++)
@@ -165,6 +166,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
             /* find real rank of dest */
             dst = (newdst < rem) ? newdst * 2 + 1 : newdst + rem;
 
+            MPI_Aint send_cnt, recv_cnt;
             send_cnt = recv_cnt = 0;
             if (newrank < newdst) {
                 send_idx = recv_idx + pof2 / (mask * 2);
@@ -227,6 +229,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
             /* find real rank of dest */
             dst = (newdst < rem) ? newdst * 2 + 1 : newdst + rem;
 
+            MPI_Aint send_cnt, recv_cnt;
             send_cnt = recv_cnt = 0;
             if (newrank < newdst) {
                 /* update last_idx except on first iteration */

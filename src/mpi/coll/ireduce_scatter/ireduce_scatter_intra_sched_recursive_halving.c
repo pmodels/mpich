@@ -41,11 +41,10 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_halving(const void *sendbuf, void
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
-    int *disps;
     void *tmp_recvbuf, *tmp_results;
-    int type_size ATTRIBUTE((unused)), total_count, dst;
+    int dst;
     int mask;
-    int *newcnts, *newdisps, rem, newdst, send_idx, recv_idx, last_idx, send_cnt, recv_cnt;
+    int rem, newdst, send_idx, recv_idx, last_idx;
     int pof2, old_i, newrank;
 
     comm_size = comm_ptr->local_size;
@@ -58,9 +57,11 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_halving(const void *sendbuf, void
     MPIR_Assert(MPIR_Op_is_commutative(op));
 #endif
 
-    disps = MPIR_Sched_alloc_state(s, comm_size * sizeof(int));
+    MPI_Aint *disps;
+    disps = MPIR_Sched_alloc_state(s, comm_size * sizeof(MPI_Aint));
     MPIR_ERR_CHKANDJUMP(!disps, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < comm_size; i++) {
         disps[i] = total_count;
@@ -70,8 +71,6 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_halving(const void *sendbuf, void
     if (total_count == 0) {
         goto fn_exit;
     }
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* allocate temp. buffer to receive incoming data */
     tmp_recvbuf = MPIR_Sched_alloc_state(s, total_count * (MPL_MAX(extent, true_extent)));
@@ -139,10 +138,10 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_halving(const void *sendbuf, void
          * even-numbered processes who no longer participate will
          * have their result calculated by the process to their
          * right (rank+1). */
-
-        newcnts = MPIR_Sched_alloc_state(s, pof2 * sizeof(int));
+        MPI_Aint *newcnts, *newdisps;
+        newcnts = MPIR_Sched_alloc_state(s, pof2 * sizeof(MPI_Aint));
         MPIR_ERR_CHKANDJUMP(!newcnts, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        newdisps = MPIR_Sched_alloc_state(s, pof2 * sizeof(int));
+        newdisps = MPIR_Sched_alloc_state(s, pof2 * sizeof(MPI_Aint));
         MPIR_ERR_CHKANDJUMP(!newdisps, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         for (i = 0; i < pof2; i++) {
@@ -168,6 +167,7 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_halving(const void *sendbuf, void
             /* find real rank of dest */
             dst = (newdst < rem) ? newdst * 2 + 1 : newdst + rem;
 
+            MPI_Aint send_cnt, recv_cnt;
             send_cnt = recv_cnt = 0;
             if (newrank < newdst) {
                 send_idx = recv_idx + mask;

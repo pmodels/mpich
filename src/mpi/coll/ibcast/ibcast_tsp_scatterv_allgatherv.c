@@ -26,7 +26,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     MPIR_Treealgo_tree_t my_tree, parents_tree;
     int current_child, next_child, lrank, total_count, sink_id;
     int num_children, *child_subtree_size = NULL;
-    int recv_size, num_send_dependencies;
+    int num_send_dependencies;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
@@ -108,6 +108,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
         parents_tree.num_children = 0;
     }
 
+    MPI_Aint recv_size;
     recv_size = cnts[rank];
     /* total size of the data to be received from the parent. */
     for (i = 0; i < num_children; i++) {
