@@ -95,7 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
 
         am_hdr.hdr.rndv_hdr_sz += flattened_sz;
         /* suppress -Wconversion warning */
-        am_hdr.ipc_hdr.flattened_sz = (flattened_sz & 0xffffff);
+        am_hdr.ipc_hdr.flattened_sz = flattened_sz;
         am_hdr.ipc_hdr.count = count;
 
         hdr_sz = sizeof(am_hdr) + flattened_sz;
