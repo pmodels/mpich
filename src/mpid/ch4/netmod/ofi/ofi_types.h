@@ -283,22 +283,22 @@ typedef union {
 } MPIDI_OFI_cacheline_mutex_t;
 
 typedef struct {
-    unsigned enable_av_table:1;
-    unsigned enable_scalable_endpoints:1;
-    unsigned enable_shared_contexts:1;
-    unsigned enable_mr_virt_address:1;
-    unsigned enable_mr_allocated:1;
-    unsigned enable_mr_prov_key:1;
-    unsigned enable_tagged:1;
-    unsigned enable_am:1;
-    unsigned enable_rma:1;
-    unsigned enable_mr_register_null:1;
-    unsigned enable_atomics:1;
-    unsigned enable_pt2pt_nopack:1;
-    unsigned enable_hmem:1;
-    unsigned enable_data_auto_progress:1;
-    unsigned enable_control_auto_progress:1;
-    unsigned require_rdm:1;
+    int enable_av_table;
+    int enable_scalable_endpoints;
+    int enable_shared_contexts;
+    int enable_mr_virt_address;
+    int enable_mr_allocated;
+    int enable_mr_prov_key;
+    int enable_tagged;
+    int enable_am;
+    int enable_rma;
+    int enable_mr_register_null;
+    int enable_atomics;
+    int enable_pt2pt_nopack;
+    int enable_hmem;
+    int enable_data_auto_progress;
+    int enable_control_auto_progress;
+    int require_rdm;
 
     int max_endpoints;
     int max_endpoints_bits;
