@@ -744,7 +744,7 @@ MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp);
 
 MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 
-int MPID_Win_create(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
+int MPID_Win_create(void *, MPI_Aint, MPI_Aint, MPIR_Info *, MPIR_Comm *,
                     MPIR_Win **);
 int MPID_Win_free(MPIR_Win **);
 
@@ -765,9 +765,9 @@ int MPID_Win_complete(MPIR_Win *win_ptr);
 int MPID_Win_lock(int lock_type, int dest, int assert, MPIR_Win *win_ptr);
 int MPID_Win_unlock(int dest, MPIR_Win *win_ptr);
 
-int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info *info,
+int MPID_Win_allocate(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info *info,
                       MPIR_Comm *comm, void *baseptr, MPIR_Win **win);
-int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info *info_ptr, MPIR_Comm *comm_ptr,
+int MPID_Win_allocate_shared(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info *info_ptr, MPIR_Comm *comm_ptr,
                              void *base_ptr, MPIR_Win **win_ptr);
 int MPID_Win_shared_query(MPIR_Win *win, int rank, MPI_Aint *size, int *disp_unit,
                           void *baseptr);
