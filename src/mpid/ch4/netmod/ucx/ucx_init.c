@@ -132,7 +132,7 @@ static int all_vnis_address_exchange(void)
     int num_vnis = MPIDI_UCX_global.num_vnis;
 
     /* ucx address lengths are non-uniform, use MPID_MAX_BC_SIZE */
-    size_t name_len = MPID_MAX_BC_SIZE;
+    int name_len = MPID_MAX_BC_SIZE;
 
     int my_len = num_vnis * name_len;
     char *all_names = MPL_malloc(size * my_len, MPL_MEM_ADDRESS);

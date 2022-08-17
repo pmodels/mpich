@@ -24,7 +24,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     ucp_mem_h mem_h;
     int cntr = 0;
     size_t rkey_size = 0;
-    MPI_Aint *rkey_sizes = NULL, *recv_disps = NULL, i;
+    MPI_Aint *rkey_sizes = NULL, *recv_disps = NULL;
     char *rkey_buffer = NULL, *rkey_recv_buff = NULL;
     struct ucx_share *share_data = NULL;
     ucp_mem_map_params_t mem_map_params;
@@ -90,7 +90,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     recv_disps = (MPI_Aint *) MPL_malloc(sizeof(MPI_Aint) * comm_ptr->local_size, MPL_MEM_OTHER);
 
 
-    for (i = 0; i < comm_ptr->local_size; i++) {
+    for (int i = 0; i < comm_ptr->local_size; i++) {
         recv_disps[i] = cntr;
         cntr += rkey_sizes[i];
     }
@@ -109,7 +109,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
 
     int vni = MPIDI_WIN(win, am_vci);
     bool all_reachable = true, none_reachable = true;
-    for (i = 0; i < comm_ptr->local_size; i++) {
+    for (int i = 0; i < comm_ptr->local_size; i++) {
         /* Skip unmapped remote region. */
         if (rkey_sizes[i] == 0) {
             all_reachable = false;
@@ -143,7 +143,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
                        sizeof(struct ucx_share), MPI_BYTE, comm_ptr, &err);
     MPIR_ERR_CHECK(mpi_errno);
 
-    for (i = 0; i < comm_ptr->local_size; i++) {
+    for (int i = 0; i < comm_ptr->local_size; i++) {
         MPIDI_UCX_WIN_INFO(win, i).disp = share_data[i].disp;
         MPIDI_UCX_WIN_INFO(win, i).addr = share_data[i].addr;
     }
