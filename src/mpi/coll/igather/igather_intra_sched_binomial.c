@@ -38,9 +38,6 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     int recvblks;
     int tmp_buf_size, missing;
     void *tmp_buf = NULL;
-    int blocks[2];
-    int displs[2];
-    MPI_Aint struct_displs[2];
     MPI_Aint extent = 0;
     int copy_offset = 0, copy_blks = 0;
     MPI_Datatype types[2], tmp_type;
@@ -142,12 +139,14 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                         copy_offset = rank + mask;
                         copy_blks = recvblks;
                     } else {
+                        MPI_Aint blocks[2], displs[2];
                         blocks[0] = recvcount * (comm_size - root - mask);
                         displs[0] = recvcount * (root + mask);
                         blocks[1] = (recvcount * recvblks) - blocks[0];
                         displs[1] = 0;
 
-                        mpi_errno = MPIR_Type_indexed_impl(2, blocks, displs, recvtype, &tmp_type);
+                        mpi_errno =
+                            MPIR_Type_indexed_large_impl(2, blocks, displs, recvtype, &tmp_type);
                         MPIR_ERR_CHECK(mpi_errno);
                         mpi_errno = MPIR_Type_commit_impl(&tmp_type);
                         MPIR_ERR_CHECK(mpi_errno);
@@ -198,6 +197,7 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                 mpi_errno = MPIR_Sched_barrier(s);
                 MPIR_ERR_CHECK(mpi_errno);
             } else {
+                MPI_Aint blocks[2], struct_displs[2];
                 blocks[0] = sendcount;
                 struct_displs[0] = (MPI_Aint) sendbuf;
                 types[0] = sendtype;
@@ -211,8 +211,8 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                 }
                 struct_displs[1] = (MPI_Aint) tmp_buf;
 
-                mpi_errno =
-                    MPIR_Type_create_struct_impl(2, blocks, struct_displs, types, &tmp_type);
+                mpi_errno = MPIR_Type_create_struct_large_impl(2, blocks, struct_displs, types,
+                                                               &tmp_type);
                 MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Type_commit_impl(&tmp_type);
                 MPIR_ERR_CHECK(mpi_errno);

@@ -47,7 +47,7 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
     int mpi_errno_ret = MPI_SUCCESS;
     int total_count, dst;
     int mask;
-    int *newcnts, *newdisps, rem, newdst, send_idx, recv_idx, last_idx, send_cnt, recv_cnt;
+    int rem, newdst, send_idx, recv_idx, last_idx, send_cnt, recv_cnt;
     int pof2, old_i, newrank;
     MPIR_CHKLMEM_DECL(5);
 
@@ -159,10 +159,10 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
          * even-numbered processes who no longer participate will
          * have their result calculated by the process to their
          * right (rank+1). */
-
-        MPIR_CHKLMEM_MALLOC(newcnts, int *, pof2 * sizeof(int), mpi_errno, "newcnts",
+        MPI_Aint *newcnts, *newdisps;
+        MPIR_CHKLMEM_MALLOC(newcnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "newcnts",
                             MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(newdisps, int *, pof2 * sizeof(int), mpi_errno, "newdisps",
+        MPIR_CHKLMEM_MALLOC(newdisps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "newdisps",
                             MPL_MEM_BUFFER);
 
         for (i = 0; i < pof2; i++) {

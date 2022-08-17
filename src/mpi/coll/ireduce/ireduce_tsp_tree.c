@@ -149,7 +149,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
      * correctly with pipelined reduce, for example, buffer+offset
      * if being calculated correctly */
     for (j = 0; j < num_chunks; j++) {
-        int msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
+        MPI_Aint msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
         void *reduce_address = (char *) reduce_buffer + offset * extent;
 
         /* For correctness, transport based collectives need to get the

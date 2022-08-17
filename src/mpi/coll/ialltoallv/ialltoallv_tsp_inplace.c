@@ -19,7 +19,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
     MPI_Aint recv_lb, true_extent;
     int nranks, rank, nvtcs;
     int i, dst, send_id, recv_id, dtcopy_id = -1, vtcs[2];
-    int max_count;
     void *tmp_buf = NULL;
     int tag = 0;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
@@ -38,6 +37,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
     MPIR_Type_get_true_extent_impl(recvtype, &recv_lb, &true_extent);
     recv_extent = MPL_MAX(recv_extent, true_extent);
 
+    MPI_Aint max_count;
     max_count = 0;
     for (i = 0; i < nranks; ++i) {
         max_count = MPL_MAX(max_count, recvcounts[i]);
