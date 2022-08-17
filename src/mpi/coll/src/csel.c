@@ -909,7 +909,7 @@ static inline MPI_Aint get_avg_msgsize(MPIR_Csel_coll_sig_s coll_info)
     return msgsize;
 }
 
-static inline int get_count(MPIR_Csel_coll_sig_s coll_info)
+static inline MPI_Aint get_count(MPIR_Csel_coll_sig_s coll_info)
 {
     MPI_Aint count = 0;
     int i = 0;

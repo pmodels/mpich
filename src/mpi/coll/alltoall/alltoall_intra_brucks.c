@@ -31,7 +31,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     MPI_Aint recvtype_sz;
     int mpi_errno = MPI_SUCCESS, src, dst, rank;
     int mpi_errno_ret = MPI_SUCCESS;
-    int block, *displs, count;
+    int block, count;
     MPI_Aint pack_size;
     MPI_Datatype newtype = MPI_DATATYPE_NULL;
     MPI_Aint newtype_sz;
@@ -76,7 +76,8 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     /* allocate displacements array for indexed datatype used in
      * communication */
 
-    MPIR_CHKLMEM_MALLOC(displs, int *, comm_size * sizeof(int), mpi_errno, "displs",
+    MPI_Aint *displs;
+    MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, comm_size * sizeof(MPI_Aint), mpi_errno, "displs",
                         MPL_MEM_BUFFER);
 
     pof2 = 1;
@@ -96,7 +97,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
         }
 
         mpi_errno =
-            MPIR_Type_create_indexed_block_impl(count, recvcount, displs, recvtype, &newtype);
+            MPIR_Type_create_indexed_block_large_impl(count, recvcount, displs, recvtype, &newtype);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&newtype);

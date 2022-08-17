@@ -30,11 +30,10 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
-    int *disps;
     void *tmp_recvbuf, *tmp_results;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int dis[2], blklens[2], total_count, dst;
+    int dst;
     int mask, dst_tree_root, my_tree_root, j, k;
     int received;
     MPI_Datatype sendtype, recvtype;
@@ -49,8 +48,11 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
+    MPI_Aint *disps;
+    MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, comm_size * sizeof(MPI_Aint), mpi_errno, "disps",
+                        MPL_MEM_BUFFER);
 
+    MPI_Aint total_count;
     total_count = comm_size * recvcount;
     for (i = 0; i < comm_size; i++) {
         disps[i] = i * recvcount;
@@ -100,6 +102,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
          * data indexed from dst_tree_root to dst_tree_root+mask-1. */
 
         /* calculate sendtype */
+        MPI_Aint dis[2], blklens[2];
         blklens[0] = blklens[1] = 0;
         for (j = 0; j < my_tree_root; j++)
             blklens[0] += recvcount;
@@ -111,7 +114,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
         for (j = my_tree_root; (j < my_tree_root + mask) && (j < comm_size); j++)
             dis[1] += recvcount;
 
-        mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &sendtype);
+        mpi_errno = MPIR_Type_indexed_large_impl(2, blklens, dis, datatype, &sendtype);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&sendtype);
@@ -129,7 +132,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
         for (j = dst_tree_root; (j < dst_tree_root + mask) && (j < comm_size); j++)
             dis[1] += recvcount;
 
-        mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &recvtype);
+        mpi_errno = MPIR_Type_indexed_large_impl(2, blklens, dis, datatype, &recvtype);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&recvtype);

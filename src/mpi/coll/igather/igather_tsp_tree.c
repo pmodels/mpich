@@ -24,9 +24,10 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     const void *data_buf = NULL;
     int tree_type, vtx_id;
     MPIR_Treealgo_tree_t my_tree, parents_tree;
-    int next_child, num_children, *child_subtree_size = NULL, *child_data_offset = NULL;
-    int offset, recv_size, num_dependencies;
+    int next_child, num_children, *child_subtree_size = NULL;
+    int num_dependencies;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    MPI_Aint *child_data_offset;
     MPIR_CHKLMEM_DECL(3);
 
     MPIR_FUNC_ENTER;
@@ -67,7 +68,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
 
     num_children = my_tree.num_children;
     MPIR_CHKLMEM_MALLOC(child_subtree_size, int *, sizeof(int) * num_children, mpi_errno, "child_subtree_size buffer", MPL_MEM_COLL);   /* to store size of subtree of each child */
-    MPIR_CHKLMEM_MALLOC(child_data_offset, int *, sizeof(int) * num_children, mpi_errno, "child_data_offset buffer", MPL_MEM_COLL);     /* to store the offset of the data to be sent to each child  */
+    MPIR_CHKLMEM_MALLOC(child_data_offset, MPI_Aint *, sizeof(MPI_Aint) * num_children, mpi_errno, "child_data_offset buffer", MPL_MEM_COLL);   /* to store the offset of the data to be sent to each child  */
 
     /* calculate size of subtree of each child */
 
@@ -79,6 +80,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
         parents_tree.num_children = 0;
     }
 
+    MPI_Aint recv_size;
     recv_size = 1;      /* total size of the data to be received from the parent.
                          * 1 is to count yourself, now add the size of each child's subtree */
     for (i = 0; i < num_children; i++) {
@@ -109,6 +111,8 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     MPIR_Treealgo_tree_free(&parents_tree);
 
     recv_size *= (lrank == 0) ? recvcount : sendcount;
+
+    MPI_Aint offset;
     offset = (lrank == 0) ? recvcount : sendcount;
 
     for (i = 0; i < num_children; i++) {

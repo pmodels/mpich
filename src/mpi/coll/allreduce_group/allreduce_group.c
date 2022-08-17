@@ -23,8 +23,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     /* newrank is a rank in group_ptr */
-    int mask, dst, is_commutative, pof2, newrank, rem, newdst, i,
-        send_idx, recv_idx, last_idx, send_cnt, recv_cnt, *cnts, *disps;
+    int mask, dst, is_commutative, pof2, newrank, rem, newdst, i, send_idx, recv_idx, last_idx;
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
     int group_rank, group_size;
@@ -173,10 +172,11 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
              * each process receives and the displacement within
              * the buffer */
 
-            MPIR_CHKLMEM_MALLOC(cnts, int *, pof2 * sizeof(int), mpi_errno, "counts",
+            MPI_Aint *cnts, *disps;
+            MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "counts",
                                 MPL_MEM_BUFFER);
-            MPIR_CHKLMEM_MALLOC(disps, int *, pof2 * sizeof(int), mpi_errno, "displacements",
-                                MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno,
+                                "displacements", MPL_MEM_BUFFER);
 
             for (i = 0; i < (pof2 - 1); i++)
                 cnts[i] = count / pof2;
@@ -196,6 +196,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
                 dst = (newdst < rem) ? newdst * 2 + 1 : newdst + rem;
                 to_comm_rank(cdst, dst);
 
+                MPI_Aint send_cnt, recv_cnt;
                 send_cnt = recv_cnt = 0;
                 if (newrank < newdst) {
                     send_idx = recv_idx + pof2 / (mask * 2);
@@ -259,6 +260,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
                 dst = (newdst < rem) ? newdst * 2 + 1 : newdst + rem;
                 to_comm_rank(cdst, dst);
 
+                MPI_Aint send_cnt, recv_cnt;
                 send_cnt = recv_cnt = 0;
                 if (newrank < newdst) {
                     /* update last_idx except on first iteration */

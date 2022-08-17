@@ -11,7 +11,6 @@ int MPIR_Ialltoallv_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
                                         const MPI_Aint rdispls[], MPI_Datatype recvtype,
                                         MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
-    int max_count;
     void *tmp_buf = NULL;
     int mpi_errno = MPI_SUCCESS;
     int comm_size;
@@ -38,6 +37,7 @@ int MPIR_Ialltoallv_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
      * conserve memory when using MPI_IN_PLACE for these routines.
      * Something like MADRE would probably generate a more optimal
      * algorithm. */
+    MPI_Aint max_count;
     max_count = 0;
     for (i = 0; i < comm_size; ++i) {
         max_count = MPL_MAX(max_count, recvcounts[i]);
