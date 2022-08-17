@@ -50,7 +50,8 @@ typedef struct MPIDI_POSIX_per_call_ibcast_info_t {
     int seq_no;
     uint64_t *parent_gather_flag_addr, *my_gather_flag_addr, *my_release_flag_addr;
     void *local_buf;
-    int count, root, tag;
+    MPI_Aint count;
+    int root, tag;
     MPI_Datatype datatype;
     MPIR_Comm *comm_ptr;
     MPIR_Request *sreq, *rreq;
@@ -60,7 +61,8 @@ typedef struct MPIDI_POSIX_per_call_ireduce_info_t {
     int seq_no;
     uint64_t *parent_gather_flag_addr, *my_gather_flag_addr, *my_release_flag_addr;
     void *send_buf, *recv_buf;
-    int count, root, tag;
+    MPI_Aint count;
+    int root, tag;
     MPI_Op op;
     MPI_Datatype datatype;
     MPIR_Comm *comm_ptr;

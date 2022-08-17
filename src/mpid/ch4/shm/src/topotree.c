@@ -475,7 +475,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k, in
     int *max_entries_per_level = NULL;
     int **ranks_per_package = NULL;
     int *package_ctr = NULL;
-    size_t topo_depth = 0;
+    int topo_depth = 0;
     int package_level = 0, i, max_ranks_per_package = 0;
     bool mapfail_flag = false;
 
