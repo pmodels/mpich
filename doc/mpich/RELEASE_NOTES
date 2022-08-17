@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
-MPICH DROP 47 - Release Notes
+MPICH DROP 48 - Release Notes
 -------------------------------------------------------------------------------
 
 CONTENTS:
@@ -19,9 +19,14 @@ This is an evaluation release of mpich provided by Intel Corporation.
 2. NEW FEATURES
 -------------------------------------------------------------------------------
 
-* Improved intra-node performance with Intel GPUs.
-* Optimized performance of broadcast and allreduce with GPU buffers. 
-* Fixed bugs with multi-nic communicator.
+* Added support for implicit scaling using XeLinks.
+* Provided MPICH binary with internal GPU kernels compiled with AOT and added
+  support for multiple GPU device types in one binary.
+* Fixed a bug which caused -bind-to core:2 to segfault in some cases.
+* Fixed bugs that caused tests to hang when using multiple NICs with multiple
+  processes per node.
+* Fixed a race condition bug in GPU pipeline for bidirectional bandwidth test.
+  Added preliminary optimizations for bibw.
 
 -------------------------------------------------------------------------------
 2.1 DETAILS
@@ -38,14 +43,6 @@ This is an evaluation release of mpich provided by Intel Corporation.
 * Allowing compute engines as subdevices when defining ZE_AFFINITY_MASK is not
   currently supported. EngineInstancedSubDevices=0 is set in the modulefiles to
   ensure this feature is disabled.
-
-* GPU IPC and the GPU low-latency transfer path are incompatible with implicit
-  scaling. In order to enable these features and disable implicit scaling, the
-  following must be performed:
-
-    export EnableWalkerPartition=0
-    export EnableImplicitScaling=0
-    export MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD=1
 
 -------------------------------------------------------------------------------
 3. RPM PACKAGE DETAILS
