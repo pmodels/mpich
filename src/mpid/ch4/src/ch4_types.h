@@ -108,7 +108,7 @@ typedef struct MPIDIG_put_msg_t {
     MPIR_Request *preq_ptr;
     MPI_Aint target_disp;
     MPI_Aint target_count;
-    MPI_Aint target_datatype;
+    MPI_Datatype target_datatype;
     MPI_Aint target_true_lb;
     int flattened_sz;
     MPI_Aint origin_data_sz;
@@ -138,7 +138,7 @@ typedef struct MPIDIG_get_msg_t {
     MPIR_Request *greq_ptr;
     MPI_Aint target_disp;
     MPI_Aint target_count;
-    MPI_Aint target_datatype;
+    MPI_Datatype target_datatype;
     MPI_Aint target_true_lb;
     int flattened_sz;
 } MPIDIG_get_msg_t;
