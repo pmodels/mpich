@@ -2605,7 +2605,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
             G.out.append("int sum = 0;")
             dump_for_open('i', 'comm_size')
             G.out.append("MPIR_ERRTEST_COUNT(%s[i], mpi_errno);" % ct)
-            G.out.append("sum += %s[i];" % ct)
+            G.out.append("sum += (int) %s[i];" % ct)
             dump_for_close()
             sct = "sum"
             rct = ct + "[comm_rank]"
