@@ -131,7 +131,7 @@ int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count,
     goto fn_exit;
 }
 
-int MPIDIG_mpi_precv_init(void *buf, int partitions, int count,
+int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
                           MPI_Datatype datatype, int source, int tag,
                           MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
 {

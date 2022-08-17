@@ -481,7 +481,7 @@ PARAM:
     op_p: MPIR_Op *
     origin_addr: const void *
     origin_addr-2: void *
-    origin_count: int
+    origin_count: MPI_Aint
     origin_datatype: MPI_Datatype
     partner: MPIR_Request *
     port_name: const char *
@@ -503,7 +503,7 @@ PARAM:
     req_p: MPIR_Request **
     sched: MPIR_TSP_sched_t
     result_addr: void *
-    result_count: int
+    result_count: MPI_Aint
     result_datatype: MPI_Datatype
     root: int
     rreq: MPIR_Request *
@@ -525,7 +525,7 @@ PARAM:
     tag: int
     tag_bits: int *
     target: int
-    target_count: int
+    target_count: MPI_Aint
     target_datatype: MPI_Datatype
     target_disp: MPI_Aint
     target_rank: int

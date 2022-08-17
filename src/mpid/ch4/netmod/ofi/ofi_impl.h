@@ -375,19 +375,19 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_load_iov(const void *buffer, int count,
 
 int MPIDI_OFI_issue_deferred_rma(MPIR_Win * win);
 void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq);
-int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
+int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
                             MPI_Datatype origin_datatype, int target_rank,
-                            int target_count, MPI_Datatype target_datatype,
+                            MPI_Aint target_count, MPI_Datatype target_datatype,
                             MPIDI_OFI_target_mr_t target_mr, MPIR_Win * win,
                             MPIDI_av_entry_t * addr, int rma_type, MPIR_Request ** sigreq);
-int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
+int MPIDI_OFI_pack_put(const void *origin_addr, MPI_Aint origin_count,
                        MPI_Datatype origin_datatype, int target_rank,
-                       int target_count, MPI_Datatype target_datatype,
+                       MPI_Aint target_count, MPI_Datatype target_datatype,
                        MPIDI_OFI_target_mr_t target_mr, MPIR_Win * win,
                        MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
-int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
+int MPIDI_OFI_pack_get(void *origin_addr, MPI_Aint origin_count,
                        MPI_Datatype origin_datatype, int target_rank,
-                       int target_count, MPI_Datatype target_datatype,
+                       MPI_Aint target_count, MPI_Datatype target_datatype,
                        MPIDI_OFI_target_mr_t target_mr, MPIR_Win * win,
                        MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
 

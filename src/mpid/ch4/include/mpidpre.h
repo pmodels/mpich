@@ -111,8 +111,8 @@ typedef struct MPIDIG_acc_req_t {
     MPIR_Request *req_ptr;
     MPI_Datatype origin_datatype;
     MPI_Datatype target_datatype;
-    int origin_count;
-    int target_count;
+    MPI_Aint origin_count;
+    MPI_Aint target_count;
     void *target_addr;
     void *flattened_dt;
     void *data;                 /* for origin_data received and result_data being sent (in GET_ACC).
@@ -121,7 +121,7 @@ typedef struct MPIDIG_acc_req_t {
     MPI_Aint result_data_sz;    /* only used in GET_ACC */
     MPI_Op op;
     void *result_addr;
-    int result_count;
+    MPI_Aint result_count;
     void *origin_addr;
     MPI_Datatype result_datatype;
 } MPIDIG_acc_req_t;
