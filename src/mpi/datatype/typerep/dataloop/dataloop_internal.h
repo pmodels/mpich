@@ -140,15 +140,6 @@ typedef struct MPII_Dataloop {
     MPI_Aint dloop_sz;
 } MPII_Dataloop;
 
-static int MPII_Type_dloop_size(MPI_Datatype type) ATTRIBUTE((unused));
-static int MPII_Type_dloop_size(MPI_Datatype type)
-{
-    MPII_Dataloop *dloop;
-
-    MPIR_DATALOOP_GET_LOOPPTR(type, dloop);
-    return dloop->dloop_sz;
-}
-
 
 /*S
   MPIR_Segment - Description of the Segment datatype
