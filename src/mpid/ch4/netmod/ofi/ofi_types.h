@@ -205,11 +205,11 @@ typedef struct {
     unsigned atomic_valid:2;
     unsigned fetch_atomic_valid:2;
     unsigned compare_atomic_valid:2;
-    unsigned dtsize:10;
+    uint16_t dtsize;
+    bool mpi_acc_valid;
     MPI_Aint max_atomic_count;
     MPI_Aint max_compare_atomic_count;
     MPI_Aint max_fetch_atomic_count;
-    bool mpi_acc_valid;
 } MPIDI_OFI_atomic_valid_t;
 
 typedef struct MPIDI_OFI_cq_list_t {

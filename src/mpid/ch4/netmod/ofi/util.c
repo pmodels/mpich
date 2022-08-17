@@ -424,7 +424,7 @@ static void create_dt_map(struct fid_ep *ep)
                 CHECK_ATOMIC(fi_fetch_atomicvalid, fetch_atomic_valid, max_fetch_atomic_count);
                 CHECK_ATOMIC(fi_compare_atomicvalid, compare_atomic_valid,
                              max_compare_atomic_count);
-                _TBL.dtsize = (int) dtsize[fi_dt];      /* cast from size_t to int */
+                _TBL.dtsize = (uint16_t) dtsize[fi_dt]; /* cast from size_t to int */
             }
         }
     }
