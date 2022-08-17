@@ -66,16 +66,20 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
     goto fn_exit;
 }
 
-int MPID_Win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info * info,
+int MPID_Win_create(void *base, MPI_Aint length, MPI_Aint disp_unit, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
+
+    MPIR_Assert(disp_unit <= INT_MAX);
+    int my_disp_unit = (int) disp_unit;
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
+    mpi_errno = MPIDI_NM_mpi_win_create(base, length, my_disp_unit, info, comm_ptr, win_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 #else
-    mpi_errno = MPIDIG_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
+    mpi_errno = MPIDIG_mpi_win_create(base, length, my_disp_unit, info, comm_ptr, win_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
@@ -106,17 +110,21 @@ int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
     goto fn_exit;
 }
 
-int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info_ptr,
+int MPID_Win_allocate_shared(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info_ptr,
                              MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
+
+    MPIR_Assert(disp_unit <= INT_MAX);
+    int my_disp_unit = (int) disp_unit;
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_win_allocate_shared(size, disp_unit,
+    mpi_errno = MPIDI_NM_mpi_win_allocate_shared(size, my_disp_unit,
                                                  info_ptr, comm_ptr, base_ptr, win_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 #else
-    mpi_errno = MPIDIG_mpi_win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, base_ptr,
+    mpi_errno = MPIDIG_mpi_win_allocate_shared(size, my_disp_unit, info_ptr, comm_ptr, base_ptr,
                                                win_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
@@ -146,16 +154,20 @@ int MPID_Win_detach(MPIR_Win * win, const void *base)
     goto fn_exit;
 }
 
-int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm,
+int MPID_Win_allocate(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info, MPIR_Comm * comm,
                       void *baseptr, MPIR_Win ** win)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
+
+    MPIR_Assert(disp_unit <= INT_MAX);
+    int my_disp_unit = (int) disp_unit;
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win);
+    mpi_errno = MPIDI_NM_mpi_win_allocate(size, my_disp_unit, info, comm, baseptr, win);
     MPIR_ERR_CHECK(mpi_errno);
 #else
-    mpi_errno = MPIDIG_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win);
+    mpi_errno = MPIDIG_mpi_win_allocate(size, my_disp_unit, info, comm, baseptr, win);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
   fn_exit:
