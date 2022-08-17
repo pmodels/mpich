@@ -48,7 +48,7 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
         c_type_ * restrict a = (c_type_ *)inoutvec;           \
         /*const*/ c_type_ * restrict b = (c_type_ *)invec;    \
         for (i=0; i<len; i++)                               \
-            a[i] = op_macro_(a[i],b[i]);                      \
+            a[i] = (c_type_) op_macro_(a[i],b[i]);            \
         break;                                                \
     }
 /* helps enforce consistent naming */
