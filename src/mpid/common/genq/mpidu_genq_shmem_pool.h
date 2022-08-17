@@ -14,8 +14,8 @@
 #include <stdint.h>
 #include <string.h>
 
-int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_proc,
-                                 uintptr_t num_proc, int rank, MPIDU_genq_shmem_pool_t * pool);
+int MPIDU_genq_shmem_pool_create(int cell_size, int cells_per_proc,
+                                 int num_proc, int rank, MPIDU_genq_shmem_pool_t * pool);
 int MPIDU_genq_shmem_pool_destroy(MPIDU_genq_shmem_pool_t pool);
 
 static inline int MPIDU_genq_shmem_pool_cell_alloc(MPIDU_genq_shmem_pool_t pool, void **cell,
