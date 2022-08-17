@@ -33,9 +33,9 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
+int MPIDI_CH3I_Put(const void *origin_addr, MPI_Aint origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint target_disp,
-                   int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
+                   MPI_Aint target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
                    MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -193,9 +193,9 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
     /* --END ERROR HANDLING-- */
 }
 
-int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
+int MPIDI_CH3I_Get(void *origin_addr, MPI_Aint origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint target_disp,
-                   int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
+                   MPI_Aint target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
                    MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -347,9 +347,9 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 }
 
 
-int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
+int MPIDI_CH3I_Accumulate(const void *origin_addr, MPI_Aint origin_count, MPI_Datatype
                           origin_datatype, int target_rank, MPI_Aint target_disp,
-                          int target_count, MPI_Datatype target_datatype, MPI_Op op,
+                          MPI_Aint target_count, MPI_Datatype target_datatype, MPI_Op op,
                           MPIR_Win * win_ptr, MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -541,10 +541,10 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 }
 
 
-int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
-                              MPI_Datatype origin_datatype, void *result_addr, int result_count,
+int MPIDI_CH3I_Get_accumulate(const void *origin_addr, MPI_Aint origin_count,
+                              MPI_Datatype origin_datatype, void *result_addr, MPI_Aint result_count,
                               MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                              int target_count, MPI_Datatype target_datatype, MPI_Op op,
+                              MPI_Aint target_count, MPI_Datatype target_datatype, MPI_Op op,
                               MPIR_Win * win_ptr, MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -776,9 +776,9 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 }
 
 
-int MPID_Put(const void *origin_addr, int origin_count, MPI_Datatype
+int MPID_Put(const void *origin_addr, MPI_Aint origin_count, MPI_Datatype
              origin_datatype, int target_rank, MPI_Aint target_disp,
-             int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr)
+             MPI_Aint target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -792,9 +792,9 @@ int MPID_Put(const void *origin_addr, int origin_count, MPI_Datatype
     return mpi_errno;
 }
 
-int MPID_Get(void *origin_addr, int origin_count, MPI_Datatype
+int MPID_Get(void *origin_addr, MPI_Aint origin_count, MPI_Datatype
              origin_datatype, int target_rank, MPI_Aint target_disp,
-             int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr)
+             MPI_Aint target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -808,9 +808,9 @@ int MPID_Get(void *origin_addr, int origin_count, MPI_Datatype
     return mpi_errno;
 }
 
-int MPID_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
+int MPID_Accumulate(const void *origin_addr, MPI_Aint origin_count, MPI_Datatype
                     origin_datatype, int target_rank, MPI_Aint target_disp,
-                    int target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win_ptr)
+                    MPI_Aint target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -824,10 +824,10 @@ int MPID_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     return mpi_errno;
 }
 
-int MPID_Get_accumulate(const void *origin_addr, int origin_count,
-                        MPI_Datatype origin_datatype, void *result_addr, int result_count,
+int MPID_Get_accumulate(const void *origin_addr, MPI_Aint origin_count,
+                        MPI_Datatype origin_datatype, void *result_addr, MPI_Aint result_count,
                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                        int target_count, MPI_Datatype target_datatype, MPI_Op op,
+                        MPI_Aint target_count, MPI_Datatype target_datatype, MPI_Op op,
                         MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
