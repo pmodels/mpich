@@ -86,10 +86,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
-                                                     int origin_count, MPI_Datatype origin_datatype,
-                                                     int target_rank, size_t size,
-                                                     MPI_Aint target_disp, MPI_Aint true_lb,
-                                                     MPIR_Win * win, MPIDI_av_entry_t * addr,
+                                                     MPI_Aint origin_count,
+                                                     MPI_Datatype origin_datatype, int target_rank,
+                                                     size_t size, MPI_Aint target_disp,
+                                                     MPI_Aint true_lb, MPIR_Win * win,
+                                                     MPIDI_av_entry_t * addr,
                                                      MPIR_Request ** reqptr ATTRIBUTE((unused)),
                                                      int vni, int vni_target)
 {
@@ -179,11 +180,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
-                                              int origin_count,
+                                              MPI_Aint origin_count,
                                               MPI_Datatype origin_datatype,
                                               int target_rank,
                                               MPI_Aint target_disp,
-                                              int target_count, MPI_Datatype target_datatype,
+                                              MPI_Aint target_count, MPI_Datatype target_datatype,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
                                               MPIDI_winattr_t winattr, MPIR_Request ** reqptr)
 {
@@ -247,11 +248,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
-                                              int origin_count,
+                                              MPI_Aint origin_count,
                                               MPI_Datatype origin_datatype,
                                               int target_rank,
                                               MPI_Aint target_disp,
-                                              int target_count, MPI_Datatype target_datatype,
+                                              MPI_Aint target_count, MPI_Datatype target_datatype,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
                                               MPIDI_winattr_t winattr, MPIR_Request ** reqptr)
 {
@@ -303,11 +304,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
-                                              int origin_count,
+                                              MPI_Aint origin_count,
                                               MPI_Datatype origin_datatype,
                                               int target_rank,
                                               MPI_Aint target_disp,
-                                              int target_count, MPI_Datatype target_datatype,
+                                              MPI_Aint target_count, MPI_Datatype target_datatype,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
                                               MPIDI_winattr_t winattr)
 {
@@ -329,11 +330,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
-                                              int origin_count,
+                                              MPI_Aint origin_count,
                                               MPI_Datatype origin_datatype,
                                               int target_rank,
                                               MPI_Aint target_disp,
-                                              int target_count, MPI_Datatype target_datatype,
+                                              MPI_Aint target_count, MPI_Datatype target_datatype,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
                                               MPIDI_winattr_t winattr)
 {
@@ -355,11 +356,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
-                                               int origin_count,
+                                               MPI_Aint origin_count,
                                                MPI_Datatype origin_datatype,
                                                int target_rank,
                                                MPI_Aint target_disp,
-                                               int target_count,
+                                               MPI_Aint target_count,
                                                MPI_Datatype target_datatype,
                                                MPIR_Win * win,
                                                MPIDI_av_entry_t * addr, MPIDI_winattr_t winattr,
@@ -410,11 +411,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
-                                                      int origin_count,
+                                                      MPI_Aint origin_count,
                                                       MPI_Datatype origin_datatype,
                                                       int target_rank,
                                                       MPI_Aint target_disp,
-                                                      int target_count,
+                                                      MPI_Aint target_count,
                                                       MPI_Datatype target_datatype,
                                                       MPI_Op op, MPIR_Win * win,
                                                       MPIDI_av_entry_t * addr,
@@ -426,14 +427,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
-                                                          int origin_count,
+                                                          MPI_Aint origin_count,
                                                           MPI_Datatype origin_datatype,
                                                           void *result_addr,
-                                                          int result_count,
+                                                          MPI_Aint result_count,
                                                           MPI_Datatype result_datatype,
                                                           int target_rank,
                                                           MPI_Aint target_disp,
-                                                          int target_count,
+                                                          MPI_Aint target_count,
                                                           MPI_Datatype target_datatype,
                                                           MPI_Op op, MPIR_Win * win,
                                                           MPIDI_av_entry_t * addr,
@@ -459,11 +460,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
-                                               int origin_count,
+                                               MPI_Aint origin_count,
                                                MPI_Datatype origin_datatype,
                                                int target_rank,
                                                MPI_Aint target_disp,
-                                               int target_count,
+                                               MPI_Aint target_count,
                                                MPI_Datatype target_datatype,
                                                MPIR_Win * win,
                                                MPIDI_av_entry_t * addr, MPIDI_winattr_t winattr,
@@ -502,14 +503,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
-                                                         int origin_count,
+                                                         MPI_Aint origin_count,
                                                          MPI_Datatype origin_datatype,
                                                          void *result_addr,
-                                                         int result_count,
+                                                         MPI_Aint result_count,
                                                          MPI_Datatype result_datatype,
                                                          int target_rank,
                                                          MPI_Aint target_disp,
-                                                         int target_count,
+                                                         MPI_Aint target_count,
                                                          MPI_Datatype target_datatype, MPI_Op op,
                                                          MPIR_Win * win, MPIDI_av_entry_t * addr,
                                                          MPIDI_winattr_t winattr)
@@ -520,11 +521,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
-                                                     int origin_count,
+                                                     MPI_Aint origin_count,
                                                      MPI_Datatype origin_datatype,
                                                      int target_rank,
                                                      MPI_Aint target_disp,
-                                                     int target_count,
+                                                     MPI_Aint target_count,
                                                      MPI_Datatype target_datatype, MPI_Op op,
                                                      MPIR_Win * win, MPIDI_av_entry_t * addr,
                                                      MPIDI_winattr_t winattr)

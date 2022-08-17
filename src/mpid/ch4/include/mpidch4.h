@@ -103,14 +103,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Pready_range(int, int, MPIR_Request *) MPL_STA
 MPL_STATIC_INLINE_PREFIX int MPID_Pready_list(int, int[], MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Parrived(MPIR_Request * rreq, int partition, int *flag);
 
-MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *, int, MPI_Datatype, int, MPI_Aint, int,
-                                             MPI_Datatype, MPI_Op,
+MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *, MPI_Aint, MPI_Datatype, int,
+                                             MPI_Aint, MPI_Aint, MPI_Datatype, MPI_Op,
                                              MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Win_create(void *, MPI_Aint, MPI_Aint, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
 MPL_STATIC_INLINE_PREFIX int MPID_Win_fence(int, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Win_free(MPIR_Win **);
-MPL_STATIC_INLINE_PREFIX int MPID_Get(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-                                      MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Get(void *, MPI_Aint, MPI_Datatype, int, MPI_Aint, MPI_Aint,
+                                      MPI_Datatype, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Win_get_info(MPIR_Win *, MPIR_Info **);
 MPL_STATIC_INLINE_PREFIX int MPID_Win_lock(int, int, int, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock(int, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
@@ -119,7 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_complete(MPIR_Win *) MPL_STATIC_INLINE_SUF
 MPL_STATIC_INLINE_PREFIX int MPID_Win_post(MPIR_Group *, int, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Win_wait(MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Win_test(MPIR_Win *, int *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Put(const void *, int, MPI_Datatype, int, MPI_Aint, int,
+MPL_STATIC_INLINE_PREFIX int MPID_Put(const void *, MPI_Aint, MPI_Datatype, int, MPI_Aint, MPI_Aint,
                                       MPI_Datatype, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Win_set_info(MPIR_Win *, MPIR_Info *);
 int MPID_Comm_reenable_anysource(MPIR_Comm *, MPIR_Group **);
@@ -135,12 +135,12 @@ int MPID_Win_detach(MPIR_Win *, const void *);
 MPL_STATIC_INLINE_PREFIX int MPID_Compare_and_swap(const void *, const void *, void *, MPI_Datatype,
                                                    int, MPI_Aint,
                                                    MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *, int, MPI_Datatype, int, MPI_Aint, int,
-                                              MPI_Datatype, MPI_Op, MPIR_Win *,
+MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *, MPI_Aint, MPI_Datatype, int, MPI_Aint,
+                                              MPI_Aint, MPI_Datatype, MPI_Op, MPIR_Win *,
                                               MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *, int, MPI_Datatype, void *, int,
-                                                  MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-                                                  MPI_Op, MPIR_Win *,
+MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *, MPI_Aint, MPI_Datatype, void *,
+                                                  MPI_Aint, MPI_Datatype, int, MPI_Aint, MPI_Aint,
+                                                  MPI_Datatype, MPI_Op, MPIR_Win *,
                                                   MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Fetch_and_op(const void *, void *, MPI_Datatype, int, MPI_Aint,
                                                MPI_Op, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
@@ -151,13 +151,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush(int, MPIR_Win *) MPL_STATIC_INLINE_S
 MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local_all(MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock_all(MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Win_create_dynamic(MPIR_Info *, MPIR_Comm *, MPIR_Win **);
-MPL_STATIC_INLINE_PREFIX int MPID_Rget(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-                                       MPIR_Win *, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Rget(void *, MPI_Aint, MPI_Datatype, int, MPI_Aint, MPI_Aint,
+                                       MPI_Datatype, MPIR_Win *,
+                                       MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Win_sync(MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_all(MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPID_Get_accumulate(const void *, int, MPI_Datatype, void *, int,
-                                                 MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-                                                 MPI_Op, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Get_accumulate(const void *, MPI_Aint, MPI_Datatype, void *,
+                                                 MPI_Aint, MPI_Datatype, int, MPI_Aint, MPI_Aint,
+                                                 MPI_Datatype, MPI_Op,
+                                                 MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Win_lock_all(int, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 void *MPID_Alloc_mem(MPI_Aint, MPIR_Info *);
 int MPID_Free_mem(void *);
