@@ -13,7 +13,7 @@
  *
  * The function returns the page rounded value for argument `size` and also
  * the size of the page in the system in the `psz` pointer argument. */
-size_t MPIDU_shm_get_mapsize(size_t size, size_t * psz);
+MPI_Aint MPIDU_shm_get_mapsize(MPI_Aint size, size_t * psz);
 
 /* MPIDU_shm_alloc_symm_all - collectively allocate and return symmetric shared memory
  *
@@ -39,7 +39,7 @@ size_t MPIDU_shm_get_mapsize(size_t size, size_t * psz);
  * The function returns MPI_SUCCESS if no error has happened while allocating memory.
  * Failure allocating symmetric memory is not considered an error. The function returns
  * MPI_ERR_OTHER if any other error occurred. */
-int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, void **ptr,
+int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, MPI_Aint len, MPI_Aint offset, void **ptr,
                              bool * fail_flag);
 
 /* MPIDU_shm_alloc - collectively allocate and return shared memory
@@ -53,7 +53,7 @@ int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, vo
  * The function returns MPI_SUCCESS if no error has happened while allocating memory.
  * Failure allocating shared memory is not considered an error. The function returns
  * MPI_ERR_OTHER if any other error occurred. */
-int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr, bool * fail_flag);
+int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, MPI_Aint len, void **ptr, bool * fail_flag);
 
 /* MPIDU_shm_free - free memory allocated using either of the previous two methods
  *
