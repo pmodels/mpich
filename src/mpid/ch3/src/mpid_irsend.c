@@ -8,7 +8,7 @@
 /*
  * MPID_Irsend()
  */
-int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int attr,
+int MPID_Irsend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int attr,
 		MPIR_Request ** request)
 {
     MPIDI_CH3_Pkt_t upkt;
