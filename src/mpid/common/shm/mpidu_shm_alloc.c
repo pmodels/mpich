@@ -121,7 +121,7 @@ static void *generate_random_addr(MPI_Aint size)
     uintptr_t map_pointer;
     char random_state[256];
     size_t page_sz = 0;
-    uint64_t random_unsigned;
+    size_t random_unsigned;
     MPI_Aint mapsize = MPIDU_shm_get_mapsize(size, &page_sz);
     MPL_time_t ts;
     unsigned int ts_32 = 0;
@@ -139,13 +139,13 @@ static void *generate_random_addr(MPI_Aint size)
     initstate_r(ts_32, random_state, sizeof(random_state), &rbuf);
     random_r(&rbuf, &rh);
     random_r(&rbuf, &rl);
-    random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
+    random_unsigned = (size_t) (((uint64_t) rh) << 32 | (uint64_t) rl);
     map_pointer = MAP_POINTER;
 
     while (check_maprange_ok((void *) map_pointer, mapsize) == 0) {
         random_r(&rbuf, &rh);
         random_r(&rbuf, &rl);
-        random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
+        random_unsigned = (size_t) (((uint64_t) rh) << 32 | (uint64_t) rl);
         map_pointer = MAP_POINTER;
         iter--;
 
