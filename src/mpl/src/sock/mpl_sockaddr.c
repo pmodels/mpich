@@ -278,9 +278,9 @@ int MPL_listen_portrange(int sock_fd, unsigned short *p_port, int low_port, int 
         MPL_get_sockaddr_direct(MPL_SOCKADDR_ANY, &addr);
     }
     for (i = low_port; i <= high_port; i++) {
-        ret = MPL_listen(sock_fd, i);
+        ret = MPL_listen(sock_fd, (unsigned short) i);
         if (ret == 0) {
-            *p_port = i;
+            *p_port = (unsigned short) i;
             break;
         } else if (errno == EADDRINUSE) {
             continue;
