@@ -66,7 +66,7 @@ int MPID_Rsend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending zero length message");
     
 	MPIDI_Pkt_init(ready_pkt, MPIDI_CH3_PKT_READY_SEND);
-	ready_pkt->match.parts.rank = comm->rank;
+	ready_pkt->match.parts.rank = (MPIDI_Rank_t) comm->rank;
 	ready_pkt->match.parts.tag = tag;
 	ready_pkt->match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
 	ready_pkt->sender_req_id = MPI_REQUEST_NULL;
