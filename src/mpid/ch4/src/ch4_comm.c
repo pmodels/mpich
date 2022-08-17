@@ -758,7 +758,7 @@ int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
                 MPIR_ERR_POP(mpi_errno);
 
             MPIDI_COMM(comm, multi_leads_comm)->context_id =
-                comm->context_id + MPIR_CONTEXT_MULTILEADS_OFFSET;
+                (MPIR_Context_id_t) (comm->context_id + MPIR_CONTEXT_MULTILEADS_OFFSET);
             MPIDI_COMM(comm, multi_leads_comm)->recvcontext_id =
                 MPIDI_COMM(comm, multi_leads_comm)->context_id;
             MPIDI_COMM(comm, multi_leads_comm)->rank = internode_table[rank];

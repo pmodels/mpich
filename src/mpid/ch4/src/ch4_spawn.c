@@ -136,12 +136,13 @@ static int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
 static void free_port_name_tag(int tag)
 {
     int idx, rem_tag;
+    int intbits = (int) sizeof(int) * 8;
 
     MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
 
-    idx = tag / (sizeof(int) * 8);
-    rem_tag = tag - (idx * sizeof(int) * 8);
+    idx = tag / intbits;
+    rem_tag = tag - (idx * intbits);
 
     port_name_tag_mask[idx] &= ~PORT_MASK_BIT(rem_tag);
 
@@ -153,6 +154,7 @@ static int get_port_name_tag(int *port_name_tag)
 {
     unsigned i, j;
     int mpi_errno = MPI_SUCCESS;
+    int intbits = (int) sizeof(int) * 8;
 
     MPIR_FUNC_ENTER;
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
@@ -162,10 +164,10 @@ static int get_port_name_tag(int *port_name_tag)
             break;
 
     if (i < MPIR_MAX_CONTEXT_MASK) {
-        for (j = 0; j < (8 * sizeof(int)); j++) {
+        for (j = 0; j < intbits; j++) {
             if ((port_name_tag_mask[i] | PORT_MASK_BIT(j)) != port_name_tag_mask[i]) {
                 port_name_tag_mask[i] |= PORT_MASK_BIT(j);
-                *port_name_tag = ((i * 8 * sizeof(int)) + j);
+                *port_name_tag = (i * intbits + j);
                 goto fn_exit;
             }
         }
@@ -319,7 +321,7 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
 
         /* send remote context_id + addrname */
 
-        int hdr_sz = sizeof(hdr) - MPIDI_DYNPROC_NAME_MAX + hdr.addrname_len;
+        int hdr_sz = (int) sizeof(hdr) - MPIDI_DYNPROC_NAME_MAX + hdr.addrname_len;
         mpi_errno = MPIDI_NM_dynamic_send(remote_gpid, tag, &hdr, hdr_sz, timeout);
         MPL_free(addrname);
         MPL_free(addrname_size);

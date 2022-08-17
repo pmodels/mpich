@@ -77,7 +77,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
 
     available = capacity;
 
-    cell->from = MPIDI_POSIX_global.my_local_rank;
+    cell->from = (uint16_t) MPIDI_POSIX_global.my_local_rank;
 
     /* If this is the beginning of the message, mark it as the head. Otherwise it will be the
      * tail. */
@@ -91,7 +91,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
         /* make sure the data region starts at the boundary of MAX_ALIGNMENT */
         payload = payload + resized_am_hdr_sz;
         cell->payload_size += resized_am_hdr_sz;
-        cell->am_header.am_hdr_sz = resized_am_hdr_sz;
+        cell->am_header.am_hdr_sz = (uint16_t) resized_am_hdr_sz;
         available -= cell->am_header.am_hdr_sz;
     } else {
         cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_DATA;
