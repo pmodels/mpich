@@ -82,7 +82,11 @@ int MPIR_Dataloop_flatten_size(MPIR_Datatype * dtp, int *flattened_loop_size)
 {
     MPII_Dataloop *dloop = (MPII_Dataloop *) dtp->typerep.handle;
 
-    *flattened_loop_size = sizeof(struct dloop_flatten_hdr) + dloop->dloop_sz;
+    MPI_Aint sz;
+    sz = sizeof(struct dloop_flatten_hdr) + dloop->dloop_sz;
+
+    MPIR_Assert(sz <= INT_MAX);
+    *flattened_loop_size = (int) sz;
 
     return MPI_SUCCESS;
 }
