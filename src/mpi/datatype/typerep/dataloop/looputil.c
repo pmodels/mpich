@@ -660,8 +660,8 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
 
     MPIR_FUNC_ENTER;
 
-    src_el_size = MPIR_Datatype_get_basic_size(el_type);
-    dest_el_size = MPII_Typerep_get_basic_size_external32(el_type);
+    src_el_size = (int) MPIR_Datatype_get_basic_size(el_type);
+    dest_el_size = (int) MPII_Typerep_get_basic_size_external32(el_type);
     MPIR_Assert(dest_el_size);
 
     /*
@@ -672,30 +672,33 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
      * sz = size of datatype (guess we could get this from handle value if
      *      we wanted...)
      */
+
+    MPIR_Assert(*blocks_p <= INT_MAX);
+    int count = (int) *blocks_p;
 #ifdef MPID_SP_VERBOSE
     dbg_printf("\t[contig pack [external32]: do=%d, dp=%x, bp=%x, "
                "src_el_sz=%d, dest_el_sz=%d, blksz=%d]\n",
                rel_off,
                (unsigned) bufp,
-               (unsigned) paramp->u.pack.pack_buffer, src_el_size, dest_el_size, (int) *blocks_p);
+               (unsigned) paramp->u.pack.pack_buffer, src_el_size, dest_el_size, count);
 #endif
 
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1)) {
-        MPIR_Memcpy(paramp->u.pack.pack_buffer, ((char *) bufp) + rel_off, *blocks_p);
+        MPIR_Memcpy(paramp->u.pack.pack_buffer, ((char *) bufp) + rel_off, count);
     } else if (MPII_Typerep_basic_type_is_complex(el_type)) {
         /* treat as 2x floating point */
         external32_float_convert(paramp->u.pack.pack_buffer,
                                  ((char *) bufp) + rel_off,
-                                 dest_el_size / 2, src_el_size / 2, (*blocks_p) * 2);
+                                 dest_el_size / 2, src_el_size / 2, count * 2);
     } else if (is_float_type(el_type)) {
         external32_float_convert(paramp->u.pack.pack_buffer,
-                                 ((char *) bufp) + rel_off, dest_el_size, src_el_size, *blocks_p);
+                                 ((char *) bufp) + rel_off, dest_el_size, src_el_size, count);
     } else {
         external32_basic_convert(paramp->u.pack.pack_buffer,
-                                 ((char *) bufp) + rel_off, dest_el_size, src_el_size, *blocks_p);
+                                 ((char *) bufp) + rel_off, dest_el_size, src_el_size, count);
     }
-    paramp->u.pack.pack_buffer += (dest_el_size * (*blocks_p));
+    paramp->u.pack.pack_buffer += (dest_el_size * count);
 
     MPIR_FUNC_EXIT;
     return 0;
@@ -710,8 +713,8 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
 
     MPIR_FUNC_ENTER;
 
-    dest_el_size = MPIR_Datatype_get_basic_size(el_type);
-    src_el_size = MPII_Typerep_get_basic_size_external32(el_type);
+    dest_el_size = (int) MPIR_Datatype_get_basic_size(el_type);
+    src_el_size = (int) MPII_Typerep_get_basic_size_external32(el_type);
     MPIR_Assert(src_el_size);
 
     /*
@@ -722,33 +725,33 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
      * sz = size of datatype (guess we could get this from handle value if
      *      we wanted...)
      */
+    MPIR_Assert(*blocks_p <= INT_MAX);
+    int count = (int) *blocks_p;
+
 #ifdef MPID_SP_VERBOSE
     dbg_printf("\t[contig unpack [external32]: do=%d, dp=%x, up=%x, "
                "src_el_sz=%d, dest_el_sz=%d, blksz=%d]\n",
                rel_off,
                (unsigned) bufp,
-               (unsigned) paramp->u.unpack.unpack_buffer,
-               src_el_size, dest_el_size, (int) *blocks_p);
+               (unsigned) paramp->u.unpack.unpack_buffer, src_el_size, dest_el_size, count);
 #endif
 
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1)) {
-        MPIR_Memcpy(((char *) bufp) + rel_off, paramp->u.unpack.unpack_buffer, *blocks_p);
+        MPIR_Memcpy(((char *) bufp) + rel_off, paramp->u.unpack.unpack_buffer, count);
     } else if (MPII_Typerep_basic_type_is_complex(el_type)) {
         /* treat as 2x floating point */
         external32_float_convert(((char *) bufp) + rel_off,
                                  paramp->u.unpack.unpack_buffer,
-                                 dest_el_size / 2, src_el_size / 2, (*blocks_p) * 2);
+                                 dest_el_size / 2, src_el_size / 2, count * 2);
     } else if (is_float_type(el_type)) {
         external32_float_convert(((char *) bufp) + rel_off,
-                                 paramp->u.unpack.unpack_buffer,
-                                 dest_el_size, src_el_size, *blocks_p);
+                                 paramp->u.unpack.unpack_buffer, dest_el_size, src_el_size, count);
     } else {
         external32_basic_convert(((char *) bufp) + rel_off,
-                                 paramp->u.unpack.unpack_buffer,
-                                 dest_el_size, src_el_size, *blocks_p);
+                                 paramp->u.unpack.unpack_buffer, dest_el_size, src_el_size, count);
     }
-    paramp->u.unpack.unpack_buffer += (src_el_size * (*blocks_p));
+    paramp->u.unpack.unpack_buffer += (src_el_size * count);
 
     MPIR_FUNC_EXIT;
     return 0;
