@@ -142,6 +142,17 @@ int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
     return attr->type == MPL_GPU_POINTER_DEV;
 }
 
+int MPL_gpu_query_pointer_is_strict_dev(const void *ptr, MPL_pointer_attr_t * attr)
+{
+    MPL_pointer_attr_t a;
+
+    if (attr == NULL) {
+        MPL_gpu_query_pointer_attr(ptr, &a);
+        attr = &a;
+    }
+    return attr->type == MPL_GPU_POINTER_DEV;
+}
+
 int MPL_gpu_query_is_same_dev(int dev1, int dev2)
 {
     return dev1 == dev2;
