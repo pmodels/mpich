@@ -286,7 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_mr_bind(struct fi_info *prov, struct fid_
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (prov->domain_attr->mr_mode == FI_MR_ENDPOINT) {
+    if (prov->domain_attr->mr_mode & FI_MR_ENDPOINT) {
         /* Bind the memory region to the endpoint */
         MPIDI_OFI_CALL(fi_mr_bind(mr, &ep->fid, 0ULL), mr_bind);
         MPIDI_OFI_CALL(fi_mr_enable(mr), mr_enable);
