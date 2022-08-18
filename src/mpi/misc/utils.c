@@ -45,8 +45,8 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         MPI_Aint actual_unpack_bytes;
         if (localcopy_kind == LOCALCOPY_NONBLOCKING) {
             MPIR_Typerep_req *typerep_req = extra_param;
-            MPIR_Typerep_iunpack((char *) MPIR_get_contig_ptr(sendbuf, sendtype_true_lb) + sendoffset,
-                                 copy_sz, recvbuf, recvcount, recvtype, recvoffset,
+            MPIR_Typerep_iunpack((char *) MPIR_get_contig_ptr(sendbuf, sendtype_true_lb) +
+                                 sendoffset, copy_sz, recvbuf, recvcount, recvtype, recvoffset,
                                  &actual_unpack_bytes, typerep_req, MPIR_TYPEREP_FLAG_NONE);
         } else if (localcopy_kind == LOCALCOPY_STREAM) {
             void *stream = extra_param;
@@ -55,8 +55,8 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
                                        &actual_unpack_bytes, stream);
         } else {
             /* LOCALCOPY_BLOCKING */
-            MPIR_Typerep_unpack((char *) MPIR_get_contig_ptr(sendbuf, sendtype_true_lb) + sendoffset,
-                                copy_sz, recvbuf, recvcount, recvtype, 0,
+            MPIR_Typerep_unpack((char *) MPIR_get_contig_ptr(sendbuf, sendtype_true_lb) +
+                                sendoffset, copy_sz, recvbuf, recvcount, recvtype, 0,
                                 &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
         }
         MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
