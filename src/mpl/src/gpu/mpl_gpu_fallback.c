@@ -6,6 +6,11 @@
 #include "mpl.h"
 #include <assert.h>
 
+int MPL_gpu_query_pointer_is_strict_dev(const void *ptr, MPL_pointer_attr_t * attr)
+{
+    return 0;
+}
+
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
     *dev_cnt = *dev_id = *subdevice_id = -1;
