@@ -42,6 +42,21 @@ cvars:
         }                                       \
     } while (0)
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_rma_enabled(const void *ptr)
+{
+    if (ENABLE_GPU) {
+        MPL_pointer_attr_t attr;
+        MPIR_GPU_query_pointer_attr(ptr, &attr);
+        if (MPL_gpu_query_pointer_is_dev(ptr, &attr)) {
+            if (MPIDI_OFI_ENABLE_HMEM && MPL_gpu_query_pointer_is_strict_dev(ptr, &attr)) {
+                return 1;
+            } else
+                return 0;
+        }
+    }
+    return 0;
+}
+
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query_type,
                                                                  MPI_Op op,
                                                                  MPIR_Win * win,
@@ -218,8 +233,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
     if (unlikely(!target_mr_found))
         goto am_fallback;
 
+    void *origin_ptr = MPIR_get_contig_ptr(origin_addr, origin_true_lb);
+    MPL_pointer_attr_t attr;
+    MPIR_GPU_query_pointer_attr(origin_ptr, &attr);
+
     /* small contiguous messages */
-    if (origin_contig && target_contig && (origin_bytes <= MPIDI_OFI_global.max_buffered_write) &&
+    /* skip fi_inject path for GPU messages because this path can be
+     * very slow */
+    if (origin_contig && target_contig &&
+        (origin_bytes <= MPIDI_OFI_global.max_buffered_write &&
+         !MPL_gpu_query_pointer_is_dev(origin_ptr, &attr)) &&
         !MPIR_CVAR_CH4_OFI_DISABLE_INJECT_WRITE) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
         MPIDI_OFI_win_cntr_incr(win);
@@ -242,7 +265,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         } else {
             flags = FI_DELIVERY_COMPLETE;
         }
-        msg.desc = NULL;
+        iov.iov_base = MPIR_get_contig_ptr(origin_addr, origin_true_lb);
+        iov.iov_len = target_bytes;
+
+        void *desc = NULL;
+        if (MPL_gpu_query_pointer_is_strict_dev(iov.iov_base, &attr))
+            MPIDI_OFI_gpu_rma_register(iov.iov_base, iov.iov_len, &attr, win, &desc);
+
+        msg.desc = desc;
         msg.addr = MPIDI_OFI_av_to_phys(addr, nic_target, vci_target);
         msg.context = NULL;
         msg.data = 0;
@@ -250,8 +280,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         msg.iov_count = 1;
         msg.rma_iov = &riov;
         msg.rma_iov_count = 1;
-        iov.iov_base = MPIR_get_contig_ptr(origin_addr, origin_true_lb);
-        iov.iov_len = target_bytes;
         riov.addr = target_mr.addr + target_true_lb;
         riov.len = target_bytes;
         riov.key = target_mr.mr_key;
@@ -325,7 +353,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
-        MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+        !MPIDI_OFI_gpu_rma_enabled(origin_addr)) {
         MPIDI_OFI_register_am_bufs();
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
@@ -411,7 +439,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         } else {
             flags = 0;
         }
-        msg.desc = NULL;
+        iov.iov_base = MPIR_get_contig_ptr(origin_addr, origin_true_lb);
+        iov.iov_len = target_bytes;
+
+        void *desc = NULL;
+        MPL_pointer_attr_t attr;
+        MPIR_GPU_query_pointer_attr(iov.iov_base, &attr);
+        if (MPL_gpu_query_pointer_is_strict_dev(iov.iov_base, &attr))
+            MPIDI_OFI_gpu_rma_register(iov.iov_base, iov.iov_len, NULL, win, &desc);
+
+        msg.desc = desc;
         msg.msg_iov = &iov;
         msg.iov_count = 1;
         msg.addr = MPIDI_OFI_av_to_phys(addr, nic_target, vci_target);
@@ -419,8 +456,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         msg.rma_iov_count = 1;
         msg.context = NULL;
         msg.data = 0;
-        iov.iov_base = MPIR_get_contig_ptr(origin_addr, origin_true_lb);
-        iov.iov_len = target_bytes;
         riov.addr = target_mr.addr + target_true_lb;
         riov.len = target_bytes;
         riov.key = target_mr.mr_key;
@@ -494,7 +529,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
     MPIR_FUNC_ENTER;
 
     if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
-        MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+        !MPIDI_OFI_gpu_rma_enabled(origin_addr)) {
         MPIDI_OFI_register_am_bufs();
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
@@ -527,7 +562,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
-        MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+        !MPIDI_OFI_gpu_rma_enabled(origin_addr)) {
         MPIDI_OFI_register_am_bufs();
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, request);
@@ -582,9 +617,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
            !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
-           MPIR_GPU_query_pointer_is_dev(origin_addr) ||
-           MPIR_GPU_query_pointer_is_dev(compare_addr) ||
-           MPIR_GPU_query_pointer_is_dev(result_addr)) {
+           !MPIDI_OFI_gpu_rma_enabled(origin_addr) ||
+           !MPIDI_OFI_gpu_rma_enabled(compare_addr) || !MPIDI_OFI_gpu_rma_enabled(result_addr)) {
         MPIDI_OFI_register_am_bufs();
         mpi_errno =
             MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
@@ -635,8 +669,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
     targetv.count = 1;
     targetv.key = target_mr.mr_key;
 
+    void *desc = NULL;
+    MPIDI_OFI_gpu_rma_register(originv.addr, dt_size, NULL, win, &desc);
+    void *compare_desc = NULL;
+    MPIDI_OFI_gpu_rma_register(comparev.addr, dt_size, NULL, win, &compare_desc);
+    void *result_desc = NULL;
+    MPIDI_OFI_gpu_rma_register(resultv.addr, dt_size, NULL, win, &result_desc);
+
     msg.msg_iov = &originv;
-    msg.desc = NULL;
+    msg.desc = desc;
     msg.iov_count = 1;
     msg.addr = MPIDI_OFI_av_to_phys(av, nic_target, vci_target);
     msg.rma_iov = &targetv;
@@ -649,8 +690,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     MPIDI_OFI_win_cntr_incr(win);
     MPIDI_OFI_CALL_RETRY(fi_compare_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg,
-                                              &comparev, NULL, 1, &resultv, NULL, 1, 0), vci,
-                         atomicto);
+                                              &comparev, compare_desc, 1, &resultv, result_desc, 1,
+                                              0), vci, atomicto);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -757,8 +798,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
         targetv.count = basic_count;
         targetv.key = target_mr.mr_key;
 
+        void *desc = NULL;
+        MPIDI_OFI_gpu_rma_register(originv.addr, dt_size * basic_count, NULL, win, &desc);
+
         msg.msg_iov = &originv;
-        msg.desc = NULL;
+        msg.desc = desc;
         msg.iov_count = 1;
         msg.addr = MPIDI_OFI_av_to_phys(addr, nic_target, vci_target);
         msg.rma_iov = &targetv;
@@ -896,8 +940,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         targetv.count = basic_count;
         targetv.key = target_mr.mr_key;
 
+        void *desc = NULL;
+        MPIDI_OFI_gpu_rma_register(originv.addr, dt_size * basic_count, NULL, win, &desc);
+        void *result_desc = NULL;
+        MPIDI_OFI_gpu_rma_register(resultv.addr, dt_size * basic_count, NULL, win, &result_desc);
+
         msg.msg_iov = &originv;
-        msg.desc = NULL;
+        msg.desc = desc;
         msg.iov_count = 1;
         msg.addr = MPIDI_OFI_av_to_phys(addr, nic_target, vci_target);
         msg.rma_iov = &targetv;
@@ -908,7 +957,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         msg.data = 0;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_fetch_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, &resultv,
-                                                NULL, 1, flags), vci, rdma_readfrom);
+                                                result_desc, 1, flags), vci, rdma_readfrom);
         /* Complete signal request to inform completion to user. */
         MPIDI_OFI_sigreq_complete(sigreq);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
@@ -971,7 +1020,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
            !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
-           !(winattr & MPIDI_WINATTR_NM_REACHABLE) || MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+           !(winattr & MPIDI_WINATTR_NM_REACHABLE) || !MPIDI_OFI_gpu_rma_enabled(origin_addr)) {
         MPIDI_OFI_register_am_bufs();
         mpi_errno =
             MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
@@ -1021,8 +1070,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_add
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
            !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
-           MPIR_GPU_query_pointer_is_dev(origin_addr) ||
-           MPIR_GPU_query_pointer_is_dev(result_addr)) {
+           !MPIDI_OFI_gpu_rma_enabled(origin_addr) || !MPIDI_OFI_gpu_rma_enabled(result_addr)) {
         MPIDI_OFI_register_am_bufs();
         mpi_errno =
             MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
@@ -1076,8 +1124,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
            !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
-           MPIR_GPU_query_pointer_is_dev(origin_addr) ||
-           MPIR_GPU_query_pointer_is_dev(result_addr)) {
+           !MPIDI_OFI_gpu_rma_enabled(origin_addr) || !MPIDI_OFI_gpu_rma_enabled(result_addr)) {
         MPIDI_OFI_register_am_bufs();
         mpi_errno =
             MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank, target_disp,
@@ -1124,8 +1171,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     targetv.count = 1;
     targetv.key = target_mr.mr_key;
 
+    void *desc = NULL;
+    MPIDI_OFI_gpu_rma_register(originv.addr, dt_size, NULL, win, &desc);
+    void *result_desc = NULL;
+    MPIDI_OFI_gpu_rma_register(resultv.addr, dt_size, NULL, win, &result_desc);
+
     msg.msg_iov = &originv;
-    msg.desc = NULL;
+    msg.desc = desc;
     msg.iov_count = 1;
     msg.addr = MPIDI_OFI_av_to_phys(av, nic_target, vci_target);
     msg.rma_iov = &targetv;
@@ -1138,7 +1190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     MPIDI_OFI_win_cntr_incr(win);
     MPIDI_OFI_CALL_RETRY(fi_fetch_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, &resultv,
-                                            NULL, 1, 0), vci, rdma_readfrom);
+                                            result_desc, 1, 0), vci, rdma_readfrom);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
 
   fn_exit:
@@ -1170,7 +1222,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE) ||
-        MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+        !MPIDI_OFI_gpu_rma_enabled(origin_addr)) {
         MPIDI_OFI_register_am_bufs();
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, request);
@@ -1216,8 +1268,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr
            !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
-           !(winattr & MPIDI_WINATTR_NM_REACHABLE) || MPIR_GPU_query_pointer_is_dev(origin_addr) ||
-           MPIR_GPU_query_pointer_is_dev(result_addr)) {
+           !(winattr & MPIDI_WINATTR_NM_REACHABLE) || !MPIDI_OFI_gpu_rma_enabled(origin_addr) ||
+           !MPIDI_OFI_gpu_rma_enabled(result_addr)) {
         MPIDI_OFI_register_am_bufs();
         mpi_errno =
             MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
@@ -1259,7 +1311,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
            !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
-           !(winattr & MPIDI_WINATTR_NM_REACHABLE) || MPIR_GPU_query_pointer_is_dev(origin_addr)) {
+           !(winattr & MPIDI_WINATTR_NM_REACHABLE) || !MPIDI_OFI_gpu_rma_enabled(origin_addr)) {
         MPIDI_OFI_register_am_bufs();
         mpi_errno =
             MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
