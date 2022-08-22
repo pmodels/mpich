@@ -8,17 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern const char MPII_Version_string[];
-extern const char MPII_Version_date[];
-extern const char MPII_Version_ABI[];
-extern const char MPII_Version_configure[];
-extern const char MPII_Version_device[];
-extern const char MPII_Version_CC[];
-extern const char MPII_Version_CXX[];
-extern const char MPII_Version_F77[];
-extern const char MPII_Version_FC[];
-extern const char MPII_Version_custom[];
-
 /* FIXME: We really should consider internationalizing the output from this
    program */
 /* style: allow:fprintf:1 sig:0 */
@@ -36,9 +25,20 @@ extern const char MPII_Version_custom[];
  * shared library.
  */
 
-typedef enum { Version_number = 0, Date = 1,
-    Patches = 2, Configure_args = 3, Device = 4,
-    Compilers = 5, Custom = 6, LastField
+typedef enum {
+    Version_number = 0,
+    Date,
+    Patches,
+    Configure_args,
+    Device,
+    Compilers,
+    Custom,
+    ABI,
+    CC,
+    CXX,
+    F77,
+    FC,
+    LastField
 } fields;
 
 /*D
@@ -58,73 +58,117 @@ typedef enum { Version_number = 0, Date = 1,
 
 int main(int argc, char *argv[])
 {
-    int i, flags[10];
     char version[MPI_MAX_LIBRARY_VERSION_STRING];
     int versionlen;
 
-    /* FIXME: this is needed to avoid unresolved symbols issues when building with
-     * --disable-weak-symbols on some platforms. Ideally, we could use the output
-     * from this call instead of accessing internal library variables.
-     */
     MPI_Get_library_version(version, &versionlen);
+    if (argc <= 1 || strncmp("MPICH ", version, 6) != 0) {
+        printf("%s\n", version);
+        return 0;
+    }
 
-    if (argc <= 1) {
-        /* Show all values */
-        for (i = 0; i < LastField; i++)
-            flags[i] = 1;
-    } else {
-        /* Show only requested values */
-        for (i = 0; i < LastField; i++)
-            flags[i] = 0;
-        for (i = 1; i < argc; i++) {
-            if (strcmp(argv[i], "-version") == 0 ||
-                strcmp(argv[i], "--version") == 0 || strcmp(argv[i], "-v") == 0)
-                flags[Version_number] = 1;
-            else if (strcmp(argv[i], "-date") == 0 ||
-                     strcmp(argv[i], "--date") == 0 || strcmp(argv[i], "-D") == 0)
-                flags[Date] = 1;
-            else if (strcmp(argv[i], "-patches") == 0)
-                flags[Patches] = 1;
-            else if (strcmp(argv[i], "-configure") == 0 ||
-                     strcmp(argv[i], "--configure") == 0 || strcmp(argv[i], "-c") == 0)
-                flags[Configure_args] = 1;
-            else if (strcmp(argv[i], "-device") == 0 ||
-                     strcmp(argv[i], "--device") == 0 || strcmp(argv[i], "-d") == 0)
-                flags[Device] = 1;
-            else if (strcmp(argv[i], "-compiler") == 0 ||
-                     strcmp(argv[i], "--compiler") == 0 || strcmp(argv[i], "-b") == 0)
-                flags[Compilers] = 1;
-            else if (strcmp(argv[i], "-custom") == 0 ||
-                     strcmp(argv[i], "--custom") == 0 || strcmp(argv[i], "-u") == 0)
-                flags[Custom] = 1;
-            else {
-                fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
-                exit(1);
-            }
+    /* parse the command line options */
+    int flags[20];
+
+    /* Show only requested values */
+    for (int i = 0; i < LastField; i++)
+        flags[i] = 0;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-version") == 0 ||
+            strcmp(argv[i], "--version") == 0 || strcmp(argv[i], "-v") == 0)
+            flags[Version_number] = 1;
+        else if (strcmp(argv[i], "-date") == 0 ||
+                 strcmp(argv[i], "--date") == 0 || strcmp(argv[i], "-D") == 0)
+            flags[Date] = 1;
+        else if (strcmp(argv[i], "-patches") == 0)
+            flags[Patches] = 1;
+        else if (strcmp(argv[i], "-configure") == 0 ||
+                 strcmp(argv[i], "--configure") == 0 || strcmp(argv[i], "-c") == 0)
+            flags[Configure_args] = 1;
+        else if (strcmp(argv[i], "-device") == 0 ||
+                 strcmp(argv[i], "--device") == 0 || strcmp(argv[i], "-d") == 0)
+            flags[Device] = 1;
+        else if (strcmp(argv[i], "-compiler") == 0 ||
+                 strcmp(argv[i], "--compiler") == 0 || strcmp(argv[i], "-b") == 0)
+            flags[Compilers] = 1;
+        else if (strcmp(argv[i], "-custom") == 0 ||
+                 strcmp(argv[i], "--custom") == 0 || strcmp(argv[i], "-u") == 0)
+            flags[Custom] = 1;
+        else {
+            fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
+            exit(1);
         }
     }
 
+    /* parse MPICH version text */
+    char *strs[20];
+    for (int i = 0; i < 20; i++) {
+        strs[i] = NULL;
+    }
+
+    char *s = version;
+
+#define MATCH(head, idx) \
+    else if (strncmp(s, head, strlen(head)) == 0) { \
+        strs[idx] = s; \
+        s += strlen(head); \
+    }
+
+    while (*s) {
+        /* *INDENT-OFF* */
+        if (*s == '\n' || *s == '\r') {
+            /* terminate the sub-string */
+            *s = '\0';
+            s++;
+        }
+        MATCH("MPICH Version:", Version_number)
+        MATCH("MPICH Release date:", Date)
+        MATCH("MPICH Device:", Device)
+        MATCH("MPICH configure:", Configure_args)
+        MATCH("MPICH ABI:", ABI)
+        MATCH("MPICH CC:", CC)
+        MATCH("MPICH CXX:", CXX)
+        MATCH("MPICH F77:", F77)
+        MATCH("MPICH FC:", FC)
+        else if (strncmp(s, "MPICH Custom Information:", 25) == 0) {
+            strs[Custom] = s;
+            /* grab the rest of the text */
+            break;
+        } else {
+            s++;
+        }
+        /* *INDENT-ON* */
+    }
+
     /* Print out the information, one item per line */
-    if (flags[Version_number]) {
-        printf("MPICH Version:    \t%s\n", MPII_Version_string);
+    if (flags[Version_number] && strs[Version_number]) {
+        printf("%s\n", strs[Version_number]);
     }
-    if (flags[Date]) {
-        printf("MPICH Release date:\t%s\n", MPII_Version_date);
+    if (flags[Date] && strs[Date]) {
+        printf("%s\n", strs[Date]);
     }
-    if (flags[Device]) {
-        printf("MPICH Device:    \t%s\n", MPII_Version_device);
+    if (flags[Device] && strs[Device]) {
+        printf("%s\n", strs[Device]);
     }
-    if (flags[Configure_args]) {
-        printf("MPICH configure: \t%s\n", MPII_Version_configure);
+    if (flags[Configure_args] && strs[Configure_args]) {
+        printf("%s\n", strs[Configure_args]);
     }
     if (flags[Compilers]) {
-        printf("MPICH CC: \t%s\n", MPII_Version_CC);
-        printf("MPICH CXX: \t%s\n", MPII_Version_CXX);
-        printf("MPICH F77: \t%s\n", MPII_Version_F77);
-        printf("MPICH FC: \t%s\n", MPII_Version_FC);
+        if (strs[CC]) {
+            printf("%s\n", strs[CC]);
+        }
+        if (strs[CXX]) {
+            printf("%s\n", strs[CXX]);
+        }
+        if (strs[F77]) {
+            printf("%s\n", strs[F77]);
+        }
+        if (strs[FC]) {
+            printf("%s\n", strs[FC]);
+        }
     }
-    if (flags[Custom]) {
-        printf("MPICH Custom Information: \t%s\n", MPII_Version_custom);
+    if (flags[Custom] && strs[Custom]) {
+        printf("%s\n", strs[Custom]);
     }
 
     return 0;
