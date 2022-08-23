@@ -6,9 +6,9 @@
 #ifndef PMI_WIRE_H_INCLUDED
 #define PMI_WIRE_H_INCLUDED
 
-#define PMII_WIRE_V1        1
-#define PMII_WIRE_V2        2
-#define PMII_WIRE_V1_MCMD   3
+#define PMIU_WIRE_V1        1
+#define PMIU_WIRE_V2        2
+#define PMIU_WIRE_V1_MCMD   3
 
 /* We may allocate stack arrays of size MAX_PMI_ARGS. Thus it shouldn't
  * be too big or result in stack-overflow. We assume a few kilobytes are safe.
@@ -20,20 +20,22 @@
  * Or it may be constructed from scratch, where buf is not used. In either
  * case, the object does not allocate additional buffers.
  */
-struct PMII_token {
+struct PMIU_token {
     const char *key;
     const char *val;
 };
 
 struct PMIU_cmd {
-    char *buf;
-    int len;
+    char *buf;                  /* buffer to hold the string before parsing */
+    char *tmp_buf;              /* buffer to hold the serialization output */
     int version;                /* wire protocol: 1 or 2 */
     const char *cmd;
-    struct PMII_token tokens[MAX_PMI_ARGS];
+    struct PMIU_token tokens[MAX_PMI_ARGS];
     int num_tokens;
 };
 
+/* Just parse the buf to get PMI command name. Do not alter buf. */
+char *PMIU_wire_get_cmd(char *buf, int buflen, int pmi_version);
 /* Construct MPII_pmi from parsing buf.
  * Note: buf will be modified during parsing.
  */
@@ -49,23 +51,59 @@ void PMIU_cmd_add_bool(struct PMIU_cmd *pmicmd, const char *key, int val);
 void PMIU_cmd_add_substr(struct PMIU_cmd *pmicmd, const char *key, int i, const char *val);
 
 void PMIU_cmd_free_buf(struct PMIU_cmd *pmicmd);
+void PMIU_cmd_free(struct PMIU_cmd *pmicmd);
+struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd);
 
 const char *PMIU_cmd_find_keyval(struct PMIU_cmd *pmicmd, const char *key);
-int PMIU_cmd_get_intval_with_default(struct PMIU_cmd *pmicmd, const char *key, int dfltval);
+const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key,
+                                         const char *segment_key, int segment_index);
 
-#define PMII_PMI_GET_STRVAL(pmicmd, key, val) do { \
+#define PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmicmd, key, val, dfltval) do { \
+    const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
+    if (tmp) { \
+        val = tmp; \
+    } else { \
+        val = dfltval; \
+    } \
+} while (0)
+
+#define PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmicmd, key, val, dfltval) do { \
+    const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
+    if (tmp) { \
+        val = atoi(tmp); \
+    } else { \
+        val = dfltval; \
+    } \
+} while (0)
+
+#define PMIU_CMD_GET_BOOLVAL_WITH_DEFAULT(pmicmd, key, val, dfltval) do { \
+    const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
+    if (tmp) { \
+        if (strcmp(tmp, "TRUE") == 0) { \
+            val = PMIU_TRUE; \
+        } else if (strcmp(tmp, "FALSE") == 0) { \
+            val = PMIU_FALSE; \
+        } else { \
+            val = dfltval; \
+        } \
+    } else { \
+        val = dfltval; \
+    } \
+} while (0)
+
+#define PMIU_CMD_GET_STRVAL(pmicmd, key, val) do { \
     const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
     PMIU_ERR_CHKANDJUMP1(tmp == NULL, pmi_errno, PMIU_FAIL, "PMI command missing key %s\n", key); \
     val = tmp; \
 } while (0)
 
-#define PMII_PMI_GET_INTVAL(pmicmd, key, val) do { \
+#define PMIU_CMD_GET_INTVAL(pmicmd, key, val) do { \
     const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
     PMIU_ERR_CHKANDJUMP1(tmp == NULL, pmi_errno, PMIU_FAIL, "PMI command missing key %s\n", key); \
     val = atoi(tmp); \
 } while (0)
 
-#define PMII_PMI_GET_BOOLVAL(pmicmd, key, val) do { \
+#define PMIU_CMD_GET_BOOLVAL(pmicmd, key, val) do { \
     const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
     PMIU_ERR_CHKANDJUMP1(tmp == NULL, pmi_errno, PMIU_FAIL, "PMI command missing key %s\n", key); \
     if (strcmp(tmp, "TRUE") == 0) { \
@@ -77,19 +115,26 @@ int PMIU_cmd_get_intval_with_default(struct PMIU_cmd *pmicmd, const char *key, i
     } \
 } while (0)
 
-#define PMII_PMI_EXPECT_STRVAL(pmicmd, key, val) do { \
+#define PMIU_CMD_EXPECT_STRVAL(pmicmd, key, val) do { \
     const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
     PMIU_ERR_CHKANDJUMP1(tmp == NULL, pmi_errno, PMIU_FAIL, "PMI command missing key %s\n", key); \
     PMIU_ERR_CHKANDJUMP3(strcmp(tmp, val) != 0, pmi_errno, PMIU_FAIL, \
                          "Expect PMI response with %s=%s, got %s\n", key, val, tmp); \
 } while (0)
 
-#define PMII_PMI_EXPECT_INTVAL(pmicmd, key, val) do { \
+#define PMIU_CMD_EXPECT_INTVAL(pmicmd, key, val) do { \
     const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \
     PMIU_ERR_CHKANDJUMP1(tmp == NULL, pmi_errno, PMIU_FAIL, "PMI command missing key %s\n", key); \
     PMIU_ERR_CHKANDJUMP3(atoi(tmp) != val, pmi_errno, PMIU_FAIL, \
                          "Expect PMI response with %s=%d, got %s\n", key, val, tmp); \
 } while (0)
+
+/* output to a string using a specific wire protocol */
+int PMIU_cmd_output_v1(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
+int PMIU_cmd_output_v1_mcmd(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
+int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
+/* output to a string based on embedded version in pmicmd */
+int PMIU_cmd_output(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
 
 /* read and parse PMI command */
 int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd);
