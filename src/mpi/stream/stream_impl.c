@@ -169,7 +169,7 @@ int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
     MPIR_ERR_CHKANDJUMP1(!stream_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                          "MPI_Stream");
 
-    MPIR_Object_set_ref(stream_ptr, 0);
+    MPIR_Object_set_ref(stream_ptr, 1);
     stream_ptr->vci = 0;
 
     const char *s_type;
@@ -218,13 +218,24 @@ int MPIR_Stream_free_impl(MPIR_Stream * stream_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int ref_cnt = MPIR_Object_get_ref(stream_ptr);
-    MPIR_ERR_CHKANDJUMP(ref_cnt != 0, mpi_errno, MPI_ERR_OTHER, "**cannotfreestream");
-
-    if (stream_ptr->vci) {
-        mpi_errno = deallocate_vci(stream_ptr->vci);
+    int ref_cnt;
+    MPIR_Object_release_ref(stream_ptr, &ref_cnt);
+    if (ref_cnt == 0) {
+        if (stream_ptr->vci) {
+            mpi_errno = deallocate_vci(stream_ptr->vci);
+        }
+        MPIR_Handle_obj_free(&MPIR_Stream_mem, stream_ptr);
+    } else {
+        /* The stream is still in use */
+        if (stream_ptr->type == MPIR_STREAM_GPU) {
+            /* We allow asynchronous free of GPU stream because we reuse a single
+             * gpu vci. Nothing to do here. */
+        } else {
+            /* We need ensure unique vci usage per stream, thus we need warn user
+             * when stream is freed while still in-use */
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**cannotfreestream");
+        }
     }
-    MPIR_Handle_obj_free(&MPIR_Stream_mem, stream_ptr);
 
   fn_exit:
     return mpi_errno;
