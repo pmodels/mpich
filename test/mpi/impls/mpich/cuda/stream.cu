@@ -83,8 +83,6 @@ int main(void)
 
         mpi_errno = MPIX_Send_enqueue(d_x, N, MPI_FLOAT, 1, 0, stream_comm);
         assert(mpi_errno == MPI_SUCCESS);
-
-        cudaStreamSynchronize(stream);
     } else if (rank == 1) {
         for (int i = 0; i < N; i++) {
             y[i] = y_val;
@@ -114,8 +112,6 @@ int main(void)
         /* req won't reset to MPI_REQUEST_NULL, but user shouldn't use it afterward */
         mpi_errno = MPIX_Wait_enqueue(&req, MPI_STATUS_IGNORE);
         assert(mpi_errno == MPI_SUCCESS);
-
-        cudaStreamSynchronize(stream);
     } else if (rank == 1) {
         /* reset d_x, d_y */
         for (int i = 0; i < N; i++) {
