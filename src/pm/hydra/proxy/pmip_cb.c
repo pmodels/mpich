@@ -394,8 +394,8 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
 
     int pmi_version = hdr.u.pmi.pmi_version;
     int pmi_rank = hdr.u.pmi.pid;
-    HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_INTERNAL_ARGS * sizeof(char *), status);
-    for (i = 0; i < MAX_PMI_INTERNAL_ARGS; i++)
+    HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
+    for (i = 0; i < MAX_PMI_ARGS; i++)
         args[i] = NULL;
 
     status = HYD_pmcd_pmi_parse_pmi_cmd(buf, pmi_version, &pmi_cmd, args);

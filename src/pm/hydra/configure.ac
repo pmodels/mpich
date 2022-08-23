@@ -5,6 +5,7 @@
 
 AC_PREREQ(2.62)
 
+m4_define([HYDRA_CONFIGURE], 1)
 m4_include([version.m4])
 AC_INIT([Hydra], MPICH_VERSION_m4)
 
@@ -112,6 +113,11 @@ PAC_POP_ALL_FLAGS
 
 AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"`echo $ac_configure_args`",[Configure arguments])
 
+if test -z "$FROM_MPICH" ; then
+    FROM_HYDRA=yes
+    export FROM_HYDRA
+fi
+
 # MPL
 mpl_srcdir=""
 AC_SUBST([mpl_srcdir])
@@ -125,6 +131,28 @@ mpl_lib=""
 AC_SUBST([mpl_lib])
 m4_define([mpl_embedded_dir],[modules/mpl])
 PAC_CONFIG_MPL
+
+# PMI
+pmi_srcdir=""
+pmi_includedir=""
+pmi_lib=""
+AC_SUBST([pmi_srcdir])
+AC_SUBST([pmi_includedir])
+AC_SUBST([pmi_lib])
+m4_define([pmi_embedded_dir],[modules/pmi])
+# NOTE: we do not need the public pmi include dir (where pmi.h and pmi2.h are contained)
+#       we need the "pmi/src" path for accessing internal headers such as pmi_wire.h
+if test "$FROM_MPICH" = "yes"; then
+    pmi_includedir="-I$main_top_srcdir/src/pmi/src"
+    pmi_lib="$main_top_builddir/src/pmi/libpmi.la"
+else
+    # TODO: option for --with-pmilib=xxx
+    pmi_srcdir=pmi_embedded_dir
+    pmi_includedir='-I$(top_srcdir)/pmi_embedded_dir/src'
+    pmi_subdir_args="--enable-embedded"
+    PAC_CONFIG_SUBDIR_ARGS(pmi_embedded_dir, [$pmi_subdir_args])
+    pmi_lib='$(top_builddir)/pmi_embedded_dir/libpmi.la'
+fi
 
 # Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
