@@ -563,14 +563,23 @@ static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
         }
     }
 #elif defined(USE_PMIX_API)
-    int n = bufsize * 2 + 1;
-    char *val = MPL_malloc(n, MPL_MEM_OTHER);
-    encode(bufsize, buf, val);
-    mpi_errno = optimized_put(key, val, is_local);
-    MPIR_ERR_CHECK(mpi_errno);
+    int pmi_errno;
+    pmix_value_t value;
+    value.type = PMIX_BYTE_OBJECT;
+    value.data.bo.bytes = (char *) buf;
+    value.data.bo.size = bufsize;
+    pmi_errno = PMIx_Put(is_local ? PMIX_LOCAL : PMIX_GLOBAL, key, &value);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_put", "**pmix_put %d", pmi_errno);
+    pmi_errno = PMIx_Commit();
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_commit", "**pmix_commit %d", pmi_errno);
 #endif
+
   fn_exit:
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
     MPL_free(val);
+#endif
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -579,12 +588,14 @@ static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
 static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local)
 {
     int mpi_errno = MPI_SUCCESS;
-    char *val = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
-    int segsize = (pmi_max_val_size - 1) / 2;
 
     MPIR_Assert(p_size);
     MPIR_Assert(*p_size > 0);
     int bufsize = *p_size;
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
+    char *val = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
+    int segsize = (pmi_max_val_size - 1) / 2;
+
     int got_size;
 
     mpi_errno = optimized_get(src, key, val, pmi_max_val_size, is_local);
@@ -618,8 +629,33 @@ static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local
 
     *p_size = got_size;
 
+#elif defined(USE_PMIX_API)
+    int pmi_errno;
+    pmix_value_t *pvalue;
+    if (src < 0) {
+        pmi_errno = PMIx_Get(NULL, key, NULL, 0, &pvalue);
+    } else {
+        pmix_proc_t proc;
+        PMIX_PROC_CONSTRUCT(&proc);
+        proc.rank = src;
+
+        pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+    }
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_get", "**pmix_get %d", pmi_errno);
+    MPIR_Assert(pvalue->type == PMIX_BYTE_OBJECT);
+    MPIR_Assert(pvalue->data.bo.size <= bufsize);
+
+    memcpy(buf, pvalue->data.bo.bytes, pvalue->data.bo.size);
+    *p_size = pvalue->data.bo.size;
+
+    PMIX_VALUE_RELEASE(pvalue);
+#endif
+
   fn_exit:
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
     MPL_free(val);
+#endif
     return mpi_errno;
   fn_fail:
     goto fn_exit;
