@@ -1277,8 +1277,13 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             MPIDIU_map_destroy(MPIDI_OFI_global.per_vni[vni].am_send_seq_tracker);
             MPIDIU_map_destroy(MPIDI_OFI_global.per_vni[vni].am_recv_seq_tracker);
 
-            for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
+            for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
+#ifdef MPL_HAVE_ZE
+                host_free_registered(MPIDI_OFI_global.per_vni[vni].am_bufs[i]);
+#else
                 MPIR_gpu_free_host(MPIDI_OFI_global.per_vni[vni].am_bufs[i]);
+#endif
+            }
 
             MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vni[vni].am_hdr_buf_pool);
 
@@ -1988,7 +1993,11 @@ int ofi_am_post_recv(int vni, int nic)
                                  FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
 
         for (int i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
+#ifdef MPL_HAVE_ZE
+            MPIDI_OFI_global.per_vni[vni].am_bufs[i] = host_alloc_registered(MPIDI_OFI_AM_BUFF_SZ);
+#else
             MPIR_gpu_malloc_host(&(MPIDI_OFI_global.per_vni[vni].am_bufs[i]), MPIDI_OFI_AM_BUFF_SZ);
+#endif
             MPIDI_OFI_global.per_vni[vni].am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
             MPIDI_OFI_global.per_vni[vni].am_reqs[i].index = i;
             MPIR_Assert(MPIDI_OFI_global.per_vni[vni].am_bufs[i]);
