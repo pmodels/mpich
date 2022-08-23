@@ -52,6 +52,7 @@ static void send_enqueue_cb(void *data)
     if (p->host_buf) {
         MPIR_gpu_free_host(p->host_buf);
     }
+    MPIR_Comm_release(p->comm_ptr);
     MPL_free(data);
 }
 
@@ -71,6 +72,7 @@ int MPIR_Send_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     p->dest = dest;
     p->tag = tag;
     p->comm_ptr = comm_ptr;
+    MPIR_Comm_add_ref(comm_ptr);
 
     if (MPIR_GPU_query_pointer_is_dev(buf)) {
         MPI_Aint dt_size;
@@ -137,6 +139,7 @@ static void recv_enqueue_cb(void *data)
 
     if (!p->host_buf) {
         /* we are done */
+        MPIR_Comm_release(p->comm_ptr);
         MPL_free(p);
     }
 }
@@ -147,7 +150,8 @@ static void recv_stream_cleanup_cb(void *data)
     MPIR_Assertp(p->actual_unpack_bytes == p->data_sz);
 
     MPIR_gpu_free_host(p->host_buf);
-    MPL_free(data);
+    MPIR_Comm_release(p->comm_ptr);
+    MPL_free(p);
 }
 
 int MPIR_Recv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -167,6 +171,7 @@ int MPIR_Recv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     p->tag = tag;
     p->comm_ptr = comm_ptr;
     p->status = status;
+    MPIR_Comm_add_ref(comm_ptr);
 
     if (MPIR_GPU_query_pointer_is_dev(buf)) {
         MPI_Aint dt_size;
@@ -241,6 +246,7 @@ int MPIR_Isend_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype dataty
     p->dest = dest;
     p->tag = tag;
     p->comm_ptr = comm_ptr;
+    MPIR_Comm_add_ref(comm_ptr);
 
     if (MPIR_GPU_query_pointer_is_dev(buf)) {
         MPI_Aint dt_size;
@@ -313,6 +319,7 @@ int MPIR_Irecv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     p->buf = buf;
     p->count = count;
     p->datatype = datatype;
+    MPIR_Comm_add_ref(comm_ptr);
 
     if (MPIR_GPU_query_pointer_is_dev(buf)) {
         MPI_Aint dt_size;
@@ -353,6 +360,7 @@ static void wait_enqueue_cb(void *data)
         if (p->host_buf) {
             MPIR_gpu_free_host(p->host_buf);
         }
+        MPIR_Comm_release(p->comm_ptr);
         MPL_free(p);
     } else {
         struct recv_data *p = enqueue_req->u.enqueue.data;
@@ -364,6 +372,7 @@ static void wait_enqueue_cb(void *data)
         MPIR_Request_free(real_req);
 
         if (!p->host_buf) {
+            MPIR_Comm_release(p->comm_ptr);
             MPL_free(p);
         }
     }
@@ -432,10 +441,12 @@ static void waitall_enqueue_cb(void *data)
             if (p2->host_buf) {
                 MPIR_gpu_free_host(p2->host_buf);
             }
+            MPIR_Comm_release(p2->comm_ptr);
             MPL_free(p2);
         } else {
             struct recv_data *p2 = enqueue_req->u.enqueue.data;
             if (!p2->host_buf) {
+                MPIR_Comm_release(p2->comm_ptr);
                 MPL_free(p2);
             }
         }
@@ -657,6 +668,7 @@ static void allreduce_enqueue_cb(void *data)
 
     if (!p->host_recvbuf) {
         /* we are done */
+        MPIR_Comm_release(p->comm_ptr);
         MPL_free(p->tmp_buf);
         MPL_free(p);
     }
@@ -670,6 +682,7 @@ static void allred_stream_cleanup_cb(void *data)
 
     MPIR_gpu_host_free(p->host_recvbuf, p->count, p->datatype);
 
+    MPIR_Comm_release(p->comm_ptr);
     MPL_free(p->tmp_buf);
     MPL_free(p);
 }
@@ -704,6 +717,7 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
     p->datatype = datatype;
     p->op = op;
     p->comm_ptr = comm_ptr;
+    MPIR_Comm_add_ref(comm_ptr);
 
     p->sendbuf_is_dev = false;
     p->host_recvbuf = NULL;
