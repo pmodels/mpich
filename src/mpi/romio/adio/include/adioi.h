@@ -769,6 +769,9 @@ int MPIR_Status_set_bytes(MPI_Status * status, MPI_Datatype datatype, MPI_Count 
 int ADIOI_Uses_generic_read(ADIO_File fd);
 int ADIOI_Uses_generic_write(ADIO_File fd);
 int ADIOI_Err_create_code(const char *myname, const char *filename, int my_errno);
+int ADIOI_Type_get_combiner(MPI_Datatype datatype, int *combiner);
+int ADIOI_Type_ispredef(MPI_Datatype datatype, int *flag);
+int ADIOI_Type_dispose(MPI_Datatype * datatype);
 int ADIOI_Type_create_hindexed_x(int count,
                                  const MPI_Count array_of_blocklengths[],
                                  const MPI_Aint array_of_displacements[],
