@@ -44,7 +44,7 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype,
     int error_code;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_VIEW";
-    int i, j, k, combiner;
+    int is_predef;
     MPI_Datatype copy_etype, copy_filetype;
 
     ROMIO_THREAD_CS_ENTER();
@@ -66,8 +66,8 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype,
     ADIOI_Strncpy(datarep,
                   (adio_fh->is_external32 ? "external32" : "native"), MPI_MAX_DATAREP_STRING);
 
-    MPI_Type_get_envelope(adio_fh->etype, &i, &j, &k, &combiner);
-    if (combiner == MPI_COMBINER_NAMED)
+    ADIOI_Type_ispredef(adio_fh->etype, &is_predef);
+    if (is_predef)
         *etype = adio_fh->etype;
     else {
 #ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
@@ -79,8 +79,8 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype,
         MPI_Type_commit(&copy_etype);
         *etype = copy_etype;
     }
-    MPI_Type_get_envelope(adio_fh->filetype, &i, &j, &k, &combiner);
-    if (combiner == MPI_COMBINER_NAMED)
+    ADIOI_Type_ispredef(adio_fh->filetype, &is_predef);
+    if (is_predef)
         *filetype = adio_fh->filetype;
     else {
 #ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP

@@ -291,6 +291,10 @@
 #define MPI_Type_get_contents PMPI_Type_get_contents
 #undef MPI_Type_get_envelope
 #define MPI_Type_get_envelope PMPI_Type_get_envelope
+#undef MPI_Type_get_contents_c
+#define MPI_Type_get_contents_c PMPI_Type_get_contents_c
+#undef MPI_Type_get_envelope_c
+#define MPI_Type_get_envelope_c PMPI_Type_get_envelope_c
 #undef MPI_Type_get_true_extent
 #define MPI_Type_get_true_extent PMPI_Type_get_true_extent
 #undef MPI_Type_indexed
