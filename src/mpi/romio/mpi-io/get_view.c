@@ -70,21 +70,24 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype,
     if (combiner == MPI_COMBINER_NAMED)
         *etype = adio_fh->etype;
     else {
-        /* FIXME: It is wrong to use MPI_Type_contiguous; the user could choose to
-         * re-implement MPI_Type_contiguous in an unexpected way.  Either use
-         * MPID_Barrier as in MPICH or PMPI_Type_contiguous */
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
+        MPI_Type_dup(adio_fh->etype, &copy_etype);
+#else
         MPI_Type_contiguous(1, adio_fh->etype, &copy_etype);
+#endif
 
-        /* FIXME: Ditto for MPI_Type_commit - use NMPI or PMPI */
         MPI_Type_commit(&copy_etype);
         *etype = copy_etype;
     }
-    /* FIXME: Ditto for MPI_Type_xxx - use NMPI or PMPI */
     MPI_Type_get_envelope(adio_fh->filetype, &i, &j, &k, &combiner);
     if (combiner == MPI_COMBINER_NAMED)
         *filetype = adio_fh->filetype;
     else {
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
+        MPI_Type_dup(adio_fh->filetype, &copy_filetype);
+#else
         MPI_Type_contiguous(1, adio_fh->filetype, &copy_filetype);
+#endif
 
         MPI_Type_commit(&copy_filetype);
         *filetype = copy_filetype;
