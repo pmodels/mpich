@@ -80,7 +80,11 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
         fd->etype = etype;
         etype_is_contig = 1;
     } else {
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
+        MPI_Type_dup(etype, &copy_etype);
+#else
         MPI_Type_contiguous(1, etype, &copy_etype);
+#endif
         MPI_Type_commit(&copy_etype);
         fd->etype = copy_etype;
         ADIOI_Datatype_iscontig(fd->etype, &etype_is_contig);
@@ -94,7 +98,11 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
         fd->filetype = filetype;
         filetype_is_contig = 1;
     } else {
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
+        MPI_Type_dup(filetype, &copy_filetype);
+#else
         MPI_Type_contiguous(1, filetype, &copy_filetype);
+#endif
         MPI_Type_commit(&copy_filetype);
         fd->filetype = copy_filetype;
         ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
