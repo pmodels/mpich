@@ -71,11 +71,15 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
         case MPI_COMBINER_NAMED:
             *flag = 1;
             break;
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
+        case MPI_COMBINER_DUP:
+#endif
         case MPI_COMBINER_CONTIGUOUS:
             ints = (int *) ADIOI_Malloc((nints + 1) * sizeof(int));
             adds = (MPI_Aint *) ADIOI_Malloc((nadds + 1) * sizeof(MPI_Aint));
             types = (MPI_Datatype *) ADIOI_Malloc((ntypes + 1) * sizeof(MPI_Datatype));
             MPI_Type_get_contents(datatype, nints, nadds, ntypes, ints, adds, types);
+
             ADIOI_Datatype_iscontig(types[0], flag);
 
             MPI_Type_get_envelope(types[0], &ni, &na, &nt, &cb);
@@ -85,6 +89,11 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
             ADIOI_Free(ints);
             ADIOI_Free(adds);
             ADIOI_Free(types);
+            break;
+        case MPI_COMBINER_F90_INTEGER:
+        case MPI_COMBINER_F90_REAL:
+        case MPI_COMBINER_F90_COMPLEX:
+            *flag = 1;
             break;
         default:
             *flag = 0;
