@@ -31,7 +31,11 @@ void HYD_pmcd_pmi_dump(struct PMIU_cmd *pmicmd)
     int buflen = 0;
 
     PMIU_cmd_output(pmicmd, &buf, &buflen);
-    HYDU_dump_noprefix(stdout, "%s", buf);
+    if (buf[buflen - 1] == '\n') {
+        HYDU_dump_noprefix(stdout, "%s", buf);
+    } else {
+        HYDU_dump_noprefix(stdout, "%s\n", buf);
+    }
 }
 
 HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *hdr, int debug)
@@ -51,7 +55,11 @@ HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *
         } else {
             HYDU_dump(stdout, "Sending PMI command:\n");
         }
-        HYDU_dump_noprefix(stdout, "    %s\n", buf);
+        if (buf[buflen - 1] == '\n') {
+            HYDU_dump_noprefix(stdout, "    %s", buf);
+        } else {
+            HYDU_dump_noprefix(stdout, "%s\n", buf);
+        }
     }
 
     int sent = 0, closed;
