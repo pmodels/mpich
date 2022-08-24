@@ -73,8 +73,7 @@ void MPIR_stream_comm_free(MPIR_Comm * comm)
 {
     if (comm->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
         if (comm->stream_comm.single.stream) {
-            int cnt;
-            MPIR_Object_release_ref_always(comm->stream_comm.single.stream, &cnt);
+            MPIR_Stream_free_impl(comm->stream_comm.single.stream);
         }
         MPL_free(comm->stream_comm.single.vci_table);
     } else if (comm->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
@@ -83,8 +82,7 @@ void MPIR_stream_comm_free(MPIR_Comm * comm)
             comm->stream_comm.multiplex.vci_displs[rank];
         for (int i = 0; i < num_local_streams; i++) {
             if (comm->stream_comm.multiplex.local_streams[i]) {
-                int cnt;
-                MPIR_Object_release_ref_always(comm->stream_comm.multiplex.local_streams[i], &cnt);
+                MPIR_Stream_free_impl(comm->stream_comm.multiplex.local_streams[i]);
             }
         }
         MPL_free(comm->stream_comm.multiplex.local_streams);
