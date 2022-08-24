@@ -11,7 +11,7 @@
 
 void ADIO_Close(ADIO_File fd, int *error_code)
 {
-    int i, j, k, combiner, myrank, err;
+    int i, myrank, err;
     static char myname[] = "ADIO_CLOSE";
 
     if (fd->async_count) {
@@ -97,13 +97,8 @@ void ADIO_Close(ADIO_File fd, int *error_code)
     MPI_Comm_free(&(fd->comm));
     ADIOI_Free(fd->filename);
 
-    MPI_Type_get_envelope(fd->etype, &i, &j, &k, &combiner);
-    if (combiner != MPI_COMBINER_NAMED)
-        MPI_Type_free(&(fd->etype));
-
-    MPI_Type_get_envelope(fd->filetype, &i, &j, &k, &combiner);
-    if (combiner != MPI_COMBINER_NAMED)
-        MPI_Type_free(&(fd->filetype));
+    ADIOI_Type_dispose(&(fd->etype));
+    ADIOI_Type_dispose(&(fd->filetype));
 
     MPI_Info_free(&(fd->info));
 
