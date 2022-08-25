@@ -174,7 +174,8 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPIR_Typerep_init();
     MPII_thread_mutex_create();
     MPII_init_request();
-    MPIR_pmi_init();
+    mpi_errno = MPIR_pmi_init();
+    MPIR_ERR_CHECK(mpi_errno);
     MPII_hwtopo_init();
     MPII_nettopo_init();
     MPII_init_windows();
