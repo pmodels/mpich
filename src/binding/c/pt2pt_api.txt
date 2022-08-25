@@ -411,6 +411,7 @@ MPI_Rsend:
 
     /* If a request was returned, then we need to block until the request
      * is complete */
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -457,6 +458,7 @@ MPI_Send:
         goto fn_exit;
     }
 
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -519,6 +521,7 @@ MPI_Ssend:
 
     /* If a request was returned, then we need to block until the request
      * is complete */
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
