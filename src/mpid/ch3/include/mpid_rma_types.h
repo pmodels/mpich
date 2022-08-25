@@ -38,14 +38,14 @@ typedef struct MPIDI_RMA_Op {
     struct MPIDI_RMA_Op *prev;  /* pointer to prev element in list */
 
     void *origin_addr;
-    int origin_count;
+    MPI_Aint origin_count;
     MPI_Datatype origin_datatype;
 
     void *compare_addr;
     MPI_Datatype compare_datatype;
 
     void *result_addr;
-    int result_count;
+    MPI_Aint result_count;
     MPI_Datatype result_datatype;
 
     struct MPIR_Request *single_req;    /* used for unstreamed RMA ops */

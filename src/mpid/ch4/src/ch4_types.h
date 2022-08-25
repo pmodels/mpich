@@ -15,7 +15,7 @@
 #define MPIDIU_MAP_NOT_FOUND      ((void*)(-1UL))
 
 #define MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK (1024)
-#define MPIDIU_REQUEST_POOL_CELL_SIZE (256)
+#define MPIDIU_REQUEST_POOL_CELL_SIZE (512)
 
 /* Flags for MPIDI_Progress_test
  *

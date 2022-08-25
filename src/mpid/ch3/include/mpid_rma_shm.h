@@ -9,8 +9,8 @@
 #include "utlist.h"
 #include "mpid_rma_types.h"
 
-static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
-                                   void *target_buf, int target_count, MPI_Datatype target_dtp,
+static inline int do_accumulate_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source_dtp,
+                                   void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp,
                                    MPI_Aint stream_offset, MPI_Op acc_op,
                                    MPIDI_RMA_Acc_srcbuf_kind_t srckind);
 
@@ -240,9 +240,9 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
     /* --END ERROR HANDLING-- */
 }
 
-static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_count, MPI_Datatype
+static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, MPI_Aint origin_count, MPI_Datatype
                                         origin_datatype, int target_rank, MPI_Aint target_disp,
-                                        int target_count, MPI_Datatype target_datatype,
+                                        MPI_Aint target_count, MPI_Datatype target_datatype,
                                         MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -276,9 +276,9 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
 }
 
 
-static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_count, MPI_Datatype
+static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, MPI_Aint origin_count, MPI_Datatype
                                         origin_datatype, int target_rank, MPI_Aint target_disp,
-                                        int target_count, MPI_Datatype target_datatype, MPI_Op op,
+                                        MPI_Aint target_count, MPI_Datatype target_datatype, MPI_Op op,
                                         MPIR_Win * win_ptr)
 {
     void *base = NULL;
@@ -386,10 +386,10 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
 }
 
 
-static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_count, MPI_Datatype
-                                            origin_datatype, void *result_addr, int result_count,
+static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, MPI_Aint origin_count, MPI_Datatype
+                                            origin_datatype, void *result_addr, MPI_Aint result_count,
                                             MPI_Datatype result_datatype, int target_rank, MPI_Aint
-                                            target_disp, int target_count,
+                                            target_disp, MPI_Aint target_count,
                                             MPI_Datatype target_datatype, MPI_Op op,
                                             MPIR_Win * win_ptr)
 {
@@ -507,9 +507,9 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
 }
 
 
-static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
+static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, MPI_Aint origin_count,
                                         MPI_Datatype origin_datatype, int target_rank,
-                                        MPI_Aint target_disp, int target_count,
+                                        MPI_Aint target_disp, MPI_Aint target_count,
                                         MPI_Datatype target_datatype, MPIR_Win * win_ptr)
 {
     void *base = NULL;
