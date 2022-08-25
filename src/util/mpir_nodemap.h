@@ -8,16 +8,13 @@
 
 #include "mpl.h"
 
-#if !defined(USE_PMI2_API) && !defined(USE_PMIX_API)
-/* this function is not used in pmi2 or pmix */
+/* this function is not used in pmix */
 static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pmi_errno;
     int ret;
     char *key;
     int key_max_sz;
-    char *kvs_name;
     char hostname[MAX_HOSTNAME_LEN];
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     MPIR_CHKLMEM_DECL(2);
@@ -31,30 +28,19 @@ static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
     hostname[MAX_HOSTNAME_LEN - 1] = '\0';
 
     /* Allocate space for pmi key */
-    pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
-
+    key_max_sz = MPIR_pmi_max_key_size();
     MPIR_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key", MPL_MEM_ADDRESS);
 
-    MPIR_CHKLMEM_MALLOC(kvs_name, char *, 256, mpi_errno, "kvs_name", MPL_MEM_ADDRESS);
-    pmi_errno = PMI_KVS_Get_my_name(kvs_name, 256);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
     /* Put my hostname id */
     if (sz > 1) {
         memset(key, 0, key_max_sz);
         MPL_snprintf(key, key_max_sz, "hostname[%d]", myrank);
 
-        pmi_errno = PMI_KVS_Put(kvs_name, key, hostname);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put",
-                             "**pmi_kvs_put %d", pmi_errno);
+        mpi_errno = MPIR_pmi_kvs_put(key, hostname);
+        MPIR_ERR_CHECK(mpi_errno);
 
-        pmi_errno = PMI_KVS_Commit(kvs_name);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit",
-                             "**pmi_kvs_commit %d", pmi_errno);
-
-        pmi_errno = PMI_Barrier();
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier",
-                             "**pmi_barrier %d", pmi_errno);
+        mpi_errno = MPIR_pmi_barrier();
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -63,7 +49,6 @@ static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
   fn_fail:
     goto fn_exit;
 }
-#endif
 
 
 #define MPIR_NODEMAP_PARSE_ERROR() MPIR_ERR_INTERNALANDJUMP(mpi_errno, "parse error")
@@ -281,8 +266,6 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
      added to the list of node names.
 */
 
-/* TODO: make the fallback routine general, ie works across all PMI versions */
-#ifdef USE_PMI1_API
 static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *out_nodemap,
                                                       int *out_max_node_id)
 {
@@ -321,10 +304,8 @@ static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *o
             memset(key, 0, key_max_sz);
             MPL_snprintf(key, key_max_sz, "hostname[%d]", i);
 
-            const char *kvs_name = MPIR_pmi_job_id();
-            int pmi_errno = PMI_KVS_Get(kvs_name, key, node_names[max_node_id + 1], key_max_sz);
-            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                 "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
+            mpi_errno = MPIR_pmi_kvs_get(i, key, node_names[max_node_id + 1], key_max_sz);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* Find the node_id for this process, or create a new one */
@@ -353,6 +334,5 @@ static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *o
   fn_fail:
     goto fn_exit;
 }
-#endif
 
 #endif /* BUILD_NODEMAP_H_INCLUDED */
