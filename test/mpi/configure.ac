@@ -552,22 +552,6 @@ MPILIBLOC=""
 AC_SUBST(MPILIBLOC)
 
 namepub_tests="#"
-if test "$enable_namepub" != "no" ; then
-    AC_MSG_CHECKING([whether MPI_Publish_name is supported])
-    AC_RUN_IFELSE([
-            AC_LANG_PROGRAM([#include "mpi.h"],[
-                int rc;
-                MPI_Init(0,0);
-                rc = MPI_Publish_name("servname", MPI_INFO_NULL, "otherhost:122");
-                MPI_Finalize();
-                if (rc) {
-                    exit(1);
-                }
-            ])
-        ],[enable_namepub=yes],[enable_namepub=no])
-    AC_MSG_RESULT($enable_namepub)
-fi
-
 if test "$enable_namepub" = "yes" ; then
     namepub_tests=""
 fi
