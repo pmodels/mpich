@@ -393,7 +393,7 @@ call Open at MPI\_File\_open time, but instead call open if they perform
 independent I/O.  This can result in somewhat unusual error returns to
 processes (e.g. learning that a file is not accessible at write time).
 
-ADIOI\_ReadContig(ADIO\_File fd, void *buf, int count, MPI\_Datatype datatype,
+ADIOI\_ReadContig(ADIO\_File fd, void *buf, MPI\_Aint count, MPI\_Datatype datatype,
 int file\_ptr\_type, ADIO\_Offset offset, ADIO\_Status *status, int *error\_code)
 
 ReadContig is used to read a contiguous region from a file into a contiguous
@@ -405,7 +405,7 @@ file\_ptr\_type.  Open has been called by this process prior to the call to
 ReadContig.  There is no guarantee that any other processes will call this
 function at the same time.
 
-ADIOI\_WriteContig(ADIO\_File fd, void *buf, int count, MPI\_Datatype datatype,
+ADIOI\_WriteContig(ADIO\_File fd, void *buf, MPI\_Aint count, MPI\_Datatype datatype,
 int file\_ptr\_type, ADIO\_Offset offset, ADIO\_Status *status, int *error\_code)
 
 WriteContig is used to write a contiguous region to a file from a contiguous

@@ -10,7 +10,7 @@
 #include "ad_pvfs2_io.h"
 #include "ad_pvfs2_common.h"
 
-int ADIOI_PVFS2_StridedDtypeIO(ADIO_File fd, void *buf, int count,
+int ADIOI_PVFS2_StridedDtypeIO(ADIO_File fd, void *buf, MPI_Aint count,
                                MPI_Datatype datatype, int file_ptr_type,
                                ADIO_Offset offset, ADIO_Status * status, int
                                *error_code, int rw_type)

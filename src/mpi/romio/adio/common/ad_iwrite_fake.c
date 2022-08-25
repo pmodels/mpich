@@ -10,7 +10,7 @@
 /* Generic implementation of IwriteContig calls the blocking WriteContig
  * immediately.
  */
-void ADIOI_FAKE_IwriteContig(ADIO_File fd, const void *buf, int count,
+void ADIOI_FAKE_IwriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                              MPI_Datatype datatype, int file_ptr_type,
                              ADIO_Offset offset, ADIO_Request * request, int *error_code)
 {
@@ -38,7 +38,7 @@ void ADIOI_FAKE_IwriteContig(ADIO_File fd, const void *buf, int count,
 /* Generic implementation of IwriteStrided calls the blocking WriteStrided
  * immediately.
  */
-void ADIOI_FAKE_IwriteStrided(ADIO_File fd, const void *buf, int count,
+void ADIOI_FAKE_IwriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                               MPI_Datatype datatype, int file_ptr_type,
                               ADIO_Offset offset, ADIO_Request * request, int *error_code)
 {

@@ -13,7 +13,7 @@
 static void ADIOI_XFS_Aligned_Mem_File_Read(ADIO_File fd, void *buf, int len,
                                             ADIO_Offset offset, int *err);
 
-void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
                           MPI_Datatype datatype, int file_ptr_type,
                           ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {

@@ -43,19 +43,19 @@ int ADIOI_NFS_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
 #endif
 
 void ADIOI_NFS_Open(ADIO_File fd, int *error_code);
-void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
                           MPI_Datatype datatype, int file_ptr_type,
                           ADIO_Offset offset, ADIO_Status * status, int
                           *error_code);
-void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
+void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                            MPI_Datatype datatype, int file_ptr_type,
                            ADIO_Offset offset, ADIO_Status * status, int
                            *error_code);
-void ADIOI_NFS_IwriteContig(ADIO_File fd, void *buf, int count,
+void ADIOI_NFS_IwriteContig(ADIO_File fd, void *buf, MPI_Aint count,
                             MPI_Datatype datatype, int file_ptr_type,
                             ADIO_Offset offset, ADIO_Request * request, int
                             *error_code);
-void ADIOI_NFS_IreadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_NFS_IreadContig(ADIO_File fd, void *buf, MPI_Aint count,
                            MPI_Datatype datatype, int file_ptr_type,
                            ADIO_Offset offset, ADIO_Request * request, int
                            *error_code);
@@ -68,11 +68,11 @@ void ADIOI_NFS_ReadComplete(ADIO_Request * request, ADIO_Status * status, int
 void ADIOI_NFS_WriteComplete(ADIO_Request * request, ADIO_Status * status, int *error_code);
 void ADIOI_NFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int
                      *error_code);
-void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
+void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                             MPI_Datatype datatype, int file_ptr_type,
                             ADIO_Offset offset, ADIO_Status * status, int
                             *error_code);
-void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, int count,
+void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                            MPI_Datatype datatype, int file_ptr_type,
                            ADIO_Offset offset, ADIO_Status * status, int
                            *error_code);
