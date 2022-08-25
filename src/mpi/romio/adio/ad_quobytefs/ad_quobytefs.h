@@ -40,10 +40,10 @@ void ADIOI_QUOBYTEFS_CreateAdapter(const char *registry, int *error_code);
 void ADIOI_QUOBYTEFS_DestroyAdapter(void) __attribute__ ((destructor));
 
 void ADIOI_QUOBYTEFS_Open(ADIO_File fd, int *error_code);
-void ADIOI_QUOBYTEFS_ReadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_QUOBYTEFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
                                 MPI_Datatype datatype, int file_ptr_type,
                                 ADIO_Offset offset, ADIO_Status * status, int *error_code);
-void ADIOI_QUOBYTEFS_WriteContig(ADIO_File fd, const void *buf, int count,
+void ADIOI_QUOBYTEFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                                  MPI_Datatype datatype, int file_ptr_type,
                                  ADIO_Offset offset, ADIO_Status * status, int *error_code);
 void ADIOI_QUOBYTEFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int
@@ -54,16 +54,16 @@ void ADIOI_QUOBYTEFS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code);
 void ADIOI_QUOBYTEFS_Delete(const char *path, int *error_code);
 int ADIOI_QUOBYTEFS_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int whence,
                             ADIO_Offset len);
-int ADIOI_QUOBYTEFS_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
+int ADIOI_QUOBYTEFS_aio(ADIO_File fd, void *buf, MPI_Aint count, MPI_Datatype type,
                         ADIO_Offset offset, int wr, MPI_Request * request);
 int ADIOI_QUOBYTEFS_aio_free_fn(void *extra_state);
 int ADIOI_QUOBYTEFS_aio_poll_fn(void *extra_state, MPI_Status * status);
-int ADIOI_QUOBYTEFS_aio_wait_fn(int count, void **array_of_states, double timeout,
+int ADIOI_QUOBYTEFS_aio_wait_fn(MPI_Aint count, void **array_of_states, double timeout,
                                 MPI_Status * status);
-void ADIOI_QUOBYTEFS_IreadContig(ADIO_File fd, void *buf, int count, MPI_Datatype datatype,
+void ADIOI_QUOBYTEFS_IreadContig(ADIO_File fd, void *buf, MPI_Aint count, MPI_Datatype datatype,
                                  int file_ptr_type, ADIO_Offset offset, MPI_Request * request,
                                  int *error_code);
-void ADIOI_QUOBYTEFS_IwriteContig(ADIO_File fd, const void *buf, int count, MPI_Datatype datatype,
-                                  int file_ptr_type, ADIO_Offset offset, ADIO_Request * request,
-                                  int *error_code);
+void ADIOI_QUOBYTEFS_IwriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
+                                  MPI_Datatype datatype, int file_ptr_type, ADIO_Offset offset,
+                                  ADIO_Request * request, int *error_code);
 #endif /* AD_QUOBYTEFS_H_INCLUDED */

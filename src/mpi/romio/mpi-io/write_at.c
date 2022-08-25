@@ -101,7 +101,6 @@ Output Parameters:
 int MPI_File_write_at_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
                         MPI_Count count, MPI_Datatype datatype, MPI_Status * status)
 {
-    assert(count <= INT_MAX);
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_AT";
 #ifdef MPI_hpux

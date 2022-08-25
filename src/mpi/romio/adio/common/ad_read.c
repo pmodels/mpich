@@ -18,7 +18,7 @@
 #include <limits.h>
 #endif
 
-void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
                           MPI_Datatype datatype, int file_ptr_type,
                           ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {

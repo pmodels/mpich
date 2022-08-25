@@ -139,7 +139,7 @@
         }                                                               \
     }
 
-void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
+void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                                MPI_Datatype datatype, int file_ptr_type,
                                ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {

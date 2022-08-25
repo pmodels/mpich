@@ -22,7 +22,7 @@ struct ADIOI_GEN_IwriteStridedColl_vars {
     /* parameters */
     ADIO_File fd;
     const void *buf;
-    int count;
+    MPI_Aint count;
     MPI_Datatype datatype;
     int file_ptr_type;
     ADIO_Offset offset;
@@ -109,7 +109,7 @@ struct ADIOI_Iexch_and_write_vars {
     int *done_to_proc;
     ADIOI_Flatlist_node *flat_buf;
     MPI_Aint buftype_extent;
-    int coll_bufsize;
+    MPI_Aint coll_bufsize;
 
     /* next function to be called */
     void (*next_fn) (ADIOI_NBC_Request *, int *);
@@ -217,7 +217,7 @@ static int ADIOI_GEN_iwc_wait_fn(int count, void **array_of_states,
 
 
 /* Non-blocking version of ADIOI_GEN_WriteStridedColl() */
-void ADIOI_GEN_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
+void ADIOI_GEN_IwriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count,
                                  MPI_Datatype datatype, int file_ptr_type,
                                  ADIO_Offset offset, MPI_Request * request, int *error_code)
 {
@@ -342,7 +342,8 @@ static void ADIOI_GEN_IwriteStridedColl_indio(ADIOI_NBC_Request * nbc_req, int *
     ADIOI_Icalc_others_req_vars *cor_vars = NULL;
     ADIO_File fd = vars->fd;
     const void *buf;
-    int count, file_ptr_type;
+    MPI_Aint count;
+    int file_ptr_type;
     MPI_Datatype datatype = vars->datatype;
     ADIO_Offset offset;
     int filetype_is_contig;
@@ -589,7 +590,8 @@ static void ADIOI_Iexch_and_write(ADIOI_NBC_Request * nbc_req, int *error_code)
 
     int i, j;
     ADIO_Offset st_loc = -1, end_loc = -1;
-    int info_flag, coll_bufsize;
+    int info_flag;
+    MPI_Aint coll_bufsize;
     char *value;
 
     *error_code = MPI_SUCCESS;  /* changed below if error */
@@ -746,7 +748,7 @@ static void ADIOI_Iexch_and_write_l1_begin(ADIOI_NBC_Request * nbc_req, int *err
     for (i = 0; i < nprocs; i++)
         count[i] = recv_size[i] = 0;
 
-    size = MPL_MIN((unsigned) vars->coll_bufsize, vars->end_loc - vars->st_loc + 1 - vars->done);
+    size = MPL_MIN(vars->coll_bufsize, vars->end_loc - vars->st_loc + 1 - vars->done);
     vars->size = size;
 
     for (i = 0; i < nprocs; i++) {
