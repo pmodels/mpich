@@ -13,6 +13,7 @@ EXTRA_DIST = testlist.in
 noinst_PROGRAMS = \
     rdwrord       \
     rdwrzero      \
+    rd_end	  \
     getextent     \
     setinfo       \
     setviewcur    \
