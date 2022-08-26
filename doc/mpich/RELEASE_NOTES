@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
-MPICH DROP 48 - Release Notes
+MPICH DROP 49 - Release Notes
 -------------------------------------------------------------------------------
 
 CONTENTS:
@@ -19,14 +19,9 @@ This is an evaluation release of mpich provided by Intel Corporation.
 2. NEW FEATURES
 -------------------------------------------------------------------------------
 
-* Added support for implicit scaling using XeLinks.
-* Provided MPICH binary with internal GPU kernels compiled with AOT and added
-  support for multiple GPU device types in one binary.
-* Fixed a bug which caused -bind-to core:2 to segfault in some cases.
-* Fixed bugs that caused tests to hang when using multiple NICs with multiple
-  processes per node.
-* Fixed a race condition bug in GPU pipeline for bidirectional bandwidth test.
-  Added preliminary optimizations for bibw.
+* Fixed AM path with GPU enabled.
+* Fixed RMA bugs with CXI provider.
+* Fixed bugs so the application can use USM host.
 
 -------------------------------------------------------------------------------
 2.1 DETAILS
