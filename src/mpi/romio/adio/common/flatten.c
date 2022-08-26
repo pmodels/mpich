@@ -138,6 +138,186 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 
 }
 
+#if MPI_VERSION >= 4
+static inline int downcast_i(MPI_Count count_value)
+{
+    int int_value = (int) count_value;
+    ADIOI_Assert((int_value == count_value));
+    return int_value;
+}
+
+static inline MPI_Aint downcast_a(MPI_Count count_value)
+{
+    MPI_Aint aint_value = (MPI_Aint) count_value;
+    ADIOI_Assert((aint_value == count_value));
+    return aint_value;
+}
+#endif
+
+static void ADIOI_Type_decode(MPI_Datatype datatype, int *combiner,
+                              int *nints, int *nadds, int *ntypes,
+                              int **ints, MPI_Aint ** adds, MPI_Datatype ** types)
+{
+#if MPI_VERSION >= 4
+    MPI_Count nints_c, nadds_c, ncnts_c, ntypes_c;
+    int *ints_c;
+    MPI_Aint *adds_c;
+    MPI_Count *cnts_c;
+    MPI_Datatype *types_c;
+
+    MPI_Type_get_envelope_c(datatype, &nints_c, &nadds_c, &ncnts_c, &ntypes_c, combiner);
+
+    ints_c = (int *) ADIOI_Malloc((nints_c + 1) * sizeof(int));
+    adds_c = (MPI_Aint *) ADIOI_Malloc((nadds_c + 1) * sizeof(MPI_Aint));
+    cnts_c = (MPI_Count *) ADIOI_Malloc((ncnts_c + 1) * sizeof(MPI_Count));
+    types_c = (MPI_Datatype *) ADIOI_Malloc((ntypes_c + 1) * sizeof(MPI_Datatype));
+
+    switch (*combiner) {
+        case MPI_COMBINER_NAMED:
+        case MPI_COMBINER_F90_INTEGER:
+        case MPI_COMBINER_F90_REAL:
+        case MPI_COMBINER_F90_COMPLEX:
+            break;
+        default:
+            MPI_Type_get_contents_c(datatype,
+                                    nints_c, nadds_c, ncnts_c, ntypes_c,
+                                    ints_c, adds_c, cnts_c, types_c);
+            break;
+    }
+
+    *nints = downcast_i(nints_c);
+    *nadds = downcast_i(nadds_c);
+    *ntypes = downcast_i(ntypes_c);
+
+    if (ncnts_c > 0) {
+        switch (*combiner) {
+            case MPI_COMBINER_CONTIGUOUS:
+            case MPI_COMBINER_VECTOR:
+            case MPI_COMBINER_INDEXED:
+            case MPI_COMBINER_INDEXED_BLOCK:
+                *nints += downcast_i(ncnts_c);
+                break;
+            case MPI_COMBINER_HVECTOR:
+                *nints += downcast_i(ncnts_c) - 1;
+                *nadds += 1;
+                break;
+            case MPI_COMBINER_HINDEXED:
+            case MPI_COMBINER_HINDEXED_BLOCK:
+                *nints += downcast_i(cnts_c[0]);
+                *nadds += downcast_i(cnts_c[0]);
+                break;
+            case MPI_COMBINER_STRUCT:
+                *nints += downcast_i(cnts_c[0]);
+                *nadds += downcast_i(cnts_c[0]);
+                break;
+            case MPI_COMBINER_SUBARRAY:
+            case MPI_COMBINER_DARRAY:
+                *nints += downcast_i(ncnts_c);
+                break;
+            case MPI_COMBINER_RESIZED:
+                *nadds += downcast_i(ncnts_c);
+                break;
+            default:
+                break;
+        }
+    }
+
+    *ints = ints_c;
+    *adds = adds_c;
+    *types = types_c;
+
+    if (ncnts_c > 0) {
+        MPI_Count k, n, ip = 0, ap = 0, iq = 0, cq = 0;
+
+        *ints = (int *) ADIOI_Malloc((*nints + 1) * sizeof(int));
+        *adds = (MPI_Aint *) ADIOI_Malloc((*nadds + 1) * sizeof(MPI_Aint));
+
+        switch (*combiner) {
+            case MPI_COMBINER_CONTIGUOUS:
+            case MPI_COMBINER_VECTOR:
+            case MPI_COMBINER_INDEXED:
+            case MPI_COMBINER_INDEXED_BLOCK:
+                n = ncnts_c;
+                for (k = 0; k < n; k++)
+                    (*ints)[ip++] = downcast_i(cnts_c[cq++]);
+                break;
+            case MPI_COMBINER_HVECTOR:
+                (*ints)[ip++] = downcast_i(cnts_c[cq++]);       /* count */
+                (*ints)[ip++] = downcast_i(cnts_c[cq++]);       /* blocklength */
+                (*adds)[ap++] = downcast_a(cnts_c[cq++]);       /* stride */
+                break;
+            case MPI_COMBINER_HINDEXED:
+                n = cnts_c[0];
+                (*ints)[ip++] = downcast_i(cnts_c[cq++]);       /* count */
+                for (k = 0; k < n; k++)
+                    (*ints)[ip++] = downcast_i(cnts_c[cq++]);   /* blocklengths */
+                for (k = 0; k < n; k++)
+                    (*adds)[ap++] = downcast_a(cnts_c[cq++]);   /* displacement */
+                break;
+            case MPI_COMBINER_HINDEXED_BLOCK:
+                n = cnts_c[0];
+                (*ints)[ip++] = downcast_i(cnts_c[cq++]);       /* count */
+                (*ints)[ip++] = downcast_i(cnts_c[cq++]);       /* blocklength */
+                for (k = 0; k < n; k++)
+                    (*adds)[ap++] = downcast_a(cnts_c[cq++]);   /* displacements */
+                break;
+            case MPI_COMBINER_STRUCT:
+                n = cnts_c[0];
+                (*ints)[ip++] = downcast_i(cnts_c[cq++]);       /* count */
+                for (k = 0; k < n; k++)
+                    (*ints)[ip++] = downcast_i(cnts_c[cq++]);   /* blocklengths */
+                for (k = 0; k < n; k++)
+                    (*adds)[ap++] = downcast_a(cnts_c[cq++]);   /* displacements */
+                break;
+            case MPI_COMBINER_SUBARRAY:
+                n = ints_c[0];
+                (*ints)[ip++] = ints_c[iq++];   /* ndims */
+                for (k = 0; k < n; k++)
+                    (*ints)[ip++] = downcast_i(cnts_c[cq++]);   /* sizes */
+                for (k = 0; k < n; k++)
+                    (*ints)[ip++] = downcast_i(cnts_c[cq++]);   /* subsizes */
+                for (k = 0; k < n; k++)
+                    (*ints)[ip++] = downcast_i(cnts_c[cq++]);   /* starts */
+                (*ints)[ip++] = ints_c[iq++];   /* order */
+                break;
+            case MPI_COMBINER_DARRAY:
+                n = ints_c[2];
+                (*ints)[ip++] = ints_c[iq++];   /* size */
+                (*ints)[ip++] = ints_c[iq++];   /* rank */
+                (*ints)[ip++] = ints_c[iq++];   /* ndims */
+                for (k = 0; k < n; k++)
+                    (*ints)[ip++] = downcast_i(cnts_c[cq++]);   /* gsizes */
+                for (k = 0; k < n; k++)
+                    (*ints)[ip++] = ints_c[iq++];       /* distribs */
+                for (k = 0; k < n; k++)
+                    (*ints)[ip++] = ints_c[iq++];       /* dargs */
+                for (k = 0; k < n; k++)
+                    (*ints)[ip++] = ints_c[iq++];       /* psizes */
+                (*ints)[ip++] = ints_c[iq++];   /* order */
+                break;
+            case MPI_COMBINER_RESIZED:
+                (*adds)[ap++] = downcast_a(cnts_c[cq++]);       /* lb */
+                (*adds)[ap++] = downcast_a(cnts_c[cq++]);       /* extent */
+                break;
+            default:
+                break;
+        }
+        ADIOI_Assert((iq == nints_c));
+        ADIOI_Assert((cq == ncnts_c));
+
+        ADIOI_Free(ints_c);
+        ADIOI_Free(adds_c);
+    }
+    ADIOI_Free(cnts_c);
+#else
+    MPI_Type_get_envelope(datatype, nints, nadds, ntypes, combiner);
+    *ints = (int *) ADIOI_Malloc((*nints + 1) * sizeof(int));
+    *adds = (MPI_Aint *) ADIOI_Malloc((*nadds + 1) * sizeof(MPI_Aint));
+    *types = (MPI_Datatype *) ADIOI_Malloc((*ntypes + 1) * sizeof(MPI_Datatype));
+    MPI_Type_get_contents(datatype, *nints, *nadds, *ntypes, *ints, *adds, *types);
+#endif
+}
+
 /* ADIOI_Flatten()
  *
  * Assumption: input datatype is not a basic!!!!
@@ -157,11 +337,8 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
     int *ints;
     MPI_Aint *adds;             /* Make no assumptions about +/- sign on these */
     MPI_Datatype *types;
-    MPI_Type_get_envelope(datatype, &nints, &nadds, &ntypes, &combiner);
-    ints = (int *) ADIOI_Malloc((nints + 1) * sizeof(int));
-    adds = (MPI_Aint *) ADIOI_Malloc((nadds + 1) * sizeof(MPI_Aint));
-    types = (MPI_Datatype *) ADIOI_Malloc((ntypes + 1) * sizeof(MPI_Datatype));
-    MPI_Type_get_contents(datatype, nints, nadds, ntypes, ints, adds, types);
+
+    ADIOI_Type_decode(datatype, &combiner, &nints, &nadds, &ntypes, &ints, &adds, &types);
 
 #ifdef FLATTEN_DEBUG
     DBG_FPRINTF(stderr, "ADIOI_Flatten:: st_offset %#llX, curr_index %#llX\n",
@@ -939,11 +1116,7 @@ MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_
     MPI_Aint *adds;             /* Make no assumptions about +/- sign on these */
     MPI_Datatype *types;
 
-    MPI_Type_get_envelope(datatype, &nints, &nadds, &ntypes, &combiner);
-    ints = (int *) ADIOI_Malloc((nints + 1) * sizeof(int));
-    adds = (MPI_Aint *) ADIOI_Malloc((nadds + 1) * sizeof(MPI_Aint));
-    types = (MPI_Datatype *) ADIOI_Malloc((ntypes + 1) * sizeof(MPI_Datatype));
-    MPI_Type_get_contents(datatype, nints, nadds, ntypes, ints, adds, types);
+    ADIOI_Type_decode(datatype, &combiner, &nints, &nadds, &ntypes, &ints, &adds, &types);
 
     switch (combiner) {
 #ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
