@@ -826,7 +826,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     for (i = 0; i < nprocs; i++) {
         if (send_size[i]) {
             /* take care if the last off-len pair is a partial send */
-            ADIO_Offset tmp;
+            ADIO_Offset tmp = 0;
             if (partial_send[i]) {
                 k = start_pos[i] + count[i] - 1;
                 tmp = others_req[i].lens[k];
