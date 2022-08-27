@@ -41,8 +41,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 
     /* if we cannot fit the entire data into a single IOV array,
      * fallback to pack */
-    MPIR_Typerep_iov_len(count, MPIDI_OFI_REQUEST(rreq, datatype), dt_ptr->size * count,
-                         &num_contig);
+    MPIR_Typerep_get_iov_len(count, MPIDI_OFI_REQUEST(rreq, datatype), &num_contig);
     if (num_contig > MPIDI_OFI_global.rx_iov_limit)
         goto unpack;
 
@@ -65,10 +64,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_malloc(size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
 
-    MPI_Aint actual_iov_len, actual_iov_bytes;
-    MPIR_Typerep_to_iov(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), 0,
-                        MPIDI_OFI_REQUEST(rreq, noncontig.nopack), num_contig, dt_ptr->size * count,
-                        &actual_iov_len, &actual_iov_bytes);
+    MPI_Aint actual_iov_len;
+    MPIR_Typerep_to_iov_offset(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), 0,
+                               MPIDI_OFI_REQUEST(rreq, noncontig.nopack), num_contig,
+                               &actual_iov_len);
     assert(num_contig == actual_iov_len);
 
     originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[0]));

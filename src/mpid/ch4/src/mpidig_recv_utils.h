@@ -148,8 +148,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_get_recv_iov_count(MPIR_Request * rreq)
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         MPI_Aint num_iov;
-        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, count),
-                             MPIDIG_REQUEST(rreq, datatype), p->in_data_sz, &num_iov);
+        MPIR_Typerep_get_iov_len(MPIDIG_REQUEST(rreq, count),
+                                 MPIDIG_REQUEST(rreq, datatype), &num_iov);
         return num_iov;
     } else if (p->recv_type == MPIDIG_RECV_CONTIG) {
         return 1;
@@ -359,8 +359,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq)
     } else {
         struct iovec *iov;
         MPI_Aint num_iov;
-        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, count),
-                             MPIDIG_REQUEST(rreq, datatype), data_sz, &num_iov);
+        MPIR_Typerep_get_iov_len(MPIDIG_REQUEST(rreq, count),
+                                 MPIDIG_REQUEST(rreq, datatype), &num_iov);
         MPIR_Assert(num_iov > 0);
 
         iov = MPL_malloc(num_iov * sizeof(struct iovec), MPL_MEM_OTHER);
@@ -370,14 +370,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq)
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RCV_NON_CONTIG;
 
         MPI_Aint actual_iov_len;
-        MPI_Aint actual_iov_bytes;
-        MPIR_Typerep_to_iov(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                            MPIDIG_REQUEST(rreq, datatype), 0, iov, num_iov,
-                            p->in_data_sz, &actual_iov_len, &actual_iov_bytes);
-
-        if (actual_iov_bytes != p->in_data_sz) {
-            rreq->status.MPI_ERROR = MPI_ERR_TYPE;
-        }
+        MPIR_Typerep_to_iov_offset(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                                   MPIDIG_REQUEST(rreq, datatype), 0, iov, num_iov,
+                                   &actual_iov_len);
 
         p->recv_type = MPIDIG_RECV_IOV;
         p->iov_ptr = iov;
