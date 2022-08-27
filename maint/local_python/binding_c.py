@@ -637,7 +637,7 @@ def process_func_parameters(func):
                 validation_list.append({'kind': "WIN_DISPUNIT", 'name': name})
             else:
                 validation_list.append({'kind': "RMADISP", 'name': name})
-        elif RE.match(r'(.*_NNI|ARRAY_LENGTH|INFO_VALUE_LENGTH|KEY_INDEX|INDEX|NUM_DIMS|DIMENSION|COMM_SIZE)', kind):
+        elif RE.match(r'(.*_NNI|ARRAY_LENGTH|INFO_VALUE_LENGTH|KEY_INDEX|INDEX|NUM_DIMS|DIMENSION|COMM_SIZE|DISPLACEMENT_COUNT)', kind):
             if p['param_direction'] == 'inout':
                 validation_list.append({'kind': "ARGNULL", 'name': name})
                 validation_list.append({'kind': "ARGNEG", 'name': "*" + name})

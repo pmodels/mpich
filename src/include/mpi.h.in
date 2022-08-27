@@ -969,6 +969,12 @@ typedef struct {
 */
 /* --Insert Additional Definitions Here-- */
 
+/* same as struct iovec, provided to avoid header dependency */
+typedef struct MPIX_Iov {
+    void *iov_base;
+    MPI_Aint iov_len;
+} MPIX_Iov;
+
 /*
  * Normally, we provide prototypes for all MPI routines.  In a few weird
  * cases, we need to suppress the prototypes.
