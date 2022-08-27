@@ -164,7 +164,7 @@ int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype datatype, MPI_Aint max_iov
     rc = yaksa_type_get_size(type, &size);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
-    if (max_iov_bytes >= count * size) {        /* fast path */
+    if (max_iov_bytes == -1 || max_iov_bytes >= count * size) { /* fast path */
         *iov_len = (MPI_Aint) max_iov_len;
     } else {    /* slow path */
         struct iovec *iov =
