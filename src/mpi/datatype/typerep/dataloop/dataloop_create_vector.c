@@ -26,6 +26,8 @@ int MPIR_Dataloop_create_vector(MPI_Aint icount,
                                 int strideinbytes, MPI_Datatype oldtype, void **dlp_p)
 {
     int err, is_builtin;
+    int old_is_contig;
+    MPI_Aint old_num_contig;
 
     MPI_Aint count, blocklength;
     MPI_Aint stride;
@@ -70,6 +72,8 @@ int MPIR_Dataloop_create_vector(MPI_Aint icount,
         new_dlp->el_size = basic_sz;
         new_dlp->el_extent = new_dlp->el_size;
         new_dlp->el_type = oldtype;
+        old_is_contig = 1;
+        old_num_contig = 1;
     } else {    /* user-defined base type (oldtype) */
 
         MPII_Dataloop *old_loop_ptr;
@@ -86,6 +90,8 @@ int MPIR_Dataloop_create_vector(MPI_Aint icount,
         MPIR_Datatype_get_size_macro(oldtype, new_dlp->el_size);
         MPIR_Datatype_get_extent_macro(oldtype, new_dlp->el_extent);
         MPIR_Datatype_get_basic_type(oldtype, new_dlp->el_type);
+        old_is_contig = old_loop_ptr->is_contig;
+        old_num_contig = old_loop_ptr->num_contig;
     }
 
     /* vector-specific members
@@ -95,6 +101,15 @@ int MPIR_Dataloop_create_vector(MPI_Aint icount,
     new_dlp->loop_params.v_t.count = count;
     new_dlp->loop_params.v_t.blocksize = blocklength;
     new_dlp->loop_params.v_t.stride = (strideinbytes) ? stride : stride * new_dlp->el_extent;
+
+    /* FIXME: trivial case such as stride == size * blocklength should be optimized away */
+    if (old_is_contig) {
+        new_dlp->is_contig = 0;
+        new_dlp->num_contig = count;
+    } else {
+        new_dlp->is_contig = 0;
+        new_dlp->num_contig = count * blocklength * old_num_contig;
+    }
 
     *dlp_p = new_dlp;
 
