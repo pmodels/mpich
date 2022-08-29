@@ -56,31 +56,30 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
                    MPI_Datatype filetype, MPI_Info info, int *error_code)
 {
     static char myname[] = "ADIO_Set_view";
-    int combiner, i, j, k, err, etype_is_contig, filetype_is_contig;
+    int is_predef, i, err, etype_is_contig, filetype_is_contig;
     MPI_Datatype copy_etype, copy_filetype;
     ADIOI_Flatlist_node *flat_file, *flat_etype;
     /* free copies of old etypes and filetypes and delete flattened
      * version of filetype if necessary */
 
-    MPI_Type_get_envelope(fd->etype, &i, &j, &k, &combiner);
-    if (combiner != MPI_COMBINER_NAMED)
-        MPI_Type_free(&(fd->etype));
-
-    MPI_Type_get_envelope(fd->filetype, &i, &j, &k, &combiner);
-    if (combiner != MPI_COMBINER_NAMED)
-        MPI_Type_free(&(fd->filetype));
+    ADIOI_Type_dispose(&(fd->etype));
+    ADIOI_Type_dispose(&(fd->filetype));
 
     /* set new info */
     ADIO_SetInfo(fd, info, &err);
 
     /* set new etypes and filetypes */
 
-    MPI_Type_get_envelope(etype, &i, &j, &k, &combiner);
-    if (combiner == MPI_COMBINER_NAMED) {
+    ADIOI_Type_ispredef(etype, &is_predef);
+    if (is_predef) {
         fd->etype = etype;
         etype_is_contig = 1;
     } else {
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
+        MPI_Type_dup(etype, &copy_etype);
+#else
         MPI_Type_contiguous(1, etype, &copy_etype);
+#endif
         MPI_Type_commit(&copy_etype);
         fd->etype = copy_etype;
         ADIOI_Datatype_iscontig(fd->etype, &etype_is_contig);
@@ -89,12 +88,16 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
     if (0 == check_type(flat_etype, fd->orig_access_mode, myname, "etype", error_code))
         return;
 
-    MPI_Type_get_envelope(filetype, &i, &j, &k, &combiner);
-    if (combiner == MPI_COMBINER_NAMED) {
+    ADIOI_Type_ispredef(filetype, &is_predef);
+    if (is_predef) {
         fd->filetype = filetype;
         filetype_is_contig = 1;
     } else {
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
+        MPI_Type_dup(filetype, &copy_filetype);
+#else
         MPI_Type_contiguous(1, filetype, &copy_filetype);
+#endif
         MPI_Type_commit(&copy_filetype);
         fd->filetype = copy_filetype;
         ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);

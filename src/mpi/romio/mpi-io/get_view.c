@@ -44,7 +44,7 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype,
     int error_code;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_VIEW";
-    int i, j, k, combiner;
+    int is_predef;
     MPI_Datatype copy_etype, copy_filetype;
 
     ROMIO_THREAD_CS_ENTER();
@@ -66,25 +66,28 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype,
     ADIOI_Strncpy(datarep,
                   (adio_fh->is_external32 ? "external32" : "native"), MPI_MAX_DATAREP_STRING);
 
-    MPI_Type_get_envelope(adio_fh->etype, &i, &j, &k, &combiner);
-    if (combiner == MPI_COMBINER_NAMED)
+    ADIOI_Type_ispredef(adio_fh->etype, &is_predef);
+    if (is_predef)
         *etype = adio_fh->etype;
     else {
-        /* FIXME: It is wrong to use MPI_Type_contiguous; the user could choose to
-         * re-implement MPI_Type_contiguous in an unexpected way.  Either use
-         * MPID_Barrier as in MPICH or PMPI_Type_contiguous */
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
+        MPI_Type_dup(adio_fh->etype, &copy_etype);
+#else
         MPI_Type_contiguous(1, adio_fh->etype, &copy_etype);
+#endif
 
-        /* FIXME: Ditto for MPI_Type_commit - use NMPI or PMPI */
         MPI_Type_commit(&copy_etype);
         *etype = copy_etype;
     }
-    /* FIXME: Ditto for MPI_Type_xxx - use NMPI or PMPI */
-    MPI_Type_get_envelope(adio_fh->filetype, &i, &j, &k, &combiner);
-    if (combiner == MPI_COMBINER_NAMED)
+    ADIOI_Type_ispredef(adio_fh->filetype, &is_predef);
+    if (is_predef)
         *filetype = adio_fh->filetype;
     else {
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
+        MPI_Type_dup(adio_fh->filetype, &copy_filetype);
+#else
         MPI_Type_contiguous(1, adio_fh->filetype, &copy_filetype);
+#endif
 
         MPI_Type_commit(&copy_filetype);
         *filetype = copy_filetype;
