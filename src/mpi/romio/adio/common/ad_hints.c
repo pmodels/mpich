@@ -132,6 +132,14 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         ADIOI_Info_set(info, "romio_synchronized_flush", "disabled");
         fd->hints->synchronizing_flush = 0;
 
+        /* While MPI-IO rules say a write from one process is not visible until
+         * sync or close, many file systems implement the more restrictive
+         * POSIX semantics:  under POSIX semantics a write from one process is
+         * visible to everyone.  For counter-example, Unify, NFS and PVFS do
+         * not support this semantic */
+        ADIOI_Info_set(info, "romio_visibility_immediate", "true");
+        fd->hints->visibility_immediate = 1;
+
         fd->hints->initialized = 1;
 
         /* ADIO_Open sets up collective buffering arrays.  If we are in this
