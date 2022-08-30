@@ -79,17 +79,17 @@ int main(int argc, char **argv)
     err = MPI_File_set_view(fh, -1, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
     /* disp is deliberately passed as -1 */
 
-    /* This test is designed for ROMIO specifically and tests for a
-     * specific error message */
+    /* consulting error class should be more general than looking for specific strings */
     if (err != MPI_SUCCESS) {
-        MPI_Error_string(err, string, &len);
         if (!rank) {
+            int errorclass;
 #if VERBOSE
             fprintf(stderr, "%s\n", string);
 #else
-            /* check for the word "displacement" in the message.
-             * This allows other formatting of the message */
-            if (strstr(string, "displacement") == 0) {
+            /* expecting error class MPI_ERR_ARG */
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_ARG) {
+                MPI_Error_string(err, string, &len);
                 fprintf(stderr, "Unexpected error message %s\n", string);
                 errs++;
             }
@@ -114,5 +114,5 @@ int main(int argc, char **argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return (errs > 0);
 }
