@@ -214,7 +214,7 @@ struct MPIR_Request {
                                                  * Value is 0 or 1. */
         } part;                 /* kind : MPIR_REQUEST_KIND__PART_SEND or MPIR_REQUEST_KIND__PART_RECV */
         struct {
-            MPL_gpu_stream_t gpu_stream;
+            MPIR_Stream *stream_ptr;
             struct MPIR_Request *real_request;
             bool is_send;
             void *data;
@@ -464,6 +464,8 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
     MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[0].lock));
     return req;
 }
+
+int MPIR_allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req);
 
 #define MPIR_Request_add_ref(req_p_) \
     do { MPIR_Object_add_ref(req_p_); } while (0)

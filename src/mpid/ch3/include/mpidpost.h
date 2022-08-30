@@ -182,6 +182,7 @@ static inline int MPID_Progress_test(MPID_Progress_state * state) /* state is un
     return MPIDI_CH3_Progress_test();
 }
 #define MPID_Progress_poke()		     MPIDI_CH3_Progress_poke()
+#define MPID_Stream_progress(stream)         MPIDI_CH3_Progress_poke()
 
 /* Dynamic process support */
 int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
@@ -228,12 +229,12 @@ int MPIDI_CH3I_Comm_set_hints(MPIR_Comm *, MPIR_Info *info_ptr);
 */
 MPL_STATIC_INLINE_PREFIX int MPID_Init_async_thread(void)
 {
-    return MPIR_Init_async_thread();
+    return MPIR_Start_progress_thread_impl(NULL);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Finalize_async_thread(void)
 {
-    return MPIR_Finalize_async_thread();
+    return MPIR_Stop_progress_thread_impl(NULL);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status)

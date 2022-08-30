@@ -18,6 +18,8 @@ typedef int MPL_gpu_device_handle_t;
 typedef struct hipPointerAttribute_t MPL_gpu_device_attr;
 typedef hipStream_t MPL_gpu_stream_t;
 
+typedef volatile int MPL_gpu_event_t;
+
 #define MPL_GPU_STREAM_DEFAULT 0
 #define MPL_GPU_DEVICE_INVALID -1
 

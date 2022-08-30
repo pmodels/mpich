@@ -24,6 +24,9 @@ struct MPIR_Stream {
         void *dummy;            /* to force a minimum pointer alignment, required by handlemem */
     } u;
     int vci;
+#ifdef MPID_DEV_STREAM_DECL
+     MPID_DEV_STREAM_DECL
+#endif
 };
 
 extern MPIR_Object_alloc_t MPIR_Stream_mem;
