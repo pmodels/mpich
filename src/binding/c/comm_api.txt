@@ -21,7 +21,7 @@ MPI_Comm_create_group:
     .extra: errtest_comm_intra
 
 MPI_Comm_dup:
-    .desc: Duplicates an existing communicator with all its cached information
+    .desc: Duplicates an existing communicator
     .seealso: MPI_Comm_free, MPI_Keyval_create, MPI_Attr_put, MPI_Attr_delete, MPI_Comm_create_keyval, MPI_Comm_set_attr, MPI_Comm_delete_attr
 /*
     Notes:
@@ -48,7 +48,7 @@ MPI_Comm_dup:
 */
 
 MPI_Comm_dup_with_info:
-    .desc: Duplicates an existing communicator with all its cached information
+    .desc: Duplicates an existing communicator using the supplied info hints
     .seealso: MPI_Comm_dup, MPI_Comm_free, MPI_Keyval_create, MPI_Attr_put, MPI_Attr_delete, MPI_Comm_create_keyval, MPI_Comm_set_attr, MPI_Comm_delete_attr
 /*
     Notes:
