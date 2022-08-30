@@ -134,6 +134,8 @@ typedef struct MPII_Dataloop {
     MPI_Aint el_size;
     MPI_Aint el_extent;
     MPI_Datatype el_type;
+    int is_contig;
+    MPI_Aint num_contig;
 
     MPI_Aint dloop_sz;
 } MPII_Dataloop;
