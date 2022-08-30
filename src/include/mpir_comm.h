@@ -271,6 +271,18 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr);
 void MPIR_stream_comm_init(MPIR_Comm * comm_ptr);
 void MPIR_stream_comm_free(MPIR_Comm * comm_ptr);
 int MPIR_Comm_copy_stream(MPIR_Comm * oldcomm, MPIR_Comm * newcomm);
+int MPIR_get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_stream);
+
+MPL_STATIC_INLINE_PREFIX MPIR_Stream *MPIR_stream_comm_get_local_stream(MPIR_Comm * comm_ptr)
+{
+    if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
+        return comm_ptr->stream_comm.single.stream;
+    } else if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
+        return comm_ptr->stream_comm.multiplex.local_streams[comm_ptr->rank];
+    } else {
+        return NULL;
+    }
+}
 
 #define MPIR_Comm_add_ref(comm_p_) \
     do { MPIR_Object_add_ref((comm_p_)); } while (0)

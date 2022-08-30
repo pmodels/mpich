@@ -14,6 +14,9 @@ typedef int MPL_gpu_device_handle_t;
 typedef struct cudaPointerAttributes MPL_gpu_device_attr;
 typedef cudaStream_t MPL_gpu_stream_t;
 
+/* Note: event variable need be allocated on a gpu registered host buffer for it to work */
+typedef volatile int MPL_gpu_event_t;
+
 #define MPL_GPU_STREAM_DEFAULT 0
 #define MPL_GPU_DEVICE_INVALID -1
 

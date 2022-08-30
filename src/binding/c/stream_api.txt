@@ -23,6 +23,16 @@ MPIX_Comm_get_stream:
     idx: INDEX
     stream: STREAM, direction=out, [stream object]
 
+MPIX_Stream_progress:
+    stream: STREAM, [stream object]
+    .impl: mpid
+
+MPIX_Start_progress_thread:
+    stream: STREAM, [stream object]
+
+MPIX_Stop_progress_thread:
+    stream: STREAM, [stream object]
+
 MPIX_Stream_send:
     buf: BUFFER, constant=True, [initial address of send buffer]
     count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
@@ -155,6 +165,8 @@ MPIX_Send_enqueue:
     dest: RANK, [rank of destination]
     tag: TAG, [message tag]
     comm: COMMUNICATOR
+    .impl: mpid
+    .decl: MPIR_Send_enqueue_impl
 
 MPIX_Recv_enqueue:
     buf: BUFFER, direction=out, [initial address of receive buffer]
@@ -164,6 +176,8 @@ MPIX_Recv_enqueue:
     tag: TAG, [message tag or MPI_ANY_TAG]
     comm: COMMUNICATOR
     status: STATUS, direction=out
+    .impl: mpid
+    .decl: MPIR_Recv_enqueue_impl
 
 MPIX_Isend_enqueue:
     buf: BUFFER, constant=True, [initial address of send buffer]
@@ -173,6 +187,8 @@ MPIX_Isend_enqueue:
     tag: TAG, [message tag]
     comm: COMMUNICATOR
     request: REQUEST, direction=out
+    .impl: mpid
+    .decl: MPIR_Isend_enqueue_impl
 
 MPIX_Irecv_enqueue:
     buf: BUFFER, direction=out, [initial address of receive buffer]
@@ -180,18 +196,23 @@ MPIX_Irecv_enqueue:
     datatype: DATATYPE, [datatype of each receive buffer element]
     source: RANK, [rank of source or MPI_ANY_SOURCE]
     tag: TAG, [message tag or MPI_ANY_TAG]
-
     comm: COMMUNICATOR
     request: REQUEST, direction=out
+    .impl: mpid
+    .decl: MPIR_Irecv_enqueue_impl
 
 MPIX_Wait_enqueue:
     request: REQUEST, direction=inout, [request]
     status: STATUS, direction=out
+    .impl: mpid
+    .decl: MPIR_Wait_enqueue_impl
 
 MPIX_Waitall_enqueue:
     count: ARRAY_LENGTH_NNI, [lists length]
     array_of_requests: REQUEST, direction=inout, length=count, [array of requests]
     array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects]
+    .impl: mpid
+    .decl: MPIR_Waitall_enqueue_impl
 { -- error_check -- array_of_statuses
     if (count > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);

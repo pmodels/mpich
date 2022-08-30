@@ -179,6 +179,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm *);
 int MPID_Comm_free_hook(MPIR_Comm *);
 int MPID_Comm_set_hints(MPIR_Comm *, MPIR_Info *);
 int MPID_Comm_commit_post_hook(MPIR_Comm *);
+int MPID_Stream_create_hook(MPIR_Stream * stream);
+int MPID_Stream_free_hook(MPIR_Stream * stream);
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm *, MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *, MPI_Aint, MPI_Datatype, int, MPIR_Comm *,
                                         MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
@@ -313,6 +315,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscatter(const void *, MPI_Aint, MPI_Datatype,
 MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *, const MPI_Aint *, const MPI_Aint *,
                                             MPI_Datatype, void *, MPI_Aint, MPI_Datatype, int,
                                             MPIR_Comm *, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
+int MPID_Send_enqueue(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                      int dest, int tag, MPIR_Comm * comm_ptr);
+int MPID_Recv_enqueue(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                      int source, int tag, MPIR_Comm * comm_ptr, MPI_Status * status);
+int MPID_Isend_enqueue(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                       int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** req);
+int MPID_Irecv_enqueue(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                       int source, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** req);
+int MPID_Wait_enqueue(MPIR_Request * req_ptr, MPI_Status * status);
+int MPID_Waitall_enqueue(int count, MPI_Request * array_of_requests,
+                         MPI_Status * array_of_statuses);
 int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg);
 
 /* This function is not exposed to the upper layers but functions in a way

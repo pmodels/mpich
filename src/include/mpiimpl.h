@@ -177,7 +177,6 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_pt2pt.h"
 #include "mpir_ext.h"
 #include "mpir_gpu.h"
-#include "mpir_stream.h"
 
 #ifdef HAVE_CXX_BINDING
 #include "mpii_cxxinterface.h"
@@ -202,6 +201,7 @@ typedef struct MPIR_Stream MPIR_Stream;
 /*****************************************************************************/
 
 #include "mpir_thread.h"        /* come first as mutexes are often depended on, e.g. request */
+#include "mpir_stream.h"
 #include "mpir_err.h"
 #include "mpir_attr.h"
 #include "mpir_group.h"
