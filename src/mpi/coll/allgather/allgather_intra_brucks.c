@@ -28,7 +28,7 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
     MPI_Aint recvtype_extent, recvtype_sz;
     int pof2, src, rem;
     void *tmp_buf = NULL;
-    int curr_cnt, dst;
+    int dst;
 
     MPIR_CHKLMEM_DECL(1);
 
@@ -58,6 +58,7 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
 
     /* do the first \floor(\lg p) steps */
 
+    MPI_Aint curr_cnt;
     curr_cnt = recvcount;
     pof2 = 1;
     while (pof2 <= comm_size / 2) {

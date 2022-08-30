@@ -349,7 +349,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
     MPIDI_POSIX_per_call_ibcast_info_t *data;
     int i;
     MPI_Aint num_chunks, chunk_count_floor, chunk_count_ceil;
-    int offset = 0, is_contig, ori_count = count, vtx_id;
+    int offset = 0, is_contig, vtx_id;
+    MPI_Aint ori_count = count;
     MPI_Aint type_size, nbytes, true_lb, true_extent;
     void *ori_local_buf = local_buf;
     MPI_Datatype ori_datatype = datatype;
@@ -412,7 +413,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
      * chunk. */
 
     for (i = 0; i < num_chunks; i++) {
-        int chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
+        MPI_Aint chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
         int n_incoming = 0;
         if (i == 0 && !is_contig) {
             /* Create dependence from the pack vertex to the first vertex of the first chunk */
@@ -488,9 +489,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
         if (my_rank != root) {
             /* Non-root unpack the data if expecting non-contiguous datatypes */
             /* Dependency is created from the last vertices of each chunk to the unpack vertex */
+            MPIR_Assert(num_chunks <= INT_MAX);
             mpi_errno =
                 MPIR_TSP_sched_localcopy(local_buf, nbytes, MPI_BYTE, ori_local_buf, ori_count,
-                                         ori_datatype, sched, num_chunks, sixth_vtx_id, &vtx_id);
+                                         ori_datatype, sched, (int) num_chunks, sixth_vtx_id,
+                                         &vtx_id);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }

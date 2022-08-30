@@ -54,10 +54,9 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, dst;
     int relative_rank, mask;
-    int scatter_size, nbytes, curr_size, incoming_count;
-    int type_size, j, k, i, tmp_mask, is_contig;
-    int relative_dst, dst_tree_root, my_tree_root, send_offset;
-    int recv_offset, tree_root, nprocs_completed, offset;
+    int j, k, i, tmp_mask, is_contig;
+    int relative_dst, dst_tree_root, my_tree_root;
+    int tree_root, nprocs_completed;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf;
     struct MPII_Ibcast_state *ibcast_state;
@@ -78,6 +77,7 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
         MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
+    MPI_Aint type_size, nbytes;
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
 
@@ -113,6 +113,7 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
     mpi_errno = MPII_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, nbytes, s);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPI_Aint scatter_size, curr_size, incoming_count;
     /* this is the block size used for the scatter operation */
     scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
@@ -148,6 +149,7 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
         my_tree_root = relative_rank >> i;
         my_tree_root <<= i;
 
+        MPI_Aint send_offset, recv_offset;
         send_offset = my_tree_root * scatter_size;
         recv_offset = dst_tree_root * scatter_size;
 
@@ -205,6 +207,7 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
             }
             k--;
 
+            MPI_Aint offset;
             offset = scatter_size * (my_tree_root + mask);
             tmp_mask = mask >> 1;
 

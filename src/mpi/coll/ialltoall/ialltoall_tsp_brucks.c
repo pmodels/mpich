@@ -42,7 +42,7 @@ cvars:
 * base k representation of the offset. The argument phase corresponds
 * to the phase in the brucks algorithm. */
 static int
-brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int count,
+brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Aint count,
                  int phase, int k, int digitval, int comm_size, int *pupsize,
                  MPIR_TSP_sched_t sched, int ninvtcs, int *invtcs)
 {

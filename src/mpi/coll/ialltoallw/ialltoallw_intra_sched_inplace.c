@@ -27,7 +27,6 @@ int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
     int comm_size, i, j;
     int dst, rank;
     MPI_Aint recvtype_sz;
-    int max_size;
     void *tmp_buf = NULL;
 
     comm_size = comm_ptr->local_size;
@@ -45,7 +44,7 @@ int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
      * conserve memory when using MPI_IN_PLACE for these routines.
      * Something like MADRE would probably generate a more optimal
      * algorithm. */
-    max_size = 0;
+    MPI_Aint max_size = 0;
     for (i = 0; i < comm_size; ++i) {
         /* only look at recvtypes/recvcounts because the send vectors are
          * ignored when sendbuf==MPI_IN_PLACE */

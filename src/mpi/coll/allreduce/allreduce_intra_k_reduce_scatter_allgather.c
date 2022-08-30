@@ -22,7 +22,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     int rem = 0, idx = 0, dst = 0, rank_for_offset;
     MPI_Aint true_extent, true_lb, extent;
     int current_cnt = 0, send_count = 0, recv_count = 0, send_cnt = 0, recv_cnt = 0, iter = 0;
-    int offset = 0, send_offset = 0, recv_offset = 0;
+    int offset = 0;
     int step1_sendto = -1, step1_nrecvs = 0, *step1_recvfrom = NULL;
     int step2_nphases = 0, **step2_nbrs;
     int i, j, x, phase, recv_phase, p_of_k, T;
@@ -31,7 +31,6 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     MPIR_Request *sreqs[MAX_RADIX * 2], *rreqs[MAX_RADIX * 2];
     MPIR_Request **send_reqs = NULL, **recv_reqs = NULL;
     int num_sreq = 0, num_rreq = 0, total_phases = 0;
-    int *cnts = NULL, *displs = NULL;
     void *tmp_recvbuf = NULL;
     MPIR_CHKLMEM_DECL(2);
 
@@ -145,8 +144,11 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
 
     /* Main recursive exchange step */
     if (in_step2) {
-        MPIR_CHKLMEM_MALLOC(cnts, int *, sizeof(int) * nranks, mpi_errno, "cnts", MPL_MEM_COLL);
-        MPIR_CHKLMEM_MALLOC(displs, int *, sizeof(int) * nranks, mpi_errno, "displs", MPL_MEM_COLL);
+        MPI_Aint *cnts = NULL, *displs = NULL;
+        MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, sizeof(MPI_Aint) * nranks, mpi_errno, "cnts",
+                            MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, sizeof(MPI_Aint) * nranks, mpi_errno, "displs",
+                            MPL_MEM_COLL);
         idx = 0;
         rem = nranks - p_of_k;
 
@@ -176,7 +178,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                 rank_for_offset = MPII_Recexchalgo_reverse_digits_step2(dst, nranks, k);
                 MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks,
                                                       &current_cnt, &offset);
-                send_offset = displs[offset] * extent;
+                MPI_Aint send_offset = displs[offset] * extent;
                 send_cnt = 0;
                 for (x = 0; x < current_cnt; x++)
                     send_cnt += cnts[offset + x];
@@ -197,7 +199,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                 MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks,
                                                       &current_cnt, &offset);
 
-                recv_offset = displs[offset] * extent;
+                MPI_Aint recv_offset = displs[offset] * extent;
                 recv_cnt = 0;
                 for (x = 0; x < current_cnt; x++)
                     recv_cnt += cnts[offset + x];
@@ -246,7 +248,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
 
                     MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j + iter, k, nranks,
                                                           &current_cnt, &offset);
-                    recv_offset = displs[offset] * extent;
+                    MPI_Aint recv_offset = displs[offset] * extent;
                     recv_count = 0;
                     for (x = 0; x < current_cnt; x++)
                         recv_count += cnts[offset + x];
@@ -269,7 +271,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                 rank_for_offset = MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k);
                 MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks, &current_cnt,
                                                       &offset);
-                send_offset = displs[offset] * extent;
+                MPI_Aint send_offset = displs[offset] * extent;
                 send_count = 0;
                 for (x = 0; x < current_cnt; x++)
                     send_count += cnts[offset + x];
@@ -300,7 +302,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                         rank_for_offset = MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k);
                         MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks,
                                                               &current_cnt, &offset);
-                        send_offset = displs[offset] * extent;
+                        MPI_Aint send_offset = displs[offset] * extent;
                         send_count = 0;
                         for (x = 0; x < current_cnt; x++)
                             send_count += cnts[offset + x];

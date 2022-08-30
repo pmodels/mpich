@@ -19,7 +19,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                                     int recv_pre_posted, MPIR_Errflag_t * errflag)
 {
     int rank, comm_size, i, j, k, *p, src = -1, dst, offset = 0;
-    int msgsize, is_contig;
+    int is_contig;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
@@ -98,7 +98,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
             /* For large number of chunks, pre-posting all the receives can add overhead
              * so posting three IRecvs to keep the pipeline going*/
             for (i = 0; i < 3; i++) {
-                msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
+                MPI_Aint msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
 
                 if (src != -1) {        /* post receive from parent */
                     mpi_errno =
@@ -112,7 +112,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
         } else {
             /* For small number of chunks, all the receives can be pre-posted */
             for (i = 0; i < num_chunks; i++) {
-                msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
+                MPI_Aint msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
                 if (src != -1) {
                     mpi_errno =
                         MPIC_Irecv((char *) sendbuf + offset, msgsize, MPI_BYTE,
@@ -126,7 +126,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
     offset = 0;
 
     for (i = 0; i < num_chunks; i++) {
-        msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
+        MPI_Aint msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
 
         if ((num_chunks <= 3 && is_nb) || (recv_pre_posted && is_nb)) {
             /* Wait to receive the chunk before it can be sent to the children */

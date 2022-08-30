@@ -18,7 +18,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
     int i;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
-    size_t extent, type_size;
+    MPI_Aint extent, type_size;
     MPI_Aint lb, true_extent;
     int size;
     int rank;
@@ -51,7 +51,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
      * correctly with pipelined broadcast, for example, buffer+offset
      * if being calculated correctly */
     for (i = 0; i < num_chunks; i++) {
-        int msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
+        MPI_Aint msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
 #ifdef HAVE_ERROR_CHECKING
         struct MPII_Ibcast_state *ibcast_state = NULL;
 

@@ -18,7 +18,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    int comm_size, rank, is_commutative, type_size ATTRIBUTE((unused));
+    int comm_size, rank, is_commutative;
     int mask, relrank, source, lroot;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
@@ -52,8 +52,6 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         MPIR_ERR_CHECK(mpi_errno);
     }
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* This code is from MPICH-1. */
 

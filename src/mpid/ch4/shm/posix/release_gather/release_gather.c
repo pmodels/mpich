@@ -244,7 +244,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             /* Calculate the amount of memory that would be allocated for flags */
             flags_shm_size = MPIDI_POSIX_RELEASE_GATHER_FLAG_SPACE_PER_RANK * num_ranks;
             /* Reset flags_shm_size so that the data buffers are aligned to the system pages */
-            flags_num_pages = flags_shm_size / (int) (pg_sz);
+            flags_num_pages = (int) (flags_shm_size / pg_sz);
             if (flags_shm_size % pg_sz != 0) {
                 flags_num_pages++;
             }
@@ -263,7 +263,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
         if (rank == 0) {
             /* rank 0 decides if more memory can be created and broadcasts the decision to other ranks */
-            tmp_shm_counter = MPL_atomic_acquire_load_uint64(MPIDI_POSIX_shm_limit_counter);
+            tmp_shm_counter =
+                (size_t) MPL_atomic_acquire_load_uint64(MPIDI_POSIX_shm_limit_counter);
 
             /* Check if it is allowed to create more shm on this node */
             if ((tmp_shm_counter + memory_to_be_allocated) >

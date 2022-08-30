@@ -52,7 +52,6 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
     int i, j, k;
     int mask, tmp_mask, dst;
     int dst_tree_root, my_tree_root, tree_root;
-    int offset, send_offset, recv_offset;
     MPI_Aint recvtype_extent;
     MPIR_Datatype *recv_dtp;
 
@@ -105,7 +104,7 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
         my_tree_root = rank >> i;
         my_tree_root <<= i;
 
-        /* saving an MPI_Aint into an int, overflow checked above */
+        MPI_Aint send_offset, recv_offset;
         send_offset = my_tree_root * recvcount * recvtype_extent;
         recv_offset = dst_tree_root * recvcount * recvtype_extent;
 
@@ -155,7 +154,7 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
             }
             k--;
 
-            /* FIXME: saving an MPI_Aint into an int */
+            MPI_Aint offset;
             offset = recvcount * (my_tree_root + mask) * recvtype_extent;
             tmp_mask = mask >> 1;
 
