@@ -98,7 +98,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
                         mpi_errno, "reqs", MPL_MEM_BUFFER);
 
     for (j = 0; j < num_chunks; j++) {
-        int msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
+        MPI_Aint msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
         void *reduce_address = (char *) reduce_buffer + offset * extent;
         MPIR_ERR_CHKANDJUMP(!reduce_address, mpi_errno, MPI_ERR_OTHER, "**nomem");
 

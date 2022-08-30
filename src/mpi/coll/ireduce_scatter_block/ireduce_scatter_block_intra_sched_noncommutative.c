@@ -19,8 +19,6 @@ int MPIR_Ireduce_scatter_block_intra_sched_noncommutative(const void *sendbuf, v
     int rank = comm_ptr->rank;
     int log2_comm_size;
     int i, k;
-    int recv_offset, send_offset;
-    int block_size, total_count, size;
     MPI_Aint true_extent, true_lb;
     int buf0_was_inout;
     void *tmp_buf0;
@@ -38,6 +36,7 @@ int MPIR_Ireduce_scatter_block_intra_sched_noncommutative(const void *sendbuf, v
     log2_comm_size = MPL_log2(comm_size);
 
     /* size of a block (count of datatype per block, NOT bytes per block) */
+    MPI_Aint block_size, total_count;
     block_size = recvcount;
     total_count = block_size * comm_size;
 
@@ -65,6 +64,7 @@ int MPIR_Ireduce_scatter_block_intra_sched_noncommutative(const void *sendbuf, v
     MPIR_SCHED_BARRIER(s);
     buf0_was_inout = 1;
 
+    MPI_Aint send_offset, recv_offset, size;
     send_offset = 0;
     recv_offset = 0;
     size = total_count;

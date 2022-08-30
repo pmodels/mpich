@@ -16,10 +16,11 @@ int MPIR_Bcast_intra_tree(void *buffer,
                           int branching_factor, int is_nb, MPIR_Errflag_t * errflag)
 {
     int rank, comm_size, src, dst, *p, j, k, lrank, is_contig;
-    int parent = -1, num_children = 0, num_req = 0, saved_count = count, is_root = 0;
+    int parent = -1, num_children = 0, num_req = 0, is_root = 0;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint nbytes = 0, type_size, actual_packed_unpacked_bytes, recvd_size;
+    MPI_Aint saved_count = count;
     MPI_Status status;
     void *send_buf = NULL;
     MPIR_Request **reqs = NULL;

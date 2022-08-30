@@ -9,7 +9,23 @@
 #include "topotree_util.h"
 #include "topotree.h"
 
-#include <math.h>
+static int calc_parent(int i, int k)
+{
+    int parent = i / k;
+    if (i % k == 0) {
+        parent--;
+    }
+    return parent;
+}
+
+static int calc_pow(int k, int n)
+{
+    int result = k;
+    for (int i = 1; i < n; i++) {
+        result *= k;
+    }
+    return result;
+}
 
 /* This function allocates and generates a template_tree based on k_val, tree_type, and
  * skewness for max_ranks.
@@ -26,7 +42,7 @@ int MPIDI_SHM_create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_v
     if (tree_type == MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY) {
         /* Notice that skewness matters only for kary trees */
         for (i = 0; i < max_ranks; ++i) {
-            MPIDI_SHM_TOPOTREE_PARENT(template_tree, i) = ceilf(i / (float) (k_val)) - 1;
+            MPIDI_SHM_TOPOTREE_PARENT(template_tree, i) = calc_parent(i, k_val);
             MPIDI_SHM_TOPOTREE_NUM_CHILD(template_tree, i) = 0;
             if (!right_skewed) {
                 for (j = 0; j < k_val; ++j) {
@@ -78,14 +94,14 @@ int MPIDI_SHM_create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_v
                 /* check if rank lies in this range */
                 for (j = 1; j < k_val; j++) {
                     if (lrank >= running_rank &&
-                        lrank < running_rank + pow(k_val, maxtime - time - 1)) {
+                        lrank < running_rank + calc_pow(k_val, maxtime - time - 1)) {
                         /* move to the corresponding subtree */
                         parent = current_rank;
                         current_rank = running_rank;
                         running_rank = current_rank + 1;
                         break;
                     }
-                    running_rank += pow(k_val, maxtime - time - 1);
+                    running_rank += calc_pow(k_val, maxtime - time - 1);
                 }
             }
             parent = parent == -1 ? -1 : (parent + root) % max_ranks;
@@ -102,7 +118,7 @@ int MPIDI_SHM_create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_v
                             fprintf(stderr, "Rank=%d, AddChild=%d, Index=%d\n", rank,
                                     (crank + root) % max_ranks, child_idx);
                     }
-                    crank += pow(k_val, maxtime - i - 1);
+                    crank += calc_pow(k_val, maxtime - i - 1);
                 }
             }
         }
@@ -222,7 +238,7 @@ void MPIDI_SHM_gen_package_tree(int num_packages, int k_val, bool right_skewed,
         if (i == 0) {
             MPIDI_SHM_TOPOTREE_PARENT(package_tree, i) = -1;
         } else {
-            parent_idx = floor((i - 1) / (float) (k_val));
+            parent_idx = calc_parent(i, k_val);
             MPIDI_SHM_TOPOTREE_PARENT(package_tree, i) = package_leaders[parent_idx];
         }
         MPIDI_SHM_TOPOTREE_NUM_CHILD(package_tree, i) = 0;
@@ -459,7 +475,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k, in
     int *max_entries_per_level = NULL;
     int **ranks_per_package = NULL;
     int *package_ctr = NULL;
-    size_t topo_depth = 0;
+    int topo_depth = 0;
     int package_level = 0, i, max_ranks_per_package = 0;
     bool mapfail_flag = false;
 

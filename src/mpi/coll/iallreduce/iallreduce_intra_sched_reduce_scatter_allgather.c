@@ -13,10 +13,9 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, newrank, pof2, rem;
-    int i, send_idx, recv_idx, last_idx, mask, newdst, dst, send_cnt, recv_cnt;
+    int i, send_idx, recv_idx, last_idx, mask, newdst, dst;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
-    int *cnts, *disps;
     MPIR_CHKLMEM_DECL(2);
 
 #ifdef HAVE_ERROR_CHECKING
@@ -92,8 +91,10 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
          * calculated directly during the loop, rather than requiring a less-scalable
          * "2*pof2"-sized memory allocation */
 
-        MPIR_CHKLMEM_MALLOC(cnts, int *, pof2 * sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(disps, int *, pof2 * sizeof(int), mpi_errno, "displacements",
+        MPI_Aint *cnts, *disps;
+        MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "counts",
+                            MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "displacements",
                             MPL_MEM_BUFFER);
 
         MPIR_Assert(count >= pof2);     /* the cnts calculations assume this */
@@ -114,6 +115,7 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
             /* find real rank of dest */
             dst = (newdst < rem) ? newdst * 2 + 1 : newdst + rem;
 
+            MPI_Aint send_cnt, recv_cnt;
             send_cnt = recv_cnt = 0;
             if (newrank < newdst) {
                 send_idx = recv_idx + pof2 / (mask * 2);
@@ -169,6 +171,7 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
             /* find real rank of dest */
             dst = (newdst < rem) ? newdst * 2 + 1 : newdst + rem;
 
+            MPI_Aint send_cnt, recv_cnt;
             send_cnt = recv_cnt = 0;
             if (newrank < newdst) {
                 /* update last_idx except on first iteration */

@@ -24,14 +24,13 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    int nbytes, recvtype_sz, newtype_size;
     int rank, comm_size;
     void *tmp_buf = NULL;
+    MPI_Aint recvtype_sz, newtype_size;
     MPI_Aint sendtype_extent, recvtype_extent;
     int pof2, dst, src;
     int count, block;
     MPI_Datatype newtype;
-    int *displs;
     MPIR_CHKLMEM_DECL(1);       /* displs */
 
 #ifdef HAVE_ERROR_CHECKING
@@ -47,6 +46,7 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     /* allocate temporary buffer */
     /* must be same size as entire recvbuf for Phase 3 */
+    MPI_Aint nbytes;
     nbytes = recvtype_sz * recvcount * comm_size;
     tmp_buf = MPIR_Sched_alloc_state(s, nbytes);
     MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -73,7 +73,8 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     /* allocate displacements array for indexed datatype used in
      * communication */
 
-    MPIR_CHKLMEM_MALLOC(displs, int *, comm_size * sizeof(int), mpi_errno, "displs",
+    MPI_Aint *displs;
+    MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, comm_size * sizeof(MPI_Aint), mpi_errno, "displs",
                         MPL_MEM_BUFFER);
 
     pof2 = 1;
@@ -93,7 +94,7 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
         }
 
         mpi_errno =
-            MPIR_Type_create_indexed_block_impl(count, recvcount, displs, recvtype, &newtype);
+            MPIR_Type_create_indexed_block_large_impl(count, recvcount, displs, recvtype, &newtype);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&newtype);

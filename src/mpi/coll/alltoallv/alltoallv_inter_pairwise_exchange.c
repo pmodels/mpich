@@ -30,7 +30,7 @@ int MPIR_Alltoallv_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint *
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    int src, dst, rank, sendcount, recvcount;
+    int src, dst, rank;
     char *sendaddr, *recvaddr;
 
     local_size = comm_ptr->local_size;
@@ -44,6 +44,7 @@ int MPIR_Alltoallv_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint *
     /* Use pairwise exchange algorithm. */
     max_size = MPL_MAX(local_size, remote_size);
     for (i = 0; i < max_size; i++) {
+        MPI_Aint sendcount, recvcount;
         src = (rank - i + max_size) % max_size;
         dst = (rank + i) % max_size;
         if (src >= remote_size) {

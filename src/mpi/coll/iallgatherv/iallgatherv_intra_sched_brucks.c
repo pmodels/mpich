@@ -13,8 +13,7 @@ int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, j, i;
     MPI_Aint recvtype_extent, recvtype_sz;
-    int send_cnt, dst, total_count, pof2, src, rem;
-    int incoming_count, curr_count;
+    int dst, pof2, src, rem;
     void *tmp_buf;
 
     comm_size = comm_ptr->local_size;
@@ -23,6 +22,7 @@ int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < comm_size; i++)
         total_count += recvcounts[i];
@@ -57,13 +57,14 @@ int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
      */
     /* curr_count is the amount of data (in counts of recvtype) that we have
      * right now, starting with the block we copied in the previous step */
+    MPI_Aint curr_count;
     curr_count = recvcounts[rank];
     pof2 = 1;
     while (pof2 <= comm_size / 2) {
         src = (rank + pof2) % comm_size;
         dst = (rank - pof2 + comm_size) % comm_size;
 
-        incoming_count = 0;
+        MPI_Aint incoming_count = 0;
         for (i = 0; i < pof2; ++i) {
             incoming_count += recvcounts[(src + i) % comm_size];
         }
@@ -87,11 +88,11 @@ int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
         src = (rank + pof2) % comm_size;
         dst = (rank - pof2 + comm_size) % comm_size;
 
-        send_cnt = 0;
+        MPI_Aint cnt = 0;
         for (i = 0; i < rem; i++)
-            send_cnt += recvcounts[(rank + i) % comm_size];
+            cnt += recvcounts[(rank + i) % comm_size];
 
-        mpi_errno = MPIR_Sched_send(tmp_buf, send_cnt * recvtype_sz, MPI_BYTE, dst, comm_ptr, s);
+        mpi_errno = MPIR_Sched_send(tmp_buf, cnt * recvtype_sz, MPI_BYTE, dst, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         /* sendrecv, no barrier */
         mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + curr_count * recvtype_sz),
@@ -104,6 +105,7 @@ int MPIR_Iallgatherv_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     /* Rotate blocks in tmp_buf down by (rank) blocks and store
      * result in recvbuf. */
 
+    MPI_Aint send_cnt;
     send_cnt = 0;
     for (i = 0; i < (comm_size - rank); i++) {
         j = (rank + i) % comm_size;

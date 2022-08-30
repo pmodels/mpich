@@ -42,10 +42,10 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int comm_size, rank, type_size ATTRIBUTE((unused)), pof2, rem, newrank;
-    int mask, *cnts, *disps, i, j, send_idx = 0;
+    int comm_size, rank, pof2, rem, newrank;
+    int mask, i, j, send_idx = 0;
     int recv_idx, last_idx = 0, newdst;
-    int dst, send_cnt, recv_cnt, newroot, newdst_tree_root, newroot_tree_root;
+    int dst, newroot, newdst_tree_root, newroot_tree_root;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
 
@@ -77,8 +77,6 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         MPIR_ERR_CHECK(mpi_errno);
     }
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to comm_size */
     pof2 = comm_ptr->coll.pof2;
@@ -154,8 +152,10 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
     /* We allocate these arrays on all processes, even if newrank=-1,
      * because if root is one of the excluded processes, we will
      * need them on the root later on below. */
-    MPIR_CHKLMEM_MALLOC(cnts, int *, pof2 * sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);
-    MPIR_CHKLMEM_MALLOC(disps, int *, pof2 * sizeof(int), mpi_errno, "displacements",
+    MPI_Aint *cnts, *disps;
+    MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "counts",
+                        MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "displacements",
                         MPL_MEM_BUFFER);
 
     if (newrank != -1) {
@@ -179,6 +179,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
             /* find real rank of dest */
             dst = (newdst < rem) ? newdst * 2 : newdst + rem;
 
+            MPI_Aint send_cnt, recv_cnt;
             send_cnt = recv_cnt = 0;
             if (newrank < newdst) {
                 send_idx = recv_idx + pof2 / (mask * 2);
@@ -319,6 +320,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
             newroot_tree_root = newroot >> j;
             newroot_tree_root <<= j;
 
+            MPI_Aint send_cnt, recv_cnt;
             send_cnt = recv_cnt = 0;
             if (newrank < newdst) {
                 /* update last_idx except on first iteration */

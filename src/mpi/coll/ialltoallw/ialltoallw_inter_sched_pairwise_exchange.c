@@ -24,7 +24,7 @@ int MPIR_Ialltoallw_inter_sched_pairwise_exchange(const void *sendbuf, const MPI
 */
     int mpi_errno = MPI_SUCCESS;
     int local_size, remote_size, max_size, i;
-    int src, dst, rank, sendcount, recvcount;
+    int src, dst, rank;
     char *sendaddr, *recvaddr;
     MPI_Datatype sendtype, recvtype;
 
@@ -35,6 +35,7 @@ int MPIR_Ialltoallw_inter_sched_pairwise_exchange(const void *sendbuf, const MPI
     /* Use pairwise exchange algorithm. */
     max_size = MPL_MAX(local_size, remote_size);
     for (i = 0; i < max_size; i++) {
+        MPI_Aint sendcount, recvcount;
         src = (rank - i + max_size) % max_size;
         dst = (rank + i) % max_size;
         if (src >= remote_size) {
