@@ -28,8 +28,8 @@ static int errs;
 
 /* Sets elements corresponding to count=1 of the given MPI datatype, using
  * set_elements and set_elements_x.  Checks expected values are returned by
- * get_elements, get_elements_x, and get_count (including MPI_UNDEFINED
- * clipping) */
+ * get_elements, get_elements_x, get_elements_c, and get_count (including
+ * MPI_UNDEFINED clipping) */
 static void check_set_elements(MPI_Status status, MPI_Datatype type, MPI_Count expected)
 {
     MPI_Count elements_x;
@@ -60,6 +60,21 @@ static void check_set_elements(MPI_Status status, MPI_Datatype type, MPI_Count e
     }
     check(elements_x == expected);
     check(count == 1);
+
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
+    elements = elements_x = count = 0xfeedface;
+    MPI_Status_set_elements_c(&status, type, 1);
+    MPI_Get_elements(&status, type, &elements);
+    MPI_Get_elements_c(&status, type, &elements_x);
+    MPI_Get_count(&status, type, &count);
+    if (expected > INT_MAX) {
+        check(elements == MPI_UNDEFINED);
+    } else {
+        check(elements == (int) expected);
+    }
+    check(elements_x == expected);
+    check(count == 1);
+#endif
 }
 
 int main(int argc, char *argv[])
