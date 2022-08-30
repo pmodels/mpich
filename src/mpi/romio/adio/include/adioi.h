@@ -48,6 +48,7 @@ struct ADIOI_Hints_struct {
     int start_iodevice;
     int min_fdomain_size;
     int synchronizing_flush;    /* "romio_synchronized_flush" hint */
+    int visibility_immediate;   /* "romio_visibility_immediate" hint */
     char *cb_config_list;
     int *ranklist;
     union {
