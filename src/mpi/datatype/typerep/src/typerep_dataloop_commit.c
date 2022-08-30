@@ -380,10 +380,14 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     }
 
   clean_exit:
-    /* for now we just leave the intermediate dataloops in place.
-     * could remove them to save space if we wanted.
-     */
-
+    {
+        int is_contig;
+        MPI_Aint num_contig;
+        MPIR_Dataloop_update_contig(*dlp_p, typeptr->extent, typeptr->size);
+        MPIR_Dataloop_get_contig(*dlp_p, &is_contig, &num_contig);
+        typeptr->is_contig = is_contig;
+        typeptr->typerep.num_contig_blocks = num_contig;
+    }
     return;
 }
 
