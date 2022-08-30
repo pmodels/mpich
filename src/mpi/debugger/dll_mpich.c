@@ -1005,7 +1005,7 @@ static mqs_tword_t fetch_int(mqs_process * proc, mqs_taddr_t addr, mpich_process
 static mqs_tword_t fetch_int16(mqs_process * proc, mqs_taddr_t addr, mpich_process_info * p_info)
 {
     char buffer[8];             /* ASSUME an integer fits in 8 bytes */
-    int16_t res = 0;
+    mqs_tword_t res = 0;
 
     if (mqs_ok == dbgr_fetch_data(proc, addr, 2, buffer))
         dbgr_target_to_host(proc, buffer,
