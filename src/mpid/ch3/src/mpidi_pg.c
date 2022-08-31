@@ -554,7 +554,7 @@ static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
     MPIR_ERR_CHKANDJUMP1(len < 0 || len > sizeof(key), mpi_errno, MPI_ERR_OTHER, "**snprintf", "**snprintf %d", len);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
-    mpi_errno = MPIR_pmi_kvs_get(-1, key, buf, bufsize);
+    mpi_errno = MPIR_pmi_kvs_get(rank, key, buf, bufsize);
     MPIR_ERR_CHECK(mpi_errno);
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
 
