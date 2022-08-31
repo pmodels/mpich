@@ -147,7 +147,7 @@ int MPIR_Typerep_to_iov_offset(const void *buf, MPI_Aint count, MPI_Datatype dat
 }
 
 int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype datatype, MPI_Aint max_iov_bytes,
-                         MPI_Aint * iov_len)
+                         MPI_Aint * iov_len, MPI_Aint * actual_iov_bytes)
 {
     MPIR_FUNC_ENTER;
 
@@ -166,6 +166,9 @@ int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype datatype, MPI_Aint max_iov
 
     if (max_iov_bytes == -1 || max_iov_bytes >= count * size) { /* fast path */
         *iov_len = (MPI_Aint) max_iov_len;
+        if (actual_iov_bytes) {
+            *actual_iov_bytes = count * size;
+        }
     } else {    /* slow path */
         struct iovec *iov =
             (struct iovec *) MPL_malloc(max_iov_len * sizeof(struct iovec), MPL_MEM_DATATYPE);
@@ -177,6 +180,7 @@ int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype datatype, MPI_Aint max_iov
         MPL_free(iov);
 
         *iov_len = (MPI_Aint) actual_iov_len;
+        /* FIXME: set actual_iov_len */
     }
 
   fn_exit:

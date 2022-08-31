@@ -54,11 +54,11 @@ int MPIR_Typerep_to_iov_offset(const void *buf, MPI_Aint count, MPI_Datatype typ
                                MPI_Aint iov_offset, struct iovec *iov, MPI_Aint max_iov_len,
                                MPI_Aint * actual_iov_len);
 int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype type, MPI_Aint max_iov_bytes,
-                         MPI_Aint * iov_len);
+                         MPI_Aint * iov_len, MPI_Aint * actual_iov_bytes);
 
 /* We nearly always just want the total iov number */
 #define MPIR_Typerep_get_iov_len(count, type, iov_len) \
-    MPIR_Typerep_iov_len(count, type, -1, iov_len)
+    MPIR_Typerep_iov_len(count, type, -1, iov_len, NULL)
 
 #define MPIR_TYPEREP_FLAG_NONE          0x0UL
 #define MPIR_TYPEREP_FLAG_STREAM        0x1UL

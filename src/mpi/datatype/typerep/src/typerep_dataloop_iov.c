@@ -59,7 +59,7 @@ int MPIR_Typerep_to_iov_offset(const void *buf, MPI_Aint count, MPI_Datatype typ
 }
 
 int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype type, MPI_Aint max_iov_bytes,
-                         MPI_Aint * iov_len)
+                         MPI_Aint * iov_len, MPI_Aint * actual_iov_bytes)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -85,14 +85,18 @@ int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype type, MPI_Aint max_iov_byt
 
     if (max_iov_bytes >= count * type_size) {
         *iov_len = count * num_contig;
-        /* *actual_iov_bytes = count * type_size; */
+        if (actual_iov_bytes) {
+            *actual_iov_bytes = count * type_size;
+        }
         goto fn_exit;
     }
 
     if (is_contig) {
         /* only whole segment */
         *iov_len = 0;
-        /* *actual_iov_bytes = 0; */
+        if (actual_iov_bytes) {
+            *actual_iov_bytes = 0;
+        }
         goto fn_exit;
     }
 
@@ -109,7 +113,9 @@ int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype type, MPI_Aint max_iov_byt
         mpi_errno = MPIR_Dataloop_iov_len(dt_ptr->typerep.handle, &rem_bytes, iov_len);
         MPIR_ERR_CHECK(mpi_errno);
     }
-    /* *actual_iov_bytes = max_iov_bytes - rem_bytes; */
+    if (actual_iov_bytes) {
+        *actual_iov_bytes = max_iov_bytes - rem_bytes;
+    }
 
   fn_exit:
     return mpi_errno;
