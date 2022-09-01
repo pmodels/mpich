@@ -11,53 +11,23 @@
 #include "pmiserv_utils.h"
 #include "pmi_v2_common.h"
 
-static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[]);
-static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[]);
-static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[]);
-static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[]);
+static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+static HYD_status fn_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+static HYD_status fn_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+static HYD_status fn_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
 
 static struct HYD_pmcd_pmi_v2_reqs *pending_reqs = NULL;
 
-static HYD_status cmd_response(int fd, int pid, char *cmd)
+static HYD_status cmd_response(int fd, int pid, struct PMIU_cmd *pmi)
 {
-    char cmdlen[7];
     struct HYD_pmcd_hdr hdr;
-    int sent, closed;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PMI_RESPONSE;
     hdr.u.pmi.pid = pid;
-    hdr.u.pmi.pmi_version = 2;
-    hdr.buflen = 6 + strlen(cmd);
-    status = HYDU_sock_write(fd, &hdr, sizeof(hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send CMD_PMI_RESPONSE header to proxy\n");
-    HYDU_ASSERT(!closed, status);
-
-    MPL_snprintf(cmdlen, 7, "%6u", (unsigned) strlen(cmd));
-    status = HYDU_sock_write(fd, cmdlen, 6, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "error writing PMI line\n");
-    HYDU_ASSERT(!closed, status);
-
-    if (HYD_server_info.user_global.debug) {
-        HYDU_dump(stdout, "PMI response to fd %d pid %d: %s\n", fd, pid, cmd);
-    }
-
-    status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "error writing PMI line\n");
-    HYDU_ASSERT(!closed, status);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+    return HYD_pmcd_pmi_send(fd, pmi, &hdr, HYD_server_info.user_global.debug);
 }
 
-static HYD_status poke_progress(char *key)
+static HYD_status poke_progress(const char *key)
 {
     struct HYD_pmcd_pmi_v2_reqs *req, *list_head = NULL, *list_tail = NULL;
     int i, count;
@@ -85,11 +55,11 @@ static HYD_status poke_progress(char *key)
                 list_tail = req;
             }
         } else {
-            status = fn_kvs_get(req->fd, req->pid, req->pgid, req->args);
+            status = fn_kvs_get(req->fd, req->pid, req->pgid, req->pmi);
             HYDU_ERR_POP(status, "kvs_get returned error\n");
 
             /* Free the dequeued request */
-            HYDU_free_strlist(req->args);
+            PMIU_cmd_free(req->pmi);
             MPL_free(req);
         }
     }
@@ -106,27 +76,22 @@ static HYD_status poke_progress(char *key)
     goto fn_exit;
 }
 
-static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_pmi_kvs_pair *run;
     const char *key;
-    char *thrid, *val, *cmd;
-    struct HYD_string_stash stash;
-    struct PMIU_token *tokens;
-    int token_count;
+    const char *thrid;
+    const char *val;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
+    key = PMIU_cmd_find_keyval(pmi, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
-    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
+    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
@@ -145,31 +110,24 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
         }
     }
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=info-getjobattr-response;"), status);
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 2, "info-getjobattr-response");
     if (thrid) {
-        HYD_STRING_STASH(stash, MPL_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(thrid), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
-    HYD_STRING_STASH(stash, MPL_strdup("found="), status);
     if (val) {
-        HYD_STRING_STASH(stash, MPL_strdup("TRUE;value="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(val), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";rc=0;"), status);
+        PMIU_cmd_add_str(&pmi_response, "found", "TRUE");
+        PMIU_cmd_add_str(&pmi_response, "value", val);
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
     } else {
-        HYD_STRING_STASH(stash, MPL_strdup("FALSE;rc=0;"), status);
+        PMIU_cmd_add_str(&pmi_response, "found", "FALSE");
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
     }
 
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
-    MPL_free(cmd);
-
   fn_exit:
-    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -177,33 +135,27 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
-    struct HYD_string_stash stash;
-    char *key, *val, *thrid, *cmd;
+    const char *key, *val, *thrid;
     int ret;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct PMIU_token *tokens;
-    int token_count;
     struct HYD_pmcd_pmi_v2_reqs *req;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
+    key = PMIU_cmd_find_keyval(pmi, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
-    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "value");
+    val = PMIU_cmd_find_keyval(pmi, "value");
     if (val == NULL) {
         /* the user sent an empty string */
         val = MPL_strdup("");
     }
 
-    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
+    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
@@ -213,22 +165,15 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_add_kvs(key, val, pg_scratch->kvs, &ret);
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=kvs-put-response;"), status);
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 2, "kvs-put-response");
     if (thrid) {
-        HYD_STRING_STASH(stash, MPL_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(thrid), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
-    HYD_STRING_STASH(stash, MPL_strdup("rc="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(ret), status);
-    HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+    PMIU_cmd_add_int(&pmi_response, "rc", ret);
 
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
-    MPL_free(cmd);
 
     for (req = pending_reqs; req; req = req->next) {
         if (!strcmp(req->key, key)) {
@@ -240,7 +185,6 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     }
 
   fn_exit:
-    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -248,28 +192,23 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     int i, idx, found;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_kvs_pair *run;
-    char *key, *thrid, *cmd;
-    struct HYD_string_stash stash;
-    struct PMIU_token *tokens;
-    int token_count;
+    const char *key;
+    const char *thrid;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
+    key = PMIU_cmd_find_keyval(pmi, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
-    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
+    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
@@ -300,7 +239,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
         for (i = 0; i < pg->pg_process_count; i++) {
             if (pg_scratch->ecount[i].epoch < pg_scratch->ecount[idx].epoch) {
                 /* We haven't reached a barrier yet; queue up request */
-                status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, args, key, &pending_reqs);
+                status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, pmi, key, &pending_reqs);
                 HYDU_ERR_POP(status, "unable to queue request\n");
 
                 /* We are done */
@@ -309,30 +248,23 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
         }
     }
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=kvs-get-response;"), status);
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 2, "kvs-get-response");
     if (thrid) {
-        HYD_STRING_STASH(stash, MPL_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(thrid), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
     if (found) {
-        HYD_STRING_STASH(stash, MPL_strdup("found=TRUE;value="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(run->val), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+        PMIU_cmd_add_str(&pmi_response, "found", "TRUE");
+        PMIU_cmd_add_str(&pmi_response, "value", run->val);
     } else {
-        HYD_STRING_STASH(stash, MPL_strdup("found=FALSE;"), status);
+        PMIU_cmd_add_str(&pmi_response, "found", "FALSE");
     }
-    HYD_STRING_STASH(stash, MPL_strdup("rc=0;"), status);
+    PMIU_cmd_add_str(&pmi_response, "rc", "0");
 
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
-    MPL_free(cmd);
 
   fn_exit:
-    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -340,22 +272,17 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct HYD_string_stash stash;
-    char *cmd, *thrid;
-    struct PMIU_token *tokens;
-    int token_count, i;
+    const char *thrid;
+    int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
+    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
@@ -384,20 +311,15 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
         cur_epoch = pg_scratch->ecount[i].epoch;
     }
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=kvs-fence-response;"), status);
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 1, "kvs-fence-response");
     if (thrid) {
-        HYD_STRING_STASH(stash, MPL_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(thrid), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
-    HYD_STRING_STASH(stash, MPL_strdup("rc=0;"), status);
+    PMIU_cmd_add_str(&pmi_response, "rc", "0");
 
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
-    MPL_free(cmd);
 
     if (cur_epoch == pg_scratch->epoch) {
         pg_scratch->fence_count++;
@@ -417,7 +339,6 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     }
 
   fn_exit:
-    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -425,46 +346,23 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static void segment_tokens(struct PMIU_token *tokens, int token_count,
-                           struct HYD_pmcd_token_segment *segment_list, int *num_segments)
-{
-    int i, j;
-
-    j = 0;
-    segment_list[j].start_idx = 0;
-    segment_list[j].token_count = 0;
-    for (i = 0; i < token_count; i++) {
-        if (!strcmp(tokens[i].key, "subcmd")) {
-            j++;
-            segment_list[j].start_idx = i;
-            segment_list[j].token_count = 1;
-        } else {
-            segment_list[j].token_count++;
-        }
-    }
-    *num_segments = j + 1;
-}
-
-static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_proxy *proxy;
-    struct PMIU_token *tokens;
     struct HYD_exec *exec_list = NULL, *exec;
     struct HYD_env *env;
     struct HYD_node *node;
 
-    char *thrid;
-    char key[PMI_MAXKEYLEN], *val;
+    const char *thrid, *val;
+    char key[PMI_MAXKEYLEN];
     int maxprocs, preputcount, infokeycount, ret;
     int ncmds;
     char *execname, *path = NULL;
 
-    struct HYD_pmcd_token_segment *segment_list = NULL;
-
-    int token_count, i, j, k, new_pgid;
-    int argcnt, num_segments;
+    int i, j, k, new_pgid;
+    int argcnt;
     struct HYD_string_stash proxy_stash;
     char *control_port;
     struct HYD_string_stash stash;
@@ -474,38 +372,26 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     proxy_stash.strlist = NULL;
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
+    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
 
     /* Here's the order of things we do:
      *
-     *   1. Break the token list into multiple segments, each segment
-     *      corresponding to a command. Each command represents
-     *      information for one executable.
-     *
-     *   2. Allocate a process group for the new set of spawned
+     *   1. Allocate a process group for the new set of spawned
      *      processes
      *
-     *   3. Get all the common keys and deal with them
+     *   2. Get all the common keys and deal with them
      *
-     *   4. Create an executable list based on the segments.
+     *   3. Create an executable list and parse the arguments from
+     *      each segment.
      *
      *   5. Create a proxy list using the created executable list and
      *      spawn it.
      */
 
-    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "ncmds");
+    val = PMIU_cmd_find_keyval(pmi, "ncmds");
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR, "unable to find token: ncmds\n");
     ncmds = atoi(val);
-
-    HYDU_MALLOC_OR_JUMP(segment_list, struct HYD_pmcd_token_segment *,
-                        (ncmds + 1) * sizeof(struct HYD_pmcd_token_segment), status);
-    segment_tokens(tokens, token_count, segment_list, &num_segments);
-    HYDU_ASSERT((ncmds + 1) == num_segments, status);
-
 
     /* Allocate a new process group */
     for (pg = &HYD_server_info.pg_list; pg->next; pg = pg->next);
@@ -521,23 +407,20 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     pg->spawner_pg = proxy->pg;
 
-    for (j = 1; j <= ncmds; j++) {
+    for (j = 0; j < ncmds; j++) {
         /* For each segment, we create an exec structure */
-        val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                             segment_list[j].token_count, "maxprocs");
+        val = PMIU_cmd_find_keyval_segment(pmi, "maxprocs", "subcmd", j);
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: maxprocs\n");
         maxprocs = atoi(val);
         pg->pg_process_count += maxprocs;
 
-        val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                             segment_list[j].token_count, "argc");
+        val = PMIU_cmd_find_keyval_segment(pmi, "argc", "subcmd", j);
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: argc\n");
         argcnt = atoi(val);
 
-        val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                             segment_list[j].token_count, "infokeycount");
+        val = PMIU_cmd_find_keyval_segment(pmi, "infokeycount", "subcmd", j);
         if (val)
             infokeycount = atoi(val);
         else
@@ -558,27 +441,24 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
         /* Info keys */
         for (i = 0; i < infokeycount; i++) {
-            char *info_key, *info_val;
+            const char *info_key;
 
             MPL_snprintf(key, PMI_MAXKEYLEN, "infokey%d", i);
-            val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                                 segment_list[j].token_count, key);
+            val = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j);
             HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                                 "unable to find token: %s\n", key);
             info_key = val;
 
             MPL_snprintf(key, PMI_MAXKEYLEN, "infoval%d", i);
-            val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                                 segment_list[j].token_count, key);
+            val = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j);
             HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                                 "unable to find token: %s\n", key);
-            info_val = val;
-
             if (!strcmp(info_key, "path")) {
-                path = MPL_strdup(info_val);
+                path = MPL_strdup(val);
             } else if (!strcmp(info_key, "wdir")) {
-                exec->wdir = MPL_strdup(info_val);
+                exec->wdir = MPL_strdup(val);
             } else if (!strcmp(info_key, "host") || !strcmp(info_key, "hosts")) {
+                char *info_val = MPL_strdup(val);
                 char *saveptr;
                 char *host = strtok_r(info_val, ",", &saveptr);
                 while (host) {
@@ -586,11 +466,14 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                     HYDU_ERR_POP(status, "error creating node list\n");
                     host = strtok_r(NULL, ",", &saveptr);
                 }
+                MPL_free(info_val);
             } else if (!strcmp(info_key, "hostfile")) {
+                char *info_val = MPL_strdup(val);
                 pg->user_node_list = NULL;
                 status = HYDU_parse_hostfile(info_val, &pg->user_node_list,
                                              HYDU_process_mfile_token);
                 HYDU_ERR_POP(status, "error parsing hostfile\n");
+                MPL_free(info_val);
             } else {
                 /* Unrecognized info key; ignore */
             }
@@ -599,8 +482,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         status = HYDU_correct_wdir(&exec->wdir);
         HYDU_ERR_POP(status, "unable to correct wdir\n");
 
-        val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                             segment_list[j].token_count, "subcmd");
+        val = PMIU_cmd_find_keyval_segment(pmi, "subcmd", "subcmd", j);
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: subcmd\n");
         if (path == NULL)
@@ -618,8 +500,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         exec->exec[i++] = execname;
         for (k = 0; k < argcnt; k++) {
             MPL_snprintf(key, PMI_MAXKEYLEN, "argv%d", k);
-            val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                                 segment_list[j].token_count, key);
+            val = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j);
             HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                                 "unable to find token: %s\n", key);
             exec->exec[i++] = MPL_strdup(val);
@@ -648,22 +529,22 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     /* Get the common keys and deal with them */
-    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "preputcount");
+    val = PMIU_cmd_find_keyval(pmi, "preputcount");
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: preputcount\n");
     preputcount = atoi(val);
 
     for (i = 0; i < preputcount; i++) {
-        char *preput_key, *preput_val;
+        const char *preput_key, *preput_val;
 
         MPL_snprintf(key, PMI_MAXKEYLEN, "ppkey%d", i);
-        val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, key);
+        val = PMIU_cmd_find_keyval(pmi, key);
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: %s\n", key);
         preput_key = val;
 
         MPL_snprintf(key, PMI_MAXKEYLEN, "ppval%d", i);
-        val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, key);
+        val = PMIU_cmd_find_keyval(pmi, key);
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: %s\n", key);
         preput_val = val;
@@ -715,32 +596,21 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     {
-        char *cmd;
-
-        HYD_STRING_STASH_INIT(stash);
-        HYD_STRING_STASH(stash, MPL_strdup("cmd=spawn-response;"), status);
+        struct PMIU_cmd pmi_response;
+        PMIU_cmd_init(&pmi_response, 2, "spawn-response");
         if (thrid) {
-            HYD_STRING_STASH(stash, MPL_strdup("thrid="), status);
-            HYD_STRING_STASH(stash, MPL_strdup(thrid), status);
-            HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
         }
-        HYD_STRING_STASH(stash, MPL_strdup("rc=0;"), status);
-        HYD_STRING_STASH(stash, MPL_strdup("jobid="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(pg_scratch->kvs->kvsname), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
-        HYD_STRING_STASH(stash, MPL_strdup("nerrs=0;"), status);
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
+        PMIU_cmd_add_str(&pmi_response, "jobid", pg_scratch->kvs->kvsname);
+        PMIU_cmd_add_str(&pmi_response, "nerrs", "0");;
 
-        HYD_STRING_SPIT(stash, cmd, status);
-
-        status = cmd_response(fd, pid, cmd);
+        status = cmd_response(fd, pid, &pmi_response);
         HYDU_ERR_POP(status, "send command failed\n");
-        MPL_free(cmd);
     }
 
   fn_exit:
-    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYD_STRING_STASH_FREE(proxy_stash);
-    MPL_free(segment_list);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -748,56 +618,48 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_name_publish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
-    struct HYD_string_stash stash;
-    char *cmd, *thrid, *val, *name = NULL, *port = NULL;
-    int token_count, success;
-    struct PMIU_token *tokens = NULL;
+    const char *thrid, *val;
+    char *name = NULL, *port = NULL;
+    int success;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
-    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
-
-    if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
+    if ((val = PMIU_cmd_find_keyval(pmi, "name")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: name\n");
     name = MPL_strdup(val);
     HYDU_ERR_CHKANDJUMP(status, NULL == name, HYD_INTERNAL_ERROR, "%s", "");
 
-    if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "port")) == NULL)
+    if ((val = PMIU_cmd_find_keyval(pmi, "port")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: port\n");
     port = MPL_strdup(val);
 
     status = HYD_pmcd_pmi_publish(name, port, &success);
     HYDU_ERR_POP(status, "error publishing service\n");
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=name-publish-response;"), status);
+    struct PMIU_cmd pmi_response;
+    char tmp[100];
+    PMIU_cmd_init(&pmi_response, 2, "name-publish-response");
     if (thrid) {
-        HYD_STRING_STASH(stash, MPL_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(thrid), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
     if (!success) {
-        HYD_STRING_STASH(stash, MPL_strdup("rc=1;errmsg=duplicate_service_"), status);
-        HYD_STRING_STASH(stash, MPL_strdup(name), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
-    } else
-        HYD_STRING_STASH(stash, MPL_strdup("rc=0;"), status);
+        MPL_snprintf(tmp, 100, "duplicate_service_%s", name);
 
-    HYD_STRING_SPIT(stash, cmd, status);
+        PMIU_cmd_add_str(&pmi_response, "rc", "1");
+        PMIU_cmd_add_str(&pmi_response, "errmsg", tmp);
+    } else {
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
+    }
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
-    MPL_free(cmd);
 
   fn_exit:
-    if (tokens)
-        HYD_pmcd_pmi_free_tokens(tokens, token_count);
     MPL_free(name);
     MPL_free(port);
     HYDU_FUNC_EXIT();
@@ -807,51 +669,41 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_name_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
-    struct HYD_string_stash stash;
-    char *cmd, *thrid, *name;
-    int token_count, success;
-    struct PMIU_token *tokens = NULL;
+    const char *thrid, *name;
+    int success;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
-    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
-
-    if ((name = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
+    if ((name = PMIU_cmd_find_keyval(pmi, "name")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: name\n");
 
     status = HYD_pmcd_pmi_unpublish(name, &success);
     HYDU_ERR_POP(status, "error unpublishing service\n");
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=name-unpublish-response;"), status);
+    struct PMIU_cmd pmi_response;
+    char tmp[100];
+    PMIU_cmd_init(&pmi_response, 2, "name-unpublish-response");
     if (thrid) {
-        HYD_STRING_STASH(stash, MPL_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(thrid), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
-    if (success)
-        HYD_STRING_STASH(stash, MPL_strdup("rc=0;"), status);
-    else {
-        HYD_STRING_STASH(stash, MPL_strdup("rc=1;errmsg=service_"), status);
-        HYD_STRING_STASH(stash, MPL_strdup(name), status);
-        HYD_STRING_STASH(stash, MPL_strdup("_not_found;"), status);
+    if (success) {
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
+    } else {
+        MPL_snprintf(tmp, 100, "service_%s_not_found", name);
+
+        PMIU_cmd_add_str(&pmi_response, "rc", "1");
+        PMIU_cmd_add_str(&pmi_response, "errmsg", tmp);
     }
 
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
-    MPL_free(cmd);
 
   fn_exit:
-    if (tokens)
-        HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -859,51 +711,39 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_name_lookup(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
-    struct HYD_string_stash stash;
-    char *cmd, *thrid, *name, *value;
-    int token_count;
-    struct PMIU_token *tokens = NULL;
+    const char *thrid, *name, *value;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
-    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
-
-    if ((name = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
+    if ((name = PMIU_cmd_find_keyval(pmi, "name")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: name\n");
 
     status = HYD_pmcd_pmi_lookup(name, &value);
     HYDU_ERR_POP(status, "error while looking up service\n");
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("cmd=name-lookup-response;"), status);
+    struct PMIU_cmd pmi_response;
+    PMIU_cmd_init(&pmi_response, 2, "name-lookup-response");
     if (thrid) {
-        HYD_STRING_STASH(stash, MPL_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(thrid), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";"), status);
+        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
     if (value) {
-        HYD_STRING_STASH(stash, MPL_strdup("port="), status);
-        HYD_STRING_STASH(stash, MPL_strdup(value), status);
-        HYD_STRING_STASH(stash, MPL_strdup(";found=TRUE;rc=0;"), status);
+        PMIU_cmd_add_str(&pmi_response, "port", value);
+        PMIU_cmd_add_str(&pmi_response, "found", "TRUE");
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
     } else {
-        HYD_STRING_STASH(stash, MPL_strdup("found=FALSE;rc=1;"), status);
+        PMIU_cmd_add_str(&pmi_response, "found", "FALSE");
+        PMIU_cmd_add_str(&pmi_response, "rc", "1");
     }
 
-    HYD_STRING_SPIT(stash, cmd, status);
-
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
-    MPL_free(cmd);
 
   fn_exit:
-    if (tokens)
-        HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
