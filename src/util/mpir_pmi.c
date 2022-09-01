@@ -1092,6 +1092,86 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     goto fn_exit;
 }
 
+int MPIR_pmi_publish(const char name[], const char port[])
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+#ifdef USE_PMI2_API
+    /* release the global CS for PMI calls */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    pmi_errno = PMI2_Nameserv_publish(name, NULL, port);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    pmix_info_t *info;
+    PMIX_INFO_CREATE(info, 1);
+    MPL_strncpy(info[0].key, name, PMIX_MAX_KEYLEN);
+    info[0].value.type = PMIX_STRING;
+    info[0].value.data.string = MPL_direct_strdup(port);
+    pmi_errno = PMIx_Publish(info, 1);
+    PMIX_INFO_FREE(info, 1);
+#else
+    pmi_errno = PMI_Publish_name(name, port);
+#endif
+    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_NAME, "**namepubnotpub",
+                         "**namepubnotpub %s", name);
+
+  fn_fail:
+    return mpi_errno;
+}
+
+int MPIR_pmi_lookup(const char name[], char port[])
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+#ifdef USE_PMI2_API
+    /* release the global CS for PMI calls */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    pmi_errno = PMI2_Nameserv_lookup(name, NULL, port, MPI_MAX_PORT_NAME);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    pmix_pdata_t *pdata;
+    PMIX_PDATA_CREATE(pdata, 1);
+    MPL_strncpy(pdata[0].key, name, PMIX_MAX_KEYLEN);
+    pmi_errno = PMIx_Lookup(pdata, 1, NULL, 0);
+    if (pmi_errno == PMIX_SUCCESS) {
+        MPL_strncpy(port, pdata[0].value.data.string, MPI_MAX_PORT_NAME);
+    }
+    PMIX_PDATA_FREE(pdata, 1);
+#else
+    pmi_errno = PMI_Lookup_name(name, port);
+#endif
+    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_NAME, "**namepubnotfound",
+                         "**namepubnotfound %s", name);
+
+  fn_fail:
+    return mpi_errno;
+}
+
+int MPIR_pmi_unpublish(const char name[])
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+#ifdef USE_PMI2_API
+    /* release the global CS for PMI calls */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    pmi_errno = PMI2_Nameserv_unpublish(name, NULL);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    char *keys[2] = { (char *) name, NULL };
+    PMIx_Unpublish(keys, NULL, 0);
+#else
+    pmi_errno = PMI_Unpublish_name(name);
+#endif
+    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_SERVICE, "**namepubnotunpub",
+                         "**namepubnotunpub %s", name);
+
+  fn_fail:
+    return mpi_errno;
+}
+
 /* ---- static functions ---- */
 
 /* The following static function declares are only for build_nodemap() */

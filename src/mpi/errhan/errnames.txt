@@ -150,8 +150,8 @@ be in the range 0 to %d
  buffer size is %d
 **inttoosmall:An address does not fit into a Fortran INTEGER.  Use \
  MPI_Get_address instead
-**namepubnotpub:Lookup failed for service name 
-**namepubnotpub %s:Lookup failed for service name %s
+**namepubnotpub:Publish failed for service name
+**namepubnotpub %s:Publish failed for service name %s
 **nonamepub:No name publishing service available
 **namepubfile:Unable to publish service name
 **namepubfile %s %s %s:Unable to publish service name %s using file %s for \
