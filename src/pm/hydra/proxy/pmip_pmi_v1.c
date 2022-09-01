@@ -67,10 +67,10 @@ static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, cha
     MPL_free(tmp);
 
     HYD_pmcd_init_header(&hdr);
-    hdr.cmd = PMI_CMD;
-    hdr.pid = fd;
+    hdr.cmd = CMD_PMI;
+    hdr.u.pmi.pid = fd;
     hdr.buflen = strlen(buf);
-    hdr.pmi_version = 1;
+    hdr.u.pmi.pmi_version = 1;
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
                         HYDU_SOCK_COMM_MSGWAIT);

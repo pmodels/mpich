@@ -34,40 +34,46 @@ struct HYD_pmcd_init_hdr {
     int proxy_id;
 };
 
-struct HYD_pmcd_hdr {
-    /* The set of commands supported */
-    enum HYD_pmcd_cmd {
-        INVALID_CMD = 0,        /* for sanity testing */
+/* The set of commands supported */
+enum HYD_pmcd_cmd {
+    CMD_INVALID = 0,            /* for sanity testing */
 
-        /* UI to proxy commands */
-        PROC_INFO,
-        PMI_RESPONSE,
-        SIGNAL,
-        STDIN,
+    /* UI to proxy commands */
+    CMD_PROC_INFO,
+    CMD_PMI_RESPONSE,
+    CMD_SIGNAL,
+    CMD_STDIN,
 
-        /* Proxy to UI commands */
-        PID_LIST,
-        EXIT_STATUS,
-        PMI_CMD,
-        STDOUT,
-        STDERR,
-        PROCESS_TERMINATED
-    } cmd;
+    /* Proxy to UI commands */
+    CMD_PID_LIST,
+    CMD_EXIT_STATUS,
+    CMD_PMI,
+    CMD_STDOUT,
+    CMD_STDERR,
+    CMD_PROCESS_TERMINATED
+};
 
-    /* Generic */
-    int buflen;
-
-    /* PMI_CMD */
+/* PMI_CMD */
+struct HYD_hdr_pmi {
     int pid;                    /* ID of the requesting process */
     int pmi_version;            /* PMI version */
+};
 
-    /* STDOUT/STDERR */
+/* STDOUT/STDERR */
+struct HYD_hdr_io {
     int pgid;
     int proxy_id;
     int rank;
+};
 
-    /* SIGNAL */
-    int signum;
+struct HYD_pmcd_hdr {
+    enum HYD_pmcd_cmd cmd;
+    int buflen;
+    union {
+        int data;               /* for commands with a single integer data */
+        struct HYD_hdr_pmi pmi;
+        struct HYD_hdr_io io;
+    } u;
 };
 
 struct HYD_pmcd_token {
