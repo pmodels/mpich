@@ -315,8 +315,6 @@ int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype)
     MPIR_Datatype *dtp;
 
     MPIR_Datatype_get_ptr(oldtype, dtp);
-    if (dtp->is_committed)
-        MPIR_Dataloop_dup(dtp->typerep.handle, (void **) &newtype->typerep.handle);
 
     newtype->size = dtp->size;
     newtype->extent = dtp->extent;
