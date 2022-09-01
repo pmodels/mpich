@@ -113,5 +113,8 @@ void ADIOI_PVFS2_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     /* set the values for collective I/O and data sieving parameters */
     ADIOI_GEN_SetInfo(fd, users_info, error_code);
 
+    ADIOI_Info_set(info, "romio_visibility_immediate", "false");
+    fd->hints->visibility_immediate = 0;
+
     *error_code = MPI_SUCCESS;
 }
