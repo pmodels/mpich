@@ -172,6 +172,12 @@ int MPIR_pmi_init(void)
     pmix_value_t *pvalue = NULL;
 
     pmi_errno = PMIx_Init(&pmix_proc, NULL, 0);
+    if (pmi_errno == PMIX_ERR_UNREACH) {
+        /* no pmi server, assume we are a singleton */
+        rank = 0;
+        size = 1;
+        goto singleton_out;
+    }
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_init", "**pmix_init %d", pmi_errno);
 
@@ -187,6 +193,7 @@ int MPIR_pmi_init(void)
     PMIX_VALUE_RELEASE(pvalue);
 
     /* appnum, has_parent is not set for now */
+  singleton_out:
     appnum = 0;
     has_parent = 0;
 
