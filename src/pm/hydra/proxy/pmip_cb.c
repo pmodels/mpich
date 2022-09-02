@@ -706,6 +706,15 @@ static HYD_status launch_procs(void)
                                 "unable to change wdir to %s (%s)\n", exec->wdir,
                                 MPL_strerror(errno));
 
+        bool allocate_subdev = false;
+        int n_local_gpus = 0;
+        if (HYD_pmcd_pmip.user_global.gpu_subdevs_per_proc != HYD_GPUS_PER_PROC_AUTO) {
+            allocate_subdev = true;
+            n_local_gpus = HYD_pmcd_pmip.user_global.gpu_subdevs_per_proc;
+        } else {
+            allocate_subdev = false;
+            n_local_gpus = HYD_pmcd_pmip.user_global.gpus_per_proc;
+        }
         for (i = 0; i < exec->proc_count; i++) {
             /* FIXME: these envvars should be set by MPICH instead. See #2360 */
             str = HYDU_int_to_str(HYD_pmcd_pmip.local.proxy_process_count);
@@ -718,9 +727,11 @@ static HYD_status launch_procs(void)
             HYDU_ERR_POP(status, "unable to add env to list\n");
             MPL_free(str);
 
-            if (HYD_pmcd_pmip.user_global.gpus_per_proc == HYD_GPUS_PER_PROC_AUTO) {
+            if (HYD_pmcd_pmip.user_global.gpus_per_proc == HYD_GPUS_PER_PROC_AUTO
+                && HYD_pmcd_pmip.user_global.gpu_subdevs_per_proc == HYD_GPUS_PER_PROC_AUTO) {
                 /* nothing to do */
-            } else if (HYD_pmcd_pmip.user_global.gpus_per_proc == 0) {
+            } else if (HYD_pmcd_pmip.user_global.gpus_per_proc == 0
+                       || HYD_pmcd_pmip.user_global.gpu_subdevs_per_proc == 0) {
                 MPL_gpu_dev_affinity_to_env(0, NULL, &str);
 
                 status = HYDU_append_env_to_list(MPL_GPU_DEV_AFFINITY_ENV, str, &force_env);
@@ -735,22 +746,20 @@ static HYD_status launch_procs(void)
                 char *affinity_env_str = NULL;
 
                 MPL_gpu_get_dev_count(&dev_count, &max_dev_id);
-                MPL_gpu_get_dev_list(&n_dev_ids, &all_dev_ids, false);
-                child_dev_ids =
-                    (char **) MPL_malloc(HYD_pmcd_pmip.user_global.gpus_per_proc * sizeof(char *),
-                                         MPL_MEM_OTHER);
+                MPL_gpu_get_dev_list(&n_dev_ids, &all_dev_ids, allocate_subdev);
+                child_dev_ids = (char **) MPL_malloc(n_local_gpus * sizeof(char *), MPL_MEM_OTHER);
                 HYDU_ASSERT(child_dev_ids, status);
 
-                for (int k = 0; k < HYD_pmcd_pmip.user_global.gpus_per_proc; k++) {
-                    int p = process_id * HYD_pmcd_pmip.user_global.gpus_per_proc + k;
-                    int id_str_len = strlen(all_dev_ids[p % dev_count]);
+                for (int k = 0; k < n_local_gpus; k++) {
+                    int p = process_id * n_local_gpus + k;
+                    int idx = p % n_dev_ids;
+                    int id_str_len = strlen(all_dev_ids[idx]);
                     child_dev_ids[k] = (char *) MPL_malloc((id_str_len + 1) * sizeof(char),
                                                            MPL_MEM_OTHER);
-                    MPL_strncpy(child_dev_ids[k], all_dev_ids[p % dev_count], id_str_len + 1);
+                    MPL_strncpy(child_dev_ids[k], all_dev_ids[idx], id_str_len + 1);
                 }
 
-                MPL_gpu_dev_affinity_to_env(HYD_pmcd_pmip.user_global.gpus_per_proc, child_dev_ids,
-                                            &affinity_env_str);
+                MPL_gpu_dev_affinity_to_env(n_local_gpus, child_dev_ids, &affinity_env_str);
 
                 status = HYDU_append_env_to_list(MPL_GPU_DEV_AFFINITY_ENV, affinity_env_str,
                                                  &force_env);

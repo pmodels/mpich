@@ -204,6 +204,9 @@ static void set_default_values(void)
 
     if (HYD_server_info.user_global.gpus_per_proc == HYD_GPUS_PER_PROC_UNSET)
         HYD_server_info.user_global.gpus_per_proc = HYD_GPUS_PER_PROC_AUTO;
+
+    if (HYD_server_info.user_global.gpu_subdevs_per_proc == HYD_GPUS_PER_PROC_UNSET)
+        HYD_server_info.user_global.gpu_subdevs_per_proc = HYD_GPUS_PER_PROC_AUTO;
 }
 
 /* In case a boolean environment value is unparsable (not 1|0|yes|no|true|false|on|off),
