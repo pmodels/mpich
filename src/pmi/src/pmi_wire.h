@@ -26,6 +26,7 @@ struct PMIU_token {
 };
 
 struct PMIU_cmd {
+    bool buf_need_free;         /* if true, need call PMIU_cmd_free_buf to free buf */
     char *buf;                  /* buffer to hold the string before parsing */
     char *tmp_buf;              /* buffer to hold the serialization output */
     int version;                /* wire protocol: 1 or 2 */
@@ -43,6 +44,8 @@ int PMIU_cmd_parse(char *buf, int buflen, int version, struct PMIU_cmd *pmicmd);
 
 /* Construct MPII_pmi from scratch */
 void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd);
+/* same as PMIU_cmd_init, but uses static internal buffer */
+void PMIU_cmd_init_static(struct PMIU_cmd *pmicmd, int version, const char *cmd);
 void PMIU_cmd_add_token(struct PMIU_cmd *pmicmd, const char *token_str);
 void PMIU_cmd_add_str(struct PMIU_cmd *pmicmd, const char *key, const char *val);
 void PMIU_cmd_add_int(struct PMIU_cmd *pmicmd, const char *key, int val);

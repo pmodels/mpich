@@ -348,6 +348,7 @@ char *PMIU_wire_get_cmd(char *buf, int buflen, int pmi_version)
 /* Construct MPII_pmi from scratch */
 void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd)
 {
+    pmicmd->buf_need_free = false;
     pmicmd->buf = NULL;
     pmicmd->tmp_buf = NULL;
     pmicmd->version = version;
@@ -357,7 +358,9 @@ void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd)
 
 void PMIU_cmd_free_buf(struct PMIU_cmd *pmicmd)
 {
-    MPL_free(pmicmd->buf);
+    if (pmicmd->buf_need_free) {
+        MPL_free(pmicmd->buf);
+    }
     MPL_free(pmicmd->tmp_buf);
     pmicmd->buf = NULL;
     pmicmd->tmp_buf = NULL;
@@ -409,10 +412,24 @@ void PMIU_cmd_add_token(struct PMIU_cmd *pmicmd, const char *token_str)
  */
 #define MAX_TOKEN_BUF_SIZE 50   /* We only use it for e.g. "%d", "%p", etc.
                                  * The longest may be "infokey%d" */
+
+/* Initialize with static buffers, thus obviate the need to call PMIU_cmd_free_buf.
+ * Obviously it won't work for concurrent PMIU_cmd instances, but most PMIU_cmd
+ * usages are not concurrent.
+ */
+void PMIU_cmd_init_static(struct PMIU_cmd *pmicmd, int version, const char *cmd)
+{
+    static char buf[MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE];
+
+    PMIU_cmd_init(pmicmd, version, cmd);
+    pmicmd->buf = buf;
+}
+
 #define PMII_PMI_ALLOC(pmicmd) do { \
     if (pmicmd->buf == NULL) { \
         pmicmd->buf = MPL_malloc(MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE, MPL_MEM_OTHER); \
         PMIU_Assert(pmicmd->buf); \
+        pmicmd->buf_need_free = true; \
     } \
 } while (0)
 
@@ -750,6 +767,7 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
         } else {
             pmi_errno = PMIU_cmd_parse(recvbuf, strlen(recvbuf), PMIU_WIRE_V2, pmicmd);
         }
+        pmicmd->buf_need_free = true;
         PMIU_ERR_POP(pmi_errno);
 
         const char *thrid;
