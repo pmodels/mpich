@@ -51,8 +51,8 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         copy_sz = sdata_sz;
 
     /* Builtin types is the common case; optimize for it */
-    MPIR_Datatype_iscontig(sendtype, &sendtype_iscontig);
-    MPIR_Datatype_iscontig(recvtype, &recvtype_iscontig);
+    MPIR_Datatype_is_contig(sendtype, &sendtype_iscontig);
+    MPIR_Datatype_is_contig(recvtype, &recvtype_iscontig);
 
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_true_lb, &true_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &true_extent);
