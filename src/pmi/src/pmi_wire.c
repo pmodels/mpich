@@ -361,7 +361,6 @@ void PMIU_cmd_free_buf(struct PMIU_cmd *pmicmd)
     if (pmicmd->buf_need_free) {
         MPL_free(pmicmd->buf);
     }
-    MPL_free(pmicmd->tmp_buf);
     pmicmd->buf = NULL;
     pmicmd->tmp_buf = NULL;
 }
@@ -548,13 +547,15 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
     return pmi_copy;
 }
 
+
+#define MAX_TMP_BUF_SIZE 64*1024
+static char tmp_buf_for_output[MAX_TMP_BUF_SIZE];
+
 /* allocate serialization tmp_buf. Note: as safety, add 1 extra for NULL-termination */
 #define PMIU_CMD_ALLOC_TMP_BUF(pmicmd, len) \
     do { \
-        if (pmicmd->tmp_buf) { \
-            MPL_free(pmicmd->tmp_buf); \
-        } \
-        PMIU_CHK_MALLOC(pmicmd->tmp_buf, char *, len + 1, pmi_errno, PMIU_ERR_NOMEM, "buf"); \
+        assert(len + 1 < MAX_TMP_BUF_SIZE); \
+        pmicmd->tmp_buf = tmp_buf_for_output; \
     } while (0)
 
 /* serialization output */
