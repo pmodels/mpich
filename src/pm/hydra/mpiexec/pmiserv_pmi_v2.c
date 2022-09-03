@@ -111,7 +111,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, struct PMIU_cmd 
     }
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 2, "info-getjobattr-response");
+    PMIU_cmd_init_static(&pmi_response, 2, "info-getjobattr-response");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
@@ -166,7 +166,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 2, "kvs-put-response");
+    PMIU_cmd_init_static(&pmi_response, 2, "kvs-put-response");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
@@ -249,7 +249,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 2, "kvs-get-response");
+    PMIU_cmd_init_static(&pmi_response, 2, "kvs-get-response");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
@@ -312,7 +312,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 1, "kvs-fence-response");
+    PMIU_cmd_init_static(&pmi_response, 1, "kvs-fence-response");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
@@ -597,7 +597,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 
     {
         struct PMIU_cmd pmi_response;
-        PMIU_cmd_init(&pmi_response, 2, "spawn-response");
+        PMIU_cmd_init_static(&pmi_response, 2, "spawn-response");
         if (thrid) {
             PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
         }
@@ -643,7 +643,7 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, struct PMIU_cmd *pm
 
     struct PMIU_cmd pmi_response;
     char tmp[100];
-    PMIU_cmd_init(&pmi_response, 2, "name-publish-response");
+    PMIU_cmd_init_static(&pmi_response, 2, "name-publish-response");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
@@ -687,7 +687,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *
 
     struct PMIU_cmd pmi_response;
     char tmp[100];
-    PMIU_cmd_init(&pmi_response, 2, "name-unpublish-response");
+    PMIU_cmd_init_static(&pmi_response, 2, "name-unpublish-response");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
@@ -727,7 +727,7 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, struct PMIU_cmd *pmi
     HYDU_ERR_POP(status, "error while looking up service\n");
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 2, "name-lookup-response");
+    PMIU_cmd_init_static(&pmi_response, 2, "name-lookup-response");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
