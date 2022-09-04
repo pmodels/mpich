@@ -177,10 +177,20 @@ int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype datatype, MPI_Aint max_iov
         rc = yaksa_iov(NULL, count, type, 0, iov, max_iov_len, &actual_iov_len);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
-        MPL_free(iov);
+        *iov_len = 0;
+        *actual_iov_bytes = 0;
 
-        *iov_len = (MPI_Aint) actual_iov_len;
-        /* FIXME: set actual_iov_len */
+        *iov_len = 0;
+        *actual_iov_bytes = 0;
+        for (MPI_Aint i = 0; i < max_iov_len; i++) {
+            if (*actual_iov_bytes + iov[i].iov_len > max_iov_bytes) {
+                break;
+            }
+            *iov_len = i + 1;
+            *actual_iov_bytes += iov[i].iov_len;
+        }
+
+        MPL_free(iov);
     }
 
   fn_exit:
