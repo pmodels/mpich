@@ -730,7 +730,7 @@ const char *HYD_pmip_get_hwloc_xmlfile(void)
     HYDU_FUNC_ENTER();
 
     /* lazy init */
-    HYD_status status = HYDT_topo_hwloc_init(NULL, NULL, NULL);
+    HYD_status status ATTRIBUTE((unused)) = HYDT_topo_hwloc_init(NULL, NULL, NULL);
     assert(status == HYD_SUCCESS);
 
     HYDU_FUNC_EXIT();

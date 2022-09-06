@@ -187,8 +187,8 @@ static HYD_status cache_put_flush(struct pmip_pg *pg)
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
     for (int i = 0; i < pg->cache_put.keyval_len; i++) {
-        MPL_free(pg->cache_put.tokens[i].key);
-        MPL_free(pg->cache_put.tokens[i].val);
+        MPL_free((void *) pg->cache_put.tokens[i].key); /* cast away const qualifier */
+        MPL_free((void *) pg->cache_put.tokens[i].val); /* cast away const qualifier */
     }
     pg->cache_put.keyval_len = 0;
     PMIU_cmd_free_buf(&pmi);
