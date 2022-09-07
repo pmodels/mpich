@@ -42,7 +42,7 @@ static HYD_status bcast_keyvals(int fd, int pid)
 
     struct PMIU_cmd pmi;
     if (keyval_count) {
-        PMIU_cmd_init(&pmi, 1, "keyval_cache");
+        PMIU_cmd_init_static(&pmi, 1, "keyval_cache");
         arg_count = 1;
         for (run = pg_scratch->kvs->key_pair, j = 0; run; run = run->next, j++) {
             if (j < pg_scratch->keyval_dist_count)
@@ -58,7 +58,7 @@ static HYD_status bcast_keyvals(int fd, int pid)
                     HYDU_ERR_POP(status, "error writing PMI line\n");
                 }
 
-                PMIU_cmd_init(&pmi, 1, "keyval_cache");
+                PMIU_cmd_init_static(&pmi, 1, "keyval_cache");
                 arg_count = 1;
             }
         }
@@ -97,7 +97,7 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
         bcast_keyvals(fd, pid);
 
         struct PMIU_cmd pmi_response;
-        PMIU_cmd_init(&pmi_response, 1, "barrier_out");
+        PMIU_cmd_init_static(&pmi_response, 1, "barrier_out");
         for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
             status = cmd_response(tproxy->control_fd, pid, &pmi_response);
             HYDU_ERR_POP(status, "error writing PMI line\n");
@@ -184,7 +184,7 @@ static HYD_status fn_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 
     struct PMIU_cmd pmi_response;
   found_val:
-    PMIU_cmd_init(&pmi_response, 1, "get_result");
+    PMIU_cmd_init_static(&pmi_response, 1, "get_result");
     if (val) {
         PMIU_cmd_add_str(&pmi_response, "rc", "0");
         PMIU_cmd_add_str(&pmi_response, "msg", "success");
@@ -479,7 +479,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 
     {
         struct PMIU_cmd pmi_response;
-        PMIU_cmd_init(&pmi_response, 1, "spawn_result");
+        PMIU_cmd_init_static(&pmi_response, 1, "spawn_result");
         PMIU_cmd_add_str(&pmi_response, "rc", "0");
 
         status = cmd_response(fd, pid, &pmi_response);
@@ -520,7 +520,7 @@ static HYD_status fn_publish_name(int fd, int pid, int pgid, struct PMIU_cmd *pm
     HYDU_ERR_POP(status, "error publishing service\n");
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 1, "publish_result");
+    PMIU_cmd_init_static(&pmi_response, 1, "publish_result");
     if (success) {
         PMIU_cmd_add_str(&pmi_response, "info", "ok");
         PMIU_cmd_add_str(&pmi_response, "rc", "0");
@@ -562,7 +562,7 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, struct PMIU_cmd *
     HYDU_ERR_POP(status, "error unpublishing service\n");
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 1, "unpublish_result");
+    PMIU_cmd_init_static(&pmi_response, 1, "unpublish_result");
     if (success) {
         PMIU_cmd_add_str(&pmi_response, "info", "ok");
         PMIU_cmd_add_str(&pmi_response, "rc", "0");
@@ -598,7 +598,7 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, struct PMIU_cmd *pmi
     HYDU_ERR_POP(status, "error while looking up service\n");
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 1, "lookup_result");
+    PMIU_cmd_init_static(&pmi_response, 1, "lookup_result");
     if (value) {
         PMIU_cmd_add_str(&pmi_response, "port", value);
         PMIU_cmd_add_str(&pmi_response, "rc", "0");

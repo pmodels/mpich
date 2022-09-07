@@ -111,7 +111,7 @@ static HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi)
     }
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 2, "fullinit-response");
+    PMIU_cmd_init_static(&pmi_response, 2, "fullinit-response");
     PMIU_cmd_add_str(&pmi_response, "pmi-version", "2");
     PMIU_cmd_add_str(&pmi_response, "pmi-subversion", "0");
     PMIU_cmd_add_int(&pmi_response, "rank", id);
@@ -143,7 +143,7 @@ static HYD_status fn_job_getid(int fd, struct PMIU_cmd *pmi)
     thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 2, "job-getid-response");
+    PMIU_cmd_init_static(&pmi_response, 2, "job-getid-response");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
@@ -182,7 +182,7 @@ static HYD_status fn_info_putnodeattr(int fd, struct PMIU_cmd *pmi)
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 2, "info-putnodeattr");
+    PMIU_cmd_init_static(&pmi_response, 2, "info-putnodeattr");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
@@ -236,7 +236,7 @@ static HYD_status fn_info_getnodeattr(int fd, struct PMIU_cmd *pmi)
 
     if (found) {        /* We found the attribute */
         struct PMIU_cmd pmi_response;
-        PMIU_cmd_init(&pmi_response, 2, "info-getnodeattr-response");
+        PMIU_cmd_init_static(&pmi_response, 2, "info-getnodeattr-response");
         if (thrid) {
             PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
         }
@@ -255,7 +255,7 @@ static HYD_status fn_info_getnodeattr(int fd, struct PMIU_cmd *pmi)
     } else {
         /* Tell the client that we can't find the attribute */
         struct PMIU_cmd pmi_response;
-        PMIU_cmd_init(&pmi_response, 2, "info-getnodeattr-response");
+        PMIU_cmd_init_static(&pmi_response, 2, "info-getnodeattr-response");
         if (thrid) {
             PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
         }
@@ -288,7 +288,7 @@ static HYD_status fn_info_getjobattr(int fd, struct PMIU_cmd *pmi)
 
     struct PMIU_cmd pmi_response;
     if (!strcmp(key, "PMI_process_mapping")) {
-        PMIU_cmd_init(&pmi_response, 2, "info-getjobattr-response");
+        PMIU_cmd_init_static(&pmi_response, 2, "info-getjobattr-response");
         if (thrid) {
             PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
         }
@@ -301,7 +301,7 @@ static HYD_status fn_info_getjobattr(int fd, struct PMIU_cmd *pmi)
     } else if (!strcmp(key, "PMI_hwloc_xmlfile")) {
         const char *xmlfile = HYD_pmip_get_hwloc_xmlfile();
 
-        PMIU_cmd_init(&pmi_response, 2, "info-getjobattr-response");
+        PMIU_cmd_init_static(&pmi_response, 2, "info-getjobattr-response");
         if (thrid) {
             PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
         }
@@ -338,7 +338,7 @@ static HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi)
     thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init(&pmi_response, 2, "finalize-response");
+    PMIU_cmd_init_static(&pmi_response, 2, "finalize-response");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
