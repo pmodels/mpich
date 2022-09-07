@@ -607,11 +607,7 @@ int PMIU_cmd_output_v1(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
     *buf_out = pmicmd->tmp_buf;
     *buflen_out = buflen;
 
-  fn_exit:
     return pmi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 int PMIU_cmd_output_v1_mcmd(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
@@ -663,10 +659,7 @@ int PMIU_cmd_output_v1_mcmd(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen
     *buf_out = pmicmd->tmp_buf;
     *buflen_out = buflen;
 
-  fn_exit:
     return pmi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
@@ -721,10 +714,7 @@ int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
     *buf_out = pmicmd->tmp_buf;
     *buflen_out = buflen;
 
-  fn_exit:
     return pmi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int PMIU_cmd_output(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
