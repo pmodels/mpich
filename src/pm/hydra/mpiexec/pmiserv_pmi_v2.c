@@ -338,7 +338,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init_static(&pmi_response, 1, "kvs-fence-response");
+    PMIU_cmd_init_static(&pmi_response, 2, "kvs-fence-response");
     if (thrid) {
         PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
     }
