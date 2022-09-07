@@ -39,7 +39,7 @@ static int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
     return MPI_SUCCESS;
 }
 
-ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype);
+static ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype);
 
 ADIOI_Flatlist_node *ADIOI_Flatten_and_find(MPI_Datatype datatype)
 {
@@ -107,28 +107,11 @@ static void flatlist_node_grow(ADIOI_Flatlist_node * flat, int idx)
 
 static void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type);
 /* flatten datatype and add it to Flatlist */
-ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
+static ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 {
     MPI_Count flat_count, curr_index = 0;
-    int is_contig, flag;
+    int is_contig;
     ADIOI_Flatlist_node *flat;
-
-    if (ADIOI_Flattened_type_keyval == MPI_KEYVAL_INVALID) {
-        /* ADIOI_End_call will take care of cleanup */
-        MPI_Type_create_keyval(ADIOI_Flattened_type_copy,
-                               ADIOI_Flattened_type_delete, &ADIOI_Flattened_type_keyval, NULL);
-    }
-
-    /* check if necessary to flatten. */
-
-    /* has it already been flattened? */
-    MPI_Type_get_attr(datatype, ADIOI_Flattened_type_keyval, &flat, &flag);
-    if (flag) {
-#ifdef FLATTEN_DEBUG
-        DBG_FPRINTF(stderr, "ADIOI_Flatten_datatype:: found datatype %#X\n", datatype);
-#endif
-        return flat;
-    }
 
     /* is it entirely contiguous? */
     ADIOI_Datatype_iscontig(datatype, &is_contig);
