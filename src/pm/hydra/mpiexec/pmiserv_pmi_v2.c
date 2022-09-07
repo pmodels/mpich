@@ -53,16 +53,28 @@ HYD_status HYD_pmiserv_epoch_free(struct HYD_pg *pg)
     return HYD_SUCCESS;
 }
 
-static HYD_status poke_progress(const char *key)
+/* Process the pending get with matching key. If the key is NULL,
+ * we are in a kvs-fence, clear all the pending reqs.
+ */
+static HYD_status check_pending_reqs(const char *key)
 {
     struct HYD_pmcd_pmi_v2_reqs *req, *list_head = NULL, *list_tail = NULL;
-    int i, count;
     HYD_status status = HYD_SUCCESS;
 
-    for (count = 0, req = pending_reqs; req; req = req->next)
+    int count = 0;
+    int has_pending = 0;
+    for (count = 0, req = pending_reqs; req; req = req->next) {
         count++;
+        if (key && strcmp(key, req->key) == 0) {
+            has_pending++;
+        }
+    }
 
-    for (i = 0; i < count; i++) {
+    if (key && !has_pending) {
+        goto fn_exit;
+    }
+
+    for (int i = 0; i < count; i++) {
         /* Dequeue a request */
         req = pending_reqs;
         if (pending_reqs) {
@@ -201,14 +213,8 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
-    for (req = pending_reqs; req; req = req->next) {
-        if (!strcmp(req->key, key)) {
-            /* Poke the progress engine before exiting */
-            status = poke_progress(key);
-            HYDU_ERR_POP(status, "poke progress error\n");
-            break;
-        }
-    }
+    status = check_pending_reqs(key);
+    HYDU_ERR_POP(status, "poke progress error\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -351,8 +357,8 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
         pg_scratch->fence_count++;
         if (pg_scratch->fence_count % proxy->pg->pg_process_count == 0) {
             /* Poke the progress engine before exiting */
-            status = poke_progress(NULL);
-            HYDU_ERR_POP(status, "poke progress error\n");
+            status = check_pending_reqs(NULL);
+            HYDU_ERR_POP(status, "check pending requests error\n");
             /* reset fence_count */
             pg_scratch->epoch++;
             pg_scratch->fence_count = 0;
