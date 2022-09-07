@@ -23,6 +23,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     MPIR_FUNC_ENTER;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
+    MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    bool syncflag = MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
     int vsi_src, vsi_dst;
     /* note: MPIDI_POSIX_SEND_VSIS defined in posix_send.h */
     MPIDI_POSIX_SEND_VSIS(vsi_src, vsi_dst);
@@ -107,7 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     if (do_ipc) {
         mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype, data_sz, dt_contig,
                                         rank, tag, comm, context_offset, addr, ipc_attr,
-                                        vsi_src, vsi_dst, request);
+                                        vsi_src, vsi_dst, request, syncflag, errflag);
         MPIR_ERR_CHECK(mpi_errno);
         *done = true;
         /* TODO: add flattening datatype protocol for noncontig send. Different
