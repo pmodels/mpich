@@ -520,7 +520,7 @@ if test "$enable_threads" != "no" ; then
                 MPI_Init_thread(0,0, MPI_THREAD_MULTIPLE, &provided);
                 MPI_Finalize();
                 if (provided != MPI_THREAD_MULTIPLE) {
-                    exit(1);
+                    return 1;
                 }
             ])
         ],[enable_threads=yes],[enable_threads=no])
