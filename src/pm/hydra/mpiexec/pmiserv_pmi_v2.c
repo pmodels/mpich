@@ -18,15 +18,6 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
 
 static struct HYD_pmcd_pmi_v2_reqs *pending_reqs = NULL;
 
-static HYD_status cmd_response(int fd, int pid, struct PMIU_cmd *pmi)
-{
-    struct HYD_pmcd_hdr hdr;
-    HYD_pmcd_init_header(&hdr);
-    hdr.cmd = CMD_PMI_RESPONSE;
-    hdr.u.pmi.pid = pid;
-    return HYD_pmcd_pmi_send(fd, pmi, &hdr, HYD_server_info.user_global.debug);
-}
-
 static HYD_status poke_progress(const char *key)
 {
     struct HYD_pmcd_pmi_v2_reqs *req, *list_head = NULL, *list_tail = NULL;
@@ -124,7 +115,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, struct PMIU_cmd 
         PMIU_cmd_add_str(&pmi_response, "rc", "0");
     }
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
@@ -172,7 +163,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
     PMIU_cmd_add_int(&pmi_response, "rc", ret);
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
     for (req = pending_reqs; req; req = req->next) {
@@ -261,7 +252,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
     PMIU_cmd_add_str(&pmi_response, "rc", "0");
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
@@ -318,7 +309,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
     PMIU_cmd_add_str(&pmi_response, "rc", "0");
 
-    status = cmd_response(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
     if (cur_epoch == pg_scratch->epoch) {
@@ -605,145 +596,12 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
         PMIU_cmd_add_str(&pmi_response, "jobid", pg_scratch->kvs->kvsname);
         PMIU_cmd_add_str(&pmi_response, "nerrs", "0");;
 
-        status = cmd_response(fd, pid, &pmi_response);
+        status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
         HYDU_ERR_POP(status, "send command failed\n");
     }
 
   fn_exit:
     HYD_STRING_STASH_FREE(proxy_stash);
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status fn_name_publish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
-{
-    const char *thrid, *val;
-    char *name = NULL, *port = NULL;
-    int success;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
-
-    if ((val = PMIU_cmd_find_keyval(pmi, "name")) == NULL)
-        HYDU_ERR_POP(status, "cannot find token: name\n");
-    name = MPL_strdup(val);
-    HYDU_ERR_CHKANDJUMP(status, NULL == name, HYD_INTERNAL_ERROR, "%s", "");
-
-    if ((val = PMIU_cmd_find_keyval(pmi, "port")) == NULL)
-        HYDU_ERR_POP(status, "cannot find token: port\n");
-    port = MPL_strdup(val);
-
-    status = HYD_pmcd_pmi_publish(name, port, &success);
-    HYDU_ERR_POP(status, "error publishing service\n");
-
-    struct PMIU_cmd pmi_response;
-    char tmp[100];
-    PMIU_cmd_init_static(&pmi_response, 2, "name-publish-response");
-    if (thrid) {
-        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-    }
-    if (!success) {
-        MPL_snprintf(tmp, 100, "duplicate_service_%s", name);
-
-        PMIU_cmd_add_str(&pmi_response, "rc", "1");
-        PMIU_cmd_add_str(&pmi_response, "errmsg", tmp);
-    } else {
-        PMIU_cmd_add_str(&pmi_response, "rc", "0");
-    }
-
-    status = cmd_response(fd, pid, &pmi_response);
-    HYDU_ERR_POP(status, "send command failed\n");
-
-  fn_exit:
-    MPL_free(name);
-    MPL_free(port);
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status fn_name_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
-{
-    const char *thrid, *name;
-    int success;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
-
-    if ((name = PMIU_cmd_find_keyval(pmi, "name")) == NULL)
-        HYDU_ERR_POP(status, "cannot find token: name\n");
-
-    status = HYD_pmcd_pmi_unpublish(name, &success);
-    HYDU_ERR_POP(status, "error unpublishing service\n");
-
-    struct PMIU_cmd pmi_response;
-    char tmp[100];
-    PMIU_cmd_init_static(&pmi_response, 2, "name-unpublish-response");
-    if (thrid) {
-        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-    }
-    if (success) {
-        PMIU_cmd_add_str(&pmi_response, "rc", "0");
-    } else {
-        MPL_snprintf(tmp, 100, "service_%s_not_found", name);
-
-        PMIU_cmd_add_str(&pmi_response, "rc", "1");
-        PMIU_cmd_add_str(&pmi_response, "errmsg", tmp);
-    }
-
-    status = cmd_response(fd, pid, &pmi_response);
-    HYDU_ERR_POP(status, "send command failed\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status fn_name_lookup(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
-{
-    const char *thrid, *name, *value;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
-
-    if ((name = PMIU_cmd_find_keyval(pmi, "name")) == NULL)
-        HYDU_ERR_POP(status, "cannot find token: name\n");
-
-    status = HYD_pmcd_pmi_lookup(name, &value);
-    HYDU_ERR_POP(status, "error while looking up service\n");
-
-    struct PMIU_cmd pmi_response;
-    PMIU_cmd_init_static(&pmi_response, 2, "name-lookup-response");
-    if (thrid) {
-        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-    }
-    if (value) {
-        PMIU_cmd_add_str(&pmi_response, "port", value);
-        PMIU_cmd_add_str(&pmi_response, "found", "TRUE");
-        PMIU_cmd_add_str(&pmi_response, "rc", "0");
-    } else {
-        PMIU_cmd_add_str(&pmi_response, "found", "FALSE");
-        PMIU_cmd_add_str(&pmi_response, "rc", "1");
-    }
-
-    status = cmd_response(fd, pid, &pmi_response);
-    HYDU_ERR_POP(status, "send command failed\n");
-
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
@@ -758,9 +616,6 @@ static struct HYD_pmcd_pmi_handle pmi_v2_handle_fns_foo[] = {
     {"kvs-get", fn_kvs_get},
     {"kvs-fence", fn_kvs_fence},
     {"spawn", fn_spawn},
-    {"name-publish", fn_name_publish},
-    {"name-unpublish", fn_name_unpublish},
-    {"name-lookup", fn_name_lookup},
     {"\0", NULL}
 };
 
