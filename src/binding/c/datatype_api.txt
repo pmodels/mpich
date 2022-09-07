@@ -67,12 +67,20 @@ MPI_Get_elements:
 
     /* clip the value if it cannot be correctly returned to the user */
     *count = (count_x > INT_MAX) ? MPI_UNDEFINED : (int) count_x;
+
+    if (byte_count != 0) {
+        *count = MPI_UNDEFINED;
+    }
 }
 { -- large_count --
     MPI_Count byte_count = MPIR_STATUS_GET_COUNT(*status);
     mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, count);
     if (mpi_errno) {
         goto fn_fail;
+    }
+
+    if (byte_count != 0) {
+        *count = MPI_UNDEFINED;
     }
 }
 
@@ -83,6 +91,10 @@ MPI_Get_elements_x:
     MPI_Count byte_count = MPIR_STATUS_GET_COUNT(*status);
     mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, count);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (byte_count != 0) {
+        *count = MPI_UNDEFINED;
+    }
 }
 
 MPI_Pack:
