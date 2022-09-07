@@ -10,6 +10,56 @@
 #define FLATTEN_DEBUG 1
 #endif
 
+int ADIOI_Flattened_type_keyval = MPI_KEYVAL_INVALID;
+
+static int ADIOI_Flattened_type_copy(MPI_Datatype oldtype,
+                                     int type_keyval, void *extra_state, void *attribute_val_in,
+                                     void *attribute_val_out, int *flag)
+{
+    ADIOI_Flatlist_node *node = (ADIOI_Flatlist_node *) attribute_val_in;
+    if (node != NULL)
+        node->refct++;
+    *(ADIOI_Flatlist_node **) attribute_val_out = node;
+    *flag = 1;  /* attribute copied to new communicator */
+    return MPI_SUCCESS;
+}
+
+static int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
+                                       int type_keyval, void *attribute_val, void *extra_state)
+{
+    ADIOI_Flatlist_node *node = (ADIOI_Flatlist_node *) attribute_val;
+    ADIOI_Assert(node != NULL);
+    node->refct--;
+
+    if (node->refct <= 0) {
+        ADIOI_Free(node->blocklens);
+        ADIOI_Free(node);
+    }
+
+    return MPI_SUCCESS;
+}
+
+ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype);
+
+ADIOI_Flatlist_node *ADIOI_Flatten_and_find(MPI_Datatype datatype)
+{
+    ADIOI_Flatlist_node *node;
+    int flag = 0;
+
+    if (ADIOI_Flattened_type_keyval == MPI_KEYVAL_INVALID) {
+        /* ADIOI_End_call will take care of cleanup */
+        MPI_Type_create_keyval(ADIOI_Flattened_type_copy,
+                               ADIOI_Flattened_type_delete, &ADIOI_Flattened_type_keyval, NULL);
+    }
+
+    MPI_Type_get_attr(datatype, ADIOI_Flattened_type_keyval, &node, &flag);
+    if (flag == 0) {
+        node = ADIOI_Flatten_datatype(datatype);
+    }
+
+    return node;
+}
+
 static ADIOI_Flatlist_node *flatlist_node_new(MPI_Datatype datatype, MPI_Count count)
 {
     ADIOI_Flatlist_node *flat;
@@ -322,8 +372,8 @@ static void ADIOI_Type_decode(MPI_Datatype datatype, int *combiner,
  *
  * Assumption: input datatype is not a basic!!!!
  */
-void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
-                   ADIO_Offset st_offset, MPI_Count * curr_index)
+static void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
+                          ADIO_Offset st_offset, MPI_Count * curr_index)
 {
     int k, m, n, is_hindexed_block = 0;
     int lb_updated = 0;
@@ -1105,7 +1155,7 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
  *
  * ASSUMES THAT TYPE IS NOT A BASIC!!!
  */
-MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_index)
+static MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_index)
 {
     int i, n;
     MPI_Count count = 0, prev_index, num, basic_num;
@@ -1443,52 +1493,4 @@ static void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
     flat_type->blocklens = opt_blocklens;
     flat_type->indices = opt_indices;
     return;
-}
-
-int ADIOI_Flattened_type_keyval = MPI_KEYVAL_INVALID;
-
-int ADIOI_Flattened_type_copy(MPI_Datatype oldtype,
-                              int type_keyval, void *extra_state, void *attribute_val_in,
-                              void *attribute_val_out, int *flag)
-{
-    ADIOI_Flatlist_node *node = (ADIOI_Flatlist_node *) attribute_val_in;
-    if (node != NULL)
-        node->refct++;
-    *(ADIOI_Flatlist_node **) attribute_val_out = node;
-    *flag = 1;  /* attribute copied to new communicator */
-    return MPI_SUCCESS;
-}
-
-int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
-                                int type_keyval, void *attribute_val, void *extra_state)
-{
-    ADIOI_Flatlist_node *node = (ADIOI_Flatlist_node *) attribute_val;
-    ADIOI_Assert(node != NULL);
-    node->refct--;
-
-    if (node->refct <= 0) {
-        ADIOI_Free(node->blocklens);
-        ADIOI_Free(node);
-    }
-
-    return MPI_SUCCESS;
-}
-
-ADIOI_Flatlist_node *ADIOI_Flatten_and_find(MPI_Datatype datatype)
-{
-    ADIOI_Flatlist_node *node;
-    int flag = 0;
-
-    if (ADIOI_Flattened_type_keyval == MPI_KEYVAL_INVALID) {
-        /* ADIOI_End_call will take care of cleanup */
-        MPI_Type_create_keyval(ADIOI_Flattened_type_copy,
-                               ADIOI_Flattened_type_delete, &ADIOI_Flattened_type_keyval, NULL);
-    }
-
-    MPI_Type_get_attr(datatype, ADIOI_Flattened_type_keyval, &node, &flag);
-    if (flag == 0) {
-        node = ADIOI_Flatten_datatype(datatype);
-    }
-
-    return node;
 }

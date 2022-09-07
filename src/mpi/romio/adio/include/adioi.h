@@ -371,16 +371,7 @@ typedef struct {
 
 void ADIOI_SetFunctions(ADIO_File fd);
 ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype type);
-void ADIOI_Flatten(MPI_Datatype type, ADIOI_Flatlist_node * flat,
-                   ADIO_Offset st_offset, MPI_Count * curr_index);
-/* callbacks for attribute-style flattened tracking */
-int ADIOI_Flattened_type_copy(MPI_Datatype oldtype,
-                              int type_keyval, void *extra_state, void *attribute_val_in,
-                              void *attribute_val_out, int *flag);
-int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
-                                int type_keyval, void *attribute_val, void *extra_state);
 ADIOI_Flatlist_node *ADIOI_Flatten_and_find(MPI_Datatype);
-MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype type, MPI_Count * curr_index);
 void ADIOI_Complete_async(int *error_code);
 void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname);
 void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname);
