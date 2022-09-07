@@ -60,6 +60,69 @@ ADIOI_Flatlist_node *ADIOI_Flatten_and_find(MPI_Datatype datatype)
     return node;
 }
 
+#ifdef HAVE_MPIX_TYPE_IOV
+ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
+{
+    MPI_Count type_size, num_iovs;
+    MPI_Count actual;
+
+    MPI_Type_size_x(datatype, &type_size);
+
+    MPIX_Type_iov_len(datatype, type_size, &num_iovs, &actual);
+    assert(num_iovs > 0);
+    assert(actual == type_size);
+
+    MPIX_Iov *iovs;
+    iovs = ADIOI_Malloc(num_iovs * sizeof(MPIX_Iov));
+    assert(iovs);
+
+    MPIX_Type_iov(datatype, 0, iovs, num_iovs, &actual);
+    assert(actual == num_iovs);
+
+    /* copy to flatlist */
+    ADIOI_Flatlist_node *flat;
+    flat = ADIOI_Malloc(sizeof(ADIOI_Flatlist_node));
+    flat->count = num_iovs;
+    flat->blocklens = (ADIO_Offset *) ADIOI_Malloc(flat->count * 2 * sizeof(ADIO_Offset));
+    flat->indices = flat->blocklens + flat->count;
+    flat->refct = 1;
+
+    for (MPI_Count i = 0; i < num_iovs; i++) {
+        flat->indices[i] = (ADIO_Offset) iovs[i].iov_base;
+        flat->blocklens[i] = (ADIO_Offset) iovs[i].iov_len;
+    }
+
+    /* update flags */
+    flat->flag = 0;
+    for (MPI_Count i = 0; i < flat->count; i++) {
+        /* Check if any of the displacements is negative */
+        if (flat->indices[i] < 0) {
+            flat->flag |= ADIOI_TYPE_NEGATIVE;
+        }
+
+        if (i > 0) {
+            MPI_Count j = i - 1;
+            /* Check if displacements are in a monotonic nondecreasing order */
+            if (flat->indices[j] > flat->indices[i]) {
+                flat->flag |= ADIOI_TYPE_DECREASE;
+            }
+
+            /* Check for overlapping regions */
+            if (flat->indices[j] + flat->blocklens[j] > flat->indices[i]) {
+                flat->flag |= ADIOI_TYPE_OVERLAP;
+            }
+        }
+    }
+
+    /* cache it to attribute */
+    MPI_Type_set_attr(datatype, ADIOI_Flattened_type_keyval, flat);
+
+    ADIOI_Free(iovs);
+    return flat;
+}
+
+#else
+
 static ADIOI_Flatlist_node *flatlist_node_new(MPI_Datatype datatype, MPI_Count count)
 {
     ADIOI_Flatlist_node *flat;
@@ -1477,3 +1540,5 @@ static void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
     flat_type->indices = opt_indices;
     return;
 }
+
+#endif /* HAVE_MPIX_TYPE_IOV */
