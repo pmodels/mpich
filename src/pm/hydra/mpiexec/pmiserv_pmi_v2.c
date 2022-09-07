@@ -53,6 +53,29 @@ HYD_status HYD_pmiserv_epoch_free(struct HYD_pg *pg)
     return HYD_SUCCESS;
 }
 
+static bool check_epoch_reached(struct HYD_pg *pg, int fd, int pid)
+{
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
+
+    int idx = -1;
+    for (int i = 0; i < pg->pg_process_count; i++) {
+        if (pg_scratch->ecount[i].fd == fd && pg_scratch->ecount[i].pid == pid) {
+            idx = i;
+            break;
+        }
+    }
+    assert(idx != -1);
+
+    for (int i = 0; i < pg->pg_process_count; i++) {
+        if (pg_scratch->ecount[i].epoch < pg_scratch->ecount[idx].epoch) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 /* Process the pending get with matching key. If the key is NULL,
  * we are in a kvs-fence, clear all the pending reqs.
  */
@@ -256,27 +279,13 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
 
     if (!found) {
-        pg = proxy->pg;
-        pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-
-        idx = -1;
-        for (i = 0; i < pg->pg_process_count; i++)
-            if (pg_scratch->ecount[i].fd == fd && pg_scratch->ecount[i].pid == pid) {
-                idx = i;
-                break;
-            }
-
-        HYDU_ASSERT(idx != -1, status);
-
-        for (i = 0; i < pg->pg_process_count; i++) {
-            if (pg_scratch->ecount[i].epoch < pg_scratch->ecount[idx].epoch) {
-                /* We haven't reached a barrier yet; queue up request */
-                status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, pmi, key, &pending_reqs);
-                HYDU_ERR_POP(status, "unable to queue request\n");
-
-                /* We are done */
-                goto fn_exit;
-            }
+        /* check whether all proxies have arrived at the same epoch or enqueue
+         * the "get". A "put" (from another proxy) will poke the progress.
+         */
+        if (!check_epoch_reached(proxy->pg, fd, pid)) {
+            status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, pmi, key, &pending_reqs);
+            HYDU_ERR_POP(status, "unable to queue request\n");
+            goto fn_exit;
         }
     }
 
