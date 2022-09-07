@@ -50,6 +50,8 @@ extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle;
 
 HYD_status HYD_pmiserv_pmi_reply(int fd, int pid, struct PMIU_cmd *pmi);
 HYD_status HYD_pmiserv_bcast_keyvals(int fd, int pid);
+HYD_status HYD_pmiserv_epoch_init(struct HYD_pg *pg);
+HYD_status HYD_pmiserv_epoch_free(struct HYD_pg *pg);
 
 HYD_status HYD_pmiserv_publish(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
 HYD_status HYD_pmiserv_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *pmi);

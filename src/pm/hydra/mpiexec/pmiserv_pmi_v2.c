@@ -18,6 +18,41 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
 
 static struct HYD_pmcd_pmi_v2_reqs *pending_reqs = NULL;
 
+HYD_status HYD_pmiserv_epoch_init(struct HYD_pg *pg)
+{
+    HYD_status status = HYD_SUCCESS;
+    HYDU_FUNC_ENTER();
+
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    pg_scratch = pg->pg_scratch;
+
+    HYDU_MALLOC_OR_JUMP(pg_scratch->ecount, struct HYD_pmcd_pmi_ecount *,
+                        pg->pg_process_count * sizeof(struct HYD_pmcd_pmi_ecount), status);
+    /* initialize as sentinels. The first kvs-fence will fill the entry.
+     * Subsequent kvs-fence will increment the epoch. */
+    for (int i = 0; i < pg->pg_process_count; i++) {
+        pg_scratch->ecount[i].fd = HYD_FD_UNSET;
+        pg_scratch->ecount[i].pid = -1;
+        pg_scratch->ecount[i].epoch = -1;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_pmiserv_epoch_free(struct HYD_pg *pg)
+{
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    pg_scratch = pg->pg_scratch;
+
+    MPL_free(pg_scratch->ecount);
+
+    return HYD_SUCCESS;
+}
+
 static HYD_status poke_progress(const char *key)
 {
     struct HYD_pmcd_pmi_v2_reqs *req, *list_head = NULL, *list_tail = NULL;
