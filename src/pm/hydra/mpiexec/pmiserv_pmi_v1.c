@@ -365,6 +365,10 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
         HYDU_ERR_POP(status, "unable to add key pair to kvs\n");
     }
 
+    /* PMI-v2 kvs-fence */
+    status = HYD_pmiserv_epoch_init(&HYD_server_info.pg_list);
+    HYDU_ERR_POP(status, "unable to init epoch\n");
+
     /* Create the proxy list */
     if (pg->user_node_list) {
         status = HYDU_create_proxy_list(exec_list, pg->user_node_list, pg, false);

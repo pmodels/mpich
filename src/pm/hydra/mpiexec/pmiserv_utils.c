@@ -519,10 +519,6 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
     pg_scratch->epoch = 0;
     pg_scratch->fence_count = 0;
 
-    /* for PMI-v2 kvs-fence */
-    status = HYD_pmiserv_epoch_init(pg);
-    HYDU_ERR_POP(status, "unable to init epoch\n");
-
     pg_scratch->control_listen_fd = HYD_FD_UNSET;
     pg_scratch->pmi_listen_fd = HYD_FD_UNSET;
 
