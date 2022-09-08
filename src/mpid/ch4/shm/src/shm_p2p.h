@@ -19,13 +19,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
 
     MPIR_FUNC_ENTER;
 
-    if (!attr) {
-        /* not collective, not ssend. We are assuming pt2pt context_offset is 0. */
-        mpi_errno = MPIDI_IPC_mpi_isend(buf, count, datatype, rank, tag, comm, attr, addr, request);
-    } else {
-        mpi_errno = MPIDI_POSIX_mpi_isend(buf, count, datatype, rank, tag, comm,
-                                          attr, addr, request);
-    }
+    mpi_errno = MPIDI_IPC_mpi_isend(buf, count, datatype, rank, tag, comm, attr, addr, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
