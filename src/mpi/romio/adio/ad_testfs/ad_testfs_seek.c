@@ -23,9 +23,8 @@ ADIO_Offset ADIOI_TESTFS_SeekIndividual(ADIO_File fd, ADIO_Offset offset,
 
     ADIO_Offset off;
     ADIOI_Flatlist_node *flat_file;
-    int i, n_etypes_in_filetype, n_filetypes, etype_in_filetype;
+    int i;
     ADIO_Offset abs_off_in_filetype = 0, sum;
-    int size_in_filetype;
     int filetype_is_contig;
     MPI_Count filetype_size;
     MPI_Aint etype_size, lb, filetype_extent;
@@ -52,11 +51,10 @@ ADIO_Offset ADIOI_TESTFS_SeekIndividual(ADIO_File fd, ADIO_Offset offset,
             return 0;
         }
 
-        n_etypes_in_filetype = filetype_size / etype_size;
-        ADIOI_Assert((offset / n_etypes_in_filetype) == (int) (offset / n_etypes_in_filetype));
-        n_filetypes = (int) (offset / n_etypes_in_filetype);
-        etype_in_filetype = (int) (offset % n_etypes_in_filetype);
-        size_in_filetype = etype_in_filetype * etype_size;
+        MPI_Count n_etypes_in_filetype = filetype_size / etype_size;
+        MPI_Count n_filetypes = offset / n_etypes_in_filetype;
+        MPI_Count etype_in_filetype = offset % n_etypes_in_filetype;
+        MPI_Count size_in_filetype = etype_in_filetype * etype_size;
 
         sum = 0;
         for (i = 0; i < flat_file->count; i++) {

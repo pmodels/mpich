@@ -184,7 +184,7 @@ void ADIOI_Calc_file_domains(ADIO_Offset * st_offsets, ADIO_Offset
      * experiment with other alignment strategies here */
     if (striping_unit > 0) {
         ADIO_Offset end_off;
-        int rem_front, rem_back;
+        ADIO_Offset rem_front, rem_back;
 
         /* align fd_end[0] to the nearest file lock boundary */
         fd_start[0] = min_st_offset;

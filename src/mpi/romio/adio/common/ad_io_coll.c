@@ -668,7 +668,6 @@ void ADIOI_Calc_bounds(ADIO_File fd, MPI_Aint count, MPI_Datatype buftype,
                        ADIO_Offset * st_offset, ADIO_Offset * end_offset)
 {
     MPI_Count filetype_size, buftype_size, etype_size;
-    int sum;
     MPI_Aint lb, filetype_extent;
     ADIO_Offset total_io;
     int filetype_is_contig;
@@ -726,7 +725,7 @@ void ADIOI_Calc_bounds(ADIO_File fd, MPI_Aint count, MPI_Datatype buftype,
             remainder = (fd->fp_ind - fd->disp - flat_file->indices[0]) % filetype_extent;
             if (remainder) {
                 /* find how many file viewable bytes into first filetype */
-                sum = 0;
+                ADIO_Offset sum = 0;
                 for (i = 0; i < flat_file->count; i++) {
                     sum += flat_file->blocklens[i];
                     if ((flat_file->indices[i] - flat_file->indices[0] +
@@ -750,7 +749,7 @@ void ADIOI_Calc_bounds(ADIO_File fd, MPI_Aint count, MPI_Datatype buftype,
                 end_byte_off += flat_file->indices[i] + flat_file->blocklens[i] - 1;
                 end_byte_off -= flat_file->indices[0];
             } else {
-                sum = 0;
+                ADIO_Offset sum = 0;
                 for (i = 0; i < flat_file->count; i++) {
                     sum += flat_file->blocklens[i];
                     if (sum >= remainder) {
@@ -768,7 +767,7 @@ void ADIOI_Calc_bounds(ADIO_File fd, MPI_Aint count, MPI_Datatype buftype,
             /* number of file viewable bytes into starting filetype */
             remainder = (etype_size * offset) % filetype_size;
 
-            sum = 0;
+            ADIO_Offset sum = 0;
             for (i = 0; i < flat_file->count; i++) {
                 sum += flat_file->blocklens[i];
                 if (sum >= remainder) {
@@ -804,7 +803,7 @@ void ADIOI_Calc_bounds(ADIO_File fd, MPI_Aint count, MPI_Datatype buftype,
                 end_byte_off -= filetype_extent - flat_file->indices[i] -
                     flat_file->blocklens[i] + 1;
             } else {
-                sum = 0;
+                ADIO_Offset sum = 0;
                 for (i = 0; i < flat_file->count; i++) {
                     sum += flat_file->blocklens[i];
                     if (sum >= remainder) {
@@ -857,7 +856,7 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, MPI_Aint count,
 #endif
     MPI_Type_get_extent(custom_ftype, &lb, &f_extent);
     MPI_Type_size_x(custom_ftype, &f_size);
-    f_ds_percent = 100 * f_size / f_extent;
+    f_ds_percent = (int) (100 * f_size / f_extent);
 
     /* temporarily store file view information */
     user_filetype = fd->filetype;

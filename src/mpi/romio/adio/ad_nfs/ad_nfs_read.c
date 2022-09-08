@@ -162,10 +162,10 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
 /* offset is in units of etype relative to the filetype. */
 
     ADIOI_Flatlist_node *flat_buf, *flat_file;
-    ADIO_Offset i_offset, new_brd_size, brd_size, size;
-    int i, j, k, err, err_flag = 0, st_index = 0;
+    ADIO_Offset new_brd_size, brd_size, size;
+    int i, err_flag = 0, st_index = 0;
+    ssize_t err;
     MPI_Count num, bufsize;
-    int n_etypes_in_filetype;
     ADIO_Offset n_filetypes, etype_in_filetype, st_n_filetypes, size_in_filetype;
     ADIO_Offset abs_off_in_filetype = 0, new_frd_size, frd_size = 0, st_frd_size;
     MPI_Count filetype_size, etype_size, buftype_size, partial_read;
@@ -246,7 +246,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
         if (err == -1)
             err_flag = 1;
 
-        for (j = 0; j < count; j++)
+        for (MPI_Aint j = 0; j < count; j++)
             for (i = 0; i < flat_buf->count; i++) {
                 userbuf_off = (ADIO_Offset) j *buftype_extent + flat_buf->indices[i];
                 req_off = off;
@@ -305,7 +305,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
             st_index = i;       /* starting index in flat_file->indices[] */
             offset += disp + (ADIO_Offset) n_filetypes *filetype_extent;
         } else {
-            n_etypes_in_filetype = filetype_size / etype_size;
+            ADIO_Offset n_etypes_in_filetype = filetype_size / etype_size;
             n_filetypes = offset / n_etypes_in_filetype;
             etype_in_filetype = offset % n_etypes_in_filetype;
             size_in_filetype = etype_in_filetype * etype_size;
@@ -362,24 +362,26 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
         /* Calculate end_offset, the last byte-offset that will be accessed.
          * e.g., if start_offset=0 and 100 bytes to be read, end_offset=99 */
 
-        st_frd_size = frd_size;
-        st_n_filetypes = n_filetypes;
-        i_offset = 0;
-        j = st_index;
-        off = offset;
-        frd_size = MPL_MIN(st_frd_size, bufsize);
-        while (i_offset < bufsize) {
-            i_offset += frd_size;
-            end_offset = off + frd_size - 1;
-            j = (j + 1) % flat_file->count;
-            n_filetypes += (j == 0) ? 1 : 0;
-            while (flat_file->blocklens[j] == 0) {
+        {
+            st_frd_size = frd_size;
+            st_n_filetypes = n_filetypes;
+            ADIO_Offset i_offset = 0;
+            MPI_Count j = st_index;
+            off = offset;
+            frd_size = MPL_MIN(st_frd_size, bufsize);
+            while (i_offset < bufsize) {
+                i_offset += frd_size;
+                end_offset = off + frd_size - 1;
                 j = (j + 1) % flat_file->count;
                 n_filetypes += (j == 0) ? 1 : 0;
-            }
+                while (flat_file->blocklens[j] == 0) {
+                    j = (j + 1) % flat_file->count;
+                    n_filetypes += (j == 0) ? 1 : 0;
+                }
 
-            off = disp + flat_file->indices[j] + n_filetypes * (ADIO_Offset) filetype_extent;
-            frd_size = MPL_MIN(flat_file->blocklens[j], bufsize - i_offset);
+                off = disp + flat_file->indices[j] + n_filetypes * (ADIO_Offset) filetype_extent;
+                frd_size = MPL_MIN(flat_file->blocklens[j], bufsize - i_offset);
+            }
         }
 
 /* if atomicity is true, lock (exclusive) the region to be accessed */
@@ -418,8 +420,8 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
 /* contiguous in memory, noncontiguous in file. should be the most
    common case. */
 
-            i_offset = 0;
-            j = st_index;
+            ADIO_Offset i_offset = 0;
+            MPI_Count j = st_index;
             off = offset;
             n_filetypes = st_n_filetypes;
             frd_size = MPL_MIN(st_frd_size, bufsize);
@@ -459,9 +461,10 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
 
             flat_buf = ADIOI_Flatten_and_find(datatype);
 
-            k = num = buf_count = 0;
-            i_offset = flat_buf->indices[0];
-            j = st_index;
+            MPI_Count k = 0;
+            num = buf_count = 0;
+            ADIO_Offset i_offset = flat_buf->indices[0];
+            MPI_Count j = st_index;
             off = offset;
             n_filetypes = st_n_filetypes;
             frd_size = st_frd_size;

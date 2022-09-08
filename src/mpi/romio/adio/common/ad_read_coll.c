@@ -387,7 +387,8 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, MPI_Aint bufcount, MPI_Datatype
         /* calculate how much space to allocate for offset_list, len_list */
 
         old_frd_size = frd_size;
-        contig_access_count = i_offset = 0;
+        contig_access_count = 0;
+        i_offset = 0;
         j = st_index;
         bufsize = (ADIO_Offset) buftype_size *(ADIO_Offset) bufcount;
         frd_size = MPL_MIN(frd_size, bufsize);
@@ -946,7 +947,8 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
             ADIOI_Assert(size_in_buf == (size_t)size_in_buf);           \
             memcpy(((char *) buf) + user_buf_idx,                       \
                    &(recv_buf[p][recv_buf_idx[p]]), size_in_buf);       \
-            recv_buf_idx[p] += size_in_buf; /* already tested (size_t)size_in_buf*/ \
+            assert(size_in_buf < INT_MAX); \
+            recv_buf_idx[p] += (int) size_in_buf; /* already tested (size_t)size_in_buf*/ \
             user_buf_idx += size_in_buf;                                \
             flat_buf_sz -= size_in_buf;                                 \
             if (!flat_buf_sz) {                                         \
@@ -1036,7 +1038,7 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                         buf_incr = curr_from_proc[p] + len - done_from_proc[p];
                         ADIOI_Assert((done_from_proc[p] + size) ==
                                      (unsigned) ((ADIO_Offset) done_from_proc[p] + size));
-                        curr_from_proc[p] = done_from_proc[p] + size;
+                        curr_from_proc[p] = (unsigned) (done_from_proc[p] + size);
                         ADIOI_BUF_COPY;
                     } else {
                         size = MPL_MIN(len, recv_size[p] - recv_buf_idx[p]);
@@ -1061,9 +1063,12 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
             rem_len -= len;
         }
     }
-    for (i = 0; i < nprocs; i++)
-        if (recv_size[i])
-            recd_from_proc[i] = curr_from_proc[i];
+    for (i = 0; i < nprocs; i++) {
+        if (recv_size[i]) {
+            ADIOI_Assert(curr_from_proc[i] <= INT_MAX);
+            recd_from_proc[i] = (int) curr_from_proc[i];
+        }
+    }
 
     ADIOI_Free(curr_from_proc);
 }

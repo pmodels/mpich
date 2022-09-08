@@ -16,7 +16,6 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
     ADIOI_Flatlist_node *flat_buf, *flat_file;
     ADIO_Offset size, brd_size, frd_size = 0, req_len, sum;
     int b_index;
-    int n_etypes_in_filetype;
     ADIO_Offset n_filetypes, etype_in_filetype;
     ADIO_Offset abs_off_in_filetype = 0;
     MPI_Count bufsize, filetype_size, buftype_size, size_in_filetype;
@@ -146,7 +145,7 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
                 }
             }
         } else {
-            n_etypes_in_filetype = filetype_size / etype_size;
+            ADIO_Offset n_etypes_in_filetype = filetype_size / etype_size;
             n_filetypes = offset / n_etypes_in_filetype;
             etype_in_filetype = (int) (offset % n_etypes_in_filetype);
             size_in_filetype = (unsigned) etype_in_filetype *(unsigned) etype_size;
@@ -324,7 +323,6 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
 
                 if (size == brd_size) {
                     /* reached end of contiguous block in memory */
-
                     b_index = (b_index + 1) % flat_buf->count;
                     buf_count++;
                     i_offset = buftype_extent * (buf_count / flat_buf->count) +

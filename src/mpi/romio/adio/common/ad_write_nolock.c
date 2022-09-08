@@ -310,7 +310,8 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
 
             flat_buf = ADIOI_Flatten_and_find(datatype);
 
-            k = num = buf_count = 0;
+            k = 0;
+            num = buf_count = 0;
             indx = flat_buf->indices[0];
             j = st_index;
             off = offset;

@@ -11,7 +11,7 @@
 #include <assert.h>
 /* #define DEBUG */
 
-void ADIOI_Calc_file_realms_user_size(ADIO_File fd, int fr_size,
+void ADIOI_Calc_file_realms_user_size(ADIO_File fd, ADIO_Offset fr_size,
                                       int nprocs_for_coll,
                                       ADIO_Offset * file_realm_st_offs,
                                       MPI_Datatype * file_realm_types);
@@ -25,9 +25,9 @@ void ADIOI_Calc_file_realms_fsize(ADIO_File fd,
                                   ADIO_Offset max_end_offset,
                                   ADIO_Offset * file_realm_st_offs,
                                   MPI_Datatype * file_realm_types);
-void ADIOI_Create_fr_simpletype(int size, int nprocs_for_coll, MPI_Datatype * simpletype);
-static void align_fr(int fr_size, ADIO_Offset fr_off, int alignment,
-                     int *aligned_fr_size, ADIO_Offset * aligned_fr_off);
+void ADIOI_Create_fr_simpletype(ADIO_Offset size, int nprocs_for_coll, MPI_Datatype * simpletype);
+static void align_fr(ADIO_Offset fr_size, ADIO_Offset fr_off, int alignment,
+                     ADIO_Offset * aligned_fr_size, ADIO_Offset * aligned_fr_off);
 void ADIOI_Verify_fr(int nprocs_for_coll, ADIO_Offset * file_realm_st_offs,
                      MPI_Datatype * file_realm_types);
 
@@ -68,7 +68,8 @@ void ADIOI_Calc_file_realms(ADIO_File fd, ADIO_Offset min_st_offset, ADIO_Offset
             file_realm_types = fd->file_realm_types;
         }
         *file_realm_st_offs = min_st_offset;
-        MPI_Type_contiguous((max_end_offset - min_st_offset + 1), MPI_BYTE, file_realm_types);
+        assert((max_end_offset - min_st_offset + 1) < INT_MAX);
+        MPI_Type_contiguous((int) (max_end_offset - min_st_offset + 1), MPI_BYTE, file_realm_types);
         MPI_Type_commit(file_realm_types);
         ADIOI_Flatten_datatype(*file_realm_types);
     } else if (fd->file_realm_st_offs == NULL) {
@@ -111,14 +112,13 @@ void ADIOI_Calc_file_realms(ADIO_File fd, ADIO_Offset min_st_offset, ADIO_Offset
 #endif
 }
 
-void ADIOI_Calc_file_realms_user_size(ADIO_File fd, int fr_size,
+void ADIOI_Calc_file_realms_user_size(ADIO_File fd, ADIO_Offset fr_size,
                                       int nprocs_for_coll,
                                       ADIO_Offset * file_realm_st_offs,
                                       MPI_Datatype * file_realm_types)
 {
     int i;
-    int aligned_fr_size;
-    ADIO_Offset aligned_fr_off;
+    ADIO_Offset aligned_fr_size, aligned_fr_off;
     MPI_Datatype simpletype;
 
     align_fr(fr_size, 0, fd->hints->cb_fr_alignment, &aligned_fr_size, &aligned_fr_off);
@@ -151,11 +151,12 @@ void ADIOI_Calc_file_realms_aar(ADIO_File fd, int nprocs_for_coll, int cb_pfr,
                                 ADIO_Offset max_end_offset,
                                 ADIO_Offset * file_realm_st_offs, MPI_Datatype * file_realm_types)
 {
-    int fr_size, aligned_fr_size, i;
+    int i;
     MPI_Datatype simpletype;
-    ADIO_Offset aligned_start_off;
+    ADIO_Offset aligned_fr_size, aligned_start_off;
     char value[9];
 
+    ADIO_Offset fr_size;
     fr_size = (max_end_offset - min_st_offset + nprocs_for_coll) / nprocs_for_coll;
     align_fr(fr_size, min_st_offset, fd->hints->cb_fr_alignment,
              &aligned_fr_size, &aligned_start_off);
@@ -178,7 +179,7 @@ void ADIOI_Calc_file_realms_aar(ADIO_File fd, int nprocs_for_coll, int cb_pfr,
 #endif
     }
     if (fd->hints->cb_pfr == ADIOI_HINT_ENABLE) {
-        MPL_snprintf(value, sizeof(value), "%d", fr_size);
+        MPL_snprintf(value, sizeof(value), "%lld", (long long) fr_size);
         ADIOI_Info_set(fd->info, "romio_cb_fr_type", value);
     }
 }
@@ -187,15 +188,15 @@ void ADIOI_Calc_file_realms_fsize(ADIO_File fd, int nprocs_for_coll,
                                   ADIO_Offset max_end_offset,
                                   ADIO_Offset * file_realm_st_offs, MPI_Datatype * file_realm_types)
 {
-    int fr_size, aligned_fr_size, error_code, i;
-    int fsize;
-    ADIO_Offset aligned_fr_off;
+    int error_code, i;
+    ADIO_Offset fr_size, aligned_fr_size, aligned_fr_off;
     ADIO_Fcntl_t fcntl_struct;
     MPI_Datatype simpletype;
 
     ADIO_Fcntl(fd, ADIO_FCNTL_GET_FSIZE, &fcntl_struct, &error_code);
 
     /* use impending file size since a write call may lengthen the file */
+    ADIO_Offset fsize;
     fsize = MPL_MAX(fcntl_struct.fsize, max_end_offset + 1);
     fr_size = (fsize + nprocs_for_coll - 1) / nprocs_for_coll;
     align_fr(fr_size, 0, fd->hints->cb_fr_alignment, &aligned_fr_size, &aligned_fr_off);
@@ -208,15 +209,17 @@ void ADIOI_Calc_file_realms_fsize(ADIO_File fd, int nprocs_for_coll,
 }
 
 /* creates a datatype with an empty trailing edge */
-void ADIOI_Create_fr_simpletype(int size, int nprocs_for_coll, MPI_Datatype * simpletype)
+void ADIOI_Create_fr_simpletype(ADIO_Offset size, int nprocs_for_coll, MPI_Datatype * simpletype)
 {
+    assert(size < INT_MAX);
+
     MPI_Aint lb, ub;
     MPI_Datatype type;
 
     lb = 0;
     ub = size * nprocs_for_coll;
 
-    MPI_Type_contiguous(size, MPI_BYTE, &type);
+    MPI_Type_contiguous((int) size, MPI_BYTE, &type);
     MPI_Type_create_resized(type, lb, ub, simpletype);
 
     MPI_Type_free(&type);
@@ -243,8 +246,8 @@ int ADIOI_Agg_idx(int rank, ADIO_File fd)
     return -1;
 }
 
-static void align_fr(int fr_size, ADIO_Offset fr_off, int alignment,
-                     int *aligned_fr_size, ADIO_Offset * aligned_fr_off)
+static void align_fr(ADIO_Offset fr_size, ADIO_Offset fr_off, int alignment,
+                     ADIO_Offset * aligned_fr_size, ADIO_Offset * aligned_fr_off)
 {
     *aligned_fr_off = fr_off - (fr_off % alignment);
     *aligned_fr_size = ((fr_off + fr_size) / alignment) * alignment - *aligned_fr_off;

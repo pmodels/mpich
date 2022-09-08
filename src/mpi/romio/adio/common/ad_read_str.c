@@ -62,7 +62,6 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
     ADIO_Offset i_offset, new_brd_size, brd_size, size;
     int i, j, k, st_index = 0;
     MPI_Count num, bufsize;
-    int n_etypes_in_filetype;
     ADIO_Offset n_filetypes, etype_in_filetype, st_n_filetypes, size_in_filetype;
     ADIO_Offset abs_off_in_filetype = 0, new_frd_size, frd_size = 0, st_frd_size;
     MPI_Count filetype_size, etype_size, buftype_size, partial_read;
@@ -193,7 +192,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
             st_index = i;       /* starting index in flat_file->indices[] */
             offset += disp + (ADIO_Offset) n_filetypes *filetype_extent;
         } else {
-            n_etypes_in_filetype = filetype_size / etype_size;
+            ADIO_Offset n_etypes_in_filetype = filetype_size / etype_size;
             n_filetypes = offset / n_etypes_in_filetype;
             etype_in_filetype = offset % n_etypes_in_filetype;
             size_in_filetype = etype_in_filetype * etype_size;
@@ -324,7 +323,8 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
 
             flat_buf = ADIOI_Flatten_and_find(datatype);
 
-            k = num = buf_count = 0;
+            k = 0;
+            num = buf_count = 0;
             i_offset = flat_buf->indices[0];
             j = st_index;
             off = offset;

@@ -645,12 +645,12 @@ static void ADIOI_Iread_and_exch_l1_begin(ADIOI_NBC_Request * nbc_req, int *erro
     ADIOI_Access *others_req;
 
     int i, j;
-    ADIO_Offset real_off, req_off;
+    ADIO_Offset real_off, req_off, req_len;
     char *read_buf;
     int *curr_offlen_ptr, *count, *send_size;
     int *partial_send, *start_pos;
     ADIO_Offset size, real_size, for_next_iter;
-    int req_len, flag;
+    int flag;
 
     ADIOI_R_Iexchange_data_vars *red_vars = NULL;
 
@@ -972,7 +972,7 @@ static void ADIOI_R_Iexchange_data_recv(ADIOI_NBC_Request * nbc_req, int *error_
     ADIOI_Access *others_req = vars->others_req;
     MPI_Aint *buf_idx = vars->buf_idx;
 
-    int i, j, k = 0, tmp = 0, nprocs_recv, nprocs_send;
+    int i, j, k = 0, nprocs_recv, nprocs_send;
     char **recv_buf = NULL;
     MPI_Datatype send_type;
 
@@ -1035,6 +1035,7 @@ static void ADIOI_R_Iexchange_data_recv(ADIOI_NBC_Request * nbc_req, int *error_
     for (i = 0; i < nprocs; i++) {
         if (send_size[i]) {
             /* take care if the last off-len pair is a partial send */
+            ADIO_Offset tmp = 0;
             if (partial_send[i]) {
                 k = start_pos[i] + count[i] - 1;
                 tmp = others_req[i].lens[k];
