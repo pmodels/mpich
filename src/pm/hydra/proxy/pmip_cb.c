@@ -696,7 +696,7 @@ static HYD_status singleton_init(struct pmip_pg *pg, int singleton_pid, int sing
     p = &pg->downstreams[0];
 
     int fd;
-    status = HYDU_sock_connect("localhost", singleton_port, &fd, 0, HYD_CONNECT_DELAY);
+    status = HYDU_sock_connect("localhost", (uint16_t) singleton_port, &fd, 0, HYD_CONNECT_DELAY);
     HYDU_ERR_POP(status, "unable to connect to singleton process\n");
 
     p->pid = singleton_pid;
@@ -707,12 +707,12 @@ static HYD_status singleton_init(struct pmip_pg *pg, int singleton_pid, int sing
 
     char msg[1024];
     strcpy(msg, "cmd=singinit authtype=none\n");
-    status = HYDU_sock_write(fd, msg, strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_write(fd, msg, (int) strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send msg to singleton process\n");
     status = HYDU_sock_read(fd, msg, 1024, &recvd, &closed, HYDU_SOCK_COMM_NONE);
     HYDU_ERR_POP(status, "unable to read msg from singleton process\n");
     snprintf(msg, 1024, "cmd=singinit_info versionok=yes stdio=no kvsname=%s\n", pg->kvsname);
-    status = HYDU_sock_write(fd, msg, strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_write(fd, msg, (int) strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send msg to singleton process\n");
 
     status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, p, pmi_cb);
@@ -928,7 +928,7 @@ static HYD_status launch_procs(struct pmip_pg *pg)
                     if (idx >= n_dev_ids) {
                         break;
                     }
-                    int id_str_len = strlen(all_dev_ids[idx]);
+                    int id_str_len = (int) strlen(all_dev_ids[idx]);
                     child_dev_ids[k] = (char *) MPL_malloc((id_str_len + 1) * sizeof(char),
                                                            MPL_MEM_OTHER);
                     MPL_strncpy(child_dev_ids[k], all_dev_ids[idx], id_str_len + 1);

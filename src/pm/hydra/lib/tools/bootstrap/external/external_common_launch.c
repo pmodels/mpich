@@ -48,7 +48,7 @@ static HYD_status lsf_get_path(char **path)
 
     if (*path == NULL) {
         if (MPL_env2str("LSF_BINDIR", (const char **) &bin_dir) && bin_dir) {
-            length = strlen(bin_dir) + 2 + strlen("blaunch");
+            length = (int) strlen(bin_dir) + 2 + (int) strlen("blaunch");
             HYDU_MALLOC_OR_JUMP(*path, char *, length, status);
             snprintf(*path, length, "%s/blaunch", bin_dir);
         }
@@ -77,7 +77,9 @@ static HYD_status sge_get_path(char **path)
     if (*path == NULL) {
         if (MPL_env2str("SGE_ROOT", (const char **) &sge_root) &&
             MPL_env2str("ARC", (const char **) &arc) && sge_root && arc) {
-            length = strlen(sge_root) + strlen("/bin/") + strlen(arc) + 1 + strlen("qrsh") + 1;
+            length =
+                (int) strlen(sge_root) + (int) strlen("/bin/") + (int) strlen(arc) + 1 +
+                (int) strlen("qrsh") + 1;
             HYDU_MALLOC_OR_JUMP(*path, char *, length, status);
             snprintf(*path, length, "%s/bin/%s/qrsh", sge_root, arc);
         }
@@ -199,7 +201,9 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         if (proxy->node->user == NULL) {
             targs[host_idx] = MPL_strdup(proxy->node->hostname);
         } else {
-            len = strlen(proxy->node->user) + strlen("@") + strlen(proxy->node->hostname) + 1;
+            len =
+                (int) strlen(proxy->node->user) + (int) strlen("@") +
+                (int) strlen(proxy->node->hostname) + 1;
 
             HYDU_MALLOC_OR_JUMP(targs[host_idx], char *, len, status);
             snprintf(targs[host_idx], len, "%s@%s", proxy->node->user, proxy->node->hostname);

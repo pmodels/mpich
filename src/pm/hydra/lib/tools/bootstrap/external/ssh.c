@@ -74,7 +74,7 @@ HYD_status HYDTI_bscd_ssh_store_launch_time(char *hostname)
             oldest = i;
 
     gettimeofday(&now, NULL);
-    time_left = HYDT_bscd_ssh_limit_time - now.tv_sec + e->init_time[oldest].tv_sec;
+    time_left = HYDT_bscd_ssh_limit_time - (int) (now.tv_sec - e->init_time[oldest].tv_sec);
 
     /* A better approach will be to make progress here, but that would
      * mean that we need to deal with nested calls to the demux engine
