@@ -209,13 +209,13 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int 
                                                           MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint total_count = 0;
     int i, vtx_id;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 
     /* calculate the total count */
+    MPI_Aint total_count = 0;
     for (i = 0; i < nranks; i++)
         total_count += recvcounts[i];
 

@@ -21,7 +21,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     MPI_Aint lb, true_extent;
     MPI_Aint *cnts, *displs;
     int recv_id, *reduce_id, nvtcs, vtcs;
-    int send_rank, recv_rank, total_count;
+    int send_rank, recv_rank;
     void *tmpbuf;
     int tag, vtx_id;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
@@ -45,6 +45,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     for (i = 0; i < nranks; i++)
         cnts[i] = 0;
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < nranks; i++) {
         cnts[i] = (count + nranks - 1) / nranks;

@@ -18,7 +18,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                                     int branching_factor, int is_nb, int chunk_size,
                                     int recv_pre_posted, MPIR_Errflag_t errflag)
 {
-    int rank, comm_size, i, j, k, *p, src = -1, dst, offset = 0;
+    int rank, comm_size, i, j, k, *p, src = -1, dst;
     int is_contig;
     int mpi_errno = MPI_SUCCESS;
     MPI_Status status;
@@ -108,6 +108,8 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
     else if (tree_type == MPIR_TREE_TYPE_KARY && parent != -1)
         src = parent;
 
+    MPI_Aint offset;
+    offset = 0;
     if (is_nb) {
         if (num_chunks > 3 && !recv_pre_posted) {
             /* For large number of chunks, pre-posting all the receives can add overhead

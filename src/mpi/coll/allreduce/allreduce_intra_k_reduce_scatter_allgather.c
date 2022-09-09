@@ -21,7 +21,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     int rank, nranks, nbr;
     int rem = 0, idx = 0, dst = 0, rank_for_offset;
     MPI_Aint true_extent, true_lb, extent;
-    int current_cnt = 0, send_count = 0, recv_count = 0, send_cnt = 0, recv_cnt = 0, iter = 0;
+    int current_cnt = 0, iter = 0;
     int offset = 0;
     int step1_sendto = -1, step1_nrecvs = 0, *step1_recvfrom = NULL;
     int step2_nphases = 0, **step2_nbrs;
@@ -157,7 +157,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                 MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks,
                                                       &current_cnt, &offset);
                 MPI_Aint send_offset = displs[offset] * extent;
-                send_cnt = 0;
+                MPI_Aint send_cnt = 0;
                 for (x = 0; x < current_cnt; x++)
                     send_cnt += cnts[offset + x];
                 mpi_errno =
@@ -171,7 +171,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                                                       &current_cnt, &offset);
 
                 MPI_Aint recv_offset = displs[offset] * extent;
-                recv_cnt = 0;
+                MPI_Aint recv_cnt = 0;
                 for (x = 0; x < current_cnt; x++)
                     recv_cnt += cnts[offset + x];
                 mpi_errno =
@@ -205,7 +205,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                     MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j + iter, k, nranks,
                                                           &current_cnt, &offset);
                     MPI_Aint recv_offset = displs[offset] * extent;
-                    recv_count = 0;
+                    MPI_Aint recv_count = 0;
                     for (x = 0; x < current_cnt; x++)
                         recv_count += cnts[offset + x];
                     mpi_errno = MPIC_Irecv(((char *) recvbuf + recv_offset), recv_count, datatype,
@@ -221,7 +221,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                 MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks, &current_cnt,
                                                       &offset);
                 MPI_Aint send_offset = displs[offset] * extent;
-                send_count = 0;
+                MPI_Aint send_count = 0;
                 for (x = 0; x < current_cnt; x++)
                     send_count += cnts[offset + x];
                 mpi_errno = MPIC_Isend(((char *) recvbuf + send_offset), send_count, datatype,
@@ -244,7 +244,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                         MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks,
                                                               &current_cnt, &offset);
                         MPI_Aint send_offset = displs[offset] * extent;
-                        send_count = 0;
+                        MPI_Aint send_count = 0;
                         for (x = 0; x < current_cnt; x++)
                             send_count += cnts[offset + x];
                         mpi_errno =

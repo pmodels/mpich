@@ -14,7 +14,6 @@ int MPIR_Ireduce_scatter_block_intra_sched_pairwise(const void *sendbuf, void *r
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
-    MPI_Aint *disps;
     void *tmp_recvbuf;
     int src, dst;
     MPI_Aint total_count;
@@ -31,9 +30,11 @@ int MPIR_Ireduce_scatter_block_intra_sched_pairwise(const void *sendbuf, void *r
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    MPI_Aint *disps;
     disps = MPIR_Sched_alloc_state(s, comm_size * sizeof(MPI_Aint));
     MPIR_ERR_CHKANDJUMP(!disps, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < comm_size; i++) {
         disps[i] = total_count;
