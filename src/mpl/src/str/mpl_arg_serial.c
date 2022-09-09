@@ -18,29 +18,30 @@ int MPL_args_serialize(int argc, char **argv, int *len, void **serialized_buf)
      *   2. An array of integers indicating the length of each argument
      *   3. An array of strings with the actual arguments
      */
+    int intsize = (int) sizeof(int);
 
     buf_size = 0;
-    buf_size += sizeof(int);    /* for the number of arguments */
-    buf_size += argc * sizeof(int);     /* for the argument lengths */
+    buf_size += intsize;        /* for the number of arguments */
+    buf_size += argc * intsize; /* for the argument lengths */
     for (i = 0; i < argc; i++)
-        buf_size += strlen(argv[i]);    /* for the arguments themselves */
+        buf_size += (int) strlen(argv[i]);      /* for the arguments themselves */
 
     buf = MPL_malloc(buf_size, MPL_MEM_STRINGS);
     assert(buf);
 
     offset = 0;
-    memcpy(buf, &argc, sizeof(int));
-    offset += sizeof(int);
+    memcpy(buf, &argc, intsize);
+    offset += intsize;
 
     for (i = 0; i < argc; i++) {
-        tmp = strlen(argv[i]);
-        memcpy(buf + offset, &tmp, sizeof(int));
-        offset += sizeof(int);
+        tmp = (int) strlen(argv[i]);
+        memcpy(buf + offset, &tmp, intsize);
+        offset += intsize;
     }
 
     for (i = 0; i < argc; i++) {
         memcpy(buf + offset, argv[i], strlen(argv[i]));
-        offset += strlen(argv[i]);
+        offset += (int) strlen(argv[i]);
     }
 
     *len = buf_size;
