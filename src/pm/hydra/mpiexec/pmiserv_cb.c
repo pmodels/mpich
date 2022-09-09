@@ -209,7 +209,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
     if (hdr.cmd == CMD_PID_LIST) {      /* Got PIDs */
         HYDU_MALLOC_OR_JUMP(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
         status = HYDU_sock_read(fd, (void *) proxy->pid,
-                                proxy->proxy_process_count * sizeof(int),
+                                (int) (proxy->proxy_process_count * sizeof(int)),
                                 &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read status from proxy\n");
         HYDU_ASSERT(!closed, status);
@@ -233,7 +233,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                             status);
         status =
             HYDU_sock_read(fd, (void *) proxy->exit_status,
-                           proxy->proxy_process_count * sizeof(int), &count, &closed,
+                           (int) (proxy->proxy_process_count * sizeof(int)), &count, &closed,
                            HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read status from proxy\n");
         HYDU_ASSERT(!closed, status);
@@ -315,7 +315,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         hdr.buflen = count;
 
-        status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed,
+        status = HYDU_sock_write(proxy->control_fd, &hdr, (int) sizeof(hdr), &count, &closed,
                                  HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error writing to control socket\n");
         HYDU_ASSERT(!closed, status);
@@ -365,7 +365,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 segment = strtok(current_list, ",");
                 HYDU_ASSERT(segment != NULL, status);
                 do {
-                    value = strtol(segment, NULL, 10);
+                    value = (int) strtol(segment, NULL, 10);
                     if (value == terminated_rank) {
                         included = 1;
                         break;
