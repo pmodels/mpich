@@ -20,7 +20,7 @@ inline int MPLI_shm_lhnd_close(MPL_shm_hnd_t hnd)
     MPLI_shm_lhnd_t lhnd = MPLI_SHM_LHND_INVALID;
     lhnd = MPLI_shm_lhnd_get(hnd);
     if (lhnd != MPLI_SHM_LHND_INVALID) {
-        if (close(lhnd) == 0) {
+        if (close((int) lhnd) == 0) {
             MPLI_shm_lhnd_set(hnd, MPLI_SHM_LHND_INIT_VAL);
         } else {
             /* close() failed */
@@ -81,9 +81,9 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
         }
 
         MPLI_shm_lhnd_set(hnd, lhnd);
-        rc = (MPLI_shm_lhnd_t) lseek(lhnd, seg_sz - 1, SEEK_SET);
+        lseek((int) lhnd, seg_sz - 1, SEEK_SET);
         do {
-            rc = (int) write(lhnd, "", 1);
+            rc = (int) write((int) lhnd, "", 1);
         } while ((rc == -1) && (errno == EINTR));
         if (rc == -1) {
             rc = MPL_ERR_SHM_INTERN;
