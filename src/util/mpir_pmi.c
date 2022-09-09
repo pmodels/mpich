@@ -330,6 +330,9 @@ int MPIR_pmi_barrier(void)
     pmi_errno = PMI2_KVS_Fence();
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_kvsfence", "**pmi_kvsfence %d", pmi_errno);
+    /* Get a non-existent key, it only returns after every process called fence */
+    int out_len;
+    PMI2_KVS_Get(pmi_jobid, PMI2_ID_NULL, "-NONEXIST-KEY", NULL, 0, &out_len);
 #elif defined(USE_PMIX_API)
     pmix_info_t *info;
     PMIX_INFO_CREATE(info, 1);

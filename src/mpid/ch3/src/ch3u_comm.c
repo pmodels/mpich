@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 #include "utlist.h"
-#if defined HAVE_LIBHCOLL
+#if defined HAVE_HCOLL
 #include "../../common/hcoll/hcoll.h"
 #endif
 
@@ -52,7 +52,7 @@ static hook_elt *destroy_hooks_tail = NULL;
 int MPIDI_CH3I_Comm_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-#if defined HAVE_LIBHCOLL && MPID_CH3I_CH_HCOLL_BCOL
+#if defined HAVE_HCOLL && MPID_CH3I_CH_HCOLL_BCOL
     MPIR_CHKLMEM_DECL(1);
 #endif
 
@@ -64,7 +64,7 @@ int MPIDI_CH3I_Comm_init(void)
     mpi_errno = MPIDI_CH3U_Comm_register_create_hook(comm_created, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
-#if defined HAVE_LIBHCOLL
+#if defined HAVE_HCOLL
     {
         int r;
 
@@ -103,7 +103,7 @@ int MPIDI_CH3I_Comm_init(void)
     
  fn_exit:
     MPIR_FUNC_EXIT;
-#if defined HAVE_LIBHCOLL && MPID_CH3I_CH_HCOLL_BCOL
+#if defined HAVE_HCOLL && MPID_CH3I_CH_HCOLL_BCOL
     MPIR_CHKLMEM_FREEALL();
 #endif
     return mpi_errno;

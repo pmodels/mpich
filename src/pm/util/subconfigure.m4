@@ -259,7 +259,7 @@ if test "$ac_cv_func_thread_policy_set" = yes ; then
             ]])],[pac_cv_have_thread_affinity_policy=yes], [pac_cv_have_thread_affinity_policy=no])
     ])
     if test "$pac_cv_have_thread_affinity_policy" = yes ; then
-        AC_DEFINE(HAVE_OSX_THREAD_AFFINITY,1,[Define is the OSX thread affinity policy macros defined])
+        AC_DEFINE(HAVE_OSX_THREAD_AFFINITY,1,[Define if the OSX thread affinity policy macros defined])
     fi
 fi
 

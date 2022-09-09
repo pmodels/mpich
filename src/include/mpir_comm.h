@@ -6,7 +6,7 @@
 #ifndef MPIR_COMM_H_INCLUDED
 #define MPIR_COMM_H_INCLUDED
 
-#if defined HAVE_LIBHCOLL
+#if defined HAVE_HCOLL
 #include "../mpid/common/hcoll/hcollpre.h"
 #endif
 
@@ -222,9 +222,9 @@ struct MPIR_Comm {
     } coll;
 
     void *csel_comm;            /* collective selector handle */
-#if defined HAVE_LIBHCOLL
+#if defined HAVE_HCOLL
     hcoll_comm_priv_t hcoll_priv;
-#endif                          /* HAVE_LIBHCOLL */
+#endif                          /* HAVE_HCOLL */
 
     /* the mapper is temporarily filled out in order to allow the
      * device to setup its network addresses.  it will be freed after
@@ -378,7 +378,7 @@ int MPII_Comm_create_map(int local_n,
                          int *local_mapping,
                          int *remote_mapping, MPIR_Comm * mapping_comm, MPIR_Comm * newcomm);
 
-int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
+int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info, bool in_comm_create);
 int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
 int MPII_Comm_check_hints(MPIR_Comm * comm_ptr);
 

@@ -151,9 +151,11 @@ int main(int argc, char **argv)
                      HYD_pmcd_pmip.upstream.server_name, HYD_pmcd_pmip.upstream.server_port);
     }
 
+    struct HYD_pmcd_init_hdr init_hdr;
+    strncpy(init_hdr.signature, "HYD", 4);
+    init_hdr.proxy_id = HYD_pmcd_pmip.local.id;
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
-                             &HYD_pmcd_pmip.local.id, sizeof(HYD_pmcd_pmip.local.id), &sent,
-                             &closed, HYDU_SOCK_COMM_MSGWAIT);
+                             &init_hdr, sizeof(init_hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send the proxy ID to the server\n");
     if (closed)
         goto fn_fail;

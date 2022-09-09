@@ -70,7 +70,9 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
         status = ucp_mem_query(mem_h, &mem_attr);
         MPIDI_UCX_CHK_STATUS(status);
 
-        *base_ptr = mem_attr.address;
+        if (mem_map_params.flags & UCP_MEM_MAP_ALLOCATE) {
+            *base_ptr = mem_attr.address;
+        }
         MPIR_Assert(mem_attr.length >= length);
 
         /* pack the key */

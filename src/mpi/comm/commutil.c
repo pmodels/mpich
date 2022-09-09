@@ -106,7 +106,7 @@ static int get_string_value(char *s, int type, int val)
  * If the hint is registered with callback function, it can be used for customization
  * at both creation time and run-time.
  */
-int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
+int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info, bool in_comm_creation)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -130,8 +130,11 @@ int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
         }
     }
 
-    mpi_errno = MPID_Comm_set_hints(comm_ptr, info);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* Device can process hints during commit stage if in_comm_creation */
+    if (!in_comm_creation) {
+        mpi_errno = MPID_Comm_set_hints(comm_ptr, info);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /* FIXME: run collective to ensure hints consistency */
   fn_exit:
@@ -905,7 +908,7 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
 
     if (info) {
-        MPII_Comm_set_hints(newcomm_ptr, info);
+        MPII_Comm_set_hints(newcomm_ptr, info, true);
     }
 
     newcomm_ptr->tainted = comm_ptr->tainted;
@@ -975,7 +978,7 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** out
     MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
 
     if (info) {
-        MPII_Comm_set_hints(newcomm_ptr, info);
+        MPII_Comm_set_hints(newcomm_ptr, info, true);
     }
 
     /* Start with no attributes on this communicator */

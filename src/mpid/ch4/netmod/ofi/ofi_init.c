@@ -872,7 +872,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             mpi_errno = flush_send_queue();
             MPIR_ERR_CHECK(mpi_errno);
         }
-    } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
+    } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
+               || strcmp("psm3", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
         /* verbs;ofi_rxm provider need barrier to prevent message loss */
         mpi_errno = MPIR_pmi_barrier();
         MPIR_ERR_CHECK(mpi_errno);
@@ -1487,7 +1488,7 @@ static void dump_global_settings(void)
 
 static void dump_dynamic_settings(void)
 {
-    fprintf(stdout, "==== OFI dyanamic settings ====\n");
+    fprintf(stdout, "==== OFI dynamic settings ====\n");
     fprintf(stdout, "num_vnis: %d\n", MPIDI_OFI_global.num_vnis);
     fprintf(stdout, "num_nics: %d\n", MPIDI_OFI_global.num_nics);
     fprintf(stdout, "======================================\n");

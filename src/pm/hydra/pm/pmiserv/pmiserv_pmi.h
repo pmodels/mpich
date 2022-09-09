@@ -8,7 +8,7 @@
 
 #include "hydra.h"
 #include "demux.h"
-#include "common.h"
+#include "pmiserv_common.h"
 
 /* PMI-1 specific definitions */
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v1;
@@ -22,7 +22,11 @@ struct HYD_pmcd_token_segment {
 };
 
 struct HYD_pmcd_pmi_pg_scratch {
+    /* PMI-1's PMI_Barrier is blocking, thus a single barrier_count works */
     int barrier_count;
+    /* PMI-2's PMI2_KVS_Fence is non-blocking, thus need track epoch */
+    int epoch;
+    int fence_count;
     struct HYD_pmcd_pmi_ecount {
         int fd;
         int pid;

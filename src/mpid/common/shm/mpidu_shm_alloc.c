@@ -19,6 +19,8 @@
 #include <sys/shm.h>
 #endif
 
+#include <sys/mman.h>
+
 #include <stddef.h>
 
 /*

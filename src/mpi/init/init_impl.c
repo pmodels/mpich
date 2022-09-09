@@ -130,8 +130,9 @@ int MPIR_Session_get_nth_pset_impl(MPIR_Session * session_ptr, MPIR_Info * info_
         i++;
     }
 
-    if (i != n) {
-        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**psetinvalidn");
+    if (!MPIR_pset_list[i]) {
+        MPIR_ERR_SETANDSTMT1(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**psetinvalidn",
+                             "**psetinvalidn %d", n);
     }
 
     int len = strlen(MPIR_pset_list[i]);

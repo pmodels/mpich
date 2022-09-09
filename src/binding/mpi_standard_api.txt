@@ -2021,7 +2021,7 @@ MPI_Status_set_cancelled:
 MPI_Status_set_elements:
     status: STATUS, direction=inout, [status with which to associate count]
     datatype: DATATYPE, [datatype associated with count]
-    count: XFER_NUM_ELEM_SMALL, [number of elements to associate with status]
+    count: POLYXFER_NUM_ELEM, [number of elements to associate with status]
 MPI_Status_set_elements_x:
     status: STATUS, direction=inout, [status with which to associate count]
     datatype: DATATYPE, [datatype associated with count]

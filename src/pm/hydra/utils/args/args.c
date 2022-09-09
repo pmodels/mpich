@@ -28,7 +28,7 @@ static HYD_status get_abs_wd(const char *wd, char **abs_wd)
     }
 
     if (wd[0] != '.') {
-        *abs_wd = (char *) wd;
+        *abs_wd = MPL_strdup(wd);
         goto fn_exit;
     }
 
@@ -91,15 +91,18 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
                 HYDU_ERR_POP(status, "unable to join strings\n");
                 HYDU_free_strlist(tmp);
 
+                MPL_free(test_loc);
                 goto fn_exit;   /* We are done */
             }
 
             MPL_free(path_loc);
             path_loc = NULL;
 
+            MPL_free(test_loc);
             status = get_abs_wd(strtok(NULL, ";:"), &test_loc);
             HYDU_ERR_POP(status, "error getting absolute working dir\n");
         }
+        MPL_free(test_loc);
     }
 
     /* There is either no PATH environment or we could not find the

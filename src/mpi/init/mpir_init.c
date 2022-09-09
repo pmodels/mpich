@@ -201,8 +201,20 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     /* Initialize gpu in mpl in order to support shm gpu module initialization
      * inside MPID_Init */
     if (MPIR_CVAR_ENABLE_GPU) {
-        int mpl_errno = MPL_gpu_init();
+        int debug_summary = 0;
+        if (MPIR_CVAR_DEBUG_SUMMARY) {
+            debug_summary = (MPIR_Process.rank == 0);
+        }
+        int mpl_errno = MPL_gpu_init(debug_summary);
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
+
+        int device_count, max_dev_id;
+        mpi_errno = MPL_gpu_get_dev_count(&device_count, &max_dev_id);
+        MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
+
+        if (device_count <= 0) {
+            MPIR_CVAR_ENABLE_GPU = 0;
+        }
     }
 
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
@@ -357,11 +369,11 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPIR_ThreadInfo.isThreaded = 0;
 #endif
 
-    mpi_errno = MPIR_finalize_builtin_comms();
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Call the high-priority callbacks */
     MPII_Call_finalize_callbacks(MPIR_FINALIZE_CALLBACK_PRIO + 1, MPIR_FINALIZE_CALLBACK_MAX_PRIO);
+
+    mpi_errno = MPIR_finalize_builtin_comms();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Signal the debugger that we are about to exit. */
     MPIR_Debugger_set_aborting(NULL);
@@ -377,7 +389,7 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Call the low-priority (post Finalize) callbacks */
-    MPII_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+    MPII_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO);
 
     MPII_hwtopo_finalize();
     MPII_nettopo_finalize();

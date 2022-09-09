@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #endif
 
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
 #include "hcoll/api/hcoll_dte.h"
 #endif
 
@@ -37,7 +37,7 @@
 #endif
 
 typedef struct {
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     hcoll_datatype_t hcoll_datatype;
 #endif
     union {

@@ -7,13 +7,13 @@
 #define MPID_COLL_H_INCLUDED
 
 #include "mpiimpl.h"
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
 #include "../../common/hcoll/hcoll.h"
 #endif
 
 static inline int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     if (MPI_SUCCESS == hcoll_Barrier(comm, errflag))
         return MPI_SUCCESS;
 #endif
@@ -23,7 +23,7 @@ static inline int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 static inline int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                              MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     if (MPI_SUCCESS == hcoll_Bcast(buffer, count, datatype, root, comm, errflag))
         return MPI_SUCCESS;
 #endif
@@ -34,7 +34,7 @@ static inline int MPID_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint co
                                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                  MPIR_Errflag_t * errflag)
 {
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     if (MPI_SUCCESS == hcoll_Allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag))
         return MPI_SUCCESS;
 #endif
@@ -45,7 +45,7 @@ static inline int MPID_Allgather(const void *sendbuf, MPI_Aint sendcount, MPI_Da
                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                  MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-#ifdef HAVE_LIBHCOLL
+#ifdef HAVE_HCOLL
     if (MPI_SUCCESS == hcoll_Allgather(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcount, recvtype, comm, errflag))
         return MPI_SUCCESS;
