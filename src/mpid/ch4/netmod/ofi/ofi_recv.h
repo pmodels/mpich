@@ -225,7 +225,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     if (unlikely(data_sz >= MPIDI_OFI_global.max_msg_size) && !MPIDI_OFI_COMM(comm).enable_striping) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
-        data_sz = MPIDI_OFI_global.max_msg_size;
+        data_sz = (MPI_Aint) MPIDI_OFI_global.max_msg_size;
     } else if (MPIDI_OFI_COMM(comm).enable_striping &&
                (data_sz >= MPIDI_OFI_global.stripe_threshold)) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
