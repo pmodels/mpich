@@ -24,8 +24,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     size_t nbytes;
     int tree_type, vtx_id, recv_id;
     MPIR_Treealgo_tree_t my_tree, parents_tree;
-    int current_child, next_child, lrank, total_count, sink_id;
-    int num_children, *child_subtree_size = NULL;
+    int current_child, next_child, lrank, sink_id;
+    int num_children;
     int num_send_dependencies;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
@@ -56,6 +56,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, sizeof(MPI_Aint) * size, mpi_errno, "cnts", MPL_MEM_COLL);    /* to store counts of each rank */
     MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, sizeof(MPI_Aint) * size, mpi_errno, "displs", MPL_MEM_COLL);        /* to store displs of each rank */
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < size; i++)
         cnts[i] = 0;
@@ -95,7 +96,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
-    MPIR_CHKLMEM_MALLOC(child_subtree_size, int *, sizeof(int) * num_children, mpi_errno, "child_subtree_size buffer", MPL_MEM_COLL);   /* to store size of subtree of each child */
+    MPI_Aint *child_subtree_size;
+    MPIR_CHKLMEM_MALLOC(child_subtree_size, MPI_Aint *, sizeof(MPI_Aint) * num_children, mpi_errno, "child_subtree_size buffer", MPL_MEM_COLL); /* to store size of subtree of each child */
     /* calculate size of subtree of each child */
 
     /* get tree information of the parent */
