@@ -11,7 +11,7 @@
 HYD_status HYDT_dmxu_select_wait_for_event(int wtime)
 {
     fd_set readfds, writefds;
-    int nfds, i, ret, work_done, events;
+    int nfds, i, ret, work_done;
     struct timeval timeout;
     struct HYDT_dmxu_callback *run;
     HYD_status status = HYD_SUCCESS;
@@ -59,7 +59,7 @@ HYD_status HYDT_dmxu_select_wait_for_event(int wtime)
             if (run->fd[i] == HYD_FD_UNSET)
                 continue;
 
-            events = 0;
+            HYD_event_t events = 0;
             if (FD_ISSET(run->fd[i], &readfds))
                 events |= HYD_POLLIN;
             if (FD_ISSET(run->fd[i], &writefds))

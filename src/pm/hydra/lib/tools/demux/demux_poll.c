@@ -7,7 +7,7 @@
 
 HYD_status HYDT_dmxu_poll_wait_for_event(int wtime)
 {
-    int total_fds, i, j, events, ret, work_done;
+    int total_fds, i, j, ret, work_done;
     struct HYDT_dmxu_callback *run;
     struct pollfd *pollfds = NULL;
     HYD_status status = HYD_SUCCESS;
@@ -57,7 +57,7 @@ HYD_status HYDT_dmxu_poll_wait_for_event(int wtime)
             if (pollfds[i].revents) {
                 work_done = 1;
 
-                events = 0;
+                HYD_event_t events = 0;
                 if (pollfds[i].revents & POLLIN)
                     events |= HYD_POLLIN;
                 if (pollfds[i].revents & POLLOUT)

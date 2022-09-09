@@ -53,7 +53,7 @@ HYD_status HYD_pmiserv_abort(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     if (PMIU_cmd_find_keyval(pmi, "exitcode") == NULL)
         HYDU_ERR_POP(status, "cannot find token: exitcode\n");
 
-    exitcode = strtol(PMIU_cmd_find_keyval(pmi, "exitcode"), NULL, 10);
+    exitcode = (int) strtol(PMIU_cmd_find_keyval(pmi, "exitcode"), NULL, 10);
 
   fn_exit:
     /* clean everything up and exit */
