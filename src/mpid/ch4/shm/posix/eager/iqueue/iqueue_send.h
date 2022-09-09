@@ -90,7 +90,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
         MPIR_Typerep_copy(payload, am_hdr, am_hdr_sz, MPIR_TYPEREP_FLAG_STREAM);
         /* make sure the data region starts at the boundary of MAX_ALIGNMENT */
         payload = payload + resized_am_hdr_sz;
-        cell->payload_size += resized_am_hdr_sz;
+        cell->payload_size += (int) resized_am_hdr_sz;
         cell->am_header.am_hdr_sz = (uint16_t) resized_am_hdr_sz;
         available -= cell->am_header.am_hdr_sz;
     } else {
@@ -105,7 +105,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     if (bytes_sent) {
         MPIR_Typerep_pack(buf, count, datatype, offset, payload, available, &packed_size,
                           MPIR_TYPEREP_FLAG_STREAM);
-        cell->payload_size += packed_size;
+        cell->payload_size += (int) packed_size;
         *bytes_sent = packed_size;
     }
 
