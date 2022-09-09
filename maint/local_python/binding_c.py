@@ -2198,7 +2198,7 @@ def dump_convert_handle(func, p):
 
     if kind == "REQUEST" and p['length']:
         G.out.append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % p['length'])
-        G.out.append("    int nbytes = %s * sizeof(MPIR_Request *);" % p['length'])
+        G.out.append("    int nbytes = %s * (int) sizeof(MPIR_Request *);" % p['length'])
         G.out.append("    request_ptrs = (MPIR_Request **) MPL_malloc(nbytes, MPL_MEM_OBJECT);")
         G.out.append("    if (request_ptrs == NULL) {")
         G.out.append("        MPIR_CHKMEM_SETERR(mpi_errno, nbytes, \"request pointers\");")
