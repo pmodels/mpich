@@ -20,7 +20,7 @@ int MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv(const void *se
                                                                   MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank, root, local_size, total_count, i;
+    int rank, root, local_size, i;
     MPI_Aint true_extent, true_lb = 0, extent;
     void *tmp_buf = NULL;
     MPI_Aint *disps = NULL;
@@ -29,7 +29,7 @@ int MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv(const void *se
     rank = comm_ptr->rank;
     local_size = comm_ptr->local_size;
 
-    total_count = 0;
+    MPI_Aint total_count = 0;
     for (i = 0; i < local_size; i++)
         total_count += recvcounts[i];
 

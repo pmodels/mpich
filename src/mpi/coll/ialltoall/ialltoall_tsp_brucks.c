@@ -43,7 +43,7 @@ cvars:
 * to the phase in the brucks algorithm. */
 static int
 brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Aint count,
-                 int phase, int k, int digitval, int comm_size, int *pupsize,
+                 int phase, int k, int digitval, int comm_size, MPI_Aint * pupsize,
                  MPIR_TSP_sched_t sched, int ninvtcs, int *invtcs)
 {
     MPI_Aint type_extent, type_lb, type_true_extent;
@@ -132,7 +132,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int delta, src, dst, vtx_id;
     void ***tmp_sbuf = NULL, ***tmp_rbuf = NULL;
     int *packids, *sendids = NULL, *recvids = NULL, *unpackids = NULL;
-    int packsize, num_unpacks_in_last_phase;
+    int num_unpacks_in_last_phase;
     void *tmp_buf = NULL;
     const void *senddata;
     int tag;
@@ -259,6 +259,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     unpackids = invtcs + 3 * k - 3;
     pack_ninvtcs = recv_ninvtcs = 0;
 
+    MPI_Aint packsize;
     packsize = 0;
     num_unpacks_in_last_phase = 0;      /* record number of unpacking tasks in last phase for building dependency graph */
 

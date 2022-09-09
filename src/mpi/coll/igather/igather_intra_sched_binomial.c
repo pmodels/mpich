@@ -36,7 +36,7 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     int mask, src, dst, relative_src;
     MPI_Aint recvtype_size, sendtype_size, curr_cnt = 0, nbytes;
     int recvblks;
-    int tmp_buf_size, missing;
+    int missing;
     void *tmp_buf = NULL;
     MPI_Aint extent = 0;
     int copy_offset = 0, copy_blks = 0;
@@ -72,6 +72,8 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     missing = (relative_rank | mask) - comm_size + 1;
     if (missing < 0)
         missing = 0;
+
+    MPI_Aint tmp_buf_size;
     tmp_buf_size = (mask - missing);
 
     /* If the message is smaller than the threshold, we will copy

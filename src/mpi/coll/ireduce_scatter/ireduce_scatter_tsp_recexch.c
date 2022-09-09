@@ -144,7 +144,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     int *step1_recvfrom = NULL;
     int **step2_nbrs = NULL;
     int nranks, rank, p_of_k, T;
-    int total_count, i;
+    int i;
     int dtcopy_id = -1, recv_id = -1, reduce_id = -1, sink_id = -1;
     int nvtcs, vtcs[2];
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
@@ -168,6 +168,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     extent = MPL_MAX(extent, true_extent);
     MPIR_Assert(MPIR_Op_is_commutative(op) == 1);
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < nranks; i++) {
         total_count += recvcounts[i];

@@ -24,11 +24,11 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
-    int *disps;
     void *tmp_recvbuf, *tmp_results;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int dis[2], blklens[2], total_count, dst;
+    MPI_Aint dis[2], blklens[2];
+    int dst;
     int mask, dst_tree_root, my_tree_root, j, k;
     int pof2, received;
     MPI_Datatype sendtype, recvtype;
@@ -43,8 +43,11 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
+    MPI_Aint *disps;
+    MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, comm_size * sizeof(MPI_Aint), mpi_errno, "disps",
+                        MPL_MEM_BUFFER);
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < comm_size; i++) {
         disps[i] = total_count;
@@ -116,7 +119,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
         for (j = my_tree_root; (j < my_tree_root + mask) && (j < comm_size); j++)
             dis[1] += recvcounts[j];
 
-        mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &sendtype);
+        mpi_errno = MPIR_Type_indexed_large_impl(2, blklens, dis, datatype, &sendtype);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&sendtype);
@@ -134,7 +137,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
         for (j = dst_tree_root; (j < dst_tree_root + mask) && (j < comm_size); j++)
             dis[1] += recvcounts[j];
 
-        mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &recvtype);
+        mpi_errno = MPIR_Type_indexed_large_impl(2, blklens, dis, datatype, &recvtype);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&recvtype);

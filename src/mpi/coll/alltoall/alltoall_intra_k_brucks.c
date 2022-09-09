@@ -31,7 +31,7 @@ cvars:
  * the brucks algorithm. */
 static int
 brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Aint count,
-                 int pow_k_phase, int k, int digitval, int comm_size, int *pupsize)
+                 int pow_k_phase, int k, int digitval, int comm_size, MPI_Aint * pupsize)
 {
     MPI_Aint type_extent, type_lb, type_true_extent;
     int offset, nconsecutive_occurrences, delta;
@@ -121,7 +121,6 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
     MPI_Aint s_true_extent, r_true_extent;
     int delta, src, dst;
     void **tmp_sbuf = NULL, **tmp_rbuf = NULL;
-    int packsize;
     void *tmp_buf = NULL;
     const void *senddata;
     MPIR_Request **reqs;
@@ -229,6 +228,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Allocated temporary buffer space for packing\n"));
 
+    MPI_Aint packsize;
     packsize = 0;
 
     /* Post (k - 1) sends/recvs for each of the nphases */
