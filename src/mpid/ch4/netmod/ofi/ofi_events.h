@@ -19,7 +19,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry 
     if (unlikely(has_err)) {
         return wc->data & ((1 << MPIDI_OFI_IDATA_SRC_BITS) - 1);
     }
-    return wc->data;
+    return (int) wc->data;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vni,

@@ -194,7 +194,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_sreq(const void *am_hdr, size_t a
         MPIDI_OFI_AMREQUEST(sreq, sreq_hdr) = sreq_hdr;
 
         sreq_hdr->am_hdr = (void *) &sreq_hdr->am_hdr_buf[0];
-        sreq_hdr->am_hdr_sz = am_hdr_sz;
+        sreq_hdr->am_hdr_sz = (uint16_t) am_hdr_sz;
         sreq_hdr->pack_buffer = NULL;
     } else {
         sreq_hdr = MPIDI_OFI_AMREQUEST(sreq, sreq_hdr);
@@ -249,11 +249,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
 
     msg_hdr = &MPIDI_OFI_AM_SREQ_HDR(sreq, msg_hdr);
     msg_hdr->handler_id = handler_id;
-    msg_hdr->am_hdr_sz = am_hdr_sz;
+    msg_hdr->am_hdr_sz = (uint16_t) am_hdr_sz;
     msg_hdr->payload_sz = 0;    /* LMT info sent as header */
     msg_hdr->am_type = MPIDI_AMTYPE_RDMA_READ;
-    msg_hdr->vni_src = vni_src;
-    msg_hdr->vni_dst = vni_dst;
+    msg_hdr->vni_src = (uint8_t) vni_src;
+    msg_hdr->vni_dst = (uint8_t) vni_dst;
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vni_src, dst_addr);
     msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vni_src, vni_src);
 
@@ -337,8 +337,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     msg_hdr->am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
     msg_hdr->payload_sz = data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
-    msg_hdr->vni_src = vni_src;
-    msg_hdr->vni_dst = vni_dst;
+    msg_hdr->vni_src = (uint8_t) vni_src;
+    msg_hdr->vni_dst = (uint8_t) vni_dst;
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vni_src, dst_addr);
     msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vni_src, vni_src);
 
@@ -399,11 +399,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
 
     msg_hdr = (MPIDI_OFI_am_header_t *) send_req->msg_hdr;
     msg_hdr->handler_id = handler_id;
-    msg_hdr->am_hdr_sz = am_hdr_sz;
+    msg_hdr->am_hdr_sz = (uint16_t) am_hdr_sz;
     msg_hdr->payload_sz = seg_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_PIPELINE;
-    msg_hdr->vni_src = vni_src;
-    msg_hdr->vni_dst = vni_dst;
+    msg_hdr->vni_src = (uint8_t) vni_src;
+    msg_hdr->vni_dst = (uint8_t) vni_dst;
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vni_src, dst_addr);
     msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vni_src, vni_src);
 
@@ -445,8 +445,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->sreq = sreq; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz = data_sz; \
         MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing = need_packing; \
-        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->vni_src = vni_src; \
-        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->vni_dst = vni_dst; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->vni_src = (uint8_t) vni_src; \
+        MPIDI_OFI_AMREQUEST(sreq, deferred_req)->vni_dst = (uint8_t) vni_dst; \
         DL_APPEND(MPIDI_OFI_global.per_vni[vni_src].deferred_am_isend_q, MPIDI_OFI_AMREQUEST(sreq, deferred_req)); \
     } while (0)
 
@@ -584,11 +584,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
 
     msg_hdr.handler_id = handler_id;
-    msg_hdr.am_hdr_sz = am_hdr_sz;
+    msg_hdr.am_hdr_sz = (uint16_t) am_hdr_sz;
     msg_hdr.payload_sz = 0;
     msg_hdr.am_type = MPIDI_AMTYPE_SHORT_HDR;
-    msg_hdr.vni_src = vni_src;
-    msg_hdr.vni_dst = vni_dst;
+    msg_hdr.vni_src = (uint8_t) vni_src;
+    msg_hdr.vni_dst = (uint8_t) vni_dst;
     msg_hdr.seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vni_src, dst_addr);
     msg_hdr.fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vni_src, vni_src);
 
