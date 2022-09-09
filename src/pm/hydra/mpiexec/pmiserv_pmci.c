@@ -91,6 +91,10 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
 
+    /* PMI-v2 kvs-fence */
+    status = HYD_pmiserv_epoch_init(&HYD_server_info.pg_list);
+    HYDU_ERR_POP(status, "unable to init epoch\n");
+
     status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
                                                  HYD_server_info.localhost,
                                                  HYD_server_info.port_range, &control_port,
