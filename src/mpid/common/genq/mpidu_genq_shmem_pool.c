@@ -109,7 +109,7 @@ int MPIDU_genq_shmem_pool_create(int cell_size, int cells_per_proc,
 
     /* the global_block_index is at the end of the slab to avoid extra need of alignment */
     int total_cells_size = num_proc * cells_per_proc * pool_obj->cell_alloc_size;
-    int free_queue_size = num_proc * sizeof(MPIDU_genq_shmem_queue_u);
+    int free_queue_size = num_proc * (int) sizeof(MPIDU_genq_shmem_queue_u);
     slab_size = total_cells_size + free_queue_size;
 
     rc = MPIDU_Init_shm_alloc(slab_size, &pool_obj->slab);

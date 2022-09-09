@@ -63,7 +63,7 @@ int MPIDU_bc_allgather(MPIR_Comm * allgather_comm, void *bc, int bc_len, int sam
         int node_id = MPIR_Process.node_map[i];
         recv_cnts[node_id]++;
     }
-    int disp = 0;
+    MPI_Aint disp = 0;
     for (i = 0; i < num_nodes; i++) {
         recv_offs[i] = disp;
         disp += recv_cnts[i];
