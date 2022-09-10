@@ -169,10 +169,10 @@ static void ADIOI_Type_decode(MPI_Datatype datatype, int *combiner,
 
     MPI_Type_get_envelope_c(datatype, &nints_c, &nadds_c, &ncnts_c, &ntypes_c, combiner);
 
-    ints_c = (int *) ADIOI_Malloc((nints_c + 1) * sizeof(int));
-    adds_c = (MPI_Aint *) ADIOI_Malloc((nadds_c + 1) * sizeof(MPI_Aint));
-    cnts_c = (MPI_Count *) ADIOI_Malloc((ncnts_c + 1) * sizeof(MPI_Count));
-    types_c = (MPI_Datatype *) ADIOI_Malloc((ntypes_c + 1) * sizeof(MPI_Datatype));
+    ints_c = (int *) ADIOI_Malloc((size_t) (nints_c + 1) * sizeof(int));
+    adds_c = (MPI_Aint *) ADIOI_Malloc((size_t) (nadds_c + 1) * sizeof(MPI_Aint));
+    cnts_c = (MPI_Count *) ADIOI_Malloc((size_t) (ncnts_c + 1) * sizeof(MPI_Count));
+    types_c = (MPI_Datatype *) ADIOI_Malloc((size_t) (ntypes_c + 1) * sizeof(MPI_Datatype));
 
     switch (*combiner) {
         case MPI_COMBINER_NAMED:

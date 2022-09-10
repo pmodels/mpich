@@ -109,7 +109,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
     flat_file_p = ADIOI_Flatten_and_find(fd->filetype);
     if (filetype_extent == filetype_sz) {
         flat_file_p->blocklens[0] = memtype_sz * count;
-        filetype_extent = memtype_sz * count;
+        filetype_extent = (MPI_Aint) (memtype_sz * count);
         filetype_sz = filetype_extent;
     }
 
@@ -159,7 +159,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
         /* if memory is contiguous, we now replace memtype_sz and
          * memtype_extent with the full access size */
         memtype_sz *= count;
-        memtype_extent = memtype_sz;
+        memtype_extent = (MPI_Aint) memtype_sz;
     }
 
     for (i = 0; i < fd->hints->cb_nodes; i++) {

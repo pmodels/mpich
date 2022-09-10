@@ -1110,7 +1110,7 @@ static void ADIOI_W_Iexchange_data_hole(ADIOI_NBC_Request * nbc_req, int *error_
 
     if (nprocs_recv) {
         if (*hole) {
-            ADIO_IreadContig(fd, vars->write_buf, size, MPI_BYTE,
+            ADIO_IreadContig(fd, vars->write_buf, (MPI_Aint) size, MPI_BYTE,
                              ADIO_EXPLICIT_OFFSET, off, &vars->req2, &vars->err);
             nbc_req->data.wr.state = ADIOI_IWC_STATE_W_IEXCHANGE_DATA_HOLE;
             return;

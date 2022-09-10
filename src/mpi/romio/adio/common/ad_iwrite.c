@@ -90,10 +90,10 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, MPI_Aint count, MPI_Datatype type,
     struct aiocb *aiocbp = NULL;
     ADIOI_AIO_Request *aio_req = NULL;
     MPI_Status status;
-    MPI_Count len, typesize;
+    MPI_Count typesize;
 
     MPI_Type_size_x(type, &typesize);
-    len = count * typesize;
+    MPI_Aint len = (MPI_Aint) (count * typesize);
 
 #if defined(ROMIO_XFS)
     unsigned maxiosz = wr ? fd->hints->fs_hints.xfs.write_chunk_sz :

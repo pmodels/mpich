@@ -736,7 +736,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
                 }
 
                 /* read currentRoundFDEnd bytes */
-                ADIO_ReadContig(fd, read_buf, amountDataToReadThisRound,
+                ADIO_ReadContig(fd, read_buf, (MPI_Aint) amountDataToReadThisRound,
                                 MPI_BYTE, ADIO_EXPLICIT_OFFSET, currentRoundFDStart,
                                 &status, error_code);
                 currentReadBuf = 1;

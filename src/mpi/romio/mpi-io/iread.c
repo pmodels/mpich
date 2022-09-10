@@ -117,7 +117,7 @@ int MPI_File_iread_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datat
 
 
     error_code = MPIOI_File_iread(fh, (MPI_Offset) 0, ADIO_INDIVIDUAL,
-                                  buf, count, datatype, myname, request);
+                                  buf, (MPI_Aint) count, datatype, myname, request);
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)

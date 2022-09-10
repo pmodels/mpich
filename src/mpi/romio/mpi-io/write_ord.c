@@ -83,7 +83,7 @@ Output Parameters:
 int MPI_File_write_ordered_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
                              MPI_Datatype datatype, MPI_Status * status)
 {
-    return MPIOI_File_write_ordered(fh, buf, count, datatype, status);
+    return MPIOI_File_write_ordered(fh, buf, (MPI_Aint) count, datatype, status);
 }
 
 #ifdef MPIO_BUILD_PROFILING

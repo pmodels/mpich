@@ -88,7 +88,7 @@ Output Parameters:
 int MPI_File_iwrite_shared_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
                              MPI_Datatype datatype, MPIO_Request * request)
 {
-    return MPIOI_File_iwrite_shared(fh, buf, count, datatype, request);
+    return MPIOI_File_iwrite_shared(fh, buf, (MPI_Aint) count, datatype, request);
 }
 
 #ifdef MPIO_BUILD_PROFILING

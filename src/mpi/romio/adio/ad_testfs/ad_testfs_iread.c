@@ -17,7 +17,7 @@ void ADIOI_TESTFS_IreadContig(ADIO_File fd, void *buf, MPI_Aint count,
 {
     ADIO_Status status;
     int myrank, nprocs;
-    MPI_Count typesize, len;
+    MPI_Count typesize;
 
     *error_code = MPI_SUCCESS;
 
@@ -28,7 +28,7 @@ void ADIOI_TESTFS_IreadContig(ADIO_File fd, void *buf, MPI_Aint count,
             myrank, nprocs, fd->filename);
     FPRINTF(stdout, "[%d/%d]    calling ADIOI_TESTFS_ReadContig\n", myrank, nprocs);
 
-    len = count * typesize;
+    MPI_Aint len = (MPI_Aint) (count * typesize);
     ADIOI_TESTFS_ReadContig(fd, buf, len, MPI_BYTE, file_ptr_type, offset, &status, error_code);
 
     MPIO_Completed_request_create(&fd, len, error_code, request);

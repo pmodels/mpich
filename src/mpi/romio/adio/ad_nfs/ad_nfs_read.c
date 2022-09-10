@@ -14,9 +14,8 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
                           ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
     ssize_t err = -1;
-    MPI_Count datatype_size, len;
-    ADIO_Offset bytes_xfered = 0;
-    size_t rd_count;
+    MPI_Count datatype_size;
+    MPI_Aint len, bytes_xfered, rd_count;
     static char myname[] = "ADIOI_NFS_READCONTIG";
     char *p;
 
@@ -26,12 +25,13 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
     }
 
     MPI_Type_size_x(datatype, &datatype_size);
-    len = datatype_size * count;
+    len = (MPI_Aint) (datatype_size * count);
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
         offset = fd->fp_ind;
     }
 
+    bytes_xfered = 0;
     p = buf;
     while (bytes_xfered < len) {
         rd_count = len - bytes_xfered;
@@ -86,7 +86,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
     do {                                                                \
         if (req_off >= readbuf_off + readbuf_len) {                     \
             readbuf_off = req_off;                                      \
-            readbuf_len = (int) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1)); \
+            readbuf_len = (MPI_Aint) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1)); \
             MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);                  \
             lseek(fd->fd_sys, readbuf_off, SEEK_SET);                   \
             MPE_Log_event(ADIOI_MPE_lseek_b, 0, NULL);                  \
@@ -98,7 +98,8 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
             if (err == -1) err_flag = 1;                                \
         }                                                               \
         while (req_len > readbuf_off + readbuf_len - req_off) {         \
-            partial_read = (int) (readbuf_off + readbuf_len - req_off); \
+            MPI_Aint partial_read;                                      \
+            partial_read = (MPI_Aint) (readbuf_off + readbuf_len - req_off); \
             tmp_buf = (char *) ADIOI_Malloc(partial_read);              \
             memcpy(tmp_buf, readbuf+readbuf_len-partial_read, partial_read); \
             ADIOI_Free(readbuf);                                        \
@@ -106,7 +107,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
             memcpy(readbuf, tmp_buf, partial_read);                     \
             ADIOI_Free(tmp_buf);                                        \
             readbuf_off += readbuf_len-partial_read;                    \
-            readbuf_len = (int) (partial_read + MPL_MIN(max_bufsize,    \
+            readbuf_len = (MPI_Aint) (partial_read + MPL_MIN(max_bufsize,    \
                                                         end_offset-readbuf_off+1)); \
             MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);                  \
             lseek(fd->fd_sys, readbuf_off+partial_read, SEEK_SET);      \
@@ -118,7 +119,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
             if (!(fd->atomicity)) ADIOI_UNLOCK(fd, readbuf_off+partial_read, SEEK_SET, readbuf_len-partial_read); \
             if (err == -1) err_flag = 1;                                \
         }                                                               \
-        memcpy((char *)buf + userbuf_off, readbuf+req_off-readbuf_off, req_len); \
+        memcpy((char *)buf + userbuf_off, readbuf+req_off-readbuf_off, (MPI_Aint) req_len); \
     } while (0)
 #else
 #define ADIOI_BUFFERED_READ                                             \
@@ -133,6 +134,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
             if (err == -1) err_flag = 1;                                \
         }                                                               \
         while (req_len > readbuf_off + readbuf_len - req_off) {         \
+            MPI_Aint partial_read;                                      \
             partial_read = (int) (readbuf_off + readbuf_len - req_off); \
             tmp_buf = (char *) ADIOI_Malloc(partial_read);              \
             memcpy(tmp_buf, readbuf+readbuf_len-partial_read, partial_read); \
@@ -149,7 +151,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
             if (!(fd->atomicity)) ADIOI_UNLOCK(fd, readbuf_off+partial_read, SEEK_SET, readbuf_len-partial_read); \
             if (err == -1) err_flag = 1;                                \
         }                                                               \
-        memcpy((char *)buf + userbuf_off, readbuf+req_off-readbuf_off, req_len); \
+        memcpy((char *)buf + userbuf_off, readbuf+req_off-readbuf_off, (MPI_Aint) req_len); \
     } while (0)
 #endif
 
@@ -168,7 +170,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
     MPI_Count num, bufsize;
     ADIO_Offset n_filetypes, etype_in_filetype, st_n_filetypes, size_in_filetype;
     ADIO_Offset abs_off_in_filetype = 0, new_frd_size, frd_size = 0, st_frd_size;
-    MPI_Count filetype_size, etype_size, buftype_size, partial_read;
+    MPI_Count filetype_size, etype_size, buftype_size;
     MPI_Aint lb, filetype_extent, buftype_extent;
     int buf_count, buftype_is_contig, filetype_is_contig;
     ADIO_Offset userbuf_off, req_len, sum;

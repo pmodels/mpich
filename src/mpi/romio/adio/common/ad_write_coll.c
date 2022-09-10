@@ -768,7 +768,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 #define ADIOI_BUF_INCR \
 do { \
     while (buf_incr) { \
-        size_in_buf = MPL_MIN(buf_incr, flat_buf_sz); \
+        MPI_Aint size_in_buf = (MPI_Aint) MPL_MIN(buf_incr, flat_buf_sz); \
         user_buf_idx += size_in_buf; \
         flat_buf_sz -= size_in_buf; \
         if (!flat_buf_sz) { \
@@ -789,9 +789,7 @@ do { \
 #define ADIOI_BUF_COPY \
 do { \
     while (size) { \
-        size_in_buf = MPL_MIN(size, flat_buf_sz); \
-  ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + user_buf_idx) == (ADIO_Offset)(uintptr_t)((uintptr_t)buf + user_buf_idx)); \
-  ADIOI_Assert(size_in_buf == (size_t)size_in_buf); \
+        MPI_Aint size_in_buf = (MPI_Aint) MPL_MIN(size, flat_buf_sz); \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
                ((char *) buf) + user_buf_idx, size_in_buf); \
         assert(size_in_buf < INT_MAX); \
@@ -832,7 +830,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 /* this function is only called if buftype is not contig */
 
     int i, p, flat_buf_idx;
-    ADIO_Offset flat_buf_sz, size_in_buf, buf_incr, size;
+    ADIO_Offset flat_buf_sz, buf_incr, size;
     int jj, n_buftypes;
     ADIO_Offset off, len, rem_len, user_buf_idx;
 

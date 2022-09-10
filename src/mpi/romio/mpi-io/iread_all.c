@@ -118,7 +118,8 @@ int MPI_File_iread_all_c(MPI_File fh, void *buf, MPI_Count count,
 #endif /* MPI_hpux */
 
     error_code = MPIOI_File_iread_all(fh, (MPI_Offset) 0,
-                                      ADIO_INDIVIDUAL, buf, count, datatype, myname, request);
+                                      ADIO_INDIVIDUAL, buf, (MPI_Aint) count, datatype, myname,
+                                      request);
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS) {

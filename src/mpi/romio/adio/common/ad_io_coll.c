@@ -321,7 +321,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, MPI_Aint count, int rdwr,
 
             if (rdwr == ADIOI_READ) {
                 if (fd->is_agg && buffered_io_size) {
-                    ADIOI_IOFiletype(fd, cb_buf, buffered_io_size, MPI_BYTE,
+                    ADIOI_IOFiletype(fd, cb_buf, (MPI_Aint) buffered_io_size, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, agg_disp, agg_dtype,
                                      ADIOI_READ, status, error_code);
                     if (*error_code != MPI_SUCCESS)
@@ -486,7 +486,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, MPI_Aint count, int rdwr,
                     fprintf(stderr, "]\n");
                     fflush(NULL);
 #endif
-                    ADIOI_IOFiletype(fd, cb_buf, buffered_io_size, MPI_BYTE,
+                    ADIOI_IOFiletype(fd, cb_buf, (MPI_Aint) buffered_io_size, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, agg_disp, agg_dtype,
                                      ADIOI_WRITE, status, error_code);
                     if (*error_code != MPI_SUCCESS)
@@ -502,7 +502,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, MPI_Aint count, int rdwr,
 
             if (rdwr == ADIOI_READ) {
                 if (fd->is_agg && buffered_io_size) {
-                    ADIOI_IOFiletype(fd, cb_buf, buffered_io_size, MPI_BYTE,
+                    ADIOI_IOFiletype(fd, cb_buf, (MPI_Aint) buffered_io_size, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, agg_disp, agg_dtype,
                                      ADIOI_READ, status, error_code);
                     if (*error_code != MPI_SUCCESS)
@@ -531,7 +531,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, MPI_Aint count, int rdwr,
                 MPE_Log_event(5033, 0, NULL);
 #endif
                 if (fd->is_agg && buffered_io_size) {
-                    ADIOI_IOFiletype(fd, cb_buf, buffered_io_size, MPI_BYTE,
+                    ADIOI_IOFiletype(fd, cb_buf, (MPI_Aint) buffered_io_size, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, agg_disp, agg_dtype,
                                      ADIOI_WRITE, status, error_code);
                     if (*error_code != MPI_SUCCESS)

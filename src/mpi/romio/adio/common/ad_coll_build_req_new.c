@@ -545,7 +545,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
                      * region. */
                     next_off_idx = client_ol_cur_ct_arr[cur_off_proc];
                     if (client_comm_next_off_arr[cur_off_proc] != tmp_coll_buf_sz) {
-                        client_disp_arr[cur_off_proc][next_off_idx] = tmp_coll_buf_sz;
+                        client_disp_arr[cur_off_proc][next_off_idx] = (MPI_Aint) tmp_coll_buf_sz;
                         client_blk_arr[cur_off_proc][next_off_idx] = (int) act_reg_sz;
                         (client_ol_cur_ct_arr[cur_off_proc])++;
                     } else {
@@ -563,7 +563,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
                          * the file than an MPI_Aint */
                         if (!agg_ol_cur_ct)
                             *agg_dtype_offset_p = st_reg;
-                        agg_disp_arr[agg_ol_cur_ct] = st_reg - (MPI_Aint) * agg_dtype_offset_p;
+                        agg_disp_arr[agg_ol_cur_ct] = (MPI_Aint) (st_reg - *agg_dtype_offset_p);
                         agg_blk_arr[agg_ol_cur_ct] = (int) act_reg_sz;
                         agg_ol_cur_ct++;
                     } else {
@@ -913,7 +913,8 @@ int ADIOI_Build_client_reqs(ADIO_File fd,
                         agg_next_off_idx = agg_ol_cur_ct_arr[cur_off_proc];
                         assert(agg_mem_act_reg_sz < INT_MAX);
                         if (agg_mem_next_off_arr[cur_off_proc] != agg_mem_st_reg) {
-                            agg_disp_arr[cur_off_proc][agg_next_off_idx] = agg_mem_st_reg;
+                            agg_disp_arr[cur_off_proc][agg_next_off_idx] =
+                                (MPI_Aint) agg_mem_st_reg;
                             agg_blk_arr[cur_off_proc][agg_next_off_idx] = (int) agg_mem_act_reg_sz;
                             (agg_ol_cur_ct_arr[cur_off_proc])++;
                         } else {
@@ -1211,7 +1212,8 @@ int ADIOI_Build_client_pre_req(ADIO_File fd,
                         assert(agg_mem_act_reg_sz < INT_MAX);
                         agg_next_off_idx = agg_ol_cur_ct;
                         if (agg_mem_next_off != agg_mem_st_reg) {
-                            my_mem_view_state_p->pre_disp_arr[agg_next_off_idx] = agg_mem_st_reg;
+                            my_mem_view_state_p->pre_disp_arr[agg_next_off_idx] =
+                                (MPI_Aint) agg_mem_st_reg;
                             my_mem_view_state_p->pre_blk_arr[agg_next_off_idx] =
                                 (int) agg_mem_act_reg_sz;
                             agg_ol_cur_ct++;

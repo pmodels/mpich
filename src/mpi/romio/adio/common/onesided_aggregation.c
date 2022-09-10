@@ -120,10 +120,11 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
             if (packedDataBufer != NULL) {
                 if (packing)
                     memcpy(&(packedDataBufer[targetSendDataIndex]),
-                           &(sourceDataBuffer[physicalSourceBufferOffset]), remainingBytesToLoad);
+                           &(sourceDataBuffer[physicalSourceBufferOffset]),
+                           (size_t) remainingBytesToLoad);
                 else
                     memcpy(&(sourceDataBuffer[physicalSourceBufferOffset]),
-                           &(packedDataBufer[targetSendDataIndex]), remainingBytesToLoad);
+                           &(packedDataBufer[targetSendDataIndex]), (size_t) remainingBytesToLoad);
             }
 
             targetSendDataIndex += remainingBytesToLoad;
@@ -154,10 +155,11 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
             if (packedDataBufer != NULL) {
                 if (packing)
                     memcpy(&(packedDataBufer[targetSendDataIndex]),
-                           &(sourceDataBuffer[physicalSourceBufferOffset]), amountDataToLoad);
+                           &(sourceDataBuffer[physicalSourceBufferOffset]),
+                           (size_t) amountDataToLoad);
                 else
                     memcpy(&(sourceDataBuffer[physicalSourceBufferOffset]),
-                           &(packedDataBufer[targetSendDataIndex]), amountDataToLoad);
+                           &(packedDataBufer[targetSendDataIndex]), (size_t) amountDataToLoad);
             }
 
             targetSendDataIndex += amountDataToLoad;
@@ -1014,7 +1016,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     (char *) write_buf +
                                     ((ADIO_Offset) stripeIter *
                                      (ADIO_Offset) stripeSize),
-                                    stripe_parms->stripeWriteLens[stripeIter], MPI_BYTE,
+                                    (MPI_Aint) stripe_parms->stripeWriteLens[stripeIter], MPI_BYTE,
                                     ADIO_EXPLICIT_OFFSET,
                                     stripe_parms->stripeWriteOffsets[stripeIter], &status,
                                     error_code);
@@ -1171,7 +1173,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 #endif
                                         if (amountOfDataWrittenThisRoundAgg > 0)
                                             derivedTypePackedSourceBuffer = (char *)
-                                                ADIOI_Malloc(amountOfDataWrittenThisRoundAgg *
+                                                ADIOI_Malloc((size_t)
+                                                             amountOfDataWrittenThisRoundAgg *
                                                              sizeof(char));
                                         else
                                             derivedTypePackedSourceBuffer = NULL;
@@ -1211,7 +1214,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                         bufferAmountToSend;
                                 } else {
                                     putSourceData =
-                                        (char *) ADIOI_Malloc(bufferAmountToSend * sizeof(char));
+                                        (char *) ADIOI_Malloc((size_t) bufferAmountToSend *
+                                                              sizeof(char));
                                     nonContigSourceDataBufferAdvance(((char *) buf), flatBuf,
                                                                      bufferAmountToSend, 1,
                                                                      &currentFDSourceBufferState
@@ -1441,8 +1445,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                              (char *) write_buf +
                                              ((ADIO_Offset) stripeIter *
                                               (ADIO_Offset) (stripeSize)),
-                                             stripe_parms->stripeWriteLens[stripeIter], MPI_BYTE,
-                                             ADIO_EXPLICIT_OFFSET,
+                                             (size_t) stripe_parms->stripeWriteLens[stripeIter],
+                                             MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                                              stripe_parms->stripeWriteOffsets[stripeIter], &status,
                                              error_code);
                         }
@@ -2304,7 +2308,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                     }
 
                     /* read currentRoundFDEnd bytes */
-                    ADIO_ReadContig(fd, read_buf, amountDataToReadThisRound,
+                    ADIO_ReadContig(fd, read_buf, (MPI_Aint) amountDataToReadThisRound,
                                     MPI_BYTE, ADIO_EXPLICIT_OFFSET, currentRoundFDStart,
                                     &status, error_code);
                     currentReadBuf = 1;
@@ -2501,7 +2505,8 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 #endif
                                         if (amountOfDataReadThisRoundAgg > 0)
                                             derivedTypePackedSourceBuffer =
-                                                (char *) ADIOI_Malloc(amountOfDataReadThisRoundAgg *
+                                                (char *) ADIOI_Malloc((size_t)
+                                                                      amountOfDataReadThisRoundAgg *
                                                                       sizeof(char));
                                         else
                                             derivedTypePackedSourceBuffer = NULL;
@@ -2544,7 +2549,8 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
                                 } else {
                                     getSourceData =
-                                        (char *) ADIOI_Malloc(bufferAmountToRecv * sizeof(char));
+                                        (char *) ADIOI_Malloc((size_t) bufferAmountToRecv *
+                                                              sizeof(char));
                                     MPI_Get(getSourceData, (int) bufferAmountToRecv, MPI_BYTE,
                                             sourceAggsForMyData[aggIter],
                                             sourceDisplacementToUseThisRound,

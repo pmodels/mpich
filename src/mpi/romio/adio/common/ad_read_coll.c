@@ -487,7 +487,8 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
     int *curr_offlen_ptr, *count, *send_size, *recv_size;
     int *partial_send, *recd_from_proc, *start_pos;
     /* Not convinced end_loc-st_loc couldn't be > int, so make these offsets */
-    ADIO_Offset real_size, size, for_curr_iter, for_next_iter;
+    ADIO_Offset real_size, size;
+    MPI_Aint for_curr_iter, for_next_iter;
     int rank;
     ADIOI_Flatlist_node *flat_buf = NULL;
     MPI_Aint lb, buftype_extent;
@@ -665,7 +666,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                 start_pos[i] = curr_offlen_ptr[i];
                 for (j = curr_offlen_ptr[i]; j < others_req[i].count; j++) {
                     ADIO_Offset req_off;
-                    MPI_Aint req_len;
+                    ADIO_Offset req_len;
                     if (partial_send[i]) {
                         /* this request may have been partially
                          * satisfied in the previous iteration. */
@@ -696,8 +697,8 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                                 /* this is the case illustrated in the
                                  * figure above. */
                                 for_next_iter = MPL_MAX(for_next_iter,
-                                                        real_off + real_size -
-                                                        others_req[i].offsets[j + 1]);
+                                                        (MPI_Aint) (real_off + real_size -
+                                                                    others_req[i].offsets[j + 1]));
                                 /* max because it must cover requests
                                  * from different processes */
                             }
@@ -727,7 +728,6 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
             tmp_buf = (char *) ADIOI_Malloc(for_next_iter);
             ADIOI_Assert((((ADIO_Offset) (uintptr_t) read_buf) + real_size - for_next_iter) ==
                          (ADIO_Offset) (uintptr_t) (read_buf + real_size - for_next_iter));
-            ADIOI_Assert((for_next_iter + coll_bufsize) == (size_t) (for_next_iter + coll_bufsize));
             memcpy(tmp_buf, read_buf + real_size - for_next_iter, for_next_iter);
             ADIOI_Free(fd->io_buf);
             fd->io_buf = (char *) ADIOI_Malloc(for_next_iter + coll_bufsize);
@@ -921,7 +921,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 #define ADIOI_BUF_INCR                                                  \
     do {                                                                \
         while (buf_incr) {                                              \
-            size_in_buf = MPL_MIN(buf_incr, flat_buf_sz);               \
+            MPI_Aint size_in_buf = (MPI_Aint) MPL_MIN(buf_incr, flat_buf_sz);               \
             user_buf_idx += size_in_buf;                                \
             flat_buf_sz -= size_in_buf;                                 \
             if (!flat_buf_sz) {                                         \
@@ -942,13 +942,12 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 #define ADIOI_BUF_COPY                                                  \
     do {                                                                \
         while (size) {                                                  \
-            size_in_buf = MPL_MIN(size, flat_buf_sz);                   \
+            MPI_Aint size_in_buf = (MPI_Aint) MPL_MIN(size, flat_buf_sz);                   \
             ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + user_buf_idx) == (ADIO_Offset)(uintptr_t)((uintptr_t)buf + user_buf_idx)); \
-            ADIOI_Assert(size_in_buf == (size_t)size_in_buf);           \
             memcpy(((char *) buf) + user_buf_idx,                       \
                    &(recv_buf[p][recv_buf_idx[p]]), size_in_buf);       \
             assert(size_in_buf < INT_MAX); \
-            recv_buf_idx[p] += (int) size_in_buf; /* already tested (size_t)size_in_buf*/ \
+            recv_buf_idx[p] += (int) size_in_buf; \
             user_buf_idx += size_in_buf;                                \
             flat_buf_sz -= size_in_buf;                                 \
             if (!flat_buf_sz) {                                         \
@@ -982,7 +981,7 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 /* this function is only called if buftype is not contig */
 
     int i, p, flat_buf_idx;
-    ADIO_Offset flat_buf_sz, size_in_buf, buf_incr, size;
+    ADIO_Offset flat_buf_sz, buf_incr, size;
     int n_buftypes;
     ADIO_Offset off, len, rem_len, user_buf_idx;
     MPI_Aint *curr_from_proc, *done_from_proc, *recv_buf_idx;

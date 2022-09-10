@@ -84,7 +84,7 @@ Output Parameters:
 int MPI_File_iread_shared_c(MPI_File fh, void *buf, MPI_Count count,
                             MPI_Datatype datatype, MPI_Request * request)
 {
-    return MPIOI_File_iread_shared(fh, buf, count, datatype, request);
+    return MPIOI_File_iread_shared(fh, buf, (MPI_Aint) count, datatype, request);
 }
 
 #ifdef MPIO_BUILD_PROFILING

@@ -37,7 +37,7 @@ ADIO_Offset ADIOI_TESTFS_SeekIndividual(ADIO_File fd, ADIO_Offset offset,
             myrank, nprocs, fd->filename);
 
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
-    etype_size = fd->etype_size;
+    etype_size = (MPI_Aint) fd->etype_size;
 
     if (filetype_is_contig)
         off = fd->disp + etype_size * offset;

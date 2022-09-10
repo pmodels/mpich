@@ -117,7 +117,7 @@ int ADIOI_NFS_aio(ADIO_File fd, void *buf, ADIO_Offset len, ADIO_Offset offset,
         if (this_errno == EAGAIN) {
             /* exceeded the max. no. of outstanding requests.
              * complete all previous async. requests and try again. */
-            ADIO_WriteContig(fd, buf, len, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
+            ADIO_WriteContig(fd, buf, (MPI_Aint) len, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                              offset, &status, &error_code);
             MPIO_Completed_request_create(&fd, len, &error_code, request);
             return 0;

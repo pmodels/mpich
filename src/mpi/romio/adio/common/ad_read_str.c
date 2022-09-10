@@ -11,7 +11,7 @@
         if (req_off >= readbuf_off + readbuf_len) {                     \
             readbuf_off = req_off;                                      \
             readbuf_len = (MPI_Aint) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1)); \
-            ADIO_ReadContig(fd, readbuf, readbuf_len, MPI_BYTE,         \
+            ADIO_ReadContig(fd, readbuf, (MPI_Aint) readbuf_len, MPI_BYTE,         \
                             ADIO_EXPLICIT_OFFSET, readbuf_off, &status1, error_code); \
             if (*error_code != MPI_SUCCESS) {                           \
                 *error_code = MPIO_Err_create_code(*error_code,         \
@@ -23,7 +23,7 @@
         }                                                               \
         while (req_len > readbuf_off + readbuf_len - req_off) {         \
             ADIOI_Assert((readbuf_off + readbuf_len - req_off) == (int) (readbuf_off + readbuf_len - req_off)); \
-            partial_read = (int) (readbuf_off + readbuf_len - req_off); \
+            MPI_Aint partial_read = (MPI_Aint) (readbuf_off + readbuf_len - req_off); \
             tmp_buf = (char *) ADIOI_Malloc(partial_read);              \
             memcpy(tmp_buf, readbuf+readbuf_len-partial_read, partial_read); \
             ADIOI_Free(readbuf);                                        \
@@ -33,7 +33,7 @@
             readbuf_off += readbuf_len-partial_read;                    \
             readbuf_len = (MPI_Aint) (partial_read + MPL_MIN(max_bufsize, \
                                                              end_offset-readbuf_off+1)); \
-            ADIO_ReadContig(fd, readbuf+partial_read, readbuf_len-partial_read, \
+            ADIO_ReadContig(fd, readbuf+partial_read, (MPI_Aint) readbuf_len-partial_read, \
                             MPI_BYTE, ADIO_EXPLICIT_OFFSET, readbuf_off+partial_read, \
                             &status1, error_code);                      \
             if (*error_code != MPI_SUCCESS) {                           \
@@ -45,7 +45,7 @@
             }                                                           \
         }                                                               \
         ADIOI_Assert(req_len == (size_t)req_len);                       \
-        memcpy((char *)buf + userbuf_off, readbuf+req_off-readbuf_off, req_len); \
+        memcpy((char *)buf + userbuf_off, readbuf+req_off-readbuf_off, (size_t) req_len); \
     } while (0)
 
 
@@ -64,7 +64,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
     MPI_Count num, bufsize;
     ADIO_Offset n_filetypes, etype_in_filetype, st_n_filetypes, size_in_filetype;
     ADIO_Offset abs_off_in_filetype = 0, new_frd_size, frd_size = 0, st_frd_size;
-    MPI_Count filetype_size, etype_size, buftype_size, partial_read;
+    MPI_Count filetype_size, etype_size, buftype_size;
     MPI_Aint lb, filetype_extent, buftype_extent;
     int buf_count, buftype_is_contig, filetype_is_contig;
     ADIO_Offset userbuf_off, req_len, sum;

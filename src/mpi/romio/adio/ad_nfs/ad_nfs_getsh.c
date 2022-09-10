@@ -47,7 +47,7 @@ void ADIOI_NFS_Get_shared_fp(ADIO_File fd, ADIO_Offset incr, ADIO_Offset * share
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);
 #endif
-        err = lseek(fd->shared_fp_fd->fd_sys, 0, SEEK_SET);
+        err = (ssize_t) lseek(fd->shared_fp_fd->fd_sys, 0, SEEK_SET);
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_lseek_b, 0, NULL);
 #endif
@@ -79,7 +79,7 @@ void ADIOI_NFS_Get_shared_fp(ADIO_File fd, ADIO_Offset incr, ADIO_Offset * share
 #ifdef ADIOI_MPE_LOGGING
     MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);
 #endif
-    err = lseek(fd->shared_fp_fd->fd_sys, 0, SEEK_SET);
+    err = (ssize_t) lseek(fd->shared_fp_fd->fd_sys, 0, SEEK_SET);
 #ifdef ADIOI_MPE_LOGGING
     MPE_Log_event(ADIOI_MPE_lseek_b, 0, NULL);
 #endif

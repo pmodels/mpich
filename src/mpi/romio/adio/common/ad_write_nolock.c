@@ -112,7 +112,8 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                     MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);
 #endif
                     err = write(fd->fd_sys,
-                                combine_buf, fd->hints->ind_wr_buffer_size - combine_buf_remain);
+                                combine_buf,
+                                (size_t) (fd->hints->ind_wr_buffer_size - combine_buf_remain));
 #ifdef ADIOI_MPE_LOGGING
                     MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
 #endif
@@ -138,7 +139,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
 #endif
                     err = write(fd->fd_sys,
                                 ((char *) buf) + (ADIO_Offset) j * (ADIO_Offset) buftype_extent +
-                                flat_buf->indices[i], flat_buf->blocklens[i]);
+                                flat_buf->indices[i], (size_t) flat_buf->blocklens[i]);
 #ifdef ADIOI_MPE_LOGGING
                     MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
 #endif
@@ -149,7 +150,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                     /* copy more data into combine buffer */
                     memcpy(combine_buf_ptr,
                            ((char *) buf) + j * buftype_extent + flat_buf->indices[i],
-                           flat_buf->blocklens[i]);
+                           (size_t) flat_buf->blocklens[i]);
                     combine_buf_ptr += flat_buf->blocklens[i];
                     combine_buf_remain -= flat_buf->blocklens[i];
                     off += flat_buf->blocklens[i];      /* keep up with the final file offset too */
@@ -167,7 +168,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
             MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);
 #endif
             err = write(fd->fd_sys,
-                        combine_buf, fd->hints->ind_wr_buffer_size - combine_buf_remain);
+                        combine_buf, (size_t) (fd->hints->ind_wr_buffer_size - combine_buf_remain));
 #ifdef ADIOI_MPE_LOGGING
             MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
 #endif
@@ -270,7 +271,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
 #ifdef ADIOI_MPE_LOGGING
                     MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);
 #endif
-                    err = write(fd->fd_sys, ((char *) buf) + i_offset, fwr_size);
+                    err = write(fd->fd_sys, ((char *) buf) + i_offset, (size_t) fwr_size);
 #ifdef ADIOI_MPE_LOGGING
                     MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
 #endif
@@ -303,7 +304,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
 
             k = 0;
             num = buf_count = 0;
-            indx = flat_buf->indices[0];
+            indx = (MPI_Aint) flat_buf->indices[0];
             j = st_index;
             off = offset;
             bwr_size = flat_buf->blocklens[0];
@@ -329,7 +330,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
 #endif
                     ADIOI_Assert(size == (size_t) size);
                     ADIOI_Assert(off == (off_t) off);
-                    err = write(fd->fd_sys, ((char *) buf) + indx, size);
+                    err = write(fd->fd_sys, ((char *) buf) + indx, (size_t) size);
 #ifdef ADIOI_MPE_LOGGING
                     MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
 #endif
@@ -354,7 +355,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
 
                     new_fwr_size = flat_file->blocklens[j];
                     if (size != bwr_size) {
-                        indx += size;
+                        indx += (MPI_Aint) size;
                         new_bwr_size -= size;
                     }
                 }
@@ -364,7 +365,8 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
 
                     k = (k + 1) % flat_buf->count;
                     buf_count++;
-                    indx = buftype_extent * (buf_count / flat_buf->count) + flat_buf->indices[k];
+                    indx = (MPI_Aint) (buftype_extent * (buf_count / flat_buf->count) +
+                                       flat_buf->indices[k]);
                     new_bwr_size = flat_buf->blocklens[k];
                     if (size != fwr_size) {
                         off += size;

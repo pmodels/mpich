@@ -108,7 +108,7 @@ int MPI_File_write_at_all_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *bu
 #endif /* MPI_hpux */
 
     error_code = MPIOI_File_write_all(fh, offset, ADIO_EXPLICIT_OFFSET,
-                                      buf, count, datatype, myname, status);
+                                      buf, (MPI_Aint) count, datatype, myname, status);
 
 #ifdef MPI_hpux
     HPMP_IO_END(fl_xmpi, fh, datatype, count);

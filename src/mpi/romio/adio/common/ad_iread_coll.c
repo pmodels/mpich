@@ -828,7 +828,7 @@ static void ADIOI_Iread_and_exch_l1_end(ADIOI_NBC_Request * nbc_req, int *error_
     ADIO_File fd = vars->fd;
     ADIO_Offset size = vars->size;
     ADIO_Offset real_size = vars->real_size;
-    ADIO_Offset for_next_iter = vars->for_next_iter;
+    MPI_Aint for_next_iter = (MPI_Aint) vars->for_next_iter;
     char *read_buf = vars->read_buf;
     char *tmp_buf;
 

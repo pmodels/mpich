@@ -217,7 +217,7 @@ void ADIOI_Create_fr_simpletype(ADIO_Offset size, int nprocs_for_coll, MPI_Datat
     MPI_Datatype type;
 
     lb = 0;
-    ub = size * nprocs_for_coll;
+    ub = (MPI_Aint) (size * nprocs_for_coll);
 
     MPI_Type_contiguous((int) size, MPI_BYTE, &type);
     MPI_Type_create_resized(type, lb, ub, simpletype);

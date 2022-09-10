@@ -77,7 +77,7 @@ Output Parameters:
 int MPI_File_write_ordered_begin_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count count,
                                    MPI_Datatype datatype)
 {
-    return MPIOI_File_write_ordered_begin(fh, buf, count, datatype);
+    return MPIOI_File_write_ordered_begin(fh, buf, (MPI_Aint) count, datatype);
 }
 
 #ifdef MPIO_BUILD_PROFILING

@@ -88,7 +88,8 @@ int MPI_File_write_at_all_begin_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST vo
     static char myname[] = "MPI_FILE_WRITE_AT_ALL_BEGIN";
 
     error_code = MPIOI_File_write_all_begin(fh, offset,
-                                            ADIO_EXPLICIT_OFFSET, buf, count, datatype, myname);
+                                            ADIO_EXPLICIT_OFFSET, buf, (MPI_Aint) count, datatype,
+                                            myname);
 
     return error_code;
 }
