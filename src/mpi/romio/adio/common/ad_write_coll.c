@@ -429,9 +429,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                                      (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
                         MPI_Get_address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
                         ADIOI_Assert((off + size - req_off) == (int) (off + size - req_off));
-                        recv_size[i] += (int) (MPL_MIN(off + size - req_off, (unsigned) req_len));
+                        recv_size[i] += (int) (MPL_MIN(off + size - req_off, req_len));
 
-                        if (off + size - req_off < (unsigned) req_len) {
+                        if (off + size - req_off < req_len) {
                             partial_recv[i] = (int) (off + size - req_off);
 
                             /* --BEGIN ERROR HANDLING-- */
@@ -878,20 +878,15 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                        done_to_proc[p], send_size[p] - send_buf_idx[p]);
                         buf_incr = done_to_proc[p] - curr_to_proc[p];
                         ADIOI_BUF_INCR;
-                        ADIOI_Assert((curr_to_proc[p] + len - done_to_proc[p]) ==
-                                     (unsigned) (curr_to_proc[p] + len - done_to_proc[p]));
                         buf_incr = curr_to_proc[p] + len - done_to_proc[p];
-                        ADIOI_Assert((done_to_proc[p] + size) ==
-                                     (unsigned) (done_to_proc[p] + size));
+                        ADIOI_Assert((done_to_proc[p] + size) == (done_to_proc[p] + (int) size));
                         /* ok to cast: bounded by cb buffer size */
                         curr_to_proc[p] = done_to_proc[p] + (int) size;
                         ADIOI_BUF_COPY;
                     } else {
                         size = MPL_MIN(len, send_size[p] - send_buf_idx[p]);
                         buf_incr = len;
-                        ADIOI_Assert((curr_to_proc[p] + size) ==
-                                     (unsigned) ((ADIO_Offset) curr_to_proc[p] + size));
-                        assert(size <= INT_MAX);
+                        ADIOI_Assert((curr_to_proc[p] + size) == (curr_to_proc[p] + (int) size));
                         curr_to_proc[p] += (int) size;
                         ADIOI_BUF_COPY;
                     }
@@ -901,8 +896,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                         jj++;
                     }
                 } else {
-                    ADIOI_Assert((curr_to_proc[p] + (int) len) ==
-                                 (unsigned) ((ADIO_Offset) curr_to_proc[p] + len));
+                    ADIOI_Assert((curr_to_proc[p] + len) == (curr_to_proc[p] + (int) len));
                     curr_to_proc[p] += (int) len;
                     buf_incr = len;
                     ADIOI_BUF_INCR;

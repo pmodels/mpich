@@ -72,8 +72,6 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
     MPI_Type_get_extent(datatype, &lb, &buftype_extent);
     etype_size = fd->etype_size;
 
-    ADIOI_Assert((buftype_size * count) ==
-                 ((ADIO_Offset) (unsigned) buftype_size * (ADIO_Offset) count));
     bufsize = buftype_size * count;
 
     if (!buftype_is_contig && filetype_is_contig) {
@@ -135,19 +133,12 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                     printf("[%d/%d] nc mem c file (1) writing loc = %Ld sz = %d\n",
                            rank, nprocs, off, flat_buf->blocklens[i]);
 #endif
-                    ADIOI_Assert(flat_buf->blocklens[i] == (unsigned) flat_buf->blocklens[i]);
-                    ADIOI_Assert((((ADIO_Offset) (uintptr_t) buf) +
-                                  (ADIO_Offset) j * (ADIO_Offset) buftype_extent +
-                                  flat_buf->indices[i]) ==
-                                 (ADIO_Offset) ((uintptr_t) buf +
-                                                (ADIO_Offset) j * (ADIO_Offset) buftype_extent +
-                                                flat_buf->indices[i]));
 #ifdef ADIOI_MPE_LOGGING
                     MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);
 #endif
                     err = write(fd->fd_sys,
                                 ((char *) buf) + (ADIO_Offset) j * (ADIO_Offset) buftype_extent +
-                                flat_buf->indices[i], (unsigned) flat_buf->blocklens[i]);
+                                flat_buf->indices[i], flat_buf->blocklens[i]);
 #ifdef ADIOI_MPE_LOGGING
                     MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
 #endif

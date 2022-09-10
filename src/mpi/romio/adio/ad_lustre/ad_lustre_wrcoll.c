@@ -946,7 +946,7 @@ do { \
         size -= size_in_buf; \
         buf_incr -= size_in_buf; \
     } \
-    ADIOI_BUF_INCR; \
+    ADIOI_BUF_INCR \
 } while (0)
 
 static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
@@ -1011,18 +1011,16 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
                         buf_incr = done_to_proc[p] - curr_to_proc[p];
                         ADIOI_BUF_INCR;
                         ADIOI_Assert((curr_to_proc[p] + len - done_to_proc[p]) ==
-                                     (unsigned) (curr_to_proc[p] + len - done_to_proc[p]));
+                                     (int) (curr_to_proc[p] + len - done_to_proc[p]));
                         buf_incr = (int) (curr_to_proc[p] + len - done_to_proc[p]);
-                        ADIOI_Assert((done_to_proc[p] + size) ==
-                                     (unsigned) (done_to_proc[p] + size));
-                        curr_to_proc[p] = done_to_proc[p] + size;
+                        ADIOI_Assert((done_to_proc[p] + size) == (int) (done_to_proc[p] + size));
+                        curr_to_proc[p] = (int) (done_to_proc[p] + size);
                         ADIOI_BUF_COPY;
                     } else {
                         size = (int) MPL_MIN(len, send_size[p] - send_buf_idx[p]);
                         buf_incr = (int) len;
-                        ADIOI_Assert((curr_to_proc[p] + size) ==
-                                     (unsigned) ((ADIO_Offset) curr_to_proc[p] + size));
-                        curr_to_proc[p] += size;
+                        ADIOI_Assert((curr_to_proc[p] + size) == (curr_to_proc[p] + (int) size));
+                        curr_to_proc[p] += (int) size;
                         ADIOI_BUF_COPY;
                     }
                     if (send_buf_idx[p] == send_size[p]) {
@@ -1031,8 +1029,7 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
                         jj++;
                     }
                 } else {
-                    ADIOI_Assert((curr_to_proc[p] + len) ==
-                                 (unsigned) ((ADIO_Offset) curr_to_proc[p] + len));
+                    ADIOI_Assert((curr_to_proc[p] + len) == (curr_to_proc[p] + (int) len));
                     curr_to_proc[p] += (int) len;
                     buf_incr = (int) len;
                     ADIOI_BUF_INCR;

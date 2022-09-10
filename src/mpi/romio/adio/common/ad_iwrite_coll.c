@@ -774,9 +774,9 @@ static void ADIOI_Iexch_and_write_l1_begin(ADIOI_NBC_Request * nbc_req, int *err
                                  (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
                     MPI_Get_address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
                     ADIOI_Assert((off + size - req_off) == (int) (off + size - req_off));
-                    recv_size[i] += (int) (MPL_MIN(off + size - req_off, (unsigned) req_len));
+                    recv_size[i] += (int) (MPL_MIN(off + size - req_off, req_len));
 
-                    if (off + size - req_off < (unsigned) req_len) {
+                    if (off + size - req_off < req_len) {
                         partial_recv[i] = (int) (off + size - req_off);
 
                         /* --BEGIN ERROR HANDLING-- */

@@ -747,11 +747,9 @@ static void ADIOI_Iread_and_exch_l1_begin(ADIOI_NBC_Request * nbc_req, int *erro
                     MPI_Get_address(read_buf + req_off - real_off, &(others_req[i].mem_ptrs[j]));
                     ADIOI_Assert((real_off + real_size - req_off) ==
                                  (int) (real_off + real_size - req_off));
-                    send_size[i] +=
-                        (int) (MPL_MIN
-                               (real_off + real_size - req_off, (ADIO_Offset) (unsigned) req_len));
+                    send_size[i] += (int) (MPL_MIN(real_off + real_size - req_off, req_len));
 
-                    if (real_off + real_size - req_off < (ADIO_Offset) (unsigned) req_len) {
+                    if (real_off + real_size - req_off < req_len) {
                         partial_send[i] = (int) (real_off + real_size - req_off);
                         if ((j + 1 < others_req[i].count) &&
                             (others_req[i].offsets[j + 1] < real_off + real_size)) {

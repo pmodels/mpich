@@ -186,7 +186,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
         end_offset = off + bufsize - 1;
         writebuf_off = off;
         writebuf = (char *) ADIOI_Malloc(max_bufsize);
-        writebuf_len = (unsigned) (MPL_MIN(max_bufsize, end_offset - writebuf_off + 1));
+        writebuf_len = MPL_MIN(max_bufsize, end_offset - writebuf_off + 1);
 
         /* if atomicity is true or data sieving is not disable, lock the region
          * to be accessed */

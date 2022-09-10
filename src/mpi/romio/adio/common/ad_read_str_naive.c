@@ -147,8 +147,8 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
         } else {
             ADIO_Offset n_etypes_in_filetype = filetype_size / etype_size;
             n_filetypes = offset / n_etypes_in_filetype;
-            etype_in_filetype = (int) (offset % n_etypes_in_filetype);
-            size_in_filetype = (unsigned) etype_in_filetype *(unsigned) etype_size;
+            etype_in_filetype = offset % n_etypes_in_filetype;
+            size_in_filetype = etype_in_filetype * etype_size;
 
             sum = 0;
             for (f_index = 0; f_index < flat_file->count; f_index++) {
@@ -192,7 +192,7 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
             }
 
             off = disp + flat_file->indices[f_index] + n_filetypes * (ADIO_Offset) filetype_extent;
-            frd_size = MPL_MIN(flat_file->blocklens[f_index], bufsize - (unsigned) userbuf_off);
+            frd_size = MPL_MIN(flat_file->blocklens[f_index], bufsize - userbuf_off);
         }
 
         /* End of calculations.  At this point the following values have
@@ -260,8 +260,7 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
                     }
                     off = disp + flat_file->indices[f_index] +
                         n_filetypes * (ADIO_Offset) filetype_extent;
-                    frd_size = MPL_MIN(flat_file->blocklens[f_index],
-                                       bufsize - (unsigned) userbuf_off);
+                    frd_size = MPL_MIN(flat_file->blocklens[f_index], bufsize - userbuf_off);
                 }
             }
         } else {

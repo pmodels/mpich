@@ -10,7 +10,7 @@
     do {                                                                \
         if (req_off >= readbuf_off + readbuf_len) {                     \
             readbuf_off = req_off;                                      \
-            readbuf_len = (unsigned) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1)); \
+            readbuf_len = (MPI_Aint) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1)); \
             ADIO_ReadContig(fd, readbuf, readbuf_len, MPI_BYTE,         \
                             ADIO_EXPLICIT_OFFSET, readbuf_off, &status1, error_code); \
             if (*error_code != MPI_SUCCESS) {                           \
@@ -31,7 +31,7 @@
             memcpy(readbuf, tmp_buf, partial_read);                     \
             ADIOI_Free(tmp_buf);                                        \
             readbuf_off += readbuf_len-partial_read;                    \
-            readbuf_len = (unsigned) (partial_read + MPL_MIN(max_bufsize, \
+            readbuf_len = (MPI_Aint) (partial_read + MPL_MIN(max_bufsize, \
                                                              end_offset-readbuf_off+1)); \
             ADIO_ReadContig(fd, readbuf+partial_read, readbuf_len-partial_read, \
                             MPI_BYTE, ADIO_EXPLICIT_OFFSET, readbuf_off+partial_read, \
@@ -71,7 +71,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
     ADIO_Offset off, req_off, disp, end_offset = 0, readbuf_off, start_off;
     char *readbuf, *tmp_buf, *value;
     int info_flag;
-    unsigned max_bufsize, readbuf_len;
+    MPI_Aint max_bufsize, readbuf_len;
     ADIO_Status status1;
     static char myname[] = "ADIOI_GEN_ReadStrided";
 
@@ -129,7 +129,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
         end_offset = off + bufsize - 1;
         readbuf_off = off;
         readbuf = (char *) ADIOI_Malloc(max_bufsize);
-        readbuf_len = (unsigned) (MPL_MIN(max_bufsize, end_offset - readbuf_off + 1));
+        readbuf_len = (MPI_Aint) (MPL_MIN(max_bufsize, end_offset - readbuf_off + 1));
 
 /* if atomicity is true, lock (exclusive) the region to be accessed */
         if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS))
@@ -379,7 +379,6 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                         new_frd_size -= size;
                     }
                 }
-                ADIOI_Assert(((ADIO_Offset) num + size) == (unsigned) (num + size));
                 num += size;
                 frd_size = new_frd_size;
                 brd_size = new_brd_size;

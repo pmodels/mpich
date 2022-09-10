@@ -175,7 +175,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
     ADIO_Offset off, req_off, disp, end_offset = 0, readbuf_off, start_off;
     char *readbuf, *tmp_buf, *value;
     int info_flag;
-    unsigned max_bufsize, readbuf_len;
+    MPI_Aint max_bufsize, readbuf_len;
 
     static char myname[] = "ADIOI_NFS_READSTRIDED";
 
@@ -219,7 +219,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
         end_offset = off + bufsize - 1;
         readbuf_off = off;
         readbuf = (char *) ADIOI_Malloc(max_bufsize);
-        readbuf_len = (unsigned) (MPL_MIN(max_bufsize, end_offset - readbuf_off + 1));
+        readbuf_len = (MPI_Aint) (MPL_MIN(max_bufsize, end_offset - readbuf_off + 1));
 
 /* if atomicity is true, lock (exclusive) the region to be accessed */
         if (fd->atomicity)
