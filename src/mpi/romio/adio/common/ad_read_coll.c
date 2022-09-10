@@ -918,7 +918,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 }
 
 #define ADIOI_BUF_INCR                                                  \
-    {                                                                   \
+    do {                                                                \
         while (buf_incr) {                                              \
             size_in_buf = MPL_MIN(buf_incr, flat_buf_sz);               \
             user_buf_idx += size_in_buf;                                \
@@ -935,11 +935,11 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
             }                                                           \
             buf_incr -= size_in_buf;                                    \
         }                                                               \
-    }
+    } while (0)
 
 
 #define ADIOI_BUF_COPY                                                  \
-    {                                                                   \
+    do {                                                                \
         while (size) {                                                  \
             size_in_buf = MPL_MIN(size, flat_buf_sz);                   \
             ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + user_buf_idx) == (ADIO_Offset)(uintptr_t)((uintptr_t)buf + user_buf_idx)); \
@@ -962,8 +962,8 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
             size -= size_in_buf;                                        \
             buf_incr -= size_in_buf;                                    \
         }                                                               \
-        ADIOI_BUF_INCR                                                  \
-    }
+        ADIOI_BUF_INCR;                                                 \
+    } while (0)
 
 void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             * flat_buf, char **recv_buf, ADIO_Offset
@@ -1032,26 +1032,31 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                         size = MPL_MIN(curr_from_proc[p] + len -
                                        done_from_proc[p], recv_size[p] - recv_buf_idx[p]);
                         buf_incr = done_from_proc[p] - curr_from_proc[p];
-                        ADIOI_BUF_INCR buf_incr = curr_from_proc[p] + len - done_from_proc[p];
+                        ADIOI_BUF_INCR;
+                        buf_incr = curr_from_proc[p] + len - done_from_proc[p];
                         ADIOI_Assert((done_from_proc[p] + size) ==
                                      (unsigned) ((ADIO_Offset) done_from_proc[p] + size));
                         curr_from_proc[p] = done_from_proc[p] + size;
-                    ADIOI_BUF_COPY} else {
+                        ADIOI_BUF_COPY;
+                    } else {
                         size = MPL_MIN(len, recv_size[p] - recv_buf_idx[p]);
                         buf_incr = len;
                         ADIOI_Assert((curr_from_proc[p] + size) ==
                                      (unsigned) ((ADIO_Offset) curr_from_proc[p] + size));
                         curr_from_proc[p] += (unsigned) size;
-                    ADIOI_BUF_COPY}
+                        ADIOI_BUF_COPY;
+                    }
                 } else {
                     ADIOI_Assert((curr_from_proc[p] + len) ==
                                  (unsigned) ((ADIO_Offset) curr_from_proc[p] + len));
                     curr_from_proc[p] += (unsigned) len;
                     buf_incr = len;
-                ADIOI_BUF_INCR}
+                    ADIOI_BUF_INCR;
+                }
             } else {
                 buf_incr = len;
-            ADIOI_BUF_INCR}
+                ADIOI_BUF_INCR;
+            }
             off += len;
             rem_len -= len;
         }

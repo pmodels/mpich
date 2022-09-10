@@ -83,7 +83,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
 
 #ifdef ADIOI_MPE_LOGGING
 #define ADIOI_BUFFERED_READ                                             \
-    {                                                                   \
+    do {                                                                \
         if (req_off >= readbuf_off + readbuf_len) {                     \
             readbuf_off = req_off;                                      \
             readbuf_len = (int) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1)); \
@@ -119,10 +119,10 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
             if (err == -1) err_flag = 1;                                \
         }                                                               \
         memcpy((char *)buf + userbuf_off, readbuf+req_off-readbuf_off, req_len); \
-    }
+    } while (0)
 #else
 #define ADIOI_BUFFERED_READ                                             \
-    {                                                                   \
+    do {                                                                \
         if (req_off >= readbuf_off + readbuf_len) {                     \
             readbuf_off = req_off;                                      \
             readbuf_len = (int) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1)); \
@@ -150,7 +150,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
             if (err == -1) err_flag = 1;                                \
         }                                                               \
         memcpy((char *)buf + userbuf_off, readbuf+req_off-readbuf_off, req_len); \
-    }
+    } while (0)
 #endif
 
 
@@ -251,7 +251,8 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                 userbuf_off = (ADIO_Offset) j *buftype_extent + flat_buf->indices[i];
                 req_off = off;
                 req_len = flat_buf->blocklens[i];
-                ADIOI_BUFFERED_READ off += flat_buf->blocklens[i];
+                ADIOI_BUFFERED_READ;
+                off += flat_buf->blocklens[i];
             }
 
         if (fd->atomicity)
@@ -432,7 +433,8 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                     req_off = off;
                     req_len = frd_size;
                     userbuf_off = i_offset;
-                ADIOI_BUFFERED_READ}
+                    ADIOI_BUFFERED_READ;
+                }
                 i_offset += frd_size;
 
                 if (off + frd_size < disp + flat_file->indices[j] +
@@ -474,7 +476,8 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                     req_off = off;
                     req_len = size;
                     userbuf_off = i_offset;
-                ADIOI_BUFFERED_READ}
+                    ADIOI_BUFFERED_READ;
+                }
 
                 new_frd_size = frd_size;
                 new_brd_size = brd_size;

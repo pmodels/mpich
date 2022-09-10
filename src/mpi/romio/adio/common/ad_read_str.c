@@ -7,7 +7,7 @@
 #include "adio_extern.h"
 
 #define ADIOI_BUFFERED_READ                                             \
-    {                                                                   \
+    do {                                                                \
         if (req_off >= readbuf_off + readbuf_len) {                     \
             readbuf_off = req_off;                                      \
             readbuf_len = (unsigned) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1)); \
@@ -46,7 +46,7 @@
         }                                                               \
         ADIOI_Assert(req_len == (size_t)req_len);                       \
         memcpy((char *)buf + userbuf_off, readbuf+req_off-readbuf_off, req_len); \
-    }
+    } while (0)
 
 
 void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
@@ -146,7 +146,8 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                 userbuf_off = (ADIO_Offset) j *(ADIO_Offset) buftype_extent + flat_buf->indices[i];
                 req_off = off;
                 req_len = flat_buf->blocklens[i];
-                ADIOI_BUFFERED_READ off += flat_buf->blocklens[i];
+                ADIOI_BUFFERED_READ;
+                off += flat_buf->blocklens[i];
             }
         }
 
@@ -297,7 +298,8 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                     req_off = off;
                     req_len = frd_size;
                     userbuf_off = i_offset;
-                ADIOI_BUFFERED_READ}
+                    ADIOI_BUFFERED_READ;
+                }
                 i_offset += frd_size;
 
                 if (off + frd_size < disp + flat_file->indices[j] +
@@ -339,7 +341,8 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                     req_off = off;
                     req_len = size;
                     userbuf_off = i_offset;
-                ADIOI_BUFFERED_READ}
+                    ADIOI_BUFFERED_READ;
+                }
 
                 new_frd_size = frd_size;
                 new_brd_size = brd_size;
