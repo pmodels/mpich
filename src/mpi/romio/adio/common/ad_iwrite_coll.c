@@ -132,7 +132,7 @@ struct ADIOI_W_Iexchange_data_vars {
     int *send_size;
     int *recv_size;
     ADIO_Offset off;
-    int size;
+    ADIO_Offset size;
     int *count;
     int *start_pos;
     int *partial_recv;
@@ -702,9 +702,9 @@ static void ADIOI_Iexch_and_write_l1_begin(ADIOI_NBC_Request * nbc_req, int *err
     ADIOI_Access *others_req;
 
     int i, j;
-    ADIO_Offset off, req_off;
+    ADIO_Offset off, req_off, req_len;
     char *write_buf;
-    int *curr_offlen_ptr, *count, req_len, *recv_size;
+    int *curr_offlen_ptr, *count, *recv_size;
     int *partial_recv, *start_pos;
     ADIO_Offset size;
     static char myname[] = "ADIOI_IEXCH_AND_WRITE_L1_BEGIN";
@@ -774,9 +774,9 @@ static void ADIOI_Iexch_and_write_l1_begin(ADIOI_NBC_Request * nbc_req, int *err
                                  (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
                     MPI_Get_address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
                     ADIOI_Assert((off + size - req_off) == (int) (off + size - req_off));
-                    recv_size[i] += (int) (MPL_MIN(off + size - req_off, (unsigned) req_len));
+                    recv_size[i] += (int) (MPL_MIN(off + size - req_off, req_len));
 
-                    if (off + size - req_off < (unsigned) req_len) {
+                    if (off + size - req_off < req_len) {
                         partial_recv[i] = (int) (off + size - req_off);
 
                         /* --BEGIN ERROR HANDLING-- */
@@ -1008,7 +1008,7 @@ static void ADIOI_W_Iexchange_data_hole(ADIOI_NBC_Request * nbc_req, int *error_
     ADIO_File fd = vars->fd;
     int *recv_size = vars->recv_size;
     ADIO_Offset off = vars->off;
-    int size = vars->size;
+    ADIO_Offset size = vars->size;
     int *count = vars->count;
     int *start_pos = vars->start_pos;
     int *partial_recv = vars->partial_recv;
@@ -1016,7 +1016,7 @@ static void ADIOI_W_Iexchange_data_hole(ADIOI_NBC_Request * nbc_req, int *error_
     ADIOI_Access *others_req = vars->others_req;
     int *hole = vars->hole;
 
-    int i, j, k, *tmp_len, nprocs_recv;
+    int i, j, k, nprocs_recv;
     MPI_Datatype *recv_types;
     int *srt_len = NULL, sum;
     ADIO_Offset *srt_off = NULL;
@@ -1034,7 +1034,8 @@ static void ADIOI_W_Iexchange_data_hole(ADIOI_NBC_Request * nbc_req, int *error_
     vars->recv_types = recv_types;
     /* +1 to avoid a 0-size malloc */
 
-    tmp_len = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    ADIO_Offset *tmp_len;
+    tmp_len = ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
     j = 0;
     for (i = 0; i < nprocs; i++) {
         if (recv_size[i]) {
@@ -1109,7 +1110,7 @@ static void ADIOI_W_Iexchange_data_hole(ADIOI_NBC_Request * nbc_req, int *error_
 
     if (nprocs_recv) {
         if (*hole) {
-            ADIO_IreadContig(fd, vars->write_buf, size, MPI_BYTE,
+            ADIO_IreadContig(fd, vars->write_buf, (MPI_Aint) size, MPI_BYTE,
                              ADIO_EXPLICIT_OFFSET, off, &vars->req2, &vars->err);
             nbc_req->data.wr.state = ADIOI_IWC_STATE_W_IEXCHANGE_DATA_HOLE;
             return;

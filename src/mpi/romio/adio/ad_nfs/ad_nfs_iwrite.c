@@ -54,7 +54,7 @@ void ADIOI_NFS_IwriteContig(ADIO_File fd, void *buf, MPI_Aint count,
  * Returns 0 on success, -errno on failure.
  */
 #ifdef ROMIO_HAVE_WORKING_AIO
-int ADIOI_NFS_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
+int ADIOI_NFS_aio(ADIO_File fd, void *buf, ADIO_Offset len, ADIO_Offset offset,
                   int wr, MPI_Request * request)
 {
     int err = -1, fd_sys;
@@ -70,7 +70,7 @@ int ADIOI_NFS_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
     aiocbp = (struct aiocb *) ADIOI_Calloc(sizeof(struct aiocb), 1);
     aiocbp->aio_offset = offset;
     aiocbp->aio_buf = buf;
-    aiocbp->aio_nbytes = len;
+    aiocbp->aio_nbytes = (size_t) len;
 
 #ifdef HAVE_STRUCT_AIOCB_AIO_WHENCE
     aiocbp->aio_whence = SEEK_SET;
@@ -117,7 +117,7 @@ int ADIOI_NFS_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
         if (this_errno == EAGAIN) {
             /* exceeded the max. no. of outstanding requests.
              * complete all previous async. requests and try again. */
-            ADIO_WriteContig(fd, buf, len, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
+            ADIO_WriteContig(fd, buf, (MPI_Aint) len, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                              offset, &status, &error_code);
             MPIO_Completed_request_create(&fd, len, &error_code, request);
             return 0;

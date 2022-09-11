@@ -9,7 +9,7 @@
 #include "mpidu_init_shm.h"
 
 typedef struct MPIDU_shm_seg {
-    size_t segment_len;
+    MPI_Aint segment_len;
     /* Handle to shm seg */
     MPL_shm_hnd_t hnd;
     /* Pointers */

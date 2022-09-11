@@ -26,8 +26,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
 {
     ssize_t err = -1;
     MPI_Count datatype_size;
-    ADIO_Offset len, bytes_xfered = 0;
-    size_t wr_count;
+    MPI_Aint len, bytes_xfered, wr_count;
     static char myname[] = "ADIOI_GEN_WRITECONTIG";
 #ifdef ROMIO_GPFS
     double io_time = 0;
@@ -44,7 +43,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
     }
 
     MPI_Type_size_x(datatype, &datatype_size);
-    len = (ADIO_Offset) datatype_size *(ADIO_Offset) count;
+    len = (MPI_Aint) (datatype_size * count);
 
 #ifdef ROMIO_GPFS
     io_time = MPI_Wtime();
@@ -57,6 +56,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
         offset = fd->fp_ind;
     }
 
+    bytes_xfered = 0;
     p = (char *) buf;
     while (bytes_xfered < len) {
 #ifdef ADIOI_MPE_LOGGING

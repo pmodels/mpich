@@ -39,7 +39,7 @@ typedef uint16_t MPIR_Context_id_t;
 
 /* yields an rvalue that is the value of the field_name_ in the least significant bits */
 #define MPIR_CONTEXT_READ_FIELD(field_name_,id_) \
-    (((id_) & MPIR_CONTEXT_##field_name_##_MASK) >> MPIR_CONTEXT_##field_name_##_SHIFT)
+    ((int) (((id_) & MPIR_CONTEXT_##field_name_##_MASK) >> MPIR_CONTEXT_##field_name_##_SHIFT))
 /* yields an rvalue that is the old_id_ with field_name_ set to field_val_ */
 #define MPIR_CONTEXT_SET_FIELD(field_name_,old_id_,field_val_) \
     ((old_id_ & ~MPIR_CONTEXT_##field_name_##_MASK) | ((field_val_) << MPIR_CONTEXT_##field_name_##_SHIFT))

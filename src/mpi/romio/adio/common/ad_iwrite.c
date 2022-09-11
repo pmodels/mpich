@@ -90,10 +90,10 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, MPI_Aint count, MPI_Datatype type,
     struct aiocb *aiocbp = NULL;
     ADIOI_AIO_Request *aio_req = NULL;
     MPI_Status status;
-    MPI_Count len, typesize;
+    MPI_Count typesize;
 
     MPI_Type_size_x(type, &typesize);
-    len = count * typesize;
+    MPI_Aint len = (MPI_Aint) (count * typesize);
 
 #if defined(ROMIO_XFS)
     unsigned maxiosz = wr ? fd->hints->fs_hints.xfs.write_chunk_sz :
@@ -264,9 +264,10 @@ int ADIOI_GEN_aio_wait_fn(int count, void **array_of_states, double timeout, MPI
     cblist = (const struct aiocb **) ADIOI_Calloc(count, sizeof(struct aiocb *));
 
     starttime = MPI_Wtime();
-    if (timeout > 0) {
-        aio_timer.tv_sec = (time_t) timeout;
-        aio_timer.tv_nsec = timeout - aio_timer.tv_sec;
+    long n_timeout = (long) timeout;
+    if (n_timeout > 0) {
+        aio_timer.tv_sec = n_timeout;
+        aio_timer.tv_nsec = n_timeout - aio_timer.tv_sec;
         aio_timer_p = &aio_timer;
     }
     for (i = 0; i < count; i++) {

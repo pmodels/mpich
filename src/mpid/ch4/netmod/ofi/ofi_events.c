@@ -275,9 +275,9 @@ static int am_recv_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * 
 #ifdef NEEDS_STRICT_ALIGNMENT
     /* FI_MULTI_RECV may pack the message at lesser alignment, copy the header
      * when that's the case */
-#define MAX_HDR_SIZE 280        /* MPIDI_OFI_AM_MSG_HEADER_SIZE + MPIDI_OFI_MAX_AM_HDR_SIZE */
-    MPL_COMPILE_TIME_ASSERT(MAX_HDR_SIZE >=
-                            MPIDI_OFI_AM_MSG_HEADER_SIZE + MPIDI_OFI_MAX_AM_HDR_SIZE);
+#define MPIDI_OFI_MAX_AM_MSG_HEADER_SIZE 32
+#define MAX_HDR_SIZE MPIDI_OFI_MAX_AM_MSG_HEADER_SIZE + MPIDI_OFI_MAX_AM_HDR_SIZE
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_OFI_am_header_t) <= MPIDI_OFI_MAX_AM_MSG_HEADER_SIZE);
     /* if has_alignment_copy is 0 and the message contains extended header, the
      * header needs to be copied out for alignment to access */
     int has_alignment_copy = 0;
@@ -285,7 +285,7 @@ static int am_recv_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * 
     if ((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) {
         int temp_size = MAX_HDR_SIZE;
         if (temp_size > wc->len) {
-            temp_size = wc->len;
+            temp_size = (int) wc->len;
         }
         memcpy(temp, orig_buf, temp_size);
         am_hdr = (void *) temp;
@@ -311,7 +311,7 @@ static int am_recv_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * 
     /* Received an expected message */
   fn_repeat:
     fi_src_addr = am_hdr->fi_src_addr;
-    next_seqno = am_hdr->seqno + 1;
+    next_seqno = (uint16_t) (am_hdr->seqno + 1);
 
     void *p_data;
     switch (am_hdr->am_type) {

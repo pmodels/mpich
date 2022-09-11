@@ -615,7 +615,7 @@ static void win_lock_req_proc(int mtype, const MPIDIG_win_cntrl_msg_t * info, MP
     struct MPIDIG_win_lock *lock = (struct MPIDIG_win_lock *)
         MPL_calloc(1, sizeof(struct MPIDIG_win_lock), MPL_MEM_RMA);
 
-    lock->mtype = mtype;        /* MPIDIG_WIN_LOCK or MPIDIG_WIN_LOCKALL */
+    lock->mtype = (uint16_t) mtype;     /* MPIDIG_WIN_LOCK or MPIDIG_WIN_LOCKALL */
     lock->rank = info->origin_rank;
     lock->type = info->lock_type;
     MPIDIG_win_lock_recvd_t *lock_recvd_q = &MPIDIG_WIN(win, sync).lock_recvd;

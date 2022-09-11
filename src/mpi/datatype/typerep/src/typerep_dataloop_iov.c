@@ -32,6 +32,14 @@ int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype type, MPI_
     return mpi_errno;
 }
 
+#define SEG_TO_IOV(seg, byte_offset, last, iov, iov_len) \
+    do { \
+        MPIR_Assert(iov_len <= INT_MAX); \
+        int len_out = (int) iov_len; \
+        MPIR_Segment_to_iov(seg, byte_offset, last, iov, &len_out); \
+        iov_len = len_out; \
+    } while (0)
+
 int MPIR_Typerep_to_iov_offset(const void *buf, MPI_Aint count, MPI_Datatype type,
                                MPI_Aint iov_offset, struct iovec *iov, MPI_Aint max_iov_len,
                                MPI_Aint * actual_iov_len)
@@ -48,8 +56,8 @@ int MPIR_Typerep_to_iov_offset(const void *buf, MPI_Aint count, MPI_Datatype typ
     MPI_Aint rem_iov_offset = iov_offset;
     while (rem_iov_offset) {
         last = MPIR_AINT_MAX;
-        int iov_len = MPL_MIN(max_iov_len, rem_iov_offset);
-        MPIR_Segment_to_iov(seg, byte_offset, &last, iov, &iov_len);
+        MPI_Aint iov_len = MPL_MIN(max_iov_len, rem_iov_offset);
+        SEG_TO_IOV(seg, byte_offset, &last, iov, iov_len);
         rem_iov_offset += iov_len;
         for (int i = 0; i < iov_len; i++)
             byte_offset += iov[i].iov_len;
@@ -57,9 +65,9 @@ int MPIR_Typerep_to_iov_offset(const void *buf, MPI_Aint count, MPI_Datatype typ
 
     /* Final conversion to get the correct IOV set */
     last = MPIR_AINT_MAX;
-    int iov_len = max_iov_len;
-    MPIR_Segment_to_iov(seg, byte_offset, &last, iov, &iov_len);
-    *actual_iov_len = (MPI_Aint) iov_len;
+    MPI_Aint iov_len = max_iov_len;
+    SEG_TO_IOV(seg, byte_offset, &last, iov, iov_len);
+    *actual_iov_len = iov_len;
 
     MPIR_Segment_free(seg);
 

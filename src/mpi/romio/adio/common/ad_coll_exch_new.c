@@ -39,8 +39,7 @@ void ADIOI_Print_flatlist_node(ADIOI_Flatlist_node * flatlist_node_p)
         fprintf(stderr, "print flatlist node of NULL ptr\n");
         return;
     }
-    fprintf(stderr, "print flatlist node count = %d (idx,blocklen)\n",
-            (int) flatlist_node_p->count);
+    fprintf(stderr, "print flatlist node count = %d (idx,blocklen)\n", flatlist_node_p->count);
     for (i = 0; i < flatlist_node_p->count; i++) {
         if (i % 5 == 0 && i != 0) {
             fprintf(stderr, "%d=(%lld,%lld)\n", i, (long long) flatlist_node_p->indices[i],
@@ -110,7 +109,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
     flat_file_p = ADIOI_Flatten_and_find(fd->filetype);
     if (filetype_extent == filetype_sz) {
         flat_file_p->blocklens[0] = memtype_sz * count;
-        filetype_extent = memtype_sz * count;
+        filetype_extent = (MPI_Aint) (memtype_sz * count);
         filetype_sz = filetype_extent;
     }
 
@@ -160,7 +159,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
         /* if memory is contiguous, we now replace memtype_sz and
          * memtype_extent with the full access size */
         memtype_sz *= count;
-        memtype_extent = memtype_sz;
+        memtype_extent = (MPI_Aint) memtype_sz;
     }
 
     for (i = 0; i < fd->hints->cb_nodes; i++) {

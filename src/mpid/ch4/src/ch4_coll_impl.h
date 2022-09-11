@@ -408,7 +408,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void 
  * commutative.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void *sendbuf,
-                                                                     void *recvbuf, int count,
+                                                                     void *recvbuf, MPI_Aint count,
                                                                      MPI_Datatype datatype,
                                                                      MPI_Op op,
                                                                      int num_leads,
@@ -420,12 +420,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
     char *shm_addr;
     int my_leader_rank = -1, iter;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
-    int offset = 0, is_contig, i;
+    int is_contig, i;
     MPI_Aint lb, true_extent, extent;
     int num_offsets = MPIR_CVAR_ALLREDUCE_LOCAL_COPY_OFFSETS;
-    int local_copy_rank = MPIR_Comm_rank(comm_ptr->node_comm);
-    int local_copy_offset = 0;
-    int local_copy_group = 0;
     int shm_size_per_lead = MPIR_CVAR_ALLREDUCE_SHM_PER_LEADER;
 
     MPIR_Type_get_extent_impl(datatype, &lb, &extent);
@@ -484,9 +481,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
                                             extent, count, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
 
+    MPI_Aint offset = 0;
     for (iter = 0; iter < num_chunks; iter++) {
-        int chunk_count = (iter == 0) ? chunk_size_floor : chunk_size_ceil;
-        int per_leader_count = chunk_count / num_leads;
+        MPI_Aint chunk_count = (iter == 0) ? chunk_size_floor : chunk_size_ceil;
+        MPI_Aint per_leader_count = chunk_count / num_leads;
         if (my_leader_rank == (num_leads - 1)) {
             /* If chunk_count is not perfectly divisible by num_leaders. The last leader gets the
              * leftover count as well */
@@ -537,7 +535,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
 
             int j;
             MPI_Aint cache_tile_size, cache_chunk_count;
-            int leader_offset = my_leader_rank * (chunk_count / num_leads) * extent;
+            MPI_Aint leader_offset = my_leader_rank * (chunk_count / num_leads) * extent;
             cache_tile_size = MPIR_CVAR_ALLREDUCE_CACHE_PER_LEADER;
             MPI_Aint cache_chunk_size_floor = 0, cache_chunk_size_ceil = 0;
 
@@ -599,6 +597,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
         if ((chunk_count % num_offsets) != 0)
             num_offsets = 1;
 
+        int local_copy_rank, local_copy_group;
+        MPI_Aint local_copy_offset;
+        local_copy_rank = MPIR_Comm_rank(comm_ptr->node_comm);
         local_copy_offset = chunk_count * extent / num_offsets;
         local_copy_group = (local_copy_rank / num_offsets);
         for (i = 0; i < num_offsets; i++) {
@@ -866,10 +867,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_gamma(const void *se
  * the data for ranks sitting on other nodes into a shared memory buffer. Next each rank participates
  * as a leader in inter-node Alltoall */
 MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *sendbuf,
-                                                                    int sendcount,
+                                                                    MPI_Aint sendcount,
                                                                     MPI_Datatype sendtype,
                                                                     void *recvbuf,
-                                                                    int recvcount,
+                                                                    MPI_Aint recvcount,
                                                                     MPI_Datatype recvtype,
                                                                     MPIR_Comm * comm_ptr,
                                                                     MPIR_Errflag_t * errflag)
@@ -1087,10 +1088,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void *sendbuf,
-                                                                     int sendcount,
+                                                                     MPI_Aint sendcount,
                                                                      MPI_Datatype sendtype,
                                                                      void *recvbuf,
-                                                                     int recvcount,
+                                                                     MPI_Aint recvcount,
                                                                      MPI_Datatype recvtype,
                                                                      MPIR_Comm * comm_ptr,
                                                                      MPIR_Errflag_t * errflag)
@@ -1099,7 +1100,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
     int node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
     int my_node_comm_rank = MPIR_Comm_rank(comm_ptr->node_comm);
     MPI_Aint type_size, extent, true_extent, lb;
-    int is_contig, offset;
+    int is_contig;
     bool mapfail_flag = false;
 
     if (sendcount < 1 && sendbuf != MPI_IN_PLACE)
@@ -1129,6 +1130,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
     }
 
     /* Using MPL_MAX handles non-contiguous datatype as well */
+    MPI_Aint offset;
     offset = MPL_MAX(type_size, extent) * sendcount;
 
     /* When using MPI_IN_PLACE, the "senddata" from each rank is at its receive index */

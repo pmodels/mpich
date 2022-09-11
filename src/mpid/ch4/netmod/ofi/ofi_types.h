@@ -205,11 +205,11 @@ typedef struct {
     unsigned atomic_valid:2;
     unsigned fetch_atomic_valid:2;
     unsigned compare_atomic_valid:2;
-    unsigned dtsize:10;
-    uint64_t max_atomic_count;
-    uint64_t max_compare_atomic_count;
-    uint64_t max_fetch_atomic_count;
+    uint16_t dtsize;
     bool mpi_acc_valid;
+    MPI_Aint max_atomic_count;
+    MPI_Aint max_compare_atomic_count;
+    MPI_Aint max_fetch_atomic_count;
 } MPIDI_OFI_atomic_valid_t;
 
 typedef struct MPIDI_OFI_cq_list_t {
@@ -283,22 +283,22 @@ typedef union {
 } MPIDI_OFI_cacheline_mutex_t;
 
 typedef struct {
-    unsigned enable_av_table:1;
-    unsigned enable_scalable_endpoints:1;
-    unsigned enable_shared_contexts:1;
-    unsigned enable_mr_virt_address:1;
-    unsigned enable_mr_allocated:1;
-    unsigned enable_mr_prov_key:1;
-    unsigned enable_tagged:1;
-    unsigned enable_am:1;
-    unsigned enable_rma:1;
-    unsigned enable_mr_register_null:1;
-    unsigned enable_atomics:1;
-    unsigned enable_pt2pt_nopack:1;
-    unsigned enable_hmem:1;
-    unsigned enable_data_auto_progress:1;
-    unsigned enable_control_auto_progress:1;
-    unsigned require_rdm:1;
+    int enable_av_table;
+    int enable_scalable_endpoints;
+    int enable_shared_contexts;
+    int enable_mr_virt_address;
+    int enable_mr_allocated;
+    int enable_mr_prov_key;
+    int enable_tagged;
+    int enable_am;
+    int enable_rma;
+    int enable_mr_register_null;
+    int enable_atomics;
+    int enable_pt2pt_nopack;
+    int enable_hmem;
+    int enable_data_auto_progress;
+    int enable_control_auto_progress;
+    int require_rdm;
 
     int max_endpoints;
     int max_endpoints_bits;
@@ -338,14 +338,11 @@ typedef struct {
     int got_named_av;
 
     /* Queryable limits */
-    uint64_t max_buffered_send;
-    uint64_t max_buffered_write;
-    uint64_t max_msg_size;
-    uint64_t stripe_threshold;
-    uint64_t max_short_send;
-    uint64_t max_mr_key_size;
-    uint64_t max_rma_key_bits;
-    uint64_t max_huge_rmas;
+    MPI_Aint max_buffered_send;
+    MPI_Aint max_buffered_write;
+    MPI_Aint max_msg_size;
+    MPI_Aint stripe_threshold;
+    MPI_Aint max_mr_key_size;
     int rma_key_type_bits;
     int context_shift;
     MPI_Aint tx_iov_limit;
@@ -451,14 +448,14 @@ typedef struct MPIDI_OFI_win_request {
         struct {
             struct {
                 const void *addr;
-                int count;
+                MPI_Aint count;
                 MPI_Datatype datatype;
                 MPI_Aint total_bytes;
                 MPI_Aint pack_offset;
             } origin;
             struct {
                 void *base;
-                int count;
+                MPI_Aint count;
                 MPI_Datatype datatype;
                 struct iovec *iov;
                 MPI_Aint iov_len;
@@ -472,14 +469,14 @@ typedef struct MPIDI_OFI_win_request {
         struct {
             struct {
                 void *addr;
-                int count;
+                MPI_Aint count;
                 MPI_Datatype datatype;
                 MPI_Aint total_bytes;
                 MPI_Aint pack_offset;
             } origin;
             struct {
                 void *base;
-                int count;
+                MPI_Aint count;
                 MPI_Datatype datatype;
                 struct iovec *iov;
                 MPI_Aint iov_len;

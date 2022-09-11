@@ -240,16 +240,13 @@ int ADIOI_init_view_state(int file_ptr_type, int nprocs, view_state * view_state
 
 /* Return the next file realm offset and length for this datatype state
  * within a particular file realm. */
-static inline int get_next_fr_off(ADIO_File fd,
-                                  ADIO_Offset off,
-                                  ADIO_Offset fr_st_off,
-                                  MPI_Datatype * fr_type_p,
+static inline int get_next_fr_off(ADIO_File fd, ADIO_Offset off,
+                                  ADIO_Offset fr_st_off, MPI_Datatype * fr_type_p,
                                   ADIO_Offset * fr_next_off_p, ADIO_Offset * fr_max_len_p)
 {
     MPI_Aint lb, fr_extent = -1;
     ADIO_Offset tmp_off, off_rem;
     ADIOI_Flatlist_node *fr_node_p;
-    int i = -1, fr_dtype_ct = 0;
 
     /* Should have already been flattened in calc_file_realms() */
     fr_node_p = ADIOI_Flatten_and_find(*fr_type_p);
@@ -266,9 +263,9 @@ static inline int get_next_fr_off(ADIO_File fd,
      * and where the next fr_off is. */
     MPI_Type_get_extent(*fr_type_p, &lb, &fr_extent);
     tmp_off = off - fr_st_off;
-    fr_dtype_ct = tmp_off / fr_extent;
+    ADIO_Offset fr_dtype_ct = tmp_off / fr_extent;
     off_rem = tmp_off % fr_extent;
-    for (i = 0; i < fr_node_p->count; i++) {
+    for (int i = 0; i < fr_node_p->count; i++) {
         if (off_rem < fr_node_p->indices[i]) {
             *fr_next_off_p = fr_st_off + (fr_dtype_ct * fr_extent) + fr_node_p->indices[i];
             *fr_max_len_p = fr_node_p->blocklens[i];
@@ -276,7 +273,7 @@ static inline int get_next_fr_off(ADIO_File fd,
         } else if (off_rem < fr_node_p->indices[i] + fr_node_p->blocklens[i]) {
             *fr_next_off_p = off;
             *fr_max_len_p = fr_node_p->blocklens[i] - (off_rem - fr_node_p->indices[i]);
-            return off;
+            return 0;
         }
     }
 
@@ -302,9 +299,6 @@ static inline int find_next_off(ADIO_File fd,
     int ret = 0;
     flatten_state *tmp_state_p = NULL;
     ADIO_Offset tmp_st_off = 0, tmp_reg_sz = 0;
-#ifdef DTYPE_SKIP
-    int skip_type_ct;
-#endif
 
 #ifdef AGGREGATION_PROFILE
     /* MPE_Log_event (5022, 0, NULL); */
@@ -346,7 +340,7 @@ static inline int find_next_off(ADIO_File fd,
 #ifdef DTYPE_SKIP
             if (tmp_flat_type_p->count > 1) {
                 /* let's see if we can skip whole datatypes */
-                skip_type_ct = (fr_next_off - tmp_state_p->abs_off) / view_state_p->ext;
+                ADIO_Offset skip_type_ct = (fr_next_off - tmp_state_p->abs_off) / view_state_p->ext;
                 if (skip_type_ct > 0) {
                     /* before we go on, let's check if we've actually
                      * finished up already */
@@ -529,6 +523,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
                                   &(client_file_view_state_arr[cur_off_proc]),
                                   &st_reg, &act_reg_sz, i);
 
+            assert(act_reg_sz <= INT_MAX);
             switch (i) {
                 case TEMP_OFF:
                     /* Increment the ol list count for each proc and
@@ -550,12 +545,12 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
                      * region. */
                     next_off_idx = client_ol_cur_ct_arr[cur_off_proc];
                     if (client_comm_next_off_arr[cur_off_proc] != tmp_coll_buf_sz) {
-                        client_disp_arr[cur_off_proc][next_off_idx] = tmp_coll_buf_sz;
-                        client_blk_arr[cur_off_proc][next_off_idx] = act_reg_sz;
+                        client_disp_arr[cur_off_proc][next_off_idx] = (MPI_Aint) tmp_coll_buf_sz;
+                        client_blk_arr[cur_off_proc][next_off_idx] = (int) act_reg_sz;
                         (client_ol_cur_ct_arr[cur_off_proc])++;
                     } else {
                         client_blk_arr[cur_off_proc][next_off_idx - 1]
-                            += act_reg_sz;
+                            += (int) act_reg_sz;
                     }
                     client_comm_sz_arr[cur_off_proc] += act_reg_sz;
                     client_comm_next_off_arr[cur_off_proc] = tmp_coll_buf_sz + act_reg_sz;
@@ -568,11 +563,11 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
                          * the file than an MPI_Aint */
                         if (!agg_ol_cur_ct)
                             *agg_dtype_offset_p = st_reg;
-                        agg_disp_arr[agg_ol_cur_ct] = st_reg - (MPI_Aint) * agg_dtype_offset_p;
-                        agg_blk_arr[agg_ol_cur_ct] = act_reg_sz;
+                        agg_disp_arr[agg_ol_cur_ct] = (MPI_Aint) (st_reg - *agg_dtype_offset_p);
+                        agg_blk_arr[agg_ol_cur_ct] = (int) act_reg_sz;
                         agg_ol_cur_ct++;
                     } else {
-                        agg_blk_arr[agg_ol_cur_ct - 1] += act_reg_sz;
+                        agg_blk_arr[agg_ol_cur_ct - 1] += (int) act_reg_sz;
                     }
                     agg_next_off = st_reg + act_reg_sz;
 
@@ -916,13 +911,15 @@ int ADIOI_Build_client_reqs(ADIO_File fd,
                          * map to each aggregator, coalescing if
                          * possible. */
                         agg_next_off_idx = agg_ol_cur_ct_arr[cur_off_proc];
+                        assert(agg_mem_act_reg_sz < INT_MAX);
                         if (agg_mem_next_off_arr[cur_off_proc] != agg_mem_st_reg) {
-                            agg_disp_arr[cur_off_proc][agg_next_off_idx] = agg_mem_st_reg;
-                            agg_blk_arr[cur_off_proc][agg_next_off_idx] = agg_mem_act_reg_sz;
+                            agg_disp_arr[cur_off_proc][agg_next_off_idx] =
+                                (MPI_Aint) agg_mem_st_reg;
+                            agg_blk_arr[cur_off_proc][agg_next_off_idx] = (int) agg_mem_act_reg_sz;
                             (agg_ol_cur_ct_arr[cur_off_proc])++;
                         } else {
                             agg_blk_arr[cur_off_proc][agg_next_off_idx - 1]
-                                += agg_mem_act_reg_sz;
+                                += (int) agg_mem_act_reg_sz;
                         }
                         agg_mem_next_off_arr[cur_off_proc] = agg_mem_st_reg + agg_mem_act_reg_sz;
                         break;
@@ -1044,9 +1041,6 @@ int ADIOI_Build_client_pre_req(ADIO_File fd,
     MPI_Aint *tmp_disp_arr = NULL;
     int *tmp_blk_arr = NULL, exit_loop = -1;
     flatten_state *tmp_mem_state_p = NULL, *tmp_file_state_p = NULL;
-#ifdef DTYPE_SKIP
-    int skip_type_ct;
-#endif
     if (agg_idx < 0 || agg_idx >= fd->hints->cb_nodes) {
         fprintf(stderr, "ADIOI_Build_client_pre_req: Invalid agg_idx %d\n", agg_idx);
         return -1;
@@ -1154,7 +1148,7 @@ int ADIOI_Build_client_pre_req(ADIO_File fd,
 #ifdef DTYPE_SKIP
                 if (my_mem_view_state_p->flat_type_p->count > 1) {
                     /* let's see if we can skip whole memory datatypes */
-                    skip_type_ct =
+                    ADIO_Offset skip_type_ct =
                         (tmp_file_state_p->cur_sz - tmp_mem_state_p->cur_sz) /
                         my_mem_view_state_p->type_sz;
                     if (skip_type_ct > 0) {
@@ -1214,16 +1208,20 @@ int ADIOI_Build_client_pre_req(ADIO_File fd,
                         /* Set the ol list for the memtype that
                          * will map to our aggregator, coalescing
                          * if possible. */
+                        assert(agg_mem_st_reg < INT_MAX);
+                        assert(agg_mem_act_reg_sz < INT_MAX);
                         agg_next_off_idx = agg_ol_cur_ct;
                         if (agg_mem_next_off != agg_mem_st_reg) {
-                            my_mem_view_state_p->pre_disp_arr[agg_next_off_idx] = agg_mem_st_reg;
-                            my_mem_view_state_p->pre_blk_arr[agg_next_off_idx] = agg_mem_act_reg_sz;
+                            my_mem_view_state_p->pre_disp_arr[agg_next_off_idx] =
+                                (MPI_Aint) agg_mem_st_reg;
+                            my_mem_view_state_p->pre_blk_arr[agg_next_off_idx] =
+                                (int) agg_mem_act_reg_sz;
                             agg_ol_cur_ct++;
                             if (agg_ol_cur_ct == agg_ol_ct)
                                 exit_loop = 1;
                         } else {
                             my_mem_view_state_p->pre_blk_arr[agg_next_off_idx - 1]
-                                += agg_mem_act_reg_sz;
+                                += (int) agg_mem_act_reg_sz;
                         }
                         agg_mem_next_off = agg_mem_st_reg + agg_mem_act_reg_sz;
                         break;
@@ -1317,7 +1315,7 @@ static int process_pre_req(ADIO_File fd,
 {
     int i, has_partial = 0;
     MPI_Aint partial_disp = 0;
-    int partial_len = 0;
+    ADIO_Offset partial_len = 0;
     ADIO_Offset tmp_agg_comm_pre_sz = 0;
 
     assert(my_mem_view_state_p->pre_sz > 0);
@@ -1378,7 +1376,7 @@ static int process_pre_req(ADIO_File fd,
                 if ((my_mem_view_state_p->pre_blk_arr[i] +
                      tmp_agg_comm_pre_sz) > *agg_comm_pre_sz_p) {
                     has_partial = 1;
-                    agg_blk_arr[i] = *agg_comm_pre_sz_p - tmp_agg_comm_pre_sz;
+                    agg_blk_arr[i] = (int) (*agg_comm_pre_sz_p - tmp_agg_comm_pre_sz);
                     tmp_agg_comm_pre_sz = *agg_comm_pre_sz_p;
                     partial_disp = my_mem_view_state_p->pre_disp_arr[i] + agg_blk_arr[i];
                     partial_len = my_mem_view_state_p->pre_blk_arr[i] - agg_blk_arr[i];
@@ -1425,7 +1423,7 @@ static int process_pre_req(ADIO_File fd,
                     /* new_pre_disp_arr[remain_ol_ct - 1] = partial_disp;
                      * new_pre_blk_arr[remain_ol_ct - 1]  = partial_len; */
                     new_pre_disp_arr[0] = partial_disp;
-                    new_pre_blk_arr[0] = partial_len;
+                    new_pre_blk_arr[0] = (int) partial_len;
                 }
 
                 ADIOI_Free(my_mem_view_state_p->pre_disp_arr);
@@ -1479,9 +1477,6 @@ int ADIOI_Build_client_req(ADIO_File fd,
     ADIO_Offset *fr_st_off_arr = fd->file_realm_st_offs;
     MPI_Datatype *fr_type_arr = fd->file_realm_types;
     flatten_state *tmp_mem_state_p = NULL, *tmp_file_state_p = NULL;
-#ifdef DTYPE_SKIP
-    int skip_type_ct;
-#endif
 
     if (agg_idx < 0 || agg_idx >= fd->hints->cb_nodes) {
 #ifdef DEBUG1
@@ -1570,7 +1565,7 @@ int ADIOI_Build_client_req(ADIO_File fd,
 #ifdef DTYPE_SKIP
                 if (my_mem_view_state_p->flat_type_p->count > 1) {
                     /* let's see if we can skip whole memory datatypes */
-                    skip_type_ct =
+                    ADIO_Offset skip_type_ct =
                         (tmp_file_state_p->cur_sz - act_reg_sz -
                          tmp_mem_state_p->cur_sz) / my_mem_view_state_p->type_sz;
                     if (skip_type_ct > 0) {
@@ -1616,12 +1611,11 @@ int ADIOI_Build_client_req(ADIO_File fd,
                          * if possible. */
                         agg_next_off_idx = agg_ol_cur_ct;
                         if (agg_mem_next_off != agg_mem_st_reg) {
-                            agg_disp_arr[agg_next_off_idx] = agg_mem_st_reg;
-                            agg_blk_arr[agg_next_off_idx] = agg_mem_act_reg_sz;
+                            agg_disp_arr[agg_next_off_idx] = (MPI_Aint) agg_mem_st_reg;
+                            agg_blk_arr[agg_next_off_idx] = (int) agg_mem_act_reg_sz;
                             agg_ol_cur_ct++;
                         } else {
-                            agg_blk_arr[agg_next_off_idx - 1]
-                                += agg_mem_act_reg_sz;
+                            agg_blk_arr[agg_next_off_idx - 1] += (int) agg_mem_act_reg_sz;
                         }
                         agg_mem_next_off = agg_mem_st_reg + agg_mem_act_reg_sz;
                         break;

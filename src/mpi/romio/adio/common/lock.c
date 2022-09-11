@@ -106,8 +106,8 @@ int ADIOI_GEN_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int w
     lock.l_whence = whence;
     lock.l_len = (int) len;
 #else
-    lock.l_type = type;
-    lock.l_whence = whence;
+    lock.l_type = (short) type;
+    lock.l_whence = (short) whence;
     lock.l_start = offset;
     lock.l_len = len;
 #endif
@@ -172,9 +172,9 @@ int ADIOI_GEN_SetLock64(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int
     if (len == 0)
         return MPI_SUCCESS;
 
-    lock.l_type = type;
+    lock.l_type = (short) type;
     lock.l_start = offset;
-    lock.l_whence = whence;
+    lock.l_whence = (short) whence;
     lock.l_len = len;
 
     do {

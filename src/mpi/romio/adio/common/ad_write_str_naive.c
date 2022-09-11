@@ -47,8 +47,6 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, MPI_Aint count,
     MPI_Type_get_extent(buftype, &lb, &buftype_extent);
     etype_size = fd->etype_size;
 
-    ADIOI_Assert((buftype_size * count) ==
-                 ((ADIO_Offset) (unsigned) buftype_size * (ADIO_Offset) count));
     bufsize = buftype_size * count;
 
     /* contiguous in buftype and filetype is handled elsewhere */
@@ -193,7 +191,7 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, MPI_Aint count,
             }
 
             off = disp + flat_file->indices[f_index] + n_filetypes * (ADIO_Offset) filetype_extent;
-            fwr_size = MPL_MIN(flat_file->blocklens[f_index], bufsize - (unsigned) userbuf_off);
+            fwr_size = MPL_MIN(flat_file->blocklens[f_index], bufsize - userbuf_off);
         }
 
         /* End of calculations.  At this point the following values have
@@ -259,8 +257,7 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, MPI_Aint count,
                     }
                     off = disp + flat_file->indices[f_index] +
                         n_filetypes * (ADIO_Offset) filetype_extent;
-                    fwr_size = MPL_MIN(flat_file->blocklens[f_index],
-                                       bufsize - (unsigned) userbuf_off);
+                    fwr_size = MPL_MIN(flat_file->blocklens[f_index], bufsize - userbuf_off);
                 }
             }
         } else {

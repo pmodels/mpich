@@ -278,7 +278,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
     int hole, i, j, m, ntimes, max_ntimes, buftype_is_contig;
     ADIO_Offset st_loc = -1, end_loc = -1, off, done, req_off;
     char *write_buf = NULL;
-    int *curr_offlen_ptr, *count, *send_size, req_len, *recv_size;
+    int *curr_offlen_ptr, *count, *send_size, *recv_size;
     int *partial_recv, *sent_to_proc, *start_pos, flag;
     int *send_buf_idx, *curr_to_proc, *done_to_proc;
     MPI_Status status;
@@ -409,6 +409,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
             if (others_req[i].count) {
                 start_pos[i] = curr_offlen_ptr[i];
                 for (j = curr_offlen_ptr[i]; j < others_req[i].count; j++) {
+                    ADIO_Offset req_len;
                     if (partial_recv[i]) {
                         /* this request may have been partially
                          * satisfied in the previous iteration. */
@@ -428,9 +429,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                                      (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
                         MPI_Get_address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
                         ADIOI_Assert((off + size - req_off) == (int) (off + size - req_off));
-                        recv_size[i] += (int) (MPL_MIN(off + size - req_off, (unsigned) req_len));
+                        recv_size[i] += (int) (MPL_MIN(off + size - req_off, req_len));
 
-                        if (off + size - req_off < (unsigned) req_len) {
+                        if (off + size - req_off < req_len) {
                             partial_recv[i] = (int) (off + size - req_off);
 
                             /* --BEGIN ERROR HANDLING-- */
@@ -457,8 +458,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
             }
         }
 
+        assert(size <= INT_MAX);
         ADIOI_W_Exchange_data(fd, buf, write_buf, flat_buf, offset_list,
-                              len_list, send_size, recv_size, off, size, count,
+                              len_list, send_size, recv_size, off, (int) size, count,
                               start_pos, partial_recv,
                               sent_to_proc, nprocs, myrank,
                               buftype_is_contig, contig_access_count,
@@ -527,7 +529,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
                                   int *done_to_proc, int *hole, int iter,
                                   MPI_Aint buftype_extent, MPI_Aint * buf_idx, int *error_code)
 {
-    int i, j, k, *tmp_len, nprocs_recv, nprocs_send, err;
+    int i, j, k, nprocs_recv, nprocs_send, err;
     char **send_buf = NULL;
     MPI_Request *requests, *send_req;
     MPI_Datatype *recv_types;
@@ -558,7 +560,8 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         ADIOI_Malloc((nprocs_recv + 1) * sizeof(MPI_Datatype));
 /* +1 to avoid a 0-size malloc */
 
-    tmp_len = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    ADIO_Offset *tmp_len;
+    tmp_len = ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
     j = 0;
     for (i = 0; i < nprocs; i++) {
         if (recv_size[i]) {
@@ -763,9 +766,9 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 }
 
 #define ADIOI_BUF_INCR \
-{ \
+do { \
     while (buf_incr) { \
-        size_in_buf = MPL_MIN(buf_incr, flat_buf_sz); \
+        MPI_Aint size_in_buf = (MPI_Aint) MPL_MIN(buf_incr, flat_buf_sz); \
         user_buf_idx += size_in_buf; \
         flat_buf_sz -= size_in_buf; \
         if (!flat_buf_sz) { \
@@ -780,18 +783,17 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         } \
         buf_incr -= size_in_buf; \
     } \
-}
+} while (0)
 
 
 #define ADIOI_BUF_COPY \
-{ \
+do { \
     while (size) { \
-        size_in_buf = MPL_MIN(size, flat_buf_sz); \
-  ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + user_buf_idx) == (ADIO_Offset)(uintptr_t)((uintptr_t)buf + user_buf_idx)); \
-  ADIOI_Assert(size_in_buf == (size_t)size_in_buf); \
+        MPI_Aint size_in_buf = (MPI_Aint) MPL_MIN(size, flat_buf_sz); \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
                ((char *) buf) + user_buf_idx, size_in_buf); \
-        send_buf_idx[p] += size_in_buf; \
+        assert(size_in_buf < INT_MAX); \
+        send_buf_idx[p] += (int) size_in_buf; \
         user_buf_idx += size_in_buf; \
         flat_buf_sz -= size_in_buf; \
         if (!flat_buf_sz) { \
@@ -807,8 +809,8 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         size -= size_in_buf; \
         buf_incr -= size_in_buf; \
     } \
-    ADIOI_BUF_INCR \
-}
+    ADIOI_BUF_INCR; \
+} while (0)
 
 
 
@@ -828,7 +830,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 /* this function is only called if buftype is not contig */
 
     int i, p, flat_buf_idx;
-    ADIO_Offset flat_buf_sz, size_in_buf, buf_incr, size;
+    ADIO_Offset flat_buf_sz, buf_incr, size;
     int jj, n_buftypes;
     ADIO_Offset off, len, rem_len, user_buf_idx;
 
@@ -873,35 +875,34 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                         size = MPL_MIN(curr_to_proc[p] + len -
                                        done_to_proc[p], send_size[p] - send_buf_idx[p]);
                         buf_incr = done_to_proc[p] - curr_to_proc[p];
-                        ADIOI_BUF_INCR
-                            ADIOI_Assert((curr_to_proc[p] + len - done_to_proc[p]) ==
-                                         (unsigned) (curr_to_proc[p] + len - done_to_proc[p]));
+                        ADIOI_BUF_INCR;
                         buf_incr = curr_to_proc[p] + len - done_to_proc[p];
-                        ADIOI_Assert((done_to_proc[p] + size) ==
-                                     (unsigned) (done_to_proc[p] + size));
+                        ADIOI_Assert((done_to_proc[p] + size) == (done_to_proc[p] + (int) size));
                         /* ok to cast: bounded by cb buffer size */
                         curr_to_proc[p] = done_to_proc[p] + (int) size;
-                    ADIOI_BUF_COPY} else {
+                        ADIOI_BUF_COPY;
+                    } else {
                         size = MPL_MIN(len, send_size[p] - send_buf_idx[p]);
                         buf_incr = len;
-                        ADIOI_Assert((curr_to_proc[p] + size) ==
-                                     (unsigned) ((ADIO_Offset) curr_to_proc[p] + size));
-                        curr_to_proc[p] += size;
-                    ADIOI_BUF_COPY}
+                        ADIOI_Assert((curr_to_proc[p] + size) == (curr_to_proc[p] + (int) size));
+                        curr_to_proc[p] += (int) size;
+                        ADIOI_BUF_COPY;
+                    }
                     if (send_buf_idx[p] == send_size[p]) {
                         MPI_Isend(send_buf[p], send_size[p], MPI_BYTE, p,
                                   ADIOI_COLL_TAG(p, iter), fd->comm, requests + jj);
                         jj++;
                     }
                 } else {
-                    ADIOI_Assert((curr_to_proc[p] + len) ==
-                                 (unsigned) ((ADIO_Offset) curr_to_proc[p] + len));
-                    curr_to_proc[p] += len;
+                    ADIOI_Assert((curr_to_proc[p] + len) == (curr_to_proc[p] + (int) len));
+                    curr_to_proc[p] += (int) len;
                     buf_incr = len;
-                ADIOI_BUF_INCR}
+                    ADIOI_BUF_INCR;
+                }
             } else {
                 buf_incr = len;
-            ADIOI_BUF_INCR}
+                ADIOI_BUF_INCR;
+            }
             off += len;
             rem_len -= len;
         }
@@ -983,7 +984,8 @@ void ADIOI_Heap_merge(ADIOI_Access * others_req, int *count,
     for (i = 0; i < total_elements; i++) {
         /* extract smallest element from heap, i.e. the root */
         srt_off[i] = *(a[0].off_list);
-        srt_len[i] = *(a[0].len_list);
+        assert(*(a[0].len_list) < INT_MAX);
+        srt_len[i] = (int) (*(a[0].len_list));
         (a[0].nelem)--;
 
         if (!a[0].nelem) {

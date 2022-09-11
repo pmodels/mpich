@@ -255,7 +255,6 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv_iov(struct iovec *iov, MPI_Aint iov
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_type) = MPIDI_OFI_AM_LMT_IOV;
     MPI_Aint rem, curr_len;
-    int num_reads;
 
     /* set lmt counter */
     MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_u.lmt_cntr) = 0;
@@ -263,12 +262,12 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv_iov(struct iovec *iov, MPI_Aint iov
     rem = in_data_sz;
     for (int i = 0; i < iov_len && rem > 0; i++) {
         curr_len = MPL_MIN(rem, iov[i].iov_len);
-        num_reads = ((curr_len - 1) / MPIDI_OFI_global.max_msg_size) + 1;
+        MPI_Aint num_reads = ((curr_len - 1) / MPIDI_OFI_global.max_msg_size) + 1;
         MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_u.lmt_cntr) += num_reads;
         rem -= curr_len;
     }
 
-    int done = 0;
+    MPI_Aint done = 0;
     rem = in_data_sz;
     for (int i = 0; i < iov_len && rem > 0; i++) {
         curr_len = MPL_MIN(rem, iov[i].iov_len);
@@ -300,7 +299,7 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_Re
 
     MPI_Aint pack_size = 100 * 1024;
     if (pack_size > MPIDI_OFI_global.max_msg_size) {
-        pack_size = MPIDI_OFI_global.max_msg_size;
+        pack_size = (MPI_Aint) MPIDI_OFI_global.max_msg_size;
     }
     MPIDI_OFI_lmt_unpack_t *p = &MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_u.unpack);
     p->rma_key = lmt_msg->rma_key;

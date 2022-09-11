@@ -90,7 +90,7 @@ static void free_publish_element(struct HYDT_ns_publish *publish)
 
 static HYD_status cmd_response(int fd, const char *str)
 {
-    int len = strlen(str) + 1;  /* include the end of string */
+    int len = (int) strlen(str) + 1;    /* include the end of string */
     int sent, closed;
     HYD_status status = HYD_SUCCESS;
 

@@ -83,7 +83,8 @@ int MPI_File_write_all_begin_c(MPI_File fh, ROMIO_CONST void *buf, MPI_Count cou
     static char myname[] = "MPI_FILE_WRITE_ALL_BEGIN";
 
     error_code = MPIOI_File_write_all_begin(fh, (MPI_Offset) 0,
-                                            ADIO_INDIVIDUAL, buf, count, datatype, myname);
+                                            ADIO_INDIVIDUAL, buf, (MPI_Aint) count, datatype,
+                                            myname);
 
     return error_code;
 }

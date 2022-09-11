@@ -496,9 +496,10 @@ static void set_sep_counters(int nic)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int num_ctx_per_nic = MPIDI_OFI_global.num_vnis;
-        int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[nic]->domain_attr->tx_ctx_cnt,
-                                  MPIDI_OFI_global.prov_use[nic]->domain_attr->rx_ctx_cnt);
-        num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
+        size_t max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[nic]->domain_attr->tx_ctx_cnt,
+                                     MPIDI_OFI_global.prov_use[nic]->domain_attr->rx_ctx_cnt);
+        MPIR_Assert(max_by_prov <= INT_MAX);
+        num_ctx_per_nic = (int) MPL_MIN(num_ctx_per_nic, max_by_prov);
         MPIDI_OFI_global.prov_use[nic]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
         MPIDI_OFI_global.prov_use[nic]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
     }
@@ -1333,8 +1334,8 @@ static int update_global_limits(struct fi_info *prov)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
-    MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
+    MPIDI_OFI_global.max_buffered_send = MPL_MIN(prov->tx_attr->inject_size, MPIR_AINT_MAX);
+    MPIDI_OFI_global.max_buffered_write = MPL_MIN(prov->tx_attr->inject_size, MPIR_AINT_MAX);
     if (MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE > 0 &&
         MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE <= prov->ep_attr->max_msg_size) {
         /* Truncate max_msg_size to a user-selected value */
@@ -1361,7 +1362,7 @@ static int update_global_limits(struct fi_info *prov)
     MPIDI_OFI_global.tx_iov_limit = MPL_MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.rx_iov_limit = MPL_MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.rma_iov_limit = MPL_MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
+    MPIDI_OFI_global.max_mr_key_size = MPL_MIN(prov->domain_attr->mr_key_size, MPIR_AINT_MAX);
 
     /* Ensure that we aren't trying to shove too many bits into the match_bits.
      * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
@@ -1439,7 +1440,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "max_mr_key_size: %" PRIu64 "\n", MPIDI_OFI_global.max_mr_key_size);
     /* Print various size limits */
     fprintf(stdout, "==== Various sizes and limits ====\n");
-    fprintf(stdout, "MPIDI_OFI_AM_MSG_HEADER_SIZE: %d\n", (int) MPIDI_OFI_AM_MSG_HEADER_SIZE);
+    fprintf(stdout, "MPIDI_OFI_AM_MSG_HEADER_SIZE: %d\n", (int) sizeof(MPIDI_OFI_am_header_t));
     fprintf(stdout, "MPIDI_OFI_MAX_AM_HDR_SIZE: %d\n", (int) MPIDI_OFI_MAX_AM_HDR_SIZE);
     fprintf(stdout, "sizeof(MPIDI_OFI_am_request_header_t): %d\n",
             (int) sizeof(MPIDI_OFI_am_request_header_t));

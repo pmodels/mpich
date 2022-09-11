@@ -75,8 +75,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
     ADIO_Offset *targetAggsForMyDataFDEnd =
         (ADIO_Offset *) ADIOI_Malloc(naggs * sizeof(ADIO_Offset));
     int numTargetAggs = 0;
-    int i;
-    for (i = 0; i < naggs; i++) {
+    for (int i = 0; i < naggs; i++) {
         if (((myOffsetStart >= fd_start[i]) && (myOffsetStart <= fd_end[i])) ||
             ((myOffsetEnd >= fd_start[i]) && (myOffsetEnd <= fd_end[i]))) {
             targetAggsForMyData[numTargetAggs] = fd->hints->ranklist[i];
@@ -88,7 +87,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 
     /* these 3 arrays track info on the procs that feed an aggregtor */
     int *sourceProcsForMyData = NULL;
-    int *remainingDataAmountToGetPerProc = NULL;
+    ADIO_Offset *remainingDataAmountToGetPerProc = NULL;
     ADIO_Offset *remainingDataOffsetToGetPerProc = NULL;
 
     int numSourceProcs = 0;
@@ -97,21 +96,20 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
                          * need from what procs */
 
         /* count numSourceProcs so we know how large to make the arrays */
-        for (i = 0; i < nprocs; i++)
+        for (int i = 0; i < nprocs; i++)
             if (((st_offsets[i] >= fd_start[myAggRank]) && (st_offsets[i] <= fd_end[myAggRank])) ||
                 ((end_offsets[i] >= fd_start[myAggRank]) && (end_offsets[i] <= fd_end[myAggRank])))
                 numSourceProcs++;
 
-        sourceProcsForMyData = (int *) ADIOI_Malloc(numSourceProcs * sizeof(int));
-        remainingDataAmountToGetPerProc = (int *) ADIOI_Malloc(numSourceProcs * sizeof(int));
-        remainingDataOffsetToGetPerProc =
-            (ADIO_Offset *) ADIOI_Malloc(numSourceProcs * sizeof(ADIO_Offset));
+        sourceProcsForMyData = ADIOI_Malloc(numSourceProcs * sizeof(int));
+        remainingDataAmountToGetPerProc = ADIOI_Malloc(numSourceProcs * sizeof(ADIO_Offset));
+        remainingDataOffsetToGetPerProc = ADIOI_Malloc(numSourceProcs * sizeof(ADIO_Offset));
 
         /* everybody has the st_offsets and end_offsets for all ranks so if I am a
          * used aggregator go thru them and figure out which ranks have data that
          * falls into my file domain assigned to me */
         numSourceProcs = 0;
-        for (i = 0; i < nprocs; i++) {
+        for (int i = 0; i < nprocs; i++) {
             if (((st_offsets[i] >= fd_start[myAggRank]) && (st_offsets[i] <= fd_end[myAggRank])) ||
                 ((end_offsets[i] >= fd_start[myAggRank]) &&
                  (end_offsets[i] <= fd_end[myAggRank]))) {
@@ -143,11 +141,11 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
     }
 
     int *amountOfDataReqestedByTargetAgg = (int *) ADIOI_Malloc(naggs * sizeof(int));
-    for (i = 0; i < numTargetAggs; i++) {
+    for (int i = 0; i < numTargetAggs; i++) {
         amountOfDataReqestedByTargetAgg[i] = 0;
     }
 
-    int totalAmountDataReceived = 0;
+    ADIO_Offset totalAmountDataReceived = 0;
     MPI_Request *mpiSizeToSendRequest =
         (MPI_Request *) ADIOI_Malloc(numTargetAggs * sizeof(MPI_Request));
     MPI_Request *mpiRecvDataRequest =
@@ -188,11 +186,12 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
         currentRoundFDStart = fd_start[myAggRank];
     }
 
-    int *dataSizeGottenThisRoundPerProc = (int *) ADIOI_Malloc(numSourceProcs * sizeof(int));
+    ADIO_Offset *dataSizeGottenThisRoundPerProc =
+        ADIOI_Malloc(numSourceProcs * sizeof(ADIO_Offset));
     int *mpiRequestMapPerProc = (int *) ADIOI_Malloc(numSourceProcs * sizeof(int));
     int *targetAggIndexesForMyDataThisRound = (int *) ADIOI_Malloc(numTargetAggs * sizeof(int));
-    int *sendBufferOffsetsThisRound = (int *) ADIOI_Malloc(numTargetAggs * sizeof(int));
-    int *bufferAmountsToSendThisRound = (int *) ADIOI_Malloc(numTargetAggs * sizeof(int));
+    ADIO_Offset *sendBufferOffsetsThisRound = ADIOI_Malloc(numTargetAggs * sizeof(ADIO_Offset));
+    ADIO_Offset *bufferAmountsToSendThisRound = ADIOI_Malloc(numTargetAggs * sizeof(ADIO_Offset));
 
 #ifdef ROMIO_GPFS
     endTimeBase = MPI_Wtime();
@@ -207,7 +206,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 
         /* determine what target aggs I need to send data to this round */
         int numTargetAggsThisRound = 0;
-        for (i = 0; i < numTargetAggs; i++) {
+        for (int i = 0; i < numTargetAggs; i++) {
             if (((myOffsetStart >= targetAggsForMyDataFDStart[i]) &&
                  (myOffsetStart <= targetAggsForMyDataFDEnd[i])) ||
                 ((myOffsetEnd >= targetAggsForMyDataFDStart[i]) &&
@@ -239,8 +238,8 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
                  * currentRoundFDEndForMyTargetAgg */
                 /* find the offset into the send buffer and the amount
                  * of data to send */
-                int sendBufferOffset = 0;
-                int bufferAmountToSend = 0;
+                ADIO_Offset sendBufferOffset = 0;
+                ADIO_Offset bufferAmountToSend = 0;
 
                 if ((myOffsetStart >= currentRoundFDStartForMyTargetAgg) &&
                     (myOffsetStart <= currentRoundFDEndForMyTargetAgg)) {
@@ -250,7 +249,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
                         bufferAmountToSend = (myOffsetEnd - myOffsetStart) + 1;
                 } else if ((myOffsetEnd >= currentRoundFDStartForMyTargetAgg) &&
                            (myOffsetEnd <= currentRoundFDEndForMyTargetAgg)) {
-                    sendBufferOffset = (int) (currentRoundFDStartForMyTargetAgg - myOffsetStart);
+                    sendBufferOffset = currentRoundFDStartForMyTargetAgg - myOffsetStart;
                     if (myOffsetEnd > currentRoundFDEndForMyTargetAgg)
                         bufferAmountToSend =
                             (currentRoundFDEndForMyTargetAgg - currentRoundFDStartForMyTargetAgg) +
@@ -259,7 +258,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
                         bufferAmountToSend = (myOffsetEnd - currentRoundFDStartForMyTargetAgg) + 1;
                 } else if ((myOffsetStart <= currentRoundFDStartForMyTargetAgg) &&
                            (myOffsetEnd >= currentRoundFDEndForMyTargetAgg)) {
-                    sendBufferOffset = (int) (currentRoundFDStartForMyTargetAgg - myOffsetStart);
+                    sendBufferOffset = currentRoundFDStartForMyTargetAgg - myOffsetStart;
                     bufferAmountToSend =
                         (currentRoundFDEndForMyTargetAgg - currentRoundFDStartForMyTargetAgg) + 1;
                 }
@@ -269,8 +268,8 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
                     sendBufferOffsetsThisRound[numTargetAggsThisRound] = sendBufferOffset;
                     bufferAmountsToSendThisRound[numTargetAggsThisRound] = bufferAmountToSend;
 #ifdef p2pcontigtrace
-                    printf("bufferAmountToSend is %d sendBufferOffset is %d\n", bufferAmountToSend,
-                           sendBufferOffset);
+                    printf("bufferAmountToSend is %lld sendBufferOffset is %d\n",
+                           (long long) bufferAmountToSend, (long long) sendBufferOffset);
 #endif
                     /* only need to be pinged by the agg for rounds after the first one - for the first one just
                      * send the data without being pinged */
@@ -301,7 +300,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
         int numSourceProcsSentData = 0;
 
         /* the aggs send the amount of data they need to their source procs */
-        for (i = 0; i < numSourceProcs; i++) {
+        for (int i = 0; i < numSourceProcs; i++) {
             if ((remainingDataOffsetToGetPerProc[i] >= currentRoundFDStart) &&
                 (remainingDataOffsetToGetPerProc[i] <= currentRoundFDEnd)) {
                 if ((remainingDataOffsetToGetPerProc[i] + remainingDataAmountToGetPerProc[i]) <=
@@ -341,7 +340,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 
         int numDataSendToWaitFor = 0;
         /* the source procs send the requested data to the aggs */
-        for (i = 0; i < numTargetAggsThisRound; i++) {
+        for (int i = 0; i < numTargetAggsThisRound; i++) {
 
             /* the source procs aren't pinged by the target aggs on the first round */
             if (roundIter > 0) {
@@ -349,29 +348,31 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
                 MPI_Waitany(numTargetAggsThisRound, mpiSizeToSendRequest,
                             &irecv, &mpiWaitAnyStatusFromTargetAggs);
 
+                assert(bufferAmountsToSendThisRound[irecv] < INT_MAX);
 #ifdef p2pcontigtrace
                 printf
-                    ("irecv is %d amountOfDataReqestedByTargetAgg is %d bufferAmountsToSendThisRound is %d sendBufferOffsetsThisRound is %d targetAggsForMyData is %d\n",
+                    ("irecv is %d amountOfDataReqestedByTargetAgg is %lld bufferAmountsToSendThisRound is %d sendBufferOffsetsThisRound is %d targetAggsForMyData is %d\n",
                      irecv, amountOfDataReqestedByTargetAgg[irecv],
-                     bufferAmountsToSendThisRound[irecv], sendBufferOffsetsThisRound[irecv],
+                     (long long) bufferAmountsToSendThisRound[irecv],
+                     sendBufferOffsetsThisRound[irecv],
                      targetAggsForMyData[targetAggIndexesForMyDataThisRound[irecv]]);
 #endif
                 ADIOI_Assert(amountOfDataReqestedByTargetAgg[irecv] ==
                              bufferAmountsToSendThisRound[irecv]);
                 MPI_Isend(&((char *) buf)[sendBufferOffsetsThisRound[irecv]],
-                          bufferAmountsToSendThisRound[irecv], MPI_BYTE,
+                          (int) bufferAmountsToSendThisRound[irecv], MPI_BYTE,
                           targetAggsForMyData[targetAggIndexesForMyDataThisRound[irecv]], 0,
                           fd->comm, &mpiSendDataToTargetAggRequest[irecv]);
 
             } else {
 #ifdef p2pcontigtrace
                 printf
-                    ("i is %d bufferAmountsToSendThisRound is %d sendBufferOffsetsThisRound is %d targetAggsForMyData is %d\n",
-                     i, bufferAmountsToSendThisRound[i], sendBufferOffsetsThisRound[i],
+                    ("i is %d bufferAmountsToSendThisRound is %lld sendBufferOffsetsThisRound is %d targetAggsForMyData is %d\n",
+                     i, (long long) bufferAmountsToSendThisRound[i], sendBufferOffsetsThisRound[i],
                      targetAggsForMyData[targetAggIndexesForMyDataThisRound[i]]);
 #endif
                 MPI_Isend(&((char *) buf)[sendBufferOffsetsThisRound[i]],
-                          bufferAmountsToSendThisRound[i], MPI_BYTE,
+                          (int) bufferAmountsToSendThisRound[i], MPI_BYTE,
                           targetAggsForMyData[targetAggIndexesForMyDataThisRound[i]], 0, fd->comm,
                           &mpiSendDataToTargetAggRequest[i]);
             }
@@ -385,22 +386,24 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 
         /* the aggs receive the data from the source procs */
         int numDataRecvToWaitFor = 0;
-        for (i = 0; i < numSourceProcs; i++) {
+        for (int i = 0; i < numSourceProcs; i++) {
 
-            int currentWBOffset = 0;
+            ADIO_Offset currentWBOffset = 0;
             for (j = 0; j < i; j++)
                 currentWBOffset += dataSizeGottenThisRoundPerProc[j];
 
             /* only receive from source procs that will send > 0 count data */
             if (dataSizeGottenThisRoundPerProc[i] > 0) {
+                assert(dataSizeGottenThisRoundPerProc[i] < INT_MAX);
 #ifdef p2pcontigtrace
                 printf
                     ("receiving data from rank %d dataSizeGottenThisRoundPerProc is %d currentWBOffset is %d\n",
                      sourceProcsForMyData[i], dataSizeGottenThisRoundPerProc[i], currentWBOffset);
 #endif
-                MPI_Irecv(&((char *) write_buf)[currentWBOffset], dataSizeGottenThisRoundPerProc[i],
-                          MPI_BYTE, sourceProcsForMyData[i], 0,
-                          fd->comm, &mpiRecvDataRequest[numDataRecvToWaitFor]);
+                MPI_Irecv(&((char *) write_buf)[currentWBOffset],
+                          (int) dataSizeGottenThisRoundPerProc[i], MPI_BYTE,
+                          sourceProcsForMyData[i], 0, fd->comm,
+                          &mpiRecvDataRequest[numDataRecvToWaitFor]);
                 mpiRequestMapPerProc[numDataRecvToWaitFor] = i;
                 numDataRecvToWaitFor++;
             }
@@ -409,8 +412,8 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 #endif
         }
 
-        int totalDataReceivedThisRound = 0;
-        for (i = 0; i < numDataRecvToWaitFor; i++) {
+        ADIO_Offset totalDataReceivedThisRound = 0;
+        for (int i = 0; i < numDataRecvToWaitFor; i++) {
             MPI_Waitany(numDataRecvToWaitFor, mpiRecvDataRequest,
                         &irecv, &mpiWaitAnyStatusFromSourceProcs);
             totalDataReceivedThisRound +=
@@ -433,7 +436,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 
         /* clean up the MPI_Request object for the MPI_Isend which told the
          * source procs how much data to send */
-        for (i = 0; i < numSourceProcsSentData; i++) {
+        for (int i = 0; i < numSourceProcsSentData; i++) {
             MPI_Waitany(numSourceProcsSentData, mpiSendDataSizeRequest,
                         &isend, &mpiIsendStatusForSize);
         }
@@ -492,7 +495,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
         /* numDataRecvToWaitFor > 0 */
         if (iAmUsedAgg)
             currentRoundFDStart += coll_bufsize;
-        for (i = 0; i < numDataSendToWaitFor; i++) {
+        for (int i = 0; i < numDataSendToWaitFor; i++) {
             MPI_Wait(&mpiSendDataToTargetAggRequest[i], &mpiIsendStatusForData);
         }
 
@@ -601,8 +604,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
     ADIO_Offset *sourceAggsForMyDataFDEnd =
         (ADIO_Offset *) ADIOI_Malloc(naggs * sizeof(ADIO_Offset));
     int numSourceAggs = 0;
-    int i;
-    for (i = 0; i < naggs; i++) {
+    for (int i = 0; i < naggs; i++) {
         if (((myOffsetStart >= fd_start[i]) && (myOffsetStart <= fd_end[i])) ||
             ((myOffsetEnd >= fd_start[i]) && (myOffsetEnd <= fd_end[i]))) {
             sourceAggsForMyData[numSourceAggs] = fd->hints->ranklist[i];
@@ -617,7 +619,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
      * using max size of nprocs for the arrays could determine exact size first
      * and then allocate that size */
     int *targetProcsForMyData = NULL;
-    int *remainingDataAmountToSendPerProc = NULL;
+    ADIO_Offset *remainingDataAmountToSendPerProc = NULL;
     ADIO_Offset *remainingDataOffsetToSendPerProc = NULL;
 
     int numTargetProcs = 0;
@@ -626,14 +628,14 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
         /* for the used aggregators figure out how much data I need from what procs */
 
         /* count numTargetProcs so we know how large to make the arrays */
-        for (i = 0; i < nprocs; i++)
+        for (int i = 0; i < nprocs; i++)
             if (((st_offsets[i] >= fd_start[myAggRank]) &&
                  (st_offsets[i] <= fd_end[myAggRank])) ||
                 ((end_offsets[i] >= fd_start[myAggRank]) && (end_offsets[i] <= fd_end[myAggRank])))
                 numTargetProcs++;
 
         targetProcsForMyData = (int *) ADIOI_Malloc(numTargetProcs * sizeof(int));
-        remainingDataAmountToSendPerProc = (int *) ADIOI_Malloc(numTargetProcs * sizeof(int));
+        remainingDataAmountToSendPerProc = ADIOI_Malloc(numTargetProcs * sizeof(ADIO_Offset));
         remainingDataOffsetToSendPerProc =
             (ADIO_Offset *) ADIOI_Malloc(numTargetProcs * sizeof(ADIO_Offset));
 
@@ -641,7 +643,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
          * used aggregator go thru them and figure out which ranks have data that
          * falls into my file domain assigned to me */
         numTargetProcs = 0;
-        for (i = 0; i < nprocs; i++) {
+        for (int i = 0; i < nprocs; i++) {
             if (((st_offsets[i] >= fd_start[myAggRank]) && (st_offsets[i] <= fd_end[myAggRank])) ||
                 ((end_offsets[i] >= fd_start[myAggRank]) &&
                  (end_offsets[i] <= fd_end[myAggRank]))) {
@@ -693,10 +695,10 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
         nextRoundFDStart = fd_start[myAggRank];
     }
 
-    int *dataSizeSentThisRoundPerProc = (int *) ADIOI_Malloc(numTargetProcs * sizeof(int));
+    ADIO_Offset *dataSizeSentThisRoundPerProc = ADIOI_Malloc(numTargetProcs * sizeof(ADIO_Offset));
     int *sourceAggIndexesForMyDataThisRound = (int *) ADIOI_Malloc(numSourceAggs * sizeof(int));
-    int *recvBufferOffsetsThisRound = (int *) ADIOI_Malloc(numSourceAggs * sizeof(int));
-    int *bufferAmountsToGetThisRound = (int *) ADIOI_Malloc(numSourceAggs * sizeof(int));
+    ADIO_Offset *recvBufferOffsetsThisRound = ADIOI_Malloc(numSourceAggs * sizeof(ADIO_Offset));
+    ADIO_Offset *bufferAmountsToGetThisRound = ADIOI_Malloc(numSourceAggs * sizeof(ADIO_Offset));
     *error_code = MPI_SUCCESS;
 
     int currentReadBuf = 0;
@@ -724,7 +726,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
             currentRoundFDStart = nextRoundFDStart;
 
             if (!useIOBuffer || (roundIter == 0)) {
-                int amountDataToReadThisRound;
+                ADIO_Offset amountDataToReadThisRound;
                 if ((fd_end[myAggRank] - currentRoundFDStart) < coll_bufsize) {
                     currentRoundFDEnd = fd_end[myAggRank];
                     amountDataToReadThisRound = ((currentRoundFDEnd - currentRoundFDStart) + 1);
@@ -734,7 +736,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
                 }
 
                 /* read currentRoundFDEnd bytes */
-                ADIO_ReadContig(fd, read_buf, amountDataToReadThisRound,
+                ADIO_ReadContig(fd, read_buf, (MPI_Aint) amountDataToReadThisRound,
                                 MPI_BYTE, ADIO_EXPLICIT_OFFSET, currentRoundFDStart,
                                 &status, error_code);
                 currentReadBuf = 1;
@@ -752,7 +754,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 
                 if (roundIter < (numberOfRounds - 1)) {
                     nextRoundFDStart += coll_bufsize;
-                    int amountDataToReadNextRound;
+                    ADIO_Offset amountDataToReadNextRound;
                     if ((fd_end[myAggRank] - nextRoundFDStart) < coll_bufsize) {
                         nextRoundFDEnd = fd_end[myAggRank];
                         amountDataToReadNextRound = ((nextRoundFDEnd - nextRoundFDStart) + 1);
@@ -815,7 +817,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
         /* determine what source aggs I need to get data from this round and
          * recv only from them */
         int numSourceAggsThisRound = 0;
-        for (i = 0; i < numSourceAggs; i++) {
+        for (int i = 0; i < numSourceAggs; i++) {
             if (((myOffsetStart >= sourceAggsForMyDataFDStart[i]) &&
                  (myOffsetStart <= sourceAggsForMyDataFDEnd[i]))
                 || ((myOffsetEnd >= sourceAggsForMyDataFDStart[i]) &&
@@ -846,8 +848,8 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 
                 /* get the portion of my data that is within currentRoundFDStartForMySourceAgg to currentRoundFDEndForMySourceAgg */
                 /* find the offset into the recv buffer and the amount of data to get */
-                int recvBufferOffset = 0;
-                int bufferAmountToGet = 0;
+                ADIO_Offset recvBufferOffset = 0;
+                ADIO_Offset bufferAmountToGet = 0;
 
                 if ((myOffsetStart >= currentRoundFDStartForMySourceAgg) &&
                     (myOffsetStart <= currentRoundFDEndForMySourceAgg)) {
@@ -887,7 +889,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 
         /* the aggs determine the amount of data they will be sending to their
          * source procs */
-        for (i = 0; i < numTargetProcs; i++) {
+        for (int i = 0; i < numTargetProcs; i++) {
             if ((remainingDataOffsetToSendPerProc[i] >= currentRoundFDStart) &&
                 (remainingDataOffsetToSendPerProc[i] <= currentRoundFDEnd)) {
                 if ((remainingDataOffsetToSendPerProc[i] +
@@ -912,25 +914,27 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
         }
 
         /* the target procs get the data from the source aggs */
-        for (i = 0; i < numSourceAggsThisRound; i++) {
+        for (int i = 0; i < numSourceAggsThisRound; i++) {
+            assert(bufferAmountsToGetThisRound[i] < INT_MAX);
             MPI_Irecv(&((char *) buf)[recvBufferOffsetsThisRound[i]],
-                      bufferAmountsToGetThisRound[i], MPI_BYTE,
+                      (int) bufferAmountsToGetThisRound[i], MPI_BYTE,
                       sourceAggsForMyData[sourceAggIndexesForMyDataThisRound[i]], 0, fd->comm,
                       &mpiRecvDataFromSourceAggsRequest[i]);
         }
 
         /* the source aggs send the data to the target procs */
         int numTargetProcsSentThisRound = 0;
-        for (i = 0; i < numTargetProcs; i++) {
+        for (int i = 0; i < numTargetProcs; i++) {
 
-            int currentWBOffset = 0;
+            ADIO_Offset currentWBOffset = 0;
             for (j = 0; j < i; j++)
                 currentWBOffset += dataSizeSentThisRoundPerProc[j];
 
             /* only send to target procs that will recv > 0 count data */
             if (dataSizeSentThisRoundPerProc[i] > 0) {
+                assert(dataSizeSentThisRoundPerProc[i] < INT_MAX);
                 MPI_Isend(&((char *) read_buf)[currentWBOffset],
-                          dataSizeSentThisRoundPerProc[i],
+                          (int) dataSizeSentThisRoundPerProc[i],
                           MPI_BYTE, targetProcsForMyData[i], 0,
                           fd->comm, &mpiSendDataToTargetProcRequest[numTargetProcsSentThisRound]);
                 numTargetProcsSentThisRound++;
@@ -940,7 +944,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
         }
 
         /* wait for the target procs to get their data */
-        for (i = 0; i < numSourceAggsThisRound; i++) {
+        for (int i = 0; i < numSourceAggsThisRound; i++) {
             MPI_Waitany(numSourceAggsThisRound, mpiRecvDataFromSourceAggsRequest,
                         &irecv, &mpiWaitAnyStatusFromSourceProcs);
         }
@@ -948,7 +952,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
         nextRoundFDStart = currentRoundFDStart + coll_bufsize;
 
         /* clean up the MPI_Isend MPI_Requests */
-        for (i = 0; i < numTargetProcsSentThisRound; i++) {
+        for (int i = 0; i < numTargetProcsSentThisRound; i++) {
             MPI_Waitany(numTargetProcsSentThisRound, mpiSendDataToTargetProcRequest,
                         &isend, &mpiIsendStatusForData);
         }

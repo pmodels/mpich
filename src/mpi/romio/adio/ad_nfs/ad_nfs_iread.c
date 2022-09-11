@@ -11,11 +11,12 @@ void ADIOI_NFS_IreadContig(ADIO_File fd, void *buf, MPI_Aint count,
                            MPI_Datatype datatype, int file_ptr_type,
                            ADIO_Offset offset, ADIO_Request * request, int *error_code)
 {
-    MPI_Count len, typesize;
     int aio_errno = 0;
     static char myname[] = "ADIOI_NFS_IREADCONTIG";
 
+    MPI_Count typesize;
     MPI_Type_size_x(datatype, &typesize);
+    ADIO_Offset len;
     len = count * typesize;
 
     if (file_ptr_type == ADIO_INDIVIDUAL)

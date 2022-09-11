@@ -349,7 +349,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
     MPIDI_POSIX_per_call_ibcast_info_t *data;
     int i;
     MPI_Aint num_chunks, chunk_count_floor, chunk_count_ceil;
-    int offset = 0, is_contig, vtx_id;
+    int is_contig, vtx_id;
     MPI_Aint ori_count = count;
     MPI_Aint type_size, nbytes, true_lb, true_extent;
     void *ori_local_buf = local_buf;
@@ -412,6 +412,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
      * into. Then, there is a dependence from first vertex of previous chunk to first vertex of next
      * chunk. */
 
+    MPI_Aint offset;
+    offset = 0;
     for (i = 0; i < num_chunks; i++) {
         MPI_Aint chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
         int n_incoming = 0;

@@ -186,7 +186,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_progress_state_init(MPID_Progress_state * st
     } else {
         /* global progress by default */
         for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
-            state->vci[i] = i;
+            state->vci[i] = (uint8_t) i;
         }
         state->vci_count = MPIDI_global.n_total_vcis;
     }
@@ -303,7 +303,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Stream_progress(MPIR_Stream * stream_ptr)
         }
 
         state.progress_made = 0;
-        state.vci[0] = stream_ptr->vci;
+        state.vci[0] = (uint8_t) stream_ptr->vci;
         state.vci_count = 1;
         MPID_Progress_test(&state);
 

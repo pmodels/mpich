@@ -44,7 +44,7 @@ int MPIR_Typerep_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    *flattened_type_size = flattened_loop_size + sizeof(struct flatten_hdr);
+    *flattened_type_size = flattened_loop_size + (int) sizeof(struct flatten_hdr);
 
   fn_exit:
     return mpi_errno;

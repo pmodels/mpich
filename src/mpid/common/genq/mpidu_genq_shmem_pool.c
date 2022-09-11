@@ -88,8 +88,8 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx)
     goto fn_exit;
 }
 
-int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_proc,
-                                 uintptr_t num_proc, int rank, MPIDU_genq_shmem_pool_t * pool)
+int MPIDU_genq_shmem_pool_create(int cell_size, int cells_per_proc,
+                                 int num_proc, int rank, MPIDU_genq_shmem_pool_t * pool)
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_pool_s *pool_obj;
@@ -102,14 +102,14 @@ int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_proc,
 
     pool_obj->cell_size = cell_size;
     aligned_cell_size = RESIZE_TO_MAX_ALIGN(cell_size);
-    pool_obj->cell_alloc_size = sizeof(MPIDU_genqi_shmem_cell_header_s) + aligned_cell_size;
+    pool_obj->cell_alloc_size = (int) (sizeof(MPIDU_genqi_shmem_cell_header_s) + aligned_cell_size);
     pool_obj->cells_per_proc = cells_per_proc;
     pool_obj->num_proc = num_proc;
     pool_obj->rank = rank;
 
     /* the global_block_index is at the end of the slab to avoid extra need of alignment */
     int total_cells_size = num_proc * cells_per_proc * pool_obj->cell_alloc_size;
-    int free_queue_size = num_proc * sizeof(MPIDU_genq_shmem_queue_u);
+    int free_queue_size = num_proc * (int) sizeof(MPIDU_genq_shmem_queue_u);
     slab_size = total_cells_size + free_queue_size;
 
     rc = MPIDU_Init_shm_alloc(slab_size, &pool_obj->slab);

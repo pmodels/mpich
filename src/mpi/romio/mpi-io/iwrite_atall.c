@@ -113,7 +113,7 @@ int MPI_File_iwrite_at_all_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *b
 #endif /* MPI_hpux */
 
     error_code = MPIOI_File_iwrite_all(fh, offset, ADIO_EXPLICIT_OFFSET,
-                                       buf, count, datatype, myname, request);
+                                       buf, (MPI_Aint) count, datatype, myname, request);
 
 #ifdef MPI_hpux
     HPMP_IO_END(fl_xmpi, fh, datatype, count);

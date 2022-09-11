@@ -192,7 +192,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     else
         flags = FI_DELIVERY_COMPLETE;
 
-    int j = req->noncontig.put.target.iov_cur;
+    MPI_Aint j = req->noncontig.put.target.iov_cur;
     size_t msg_len;
     while (req->noncontig.put.origin.pack_offset < req->noncontig.put.origin.total_bytes) {
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vni].pack_buf_pool, &pack_buffer);
@@ -282,7 +282,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     else
         flags = FI_DELIVERY_COMPLETE;
 
-    int j = req->noncontig.get.target.iov_cur;
+    MPI_Aint j = req->noncontig.get.target.iov_cur;
     size_t msg_len;
     while (req->noncontig.get.origin.pack_offset < req->noncontig.get.origin.total_bytes) {
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vni].pack_buf_pool, &pack_buffer);

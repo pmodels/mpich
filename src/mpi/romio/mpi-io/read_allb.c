@@ -84,7 +84,8 @@ int MPI_File_read_all_begin_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datat
     static char myname[] = "MPI_FILE_READ_ALL_BEGIN";
 
     error_code = MPIOI_File_read_all_begin(fh, (MPI_Offset) 0,
-                                           ADIO_INDIVIDUAL, buf, count, datatype, myname);
+                                           ADIO_INDIVIDUAL, buf, (MPI_Aint) count, datatype,
+                                           myname);
 
     return error_code;
 }

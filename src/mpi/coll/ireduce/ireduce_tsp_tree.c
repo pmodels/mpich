@@ -17,7 +17,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, j, t;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
-    int offset = 0;
     size_t extent, type_size;
     MPI_Aint type_lb, true_extent;
     int is_commutative;
@@ -148,6 +147,8 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     /* NOTE: Make sure you are handling non-contiguous datatypes
      * correctly with pipelined reduce, for example, buffer+offset
      * if being calculated correctly */
+    MPI_Aint offset;
+    offset = 0;
     for (j = 0; j < num_chunks; j++) {
         MPI_Aint msgsize = (j == 0) ? chunk_size_floor : chunk_size_ceil;
         void *reduce_address = (char *) reduce_buffer + offset * extent;

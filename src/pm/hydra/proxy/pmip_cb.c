@@ -213,7 +213,7 @@ static HYD_status check_pmi_cmd(char **buf, int *buflen_out, int *pmi_version, i
                 if (*bufptr == '\n') {
                     full_command = 1;
                     *bufptr = '\0';
-                    buflen = bufptr - sptr + 1;
+                    buflen = (int) (bufptr - sptr + 1);
                     break;
                 }
             }
@@ -224,7 +224,7 @@ static HYD_status check_pmi_cmd(char **buf, int *buflen_out, int *pmi_version, i
                     full_command = 1;
                     bufptr += strlen("endcmd\n") - 1;
                     *bufptr = '\0';
-                    buflen = bufptr - sptr + 1;
+                    buflen = (int) (bufptr - sptr + 1);
                     break;
                 }
             }
@@ -242,7 +242,7 @@ static HYD_status check_pmi_cmd(char **buf, int *buflen_out, int *pmi_version, i
             full_command = 1;
             char *bufptr = sptr + 6 + cmdlen - 1;
             *bufptr = '\0';
-            buflen = bufptr - sptr + 1;
+            buflen = (int) (bufptr - sptr + 1);
         }
     }
 
@@ -518,20 +518,20 @@ static HYD_status singleton_init(void)
 
     int fd;
     status =
-        HYDU_sock_connect("localhost", HYD_pmcd_pmip.user_global.singleton_port, &fd, 0,
+        HYDU_sock_connect("localhost", (uint16_t) HYD_pmcd_pmip.user_global.singleton_port, &fd, 0,
                           HYD_CONNECT_DELAY);
     HYDU_ERR_POP(status, "unable to connect to singleton process\n");
     HYD_pmcd_pmip.downstream.pmi_fd[0] = fd;
 
     char msg[1024];
     strcpy(msg, "cmd=singinit authtype=none\n");
-    status = HYDU_sock_write(fd, msg, strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_write(fd, msg, (int) strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send msg to singleton process\n");
     status = HYDU_sock_read(fd, msg, 1024, &recvd, &closed, HYDU_SOCK_COMM_NONE);
     HYDU_ERR_POP(status, "unable to read msg from singleton process\n");
     MPL_snprintf(msg, 1024, "cmd=singinit_info versionok=yes stdio=no kvsname=%s\n",
                  HYD_pmcd_pmip.local.kvs->kvsname);
-    status = HYDU_sock_write(fd, msg, strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_write(fd, msg, (int) strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send msg to singleton process\n");
 
     status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, NULL, pmi_cb);
@@ -549,7 +549,7 @@ static HYD_status singleton_init(void)
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              HYD_pmcd_pmip.downstream.pid,
-                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent,
+                             (int) (HYD_pmcd_pmip.local.proxy_process_count * sizeof(int)), &sent,
                              &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PID list upstream\n");
     HYDU_ASSERT(!closed, status);
@@ -746,7 +746,7 @@ static HYD_status launch_procs(void)
                         cuda_str_offset++;
                     }
                     MPL_strncpy(cuda_str + cuda_str_offset, str, MAX_GPU_STR_LEN - cuda_str_offset);
-                    cuda_str_offset += strlen(str);
+                    cuda_str_offset += (int) strlen(str);
 
                     MPL_free(str);
                 }
@@ -848,7 +848,7 @@ static HYD_status launch_procs(void)
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              HYD_pmcd_pmip.downstream.pid,
-                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent,
+                             (int) (HYD_pmcd_pmip.local.proxy_process_count * sizeof(int)), &sent,
                              &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PID list upstream\n");
     HYDU_ASSERT(!closed, status);

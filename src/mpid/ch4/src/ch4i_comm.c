@@ -978,7 +978,7 @@ int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int
             max_gpid = n;
     }
 
-    uint64_t mask_size = (max_gpid / 32) + 1;
+    int mask_size = (int) (max_gpid / 32) + 1;
     if (mask_size > 128) {
         MPIR_CHKLMEM_MALLOC(gpidmask, uint32_t *, mask_size * sizeof(uint32_t),
                             mpi_errno, "gpidmask", MPL_MEM_COMM);
@@ -992,8 +992,8 @@ int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int
     /* Set the bits for the first array */
     for (int i = 0; i < n1; i++) {
         uint64_t n = shrink(gpids1[i], num_low_bits);
-        int idx = n / 32;
-        int bit = n % 32;
+        int idx = (int) (n / 32);
+        int bit = (int) (n % 32);
         gpidmask[idx] = gpidmask[idx] | (1 << bit);
         MPIR_Assert(idx < mask_size);
     }
@@ -1001,8 +1001,8 @@ int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int
     /* Look for any duplicates in the second array */
     for (int i = 0; i < n2; i++) {
         uint64_t n = shrink(gpids2[i], num_low_bits);
-        int idx = n / 32;
-        int bit = n % 32;
+        int idx = (int) (n / 32);
+        int bit = (int) (n % 32);
         if (gpidmask[idx] & (1 << bit)) {
             MPIR_ERR_SET1(mpi_errno, MPI_ERR_COMM,
                           "**dupprocesses", "**dupprocesses %d", gpids2[i]);

@@ -16,7 +16,6 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
     ADIOI_Flatlist_node *flat_buf, *flat_file;
     ADIO_Offset size, brd_size, frd_size = 0, req_len, sum;
     int b_index;
-    int n_etypes_in_filetype;
     ADIO_Offset n_filetypes, etype_in_filetype;
     ADIO_Offset abs_off_in_filetype = 0;
     MPI_Count bufsize, filetype_size, buftype_size, size_in_filetype;
@@ -81,8 +80,7 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
                              (ADIO_Offset) (uintptr_t) ((uintptr_t) buf + userbuf_off));
                 ADIOI_Assert(req_len == (int) req_len);
                 ADIO_ReadContig(fd,
-                                (char *) buf + userbuf_off,
-                                req_len,
+                                (char *) buf + userbuf_off, (MPI_Aint) req_len,
                                 MPI_BYTE, ADIO_EXPLICIT_OFFSET, req_off, &status1, error_code);
                 if (*error_code != MPI_SUCCESS)
                     return;
@@ -146,10 +144,10 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
                 }
             }
         } else {
-            n_etypes_in_filetype = filetype_size / etype_size;
+            ADIO_Offset n_etypes_in_filetype = filetype_size / etype_size;
             n_filetypes = offset / n_etypes_in_filetype;
-            etype_in_filetype = (int) (offset % n_etypes_in_filetype);
-            size_in_filetype = (unsigned) etype_in_filetype *(unsigned) etype_size;
+            etype_in_filetype = offset % n_etypes_in_filetype;
+            size_in_filetype = etype_in_filetype * etype_size;
 
             sum = 0;
             for (f_index = 0; f_index < flat_file->count; f_index++) {
@@ -193,7 +191,7 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
             }
 
             off = disp + flat_file->indices[f_index] + n_filetypes * (ADIO_Offset) filetype_extent;
-            frd_size = MPL_MIN(flat_file->blocklens[f_index], bufsize - (unsigned) userbuf_off);
+            frd_size = MPL_MIN(flat_file->blocklens[f_index], bufsize - userbuf_off);
         }
 
         /* End of calculations.  At this point the following values have
@@ -233,8 +231,7 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
                                  (ADIO_Offset) (uintptr_t) ((uintptr_t) buf + userbuf_off));
                     ADIOI_Assert(req_len == (int) req_len);
                     ADIO_ReadContig(fd,
-                                    (char *) buf + userbuf_off,
-                                    req_len,
+                                    (char *) buf + userbuf_off, (MPI_Aint) req_len,
                                     MPI_BYTE, ADIO_EXPLICIT_OFFSET, req_off, &status1, error_code);
                     if (*error_code != MPI_SUCCESS)
                         return;
@@ -261,8 +258,7 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
                     }
                     off = disp + flat_file->indices[f_index] +
                         n_filetypes * (ADIO_Offset) filetype_extent;
-                    frd_size = MPL_MIN(flat_file->blocklens[f_index],
-                                       bufsize - (unsigned) userbuf_off);
+                    frd_size = MPL_MIN(flat_file->blocklens[f_index], bufsize - userbuf_off);
                 }
             }
         } else {
@@ -296,8 +292,7 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
                                  (ADIO_Offset) (uintptr_t) ((uintptr_t) buf + userbuf_off));
                     ADIOI_Assert(req_len == (int) req_len);
                     ADIO_ReadContig(fd,
-                                    (char *) buf + userbuf_off,
-                                    req_len,
+                                    (char *) buf + userbuf_off, (MPI_Aint) req_len,
                                     MPI_BYTE, ADIO_EXPLICIT_OFFSET, req_off, &status1, error_code);
                     if (*error_code != MPI_SUCCESS)
                         return;
@@ -324,7 +319,6 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, MPI_Aint count,
 
                 if (size == brd_size) {
                     /* reached end of contiguous block in memory */
-
                     b_index = (b_index + 1) % flat_buf->count;
                     buf_count++;
                     i_offset = buftype_extent * (buf_count / flat_buf->count) +

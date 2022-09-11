@@ -51,7 +51,7 @@ typedef struct MPLI_gavl_tree_node {
         } s;
         struct MPLI_gavl_tree_node *next;
     } u;
-    uintptr_t height;
+    int height;
     uintptr_t addr;
     uintptr_t len;
     const void *val;

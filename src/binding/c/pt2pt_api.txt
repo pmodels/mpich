@@ -35,7 +35,7 @@ MPI_Bsend:
     delivered.)
 */
 {
-    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
+    mpi_errno = MPIR_Bsend_isend(buf, (MPI_Aint) (MPI_Aint) count, datatype, dest, tag, comm_ptr, NULL);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 }
@@ -46,11 +46,11 @@ MPI_Bsend_init:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Bsend_init(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Bsend_init(buf, (MPI_Aint) (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                                 MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, (MPI_Aint) count);
 
     /* return the handle of the request to the user */
     MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
@@ -89,7 +89,7 @@ MPI_Buffer_attach:
     one thread at a time calls this routine or 'MPI_Buffer_detach'.
 */
 {
-    mpi_errno = MPIR_Bsend_attach(buffer, size);
+    mpi_errno = MPIR_Bsend_attach(buffer, (MPI_Aint) size);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 }
@@ -155,7 +155,7 @@ MPI_Ibsend:
     .desc: Starts a nonblocking buffered send
     .earlyreturn: pt2pt_proc_null
 {
-    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
+    mpi_errno = MPIR_Bsend_isend(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr, NULL);
     if (mpi_errno)
         goto fn_fail;
 
@@ -194,7 +194,7 @@ MPI_Imrecv:
 {
     MPIR_Request *rreq = NULL;
 
-    mpi_errno = MPID_Imrecv(buf, count, datatype, message_ptr, &rreq);
+    mpi_errno = MPID_Imrecv(buf, (MPI_Aint) count, datatype, message_ptr, &rreq);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(rreq != NULL);
@@ -218,7 +218,7 @@ MPI_Irecv:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr,
+    mpi_errno = MPID_Irecv(buf, (MPI_Aint) count, datatype, source, tag, comm_ptr,
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for irecv, lower-level access is
@@ -241,11 +241,11 @@ MPI_Irsend:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Irsend(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Irsend(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                             MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, (MPI_Aint) count);
 
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for irsend, lower-level access is
@@ -260,12 +260,12 @@ MPI_Isend:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Isend(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, (MPI_Aint) count);
 
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for isend, lower-level access is
@@ -280,11 +280,11 @@ MPI_Issend:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Issend(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Issend(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                             MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, (MPI_Aint) count);
 
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for issend, lower-level access is
@@ -319,7 +319,7 @@ MPI_Mrecv:
 }
 {
     MPIR_Request *rreq = NULL;
-    mpi_errno = MPID_Mrecv(buf, count, datatype, message_ptr, status, &rreq);
+    mpi_errno = MPID_Mrecv(buf, (MPI_Aint) count, datatype, message_ptr, status, &rreq);
     MPIR_ERR_CHECK(mpi_errno);
     /* rreq == NULL implies message = MPI_MESSAGE_NO_PROC.
      * I.e, status was set and no need to wait on rreq */
@@ -358,7 +358,7 @@ MPI_Recv:
     /* MT: Note that MPID_Recv may release the SINGLE_CS if it
      * decides to block internally.  MPID_Recv in that case will
      * re-aquire the SINGLE_CS before returning */
-    mpi_errno = MPID_Recv(buf, count, datatype, source, tag, comm_ptr,
+    mpi_errno = MPID_Recv(buf, (MPI_Aint) count, datatype, source, tag, comm_ptr,
                           MPIR_CONTEXT_INTRA_PT2PT, status, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -385,7 +385,7 @@ MPI_Recv_init:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Recv_init(buf, count, datatype, source, tag, comm_ptr,
+    mpi_errno = MPID_Recv_init(buf, (MPI_Aint) count, datatype, source, tag, comm_ptr,
                                MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -400,7 +400,7 @@ MPI_Rsend:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Rsend(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Rsend(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -427,7 +427,7 @@ MPI_Rsend_init:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Rsend_init(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Rsend_init(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                                 MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -448,7 +448,7 @@ MPI_Send:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Send(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Send(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                           MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -473,11 +473,11 @@ MPI_Send_init:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Send_init(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Send_init(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                                MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, (MPI_Aint) count);
 
     /* return the handle of the request to the user */
     MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
@@ -491,10 +491,10 @@ MPI_Sendrecv_replace:
     .decl: MPIR_Sendrecv_replace_impl
 {
 #if defined(MPID_Sendrecv_replace)
-    mpi_errno = MPID_Sendrecv_replace(buf, count, datatype, dest,
+    mpi_errno = MPID_Sendrecv_replace(buf, (MPI_Aint) count, datatype, dest,
                                       sendtag, source, recvtag, comm_ptr, status);
 #else
-    mpi_errno = MPIR_Sendrecv_replace_impl(buf, count, datatype, dest,
+    mpi_errno = MPIR_Sendrecv_replace_impl(buf, (MPI_Aint) count, datatype, dest,
                                            sendtag, source, recvtag, comm_ptr, status);
 #endif
 
@@ -508,7 +508,7 @@ MPI_Ssend:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Ssend(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Ssend(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -534,7 +534,7 @@ MPI_Ssend_init:
 {
     MPIR_Request *request_ptr = NULL;
 
-    mpi_errno = MPID_Ssend_init(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Ssend_init(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                                 MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;

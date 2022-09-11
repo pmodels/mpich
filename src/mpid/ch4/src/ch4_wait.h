@@ -43,7 +43,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
 
     state->progress_counts[0] = MPL_atomic_relaxed_load_int(&MPIDI_VCI(vci).progress_count);
     state->vci_count = 1;
-    state->vci[0] = vci;
+    state->vci[0] = (uint8_t) vci;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** reqs,
@@ -67,7 +67,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** re
             }
         }
         if (!found) {
-            state->vci[idx++] = vci;
+            state->vci[idx++] = (uint8_t) vci;
             MPIR_Assert(vci < MPIDI_global.n_total_vcis);
         }
     }

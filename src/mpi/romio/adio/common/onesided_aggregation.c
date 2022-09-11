@@ -31,7 +31,7 @@ typedef struct FDSourceBufferState {
     ADIO_Offset indiceOffset;
     MPI_Aint bufTypeExtent;
     ADIO_Offset dataTypeExtent;
-    int flatBufIndice;
+    MPI_Count flatBufIndice;
 
     ADIO_Offset sourceBufferOffset;
 
@@ -84,7 +84,7 @@ int ADIOI_OneSidedCleanup(ADIO_File fd)
  */
 inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
                                                     ADIOI_Flatlist_node * flatBuf,
-                                                    int targetNumBytes, int packing,
+                                                    ADIO_Offset targetNumBytes, int packing,
                                                     FDSourceBufferState *
                                                     currentFDSourceBufferState,
                                                     char *packedDataBufer)
@@ -94,17 +94,17 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
     ADIO_Offset currentIndiceOffset = currentFDSourceBufferState->indiceOffset;
     ADIO_Offset bufTypeExtent = (ADIO_Offset) currentFDSourceBufferState->bufTypeExtent;
     ADIO_Offset currentDataTypeExtent = currentFDSourceBufferState->dataTypeExtent;
-    int currentFlatBufIndice = currentFDSourceBufferState->flatBufIndice;
+    MPI_Count currentFlatBufIndice = currentFDSourceBufferState->flatBufIndice;
 
-    int targetSendDataIndex = 0;
+    ADIO_Offset targetSendDataIndex = 0;
 
 #ifdef onesidedtrace
     printf
-        ("nonContigSourceDataBufferAdvance: currentFlatBufIndice is %d currentDataTypeExtent is %ld currentIndiceOffset is %ld\n",
-         currentFlatBufIndice, currentDataTypeExtent, currentIndiceOffset);
+        ("nonContigSourceDataBufferAdvance: currentFlatBufIndice is %lld currentDataTypeExtent is %ld currentIndiceOffset is %ld\n",
+         (long long) currentFlatBufIndice, currentDataTypeExtent, currentIndiceOffset);
 #endif
 
-    int remainingBytesToLoad = targetNumBytes;
+    ADIO_Offset remainingBytesToLoad = targetNumBytes;
     while (remainingBytesToLoad > 0) {
         if ((flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset) >= remainingBytesToLoad) { // we can get the rest of our data from this indice
             ADIO_Offset physicalSourceBufferOffset =
@@ -120,10 +120,11 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
             if (packedDataBufer != NULL) {
                 if (packing)
                     memcpy(&(packedDataBufer[targetSendDataIndex]),
-                           &(sourceDataBuffer[physicalSourceBufferOffset]), remainingBytesToLoad);
+                           &(sourceDataBuffer[physicalSourceBufferOffset]),
+                           (size_t) remainingBytesToLoad);
                 else
                     memcpy(&(sourceDataBuffer[physicalSourceBufferOffset]),
-                           &(packedDataBufer[targetSendDataIndex]), remainingBytesToLoad);
+                           &(packedDataBufer[targetSendDataIndex]), (size_t) remainingBytesToLoad);
             }
 
             targetSendDataIndex += remainingBytesToLoad;
@@ -139,23 +140,26 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
             remainingBytesToLoad = 0;
 
         } else {        // we can only get part of our data from this indice
-            int amountDataToLoad = (flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset);
+            ADIO_Offset amountDataToLoad =
+                (flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset);
             ADIO_Offset physicalSourceBufferOffset =
                 (currentDataTypeExtent * bufTypeExtent) + flatBuf->indices[currentFlatBufIndice] +
                 currentIndiceOffset;
 
 #ifdef onesidedtrace
             printf
-                ("loading amountDataToLoad %d from src buffer offset %ld to targetSendDataIndex %d\n",
-                 amountDataToLoad, physicalSourceBufferOffset, targetSendDataIndex);
+                ("loading amountDataToLoad %lld from src buffer offset %lld to targetSendDataIndex %lld\n",
+                 (long long) amountDataToLoad, (long long) physicalSourceBufferOffset,
+                 (long long) targetSendDataIndex);
 #endif
             if (packedDataBufer != NULL) {
                 if (packing)
                     memcpy(&(packedDataBufer[targetSendDataIndex]),
-                           &(sourceDataBuffer[physicalSourceBufferOffset]), amountDataToLoad);
+                           &(sourceDataBuffer[physicalSourceBufferOffset]),
+                           (size_t) amountDataToLoad);
                 else
                     memcpy(&(sourceDataBuffer[physicalSourceBufferOffset]),
-                           &(packedDataBufer[targetSendDataIndex]), amountDataToLoad);
+                           &(packedDataBufer[targetSendDataIndex]), (size_t) amountDataToLoad);
             }
 
             targetSendDataIndex += amountDataToLoad;
@@ -439,7 +443,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
     ADIO_Offset currentSourceBufferOffset = 0;
     ADIO_Offset currentDataTypeExtent = 0;
-    int currentFlatBufIndice = 0;
+    ADIO_Offset currentFlatBufIndice = 0;
     ADIO_Offset currentIndiceOffset = 0;
 
     /* Remember where we left off in the source buffer when packing stripes. */
@@ -486,7 +490,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                      * and file domains.
                      */
                     ADIO_Offset sourceBlockTotal = 0;
-                    int lastIndiceUsed = currentFlatBufIndice;
+                    MPI_Count lastIndiceUsed = currentFlatBufIndice;
                     int numNonContigSourceChunks = 0;
 
                     while (sourceBlockTotal < len_list[blockIter - 1]) {
@@ -531,7 +535,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
              */
             if ((blockIter == (contig_access_count - 1)) && (!bufTypeIsContig)) {
                 ADIO_Offset sourceBlockTotal = 0;
-                int tmpCurrentFlatBufIndice = currentFlatBufIndice;
+                MPI_Count tmpCurrentFlatBufIndice = currentFlatBufIndice;
                 int lastNumNonContigSourceChunks = 0;
                 while (sourceBlockTotal < len_list[blockIter]) {
                     lastNumNonContigSourceChunks++;
@@ -794,7 +798,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     currentFDSourceBufferState[numTargetAggs - 1].flatBufIndice;
                             }
                             nonContigSourceDataBufferAdvance(((char *) buf), flatBuf,
-                                                             (int) amountToAdvanceSBOffsetForFD, 1,
+                                                             amountToAdvanceSBOffsetForFD, 1,
                                                              &currentFDSourceBufferState
                                                              [numTargetAggs], NULL);
 #ifdef onesidedtrace
@@ -1012,7 +1016,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     (char *) write_buf +
                                     ((ADIO_Offset) stripeIter *
                                      (ADIO_Offset) stripeSize),
-                                    stripe_parms->stripeWriteLens[stripeIter], MPI_BYTE,
+                                    (MPI_Aint) stripe_parms->stripeWriteLens[stripeIter], MPI_BYTE,
                                     ADIO_EXPLICIT_OFFSET,
                                     stripe_parms->stripeWriteOffsets[stripeIter], &status,
                                     error_code);
@@ -1047,7 +1051,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             int aggIter;
             for (aggIter = 0; aggIter < numTargetAggs; aggIter++) {
 
-                int numBytesPutThisAggRound = 0;
+                ADIO_Offset numBytesPutThisAggRound = 0;
                 /* If we have data for the round/agg process it.
                  */
                 if (targetAggsForMyDataFirstOffLenIndex[roundIter][aggIter] != -1) {
@@ -1069,7 +1073,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                     MPI_Datatype *targetAggDataTypes = NULL;
 
                     char *derivedTypePackedSourceBuffer = NULL;
-                    int derivedTypePackedSourceBufferOffset = 0;
+                    ADIO_Offset derivedTypePackedSourceBufferOffset = 0;
                     int allocatedDerivedTypeArrays = 0;
                     ADIO_Offset amountOfDataWrittenThisRoundAgg = 0;
 
@@ -1104,7 +1108,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
                         /* Determine the amount of data and exact source buffer offsets to use.
                          */
-                        int bufferAmountToSend = 0;
+                        ADIO_Offset bufferAmountToSend = 0;
 
                         if ((offsetStart >= currentRoundFDStartForMyTargetAgg) &&
                             (offsetStart <= currentRoundFDEndForMyTargetAgg)) {
@@ -1138,6 +1142,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                         printf("bufferAmountToSend is %d\n", bufferAmountToSend);
 #endif
                         if (bufferAmountToSend > 0) {   /* we have data to send this round */
+                            assert(bufferAmountToSend <= INT_MAX);
                             if (romio_write_aggmethod == 2) {
                                 /* Only allocate these arrays if we are using method 2 and only do it once for this round/target agg.
                                  */
@@ -1168,7 +1173,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 #endif
                                         if (amountOfDataWrittenThisRoundAgg > 0)
                                             derivedTypePackedSourceBuffer = (char *)
-                                                ADIOI_Malloc(amountOfDataWrittenThisRoundAgg *
+                                                ADIOI_Malloc((size_t)
+                                                             amountOfDataWrittenThisRoundAgg *
                                                              sizeof(char));
                                         else
                                             derivedTypePackedSourceBuffer = NULL;
@@ -1200,23 +1206,24 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                 if (bufTypeIsContig) {
                                     MPI_Put(((char *) buf) +
                                             currentFDSourceBufferState[aggIter].sourceBufferOffset,
-                                            bufferAmountToSend, MPI_BYTE,
+                                            (int) bufferAmountToSend, MPI_BYTE,
                                             targetAggsForMyData[aggIter],
-                                            targetDisplacementToUseThisRound, bufferAmountToSend,
-                                            MPI_BYTE, write_buf_window);
+                                            targetDisplacementToUseThisRound,
+                                            (int) bufferAmountToSend, MPI_BYTE, write_buf_window);
                                     currentFDSourceBufferState[aggIter].sourceBufferOffset +=
-                                        (ADIO_Offset) bufferAmountToSend;
+                                        bufferAmountToSend;
                                 } else {
                                     putSourceData =
-                                        (char *) ADIOI_Malloc(bufferAmountToSend * sizeof(char));
+                                        (char *) ADIOI_Malloc((size_t) bufferAmountToSend *
+                                                              sizeof(char));
                                     nonContigSourceDataBufferAdvance(((char *) buf), flatBuf,
                                                                      bufferAmountToSend, 1,
                                                                      &currentFDSourceBufferState
                                                                      [aggIter], putSourceData);
-                                    MPI_Put(putSourceData, bufferAmountToSend, MPI_BYTE,
+                                    MPI_Put(putSourceData, (int) bufferAmountToSend, MPI_BYTE,
                                             targetAggsForMyData[aggIter],
-                                            targetDisplacementToUseThisRound, bufferAmountToSend,
-                                            MPI_BYTE, write_buf_window);
+                                            targetDisplacementToUseThisRound,
+                                            (int) bufferAmountToSend, MPI_BYTE, write_buf_window);
 
                                 }
                                 MPI_Win_unlock(targetAggsForMyData[aggIter], write_buf_window);
@@ -1232,7 +1239,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
                                 if (bufTypeIsContig) {
                                     targetAggBlockLengths[targetAggContigAccessCount] =
-                                        bufferAmountToSend;
+                                        (int) bufferAmountToSend;
                                     targetAggDataTypes[targetAggContigAccessCount] = MPI_BYTE;
                                     targetAggDisplacements[targetAggContigAccessCount] =
                                         targetDisplacementToUseThisRound;
@@ -1240,7 +1247,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                         (MPI_Aint)
                                         currentFDSourceBufferState[aggIter].sourceBufferOffset;
                                     currentFDSourceBufferState[aggIter].sourceBufferOffset +=
-                                        (ADIO_Offset) bufferAmountToSend;
+                                        bufferAmountToSend;
                                     targetAggContigAccessCount++;
                                 } else {
                                     nonContigSourceDataBufferAdvance(((char *) buf), flatBuf,
@@ -1250,15 +1257,14 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                                                      &derivedTypePackedSourceBuffer
                                                                      [derivedTypePackedSourceBufferOffset]);
                                     targetAggBlockLengths[targetAggContigAccessCount] =
-                                        bufferAmountToSend;
+                                        (int) bufferAmountToSend;
                                     targetAggDataTypes[targetAggContigAccessCount] = MPI_BYTE;
                                     targetAggDisplacements[targetAggContigAccessCount] =
                                         targetDisplacementToUseThisRound;
                                     sourceBufferDisplacements[targetAggContigAccessCount] =
                                         (MPI_Aint) derivedTypePackedSourceBufferOffset;
                                     targetAggContigAccessCount++;
-                                    derivedTypePackedSourceBufferOffset +=
-                                        (ADIO_Offset) bufferAmountToSend;
+                                    derivedTypePackedSourceBufferOffset += bufferAmountToSend;
                                 }
                             }
 #ifdef onesidedtrace
@@ -1439,8 +1445,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                              (char *) write_buf +
                                              ((ADIO_Offset) stripeIter *
                                               (ADIO_Offset) (stripeSize)),
-                                             stripe_parms->stripeWriteLens[stripeIter], MPI_BYTE,
-                                             ADIO_EXPLICIT_OFFSET,
+                                             (size_t) stripe_parms->stripeWriteLens[stripeIter],
+                                             MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                                              stripe_parms->stripeWriteOffsets[stripeIter], &status,
                                              error_code);
                         }
@@ -1814,7 +1820,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
     ADIO_Offset currentRecvBufferOffset = 0;
     ADIO_Offset currentDataTypeExtent = 0;
-    int currentFlatBufIndice = 0;
+    MPI_Count currentFlatBufIndice = 0;
     ADIO_Offset currentIndiceOffset = 0;
 
     /* This denotes the coll_bufsize boundaries within the source buffer for reading for 1 round.
@@ -1846,7 +1852,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                      * in the blocks.
                      */
                     ADIO_Offset sourceBlockTotal = 0;
-                    int lastIndiceUsed = currentFlatBufIndice;
+                    MPI_Count lastIndiceUsed = currentFlatBufIndice;
                     int numNonContigSourceChunks = 0;
                     while (sourceBlockTotal < len_list[blockIter - 1]) {
                         numNonContigSourceChunks++;
@@ -1890,7 +1896,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
              */
             if ((blockIter == (contig_access_count - 1)) && (!bufTypeIsContig)) {
                 ADIO_Offset sourceBlockTotal = 0;
-                int tmpCurrentFlatBufIndice = currentFlatBufIndice;
+                MPI_Count tmpCurrentFlatBufIndice = currentFlatBufIndice;
                 int lastNumNonContigSourceChunks = 0;
                 while (sourceBlockTotal < len_list[blockIter]) {
                     lastNumNonContigSourceChunks++;
@@ -2292,7 +2298,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                 currentRoundFDStart = nextRoundFDStart;
 
                 if (!useIOBuffer || (roundIter == 0)) {
-                    int amountDataToReadThisRound;
+                    ADIO_Offset amountDataToReadThisRound;
                     if ((fd_end[myAggRank] - currentRoundFDStart) < coll_bufsize) {
                         currentRoundFDEnd = fd_end[myAggRank];
                         amountDataToReadThisRound = ((currentRoundFDEnd - currentRoundFDStart) + 1);
@@ -2302,7 +2308,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                     }
 
                     /* read currentRoundFDEnd bytes */
-                    ADIO_ReadContig(fd, read_buf, amountDataToReadThisRound,
+                    ADIO_ReadContig(fd, read_buf, (MPI_Aint) amountDataToReadThisRound,
                                     MPI_BYTE, ADIO_EXPLICIT_OFFSET, currentRoundFDStart,
                                     &status, error_code);
                     currentReadBuf = 1;
@@ -2316,7 +2322,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
                     if (roundIter < (numberOfRounds - 1)) {
                         nextRoundFDStart += coll_bufsize;
-                        int amountDataToReadNextRound;
+                        ADIO_Offset amountDataToReadNextRound;
                         if ((fd_end[myAggRank] - nextRoundFDStart) < coll_bufsize) {
                             nextRoundFDEnd = fd_end[myAggRank];
                             amountDataToReadNextRound = ((nextRoundFDEnd - nextRoundFDStart) + 1);
@@ -2419,7 +2425,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                     MPI_Aint *sourceAggDisplacements = NULL, *recvBufferDisplacements = NULL;
                     MPI_Datatype *sourceAggDataTypes = NULL;
                     char *derivedTypePackedSourceBuffer = NULL;
-                    int derivedTypePackedSourceBufferOffset = 0;
+                    ADIO_Offset derivedTypePackedSourceBufferOffset = 0;
                     int allocatedDerivedTypeArrays = 0;
                     ADIO_Offset amountOfDataReadThisRoundAgg = 0;
 
@@ -2439,7 +2445,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
                         /* Determine the amount of data and exact source buffer offsets to use.
                          */
-                        int bufferAmountToRecv = 0;
+                        ADIO_Offset bufferAmountToRecv = 0;
 
                         if ((offsetStart >= currentRoundFDStartForMySourceAgg) &&
                             (offsetStart <= currentRoundFDEndForMySourceAgg)) {
@@ -2499,7 +2505,8 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 #endif
                                         if (amountOfDataReadThisRoundAgg > 0)
                                             derivedTypePackedSourceBuffer =
-                                                (char *) ADIOI_Malloc(amountOfDataReadThisRoundAgg *
+                                                (char *) ADIOI_Malloc((size_t)
+                                                                      amountOfDataReadThisRoundAgg *
                                                                       sizeof(char));
                                         else
                                             derivedTypePackedSourceBuffer = NULL;
@@ -2519,6 +2526,9 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                 sourceDisplacementToUseThisRound += (MPI_Aint) coll_bufsize;
                             }
 
+                            /* make sure bufferAmountToRecv fits in int to be used in e.g. MPI_Get */
+                            assert(bufferAmountToRecv < INT_MAX);
+
                             /* For romio_read_aggmethod of 1 do the mpi_get using the primitive MPI_BYTE type from each
                              * contiguous chunk from the target, if the source is non-contiguous then unpack the data after
                              * the MPI_Win_unlock is done to make sure the data has arrived first.
@@ -2530,20 +2540,21 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                 if (bufTypeIsContig) {
                                     MPI_Get(((char *) buf) +
                                             currentFDSourceBufferState[aggIter].sourceBufferOffset,
-                                            bufferAmountToRecv, MPI_BYTE,
+                                            (int) bufferAmountToRecv, MPI_BYTE,
                                             sourceAggsForMyData[aggIter],
-                                            sourceDisplacementToUseThisRound, bufferAmountToRecv,
-                                            MPI_BYTE, read_buf_window);
+                                            sourceDisplacementToUseThisRound,
+                                            (int) bufferAmountToRecv, MPI_BYTE, read_buf_window);
                                     currentFDSourceBufferState[aggIter].sourceBufferOffset +=
-                                        (ADIO_Offset) bufferAmountToRecv;
+                                        bufferAmountToRecv;
 
                                 } else {
                                     getSourceData =
-                                        (char *) ADIOI_Malloc(bufferAmountToRecv * sizeof(char));
-                                    MPI_Get(getSourceData, bufferAmountToRecv, MPI_BYTE,
+                                        (char *) ADIOI_Malloc((size_t) bufferAmountToRecv *
+                                                              sizeof(char));
+                                    MPI_Get(getSourceData, (int) bufferAmountToRecv, MPI_BYTE,
                                             sourceAggsForMyData[aggIter],
-                                            sourceDisplacementToUseThisRound, bufferAmountToRecv,
-                                            MPI_BYTE, read_buf_window);
+                                            sourceDisplacementToUseThisRound,
+                                            (int) bufferAmountToRecv, MPI_BYTE, read_buf_window);
 
                                 }
                                 MPI_Win_unlock(sourceAggsForMyData[aggIter], read_buf_window);
@@ -2563,25 +2574,24 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                             else if (romio_read_aggmethod == 2) {
                                 if (bufTypeIsContig) {
                                     sourceAggBlockLengths[sourceAggContigAccessCount] =
-                                        bufferAmountToRecv;
+                                        (int) bufferAmountToRecv;
                                     sourceAggDataTypes[sourceAggContigAccessCount] = MPI_BYTE;
                                     sourceAggDisplacements[sourceAggContigAccessCount] =
                                         sourceDisplacementToUseThisRound;
                                     recvBufferDisplacements[sourceAggContigAccessCount] = (MPI_Aint)
                                         currentFDSourceBufferState[aggIter].sourceBufferOffset;
                                     currentFDSourceBufferState[aggIter].sourceBufferOffset +=
-                                        (ADIO_Offset) bufferAmountToRecv;
+                                        bufferAmountToRecv;
                                     sourceAggContigAccessCount++;
                                 } else {
                                     sourceAggBlockLengths[sourceAggContigAccessCount] =
-                                        bufferAmountToRecv;
+                                        (int) bufferAmountToRecv;
                                     sourceAggDataTypes[sourceAggContigAccessCount] = MPI_BYTE;
                                     sourceAggDisplacements[sourceAggContigAccessCount] =
                                         sourceDisplacementToUseThisRound;
                                     recvBufferDisplacements[sourceAggContigAccessCount] =
                                         (MPI_Aint) derivedTypePackedSourceBufferOffset;
-                                    derivedTypePackedSourceBufferOffset +=
-                                        (ADIO_Offset) bufferAmountToRecv;
+                                    derivedTypePackedSourceBufferOffset += bufferAmountToRecv;
                                     sourceAggContigAccessCount++;
                                 }
                             }

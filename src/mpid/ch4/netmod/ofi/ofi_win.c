@@ -223,7 +223,8 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     MPIDI_OFI_WIN(win).winfo = MPL_malloc(sizeof(*winfo) * comm_ptr->local_size, MPL_MEM_RMA);
 
     winfo = MPIDI_OFI_WIN(win).winfo;
-    winfo[comm_ptr->rank].disp_unit = disp_unit;
+    MPIR_Assert(disp_unit <= INT_MAX);
+    winfo[comm_ptr->rank].disp_unit = (int) disp_unit;
 
     if ((MPIDI_OFI_ENABLE_MR_PROV_KEY || MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) && MPIDI_OFI_WIN(win).mr) {
         /* MR_BASIC */
@@ -345,7 +346,7 @@ static int win_init_sep(MPIR_Win * win)
     if (MPIDI_OFI_global.ctx[ctx_idx].rma_sep == NULL) {
         /* NOTE: if MPIDI_OFI_VNI_USE_SEPCTX, we could share rma_stx_ctx across vnis */
 
-        MPIDI_OFI_global.max_rma_sep_tx_cnt =
+        MPIDI_OFI_global.max_rma_sep_tx_cnt = (int)
             MPL_MIN(MPIDI_OFI_global.prov_use[0]->domain_attr->max_ep_tx_ctx,
                     MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX);
         finfo->ep_attr->tx_ctx_cnt = MPIDI_OFI_global.max_rma_sep_tx_cnt;

@@ -27,7 +27,7 @@
             }                                                           \
             writebuf_off = req_off;                                     \
             /* stripe_size alignment */                                 \
-            writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
+            writebuf_len = (MPI_Aint) MPL_MIN(end_offset - writebuf_off + 1, \
                                               (writebuf_off / stripe_size + 1) * \
                                               stripe_size - writebuf_off); \
             if (!fd->atomicity && fd->hints->ds_write == ADIOI_HINT_DISABLE) \
@@ -45,7 +45,7 @@
                 return;                                                 \
             }                                                           \
         }                                                               \
-        write_sz = (unsigned) (MPL_MIN(req_len,                         \
+        write_sz = (MPI_Aint) (MPL_MIN(req_len,                         \
                                        writebuf_off + writebuf_len - req_off)); \
         ADIOI_Assert((ADIO_Offset)write_sz ==                           \
                      MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
@@ -67,7 +67,7 @@
             userbuf_off += write_sz;                                    \
             writebuf_off += writebuf_len;                               \
             /* stripe_size alignment */                                 \
-            writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
+            writebuf_len = (MPI_Aint) MPL_MIN(end_offset - writebuf_off + 1, \
                                               (writebuf_off / stripe_size + 1) * \
                                               stripe_size - writebuf_off); \
             if (!fd->atomicity && fd->hints->ds_write == ADIOI_HINT_DISABLE) \
@@ -108,11 +108,11 @@
             }                                                           \
             writebuf_off = req_off;                                     \
             /* stripe_size alignment */                                 \
-            writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
+            writebuf_len = (MPI_Aint) MPL_MIN(end_offset - writebuf_off + 1, \
                                               (writebuf_off / stripe_size + 1) * \
                                               stripe_size - writebuf_off); \
         }                                                               \
-        write_sz = (unsigned) MPL_MIN(req_len, writebuf_off + writebuf_len - req_off); \
+        write_sz = (MPI_Aint) MPL_MIN(req_len, writebuf_off + writebuf_len - req_off); \
         ADIOI_Assert((ADIO_Offset)write_sz == MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
         memcpy(writebuf + req_off - writebuf_off,                       \
                (char *)buf + userbuf_off, write_sz);                    \
@@ -131,7 +131,7 @@
             userbuf_off += write_sz;                                    \
             writebuf_off += writebuf_len;                               \
             /* stripe_size alignment */                                 \
-            writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
+            writebuf_len = (MPI_Aint) MPL_MIN(end_offset - writebuf_off + 1, \
                                               (writebuf_off / stripe_size + 1) * \
                                               stripe_size - writebuf_off); \
             write_sz = MPL_MIN(req_len, writebuf_len);                  \
@@ -156,7 +156,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
     ADIO_Offset userbuf_off;
     ADIO_Offset off, req_off, disp, end_offset = 0, writebuf_off, start_off;
     char *writebuf;
-    unsigned bufsize, writebuf_len, write_sz;
+    MPI_Aint bufsize, writebuf_len, write_sz;
     ADIO_Status status1;
     ADIO_Offset new_bwr_size, new_fwr_size, st_fwr_size, fwr_size = 0, bwr_size, req_len;
     int stripe_size;
@@ -191,9 +191,8 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
     MPI_Type_get_extent(datatype, &lb, &buftype_extent);
     etype_size = fd->etype_size;
 
-    ADIOI_Assert((buftype_size * count) ==
-                 ((ADIO_Offset) (unsigned) buftype_size * (ADIO_Offset) count));
-    bufsize = buftype_size * count;
+    ADIOI_Assert((buftype_size * count) == (MPI_Aint) (buftype_size * count));
+    bufsize = (MPI_Aint) (buftype_size * count);
 
     /* get striping info */
     stripe_size = fd->hints->striping_unit;

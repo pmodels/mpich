@@ -92,8 +92,9 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
      * Otherwise, we collect a table of everyone. */
     void *table = NULL;
     mpi_errno = MPIDU_bc_table_create(rank, size, MPIR_Process.node_map,
-                                      &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
-                                      TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
+                                      &MPIDI_OFI_global.addrname,
+                                      (int) MPIDI_OFI_global.addrnamelen, TRUE,
+                                      MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Third, each fi_av_insert those addresses */
@@ -119,7 +120,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
         }
         MPL_free(mapped_table);
         /* Then, allgather all address names using init_comm */
-        MPIDU_bc_allgather(init_comm, MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
+        MPIDU_bc_allgather(init_comm, MPIDI_OFI_global.addrname, (int) MPIDI_OFI_global.addrnamelen,
                            TRUE, &table, &rank_map, &recv_bc_len);
 
         /* Insert the rest of the addresses */
@@ -211,7 +212,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
     }
 
     /* libfabric uses uniform name_len within a single provider */
-    int name_len = MPIDI_OFI_global.addrnamelen;
+    int name_len = (int) MPIDI_OFI_global.addrnamelen;
     int my_len = num_vnis * num_nics * name_len;
     char *all_names;
     MPIR_CHKLMEM_MALLOC(all_names, char *, size * my_len, mpi_errno, "all_names", MPL_MEM_ADDRESS);

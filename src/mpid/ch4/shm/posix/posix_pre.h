@@ -55,10 +55,10 @@ typedef struct {
 } MPIDI_POSIX_request_t;
 
 typedef struct MPIDI_POSIX_am_header {
-    int8_t am_type;
-    int8_t handler_id;
-    int16_t am_hdr_sz;
-    int32_t unused;
+    uint8_t am_type;
+    uint8_t handler_id;
+    uint16_t am_hdr_sz;
+    uint32_t unused;
 } MPIDI_POSIX_am_header_t;
 
 typedef struct MPIDI_POSIX_am_request_header {
@@ -66,8 +66,8 @@ typedef struct MPIDI_POSIX_am_request_header {
     void *rreq_ptr;
     void *am_hdr;
 
-    int8_t src_vsi;
-    int8_t dst_vsi;
+    uint8_t src_vsi;
+    uint8_t dst_vsi;
     uint16_t am_hdr_sz;
     uint8_t pad[4];
 

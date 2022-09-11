@@ -34,8 +34,8 @@ typedef struct MPIDI_IPCI_ipc_attr {
 typedef struct MPIDI_IPC_rndv_hdr {
     MPIDI_IPCI_type_t ipc_type;
     MPIDI_IPCI_ipc_handle_t ipc_handle;
-    uint64_t is_contig:8;
-    uint64_t flattened_sz:24;   /* only if it's non-contig, flattened type
+    uint8_t is_contig;
+    uint32_t flattened_sz;      /* only if it's non-contig, flattened type
                                  * will be attached after this header. */
     MPI_Aint count;             /* only if it's non-contig */
 } MPIDI_IPC_hdr;

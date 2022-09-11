@@ -20,7 +20,8 @@ static ADIOI_Flatlist_node *flatlist_node_new(MPI_Datatype datatype, MPI_Count c
     flat->indices = NULL;
     flat->lb_idx = flat->ub_idx = -1;
     flat->refct = 1;
-    flat->count = count;
+    assert(count < INT_MAX);
+    flat->count = (int) count;
     flat->flag = 0;
 
     flat->blocklens = (ADIO_Offset *) ADIOI_Calloc(flat->count * 2, sizeof(ADIO_Offset));
@@ -36,12 +37,12 @@ static ADIOI_Flatlist_node *flatlist_node_new(MPI_Datatype datatype, MPI_Count c
  * time something's added to flat's arrays, let's make sure they're big enough
  * and re-alloc if not.
  */
-static void flatlist_node_grow(ADIOI_Flatlist_node * flat, int idx)
+static void flatlist_node_grow(ADIOI_Flatlist_node * flat, MPI_Count idx)
 {
     if (idx >= flat->count) {
         ADIO_Offset *new_blocklens;
         ADIO_Offset *new_indices;
-        int new_count = (flat->count * 1.25 + 4);
+        int new_count = flat->count * 5 / 4 + 4;
         new_blocklens = (ADIO_Offset *) ADIOI_Calloc(new_count * 2, sizeof(ADIO_Offset));
         new_indices = new_blocklens + new_count;
         if (flat->count) {
@@ -118,7 +119,8 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
  * that syncing them is a hack, and as long as the counter doesn't under-count
  * it's good enough.
  */
-        flat->count = curr_index;
+        assert(curr_index < INT_MAX);
+        flat->count = (int) curr_index;
 
         ADIOI_Optimize_flattened(flat);
 /* debug */
@@ -167,10 +169,10 @@ static void ADIOI_Type_decode(MPI_Datatype datatype, int *combiner,
 
     MPI_Type_get_envelope_c(datatype, &nints_c, &nadds_c, &ncnts_c, &ntypes_c, combiner);
 
-    ints_c = (int *) ADIOI_Malloc((nints_c + 1) * sizeof(int));
-    adds_c = (MPI_Aint *) ADIOI_Malloc((nadds_c + 1) * sizeof(MPI_Aint));
-    cnts_c = (MPI_Count *) ADIOI_Malloc((ncnts_c + 1) * sizeof(MPI_Count));
-    types_c = (MPI_Datatype *) ADIOI_Malloc((ntypes_c + 1) * sizeof(MPI_Datatype));
+    ints_c = (int *) ADIOI_Malloc((size_t) (nints_c + 1) * sizeof(int));
+    adds_c = (MPI_Aint *) ADIOI_Malloc((size_t) (nadds_c + 1) * sizeof(MPI_Aint));
+    cnts_c = (MPI_Count *) ADIOI_Malloc((size_t) (ncnts_c + 1) * sizeof(MPI_Count));
+    types_c = (MPI_Datatype *) ADIOI_Malloc((size_t) (ntypes_c + 1) * sizeof(MPI_Datatype));
 
     switch (*combiner) {
         case MPI_COMBINER_NAMED:

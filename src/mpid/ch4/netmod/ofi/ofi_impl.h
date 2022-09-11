@@ -66,7 +66,7 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
                               __SHORT_FILE__,               \
                               __LINE__,                     \
                               __func__,                       \
-                              fi_strerror(-_ret));          \
+                              fi_strerror((int) (-_ret)));  \
     } while (0)
 
 #define MPIDI_OFI_CALL_RETRY(FUNC,vci_,STR,EAGAIN)      \
@@ -84,7 +84,7 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
                               __SHORT_FILE__,               \
                               __LINE__,                     \
                               __func__,                       \
-                              fi_strerror(-_ret));          \
+                              fi_strerror((int) (-_ret)));  \
         MPIR_ERR_CHKANDJUMP(_retry == 0 && EAGAIN,          \
                             mpi_errno,                      \
                             MPIX_ERR_EAGAIN,                \
@@ -139,7 +139,7 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
                               __SHORT_FILE__,               \
                               __LINE__,                     \
                               __func__,                     \
-                              fi_strerror(-_ret));          \
+                              fi_strerror((int) (-_ret)));  \
     } while (0)
 
 #define MPIDI_OFI_VCI_CALL_RETRY(FUNC,vci_,STR,EAGAIN)      \
@@ -159,7 +159,7 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
                               __SHORT_FILE__,               \
                               __LINE__,                     \
                               __func__,                     \
-                              fi_strerror(-_ret));          \
+                              fi_strerror((int) (-_ret)));  \
         MPIR_ERR_CHKANDJUMP(_retry == 0 && EAGAIN,          \
                             mpi_errno,                      \
                             MPIX_ERR_EAGAIN,                \
@@ -193,23 +193,8 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
 
 #define MPIDI_OFI_CALL_RETURN(FUNC, _ret)                               \
         do {                                                            \
-            (_ret) = FUNC;                                              \
+            (_ret) = (int) FUNC;                                        \
         } while (0)
-
-#define MPIDI_OFI_STR_CALL(FUNC,STR)                                   \
-  do                                                            \
-    {                                                           \
-      str_errno = FUNC;                                         \
-      MPIDI_OFI_ERR(str_errno!=MPL_SUCCESS,        \
-                            mpi_errno,                          \
-                            MPI_ERR_OTHER,                      \
-                            "**"#STR,                           \
-                            "**"#STR" %s %d %s %s",             \
-                            __SHORT_FILE__,                     \
-                            __LINE__,                           \
-                            __func__,                             \
-                            #STR);                              \
-    } while (0)
 
 #define MPIDI_OFI_REQUEST_CREATE(req, kind, vni) \
     do {                                                      \
@@ -363,7 +348,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
     }
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_load_iov(const void *buffer, int count,
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_load_iov(const void *buffer, MPI_Aint count,
                                                  MPI_Datatype datatype, MPI_Aint max_len,
                                                  MPI_Aint * loaded_iov_offset, struct iovec *iov)
 {
@@ -541,32 +526,6 @@ struct MPIDI_OFI_contig_blocks_params {
     size_t last_chunk;
 };
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* number of data elements in dt_datatype */
-                                                    MPI_Datatype dt_datatype, size_t total_bytes,       /* total byte size, passed in here for reusing */
-                                                    size_t max_pipe)
-{
-    ssize_t rem_size = total_bytes;
-    MPI_Aint num_iov, total_iov = 0;
-
-    MPIR_FUNC_ENTER;
-
-    if (dt_datatype == MPI_DATATYPE_NULL)
-        goto fn_exit;
-
-    do {
-        MPI_Aint tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
-
-        MPIR_Typerep_iov_len(dt_count, dt_datatype, tmp_size, &num_iov);
-        total_iov += num_iov;
-
-        rem_size -= tmp_size;
-    } while (rem_size);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return total_iov;
-}
-
 /* Calculate the index of the NIC used to send a message from sender_rank to receiver_rank
  *
  * comm - The communicator used to send the message.
@@ -644,7 +603,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_has_cq_buffered(int vni)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
 {
-    int mpi_errno = MPI_SUCCESS, ret = 0;
+    int mpi_errno = MPI_SUCCESS;
     struct fi_cq_tagged_entry cq_entry;
     MPIR_FUNC_ENTER;
 
@@ -652,7 +611,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
 
     for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
         int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
-        ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, &cq_entry, 1);
+        ssize_t ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, &cq_entry, 1);
 
         if (unlikely(ret == -FI_EAGAIN))
             goto fn_exit;

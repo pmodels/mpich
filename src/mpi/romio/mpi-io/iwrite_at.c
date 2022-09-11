@@ -128,7 +128,7 @@ int MPI_File_iwrite_at_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
     adio_fh = MPIO_File_resolve(fh);
 
     error_code = MPIOI_File_iwrite(adio_fh, offset, ADIO_EXPLICIT_OFFSET, buf,
-                                   count, datatype, myname, request);
+                                   (MPI_Aint) count, datatype, myname, request);
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)

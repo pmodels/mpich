@@ -47,7 +47,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
         MPIR_ERR_CHKANDJUMP(!req_hdr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         req_hdr->am_hdr = (void *) &req_hdr->am_hdr_buf[0];
-        req_hdr->am_hdr_sz = am_hdr_sz;
+        req_hdr->am_hdr_sz = (uint16_t) am_hdr_sz;
 
         req_hdr->pack_buffer = NULL;
     }

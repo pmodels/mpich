@@ -14,9 +14,8 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                            ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
     ssize_t err = -1;
-    MPI_Count datatype_size, len;
-    ADIO_Offset bytes_xfered = 0;
-    size_t wr_count;
+    MPI_Count datatype_size;
+    MPI_Aint len, bytes_xfered, wr_count;
     static char myname[] = "ADIOI_NFS_WRITECONTIG";
     char *p;
 
@@ -26,12 +25,13 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
     }
 
     MPI_Type_size_x(datatype, &datatype_size);
-    len = datatype_size * (ADIO_Offset) count;
+    len = (MPI_Aint) (datatype_size * count);
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
         offset = fd->fp_ind;
     }
 
+    bytes_xfered = 0;
     p = (char *) buf;
     while (bytes_xfered < len) {
 #ifdef ADIOI_MPE_LOGGING
@@ -92,7 +92,7 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
             if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             writebuf_off = req_off;                                     \
-            writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
+            writebuf_len = (MPI_Aint) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
             if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);                  \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
@@ -108,7 +108,7 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                 goto fn_exit;                                           \
             }                                                           \
         }                                                               \
-        write_sz = (int) (MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
+        MPI_Aint write_sz = (MPI_Aint) (MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
         memcpy(writebuf+req_off-writebuf_off, (char *)buf +userbuf_off, write_sz); \
         while (write_sz != req_len) {                                   \
             MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);                  \
@@ -122,7 +122,7 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
             req_len -= write_sz;                                        \
             userbuf_off += write_sz;                                    \
             writebuf_off += writebuf_len;                               \
-            writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
+            writebuf_len = (MPI_Aint) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
             if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);                  \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
@@ -137,7 +137,7 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                                                    "**ioRMWrdwr", 0);   \
                 goto fn_exit;                                           \
             }                                                           \
-            write_sz = MPL_MIN(req_len, writebuf_len);                  \
+            write_sz = (MPI_Aint) MPL_MIN(req_len, writebuf_len);                  \
             memcpy(writebuf, (char *)buf + userbuf_off, write_sz);      \
         }                                                               \
     }
@@ -150,7 +150,7 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
             if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             writebuf_off = req_off;                                     \
-            writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
+            writebuf_len = (MPI_Aint) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
             if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
             err = read(fd->fd_sys, writebuf, writebuf_len);             \
@@ -162,7 +162,8 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                 goto fn_exit;                                           \
             }                                                           \
         }                                                               \
-        write_sz = (int) (MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
+        MPI_Aint write_sz; \
+        write_sz = (MPI_Aint) (MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
         memcpy(writebuf+req_off-writebuf_off, (char *)buf +userbuf_off, write_sz); \
         while (write_sz != req_len) {                                   \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
@@ -172,7 +173,7 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
             req_len -= write_sz;                                        \
             userbuf_off += write_sz;                                    \
             writebuf_off += writebuf_len;                               \
-            writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
+            writebuf_len = (MPI_Aint) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
             if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
             err = read(fd->fd_sys, writebuf, writebuf_len);             \
@@ -183,7 +184,7 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                                                    "**ioRMWrdwr", 0);   \
                 goto fn_exit;                                           \
             }                                                           \
-            write_sz = MPL_MIN(req_len, writebuf_len);                  \
+            write_sz = (MPI_Aint) MPL_MIN(req_len, writebuf_len);                  \
             memcpy(writebuf, (char *)buf + userbuf_off, write_sz);      \
         }                                                               \
     }
@@ -205,9 +206,10 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
             if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             writebuf_off = req_off;                                     \
-            writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
+            writebuf_len = (MPI_Aint) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
         }                                                               \
-        write_sz = (int) (MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
+        MPI_Aint write_sz; \
+        write_sz = (MPI_Aint) (MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
         memcpy(writebuf+req_off-writebuf_off, (char *)buf +userbuf_off, write_sz); \
         while (write_sz != req_len) {                                   \
             MPE_Log_event(ADIOI_MPE_lseek_a, 0, NULL);                  \
@@ -222,8 +224,8 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
             req_len -= write_sz;                                        \
             userbuf_off += write_sz;                                    \
             writebuf_off += writebuf_len;                               \
-            writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
-            write_sz = MPL_MIN(req_len, writebuf_len);                  \
+            writebuf_len = (MPI_Aint) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
+            write_sz = (MPI_Aint) MPL_MIN(req_len, writebuf_len);                  \
             memcpy(writebuf, (char *)buf + userbuf_off, write_sz);      \
         }                                                               \
     }
@@ -237,9 +239,10 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
             if (!(fd->atomicity)) ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
             if (err == -1) err_flag = 1;                                \
             writebuf_off = req_off;                                     \
-            writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
+            writebuf_len = (MPI_Aint) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
         }                                                               \
-        write_sz = (int) (MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
+        MPI_Aint write_sz; \
+        write_sz = (MPI_Aint) (MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
         memcpy(writebuf+req_off-writebuf_off, (char *)buf +userbuf_off, write_sz); \
         while (write_sz != req_len) {                                   \
             lseek(fd->fd_sys, writebuf_off, SEEK_SET);                  \
@@ -250,8 +253,8 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
             req_len -= write_sz;                                        \
             userbuf_off += write_sz;                                    \
             writebuf_off += writebuf_len;                               \
-            writebuf_len = (int) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
-            write_sz = MPL_MIN(req_len, writebuf_len);                  \
+            writebuf_len = (MPI_Aint) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1)); \
+            write_sz = (MPI_Aint) MPL_MIN(req_len, writebuf_len);                  \
             memcpy(writebuf, (char *)buf + userbuf_off, write_sz);      \
         }                                                               \
     }
@@ -266,22 +269,24 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
 /* offset is in units of etype relative to the filetype. */
 
     ADIOI_Flatlist_node *flat_buf, *flat_file;
-    int i, j, k, err = -1, bwr_size, st_index = 0;
-    ADIO_Offset i_offset, sum, size_in_filetype;
+    int i, st_index = 0;
+    ssize_t err = -1;
+    ADIO_Offset sum, size_in_filetype;
     ADIO_Offset num, size, n_etypes_in_filetype;
     MPI_Count bufsize;
-    ADIO_Offset n_filetypes, etype_in_filetype;
+    ADIO_Offset n_filetypes, etype_in_filetype, st_n_filetypes;
     ADIO_Offset abs_off_in_filetype = 0;
-    int req_len;
+    ADIO_Offset req_len;
     MPI_Count filetype_size, etype_size, buftype_size;
     MPI_Aint lb, filetype_extent, buftype_extent;
     int buf_count, buftype_is_contig, filetype_is_contig;
     ADIO_Offset userbuf_off;
     ADIO_Offset off, req_off, disp, end_offset = 0, writebuf_off, start_off;
     char *writebuf = NULL, *value;
-    int st_n_filetypes, writebuf_len, write_sz;
-    ADIO_Offset fwr_size = 0, new_fwr_size, st_fwr_size;
-    int new_bwr_size, err_flag = 0, info_flag, max_bufsize;
+    MPI_Aint writebuf_len;
+    ADIO_Offset bwr_size, fwr_size = 0, st_fwr_size;
+    int err_flag = 0, info_flag;
+    MPI_Aint max_bufsize;
     static char myname[] = "ADIOI_NFS_WRITESTRIDED";
 
     ADIOI_Datatype_iscontig(datatype, &buftype_is_contig);
@@ -322,13 +327,13 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
         end_offset = off + bufsize - 1;
         writebuf_off = off;
         writebuf = (char *) ADIOI_Malloc(max_bufsize);
-        writebuf_len = (int) (MPL_MIN(max_bufsize, end_offset - writebuf_off + 1));
+        writebuf_len = (MPI_Aint) MPL_MIN(max_bufsize, end_offset - writebuf_off + 1);
 
 /* if atomicity is true, lock the region to be accessed */
         if (fd->atomicity)
             ADIOI_WRITE_LOCK(fd, start_off, SEEK_SET, end_offset - start_off + 1);
 
-        for (j = 0; j < count; j++)
+        for (MPI_Aint j = 0; j < count; j++)
             for (i = 0; i < flat_buf->count; i++) {
                 userbuf_off = j * buftype_extent + flat_buf->indices[i];
                 req_off = off;
@@ -467,25 +472,27 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
         /* Calculate end_offset, the last byte-offset that will be accessed.
          * e.g., if start_offset=0 and 100 bytes to be write, end_offset=99 */
 
-        st_fwr_size = fwr_size;
-        st_n_filetypes = n_filetypes;
-        i_offset = 0;
-        j = st_index;
-        off = offset;
-        fwr_size = MPL_MIN(st_fwr_size, bufsize);
-        while (i_offset < bufsize) {
-            i_offset += fwr_size;
-            end_offset = off + fwr_size - 1;
+        {
+            st_fwr_size = fwr_size;
+            st_n_filetypes = n_filetypes;
+            ADIO_Offset i_offset = 0;
+            MPI_Count j = st_index;
+            off = offset;
+            fwr_size = MPL_MIN(st_fwr_size, bufsize);
+            while (i_offset < bufsize) {
+                i_offset += fwr_size;
+                end_offset = off + fwr_size - 1;
 
-            j = (j + 1) % flat_file->count;
-            n_filetypes += (j == 0) ? 1 : 0;
-            while (flat_file->blocklens[j] == 0) {
                 j = (j + 1) % flat_file->count;
                 n_filetypes += (j == 0) ? 1 : 0;
-            }
+                while (flat_file->blocklens[j] == 0) {
+                    j = (j + 1) % flat_file->count;
+                    n_filetypes += (j == 0) ? 1 : 0;
+                }
 
-            off = disp + flat_file->indices[j] + n_filetypes * (ADIO_Offset) filetype_extent;
-            fwr_size = MPL_MIN(flat_file->blocklens[j], bufsize - i_offset);
+                off = disp + flat_file->indices[j] + n_filetypes * (ADIO_Offset) filetype_extent;
+                fwr_size = MPL_MIN(flat_file->blocklens[j], bufsize - i_offset);
+            }
         }
 
 /* if atomicity is true, lock the region to be accessed */
@@ -496,7 +503,7 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
         writebuf_off = offset;
         writebuf = (char *) ADIOI_Malloc(max_bufsize);
         memset(writebuf, -1, max_bufsize);
-        writebuf_len = (int) (MPL_MIN(max_bufsize, end_offset - writebuf_off + 1));
+        writebuf_len = (MPI_Aint) (MPL_MIN(max_bufsize, end_offset - writebuf_off + 1));
         if (!(fd->atomicity))
             ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
 #ifdef ADIOI_MPE_LOGGING
@@ -528,8 +535,8 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
 /* contiguous in memory, noncontiguous in file. should be the most
    common case. */
 
-            i_offset = 0;
-            j = st_index;
+            ADIO_Offset i_offset = 0;
+            MPI_Count j = st_index;
             off = offset;
             n_filetypes = st_n_filetypes;
             fwr_size = MPL_MIN(st_fwr_size, bufsize);
@@ -569,9 +576,10 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
 
             flat_buf = ADIOI_Flatten_and_find(datatype);
 
-            k = num = buf_count = 0;
-            i_offset = flat_buf->indices[0];
-            j = st_index;
+            MPI_Count k = 0;
+            num = buf_count = 0;
+            ADIO_Offset i_offset = flat_buf->indices[0];
+            MPI_Count j = st_index;
             off = offset;
             n_filetypes = st_n_filetypes;
             fwr_size = st_fwr_size;
@@ -589,8 +597,8 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                     ADIOI_BUFFERED_WRITE;
                 }
 
-                new_fwr_size = fwr_size;
-                new_bwr_size = bwr_size;
+                ADIO_Offset new_fwr_size = fwr_size;
+                ADIO_Offset new_bwr_size = bwr_size;
 
                 if (size == fwr_size) {
 /* reached end of contiguous block in file */

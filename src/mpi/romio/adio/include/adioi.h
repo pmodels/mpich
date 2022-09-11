@@ -133,7 +133,7 @@ enum {
 
 typedef struct ADIOI_Fl_node {
     MPI_Datatype type;
-    MPI_Count count;            /* no. of contiguous blocks */
+    int count;                  /* no. of contiguous blocks */
     ADIO_Offset *blocklens;     /* array of contiguous block lengths (bytes) */
     ADIO_Offset *indices;       /* array of byte offsets of each block */
     /* the type processing code in ROMIO loops through the flattened
@@ -729,7 +729,7 @@ typedef struct ADIOI_OneSidedStripeParms {
     /* These three elements track the state of the source buffer advancement through multiple calls */
     /* to ADIOI_OneSidedWriteAggregation */
     ADIO_Offset lastDataTypeExtent;
-    int lastFlatBufIndice;
+    ADIO_Offset lastFlatBufIndice;
     ADIO_Offset lastIndiceOffset;
 } ADIOI_OneSidedStripeParms;
 
@@ -1034,7 +1034,7 @@ typedef struct wcThreadFuncData {
     ADIO_File fd;
     int io_kind;
     char *buf;
-    int size;
+    ADIO_Offset size;
     ADIO_Offset offset;
     ADIO_Status *status;
     int error_code;

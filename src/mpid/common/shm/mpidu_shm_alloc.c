@@ -69,7 +69,7 @@ typedef struct seg_list {
 static seg_list_t *seg_list_head = NULL;
 static seg_list_t *seg_list_tail = NULL;
 
-size_t MPIDU_shm_get_mapsize(size_t size, size_t * psz)
+MPI_Aint MPIDU_shm_get_mapsize(MPI_Aint size, size_t * psz)
 {
     size_t page_sz, mapsize;
 
@@ -78,20 +78,20 @@ size_t MPIDU_shm_get_mapsize(size_t size, size_t * psz)
     else
         page_sz = *psz;
 
-    mapsize = (size + (page_sz - 1)) & (~(page_sz - 1));
+    mapsize = ((size_t) size + (page_sz - 1)) & (~(page_sz - 1));
     *psz = page_sz;
 
-    return mapsize;
+    return (MPI_Aint) mapsize;
 }
 
 #ifdef USE_SYM_HEAP
-static int check_maprange_ok(void *start, size_t size)
+static int check_maprange_ok(void *start, MPI_Aint size)
 {
     int rc = 0;
     int ret = 0;
     size_t page_sz = 0;
-    size_t mapsize = MPIDU_shm_get_mapsize(size, &page_sz);
-    size_t i, num_pages = mapsize / page_sz;
+    MPI_Aint mapsize = MPIDU_shm_get_mapsize(size, &page_sz);
+    MPI_Aint i, num_pages = mapsize / (MPI_Aint) page_sz;
     char *ptr = (char *) start;
 
     for (i = 0; i < num_pages; i++) {
@@ -111,18 +111,18 @@ static int check_maprange_ok(void *start, size_t size)
     return ret;
 }
 
-static void *generate_random_addr(size_t size)
+static void *generate_random_addr(MPI_Aint size)
 {
     /* starting position for pointer to map
      * This is not generic, probably only works properly on Linux
      * but it's not fatal since we bail after a fixed number of iterations
      */
-#define MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
+#define MAP_POINTER (random_unsigned&(size_t)((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000))
     uintptr_t map_pointer;
     char random_state[256];
     size_t page_sz = 0;
-    uint64_t random_unsigned;
-    size_t mapsize = MPIDU_shm_get_mapsize(size, &page_sz);
+    size_t random_unsigned;
+    MPI_Aint mapsize = MPIDU_shm_get_mapsize(size, &page_sz);
     MPL_time_t ts;
     unsigned int ts_32 = 0;
     int iter = MPIR_CVAR_SHM_RANDOM_ADDR_RETRY;
@@ -139,13 +139,13 @@ static void *generate_random_addr(size_t size)
     initstate_r(ts_32, random_state, sizeof(random_state), &rbuf);
     random_r(&rbuf, &rh);
     random_r(&rbuf, &rl);
-    random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
+    random_unsigned = (size_t) (((uint64_t) rh) << 32 | (uint64_t) rl);
     map_pointer = MAP_POINTER;
 
     while (check_maprange_ok((void *) map_pointer, mapsize) == 0) {
         random_r(&rbuf, &rh);
         random_r(&rbuf, &rl);
-        random_unsigned = ((uint64_t) rh) << 32 | (uint64_t) rl;
+        random_unsigned = (size_t) (((uint64_t) rh) << 32 | (uint64_t) rl);
         map_pointer = MAP_POINTER;
         iter--;
 
@@ -160,11 +160,11 @@ static void *generate_random_addr(size_t size)
 }
 
 typedef struct {
-    unsigned long long sz;
+    MPI_Aint sz;
     int loc;
 } ull_maxloc_t;
 
-/* Compute maxloc for unsigned long long type.
+/* Compute maxloc for MPI_Aint type.
  * If more than one max value exists, the loc with lower rank is returned. */
 static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype)
 {
@@ -180,12 +180,10 @@ static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Dataty
     }
 }
 
-/* Allreduce MAXLOC for unsigned size type by using user defined operator
- * and derived datatype. We have to customize it because standard MAXLOC
- * supports only pairtypes with signed {short, int, long}. We internally
- * cast size_t to unsigned long long which is large enough to hold size type
- * and matches an MPI basic datatype. */
-static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * maxsz,
+/* Allreduce MAXLOC for MPI_Aint size type by using user defined operator
+ * and derived datatype.
+ */
+static int allreduce_maxloc(MPI_Aint mysz, int myloc, MPIR_Comm * comm, MPI_Aint * maxsz,
                             int *maxsz_loc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -197,7 +195,7 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
 
     MPIR_Op *maxloc_op = NULL;
 
-    types[0] = MPI_UNSIGNED_LONG_LONG;
+    types[0] = MPI_AINT;
     types[1] = MPI_INT;
     disps[0] = 0;
     disps[1] = (MPI_Aint) ((uintptr_t) & maxloc.loc - (uintptr_t) & maxloc.sz);
@@ -211,7 +209,7 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
     mpi_errno = MPIR_Op_create_impl(ull_maxloc_op_func, 0, &maxloc_op);
     MPIR_ERR_CHECK(mpi_errno);
 
-    maxloc.sz = (unsigned long long) mysz;
+    maxloc.sz = mysz;
     maxloc.loc = myloc;
 
     mpi_errno =
@@ -219,7 +217,7 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
     MPIR_ERR_CHECK(mpi_errno);
 
     *maxsz_loc = maxloc_result.loc;
-    *maxsz = (size_t) maxloc_result.sz;
+    *maxsz = maxloc_result.sz;
 
   fn_exit:
     if (maxloc_type != MPI_DATATYPE_NULL)
@@ -384,7 +382,7 @@ static int unmap_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg)
 }
 
 /* Allocate symmetric shared memory across all processes in comm */
-static int shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t offset, MPIDU_shm_seg_t * shm_seg,
+static int shm_alloc_symm_all(MPIR_Comm * comm_ptr, MPI_Aint offset, MPIDU_shm_seg_t * shm_seg,
                               bool * fail_flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -392,7 +390,7 @@ static int shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t offset, MPIDU_shm_seg
     int all_map_result = SYMSHM_MAP_FAIL;
     int iter = MPIR_CVAR_SHM_SYMHEAP_RETRY;
     int maxsz_loc = 0;
-    size_t maxsz = 0;
+    MPI_Aint maxsz = 0;
     char *map_pointer = NULL;
     MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -556,7 +554,7 @@ static int shm_alloc(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, bool *
     goto fn_exit;
 }
 
-int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, void **ptr,
+int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, MPI_Aint len, MPI_Aint offset, void **ptr,
                              bool * fail_flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -617,7 +615,7 @@ int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, vo
 #endif /* end of USE_SYM_HEAP */
 }
 
-int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr, bool * fail_flag)
+int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, MPI_Aint len, void **ptr, bool * fail_flag)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
     MPIDU_shm_seg_t *shm_seg = NULL;

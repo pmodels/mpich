@@ -80,7 +80,7 @@ static int type_create_contiguous_x(MPI_Count count, MPI_Datatype oldtype, MPI_D
      * from now! */
     ADIOI_Assert(count / INT_MAX == (int) (count / INT_MAX));
     int c = (int) (count / INT_MAX);    /* OK to cast until 'count' is 256 bits */
-    int r = count % INT_MAX;
+    int r = (int) (count % INT_MAX);
 
     MPI_Type_vector(c, INT_MAX, INT_MAX, oldtype, &chunks);
     MPI_Type_contiguous(r, oldtype, &remainder);

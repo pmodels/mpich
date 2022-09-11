@@ -81,7 +81,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win
     MPIR_FUNC_ENTER;
 
     /* pick the lower 32-bit to extract context id */
-    ret = (win_id - 1) & 0xffffffff;
+    ret = (MPIR_Context_id_t) ((win_id - 1) & 0xffffffff);
 
     MPIR_FUNC_EXIT;
     return ret;

@@ -79,7 +79,7 @@ static int get_huge_issue_read(MPIR_Request * rreq)
         chunk_size = MPIDI_OFI_global.max_msg_size;
     }
 
-    int num_chunks = MPL_DIV_ROUNDUP(bytesLeft, chunk_size);
+    MPI_Aint num_chunks = MPL_DIV_ROUNDUP(bytesLeft, chunk_size);
 
     /* note: this is receiver read from sender */
     int vni_remote = info->vni_src;
@@ -93,7 +93,8 @@ static int get_huge_issue_read(MPIR_Request * rreq)
     /* allocate and initialize cc_ptr. It will be freed by event completion when it reaches 0 */
     MPIR_cc_t *cc_ptr;
     cc_ptr = MPL_malloc(sizeof(MPIR_cc_t), MPL_MEM_OTHER);
-    MPIR_cc_set(cc_ptr, num_chunks);
+    MPIR_Assert(num_chunks <= INT_MAX);
+    MPIR_cc_set(cc_ptr, (int) num_chunks);
 
     int issued_chunks = 0;
 
@@ -202,7 +203,7 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
         MPIDI_OFI_huge_recv_list_t *list_ptr;
         MPIR_Context_id_t comm_id = comm_ptr->recvcontext_id;
         int rank = MPIDI_OFI_cqe_get_source(wc, false);
-        int tag = (MPIDI_OFI_TAG_MASK & wc->tag);
+        int tag = (int) (MPIDI_OFI_TAG_MASK & wc->tag);
 
         LL_FOREACH(MPIDI_OFI_global.per_vni[vni].huge_ctrl_head, list_ptr) {
             if (list_ptr->comm_id == comm_id && list_ptr->rank == rank && list_ptr->tag == tag) {
@@ -225,7 +226,7 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
 
         list_ptr->comm_id = comm_ptr->recvcontext_id;
         list_ptr->rank = MPIDI_OFI_cqe_get_source(wc, false);
-        list_ptr->tag = (MPIDI_OFI_TAG_MASK & wc->tag);
+        list_ptr->tag = (int) (MPIDI_OFI_TAG_MASK & wc->tag);
         list_ptr->u.rreq = rreq;
 
         LL_APPEND(MPIDI_OFI_global.per_vni[vni].huge_recv_head,
@@ -360,7 +361,7 @@ int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
 
         huge_list_ptr->comm_id = rreq->comm->recvcontext_id;
         huge_list_ptr->rank = MPIDI_OFI_cqe_get_source(wc, false);
-        huge_list_ptr->tag = MPIDI_OFI_TAG_MASK & wc->tag;
+        huge_list_ptr->tag = (int) (MPIDI_OFI_TAG_MASK & wc->tag);
         huge_list_ptr->u.rreq = rreq;
 
         LL_APPEND(MPIDI_OFI_global.per_vni[vni].huge_recv_head,

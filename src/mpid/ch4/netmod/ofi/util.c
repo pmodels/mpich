@@ -16,9 +16,9 @@ int MPIDI_OFI_retry_progress(void)
 }
 
 typedef struct MPIDI_OFI_mr_key_allocator_t {
-    uint64_t chunk_size;
-    uint64_t num_ints;
-    uint64_t last_free_mr_key;
+    int chunk_size;
+    int num_ints;
+    int last_free_mr_key;
     uint64_t *bitmask;
 } MPIDI_OFI_mr_key_allocator_t;
 
@@ -130,11 +130,12 @@ void MPIDI_OFI_mr_key_free(int key_type, uint64_t alloc_key)
     switch (key_type) {
         case MPIDI_OFI_LOCAL_MR_KEY:
             {
-                uint64_t int_index, bitpos, numbits;
+                int int_index;
+                uint64_t bitpos, numbits;
 
                 MPID_THREAD_CS_ENTER(VCI, mr_key_allocator_lock);
                 numbits = sizeof(uint64_t) * 8;
-                int_index = alloc_key / numbits;
+                int_index = (int) (alloc_key / numbits);
                 bitpos = alloc_key % numbits;
                 mr_key_allocator.last_free_mr_key =
                     MPL_MIN(int_index, mr_key_allocator.last_free_mr_key);
@@ -235,7 +236,7 @@ static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum
     *fi_dt = FI_DATATYPE_LAST;
     *fi_op = FI_ATOMIC_OP_LAST;
 
-    int dt_size;
+    MPI_Aint dt_size;
     MPIR_Datatype_get_size_macro(dt, dt_size);
 
     if (dt == MPI_BYTE || dt == MPI_CHAR || dt == MPI_SIGNED_CHAR || dt == MPI_SHORT ||
@@ -358,13 +359,16 @@ static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum
 }
 
 #define _TBL MPIDI_OFI_global.win_op_table[i][j]
-#define CHECK_ATOMIC(fcn,field1,field2)            \
+#define CHECK_ATOMIC(fcn,field1,field2)  do { \
+  ssize_t ret;                                     \
+  size_t atomic_count;                             \
   atomic_count = 0;                                \
   ret = fcn(ep, fi_dt, fi_op, &atomic_count);      \
   if (ret == 0 && atomic_count != 0) {             \
     _TBL.field1 = 1;                               \
-    _TBL.field2 = atomic_count;                    \
-  }
+    _TBL.field2 = MPL_MIN(atomic_count, MPIR_AINT_MAX); \
+  } \
+} while (0)
 
 static void create_dt_map(struct fid_ep *ep)
 {
@@ -407,22 +411,20 @@ static void create_dt_map(struct fid_ep *ep)
             mpi_to_ofi(dt, &fi_dt, op, &fi_op);
             MPIR_Assert(fi_dt != (enum fi_datatype) -1);
             MPIR_Assert(fi_op != (enum fi_op) -1);
-            _TBL.dt = fi_dt;
-            _TBL.op = fi_op;
+            _TBL.dt = (uint8_t) fi_dt;
+            _TBL.op = (uint8_t) fi_op;
             _TBL.atomic_valid = 0;
             _TBL.max_atomic_count = 0;
             _TBL.max_fetch_atomic_count = 0;
             _TBL.max_compare_atomic_count = 0;
             _TBL.mpi_acc_valid = check_mpi_acc_valid(dt, op);
-            ssize_t ret;
-            size_t atomic_count;
 
             if (fi_dt != FI_DATATYPE_LAST && fi_op != FI_ATOMIC_OP_LAST) {
                 CHECK_ATOMIC(fi_atomicvalid, atomic_valid, max_atomic_count);
                 CHECK_ATOMIC(fi_fetch_atomicvalid, fetch_atomic_valid, max_fetch_atomic_count);
                 CHECK_ATOMIC(fi_compare_atomicvalid, compare_atomic_valid,
                              max_compare_atomic_count);
-                _TBL.dtsize = dtsize[fi_dt];
+                _TBL.dtsize = (uint16_t) dtsize[fi_dt]; /* cast from size_t to int */
             }
         }
     }

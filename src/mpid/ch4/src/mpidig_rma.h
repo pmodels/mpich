@@ -114,7 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, MPI_Aint ori
     am_hdr_max_size = MPIDI_NM_am_hdr_max_sz();
 #endif
 
-    int hdr_size = sizeof(am_hdr) + flattened_sz;
+    MPI_Aint hdr_size = sizeof(am_hdr) + flattened_sz;
     if (hdr_size <= am_hdr_max_size) {
         void *header = MPL_malloc(hdr_size, MPL_MEM_OTHER);
         MPIR_Assert(header);
@@ -351,7 +351,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, MPI_A
     am_hdr_max_size = MPIDI_NM_am_hdr_max_sz();
 #endif
 
-    int hdr_size = sizeof(am_hdr) + flattened_sz;
+    MPI_Aint hdr_size = sizeof(am_hdr) + flattened_sz;
     if (hdr_size <= am_hdr_max_size) {
         void *header = MPL_malloc(hdr_size, MPL_MEM_OTHER);
         MPIR_Assert(header);
@@ -497,7 +497,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
-    int am_hdr_max_size;
+    MPI_Aint am_hdr_max_size;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
     am_hdr_max_size = is_local ? MPIDI_SHM_am_hdr_max_sz() : MPIDI_NM_am_hdr_max_sz();
@@ -505,7 +505,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     am_hdr_max_size = MPIDI_NM_am_hdr_max_sz();
 #endif
 
-    int hdr_size = sizeof(am_hdr) + flattened_sz;
+    MPI_Aint hdr_size = sizeof(am_hdr) + flattened_sz;
     if (hdr_size <= am_hdr_max_size) {
         void *header = MPL_malloc(hdr_size, MPL_MEM_OTHER);
         MPIR_Assert(header);

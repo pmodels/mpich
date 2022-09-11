@@ -363,7 +363,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
     int i;
     MPI_Aint num_chunks, chunk_count_floor, chunk_count_ceil;
     MPI_Aint true_extent, type_size, lb, extent;
-    int offset = 0, is_contig;
+    int is_contig;
 
     /* Register the vertices */
     reserve_buf_type_id = MPIR_TSP_sched_new_type(sched, MPIDI_POSIX_NB_RG_rank0_hold_buf_issue,
@@ -409,6 +409,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
      * release_gather) and number of trees is same as number of chunks the message is divided
      * into. Then, there is a dependence from first vertex of previous chunk to first vertex of next
      * chunk. */
+    MPI_Aint offset;
+    offset = 0;
     for (i = 0; i < num_chunks; i++) {
         MPI_Aint chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
         int n_incoming = 0;

@@ -109,7 +109,7 @@ int MPI_File_read_at_all_c(MPI_File fh, MPI_Offset offset, void *buf,
 #endif /* MPI_hpux */
 
     error_code = MPIOI_File_read_all(fh, offset, ADIO_EXPLICIT_OFFSET, buf,
-                                     count, datatype, myname, status);
+                                     (MPI_Aint) count, datatype, myname, status);
 
 #ifdef MPI_hpux
     HPMP_IO_END(fl_xmpi, fh, datatype, count);

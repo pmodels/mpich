@@ -414,7 +414,7 @@ static int check_disjoint_lpids(uint64_t lpids1[], int n1, uint64_t lpids2[], in
     }
     MPIR_Assert(maxlpid <= INT_MAX);
 
-    mask_size = (maxlpid / 32) + 1;
+    mask_size = (int) ((maxlpid / 32) + 1);
 
     if (mask_size > N_STATIC_LPID32) {
         MPIR_CHKLMEM_MALLOC(lpidmask,uint32_t*,mask_size*sizeof(uint32_t),
@@ -429,16 +429,16 @@ static int check_disjoint_lpids(uint64_t lpids1[], int n1, uint64_t lpids2[], in
 
     /* Set the bits for the first array */
     for (i=0; i<n1; i++) {
-        idx = lpids1[i] / 32;
-        bit = lpids1[i] % 32;
+        idx = (int) (lpids1[i] / 32);
+        bit = (int) (lpids1[i] % 32);
         lpidmask[idx] = lpidmask[idx] | (1 << bit);
         MPIR_Assert(idx < mask_size);
     }
 
     /* Look for any duplicates in the second array */
     for (i=0; i<n2; i++) {
-        idx = lpids2[i] / 32;
-        bit = lpids2[i] % 32;
+        idx = (int) (lpids2[i] / 32);
+        bit = (int) (lpids2[i] % 32);
         if (lpidmask[idx] & (1 << bit)) {
             MPIR_ERR_SET1(mpi_errno,MPI_ERR_COMM,
                           "**dupprocesses", "**dupprocesses %d", lpids2[i] );

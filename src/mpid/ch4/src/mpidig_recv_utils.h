@@ -95,7 +95,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_init(int is_contig, MPI_Aint in_data_sz
     } else {
         p->recv_type = MPIDIG_RECV_IOV;
         p->iov_ptr = data;
-        p->iov_num = data_sz;
+        /* the data_sz is in this case the number of IOVs */
+        p->iov_num = (int) data_sz;
     }
 
     MPIDIG_recv_set_buffer_attr(rreq);
@@ -150,7 +151,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_get_recv_iov_count(MPIR_Request * rreq)
         MPI_Aint num_iov;
         MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, count),
                              MPIDIG_REQUEST(rreq, datatype), p->in_data_sz, &num_iov);
-        return num_iov;
+        MPIR_Assert(num_iov <= INT_MAX);
+        return (int) num_iov;
     } else if (p->recv_type == MPIDIG_RECV_CONTIG) {
         return 1;
     } else {
@@ -203,10 +205,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
         struct iovec *iov = p->iov_ptr;
         int iov_len = p->iov_num;
 
-        int done = 0;
-        int rem = in_data_sz;
+        MPI_Aint done = 0;
+        MPI_Aint rem = in_data_sz;
         for (int i = 0; i < iov_len && rem > 0; i++) {
-            int curr_len = MPL_MIN(rem, iov[i].iov_len);
+            MPI_Aint curr_len = MPL_MIN(rem, iov[i].iov_len);
             MPIR_Typerep_copy(iov[i].iov_base, (char *) in_data + done, curr_len,
                               MPIR_TYPEREP_FLAG_NONE);
             rem -= curr_len;
@@ -381,7 +383,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq)
 
         p->recv_type = MPIDIG_RECV_IOV;
         p->iov_ptr = iov;
-        p->iov_num = num_iov;
+        MPIR_Assert(num_iov <= INT_MAX);
+        p->iov_num = (int) num_iov;
     }
 }
 

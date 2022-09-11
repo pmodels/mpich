@@ -174,7 +174,7 @@ int MPIR_Session_get_nth_pset_impl(MPIR_Session * session_ptr, MPIR_Info * info_
                              "**psetinvalidn %d", n);
     }
 
-    int len = strlen(MPIR_pset_list[i]);
+    int len = (int) strlen(MPIR_pset_list[i]);
 
     /* if the name buffer length is 0, just return needed length */
     if (*pset_len == 0) {

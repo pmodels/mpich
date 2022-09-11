@@ -80,7 +80,7 @@ typedef enum {
 typedef struct MPIDIG_rreq_t {
     /* mrecv fields */
     void *mrcv_buffer;
-    uint64_t mrcv_count;
+    MPI_Aint mrcv_count;
     MPI_Datatype mrcv_datatype;
 
     MPIR_Request *peer_req_ptr;
@@ -672,8 +672,8 @@ typedef struct MPIDI_av_entry {
 #define MPIDIU_LPID_BITS                     32
 #define MPIDIU_LPID_MASK                     0xFFFFFFFFU
 #define MPIDIU_GPID_CREATE(avtid, lpid)      (((uint64_t) (avtid) << MPIDIU_LPID_BITS) | (lpid))
-#define MPIDIU_GPID_GET_AVTID(gpid)          ((gpid) >> MPIDIU_LPID_BITS)
-#define MPIDIU_GPID_GET_LPID(gpid)           ((gpid) & MPIDIU_LPID_MASK)
+#define MPIDIU_GPID_GET_AVTID(gpid)          ((int) ((gpid) >> MPIDIU_LPID_BITS))
+#define MPIDIU_GPID_GET_LPID(gpid)           ((int) ((gpid) & MPIDIU_LPID_MASK))
 
 #define MPIDI_DYNPROC_MASK                 (0x80000000U)
 
