@@ -11,8 +11,6 @@
 
 #define MAX_GPU_STR_LEN   (128)
 
-struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
-
 static int pmi_storage_len = 0;
 static char pmi_storage[HYD_TMPBUF_SIZE], *sptr = pmi_storage;
 
@@ -99,45 +97,62 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
 
     HYDU_FUNC_ENTER();
 
-    struct HYD_pmcd_pmip_pmi_handle pmi_handle_fns[] = {
-        {"init", fn_init},
-        {"initack", fn_fullinit},
-        {"get_maxes", fn_get_maxes},
-        {"get_appnum", fn_get_appnum},
-        {"get_my_kvsname", fn_get_my_kvsname},
-        {"get_universe_size", fn_get_usize},
-        {"get", fn_get},
-        {"put", fn_put},
-        {"barrier_in", fn_barrier_in},
-        {"finalize", fn_finalize},
-        {"fullinit", fn_fullinit},
-        {"job-getid", fn_get_my_kvsname},
-        {"info-putnodeattr", fn_info_putnodeattr},
-        {"info-getnodeattr", fn_info_getnodeattr},
-        {"info-getjobattr", fn_get},
-        {"\0", NULL}
-    };
-
     char *cmd = PMIU_wire_get_cmd(buf, buflen, pmi_version);
+    int cmd_id = PMIU_msg_cmd_to_id(cmd);
 
-    struct HYD_pmcd_pmip_pmi_handle *h;
-    h = pmi_handle_fns;
-    while (h->handler) {
-        if (strcmp(cmd, h->cmd) == 0) {
-            struct PMIU_cmd pmi;
-            status = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
-            HYDU_ERR_POP(status, "unable to parse PMI command\n");
+    HYD_status(*handler) (int fd, struct PMIU_cmd * pmi) = NULL;
+    switch (cmd_id) {
+        case PMIU_CMD_INIT:
+            handler = fn_init;
+            break;
+        case PMIU_CMD_FINALIZE:
+            handler = fn_finalize;
+            break;
+        case PMIU_CMD_FULLINIT:
+            handler = fn_fullinit;
+            break;
+        case PMIU_CMD_MAXES:
+            handler = fn_get_maxes;
+            break;
+        case PMIU_CMD_APPNUM:
+            handler = fn_get_appnum;
+            break;
+        case PMIU_CMD_KVSNAME:
+            handler = fn_get_my_kvsname;
+            break;
+        case PMIU_CMD_UNIVERSE:
+            handler = fn_get_usize;
+            break;
+        case PMIU_CMD_GET:
+            handler = fn_get;
+            break;
+        case PMIU_CMD_PUT:
+            handler = fn_put;
+            break;
+        case PMIU_CMD_BARRIER:
+            handler = fn_barrier_in;
+            break;
+        case PMIU_CMD_PUTNODEATTR:
+            handler = fn_info_putnodeattr;
+            break;
+        case PMIU_CMD_GETNODEATTR:
+            handler = fn_info_getnodeattr;
+            break;
+    }
 
-            if (HYD_pmcd_pmip.user_global.debug) {
-                HYDU_dump(stdout, "got pmi command\n    ");
-                HYD_pmcd_pmi_dump(&pmi);
-            }
+    if (handler) {
+        struct PMIU_cmd pmi;
+        status = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
+        HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
-            status = h->handler(fd, &pmi);
-            HYDU_ERR_POP(status, "PMI handler returned error\n");
-            goto fn_exit;
+        if (HYD_pmcd_pmip.user_global.debug) {
+            HYDU_dump(stdout, "got pmi command\n    ");
+            HYD_pmcd_pmi_dump(&pmi);
         }
-        h++;
+
+        status = handler(fd, &pmi);
+        HYDU_ERR_POP(status, "PMI handler returned error\n");
+        goto fn_exit;
     }
 
     if (HYD_pmcd_pmip.user_global.debug) {
@@ -390,7 +405,6 @@ static HYD_status handle_pmi_response(int fd, int buflen, int pmi_version, int p
 {
     int count, closed, sent;
     char *buf = NULL;
-    struct HYD_pmcd_pmip_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -403,32 +417,25 @@ static HYD_status handle_pmi_response(int fd, int buflen, int pmi_version, int p
 
     buf[buflen] = 0;
 
-    struct HYD_pmcd_pmip_pmi_handle pmi_handle_fns[] = {
-        {"keyval_cache", fn_keyval_cache},
-        {"barrier_out", fn_barrier_out},
-        {"\0", NULL}
-    };
-
     char *cmd = PMIU_wire_get_cmd(buf, buflen, pmi_version);
+    int cmd_id = PMIU_msg_cmd_to_id(cmd);
 
-    h = pmi_handle_fns;
-    while (h->handler) {
-        if (strcmp(cmd, h->cmd) == 0) {
-            struct PMIU_cmd pmi;
-            /* note: buf is modified during parsing; make sure do not forward */
-            status = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
-            HYDU_ERR_POP(status, "unable to parse PMI command\n");
+    HYD_status(*handler) (int fd, struct PMIU_cmd * pmi) = NULL;
+    if (cmd_id == PMIU_CMD_KVSCACHE) {
+        handler = fn_keyval_cache;
+    } else if (cmd_id == PMIU_CMD_BARRIEROUT) {
+        handler = fn_barrier_out;
+    }
 
-            if (HYD_pmcd_pmip.user_global.debug) {
-                HYDU_dump(stdout, "got pmi from server\n    ");
-                HYD_pmcd_pmi_dump(&pmi);
-            }
+    if (handler) {
+        struct PMIU_cmd pmi;
+        /* note: buf is modified during parsing; make sure do not forward */
+        status = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
+        HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
-            status = h->handler(fd, &pmi);
-            HYDU_ERR_POP(status, "PMI handler returned error\n");
-            goto fn_exit;
-        }
-        h++;
+        status = handler(fd, &pmi);
+        HYDU_ERR_POP(status, "PMI handler returned error\n");
+        goto fn_exit;
     }
 
     if (HYD_pmcd_pmip.user_global.debug) {

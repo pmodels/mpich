@@ -7,7 +7,9 @@
 #define COMMON_H_INCLUDED
 
 #include "hydra.h"
-#include "pmi_wire.h"   /* from libpmi */
+/* from libpmi */
+#include "pmi_wire.h"
+#include "pmi_msg.h"
 
 /* Generic definitions */
 #define PMI_MAXKEYLEN    (64)   /* max length of key in keyval space */
