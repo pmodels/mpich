@@ -8,6 +8,7 @@
 #include "pmi_util.h"
 #include "pmi_common.h"
 #include "pmi_wire.h"
+#include "pmi_msg.h"
 
 #include <ctype.h>
 
@@ -305,6 +306,8 @@ int PMIU_cmd_parse(char *buf, int buflen, int version, struct PMIU_cmd *pmicmd)
         pmi_errno = parse_v2(buf, pmicmd);
     }
     PMIU_ERR_POP(pmi_errno);
+
+    pmicmd->cmd_id = PMIU_msg_cmd_to_id(pmicmd->cmd);
 
   fn_exit:
     return pmi_errno;

@@ -30,6 +30,7 @@ struct PMIU_cmd {
     char *buf;                  /* buffer to hold the string before parsing */
     char *tmp_buf;              /* buffer to hold the serialization output */
     int version;                /* wire protocol: 1 or 2 */
+    int cmd_id;                 /* id defined in pmi_msg.h */
     const char *cmd;
     struct PMIU_token tokens[MAX_PMI_ARGS];
     int num_tokens;
