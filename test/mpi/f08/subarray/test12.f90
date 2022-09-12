@@ -33,21 +33,17 @@ program main
             iar(i)=i
         end do
 
-        block
+        call mpi_isend(iar(2:7), 6, MPI_INTEGER, 1, 678, MPI_COMM_WORLD, request, ierr);
+        if (ierr .ne. MPI_SUCCESS) then
+           if (verbose) print *,"PE ",rank,": ",name,": mpi_isend exited in error (",ierr,")"
+           errs = errs + 1
+        endif
 
-            call mpi_isend(iar(2:7), 6, MPI_INTEGER, 1, 678, MPI_COMM_WORLD, request, ierr);
-            if (ierr .ne. MPI_SUCCESS) then
-                if (verbose) print *,"PE ",rank,": ",name,": mpi_isend exited in error (",ierr,")"
-                errs = errs + 1
-            endif
-
-            call mpi_wait(request, status, ierr)
-            if (ierr .ne. MPI_SUCCESS) then
-                if (verbose) print *,"PE ",rank,": ",name,": mpi_wait exited in error (",ierr,")"
-                errs = errs + 1
-            endif
-
-        end block
+        call mpi_wait(request, status, ierr)
+        if (ierr .ne. MPI_SUCCESS) then
+           if (verbose) print *,"PE ",rank,": ",name,": mpi_wait exited in error (",ierr,")"
+           errs = errs + 1
+        endif
 
     else if (rank .eq. 1) then
         do i=1,10
@@ -58,21 +54,17 @@ program main
             iar_check(i)=i
         end do
 
-        block
+        call mpi_irecv(iar(2:7), 6, MPI_INTEGER, 0, 678, MPI_COMM_WORLD, request, ierr);
+        if (ierr .ne. MPI_SUCCESS) then
+           if (verbose) print *,"PE ",rank,": ",name,"mpi_irecv exited in error (",ierr,")"
+           errs = errs + 1
+        endif
 
-            call mpi_irecv(iar(2:7), 6, MPI_INTEGER, 0, 678, MPI_COMM_WORLD, request, ierr);
-            if (ierr .ne. MPI_SUCCESS) then
-                if (verbose) print *,"PE ",rank,": ",name,"mpi_irecv exited in error (",ierr,")"
-                errs = errs + 1
-            endif
-
-            call mpi_wait(request, status, ierr)
-            if (ierr .ne. MPI_SUCCESS) then
-                if (verbose) print *,"PE ",rank,": ",name,": mpi_wait exited in error (",ierr,")"
-                errs = errs + 1
-            endif
-
-        end block
+        call mpi_wait(request, status, ierr)
+        if (ierr .ne. MPI_SUCCESS) then
+           if (verbose) print *,"PE ",rank,": ",name,": mpi_wait exited in error (",ierr,")"
+           errs = errs + 1
+        endif
 
         do i=1,10
             if (iar(i) .ne. iar_check(i)) then

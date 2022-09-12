@@ -17,11 +17,6 @@ AC_MSG_NOTICE([RUNNING CONFIGURE FOR F90 CODE])
 
 AC_PROG_LN_S
 
-# Determine the extension for Fortran 90 files (it isn't always .f90)
-PAC_FC_EXT
-FCEXT=$ac_fc_srcext
-AC_SUBST(FCEXT)
-
 # Determine the precision and range of the standard Fortran types.  This
 # isn't quite enough for a full implementation of the Type_create_f90_xxx
 # routines, but will handle most programs.  We can extend this by trying to
