@@ -9,6 +9,7 @@
 #define PMIU_WIRE_V1        1
 #define PMIU_WIRE_V2        2
 #define PMIU_WIRE_V1_MCMD   3
+#define PMIU_WIRE_V1_INITACK 4
 
 /* We may allocate stack arrays of size MAX_PMI_ARGS. Thus it shouldn't
  * be too big or result in stack-overflow. We assume a few kilobytes are safe.
@@ -139,6 +140,7 @@ const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key,
 /* output to a string using a specific wire protocol */
 int PMIU_cmd_output_v1(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
 int PMIU_cmd_output_v1_mcmd(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
+int PMIU_cmd_output_v1_initack(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
 int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
 /* output to a string based on embedded version in pmicmd */
 int PMIU_cmd_output(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);

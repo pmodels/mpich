@@ -667,6 +667,34 @@ int PMIU_cmd_output_v1_mcmd(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen
     return pmi_errno;
 }
 
+int PMIU_cmd_output_v1_initack(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
+{
+    int pmi_errno;
+
+    /* this variation require 3 additional "set" cmd for size, rank, and debug */
+    int size, rank, debug;
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmicmd, "size", size, -1);
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmicmd, "rank", rank, -1);
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmicmd, "debug", debug, 0);
+
+    pmi_errno = PMIU_cmd_output_v1(pmicmd, buf_out, buflen_out);
+
+    /* if we are setting size and rank, we'll do 3 extra commands */
+    if (rank >= 0 && size >= 0) {
+        char *s = *buf_out + (*buflen_out);
+        int len = MAX_TMP_BUF_SIZE - (*buflen_out);
+        MPL_snprintf(s, len, "cmd=set size=%d\ncmd=set rank=%d\ncmd=set debug=%d\n", size, rank,
+                     debug);
+
+        *buflen_out += strlen(s);
+    }
+
+  fn_exit:
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
 {
     int pmi_errno = PMIU_SUCCESS;
@@ -730,6 +758,8 @@ int PMIU_cmd_output(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
         pmi_errno = PMIU_cmd_output_v1(pmicmd, buf_out, buflen_out);
     } else if (pmicmd->version == PMIU_WIRE_V1_MCMD) {
         pmi_errno = PMIU_cmd_output_v1_mcmd(pmicmd, buf_out, buflen_out);
+    } else if (pmicmd->version == PMIU_WIRE_V1_INITACK) {
+        pmi_errno = PMIU_cmd_output_v1_initack(pmicmd, buf_out, buflen_out);
     } else {
         /* PMIU_WIRE_V2 */
         if (PMIU_is_threaded) {

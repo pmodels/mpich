@@ -34,6 +34,7 @@
 #include <sys/socket.h>
 
 #define USE_WIRE_VER  PMIU_WIRE_V1
+static const bool no_static = false;
 
 /* ALL GLOBAL VARIABLES MUST BE INITIALIZED TO AVOID POLLUTING THE
    LIBRARY WITH COMMON SYMBOLS */
@@ -767,13 +768,6 @@ static int PMII_Set_from_port(int id)
 
     struct PMIU_cmd pmicmd;
     PMIU_msg_set_query_fullinit(&pmicmd, USE_WIRE_VER, no_static, id);
-
-    /* We start by sending a startup message to the server */
-    PMIU_printf(PMIU_verbose, "Writing initack to destination fd %d\n", PMI_fd);
-
-    /* Handshake and initialize from a port */
-
-    PMIU_cmd_add_int(&pmicmd, "pmiid", id);
 
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
     PMIU_ERR_POP(pmi_errno);
