@@ -7,6 +7,7 @@
 #include "hydra.h"
 #include "mpiexec.h"
 #include "uiu.h"
+#include "pmi_util.h"   /* from libpmi, for PMIU_verbose */
 
 /* The order of loading options:
  *     * set default sentinel values
@@ -135,6 +136,10 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     HYDU_ERR_POP(status, "checking environment variables\n");
 
     set_default_values();
+
+    if (HYD_server_info.user_global.debug) {
+        PMIU_verbose = 1;
+    }
 
     status = post_process();
     HYDU_ERR_POP(status, "post processing\n");

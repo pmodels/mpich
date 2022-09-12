@@ -35,16 +35,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
                                                  int rank, int tag, MPIR_Comm * comm,
                                                  int context_offset, MPIDI_av_entry_t * addr,
                                                  MPIDI_IPCI_ipc_attr_t ipc_attr,
-                                                 int vsi_src, int vsi_dst, MPIR_Request ** request)
+                                                 int vsi_src, int vsi_dst, MPIR_Request ** request,
+                                                 bool syncflag, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
     MPIDI_IPC_rts_t am_hdr;
     MPIR_CHKLMEM_DECL(1);       /* we may need allocate hdr for non-contig case */
 
-    int flags = 0;
-    int error_bits = 0;
-
+    int flags = syncflag ? MPIDIG_AM_SEND_FLAGS_SYNC : MPIDIG_AM_SEND_FLAGS_NONE;
     MPIR_FUNC_ENTER;
 
     /* Create send request */
@@ -70,7 +69,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     am_hdr.hdr.data_sz = data_sz;
     am_hdr.hdr.rndv_hdr_sz = sizeof(MPIDI_IPC_hdr);
     am_hdr.hdr.sreq_ptr = sreq;
-    am_hdr.hdr.error_bits = error_bits;
+    am_hdr.hdr.error_bits = errflag;
     am_hdr.hdr.flags = flags;
     MPIDIG_AM_SEND_SET_RNDV(am_hdr.hdr.flags, MPIDIG_RNDV_IPC);
 

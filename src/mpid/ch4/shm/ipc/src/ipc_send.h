@@ -23,6 +23,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     MPIR_FUNC_ENTER;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
+    MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    bool syncflag = MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
     int vsi_src, vsi_dst;
     /* note: MPIDI_POSIX_SEND_VSIS defined in posix_send.h */
     MPIDI_POSIX_SEND_VSIS(vsi_src, vsi_dst);
@@ -40,24 +42,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, true_lb);
 
     if (!dt_contig) {
-        /* skip HINDEXED and STRUCT */
-        int combiner = dt_ptr->contents->combiner;
-        MPIR_Datatype *tmp_dtp = dt_ptr;
-        while (combiner == MPI_COMBINER_DUP || combiner == MPI_COMBINER_RESIZED) {
-            int *ints;
-            MPI_Aint *aints, *counts;
-            MPI_Datatype *types;
-            MPIR_Datatype_access_contents(tmp_dtp->contents, &ints, &aints, &counts, &types);
-            MPIR_Datatype_get_ptr(types[0], tmp_dtp);
-            if (!tmp_dtp || !tmp_dtp->contents) {
-                break;
+        if (dt_ptr->contents) {
+            /* skip HINDEXED and STRUCT */
+            int combiner = dt_ptr->contents->combiner;
+            MPIR_Datatype *tmp_dtp = dt_ptr;
+            while (combiner == MPI_COMBINER_DUP || combiner == MPI_COMBINER_RESIZED) {
+                int *ints;
+                MPI_Aint *aints, *counts;
+                MPI_Datatype *types;
+                MPIR_Datatype_access_contents(tmp_dtp->contents, &ints, &aints, &counts, &types);
+                MPIR_Datatype_get_ptr(types[0], tmp_dtp);
+                if (!tmp_dtp || !tmp_dtp->contents) {
+                    break;
+                }
+                combiner = tmp_dtp->contents->combiner;
             }
-            combiner = tmp_dtp->contents->combiner;
-        }
-        switch (combiner) {
-            case MPI_COMBINER_HINDEXED:
-            case MPI_COMBINER_STRUCT:
-                goto fn_exit;
+            switch (combiner) {
+                case MPI_COMBINER_HINDEXED:
+                case MPI_COMBINER_STRUCT:
+                    goto fn_exit;
+            }
         }
 
         /* skip negative lb and extent */
@@ -121,7 +125,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
 
         mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype, data_sz, dt_contig,
                                         rank, tag, comm, context_offset, addr, ipc_attr,
-                                        vsi_src, vsi_dst, request);
+                                        vsi_src, vsi_dst, request, syncflag, errflag);
         MPIR_ERR_CHECK(mpi_errno);
         *done = true;
         /* TODO: add flattening datatype protocol for noncontig send. Different
