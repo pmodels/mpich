@@ -262,11 +262,18 @@ HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi)
 
         PMIU_cmd_init_static(&pmi_response, pmi->version, "set");
         PMIU_cmd_add_int(&pmi_response, "size", size);
-        PMIU_cmd_add_int(&pmi_response, "rank", rank);
-        PMIU_cmd_add_int(&pmi_response, "debug", debug);
-
         status = send_cmd_downstream(fd, &pmi_response);
-        HYDU_ERR_POP(status, "error sending PMI response\n");
+        HYDU_ERR_POP(status, "error sending PMI set size\n");
+
+        PMIU_cmd_init_static(&pmi_response, pmi->version, "set");
+        PMIU_cmd_add_int(&pmi_response, "rank", rank);
+        status = send_cmd_downstream(fd, &pmi_response);
+        HYDU_ERR_POP(status, "error sending PMI set rank\n");
+
+        PMIU_cmd_init_static(&pmi_response, pmi->version, "set");
+        PMIU_cmd_add_int(&pmi_response, "debug", debug);
+        status = send_cmd_downstream(fd, &pmi_response);
+        HYDU_ERR_POP(status, "error sending PMI set debug\n");
     } else {
         PMIU_cmd_init_static(&pmi_response, 2, "fullinit-response");
         PMIU_cmd_add_str(&pmi_response, "pmi-version", "2");
