@@ -9,7 +9,7 @@
 #include "ad_pvfs2_io.h"
 #include "ad_pvfs2_common.h"
 
-void ADIOI_PVFS2_ReadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_PVFS2_ReadContig(ADIO_File fd, void *buf, MPI_Aint count,
                             MPI_Datatype datatype, int file_ptr_type,
                             ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
@@ -99,7 +99,7 @@ void ADIOI_PVFS2_ReadContig(ADIO_File fd, void *buf, int count,
     return;
 }
 
-static int ADIOI_PVFS2_ReadStridedListIO(ADIO_File fd, void *buf, int count,
+static int ADIOI_PVFS2_ReadStridedListIO(ADIO_File fd, void *buf, MPI_Aint count,
                                          MPI_Datatype datatype, int file_ptr_type,
                                          ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
@@ -107,7 +107,7 @@ static int ADIOI_PVFS2_ReadStridedListIO(ADIO_File fd, void *buf, int count,
                                      datatype, file_ptr_type, offset, status, error_code, READ);
 }
 
-static int ADIOI_PVFS2_ReadStridedDtypeIO(ADIO_File fd, void *buf, int count,
+static int ADIOI_PVFS2_ReadStridedDtypeIO(ADIO_File fd, void *buf, MPI_Aint count,
                                           MPI_Datatype datatype, int file_ptr_type,
                                           ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
@@ -115,7 +115,7 @@ static int ADIOI_PVFS2_ReadStridedDtypeIO(ADIO_File fd, void *buf, int count,
                                       datatype, file_ptr_type, offset, status, error_code, READ);
 }
 
-void ADIOI_PVFS2_ReadStrided(ADIO_File fd, void *buf, int count,
+void ADIOI_PVFS2_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                              MPI_Datatype datatype, int file_ptr_type,
                              ADIO_Offset offset, ADIO_Status * status, int
                              *error_code)

@@ -29,7 +29,6 @@ int MPIR_Ialltoallw_intra_sched_blocked(const void *sendbuf, const MPI_Aint send
     int comm_size, i;
     int dst, rank;
     int ii, ss, bblock;
-    int type_size;
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
@@ -50,6 +49,7 @@ int MPIR_Ialltoallw_intra_sched_blocked(const void *sendbuf, const MPI_Aint send
         for (i = 0; i < ss; i++) {
             dst = (rank + i + ii) % comm_size;
             if (recvcounts[dst]) {
+                MPI_Aint type_size;
                 MPIR_Datatype_get_size_macro(recvtypes[dst], type_size);
                 if (type_size) {
                     mpi_errno = MPIR_Sched_recv((char *) recvbuf + rdispls[dst],
@@ -62,6 +62,7 @@ int MPIR_Ialltoallw_intra_sched_blocked(const void *sendbuf, const MPI_Aint send
         for (i = 0; i < ss; i++) {
             dst = (rank - i - ii + comm_size) % comm_size;
             if (sendcounts[dst]) {
+                MPI_Aint type_size;
                 MPIR_Datatype_get_size_macro(sendtypes[dst], type_size);
                 if (type_size) {
                     mpi_errno = MPIR_Sched_send((char *) sendbuf + sdispls[dst],

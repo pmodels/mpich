@@ -410,7 +410,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
      * into. Then, there is a dependence from first vertex of previous chunk to first vertex of next
      * chunk. */
     for (i = 0; i < num_chunks; i++) {
-        int chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
+        MPI_Aint chunk_count = (i == 0) ? chunk_count_floor : chunk_count_ceil;
         int n_incoming = 0;
         data = (MPIDI_POSIX_per_call_ireduce_info_t *)
             MPIR_TSP_sched_malloc(sizeof(MPIDI_POSIX_per_call_ireduce_info_t), sched);

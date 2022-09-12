@@ -163,6 +163,12 @@ MPI_Status_set_elements:
         goto fn_fail;
     }
 }
+{ -- large_count --
+    mpi_errno = MPIR_Status_set_elements_x_impl(status, datatype, count);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
 
 MPI_Status_set_elements_x:
     .desc: Set the number of elements in a status

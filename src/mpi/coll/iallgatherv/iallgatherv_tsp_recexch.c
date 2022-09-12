@@ -18,8 +18,8 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
-    int partner, offset, count, send_offset, recv_offset;
-    int i, send_count, recv_count, vtx_id;
+    int partner, offset, count;
+    int i, vtx_id;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
@@ -31,8 +31,8 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
         /* calculate offset and count of the data to be sent to the partner */
         MPII_Recexchalgo_get_count_and_offset(rank, 0, k, nranks, &count, &offset);
 
-        send_offset = displs[offset] * recv_extent;
-        send_count = 0;
+        MPI_Aint send_offset = displs[offset] * recv_extent;
+        MPI_Aint send_count = 0;
         for (i = 0; i < count; i++)
             send_count += recvcounts[offset + i];
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -46,8 +46,8 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
 
         /* calculate offset and count of the data to be received from the partner */
         MPII_Recexchalgo_get_count_and_offset(partner, 0, k, nranks, &count, &offset);
-        recv_offset = displs[offset] * recv_extent;
-        recv_count = 0;
+        MPI_Aint recv_offset = displs[offset] * recv_extent;
+        MPI_Aint recv_count = 0;
         for (i = 0; i < count; i++)
             recv_count += recvcounts[offset + i];
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -77,7 +77,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int 
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
-    int send_offset, recv_offset, i, vtx_id;
+    int i, vtx_id;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
 
@@ -85,7 +85,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int 
 
     if (step1_sendto != -1) {   /* non-participating rank sends the data to a partcipating rank */
         void *buf_to_send;
-        send_offset = displs[rank] * recv_extent;
+        MPI_Aint send_offset = displs[rank] * recv_extent;
         if (is_inplace)
             buf_to_send = ((char *) recvbuf + send_offset);
         else
@@ -96,7 +96,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int 
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     } else {
         for (i = 0; i < step1_nrecvs; i++) {    /* participating rank gets the data from non-participating rank */
-            recv_offset = displs[step1_recvfrom[i]] * recv_extent;
+            MPI_Aint recv_offset = displs[step1_recvfrom[i]] * recv_extent;
             mpi_errno =
                 MPIR_TSP_sched_irecv(((char *) recvbuf + recv_offset),
                                      recvcounts[step1_recvfrom[i]], recvtype, step1_recvfrom[i],
@@ -122,8 +122,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
-    int phase, i, j, count, nbr, send_offset, recv_offset, offset, rank_for_offset;
-    int x, send_count, recv_count, vtx_id;
+    int phase, i, j, count, nbr, offset, rank_for_offset;
+    int x, vtx_id;
     int *recv_id = *recv_id_;
     int nrecvs = 0;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
@@ -145,8 +145,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
             else
                 rank_for_offset = rank;
             MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks, &count, &offset);
-            send_offset = displs[offset] * recv_extent;
-            send_count = 0;
+            MPI_Aint send_offset = displs[offset] * recv_extent;
+            MPI_Aint send_count = 0;
             for (x = 0; x < count; x++)
                 send_count += recvcounts[offset + x];
             mpi_errno = MPIR_TSP_sched_isend(((char *) recvbuf + send_offset), send_count, recvtype,
@@ -165,8 +165,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
             else
                 rank_for_offset = nbr;
             MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks, &count, &offset);
-            recv_offset = displs[offset] * recv_extent;
-            recv_count = 0;
+            MPI_Aint recv_offset = displs[offset] * recv_extent;
+            MPI_Aint recv_count = 0;
             for (x = 0; x < count; x++)
                 recv_count += recvcounts[offset + x];
             mpi_errno =

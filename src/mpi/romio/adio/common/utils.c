@@ -6,6 +6,59 @@
 #include <adio.h>
 #include <limits.h>
 
+/* utility function to query a datatype for its combiner,
+ * convenience wrapper around MPI_Type_get_envelope[_c] */
+
+int ADIOI_Type_get_combiner(MPI_Datatype datatype, int *combiner)
+{
+    int ret;
+#if MPI_VERSION >= 4
+    MPI_Count ni, na, nc, nt;
+    ret = MPI_Type_get_envelope_c(datatype, &ni, &na, &nc, &nt, combiner);
+#else
+    int ni, na, nt;
+    ret = MPI_Type_get_envelope(datatype, &ni, &na, &nt, combiner);
+#endif
+    return ret;
+}
+
+/* utility function to determine whether a datatype is predefined:
+ * a datatype is predefined if its combiner is MPI_COMBINER_NAMED
+ * or MPI_COMBINER_F90_{INTEGER|REAL|COMPLEX} */
+
+int ADIOI_Type_ispredef(MPI_Datatype datatype, int *flag)
+{
+    int ret, combiner;
+    ret = ADIOI_Type_get_combiner(datatype, &combiner);
+    switch (combiner) {
+        case MPI_COMBINER_NAMED:
+        case MPI_COMBINER_F90_INTEGER:
+        case MPI_COMBINER_F90_REAL:
+        case MPI_COMBINER_F90_COMPLEX:
+            *flag = 1;
+            break;
+        default:
+            *flag = 0;
+            break;
+    }
+    return ret;
+}
+
+/* utility function for freeing user-defined datatypes,
+ * MPI_DATATYPE_NULL and predefined datatypes are ignored,
+ * datatype is set to MPI_DATATYPE_NULL upon return */
+
+int ADIOI_Type_dispose(MPI_Datatype * datatype)
+{
+    int ret, flag;
+    if (*datatype == MPI_DATATYPE_NULL)
+        return MPI_SUCCESS;
+    ret = ADIOI_Type_ispredef(*datatype, &flag);
+    if (ret == MPI_SUCCESS && !flag)
+        ret = MPI_Type_free(datatype);
+    *datatype = MPI_DATATYPE_NULL;
+    return ret;
+}
 
 /* utility function for creating large contiguous types: algorithim from BigMPI
  * https://github.com/jeffhammond/BigMPI */

@@ -471,13 +471,13 @@ def dump_mpir(name, blocking_type):
         G.out.append("void *host_recvbuf = NULL;")
         G.out.append("")
         if name == "reduce_scatter":
-            G.out.append("int count = 0;")
+            G.out.append("MPI_Aint count = 0;")
             G.out.append("for (int i = 0; i < MPIR_Comm_size(comm_ptr); i++) {")
             G.out.append("    count += recvcounts[i];")
             G.out.append("}")
             G.out.append("")
         elif name == "reduce_scatter_block":
-            G.out.append("int count = MPIR_Comm_size(comm_ptr) * recvcount;")
+            G.out.append("MPI_Aint count = MPIR_Comm_size(comm_ptr) * recvcount;")
 
         if name == "reduce":
             use_recvbuf = "(comm_ptr->rank == root || root == MPI_ROOT) ? recvbuf : NULL"

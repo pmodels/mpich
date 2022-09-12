@@ -33,7 +33,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
     int dst, rank;
     int outstanding_requests;
     int ii, ss, bblock;
-    int type_size;
+    MPI_Aint type_size;
     MPIR_CHKLMEM_DECL(2);
 
     comm_size = comm_ptr->local_size;

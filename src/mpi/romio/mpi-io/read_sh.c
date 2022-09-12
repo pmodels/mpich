@@ -83,15 +83,13 @@ Output Parameters:
 int MPI_File_read_shared_c(MPI_File fh, void *buf, MPI_Count count,
                            MPI_Datatype datatype, MPI_Status * status)
 {
-    assert(count <= INT_MAX);
     return MPIOI_File_read_shared(fh, buf, count, datatype, status);
 }
 
 #ifdef MPIO_BUILD_PROFILING
-int MPIOI_File_read_shared(MPI_File fh, void *buf, int count,
+int MPIOI_File_read_shared(MPI_File fh, void *buf, MPI_Aint count,
                            MPI_Datatype datatype, MPI_Status * status)
 {
-    assert(count <= INT_MAX);
     int error_code, buftype_is_contig, filetype_is_contig;
     static char myname[] = "MPI_FILE_READ_SHARED";
     MPI_Count datatype_size;

@@ -8,7 +8,7 @@
 #include "ad_pvfs2_io.h"
 #include "ad_pvfs2_common.h"
 
-void ADIOI_PVFS2_WriteContig(ADIO_File fd, const void *buf, int count,
+void ADIOI_PVFS2_WriteContig(ADIO_File fd, const void *buf, MPI_Aint count,
                              MPI_Datatype datatype, int file_ptr_type,
                              ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
@@ -111,7 +111,7 @@ void ADIOI_PVFS2_WriteContig(ADIO_File fd, const void *buf, int count,
     return;
 }
 
-int ADIOI_PVFS2_WriteStridedListIO(ADIO_File fd, const void *buf, int count,
+int ADIOI_PVFS2_WriteStridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
                                    MPI_Datatype datatype, int file_ptr_type,
                                    ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
@@ -119,7 +119,7 @@ int ADIOI_PVFS2_WriteStridedListIO(ADIO_File fd, const void *buf, int count,
                                      datatype, file_ptr_type, offset, status, error_code, WRITE);
 }
 
-int ADIOI_PVFS2_WriteStridedDtypeIO(ADIO_File fd, const void *buf, int count,
+int ADIOI_PVFS2_WriteStridedDtypeIO(ADIO_File fd, const void *buf, MPI_Aint count,
                                     MPI_Datatype datatype, int file_ptr_type,
                                     ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
@@ -128,7 +128,7 @@ int ADIOI_PVFS2_WriteStridedDtypeIO(ADIO_File fd, const void *buf, int count,
 }
 
 
-void ADIOI_PVFS2_WriteStrided(ADIO_File fd, const void *buf, int count,
+void ADIOI_PVFS2_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                               MPI_Datatype datatype, int file_ptr_type,
                               ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {

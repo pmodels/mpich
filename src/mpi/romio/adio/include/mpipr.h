@@ -269,10 +269,10 @@
 #define MPI_Topo_test PMPI_Topo_test
 #undef MPI_Type_commit
 #define MPI_Type_commit PMPI_Type_commit
+#undef MPI_Type_dup
+#define MPI_Type_dup PMPI_Type_dup
 #undef MPI_Type_contiguous
 #define MPI_Type_contiguous PMPI_Type_contiguous
-#undef MPI_Type_count
-#define MPI_Type_count PMPI_Type_count
 /* #define MPI_Type_create_darray PMPI_Type_create_darray */
 #undef MPI_Type_create_indexed_block
 #define MPI_Type_create_indexed_block PMPI_Type_create_indexed_block
@@ -291,6 +291,10 @@
 #define MPI_Type_get_contents PMPI_Type_get_contents
 #undef MPI_Type_get_envelope
 #define MPI_Type_get_envelope PMPI_Type_get_envelope
+#undef MPI_Type_get_contents_c
+#define MPI_Type_get_contents_c PMPI_Type_get_contents_c
+#undef MPI_Type_get_envelope_c
+#define MPI_Type_get_envelope_c PMPI_Type_get_envelope_c
 #undef MPI_Type_get_true_extent
 #define MPI_Type_get_true_extent PMPI_Type_get_true_extent
 #undef MPI_Type_indexed

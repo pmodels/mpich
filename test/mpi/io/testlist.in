@@ -1,5 +1,7 @@
 rdwrord 4
+rdwrord 2 -large-count
 rdwrzero 4
+rd_end 2
 getextent 2
 setinfo 4
 setviewcur 4

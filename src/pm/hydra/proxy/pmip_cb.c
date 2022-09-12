@@ -93,11 +93,8 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
+static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, struct HYD_pmcd_hdr hdr)
 {
-    struct HYD_pmcd_pmip_pmi_handle *h;
-    char *pmi_cmd = NULL, **args = NULL;
-    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -107,22 +104,22 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
     else
         HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
 
-    HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
-    for (int i = 0; i < MAX_PMI_ARGS; i++)
-        args[i] = NULL;
+    char *cmd = PMIU_wire_get_cmd(buf, hdr.buflen, hdr.u.pmi.pmi_version);
 
-    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.u.pmi.pmi_version, &pmi_cmd, args);
-    HYDU_ERR_POP(status, "unable to parse PMI command\n");
-
-    if (HYD_pmcd_pmip.user_global.debug) {
-        HYDU_dump(stdout, "got pmi command (from %d): %s\n", fd, pmi_cmd);
-        HYDU_print_strlist(args);
-    }
-
+    struct HYD_pmcd_pmip_pmi_handle *h;
     h = HYD_pmcd_pmip_pmi_handle;
     while (h->handler) {
-        if (!strcmp(pmi_cmd, h->cmd)) {
-            status = h->handler(fd, args);
+        if (strcmp(cmd, h->cmd) == 0) {
+            struct PMIU_cmd pmi;
+            status = PMIU_cmd_parse(buf, buflen, hdr.u.pmi.pmi_version, &pmi);
+            HYDU_ERR_POP(status, "unable to parse PMI command\n");
+
+            if (HYD_pmcd_pmip.user_global.debug) {
+                HYDU_dump(stdout, "got pmi command\n    ");
+                HYD_pmcd_pmi_dump(&pmi);
+            }
+
+            status = h->handler(fd, &pmi);
             HYDU_ERR_POP(status, "PMI handler returned error\n");
             goto fn_exit;
         }
@@ -130,10 +127,13 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
     }
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYDU_dump(stdout, "we don't understand this command %s; forwarding upstream\n", pmi_cmd);
+        HYDU_dump(stdout, "we don't understand this command, forwarding upstream\n");
+        HYDU_dump(stdout, "    %s\n", buf);
     }
 
     /* We don't understand the command; forward it upstream */
+    int sent, closed;
+
     hdr.cmd = CMD_PMI;
     hdr.u.pmi.pid = fd;
     hdr.buflen = strlen(buf);
@@ -150,12 +150,6 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
     HYDU_ASSERT(!closed, status);
 
   fn_exit:
-    MPL_free(pmi_cmd);
-    if (args) {
-        HYDU_free_strlist(args);
-        MPL_free(args);
-    }
-
     HYDU_FUNC_EXIT();
     return status;
 
@@ -163,10 +157,9 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
     goto fn_exit;
 }
 
-static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
+static HYD_status check_pmi_cmd(char **buf, int *buflen_out, int *pmi_version, int *repeat)
 {
     HYD_status status = HYD_SUCCESS;
-
     HYDU_FUNC_ENTER();
 
     *repeat = 0;
@@ -241,6 +234,7 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
     if (full_command) {
         /* We have a full command */
         *buf = sptr;
+        *buflen_out = buflen;
         sptr += buflen;
         pmi_storage_len -= buflen;
 
@@ -345,8 +339,9 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         pmi_storage[pmi_storage_len] = 0;
     }
 
+    int buflen = 0;
   check_cmd:
-    status = check_pmi_cmd(&buf, &hdr.u.pmi.pmi_version, &repeat);
+    status = check_pmi_cmd(&buf, &buflen, &hdr.u.pmi.pmi_version, &repeat);
     HYDU_ERR_POP(status, "error checking the PMI command\n");
 
     if (buf == NULL)
@@ -360,7 +355,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     if (pid != -1 && !HYD_pmcd_pmip.downstream.pmi_fd_active[pid])
         HYD_pmcd_pmip.downstream.pmi_fd_active[pid] = 1;
 
-    status = handle_pmi_cmd(fd, buf, hdr);
+    status = handle_pmi_cmd(fd, buf, buflen, hdr);
     HYDU_ERR_POP(status, "unable to handle PMI command\n");
 
     if (repeat)
@@ -377,8 +372,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
 static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
 {
-    int count, closed, sent, i;
-    char *buf = NULL, *pmi_cmd = NULL, **args = NULL;
+    int count, closed, sent;
+    char *buf = NULL;
     struct HYD_pmcd_pmip_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
 
@@ -394,17 +389,18 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
 
     int pmi_version = hdr.u.pmi.pmi_version;
     int pmi_rank = hdr.u.pmi.pid;
-    HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_INTERNAL_ARGS * sizeof(char *), status);
-    for (i = 0; i < MAX_PMI_INTERNAL_ARGS; i++)
-        args[i] = NULL;
 
-    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, pmi_version, &pmi_cmd, args);
-    HYDU_ERR_POP(status, "unable to parse PMI command\n");
+    char *cmd = PMIU_wire_get_cmd(buf, hdr.buflen, pmi_version);
 
     h = HYD_pmcd_pmip_pmi_handle;
     while (h->handler) {
-        if (!strcmp(pmi_cmd, h->cmd)) {
-            status = h->handler(fd, args);
+        if (strcmp(cmd, h->cmd) == 0) {
+            struct PMIU_cmd pmi;
+            /* note: buf is modified during parsing; make sure do not forward */
+            status = PMIU_cmd_parse(buf, hdr.buflen, pmi_version, &pmi);
+            HYDU_ERR_POP(status, "unable to parse PMI command\n");
+
+            status = h->handler(fd, &pmi);
             HYDU_ERR_POP(status, "PMI handler returned error\n");
             goto fn_exit;
         }
@@ -412,7 +408,7 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
     }
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n", pmi_cmd);
+        HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n", cmd);
     }
 
     status = HYDU_sock_write(pmi_rank, buf, hdr.buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
@@ -425,11 +421,6 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
     }
 
   fn_exit:
-    MPL_free(pmi_cmd);
-    if (args) {
-        HYDU_free_strlist(args);
-        MPL_free(args);
-    }
     MPL_free(buf);
     HYDU_FUNC_EXIT();
     return status;

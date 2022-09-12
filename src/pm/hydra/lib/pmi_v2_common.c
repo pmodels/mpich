@@ -5,10 +5,11 @@
 
 #include "hydra.h"
 #include "bsci.h"
+#include "pmiserv_common.h"
 #include "pmi_v2_common.h"
 
-HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, char *args[], char *key,
-                                     struct HYD_pmcd_pmi_v2_reqs **pending_reqs)
+HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, struct PMIU_cmd *pmi,
+                                     const char *key, struct HYD_pmcd_pmi_v2_reqs **pending_reqs)
 {
     struct HYD_pmcd_pmi_v2_reqs *req, *tmp;
     HYD_status status = HYD_SUCCESS;
@@ -21,9 +22,7 @@ HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, char *args[], ch
     req->prev = NULL;
     req->next = NULL;
 
-    status = HYDU_strdup_list(args, &req->args);
-    HYDU_ERR_POP(status, "unable to dup args\n");
-
+    req->pmi = PMIU_cmd_dup(pmi);
     req->key = MPL_strdup(key);
 
     if (*pending_reqs == NULL)

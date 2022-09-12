@@ -20,6 +20,7 @@ romio_other_sources +=            \
     adio/ad_nfs/ad_nfs_getsh.c    \
     adio/ad_nfs/ad_nfs.c          \
     adio/ad_nfs/ad_nfs_resize.c   \
-    adio/ad_nfs/ad_nfs_features.c
+    adio/ad_nfs/ad_nfs_features.c \
+    adio/ad_nfs/ad_nfs_hints.c
 
 endif BUILD_AD_NFS

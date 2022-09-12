@@ -36,9 +36,21 @@ void saxpy(int n, float a, float *x, float *y)
   if (i < n) y[i] = a*x[i] + y[i];
 }
 
-int main(void)
+static int need_progress_thread = 0;
+static void parse_args(int argc, char **argv)
+{
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-progress-thread") == 0) {
+            need_progress_thread = 1;
+        }
+    }
+}
+
+int main(int argc, char **argv)
 {
     int errs = 0;
+
+    parse_args(argc, argv);
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -71,6 +83,10 @@ int main(void)
 
     MPI_Info_free(&info);
 
+    if (need_progress_thread) {
+        MPIX_Start_progress_thread(mpi_stream);
+    }
+
     MPI_Comm stream_comm;
     MPIX_Stream_comm_create(MPI_COMM_WORLD, mpi_stream, &stream_comm);
 
@@ -83,8 +99,6 @@ int main(void)
 
         mpi_errno = MPIX_Send_enqueue(d_x, N, MPI_FLOAT, 1, 0, stream_comm);
         assert(mpi_errno == MPI_SUCCESS);
-
-        cudaStreamSynchronize(stream);
     } else if (rank == 1) {
         for (int i = 0; i < N; i++) {
             y[i] = y_val;
@@ -114,8 +128,6 @@ int main(void)
         /* req won't reset to MPI_REQUEST_NULL, but user shouldn't use it afterward */
         mpi_errno = MPIX_Wait_enqueue(&req, MPI_STATUS_IGNORE);
         assert(mpi_errno == MPI_SUCCESS);
-
-        cudaStreamSynchronize(stream);
     } else if (rank == 1) {
         /* reset d_x, d_y */
         for (int i = 0; i < N; i++) {
@@ -139,6 +151,9 @@ int main(void)
         errs += check_result(y);
     }
 
+    if (need_progress_thread) {
+        MPIX_Stop_progress_thread(mpi_stream);
+    }
 
     MPI_Comm_free(&stream_comm);
     MPIX_Stream_free(&mpi_stream);

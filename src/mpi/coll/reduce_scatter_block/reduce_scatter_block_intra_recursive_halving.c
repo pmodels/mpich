@@ -45,13 +45,12 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
-    int *disps;
     void *tmp_recvbuf, *tmp_results;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int total_count, dst;
+    int dst;
     int mask;
-    int *newcnts, *newdisps, rem, newdst, send_idx, recv_idx, last_idx, send_cnt, recv_cnt;
+    int rem, newdst, send_idx, recv_idx, last_idx;
     int pof2, old_i, newrank;
     MPIR_CHKLMEM_DECL(5);
 
@@ -69,8 +68,11 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
-    MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
+    MPI_Aint *disps;
+    MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, comm_size * sizeof(MPI_Aint), mpi_errno, "disps",
+                        MPL_MEM_BUFFER);
 
+    MPI_Aint total_count;
     total_count = comm_size * recvcount;
     for (i = 0; i < comm_size; i++) {
         disps[i] = i * recvcount;
@@ -160,10 +162,10 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
          * even-numbered processes who no longer participate will
          * have their result calculated by the process to their
          * right (rank+1). */
-
-        MPIR_CHKLMEM_MALLOC(newcnts, int *, pof2 * sizeof(int), mpi_errno, "newcnts",
+        MPI_Aint *newcnts, *newdisps;
+        MPIR_CHKLMEM_MALLOC(newcnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "newcnts",
                             MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(newdisps, int *, pof2 * sizeof(int), mpi_errno, "newdisps",
+        MPIR_CHKLMEM_MALLOC(newdisps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "newdisps",
                             MPL_MEM_BUFFER);
 
         for (i = 0; i < pof2; i++) {
@@ -190,6 +192,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
             /* find real rank of dest */
             dst = (newdst < rem) ? newdst * 2 + 1 : newdst + rem;
 
+            MPI_Aint send_cnt, recv_cnt;
             send_cnt = recv_cnt = 0;
             if (newrank < newdst) {
                 send_idx = recv_idx + mask;

@@ -19,7 +19,7 @@
 
 #define PMI2_CHK_RC_ERRMSG(pmicmd) do { \
     int rc; \
-    PMII_PMI_GET_INTVAL(pmicmd, "rc", rc); \
+    PMIU_CMD_GET_INTVAL(pmicmd, "rc", rc); \
     if (rc) { \
         const char *errmsg = PMIU_cmd_find_keyval(pmicmd, "errmsg"); \
         PMIU_ERR_SETANDJUMP2(pmi_errno, PMI2_ERR_OTHER, \
@@ -27,7 +27,11 @@
     } \
 } while (0)
 
-#define USE_WIRE_VER  PMII_WIRE_V2
+#define USE_WIRE_VER  PMIU_WIRE_V2
+
+static bool cached_singinit_inuse;
+static char cached_singinit_key[PMI2_MAX_KEYLEN];
+static char cached_singinit_val[PMI2_MAX_VALLEN];
 
 static int getPMIFD(void);
 static int PMIi_InitIfSingleton(void);
@@ -69,8 +73,14 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
      * we may have set it to help debug the setup process */
     char *p;
     p = getenv("PMI2_DEBUG");
-    if (p)
-        PMI_debug = atoi(p);
+    if (p) {
+        PMIU_verbose = atoi(p);
+    } else {
+        p = getenv("PMI_DEBUG");
+        if (p) {
+            PMIU_verbose = atoi(p);
+        }
+    }
 
     /* Get the fd for PMI commands; if none, we're a singleton */
     pmi_errno = getPMIFD();
@@ -79,8 +89,8 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     if (PMI_fd == -1) {
         /* Singleton init: Process not started with mpiexec,
          * so set size to 1, rank to 0 */
-        PMI_size = 1;
-        PMI_rank = 0;
+        *size = 1;
+        *rank = 0;
         *spawned = 0;
 
         PMI_initialized = SINGLETON_INIT_BUT_NO_PM;
@@ -89,7 +99,7 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     }
 
     /* do initial PMI1 init */
-    PMIU_cmd_init(&pmicmd, PMII_WIRE_V1, "init");
+    PMIU_cmd_init(&pmicmd, PMIU_WIRE_V1, "init");
     PMIU_cmd_add_int(&pmicmd, "pmi_version", PMI_VERSION);
     PMIU_cmd_add_int(&pmicmd, "pmi_subversion", PMI_SUBVERSION);
 
@@ -98,9 +108,9 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 
     int server_version, server_subversion;
     int rc;
-    PMII_PMI_GET_INTVAL(&pmicmd, "pmi_version", server_version);
-    PMII_PMI_GET_INTVAL(&pmicmd, "pmi_subversion", server_subversion);
-    PMII_PMI_GET_INTVAL(&pmicmd, "rc", rc);
+    PMIU_CMD_GET_INTVAL(&pmicmd, "pmi_version", server_version);
+    PMIU_CMD_GET_INTVAL(&pmicmd, "pmi_subversion", server_subversion);
+    PMIU_CMD_GET_INTVAL(&pmicmd, "rc", rc);
     PMIU_ERR_CHKANDJUMP4(rc != 0, pmi_errno, PMI2_FAIL,
                          "pmi_version mismatch; client=%d.%d mgr=%d.%d",
                          PMI_VERSION, PMI_SUBVERSION, server_version, server_subversion);
@@ -123,20 +133,17 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "fullinit-response");
     PMIU_ERR_POP(pmi_errno);
 
-    PMII_PMI_GET_INTVAL(&pmicmd, "pmi-version", server_version);
-    PMII_PMI_GET_INTVAL(&pmicmd, "pmi-subversion", server_subversion);
-    PMII_PMI_GET_INTVAL(&pmicmd, "rank", *rank);
-    PMII_PMI_GET_INTVAL(&pmicmd, "size", *size);
-    PMII_PMI_GET_INTVAL(&pmicmd, "appnum", *appnum);
+    PMIU_CMD_GET_INTVAL(&pmicmd, "pmi-version", server_version);
+    PMIU_CMD_GET_INTVAL(&pmicmd, "pmi-subversion", server_subversion);
+    PMIU_CMD_GET_INTVAL(&pmicmd, "rank", *rank);
+    PMIU_CMD_GET_INTVAL(&pmicmd, "size", *size);
+    PMIU_CMD_GET_INTVAL(&pmicmd, "appnum", *appnum);
 
     if (PMIU_cmd_find_keyval(&pmicmd, "spawner-jobid")) {
         *spawned = PMIU_TRUE;
     } else {
         *spawned = PMIU_FALSE;
     }
-
-    PMI_debug |= PMIU_cmd_get_intval_with_default(&pmicmd, "debugged", 0);
-    PMIU_verbose = PMIU_cmd_get_intval_with_default(&pmicmd, "pmiverbose", 0);
 
     if (!PMI_initialized) {
         PMI_initialized = NORMAL_INIT_WITH_PM;
@@ -253,7 +260,7 @@ PMI_API_PUBLIC int PMI2_Job_Spawn(int count, const char *cmds[],
 
     if (jobId && jobIdSize) {
         const char *jid;
-        PMII_PMI_GET_STRVAL(&pmicmd, "jobid", jid);
+        PMIU_CMD_GET_STRVAL(&pmicmd, "jobid", jid);
         MPL_strncpy(jobId, jid, jobIdSize);
     }
 
@@ -277,12 +284,18 @@ PMI_API_PUBLIC int PMI2_Job_GetId(char jobid[], int jobid_size)
     struct PMIU_cmd pmicmd;
     PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "job-getid");
 
+    if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
+        /* Return a dummy name */
+        MPL_snprintf(jobid, jobid_size, "singinit_kvs_%d_0", (int) getpid());
+        goto fn_exit;
+    }
+
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "job-getid-response");
     PMIU_ERR_POP(pmi_errno);
     PMI2_CHK_RC_ERRMSG(&pmicmd);
 
     const char *jid;
-    PMII_PMI_GET_STRVAL(&pmicmd, "jobid", jid);
+    PMIU_CMD_GET_STRVAL(&pmicmd, "jobid", jid);
 
     MPL_strncpy(jobid, jid, jobid_size);
 
@@ -306,7 +319,7 @@ PMI_API_PUBLIC int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t * co
     PMI2_CHK_RC_ERRMSG(&pmicmd);
 
     int kvscopy;
-    PMII_PMI_GET_INTVAL(&pmicmd, "kvscopy", kvscopy);
+    PMIU_CMD_GET_INTVAL(&pmicmd, "kvscopy", kvscopy);
     PMIU_ERR_CHKANDJUMP(kvscopy, pmi_errno, PMI2_ERR_OTHER, "**notimpl");
 
   fn_exit:
@@ -344,6 +357,21 @@ PMI_API_PUBLIC int PMI2_KVS_Put(const char key[], const char value[])
     PMIU_cmd_add_str(&pmicmd, "key", key);
     PMIU_cmd_add_str(&pmicmd, "value", value);
 
+    /* This is a special hack to support singleton initialization */
+    if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
+        int rc;
+        if (cached_singinit_inuse)
+            return PMI2_FAIL;
+        rc = MPL_strncpy(cached_singinit_key, key, PMI2_MAX_KEYLEN);
+        if (rc != 0)
+            return PMI2_FAIL;
+        rc = MPL_strncpy(cached_singinit_val, value, PMI2_MAX_VALLEN);
+        if (rc != 0)
+            return PMI2_FAIL;
+        cached_singinit_inuse = true;
+        return PMI2_SUCCESS;
+    }
+
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "kvs-put-response");
     PMIU_ERR_POP(pmi_errno);
     PMI2_CHK_RC_ERRMSG(&pmicmd);
@@ -362,9 +390,11 @@ PMI_API_PUBLIC int PMI2_KVS_Fence(void)
     struct PMIU_cmd pmicmd;
     PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "kvs-fence");
 
-    pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "kvs-fence-response");
-    PMIU_ERR_POP(pmi_errno);
-    PMI2_CHK_RC_ERRMSG(&pmicmd);
+    if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
+        pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "kvs-fence-response");
+        PMIU_ERR_POP(pmi_errno);
+        PMI2_CHK_RC_ERRMSG(&pmicmd);
+    }
 
   fn_exit:
     PMIU_cmd_free_buf(&pmicmd);
@@ -385,14 +415,19 @@ PMI_API_PUBLIC
     PMIU_cmd_add_int(&pmicmd, "srcid", src_pmi_id);
     PMIU_cmd_add_str(&pmicmd, "key", key);
 
+    /* singletons can skip the nonexistent key used for barrier */
+    if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM && strcmp(key, "-NONEXIST-KEY") == 0) {
+        goto fn_exit;
+    }
+
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "kvs-get-response");
     PMIU_ERR_POP(pmi_errno);
     PMI2_CHK_RC_ERRMSG(&pmicmd);
 
-    PMII_PMI_EXPECT_STRVAL(&pmicmd, "found", "TRUE");
+    PMIU_CMD_EXPECT_STRVAL(&pmicmd, "found", "TRUE");
 
     const char *tmp_val;
-    PMII_PMI_GET_STRVAL(&pmicmd, "value", tmp_val);
+    PMIU_CMD_GET_STRVAL(&pmicmd, "value", tmp_val);
 
     int ret;
     ret = MPL_strncpy(value, tmp_val, maxValue);
@@ -422,11 +457,11 @@ PMI_API_PUBLIC
     PMIU_ERR_POP(pmi_errno);
     PMI2_CHK_RC_ERRMSG(&pmicmd);
 
-    PMII_PMI_GET_BOOLVAL(&pmicmd, "found", *flag);
+    PMIU_CMD_GET_BOOLVAL(&pmicmd, "found", *flag);
 
     if (*flag) {
         const char *tmp_val;
-        PMII_PMI_GET_STRVAL(&pmicmd, "value", tmp_val);
+        PMIU_CMD_GET_STRVAL(&pmicmd, "value", tmp_val);
 
         MPL_strncpy(value, tmp_val, valuelen);
     }
@@ -480,11 +515,11 @@ PMI_API_PUBLIC int PMI2_Info_GetNodeAttrIntArray(const char name[], int array[],
     PMIU_ERR_POP(pmi_errno);
     PMI2_CHK_RC_ERRMSG(&pmicmd);
 
-    PMII_PMI_GET_BOOLVAL(&pmicmd, "found", *flag);
+    PMIU_CMD_GET_BOOLVAL(&pmicmd, "found", *flag);
 
     if (*flag) {
         const char *tmp_val;
-        PMII_PMI_GET_STRVAL(&pmicmd, "value", tmp_val);
+        PMIU_CMD_GET_STRVAL(&pmicmd, "value", tmp_val);
 
         pmi_errno = parse_int_array(tmp_val, array, arraylen, outlen);
         PMIU_ERR_POP(pmi_errno);
@@ -529,10 +564,10 @@ PMI_API_PUBLIC int PMI2_Info_GetJobAttr(const char name[], char value[], int val
     PMIU_ERR_POP(pmi_errno);
     PMI2_CHK_RC_ERRMSG(&pmicmd);
 
-    PMII_PMI_GET_BOOLVAL(&pmicmd, "found", *flag);
+    PMIU_CMD_GET_BOOLVAL(&pmicmd, "found", *flag);
     if (*flag) {
         const char *tmp_val;
-        PMII_PMI_GET_STRVAL(&pmicmd, "value", tmp_val);
+        PMIU_CMD_GET_STRVAL(&pmicmd, "value", tmp_val);
         MPL_strncpy(value, tmp_val, valuelen);
     }
 
@@ -556,10 +591,10 @@ PMI_API_PUBLIC int PMI2_Info_GetJobAttrIntArray(const char name[], int array[], 
     PMIU_ERR_POP(pmi_errno);
     PMI2_CHK_RC_ERRMSG(&pmicmd);
 
-    PMII_PMI_GET_BOOLVAL(&pmicmd, "found", *flag);
+    PMIU_CMD_GET_BOOLVAL(&pmicmd, "found", *flag);
     if (*flag) {
         const char *tmp_val;
-        PMII_PMI_GET_STRVAL(&pmicmd, "value", tmp_val);
+        PMIU_CMD_GET_STRVAL(&pmicmd, "value", tmp_val);
 
         pmi_errno = parse_int_array(tmp_val, array, arraylen, outlen);
         PMIU_ERR_POP(pmi_errno);
@@ -612,7 +647,7 @@ PMI_API_PUBLIC int PMI2_Nameserv_lookup(const char service_name[], const PMI2_ke
     PMI2_CHK_RC_ERRMSG(&pmicmd);
 
     const char *tmp_port;
-    PMII_PMI_GET_STRVAL(&pmicmd, "port", tmp_port);
+    PMIU_CMD_GET_STRVAL(&pmicmd, "port", tmp_port);
 
     MPL_strncpy(port, tmp_port, portLen);
 

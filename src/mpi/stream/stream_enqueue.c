@@ -8,9 +8,6 @@
 /* Allow per-thread level disabling GPU path */
 MPL_TLS bool MPIR_disable_gpu = false;
 
-static int get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_stream);
-static int allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req);
-
 /* send enqueue */
 struct send_data {
     const void *buf;
@@ -52,6 +49,7 @@ static void send_enqueue_cb(void *data)
     if (p->host_buf) {
         MPIR_gpu_free_host(p->host_buf);
     }
+    MPIR_Comm_release(p->comm_ptr);
     MPL_free(data);
 }
 
@@ -61,7 +59,7 @@ int MPIR_Send_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     int mpi_errno = MPI_SUCCESS;
 
     MPL_gpu_stream_t gpu_stream;
-    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    mpi_errno = MPIR_get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct send_data *p;
@@ -71,6 +69,7 @@ int MPIR_Send_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     p->dest = dest;
     p->tag = tag;
     p->comm_ptr = comm_ptr;
+    MPIR_Comm_add_ref(comm_ptr);
 
     if (MPIR_GPU_query_pointer_is_dev(buf)) {
         MPI_Aint dt_size;
@@ -137,6 +136,7 @@ static void recv_enqueue_cb(void *data)
 
     if (!p->host_buf) {
         /* we are done */
+        MPIR_Comm_release(p->comm_ptr);
         MPL_free(p);
     }
 }
@@ -147,7 +147,8 @@ static void recv_stream_cleanup_cb(void *data)
     MPIR_Assertp(p->actual_unpack_bytes == p->data_sz);
 
     MPIR_gpu_free_host(p->host_buf);
-    MPL_free(data);
+    MPIR_Comm_release(p->comm_ptr);
+    MPL_free(p);
 }
 
 int MPIR_Recv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -156,7 +157,7 @@ int MPIR_Recv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
 
     MPL_gpu_stream_t gpu_stream;
-    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    mpi_errno = MPIR_get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct recv_data *p;
@@ -167,6 +168,7 @@ int MPIR_Recv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     p->tag = tag;
     p->comm_ptr = comm_ptr;
     p->status = status;
+    MPIR_Comm_add_ref(comm_ptr);
 
     if (MPIR_GPU_query_pointer_is_dev(buf)) {
         MPI_Aint dt_size;
@@ -225,14 +227,14 @@ int MPIR_Isend_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype dataty
     int mpi_errno = MPI_SUCCESS;
 
     MPL_gpu_stream_t gpu_stream;
-    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    mpi_errno = MPIR_get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct send_data *p;
     p = MPL_malloc(sizeof(struct send_data), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    mpi_errno = allocate_enqueue_request(comm_ptr, req);
+    mpi_errno = MPIR_allocate_enqueue_request(comm_ptr, req);
     MPIR_ERR_CHECK(mpi_errno);
     (*req)->u.enqueue.is_send = true;
     (*req)->u.enqueue.data = p;
@@ -241,6 +243,7 @@ int MPIR_Isend_enqueue_impl(const void *buf, MPI_Aint count, MPI_Datatype dataty
     p->dest = dest;
     p->tag = tag;
     p->comm_ptr = comm_ptr;
+    MPIR_Comm_add_ref(comm_ptr);
 
     if (MPIR_GPU_query_pointer_is_dev(buf)) {
         MPI_Aint dt_size;
@@ -293,14 +296,14 @@ int MPIR_Irecv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
 
     MPL_gpu_stream_t gpu_stream;
-    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    mpi_errno = MPIR_get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct recv_data *p;
     p = MPL_malloc(sizeof(struct recv_data), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    mpi_errno = allocate_enqueue_request(comm_ptr, req);
+    mpi_errno = MPIR_allocate_enqueue_request(comm_ptr, req);
     MPIR_ERR_CHECK(mpi_errno);
     (*req)->u.enqueue.is_send = false;
     (*req)->u.enqueue.data = p;
@@ -313,6 +316,7 @@ int MPIR_Irecv_enqueue_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     p->buf = buf;
     p->count = count;
     p->datatype = datatype;
+    MPIR_Comm_add_ref(comm_ptr);
 
     if (MPIR_GPU_query_pointer_is_dev(buf)) {
         MPI_Aint dt_size;
@@ -353,6 +357,7 @@ static void wait_enqueue_cb(void *data)
         if (p->host_buf) {
             MPIR_gpu_free_host(p->host_buf);
         }
+        MPIR_Comm_release(p->comm_ptr);
         MPL_free(p);
     } else {
         struct recv_data *p = enqueue_req->u.enqueue.data;
@@ -364,6 +369,7 @@ static void wait_enqueue_cb(void *data)
         MPIR_Request_free(real_req);
 
         if (!p->host_buf) {
+            MPIR_Comm_release(p->comm_ptr);
             MPL_free(p);
         }
     }
@@ -375,7 +381,7 @@ int MPIR_Wait_enqueue_impl(MPIR_Request * req_ptr, MPI_Status * status)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Assert(req_ptr && req_ptr->kind == MPIR_REQUEST_KIND__ENQUEUE);
 
-    MPL_gpu_stream_t gpu_stream = req_ptr->u.enqueue.gpu_stream;
+    MPL_gpu_stream_t gpu_stream = req_ptr->u.enqueue.stream_ptr->u.gpu_stream;
     if (!req_ptr->u.enqueue.is_send) {
         struct recv_data *p = req_ptr->u.enqueue.data;
         p->status = status;
@@ -432,10 +438,12 @@ static void waitall_enqueue_cb(void *data)
             if (p2->host_buf) {
                 MPIR_gpu_free_host(p2->host_buf);
             }
+            MPIR_Comm_release(p2->comm_ptr);
             MPL_free(p2);
         } else {
             struct recv_data *p2 = enqueue_req->u.enqueue.data;
             if (!p2->host_buf) {
+                MPIR_Comm_release(p2->comm_ptr);
                 MPL_free(p2);
             }
         }
@@ -457,9 +465,9 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
 
         MPIR_Assert(enqueue_req && enqueue_req->kind == MPIR_REQUEST_KIND__ENQUEUE);
         if (i == 0) {
-            gpu_stream = enqueue_req->u.enqueue.gpu_stream;
+            gpu_stream = enqueue_req->u.enqueue.stream_ptr->u.gpu_stream;
         } else {
-            MPIR_Assert(gpu_stream == enqueue_req->u.enqueue.gpu_stream);
+            MPIR_Assert(gpu_stream == enqueue_req->u.enqueue.stream_ptr->u.gpu_stream);
         }
     }
 
@@ -495,52 +503,6 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-/* static utility */
-
-static int get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_stream)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_Stream *stream_ptr = NULL;
-    if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
-        stream_ptr = comm_ptr->stream_comm.single.stream;
-    } else if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
-        stream_ptr = comm_ptr->stream_comm.multiplex.local_streams[comm_ptr->rank];
-    }
-
-    MPIR_ERR_CHKANDJUMP(!stream_ptr || stream_ptr->type != MPIR_STREAM_GPU,
-                        mpi_errno, MPI_ERR_OTHER, "**notgpustream");
-    *gpu_stream = stream_ptr->u.gpu_stream;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int allocate_enqueue_request(MPIR_Comm * comm_ptr, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_Stream *stream_ptr = NULL;
-    if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
-        stream_ptr = comm_ptr->stream_comm.single.stream;
-    } else if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
-        stream_ptr = comm_ptr->stream_comm.multiplex.local_streams[comm_ptr->rank];
-    }
-    MPIR_Assert(stream_ptr);
-
-    int vci = stream_ptr->vci;
-    MPIR_Assert(vci > 0);
-
-    /* stream vci are only accessed within a serialized context */
-    (*req) = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__ENQUEUE, vci, 1);
-    (*req)->u.enqueue.gpu_stream = stream_ptr->u.gpu_stream;
-    (*req)->u.enqueue.real_request = NULL;
-
-    return mpi_errno;
 }
 
 /* ---- collectives --------------------- */
@@ -657,6 +619,7 @@ static void allreduce_enqueue_cb(void *data)
 
     if (!p->host_recvbuf) {
         /* we are done */
+        MPIR_Comm_release(p->comm_ptr);
         MPL_free(p->tmp_buf);
         MPL_free(p);
     }
@@ -670,6 +633,7 @@ static void allred_stream_cleanup_cb(void *data)
 
     MPIR_gpu_host_free(p->host_recvbuf, p->count, p->datatype);
 
+    MPIR_Comm_release(p->comm_ptr);
     MPL_free(p->tmp_buf);
     MPL_free(p);
 }
@@ -681,7 +645,7 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
 
     MPL_gpu_stream_t gpu_stream;
-    mpi_errno = get_local_gpu_stream(comm_ptr, &gpu_stream);
+    mpi_errno = MPIR_get_local_gpu_stream(comm_ptr, &gpu_stream);
     MPIR_ERR_CHECK(mpi_errno);
 
     int is_contig;
@@ -704,6 +668,7 @@ int MPIR_Allreduce_enqueue_impl(const void *sendbuf, void *recvbuf,
     p->datatype = datatype;
     p->op = op;
     p->comm_ptr = comm_ptr;
+    MPIR_Comm_add_ref(comm_ptr);
 
     p->sendbuf_is_dev = false;
     p->host_recvbuf = NULL;

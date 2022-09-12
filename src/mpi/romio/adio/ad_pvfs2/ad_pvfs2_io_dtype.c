@@ -10,7 +10,7 @@
 #include "ad_pvfs2_io.h"
 #include "ad_pvfs2_common.h"
 
-int ADIOI_PVFS2_StridedDtypeIO(ADIO_File fd, void *buf, int count,
+int ADIOI_PVFS2_StridedDtypeIO(ADIO_File fd, void *buf, MPI_Aint count,
                                MPI_Datatype datatype, int file_ptr_type,
                                ADIO_Offset offset, ADIO_Status * status, int
                                *error_code, int rw_type)
@@ -275,21 +275,24 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype * mpi_dtype, PVFS_Request * pvfs_dtype)
                                             (int64_t *) & arr_addr[0], *old_pvfs_dtype, pvfs_dtype);
                 ADIOI_Free(pvfs_arr_disp);
                 break;
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
             case MPI_COMBINER_DUP:
                 leaf = convert_mpi_pvfs2_dtype(&arr_dtype[0], old_pvfs_dtype);
                 ret = PVFS_Request_contiguous(1, *old_pvfs_dtype, pvfs_dtype);
-
                 break;
+#endif
             case MPI_COMBINER_INDEXED_BLOCK:
                 /* No native PVFS2 support for this operation currently */
                 ADIOI_Free(old_pvfs_dtype);
                 fprintf(stderr, "convert_mpi_pvfs2_dtype: " "INDEXED_BLOCK is unsupported\n");
                 break;
+#if defined HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK && HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK
             case MPI_COMBINER_HINDEXED_BLOCK:
                 /* No native PVFS2 support for this operation currently */
                 ADIOI_Free(old_pvfs_dtype);
                 fprintf(stderr, "convert_mpi_pvfs2_dtype: " "HINDEXED_BLOCK is unsupported\n");
                 break;
+#endif
             case MPI_COMBINER_HINDEXED_INTEGER:
                 ADIOI_Free(old_pvfs_dtype);
                 fprintf(stderr, "convert_mpi_pvfs2_dtype: " "HINDEXED_INTEGER is unsupported\n");
@@ -333,8 +336,11 @@ int convert_mpi_pvfs2_dtype(MPI_Datatype * mpi_dtype, PVFS_Request * pvfs_dtype)
         print_dtype_info(combiner, num_int, num_addr, num_dtype, arr_int, arr_addr, arr_dtype);
 #endif
 
-        if (leaf != 1 && combiner != MPI_COMBINER_DUP)
-            MPI_Type_free(&arr_dtype[0]);
+        if (leaf != 1)
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
+            if (combiner != MPI_COMBINER_DUP)
+#endif
+                MPI_Type_free(&arr_dtype[0]);
 
         ADIOI_Free(arr_int);
         ADIOI_Free(arr_addr);
@@ -574,9 +580,11 @@ void print_dtype_info(int combiner,
                 fprintf(stderr, "(%d,%lld) ", arr_int[1 + i], (long long) arr_addr[i]);
             fprintf(stderr, "]\n");
             break;
+#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
         case MPI_COMBINER_DUP:
             fprintf(stderr, "DUP\n");
             break;
+#endif
         default:
             fprintf(stderr, "no available information on this datatype");
     }

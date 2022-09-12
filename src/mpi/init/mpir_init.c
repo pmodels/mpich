@@ -71,10 +71,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-/* This will help force the load of initinfo.o, which contains data about
-   how MPICH was configured. */
-extern const char MPII_Version_device[];
-
 /* MPIR_world_model_state tracks so we only init and finalize once in world model */
 MPL_atomic_int_t MPIR_world_model_state = MPL_ATOMIC_INT_T_INITIALIZER(0);
 
@@ -178,7 +174,8 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPIR_Typerep_init();
     MPII_thread_mutex_create();
     MPII_init_request();
-    MPIR_pmi_init();
+    mpi_errno = MPIR_pmi_init();
+    MPIR_ERR_CHECK(mpi_errno);
     MPII_hwtopo_init();
     MPII_nettopo_init();
     MPII_init_windows();
@@ -247,6 +244,14 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
         /* If the MPL gpu backend doesn't support specialized cache, fallback to generic. */
         if (specialized_cache && !info.specialized_cache) {
             MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE = MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic;
+        }
+
+        int device_count, max_dev_id, max_subdev_id;
+        mpi_errno = MPL_gpu_get_dev_count(&device_count, &max_dev_id, &max_subdev_id);
+        MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
+
+        if (device_count <= 0) {
+            MPIR_CVAR_ENABLE_GPU = 0;
         }
     }
 
@@ -348,13 +353,14 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
         }
 
         MPII_world_set_initilized();
-
-        mpi_errno = MPII_init_async();
-        MPIR_ERR_CHECK(mpi_errno);
     }
     if (provided) {
         *provided = MPIR_ThreadInfo.thread_provided;
     }
+
+    mpi_errno = MPII_init_async();
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPL_initlock_unlock(&MPIR_init_lock);
     return mpi_errno;
 

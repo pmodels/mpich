@@ -683,7 +683,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
         /* since CVAR is set only once this check should only happen once during the course of
          * execution. */
         if (shm_size_per_lead == -1) {
-            shm_size_per_lead = count * sizeof(datatype);
+            MPI_Aint packsize;
+            MPIR_Pack_size(count, datatype, &packsize);
+            /* TODO: should we set a minimum size, and potentially a sane maximum? */
+            MPIR_Assert(packsize <= INT_MAX);
+            shm_size_per_lead = (int) packsize;
         }
         /* Do not create shm_size_per_lead buffers greater than 4MB. */
         if (shm_size_per_lead > MPIR_ALLREDUCE_SHM_PER_LEADER_MAX) {

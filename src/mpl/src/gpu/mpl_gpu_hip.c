@@ -455,4 +455,29 @@ bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
     return true;
 }
 
+void MPL_gpu_enqueue_trigger(MPL_gpu_event_t * var, MPL_gpu_stream_t stream)
+{
+    assert(0);
+}
+
+void MPL_gpu_enqueue_wait(MPL_gpu_event_t * var, MPL_gpu_stream_t stream)
+{
+    assert(0);
+}
+
+void MPL_gpu_event_init_count(MPL_gpu_event_t * var, int count)
+{
+    *var = count;
+}
+
+void MPL_gpu_event_complete(MPL_gpu_event_t * var)
+{
+    *var -= 1;
+}
+
+bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var)
+{
+    return (*var) <= 0;
+}
+
 #endif /* MPL_HAVE_HIP */

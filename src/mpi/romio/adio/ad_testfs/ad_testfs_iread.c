@@ -10,7 +10,7 @@
  *
  * Implemented by immediately calling ReadContig()
  */
-void ADIOI_TESTFS_IreadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_TESTFS_IreadContig(ADIO_File fd, void *buf, MPI_Aint count,
                               MPI_Datatype datatype, int file_ptr_type,
                               ADIO_Offset offset, ADIO_Request * request, int
                               *error_code)
@@ -34,7 +34,7 @@ void ADIOI_TESTFS_IreadContig(ADIO_File fd, void *buf, int count,
     MPIO_Completed_request_create(&fd, len, error_code, request);
 }
 
-void ADIOI_TESTFS_IreadStrided(ADIO_File fd, void *buf, int count,
+void ADIOI_TESTFS_IreadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                                MPI_Datatype datatype, int file_ptr_type,
                                ADIO_Offset offset, ADIO_Request * request, int
                                *error_code)

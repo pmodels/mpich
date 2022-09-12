@@ -60,7 +60,7 @@ void ADIOI_Print_flatlist_node(ADIOI_Flatlist_node * flatlist_node_p)
  * agg_file_view_state for all clients, which is the view for each
  * aggregator of a client's filetype. */
 void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
-                           ADIO_File fd, int count,
+                           ADIO_File fd, MPI_Aint count,
                            MPI_Datatype datatype, ADIO_Offset off,
                            view_state * my_mem_view_state_arr,
                            view_state * agg_file_view_state_arr,

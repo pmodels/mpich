@@ -12,7 +12,7 @@
 
 #define COALESCE_REGIONS        /* TODO: would we ever want to *not* coalesce? */
 #define MAX_OL_COUNT 64
-int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, int count,
+int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, MPI_Aint count,
                               MPI_Datatype datatype, int file_ptr_type,
                               ADIO_Offset offset, ADIO_Status * status,
                               int *error_code, int rw_type)

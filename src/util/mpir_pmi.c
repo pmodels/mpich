@@ -172,6 +172,12 @@ int MPIR_pmi_init(void)
     pmix_value_t *pvalue = NULL;
 
     pmi_errno = PMIx_Init(&pmix_proc, NULL, 0);
+    if (pmi_errno == PMIX_ERR_UNREACH) {
+        /* no pmi server, assume we are a singleton */
+        rank = 0;
+        size = 1;
+        goto singleton_out;
+    }
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_init", "**pmix_init %d", pmi_errno);
 
@@ -187,6 +193,7 @@ int MPIR_pmi_init(void)
     PMIX_VALUE_RELEASE(pvalue);
 
     /* appnum, has_parent is not set for now */
+  singleton_out:
     appnum = 0;
     has_parent = 0;
 
@@ -407,6 +414,9 @@ int MPIR_pmi_barrier(void)
     pmi_errno = PMI2_KVS_Fence();
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_kvsfence", "**pmi_kvsfence %d", pmi_errno);
+    /* Get a non-existent key, it only returns after every process called fence */
+    int out_len;
+    PMI2_KVS_Get(pmi_jobid, PMI2_ID_NULL, "-NONEXIST-KEY", NULL, 0, &out_len);
 #elif defined(USE_PMIX_API)
     pmix_info_t *info;
     PMIX_INFO_CREATE(info, 1);
@@ -560,14 +570,23 @@ static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
         }
     }
 #elif defined(USE_PMIX_API)
-    int n = bufsize * 2 + 1;
-    char *val = MPL_malloc(n, MPL_MEM_OTHER);
-    encode(bufsize, buf, val);
-    mpi_errno = optimized_put(key, val, is_local);
-    MPIR_ERR_CHECK(mpi_errno);
+    int pmi_errno;
+    pmix_value_t value;
+    value.type = PMIX_BYTE_OBJECT;
+    value.data.bo.bytes = (char *) buf;
+    value.data.bo.size = bufsize;
+    pmi_errno = PMIx_Put(is_local ? PMIX_LOCAL : PMIX_GLOBAL, key, &value);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_put", "**pmix_put %d", pmi_errno);
+    pmi_errno = PMIx_Commit();
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_commit", "**pmix_commit %d", pmi_errno);
 #endif
+
   fn_exit:
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
     MPL_free(val);
+#endif
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -576,12 +595,14 @@ static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
 static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local)
 {
     int mpi_errno = MPI_SUCCESS;
-    char *val = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
-    int segsize = (pmi_max_val_size - 1) / 2;
 
     MPIR_Assert(p_size);
     MPIR_Assert(*p_size > 0);
     int bufsize = *p_size;
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
+    char *val = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
+    int segsize = (pmi_max_val_size - 1) / 2;
+
     int got_size;
 
     mpi_errno = optimized_get(src, key, val, pmi_max_val_size, is_local);
@@ -615,8 +636,33 @@ static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local
 
     *p_size = got_size;
 
+#elif defined(USE_PMIX_API)
+    int pmi_errno;
+    pmix_value_t *pvalue;
+    if (src < 0) {
+        pmi_errno = PMIx_Get(NULL, key, NULL, 0, &pvalue);
+    } else {
+        pmix_proc_t proc;
+        PMIX_PROC_CONSTRUCT(&proc);
+        proc.rank = src;
+
+        pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+    }
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_get", "**pmix_get %d", pmi_errno);
+    MPIR_Assert(pvalue->type == PMIX_BYTE_OBJECT);
+    MPIR_Assert(pvalue->data.bo.size <= bufsize);
+
+    memcpy(buf, pvalue->data.bo.bytes, pvalue->data.bo.size);
+    *p_size = pvalue->data.bo.size;
+
+    PMIX_VALUE_RELEASE(pvalue);
+#endif
+
   fn_exit:
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
     MPL_free(val);
+#endif
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1044,6 +1090,86 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_pmi_publish(const char name[], const char port[])
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+#ifdef USE_PMI2_API
+    /* release the global CS for PMI calls */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    pmi_errno = PMI2_Nameserv_publish(name, NULL, port);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    pmix_info_t *info;
+    PMIX_INFO_CREATE(info, 1);
+    MPL_strncpy(info[0].key, name, PMIX_MAX_KEYLEN);
+    info[0].value.type = PMIX_STRING;
+    info[0].value.data.string = MPL_direct_strdup(port);
+    pmi_errno = PMIx_Publish(info, 1);
+    PMIX_INFO_FREE(info, 1);
+#else
+    pmi_errno = PMI_Publish_name(name, port);
+#endif
+    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_NAME, "**namepubnotpub",
+                         "**namepubnotpub %s", name);
+
+  fn_fail:
+    return mpi_errno;
+}
+
+int MPIR_pmi_lookup(const char name[], char port[])
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+#ifdef USE_PMI2_API
+    /* release the global CS for PMI calls */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    pmi_errno = PMI2_Nameserv_lookup(name, NULL, port, MPI_MAX_PORT_NAME);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    pmix_pdata_t *pdata;
+    PMIX_PDATA_CREATE(pdata, 1);
+    MPL_strncpy(pdata[0].key, name, PMIX_MAX_KEYLEN);
+    pmi_errno = PMIx_Lookup(pdata, 1, NULL, 0);
+    if (pmi_errno == PMIX_SUCCESS) {
+        MPL_strncpy(port, pdata[0].value.data.string, MPI_MAX_PORT_NAME);
+    }
+    PMIX_PDATA_FREE(pdata, 1);
+#else
+    pmi_errno = PMI_Lookup_name(name, port);
+#endif
+    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_NAME, "**namepubnotfound",
+                         "**namepubnotfound %s", name);
+
+  fn_fail:
+    return mpi_errno;
+}
+
+int MPIR_pmi_unpublish(const char name[])
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+#ifdef USE_PMI2_API
+    /* release the global CS for PMI calls */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    pmi_errno = PMI2_Nameserv_unpublish(name, NULL);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    char *keys[2] = { (char *) name, NULL };
+    PMIx_Unpublish(keys, NULL, 0);
+#else
+    pmi_errno = PMI_Unpublish_name(name);
+#endif
+    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_SERVICE, "**namepubnotunpub",
+                         "**namepubnotunpub %s", name);
+
+  fn_fail:
+    return mpi_errno;
 }
 
 /* ---- static functions ---- */

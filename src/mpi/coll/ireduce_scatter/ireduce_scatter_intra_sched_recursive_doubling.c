@@ -24,9 +24,8 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, voi
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
-    int *disps;
     void *tmp_recvbuf, *tmp_results;
-    int type_size ATTRIBUTE((unused)), dis[2], blklens[2], total_count, dst;
+    int dst;
     int mask, dst_tree_root, my_tree_root, j, k;
     int received;
     MPI_Datatype sendtype, recvtype;
@@ -39,9 +38,11 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, voi
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     is_commutative = MPIR_Op_is_commutative(op);
 
-    disps = MPIR_Sched_alloc_state(s, comm_size * sizeof(int));
+    MPI_Aint *disps;
+    disps = MPIR_Sched_alloc_state(s, comm_size * sizeof(MPI_Aint));
     MPIR_ERR_CHKANDJUMP(!disps, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < comm_size; i++) {
         disps[i] = total_count;
@@ -51,8 +52,6 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, voi
     if (total_count == 0) {
         goto fn_exit;
     }
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* need to allocate temporary buffer to receive incoming data */
     tmp_recvbuf = MPIR_Sched_alloc_state(s, total_count * (MPL_MAX(extent, true_extent)));
@@ -99,6 +98,7 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, voi
          * data indexed from dst_tree_root to dst_tree_root+mask-1. */
 
         /* calculate sendtype */
+        MPI_Aint dis[2], blklens[2];
         blklens[0] = blklens[1] = 0;
         for (j = 0; j < my_tree_root; j++)
             blklens[0] += recvcounts[j];
@@ -110,7 +110,7 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, voi
         for (j = my_tree_root; (j < my_tree_root + mask) && (j < comm_size); j++)
             dis[1] += recvcounts[j];
 
-        mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &sendtype);
+        mpi_errno = MPIR_Type_indexed_large_impl(2, blklens, dis, datatype, &sendtype);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&sendtype);
@@ -128,7 +128,7 @@ int MPIR_Ireduce_scatter_intra_sched_recursive_doubling(const void *sendbuf, voi
         for (j = dst_tree_root; (j < dst_tree_root + mask) && (j < comm_size); j++)
             dis[1] += recvcounts[j];
 
-        mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &recvtype);
+        mpi_errno = MPIR_Type_indexed_large_impl(2, blklens, dis, datatype, &recvtype);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&recvtype);

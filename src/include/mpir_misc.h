@@ -45,17 +45,6 @@ typedef enum MPIR_Lang_t {
 #endif
 } MPIR_Lang_t;
 
-extern const char MPII_Version_string[] MPICH_API_PUBLIC;
-extern const char MPII_Version_date[] MPICH_API_PUBLIC;
-extern const char MPII_Version_ABI[] MPICH_API_PUBLIC;
-extern const char MPII_Version_configure[] MPICH_API_PUBLIC;
-extern const char MPII_Version_device[] MPICH_API_PUBLIC;
-extern const char MPII_Version_CC[] MPICH_API_PUBLIC;
-extern const char MPII_Version_CXX[] MPICH_API_PUBLIC;
-extern const char MPII_Version_F77[] MPICH_API_PUBLIC;
-extern const char MPII_Version_FC[] MPICH_API_PUBLIC;
-extern const char MPII_Version_custom[] MPICH_API_PUBLIC;
-
 extern MPL_initlock_t MPIR_init_lock;
 
 #include "typerep_pre.h"        /* needed for MPIR_Typerep_req */
@@ -123,9 +112,5 @@ int MPIR_Find_external(struct MPIR_Comm *comm, int *external_size_p, int *extern
                        int **external_ranks_p, int **internode_table_p);
 int MPIR_Get_internode_rank(MPIR_Comm * comm_ptr, int r);
 int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
-
-/* Default routines for asynchronous progress thread */
-int MPIR_Init_async_thread(void);
-int MPIR_Finalize_async_thread(void);
 
 #endif /* MPIR_MISC_H_INCLUDED */

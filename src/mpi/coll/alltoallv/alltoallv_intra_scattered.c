@@ -35,7 +35,6 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
     MPIR_Request **reqarray;
     int dst, rank, req_cnt;
     int ii, ss, bblock;
-    int type_size;
 
     MPIR_CHKLMEM_DECL(2);
 
@@ -69,6 +68,7 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
         for (i = 0; i < ss; i++) {
             dst = (rank + i + ii) % comm_size;
             if (recvcounts[dst]) {
+                MPI_Aint type_size;
                 MPIR_Datatype_get_size_macro(recvtype, type_size);
                 if (type_size) {
                     mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst] * recv_extent,
@@ -90,6 +90,7 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
         for (i = 0; i < ss; i++) {
             dst = (rank - i - ii + comm_size) % comm_size;
             if (sendcounts[dst]) {
+                MPI_Aint type_size;
                 MPIR_Datatype_get_size_macro(sendtype, type_size);
                 if (type_size) {
                     mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst] * send_extent,

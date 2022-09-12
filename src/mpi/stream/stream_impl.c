@@ -73,8 +73,7 @@ void MPIR_stream_comm_free(MPIR_Comm * comm)
 {
     if (comm->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
         if (comm->stream_comm.single.stream) {
-            int cnt;
-            MPIR_Object_release_ref_always(comm->stream_comm.single.stream, &cnt);
+            MPIR_Stream_free_impl(comm->stream_comm.single.stream);
         }
         MPL_free(comm->stream_comm.single.vci_table);
     } else if (comm->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
@@ -83,8 +82,7 @@ void MPIR_stream_comm_free(MPIR_Comm * comm)
             comm->stream_comm.multiplex.vci_displs[rank];
         for (int i = 0; i < num_local_streams; i++) {
             if (comm->stream_comm.multiplex.local_streams[i]) {
-                int cnt;
-                MPIR_Object_release_ref_always(comm->stream_comm.multiplex.local_streams[i], &cnt);
+                MPIR_Stream_free_impl(comm->stream_comm.multiplex.local_streams[i]);
             }
         }
         MPL_free(comm->stream_comm.multiplex.local_streams);
@@ -169,8 +167,11 @@ int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
     MPIR_ERR_CHKANDJUMP1(!stream_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                          "MPI_Stream");
 
-    MPIR_Object_set_ref(stream_ptr, 0);
+    MPIR_Object_set_ref(stream_ptr, 1);
     stream_ptr->vci = 0;
+#ifdef MPID_DEV_STREAM_DECL
+    memset(&stream_ptr->dev, 0, sizeof(stream_ptr->dev));
+#endif
 
     const char *s_type;
     s_type = MPIR_Info_lookup(info_ptr, "type");
@@ -204,6 +205,9 @@ int MPIR_Stream_create_impl(MPIR_Info * info_ptr, MPIR_Stream ** p_stream_ptr)
     mpi_errno = allocate_vci(&stream_ptr->vci, stream_ptr->type == MPIR_STREAM_GPU);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPID_Stream_create_hook(stream_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
     *p_stream_ptr = stream_ptr;
   fn_exit:
     return mpi_errno;
@@ -218,13 +222,27 @@ int MPIR_Stream_free_impl(MPIR_Stream * stream_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int ref_cnt = MPIR_Object_get_ref(stream_ptr);
-    MPIR_ERR_CHKANDJUMP(ref_cnt != 0, mpi_errno, MPI_ERR_OTHER, "**cannotfreestream");
+    int ref_cnt;
+    MPIR_Object_release_ref(stream_ptr, &ref_cnt);
+    if (ref_cnt == 0) {
+        mpi_errno = MPID_Stream_free_hook(stream_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
 
-    if (stream_ptr->vci) {
-        mpi_errno = deallocate_vci(stream_ptr->vci);
+        if (stream_ptr->vci) {
+            mpi_errno = deallocate_vci(stream_ptr->vci);
+        }
+        MPIR_Handle_obj_free(&MPIR_Stream_mem, stream_ptr);
+    } else {
+        /* The stream is still in use */
+        if (stream_ptr->type == MPIR_STREAM_GPU) {
+            /* We allow asynchronous free of GPU stream because we reuse a single
+             * gpu vci. Nothing to do here. */
+        } else {
+            /* We need ensure unique vci usage per stream, thus we need warn user
+             * when stream is freed while still in-use */
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**cannotfreestream");
+        }
     }
-    MPIR_Handle_obj_free(&MPIR_Stream_mem, stream_ptr);
 
   fn_exit:
     return mpi_errno;

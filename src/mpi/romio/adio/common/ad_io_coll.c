@@ -37,7 +37,7 @@ static void post_client_comm(ADIO_File fd, int rw_type,
  * - persistent file domains
  * - an option to use alltoall instead of point-to-point
  */
-void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
+void ADIOI_IOStridedColl(ADIO_File fd, void *buf, MPI_Aint count, int rdwr,
                          MPI_Datatype datatype, int file_ptr_type,
                          ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
@@ -663,7 +663,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
 
 /* Some of this code is from the old Calc_my_off_len() function.
  * It calculates the 1st and last byte accessed */
-void ADIOI_Calc_bounds(ADIO_File fd, int count, MPI_Datatype buftype,
+void ADIOI_Calc_bounds(ADIO_File fd, MPI_Aint count, MPI_Datatype buftype,
                        int file_ptr_type, ADIO_Offset offset,
                        ADIO_Offset * st_offset, ADIO_Offset * end_offset)
 {
@@ -833,7 +833,7 @@ void ADIOI_Calc_bounds(ADIO_File fd, int count, MPI_Datatype buftype,
  * WriteStrided call without affecting existing code.  For the new 2
  * phase code, we really only need to set a custom_ftype, and we can
  * assume that this uses MPI_BYTE for the etype, and disp is 0 */
-void ADIOI_IOFiletype(ADIO_File fd, void *buf, int count,
+void ADIOI_IOFiletype(ADIO_File fd, void *buf, MPI_Aint count,
                       MPI_Datatype datatype, int file_ptr_type,
                       ADIO_Offset offset, MPI_Datatype custom_ftype,
                       int rdwr, ADIO_Status * status, int *error_code)

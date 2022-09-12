@@ -9,9 +9,10 @@
  * hierarchy.  It will choose between several different algorithms
  * based on the given parameters. */
 /* Remove this function when gentran algos are in json file */
-static int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *recvbuf, int count,
-                                                  MPI_Datatype datatype, MPI_Op op, int root,
-                                                  MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched)
+static int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *recvbuf,
+                                                  MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
+                                                  int root, MPIR_Comm * comm_ptr,
+                                                  MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
@@ -37,7 +38,7 @@ static int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *rec
 }
 
 /* sched version of CVAR and json based collective selection. Meant only for gentran scheduler */
-int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                           MPI_Datatype datatype, MPI_Op op, int root,
                                           MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched)
 {

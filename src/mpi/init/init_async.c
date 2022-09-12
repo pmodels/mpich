@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "mpi_init.h"
+#include "utarray.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -62,22 +63,34 @@ cvars:
 #define DO_ASYNC_THREAD_AFFINITY
 #endif
 
+enum {
+    MPIR_ASYNC_STATE_UNSET,
+    MPIR_ASYNC_STATE_RUNNING,
+    MPIR_ASYNC_STATE_DONE,
+};
+
+struct async_thread {
+    MPID_Thread_id_t thread_id;
+    MPL_atomic_int_t state;
+    MPIR_Stream *stream_ptr;
+};
+
+static UT_icd icd_async_thread_list = { sizeof(struct async_thread), NULL, NULL, NULL };
+
+static UT_array *async_thread_list;
+
 static int MPIR_async_thread_initialized = 0;
-static MPID_Thread_id_t progress_thread_id;
-static MPL_atomic_int_t async_done = MPL_ATOMIC_INT_T_INITIALIZER(0);
 
 static void progress_fn(void *data)
 {
-    MPID_Progress_state state;
+    struct async_thread *p = data;
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
-    MPID_Progress_start(&state);
-    while (MPL_atomic_load_int(&async_done) == 0) {
-        MPID_Progress_test(&state);
+    while (MPL_atomic_load_int(&p->state) == MPIR_ASYNC_STATE_RUNNING) {
+        MPID_Stream_progress(p->stream_ptr);
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
-    MPID_Progress_end(&state);
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
@@ -216,28 +229,56 @@ static int get_thread_affinity(bool * apply_affinity, int **p_thread_affinity, i
 }
 #endif /* DO_ASYNC_THREAD_AFFINITY */
 
-/* called inside MPID_Init_async_thread to provide device override */
-int MPIR_Init_async_thread(void)
+static struct async_thread *find_async_thread(MPIR_Stream * stream_ptr)
 {
-    int mpi_errno = MPI_SUCCESS, thr_err;
-    int *thread_affinity = NULL, affinity_idx;
-    bool apply_affinity;
+    struct async_thread *p = NULL;
+    while ((p = (struct async_thread *) utarray_next(async_thread_list, p))) {
+        if (p->stream_ptr == stream_ptr) {
+            break;
+        } else if (stream_ptr && p->stream_ptr && stream_ptr->vci == p->stream_ptr->vci) {
+            /* prevent launch extra progress threads on the same vci, e.g. GPU streams */
+            break;
+        }
+    }
+    return p;
+}
 
+int MPIR_Start_progress_thread_impl(MPIR_Stream * stream_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+#ifdef DO_ASYNC_THREAD_AFFINITY
+    int *thread_affinity = NULL, affinity_idx;
+    bool apply_affinity;
+#endif
+
+    struct async_thread *p = find_async_thread(stream_ptr);
+    if (p == NULL) {
+        utarray_extend_back(async_thread_list, MPL_MEM_OTHER);
+        p = (struct async_thread *) utarray_back(async_thread_list);
+        p->stream_ptr = stream_ptr;
+        MPL_atomic_store_int(&p->state, MPIR_ASYNC_STATE_UNSET);
+    }
+
+    if (MPL_atomic_load_int(&p->state) != MPIR_ASYNC_STATE_UNSET) {
+        goto fn_exit;
+    }
 #ifdef DO_ASYNC_THREAD_AFFINITY
     mpi_errno = get_thread_affinity(&apply_affinity, &thread_affinity, &affinity_idx);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    MPL_atomic_store_int(&p->state, MPIR_ASYNC_STATE_RUNNING);
     int err = 0;
-    MPID_Thread_create((MPID_Thread_func_t) progress_fn, NULL, &progress_thread_id, &err);
+    MPID_Thread_create((MPID_Thread_func_t) progress_fn, (void *) p, &p->thread_id, &err);
     MPIR_ERR_CHECK(mpi_errno);
 
 #ifdef DO_ASYNC_THREAD_AFFINITY
     if (apply_affinity) {
+        int thr_err;
         MPIR_Assert(thread_affinity);
-        MPL_thread_set_affinity(progress_thread_id, &(thread_affinity[affinity_idx]), 1, &thr_err);
+        MPL_thread_set_affinity(p->thread_id, &(thread_affinity[affinity_idx]), 1, &thr_err);
         MPIR_ERR_CHKANDJUMP1(thr_err, mpi_errno, MPI_ERR_OTHER, "**set_thread_affinity",
                              "**set_thread_affinity %d", thread_affinity[affinity_idx]);
     }
@@ -246,24 +287,30 @@ int MPIR_Init_async_thread(void)
     MPIR_FUNC_EXIT;
 
   fn_exit:
+#ifdef DO_ASYNC_THREAD_AFFINITY
     MPL_free(thread_affinity);
+#endif
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-/* called inside MPID_Finalize_async_thread to provide device override */
-int MPIR_Finalize_async_thread(void)
+int MPIR_Stop_progress_thread_impl(MPIR_Stream * stream_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
     MPIR_FUNC_ENTER;
 
-    MPL_atomic_store_int(&async_done, 1);
-    MPID_Thread_join(progress_thread_id);
+    struct async_thread *p = find_async_thread(stream_ptr);
+    if (p == NULL || MPL_atomic_load_int(&p->state) == MPIR_ASYNC_STATE_UNSET) {
+        goto fn_exit;
+    }
 
+    MPL_atomic_store_int(&p->state, MPIR_ASYNC_STATE_DONE);
+    MPID_Thread_join(p->thread_id);
+    MPL_atomic_store_int(&p->state, MPIR_ASYNC_STATE_UNSET);
+
+  fn_exit:
     MPIR_FUNC_EXIT;
-
     return mpi_errno;
 }
 
@@ -272,12 +319,16 @@ int MPII_init_async(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    if (async_thread_list) {
+        goto fn_exit;
+    }
+
+    utarray_new(async_thread_list, &icd_async_thread_list, MPL_MEM_OTHER);
+
     if (MPIR_CVAR_ASYNC_PROGRESS) {
         if (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPID_Init_async_thread();
-            if (mpi_errno)
-                goto fn_fail;
-
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_async_thread_initialized = 1;
         } else {
             printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
@@ -300,16 +351,24 @@ int MPII_finalize_async(void)
         mpi_errno = MPID_Finalize_async_thread();
     }
 
+    /* stop any user launched progress threads */
+    struct async_thread *p = NULL;
+    while ((p = (struct async_thread *) utarray_next(async_thread_list, p))) {
+        mpi_errno = MPIR_Stop_progress_thread_impl(p->stream_ptr);
+    }
+
+    utarray_free(async_thread_list);
+    async_thread_list = NULL;
     return mpi_errno;
 }
 
 #else
-int MPIR_Finalize_async_thread(void)
+int MPIR_Start_progress_thread_impl(MPIR_Stream * stream_ptr)
 {
     return MPI_SUCCESS;
 }
 
-int MPIR_Init_async_thread(void)
+int MPIR_Stop_progress_thread_impl(MPIR_Stream * stream_ptr)
 {
     return MPI_SUCCESS;
 }

@@ -13,6 +13,8 @@
 #include <mpi.h>
 #include "mpitest.h"
 
+static int errs;
+
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
     do {                                                                          \
@@ -24,9 +26,59 @@
         }                                                                         \
     } while (0)
 
+/* Sets elements corresponding to count=1 of the given MPI datatype, using
+ * set_elements and set_elements_x.  Checks expected values are returned by
+ * get_elements, get_elements_x, get_elements_c, and get_count (including
+ * MPI_UNDEFINED clipping) */
+static void check_set_elements(MPI_Status status, MPI_Datatype type, MPI_Count expected)
+{
+    MPI_Count elements_x;
+    int elements;
+    int count;
+
+    elements = elements_x = count = 0xfeedface;
+    /* can't use legacy "set" for large element counts */
+    if (expected <= INT_MAX) {
+        MPI_Status_set_elements(&status, type, 1);
+        MPI_Get_elements(&status, type, &elements);
+        MPI_Get_elements_x(&status, type, &elements_x);
+        MPI_Get_count(&status, type, &count);
+        check(elements == (int) expected);
+        check(elements_x == expected);
+        check(count == 1);
+    }
+
+    elements = elements_x = count = 0xfeedface;
+    MPI_Status_set_elements_x(&status, type, 1);
+    MPI_Get_elements(&status, type, &elements);
+    MPI_Get_elements_x(&status, type, &elements_x);
+    MPI_Get_count(&status, type, &count);
+    if (expected > INT_MAX) {
+        check(elements == MPI_UNDEFINED);
+    } else {
+        check(elements == (int) expected);
+    }
+    check(elements_x == expected);
+    check(count == 1);
+
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
+    elements = elements_x = count = 0xfeedface;
+    MPI_Status_set_elements_c(&status, type, 1);
+    MPI_Get_elements(&status, type, &elements);
+    MPI_Get_elements_c(&status, type, &elements_x);
+    MPI_Get_count(&status, type, &count);
+    if (expected > INT_MAX) {
+        check(elements == MPI_UNDEFINED);
+    } else {
+        check(elements == (int) expected);
+    }
+    check(elements_x == expected);
+    check(count == 1);
+#endif
+}
+
 int main(int argc, char *argv[])
 {
-    int errs = 0;
     int wrank, wsize;
     int size, elements, count;
     MPI_Aint lb, extent;
@@ -186,43 +238,10 @@ int main(int argc, char *argv[])
     check(elements_x == 10);
     check(count == 10);
 
-    /* Sets elements corresponding to count=1 of the given MPI datatype, using
-     * set_elements and set_elements_x.  Checks expected values are returned by
-     * get_elements, get_elements_x, and get_count (including MPI_UNDEFINED
-     * clipping) */
-#define check_set_elements(type_, elts_)                          \
-    do {                                                          \
-        elements = elements_x = count = 0xfeedface;               \
-        /* can't use legacy "set" for large element counts */     \
-        if ((elts_) <= INT_MAX) {                                 \
-            MPI_Status_set_elements(&status, (type_), 1);         \
-            MPI_Get_elements(&status, (type_), &elements);        \
-            MPI_Get_elements_x(&status, (type_), &elements_x);    \
-            MPI_Get_count(&status, (type_), &count);              \
-            check(elements == (int) (elts_));                     \
-            check(elements_x == (elts_));                         \
-            check(count == 1);                                    \
-        }                                                         \
-                                                                  \
-        elements = elements_x = count = 0xfeedface;               \
-        MPI_Status_set_elements_x(&status, (type_), 1);           \
-        MPI_Get_elements(&status, (type_), &elements);            \
-        MPI_Get_elements_x(&status, (type_), &elements_x);        \
-        MPI_Get_count(&status, (type_), &count);                  \
-        if ((elts_) > INT_MAX) {                                  \
-            check(elements == MPI_UNDEFINED);                     \
-        }                                                         \
-        else {                                                    \
-            check(elements == (int) (elts_));                           \
-        }                                                         \
-        check(elements_x == (elts_));                             \
-        check(count == 1);                                        \
-    } while (0)                                                   \
-
-    check_set_elements(imax_contig, INT_MAX);
-    check_set_elements(four_ints, 4);
-    check_set_elements(imx4i, 4LL * (INT_MAX / 2));
-    check_set_elements(imx4i_rsz, 4LL * (INT_MAX / 2));
+    check_set_elements(status, imax_contig, INT_MAX);
+    check_set_elements(status, four_ints, 4);
+    check_set_elements(status, imx4i, 4LL * (INT_MAX / 2));
+    check_set_elements(status, imx4i_rsz, 4LL * (INT_MAX / 2));
 
   epilogue:
     if (imax_contig != MPI_DATATYPE_NULL)

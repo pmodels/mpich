@@ -19,7 +19,7 @@ int MPIR_Iallgather_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pof2, curr_cnt, rem, src, dst;
+    int pof2, rem, src, dst;
     int rank, comm_size;
     MPI_Aint recvtype_extent, recvtype_sz;
     void *tmp_buf = NULL;
@@ -49,6 +49,7 @@ int MPIR_Iallgather_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     /* do the first \floor(\lg p) steps */
 
+    MPI_Aint curr_cnt;
     curr_cnt = recvcount;
     pof2 = 1;
     while (pof2 <= comm_size / 2) {

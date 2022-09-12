@@ -9,7 +9,7 @@
 /* Generic implementation of IreadContig calls the blocking ReadContig
  * immediately.
  */
-void ADIOI_FAKE_IreadContig(ADIO_File fd, void *buf, int count,
+void ADIOI_FAKE_IreadContig(ADIO_File fd, void *buf, MPI_Aint count,
                             MPI_Datatype datatype, int file_ptr_type,
                             ADIO_Offset offset, ADIO_Request * request, int *error_code)
 {
@@ -36,7 +36,7 @@ void ADIOI_FAKE_IreadContig(ADIO_File fd, void *buf, int count,
 /* Generic implementation of IreadStrided calls the blocking ReadStrided
  * immediately.
  */
-void ADIOI_FAKE_IreadStrided(ADIO_File fd, void *buf, int count,
+void ADIOI_FAKE_IreadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                              MPI_Datatype datatype, int file_ptr_type,
                              ADIO_Offset offset, ADIO_Request * request, int *error_code)
 {

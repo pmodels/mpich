@@ -24,7 +24,7 @@ struct ADIOI_GEN_IreadStridedColl_vars {
     /* parameters */
     ADIO_File fd;
     void *buf;
-    int count;
+    MPI_Aint count;
     MPI_Datatype datatype;
     int file_ptr_type;
     ADIO_Offset offset;
@@ -107,7 +107,7 @@ struct ADIOI_Iread_and_exch_vars {
     ADIO_Offset for_next_iter;
     ADIOI_Flatlist_node *flat_buf;
     MPI_Aint buftype_extent;
-    int coll_bufsize;
+    MPI_Aint coll_bufsize;
 
     /* next function to be called */
     void (*next_fn) (ADIOI_NBC_Request *, int *);
@@ -194,7 +194,7 @@ static int ADIOI_GEN_irc_wait_fn(int count, void **array_of_states,
 
 
 /* Nonblocking version of ADIOI_GEN_ReadStridedColl() */
-void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, int count,
+void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
                                 MPI_Datatype datatype, int file_ptr_type,
                                 ADIO_Offset offset, MPI_Request * request, int *error_code)
 {
@@ -324,7 +324,8 @@ static void ADIOI_GEN_IreadStridedColl_indio(ADIOI_NBC_Request * nbc_req, int *e
     ADIOI_Icalc_others_req_vars *cor_vars = NULL;
     ADIO_File fd = vars->fd;
     void *buf;
-    int count, file_ptr_type;
+    MPI_Aint count;
+    int file_ptr_type;
     MPI_Datatype datatype = vars->datatype;
     ADIO_Offset offset;
     int filetype_is_contig;
@@ -544,7 +545,7 @@ static void ADIOI_Iread_and_exch(ADIOI_NBC_Request * nbc_req, int *error_code)
 
     int i, j;
     ADIO_Offset st_loc = -1, end_loc = -1;
-    int coll_bufsize;
+    MPI_Aint coll_bufsize;
 
     *error_code = MPI_SUCCESS;  /* changed below if error */
     /* only I/O errors are currently reported */
@@ -707,7 +708,7 @@ static void ADIOI_Iread_and_exch_l1_begin(ADIOI_NBC_Request * nbc_req, int *erro
      * minus what was satisfied in previous iteration
      * req_size = size corresponding to req_off */
 
-    size = MPL_MIN((unsigned) vars->coll_bufsize, vars->end_loc - vars->st_loc + 1 - vars->done);
+    size = MPL_MIN(vars->coll_bufsize, vars->end_loc - vars->st_loc + 1 - vars->done);
     real_off = vars->off - vars->for_curr_iter;
     real_size = size + vars->for_curr_iter;
 

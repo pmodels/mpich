@@ -7,14 +7,12 @@
 #define COMMON_H_INCLUDED
 
 #include "hydra.h"
+#include "pmi_wire.h"   /* from libpmi */
 
 /* Generic definitions */
 #define PMI_MAXKEYLEN    (64)   /* max length of key in keyval space */
 #define PMI_MAXVALLEN    (1024) /* max length of value in keyval space */
 #define PMI_MAXKVSLEN    (256)  /* max length of various names */
-
-#define MAX_PMI_ARGS  (65536)   /* number of arguments in a PMI command */
-#define MAX_PMI_INTERNAL_ARGS   (65536) /* number of arguments in internal communication */
 
 struct HYD_pmcd_pmi_kvs_pair {
     char key[PMI_MAXKEYLEN];
@@ -33,6 +31,13 @@ struct HYD_pmcd_init_hdr {
     char signature[4]; /* HYD\0 */ ;
     int proxy_id;
 };
+
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid);
+void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmcd_pmi_kvs *kvs,
+                                int *ret);
+
+/* ---- struct HYD_pmcd_hdr ---- */
 
 /* The set of commands supported */
 enum HYD_pmcd_cmd {
@@ -76,18 +81,61 @@ struct HYD_pmcd_hdr {
     } u;
 };
 
-struct HYD_pmcd_token {
-    char *key;
-    char *val;
-};
-
 void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr);
-HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd, char *args[]);
-HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count);
-void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count);
-char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key);
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid);
-void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs, int *ret);
+void HYD_pmcd_pmi_dump(struct PMIU_cmd *pmi);
+HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *hdr, int debug);
+
+/* macros for retrieving key/val from struct PMIU_cmd */
+#define HYD_PMI_GET_STRVAL(pmi, key, val) \
+    do { \
+        const char *tmp = PMIU_cmd_find_keyval(pmi, key); \
+        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
+                            "PMI command missing key %s\n", key); \
+        val = tmp; \
+    } while (0)
+
+#define HYD_PMI_GET_INTVAL(pmi, key, val) \
+    do { \
+        const char *tmp = PMIU_cmd_find_keyval(pmi, key); \
+        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
+                            "PMI command missing key %s\n", key); \
+        val = atoi(tmp); \
+    } while (0)
+
+#define HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, key, val, dflt) \
+    PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmi, key, val, dflt)
+
+#define HYD_PMI_GET_INTVAL_WITH_DEFAULT(pmi, key, val, dflt) \
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmi, key, val, dflt)
+
+#define HYD_PMI_GET_BOOLVAL_WITH_DEFAULT(pmi, key, val, dflt) \
+    PMIU_CMD_GET_BOOLVAL_WITH_DEFAULT(pmi, key, val, dflt)
+
+/* Macro for parsing keyval within a spawn segment */
+#define HYD_PMI_GET_STRVAL_J(pmi, key, j, val) \
+    do { \
+        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
+        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
+                            "PMI command missing key %s\n", key); \
+        val = tmp; \
+    } while (0)
+
+#define HYD_PMI_GET_INTVAL_J(pmi, key, j, val) \
+    do { \
+        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
+        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
+                            "PMI command missing key %s\n", key); \
+        val = atoi(tmp); \
+    } while (0)
+
+#define HYD_PMI_GET_INTVAL_J_WITH_DEFAULT(pmi, key, j, val, dflt) \
+    do { \
+        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
+        if (tmp) { \
+            val = atoi(tmp); \
+        } else { \
+            val = dflt; \
+        } \
+    } while (0)
 
 #endif /* COMMON_H_INCLUDED */

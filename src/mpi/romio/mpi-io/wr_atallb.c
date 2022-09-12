@@ -84,7 +84,6 @@ Input Parameters:
 int MPI_File_write_at_all_begin_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
                                   MPI_Count count, MPI_Datatype datatype)
 {
-    assert(count <= INT_MAX);
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_AT_ALL_BEGIN";
 
