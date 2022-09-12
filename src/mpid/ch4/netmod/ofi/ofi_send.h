@@ -328,8 +328,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = NULL;
     }
 
-    if (data_sz <= MPIDI_OFI_global.max_buffered_send &&
-        data_sz < MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
+    if (data_sz <= MPIDI_OFI_global.max_buffered_send && !MPIR_CVAR_CH4_OFI_ENABLE_HMEM) {
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                             send_buf,
                                             data_sz,
