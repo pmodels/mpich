@@ -311,7 +311,7 @@ dnl Note: the maximum of 64 is due to the fact that we use 6 bits in the
 dnl request handle to encode pool index
 AC_ARG_WITH(ch4-max-vcis,
     [--with-ch4-max-vcis=<N>
-       Select max number of VCIs to configure (default is 1; minimum is 1; maximum is 64)],
+       Select max number of VCIs to configure (default is 64; minimum is 1; maximum is 64)],
     [], [with_ch4_max_vcis=64])
 
 if test $with_ch4_max_vcis -lt 1 -o $with_ch4_max_vcis -gt 64; then
