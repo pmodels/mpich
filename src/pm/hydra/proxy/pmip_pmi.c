@@ -169,8 +169,8 @@ static HYD_status cache_put_flush(int fd)
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
     for (int i = 0; i < cache_put.keyval_len; i++) {
-        MPL_free(cache_put.tokens[i].key);
-        MPL_free(cache_put.tokens[i].val);
+        MPL_free((void *) cache_put.tokens[i].key);
+        MPL_free((void *) cache_put.tokens[i].val);
     }
     cache_put.keyval_len = 0;
 

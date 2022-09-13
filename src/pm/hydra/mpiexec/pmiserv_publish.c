@@ -185,7 +185,7 @@ HYD_status HYD_pmiserv_lookup(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 
   fn_exit:
     if (value)
-        MPL_free(value);
+        MPL_free((void *) value);
     HYDU_FUNC_EXIT();
     return status;
 
