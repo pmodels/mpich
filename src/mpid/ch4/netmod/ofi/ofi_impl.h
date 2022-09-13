@@ -541,32 +541,6 @@ struct MPIDI_OFI_contig_blocks_params {
     size_t last_chunk;
 };
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* number of data elements in dt_datatype */
-                                                    MPI_Datatype dt_datatype, size_t total_bytes,       /* total byte size, passed in here for reusing */
-                                                    size_t max_pipe)
-{
-    ssize_t rem_size = total_bytes;
-    MPI_Aint num_iov, total_iov = 0;
-
-    MPIR_FUNC_ENTER;
-
-    if (dt_datatype == MPI_DATATYPE_NULL)
-        goto fn_exit;
-
-    do {
-        MPI_Aint tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
-
-        MPIR_Typerep_iov_len(dt_count, dt_datatype, tmp_size, &num_iov);
-        total_iov += num_iov;
-
-        rem_size -= tmp_size;
-    } while (rem_size);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return total_iov;
-}
-
 /* Calculate the index of the NIC used to send a message from sender_rank to receiver_rank
  *
  * comm - The communicator used to send the message.

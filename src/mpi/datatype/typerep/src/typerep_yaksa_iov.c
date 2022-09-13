@@ -147,7 +147,7 @@ int MPIR_Typerep_to_iov_offset(const void *buf, MPI_Aint count, MPI_Datatype dat
 }
 
 int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype datatype, MPI_Aint max_iov_bytes,
-                         MPI_Aint * iov_len)
+                         MPI_Aint * iov_len, MPI_Aint * actual_iov_bytes)
 {
     MPIR_FUNC_ENTER;
 
@@ -164,8 +164,11 @@ int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype datatype, MPI_Aint max_iov
     rc = yaksa_type_get_size(type, &size);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
-    if (max_iov_bytes >= count * size) {        /* fast path */
+    if (max_iov_bytes == -1 || max_iov_bytes >= count * size) { /* fast path */
         *iov_len = (MPI_Aint) max_iov_len;
+        if (actual_iov_bytes) {
+            *actual_iov_bytes = count * size;
+        }
     } else {    /* slow path */
         struct iovec *iov =
             (struct iovec *) MPL_malloc(max_iov_len * sizeof(struct iovec), MPL_MEM_DATATYPE);
@@ -174,9 +177,20 @@ int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype datatype, MPI_Aint max_iov
         rc = yaksa_iov(NULL, count, type, 0, iov, max_iov_len, &actual_iov_len);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
-        MPL_free(iov);
+        *iov_len = 0;
+        *actual_iov_bytes = 0;
 
-        *iov_len = (MPI_Aint) actual_iov_len;
+        *iov_len = 0;
+        *actual_iov_bytes = 0;
+        for (MPI_Aint i = 0; i < max_iov_len; i++) {
+            if (*actual_iov_bytes + iov[i].iov_len > max_iov_bytes) {
+                break;
+            }
+            *iov_len = i + 1;
+            *actual_iov_bytes += iov[i].iov_len;
+        }
+
+        MPL_free(iov);
     }
 
   fn_exit:

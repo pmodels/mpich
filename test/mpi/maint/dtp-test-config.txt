@@ -17,6 +17,7 @@
 # NOTE: the second (ssv args), fourth (timeLimit) and seventh (maxtestsize) fields are optional.
 
 attr/fkeyvaltype::1::1:1024::0
+impls/mpich/misc/type_iov::1 512 17 1018::1:1024:1024:0
 coll/bcast::1 512::4:16:1024:0
 coll/bcast::262144:timeLimit=420 mem=1.2:4:16::0
 coll/bcast_comm_world_only::1 512::10:16:1024:0

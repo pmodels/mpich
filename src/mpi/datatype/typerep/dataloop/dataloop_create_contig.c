@@ -66,6 +66,8 @@ int MPIR_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, void 
         new_dlp->el_size = basic_sz;
         new_dlp->el_extent = new_dlp->el_size;
         new_dlp->el_type = oldtype;
+        new_dlp->is_contig = 1;
+        new_dlp->num_contig = (count == 0 ? 0 : 1);
 
         new_dlp->loop_params.c_t.count = count;
     } else {
@@ -100,6 +102,13 @@ int MPIR_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, void 
             MPIR_Datatype_get_basic_type(oldtype, new_dlp->el_type);
 
             new_dlp->loop_params.c_t.count = count;
+        }
+        if (old_loop_ptr->is_contig) {
+            new_dlp->is_contig = 1;
+            new_dlp->num_contig = (count == 0 ? 0 : 1);
+        } else {
+            new_dlp->is_contig = 0;
+            new_dlp->num_contig = count * old_loop_ptr->num_contig;
         }
     }
 

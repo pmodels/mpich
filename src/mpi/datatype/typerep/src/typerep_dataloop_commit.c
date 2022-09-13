@@ -19,15 +19,6 @@
         types[1] = mt2_;                                                \
     }
 
-#define PAIRTYPE_GET_NUM_CONTIG_BLOCKS(ctype1, ctype2, num_contig_blocks)        \
-    do {                                                                \
-        struct {                                                        \
-            ctype1 x;                                                   \
-            ctype2 y;                                                   \
-        } z;                                                            \
-        num_contig_blocks = (sizeof(z.x) + sizeof(z.y) == sizeof(z)) ? 1 : 2; \
-    } while (0)
-
 /*@
 create_pairtype - create dataloop for a pairtype
 
@@ -59,28 +50,20 @@ static int create_pairtype(MPI_Datatype type)
 
     if (type == MPI_FLOAT_INT) {
         PAIRTYPE_CONTENTS(MPI_FLOAT, float, MPI_INT, int);
-        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(float, int, typeptr->typerep.num_contig_blocks);
     } else if (type == MPI_DOUBLE_INT) {
         PAIRTYPE_CONTENTS(MPI_DOUBLE, double, MPI_INT, int);
-        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(double, int, typeptr->typerep.num_contig_blocks);
     } else if (type == MPI_LONG_INT) {
         PAIRTYPE_CONTENTS(MPI_LONG, long, MPI_INT, int);
-        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(long, int, typeptr->typerep.num_contig_blocks);
     } else if (type == MPI_SHORT_INT) {
         PAIRTYPE_CONTENTS(MPI_SHORT, short, MPI_INT, int);
-        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(short, int, typeptr->typerep.num_contig_blocks);
     } else if (type == MPI_LONG_DOUBLE_INT) {
         PAIRTYPE_CONTENTS(MPI_LONG_DOUBLE, long double, MPI_INT, int);
-        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(long double, int, typeptr->typerep.num_contig_blocks);
     } else if (type == MPI_2INT) {
         PAIRTYPE_CONTENTS(MPI_INT, int, MPI_INT, int);
-        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(int, int, typeptr->typerep.num_contig_blocks);
     }
 
     return MPIR_Dataloop_create_struct(2, blocks, disps, types, (void **) &typeptr->typerep.handle);
 }
-
-static void create_named(MPI_Datatype type);
 
 void MPIR_Typerep_commit(MPI_Datatype type)
 {
@@ -89,37 +72,36 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     MPI_Aint *aints;
     MPI_Aint *counts;
 
-    void *old_dlp;
+    void *old_dlp = NULL;
 
     MPIR_Datatype *typeptr;
     MPIR_Datatype_get_ptr(type, typeptr);
+    MPIR_Assert(typeptr);
+
+    if (typeptr->typerep.handle != MPIR_TYPEREP_HANDLE_NULL) {
+        /* dataloop already created; just return. */
+        return;
+    }
     void **dlp_p = (void **) &typeptr->typerep.handle;
 
     if (type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT || type == MPI_LONG_INT ||
         type == MPI_SHORT_INT || type == MPI_LONG_DOUBLE_INT || type == MPI_2INT) {
         create_pairtype(type);
-        return;
+        goto clean_exit;
     }
 
     int combiner = MPIR_Type_get_combiner(type);
 
     /* some named types do need dataloops; handle separately. */
     if (combiner == MPI_COMBINER_NAMED) {
-        create_named(type);
-        return;
+        MPIR_Assert(0);
+        goto clean_exit;
     } else if (combiner == MPI_COMBINER_F90_REAL || combiner == MPI_COMBINER_F90_COMPLEX ||
                combiner == MPI_COMBINER_F90_INTEGER) {
         MPI_Datatype f90basetype;
         MPIR_Datatype_get_basic_type(type, f90basetype);
         MPIR_Dataloop_create_contiguous(1, f90basetype, (void **) dlp_p);
-        return;
-    }
-
-    MPIR_DATALOOP_GET_LOOPPTR(type, old_dlp);
-    if (old_dlp != NULL) {
-        /* dataloop already created; just return it. */
-        *dlp_p = old_dlp;
-        return;
+        goto clean_exit;
     }
 
     MPIR_Datatype_contents *cp = typeptr->contents;
@@ -383,48 +365,15 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     }
 
   clean_exit:
-    /* for now we just leave the intermediate dataloops in place.
-     * could remove them to save space if we wanted.
-     */
-
+    {
+        int is_contig;
+        MPI_Aint num_contig;
+        MPIR_Dataloop_update_contig(*dlp_p, typeptr->extent, typeptr->size);
+        MPIR_Dataloop_get_contig(*dlp_p, &is_contig, &num_contig);
+        typeptr->is_contig = is_contig;
+        typeptr->typerep.num_contig_blocks = num_contig;
+    }
     return;
-}
-
-/*@
-  create_named - create a dataloop for a "named" type
-  if necessary.
-
-  "named" types are ones for which MPI_Type_get_envelope() returns a
-  combiner of MPI_COMBINER_NAMED. some types that fit this category,
-  such as MPI_SHORT_INT, have multiple elements with potential gaps
-  and padding. these types need dataloops for correct processing.
-@*/
-static void create_named(MPI_Datatype type)
-{
-    /* special case: pairtypes need dataloops too.
-     *
-     * note: not dealing with MPI_2INT because size == extent
-     *       in all cases for that type.
-     *
-     * note: MPICH always precreates these, so we will never call
-     *       create_pairtype() from here in the MPICH
-     *       case.
-     */
-    if (type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT || type == MPI_LONG_INT ||
-        type == MPI_SHORT_INT || type == MPI_LONG_DOUBLE_INT) {
-        void *dlp;
-        MPIR_DATALOOP_GET_LOOPPTR(type, dlp);
-        if (dlp != NULL) {
-            /* dataloop already created */
-        } else {
-            create_pairtype(type);
-        }
-        return;
-    }
-    /* no other combiners need dataloops; exit. */
-    else {
-        return;
-    }
 }
 
 void MPIR_Typerep_free(MPIR_Datatype * typeptr)

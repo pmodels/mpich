@@ -99,16 +99,15 @@ static int typerep_op_fallback(void *source_buf, MPI_Aint source_count, MPI_Data
             MPIR_Assert(dtp->basic_type == source_dtp);
             MPIR_Assert(dtp->basic_type != MPI_DATATYPE_NULL);
 
-            mpi_errno = MPIR_Typerep_iov_len(target_count, target_dtp,
-                                             source_dtp_size * source_count, &vec_len);
+            mpi_errno = MPIR_Typerep_get_iov_len(target_count, target_dtp, &vec_len);
             MPIR_ERR_CHECK(mpi_errno);
             typerep_vec = (struct iovec *)
                 MPL_malloc(vec_len * sizeof(struct iovec), MPL_MEM_OTHER);
             MPIR_ERR_CHKANDJUMP(!typerep_vec, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-            MPI_Aint actual_iov_len, actual_iov_bytes;
-            MPIR_Typerep_to_iov(NULL, target_count, target_dtp, 0, typerep_vec, vec_len,
-                                source_count * source_dtp_size, &actual_iov_len, &actual_iov_bytes);
+            MPI_Aint actual_iov_len;
+            MPIR_Typerep_to_iov_offset(NULL, target_count, target_dtp, 0, typerep_vec, vec_len,
+                                       &actual_iov_len);
             vec_len = actual_iov_len;
             MPIR_Assert(vec_len <= INT_MAX);
         }

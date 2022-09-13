@@ -622,3 +622,24 @@ MPI_Aint MPII_Dataloop_stream_size(MPII_Dataloop * dl_p, MPI_Aint(*sizefn) (MPI_
 
     return tmp_sz * tmp_ct;
 }
+
+/* dataloop doesn't maintain modified LB and UB (e.g. struct, resized).
+ * Update and overwrite is_contig from upper level after dataloop is created.
+ */
+void MPIR_Dataloop_update_contig(void *dataloop, MPI_Aint extent, MPI_Aint typesize)
+{
+    MPII_Dataloop *dlp = (MPII_Dataloop *) dataloop;
+    /* the type is only contiguous if extent is equal to size */
+    if (dlp->is_contig) {
+        if (extent != typesize) {
+            dlp->is_contig = 0;
+        }
+    }
+}
+
+void MPIR_Dataloop_get_contig(void *dataloop, int *is_contig, MPI_Aint * num_contig)
+{
+    MPII_Dataloop *dlp = (MPII_Dataloop *) dataloop;
+    *is_contig = dlp->is_contig;
+    *num_contig = dlp->num_contig;
+}

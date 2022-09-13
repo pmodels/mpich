@@ -151,7 +151,9 @@ int main(int argc, char **argv)
         for (i = 0; i < array_size; i++)
             if (readbuf[i] != i) {
                 errs++;
-                fprintf(stderr, "Error: write integer %d but read %d\n", i, readbuf[i]);
+                if (errs < 10) {
+                    fprintf(stderr, "Error: write integer %d but read %d\n", i, readbuf[i]);
+                }
                 break;
             }
         free(readbuf);
@@ -179,8 +181,10 @@ int main(int argc, char **argv)
     for (i = 0; i < bufcount; i++) {
         if (readbuf[i] != writebuf[i]) {
             errs++;
-            fprintf(stderr, "Process %d, readbuf %d, writebuf %d, i %d\n",
-                    mynod, readbuf[i], writebuf[i], i);
+            if (errs < 10) {
+                fprintf(stderr, "Process %d, readbuf %d, writebuf %d, i %d\n",
+                        mynod, readbuf[i], writebuf[i], i);
+            }
         }
     }
 

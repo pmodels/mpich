@@ -84,6 +84,13 @@ int MPIR_Dataloop_flatten(struct MPIR_Datatype *dtp, void *flattened_dataloop);
 int MPIR_Dataloop_unflatten(struct MPIR_Datatype *dtp, void *flattened_dataloop);
 void MPIR_Dataloop_printf(MPI_Datatype type, int depth, int header);
 
+void MPIR_Dataloop_update_contig(void *dataloop, MPI_Aint extent, MPI_Aint typesize);
+void MPIR_Dataloop_get_contig(void *dataloop, int *is_contig, MPI_Aint * num_contig);
+int MPIR_Dataloop_iov_len(void *dataloop, MPI_Aint * rem_iov_bytes, MPI_Aint * iov_len);
+int MPIR_Dataloop_iov(const void *buf, MPI_Aint count, void *dataloop, MPI_Aint extent,
+                      MPI_Aint skip_iov_len, struct iovec *iov, MPI_Aint iov_len,
+                      MPI_Aint * actual_iov_len);
+
 typedef struct MPIR_Segment MPIR_Segment;
 
 /* NOTE: ASSUMING LAST TYPE IS SIGNED */

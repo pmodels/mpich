@@ -502,3 +502,52 @@ MPI_Type_match_size:
     The function returns an MPI datatype matching a local variable of type
     '(typeclass, size)'.
 */
+
+MPIX_Type_iov_len:
+    datatype: DATATYPE
+    max_iov_bytes: DISPLACEMENT_COUNT, [maximum number bytes in the iovs]
+    iov_len: DISPLACEMENT_COUNT, direction=out, [number of iovs within max_iov_bytes]
+    actual_iov_bytes: DISPLACEMENT_COUNT, direction=out, [actual number of bytes in the iovs]
+    .desc: Return the number of contiguous segments within max_iov_bytes
+{
+    MPI_Aint max_iov_bytes_i, iov_len_i, actual_iov_bytes_i;
+
+    max_iov_bytes_i = (MPI_Aint) max_iov_bytes;
+    MPIR_Assert(max_iov_bytes_i == max_iov_bytes);
+
+    mpi_errno = MPIR_Typerep_iov_len(1, datatype, max_iov_bytes_i, &iov_len_i, &actual_iov_bytes_i);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+
+    *iov_len = iov_len_i;
+    MPIR_Assert(*iov_len == iov_len_i);
+    *actual_iov_bytes = actual_iov_bytes_i;
+    MPIR_Assert(*actual_iov_bytes == actual_iov_bytes_i);
+}
+
+MPIX_Type_iov:
+    datatype: DATATYPE
+    iov_offset: DISPLACEMENT_COUNT, [number of contiguous segments to skip]
+    iov: IOVEC, direction=out, [contiguous segments array for output]
+    max_iov_len: DISPLACEMENT_COUNT, [capacity for the segments array]
+    actual_iov_len: DISPLACEMENT_COUNT, direction=out, [actual number of segments in output]
+    .desc: Return contiguous segments starting from an iov offset
+{
+    MPI_Aint iov_offset_i, max_iov_len_i, actual_iov_len_i;
+
+    iov_offset_i = iov_offset;
+    MPIR_Assert(iov_offset_i == iov_offset);
+    max_iov_len_i = max_iov_len;
+    MPIR_Assert(max_iov_len_i == max_iov_len);
+
+    /* make sure MPIX_Iov is compatible with struct iovec */
+    MPIR_Assert(sizeof(MPI_Aint) == sizeof(size_t));
+    mpi_errno = MPIR_Typerep_to_iov_offset(NULL, 1, datatype, iov_offset_i, (struct iovec *) iov, max_iov_len_i, &actual_iov_len_i);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+
+    *actual_iov_len = actual_iov_len_i;
+    MPIR_Assert(*actual_iov_len == actual_iov_len_i);
+}

@@ -297,26 +297,16 @@ int MPIR_Type_struct(MPI_Aint count,
 int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Datatype *new_dtp = 0, *old_dtp;
+    MPIR_Datatype *new_dtp = 0;
 
     if (HANDLE_IS_BUILTIN(oldtype)) {
-        /* create a new type and commit it. */
         mpi_errno = MPIR_Type_contiguous(1, oldtype, newtype);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         CREATE_NEW_DTP(new_dtp);
 
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-        new_dtp->is_committed = old_dtp->is_committed;
-
         mpi_errno = MPIR_Typerep_create_dup(oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
-
-        /* if old_dtp is committed, user will not call `MPI_Type_commit` on the new type,
-         * but the device still need be notified (e.g. ucx need register the type) */
-        if (old_dtp->is_committed) {
-            MPID_Type_commit_hook(new_dtp);
-        }
 
         *newtype = new_dtp->handle;
     }
@@ -945,7 +935,7 @@ int MPIR_Type_dup_impl(MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
-    MPIR_Datatype *new_dtp;
+    MPIR_Datatype *new_dtp, *old_dtp;
 
     mpi_errno = MPIR_Type_dup(oldtype, &new_handle);
 
@@ -956,8 +946,7 @@ int MPIR_Type_dup_impl(MPI_Datatype oldtype, MPI_Datatype * newtype)
     mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_DUP,
                                            0, 0, 0, 1, NULL, NULL, NULL, &oldtype);
 
-    mpi_errno = MPIR_Type_commit_impl(&new_handle);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Datatype_get_ptr(oldtype, old_dtp);
 
     /* Copy attributes, executing the attribute copy functions */
     /* This accesses the attribute dup function through the perprocess
@@ -965,8 +954,6 @@ int MPIR_Type_dup_impl(MPI_Datatype oldtype, MPI_Datatype * newtype)
      * attribute functions.  The actual function is (by default)
      * MPIR_Attr_dup_list
      */
-    MPIR_Datatype *old_dtp;
-    MPIR_Datatype_get_ptr(oldtype, old_dtp);
     if (MPIR_Process.attr_dup) {
         new_dtp->attributes = 0;
         mpi_errno = MPIR_Process.attr_dup(oldtype, old_dtp->attributes, &new_dtp->attributes);
@@ -974,6 +961,12 @@ int MPIR_Type_dup_impl(MPI_Datatype oldtype, MPI_Datatype * newtype)
             MPIR_Datatype_ptr_release(new_dtp);
             goto fn_fail;
         }
+    }
+
+    /* The new type should have the same committed status as the old type */
+    if (HANDLE_IS_BUILTIN(oldtype) || old_dtp->is_committed) {
+        mpi_errno = MPIR_Type_commit_impl(&new_handle);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);

@@ -62,12 +62,6 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     struct fi_msg_rma msg;
     struct fi_rma_iov riov;
     struct iovec iov;
-    size_t target_bytes, origin_bytes;
-
-    MPIR_Datatype_get_size_macro(origin_datatype, origin_bytes);
-    origin_bytes *= origin_count;
-    MPIR_Datatype_get_size_macro(target_datatype, target_bytes);
-    target_bytes *= target_count;
 
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
@@ -90,7 +84,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     MPI_Aint total_target_iov_len;
     MPI_Aint target_len;
     MPI_Aint target_iov_offset = 0;
-    MPIR_Typerep_iov_len(target_count, target_datatype, target_bytes, &total_target_iov_len);
+    MPIR_Typerep_get_iov_len(target_count, target_datatype, &total_target_iov_len);
     target_len = MPL_MIN(total_target_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
     target_iov = MPL_malloc(sizeof(struct iovec) * target_len, MPL_MEM_RMA);
 
@@ -99,7 +93,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     MPI_Aint total_origin_iov_len;
     MPI_Aint origin_len;
     MPI_Aint origin_iov_offset = 0;
-    MPIR_Typerep_iov_len(origin_count, origin_datatype, origin_bytes, &total_origin_iov_len);
+    MPIR_Typerep_get_iov_len(origin_count, origin_datatype, &total_origin_iov_len);
     origin_len = MPL_MIN(total_origin_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
     origin_iov = MPL_malloc(sizeof(struct iovec) * origin_len, MPL_MEM_RMA);
 
@@ -358,12 +352,10 @@ int MPIDI_OFI_pack_put(const void *origin_addr, MPI_Aint origin_count,
                        MPIDI_av_entry_t * addr, MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t target_bytes, origin_bytes;
+    size_t origin_bytes;
 
     MPIR_Datatype_get_size_macro(origin_datatype, origin_bytes);
     origin_bytes *= origin_count;
-    MPIR_Datatype_get_size_macro(target_datatype, target_bytes);
-    target_bytes *= target_count;
 
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
@@ -375,7 +367,7 @@ int MPIDI_OFI_pack_put(const void *origin_addr, MPI_Aint origin_count,
     struct iovec *target_iov;
     MPI_Aint total_target_iov_len;
     MPI_Aint target_len;
-    MPIR_Typerep_iov_len(target_count, target_datatype, target_bytes, &total_target_iov_len);
+    MPIR_Typerep_get_iov_len(target_count, target_datatype, &total_target_iov_len);
     target_len = MPL_MIN(total_target_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
     target_iov = MPL_malloc(sizeof(struct iovec) * target_len, MPL_MEM_RMA);
 
@@ -419,12 +411,10 @@ int MPIDI_OFI_pack_get(void *origin_addr, MPI_Aint origin_count,
                        MPIDI_av_entry_t * addr, MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t target_bytes, origin_bytes;
+    size_t origin_bytes;
 
     MPIR_Datatype_get_size_macro(origin_datatype, origin_bytes);
     origin_bytes *= origin_count;
-    MPIR_Datatype_get_size_macro(target_datatype, target_bytes);
-    target_bytes *= target_count;
 
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
@@ -436,7 +426,7 @@ int MPIDI_OFI_pack_get(void *origin_addr, MPI_Aint origin_count,
     struct iovec *target_iov;
     MPI_Aint total_target_iov_len;
     MPI_Aint target_len;
-    MPIR_Typerep_iov_len(target_count, target_datatype, target_bytes, &total_target_iov_len);
+    MPIR_Typerep_get_iov_len(target_count, target_datatype, &total_target_iov_len);
     target_len = MPL_MIN(total_target_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
     target_iov = MPL_malloc(sizeof(struct iovec) * target_len, MPL_MEM_RMA);
 

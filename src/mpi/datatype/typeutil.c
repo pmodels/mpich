@@ -356,6 +356,11 @@ void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag)
     if (HANDLE_IS_BUILTIN(datatype))
         *flag = 1;
     else {
+        MPIR_Datatype *dt_ptr;
+        MPIR_Datatype_get_ptr(datatype, dt_ptr);
+        if (!dt_ptr->is_committed) {
+            MPIR_Type_commit_impl(&datatype);
+        }
         MPIR_Datatype_is_contig(datatype, flag);
     }
 }

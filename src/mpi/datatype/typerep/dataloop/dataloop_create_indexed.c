@@ -133,6 +133,8 @@ int MPIR_Dataloop_create_indexed(MPI_Aint icount,
      */
 
     /* otherwise storing as an indexed dataloop */
+    int old_is_contig;
+    MPI_Aint old_num_contig;
 
     if (is_builtin) {
         MPII_Dataloop_alloc(MPII_DATALOOP_KIND_INDEXED, count, &new_dlp);
@@ -147,6 +149,8 @@ int MPIR_Dataloop_create_indexed(MPI_Aint icount,
         new_dlp->el_size = old_extent;
         new_dlp->el_extent = old_extent;
         new_dlp->el_type = oldtype;
+        old_is_contig = 1;
+        old_num_contig = 1;
     } else {
         MPII_Dataloop *old_loop_ptr = NULL;
 
@@ -165,6 +169,8 @@ int MPIR_Dataloop_create_indexed(MPI_Aint icount,
         MPIR_Datatype_get_size_macro(oldtype, new_dlp->el_size);
         MPIR_Datatype_get_extent_macro(oldtype, new_dlp->el_extent);
         MPIR_Datatype_get_basic_type(oldtype, new_dlp->el_type);
+        old_is_contig = old_loop_ptr->is_contig;
+        old_num_contig = old_loop_ptr->num_contig;
     }
 
     new_dlp->loop_params.i_t.count = contig_count;
@@ -184,6 +190,18 @@ int MPIR_Dataloop_create_indexed(MPI_Aint icount,
     *dlp_p = new_dlp;
     new_dlp->dloop_sz = new_loop_sz;
 
+    /* all trivial cases have been optimized away */
+    new_dlp->is_contig = 0;
+    if (old_is_contig) {
+        new_dlp->num_contig = new_dlp->loop_params.i_t.count;
+    } else {
+        MPI_Aint total_count = 0;
+        for (i = 0; i < new_dlp->loop_params.i_t.count; i++) {
+            total_count += new_dlp->loop_params.i_t.blocksize_array[i];
+        }
+
+        new_dlp->num_contig = total_count * old_num_contig;
+    }
     return MPI_SUCCESS;
 }
 

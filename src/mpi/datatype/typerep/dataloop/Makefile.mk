@@ -10,6 +10,7 @@ mpi_core_sources +=                                    \
     src/mpi/datatype/typerep/dataloop/dataloop_create_indexed.c      \
     src/mpi/datatype/typerep/dataloop/dataloop_create_struct.c       \
     src/mpi/datatype/typerep/dataloop/dataloop_create_vector.c       \
+    src/mpi/datatype/typerep/dataloop/dataloop_iov.c                 \
     src/mpi/datatype/typerep/dataloop/looputil.c                     \
     src/mpi/datatype/typerep/dataloop/segment.c                      \
     src/mpi/datatype/typerep/dataloop/segment_count.c                \

@@ -24,34 +24,6 @@
         }                                       \
     } while (0)
 
-/* _count: count of data elements of certain datatype
- * _datatype: the datatype
- * _bytes: total byte size
- * Note: _bytes is calculated based on _count & _datatype and passed in here for reusing. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_count_iovecs(int origin_count,
-                                                    int target_count,
-                                                    int result_count,
-                                                    MPI_Datatype origin_datatype,
-                                                    MPI_Datatype target_datatype,
-                                                    MPI_Datatype result_datatype,
-                                                    size_t origin_bytes,
-                                                    size_t target_bytes,
-                                                    size_t result_bytes,
-                                                    size_t max_pipe, size_t * countp)
-{
-    /* Count the max number of iovecs that will be generated, given the iovs    */
-    /* and maximum data size.  The code adds the iovecs from all three lists    */
-    /* which is an upper bound for all three lists.  This is a tradeoff because */
-    /* it will be very fast to calculate the estimate;  count_iov() only        */
-    /* scans two elements of the datatype to make the estimate                  */
-    MPIR_FUNC_ENTER;
-    *countp = MPIDI_OFI_count_iov(origin_count, origin_datatype, origin_bytes, max_pipe);
-    *countp += MPIDI_OFI_count_iov(target_count, target_datatype, target_bytes, max_pipe);
-    *countp += MPIDI_OFI_count_iov(result_count, result_datatype, result_bytes, max_pipe);
-    MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
-}
-
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query_type,
                                                                  MPI_Op op,
                                                                  MPIR_Win * win,

@@ -11,8 +11,6 @@
 static void update_type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
                                MPI_Datatype oldtype, MPIR_Datatype * newtype, bool strideinbytes)
 {
-    int old_is_contig;
-    MPI_Aint old_sz;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
     /* we only need calc eff_stride if count > 1 */
     MPI_Aint eff_stride = 0;
@@ -24,9 +22,7 @@ static void update_type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
         old_true_lb = 0;
         old_ub = el_sz;
         old_true_ub = el_sz;
-        old_sz = el_sz;
         old_extent = el_sz;
-        old_is_contig = 1;
 
         newtype->size = count * blocklength * el_sz;
 
@@ -48,9 +44,7 @@ static void update_type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
         old_true_lb = old_dtp->true_lb;
         old_ub = old_dtp->ub;
         old_true_ub = old_dtp->true_ub;
-        old_sz = old_dtp->size;
         old_extent = old_dtp->extent;
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
 
         newtype->size = count * blocklength * old_dtp->size;
 
@@ -69,25 +63,13 @@ static void update_type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
     newtype->true_lb = newtype->lb + (old_true_lb - old_lb);
     newtype->true_ub = newtype->ub + (old_true_ub - old_ub);
     newtype->extent = newtype->ub - newtype->lb;
-
-    /* new type is only contig for N types if old one was, and
-     * size and extent of new type are equivalent, and stride is
-     * equal to blocklength * size of old type.
-     */
-    if (newtype->size == newtype->extent && eff_stride == blocklength * old_sz && old_is_contig) {
-        newtype->is_contig = 1;
-    } else {
-        newtype->is_contig = 0;
-    }
 }
 
 static void update_type_indexed(MPI_Aint count, const MPI_Aint * blocklength_array,
                                 const MPI_Aint * displacement_array, MPI_Datatype oldtype,
                                 MPIR_Datatype * newtype, bool dispinbytes)
 {
-    int old_is_contig;
     MPI_Aint i;
-    MPI_Aint contig_count;
     MPI_Aint el_ct, old_ct, old_sz;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
     MPI_Aint min_lb = 0, max_ub = 0, eff_disp;
@@ -105,7 +87,6 @@ static void update_type_indexed(MPI_Aint count, const MPI_Aint * blocklength_arr
         old_ub = el_sz;
         old_true_ub = el_sz;
         old_extent = el_sz;
-        old_is_contig = 1;
 
         newtype->alignsize = MPIR_Datatype_builtintype_alignment(oldtype);
         newtype->builtin_element_size = el_sz;
@@ -127,7 +108,6 @@ static void update_type_indexed(MPI_Aint count, const MPI_Aint * blocklength_arr
         old_ub = old_dtp->ub;
         old_true_ub = old_dtp->true_ub;
         old_extent = old_dtp->extent;
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
 
         newtype->alignsize = old_dtp->alignsize;
         newtype->builtin_element_size = old_dtp->builtin_element_size;
@@ -179,21 +159,6 @@ static void update_type_indexed(MPI_Aint count, const MPI_Aint * blocklength_arr
     newtype->extent = max_ub - min_lb;
 
     newtype->n_builtin_elements = old_ct * el_ct;
-
-    /* new type is only contig for N types if it's all one big
-     * block, its size and extent are the same, and the old type
-     * was also contiguous.
-     */
-    newtype->is_contig = 0;
-    if (old_is_contig) {
-        contig_count = MPII_Datatype_indexed_count_contig(count,
-                                                          blocklength_array,
-                                                          displacement_array, dispinbytes,
-                                                          old_extent);
-        if ((contig_count == 1) && (newtype->size == newtype->extent)) {
-            newtype->is_contig = 1;
-        }
-    }
 }
 
 static void update_type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
@@ -202,8 +167,6 @@ static void update_type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
                                      bool dispinbytes)
 {
     MPI_Aint i;
-    int old_is_contig;
-    MPI_Aint contig_count;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
     MPI_Aint min_lb = 0, max_ub = 0, eff_disp;
 
@@ -215,7 +178,6 @@ static void update_type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
         old_ub = el_sz;
         old_true_ub = el_sz;
         old_extent = el_sz;
-        old_is_contig = 1;
 
         newtype->size = count * blocklength * el_sz;
 
@@ -234,7 +196,6 @@ static void update_type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
         old_ub = old_dtp->ub;
         old_true_ub = old_dtp->true_ub;
         old_extent = old_dtp->extent;
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
 
         newtype->size = count * blocklength * old_dtp->size;
 
@@ -267,21 +228,6 @@ static void update_type_blockindexed(MPI_Aint count, MPI_Aint blocklength,
     newtype->true_lb = min_lb + (old_true_lb - old_lb);
     newtype->true_ub = max_ub + (old_true_ub - old_ub);
     newtype->extent = max_ub - min_lb;
-
-    /* new type is contig for N types if it is all one big block,
-     * its size and extent are the same, and the old type was also
-     * contiguous.
-     */
-    newtype->is_contig = 0;
-    if (old_is_contig) {
-        contig_count = MPII_Datatype_blockindexed_count_contig(count,
-                                                               blocklength,
-                                                               displacement_array,
-                                                               dispinbytes, old_extent);
-        if ((contig_count == 1) && (newtype->size == newtype->extent)) {
-            newtype->is_contig = 1;
-        }
-    }
 }
 
 static MPI_Aint struct_alignsize(MPI_Aint count, const MPI_Datatype * oldtype_array)
@@ -308,28 +254,7 @@ static MPI_Aint struct_alignsize(MPI_Aint count, const MPI_Datatype * oldtype_ar
 int MPIR_Typerep_create_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
                                MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
-    int old_is_contig;
-    MPI_Aint old_extent;
-
     update_type_vector(count, blocklength, stride, oldtype, newtype, 0);
-
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        newtype->typerep.num_contig_blocks = count;
-        old_is_contig = 1;
-        old_extent = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
-    } else {
-        MPIR_Datatype *old_dtp;
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-        newtype->typerep.num_contig_blocks =
-            old_dtp->typerep.num_contig_blocks * count * blocklength;
-
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
-        old_extent = old_dtp->extent;
-    }
-
-    if (old_is_contig && stride * old_extent == old_extent * blocklength) {
-        newtype->typerep.num_contig_blocks = 1;
-    }
 
     return MPI_SUCCESS;
 }
@@ -337,28 +262,7 @@ int MPIR_Typerep_create_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint st
 int MPIR_Typerep_create_hvector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride,
                                 MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
-    int old_is_contig;
-    MPI_Aint old_extent;
-
     update_type_vector(count, blocklength, stride, oldtype, newtype, 1);
-
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        newtype->typerep.num_contig_blocks = count;
-        old_is_contig = 1;
-        old_extent = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
-    } else {
-        MPIR_Datatype *old_dtp;
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-        newtype->typerep.num_contig_blocks =
-            old_dtp->typerep.num_contig_blocks * count * blocklength;
-
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
-        old_extent = old_dtp->extent;
-    }
-
-    if (old_is_contig && stride == old_extent * blocklength) {
-        newtype->typerep.num_contig_blocks = 1;
-    }
 
     return MPI_SUCCESS;
 }
@@ -379,7 +283,6 @@ int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Dataty
         newtype->n_builtin_elements = count;
         newtype->builtin_element_size = el_sz;
         newtype->basic_type = oldtype;
-        newtype->is_contig = 1;
     } else {
         /* user-defined base type (oldtype) */
         MPIR_Datatype *old_dtp;
@@ -402,18 +305,6 @@ int MPIR_Typerep_create_contig(MPI_Aint count, MPI_Datatype oldtype, MPIR_Dataty
         newtype->n_builtin_elements = count * old_dtp->n_builtin_elements;
         newtype->builtin_element_size = old_dtp->builtin_element_size;
         newtype->basic_type = old_dtp->basic_type;
-
-        MPIR_Datatype_is_contig(oldtype, &newtype->is_contig);
-    }
-
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        newtype->typerep.num_contig_blocks = 1;
-    } else if (newtype->is_contig) {
-        newtype->typerep.num_contig_blocks = 1;
-    } else {
-        MPIR_Datatype *old_dtp;
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-        newtype->typerep.num_contig_blocks = count * old_dtp->typerep.num_contig_blocks;
     }
 
     return MPI_SUCCESS;
@@ -424,10 +315,7 @@ int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype)
     MPIR_Datatype *dtp;
 
     MPIR_Datatype_get_ptr(oldtype, dtp);
-    if (dtp->is_committed)
-        MPIR_Dataloop_dup(dtp->typerep.handle, (void **) &newtype->typerep.handle);
 
-    newtype->is_contig = dtp->is_contig;
     newtype->size = dtp->size;
     newtype->extent = dtp->extent;
     newtype->ub = dtp->ub;
@@ -440,8 +328,6 @@ int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype)
     newtype->builtin_element_size = dtp->builtin_element_size;
     newtype->basic_type = dtp->basic_type;
 
-    newtype->typerep.num_contig_blocks = dtp->typerep.num_contig_blocks;
-
     return MPI_SUCCESS;
 }
 
@@ -449,31 +335,7 @@ int MPIR_Typerep_create_indexed_block(MPI_Aint count, MPI_Aint blocklength,
                                       const MPI_Aint array_of_displacements[],
                                       MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
-    int old_is_contig;
-    MPI_Aint old_extent;
-
     update_type_blockindexed(count, blocklength, array_of_displacements, oldtype, newtype, 0);
-
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        newtype->typerep.num_contig_blocks = count;
-        old_is_contig = 1;
-        old_extent = MPIR_Datatype_get_basic_size(oldtype);
-    } else {
-        MPIR_Datatype *old_dtp;
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-        newtype->typerep.num_contig_blocks =
-            count * old_dtp->typerep.num_contig_blocks * blocklength;
-
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
-        old_extent = old_dtp->extent;
-    }
-
-    if (old_is_contig) {
-        newtype->typerep.num_contig_blocks =
-            MPII_Datatype_blockindexed_count_contig(count, blocklength,
-                                                    (const void *) array_of_displacements,
-                                                    0, old_extent);
-    }
 
     return MPI_SUCCESS;
 }
@@ -482,30 +344,7 @@ int MPIR_Typerep_create_hindexed_block(MPI_Aint count, MPI_Aint blocklength,
                                        const MPI_Aint * array_of_displacements,
                                        MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
-    int old_is_contig;
-    MPI_Aint old_extent;
-
     update_type_blockindexed(count, blocklength, array_of_displacements, oldtype, newtype, 1);
-
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        newtype->typerep.num_contig_blocks = count;
-        old_is_contig = 1;
-        old_extent = MPIR_Datatype_get_basic_size(oldtype);
-    } else {
-        MPIR_Datatype *old_dtp;
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-        newtype->typerep.num_contig_blocks =
-            count * old_dtp->typerep.num_contig_blocks * blocklength;
-
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
-        old_extent = old_dtp->extent;
-    }
-
-    if (old_is_contig) {
-        newtype->typerep.num_contig_blocks =
-            MPII_Datatype_blockindexed_count_contig(count, blocklength, array_of_displacements,
-                                                    1, old_extent);
-    }
 
     return MPI_SUCCESS;
 }
@@ -514,33 +353,7 @@ int MPIR_Typerep_create_indexed(MPI_Aint count, const MPI_Aint * array_of_blockl
                                 const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                                 MPIR_Datatype * newtype)
 {
-    int old_is_contig;
-    MPI_Aint old_extent;
-
     update_type_indexed(count, array_of_blocklengths, array_of_displacements, oldtype, newtype, 0);
-
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        newtype->typerep.num_contig_blocks = count;
-        old_is_contig = 1;
-        old_extent = MPIR_Datatype_get_basic_size(oldtype);
-    } else {
-        MPIR_Datatype *old_dtp;
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-
-        newtype->typerep.num_contig_blocks = 0;
-        for (MPI_Aint i = 0; i < count; i++)
-            newtype->typerep.num_contig_blocks +=
-                old_dtp->typerep.num_contig_blocks * array_of_blocklengths[i];
-
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
-        old_extent = old_dtp->extent;
-    }
-
-    if (old_is_contig) {
-        newtype->typerep.num_contig_blocks =
-            MPII_Datatype_indexed_count_contig(count, array_of_blocklengths,
-                                               array_of_displacements, 0, old_extent);
-    }
 
     return MPI_SUCCESS;
 }
@@ -549,33 +362,7 @@ int MPIR_Typerep_create_hindexed(MPI_Aint count, const MPI_Aint * array_of_block
                                  const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
                                  MPIR_Datatype * newtype)
 {
-    int old_is_contig;
-    MPI_Aint old_extent;
-
     update_type_indexed(count, array_of_blocklengths, array_of_displacements, oldtype, newtype, 1);
-
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        newtype->typerep.num_contig_blocks = count;
-        old_is_contig = 1;
-        old_extent = MPIR_Datatype_get_basic_size(oldtype);
-    } else {
-        MPIR_Datatype *old_dtp;
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-
-        newtype->typerep.num_contig_blocks = 0;
-        for (int i = 0; i < count; i++)
-            newtype->typerep.num_contig_blocks +=
-                old_dtp->typerep.num_contig_blocks * array_of_blocklengths[i];
-
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
-        old_extent = old_dtp->extent;
-    }
-
-    if (old_is_contig) {
-        newtype->typerep.num_contig_blocks =
-            MPII_Datatype_indexed_count_contig(count, array_of_blocklengths,
-                                               array_of_displacements, 1, old_extent);
-    }
 
     return MPI_SUCCESS;
 }
@@ -595,9 +382,7 @@ int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint exte
         newtype->alignsize = MPIR_Datatype_builtintype_alignment(oldtype);
         newtype->n_builtin_elements = 1;
         newtype->builtin_element_size = oldsize;
-        newtype->is_contig = (extent == oldsize) ? 1 : 0;
         newtype->basic_type = oldtype;
-        newtype->typerep.num_contig_blocks = 3; /* lb, data, ub */
     } else {
         MPIR_Datatype *old_dtp;
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
@@ -612,12 +397,6 @@ int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint exte
         newtype->n_builtin_elements = old_dtp->n_builtin_elements;
         newtype->builtin_element_size = old_dtp->builtin_element_size;
         newtype->basic_type = old_dtp->basic_type;
-
-        if (extent == old_dtp->size)
-            MPIR_Datatype_is_contig(oldtype, &newtype->is_contig);
-        else
-            newtype->is_contig = 0;
-        newtype->typerep.num_contig_blocks = old_dtp->typerep.num_contig_blocks;
     }
 
     return MPI_SUCCESS;
@@ -627,7 +406,6 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
                                const MPI_Aint * array_of_displacements,
                                const MPI_Datatype * array_of_types, MPIR_Datatype * newtype)
 {
-    int old_are_contig = 1, definitely_not_contig = 0;
     int found_true_lb = 0, found_true_ub = 0, found_el_type = 0, found_lb = 0, found_ub = 0;
     MPI_Aint el_sz = 0;
     MPI_Aint size = 0;
@@ -639,7 +417,6 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
         MPI_Aint tmp_el_sz;
         MPI_Datatype tmp_el_type;
         MPIR_Datatype *old_dtp = NULL;
-        int old_is_contig;
 
         /* Interpreting typemap to not include 0 blklen things. -- Rob
          * Ross, 10/31/2005
@@ -700,7 +477,6 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
         } else if (true_lb_disp > tmp_true_lb) {
             /* element starts before previous */
             true_lb_disp = tmp_true_lb;
-            definitely_not_contig = 1;
         }
 
         if (!found_lb) {
@@ -709,7 +485,6 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
         } else if (lb_disp > tmp_lb) {
             /* lb before previous */
             lb_disp = tmp_lb;
-            definitely_not_contig = 1;
         }
 
         if (!found_true_ub) {
@@ -719,7 +494,6 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
             true_ub_disp = tmp_true_ub;
         } else {
             /* element ends before previous ended */
-            definitely_not_contig = 1;
         }
 
         if (!found_ub) {
@@ -729,12 +503,7 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
             ub_disp = tmp_ub;
         } else {
             /* ub before previous */
-            definitely_not_contig = 1;
         }
-
-        MPIR_Datatype_is_contig(array_of_types[i], &old_is_contig);
-        if (!old_is_contig)
-            old_are_contig = 0;
     }
 
     newtype->n_builtin_elements = -1;   /* TODO */
@@ -760,27 +529,6 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
     }
 
     newtype->size = size;
-
-    /* new type is contig for N types if its size and extent are the
-     * same, and the old type was also contiguous, and we didn't see
-     * something noncontiguous based on true ub/ub.
-     */
-    if ((newtype->size == newtype->extent) && old_are_contig && (!definitely_not_contig)) {
-        newtype->is_contig = 1;
-    } else {
-        newtype->is_contig = 0;
-    }
-    newtype->typerep.num_contig_blocks = 0;
-    for (MPI_Aint i = 0; i < count; i++) {
-        if (HANDLE_IS_BUILTIN(array_of_types[i])) {
-            newtype->typerep.num_contig_blocks++;
-        } else {
-            MPIR_Datatype *old_dtp;
-            MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
-            newtype->typerep.num_contig_blocks +=
-                old_dtp->typerep.num_contig_blocks * array_of_blocklengths[i];
-        }
-    }
 
     return MPI_SUCCESS;
 }
