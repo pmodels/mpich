@@ -1,0 +1,158 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+#
+# PMI version 2.0 message protocol
+#
+# FORMAT:
+#     [Refer to the "INIT" message exchange below]
+#
+#     Each message exchange has a capitalized name, e.g. INIT. It is used to
+#     track Compatibilities between PMI versions. The exchange consists of a
+#     client query and a server reply. Each query or reply contains zero or
+#     more attributes. For example, INIT using PMI-1 wire protocol, client
+#     send query:
+#         cmd=init pmi_version=1 pmi_subversion=1
+#     , and the server reply:
+#         cmd=response_to_init version=1 pmi_subversion=1
+#
+#     The messages with matching names must have the exact same matching
+#     attributes across PMI versions.
+#          
+#     Each attribute specifies a type and zero or more annotations indicating
+#     e.g. when it is optional and the default value when it is missing. All
+#     optional attributes should be listed after any mandatory attributes.
+#
+#     The query or reply may also require specific wire protocol. For example,
+#     "Q: spawn, wire=v1-mcmd" indicate the query should be in the "v1-mcmd"
+#     wire format.
+#
+#     The server reply may include an "rc: INTEGER" and "errmsg: STRING"
+#     attributes to indicate an error. When a non-zero rc is returned, the
+#     normal attributes may not be included.
+#
+# Default wire protocol: v2
+#
+
+
+INIT:
+    Q: init
+        pmi_version: INTEGER
+        pmi_subversion: INTEGER
+    R: response_to_init
+        pmi_version: INTEGER
+        pmi_subversion: INTEGER
+
+FULLINIT:
+    Q: fullinit
+        pmirank: INTEGER
+    R: fullinit-response
+        rank: INTEGER
+        size: INTEGER
+        appnum: INTEGER
+        spawner-jobid: STRING, optional=NULL
+        pmiverbose: INTEGER
+
+ABORT:
+    Q: abort
+        exitcode: INTEGER, optional=1
+        message: STRING, optional=NULL
+
+FINALIZE:
+    Q: finalize
+    R: finalize-response
+
+KVSNAME:
+    Q: job-getid
+    R: job-getid-response
+        jobid: STRING
+
+PUTNODEATTR:
+    Q: info-putnodeattr
+        key: STRING
+        value: STRING
+    R: info-putnodeattr-response
+
+GETNODEATTR:
+    Q: info-getnodeattr
+        key: STRING
+        wait: BOOLEAN, optional=false
+    R: info-getnodeattr-response
+        value: STRING
+        found: BOOLEAN
+
+# PMI2 info-getjobattr is within the semantics of PMI1 get
+GET:
+    Q: info-getjobattr
+        kvsname: STRING, optional=NULL
+        key: STRING
+    R: info-getjobattr-response
+        value: STRING
+        found: BOOLEAN
+
+KVSPUT:
+    Q: kvs-put
+        key: STRING
+        value: STRING
+    R: kvs-put-response
+
+KVSGET:
+    Q: kvs-get
+        jobid: STRING, optional=NULL
+        srcid: INTEGER, optional=-1
+        key: STRING
+    R: kvs-get-response
+        value: STRING
+        found: BOOLEAN
+
+KVSFENCE:
+    Q: kvs-fence
+    R: kvs-fence-response
+
+PUBLISH:
+    Q: name-publish
+        name: STRING
+        port: STRING
+    R: name-publish-response
+
+UNPUBLISH:
+    Q: name-unpublish
+        name: STRING
+    R: name-unpublish-response
+
+LOOKUP:
+    Q: name-lookup
+        name: STRING
+    R: name-lookup-response
+        port: STRING
+
+SPAWN:
+    Q: spawn, wire=v2-subcmd
+        ncmds: INTEGER
+        preputcount: INTEGER, optional=0
+        ppkey#: STRING, count=preput_num, base=0
+        ppval#: STRING, count=preput_num, base=0
+        [
+        subcmd: STRING
+        maxprocs: INTEGER
+        argc: INTEGER
+        infokeycount: INTEGER, optional=0
+        argv#: STRING, count=argcnt, base=1
+        infokey#: STRING, count=infonum, base=0
+        infoval#: STRING, count=infonum, base=0
+        ]
+    R: spawn-response
+
+# not functioning
+CONNECT:
+    Q: job-connect
+        jobid: STRING
+    R: job-connect-response
+        kvscopy: INTEGER
+
+# not functioning
+DISCONNECT:
+    Q: job-disconnect
+        jobid: STRING
+    R: job-disconnect-response
