@@ -151,4 +151,13 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd);
 /* send a PMI command to fd and get a PMI response with expected cmd */
 int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd, const char *expectedCmd);
 
+/* message layer utilities */
+int PMIU_msg_cmd_to_id(const char *cmd);
+const char *PMIU_msg_id_to_query(int version, int cmd_id);
+const char *PMIU_msg_id_to_response(int version, int cmd_id);
+
+void PMIU_msg_set_query(struct PMIU_cmd *pmi_query, int wire_version, int cmd_id, bool is_static);
+int PMIU_msg_set_response(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_resp, bool is_static);
+int PMIU_msg_set_response_fail(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_resp,
+                               bool is_static, int rc, const char *error_message);
 #endif

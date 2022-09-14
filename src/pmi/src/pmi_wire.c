@@ -845,3 +845,74 @@ int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd, const char *expectedC
   fn_fail:
     goto fn_exit;
 }
+
+/* message layer utilities */
+
+static void init_cmd(struct PMIU_cmd *pmi, int version, int cmd_id, bool is_static, bool is_query)
+{
+    const char *cmd;
+    if (is_query) {
+        cmd = PMIU_msg_id_to_query(version, cmd_id);
+    } else {
+        cmd = PMIU_msg_id_to_response(version, cmd_id);
+    }
+
+    if (is_static) {
+        PMIU_cmd_init_static(pmi, version, cmd);
+    } else {
+        PMIU_cmd_init(pmi, version, cmd);
+    }
+
+    pmi->cmd_id = cmd_id;
+}
+
+void PMIU_msg_set_query(struct PMIU_cmd *pmi_query, int wire_version, int cmd_id, bool is_static)
+{
+    bool is_query = true;
+    init_cmd(pmi_query, wire_version, cmd_id, is_static, is_query);
+}
+
+int PMIU_msg_set_response(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_resp, bool is_static)
+{
+    bool is_query = false;
+    init_cmd(pmi_resp, pmi_query->version, pmi_query->cmd_id, is_static, is_query);
+
+    if (pmi_query->version == PMIU_WIRE_V2) {
+        const char *thrid;
+        thrid = PMIU_cmd_find_keyval(pmi_query, "thrid");
+        if (thrid) {
+            PMIU_cmd_add_str(pmi_resp, "thrid", thrid);
+        }
+    }
+
+    PMIU_cmd_add_str(pmi_resp, "rc", "0");
+
+    return PMIU_SUCCESS;
+}
+
+int PMIU_msg_set_response_fail(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_resp,
+                               bool is_static, int rc, const char *error_message)
+{
+    bool is_query = false;
+    init_cmd(pmi_resp, pmi_query->version, pmi_query->cmd_id, is_static, is_query);
+
+    if (pmi_query->version == PMIU_WIRE_V2) {
+        const char *thrid;
+        thrid = PMIU_cmd_find_keyval(pmi_query, "thrid");
+        if (thrid) {
+            PMIU_cmd_add_str(pmi_resp, "thrid", thrid);
+        }
+    }
+
+    PMIU_cmd_add_int(pmi_resp, "rc", rc);
+    if (error_message) {
+        if (pmi_query->version == PMIU_WIRE_V1) {
+            PMIU_cmd_add_str(pmi_query, "msg", error_message);
+        } else {
+            /* PMIU_WIRE_V2 */
+            PMIU_cmd_add_str(pmi_query, "errmsg", error_message);
+        }
+    }
+
+    return PMIU_SUCCESS;
+}
