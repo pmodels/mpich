@@ -114,7 +114,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
         {"job-getid", fn_get_my_kvsname},
         {"info-putnodeattr", fn_info_putnodeattr},
         {"info-getnodeattr", fn_info_getnodeattr},
-        {"info-getjobattr", fn_info_getjobattr},
+        {"info-getjobattr", fn_get},
         {"\0", NULL}
     };
 

@@ -422,12 +422,10 @@ HYD_status fn_get(int fd, struct PMIU_cmd *pmi)
 
     HYDU_FUNC_ENTER();
 
-    if (pmi->version == 2) {
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI-v2 doesn't support %s\n", pmi->cmd);
-    }
-
     const char *key;
     HYD_PMI_GET_STRVAL(pmi, "key", key);
+    const char *thrid;
+    HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
 
     bool found = false;
     const char *val;
@@ -451,8 +449,11 @@ HYD_status fn_get(int fd, struct PMIU_cmd *pmi)
     if (found) {
         struct PMIU_cmd pmi_response;
         PMIU_cmd_init_static(&pmi_response, pmi->version, "get_result");
-
+        if (thrid) {
+            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
+        }
         PMIU_cmd_add_str(&pmi_response, "rc", "0");
+        PMIU_cmd_add_str(&pmi_response, "found", "TRUE");
         PMIU_cmd_add_str(&pmi_response, "msg", "success");
         PMIU_cmd_add_str(&pmi_response, "value", val);
 
@@ -731,59 +732,6 @@ HYD_status fn_info_getnodeattr(int fd, struct PMIU_cmd *pmi)
 
     status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending command downstream\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status fn_info_getjobattr(int fd, struct PMIU_cmd *pmi)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    const char *key, *thrid;
-    HYD_PMI_GET_STRVAL(pmi, "key", key);
-    HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
-
-    if (!strcmp(key, "PMI_process_mapping")) {
-        struct PMIU_cmd pmi_response;
-        PMIU_cmd_init_static(&pmi_response, pmi->version, "info-getjobattr-response");
-        if (thrid) {
-            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-        }
-        PMIU_cmd_add_str(&pmi_response, "found", "TRUE");
-        PMIU_cmd_add_str(&pmi_response, "value", HYD_pmcd_pmip.system_global.pmi_process_mapping);
-        PMIU_cmd_add_str(&pmi_response, "rc", "0");
-
-        status = send_cmd_downstream(fd, &pmi_response);
-        HYDU_ERR_POP(status, "error sending command downstream\n");
-    } else if (!strcmp(key, "PMI_hwloc_xmlfile")) {
-        const char *xmlfile = HYD_pmip_get_hwloc_xmlfile();
-
-        struct PMIU_cmd pmi_response;
-        PMIU_cmd_init_static(&pmi_response, 2, "info-getjobattr-response");
-        if (thrid) {
-            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-        }
-        if (xmlfile) {
-            PMIU_cmd_add_str(&pmi_response, "found", "TRUE");
-            PMIU_cmd_add_str(&pmi_response, "value", xmlfile);
-        } else {
-            PMIU_cmd_add_str(&pmi_response, "found", "FALSE");
-        }
-        PMIU_cmd_add_str(&pmi_response, "rc", "0");
-
-        status = send_cmd_downstream(fd, &pmi_response);
-        HYDU_ERR_POP(status, "error sending command downstream\n");
-    } else {
-        status = send_cmd_upstream(pmi, fd);
-        HYDU_ERR_POP(status, "error sending command upstream\n");
-    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
