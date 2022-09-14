@@ -755,11 +755,13 @@ int PMIU_cmd_output(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
     int pmi_errno = PMIU_SUCCESS;
 
     if (pmicmd->version == PMIU_WIRE_V1) {
-        pmi_errno = PMIU_cmd_output_v1(pmicmd, buf_out, buflen_out);
-    } else if (pmicmd->version == PMIU_WIRE_V1_MCMD) {
-        pmi_errno = PMIU_cmd_output_v1_mcmd(pmicmd, buf_out, buflen_out);
-    } else if (pmicmd->version == PMIU_WIRE_V1_INITACK) {
-        pmi_errno = PMIU_cmd_output_v1_initack(pmicmd, buf_out, buflen_out);
+        if (pmicmd->cmd_id == PMIU_CMD_SPAWN && strcmp(pmicmd->cmd, "spawn") == 0) {
+            pmi_errno = PMIU_cmd_output_v1_mcmd(pmicmd, buf_out, buflen_out);
+        } else if (pmicmd->cmd_id == PMIU_CMD_FULLINIT) {
+            pmi_errno = PMIU_cmd_output_v1_initack(pmicmd, buf_out, buflen_out);
+        } else {
+            pmi_errno = PMIU_cmd_output_v1(pmicmd, buf_out, buflen_out);
+        }
     } else {
         /* PMIU_WIRE_V2 */
         if (PMIU_is_threaded) {

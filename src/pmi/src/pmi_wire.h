@@ -8,8 +8,6 @@
 
 #define PMIU_WIRE_V1        1
 #define PMIU_WIRE_V2        2
-#define PMIU_WIRE_V1_MCMD   3
-#define PMIU_WIRE_V1_INITACK 4
 
 /* We may allocate stack arrays of size MAX_PMI_ARGS. Thus it shouldn't
  * be too big or result in stack-overflow. We assume a few kilobytes are safe.

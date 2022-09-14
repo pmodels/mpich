@@ -575,7 +575,7 @@ PMI_API_PUBLIC
         return PMI_FAIL;
 
     struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, PMIU_WIRE_V1_MCMD, "spawn");
+    PMIU_cmd_init(&pmicmd, PMIU_WIRE_V1, "spawn");
     pmicmd.cmd_id = PMIU_CMD_SPAWN;
 
     int total_num_processes;
