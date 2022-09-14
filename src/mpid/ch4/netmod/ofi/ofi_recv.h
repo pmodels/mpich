@@ -178,11 +178,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
         if (MPIDI_OFI_ENABLE_MR_HMEM) {
             if (dt_contig) {
-                register_mem = true;
+                MPIR_GPU_query_pointer_attr(recv_buf, &attr);
+                if (attr.type == MPL_GPU_POINTER_DEV) {
+                    register_mem = true;
+                }
             }
         }
     }
-    if ((!MPIDI_OFI_ENABLE_HMEM || !dt_contig) && data_sz) {
+    if ((!MPIDI_OFI_ENABLE_HMEM || !dt_contig || (MPIDI_OFI_ENABLE_MR_HMEM && !register_mem)) &&
+        data_sz) {
         MPIR_GPU_query_pointer_attr(recv_buf, &attr);
 
         if (data_sz &&
