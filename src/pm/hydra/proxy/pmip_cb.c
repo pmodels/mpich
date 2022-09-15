@@ -213,53 +213,11 @@ static HYD_status check_pmi_cmd(char **buf, int *buflen_out, int *pmi_version, i
      * other PMs might rely on the "incorrect order of commands".
      */
 
-    int full_command, buflen;
-    /* Parse the string and if a full command is found, make sure that
-     * buflen is the length of the buffer and NUL-terminated if necessary */
-    full_command = 0;
-    if (!strncmp(sptr, "cmd=", strlen("cmd=")) || !strncmp(sptr, "mcmd=", strlen("mcmd="))) {
-        /* PMI-1 format command; read the rest of it */
-        *pmi_version = 1;
-
-        if (!strncmp(sptr, "cmd=", strlen("cmd="))) {
-            /* A newline marks the end of the command */
-            char *bufptr;
-            for (bufptr = sptr; bufptr < sptr + pmi_storage_len; bufptr++) {
-                if (*bufptr == '\n') {
-                    full_command = 1;
-                    *bufptr = '\0';
-                    buflen = bufptr - sptr + 1;
-                    break;
-                }
-            }
-        } else {        /* multi commands */
-            char *bufptr;
-            for (bufptr = sptr; bufptr < sptr + pmi_storage_len - strlen("endcmd\n") + 1; bufptr++) {
-                if (strncmp(bufptr, "endcmd\n", 7) == 0) {
-                    full_command = 1;
-                    bufptr += strlen("endcmd\n") - 1;
-                    *bufptr = '\0';
-                    buflen = bufptr - sptr + 1;
-                    break;
-                }
-            }
-        }
-    } else {
-        *pmi_version = 2;
-
-        /* We already made sure we had at least 6 bytes */
-        char lenptr[7];
-        memcpy(lenptr, sptr, 6);
-        lenptr[6] = 0;
-        int cmdlen = atoi(lenptr);
-
-        if (pmi_storage_len >= cmdlen + 6) {
-            full_command = 1;
-            char *bufptr = sptr + 6 + cmdlen - 1;
-            *bufptr = '\0';
-            buflen = bufptr - sptr + 1;
-        }
-    }
+    int full_command, buflen, cmd_id;
+    int pmi_errno;
+    pmi_errno = PMIU_check_full_cmd(sptr, pmi_storage_len, &full_command, &buflen,
+                                    pmi_version, &cmd_id);
+    assert(!pmi_errno);
 
     if (full_command) {
         /* We have a full command */

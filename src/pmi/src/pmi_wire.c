@@ -348,6 +348,84 @@ char *PMIU_wire_get_cmd(char *buf, int buflen, int pmi_version)
     return cmd;
 }
 
+/* Check whether we have a full command. */
+
+static void copy_word(char *dest, const char *src, int n)
+{
+    int i;
+    for (i = 0; i < n - 1; i++) {
+        if (IS_KEY(src[i])) {
+            dest[i] = src[i];
+        } else {
+            break;
+        }
+    }
+    dest[i] = '\0';
+}
+
+int PMIU_check_full_cmd(char *buf, int buflen, int *got_full_cmd,
+                        int *cmdlen, int *version, int *cmd_id)
+{
+    int pmi_errno = PMIU_SUCCESS;
+    int len = 0;
+
+    /* Parse the string and if a full command is found, make sure that
+     * cmdlen is the length of the buffer and NUL-terminated if necessary */
+    *got_full_cmd = 0;
+    char cmdbuf[100];
+    if (!strncmp(buf, "cmd=", strlen("cmd=")) || !strncmp(buf, "mcmd=", strlen("mcmd="))) {
+        /* PMI-1 format command; read the rest of it */
+        *version = PMIU_WIRE_V1;
+
+        if (!strncmp(buf, "cmd=", strlen("cmd="))) {
+            /* A newline marks the end of the command */
+            char *bufptr;
+            for (bufptr = buf; bufptr < buf + buflen; bufptr++) {
+                if (*bufptr == '\n') {
+                    *got_full_cmd = 1;
+                    *bufptr = '\0';
+                    *cmdlen = bufptr - buf + 1;
+                    /* cmd= */
+                    copy_word(cmdbuf, buf + 4, 100);
+                    break;
+                }
+            }
+        } else {        /* multi commands */
+            char *bufptr;
+            for (bufptr = buf; bufptr < buf + buflen - strlen("endcmd\n") + 1; bufptr++) {
+                if (strncmp(bufptr, "endcmd\n", 7) == 0) {
+                    *got_full_cmd = 1;
+                    bufptr += strlen("endcmd\n") - 1;
+                    *bufptr = '\0';
+                    *cmdlen = bufptr - buf + 1;
+                    /* mcmd= */
+                    copy_word(cmdbuf, buf + 5, 100);
+                    break;
+                }
+            }
+        }
+    } else {
+        *version = PMIU_WIRE_V2;
+
+        /* We already made sure we had at least 6 bytes */
+        char lenptr[7];
+        memcpy(lenptr, buf, 6);
+        lenptr[6] = 0;
+        int len = atoi(lenptr);
+
+        if (buflen >= len + 6) {
+            *got_full_cmd = 1;
+            char *bufptr = buf + 6 + len - 1;
+            *bufptr = '\0';
+            *cmdlen = len + 6;
+            /* ------cmd= */
+            copy_word(cmdbuf, buf + 10, 100);
+        }
+    }
+    *cmd_id = PMIU_msg_cmd_to_id(cmdbuf);
+    return pmi_errno;
+}
+
 /* Construct MPII_pmi from scratch */
 void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd)
 {

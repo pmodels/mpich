@@ -40,6 +40,8 @@ struct PMIU_cmd {
 
 /* Just parse the buf to get PMI command name. Do not alter buf. */
 char *PMIU_wire_get_cmd(char *buf, int buflen, int pmi_version);
+int PMIU_check_full_cmd(char *buf, int buflen, int *got_full_cmd,
+                        int *cmdlen, int *version, int *cmd_id);
 /* Construct MPII_pmi from parsing buf.
  * Note: buf will be modified during parsing.
  */
