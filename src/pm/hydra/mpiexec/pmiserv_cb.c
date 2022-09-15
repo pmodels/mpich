@@ -19,11 +19,6 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int bufle
 
     HYDU_FUNC_ENTER();
 
-    if (pmi_version == 1)
-        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v1;
-    else
-        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v2;
-
     if (HYD_server_info.user_global.debug)
         HYDU_dump(stdout, "[pgid: %d] got PMI command: %s\n", pgid, buf);
 
@@ -36,17 +31,30 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int bufle
         HYD_server_info.num_pmi_calls++;
 #endif /* ENABLE_PROFILING */
 
-    struct HYD_pmcd_pmi_handle *h;
-    h = HYD_pmcd_pmi_handle;
-    while (h->handler) {
-        if (!strcmp(pmi.cmd, h->cmd)) {
-            status = h->handler(fd, pid, pgid, &pmi);
-            HYDU_ERR_POP(status, "PMI handler returned error\n");
-            break;
-        }
-        h++;
-    }
-    if (!h->handler) {
+    if (strcmp(pmi.cmd, "spawn") == 0) {
+        status = HYD_pmiserv_spawn(fd, pid, pgid, &pmi);
+    } else if (strcmp(pmi.cmd, "publish_name") == 0 || strcmp(pmi.cmd, "name-publish") == 0) {
+        status = HYD_pmiserv_publish(fd, pid, pgid, &pmi);
+    } else if (strcmp(pmi.cmd, "unpublish_name") == 0 || strcmp(pmi.cmd, "name-unpublish") == 0) {
+        status = HYD_pmiserv_unpublish(fd, pid, pgid, &pmi);
+    } else if (strcmp(pmi.cmd, "lookup_name") == 0 || strcmp(pmi.cmd, "name-lookup") == 0) {
+        status = HYD_pmiserv_lookup(fd, pid, pgid, &pmi);
+    } else if (strcmp(pmi.cmd, "get") == 0 || strcmp(pmi.cmd, "info-getjobattr") == 0) {
+        status = HYD_pmiserv_kvs_get(fd, pid, pgid, &pmi, false);
+    } else if (strcmp(pmi.cmd, "kvs-get") == 0) {
+        status = HYD_pmiserv_kvs_get(fd, pid, pgid, &pmi, true);
+    } else if (strcmp(pmi.cmd, "kvs-put") == 0) {
+        status = HYD_pmiserv_kvs_put(fd, pid, pgid, &pmi);
+    } else if (strcmp(pmi.cmd, "put") == 0) {
+        /* internal put with multiple key/val pairs */
+        status = HYD_pmiserv_kvs_mput(fd, pid, pgid, &pmi);
+    } else if (strcmp(pmi.cmd, "kvs-fence") == 0) {
+        status = HYD_pmiserv_kvs_fence(fd, pid, pgid, &pmi);
+    } else if (strcmp(pmi.cmd, "barrier_in") == 0) {
+        status = HYD_pmiserv_barrier(fd, pid, pgid, &pmi);
+    } else if (strcmp(pmi.cmd, "abort") == 0) {
+        status = HYD_pmiserv_abort(fd, pid, pgid, &pmi);
+    } else {
         /* We don't understand the command */
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "Unrecognized PMI %d command: %s | cleaning up processes\n",

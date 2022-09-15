@@ -3271,11 +3271,13 @@ case $MPI_AINT in
         MPI_AINT_FMT_DEC_SPEC="%d"
         MPI_AINT_FMT_HEX_SPEC="%x"
         MPIR_AINT_MAX="INT_MAX"
+        MPIR_AINT_MIN="INT_MIN"
         ;;
     long)
         MPI_AINT_FMT_DEC_SPEC="%ld"
         MPI_AINT_FMT_HEX_SPEC="%lx"
         MPIR_AINT_MAX="LONG_MAX"
+        MPIR_AINT_MIN="LONG_MIN"
         ;;
     long_long)
         MPI_AINT_FMT_DEC_SPEC="%lld"
@@ -3283,17 +3285,20 @@ case $MPI_AINT in
         # tt#1776: if LLONG_MAX is missing, we fix it up in C, b/c it's
         # easier there.  See mpiiimpl.h.
         MPIR_AINT_MAX="LLONG_MAX"
+        MPIR_AINT_MIN="LLONG_MIN"
         ;;
     short)
         MPI_AINT_FMT_DEC_SPEC="%hd"
         MPI_AINT_FMT_HEX_SPEC="%hx"
         MPIR_AINT_MAX="SHRT_MAX"
+        MPIR_AINT_MIN="SHRT_MIN"
         ;;
     *)
         AC_MSG_WARN([unable to determine format specifiers for MPI_Aint, defaulting to int])
         MPI_AINT_FMT_DEC_SPEC="%d"
         MPI_AINT_FMT_HEX_SPEC="%x"
         MPIR_AINT_MAX="INT_MAX"
+        MPIR_AINT_MIN="INT_MIN"
     ;;
 esac
 export MPI_AINT_FMT_DEC_SPEC MPI_AINT_FMT_HEX_SPEC
@@ -3302,6 +3307,7 @@ AC_SUBST(MPI_AINT)
 AC_SUBST(MPI_AINT_FMT_DEC_SPEC)
 AC_SUBST(MPI_AINT_FMT_HEX_SPEC)
 AC_DEFINE_UNQUOTED([MPIR_AINT_MAX],[$MPIR_AINT_MAX],[limits.h _MAX constant for MPI_Aint])
+AC_DEFINE_UNQUOTED([MPIR_AINT_MIN],[$MPIR_AINT_MIN],[limits.h _MIN constant for MPI_Aint])
 
 # ------------
 # MPI_OFFSET

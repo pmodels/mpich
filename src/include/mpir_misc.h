@@ -113,4 +113,16 @@ int MPIR_Find_external(struct MPIR_Comm *comm, int *external_size_p, int *extern
 int MPIR_Get_internode_rank(MPIR_Comm * comm_ptr, int r);
 int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
 
+#define MPIR_CAST(T, val) CAST_##T((val))
+#ifdef NDEBUG
+#define MPIR_CAST_int(val) ((int) (val))
+#define MPIR_CAST_Aint(val) ((MPI_Aint) (val))
+#else
+#define MPIR_CAST_int(val) \
+    (((val) > INT_MAX || ((val) < 0 && (val) < INT_MIN)) ? (assert(0), 0) : (int) (val))
+#define MPIR_CAST_Aint(val) \
+    (((val) > MPIR_AINT_MAX || ((val) < 0 && (val) < MPIR_AINT_MIN)) ? (assert(0), 0) \
+     : (MPI_Aint) (val))
+#endif
+
 #endif /* MPIR_MISC_H_INCLUDED */

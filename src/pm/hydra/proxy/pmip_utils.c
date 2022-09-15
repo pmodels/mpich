@@ -9,6 +9,7 @@
 #include "demux.h"
 #include "hydra.h"
 
+#include "pmi_util.h"   /* from libpmi, for PMIU_verbose */
 
 void HYD_pmcd_pmip_send_signal(int sig)
 {
@@ -77,7 +78,9 @@ static HYD_status pgid_fn(char *arg, char ***argv)
 
 static HYD_status debug_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, &HYD_pmcd_pmip.user_global.debug, 1);
+    HYD_pmcd_pmip.user_global.debug = 1;
+    PMIU_verbose = 1;
+    return HYD_SUCCESS;
 }
 
 static HYD_status usize_fn(char *arg, char ***argv)

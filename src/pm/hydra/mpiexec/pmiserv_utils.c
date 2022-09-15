@@ -505,7 +505,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
 HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
 {
-    int i;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
@@ -517,14 +516,6 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
     pg_scratch->barrier_count = 0;
     pg_scratch->epoch = 0;
     pg_scratch->fence_count = 0;
-
-    HYDU_MALLOC_OR_JUMP(pg_scratch->ecount, struct HYD_pmcd_pmi_ecount *,
-                        pg->pg_process_count * sizeof(struct HYD_pmcd_pmi_ecount), status);
-    for (i = 0; i < pg->pg_process_count; i++) {
-        pg_scratch->ecount[i].fd = HYD_FD_UNSET;
-        pg_scratch->ecount[i].pid = -1;
-        pg_scratch->ecount[i].epoch = -1;
-    }
 
     pg_scratch->control_listen_fd = HYD_FD_UNSET;
     pg_scratch->pmi_listen_fd = HYD_FD_UNSET;
@@ -555,7 +546,7 @@ HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
     if (pg->pg_scratch) {
         pg_scratch = pg->pg_scratch;
 
-        MPL_free(pg_scratch->ecount);
+        HYD_pmiserv_epoch_free(pg);
         MPL_free(pg_scratch->dead_processes);
 
         HYD_pmcd_free_pmi_kvs_list(pg_scratch->kvs);

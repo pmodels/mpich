@@ -40,9 +40,6 @@ struct HYD_pmcd_pmi_pg_scratch {
 
 struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd);
 HYD_status HYD_pmcd_pmi_finalize(void);
-HYD_status HYD_pmcd_pmi_publish(const char *name, const char *port, int *success);
-HYD_status HYD_pmcd_pmi_unpublish(const char *name, int *success);
-HYD_status HYD_pmcd_pmi_lookup(const char *name, const char **value);
 
 struct HYD_pmcd_pmi_handle {
     const char *cmd;
@@ -50,5 +47,23 @@ struct HYD_pmcd_pmi_handle {
 };
 
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle;
+
+HYD_status HYD_pmiserv_pmi_reply(int fd, int pid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_bcast_keyvals(int fd, int pid);
+HYD_status HYD_pmiserv_epoch_init(struct HYD_pg *pg);
+HYD_status HYD_pmiserv_epoch_free(struct HYD_pg *pg);
+
+HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, bool sync);
+HYD_status HYD_pmiserv_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_kvs_mput(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+
+HYD_status HYD_pmiserv_barrier(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_abort(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+
+HYD_status HYD_pmiserv_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_publish(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
+HYD_status HYD_pmiserv_lookup(int fd, int pid, int pgid, struct PMIU_cmd *pmi);
 
 #endif /* PMISERV_PMI_H_INCLUDED */

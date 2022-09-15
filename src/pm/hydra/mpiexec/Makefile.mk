@@ -10,11 +10,12 @@ mpiexec_hydra_SOURCES = \
     mpiexec/options.c \
     mpiexec/get_parameters.c \
     mpiexec/uiu.c \
-    mpiexec/name_service.c \
+    mpiexec/pmiserv_kvs.c \
+    mpiexec/pmiserv_publish.c \
+    mpiexec/pmiserv_spawn.c \
+    mpiexec/pmiserv_misc.c \
     mpiexec/pmiserv_cb.c \
     mpiexec/pmiserv_pmi.c \
-    mpiexec/pmiserv_pmi_v1.c \
-    mpiexec/pmiserv_pmi_v2.c \
     mpiexec/pmiserv_pmci.c \
     mpiexec/pmiserv_utils.c
 

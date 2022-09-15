@@ -7,14 +7,195 @@
 #include "pmiserv_pmi.h"
 #include "pmiserv_utils.h"
 
+static HYD_status pmi_publish(const char *name, const char *port, int *success);
+static HYD_status pmi_unpublish(const char *name, int *success);
+static HYD_status pmi_lookup(const char *name, const char **value);
+
 static HYD_status builtin_publish(const char *name, const char *port, int *success);
 static HYD_status builtin_unpublish(const char *name, int *success);
 static HYD_status builtin_lookup(const char *name, const char **value);
+
 static HYD_status server_publish(const char *name, const char *port, int *success);
 static HYD_status server_unpublish(const char *name, int *success);
 static HYD_status server_lookup(const char *name, const char **value);
 
-HYD_status HYD_pmcd_pmi_publish(const char *name, const char *port, int *success)
+HYD_status HYD_pmiserv_publish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
+{
+    HYD_status status = HYD_SUCCESS;
+    HYDU_FUNC_ENTER();
+
+    const char *name = NULL, *port = NULL;
+    const char *thrid = NULL;
+    if (pmi->version == 1) {
+        HYD_PMI_GET_STRVAL(pmi, "service", name);
+        HYD_PMI_GET_STRVAL(pmi, "port", port);
+    } else {
+        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
+        HYD_PMI_GET_STRVAL(pmi, "name", name);
+        HYD_PMI_GET_STRVAL(pmi, "port", port);
+    }
+
+    int success = 0;
+    status = pmi_publish(name, port, &success);
+    HYDU_ERR_POP(status, "error publishing service\n");
+
+    struct PMIU_cmd pmi_response;
+    if (pmi->version == 1) {
+        PMIU_cmd_init_static(&pmi_response, 1, "publish_result");
+        if (success) {
+            PMIU_cmd_add_str(&pmi_response, "info", "ok");
+            PMIU_cmd_add_str(&pmi_response, "rc", "0");
+            PMIU_cmd_add_str(&pmi_response, "msg", "success");
+        } else {
+            PMIU_cmd_add_str(&pmi_response, "info", "ok");
+            PMIU_cmd_add_str(&pmi_response, "rc", "1");
+            PMIU_cmd_add_str(&pmi_response, "msg", "key_already_present");
+        }
+    } else {
+        PMIU_cmd_init_static(&pmi_response, 2, "name-publish-response");
+        if (thrid) {
+            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
+        }
+        if (!success) {
+            char tmp[100];
+            MPL_snprintf(tmp, 100, "duplicate_service_%s", name);
+
+            PMIU_cmd_add_str(&pmi_response, "rc", "1");
+            PMIU_cmd_add_str(&pmi_response, "errmsg", tmp);
+        } else {
+            PMIU_cmd_add_str(&pmi_response, "rc", "0");
+        }
+    }
+
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    HYDU_ERR_POP(status, "send command failed\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_pmiserv_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
+{
+    HYD_status status = HYD_SUCCESS;
+    HYDU_FUNC_ENTER();
+
+    const char *name;
+    const char *thrid = NULL;
+    if (pmi->version == 1) {
+        HYD_PMI_GET_STRVAL(pmi, "service", name);
+    } else {
+        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
+        HYD_PMI_GET_STRVAL(pmi, "name", name);
+    }
+
+    int success = 0;
+    status = pmi_unpublish(name, &success);
+    HYDU_ERR_POP(status, "error unpublishing service\n");
+
+    struct PMIU_cmd pmi_response;
+    if (pmi->version == 1) {
+        PMIU_cmd_init_static(&pmi_response, 1, "unpublish_result");
+        if (success) {
+            PMIU_cmd_add_str(&pmi_response, "info", "ok");
+            PMIU_cmd_add_str(&pmi_response, "rc", "0");
+            PMIU_cmd_add_str(&pmi_response, "msg", "success");
+        } else {
+            PMIU_cmd_add_str(&pmi_response, "info", "ok");
+            PMIU_cmd_add_str(&pmi_response, "rc", "1");
+            PMIU_cmd_add_str(&pmi_response, "msg", "service_not_found");
+        }
+    } else {
+        PMIU_cmd_init_static(&pmi_response, 2, "name-unpublish-response");
+        if (thrid) {
+            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
+        }
+        if (success) {
+            PMIU_cmd_add_str(&pmi_response, "rc", "0");
+        } else {
+            char tmp[100];
+            MPL_snprintf(tmp, 100, "service_%s_not_found", name);
+
+            PMIU_cmd_add_str(&pmi_response, "rc", "1");
+            PMIU_cmd_add_str(&pmi_response, "errmsg", tmp);
+        }
+    }
+
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    HYDU_ERR_POP(status, "send command failed\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_pmiserv_lookup(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
+{
+    HYD_status status = HYD_SUCCESS;
+    const char *value = NULL;
+
+    HYDU_FUNC_ENTER();
+
+    const char *name;
+    const char *thrid = NULL;
+    if (pmi->version == 1) {
+        HYD_PMI_GET_STRVAL(pmi, "service", name);
+    } else {
+        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
+        HYD_PMI_GET_STRVAL(pmi, "name", name);
+    }
+
+    status = pmi_lookup(name, &value);
+    HYDU_ERR_POP(status, "error while looking up service\n");
+
+    struct PMIU_cmd pmi_response;
+    if (pmi->version == 1) {
+        PMIU_cmd_init_static(&pmi_response, 1, "lookup_result");
+        if (value) {
+            PMIU_cmd_add_str(&pmi_response, "port", value);
+            PMIU_cmd_add_str(&pmi_response, "rc", "0");
+            PMIU_cmd_add_str(&pmi_response, "msg", "success");
+        } else {
+            PMIU_cmd_add_str(&pmi_response, "rc", "1");
+            PMIU_cmd_add_str(&pmi_response, "msg", "service_not_found");
+        }
+    } else {
+        PMIU_cmd_init_static(&pmi_response, 2, "name-lookup-response");
+        if (thrid) {
+            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
+        }
+        if (value) {
+            PMIU_cmd_add_str(&pmi_response, "port", value);
+            PMIU_cmd_add_str(&pmi_response, "found", "TRUE");
+            PMIU_cmd_add_str(&pmi_response, "rc", "0");
+        } else {
+            PMIU_cmd_add_str(&pmi_response, "found", "FALSE");
+            PMIU_cmd_add_str(&pmi_response, "rc", "1");
+        }
+    }
+
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    HYDU_ERR_POP(status, "send command failed\n");
+
+  fn_exit:
+    if (value)
+        MPL_free((void *) value);
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+/* internal wrapper functions */
+
+static HYD_status pmi_publish(const char *name, const char *port, int *success)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -30,7 +211,7 @@ HYD_status HYD_pmcd_pmi_publish(const char *name, const char *port, int *success
     return status;
 }
 
-HYD_status HYD_pmcd_pmi_unpublish(const char *name, int *success)
+static HYD_status pmi_unpublish(const char *name, int *success)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -46,7 +227,7 @@ HYD_status HYD_pmcd_pmi_unpublish(const char *name, int *success)
     return status;
 }
 
-HYD_status HYD_pmcd_pmi_lookup(const char *name, const char **value)
+static HYD_status pmi_lookup(const char *name, const char **value)
 {
     HYD_status status = HYD_SUCCESS;
 

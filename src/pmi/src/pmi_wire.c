@@ -348,6 +348,7 @@ char *PMIU_wire_get_cmd(char *buf, int buflen, int pmi_version)
 /* Construct MPII_pmi from scratch */
 void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd)
 {
+    pmicmd->buf_need_free = false;
     pmicmd->buf = NULL;
     pmicmd->tmp_buf = NULL;
     pmicmd->version = version;
@@ -357,8 +358,9 @@ void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd)
 
 void PMIU_cmd_free_buf(struct PMIU_cmd *pmicmd)
 {
-    MPL_free(pmicmd->buf);
-    MPL_free(pmicmd->tmp_buf);
+    if (pmicmd->buf_need_free) {
+        MPL_free(pmicmd->buf);
+    }
     pmicmd->buf = NULL;
     pmicmd->tmp_buf = NULL;
 }
@@ -409,10 +411,24 @@ void PMIU_cmd_add_token(struct PMIU_cmd *pmicmd, const char *token_str)
  */
 #define MAX_TOKEN_BUF_SIZE 50   /* We only use it for e.g. "%d", "%p", etc.
                                  * The longest may be "infokey%d" */
+
+/* Initialize with static buffers, thus obviate the need to call PMIU_cmd_free_buf.
+ * Obviously it won't work for concurrent PMIU_cmd instances, but most PMIU_cmd
+ * usages are not concurrent.
+ */
+void PMIU_cmd_init_static(struct PMIU_cmd *pmicmd, int version, const char *cmd)
+{
+    static char buf[MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE];
+
+    PMIU_cmd_init(pmicmd, version, cmd);
+    pmicmd->buf = buf;
+}
+
 #define PMII_PMI_ALLOC(pmicmd) do { \
     if (pmicmd->buf == NULL) { \
         pmicmd->buf = MPL_malloc(MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE, MPL_MEM_OTHER); \
         PMIU_Assert(pmicmd->buf); \
+        pmicmd->buf_need_free = true; \
     } \
 } while (0)
 
@@ -531,13 +547,15 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
     return pmi_copy;
 }
 
+
+#define MAX_TMP_BUF_SIZE 64*1024
+static char tmp_buf_for_output[MAX_TMP_BUF_SIZE];
+
 /* allocate serialization tmp_buf. Note: as safety, add 1 extra for NULL-termination */
 #define PMIU_CMD_ALLOC_TMP_BUF(pmicmd, len) \
     do { \
-        if (pmicmd->tmp_buf) { \
-            MPL_free(pmicmd->tmp_buf); \
-        } \
-        PMIU_CHK_MALLOC(pmicmd->tmp_buf, char *, len + 1, pmi_errno, PMIU_ERR_NOMEM, "buf"); \
+        assert(len + 1 < MAX_TMP_BUF_SIZE); \
+        pmicmd->tmp_buf = tmp_buf_for_output; \
     } while (0)
 
 /* serialization output */
@@ -589,11 +607,7 @@ int PMIU_cmd_output_v1(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
     *buf_out = pmicmd->tmp_buf;
     *buflen_out = buflen;
 
-  fn_exit:
     return pmi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 int PMIU_cmd_output_v1_mcmd(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
@@ -645,10 +659,7 @@ int PMIU_cmd_output_v1_mcmd(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen
     *buf_out = pmicmd->tmp_buf;
     *buflen_out = buflen;
 
-  fn_exit:
     return pmi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
@@ -703,10 +714,7 @@ int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
     *buf_out = pmicmd->tmp_buf;
     *buflen_out = buflen;
 
-  fn_exit:
     return pmi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int PMIU_cmd_output(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
@@ -743,13 +751,18 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
         n = PMIU_readline(fd, recvbuf, PMIU_MAXLINE);
         PMIU_ERR_CHKANDJUMP(n <= 0, pmi_errno, PMIU_FAIL, "readline failed\n");
 
-        PMIU_printf(PMIU_verbose, "got pmi response: %s", recvbuf);
+        if (recvbuf[n - 1] == '\n') {
+            PMIU_printf(PMIU_verbose, "got pmi response: %s", recvbuf);
+        } else {
+            PMIU_printf(PMIU_verbose, "got pmi response: %s\n", recvbuf);
+        }
 
         if (strncmp(recvbuf, "cmd=", 4) == 0) {
             pmi_errno = PMIU_cmd_parse(recvbuf, strlen(recvbuf), PMIU_WIRE_V1, pmicmd);
         } else {
             pmi_errno = PMIU_cmd_parse(recvbuf, strlen(recvbuf), PMIU_WIRE_V2, pmicmd);
         }
+        pmicmd->buf_need_free = true;
         PMIU_ERR_POP(pmi_errno);
 
         const char *thrid;
@@ -785,7 +798,11 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
 
     PMIU_cmd_output(pmicmd, &buf, &buflen);
 
-    PMIU_printf(PMIU_verbose, "send to fd=%d pmi: %s\n", fd, buf);
+    if (buf[buflen - 1] == '\n') {
+        PMIU_printf(PMIU_verbose, "send to fd=%d pmi: %s", fd, buf);
+    } else {
+        PMIU_printf(PMIU_verbose, "send to fd=%d pmi: %s\n", fd, buf);
+    }
 
     pmi_errno = PMIU_write(fd, buf, buflen);
     PMIU_ERR_POP(pmi_errno);
