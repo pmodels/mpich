@@ -63,8 +63,7 @@ void PMIU_cmd_free(struct PMIU_cmd *pmicmd);
 struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd);
 
 const char *PMIU_cmd_find_keyval(struct PMIU_cmd *pmicmd, const char *key);
-const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key,
-                                         const char *segment_key, int segment_index);
+const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key, int segment_index);
 
 #define PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmicmd, key, val, dfltval) do { \
     const char *tmp = PMIU_cmd_find_keyval(pmicmd, key); \

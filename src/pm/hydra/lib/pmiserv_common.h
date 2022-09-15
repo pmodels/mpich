@@ -116,7 +116,7 @@ HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *
 /* Macro for parsing keyval within a spawn segment */
 #define HYD_PMI_GET_STRVAL_J(pmi, key, j, val) \
     do { \
-        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
+        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, j); \
         HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
                             "PMI command missing key %s\n", key); \
         val = tmp; \
@@ -124,7 +124,7 @@ HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *
 
 #define HYD_PMI_GET_INTVAL_J(pmi, key, j, val) \
     do { \
-        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
+        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, j); \
         HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
                             "PMI command missing key %s\n", key); \
         val = atoi(tmp); \
@@ -132,7 +132,7 @@ HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *
 
 #define HYD_PMI_GET_INTVAL_J_WITH_DEFAULT(pmi, key, j, val, dflt) \
     do { \
-        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
+        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, j); \
         if (tmp) { \
             val = atoi(tmp); \
         } else { \

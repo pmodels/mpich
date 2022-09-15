@@ -167,9 +167,10 @@ static int parse_v1_mcmd(char *buf, struct PMIU_cmd *pmicmd)
     char *p = buf;
     int idx = 0;
 
-    if (strncmp(buf, "mcmd=", 5) != 0) {
-        PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, "Expecting cmd=");
+    if (strncmp(buf, "mcmd=spawn", 10) != 0) {
+        PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, "Expecting cmd=spawn");
     }
+    pmicmd->cmd = "spawn";
 
     while (1) {
         char *key = NULL;
@@ -208,14 +209,16 @@ static int parse_v1_mcmd(char *buf, struct PMIU_cmd *pmicmd)
             unescape_val(val);
         }
 
+        /* turn the mcmd=spawn into NULL token, function as segment divider */
         if (strcmp(key, "mcmd") == 0) {
-            pmicmd->cmd = val;
-        } else {
-            pmicmd->tokens[idx].key = key;
-            pmicmd->tokens[idx].val = val;
-            idx++;
-            PMIU_Assert(idx < MAX_PMI_ARGS);
+            key = NULL;
+            val = NULL;
         }
+
+        pmicmd->tokens[idx].key = key;
+        pmicmd->tokens[idx].val = val;
+        idx++;
+        PMIU_Assert(idx < MAX_PMI_ARGS);
     }
     pmicmd->num_tokens = idx;
 
@@ -273,6 +276,13 @@ static int parse_v2(char *buf, struct PMIU_cmd *pmicmd)
         if (strcmp(key, "cmd") == 0) {
             pmicmd->cmd = val;
         } else {
+            if (strcmp(key, "subcmd") == 0) {
+                /* insert segment divider */
+                pmicmd->tokens[idx].key = NULL;
+                pmicmd->tokens[idx].val = NULL;
+                idx++;
+                PMIU_Assert(idx < MAX_PMI_ARGS);
+            }
             pmicmd->tokens[idx].key = key;
             pmicmd->tokens[idx].val = val;
             idx++;
@@ -391,9 +401,15 @@ int PMIU_check_full_cmd(char *buf, int buflen, int *got_full_cmd,
                 }
             }
         } else {        /* multi commands */
+            /* TODO: assert mcmd=spawn */
             char *bufptr;
+            int totspawns = 0, spawnssofar = 0;
             for (bufptr = buf; bufptr < buf + buflen - strlen("endcmd\n") + 1; bufptr++) {
-                if (strncmp(bufptr, "endcmd\n", 7) == 0) {
+                if (strncmp(bufptr, "totspawns=", 10) == 0) {
+                    totspawns = atoi(bufptr + 10);
+                } else if (strncmp(bufptr, "spawnssofar=", 12) == 0) {
+                    spawnssofar = atoi(bufptr + 12);
+                } else if (strncmp(bufptr, "endcmd\n", 7) == 0 && spawnssofar == totspawns) {
                     *got_full_cmd = 1;
                     bufptr += strlen("endcmd\n") - 1;
                     *bufptr = '\0';
@@ -563,6 +579,9 @@ void PMIU_cmd_add_bool(struct PMIU_cmd *pmicmd, const char *key, int val)
 const char *PMIU_cmd_find_keyval(struct PMIU_cmd *pmicmd, const char *key)
 {
     for (int i = 0; i < pmicmd->num_tokens; i++) {
+        if (pmicmd->tokens[i].key == NULL) {
+            continue;
+        }
         if (strcmp(pmicmd->tokens[i].key, key) == 0) {
             return pmicmd->tokens[i].val;
         }
@@ -570,15 +589,16 @@ const char *PMIU_cmd_find_keyval(struct PMIU_cmd *pmicmd, const char *key)
     return NULL;
 }
 
-/* This is for parsing PMI-v2 spawn command, which contains multiple segments
- * lead by "subcmd=exename".  */
-const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key,
-                                         const char *segment_key, int segment_index)
+/* This is for parsing spawn command, which contains multiple segments
+ * separated NULL token key  */
+const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key, int segment_index)
 {
     int cur_segment = -1;
     for (int i = 0; i < pmi->num_tokens; i++) {
-        if (strcmp(pmi->tokens[i].key, segment_key) == 0) {
+        /* a NULL token starts a new segment */
+        if (pmi->tokens[i].key == NULL) {
             cur_segment++;
+            continue;
         }
         if (segment_index == cur_segment) {
             if (!strcmp(pmi->tokens[i].key, key)) {

@@ -26,89 +26,38 @@ HYD_status HYD_pmiserv_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
 
-    const char *thrid = NULL;
+    status = allocate_spawn_pg(fd);
+    HYDU_ERR_POP(status, "spawn failed\n");
 
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch = spawn_pg->pg_scratch;
+    status = fill_preput_kvs(pmi, pg_scratch->kvs);
+    HYDU_ERR_POP(status, "spawn failed\n");
+
+    int num_exec;
     if (pmi->version == 1) {
-        /* With PMI-v1, PMI_Spawn_multiple comes as separate mcmd=spawn
-         * commands. We use static variables (spawn_pg, spawn_exec_list) to sync between
-         * segments.
-         *   * In the first segment, we allocate pg and execlist.
-         *   * For each segment, we allocate, parse, and enqueue the exec object.
-         *   * In the last segment, we execute the spawn.
-         */
-
-        int total_spawns, spawnssofar;
-        HYD_PMI_GET_INTVAL(pmi, "totspawns", total_spawns);
-        HYD_PMI_GET_INTVAL(pmi, "spawnssofar", spawnssofar);
-
-        struct HYD_exec *exec;
-        if (spawnssofar == 1) {
-            status = allocate_spawn_pg(fd);
-            HYDU_ERR_POP(status, "spawn failed\n");
-
-            /* NOTE: with PMI-v1, common keys are repeated in each exec segment;
-             *       here we take it from the first segment and ignore from others.
-             */
-            struct HYD_pmcd_pmi_pg_scratch *pg_scratch = spawn_pg->pg_scratch;
-            status = fill_preput_kvs(pmi, pg_scratch->kvs);
-            HYDU_ERR_POP(status, "spawn failed\n");
-
-            status = HYDU_alloc_exec(&spawn_exec_list);
-            HYDU_ERR_POP(status, "unable to allocate exec\n");
-
-            exec = spawn_exec_list;
-            exec->appnum = 0;
-        } else {
-            HYDU_ASSERT(spawn_pg, status);
-
-            for (exec = spawn_exec_list; exec->next; exec = exec->next);
-            status = HYDU_alloc_exec(&exec->next);
-            HYDU_ERR_POP(status, "unable to allocate exec\n");
-
-            exec->next->appnum = exec->appnum + 1;
-            exec = exec->next;
-        }
-
-
-        /* For each segment, we create an exec structure */
-        status = fill_exec_params(pmi, exec, -1);
-        HYDU_ERR_POP(status, "spawn failed\n");
-
-        if (spawnssofar < total_spawns) {
-            goto fn_exit;
-        }
+        HYD_PMI_GET_INTVAL(pmi, "totspawns", num_exec);
+        /* TODO: check spawnssofar */
     } else {
-        /* PMI-v2 */
-        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
+        HYD_PMI_GET_INTVAL(pmi, "ncmds", num_exec);
+    }
 
-        status = allocate_spawn_pg(fd);
-        HYDU_ERR_POP(status, "spawn failed\n");
-
-        struct HYD_pmcd_pmi_pg_scratch *pg_scratch = spawn_pg->pg_scratch;
-        status = fill_preput_kvs(pmi, pg_scratch->kvs);
-        HYDU_ERR_POP(status, "spawn failed\n");
-
-        int ncmds;
-        HYD_PMI_GET_INTVAL(pmi, "ncmds", ncmds);
-
-        struct HYD_exec *exec;
-        exec = NULL;
-        for (int j = 0; j < ncmds; j++) {
-            if (exec == NULL) {
-                status = HYDU_alloc_exec(&spawn_exec_list);
-                HYDU_ERR_POP(status, "spawn failed\n");
-                exec = spawn_exec_list;
-                exec->appnum = j;
-            } else {
-                status = HYDU_alloc_exec(&exec->next);
-                HYDU_ERR_POP(status, "spawn failed\n");
-                exec = exec->next;
-                exec->appnum = j;
-            }
-
-            status = fill_exec_params(pmi, exec, j);
+    struct HYD_exec *exec;
+    exec = NULL;
+    for (int j = 0; j < ncmds; j++) {
+        if (exec == NULL) {
+            status = HYDU_alloc_exec(&spawn_exec_list);
             HYDU_ERR_POP(status, "spawn failed\n");
+            exec = spawn_exec_list;
+            exec->appnum = j;
+        } else {
+            status = HYDU_alloc_exec(&exec->next);
+            HYDU_ERR_POP(status, "spawn failed\n");
+            exec = exec->next;
+            exec->appnum = j;
         }
+
+        status = fill_exec_params(pmi, exec, j);
+        HYDU_ERR_POP(status, "spawn failed\n");
     }
 
     status = do_spawn();
@@ -125,6 +74,9 @@ HYD_status HYD_pmiserv_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
         /* Cache the pre-initialized keyvals on the new proxies */
         HYD_pmiserv_bcast_keyvals(fd, pid);
     } else {
+        const char *thrid = NULL;
+        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
+
         struct PMIU_cmd pmi_response;
         PMIU_cmd_init_static(&pmi_response, 2, "spawn-response");
         if (thrid) {
@@ -187,10 +139,10 @@ static HYD_status fill_exec_params(struct PMIU_cmd *pmi, struct HYD_exec *exec, 
     int nprocs, argcnt, info_num;
     const char *execname;
     if (pmi->version == 1) {
-        HYD_PMI_GET_INTVAL(pmi, "nprocs", nprocs);
-        HYD_PMI_GET_INTVAL(pmi, "argcnt", argcnt);
-        HYD_PMI_GET_INTVAL_WITH_DEFAULT(pmi, "info_num", info_num, 0);
-        HYD_PMI_GET_STRVAL(pmi, "execname", execname);
+        HYD_PMI_GET_INTVAL_J(pmi, "nprocs", j, nprocs);
+        HYD_PMI_GET_INTVAL_J(pmi, "argcnt", j, argcnt);
+        HYD_PMI_GET_INTVAL_J_WITH_DEFAULT(pmi, "info_num", j, info_num, 0);
+        HYD_PMI_GET_STRVAL_J(pmi, "execname", j, execname);
     } else {
         HYD_PMI_GET_INTVAL_J(pmi, "maxprocs", j, nprocs);
         HYD_PMI_GET_INTVAL_J(pmi, "argc", j, argcnt);
@@ -206,9 +158,9 @@ static HYD_status fill_exec_params(struct PMIU_cmd *pmi, struct HYD_exec *exec, 
         const char *info_key, *info_val;
         if (pmi->version == 1) {
             MPL_snprintf(key, 100, "info_key_%d", i);
-            HYD_PMI_GET_STRVAL(pmi, key, info_key);
+            HYD_PMI_GET_STRVAL_J(pmi, key, j, info_key);
             MPL_snprintf(key, 100, "info_val_%d", i);
-            HYD_PMI_GET_STRVAL(pmi, key, info_val);
+            HYD_PMI_GET_STRVAL_J(pmi, key, j, info_val);
         } else {
             MPL_snprintf(key, 100, "infokey%d", i);
             HYD_PMI_GET_STRVAL_J(pmi, key, j, info_key);
@@ -241,7 +193,7 @@ static HYD_status fill_exec_params(struct PMIU_cmd *pmi, struct HYD_exec *exec, 
         const char *arg;
         if (pmi->version == 1) {
             MPL_snprintf(key, 100, "arg%d", i + 1);
-            HYD_PMI_GET_STRVAL(pmi, key, arg);
+            HYD_PMI_GET_STRVAL_J(pmi, key, j, arg);
         } else {
             MPL_snprintf(key, 100, "argv%d", i);
             HYD_PMI_GET_STRVAL_J(pmi, key, j, arg);
