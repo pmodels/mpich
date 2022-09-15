@@ -291,7 +291,7 @@ static HYD_status check_pmi_cmd(char **buf, int *buflen_out, int *pmi_version, i
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL;
-    int closed, repeat, sent, linelen, pid = -1;
+    int closed, sent, linelen, pid = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -369,29 +369,27 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         pmi_storage[pmi_storage_len] = 0;
     }
 
-    int buflen;
-    int pmi_version;
-  check_cmd:
-    status = check_pmi_cmd(&buf, &buflen, &pmi_version, &repeat);
-    HYDU_ERR_POP(status, "error checking the PMI command\n");
+    int repeat;
+    do {
+        int buflen;
+        int pmi_version;
+        status = check_pmi_cmd(&buf, &buflen, &pmi_version, &repeat);
+        HYDU_ERR_POP(status, "error checking the PMI command\n");
 
-    if (buf == NULL)
-        /* read more to get a full command. */
-        goto read_cmd;
+        if (buf == NULL)
+            /* read more to get a full command. */
+            goto read_cmd;
 
-    /* We were able to read the PMI command correctly. If we were able
-     * to identify what PMI FD this is, activate it. If we were not
-     * able to identify the PMI FD, we will activate it when we get
-     * the PMI initialization command. */
-    if (pid != -1 && !HYD_pmcd_pmip.downstream.pmi_fd_active[pid])
-        HYD_pmcd_pmip.downstream.pmi_fd_active[pid] = 1;
+        /* We were able to read the PMI command correctly. If we were able
+         * to identify what PMI FD this is, activate it. If we were not
+         * able to identify the PMI FD, we will activate it when we get
+         * the PMI initialization command. */
+        if (pid != -1 && !HYD_pmcd_pmip.downstream.pmi_fd_active[pid])
+            HYD_pmcd_pmip.downstream.pmi_fd_active[pid] = 1;
 
-    status = handle_pmi_cmd(fd, buf, buflen, pmi_version);
-    HYDU_ERR_POP(status, "unable to handle PMI command\n");
-
-    if (repeat)
-        /* there are more commands to process. */
-        goto check_cmd;
+        status = handle_pmi_cmd(fd, buf, buflen, pmi_version);
+        HYDU_ERR_POP(status, "unable to handle PMI command\n");
+    } while (repeat);
 
   fn_exit:
     HYDU_FUNC_EXIT();
