@@ -161,9 +161,10 @@ PMI_API_PUBLIC int PMI2_Finalize(void)
     int pmi_errno = PMI2_SUCCESS;
 
     struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "finalize");
+    PMIU_cmd_init_zero(&pmicmd);
 
     if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
+        PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "finalize");
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "finalize-response");
         PMIU_ERR_POP(pmi_errno);
         PMI2_CHK_RC_ERRMSG(&pmicmd);
@@ -282,7 +283,7 @@ PMI_API_PUBLIC int PMI2_Job_GetId(char jobid[], int jobid_size)
     int pmi_errno = PMI2_SUCCESS;
 
     struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "job-getid");
+    PMIU_cmd_init_zero(&pmicmd);
 
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
         /* Return a dummy name */
@@ -290,6 +291,7 @@ PMI_API_PUBLIC int PMI2_Job_GetId(char jobid[], int jobid_size)
         goto fn_exit;
     }
 
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "job-getid");
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "job-getid-response");
     PMIU_ERR_POP(pmi_errno);
     PMI2_CHK_RC_ERRMSG(&pmicmd);
@@ -353,9 +355,7 @@ PMI_API_PUBLIC int PMI2_KVS_Put(const char key[], const char value[])
     int pmi_errno = PMI2_SUCCESS;
 
     struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "kvs-put");
-    PMIU_cmd_add_str(&pmicmd, "key", key);
-    PMIU_cmd_add_str(&pmicmd, "value", value);
+    PMIU_cmd_init_zero(&pmicmd);
 
     /* This is a special hack to support singleton initialization */
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
@@ -372,6 +372,9 @@ PMI_API_PUBLIC int PMI2_KVS_Put(const char key[], const char value[])
         return PMI2_SUCCESS;
     }
 
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "kvs-put");
+    PMIU_cmd_add_str(&pmicmd, "key", key);
+    PMIU_cmd_add_str(&pmicmd, "value", value);
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "kvs-put-response");
     PMIU_ERR_POP(pmi_errno);
     PMI2_CHK_RC_ERRMSG(&pmicmd);
@@ -388,9 +391,10 @@ PMI_API_PUBLIC int PMI2_KVS_Fence(void)
     int pmi_errno = PMI2_SUCCESS;
 
     struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "kvs-fence");
+    PMIU_cmd_init_zero(&pmicmd);
 
     if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
+        PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "kvs-fence");
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "kvs-fence-response");
         PMIU_ERR_POP(pmi_errno);
         PMI2_CHK_RC_ERRMSG(&pmicmd);
@@ -410,15 +414,17 @@ PMI_API_PUBLIC
     int pmi_errno = PMI2_SUCCESS;
 
     struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "kvs-get");
-    PMIU_cmd_add_str(&pmicmd, "jobid", jobid);
-    PMIU_cmd_add_int(&pmicmd, "srcid", src_pmi_id);
-    PMIU_cmd_add_str(&pmicmd, "key", key);
+    PMIU_cmd_init_zero(&pmicmd);
 
     /* singletons can skip the nonexistent key used for barrier */
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM && strcmp(key, "-NONEXIST-KEY") == 0) {
         goto fn_exit;
     }
+
+    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "kvs-get");
+    PMIU_cmd_add_str(&pmicmd, "jobid", jobid);
+    PMIU_cmd_add_int(&pmicmd, "srcid", src_pmi_id);
+    PMIU_cmd_add_str(&pmicmd, "key", key);
 
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "kvs-get-response");
     PMIU_ERR_POP(pmi_errno);

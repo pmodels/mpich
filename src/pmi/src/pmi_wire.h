@@ -35,6 +35,9 @@ struct PMIU_cmd {
     int num_tokens;
 };
 
+/* set stack-allocated object to a sane state (rather than garbage) */
+#define PMIU_cmd_init_zero(pmicmd) PMIU_cmd_init(pmicmd, 0, NULL)
+
 /* Just parse the buf to get PMI command name. Do not alter buf. */
 char *PMIU_wire_get_cmd(char *buf, int buflen, int pmi_version);
 /* Construct MPII_pmi from parsing buf.
