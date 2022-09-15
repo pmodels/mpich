@@ -216,16 +216,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
     send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
 
-    if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
+    if (MPIDI_OFI_ENABLE_HMEM && MPIR_CVAR_CH4_OFI_ENABLE_HMEM &&
+        data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
         if (MPIDI_OFI_ENABLE_MR_HMEM) {
             if (dt_contig && attr.type == MPL_GPU_POINTER_DEV) {
                 register_mem = true;
             }
         }
     }
-    if ((!MPIDI_OFI_ENABLE_HMEM || !dt_contig || (MPIDI_OFI_ENABLE_MR_HMEM && !register_mem)) &&
-        data_sz) {
-
+    if ((!MPIDI_OFI_ENABLE_HMEM || !MPIR_CVAR_CH4_OFI_ENABLE_HMEM || !dt_contig ||
+         (MPIDI_OFI_ENABLE_MR_HMEM && !register_mem)) && data_sz) {
         if (data_sz &&
             (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
              attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
@@ -475,7 +475,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         if (data_sz > 0 &&
             (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
              attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
-            if (!MPIDI_OFI_ENABLE_HMEM) {
+            if (!MPIDI_OFI_ENABLE_HMEM || !MPIR_CVAR_CH4_OFI_ENABLE_HMEM) {
                 /* Force pack for GPU buffer. */
                 void *host_buf = NULL;
                 MPIDI_OFI_gpu_malloc_pack_buffer(&host_buf, data_sz);

@@ -175,7 +175,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
 
-    if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
+    if (MPIDI_OFI_ENABLE_HMEM && MPIR_CVAR_CH4_OFI_ENABLE_HMEM &&
+        data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
         if (MPIDI_OFI_ENABLE_MR_HMEM) {
             if (dt_contig) {
                 MPIR_GPU_query_pointer_attr(recv_buf, &attr);
@@ -185,8 +186,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             }
         }
     }
-    if ((!MPIDI_OFI_ENABLE_HMEM || !dt_contig || (MPIDI_OFI_ENABLE_MR_HMEM && !register_mem)) &&
-        data_sz) {
+    if ((!MPIDI_OFI_ENABLE_HMEM || !MPIR_CVAR_CH4_OFI_ENABLE_HMEM || !dt_contig ||
+         (MPIDI_OFI_ENABLE_MR_HMEM && !register_mem)) && data_sz) {
         MPIR_GPU_query_pointer_attr(recv_buf, &attr);
 
         if (data_sz &&

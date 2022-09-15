@@ -431,7 +431,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_HMEM
       category    : CH4_OFI
       type        : int
-      default     : -1
+      default     : 0
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -1233,7 +1233,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         MPIR_Assert(MPIDI_OFI_global.per_vni[vni].am_inflight_inject_emus == 0);
     }
 
-    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM) {
+    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM && MPIR_CVAR_CH4_OFI_ENABLE_HMEM) {
         MPIDI_GPU_RDMA_queue_t *queue_mr, *tmp;
         DL_FOREACH_SAFE(MPIDI_OFI_global.gdr_mrs, queue_mr, tmp) {
             if (queue_mr->mr) {
