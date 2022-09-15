@@ -65,7 +65,6 @@ static char cached_singinit_val[PMIU_MAXLINE];
 static char singinit_kvsname[MAX_SINGINIT_KVSNAME];
 
 static int expect_pmi_cmd(const char *key);
-static int GetResponse_set_int(const char *key, int *val_out);
 
 PMI_API_PUBLIC int PMI_Init(int *spawned)
 {
@@ -730,29 +729,6 @@ static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
 }
 
 /* ----------------------------------------------------------------------- */
-static int GetResponse_set_int(const char *key, int *val_out)
-{
-    int pmi_errno = PMI_SUCCESS;
-
-    struct PMIU_cmd pmicmd;
-
-    pmi_errno = PMIU_cmd_read(PMI_fd, &pmicmd);
-    PMIU_ERR_POP(pmi_errno);
-
-    if (strcmp("set", pmicmd.cmd) != 0) {
-        PMIU_ERR_SETANDJUMP1(pmi_errno, PMI_FAIL, "expecting cmd=set, got %s\n", pmicmd.cmd);
-    }
-
-    PMIU_CMD_GET_INTVAL(&pmicmd, key, *val_out);
-
-  fn_exit:
-    PMIU_cmd_free_buf(&pmicmd);
-    return pmi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* ----------------------------------------------------------------------- */
 
 
 #ifndef USE_PMI_PORT
@@ -837,16 +813,6 @@ static int PMII_Set_from_port(int id)
     PMIU_cmd_add_int(&pmicmd, "pmiid", id);
 
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "initack");
-    PMIU_ERR_POP(pmi_errno);
-
-    /* Read, in order, size, rank, and debug.  Eventually, we'll want
-     * the handshake to include a version number */
-    /* - Why not include in the initack? */
-    pmi_errno = GetResponse_set_int("size", &PMI_size);
-    PMIU_ERR_POP(pmi_errno);
-    pmi_errno = GetResponse_set_int("rank", &PMI_rank);
-    PMIU_ERR_POP(pmi_errno);
-    pmi_errno = GetResponse_set_int("debug", &PMIU_verbose);
     PMIU_ERR_POP(pmi_errno);
 
   fn_exit:
