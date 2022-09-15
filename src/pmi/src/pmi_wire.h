@@ -150,7 +150,7 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd);
 int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd);
 
 /* send a PMI command to fd and get a PMI response with expected cmd */
-int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd, const char *expectedCmd);
+int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd);
 
 /* message layer utilities */
 int PMIU_msg_cmd_to_id(const char *cmd);

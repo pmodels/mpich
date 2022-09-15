@@ -828,9 +828,13 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
  * return from this routine, the response is parsed into the pmicmd object.
  * It can be queried for attributes.
  */
-int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd, const char *expectedCmd)
+int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd)
 {
     int pmi_errno = PMIU_SUCCESS;
+
+    int cmd_id = pmicmd->cmd_id;
+    const char *expectedCmd = PMIU_msg_id_to_response(pmicmd->version, cmd_id);
+    PMIU_Assert(expectedCmd != NULL);
 
     pmi_errno = PMIU_cmd_send(fd, pmicmd);
     PMIU_ERR_POP(pmi_errno);
@@ -842,6 +846,19 @@ int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd, const char *expectedC
         PMIU_ERR_SETANDJUMP2(pmi_errno, PMIU_FAIL,
                              "expecting cmd=%s, got %s\n", expectedCmd, pmicmd->cmd);
     }
+
+    /* check rc if included. */
+    int rc;
+    const char *msg;
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmicmd, "rc", rc, 0);
+    if (rc) {
+        PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmicmd, "msg", msg, NULL);
+        if (!msg) {
+            PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmicmd, "errmsg", msg, NULL);
+        }
+        PMIU_ERR_SETANDJUMP2(pmi_errno, PMIU_FAIL, "server responded with rc=%d - %s\n", rc, msg);
+    }
+
 
   fn_exit:
     return pmi_errno;
