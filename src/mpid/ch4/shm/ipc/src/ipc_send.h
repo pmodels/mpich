@@ -31,7 +31,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
 
     MPIDI_POSIX_THREAD_CS_ENTER_VCI(vsi_src);
 
-    if (rank == comm->rank) {
+    if (comm->local_size == 1) {
         goto fn_exit;
     }
 
