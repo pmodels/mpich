@@ -162,4 +162,12 @@ void PMIU_msg_set_query(struct PMIU_cmd *pmi_query, int wire_version, int cmd_id
 int PMIU_msg_set_response(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_resp, bool is_static);
 int PMIU_msg_set_response_fail(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_resp,
                                bool is_static, int rc, const char *error_message);
+
+void PMIU_msg_set_query_spawn(struct PMIU_cmd *pmi_query, int version, bool is_static,
+                              int count, const char *cmds[], const int maxprocs[],
+                              int argcs[], const char **argvs[],
+                              const int info_keyval_sizes[],
+                              const struct PMIU_token *info_keyval_vectors[],
+                              int preput_keyval_size,
+                              const struct PMIU_token preput_keyval_vector[]);
 #endif

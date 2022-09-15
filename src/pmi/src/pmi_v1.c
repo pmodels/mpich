@@ -570,56 +570,44 @@ PMI_API_PUBLIC
 {
     int pmi_errno = PMI_SUCCESS;
 
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init_zero(&pmicmd);
+
     /* Connect to the PM if we haven't already */
     if (PMIi_InitIfSingleton() != 0)
         return PMI_FAIL;
 
-    struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, PMIU_WIRE_V1, "spawn");
-    pmicmd.cmd_id = PMIU_CMD_SPAWN;
+    /* split argvs */
+    int *argcs = NULL;
+    argcs = MPL_malloc(count * sizeof(int), MPL_MEM_OTHER);
+    PMIU_Assert(argcs);
+
+    for (int i = 0; i < count; i++) {
+        int j = 0;
+        if (argvs && argvs[i]) {
+            while (argvs[i][j]) {
+                j++;
+            }
+        }
+        argcs[i] = j;
+    }
+
+    PMIU_msg_set_query_spawn(&pmicmd, PMIU_WIRE_V1, no_static,
+                             count, cmds, maxprocs, argcs, argvs,
+                             info_keyval_sizes, (const struct PMIU_token **) info_keyval_vectors,
+                             preput_keyval_size, (const struct PMIU_token *) preput_keyval_vector);
+    MPL_free(argcs);
+
+
+    pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
+    PMIU_ERR_POP(pmi_errno);
+    PMIU_CMD_EXPECT_INTVAL(&pmicmd, "rc", 0);
 
     int total_num_processes;
     total_num_processes = 0;
     for (int spawncnt = 0; spawncnt < count; spawncnt++) {
         total_num_processes += maxprocs[spawncnt];
-
-        if (spawncnt > 0) {
-            /* Note: it is in fact multiple PMI commands */
-            /* FIXME: use a proper separator token */
-            PMIU_cmd_add_str(&pmicmd, "mcmd", "spawn");
-        }
-        PMIU_cmd_add_int(&pmicmd, "nprocs", maxprocs[spawncnt]);
-        PMIU_cmd_add_str(&pmicmd, "execname", cmds[spawncnt]);
-        PMIU_cmd_add_int(&pmicmd, "totspawns", count);
-        PMIU_cmd_add_int(&pmicmd, "spawnssofar", spawncnt + 1);
-
-        int argcnt = 0;
-        if ((argvs != NULL) && (argvs[spawncnt] != NULL)) {
-            while (argvs[spawncnt][argcnt] != NULL) {
-                argcnt++;
-            }
-        }
-        PMIU_cmd_add_int(&pmicmd, "argcnt", argcnt);
-        for (int i = 0; i < argcnt; i++) {
-            PMIU_cmd_add_substr(&pmicmd, "arg%d", i + 1, argvs[spawncnt][i]);
-        }
-
-        PMIU_cmd_add_int(&pmicmd, "preput_num", preput_keyval_size);
-        for (int i = 0; i < preput_keyval_size; i++) {
-            PMIU_cmd_add_substr(&pmicmd, "preput_key_%d", i, preput_keyval_vector[i].key);
-            PMIU_cmd_add_substr(&pmicmd, "preput_val_%d", i, preput_keyval_vector[i].val);
-        }
-        PMIU_cmd_add_int(&pmicmd, "info_num", info_keyval_sizes[spawncnt]);
-        for (int i = 0; i < info_keyval_sizes[spawncnt]; i++) {
-            PMIU_cmd_add_substr(&pmicmd, "info_key_%d", i, info_keyval_vectors[spawncnt][i].key);
-            PMIU_cmd_add_substr(&pmicmd, "info_val_%d", i, info_keyval_vectors[spawncnt][i].val);
-        }
-        PMIU_cmd_add_token(&pmicmd, "endcmd");
     }
-
-    pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
-    PMIU_ERR_POP(pmi_errno);
-    PMIU_CMD_EXPECT_INTVAL(&pmicmd, "rc", 0);
 
     PMIU_Assert(errors != NULL);
     const char *errcodes_str;

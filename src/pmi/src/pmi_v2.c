@@ -212,33 +212,10 @@ PMI_API_PUBLIC int PMI2_Job_Spawn(int count, const char *cmds[],
         return -1;
 
     struct PMIU_cmd pmicmd;
-    PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "spawn");
-    pmicmd.cmd_id = PMIU_CMD_SPAWN;
-    PMIU_cmd_add_int(&pmicmd, "ncmds", count);
-
-    PMIU_cmd_add_int(&pmicmd, "preputcount", preput_keyval_size);
-    for (int i = 0; i < preput_keyval_size; i++) {
-        PMIU_cmd_add_substr(&pmicmd, "ppkey%d", i, preput_keyval_vector[i].key);
-        PMIU_cmd_add_substr(&pmicmd, "ppval%d", i, preput_keyval_vector[i].val);
-    }
-
-    for (int spawncnt = 0; spawncnt < count; spawncnt++) {
-        total_num_processes += maxprocs[spawncnt];
-
-        PMIU_cmd_add_str(&pmicmd, "subcmd", cmds[spawncnt]);
-        PMIU_cmd_add_int(&pmicmd, "maxprocs", maxprocs[spawncnt]);
-
-        PMIU_cmd_add_int(&pmicmd, "argc", argcs[spawncnt]);
-        for (int i = 0; i < argcs[spawncnt]; i++) {
-            PMIU_cmd_add_substr(&pmicmd, "argv%d", i, argvs[spawncnt][i]);
-        }
-
-        PMIU_cmd_add_int(&pmicmd, "infokeycount", info_keyval_sizes[spawncnt]);
-        for (int i = 0; i < info_keyval_sizes[spawncnt]; i++) {
-            PMIU_cmd_add_substr(&pmicmd, "infokey%d", i, info_keyval_vectors[spawncnt][i].key);
-            PMIU_cmd_add_substr(&pmicmd, "infoval%d", i, info_keyval_vectors[spawncnt][i].val);
-        }
-    }
+    PMIU_msg_set_query_spawn(&pmicmd, USE_WIRE_VER, no_static,
+                             count, cmds, maxprocs, argcs, argvs,
+                             info_keyval_sizes, (const struct PMIU_token **) info_keyval_vectors,
+                             preput_keyval_size, (const struct PMIU_token *) preput_keyval_vector);
 
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
     PMIU_ERR_POP(pmi_errno);

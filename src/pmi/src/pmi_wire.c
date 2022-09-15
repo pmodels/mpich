@@ -1096,3 +1096,79 @@ int PMIU_msg_set_response_fail(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_
 
     return PMIU_SUCCESS;
 }
+
+/* Spawn message functions (not generated in pmi_msg.c) */
+
+void PMIU_msg_set_query_spawn(struct PMIU_cmd *pmi_query, int version, bool is_static,
+                              int count, const char *cmds[], const int maxprocs[],
+                              int argcs[], const char **argvs[],
+                              const int info_keyval_sizes[],
+                              const struct PMIU_token *info_keyval_vectors[],
+                              int preput_keyval_size,
+                              const struct PMIU_token preput_keyval_vector[])
+{
+    PMIU_msg_set_query(pmi_query, version, PMIU_CMD_SPAWN, is_static);
+    if (version == PMIU_WIRE_V1) {
+        for (int spawncnt = 0; spawncnt < count; spawncnt++) {
+            if (spawncnt > 0) {
+                /* Note: it is in fact multiple PMI commands */
+                /* FIXME: use a proper separator token */
+                PMIU_cmd_add_str(pmi_query, "mcmd", "spawn");
+            }
+            PMIU_cmd_add_int(pmi_query, "nprocs", maxprocs[spawncnt]);
+            PMIU_cmd_add_str(pmi_query, "execname", cmds[spawncnt]);
+            PMIU_cmd_add_int(pmi_query, "totspawns", count);
+            PMIU_cmd_add_int(pmi_query, "spawnssofar", spawncnt + 1);
+
+            PMIU_cmd_add_int(pmi_query, "argcnt", argcs[spawncnt]);
+            for (int i = 0; i < argcs[spawncnt]; i++) {
+                PMIU_cmd_add_substr(pmi_query, "arg%d", i + 1, argvs[spawncnt][i]);
+            }
+
+            if (spawncnt == 0) {
+                PMIU_cmd_add_int(pmi_query, "preput_num", preput_keyval_size);
+                for (int i = 0; i < preput_keyval_size; i++) {
+                    PMIU_cmd_add_substr(pmi_query, "preput_key_%d", i, preput_keyval_vector[i].key);
+                    PMIU_cmd_add_substr(pmi_query, "preput_val_%d", i, preput_keyval_vector[i].val);
+                }
+            }
+
+            PMIU_cmd_add_int(pmi_query, "info_num", info_keyval_sizes[spawncnt]);
+            for (int i = 0; i < info_keyval_sizes[spawncnt]; i++) {
+                PMIU_cmd_add_substr(pmi_query, "info_key_%d", i,
+                                    info_keyval_vectors[spawncnt][i].key);
+                PMIU_cmd_add_substr(pmi_query, "info_val_%d", i,
+                                    info_keyval_vectors[spawncnt][i].val);
+            }
+            PMIU_cmd_add_token(pmi_query, "endcmd");
+        }
+    } else if (version == PMIU_WIRE_V2) {
+        PMIU_cmd_add_int(pmi_query, "ncmds", count);
+
+        PMIU_cmd_add_int(pmi_query, "preputcount", preput_keyval_size);
+        for (int i = 0; i < preput_keyval_size; i++) {
+            PMIU_cmd_add_substr(pmi_query, "ppkey%d", i, preput_keyval_vector[i].key);
+            PMIU_cmd_add_substr(pmi_query, "ppval%d", i, preput_keyval_vector[i].val);
+        }
+
+        for (int spawncnt = 0; spawncnt < count; spawncnt++) {
+            PMIU_cmd_add_str(pmi_query, "subcmd", cmds[spawncnt]);
+            PMIU_cmd_add_int(pmi_query, "maxprocs", maxprocs[spawncnt]);
+
+            PMIU_cmd_add_int(pmi_query, "argc", argcs[spawncnt]);
+            for (int i = 0; i < argcs[spawncnt]; i++) {
+                PMIU_cmd_add_substr(pmi_query, "argv%d", i, argvs[spawncnt][i]);
+            }
+
+            PMIU_cmd_add_int(pmi_query, "infokeycount", info_keyval_sizes[spawncnt]);
+            for (int i = 0; i < info_keyval_sizes[spawncnt]; i++) {
+                PMIU_cmd_add_substr(pmi_query, "infokey%d", i,
+                                    info_keyval_vectors[spawncnt][i].key);
+                PMIU_cmd_add_substr(pmi_query, "infoval%d", i,
+                                    info_keyval_vectors[spawncnt][i].val);
+            }
+        }
+    } else {
+        PMIU_Assert(0);
+    }
+}
