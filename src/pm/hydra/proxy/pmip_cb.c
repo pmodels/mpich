@@ -111,7 +111,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
         {"barrier_in", fn_barrier_in},
         {"finalize", fn_finalize},
         {"fullinit", fn_fullinit},
-        {"job-getid", fn_job_getid},
+        {"job-getid", fn_get_my_kvsname},
         {"info-putnodeattr", fn_info_putnodeattr},
         {"info-getnodeattr", fn_info_getnodeattr},
         {"info-getjobattr", fn_info_getjobattr},

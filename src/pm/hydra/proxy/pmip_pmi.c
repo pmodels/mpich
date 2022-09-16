@@ -361,8 +361,19 @@ HYD_status fn_get_my_kvsname(int fd, struct PMIU_cmd *pmi)
     HYDU_FUNC_ENTER();
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init_static(&pmi_response, pmi->version, "my_kvsname");
-    PMIU_cmd_add_str(&pmi_response, "kvsname", HYD_pmcd_pmip.local.kvs->kvsname);
+    if (pmi->version == 1) {
+        PMIU_cmd_init_static(&pmi_response, pmi->version, "my_kvsname");
+        PMIU_cmd_add_str(&pmi_response, "kvsname", HYD_pmcd_pmip.local.kvs->kvsname);
+    } else {
+        const char *thrid;
+        thrid = PMIU_cmd_find_keyval(pmi, "thrid");
+        PMIU_cmd_init_static(&pmi_response, 2, "job-getid-response");
+        if (thrid) {
+            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
+        }
+        PMIU_cmd_add_str(&pmi_response, "jobid", HYD_pmcd_pmip.local.kvs->kvsname);
+        PMIU_cmd_add_str(&pmi_response, "rc", "0");
+    }
 
     status = send_cmd_downstream(fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -628,38 +639,6 @@ HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi)
         /* All processes have finalized */
         internal_finalize();
     }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status fn_job_getid(int fd, struct PMIU_cmd *pmi)
-{
-    const char *thrid;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (pmi->version == 1) {
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI-v1 doesn't support %s\n", pmi->cmd);
-    }
-
-    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
-
-    struct PMIU_cmd pmi_response;
-    PMIU_cmd_init_static(&pmi_response, 2, "job-getid-response");
-    if (thrid) {
-        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-    }
-    PMIU_cmd_add_str(&pmi_response, "jobid", HYD_pmcd_pmip.local.kvs->kvsname);
-    PMIU_cmd_add_str(&pmi_response, "rc", "0");
-
-    status = send_cmd_downstream(fd, &pmi_response);
-    HYDU_ERR_POP(status, "error sending command downstream\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
