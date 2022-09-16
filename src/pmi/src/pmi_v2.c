@@ -18,16 +18,6 @@
 
 #define PMII_MAX_COMMAND_LEN (64*1024)
 
-#define PMI2_CHK_RC_ERRMSG(pmicmd) do { \
-    int rc; \
-    PMIU_CMD_GET_INTVAL(pmicmd, "rc", rc); \
-    if (rc) { \
-        const char *errmsg = PMIU_cmd_find_keyval(pmicmd, "errmsg"); \
-        PMIU_ERR_SETANDJUMP2(pmi_errno, PMI2_ERR_OTHER, \
-                                "**%s %s", (pmicmd)->cmd, errmsg ? errmsg : "unknown"); \
-    } \
-} while (0)
-
 #define USE_WIRE_VER  PMIU_WIRE_V2
 
 /* we will call PMIU_cmd_free_buf */
