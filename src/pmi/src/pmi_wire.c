@@ -101,7 +101,6 @@ static int parse_v1(char *buf, struct PMIU_cmd *pmicmd)
     int pmi_errno = PMIU_SUCCESS;
 
     char *p = buf;
-    int idx = 0;
 
     if (strncmp(buf, "cmd=", 4) != 0) {
         PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, "Expecting cmd=");
@@ -146,13 +145,9 @@ static int parse_v1(char *buf, struct PMIU_cmd *pmicmd)
         if (strcmp(key, "cmd") == 0) {
             pmicmd->cmd = val;
         } else {
-            pmicmd->tokens[idx].key = key;
-            pmicmd->tokens[idx].val = val;
-            idx++;
-            PMIU_Assert(idx < MAX_PMI_ARGS);
+            PMIU_CMD_ADD_TOKEN(pmicmd, key, val);
         }
     }
-    pmicmd->num_tokens = idx;
 
   fn_exit:
     return pmi_errno;
@@ -165,7 +160,6 @@ static int parse_v1_mcmd(char *buf, struct PMIU_cmd *pmicmd)
     int pmi_errno = PMIU_SUCCESS;
 
     char *p = buf;
-    int idx = 0;
 
     if (strncmp(buf, "mcmd=spawn", 10) != 0) {
         PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, "Expecting cmd=spawn");
@@ -215,12 +209,8 @@ static int parse_v1_mcmd(char *buf, struct PMIU_cmd *pmicmd)
             val = NULL;
         }
 
-        pmicmd->tokens[idx].key = key;
-        pmicmd->tokens[idx].val = val;
-        idx++;
-        PMIU_Assert(idx < MAX_PMI_ARGS);
+        PMIU_CMD_ADD_TOKEN(pmicmd, key, val);
     }
-    pmicmd->num_tokens = idx;
 
   fn_exit:
     return pmi_errno;
@@ -233,7 +223,6 @@ static int parse_v2(char *buf, struct PMIU_cmd *pmicmd)
     int pmi_errno = PMIU_SUCCESS;
 
     char *p = buf + 6;          /* first 6 chars is length */
-    int idx = 0;
 
     if (strncmp(p, "cmd=", 4) != 0) {
         PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, "Expecting cmd=");
@@ -278,18 +267,11 @@ static int parse_v2(char *buf, struct PMIU_cmd *pmicmd)
         } else {
             if (strcmp(key, "subcmd") == 0) {
                 /* insert segment divider */
-                pmicmd->tokens[idx].key = NULL;
-                pmicmd->tokens[idx].val = NULL;
-                idx++;
-                PMIU_Assert(idx < MAX_PMI_ARGS);
+                PMIU_CMD_ADD_TOKEN(pmicmd, NULL, NULL);
             }
-            pmicmd->tokens[idx].key = key;
-            pmicmd->tokens[idx].val = val;
-            idx++;
-            PMIU_Assert(idx < MAX_PMI_ARGS);
+            PMIU_CMD_ADD_TOKEN(pmicmd, key, val);
         }
     }
-    pmicmd->num_tokens = idx;
 
   fn_exit:
     return pmi_errno;
@@ -451,12 +433,16 @@ void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd)
     pmicmd->version = version;
     pmicmd->cmd = cmd;
     pmicmd->num_tokens = 0;
+    pmicmd->tokens = pmicmd->static_token_buf;
 }
 
 void PMIU_cmd_free_buf(struct PMIU_cmd *pmicmd)
 {
     if (pmicmd->buf_need_free) {
         MPL_free(pmicmd->buf);
+    }
+    if (pmicmd->tokens != pmicmd->static_token_buf) {
+        MPL_free(pmicmd->tokens);
     }
     pmicmd->buf = NULL;
     pmicmd->tmp_buf = NULL;
@@ -470,6 +456,8 @@ void PMIU_cmd_free(struct PMIU_cmd *pmicmd)
 
 static void transfer_pmi(struct PMIU_cmd *from, struct PMIU_cmd *to)
 {
+    PMIU_Assert(from->num_tokens < MAX_STATIC_PMI_ARGS);
+    PMIU_cmd_init_zero(to);
     to->buf = from->buf;
     to->version = from->version;
     to->cmd = from->cmd;
@@ -484,19 +472,13 @@ static void transfer_pmi(struct PMIU_cmd *from, struct PMIU_cmd *to)
 void PMIU_cmd_add_str(struct PMIU_cmd *pmicmd, const char *key, const char *val)
 {
     if (val) {
-        int i = pmicmd->num_tokens;
-        pmicmd->tokens[i].key = key;
-        pmicmd->tokens[i].val = val;
-        pmicmd->num_tokens++;
+        PMIU_CMD_ADD_TOKEN(pmicmd, key, val);
     }
 }
 
 void PMIU_cmd_add_token(struct PMIU_cmd *pmicmd, const char *token_str)
 {
-    int i = pmicmd->num_tokens;
-    pmicmd->tokens[i].key = token_str;
-    pmicmd->tokens[i].val = NULL;
-    pmicmd->num_tokens++;
+    PMIU_CMD_ADD_TOKEN(pmicmd, token_str, NULL);
 }
 
 /* The following construction routine may need buffer. When needed, we'll
@@ -506,73 +488,64 @@ void PMIU_cmd_add_token(struct PMIU_cmd *pmicmd, const char *token_str)
  * We only use the buffer to construct the pmicmd object before PMIU_cmd_send.
  * The buffer will be freed by PMIU_cmd_send.
  */
-#define MAX_TOKEN_BUF_SIZE 50   /* We only use it for e.g. "%d", "%p", etc.
-                                 * The longest may be "infokey%d" */
 
 /* Initialize with static buffers, thus obviate the need to call PMIU_cmd_free_buf.
  * Obviously it won't work for concurrent PMIU_cmd instances, but most PMIU_cmd
  * usages are not concurrent.
  */
+static char static_pmi_buf[MAX_STATIC_PMI_BUF_SIZE];
+
 void PMIU_cmd_init_static(struct PMIU_cmd *pmicmd, int version, const char *cmd)
 {
-    static char buf[MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE];
-
     PMIU_cmd_init(pmicmd, version, cmd);
-    pmicmd->buf = buf;
+    pmicmd->buf = static_pmi_buf;;
+}
+
+bool PMIU_cmd_is_static(struct PMIU_cmd *pmicmd)
+{
+    return (pmicmd->buf == static_pmi_buf);
 }
 
 #define PMII_PMI_ALLOC(pmicmd) do { \
     if (pmicmd->buf == NULL) { \
-        pmicmd->buf = MPL_malloc(MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE, MPL_MEM_OTHER); \
+        pmicmd->buf = MPL_malloc(MAX_STATIC_PMI_BUF_SIZE, MPL_MEM_OTHER); \
         PMIU_Assert(pmicmd->buf); \
         pmicmd->buf_need_free = true; \
     } \
 } while (0)
 
-#define PMII_PMI_TOKEN_BUF(pmicmd, i) ((char *) pmicmd->buf + i * MAX_TOKEN_BUF_SIZE)
+#define PMII_PMI_TOKEN_BUF(pmicmd) ((char *) (pmicmd)->buf + (pmicmd)->num_tokens * MAX_TOKEN_BUF_SIZE)
 
 void PMIU_cmd_add_substr(struct PMIU_cmd *pmicmd, const char *key, int idx, const char *val)
 {
     /* FIXME: add assertions to ensure key fits in the static space. */
 
-    int i = pmicmd->num_tokens;
     PMII_PMI_ALLOC(pmicmd);
-    char *s = PMII_PMI_TOKEN_BUF(pmicmd, i);
+    char *s = PMII_PMI_TOKEN_BUF(pmicmd);
     snprintf(s, MAX_TOKEN_BUF_SIZE, key, idx);
-    pmicmd->tokens[i].key = s;
-    pmicmd->tokens[i].val = val;
-    pmicmd->num_tokens++;
+    PMIU_CMD_ADD_TOKEN(pmicmd, s, val);
 }
 
 void PMIU_cmd_add_int(struct PMIU_cmd *pmicmd, const char *key, int val)
 {
-    int i = pmicmd->num_tokens;
     PMII_PMI_ALLOC(pmicmd);
-    char *s = PMII_PMI_TOKEN_BUF(pmicmd, i);
+    char *s = PMII_PMI_TOKEN_BUF(pmicmd);
     snprintf(s, MAX_TOKEN_BUF_SIZE, "%d", val);
-    pmicmd->tokens[i].key = key;
-    pmicmd->tokens[i].val = s;
-    pmicmd->num_tokens++;
+    PMIU_CMD_ADD_TOKEN(pmicmd, key, s);
 }
 
 /* Used internally in PMIU_cmd_send to add thrid for PMI-v2 */
 static void pmi_add_thrid(struct PMIU_cmd *pmicmd)
 {
-    int i = pmicmd->num_tokens;
     PMII_PMI_ALLOC(pmicmd);
-    char *s = PMII_PMI_TOKEN_BUF(pmicmd, i);
+    char *s = PMII_PMI_TOKEN_BUF(pmicmd);
     snprintf(s, MAX_TOKEN_BUF_SIZE, "%p", pmicmd);
-    pmicmd->tokens[i].key = "thrid";
-    pmicmd->tokens[i].val = s;
-    pmicmd->num_tokens++;
+    PMIU_CMD_ADD_TOKEN(pmicmd, "thrid", s);
 }
 
 void PMIU_cmd_add_bool(struct PMIU_cmd *pmicmd, const char *key, int val)
 {
-    int i = pmicmd->num_tokens;
-    pmicmd->tokens[i].key = key;
-    pmicmd->tokens[i].val = val ? "TRUE" : "FALSE";
-    pmicmd->num_tokens++;
+    PMIU_CMD_ADD_TOKEN(pmicmd, key, (val ? "TRUE" : "FALSE"));
 }
 
 /* keyval look up */
@@ -617,6 +590,7 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
     assert(pmi_copy);
 
     PMIU_cmd_init(pmi_copy, pmicmd->version, NULL);
+    PMIU_Assert(pmicmd->num_tokens < MAX_STATIC_PMI_ARGS);
     pmi_copy->num_tokens = pmicmd->num_tokens;
     pmi_copy->cmd_id = pmicmd->cmd_id;
 

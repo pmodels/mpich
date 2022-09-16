@@ -9,10 +9,12 @@
 #define PMIU_WIRE_V1        1
 #define PMIU_WIRE_V2        2
 
-/* We may allocate stack arrays of size MAX_PMI_ARGS. Thus it shouldn't
- * be too big or result in stack-overflow. We assume a few kilobytes are safe.
- */
 #define MAX_PMI_ARGS 1000
+#define MAX_STATIC_PMI_ARGS 20
+
+/* internal temporary buffers, used for PMIU_cmd_add_int etc. */
+#define MAX_TOKEN_BUF_SIZE 50
+#define MAX_STATIC_PMI_BUF_SIZE (MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE)
 
 /* Internally a PMI command is represented by struct PMIU_cmd. It may result
  * from parsing a PMI command string, where buf points to the command string.
@@ -31,9 +33,31 @@ struct PMIU_cmd {
     int version;                /* wire protocol: 1 or 2 */
     int cmd_id;                 /* id defined in pmi_msg.h */
     const char *cmd;
-    struct PMIU_token tokens[MAX_PMI_ARGS];
+    struct PMIU_token *tokens;
+    struct PMIU_token static_token_buf[MAX_STATIC_PMI_ARGS];
     int num_tokens;
 };
+
+#define CHECK_NUM_TOKENS(pmi) \
+    do { \
+        PMIU_Assert(idx < MAX_PMI_ARGS); \
+        if (pmi->tokens == pmi->static_token_buf && pmi->num_tokens >= MAX_STATIC_PMI_ARGS) { \
+            /* static pmi object cannot allocate memory */ \
+            PMIU_Assert(!PMIU_cmd_is_static(pmi)); \
+            pmi->tokens = MPL_malloc(MAX_PMI_ARGS * sizeof(struct PMIU_token), MPL_MEM_OTHER); \
+            PMIU_Assert(pmi->tokens); \
+            memcpy(pmi->tokens, pmi->static_token_buf, pmi->num_tokens * sizeof(struct PMIU_token)); \
+        } \
+    } while (0)
+
+#define PMIU_CMD_ADD_TOKEN(pmi, k, v) \
+    do { \
+        int idx = (pmi)->num_tokens; \
+        pmicmd->tokens[idx].key = k; \
+        pmicmd->tokens[idx].val = v; \
+        (pmi)->num_tokens = idx + 1; \
+        CHECK_NUM_TOKENS(pmi); \
+    } while (0)
 
 /* set stack-allocated object to a sane state (rather than garbage) */
 #define PMIU_cmd_init_zero(pmicmd) PMIU_cmd_init(pmicmd, 0, NULL)
@@ -51,6 +75,7 @@ int PMIU_cmd_parse(char *buf, int buflen, int version, struct PMIU_cmd *pmicmd);
 void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd);
 /* same as PMIU_cmd_init, but uses static internal buffer */
 void PMIU_cmd_init_static(struct PMIU_cmd *pmicmd, int version, const char *cmd);
+bool PMIU_cmd_is_static(struct PMIU_cmd *pmicmd);
 void PMIU_cmd_add_token(struct PMIU_cmd *pmicmd, const char *token_str);
 void PMIU_cmd_add_str(struct PMIU_cmd *pmicmd, const char *key, const char *val);
 void PMIU_cmd_add_int(struct PMIU_cmd *pmicmd, const char *key, int val);
