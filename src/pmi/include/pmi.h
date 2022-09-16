@@ -419,7 +419,7 @@ Fields:
 S*/
     typedef struct PMI_keyval_t {
         const char *key;
-        char *val;
+        const char *val;
     } PMI_keyval_t;
 
 /*@
