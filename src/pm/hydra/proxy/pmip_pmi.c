@@ -158,7 +158,7 @@ static HYD_status cache_put_flush(int fd)
     debug("flushing %d put command(s) out\n", cache_put.keyval_len);
 
     struct PMIU_cmd pmi;
-    PMIU_cmd_init_static(&pmi, 1, "put");
+    PMIU_cmd_init_static(&pmi, 1, "mput");
     HYDU_ASSERT(pmi.num_tokens < MAX_PMI_ARGS, status);
     for (int i = 0; i < cache_put.keyval_len; i++) {
         PMIU_cmd_add_str(&pmi, cache_put.tokens[i].key, cache_put.tokens[i].val);

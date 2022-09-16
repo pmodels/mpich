@@ -147,6 +147,8 @@ SINGINIT:
         kvsname: STRING
 
 # server to proxy query
+MPUT:
+    Q: mput
 KVSCACHE:
     Q: keyval_cache
 BARRIEROUT:

@@ -53,7 +53,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int bufle
         case PMIU_CMD_KVSPUT:
             status = HYD_pmiserv_kvs_put(fd, pid, pgid, &pmi);
             break;
-        case PMIU_CMD_PUT:
+        case PMIU_CMD_MPUT:
             /* internal put with multiple key/val pairs */
             status = HYD_pmiserv_kvs_mput(fd, pid, pgid, &pmi);
             break;
