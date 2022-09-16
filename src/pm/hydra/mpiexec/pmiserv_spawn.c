@@ -14,36 +14,64 @@ static struct HYD_pg *spawn_pg = NULL;
 static struct HYD_exec *spawn_exec_list = NULL;
 
 static HYD_status allocate_spawn_pg(int fd);
-static HYD_status fill_exec_params(struct PMIU_cmd *pmi, struct HYD_exec *exec, int j);
-static HYD_status fill_preput_kvs(struct PMIU_cmd *pmi, struct HYD_pmcd_pmi_kvs *kvs);
+static HYD_status fill_exec_params(struct HYD_exec *exec, const char *execname, int nprocs,
+                                   int argcnt, const char **argv,
+                                   int infonum, struct PMIU_token *infos);
+static HYD_status fill_preput_kvs(struct HYD_pmcd_pmi_kvs *kvs,
+                                  int preput_num, struct PMIU_token *infos);
 static HYD_status do_spawn(void);
 
 static char *get_exec_path(const char *execname, const char *path);
 static HYD_status parse_info_hosts(const char *host_str, struct HYD_pg *pg);
 
+static const bool is_static = true;
+
 HYD_status HYD_pmiserv_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
+    int pmi_errno;
+    bool need_free = false;
     HYDU_FUNC_ENTER();
 
     status = allocate_spawn_pg(fd);
     HYDU_ERR_POP(status, "spawn failed\n");
 
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch = spawn_pg->pg_scratch;
-    status = fill_preput_kvs(pmi, pg_scratch->kvs);
-    HYDU_ERR_POP(status, "spawn failed\n");
 
-    int num_exec;
-    if (pmi->version == 1) {
-        HYD_PMI_GET_INTVAL(pmi, "totspawns", num_exec);
-        /* TODO: check spawnssofar */
-    } else {
-        HYD_PMI_GET_INTVAL(pmi, "ncmds", num_exec);
-    }
+    int count;
+    int total_args, total_info, num_preput;
+    pmi_errno = PMIU_msg_get_query_spawn_sizes(pmi, &count, &total_args, &total_info, &num_preput);
+    HYDU_ASSERT(!pmi_errno, status);
+
+    const char **cmds;
+    int *maxprocs;
+    int *argcs;
+    const char **argvs;
+    int *info_counts;
+    struct PMIU_token *info_keyvals, *preput_keyvals;
+
+    cmds = MPL_malloc(count * sizeof(char *), MPL_MEM_OTHER);
+    maxprocs = MPL_malloc(count * sizeof(int), MPL_MEM_OTHER);
+    argcs = MPL_malloc(count * sizeof(int), MPL_MEM_OTHER);
+    argvs = MPL_malloc(total_args * sizeof(char *), MPL_MEM_OTHER);
+    info_counts = MPL_malloc(count * sizeof(int), MPL_MEM_OTHER);
+    info_keyvals = MPL_malloc(total_info * sizeof(struct PMIU_token), MPL_MEM_OTHER);
+    preput_keyvals = MPL_malloc(num_preput * sizeof(struct PMIU_token), MPL_MEM_OTHER);
+    need_free = true;
+
+    pmi_errno = PMIU_msg_get_query_spawn(pmi, cmds, maxprocs, argcs, argvs,
+                                         info_counts, info_keyvals, preput_keyvals);
+    HYDU_ASSERT(!pmi_errno, status);
+
+
+    status = fill_preput_kvs(pg_scratch->kvs, num_preput, preput_keyvals);
+    HYDU_ERR_POP(status, "spawn failed\n");
 
     struct HYD_exec *exec;
     exec = NULL;
-    for (int j = 0; j < ncmds; j++) {
+    int i_argv = 0;
+    int i_info = 0;
+    for (int j = 0; j < count; j++) {
         if (exec == NULL) {
             status = HYDU_alloc_exec(&spawn_exec_list);
             HYDU_ERR_POP(status, "spawn failed\n");
@@ -56,42 +84,37 @@ HYD_status HYD_pmiserv_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
             exec->appnum = j;
         }
 
-        status = fill_exec_params(pmi, exec, j);
+        status = fill_exec_params(exec, cmds[j], maxprocs[j], argcs[j], argvs + i_argv,
+                                  info_counts[j], info_keyvals + i_info);
         HYDU_ERR_POP(status, "spawn failed\n");
+
+        i_argv += argcs[j];
+        i_info += info_counts[j];
     }
 
     status = do_spawn();
     HYDU_ERR_POP(status, "spawn failed\n");
 
-    if (pmi->version == 1) {
-        struct PMIU_cmd pmi_response;
-        PMIU_cmd_init_static(&pmi_response, 1, "spawn_result");
-        PMIU_cmd_add_str(&pmi_response, "rc", "0");
+    struct PMIU_cmd pmi_response;
+    pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
+    HYDU_ASSERT(!pmi_errno, status);
 
-        status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
-        HYDU_ERR_POP(status, "error writing PMI line\n");
+    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    HYDU_ERR_POP(status, "error writing PMI line\n");
 
-        /* Cache the pre-initialized keyvals on the new proxies */
-        HYD_pmiserv_bcast_keyvals(fd, pid);
-    } else {
-        const char *thrid = NULL;
-        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
-
-        struct PMIU_cmd pmi_response;
-        PMIU_cmd_init_static(&pmi_response, 2, "spawn-response");
-        if (thrid) {
-            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-        }
-        PMIU_cmd_add_str(&pmi_response, "rc", "0");
-        struct HYD_pmcd_pmi_pg_scratch *pg_scratch = spawn_pg->pg_scratch;
-        PMIU_cmd_add_str(&pmi_response, "jobid", pg_scratch->kvs->kvsname);
-        PMIU_cmd_add_str(&pmi_response, "nerrs", "0");;
-
-        status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
-        HYDU_ERR_POP(status, "send command failed\n");
-    }
+    /* Cache the pre-initialized keyvals on the new proxies */
+    HYD_pmiserv_bcast_keyvals(fd, pid);
 
   fn_exit:
+    if (need_free) {
+        MPL_free(cmds);
+        MPL_free(maxprocs);
+        MPL_free(argcs);
+        MPL_free(argvs);
+        MPL_free(info_counts);
+        MPL_free(info_keyvals);
+        MPL_free(preput_keyvals);
+    }
     HYDU_FUNC_EXIT();
     return status;
 
@@ -130,54 +153,28 @@ static HYD_status allocate_spawn_pg(int fd)
     goto fn_exit;
 }
 
-static HYD_status fill_exec_params(struct PMIU_cmd *pmi, struct HYD_exec *exec, int j)
+static HYD_status fill_exec_params(struct HYD_exec *exec, const char *execname, int nprocs,
+                                   int argcnt, const char **argv,
+                                   int infonum, struct PMIU_token *infos)
 {
     HYD_status status = HYD_SUCCESS;
 
     struct HYD_pg *pg = spawn_pg;
 
-    int nprocs, argcnt, info_num;
-    const char *execname;
-    if (pmi->version == 1) {
-        HYD_PMI_GET_INTVAL_J(pmi, "nprocs", j, nprocs);
-        HYD_PMI_GET_INTVAL_J(pmi, "argcnt", j, argcnt);
-        HYD_PMI_GET_INTVAL_J_WITH_DEFAULT(pmi, "info_num", j, info_num, 0);
-        HYD_PMI_GET_STRVAL_J(pmi, "execname", j, execname);
-    } else {
-        HYD_PMI_GET_INTVAL_J(pmi, "maxprocs", j, nprocs);
-        HYD_PMI_GET_INTVAL_J(pmi, "argc", j, argcnt);
-        HYD_PMI_GET_INTVAL_J_WITH_DEFAULT(pmi, "infokeycount", j, info_num, 0);
-        HYD_PMI_GET_STRVAL_J(pmi, "subcmd", j, execname);
-    }
-
     const char *path = NULL;
     /* Info keys */
-    for (int i = 0; i < info_num; i++) {
-        char key[100];
-
-        const char *info_key, *info_val;
-        if (pmi->version == 1) {
-            MPL_snprintf(key, 100, "info_key_%d", i);
-            HYD_PMI_GET_STRVAL_J(pmi, key, j, info_key);
-            MPL_snprintf(key, 100, "info_val_%d", i);
-            HYD_PMI_GET_STRVAL_J(pmi, key, j, info_val);
-        } else {
-            MPL_snprintf(key, 100, "infokey%d", i);
-            HYD_PMI_GET_STRVAL_J(pmi, key, j, info_key);
-            MPL_snprintf(key, 100, "infoval%d", i);
-            HYD_PMI_GET_STRVAL_J(pmi, key, j, info_val);
-        }
-
-        if (!strcmp(info_key, "path")) {
-            path = info_val;
-        } else if (!strcmp(info_key, "wdir")) {
-            exec->wdir = MPL_strdup(info_val);
-        } else if (!strcmp(info_key, "host") || !strcmp(info_key, "hosts")) {
-            status = parse_info_hosts(info_val, pg);
+    for (int i = 0; i < infonum; i++) {
+        if (!strcmp(infos[i].key, "path")) {
+            path = infos[i].val;
+        } else if (!strcmp(infos[i].key, "wdir")) {
+            exec->wdir = MPL_strdup(infos[i].val);
+        } else if (!strcmp(infos[i].key, "host") || !strcmp(infos[i].key, "hosts")) {
+            status = parse_info_hosts(infos[i].val, pg);
             HYDU_ERR_POP(status, "failed spawn\n");
-        } else if (!strcmp(info_key, "hostfile")) {
+        } else if (!strcmp(infos[i].key, "hostfile")) {
             pg->user_node_list = NULL;
-            status = HYDU_parse_hostfile(info_val, &pg->user_node_list, HYDU_process_mfile_token);
+            status =
+                HYDU_parse_hostfile(infos[i].val, &pg->user_node_list, HYDU_process_mfile_token);
             HYDU_ERR_POP(status, "error parsing hostfile\n");
         } else {
             /* Unrecognized info key; ignore */
@@ -189,16 +186,7 @@ static HYD_status fill_exec_params(struct PMIU_cmd *pmi, struct HYD_exec *exec, 
 
     exec->exec[0] = get_exec_path(execname, path);
     for (int i = 0; i < argcnt; i++) {
-        char key[100];
-        const char *arg;
-        if (pmi->version == 1) {
-            MPL_snprintf(key, 100, "arg%d", i + 1);
-            HYD_PMI_GET_STRVAL_J(pmi, key, j, arg);
-        } else {
-            MPL_snprintf(key, 100, "argv%d", i);
-            HYD_PMI_GET_STRVAL_J(pmi, key, j, arg);
-        }
-        exec->exec[i + 1] = MPL_strdup(arg);
+        exec->exec[i + 1] = MPL_strdup(argv[i]);
     }
     exec->exec[argcnt + 1] = NULL;
 
@@ -220,36 +208,14 @@ static HYD_status fill_exec_params(struct PMIU_cmd *pmi, struct HYD_exec *exec, 
     goto fn_exit;
 }
 
-static HYD_status fill_preput_kvs(struct PMIU_cmd *pmi, struct HYD_pmcd_pmi_kvs *kvs)
+static HYD_status fill_preput_kvs(struct HYD_pmcd_pmi_kvs *kvs,
+                                  int preput_num, struct PMIU_token *infos)
 {
     HYD_status status = HYD_SUCCESS;
 
-    const char *key_preput_num;
-    const char *fmt_preput_key;
-    const char *fmt_preput_val;
-    if (pmi->version == 1) {
-        key_preput_num = "preput_num";
-        fmt_preput_key = "preput_key_%d";
-        fmt_preput_val = "preput_val_%d";
-    } else {
-        key_preput_num = "preputcount";
-        fmt_preput_key = "ppkey%d";
-        fmt_preput_val = "ppval%d";
-    }
-
-    int preput_num;
-    HYD_PMI_GET_INTVAL_WITH_DEFAULT(pmi, key_preput_num, preput_num, 0);
-
     for (int i = 0; i < preput_num; i++) {
-        char key[100];
-        const char *preput_key, *preput_val;
-        MPL_snprintf(key, 100, fmt_preput_key, i);
-        HYD_PMI_GET_STRVAL(pmi, key, preput_key);
-        MPL_snprintf(key, 100, fmt_preput_val, i);
-        HYD_PMI_GET_STRVAL(pmi, key, preput_val);
-
         int ret;
-        status = HYD_pmcd_pmi_add_kvs(preput_key, preput_val, kvs, &ret);
+        status = HYD_pmcd_pmi_add_kvs(infos[i].key, infos[i].val, kvs, &ret);
         HYDU_ERR_POP(status, "unable to add key pair to kvs\n");
     }
 

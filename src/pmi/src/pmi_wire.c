@@ -1172,3 +1172,145 @@ void PMIU_msg_set_query_spawn(struct PMIU_cmd *pmi_query, int version, bool is_s
         PMIU_Assert(0);
     }
 }
+
+/* macros to make the code less clutter */
+#define KEYi pmi->tokens[i].key
+#define VALi pmi->tokens[i].val
+
+int PMIU_msg_get_query_spawn_sizes(struct PMIU_cmd *pmi, int *count, int *total_args,
+                                   int *total_info_keys, int *num_preput)
+{
+    int pmi_errno = PMIU_SUCCESS;
+
+    *count = 0;
+    *num_preput = 0;
+    *total_args = 0;
+    *total_info_keys = 0;
+
+    int i_seg = 0;
+    for (int i = 0; i < pmi->num_tokens; i++) {
+        if (KEYi == NULL) {
+            i_seg++;
+            continue;
+        }
+        if (pmi->version == PMIU_WIRE_V1) {
+            if (i_seg == 1 && strcmp(KEYi, "totspawns") == 0) {
+                *count = atoi(VALi);
+            } else if (i_seg == 1 && strcmp(KEYi, "preput_num") == 0) {
+                *num_preput = atoi(VALi);
+            } else if (strcmp(KEYi, "argcnt") == 0) {
+                *total_args += atoi(VALi);
+            } else if (strcmp(KEYi, "info_num") == 0) {
+                *total_info_keys += atoi(VALi);
+            }
+        } else if (pmi->version == PMIU_WIRE_V2) {
+            if (strcmp(KEYi, "ncmds") == 0) {
+                *count = atoi(VALi);
+            } else if (strcmp(KEYi, "preputcount") == 0) {
+                *num_preput = atoi(VALi);
+            } else if (strcmp(KEYi, "argc") == 0) {
+                *total_args += atoi(VALi);
+            } else if (strcmp(KEYi, "infokeycount") == 0) {
+                *total_info_keys += atoi(VALi);
+            }
+        }
+    }
+
+    return pmi_errno;
+}
+
+int PMIU_msg_get_query_spawn(struct PMIU_cmd *pmi, const char **cmds, int *maxprocs,
+                             int *argcs, const char **argvs, int *info_counts,
+                             struct PMIU_token *info_keyvals, struct PMIU_token *preput_keyvals)
+{
+    int pmi_errno = PMIU_SUCCESS;
+
+    int count = 0;
+    int num_preput = 0, total_args = 0, total_info_keys = 0;
+    int i_cmd = 0, i_nprocs = 0, i_argc = 0, i_info_count = 0;
+    int i_argv = 0, i_info_key = 0, i_info_val = 0, i_preput_key = 0, i_preput_val = 0;
+
+    int i_seg = 0;
+    for (int i = 0; i < pmi->num_tokens; i++) {
+        if (KEYi == NULL) {
+            i_seg++;
+            continue;
+        }
+        if (pmi->version == PMIU_WIRE_V1) {
+            if (strcmp(KEYi, "totspawns") == 0) {
+                if (i_seg == 1) {
+                    count = atoi(VALi);
+                } else {
+                    PMIU_ERR_POP(atoi(VALi) != count);
+                }
+            } else if (strcmp(KEYi, "spawnssofar") == 0) {
+                PMIU_ERR_POP(atoi(VALi) != i_seg);
+            } else if (strcmp(KEYi, "execname") == 0) {
+                cmds[i_cmd++] = VALi;
+                PMIU_ERR_POP(i_cmd != i_seg);
+            } else if (strcmp(KEYi, "nprocs") == 0) {
+                maxprocs[i_nprocs++] = atoi(VALi);
+                PMIU_ERR_POP(i_nprocs != i_seg);
+            } else if (strcmp(KEYi, "argcnt") == 0) {
+                argcs[i_argc++] = atoi(VALi);
+                PMIU_ERR_POP(i_argc != i_seg);
+            } else if (strncmp(KEYi, "arg", 3) == 0) {
+                argvs[i_argv++] = VALi;
+            } else if (i_seg == 1 && strcmp(KEYi, "preput_num") == 0) {
+                num_preput = atoi(VALi);
+            } else if (i_seg == 1 && strncmp(KEYi, "preput_key_", 10) == 0) {
+                preput_keyvals[i_preput_key++].key = VALi;
+            } else if (i_seg == 1 && strncmp(KEYi, "preput_val_", 10) == 0) {
+                preput_keyvals[i_preput_val++].val = VALi;
+            } else if (strcmp(KEYi, "info_num") == 0) {
+                info_counts[i_info_count++] = atoi(VALi);
+                PMIU_ERR_POP(i_info_count != i_seg);
+            } else if (strncmp(KEYi, "info_key_", 8) == 0) {
+                info_keyvals[i_info_key++].key = VALi;
+            } else if (strncmp(KEYi, "info_val_", 8) == 0) {
+                info_keyvals[i_info_val++].val = VALi;
+            }
+        } else if (pmi->version == PMIU_WIRE_V2) {
+            if (i_seg == 0 && strcmp(KEYi, "ncmds") == 0) {
+                count = atoi(VALi);
+            } else if (strcmp(KEYi, "subcmd") == 0) {
+                cmds[i_cmd++] = VALi;
+                PMIU_ERR_POP(i_cmd != i_seg);
+            } else if (strcmp(KEYi, "maxprocs") == 0) {
+                maxprocs[i_nprocs++] = atoi(VALi);
+                PMIU_ERR_POP(i_nprocs != i_seg);
+            } else if (strcmp(KEYi, "argc") == 0) {
+                argcs[i_argc++] = atoi(VALi);
+                PMIU_ERR_POP(i_argc != i_seg);
+            } else if (strncmp(KEYi, "argv", 4) == 0) {
+                argvs[i_argv++] = VALi;
+            } else if (i_seg == 0 && strcmp(KEYi, "preputcount") == 0) {
+                num_preput = atoi(VALi);
+            } else if (i_seg == 0 && strncmp(KEYi, "ppkey", 5) == 0) {
+                preput_keyvals[i_preput_key++].key = VALi;
+            } else if (i_seg == 0 && strncmp(KEYi, "ppval", 5) == 0) {
+                preput_keyvals[i_preput_val++].val = VALi;
+            } else if (strcmp(KEYi, "infokeycount") == 0) {
+                info_counts[i_info_count++] = atoi(VALi);
+                PMIU_ERR_POP(i_info_count != i_seg);
+            } else if (strncmp(KEYi, "infokey", 7) == 0) {
+                info_keyvals[i_info_key++].key = VALi;
+            } else if (strncmp(KEYi, "infoval_", 7) == 0) {
+                info_keyvals[i_info_val++].val = VALi;
+            }
+        }
+    }
+    PMIU_ERR_POP(i_seg != count);
+    PMIU_ERR_POP(i_cmd != count);
+    PMIU_ERR_POP(i_nprocs != count);
+    PMIU_ERR_POP(i_argc != count);
+    PMIU_ERR_POP(i_info_count != count);
+    PMIU_ERR_POP(i_argv != total_args);
+    PMIU_ERR_POP(i_preput_val != num_preput || i_preput_key != num_preput);
+    PMIU_ERR_POP(i_info_val != total_info_keys || i_info_key != total_info_keys);
+
+  fn_exit:
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
+}

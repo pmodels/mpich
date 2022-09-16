@@ -170,4 +170,9 @@ void PMIU_msg_set_query_spawn(struct PMIU_cmd *pmi_query, int version, bool is_s
                               const struct PMIU_token *info_keyval_vectors[],
                               int preput_keyval_size,
                               const struct PMIU_token preput_keyval_vector[]);
+int PMIU_msg_get_query_spawn_sizes(struct PMIU_cmd *pmi, int *count, int *total_args,
+                                   int *total_info_keys, int *num_preput);
+int PMIU_msg_get_query_spawn(struct PMIU_cmd *pmi, const char **cmds, int *maxprocs,
+                             int *argcs, const char **argvs, int *info_counts,
+                             struct PMIU_token *info_keyvals, struct PMIU_token *preput_keyvals);
 #endif
