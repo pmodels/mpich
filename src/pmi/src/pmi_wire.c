@@ -517,6 +517,7 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
 
     PMIU_cmd_init(pmi_copy, pmicmd->version, NULL);
     pmi_copy->num_tokens = pmicmd->num_tokens;
+    pmi_copy->cmd_id = pmicmd->cmd_id;
 
     /* calc buflen to accommodate all token strings */
     int buflen = 0;
@@ -528,6 +529,7 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
     /* allocate the buffer */
     pmi_copy->buf = MPL_malloc(buflen, MPL_MEM_OTHER);
     assert(pmi_copy->buf);
+    pmi_copy->buf_need_free = true;
     char *s = pmi_copy->buf;
 
     /* copy cmd and tokens */
