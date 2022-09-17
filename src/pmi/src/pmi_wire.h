@@ -87,6 +87,8 @@ void PMIU_cmd_free_buf(struct PMIU_cmd *pmicmd);
 void PMIU_cmd_free(struct PMIU_cmd *pmicmd);
 struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd);
 
+void PMIU_cmd_get_tokens(struct PMIU_cmd *pmicmd,
+                         int *num_tokens, const struct PMIU_token **tokens);
 const char *PMIU_cmd_find_keyval(struct PMIU_cmd *pmicmd, const char *key);
 const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key, int segment_index);
 

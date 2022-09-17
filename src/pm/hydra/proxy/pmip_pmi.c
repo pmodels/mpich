@@ -473,28 +473,30 @@ HYD_status fn_keyval_cache(int fd, struct PMIU_cmd *pmi)
 
     HYDU_FUNC_ENTER();
 
-    /* FIXME: leak of abstraction of the pmi object */
+    int num_tokens;
+    const struct PMIU_token *tokens;
+    PMIU_cmd_get_tokens(pmi, &num_tokens, &tokens);
 
     /* allocate a larger space for the cached keyvals, copy over the
      * older keyvals and add the new ones in */
     HASH_CLEAR(hh, hash_get);
     HYDU_REALLOC_OR_JUMP(cache_get, struct cache_elem *,
-                         (sizeof(struct cache_elem) * (num_elems + pmi->num_tokens)), status);
+                         (sizeof(struct cache_elem) * (num_elems + num_tokens)), status);
 
     int i;
     for (i = 0; i < num_elems; i++) {
         struct cache_elem *elem = cache_get + i;
         HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
     }
-    for (; i < num_elems + pmi->num_tokens; i++) {
+    for (; i < num_elems + num_tokens; i++) {
         struct cache_elem *elem = cache_get + i;
-        elem->key = MPL_strdup(pmi->tokens[i - num_elems].key);
+        elem->key = MPL_strdup(tokens[i - num_elems].key);
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->key, HYD_INTERNAL_ERROR, "%s", "");
-        elem->val = MPL_strdup(pmi->tokens[i - num_elems].val);
+        elem->val = MPL_strdup(tokens[i - num_elems].val);
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->val, HYD_INTERNAL_ERROR, "%s", "");
         HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
     }
-    num_elems += pmi->num_tokens;
+    num_elems += num_tokens;
 
   fn_exit:
     HYDU_FUNC_EXIT();

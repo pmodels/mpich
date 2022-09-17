@@ -555,6 +555,12 @@ void PMIU_cmd_add_bool(struct PMIU_cmd *pmicmd, const char *key, int val)
     PMIU_CMD_ADD_TOKEN(pmicmd, key, (val ? "TRUE" : "FALSE"));
 }
 
+void PMIU_cmd_get_tokens(struct PMIU_cmd *pmicmd, int *num_tokens, const struct PMIU_token **tokens)
+{
+    *num_tokens = pmicmd->num_tokens;
+    *tokens = pmicmd->tokens;
+}
+
 /* keyval look up */
 const char *PMIU_cmd_find_keyval(struct PMIU_cmd *pmicmd, const char *key)
 {
