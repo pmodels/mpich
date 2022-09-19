@@ -617,6 +617,13 @@ HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi)
 
     finalize_count++;
 
+    /* mark singleton's stdio sockets as closed */
+    if (HYD_pmcd_pmip.user_global.singleton_pid > 0) {
+        HYDU_ASSERT(HYD_pmcd_pmip.local.proxy_process_count == 1, status);
+        HYD_pmcd_pmip.downstream.out[0] = HYD_FD_CLOSED;
+        HYD_pmcd_pmip.downstream.err[0] = HYD_FD_CLOSED;
+    }
+
     if (finalize_count == HYD_pmcd_pmip.local.proxy_process_count) {
         /* All processes have finalized */
         internal_finalize();
