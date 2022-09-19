@@ -581,6 +581,16 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
 
     MPIR_FUNC_ENTER;
 
+    if (unlikely(sched->total_vtcs == 0)) {
+        if (!sched->is_persistent) {
+            mpi_errno = MPIR_TSP_sched_free(sched);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
+        MPIR_ERR_CHKANDSTMT(*req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        goto fn_exit;
+    }
+
     /* Create a request */
     reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
     if (!reqp)
@@ -589,14 +599,6 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
     MPIR_Request_add_ref(reqp);
     sched->req = reqp;
 
-    if (unlikely(sched->total_vtcs == 0)) {
-        if (!sched->is_persistent) {
-            mpi_errno = MPIR_TSP_sched_free(sched);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-        MPID_Request_complete(reqp);
-        goto fn_exit;
-    }
     MPIR_Assert(sched->completed_vtcs == 0);
     /* Kick start progress on this collective's schedule */
     mpi_errno = MPII_Genutil_sched_poke(sched, &is_complete, &made_progress);
