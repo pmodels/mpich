@@ -211,6 +211,9 @@ if (defined($ENV{'MPIEXEC'})) {
 if (defined($ENV{'MPITEST_MPIEXECARG'})) {
     $g_opt{mpiexecargs} = $ENV{'MPITEST_MPIEXECARG'};
 }
+if (defined($ENV{'MPITEST_SINGLETON'})) {
+    $g_opt{mpitest_singleton} = $ENV{'MPITEST_SINGLETON'};
+}
 
 #---------------------------------------------------------------------------
 # Process arguments and override any defaults
@@ -408,6 +411,11 @@ sub LoadTests {
             my $requiresStrict = "";
 
             if ($#args >= 1) { $np = $args[1]; }
+
+            if ($g_opt{mpitest_singleton} and $np != 1) {
+                # skip multiple process tests if we need test singleton init
+                next;
+            }
             # Process the key=value arguments
             for (my $i=2; $i <= $#args; $i++) {
                 if ($args[$i] =~ /([^=]+)=(.*)/) {
@@ -608,6 +616,10 @@ sub LoadImplicitTests {
 
 sub get_mpiexec_wrapper {
     my ($np, $test_opt) = @_;
+
+    if ($g_opt{mpitest_singleton}) {
+        return $g_opt{program_wrapper};
+    }
 
     my $mpiexecArgs;
     if ($test_opt->{mpiexecargs} and @{$test_opt->{mpiexecargs}}) {
