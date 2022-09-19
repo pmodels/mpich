@@ -55,6 +55,8 @@ static int PMI_totalview = 0;
 #endif
 static int PMIi_InitIfSingleton(void);
 static int accept_one_connection(int);
+
+/* We allow a single PUT with SINGLETON_INIT_BUT_NO_PM */
 static int cached_singinit_inuse = 0;
 static char cached_singinit_key[PMIU_MAXLINE];
 static char cached_singinit_val[PMIU_MAXLINE];
@@ -333,9 +335,9 @@ PMI_API_PUBLIC int PMI_KVS_Get_my_name(char kvsname[], int length)
 
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
         /* Return a dummy name */
-        /* FIXME: We need to support a distinct kvsname for each
-         * process group */
-        MPL_snprintf(kvsname, length, "singinit_kvs_%d_0", (int) getpid());
+        /* Upon singinit of server, we'll check and replace "singinit" with
+         * initialized singinit_kvsname */
+        MPL_snprintf(kvsname, length, "singinit");
         goto fn_exit;
     }
 
@@ -381,6 +383,7 @@ PMI_API_PUBLIC int PMI_KVS_Get_value_length_max(int *maxlen)
 PMI_API_PUBLIC int PMI_KVS_Put(const char kvsname[], const char key[], const char value[])
 {
     int pmi_errno = PMI_SUCCESS;
+    const char *use_kvsname = kvsname;
 
     struct PMIU_cmd pmicmd;
     PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "put");
@@ -400,7 +403,11 @@ PMI_API_PUBLIC int PMI_KVS_Put(const char kvsname[], const char key[], const cha
         return PMI_SUCCESS;
     }
 
-    PMIU_cmd_add_str(&pmicmd, "kvsname", kvsname);
+    if (strcmp(kvsname, "singinit") == 0) {
+        use_kvsname = singinit_kvsname;
+    }
+
+    PMIU_cmd_add_str(&pmicmd, "kvsname", use_kvsname);
     PMIU_cmd_add_str(&pmicmd, "key", key);
     PMIU_cmd_add_str(&pmicmd, "value", value);
 
@@ -429,6 +436,7 @@ PMI_API_PUBLIC int PMI_KVS_Commit(const char kvsname[]ATTRIBUTE((unused)))
 PMI_API_PUBLIC int PMI_KVS_Get(const char kvsname[], const char key[], char value[], int length)
 {
     int pmi_errno = PMI_SUCCESS;
+    const char *use_kvsname = kvsname;
 
     struct PMIU_cmd pmicmd;
     PMIU_cmd_init(&pmicmd, USE_WIRE_VER, "get");
@@ -440,7 +448,11 @@ PMI_API_PUBLIC int PMI_KVS_Get(const char kvsname[], const char key[], char valu
     if (PMIi_InitIfSingleton() != 0)
         return PMI_FAIL;
 
-    PMIU_cmd_add_str(&pmicmd, "kvsname", kvsname);
+    if (strcmp(kvsname, "singinit") == 0) {
+        use_kvsname = singinit_kvsname;
+    }
+
+    PMIU_cmd_add_str(&pmicmd, "kvsname", use_kvsname);
     PMIU_cmd_add_str(&pmicmd, "key", key);
 
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd, "get_result");
@@ -1024,11 +1036,11 @@ static int PMIi_InitIfSingleton(void)
 
     PMII_getmaxes(&PMI_kvsname_max, &PMI_keylen_max, &PMI_vallen_max);
 
-    /* FIXME: We need to support a distinct kvsname for each
-     * process group */
     if (cached_singinit_inuse) {
         /* if we cached a key-value put, push it up to the server */
         PMI_KVS_Put(singinit_kvsname, cached_singinit_key, cached_singinit_val);
+        /* make the key-value visible */
+        PMI_Barrier();
     }
 
     return PMI_SUCCESS;
