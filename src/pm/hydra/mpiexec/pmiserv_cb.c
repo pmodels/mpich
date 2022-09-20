@@ -73,6 +73,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int bufle
                                 "Unrecognized PMI %d command: %s | cleaning up processes\n",
                                 pmi_version, pmi.cmd);
     }
+    PMIU_cmd_free_buf(&pmi);
 
   fn_exit:
     HYDU_FUNC_EXIT();

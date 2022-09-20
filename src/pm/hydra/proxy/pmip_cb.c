@@ -391,6 +391,8 @@ static HYD_status handle_pmi_response(int fd, int buflen, int pmi_version, int p
 
         status = handler(fd, &pmi);
         HYDU_ERR_POP(status, "PMI handler returned error\n");
+
+        PMIU_cmd_free_buf(&pmi);
         goto fn_exit;
     }
 
