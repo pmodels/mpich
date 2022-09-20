@@ -105,6 +105,10 @@ HYD_status HYDT_topo_finalize(void)
 
     HYDU_FUNC_ENTER();
 
+    if (!HYDT_topo_info.topolib) {
+        goto fn_exit;
+    }
+
     /* Finalize the topology library requested by the user */
 #if defined HAVE_HWLOC
     if (!strcmp(HYDT_topo_info.topolib, "hwloc")) {
