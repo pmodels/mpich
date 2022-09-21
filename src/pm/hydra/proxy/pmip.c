@@ -130,6 +130,11 @@ int main(int argc, char **argv)
     status = init_params();
     HYDU_ERR_POP(status, "Error initializing proxy params\n");
 
+    status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
+                            HYD_pmcd_pmip.user_global.binding,
+                            HYD_pmcd_pmip.user_global.mapping, HYD_pmcd_pmip.user_global.membind);
+    HYDU_ERR_POP(status, "unable to initialize process topology\n");
+
     status = HYD_pmcd_pmip_get_params(argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
@@ -200,30 +205,41 @@ int main(int argc, char **argv)
         }
     }
 
-    /* Now wait for the processes to finish */
-    while (1) {
-        pid = waitpid(-1, &ret_status, 0);
+    /* collect exit_status unless it is a singleton */
+    if (HYD_pmcd_pmip.user_global.singleton_pid > 0) {
+        HYDU_ASSERT(HYD_pmcd_pmip.local.proxy_process_count == 1, status);
+        HYDU_ASSERT(HYD_pmcd_pmip.downstream.pid[0] == HYD_pmcd_pmip.user_global.singleton_pid,
+                    status);
+        /* We won't get the singleton's exit status. Assume it's 0. */
+        if (HYD_pmcd_pmip.downstream.exit_status[0] == PMIP_EXIT_STATUS_UNSET) {
+            HYD_pmcd_pmip.downstream.exit_status[0] = 0;
+        }
+    } else {
+        /* Wait for the processes to finish */
+        while (1) {
+            pid = waitpid(-1, &ret_status, 0);
 
-        /* Find the pid and mark it as complete. */
-        if (pid > 0) {
-            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-                if (HYD_pmcd_pmip.downstream.pid[i] == pid) {
-                    if (HYD_pmcd_pmip.downstream.exit_status[i] == PMIP_EXIT_STATUS_UNSET) {
-                        HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
+            /* Find the pid and mark it as complete. */
+            if (pid > 0) {
+                for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+                    if (HYD_pmcd_pmip.downstream.pid[i] == pid) {
+                        if (HYD_pmcd_pmip.downstream.exit_status[i] == PMIP_EXIT_STATUS_UNSET) {
+                            HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
+                        }
+                        done++;
                     }
-                    done++;
                 }
             }
+
+            /* If no more processes are pending, break out */
+            if (done == HYD_pmcd_pmip.local.proxy_process_count)
+                break;
+
+            /* Check if there are any messages from the launcher */
+            status = HYDT_dmx_wait_for_event(0);
+            HYDU_IGNORE_TIMEOUT(status);
+            HYDU_ERR_POP(status, "demux engine error waiting for event\n");
         }
-
-        /* If no more processes are pending, break out */
-        if (done == HYD_pmcd_pmip.local.proxy_process_count)
-            break;
-
-        /* Check if there are any messages from the launcher */
-        status = HYDT_dmx_wait_for_event(0);
-        HYDU_IGNORE_TIMEOUT(status);
-        HYDU_ERR_POP(status, "demux engine error waiting for event\n");
     }
 
     /* Send the exit status upstream */

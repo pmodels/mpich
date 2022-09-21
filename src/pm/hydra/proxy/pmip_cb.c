@@ -612,11 +612,6 @@ static HYD_status launch_procs(void)
         HYD_pmcd_pmip.downstream.pmi_rank[i] = local_to_global_id(i);
     }
 
-    status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
-                            HYD_pmcd_pmip.user_global.binding,
-                            HYD_pmcd_pmip.user_global.mapping, HYD_pmcd_pmip.user_global.membind);
-    HYDU_ERR_POP(status, "unable to initialize process topology\n");
-
     if (HYD_pmcd_pmip.user_global.pmi_port) {
         status = HYDU_sock_create_and_listen_portstr(HYD_pmcd_pmip.user_global.iface,
                                                      NULL, NULL, &pmi_port, pmi_listen_cb, NULL);
