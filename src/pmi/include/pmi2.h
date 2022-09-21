@@ -66,8 +66,8 @@ Fields:
 
 S*/
     typedef struct PMI2_keyval_t {
-        char *key;
-        char *val;
+        const char *key;
+        const char *val;
     } PMI2_keyval_t;
 
 /*@
