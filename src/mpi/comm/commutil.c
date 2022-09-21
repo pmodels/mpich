@@ -1086,6 +1086,8 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 {
     int in_use;
     int mpi_errno = MPI_SUCCESS;
+    int unmatched_messages = 0;
+    MPI_Comm comm_handle ATTRIBUTE((unused)) = comm_ptr->handle;
 
     MPIR_FUNC_ENTER;
 
@@ -1110,6 +1112,30 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
      * communicator must not be freed.  That is the reason for the
      * test on mpi_errno here. */
     if (mpi_errno == MPI_SUCCESS) {
+#ifdef HAVE_ERROR_CHECKING
+        /* receive any unmatched messages to clear the queue and avoid context_id
+         * reuse issues. unmatched messages could be the result of user error,
+         * or send operations that were unable to be canceled by the device layer */
+        MPIR_Object_add_ref(comm_ptr);
+        int flag;
+        MPI_Status status;
+        do {
+            mpi_errno = MPID_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, comm_ptr, 0, &flag, &status);
+            MPIR_ERR_CHECK(mpi_errno);
+            if (flag) {
+                /* receive the message, ignore truncation errors */
+                MPIR_Request *request;
+                MPID_Recv(NULL, 0, MPI_DATATYPE_NULL, status.MPI_SOURCE, status.MPI_TAG, comm_ptr,
+                          0, MPI_STATUS_IGNORE, &request);
+                if (request != NULL) {
+                    MPIR_Wait(&request->handle, MPI_STATUS_IGNORE);
+                }
+                unmatched_messages++;
+            }
+        } while (flag);
+        MPIR_Object_release_ref(comm_ptr, &in_use);
+#endif /* HAVE_ERROR_CHECKING */
+
         /* If this communicator is our parent, and we're disconnecting
          * from the parent, mark that fact */
         if (MPIR_Process.comm_parent == comm_ptr)
@@ -1184,6 +1210,11 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
     }
 
   fn_exit:
+    if (unmatched_messages > 0) {
+        MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**commhasunmatched", "**commhasunmatched %x %d",
+                      comm_handle, unmatched_messages);
+    }
+
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
