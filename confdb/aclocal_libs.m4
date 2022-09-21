@@ -127,6 +127,34 @@ AC_DEFUN([PAC_CHECK_HEADER_LIB_OPTIONAL],[
     fi
 ])
 
+dnl PAC_CHECK_HEADER_LIB_EXTRAFLAGS_OPTIONAL(with_option, header.h, libname, function, other_lib, extra_CPPFLAGS)
+dnl Check optional library. The results are in $pac_have_$1.
+AC_DEFUN([PAC_CHECK_HEADER_LIB_EXTRAFLAGS_OPTIONAL],[
+    PAC_SET_HEADER_LIB_PATH($1)
+    if test "${with_$1}" = "embedded" ; then
+        dnl Caller still need configure the embedded version
+        pac_have_$1=yes
+    elif test "${with_$1}" = "no" ; then
+        pac_have_$1=no
+    else
+        dnl Other than "embedded" or "no", we check ...
+        PAC_PUSH_FLAG([CPPFLAGS])
+        PAC_APPEND_FLAG($6, [CPPFLAGS])
+        for a in $3 ; do
+            PAC_CHECK_HEADER_LIB($2,$a,$4,pac_have_$1=yes,pac_have_$1=no,$5)
+            if test "$pac_have_$1" = "yes"; then
+                PAC_LIBS_ADD(-l$a)
+                break
+            fi
+        done
+        PAC_POP_FLAG([CPPFLAGS])
+        if test "${pac_have_$1}" = "no" -a -n "${with_$1}" ; then
+            dnl user asks for it, so missing is an error
+            AC_MSG_ERROR([--with-$1 is given but not found])
+        fi
+    fi
+])
+
 dnl PAC_PROBE_HEADER_LIB(with_option, header.h, libname, function)
 dnl Similar to PAC_CHECK_HEADER_LIB_OPTIONAL, but will not set LIBS.
 dnl Results are in $pac_have_$1.
