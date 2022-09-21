@@ -113,6 +113,10 @@ AC_DEFUN([PAC_CHECK_HEADER_LIB_OPTIONAL],[
         pac_have_$1=no
     else
         dnl Other than "embedded" or "no", we check ...
+        m4_if($6, [], [], [
+            PAC_PUSH_FLAG([CPPFLAGS])
+            PAC_APPEND_FLAG($6, [CPPFLAGS])
+        ])
         for a in $3 ; do
             PAC_CHECK_HEADER_LIB($2,$a,$4,pac_have_$1=yes,pac_have_$1=no,$5)
             if test "$pac_have_$1" = "yes"; then
@@ -120,6 +124,9 @@ AC_DEFUN([PAC_CHECK_HEADER_LIB_OPTIONAL],[
                 break
             fi
         done
+        m4_if($6, [], [], [
+            PAC_POP_FLAG([CPPFLAGS])
+        ])
         if test "${pac_have_$1}" = "no" -a -n "${with_$1}" ; then
             dnl user asks for it, so missing is an error
             AC_MSG_ERROR([--with-$1 is given but not found])
