@@ -744,6 +744,7 @@ static HYD_status launch_procs(void)
                 char **all_dev_ids = NULL;
                 char **child_dev_ids = NULL;
                 char *affinity_env_str = NULL;
+                int n_gpu_assgined = 0;
 
                 MPL_gpu_get_dev_count(&dev_count, &max_dev_id);
                 MPL_gpu_get_dev_list(&n_dev_ids, &all_dev_ids, allocate_subdev);
@@ -751,15 +752,19 @@ static HYD_status launch_procs(void)
                 HYDU_ASSERT(child_dev_ids, status);
 
                 for (int k = 0; k < n_local_gpus; k++) {
-                    int p = process_id * n_local_gpus + k;
-                    int idx = p % n_dev_ids;
+                    int idx = process_id * n_local_gpus + k;
+
+                    if (idx >= n_dev_ids) {
+                        break;
+                    }
                     int id_str_len = strlen(all_dev_ids[idx]);
                     child_dev_ids[k] = (char *) MPL_malloc((id_str_len + 1) * sizeof(char),
                                                            MPL_MEM_OTHER);
                     MPL_strncpy(child_dev_ids[k], all_dev_ids[idx], id_str_len + 1);
+                    n_gpu_assgined++;
                 }
 
-                MPL_gpu_dev_affinity_to_env(n_local_gpus, child_dev_ids, &affinity_env_str);
+                MPL_gpu_dev_affinity_to_env(n_gpu_assgined, child_dev_ids, &affinity_env_str);
 
                 status = HYDU_append_env_to_list(MPL_GPU_DEV_AFFINITY_ENV, affinity_env_str,
                                                  &force_env);
