@@ -481,6 +481,7 @@
 /errors/comm/too_many_icomms
 /errors/comm/too_many_icomms2
 /errors/comm/userdup
+/errors/comm/unmatched
 /errors/cxx/errhan/commerrx
 /errors/cxx/errhan/errgetx
 /errors/cxx/errhan/errsetx
