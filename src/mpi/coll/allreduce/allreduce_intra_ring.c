@@ -19,7 +19,8 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     size_t extent;
     MPI_Aint lb, true_extent;
     MPI_Aint *cnts, *displs;    /* Created for the allgatherv call */
-    int send_rank, recv_rank, total_count;
+    int send_rank, recv_rank;
+    MPI_Aint total_count;
     void *tmpbuf;
     int tag;
     MPIR_Request *reqs[2];      /* one send and one recv per transfer */

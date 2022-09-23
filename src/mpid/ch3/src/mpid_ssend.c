@@ -87,7 +87,8 @@ int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
 
     if (data_sz + sizeof(MPIDI_CH3_Pkt_eager_sync_send_t) <= eager_threshold)
     {
-	mpi_errno = MPIDI_CH3_EagerSyncNoncontigSend( &sreq, buf, count,
+        MPIR_Assert(count <= INT_MAX);
+	mpi_errno = MPIDI_CH3_EagerSyncNoncontigSend( &sreq, buf, (int) count,
                                                       datatype, data_sz, 
                                                       dt_contig, dt_true_lb,
                                                       rank, tag, comm, 

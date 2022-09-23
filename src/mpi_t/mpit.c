@@ -477,7 +477,7 @@ void MPIR_T_strncpy(char *dst, const char *src, int *len)
     if (len) {
         /* If dst is NULL or *len is 0, just return src length + 1 */
         if (!dst || !*len) {
-            *len = (src == NULL) ? 1 : strlen(src) + 1;
+            *len = (src == NULL) ? 1 : (int) strlen(src) + 1;
         } else {
             /* MPL_strncpy will always terminate the string */
             MPIT_Assert(*len > 0);

@@ -9,5 +9,7 @@
 
 int MPIR_Typerep_size_external32(MPI_Datatype type)
 {
-    return MPIR_Dataloop_size_external32(type);
+    MPI_Aint sz = MPIR_Dataloop_size_external32(type);
+    MPIR_Assert(sz <= INT_MAX);
+    return (int) sz;
 }

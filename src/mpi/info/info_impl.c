@@ -277,7 +277,7 @@ static int hex_encode(char *str, const void *value, int len)
 
 static int hex_decode(const char *str, void *buf, int len)
 {
-    int n = strlen(str);
+    int n = (int) strlen(str);
     if (n != len * 2) {
         return 1;
     }

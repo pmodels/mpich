@@ -77,7 +77,7 @@
 
 #define BASIC_convert16(src, dest)  \
 {                                \
-    dest = ((((src) >> 8) & 0x00FF) | \
+    dest = (uint16_t) ((((src) >> 8) & 0x00FF) | \
             (((src) << 8) & 0xFF00)); \
 }
 

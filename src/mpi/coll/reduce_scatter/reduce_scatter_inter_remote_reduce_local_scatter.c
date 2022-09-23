@@ -18,7 +18,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
                                                           MPIR_Comm * comm_ptr,
                                                           MPIR_Errflag_t * errflag)
 {
-    int rank, mpi_errno, root, local_size, total_count, i;
+    int rank, mpi_errno, root, local_size, i;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb = 0, extent;
     void *tmp_buf = NULL;
@@ -29,6 +29,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
     rank = comm_ptr->rank;
     local_size = comm_ptr->local_size;
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < local_size; i++)
         total_count += recvcounts[i];

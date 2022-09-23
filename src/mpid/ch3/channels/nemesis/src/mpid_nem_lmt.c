@@ -100,9 +100,9 @@ int MPID_nem_lmt_RndvSend(MPIR_Request **sreq_p, const void * buf, MPI_Aint coun
     sreq->ch.lmt_tmp_cookie.iov_len = 0;
 	
     MPIDI_Pkt_init(rts_pkt, MPIDI_NEM_PKT_LMT_RTS);
-    rts_pkt->match.parts.rank	      = comm->rank;
+    rts_pkt->match.parts.rank	      = (MPIDI_Rank_t) comm->rank;
     rts_pkt->match.parts.tag	      = tag;
-    rts_pkt->match.parts.context_id = comm->context_id + context_offset;
+    rts_pkt->match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
     rts_pkt->sender_req_id    = sreq->handle;
     rts_pkt->data_sz	      = data_sz;
 

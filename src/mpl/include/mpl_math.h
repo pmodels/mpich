@@ -27,7 +27,7 @@ static inline int MPL_log2(int number)
     return p - 1;
 #else
     /* NOTE: if number < 0, the result is undefined. Add assertion if necessary. */
-    return sizeof(unsigned int) * 8 - __builtin_clz((unsigned int) number) - 1;
+    return (int) sizeof(unsigned int) * 8 - __builtin_clz((unsigned int) number) - 1;
 #endif
 }
 

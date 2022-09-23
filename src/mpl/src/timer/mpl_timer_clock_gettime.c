@@ -75,7 +75,7 @@ int MPL_wtick(double *wtick)
      * allows that), then we need to return the generic tick value. */
     rc = clock_getres(CLOCK_REALTIME, &res);
     if (!rc)
-        *wtick = res.tv_sec + 1.0e-9 * res.tv_nsec;
+        *wtick = (double) res.tv_sec + 1.0e-9 * (double) res.tv_nsec;
     else
         *wtick = tickval;
 
