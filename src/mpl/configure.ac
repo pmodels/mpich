@@ -1060,6 +1060,7 @@ PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSy
 if test "$pac_have_cuda" = "yes" ; then
     # also require -lcuda (in addition to -lcudart)
     PAC_CHECK_HEADER_LIB([cuda.h],[cuda],[cuMemGetAddressRange], pac_have_cuda=yes, pac_have_cuda=no)
+    AC_CHECK_LIB(dl, dlopen, [], AC_MSG_ERROR([dlopen not found.  MPL CUDA support requires libdl.]))
 fi
 if test "$pac_have_cuda" = "yes" ; then
     if test -z "$NVCC"; then
