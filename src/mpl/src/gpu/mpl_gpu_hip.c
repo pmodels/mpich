@@ -4,6 +4,7 @@
  */
 
 #include "mpl.h"
+#include "mpl_str.h"
 #include <dlfcn.h>
 #include <assert.h>
 #ifdef MPL_HAVE_HIP
@@ -18,6 +19,9 @@ typedef struct gpu_free_hook {
 static int gpu_initialized = 0;
 static int device_count = -1;
 static int max_dev_id = -1;
+static char **device_list = NULL;
+#define MAX_GPU_STR_LEN 256
+static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
 
 static int *local_to_global_map;        /* [device_count] */
 static int *global_to_local_map;        /* [max_dev_id + 1]   */
@@ -37,6 +41,46 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 
     *dev_cnt = device_count;
     *dev_id = max_dev_id;
+    return ret;
+}
+
+int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev)
+{
+    int ret = MPL_SUCCESS;
+    if (!gpu_initialized) {
+        ret = MPL_gpu_init(0);
+    }
+
+    device_list = (char **) MPL_malloc(device_count * sizeof(char *), MPL_MEM_OTHER);
+    assert(device_list);
+
+    for (int i = 0; i < device_count; ++i) {
+        int str_len = snprintf(NULL, 0, "%d", i);
+        device_list[i] = (char *) MPL_malloc((str_len + 1) * sizeof(char *), MPL_MEM_OTHER);
+        sprintf(device_list[i], "%d", i);
+    }
+
+    *dev_list = device_list;
+    return ret;
+}
+
+int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
+{
+    int ret = MPL_SUCCESS;
+    if (dev_count == 0) {
+        MPL_snprintf(affinity_env, 3, "-1");
+    } else {
+        int str_offset = 0;
+        for (int i = 0; i < dev_count; ++i) {
+            if (i) {
+                MPL_strncpy(affinity_env + str_offset, ",", MAX_GPU_STR_LEN - str_offset);
+                str_offset++;
+            }
+            MPL_strncpy(affinity_env + str_offset, dev_list[i], MAX_GPU_STR_LEN - str_offset);
+            str_offset += strlen(dev_list[i]);
+        }
+    }
+    *env = affinity_env;
     return ret;
 }
 

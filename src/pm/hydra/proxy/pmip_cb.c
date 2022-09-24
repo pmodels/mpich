@@ -706,6 +706,15 @@ static HYD_status launch_procs(void)
                                 "unable to change wdir to %s (%s)\n", exec->wdir,
                                 MPL_strerror(errno));
 
+        bool allocate_subdev = false;
+        int n_local_gpus = 0;
+        if (HYD_pmcd_pmip.user_global.gpu_subdevs_per_proc != HYD_GPUS_PER_PROC_AUTO) {
+            allocate_subdev = true;
+            n_local_gpus = HYD_pmcd_pmip.user_global.gpu_subdevs_per_proc;
+        } else {
+            allocate_subdev = false;
+            n_local_gpus = HYD_pmcd_pmip.user_global.gpus_per_proc;
+        }
         for (i = 0; i < exec->proc_count; i++) {
             /* FIXME: these envvars should be set by MPICH instead. See #2360 */
             str = HYDU_int_to_str(HYD_pmcd_pmip.local.proxy_process_count);
@@ -718,35 +727,47 @@ static HYD_status launch_procs(void)
             HYDU_ERR_POP(status, "unable to add env to list\n");
             MPL_free(str);
 
-            if (HYD_pmcd_pmip.user_global.gpus_per_proc == HYD_GPUS_PER_PROC_AUTO) {
+            if (HYD_pmcd_pmip.user_global.gpus_per_proc == HYD_GPUS_PER_PROC_AUTO
+                && HYD_pmcd_pmip.user_global.gpu_subdevs_per_proc == HYD_GPUS_PER_PROC_AUTO) {
                 /* nothing to do */
-            } else if (HYD_pmcd_pmip.user_global.gpus_per_proc == 0) {
-                str = HYDU_int_to_str(-1);
+            } else if (HYD_pmcd_pmip.user_global.gpus_per_proc == 0
+                       || HYD_pmcd_pmip.user_global.gpu_subdevs_per_proc == 0) {
+                MPL_gpu_dev_affinity_to_env(0, NULL, &str);
 
-                status = HYDU_append_env_to_list("CUDA_VISIBLE_DEVICES", str, &force_env);
+                status = HYDU_append_env_to_list(MPL_GPU_DEV_AFFINITY_ENV, str, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
 
-                MPL_free(str);
             } else {
-                char cuda_str[MAX_GPU_STR_LEN] = { 0 };
-                int cuda_str_offset = 0;
+                int dev_count = 0;
+                int n_dev_ids = 0;
+                int max_dev_id = 0;
+                char **all_dev_ids = NULL;
+                char **child_dev_ids = NULL;
+                char *affinity_env_str = NULL;
+                int n_gpu_assgined = 0;
 
-                for (int k = 0; k < HYD_pmcd_pmip.user_global.gpus_per_proc; k++) {
-                    int p = process_id * HYD_pmcd_pmip.user_global.gpus_per_proc + k;
-                    str = HYDU_int_to_str(p);
+                MPL_gpu_get_dev_count(&dev_count, &max_dev_id);
+                MPL_gpu_get_dev_list(&n_dev_ids, &all_dev_ids, allocate_subdev);
+                child_dev_ids = (char **) MPL_malloc(n_local_gpus * sizeof(char *), MPL_MEM_OTHER);
+                HYDU_ASSERT(child_dev_ids, status);
 
-                    if (k) {
-                        MPL_strncpy(cuda_str + cuda_str_offset, ",",
-                                    MAX_GPU_STR_LEN - cuda_str_offset);
-                        cuda_str_offset++;
+                for (int k = 0; k < n_local_gpus; k++) {
+                    int idx = process_id * n_local_gpus + k;
+
+                    if (idx >= n_dev_ids) {
+                        break;
                     }
-                    MPL_strncpy(cuda_str + cuda_str_offset, str, MAX_GPU_STR_LEN - cuda_str_offset);
-                    cuda_str_offset += strlen(str);
-
-                    MPL_free(str);
+                    int id_str_len = strlen(all_dev_ids[idx]);
+                    child_dev_ids[k] = (char *) MPL_malloc((id_str_len + 1) * sizeof(char),
+                                                           MPL_MEM_OTHER);
+                    MPL_strncpy(child_dev_ids[k], all_dev_ids[idx], id_str_len + 1);
+                    n_gpu_assgined++;
                 }
 
-                status = HYDU_append_env_to_list("CUDA_VISIBLE_DEVICES", cuda_str, &force_env);
+                MPL_gpu_dev_affinity_to_env(n_gpu_assgined, child_dev_ids, &affinity_env_str);
+
+                status = HYDU_append_env_to_list(MPL_GPU_DEV_AFFINITY_ENV, affinity_env_str,
+                                                 &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
 

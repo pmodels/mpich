@@ -16,4 +16,6 @@ typedef volatile int MPL_gpu_event_t;
 #define MPL_GPU_STREAM_DEFAULT 0
 #define MPL_GPU_DEVICE_INVALID -1
 
+#define MPL_GPU_DEV_AFFINITY_ENV NULL
+
 #endif /* ifndef MPL_GPU_CUDA_H_INCLUDED */

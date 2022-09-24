@@ -12,6 +12,20 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
     return MPL_SUCCESS;
 }
 
+int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev)
+{
+    int ret = MPL_SUCCESS;
+    *dev_list = NULL;
+    return ret;
+}
+
+int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
+{
+    int ret = MPL_SUCCESS;
+    *env = NULL;
+    return ret;
+}
+
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     abort();

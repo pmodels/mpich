@@ -1524,6 +1524,45 @@ static HYD_status hybrid_hosts_fn(char *arg, char ***argv)
     return status;
 }
 
+static void gpu_subdevs_per_proc_help_fn(void)
+{
+    printf("\n");
+    printf("-gpu-subdevs-per-proc: Number of GPU subdevices assigned to each process\n");
+    printf("   Only support Intel ZE. Sets the appropriate environment variables for ZE\n");
+    printf("   AUTO: All GPU subdevices (default)\n");
+    printf("   <value>: Numeric value >= 0\n\n");
+}
+
+static HYD_status gpu_subdevs_per_proc_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (HYD_ui_mpich_info.reading_config_file &&
+        HYD_server_info.user_global.gpu_subdevs_per_proc != HYD_GPUS_PER_PROC_UNSET) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    HYDU_ERR_CHKANDJUMP(status,
+                        HYD_server_info.user_global.gpu_subdevs_per_proc != HYD_GPUS_PER_PROC_UNSET,
+                        HYD_INTERNAL_ERROR, "GPUs per proc already set\n");
+
+    if (!strcmp(**argv, "AUTO")) {
+        HYD_server_info.user_global.gpu_subdevs_per_proc = HYD_GPUS_PER_PROC_AUTO;
+    } else {
+        HYD_server_info.user_global.gpu_subdevs_per_proc = atoi(**argv);
+        HYDU_ERR_CHKANDJUMP(status, HYD_server_info.user_global.gpu_subdevs_per_proc < 0,
+                            HYD_INTERNAL_ERROR, "invalid number of GPUs per proc\n");
+    }
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     /* help options */
     {"help", help_fn, help_help_fn},
@@ -1599,6 +1638,7 @@ struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"g", gpus_per_proc_fn, gpus_per_proc_help_fn},
     {"gpus-per-proc", gpus_per_proc_fn, gpus_per_proc_help_fn},
+    {"gpu-subdevs-per-proc", gpu_subdevs_per_proc_fn, gpu_subdevs_per_proc_help_fn},
     {"hybrid-hosts", hybrid_hosts_fn, hybrid_hosts_help_fn},
     {"iface", iface_fn, iface_help_fn},
     {"info", info_fn, info_help_fn},

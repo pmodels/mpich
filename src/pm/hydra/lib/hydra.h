@@ -404,6 +404,7 @@ struct HYD_user_global {
     int pmi_port;
     int skip_launch_node;
     int gpus_per_proc;
+    int gpu_subdevs_per_proc;
     int singleton_port;
     int singleton_pid;
 

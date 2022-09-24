@@ -26,6 +26,7 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->pmi_port = -1;
     user_global->skip_launch_node = -1;
     user_global->gpus_per_proc = HYD_GPUS_PER_PROC_UNSET;
+    user_global->gpu_subdevs_per_proc = HYD_GPUS_PER_PROC_UNSET;
     user_global->singleton_port = 0;
     user_global->singleton_pid = 0;
 

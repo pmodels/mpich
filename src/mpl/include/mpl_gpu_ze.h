@@ -24,4 +24,6 @@ typedef volatile int MPL_gpu_event_t;
 #define MPL_GPU_STREAM_DEFAULT 0
 #define MPL_GPU_DEVICE_INVALID NULL
 
+#define MPL_GPU_DEV_AFFINITY_ENV "ZE_AFFINITY_MASK"
+
 #endif /* ifndef MPL_GPU_ZE_H_INCLUDED */
