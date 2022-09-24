@@ -12,6 +12,9 @@
 
 #include <ctype.h>
 
+#define MAX_TMP_BUF_SIZE 1024
+static char tmp_buf_for_output[MAX_TMP_BUF_SIZE];
+
 #define IS_SPACE(c) ((c) == ' ')
 #define IS_EOS(c) ((c) == '\0')
 #define IS_EOL(c) ((c) == '\n' || (c) == '\0')
@@ -443,6 +446,10 @@ void PMIU_cmd_free_buf(struct PMIU_cmd *pmicmd)
     }
     if (pmicmd->tokens != pmicmd->static_token_buf) {
         MPL_free(pmicmd->tokens);
+        pmicmd->tokens = pmicmd->static_token_buf;
+    }
+    if (pmicmd->tmp_buf && pmicmd->tmp_buf != tmp_buf_for_output) {
+        MPL_free(pmicmd->tmp_buf);
     }
     pmicmd->buf = NULL;
     pmicmd->tmp_buf = NULL;
@@ -625,14 +632,20 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
 }
 
 
-#define MAX_TMP_BUF_SIZE 64*1024
-static char tmp_buf_for_output[MAX_TMP_BUF_SIZE];
-
 /* allocate serialization tmp_buf. Note: as safety, add 1 extra for NULL-termination */
-#define PMIU_CMD_ALLOC_TMP_BUF(pmicmd, len) \
+#define PMIU_CMD_ALLOC_TMP_BUF(pmi, len) \
     do { \
-        assert(len + 1 < MAX_TMP_BUF_SIZE); \
-        pmicmd->tmp_buf = tmp_buf_for_output; \
+        if (pmi->tmp_buf && pmi->tmp_buf != tmp_buf_for_output) { \
+                MPL_free(pmi->tmp_buf); \
+        } \
+        if (len + 1 <= MAX_TMP_BUF_SIZE) { \
+            pmi->tmp_buf = tmp_buf_for_output; \
+        } else { \
+            /* static pmi object cannot allocate memory */ \
+            PMIU_Assert(!PMIU_cmd_is_static(pmi)); \
+            pmi->tmp_buf = MPL_malloc(len + 1, MPL_MEM_OTHER); \
+            PMIU_Assert(pmi->tmp_buf); \
+        } \
     } while (0)
 
 /* serialization output */
