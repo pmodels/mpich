@@ -1133,10 +1133,8 @@ AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
 
 # Check HIP availability
 if test "$have_gpu" = "no" ; then
-    PAC_PUSH_FLAG(CPPFLAGS)
-    PAC_APPEND_FLAG([-D__HIP_PLATFORM_AMD__], [CPPFLAGS])
-    PAC_CHECK_HEADER_LIB_OPTIONAL([hip],[hip/hip_runtime_api.h],[amdhip64],[hipStreamSynchronize])
-    PAC_POP_FLAG(CPPFLAGS)
+    PAC_CHECK_HEADER_LIB_OPTIONAL([hip],[hip/hip_runtime_api.h],[amdhip64],[hipStreamSynchronize],,
+                                  [-D__HIP_PLATFORM_AMD__])
 fi
 
 if test "X${pac_have_hip}" = "Xyes" ; then
