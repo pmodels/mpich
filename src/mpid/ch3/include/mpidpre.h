@@ -737,7 +737,7 @@ int MPID_Precv_init(void *buf, int partitions, MPI_Count count, MPI_Datatype dat
                     MPIR_Request **request );
 
 int MPID_Pready_range(int partition_low, int partition_high, MPIR_Request *sreq);
-int MPID_Pready_list(int length, int array_of_partitions[], MPIR_Request *sreq);
+int MPID_Pready_list(int length, const int array_of_partitions[], MPIR_Request *sreq);
 int MPID_Parrived(MPIR_Request *rreq, int partition, int *flag);
 
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp);
