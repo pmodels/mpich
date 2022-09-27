@@ -20,7 +20,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_pready_range(int partition_low,
     return MPIDI_POSIX_mpi_pready_range(partition_low, partition_high, request);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_pready_list(int length, int array_of_partitions[],
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_pready_list(int length, const int array_of_partitions[],
                                                        MPIR_Request * request)
 {
     return MPIDI_POSIX_mpi_pready_list(length, array_of_partitions, request);

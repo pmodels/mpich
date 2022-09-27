@@ -61,7 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int partition_low, int part
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, int array_of_partitions[],
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_of_partitions[],
                                                     MPIR_Request * part_sreq)
 {
     int mpi_errno = MPI_SUCCESS;
