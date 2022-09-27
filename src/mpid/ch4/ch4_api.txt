@@ -533,4 +533,4 @@ PARAM:
     partition: int
     partition_low: int
     partition_high: int
-    array_of_partitions: int[]
+    array_of_partitions: const int[]

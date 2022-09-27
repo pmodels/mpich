@@ -27,7 +27,7 @@ int MPID_Pready_range(int partition_low, int partition_high, MPIR_Request *sreq)
     return 0;
 }
 
-int MPID_Pready_list(int length, int array_of_partitions[], MPIR_Request *sreq)
+int MPID_Pready_list(int length, const int array_of_partitions[], MPIR_Request *sreq)
 {
     MPIR_Assert(0);
     return 0;
