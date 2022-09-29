@@ -8,7 +8,6 @@
 
 #define PMIU_WIRE_V1        1
 #define PMIU_WIRE_V2        2
-#define PMIU_WIRE_V1_MCMD   3
 
 /* We may allocate stack arrays of size MAX_PMI_ARGS. Thus it shouldn't
  * be too big or result in stack-overflow. We assume a few kilobytes are safe.
@@ -30,10 +29,14 @@ struct PMIU_cmd {
     char *buf;                  /* buffer to hold the string before parsing */
     char *tmp_buf;              /* buffer to hold the serialization output */
     int version;                /* wire protocol: 1 or 2 */
+    int cmd_id;                 /* id defined in pmi_msg.h */
     const char *cmd;
     struct PMIU_token tokens[MAX_PMI_ARGS];
     int num_tokens;
 };
+
+/* set stack-allocated object to a sane state (rather than garbage) */
+#define PMIU_cmd_init_zero(pmicmd) PMIU_cmd_init(pmicmd, 0, NULL)
 
 /* Just parse the buf to get PMI command name. Do not alter buf. */
 char *PMIU_wire_get_cmd(char *buf, int buflen, int pmi_version);
@@ -135,6 +138,7 @@ const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key,
 /* output to a string using a specific wire protocol */
 int PMIU_cmd_output_v1(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
 int PMIU_cmd_output_v1_mcmd(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
+int PMIU_cmd_output_v1_initack(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
 int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
 /* output to a string based on embedded version in pmicmd */
 int PMIU_cmd_output(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out);
@@ -146,6 +150,15 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd);
 int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd);
 
 /* send a PMI command to fd and get a PMI response with expected cmd */
-int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd, const char *expectedCmd);
+int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd);
 
+/* message layer utilities */
+int PMIU_msg_cmd_to_id(const char *cmd);
+const char *PMIU_msg_id_to_query(int version, int cmd_id);
+const char *PMIU_msg_id_to_response(int version, int cmd_id);
+
+void PMIU_msg_set_query(struct PMIU_cmd *pmi_query, int wire_version, int cmd_id, bool is_static);
+int PMIU_msg_set_response(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_resp, bool is_static);
+int PMIU_msg_set_response_fail(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_resp,
+                               bool is_static, int rc, const char *error_message);
 #endif

@@ -8,13 +8,14 @@
 #include "pmi_util.h"
 #include "pmi_common.h"
 #include "pmi_wire.h"
+#include "pmi_msg.h"
 
 #include <ctype.h>
 
 #define IS_SPACE(c) ((c) == ' ')
 #define IS_EOS(c) ((c) == '\0')
 #define IS_EOL(c) ((c) == '\n' || (c) == '\0')
-#define IS_KEY(c) (isalnum(c) || (c) == '_' || (c) == '-' || (c) == '/')
+#define IS_KEY(c) (!(IS_SPACE(c) || IS_EOL(c) || (c) == '='))
 #define IS_NONVAL(c) (IS_SPACE(c) || IS_EOL(c))
 
 #define SKIP_SPACES(s) do { \
@@ -306,6 +307,8 @@ int PMIU_cmd_parse(char *buf, int buflen, int version, struct PMIU_cmd *pmicmd)
     }
     PMIU_ERR_POP(pmi_errno);
 
+    pmicmd->cmd_id = PMIU_msg_cmd_to_id(pmicmd->cmd);
+
   fn_exit:
     return pmi_errno;
   fn_fail:
@@ -517,6 +520,7 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
 
     PMIU_cmd_init(pmi_copy, pmicmd->version, NULL);
     pmi_copy->num_tokens = pmicmd->num_tokens;
+    pmi_copy->cmd_id = pmicmd->cmd_id;
 
     /* calc buflen to accommodate all token strings */
     int buflen = 0;
@@ -528,6 +532,7 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
     /* allocate the buffer */
     pmi_copy->buf = MPL_malloc(buflen, MPL_MEM_OTHER);
     assert(pmi_copy->buf);
+    pmi_copy->buf_need_free = true;
     char *s = pmi_copy->buf;
 
     /* copy cmd and tokens */
@@ -662,6 +667,34 @@ int PMIU_cmd_output_v1_mcmd(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen
     return pmi_errno;
 }
 
+int PMIU_cmd_output_v1_initack(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
+{
+    int pmi_errno;
+
+    /* this variation require 3 additional "set" cmd for size, rank, and debug */
+    int size, rank, debug;
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmicmd, "size", size, -1);
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmicmd, "rank", rank, -1);
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmicmd, "debug", debug, 0);
+
+    pmi_errno = PMIU_cmd_output_v1(pmicmd, buf_out, buflen_out);
+
+    /* if we are setting size and rank, we'll do 3 extra commands */
+    if (rank >= 0 && size >= 0) {
+        char *s = *buf_out + (*buflen_out);
+        int len = MAX_TMP_BUF_SIZE - (*buflen_out);
+        MPL_snprintf(s, len, "cmd=set size=%d\ncmd=set rank=%d\ncmd=set debug=%d\n", size, rank,
+                     debug);
+
+        *buflen_out += strlen(s);
+    }
+
+  fn_exit:
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
 {
     int pmi_errno = PMIU_SUCCESS;
@@ -722,9 +755,13 @@ int PMIU_cmd_output(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
     int pmi_errno = PMIU_SUCCESS;
 
     if (pmicmd->version == PMIU_WIRE_V1) {
-        pmi_errno = PMIU_cmd_output_v1(pmicmd, buf_out, buflen_out);
-    } else if (pmicmd->version == PMIU_WIRE_V1_MCMD) {
-        pmi_errno = PMIU_cmd_output_v1_mcmd(pmicmd, buf_out, buflen_out);
+        if (pmicmd->cmd_id == PMIU_CMD_SPAWN && strcmp(pmicmd->cmd, "spawn") == 0) {
+            pmi_errno = PMIU_cmd_output_v1_mcmd(pmicmd, buf_out, buflen_out);
+        } else if (pmicmd->cmd_id == PMIU_CMD_FULLINIT) {
+            pmi_errno = PMIU_cmd_output_v1_initack(pmicmd, buf_out, buflen_out);
+        } else {
+            pmi_errno = PMIU_cmd_output_v1(pmicmd, buf_out, buflen_out);
+        }
     } else {
         /* PMIU_WIRE_V2 */
         if (PMIU_is_threaded) {
@@ -823,9 +860,15 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
  * return from this routine, the response is parsed into the pmicmd object.
  * It can be queried for attributes.
  */
-int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd, const char *expectedCmd)
+static int GetResponse_set_int(const char *key, int *val_out);
+
+int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd)
 {
     int pmi_errno = PMIU_SUCCESS;
+
+    int cmd_id = pmicmd->cmd_id;
+    const char *expectedCmd = PMIU_msg_id_to_response(pmicmd->version, cmd_id);
+    PMIU_Assert(expectedCmd != NULL);
 
     pmi_errno = PMIU_cmd_send(fd, pmicmd);
     PMIU_ERR_POP(pmi_errno);
@@ -838,8 +881,123 @@ int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd, const char *expectedC
                              "expecting cmd=%s, got %s\n", expectedCmd, pmicmd->cmd);
     }
 
+    /* check rc if included. */
+    int rc;
+    const char *msg;
+    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmicmd, "rc", rc, 0);
+    if (rc) {
+        PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmicmd, "msg", msg, NULL);
+        if (!msg) {
+            PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmicmd, "errmsg", msg, NULL);
+        }
+        PMIU_ERR_SETANDJUMP2(pmi_errno, PMIU_FAIL, "server responded with rc=%d - %s\n", rc, msg);
+    }
+
+    if (cmd_id == PMIU_CMD_FULLINIT && pmicmd->version == PMIU_WIRE_V1) {
+        /* weird 3 additional set commands */
+        pmi_errno = GetResponse_set_int("size", &PMI_size);
+        PMIU_ERR_POP(pmi_errno);
+        pmi_errno = GetResponse_set_int("rank", &PMI_rank);
+        PMIU_ERR_POP(pmi_errno);
+        pmi_errno = GetResponse_set_int("debug", &PMIU_verbose);
+        PMIU_ERR_POP(pmi_errno);
+    }
+
   fn_exit:
     return pmi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static int GetResponse_set_int(const char *key, int *val_out)
+{
+    int pmi_errno = PMIU_SUCCESS;
+
+    struct PMIU_cmd pmicmd;
+
+    pmi_errno = PMIU_cmd_read(PMI_fd, &pmicmd);
+    PMIU_ERR_POP(pmi_errno);
+
+    if (strcmp("set", pmicmd.cmd) != 0) {
+        PMIU_ERR_SETANDJUMP1(pmi_errno, PMIU_FAIL, "expecting cmd=set, got %s\n", pmicmd.cmd);
+    }
+
+    PMIU_CMD_GET_INTVAL(&pmicmd, key, *val_out);
+
+  fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* message layer utilities */
+
+static void init_cmd(struct PMIU_cmd *pmi, int version, int cmd_id, bool is_static, bool is_query)
+{
+    const char *cmd;
+    if (is_query) {
+        cmd = PMIU_msg_id_to_query(version, cmd_id);
+    } else {
+        cmd = PMIU_msg_id_to_response(version, cmd_id);
+    }
+
+    if (is_static) {
+        PMIU_cmd_init_static(pmi, version, cmd);
+    } else {
+        PMIU_cmd_init(pmi, version, cmd);
+    }
+
+    pmi->cmd_id = cmd_id;
+}
+
+void PMIU_msg_set_query(struct PMIU_cmd *pmi_query, int wire_version, int cmd_id, bool is_static)
+{
+    bool is_query = true;
+    init_cmd(pmi_query, wire_version, cmd_id, is_static, is_query);
+}
+
+int PMIU_msg_set_response(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_resp, bool is_static)
+{
+    bool is_query = false;
+    init_cmd(pmi_resp, pmi_query->version, pmi_query->cmd_id, is_static, is_query);
+
+    if (pmi_query->version == PMIU_WIRE_V2) {
+        const char *thrid;
+        thrid = PMIU_cmd_find_keyval(pmi_query, "thrid");
+        if (thrid) {
+            PMIU_cmd_add_str(pmi_resp, "thrid", thrid);
+        }
+    }
+
+    PMIU_cmd_add_str(pmi_resp, "rc", "0");
+
+    return PMIU_SUCCESS;
+}
+
+int PMIU_msg_set_response_fail(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_resp,
+                               bool is_static, int rc, const char *error_message)
+{
+    bool is_query = false;
+    init_cmd(pmi_resp, pmi_query->version, pmi_query->cmd_id, is_static, is_query);
+
+    if (pmi_query->version == PMIU_WIRE_V2) {
+        const char *thrid;
+        thrid = PMIU_cmd_find_keyval(pmi_query, "thrid");
+        if (thrid) {
+            PMIU_cmd_add_str(pmi_resp, "thrid", thrid);
+        }
+    }
+
+    PMIU_cmd_add_int(pmi_resp, "rc", rc);
+    if (error_message) {
+        if (pmi_query->version == PMIU_WIRE_V1) {
+            PMIU_cmd_add_str(pmi_query, "msg", error_message);
+        } else {
+            /* PMIU_WIRE_V2 */
+            PMIU_cmd_add_str(pmi_query, "errmsg", error_message);
+        }
+    }
+
+    return PMIU_SUCCESS;
 }
