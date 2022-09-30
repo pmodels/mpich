@@ -350,8 +350,7 @@ struct HYD_node {
 /* Proxy information */
 struct HYD_proxy {
     struct HYD_node *node;
-
-    struct HYD_pg *pg;          /* Back pointer to the PG */
+    int pgid;
 
     char **exec_launch_info;
 
@@ -502,11 +501,13 @@ void HYDU_free_node_list(struct HYD_node *node_list);
 void HYDU_init_pg(struct HYD_pg *pg, int pgid);
 HYD_status HYDU_alloc_pg(struct HYD_pg **pg, int pgid);
 void HYDU_free_pg_list(struct HYD_pg *pg_list);
+struct HYD_pg *HYDU_get_pg(int pgid);
 void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
 HYD_status HYDU_alloc_exec(struct HYD_exec **exec);
 void HYDU_free_exec_list(struct HYD_exec *exec_list);
-HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  struct HYD_pg *pg, bool is_singleton);
+HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct HYD_node *node_list,
+                                  int pgid, bool is_singleton,
+                                  int *proxy_count_p, struct HYD_proxy **proxy_list_p);
 HYD_status HYDU_correct_wdir(char **wdir);
 
 /* args */

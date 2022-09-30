@@ -37,8 +37,10 @@ HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, 
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
+    struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
+    pg = HYDU_get_pg(proxy->pgid);
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     const char *kvsname;
     const char *key;
@@ -71,7 +73,7 @@ HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, 
         /* check whether all proxies have arrived at the same epoch or enqueue
          * the "get". A "put" (from another proxy) will poke the progress.
          */
-        if (!check_epoch_reached(proxy->pg, fd, pid)) {
+        if (!check_epoch_reached(pg, fd, pid)) {
             status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, pmi, key);
             HYDU_ERR_POP(status, "unable to queue request\n");
             goto fn_exit;
@@ -115,8 +117,10 @@ HYD_status HYD_pmiserv_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
+    struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
+    pg = HYDU_get_pg(proxy->pgid);
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     int ret;
     status = HYD_pmcd_pmi_add_kvs(key, val, pg_scratch->kvs, &ret);
@@ -149,8 +153,10 @@ HYD_status HYD_pmiserv_kvs_mput(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
+    struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
+    pg = HYDU_get_pg(proxy->pgid);
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     /* FIXME: leak of pmi's abstraction */
     for (int i = 0; i < pmi->num_tokens; i++) {
@@ -170,6 +176,7 @@ HYD_status HYD_pmiserv_kvs_mput(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 HYD_status HYD_pmiserv_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     struct HYD_proxy *proxy;
+    struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     int pmi_errno;
     int i;
@@ -180,21 +187,22 @@ HYD_status HYD_pmiserv_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
+    pg = HYDU_get_pg(proxy->pgid);
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     int cur_epoch = -1;
     /* Try to find the epoch point of this process */
-    for (i = 0; i < proxy->pg->pg_process_count; i++)
+    for (i = 0; i < pg->pg_process_count; i++)
         if (pg_scratch->ecount[i].fd == fd && pg_scratch->ecount[i].pid == pid) {
             pg_scratch->ecount[i].epoch++;
             cur_epoch = pg_scratch->ecount[i].epoch;
             break;
         }
 
-    if (i == proxy->pg->pg_process_count) {
+    if (i == pg->pg_process_count) {
         /* couldn't find the current process; find a NULL entry */
 
-        for (i = 0; i < proxy->pg->pg_process_count; i++)
+        for (i = 0; i < pg->pg_process_count; i++)
             if (pg_scratch->ecount[i].fd == HYD_FD_UNSET)
                 break;
 
@@ -213,14 +221,14 @@ HYD_status HYD_pmiserv_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi
 
     if (cur_epoch == pg_scratch->epoch) {
         pg_scratch->fence_count++;
-        if (pg_scratch->fence_count % proxy->pg->pg_process_count == 0) {
+        if (pg_scratch->fence_count % pg->pg_process_count == 0) {
             /* Poke the progress engine before exiting */
             status = check_pending_reqs(NULL);
             HYDU_ERR_POP(status, "check pending requests error\n");
             /* reset fence_count */
             pg_scratch->epoch++;
             pg_scratch->fence_count = 0;
-            for (i = 0; i < proxy->pg->pg_process_count; i++) {
+            for (i = 0; i < pg->pg_process_count; i++) {
                 if (pg_scratch->ecount[i].epoch >= pg_scratch->epoch) {
                     pg_scratch->fence_count++;
                 }

@@ -10,6 +10,7 @@ mpiexec_hydra_SOURCES = \
     mpiexec/options.c \
     mpiexec/get_parameters.c \
     mpiexec/uiu.c \
+    mpiexec/pg.c \
     mpiexec/debugger.c \
     mpiexec/pmiserv_kvs.c \
     mpiexec/pmiserv_publish.c \

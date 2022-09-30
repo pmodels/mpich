@@ -145,7 +145,7 @@ static HYD_status allocate_spawn_pg(int fd)
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
-    pg->spawner_pg = proxy->pg;
+    pg->spawner_pg = HYDU_get_pg(proxy->pgid);
 
   fn_exit:
     return status;
@@ -246,13 +246,15 @@ static HYD_status do_spawn(void)
     HYDU_ERR_POP(status, "unable to init epoch\n");
 
     /* Create the proxy list */
+    struct HYD_node *node_list;
     if (pg->user_node_list) {
-        status = HYDU_create_proxy_list(exec_list, pg->user_node_list, pg, false);
-        HYDU_ERR_POP(status, "error creating proxy list\n");
+        node_list = pg->user_node_list;
     } else {
-        status = HYDU_create_proxy_list(exec_list, HYD_server_info.node_list, pg, false);
-        HYDU_ERR_POP(status, "error creating proxy list\n");
+        node_list = HYD_server_info.node_list;
     }
+    status = HYDU_create_proxy_list(pg->pg_process_count, exec_list, node_list, pg->pgid, false,
+                                    &pg->proxy_count, &pg->proxy_list);
+    HYDU_ERR_POP(status, "error creating proxy list\n");
     HYDU_free_exec_list(exec_list);
 
     pg->pg_core_count = 0;

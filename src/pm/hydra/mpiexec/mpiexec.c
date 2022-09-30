@@ -153,13 +153,16 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }
 
+    struct HYD_pg *pg;
+    pg = &HYD_server_info.pg_list;
+
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
     /* NOTE:
      *   user may accidentally give on command line -np 0, or even -np -1,
      *   these cases will all be treated as if it is being ignored.
      */
-    HYD_server_info.pg_list.pg_process_count = 0;
+    pg->pg_process_count = 0;
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
         if (exec->proc_count <= 0) {
             global_core_count = 0;
@@ -167,20 +170,22 @@ int main(int argc, char **argv)
                 global_core_count += node->core_count;
             exec->proc_count = global_core_count;
         }
-        HYD_server_info.pg_list.pg_process_count += exec->proc_count;
+        pg->pg_process_count += exec->proc_count;
     }
 
     status = HYDU_list_inherited_env(&HYD_server_info.user_global.global_env.inherited);
     HYDU_ERR_POP(status, "unable to get the inherited env list\n");
 
-    status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_server_info.node_list,
-                                    &HYD_server_info.pg_list, HYD_server_info.singleton_port > 0);
+    status = HYDU_create_proxy_list(pg->pg_process_count,
+                                    HYD_uii_mpx_exec_list, HYD_server_info.node_list,
+                                    0, HYD_server_info.singleton_port > 0,
+                                    &pg->proxy_count, &pg->proxy_list);
     HYDU_ERR_POP(status, "unable to create proxy list\n");
 
     /* calculate the core count used by the PG */
-    HYD_server_info.pg_list.pg_core_count = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
-        HYD_server_info.pg_list.pg_core_count += proxy->node->core_count;
+    pg->pg_core_count = 0;
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
+        pg->pg_core_count += proxy->node->core_count;
 
     /* If the user didn't specify a local hostname, try to find one in
      * the list of nodes passed to us */
@@ -224,7 +229,7 @@ int main(int argc, char **argv)
     if (HYD_ui_mpich_info.print_all_exitcodes)
         HYDU_dump(stdout, "Exit codes: ");
     exit_status = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
         if (proxy->exit_status == NULL) {
             /* We didn't receive the exit status for this proxy */
             continue;

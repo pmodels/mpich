@@ -20,15 +20,18 @@ HYD_status HYD_pmiserv_barrier(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
-    proxy->pg->barrier_count++;
-    if (proxy->pg->barrier_count == proxy->pg->proxy_count) {
-        proxy->pg->barrier_count = 0;
+    struct HYD_pg *pg;
+    pg = HYDU_get_pg(proxy->pgid);
+
+    pg->barrier_count++;
+    if (pg->barrier_count == pg->proxy_count) {
+        pg->barrier_count = 0;
 
         HYD_pmiserv_bcast_keyvals(fd, pid);
 
         struct PMIU_cmd pmi_response;
         PMIU_cmd_init_static(&pmi_response, 1, "barrier_out");
-        for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
+        for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
             status = HYD_pmiserv_pmi_reply(tproxy->control_fd, pid, &pmi_response);
             HYDU_ERR_POP(status, "error writing PMI line\n");
         }

@@ -86,7 +86,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int bufle
 static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
 {
     struct HYD_proxy *tproxy;
-    struct HYD_pg *pg = proxy->pg;
+    struct HYD_pg *pg = HYDU_get_pg(proxy->pgid);
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
@@ -228,19 +228,22 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "unable to read status from proxy\n");
         HYDU_ASSERT(!closed, status);
 
-        if (proxy->pg->pgid) {
+        if (proxy->pgid != 0) {
             /* We initialize the debugger code only for non-dynamically
              * spawned processes */
             goto fn_exit;
         }
 
+        struct HYD_pg *pg;
+        pg = HYDU_get_pg(proxy->pgid);
+
         /* Check if all the PIDs have been received */
-        for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next)
+        for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)
             if (tproxy->pid == NULL)
                 goto fn_exit;
 
         /* Call the debugger initialization */
-        status = HYDT_dbg_setup_procdesc(proxy->pg);
+        status = HYDT_dbg_setup_procdesc(pg);
         HYDU_ERR_POP(status, "debugger setup failed\n");
     } else if (hdr.cmd == CMD_EXIT_STATUS) {
         HYDU_MALLOC_OR_JUMP(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int),
@@ -294,9 +297,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         buf[hdr.buflen] = 0;
 
-        status =
-            handle_pmi_cmd(fd, proxy->pg->pgid, hdr.u.pmi.pid, buf, hdr.buflen,
-                           hdr.u.pmi.pmi_version);
+        status = handle_pmi_cmd(fd, proxy->pgid, hdr.u.pmi.pid, buf, hdr.buflen,
+                                hdr.u.pmi.pmi_version);
         HYDU_ERR_POP(status, "unable to process PMI command\n");
 
         MPL_free(buf);
@@ -349,7 +351,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         int terminated_rank = hdr.u.data;
         if (HYD_server_info.user_global.auto_cleanup == 0) {
             /* Update the map of the alive processes */
-            pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
+            struct HYD_pg *pg = HYDU_get_pg(proxy->pgid);
+            pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
             pg_scratch->dead_process_count++;
 
             if (pg_scratch->dead_process_count == 1) {
@@ -404,7 +407,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                     if (tproxy->control_fd == HYD_FD_UNSET || tproxy->control_fd == HYD_FD_CLOSED)
                         continue;
 
-                    if (tproxy->pg->pgid == proxy->pg->pgid && tproxy->proxy_id == proxy->proxy_id)
+                    if (tproxy->pgid == proxy->pgid && tproxy->proxy_id == proxy->proxy_id)
                         continue;
 
                     status = HYD_pmcd_pmiserv_send_signal(tproxy, SIGUSR1);
