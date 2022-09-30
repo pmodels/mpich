@@ -147,7 +147,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                    int vni_dst, MPIR_Request ** request,
                                                    int dt_contig, size_t data_sz,
                                                    MPIR_Datatype * dt_ptr, MPI_Aint dt_true_lb,
-                                                   uint64_t type)
+                                                   uint64_t type, MPL_pointer_attr_t attr)
 {
     int mpi_errno = MPI_SUCCESS;
     char *send_buf;
@@ -215,18 +215,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
-    MPL_pointer_attr_t attr;
 
-    if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
+    if (MPIDI_OFI_ENABLE_HMEM && MPIR_CVAR_CH4_OFI_ENABLE_HMEM &&
+        data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
         if (MPIDI_OFI_ENABLE_MR_HMEM) {
-            if (dt_contig) {
+            if (dt_contig && attr.type == MPL_GPU_POINTER_DEV) {
                 register_mem = true;
             }
         }
     }
-    if ((!MPIDI_OFI_ENABLE_HMEM || !dt_contig) && data_sz) {
-        MPIR_GPU_query_pointer_attr(send_buf, &attr);
-
+    if ((!MPIDI_OFI_ENABLE_HMEM || !MPIR_CVAR_CH4_OFI_ENABLE_HMEM || !dt_contig ||
+         (MPIDI_OFI_ENABLE_MR_HMEM && !register_mem)) && data_sz) {
         if (data_sz &&
             (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
              attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
@@ -328,8 +327,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = NULL;
     }
 
-    if (data_sz <= MPIDI_OFI_global.max_buffered_send &&
-        data_sz < MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
+    if (data_sz <= MPIDI_OFI_global.max_buffered_send && !MPIR_CVAR_CH4_OFI_ENABLE_HMEM) {
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                             send_buf,
                                             data_sz,
@@ -468,16 +466,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     MPIDI_OFI_idata_set_error_bits(&cq_data, err_flag);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+    MPL_pointer_attr_t attr;
+    void *send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
+    MPIR_GPU_query_pointer_attr(send_buf, &attr);
 
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send))) {
         MPI_Aint actual_pack_bytes = 0;
-        void *send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
-        MPL_pointer_attr_t attr;
-        MPIR_GPU_query_pointer_attr(send_buf, &attr);
         if (data_sz > 0 &&
             (attr.type == MPL_GPU_POINTER_DEV || attr.type == MPL_GPU_POINTER_MANAGED ||
              attr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
-            if (!MPIDI_OFI_ENABLE_HMEM) {
+            if (!MPIDI_OFI_ENABLE_HMEM || !MPIR_CVAR_CH4_OFI_ENABLE_HMEM) {
                 /* Force pack for GPU buffer. */
                 void *host_buf = NULL;
                 MPIDI_OFI_gpu_malloc_pack_buffer(&host_buf, data_sz);
@@ -498,7 +496,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                 mpi_errno =
                     MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
                                           context_offset, addr, vni_src, vni_dst, request,
-                                          dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
+                                          dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag, attr);
                 goto fn_exit;
             }
         }
@@ -516,7 +514,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     } else {
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
                                           context_offset, addr, vni_src, vni_dst, request,
-                                          dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
+                                          dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag, attr);
     }
 
   fn_exit:

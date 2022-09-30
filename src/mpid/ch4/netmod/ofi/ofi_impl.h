@@ -770,7 +770,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t da
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_malloc_pack_buffer(void **ptr, size_t pack_size)
 {
-    if (MPIDI_OFI_ENABLE_HMEM) {
+    if (MPIDI_OFI_ENABLE_HMEM && MPIR_CVAR_CH4_OFI_ENABLE_HMEM) {
         return MPIR_gpu_malloc_host(ptr, pack_size);
     } else {
 #ifdef MPL_DEFINE_ALIGNED_ALLOC
@@ -784,7 +784,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_malloc_pack_buffer(void **ptr, size_t
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_free_pack_buffer(void *ptr)
 {
-    if (MPIDI_OFI_ENABLE_HMEM) {
+    if (MPIDI_OFI_ENABLE_HMEM && MPIR_CVAR_CH4_OFI_ENABLE_HMEM) {
         return MPIR_gpu_free_host(ptr);
     } else {
         MPL_free(ptr);
