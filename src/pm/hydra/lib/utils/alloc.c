@@ -299,6 +299,11 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
 
     HYDU_FUNC_ENTER();
 
+    if (exec_list == NULL) {
+        status = HYD_FAILURE;
+        HYDU_ERR_POP(status, "Missing executables\n");
+    }
+
     /* Find the current maximum oversubscription on the nodes */
     max_oversubscribe = 1;
     num_nodes = 0;
@@ -398,32 +403,6 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
 
             status = add_exec_to_proxy(exec, proxy, num_procs);
             HYDU_ERR_POP(status, "unable to add executable to proxy\n");
-        }
-    }
-
-    {
-        /* find dummy proxies and remove them */
-        while (proxy_list && proxy_list->exec_list == NULL) {
-            tmp = proxy_list->next;
-            proxy_list->next = NULL;
-            HYDU_free_proxy_list(proxy_list);
-            proxy_list = tmp;
-        }
-
-        if (!proxy_list) {
-            status = HYD_FAILURE;
-            HYDU_ERR_POP(status, "Missing executables\n");
-        }
-
-        for (proxy = proxy_list; proxy->next;) {
-            if (proxy->next->exec_list == NULL) {
-                tmp = proxy->next;
-                proxy->next = proxy->next->next;
-                tmp->next = NULL;
-                HYDU_free_proxy_list(tmp);
-            } else {
-                proxy = proxy->next;
-            }
         }
     }
 
