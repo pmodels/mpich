@@ -248,7 +248,7 @@ static HYD_status do_spawn(void)
     } else {
         node_list = HYD_server_info.node_list;
     }
-    status = HYDU_create_proxy_list(pg->pg_process_count, exec_list, node_list, pg->pgid, false,
+    status = HYDU_create_proxy_list(pg->pg_process_count, exec_list, node_list, pg->pgid,
                                     &pg->proxy_count, &pg->proxy_list);
     HYDU_ERR_POP(status, "error creating proxy list\n");
     HYDU_free_exec_list(exec_list);

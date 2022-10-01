@@ -263,9 +263,31 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
     goto fn_exit;
 }
 
+HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
+                                            int *proxy_count_p, struct HYD_proxy **proxy_list_p)
+{
+    HYD_status status = HYD_SUCCESS;
+    HYDU_FUNC_ENTER();
+
+    struct HYD_proxy *proxy;
+    status = alloc_proxy(&proxy, pgid, node);
+    HYDU_ERR_POP(status, "error allocating proxy\n");
+
+    proxy->proxy_process_count = 1;
+    proxy->node->active_processes = 1;
+
+    *proxy_list_p = proxy;
+    *proxy_count_p = 1;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  int pgid, bool is_singleton,
-                                  int *proxy_count_p, struct HYD_proxy **proxy_list_p)
+                                  int pgid, int *proxy_count_p, struct HYD_proxy **proxy_list_p)
 {
     struct HYD_proxy *proxy = NULL, *last_proxy = NULL, *tmp;
     struct HYD_exec *exec;
@@ -379,12 +401,7 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
         }
     }
 
-    if (is_singleton) {
-        proxy = proxy_list;
-        HYDU_ASSERT(proxy && proxy->exec_list == NULL && proxy->next == NULL, status);
-        proxy->proxy_process_count = 1;
-        proxy->node->active_processes = 1;
-    } else {
+    {
         /* find dummy proxies and remove them */
         while (proxy_list && proxy_list->exec_list == NULL) {
             tmp = proxy_list->next;

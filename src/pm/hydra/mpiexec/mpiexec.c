@@ -179,10 +179,14 @@ int main(int argc, char **argv)
     status = HYDU_list_inherited_env(&HYD_server_info.user_global.global_env.inherited);
     HYDU_ERR_POP(status, "unable to get the inherited env list\n");
 
-    status = HYDU_create_proxy_list(pg->pg_process_count,
-                                    HYD_uii_mpx_exec_list, HYD_server_info.node_list,
-                                    0, HYD_server_info.singleton_port > 0,
-                                    &pg->proxy_count, &pg->proxy_list);
+    if (HYD_server_info.singleton_port > 0) {
+        status = HYDU_create_proxy_list_singleton(HYD_server_info.node_list, 0,
+                                                  &pg->proxy_count, &pg->proxy_list);
+    } else {
+        status = HYDU_create_proxy_list(pg->pg_process_count,
+                                        HYD_uii_mpx_exec_list, HYD_server_info.node_list, 0,
+                                        &pg->proxy_count, &pg->proxy_list);
+    }
     HYDU_ERR_POP(status, "unable to create proxy list\n");
 
     /* calculate the core count used by the PG */

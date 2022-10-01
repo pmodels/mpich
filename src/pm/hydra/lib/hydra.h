@@ -479,9 +479,10 @@ void HYDU_free_node_list(struct HYD_node *node_list);
 void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
 HYD_status HYDU_alloc_exec(struct HYD_exec **exec);
 void HYDU_free_exec_list(struct HYD_exec *exec_list);
+HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
+                                            int *proxy_count_p, struct HYD_proxy **proxy_list_p);
 HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  int pgid, bool is_singleton,
-                                  int *proxy_count_p, struct HYD_proxy **proxy_list_p);
+                                  int pgid, int *proxy_count_p, struct HYD_proxy **proxy_list_p);
 HYD_status HYDU_correct_wdir(char **wdir);
 
 /* args */
