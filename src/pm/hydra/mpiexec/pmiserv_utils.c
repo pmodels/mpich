@@ -363,8 +363,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         HYD_STRING_STASH(exec_stash, MPL_strdup("--pmi-kvsname"), status);
         HYD_STRING_STASH(exec_stash, MPL_strdup(pg_scratch->kvs->kvsname), status);
 
-        if (pg->spawner_pg) {
-            pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->spawner_pg->pg_scratch;
+        if (pg->spawner_pgid != -1) {
+            struct HYD_pg *spawner_pg = PMISERV_pg_by_id(pg->spawner_pgid);
+            pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) spawner_pg->pg_scratch;
             HYD_STRING_STASH(exec_stash, MPL_strdup("--pmi-spawner-kvsname"), status);
             HYD_STRING_STASH(exec_stash, MPL_strdup(pg_scratch->kvs->kvsname), status);
         }

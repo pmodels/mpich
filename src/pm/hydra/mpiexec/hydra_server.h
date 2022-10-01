@@ -28,7 +28,7 @@ struct HYD_pg {
     int barrier_count;
     bool is_active;
 
-    struct HYD_pg *spawner_pg;
+    int spawner_pgid;
 
     /* user-specified node-list */
     struct HYD_node *user_node_list;

@@ -39,6 +39,7 @@ int PMISERV_pg_alloc(void)
     struct HYD_pg *pg = (struct HYD_pg *) utarray_eltptr(pg_list, pgid);
     pg->pgid = pgid;
     pg->is_active = true;
+    pg->spawner_pgid = -1;
 
     HYDU_FUNC_EXIT();
     return pgid;

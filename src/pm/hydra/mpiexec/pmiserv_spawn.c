@@ -13,7 +13,7 @@
 static struct HYD_pg *spawn_pg = NULL;
 static struct HYD_exec *spawn_exec_list = NULL;
 
-static HYD_status allocate_spawn_pg(int fd);
+static HYD_status allocate_spawn_pg(int spawner_pgid);
 static HYD_status fill_exec_params(struct HYD_exec *exec, const char *execname, int nprocs,
                                    int argcnt, const char **argv,
                                    int infonum, struct PMIU_token *infos);
@@ -33,7 +33,7 @@ HYD_status HYD_pmiserv_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     bool need_free = false;
     HYDU_FUNC_ENTER();
 
-    status = allocate_spawn_pg(fd);
+    status = allocate_spawn_pg(pgid);
     HYDU_ERR_POP(status, "spawn failed\n");
 
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch = spawn_pg->pg_scratch;
@@ -124,7 +124,7 @@ HYD_status HYD_pmiserv_spawn(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 
 /* ---- internal routines ---- */
 
-static HYD_status allocate_spawn_pg(int fd)
+static HYD_status allocate_spawn_pg(int spawner_pgid)
 {
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
@@ -141,11 +141,7 @@ static HYD_status allocate_spawn_pg(int fd)
 
     spawn_pg = pg;
 
-    struct HYD_proxy *proxy;
-    proxy = HYD_pmcd_pmi_find_proxy(fd);
-    HYDU_ASSERT(proxy, status);
-
-    pg->spawner_pg = PMISERV_pg_by_id(proxy->pgid);
+    pg->spawner_pgid = spawner_pgid;
 
   fn_exit:
     return status;
