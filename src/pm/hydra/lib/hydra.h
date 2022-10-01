@@ -348,8 +348,6 @@ struct HYD_proxy {
     int control_fd;
 
     struct HYD_proxy *next;
-
-    UT_hash_handle hh;
 };
 
 /* Global user parameters */

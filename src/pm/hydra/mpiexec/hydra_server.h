@@ -58,9 +58,6 @@ struct HYD_server_info_s {
     /* All of the available nodes */
     struct HYD_node *node_list;
 
-    /* Hash for fast proxy lookup */
-    struct HYD_proxy *proxy_hash;
-
     /* Cleanup */
     int cmd_pipe[2];
 

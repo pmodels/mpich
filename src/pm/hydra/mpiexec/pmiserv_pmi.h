@@ -31,7 +31,6 @@ struct HYD_pmcd_pmi_pg_scratch {
     int keyval_dist_count;      /* Number of keyvals distributed */
 };
 
-struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd);
 HYD_status HYD_pmcd_pmi_finalize(void);
 
 HYD_status HYD_pmiserv_pmi_reply(struct HYD_proxy *proxy, int pid, struct PMIU_cmd *pmi);
