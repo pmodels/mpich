@@ -10,12 +10,6 @@
 #include "demux.h"
 #include "pmiserv_common.h"
 
-/* PMI-1 specific definitions */
-extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v1;
-
-/* PMI-2 specific definitions */
-extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v2;
-
 struct HYD_pmcd_pmi_pg_scratch {
     /* PMI-1's PMI_Barrier is blocking, thus a single barrier_count works */
     int barrier_count;
@@ -40,13 +34,6 @@ struct HYD_pmcd_pmi_pg_scratch {
 
 struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd);
 HYD_status HYD_pmcd_pmi_finalize(void);
-
-struct HYD_pmcd_pmi_handle {
-    const char *cmd;
-     HYD_status(*handler) (int fd, int pid, int pgid, struct PMIU_cmd * pmi);
-};
-
-extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle;
 
 HYD_status HYD_pmiserv_pmi_reply(int fd, int pid, struct PMIU_cmd *pmi);
 HYD_status HYD_pmiserv_bcast_keyvals(int fd, int pid);

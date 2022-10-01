@@ -7,8 +7,6 @@
 #include "pmiserv_pmi.h"
 #include "pmiserv_utils.h"
 
-struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle = { 0 };
-
 struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd)
 {
     struct HYD_proxy *proxy;
