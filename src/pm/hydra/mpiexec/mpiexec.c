@@ -189,11 +189,6 @@ int main(int argc, char **argv)
     }
     HYDU_ERR_POP(status, "unable to create proxy list\n");
 
-    /* calculate the core count used by the PG */
-    pg->pg_core_count = 0;
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-        pg->pg_core_count += proxy->node->core_count;
-
     /* If the user didn't specify a local hostname, try to find one in
      * the list of nodes passed to us */
     if (HYD_server_info.localhost == NULL) {

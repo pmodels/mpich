@@ -253,17 +253,6 @@ static HYD_status do_spawn(void)
     HYDU_ERR_POP(status, "error creating proxy list\n");
     HYDU_free_exec_list(exec_list);
 
-    pg->pg_core_count = 0;
-    if (pg->user_node_list) {
-        for (struct HYD_node * node = pg->user_node_list; node; node = node->next) {
-            pg->pg_core_count += node->core_count;
-        }
-    } else {
-        for (struct HYD_proxy * proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-            pg->pg_core_count += proxy->node->core_count;
-        }
-    }
-
     int pgid = pg->pgid;
 
     char *control_port;
