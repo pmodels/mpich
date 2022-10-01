@@ -78,4 +78,13 @@ struct HYD_pg *PMISERV_pg_by_id(int pgid);
 HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg);
 HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg);
 
+void PMISERV_proxy_init(void);
+void PMISERV_proxy_finalize(void);
+int PMISERV_proxy_alloc(void);  /* return proxy_id */
+int PMISERV_proxy_max_id(void);
+struct HYD_proxy *PMISERV_proxy_by_id(int proxy_id);
+
+HYD_status PMISERV_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
+                                     int pgid, bool is_singleton);
+
 #endif /* HYDRA_SERVER_H_INCLUDED */

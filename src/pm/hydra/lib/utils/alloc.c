@@ -108,48 +108,62 @@ void HYDU_free_node_list(struct HYD_node *node_list)
     }
 }
 
-static HYD_status alloc_proxy(struct HYD_proxy **proxy, int pgid, struct HYD_node *node)
+static HYD_status alloc_proxy_list(struct HYD_node *node_list, int pgid,
+                                   int *count_p, struct HYD_proxy **proxy_list_p)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_FUNC_ENTER();
+    struct HYD_proxy *proxy_list = NULL;
+    int count = 0;
 
-    HYDU_MALLOC_OR_JUMP(*proxy, struct HYD_proxy *, sizeof(struct HYD_proxy), status);
+    for (struct HYD_node * node = node_list; node; node = node->next) {
+        count++;
+    }
+    HYDU_MALLOC_OR_JUMP(proxy_list, struct HYD_proxy *, count * sizeof(struct HYD_proxy), status);
 
-    (*proxy)->node = node;
-    (*proxy)->pgid = pgid;
+    int i;
+    i = 0;
+    for (struct HYD_node * node = node_list; node; node = node->next) {
+        struct HYD_proxy *proxy = &proxy_list[i];
+        proxy->node = node;
+        proxy->pgid = pgid;
 
-    (*proxy)->proxy_id = -1;
-    (*proxy)->exec_launch_info = NULL;
+        proxy->proxy_id = -1;   /* Do we need this? */
+        proxy->exec_launch_info = NULL;
 
-    (*proxy)->proxy_process_count = 0;
-    (*proxy)->filler_processes = 0;
+        proxy->proxy_process_count = 0;
+        proxy->filler_processes = 0;
 
-    (*proxy)->pid = NULL;
-    (*proxy)->exit_status = NULL;
-    (*proxy)->control_fd = HYD_FD_UNSET;
+        proxy->pid = NULL;
+        proxy->exit_status = NULL;
+        proxy->control_fd = HYD_FD_UNSET;
 
-    (*proxy)->exec_list = NULL;
+        proxy->exec_list = NULL;
 
-    (*proxy)->next = NULL;
+        /* Temporary to make other code based on linked list still work */
+        if (i != count - 1) {
+            proxy->next = proxy + 1;
+        } else {
+            proxy->next = NULL;
+        }
+        i++;
+    }
 
   fn_exit:
+    *count_p = count;
+    *proxy_list_p = proxy_list;
     HYDU_FUNC_EXIT();
     return status;
-
   fn_fail:
     goto fn_exit;
 }
 
-void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
+void HYDU_free_proxy_list(struct HYD_proxy *proxy_list, int count)
 {
-    struct HYD_proxy *proxy, *tproxy;
-
     HYDU_FUNC_ENTER();
 
-    proxy = proxy_list;
-    while (proxy) {
-        tproxy = proxy->next;
+    for (int i = 0; i < count; i++) {
+        struct HYD_proxy *proxy = &proxy_list[i];
 
         proxy->node = NULL;
 
@@ -162,11 +176,9 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
         MPL_free(proxy->exit_status);
 
         HYDU_free_exec_list(proxy->exec_list);
-
-        MPL_free(proxy);
-        proxy = tproxy;
     }
 
+    MPL_free(proxy_list);
     HYDU_FUNC_EXIT();
 }
 
@@ -270,9 +282,11 @@ HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
     HYDU_FUNC_ENTER();
 
     struct HYD_proxy *proxy;
-    status = alloc_proxy(&proxy, pgid, node);
+    int proxy_count;
+    status = alloc_proxy_list(node, pgid, &proxy_count, &proxy);
     HYDU_ERR_POP(status, "error allocating proxy\n");
 
+    proxy->next = NULL;
     proxy->proxy_process_count = 1;
     proxy->node->active_processes = 1;
 
@@ -290,7 +304,6 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
                                   int pgid, int *proxy_count_p, struct HYD_proxy **proxy_list_p)
 {
     HYD_status status = HYD_SUCCESS;
-    struct HYD_proxy *proxy_list = NULL;
 
     HYDU_FUNC_ENTER();
 
@@ -319,32 +332,30 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
         max_oversubscribe++;
     }
 
+    struct HYD_proxy *proxy_list = NULL;
+    int proxy_count = 0;
+    status = alloc_proxy_list(node_list, pgid, &proxy_count, &proxy_list);
+    HYDU_ERR_POP(status, "error allocating proxy_list\n");
+
     int allocated_procs = 0;
     int dummy_fillers = 1;
-    struct HYD_proxy *last_proxy = NULL;
-    for (struct HYD_node * node = node_list; node; node = node->next) {
-        /* check how many cores are available */
+    for (int i = 0; i < proxy_count; i++) {
+        struct HYD_proxy *proxy = &proxy_list[i];
+        struct HYD_node *node = proxy_list[i].node;
+
         int c = (node->core_count * max_oversubscribe) - node->active_processes;
-
-        /* create a proxy associated with this node */
-        struct HYD_proxy *proxy;
-        status = alloc_proxy(&proxy, pgid, node);
-        HYDU_ERR_POP(status, "error allocating proxy\n");
-
         proxy->filler_processes = c;
         allocated_procs += c;
 
         if (proxy->filler_processes < node->core_count)
             dummy_fillers = 0;
 
-        if (proxy_list == NULL)
-            proxy_list = proxy;
-        else if (last_proxy != NULL)
-            last_proxy->next = proxy;
-        last_proxy = proxy;
-
-        if (allocated_procs >= count)
+        if (allocated_procs >= count) {
+            proxy_count = i + 1;
+            proxy_list[i].next = NULL;
+            /* Is it worthwhile to realloc proxy_list to save memory? */
             break;
+        }
     }
 
     /* If all proxies have as many filler processes as the number of
@@ -354,11 +365,11 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
             proxy->filler_processes -= proxy->node->core_count;
 
     /* Proxy list is created; add the executables to the proxy list */
-    if (proxy_list->next == NULL) {
+    if (proxy_count == 1) {
         /* Special case: there is only one proxy, so all executables
          * directly get appended to this proxy */
         for (struct HYD_exec * exec = exec_list; exec; exec = exec->next) {
-            status = add_exec_to_proxy(exec, proxy_list, exec->proc_count);
+            status = add_exec_to_proxy(exec, &proxy_list[0], exec->proc_count);
             HYDU_ERR_POP(status, "unable to add executable to proxy\n");
         }
     } else {

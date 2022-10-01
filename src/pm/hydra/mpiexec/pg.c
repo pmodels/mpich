@@ -12,7 +12,7 @@ static void pg_dtor(void *_elt)
 {
     struct HYD_pg *pg = _elt;
     if (pg->proxy_list)
-        HYDU_free_proxy_list(pg->proxy_list);
+        HYDU_free_proxy_list(pg->proxy_list, pg->proxy_count);
 
     if (pg->user_node_list)
         HYDU_free_node_list(pg->user_node_list);

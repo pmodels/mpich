@@ -476,7 +476,7 @@ void HYDU_init_global_env(struct HYD_env_global *global_env);
 void HYDU_finalize_global_env(struct HYD_env_global *global_env);
 HYD_status HYDU_alloc_node(struct HYD_node **node);
 void HYDU_free_node_list(struct HYD_node *node_list);
-void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
+void HYDU_free_proxy_list(struct HYD_proxy *proxy_list, int count);
 HYD_status HYDU_alloc_exec(struct HYD_exec **exec);
 void HYDU_free_exec_list(struct HYD_exec *exec_list);
 HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
