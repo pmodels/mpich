@@ -42,6 +42,8 @@ int main(int argc, char **argv)
     status = HYDU_set_signal(SIGCHLD, signal_cb);
     HYDU_ERR_POP(status, "unable to set SIGCHLD\n");
 
+    HYDU_init_pg();
+
     /* Get user preferences */
     status = HYD_uii_mpx_get_parameters(argv);
     HYDU_ERR_POP(status, "error parsing parameters\n");
@@ -248,6 +250,7 @@ int main(int argc, char **argv)
 
     /* Free the mpiexec params */
     HYD_uiu_free_params();
+    HYDU_free_pg_list();
     HYDU_free_exec_list(HYD_uii_mpx_exec_list);
     HYDU_sock_finalize();
 

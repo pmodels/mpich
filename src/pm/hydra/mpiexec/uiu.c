@@ -36,8 +36,6 @@ void HYD_uiu_init_params(void)
 
     HYD_server_info.node_list = NULL;
 
-    HYDU_init_pg();
-
 #if defined ENABLE_PROFILING
     HYD_server_info.enable_profiling = -1;
     HYD_server_info.num_pmi_calls = 0;
@@ -58,7 +56,6 @@ void HYD_uiu_free_params(void)
     MPL_free(HYD_server_info.nameserver);
     MPL_free(HYD_server_info.localhost);
     HYDU_free_node_list(HYD_server_info.node_list);
-    HYDU_free_pg_list();
     MPL_free(HYD_ui_mpich_info.prepend_pattern);
     MPL_free(HYD_ui_mpich_info.outfile_pattern);
     MPL_free(HYD_ui_mpich_info.errfile_pattern);
