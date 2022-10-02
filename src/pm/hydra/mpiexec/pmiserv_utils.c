@@ -253,9 +253,37 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
     goto fn_exit;
 }
 
+static HYD_status add_env_to_exec_stash(struct HYD_string_stash *exec_stash, const char *optname,
+                                        struct HYD_env *env_list)
+{
+    HYD_status status = HYD_SUCCESS;
+    int i;
+    struct HYD_env *env;
+
+    HYD_STRING_STASH(*exec_stash, MPL_strdup(optname), status);
+    for (i = 0, env = env_list; env; env = env->next, i++);
+    HYD_STRING_STASH(*exec_stash, HYDU_int_to_str(i), status);
+
+    for (env = env_list; env; env = env->next) {
+        char *envstr;
+
+        status = HYDU_env_to_str(env, &envstr);
+        HYDU_ERR_POP(status, "error converting env to string\n");
+
+        HYD_STRING_STASH(*exec_stash, envstr, status);
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
+
 HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 {
-    int i, inherited_env_count, user_env_count, system_env_count, exec_count;
+    int inherited_env_count, user_env_count, system_env_count, exec_count;
     int proxy_count, total_filler_processes, total_core_count;
     int pmi_id, *filler_pmi_ids = NULL, *nonfiller_pmi_ids = NULL;
     struct HYD_env *env;
@@ -291,6 +319,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     HYDU_MALLOC_OR_JUMP(filler_pmi_ids, int *, proxy_count * sizeof(int), status);
     HYDU_MALLOC_OR_JUMP(nonfiller_pmi_ids, int *, proxy_count * sizeof(int), status);
 
+    int i;
     pmi_id = 0;
     for (proxy = pg->proxy_list, i = 0; proxy; proxy = proxy->next, i++) {
         filler_pmi_ids[i] = pmi_id;
@@ -396,45 +425,17 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
             HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.user_global.topolib), status);
         }
 
-        HYD_STRING_STASH(exec_stash, MPL_strdup("--global-inherited-env"), status);
-        for (i = 0, env = HYD_server_info.user_global.global_env.inherited; env;
-             env = env->next, i++);
-        HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
+        status = add_env_to_exec_stash(&exec_stash, "--global-inherited-env",
+                                       HYD_server_info.user_global.global_env.inherited);
+        HYDU_ERR_POP(status, "error adding global inherited env\n");
 
-        for (env = HYD_server_info.user_global.global_env.inherited; env; env = env->next) {
-            char *envstr;
+        status = add_env_to_exec_stash(&exec_stash, "--global-user-env",
+                                       HYD_server_info.user_global.global_env.user);
+        HYDU_ERR_POP(status, "error adding global user env\n");
 
-            status = HYDU_env_to_str(env, &envstr);
-            HYDU_ERR_POP(status, "error converting env to string\n");
-
-            HYD_STRING_STASH(exec_stash, envstr, status);
-        }
-
-        HYD_STRING_STASH(exec_stash, MPL_strdup("--global-user-env"), status);
-        for (i = 0, env = HYD_server_info.user_global.global_env.user; env; env = env->next, i++);
-        HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
-
-        for (env = HYD_server_info.user_global.global_env.user; env; env = env->next) {
-            char *envstr;
-
-            status = HYDU_env_to_str(env, &envstr);
-            HYDU_ERR_POP(status, "error converting env to string\n");
-
-            HYD_STRING_STASH(exec_stash, envstr, status);
-        }
-
-        HYD_STRING_STASH(exec_stash, MPL_strdup("--global-system-env"), status);
-        for (i = 0, env = HYD_server_info.user_global.global_env.system; env; env = env->next, i++);
-        HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
-
-        for (env = HYD_server_info.user_global.global_env.system; env; env = env->next) {
-            char *envstr;
-
-            status = HYDU_env_to_str(env, &envstr);
-            HYDU_ERR_POP(status, "error converting env to string\n");
-
-            HYD_STRING_STASH(exec_stash, envstr, status);
-        }
+        status = add_env_to_exec_stash(&exec_stash, "--global-system-env",
+                                       HYD_server_info.user_global.global_env.system);
+        HYDU_ERR_POP(status, "error adding global system env\n");
 
         if (HYD_server_info.user_global.global_env.prop) {
             HYD_STRING_STASH(exec_stash, MPL_strdup("--genv-prop"), status);
@@ -455,18 +456,8 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
             HYD_STRING_STASH(exec_stash, MPL_strdup("--exec-proc-count"), status);
             HYD_STRING_STASH(exec_stash, HYDU_int_to_str(exec->proc_count), status);
 
-            HYD_STRING_STASH(exec_stash, MPL_strdup("--exec-local-env"), status);
-            for (i = 0, env = exec->user_env; env; env = env->next, i++);
-            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
-
-            for (env = exec->user_env; env; env = env->next) {
-                char *envstr;
-
-                status = HYDU_env_to_str(env, &envstr);
-                HYDU_ERR_POP(status, "error converting env to string\n");
-
-                HYD_STRING_STASH(exec_stash, envstr, status);
-            }
+            status = add_env_to_exec_stash(&exec_stash, "--exec-local-env", exec->user_env);
+            HYDU_ERR_POP(status, "error adding exec local env\n");
 
             if (exec->env_prop) {
                 HYD_STRING_STASH(exec_stash, MPL_strdup("--exec-env-prop"), status);
@@ -478,12 +469,14 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
                 HYD_STRING_STASH(exec_stash, MPL_strdup(exec->wdir), status);
             }
 
+            int argcnt;
+            for (argcnt = 0; exec->exec[argcnt]; argcnt++);
             HYD_STRING_STASH(exec_stash, MPL_strdup("--exec-args"), status);
-            for (i = 0; exec->exec[i]; i++);
-            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
+            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(argcnt), status);
 
-            for (i = 0; exec->exec[i]; i++)
-                HYD_STRING_STASH(exec_stash, MPL_strdup(exec->exec[i]), status);
+            for (int j = 0; exec->exec[j]; j++) {
+                HYD_STRING_STASH(exec_stash, MPL_strdup(exec->exec[j]), status);
+            }
         }
 
         if (HYD_server_info.user_global.debug) {
