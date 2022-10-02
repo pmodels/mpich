@@ -45,8 +45,8 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
 
         HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
-        hdr.u.io.pgid = HYD_pmcd_pmip.local.pgid;
-        hdr.u.io.proxy_id = HYD_pmcd_pmip.local.id;
+        hdr.pgid = HYD_pmcd_pmip.local.pgid;
+        hdr.proxy_id = HYD_pmcd_pmip.local.id;
         hdr.u.io.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
         hdr.buflen = recvd;
 
@@ -166,6 +166,8 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
     struct HYD_pmcd_hdr hdr;
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PMI;
+    hdr.pgid = HYD_pmcd_pmip.local.pgid;
+    hdr.proxy_id = HYD_pmcd_pmip.local.id;
     hdr.u.pmi.pmi_version = pmi_version;
     hdr.u.pmi.process_fd = fd;
     hdr.buflen = buflen;
@@ -314,6 +316,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                 HYD_pmcd_init_header(&hdr);
 
                 hdr.cmd = CMD_PROCESS_TERMINATED;
+                hdr.pgid = HYD_pmcd_pmip.local.pgid;
+                hdr.proxy_id = HYD_pmcd_pmip.local.id;
                 /* global rank for the terminated process */
                 hdr.u.data = HYD_pmcd_pmip.downstream.pmi_rank[pid];
                 status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr),
@@ -506,6 +510,8 @@ static HYD_status singleton_init(void)
     struct HYD_pmcd_hdr hdr;
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PID_LIST;
+    hdr.pgid = HYD_pmcd_pmip.local.pgid;
+    hdr.proxy_id = HYD_pmcd_pmip.local.id;
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
                         HYDU_SOCK_COMM_MSGWAIT);
@@ -821,6 +827,8 @@ static HYD_status launch_procs(void)
     /* Send the PID list upstream */
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PID_LIST;
+    hdr.pgid = HYD_pmcd_pmip.local.pgid;
+    hdr.proxy_id = HYD_pmcd_pmip.local.id;
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
                         HYDU_SOCK_COMM_MSGWAIT);

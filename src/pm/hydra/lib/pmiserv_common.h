@@ -68,14 +68,14 @@ struct HYD_hdr_pmi {
 
 /* STDOUT/STDERR */
 struct HYD_hdr_io {
-    int pgid;
-    int proxy_id;
     int rank;
 };
 
 struct HYD_pmcd_hdr {
     enum HYD_pmcd_cmd cmd;
     int buflen;
+    int pgid;
+    int proxy_id;
     union {
         int data;               /* for commands with a single integer data */
         struct HYD_hdr_pmi pmi;
