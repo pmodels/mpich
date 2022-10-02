@@ -92,6 +92,7 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv);
 
 #define PMIP_EXIT_STATUS_UNSET -1
 void HYD_pmcd_pmip_send_signal(int sig);
+HYD_status PMIP_send_hdr_upstream(struct HYD_pmcd_hdr *hdr, void *buf, int buflen);
 
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp);
 const char *HYD_pmip_get_hwloc_xmlfile(void);

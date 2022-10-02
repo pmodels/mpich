@@ -171,11 +171,36 @@ static int get_appnum(int local_rank)
 
 static HYD_status send_cmd_upstream(struct PMIU_cmd *pmi, int fd)
 {
+    HYD_status status = HYD_SUCCESS;
+    HYDU_FUNC_ENTER();
+
+    char *buf = NULL;
+    int buflen = 0;
+
+    int pmi_errno = PMIU_cmd_output(pmi, &buf, &buflen);
+    HYDU_ASSERT(!pmi_errno, status);
+
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "Sending upstream internal PMI command:\n");
+        if (buf[buflen - 1] == '\n') {
+            HYDU_dump_noprefix(stdout, "    %s", buf);
+        } else {
+            HYDU_dump_noprefix(stdout, "%s\n", buf);
+        }
+    }
+
     struct HYD_pmcd_hdr hdr;
     hdr.cmd = CMD_PMI;
+    hdr.u.pmi.pmi_version = pmi->version;
     hdr.u.pmi.process_fd = fd;
-    return HYD_pmcd_pmi_send(HYD_pmcd_pmip.upstream.control, pmi, &hdr,
-                             HYD_pmcd_pmip.user_global.debug);
+    status = PMIP_send_hdr_upstream(&hdr, buf, buflen);
+    HYDU_ERR_POP(status, "unable to send hdr\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+  fn_fail:
+    goto fn_exit;
 }
 
 static HYD_status send_cmd_downstream(int fd, struct PMIU_cmd *pmi)

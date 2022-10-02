@@ -14,9 +14,36 @@
 static int pmi_storage_len = 0;
 static char pmi_storage[HYD_TMPBUF_SIZE], *sptr = pmi_storage;
 
+HYD_status PMIP_send_hdr_upstream(struct HYD_pmcd_hdr *hdr, void *buf, int buflen)
+{
+    HYD_status status = HYD_SUCCESS;
+    int upstream_sock_closed, sent;
+
+    hdr->pgid = HYD_pmcd_pmip.local.pgid;
+    hdr->proxy_id = HYD_pmcd_pmip.local.id;
+    hdr->buflen = buflen;
+
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, hdr, sizeof(*hdr), &sent,
+                             &upstream_sock_closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "sock write error\n");
+    HYDU_ASSERT(!upstream_sock_closed, status);
+
+    if (buflen > 0) {
+        status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, buflen, &sent,
+                                 &upstream_sock_closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "sock write error\n");
+        HYDU_ASSERT(!upstream_sock_closed, status);
+    }
+
+  fn_exit:
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
 {
-    int closed, i, sent, recvd, stdfd;
+    int closed, i, recvd, stdfd;
     char buf[HYD_TMPBUF_SIZE];
     struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
@@ -45,24 +72,10 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
 
         HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
-        hdr.pgid = HYD_pmcd_pmip.local.pgid;
-        hdr.proxy_id = HYD_pmcd_pmip.local.id;
         hdr.u.io.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
-        hdr.buflen = recvd;
 
-        {
-            int upstream_sock_closed;
-
-            status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent,
-                                     &upstream_sock_closed, HYDU_SOCK_COMM_MSGWAIT);
-            HYDU_ERR_POP(status, "sock write error\n");
-            HYDU_ASSERT(!upstream_sock_closed, status);
-
-            status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, recvd, &sent,
-                                     &upstream_sock_closed, HYDU_SOCK_COMM_MSGWAIT);
-            HYDU_ERR_POP(status, "sock write error\n");
-            HYDU_ASSERT(!upstream_sock_closed, status);
-        }
+        status = PMIP_send_hdr_upstream(&hdr, buf, recvd);
+        HYDU_ERR_POP(status, "error sending hdr upstream\n");
     }
 
     if (closed) {
@@ -161,25 +174,14 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
     }
 
     /* We don't understand the command; forward it upstream */
-    int sent, closed;
-
     struct HYD_pmcd_hdr hdr;
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PMI;
-    hdr.pgid = HYD_pmcd_pmip.local.pgid;
-    hdr.proxy_id = HYD_pmcd_pmip.local.id;
     hdr.u.pmi.pmi_version = pmi_version;
     hdr.u.pmi.process_fd = fd;
-    hdr.buflen = buflen;
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
-                             HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
-    HYDU_ASSERT(!closed, status);
 
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, buflen, &sent, &closed,
-                             HYDU_SOCK_COMM_MSGWAIT);
+    status = PMIP_send_hdr_upstream(&hdr, buf, buflen);
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
-    HYDU_ASSERT(!closed, status);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -252,7 +254,7 @@ static HYD_status check_pmi_cmd(char **buf, int *buflen_out, int *pmi_version, i
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL;
-    int closed, sent, linelen, pid = -1;
+    int closed, linelen, pid = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -316,14 +318,11 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                 HYD_pmcd_init_header(&hdr);
 
                 hdr.cmd = CMD_PROCESS_TERMINATED;
-                hdr.pgid = HYD_pmcd_pmip.local.pgid;
-                hdr.proxy_id = HYD_pmcd_pmip.local.id;
                 /* global rank for the terminated process */
                 hdr.u.data = HYD_pmcd_pmip.downstream.pmi_rank[pid];
-                status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr),
-                                         &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
-                HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
-                HYDU_ASSERT(!closed, status);
+
+                status = PMIP_send_hdr_upstream(&hdr, NULL, 0);
+                HYDU_ERR_POP(status, "unable to send hdr upstream\n");
             }
         }
         goto fn_exit;
@@ -510,20 +509,10 @@ static HYD_status singleton_init(void)
     struct HYD_pmcd_hdr hdr;
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PID_LIST;
-    hdr.pgid = HYD_pmcd_pmip.local.pgid;
-    hdr.proxy_id = HYD_pmcd_pmip.local.id;
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send PID_LIST command upstream\n");
-    HYDU_ASSERT(!closed, status);
 
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
-                             HYD_pmcd_pmip.downstream.pid,
-                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent,
-                             &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send PID list upstream\n");
-    HYDU_ASSERT(!closed, status);
+    status = PMIP_send_hdr_upstream(&hdr, HYD_pmcd_pmip.downstream.pid,
+                                    HYD_pmcd_pmip.local.proxy_process_count * sizeof(int));
+    HYDU_ERR_POP(status, "unable to send PID_LIST command upstream\n");
 
     /* skip HYDT_dmx_register_fd */
 
@@ -543,7 +532,7 @@ static HYD_status launch_procs(void)
     struct HYD_env *env, *force_env = NULL;
     struct HYD_exec *exec;
     struct HYD_pmcd_hdr hdr;
-    int sent, closed, pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
+    int pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -827,20 +816,10 @@ static HYD_status launch_procs(void)
     /* Send the PID list upstream */
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PID_LIST;
-    hdr.pgid = HYD_pmcd_pmip.local.pgid;
-    hdr.proxy_id = HYD_pmcd_pmip.local.id;
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send PID_LIST command upstream\n");
-    HYDU_ASSERT(!closed, status);
 
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
-                             HYD_pmcd_pmip.downstream.pid,
-                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent,
-                             &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send PID list upstream\n");
-    HYDU_ASSERT(!closed, status);
+    status = PMIP_send_hdr_upstream(&hdr, HYD_pmcd_pmip.downstream.pid,
+                                    HYD_pmcd_pmip.local.proxy_process_count * sizeof(int));
+    HYDU_ERR_POP(status, "unable to send PID_LIST command upstream\n");
 
     /* Everything is spawned, register the required FDs  */
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,

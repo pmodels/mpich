@@ -238,18 +238,9 @@ int main(int argc, char **argv)
     /* Send the exit status upstream */
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_EXIT_STATUS;
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
+    PMIP_send_hdr_upstream(&hdr, HYD_pmcd_pmip.downstream.exit_status,
+                           HYD_pmcd_pmip.local.proxy_process_count * sizeof(int));
     HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
-    HYDU_ASSERT(!closed, status);
-
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
-                             HYD_pmcd_pmip.downstream.exit_status,
-                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent,
-                             &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to return exit status upstream\n");
-    HYDU_ASSERT(!closed, status);
 
     status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.upstream.control);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
