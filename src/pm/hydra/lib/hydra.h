@@ -346,8 +346,6 @@ struct HYD_proxy {
     int *pid;
     int *exit_status;
     int control_fd;
-
-    struct HYD_proxy *next;
 };
 
 /* Global user parameters */

@@ -140,12 +140,6 @@ static HYD_status alloc_proxy_list(struct HYD_node *node_list, int pgid,
 
         proxy->exec_list = NULL;
 
-        /* Temporary to make other code based on linked list still work */
-        if (i != count - 1) {
-            proxy->next = proxy + 1;
-        } else {
-            proxy->next = NULL;
-        }
         i++;
     }
 
@@ -326,7 +320,6 @@ HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
     status = alloc_proxy_list(node, pgid, &proxy_count, &proxy);
     HYDU_ERR_POP(status, "error allocating proxy\n");
 
-    proxy->next = NULL;
     proxy->proxy_process_count = 1;
     proxy->node->active_processes = 1;
 
@@ -394,7 +387,6 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
         if (allocated_procs >= count) {
             extra_proxy_count = proxy_count - (i + 1);
             proxy_count = i + 1;
-            proxy_list[i].next = NULL;
             break;
         }
     }
