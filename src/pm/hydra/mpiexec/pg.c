@@ -8,9 +8,19 @@
 
 UT_array *pg_list;
 
+static void pg_dtor(void *_elt)
+{
+    struct HYD_pg *pg = _elt;
+    if (pg->proxy_list)
+        HYDU_free_proxy_list(pg->proxy_list);
+
+    if (pg->user_node_list)
+        HYDU_free_node_list(pg->user_node_list);
+}
+
 void HYDU_init_pg(void)
 {
-    static UT_icd pg_icd = { sizeof(struct HYD_pg), NULL, NULL, NULL };
+    static UT_icd pg_icd = { sizeof(struct HYD_pg), NULL, NULL, pg_dtor };
     utarray_new(pg_list, &pg_icd, MPL_MEM_OTHER);
 
     int pgid = HYDU_alloc_pg();
@@ -33,16 +43,6 @@ int HYDU_alloc_pg(void)
 
 void HYDU_free_pg_list(void)
 {
-    struct HYD_pg *pg = NULL;
-
-    while (pg = (struct HYD_pg *) utarray_next(pg_list, pg)) {
-        if (pg->proxy_list)
-            HYDU_free_proxy_list(pg->proxy_list);
-
-        if (pg->user_node_list)
-            HYDU_free_node_list(pg->user_node_list);
-    }
-
     utarray_free(pg_list);
 }
 
