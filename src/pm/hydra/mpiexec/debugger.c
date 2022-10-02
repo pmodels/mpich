@@ -25,7 +25,6 @@ int MPIR_Breakpoint(void)
 
 HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
 {
-    struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     int i, j, k, np, round;
     HYD_status status = HYD_SUCCESS;
@@ -43,13 +42,12 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
      * proxy.  When we run out of proxies, we go back to the first
      * proxy and find the next set of contiguous ranks on that
      * proxy. */
-    for (proxy = pg->proxy_list, i = 0;; proxy = proxy->next) {
+
+    i = 0;
+    for (int i_proxy = 0;; i_proxy = (i_proxy + 1) % pg->proxy_count) {
+        struct HYD_proxy *proxy = &pg->proxy_list[i_proxy];
         j = 0;
         k = 0;
-        if (!proxy) {
-            proxy = pg->proxy_list;
-            round++;
-        }
         for (exec = proxy->exec_list; exec; exec = exec->next) {
             for (np = 0; np < exec->proc_count; np++) {
                 if (k + np >= ((round + 1) * proxy->node->core_count))

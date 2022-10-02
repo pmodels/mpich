@@ -12,7 +12,6 @@
 
 HYD_status HYD_pmiserv_barrier(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi)
 {
-    struct HYD_proxy *tproxy;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -28,8 +27,8 @@ HYD_status HYD_pmiserv_barrier(struct HYD_proxy *proxy, int pid, int pgid, struc
 
         struct PMIU_cmd pmi_response;
         PMIU_cmd_init_static(&pmi_response, 1, "barrier_out");
-        for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
-            status = HYD_pmiserv_pmi_reply(tproxy, pid, &pmi_response);
+        for (int i = 0; i < pg->proxy_count; i++) {
+            status = HYD_pmiserv_pmi_reply(&pg->proxy_list[i], pid, &pmi_response);
             HYDU_ERR_POP(status, "error writing PMI line\n");
         }
     }

@@ -16,7 +16,6 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     struct HYD_cmd cmd;
     int count, closed;
-    struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -57,8 +56,8 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
     } else if (cmd.type == HYD_SIGNAL) {
         for (int i = 0; i < PMISERV_pg_max_id(); i++) {
             struct HYD_pg *pg = PMISERV_pg_by_id(i);
-            for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-                status = HYD_pmcd_pmiserv_send_signal(proxy, cmd.signum);
+            for (int j = 0; j < pg->proxy_count; j++) {
+                status = HYD_pmcd_pmiserv_send_signal(&pg->proxy_list[j], cmd.signum);
                 HYDU_ERR_POP(status, "unable to send signal downstream\n");
             }
         }
@@ -75,7 +74,6 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 
 HYD_status HYD_pmci_launch_procs(void)
 {
-    struct HYD_proxy *proxy;
     struct HYD_string_stash proxy_stash;
     char *control_port = NULL;
     int node_count, i, *control_fd;
@@ -112,9 +110,7 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    node_count = 0;
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-        node_count++;
+    node_count = pg->proxy_count;
 
     HYDU_MALLOC_OR_JUMP(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)
@@ -123,14 +119,15 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, HYD_TRUE, control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
-    for (i = 0, proxy = pg->proxy_list; proxy; proxy = proxy->next, i++)
+    for (i = 0; i < pg->proxy_count; i++) {
         if (control_fd[i] != HYD_FD_UNSET) {
-            proxy->control_fd = control_fd[i];
+            pg->proxy_list[i].control_fd = control_fd[i];
 
             status = HYDT_dmx_register_fd(1, &control_fd[i], HYD_POLLIN, (void *) (size_t) 0,
                                           HYD_pmcd_pmiserv_proxy_init_cb);
             HYDU_ERR_POP(status, "unable to register fd\n");
         }
+    }
 
     MPL_free(control_fd);
 

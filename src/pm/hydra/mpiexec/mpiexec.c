@@ -23,7 +23,6 @@ static int get_exit_status(int pgid);
 
 int main(int argc, char **argv)
 {
-    struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
     int i, user_provided_host_list, global_core_count;
@@ -285,7 +284,8 @@ static int get_exit_status(int pgid)
     if (HYD_ui_mpich_info.print_all_exitcodes)
         HYDU_dump(stdout, "Exit codes: ");
     int exit_status = 0;
-    for (struct HYD_proxy * proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+    for (int i = 0; i < pg->proxy_count; i++) {
+        struct HYD_proxy *proxy = &pg->proxy_list[i];
         if (proxy->exit_status == NULL) {
             /* We didn't receive the exit status for this proxy */
             continue;
@@ -294,14 +294,14 @@ static int get_exit_status(int pgid)
         if (HYD_ui_mpich_info.print_all_exitcodes)
             HYDU_dump_noprefix(stdout, "[%s] ", proxy->node->hostname);
 
-        for (int i = 0; i < proxy->proxy_process_count; i++) {
+        for (int j = 0; j < proxy->proxy_process_count; j++) {
             if (HYD_ui_mpich_info.print_all_exitcodes) {
-                HYDU_dump_noprefix(stdout, "%d", proxy->exit_status[i]);
-                if (i < proxy->proxy_process_count - 1)
+                HYDU_dump_noprefix(stdout, "%d", proxy->exit_status[j]);
+                if (j < proxy->proxy_process_count - 1)
                     HYDU_dump_noprefix(stdout, ",");
             }
 
-            exit_status |= proxy->exit_status[i];
+            exit_status |= proxy->exit_status[j];
         }
 
         if (HYD_ui_mpich_info.print_all_exitcodes)

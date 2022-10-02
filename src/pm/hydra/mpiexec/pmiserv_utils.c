@@ -145,7 +145,6 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
         struct block *next;
     } *blocklist_head, *blocklist_tail = NULL, *block, *nblock;
     struct HYD_node *node;
-    struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -167,12 +166,14 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
     blocklist_head = NULL;
 
     filler_round = 1;
-    for (proxy = pg->proxy_list;; proxy = proxy->next) {
-        if (filler_round && proxy == NULL) {
-            proxy = pg->proxy_list;
+    for (int i_proxy = 0;; i_proxy++) {
+        if (filler_round && i_proxy == pg->proxy_count) {
+            i_proxy = 0;
             filler_round = 0;
-        } else if (proxy == NULL)
+        } else if (i_proxy == pg->proxy_count) {
             break;
+        }
+        struct HYD_proxy *proxy = &pg->proxy_list[i_proxy];
 
         if (filler_round && proxy->filler_processes == 0)
             continue;
@@ -280,14 +281,12 @@ static HYD_status add_env_to_exec_stash(struct HYD_string_stash *exec_stash, con
     goto fn_exit;
 }
 
-
 HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 {
     int inherited_env_count, user_env_count, system_env_count, exec_count;
-    int proxy_count, total_filler_processes, total_core_count;
+    int total_filler_processes, total_core_count;
     int pmi_id, *filler_pmi_ids = NULL, *nonfiller_pmi_ids = NULL;
     struct HYD_env *env;
-    struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     char *mapping = NULL, *map;
@@ -306,32 +305,30 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
     /* Create the arguments list for each proxy */
     total_filler_processes = 0;
-    proxy_count = 0;
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        total_filler_processes += proxy->filler_processes;
-        proxy_count++;
+    for (int i = 0; i < pg->proxy_count; i++) {
+        total_filler_processes += pg->proxy_list[i].filler_processes;
     }
 
     total_core_count = 0;
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-        total_core_count += proxy->node->core_count;
+    for (int i = 0; i < pg->proxy_count; i++) {
+        total_core_count += pg->proxy_list[i].node->core_count;
+    }
 
-    HYDU_MALLOC_OR_JUMP(filler_pmi_ids, int *, proxy_count * sizeof(int), status);
-    HYDU_MALLOC_OR_JUMP(nonfiller_pmi_ids, int *, proxy_count * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(filler_pmi_ids, int *, pg->proxy_count * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(nonfiller_pmi_ids, int *, pg->proxy_count * sizeof(int), status);
 
-    int i;
     pmi_id = 0;
-    for (proxy = pg->proxy_list, i = 0; proxy; proxy = proxy->next, i++) {
+    for (int i = 0; i < pg->proxy_count; i++) {
         filler_pmi_ids[i] = pmi_id;
-        pmi_id += proxy->filler_processes;
+        pmi_id += pg->proxy_list[i].filler_processes;
     }
-    for (proxy = pg->proxy_list, i = 0; proxy; proxy = proxy->next, i++) {
+    for (int i = 0; i < pg->proxy_count; i++) {
         nonfiller_pmi_ids[i] = pmi_id;
-        pmi_id += proxy->node->core_count;
+        pmi_id += pg->proxy_list[i].node->core_count;
     }
 
-    proxy_count = 0;
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+    for (int i = 0; i < pg->proxy_count; i++) {
+        struct HYD_proxy *proxy = &pg->proxy_list[i];
         for (inherited_env_count = 0, env = HYD_server_info.user_global.global_env.inherited;
              env; env = env->next, inherited_env_count++);
         for (user_env_count = 0, env = HYD_server_info.user_global.global_env.user; env;
@@ -374,9 +371,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         HYD_STRING_STASH(exec_stash, MPL_strdup("--pmi-id-map"), status);
 
         HYD_STRING_STASH_INIT(stash);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(filler_pmi_ids[proxy_count]), status);
+        HYD_STRING_STASH(stash, HYDU_int_to_str(filler_pmi_ids[i]), status);
         HYD_STRING_STASH(stash, MPL_strdup(","), status);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(nonfiller_pmi_ids[proxy_count]), status);
+        HYD_STRING_STASH(stash, HYDU_int_to_str(nonfiller_pmi_ids[i]), status);
         HYD_STRING_SPIT(stash, map, status);
 
         HYD_STRING_STASH(exec_stash, map, status);
@@ -480,7 +477,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         }
 
         if (HYD_server_info.user_global.debug) {
-            HYDU_dump_noprefix(stdout, "Arguments being passed to proxy %d:\n", proxy_count);
+            HYDU_dump_noprefix(stdout, "Arguments being passed to proxy %d:\n", i);
             HYDU_print_strlist(exec_stash.strlist);
             HYDU_dump_noprefix(stdout, "\n");
         }
@@ -489,8 +486,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         HYDU_ERR_POP(status, "unable to dup strlist\n");
 
         HYD_STRING_STASH_FREE(exec_stash);
-
-        proxy_count++;
     }
 
   fn_exit:

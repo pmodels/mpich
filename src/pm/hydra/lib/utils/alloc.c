@@ -128,7 +128,7 @@ static HYD_status alloc_proxy_list(struct HYD_node *node_list, int pgid,
         proxy->node = node;
         proxy->pgid = pgid;
 
-        proxy->proxy_id = -1;   /* Do we need this? */
+        proxy->proxy_id = i;
         proxy->exec_launch_info = NULL;
 
         proxy->proxy_process_count = 0;
@@ -360,9 +360,11 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
 
     /* If all proxies have as many filler processes as the number of
      * cores, we can reduce those filler processes */
-    if (dummy_fillers)
-        for (struct HYD_proxy * proxy = proxy_list; proxy; proxy = proxy->next)
-            proxy->filler_processes -= proxy->node->core_count;
+    if (dummy_fillers) {
+        for (int i = 0; i < proxy_count; i++) {
+            proxy_list[i].filler_processes -= proxy_list[i].node->core_count;
+        }
+    }
 
     /* Proxy list is created; add the executables to the proxy list */
     if (proxy_count == 1) {
@@ -375,13 +377,17 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
     } else {
         struct HYD_exec *exec = exec_list;
 
-        int filler_round = 1;
-        struct HYD_proxy *proxy;
-        for (proxy = proxy_list; proxy && proxy->filler_processes == 0; proxy = proxy->next);
-        if (proxy == NULL) {
-            filler_round = 0;
-            proxy = proxy_list;
+        int i_proxy = 0;
+        int filler_round = 0;
+        for (int i = 0; i < proxy_count; i++) {
+            if (proxy_list[i].filler_processes > 0) {
+                i_proxy = i;
+                filler_round = 1;
+                break;
+            }
         }
+        struct HYD_proxy *proxy;
+        proxy = &proxy_list[i_proxy];
 
         int exec_rem_procs = exec->proc_count;
         int proxy_rem_cores = filler_round ? proxy->filler_processes : proxy->node->core_count;
@@ -397,12 +403,12 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
             HYDU_ASSERT(exec_rem_procs, status);
 
             while (proxy_rem_cores == 0) {
-                proxy = proxy->next;
-
-                if (proxy == NULL) {
+                i_proxy++;
+                if (i_proxy == proxy_count) {
+                    i_proxy = 0;
                     filler_round = 0;
-                    proxy = proxy_list;
                 }
+                proxy = &proxy_list[i_proxy];
 
                 proxy_rem_cores = filler_round ? proxy->filler_processes : proxy->node->core_count;
             }
@@ -419,13 +425,7 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
         }
     }
 
-    int i = 0;
-    for (struct HYD_proxy * proxy = proxy_list; proxy; proxy = proxy->next) {
-        proxy->proxy_id = i;
-        i++;
-    }
-
-    *proxy_count_p = i;
+    *proxy_count_p = proxy_count;
     *proxy_list_p = proxy_list;
 
   fn_exit:

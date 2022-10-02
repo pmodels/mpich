@@ -74,9 +74,7 @@ void HYD_uiu_free_params(void)
 void HYD_uiu_print_params(void)
 {
     struct HYD_env *env;
-    struct HYD_proxy *proxy;
     struct HYD_exec *exec;
-    int i;
 
     HYDU_FUNC_ENTER();
 
@@ -117,9 +115,11 @@ void HYD_uiu_print_params(void)
 
     HYDU_dump_noprefix(stdout, "    Proxy information:\n");
     HYDU_dump_noprefix(stdout, "    *********************\n");
-    i = 1;
-    for (proxy = PMISERV_pg_by_id(0)->proxy_list; proxy; proxy = proxy->next) {
-        HYDU_dump_noprefix(stdout, "      [%d] proxy: %s (%d cores)\n", i++,
+    struct HYD_pg *pg;
+    pg = PMISERV_pg_by_id(0);
+    for (int i = 0; i < pg->proxy_count; i++) {
+        struct HYD_proxy *proxy = &pg->proxy_list[i];
+        HYDU_dump_noprefix(stdout, "      [%d] proxy: %s (%d cores)\n", i + 1,
                            proxy->node->hostname, proxy->node->core_count);
         HYDU_dump_noprefix(stdout, "      Exec list: ");
         for (exec = proxy->exec_list; exec; exec = exec->next)
@@ -193,11 +193,9 @@ static HYD_status resolve_pattern_string(const char *pattern, char **str, int pg
                 case 'h':
                     pg = PMISERV_pg_by_id(pgid);
                     HYDU_ASSERT(pg, status);
+                    HYDU_ASSERT(proxy_id >= 0 && proxy_id < pg->proxy_count, status);
 
-                    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-                        if (proxy->proxy_id == proxy_id)
-                            break;
-                    HYDU_ASSERT(proxy, status);
+                    proxy = &pg->proxy_list[proxy_id];
                     MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%s", proxy->node->hostname);
                     break;
                 case '\0':

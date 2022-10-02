@@ -59,8 +59,8 @@ HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy * proxy, int pid)
             arg_count++;
             if (arg_count >= MAX_PMI_ARGS) {
                 pg_scratch->keyval_dist_count += (arg_count - 1);
-                for (struct HYD_proxy * tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
-                    status = HYD_pmiserv_pmi_reply(tproxy, pid, &pmi);
+                for (int i = 0; i < pg->proxy_count; i++) {
+                    status = HYD_pmiserv_pmi_reply(&pg->proxy_list[i], pid, &pmi);
                     HYDU_ERR_POP(status, "error writing PMI line\n");
                 }
 
@@ -71,8 +71,8 @@ HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy * proxy, int pid)
 
         if (arg_count > 1) {
             pg_scratch->keyval_dist_count += (arg_count - 1);
-            for (struct HYD_proxy * tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
-                status = HYD_pmiserv_pmi_reply(tproxy, pid, &pmi);
+            for (int i = 0; i < pg->proxy_count; i++) {
+                status = HYD_pmiserv_pmi_reply(&pg->proxy_list[i], pid, &pmi);
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
         }
