@@ -154,7 +154,7 @@ int main(int argc, char **argv)
     }
 
     struct HYD_pg *pg;
-    pg = &HYD_server_info.pg_list;
+    pg = HYDU_get_pg(0);
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */

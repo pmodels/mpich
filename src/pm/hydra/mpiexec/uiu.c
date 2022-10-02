@@ -125,7 +125,7 @@ void HYD_uiu_print_params(void)
     HYDU_dump_noprefix(stdout, "    Proxy information:\n");
     HYDU_dump_noprefix(stdout, "    *********************\n");
     i = 1;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
+    for (proxy = HYDU_get_pg(0)->proxy_list; proxy; proxy = proxy->next) {
         HYDU_dump_noprefix(stdout, "      [%d] proxy: %s (%d cores)\n", i++,
                            proxy->node->hostname, proxy->node->core_count);
         HYDU_dump_noprefix(stdout, "      Exec list: ");

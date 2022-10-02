@@ -88,11 +88,13 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYDT_dmx_register_fd(1, &HYD_server_info.cmd_pipe[0], POLLIN, NULL, ui_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_server_info.pg_list);
+    struct HYD_pg *pg;
+    pg = HYDU_get_pg(0);
+    status = HYD_pmcd_pmi_alloc_pg_scratch(pg);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
 
     /* PMI-v2 kvs-fence */
-    status = HYD_pmiserv_epoch_init(&HYD_server_info.pg_list);
+    status = HYD_pmiserv_epoch_init(pg);
     HYDU_ERR_POP(status, "unable to init epoch\n");
 
     status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
@@ -107,22 +109,21 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, control_port, 0);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-    status = HYD_pmcd_pmi_fill_in_exec_launch_info(&HYD_server_info.pg_list);
+    status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
     node_count = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
         node_count++;
 
     HYDU_MALLOC_OR_JUMP(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
 
-    status = HYDT_bsci_launch_procs(proxy_stash.strlist, HYD_server_info.pg_list.proxy_list,
-                                    HYD_TRUE, control_fd);
+    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, HYD_TRUE, control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
-    for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
+    for (i = 0, proxy = pg->proxy_list; proxy; proxy = proxy->next, i++)
         if (control_fd[i] != HYD_FD_UNSET) {
             proxy->control_fd = control_fd[i];
 
