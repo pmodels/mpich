@@ -13,6 +13,35 @@
 #include "pmiserv_common.h"
 #include "pmiserv_pmi.h"
 
+static HYD_status send_hdr_downstream(struct HYD_proxy *proxy, struct HYD_pmcd_hdr *hdr,
+                                      void *buf, int buflen)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    hdr->pgid = proxy->pgid;
+    hdr->proxy_id = proxy->proxy_id;
+    hdr->buflen = buflen;
+
+    int closed, sent;
+    status = HYDU_sock_write(proxy->control_fd, hdr, sizeof(*hdr), &sent,
+                             &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "sock write error\n");
+    HYDU_ASSERT(!closed, status);
+
+    if (buflen > 0) {
+        status = HYDU_sock_write(proxy->control_fd, buf, buflen, &sent,
+                                 &closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "sock write error\n");
+        HYDU_ASSERT(!closed, status);
+    }
+
+  fn_exit:
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
+
 static HYD_status handle_pmi_cmd(struct HYD_proxy *proxy, int pgid, int process_fd, char *buf,
                                  int buflen, int pmi_version)
 {
@@ -183,17 +212,14 @@ HYD_status HYD_pmcd_pmiserv_cleanup_all_pgs(void)
 HYD_status HYD_pmcd_pmiserv_send_signal(struct HYD_proxy *proxy, int signum)
 {
     struct HYD_pmcd_hdr hdr;
-    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_SIGNAL;
     hdr.u.data = signum;
 
-    status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed,
-                             HYDU_SOCK_COMM_MSGWAIT);
+    status = send_hdr_downstream(proxy, &hdr, NULL, 0);
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
-    HYDU_ASSERT(!closed, status);
 
   fn_exit:
     return status;
@@ -337,19 +363,10 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                            HYDU_SOCK_COMM_NONE);
         HYDU_ERR_POP(status, "error reading from stdin\n");
 
-        hdr.buflen = count;
-
-        status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed,
-                                 HYDU_SOCK_COMM_MSGWAIT);
+        send_hdr_downstream(proxy, &hdr, buf, count);
         HYDU_ERR_POP(status, "error writing to control socket\n");
-        HYDU_ASSERT(!closed, status);
 
-        if (hdr.buflen) {
-            status = HYDU_sock_write(proxy->control_fd, buf, hdr.buflen, &count, &closed,
-                                     HYDU_SOCK_COMM_MSGWAIT);
-            HYDU_ERR_POP(status, "error writing to control socket\n");
-            HYDU_ASSERT(!closed, status);
-        } else {
+        if (!count) {
             status = HYDT_dmx_deregister_fd(STDIN_FILENO);
             HYDU_ERR_POP(status, "unable to deregister STDIN\n");
         }
@@ -440,17 +457,15 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 static HYD_status send_exec_info(struct HYD_proxy *proxy)
 {
     struct HYD_pmcd_hdr hdr;
-    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PROC_INFO;
-    status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed,
-                             HYDU_SOCK_COMM_MSGWAIT);
+
+    status = send_hdr_downstream(proxy, &hdr, NULL, 0);
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
-    HYDU_ASSERT(!closed, status);
 
     status = HYDU_send_strlist(proxy->control_fd, proxy->exec_launch_info);
     HYDU_ERR_POP(status, "error sending exec info\n");
@@ -524,11 +539,8 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
             HYDU_ERR_POP(status, "unable to register fd\n");
         } else {
             hdr.cmd = CMD_STDIN;
-            hdr.buflen = 0;
-            status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed,
-                                     HYDU_SOCK_COMM_MSGWAIT);
+            status = send_hdr_downstream(proxy, &hdr, NULL, 0);
             HYDU_ERR_POP(status, "error writing to control socket\n");
-            HYDU_ASSERT(!closed, status);
         }
     }
 
