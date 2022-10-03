@@ -22,6 +22,8 @@ HYD_status HYD_pmiserv_pmi_reply(struct HYD_proxy * proxy, int process_fd, struc
     struct HYD_pmcd_hdr hdr;
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PMI_RESPONSE;
+    hdr.pgid = proxy->pgid;
+    hdr.proxy_id = proxy->proxy_id;
     hdr.u.pmi.process_fd = process_fd;
     return HYD_pmcd_pmi_send(proxy->control_fd, pmi, &hdr, HYD_server_info.user_global.debug);
 }
