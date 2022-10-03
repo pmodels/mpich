@@ -46,21 +46,6 @@ struct HYD_pmcd_pmip_s {
         int control;
     } upstream;
 
-    /* Currently our downstream only consists of actual MPI
-     * processes */
-    struct {
-        int *out;
-        int *err;
-        int in;
-
-        int *pid;
-        int *exit_status;
-
-        int *pmi_rank;
-        int *pmi_fd;
-        int *pmi_fd_active;
-    } downstream;
-
     /* Proxy details */
     struct {
         int id;
