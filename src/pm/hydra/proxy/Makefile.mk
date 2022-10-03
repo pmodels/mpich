@@ -7,6 +7,7 @@ bin_PROGRAMS += hydra_pmi_proxy
 
 hydra_pmi_proxy_SOURCES = \
     proxy/pmip.c \
+    proxy/pmip_pg.c \
     proxy/pmip_cb.c \
     proxy/pmip_utils.c \
     proxy/pmip_pmi.c
