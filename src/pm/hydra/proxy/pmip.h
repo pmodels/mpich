@@ -97,4 +97,52 @@ HYD_status PMIP_send_hdr_upstream(struct HYD_pmcd_hdr *hdr, void *buf, int bufle
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp);
 const char *HYD_pmip_get_hwloc_xmlfile(void);
 
+/* downstreams */
+struct pmip_downstream {
+    struct pmip_pg *pg;
+
+    int out;
+    int err;
+    int in;
+
+    int pid;
+    int exit_status;
+
+    int pmi_appnum;
+    int pmi_rank;
+    int pmi_fd;
+    int pmi_fd_active;
+};
+
+/* Each launch belongs to separate MPI_COMM_WORLD, which is tracked by (pgid, proxy_id)
+ * at the server. Each pmip_pg hosts a list of downstream processes.
+ */
+
+struct pmip_pg {
+    int pgid;
+    int proxy_id;
+
+    int num_procs;
+    struct pmip_downstream *downstreams;
+};
+
+void PMIP_pg_init(void);
+void PMIP_pg_finalize(void);
+struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id);
+struct pmip_pg *PMIP_pg_0(void);
+HYD_status PMIP_pg_alloc_downstreams(struct pmip_pg *pg, int num_procs);
+struct pmip_pg *PMIP_find_pg(int pgid, int proxy_id);
+
+bool PMIP_pg_has_open_stdoe(struct pmip_pg *pg);
+
+int *PMIP_pg_get_pid_list(struct pmip_pg *pg);
+int *PMIP_pg_get_stdout_list(struct pmip_pg *pg);
+int *PMIP_pg_get_stderr_list(struct pmip_pg *pg);
+int *PMIP_pg_get_exit_status_list(struct pmip_pg *pg);
+
+struct pmip_downstream *PMIP_find_downstream_by_fd(int fd);
+struct pmip_downstream *PMIP_find_downstream_by_pid(int pid);
+int PMIP_get_total_process_count(void);
+bool PMIP_has_open_stdoe(void);
+
 #endif /* PMIP_H_INCLUDED */
