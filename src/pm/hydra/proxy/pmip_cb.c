@@ -46,22 +46,20 @@ HYD_status PMIP_send_hdr_upstream(struct HYD_pmcd_hdr *hdr, void *buf, int bufle
     goto fn_exit;
 }
 
-static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
+static HYD_status stdoe_cb(int fd, bool is_stdout)
 {
-    int closed, i, recvd, stdfd;
+    int closed, i, recvd;
     char buf[HYD_TMPBUF_SIZE];
     struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    stdfd = (int) (size_t) userp;
-
     status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &recvd, &closed, HYDU_SOCK_COMM_NONE);
     HYDU_ERR_POP(status, "sock read error\n");
 
     if (recvd) {
-        if (stdfd == STDOUT_FILENO) {
+        if (is_stdout) {
             HYD_pmcd_init_header(&hdr);
             hdr.cmd = CMD_STDOUT;
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
@@ -88,7 +86,7 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
         status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
-        if (stdfd == STDOUT_FILENO) {
+        if (is_stdout) {
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.out[i] == fd)
                     HYD_pmcd_pmip.downstream.out[i] = HYD_FD_CLOSED;
@@ -107,6 +105,16 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
 
   fn_fail:
     goto fn_exit;
+}
+
+static HYD_status stdout_cb(int fd, HYD_event_t events, void *userp)
+{
+    return stdoe_cb(fd, true);
+}
+
+static HYD_status stderr_cb(int fd, HYD_event_t events, void *userp)
+{
+    return stdoe_cb(fd, false);
 }
 
 static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
@@ -828,13 +836,11 @@ static HYD_status launch_procs(void)
 
     /* Everything is spawned, register the required FDs  */
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
-                                  HYD_pmcd_pmip.downstream.out, HYD_POLLIN,
-                                  (void *) (size_t) STDOUT_FILENO, stdoe_cb);
+                                  HYD_pmcd_pmip.downstream.out, HYD_POLLIN, NULL, stdout_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
-                                  HYD_pmcd_pmip.downstream.err, HYD_POLLIN,
-                                  (void *) (size_t) STDERR_FILENO, stdoe_cb);
+                                  HYD_pmcd_pmip.downstream.err, HYD_POLLIN, NULL, stderr_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
