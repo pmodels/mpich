@@ -19,6 +19,7 @@ struct HYD_pmcd_pmip_map {
 struct HYD_pmcd_pmip_s {
     struct HYD_user_global user_global;
 
+    /* FIXME: move to struct pmip_pg */
     bool is_singleton;
     int singleton_port;
     int singleton_pid;
@@ -49,21 +50,6 @@ struct HYD_pmcd_pmip_s {
         int server_port;
         int control;
     } upstream;
-
-    /* Currently our downstream only consists of actual MPI
-     * processes */
-    struct {
-        int *out;
-        int *err;
-        int in;
-
-        int *pid;
-        int *exit_status;
-
-        int *pmi_rank;
-        int *pmi_fd;
-        int *pmi_fd_active;
-    } downstream;
 
     /* Proxy details */
     struct {
