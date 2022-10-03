@@ -191,17 +191,22 @@ bool PMIP_has_open_stdoe(void)
 
 void PMIP_bcast_signal(int sig)
 {
-    int i, pgid;
-
-    /* Send the kill signal to all processes */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-        if (HYD_pmcd_pmip.downstream.pid[i] != -1) {
+    int n = utarray_len(PMIP_pgs);
+    struct pmip_pg *arr = ut_type_array(PMIP_pgs, struct pmip_pg *);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < arr[i].num_procs; j++) {
+            int pid = arr[i].downstreams[j].pid;
+            if (pid != -1) {
 #if defined(HAVE_GETPGID) && defined(HAVE_SETSID)
-            pgid = getpgid(HYD_pmcd_pmip.downstream.pid[i]);
-            killpg(pgid, sig);
+                /* If we are able to get the process group ID, and the
+                 * child process has its own process group ID, send a
+                 * signal to the entire process group */
+                int pgid = getpgid(pid);
+                killpg(pgid, sig);
 #else
-            kill(HYD_pmcd_pmip.downstream.pid[i], sig);
+                kill(pid, sig);
 #endif
+            }
         }
     }
 }
