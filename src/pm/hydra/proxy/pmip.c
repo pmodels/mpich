@@ -27,8 +27,6 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.retries = -1;
 
-    HYD_pmcd_pmip.exec_list = NULL;
-
     PMIP_pg_init();
 
     status = HYD_pmcd_pmi_allocate_kvs(&HYD_pmcd_pmip.local.kvs, -1);
@@ -51,9 +49,6 @@ static void cleanup_params(void)
 
     HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 
-
-    /* Exec list */
-    HYDU_free_exec_list(HYD_pmcd_pmip.exec_list);
 
     PMIP_pg_finalize();
     HYDT_topo_finalize();

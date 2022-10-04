@@ -465,11 +465,11 @@ static HYD_status exec_fn(char *arg, char ***argv)
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_pmcd_pmip.exec_list == NULL) {
-        status = HYDU_alloc_exec(&HYD_pmcd_pmip.exec_list);
+    if (cur_pg->exec_list == NULL) {
+        status = HYDU_alloc_exec(&cur_pg->exec_list);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
     } else {
-        for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+        for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
         status = HYDU_alloc_exec(&exec->next);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
     }
@@ -487,7 +487,7 @@ static HYD_status exec_appnum_fn(char *arg, char ***argv)
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
     status = HYDU_set_int(arg, &exec->appnum, atoi(**argv));
 
     (*argv)++;
@@ -500,7 +500,7 @@ static HYD_status exec_proc_count_fn(char *arg, char ***argv)
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
     status = HYDU_set_int(arg, &exec->proc_count, atoi(**argv));
 
     (*argv)++;
@@ -518,7 +518,7 @@ static HYD_status exec_local_env_fn(char *arg, char ***argv)
     if (**argv == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "NULL argument to exec local env\n");
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
 
     count = atoi(**argv);
     for (i = 0; i < count; i++) {
@@ -547,7 +547,7 @@ static HYD_status exec_env_prop_fn(char *arg, char ***argv)
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
 
     status = HYDU_set_str(arg, &exec->env_prop, **argv);
 
@@ -561,7 +561,7 @@ static HYD_status exec_wdir_fn(char *arg, char ***argv)
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
 
     status = HYDU_set_str(arg, &exec->wdir, **argv);
 
@@ -579,7 +579,7 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
     if (**argv == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "NULL argument to exec args\n");
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
 
     errno = 0;
     count = strtol(**argv, NULL, 10);

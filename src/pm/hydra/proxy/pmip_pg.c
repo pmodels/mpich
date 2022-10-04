@@ -14,6 +14,7 @@ static void pg_destructor(void *_elt)
     MPL_free(pg->spawner_kvsname);
     MPL_free(pg->pmi_process_mapping);
     MPL_free(pg->downstreams);
+    HYDU_free_exec_list(pg->exec_list);
 }
 
 #define FIND_DOWNSTREAM(fd, field) do { \
