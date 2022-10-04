@@ -39,8 +39,6 @@ struct HYD_pmcd_pmip_s {
         int global_process_count;
 
         /* PMI */
-        char *pmi_fd;
-        int pmi_rank;           /* If this is -1, we auto-generate it */
         char *pmi_process_mapping;
     } system_global;            /* Global system parameters */
 
