@@ -743,7 +743,7 @@ static HYD_status launch_procs(struct pmip_pg *pg)
     HYDU_FUNC_ENTER();
 
     int num_procs = 0;
-    for (exec = HYD_pmcd_pmip.exec_list; exec; exec = exec->next) {
+    for (exec = pg->exec_list; exec; exec = exec->next) {
         num_procs += exec->proc_count;
     }
 
@@ -778,7 +778,7 @@ static HYD_status launch_procs(struct pmip_pg *pg)
 
     /* Spawn the processes */
     process_id = 0;
-    for (exec = HYD_pmcd_pmip.exec_list; exec; exec = exec->next) {
+    for (exec = pg->exec_list; exec; exec = exec->next) {
 
         /* Increasing priority order: (1) global inherited env; (2)
          * global user env; (3) local user env; (4) system env. We

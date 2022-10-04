@@ -95,6 +95,7 @@ void PMIP_free_pg(struct pmip_pg *pg)
     MPL_free(pg->spawner_kvsname);
     MPL_free(pg->pmi_process_mapping);
     MPL_free(pg->downstreams);
+    HYDU_free_exec_list(pg->exec_list);
 
     int idx = pg - arr;
     if (idx < 0 || idx >= n) {

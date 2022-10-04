@@ -37,9 +37,6 @@ struct HYD_pmcd_pmip_s {
 
         int retries;
     } local;
-
-    /* Process segmentation information for this proxy */
-    struct HYD_exec *exec_list;
 };
 
 /* downstreams */
@@ -82,10 +79,11 @@ struct pmip_pg {
     } pmi_id_map;
 
     int global_process_count;
-
     char *pmi_process_mapping;
-
     char *spawner_kvsname;
+
+    /* Process segmentation information for this proxy */
+    struct HYD_exec *exec_list;
 };
 
 extern struct HYD_pmcd_pmip_s HYD_pmcd_pmip;
