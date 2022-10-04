@@ -566,6 +566,8 @@ static HYD_status handle_launch_procs(struct pmip_pg *pg)
 
     int fd = HYD_pmcd_pmip.upstream.control;
 
+    HYD_set_cur_pg(pg);
+
     status = procinfo(fd);
     HYDU_ERR_POP(status, "error parsing process info\n");
 
