@@ -797,6 +797,7 @@ AS_IF([test "x$with_daos" != xno], [
     AC_CHECK_HEADERS(gurt/hash.h,, [unset DAOS])
     AC_CHECK_LIB([gurt], [d_hash_table_create],, [unset DAOS])
     AC_CHECK_LIB([uuid], [uuid_generate],, [unset DAOS])
+    AC_CHECK_LIB([daos_common], [daos_hhash_init_feats],, [unset DAOS])
     AC_CHECK_LIB([daos], [daos_init],, [unset DAOS])
     AC_CHECK_LIB([dfs], [dfs_mount],, [unset DAOS])
     AC_CHECK_LIB([duns], [duns_resolve_path],, [unset DAOS])
