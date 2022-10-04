@@ -84,30 +84,12 @@ HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid)
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs)
 {
     HYD_status status = HYD_SUCCESS;
-    char hostname[MAX_HOSTNAME_LEN - 40];       /* Remove space taken up by the integers and other
-                                                 * characters below. */
-    unsigned int seed;
-    MPL_time_t tv;
-    double secs;
-    int rnd;
-
     HYDU_FUNC_ENTER();
 
-    if (gethostname(hostname, MAX_HOSTNAME_LEN - 40) < 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
-
-    MPL_wtime(&tv);
-    MPL_wtime_todouble(&tv, &secs);
-    seed = (unsigned int) (secs * 1e6);
-    srand(seed);
-    rnd = rand();
-
     HYDU_MALLOC_OR_JUMP(*kvs, struct HYD_pmcd_pmi_kvs *, sizeof(struct HYD_pmcd_pmi_kvs), status);
-    MPL_snprintf_nowarn((*kvs)->kvsname, PMI_MAXKVSLEN, "kvs_%d_%d_%d_%s", (int) getpid(), pgid,
-                        rnd, hostname);
     (*kvs)->key_pair = NULL;
     (*kvs)->tail = NULL;
 

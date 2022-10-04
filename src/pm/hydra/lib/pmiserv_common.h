@@ -23,7 +23,6 @@ struct HYD_pmcd_pmi_kvs_pair {
 };
 
 struct HYD_pmcd_pmi_kvs {
-    char kvsname[PMI_MAXKVSLEN];        /* Name of this kvs */
     struct HYD_pmcd_pmi_kvs_pair *key_pair;
     struct HYD_pmcd_pmi_kvs_pair *tail;
 };
@@ -34,7 +33,7 @@ struct HYD_pmcd_init_hdr {
     int proxy_id;
 };
 
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid);
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs);
 void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmcd_pmi_kvs *kvs,
                                 int *ret);

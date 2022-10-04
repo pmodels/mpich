@@ -42,10 +42,10 @@ HYD_status HYD_pmiserv_kvs_get(struct HYD_proxy *proxy, int process_fd, int pgid
     const char *kvsname;
     const char *key;
     pmi_errno = PMIU_msg_get_query_get(pmi, &kvsname, &key);
-    if (kvsname && strcmp(pg_scratch->kvs->kvsname, kvsname) != 0) {
+    if (kvsname && strcmp(pg_scratch->kvsname, kvsname) != 0) {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "kvsname (%s) does not match this group's kvs space (%s)\n",
-                            kvsname, pg_scratch->kvs->kvsname);
+                            kvsname, pg_scratch->kvsname);
     }
 
     int found;
