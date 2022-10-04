@@ -11,6 +11,13 @@
 
 #include "pmi_util.h"   /* from libpmi, for PMIU_verbose */
 
+static pmip_pg *cur_pg = NULL;
+
+void HYD_set_cur_pg(static pmip_pg * pg)
+{
+    cur_pg = pg;
+}
+
 /* For unused options, use dummy handler to prevent parsing errors */
 static HYD_status dummy1_fn(char *arg, char ***argv)
 {
