@@ -25,24 +25,6 @@ struct HYD_pmcd_pmip_s {
     int singleton_pid;
 
     struct {
-        struct {
-            int local_filler;
-            int local_count;
-            int global_count;
-        } global_core_map;
-
-        struct {
-            int filler_start;
-            int non_filler_start;
-        } pmi_id_map;
-
-        int global_process_count;
-
-        /* PMI */
-        char *pmi_process_mapping;
-    } system_global;            /* Global system parameters */
-
-    struct {
         /* Upstream server contact information */
         char *server_name;
         int server_port;
@@ -56,8 +38,7 @@ struct HYD_pmcd_pmip_s {
         char *iface_ip_env_name;
         char *hostname;
 
-        char *spawner_kvsname;
-        struct HYD_pmcd_pmi_kvs *kvs;   /* Node-level KVS space for node attributes */
+        struct HYD_pmcd_pmi_kvs *kvs;
 
         int retries;
     } local;
@@ -93,11 +74,29 @@ struct pmip_pg {
 
     int num_procs;
     struct pmip_downstream *downstreams;
+
+    struct {
+        int local_filler;
+        int local_count;
+        int global_count;
+    } global_core_map;
+
+    struct {
+        int filler_start;
+        int non_filler_start;
+    } pmi_id_map;
+
+    int global_process_count;
+
+    char *pmi_process_mapping;
+
+    char *spawner_kvsname;
 };
 
 extern struct HYD_pmcd_pmip_s HYD_pmcd_pmip;
 extern struct HYD_arg_match_table HYD_pmcd_pmip_match_table[];
 
+void HYD_set_cur_pg(struct pmip_pg *pg);
 HYD_status HYD_pmcd_pmip_get_params(char **t_argv);
 
 #define PMIP_EXIT_STATUS_UNSET -1

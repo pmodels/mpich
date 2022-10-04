@@ -11,9 +11,9 @@
 
 #include "pmi_util.h"   /* from libpmi, for PMIU_verbose */
 
-static pmip_pg *cur_pg = NULL;
+static struct pmip_pg *cur_pg = NULL;
 
-void HYD_set_cur_pg(static pmip_pg * pg)
+void HYD_set_cur_pg(struct pmip_pg *pg)
 {
     cur_pg = pg;
 }
@@ -234,27 +234,25 @@ static HYD_status pmi_spawner_kvsname_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.local.spawner_kvsname, char *, PMI_MAXKVSLEN, status);
-
-    MPL_snprintf(HYD_pmcd_pmip.local.spawner_kvsname, PMI_MAXKVSLEN, "%s", **argv);
+    status = HYDU_set_str(arg, &cur_pg->spawner_kvsname, **argv);
     (*argv)++;
 
-  fn_exit:
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static HYD_status pmi_process_mapping_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.system_global.pmi_process_mapping, **argv);
+    HYDU_ASSERT(cur_pg, status);
+    status = HYDU_set_str(arg, &cur_pg->pmi_process_mapping, **argv);
 
     (*argv)++;
 
+  fn_exit:
     return status;
+  fn_fail:
+    goto fn_exit;
 }
 
 static HYD_status binding_fn(char *arg, char ***argv)
@@ -358,15 +356,15 @@ static HYD_status global_core_map_fn(char *arg, char ***argv)
 
     tmp = strtok(map, ",");
     HYDU_ASSERT(tmp, status);
-    HYD_pmcd_pmip.system_global.global_core_map.local_filler = atoi(tmp);
+    cur_pg->global_core_map.local_filler = atoi(tmp);
 
     tmp = strtok(NULL, ",");
     HYDU_ASSERT(tmp, status);
-    HYD_pmcd_pmip.system_global.global_core_map.local_count = atoi(tmp);
+    cur_pg->global_core_map.local_count = atoi(tmp);
 
     tmp = strtok(NULL, ",");
     HYDU_ASSERT(tmp, status);
-    HYD_pmcd_pmip.system_global.global_core_map.global_count = atoi(tmp);
+    cur_pg->global_core_map.global_count = atoi(tmp);
 
     MPL_free(map);
 
@@ -385,17 +383,19 @@ static HYD_status pmi_id_map_fn(char *arg, char ***argv)
     char *map, *tmp;
     HYD_status status = HYD_SUCCESS;
 
+    HYDU_ASSERT(cur_pg, status);
+
     /* Split the core map into three different segments */
     map = MPL_strdup(**argv);
     HYDU_ASSERT(map, status);
 
     tmp = strtok(map, ",");
     HYDU_ASSERT(tmp, status);
-    HYD_pmcd_pmip.system_global.pmi_id_map.filler_start = atoi(tmp);
+    cur_pg->pmi_id_map.filler_start = atoi(tmp);
 
     tmp = strtok(NULL, ",");
     HYDU_ASSERT(tmp, status);
-    HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start = atoi(tmp);
+    cur_pg->pmi_id_map.non_filler_start = atoi(tmp);
 
     MPL_free(map);
 
@@ -413,7 +413,7 @@ static HYD_status global_process_count_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_int(arg, &HYD_pmcd_pmip.system_global.global_process_count, atoi(**argv));
+    status = HYDU_set_int(arg, &cur_pg->global_process_count, atoi(**argv));
 
     (*argv)++;
 

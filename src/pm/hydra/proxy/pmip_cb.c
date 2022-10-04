@@ -553,22 +553,20 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 
 /* handle_launch_procs - read proc_info and launch procs */
 
-static HYD_status parse_exec_params(char **t_argv);
-static HYD_status procinfo(int fd);
+static HYD_status parse_exec_params(struct pmip_pg *pg, char **t_argv);
+static HYD_status procinfo(struct pmip_pg *pg);
 static HYD_status singleton_init(struct pmip_pg *pg, int singleton_pid, int singleton_port);
 static HYD_status launch_procs(struct pmip_pg *pg);
-static int local_to_global_id(int local_id);
+static void init_pg_params(struct pmip_pg *pg);
+static HYD_status verify_pg_params(struct pmip_pg *pg);
+static int local_to_global_id(struct pmip_pg *pg, int local_id);
 
 static HYD_status handle_launch_procs(struct pmip_pg *pg)
 {
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
 
-    int fd = HYD_pmcd_pmip.upstream.control;
-
-    HYD_set_cur_pg(pg);
-
-    status = procinfo(fd);
+    status = procinfo(pg);
     HYDU_ERR_POP(status, "error parsing process info\n");
 
     /* FIXME: split topo initialization from applying bindings.
@@ -595,13 +593,15 @@ static HYD_status handle_launch_procs(struct pmip_pg *pg)
     goto fn_exit;
 }
 
-static HYD_status parse_exec_params(char **t_argv)
+static HYD_status parse_exec_params(struct pmip_pg *pg, char **t_argv)
 {
     char **argv = t_argv;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
+    HYD_set_cur_pg(pg);
+    init_pg_params(pg);
     do {
         /* Get the executable arguments  */
         status = HYDU_parse_array(&argv, HYD_pmcd_pmip_match_table);
@@ -613,21 +613,8 @@ static HYD_status parse_exec_params(char **t_argv)
     } while (1);
 
     /* verify the arguments we got */
-    if (HYD_pmcd_pmip.system_global.global_core_map.local_filler == -1 ||
-        HYD_pmcd_pmip.system_global.global_core_map.local_count == -1 ||
-        HYD_pmcd_pmip.system_global.global_core_map.global_count == -1)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "cannot find global core map (%d,%d,%d)\n",
-                            HYD_pmcd_pmip.system_global.global_core_map.local_filler,
-                            HYD_pmcd_pmip.system_global.global_core_map.local_count,
-                            HYD_pmcd_pmip.system_global.global_core_map.global_count);
-
-    if (HYD_pmcd_pmip.system_global.pmi_id_map.filler_start == -1 ||
-        HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start == -1)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "cannot find pmi id map (%d,%d)\n",
-                            HYD_pmcd_pmip.system_global.pmi_id_map.filler_start,
-                            HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start);
+    status = verify_pg_params(pg);
+    HYDU_ERR_POP(status, "missing parameters\n");
 
     /* Set default values */
     if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB != NULL) {
@@ -644,13 +631,15 @@ static HYD_status parse_exec_params(char **t_argv)
     goto fn_exit;
 }
 
-static HYD_status procinfo(int fd)
+static HYD_status procinfo(struct pmip_pg *pg)
 {
     char **arglist;
     int num_strings, str_len, recvd, i, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    int fd = HYD_pmcd_pmip.upstream.control;
 
     /* Read information about the application to launch into a string
      * array and call parse_exec_params() to interpret it and load it into
@@ -675,7 +664,7 @@ static HYD_status procinfo(int fd)
     arglist[num_strings] = NULL;
 
     /* Get the parser to fill in the proxy params structure. */
-    status = parse_exec_params(arglist);
+    status = parse_exec_params(pg, arglist);
     HYDU_ERR_POP(status, "unable to parse argument list\n");
 
     HYDU_free_strlist(arglist);
@@ -781,7 +770,7 @@ static HYD_status launch_procs(struct pmip_pg *pg)
          * PORT. */
         p->pmi_fd = HYD_FD_UNSET;
         p->pmi_fd_active = 0;
-        p->pmi_rank = local_to_global_id(i);
+        p->pmi_rank = local_to_global_id(pg, i);
     }
 
     if (HYD_pmcd_pmip.user_global.pmi_port) {
@@ -982,7 +971,7 @@ static HYD_status launch_procs(struct pmip_pg *pg)
                 MPL_free(str);
 
                 /* PMI_SIZE */
-                str = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count);
+                str = HYDU_int_to_str(pg->global_process_count);
                 status = HYDU_append_env_to_list("PMI_SIZE", str, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
                 MPL_free(str);
@@ -1053,19 +1042,57 @@ static HYD_status launch_procs(struct pmip_pg *pg)
     goto fn_exit;
 }
 
-static int local_to_global_id(int local_id)
+/* global_core_map and pmi_id_map */
+static void init_pg_params(struct pmip_pg *pg)
+{
+    pg->global_core_map.local_filler = -1;
+    pg->global_core_map.local_count = -1;
+    pg->global_core_map.global_count = -1;
+    pg->pmi_id_map.filler_start = -1;
+    pg->pmi_id_map.non_filler_start = -1;
+
+    pg->global_process_count = -1;
+}
+
+static HYD_status verify_pg_params(struct pmip_pg *pg)
+{
+    HYD_status status = HYD_SUCCESS;
+    if (pg->global_core_map.local_filler == -1 ||
+        pg->global_core_map.local_count == -1 || pg->global_core_map.global_count == -1) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "cannot find global core map (%d,%d,%d)\n",
+                            pg->global_core_map.local_filler,
+                            pg->global_core_map.local_count, pg->global_core_map.global_count);
+    }
+
+    if (pg->pmi_id_map.filler_start == -1 || pg->pmi_id_map.non_filler_start == -1) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "cannot find pmi id map (%d,%d)\n",
+                            pg->pmi_id_map.filler_start, pg->pmi_id_map.non_filler_start);
+    }
+
+    if (pg->global_process_count == -1) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot find global_process_count\n");
+    }
+
+  fn_exit:
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int local_to_global_id(struct pmip_pg *pg, int local_id)
 {
     int rem1, rem2, layer, ret;
 
-    if (local_id < HYD_pmcd_pmip.system_global.global_core_map.local_filler)
-        ret = HYD_pmcd_pmip.system_global.pmi_id_map.filler_start + local_id;
+    if (local_id < pg->global_core_map.local_filler)
+        ret = pg->pmi_id_map.filler_start + local_id;
     else {
-        rem1 = local_id - HYD_pmcd_pmip.system_global.global_core_map.local_filler;
-        layer = rem1 / HYD_pmcd_pmip.system_global.global_core_map.local_count;
-        rem2 = rem1 - (layer * HYD_pmcd_pmip.system_global.global_core_map.local_count);
+        rem1 = local_id - pg->global_core_map.local_filler;
+        layer = rem1 / pg->global_core_map.local_count;
+        rem2 = rem1 - (layer * pg->global_core_map.local_count);
 
-        ret = HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start +
-            (layer * HYD_pmcd_pmip.system_global.global_core_map.global_count) + rem2;
+        ret = pg->pmi_id_map.non_filler_start + (layer * pg->global_core_map.global_count) + rem2;
     }
 
     return ret;

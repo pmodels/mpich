@@ -11,6 +11,8 @@ static UT_array *PMIP_pgs;
 static void pg_destructor(void *_elt)
 {
     struct pmip_pg *pg = _elt;
+    MPL_free(pg->spawner_kvsname);
+    MPL_free(pg->pmi_process_mapping);
     MPL_free(pg->downstreams);
 }
 

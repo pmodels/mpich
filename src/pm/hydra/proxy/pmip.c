@@ -17,15 +17,6 @@ static HYD_status init_params(void)
 
     HYDU_init_user_global(&HYD_pmcd_pmip.user_global);
 
-    HYD_pmcd_pmip.system_global.global_core_map.local_filler = -1;
-    HYD_pmcd_pmip.system_global.global_core_map.local_count = -1;
-    HYD_pmcd_pmip.system_global.global_core_map.global_count = -1;
-    HYD_pmcd_pmip.system_global.pmi_id_map.filler_start = -1;
-    HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start = -1;
-
-    HYD_pmcd_pmip.system_global.global_process_count = -1;
-    HYD_pmcd_pmip.system_global.pmi_process_mapping = NULL;
-
     HYD_pmcd_pmip.upstream.server_name = NULL;
     HYD_pmcd_pmip.upstream.server_port = -1;
     HYD_pmcd_pmip.upstream.control = HYD_FD_UNSET;
@@ -34,7 +25,6 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.pgid = -1;
     HYD_pmcd_pmip.local.iface_ip_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
-    HYD_pmcd_pmip.local.spawner_kvsname = NULL;
     HYD_pmcd_pmip.local.retries = -1;
 
     HYD_pmcd_pmip.exec_list = NULL;
@@ -50,9 +40,6 @@ static void cleanup_params(void)
 {
     HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
 
-    /* System global */
-    MPL_free(HYD_pmcd_pmip.system_global.pmi_process_mapping);
-
 
     /* Upstream */
     MPL_free(HYD_pmcd_pmip.upstream.server_name);
@@ -61,7 +48,6 @@ static void cleanup_params(void)
     /* Local */
     MPL_free(HYD_pmcd_pmip.local.iface_ip_env_name);
     MPL_free(HYD_pmcd_pmip.local.hostname);
-    MPL_free(HYD_pmcd_pmip.local.spawner_kvsname);
 
     HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 
