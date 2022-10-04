@@ -224,7 +224,7 @@ int main(int argc, char **argv)
 
     int *exit_status_list;
     exit_status_list = PMIP_pg_get_exit_status_list(pg_0);
-    PMIP_send_hdr_upstream(&hdr, exit_status_list, pg_0->num_procs * sizeof(int));
+    PMIP_send_hdr_upstream(pg_0, &hdr, exit_status_list, pg_0->num_procs * sizeof(int));
     HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
     MPL_free(exit_status_list);
 

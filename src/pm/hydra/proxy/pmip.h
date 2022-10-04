@@ -71,17 +71,6 @@ struct HYD_pmcd_pmip_s {
     struct HYD_exec *exec_list;
 };
 
-extern struct HYD_pmcd_pmip_s HYD_pmcd_pmip;
-extern struct HYD_arg_match_table HYD_pmcd_pmip_match_table[];
-
-HYD_status HYD_pmcd_pmip_get_params(char **t_argv);
-
-#define PMIP_EXIT_STATUS_UNSET -1
-HYD_status PMIP_send_hdr_upstream(struct HYD_pmcd_hdr *hdr, void *buf, int buflen);
-
-HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp);
-const char *HYD_pmip_get_hwloc_xmlfile(void);
-
 /* downstreams */
 struct pmip_downstream {
     struct pmip_pg *pg;
@@ -110,6 +99,19 @@ struct pmip_pg {
     int num_procs;
     struct pmip_downstream *downstreams;
 };
+
+extern struct HYD_pmcd_pmip_s HYD_pmcd_pmip;
+extern struct HYD_arg_match_table HYD_pmcd_pmip_match_table[];
+
+HYD_status HYD_pmcd_pmip_get_params(char **t_argv);
+
+#define PMIP_EXIT_STATUS_UNSET -1
+void HYD_pmcd_pmip_send_signal(int sig);
+HYD_status PMIP_send_hdr_upstream(struct pmip_pg *pg, struct HYD_pmcd_hdr *hdr,
+                                  void *buf, int buflen);
+
+HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp);
+const char *HYD_pmip_get_hwloc_xmlfile(void);
 
 void PMIP_pg_init(void);
 void PMIP_pg_finalize(void);

@@ -15,19 +15,21 @@ struct HYD_pmcd_pmip_pmi_handle {
      HYD_status(*handler) (int fd, struct PMIU_cmd * pmi);
 };
 
-HYD_status fn_init(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_initack(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_get_maxes(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_get_appnum(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_get_my_kvsname(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_get_usize(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_get(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_put(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_barrier_in(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi);
+/* handlers for initialization via pmi port */
 HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_info_putnodeattr(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_info_getnodeattr(int fd, struct PMIU_cmd *pmi);
+
+/* handlers for client pmi commands */
+HYD_status fn_init(struct pmip_downstream *p, struct PMIU_cmd *pmi);
+HYD_status fn_get_maxes(struct pmip_downstream *p, struct PMIU_cmd *pmi);
+HYD_status fn_get_appnum(struct pmip_downstream *p, struct PMIU_cmd *pmi);
+HYD_status fn_get_my_kvsname(struct pmip_downstream *p, struct PMIU_cmd *pmi);
+HYD_status fn_get_usize(struct pmip_downstream *p, struct PMIU_cmd *pmi);
+HYD_status fn_get(struct pmip_downstream *p, struct PMIU_cmd *pmi);
+HYD_status fn_put(struct pmip_downstream *p, struct PMIU_cmd *pmi);
+HYD_status fn_barrier_in(struct pmip_downstream *p, struct PMIU_cmd *pmi);
+HYD_status fn_finalize(struct pmip_downstream *p, struct PMIU_cmd *pmi);
+HYD_status fn_info_putnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi);
+HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi);
 
 /* handlers for server pmi commands */
 HYD_status fn_keyval_cache(struct pmip_pg *pg, struct PMIU_cmd *pmi);

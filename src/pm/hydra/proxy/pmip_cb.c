@@ -14,13 +14,14 @@
 static int pmi_storage_len = 0;
 static char pmi_storage[HYD_TMPBUF_SIZE], *sptr = pmi_storage;
 
-HYD_status PMIP_send_hdr_upstream(struct HYD_pmcd_hdr *hdr, void *buf, int buflen)
+HYD_status PMIP_send_hdr_upstream(struct pmip_pg *pg, struct HYD_pmcd_hdr *hdr,
+                                  void *buf, int buflen)
 {
     HYD_status status = HYD_SUCCESS;
     int upstream_sock_closed, sent;
 
-    hdr->pgid = HYD_pmcd_pmip.local.pgid;
-    hdr->proxy_id = HYD_pmcd_pmip.local.id;
+    hdr->pgid = pg->pgid;
+    hdr->proxy_id = pg->proxy_id;
     hdr->buflen = buflen;
 
     HYDU_ASSERT(hdr->cmd, status);
@@ -64,7 +65,7 @@ static HYD_status stdoe_cb(struct pmip_downstream *p, bool is_stdout)
         hdr.cmd = is_stdout ? CMD_STDOUT : CMD_STDERR;
         hdr.u.io.rank = p->pmi_rank;
 
-        status = PMIP_send_hdr_upstream(&hdr, buf, recvd);
+        status = PMIP_send_hdr_upstream(p->pg, &hdr, buf, recvd);
         HYDU_ERR_POP(status, "error sending hdr upstream\n");
     }
 
@@ -101,7 +102,7 @@ static HYD_status stderr_cb(int fd, HYD_event_t events, void *userp)
     return stdoe_cb(p, false);
 }
 
-static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
+static HYD_status handle_pmi_cmd(struct pmip_downstream *p, char *buf, int buflen, int pmi_version)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -110,7 +111,8 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
     char *cmd = PMIU_wire_get_cmd(buf, buflen, pmi_version);
     int cmd_id = PMIU_msg_cmd_to_id(cmd);
 
-    HYD_status(*handler) (int fd, struct PMIU_cmd * pmi) = NULL;
+    HYD_status(*handler) (struct pmip_downstream * p, struct PMIU_cmd * pmi) = NULL;
+    HYD_status(*init_handler) (int fd, struct PMIU_cmd * pmi) = NULL;
     switch (cmd_id) {
         case PMIU_CMD_INIT:
             handler = fn_init;
@@ -119,7 +121,8 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
             handler = fn_finalize;
             break;
         case PMIU_CMD_FULLINIT:
-            handler = fn_fullinit;
+            /* no valid downstream yet */
+            init_handler = fn_fullinit;
             break;
         case PMIU_CMD_MAXES:
             handler = fn_get_maxes;
@@ -150,7 +153,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
             break;
     }
 
-    if (handler) {
+    if (handler || init_handler) {
         struct PMIU_cmd pmi;
         status = PMIU_cmd_parse(buf, buflen, pmi_version, &pmi);
         HYDU_ERR_POP(status, "unable to parse PMI command\n");
@@ -160,7 +163,12 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
             HYD_pmcd_pmi_dump(&pmi);
         }
 
-        status = handler(fd, &pmi);
+        if (handler) {
+            HYDU_ASSERT(p->pg, status);
+            status = handler(p, &pmi);
+        } else if (init_handler) {
+            status = init_handler(p->pmi_fd, &pmi);
+        }
         HYDU_ERR_POP(status, "PMI handler returned error\n");
         goto fn_exit;
     }
@@ -175,9 +183,10 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PMI;
     hdr.u.pmi.pmi_version = pmi_version;
-    hdr.u.pmi.process_fd = fd;
+    hdr.u.pmi.process_fd = p->pmi_fd;
 
-    status = PMIP_send_hdr_upstream(&hdr, buf, buflen);
+    HYDU_ASSERT(p->pg, status);
+    status = PMIP_send_hdr_upstream(p->pg, &hdr, buf, buflen);
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
 
   fn_exit:
@@ -256,9 +265,18 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
+    struct pmip_downstream init_p;
     struct pmip_downstream *p = userp;
     if (p == NULL) {
         /* pmi_port path. We need find the downstream */
+        p = PMIP_find_downstream_by_fd(fd);
+        if (!p) {
+            /* when init via pmi_port, we don't have the matching downstream yet,
+             * use init_p. We just need pass on the fd */
+            init_p.pg = NULL;   /* sentinel as not a real downstream */
+            init_p.pmi_fd = fd;
+            p = &init_p;
+        }
     }
 
   read_cmd:
@@ -283,7 +301,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
          * We check of we found the PMI FD, and if the FD is "PMI
          * active" (which means that this is an MPI application).
          */
-        if (p && p->pmi_fd_active) {
+        if (p->pg && p->pmi_fd_active) {
             /* Deregister failed socket */
             status = HYDT_dmx_deregister_fd(fd);
             HYDU_ERR_POP(status, "unable to deregister fd\n");
@@ -316,7 +334,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                 /* global rank for the terminated process */
                 hdr.u.data = p->pmi_rank;
 
-                status = PMIP_send_hdr_upstream(&hdr, NULL, 0);
+                HYDU_ASSERT(p, status);
+                status = PMIP_send_hdr_upstream(p->pg, &hdr, NULL, 0);
                 HYDU_ERR_POP(status, "unable to send hdr upstream\n");
             }
         }
@@ -341,11 +360,11 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
          * to identify what PMI FD this is, activate it. If we were not
          * able to identify the PMI FD, we will activate it when we get
          * the PMI initialization command. */
-        if (p && !p->pmi_fd_active) {
+        if (p->pg && !p->pmi_fd_active) {
             p->pmi_fd_active = 1;
         }
 
-        status = handle_pmi_cmd(fd, buf, buflen, pmi_version);
+        status = handle_pmi_cmd(p, buf, buflen, pmi_version);
         HYDU_ERR_POP(status, "unable to handle PMI command\n");
     } while (repeat);
 
@@ -715,7 +734,7 @@ static HYD_status singleton_init(struct pmip_pg *pg, int singleton_pid, int sing
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PID_LIST;
 
-    status = PMIP_send_hdr_upstream(&hdr, &singleton_pid, sizeof(int));
+    status = PMIP_send_hdr_upstream(pg, &hdr, &singleton_pid, sizeof(int));
     HYDU_ERR_POP(status, "unable to send PID_LIST command upstream\n");
 
     /* skip HYDT_dmx_register_fd */
@@ -1012,7 +1031,7 @@ static HYD_status launch_procs(struct pmip_pg *pg)
     hdr.cmd = CMD_PID_LIST;
 
     int *pid_list = PMIP_pg_get_pid_list(pg);
-    status = PMIP_send_hdr_upstream(&hdr, pid_list, num_procs * sizeof(int));
+    status = PMIP_send_hdr_upstream(pg, &hdr, pid_list, num_procs * sizeof(int));
     HYDU_ERR_POP(status, "unable to send PID_LIST command upstream\n");
     MPL_free(pid_list);
 
