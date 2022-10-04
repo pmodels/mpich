@@ -19,44 +19,6 @@
 /* use static buffer in PMIU_cmd facility */
 static bool is_static = true;
 
-/* The number of key values we store has to be one less than the
- * number of PMI arguments allowed.  This is because, when we flush
- * the PMI keyvals upstream, the server will treat it as a single PMI
- * command.  We leave room for one extra argument, cmd=put, that needs
- * to be appended when flushing. */
-#define CACHE_PUT_KEYVAL_MAXLEN  (MAX_PMI_ARGS - 1)
-
-struct cache_put_elem {
-    struct PMIU_token tokens[CACHE_PUT_KEYVAL_MAXLEN + 1];
-    int keyval_len;
-};
-
-struct cache_elem {
-    char *key;
-    char *val;
-    UT_hash_handle hh;
-};
-
-/* TODO: move static variables inside pmip_pg */
-static struct cache_put_elem cache_put;
-static struct cache_elem *cache_get = NULL, *hash_get = NULL;
-static int num_elems = 0;
-
-static void internal_init(void)
-{
-    /* all internal globals are statically initialized to 0 */
-}
-
-static void internal_finalize(void)
-{
-    HASH_CLEAR(hh, hash_get);
-    for (int i = 0; i < num_elems; i++) {
-        MPL_free((cache_get + i)->key);
-        MPL_free((cache_get + i)->val);
-    }
-    MPL_free(cache_get);
-}
-
 /* info_getnodeattr will wait for info_putnodeattr */
 struct HYD_pmcd_pmi_v2_reqs {
     struct pmip_downstream *downstream_ptr;
@@ -205,16 +167,16 @@ static HYD_status cache_put_flush(struct pmip_pg *pg)
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
 
-    if (cache_put.keyval_len == 0)
+    if (pg->cache_put.keyval_len == 0)
         goto fn_exit;
 
-    debug("flushing %d put command(s) out\n", cache_put.keyval_len);
+    debug("flushing %d put command(s) out\n", pg->cache_put.keyval_len);
 
     struct PMIU_cmd pmi;
     PMIU_msg_set_query(&pmi, PMIU_WIRE_V1, PMIU_CMD_MPUT, false /* not static */);
     HYDU_ASSERT(pmi.num_tokens < MAX_PMI_ARGS, status);
-    for (int i = 0; i < cache_put.keyval_len; i++) {
-        PMIU_cmd_add_str(&pmi, cache_put.tokens[i].key, cache_put.tokens[i].val);
+    for (int i = 0; i < pg->cache_put.keyval_len; i++) {
+        PMIU_cmd_add_str(&pmi, pg->cache_put.tokens[i].key, pg->cache_put.tokens[i].val);
     }
 
     if (HYD_pmcd_pmip.user_global.debug) {
@@ -224,11 +186,11 @@ static HYD_status cache_put_flush(struct pmip_pg *pg)
     status = send_cmd_upstream(pg, &pmi, 0 /* dummy fd */);
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
-    for (int i = 0; i < cache_put.keyval_len; i++) {
-        MPL_free(cache_put.tokens[i].key);
-        MPL_free(cache_put.tokens[i].val);
+    for (int i = 0; i < pg->cache_put.keyval_len; i++) {
+        MPL_free(pg->cache_put.tokens[i].key);
+        MPL_free(pg->cache_put.tokens[i].val);
     }
-    cache_put.keyval_len = 0;
+    pg->cache_put.keyval_len = 0;
     PMIU_cmd_free_buf(&pmi);
 
   fn_exit:
@@ -263,12 +225,6 @@ HYD_status fn_init(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-
-    static int global_init = 1;
-    if (global_init) {
-        internal_init();
-        global_init = 0;
-    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -451,7 +407,7 @@ HYD_status fn_get(struct pmip_downstream * p, struct PMIU_cmd * pmi)
         }
     } else {
         struct cache_elem *elem = NULL;
-        HASH_FIND_STR(hash_get, key, elem);
+        HASH_FIND_STR(p->pg->hash_get, key, elem);
         if (elem) {
             found = true;
             val = elem->val;
@@ -504,17 +460,18 @@ HYD_status fn_put(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     }
 
     /* add to the cache */
-    int i = cache_put.keyval_len++;
-    cache_put.tokens[i].key = MPL_strdup(key);
+    struct pmip_pg *pg = p->pg;
+    int i = pg->cache_put.keyval_len++;
+    pg->cache_put.tokens[i].key = MPL_strdup(key);
     if (val) {
-        cache_put.tokens[i].val = MPL_strdup(val);
+        pg->cache_put.tokens[i].val = MPL_strdup(val);
     } else {
-        cache_put.tokens[i].val = NULL;
+        pg->cache_put.tokens[i].val = NULL;
     }
     debug("cached command: %s=%s\n", key, val);
 
-    if (cache_put.keyval_len >= CACHE_PUT_KEYVAL_MAXLEN) {
-        cache_put_flush(p->pg);
+    if (pg->cache_put.keyval_len >= CACHE_PUT_KEYVAL_MAXLEN) {
+        cache_put_flush(pg);
     }
 
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
@@ -543,24 +500,24 @@ HYD_status fn_keyval_cache(struct pmip_pg *pg, struct PMIU_cmd *pmi)
 
     /* allocate a larger space for the cached keyvals, copy over the
      * older keyvals and add the new ones in */
-    HASH_CLEAR(hh, hash_get);
-    HYDU_REALLOC_OR_JUMP(cache_get, struct cache_elem *,
-                         (sizeof(struct cache_elem) * (num_elems + num_tokens)), status);
+    HASH_CLEAR(hh, pg->hash_get);
+    HYDU_REALLOC_OR_JUMP(pg->cache_get, struct cache_elem *,
+                         (sizeof(struct cache_elem) * (pg->num_elems + num_tokens)), status);
 
     int i;
-    for (i = 0; i < num_elems; i++) {
-        struct cache_elem *elem = cache_get + i;
-        HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
+    for (i = 0; i < pg->num_elems; i++) {
+        struct cache_elem *elem = pg->cache_get + i;
+        HASH_ADD_STR(pg->hash_get, key, elem, MPL_MEM_PM);
     }
-    for (; i < num_elems + num_tokens; i++) {
-        struct cache_elem *elem = cache_get + i;
-        elem->key = MPL_strdup(tokens[i - num_elems].key);
+    for (; i < pg->num_elems + num_tokens; i++) {
+        struct cache_elem *elem = pg->cache_get + i;
+        elem->key = MPL_strdup(tokens[i - pg->num_elems].key);
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->key, HYD_INTERNAL_ERROR, "%s", "");
-        elem->val = MPL_strdup(tokens[i - num_elems].val);
+        elem->val = MPL_strdup(tokens[i - pg->num_elems].val);
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->val, HYD_INTERNAL_ERROR, "%s", "");
-        HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
+        HASH_ADD_STR(pg->hash_get, key, elem, MPL_MEM_PM);
     }
-    num_elems += num_tokens;
+    pg->num_elems += num_tokens;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -618,7 +575,6 @@ HYD_status fn_barrier_out(struct pmip_pg *pg, struct PMIU_cmd *pmi)
 
 HYD_status fn_finalize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 {
-    static int finalize_count = 0;
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
     HYDU_FUNC_ENTER();
@@ -636,18 +592,11 @@ HYD_status fn_finalize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     HYDU_ERR_POP(status, "unable to deregister fd\n");
     close(p->pmi_fd);
 
-    finalize_count++;
-
     /* mark singleton's stdio sockets as closed */
     if (HYD_pmcd_pmip.user_global.singleton_pid > 0) {
         HYDU_ASSERT(pg->num_procs == 1, status);
         p->out = HYD_FD_CLOSED;
         p->err = HYD_FD_CLOSED;
-    }
-
-    if (finalize_count == pg->num_procs) {
-        /* All processes have finalized */
-        internal_finalize();
     }
 
   fn_exit:

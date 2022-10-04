@@ -101,6 +101,13 @@ void PMIP_free_pg(struct pmip_pg *pg)
     HYDU_free_exec_list(pg->exec_list);
     HYD_pmcd_free_pmi_kvs_list(pg->kvs);
 
+    HASH_CLEAR(hh, pg->hash_get);
+    for (int i = 0; i < pg->num_elems; i++) {
+        MPL_free((pg->cache_get + i)->key);
+        MPL_free((pg->cache_get + i)->val);
+    }
+    MPL_free(pg->cache_get);
+
     int idx = pg - arr;
     if (idx < 0 || idx >= n) {
         /* ERROR */

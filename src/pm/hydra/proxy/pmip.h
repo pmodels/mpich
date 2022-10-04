@@ -58,6 +58,18 @@ struct pmip_downstream {
  * at the server. Each pmip_pg hosts a list of downstream processes.
  */
 
+#define CACHE_PUT_KEYVAL_MAXLEN  (MAX_PMI_ARGS - 1)
+struct cache_put_elem {
+    struct PMIU_token tokens[CACHE_PUT_KEYVAL_MAXLEN + 1];
+    int keyval_len;
+};
+
+struct cache_elem {
+    char *key;
+    char *val;
+    UT_hash_handle hh;
+};
+
 struct pmip_pg {
     int pgid;
     int proxy_id;
@@ -86,6 +98,12 @@ struct pmip_pg {
 
     /* This is for PMI-2 info-putnodeattr. Should it be per-node or per pg? */
     struct HYD_pmcd_pmi_kvs *kvs;
+
+    /* PMI-1 caches server kvs locally */
+    struct cache_put_elem cache_put;
+    struct cache_elem *cache_get;
+    struct cache_elem *hash_get;
+    int num_elems;
 };
 
 extern struct HYD_pmcd_pmip_s HYD_pmcd_pmip;
