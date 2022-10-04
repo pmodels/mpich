@@ -56,7 +56,7 @@ struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id)
     pg->pgid = pgid;
     pg->proxy_id = proxy_id;
 
-    HYD_pmcd_pmi_allocate_kvs(&pg->kvs, -1);
+    HYD_pmcd_pmi_allocate_kvs(&pg->kvs);
     /* the rest of the fields have been zero-filled */
 
     return pg;
