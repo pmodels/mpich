@@ -703,8 +703,7 @@ static HYD_status singleton_init(struct pmip_pg *pg, int singleton_pid, int sing
     HYDU_ERR_POP(status, "unable to send msg to singleton process\n");
     status = HYDU_sock_read(fd, msg, 1024, &recvd, &closed, HYDU_SOCK_COMM_NONE);
     HYDU_ERR_POP(status, "unable to read msg from singleton process\n");
-    MPL_snprintf(msg, 1024, "cmd=singinit_info versionok=yes stdio=no kvsname=%s\n",
-                 HYD_pmcd_pmip.local.kvs->kvsname);
+    MPL_snprintf(msg, 1024, "cmd=singinit_info versionok=yes stdio=no kvsname=%s\n", pg->kvsname);
     status = HYDU_sock_write(fd, msg, strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send msg to singleton process\n");
 

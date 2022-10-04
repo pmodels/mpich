@@ -36,6 +36,8 @@ struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id)
 
     pg->pgid = pgid;
     pg->proxy_id = proxy_id;
+
+    HYD_pmcd_pmi_allocate_kvs(&pg->kvs, -1);
     /* the rest of the fields have been zero-filled */
 
     return pg;
@@ -93,9 +95,11 @@ void PMIP_free_pg(struct pmip_pg *pg)
     struct pmip_pg *arr = ut_type_array(PMIP_pgs, struct pmip_pg *);
 
     MPL_free(pg->spawner_kvsname);
+    MPL_free(pg->kvsname);
     MPL_free(pg->pmi_process_mapping);
     MPL_free(pg->downstreams);
     HYDU_free_exec_list(pg->exec_list);
+    HYD_pmcd_free_pmi_kvs_list(pg->kvs);
 
     int idx = pg - arr;
     if (idx < 0 || idx >= n) {

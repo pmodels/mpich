@@ -33,8 +33,6 @@ struct HYD_pmcd_pmip_s {
         char *iface_ip_env_name;
         char *hostname;
 
-        struct HYD_pmcd_pmi_kvs *kvs;
-
         int retries;
     } local;
 };
@@ -81,9 +79,13 @@ struct pmip_pg {
     int global_process_count;
     char *pmi_process_mapping;
     char *spawner_kvsname;
+    char *kvsname;
 
     /* Process segmentation information for this proxy */
     struct HYD_exec *exec_list;
+
+    /* This is for PMI-2 info-putnodeattr. Should it be per-node or per pg? */
+    struct HYD_pmcd_pmi_kvs *kvs;
 };
 
 extern struct HYD_pmcd_pmip_s HYD_pmcd_pmip;

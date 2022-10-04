@@ -378,8 +378,7 @@ HYD_status fn_get_my_kvsname(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     HYDU_FUNC_ENTER();
 
     struct PMIU_cmd pmi_response;
-    pmi_errno = PMIU_msg_set_response_kvsname(pmi, &pmi_response, is_static,
-                                              HYD_pmcd_pmip.local.kvs->kvsname);
+    pmi_errno = PMIU_msg_set_response_kvsname(pmi, &pmi_response, is_static, p->pg->kvsname);
     HYDU_ASSERT(!pmi_errno, status);
 
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
@@ -681,7 +680,7 @@ HYD_status fn_info_putnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
         goto fn_exit;
     }
 
-    status = HYD_pmcd_pmi_add_kvs(key, val, HYD_pmcd_pmip.local.kvs, &ret);
+    status = HYD_pmcd_pmi_add_kvs(key, val, p->pg->kvs, &ret);
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
@@ -718,8 +717,9 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     int found;
     found = 0;
 
+    /* FIXME: wrap it in e.g. HYD_pmcd_pmi_find_kvs */
     struct HYD_pmcd_pmi_kvs_pair *run;
-    for (run = HYD_pmcd_pmip.local.kvs->key_pair; run; run = run->next) {
+    for (run = p->pg->kvs->key_pair; run; run = run->next) {
         if (!strcmp(run->key, key)) {
             found = 1;
             break;

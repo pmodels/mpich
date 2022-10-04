@@ -223,7 +223,9 @@ static HYD_status retries_fn(char *arg, char ***argv)
 
 static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
 {
-    MPL_snprintf(HYD_pmcd_pmip.local.kvs->kvsname, PMI_MAXKVSLEN, "%s", **argv);
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_str(arg, &cur_pg->kvsname, **argv);
     (*argv)++;
 
     return HYD_SUCCESS;
