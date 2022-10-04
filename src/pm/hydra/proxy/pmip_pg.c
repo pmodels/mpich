@@ -92,6 +92,8 @@ void PMIP_free_pg(struct pmip_pg *pg)
     int n = utarray_len(PMIP_pgs);
     struct pmip_pg *arr = ut_type_array(PMIP_pgs, struct pmip_pg *);
 
+    MPL_free(pg->spawner_kvsname);
+    MPL_free(pg->pmi_process_mapping);
     MPL_free(pg->downstreams);
 
     int idx = pg - arr;

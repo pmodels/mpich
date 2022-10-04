@@ -304,14 +304,14 @@ HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi)
     }
     HYDU_ASSERT(p, status);
 
-    int size = HYD_pmcd_pmip.system_global.global_process_count;
+    int size = pg->global_process_count;
     int rank = id;
     int debug = HYD_pmcd_pmip.user_global.debug;
     int appnum = p->pmi_appnum;
 
     struct PMIU_cmd pmi_response;
     pmi_errno = PMIU_msg_set_response_fullinit(pmi, &pmi_response, is_static, rank, size, appnum,
-                                               HYD_pmcd_pmip.local.spawner_kvsname, debug);
+                                               pg->spawner_kvsname, debug);
     HYDU_ASSERT(!pmi_errno, status);
 
     status = send_cmd_downstream(fd, &pmi_response);
@@ -401,7 +401,7 @@ HYD_status fn_get_usize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     int universe_size;
     if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_SYSTEM) {
-        universe_size = HYD_pmcd_pmip.system_global.global_core_map.global_count;
+        universe_size = p->pg->global_core_map.global_count;
     } else if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_INFINITE) {
         universe_size = -1;
     } else {
