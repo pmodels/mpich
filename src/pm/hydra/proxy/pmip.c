@@ -29,8 +29,6 @@ static HYD_status init_params(void)
 
     PMIP_pg_init();
 
-    status = HYD_pmcd_pmi_allocate_kvs(&HYD_pmcd_pmip.local.kvs, -1);
-
     return status;
 }
 
@@ -46,8 +44,6 @@ static void cleanup_params(void)
     /* Local */
     MPL_free(HYD_pmcd_pmip.local.iface_ip_env_name);
     MPL_free(HYD_pmcd_pmip.local.hostname);
-
-    HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 
 
     PMIP_pg_finalize();

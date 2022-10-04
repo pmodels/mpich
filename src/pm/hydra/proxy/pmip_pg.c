@@ -12,9 +12,11 @@ static void pg_destructor(void *_elt)
 {
     struct pmip_pg *pg = _elt;
     MPL_free(pg->spawner_kvsname);
+    MPL_free(pg->kvsname);
     MPL_free(pg->pmi_process_mapping);
     MPL_free(pg->downstreams);
     HYDU_free_exec_list(pg->exec_list);
+    HYD_pmcd_free_pmi_kvs_list(pg->kvs);
 }
 
 #define FIND_DOWNSTREAM(fd, field) do { \
@@ -46,6 +48,8 @@ struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id)
 
     pg->pgid = pgid;
     pg->proxy_id = proxy_id;
+
+    HYD_pmcd_pmi_allocate_kvs(&pg->kvs, -1);
     /* the rest of the fields have been zero-filled */
 
     return pg;
