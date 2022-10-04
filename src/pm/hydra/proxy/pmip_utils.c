@@ -11,6 +11,13 @@
 
 #include "pmi_util.h"   /* from libpmi, for PMIU_verbose */
 
+/* For unused options, use dummy handler to prevent parsing errors */
+static HYD_status dummy1_fn(char *arg, char ***argv)
+{
+    (*argv)++;
+    return HYD_SUCCESS;
+}
+
 static HYD_status control_port_fn(char *arg, char ***argv)
 {
     char *port = NULL, *name;
@@ -446,17 +453,6 @@ static HYD_status hostname_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status proxy_core_count_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_int(arg, &HYD_pmcd_pmip.local.proxy_core_count, atoi(**argv));
-
-    (*argv)++;
-
-    return status;
-}
-
 static HYD_status exec_fn(char *arg, char ***argv)
 {
     struct HYD_exec *exec = NULL;
@@ -636,7 +632,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"version", version_fn, NULL},
     {"iface-ip-env-name", iface_ip_env_name_fn, NULL},
     {"hostname", hostname_fn, NULL},
-    {"proxy-core-count", proxy_core_count_fn, NULL},
+    {"proxy-core-count", dummy1_fn, NULL},
     {"exec", exec_fn, NULL},
     {"exec-appnum", exec_appnum_fn, NULL},
     {"exec-proc-count", exec_proc_count_fn, NULL},

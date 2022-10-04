@@ -627,9 +627,6 @@ static HYD_status parse_exec_params(char **t_argv)
                             HYD_pmcd_pmip.system_global.pmi_id_map.filler_start,
                             HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start);
 
-    if (HYD_pmcd_pmip.local.proxy_core_count == -1)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "proxy core count not available\n");
-
     /* Set default values */
     if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB != NULL) {
         /* need to prevent compiler seeing MPL_strdup(NULL) or it will warn */

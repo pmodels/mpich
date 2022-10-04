@@ -35,7 +35,6 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.iface_ip_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.spawner_kvsname = NULL;
-    HYD_pmcd_pmip.local.proxy_core_count = -1;
     HYD_pmcd_pmip.local.retries = -1;
 
     HYD_pmcd_pmip.exec_list = NULL;

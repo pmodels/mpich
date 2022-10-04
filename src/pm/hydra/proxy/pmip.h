@@ -56,9 +56,6 @@ struct HYD_pmcd_pmip_s {
         char *iface_ip_env_name;
         char *hostname;
 
-        int proxy_core_count;
-        int proxy_process_count;
-
         char *spawner_kvsname;
         struct HYD_pmcd_pmi_kvs *kvs;   /* Node-level KVS space for node attributes */
 
