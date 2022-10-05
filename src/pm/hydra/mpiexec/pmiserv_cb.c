@@ -162,14 +162,6 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
     }
     pg_scratch->pmi_listen_fd = HYD_FD_CLOSED;
 
-    if (pg_scratch->control_listen_fd != HYD_FD_UNSET &&
-        pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
-        status = HYDT_dmx_deregister_fd(pg_scratch->control_listen_fd);
-        HYDU_ERR_POP(status, "unable to deregister control listen fd\n");
-        close(pg_scratch->control_listen_fd);
-    }
-    pg_scratch->control_listen_fd = HYD_FD_CLOSED;
-
     /* If this is the main PG, free the debugger PID list */
     if (pg->pgid == 0)
         HYDT_dbg_free_procdesc();
@@ -576,4 +568,18 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     if (-1 != accept_fd)
         close(accept_fd);
     goto fn_exit;
+}
+
+HYD_status HYD_control_listen(void)
+{
+    if (HYD_server_info.control_listen_fd == -1) {
+        return HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
+                                                   HYD_server_info.localhost,
+                                                   HYD_server_info.port_range,
+                                                   &HYD_server_info.control_port,
+                                                   &HYD_server_info.control_listen_fd,
+                                                   HYD_pmcd_pmiserv_control_listen_cb, NULL);
+    } else {
+        return HYD_SUCCESS;
+    }
 }

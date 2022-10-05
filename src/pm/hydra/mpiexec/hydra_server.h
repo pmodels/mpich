@@ -47,6 +47,9 @@ struct HYD_server_info_s {
     char *nameserver;
     char *localhost;
     time_t time_start;
+    /* for proxies to connect back */
+    char *control_port;
+    int control_listen_fd;
 
     int singleton_port;
     int singleton_pid;
