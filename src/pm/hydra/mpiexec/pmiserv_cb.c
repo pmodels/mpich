@@ -482,18 +482,12 @@ static HYD_status send_exec_info(struct HYD_proxy *proxy)
 
 HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *userp)
 {
-    int proxy_id, count, pgid, closed;
-    struct HYD_pg *pg;
-    struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
-
     HYDU_FUNC_ENTER();
-
-    /* Get the PGID of the connection */
-    pgid = ((int) (size_t) userp);
 
     /* Read the proxy ID */
     struct HYD_pmcd_init_hdr init_hdr;
+    int count, closed;
     status =
         HYDU_sock_read(fd, &init_hdr, sizeof(init_hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
     if (status != HYD_SUCCESS || strcmp(init_hdr.signature, "HYD") != 0) {
@@ -504,16 +498,21 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
         close(fd);
         goto fn_exit;
     }
-    HYDU_ASSERT(pgid == init_hdr.pgid, status);
+
+    int pgid, proxy_id;
+    pgid = init_hdr.pgid;
     proxy_id = init_hdr.proxy_id;
 
     /* Find the process group */
+    struct HYD_pg *pg;
     pg = PMISERV_pg_by_id(pgid);
     if (!pg)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n", pgid);
 
     HYDU_ERR_CHKANDJUMP(status, !(proxy_id >= 0 && proxy_id < pg->proxy_count), HYD_INTERNAL_ERROR,
                         "cannot find proxy with ID %d\n", proxy_id);
+
+    struct HYD_proxy *proxy;
     proxy = &pg->proxy_list[proxy_id];
 
     /* This will be the control socket for this proxy */
@@ -529,7 +528,7 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
     status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, proxy, control_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    if (pgid == 0 && proxy->proxy_id == 0) {
+    if (pgid == 0 && proxy_id == 0) {
         int fd_stdin = STDIN_FILENO;
         int stdin_valid;
         struct HYD_pmcd_hdr hdr;
@@ -566,7 +565,7 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     status = HYDU_sock_accept(fd, &accept_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
-    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, userp, HYD_pmcd_pmiserv_proxy_init_cb);
+    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, NULL, HYD_pmcd_pmiserv_proxy_init_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
