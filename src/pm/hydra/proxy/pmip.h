@@ -28,6 +28,7 @@ struct HYD_pmcd_pmip_s {
 
     /* Proxy details */
     struct {
+        /* (pgid, id) are used for sending back init_hdr to server as initial handshake */
         int id;
         int pgid;
         char *iface_ip_env_name;
