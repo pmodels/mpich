@@ -228,7 +228,7 @@ static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
     status = HYDU_set_str(arg, &cur_pg->kvsname, **argv);
     (*argv)++;
 
-    return HYD_SUCCESS;
+    return status;
 }
 
 static HYD_status pmi_spawner_kvsname_fn(char *arg, char ***argv)
@@ -238,11 +238,7 @@ static HYD_status pmi_spawner_kvsname_fn(char *arg, char ***argv)
     status = HYDU_set_str(arg, &cur_pg->spawner_kvsname, **argv);
     (*argv)++;
 
-  fn_exit:
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static HYD_status pmi_process_mapping_fn(char *arg, char ***argv)

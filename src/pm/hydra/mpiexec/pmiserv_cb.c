@@ -13,8 +13,8 @@
 #include "pmiserv_common.h"
 #include "pmiserv_pmi.h"
 
-HYD_status send_hdr_downstream(struct HYD_proxy *proxy, struct HYD_pmcd_hdr *hdr,
-                               void *buf, int buflen)
+static HYD_status send_hdr_downstream(struct HYD_proxy *proxy, struct HYD_pmcd_hdr *hdr,
+                                      void *buf, int buflen)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -212,7 +212,6 @@ HYD_status HYD_pmcd_pmiserv_cleanup_all_pgs(void)
 HYD_status HYD_pmcd_pmiserv_send_signal(struct HYD_proxy *proxy, int signum)
 {
     struct HYD_pmcd_hdr hdr;
-    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYD_pmcd_init_header(&hdr);
@@ -233,7 +232,6 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 {
     int count, closed;
     struct HYD_pmcd_hdr hdr;
-    struct HYD_proxy *tproxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     char *buf;
     HYD_status status = HYD_SUCCESS;
@@ -461,7 +459,6 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 static HYD_status send_exec_info(struct HYD_proxy *proxy)
 {
     struct HYD_pmcd_hdr hdr;
-    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

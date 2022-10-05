@@ -68,7 +68,7 @@ static void signal_cb(int sig)
 
 int main(int argc, char **argv)
 {
-    int i, count, pid, ret_status, sent, closed, ret, done;
+    int pid, ret_status, sent, closed, ret, done;
     struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 

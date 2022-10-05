@@ -49,7 +49,7 @@ HYD_status PMIP_send_hdr_upstream(struct pmip_pg *pg, struct HYD_pmcd_hdr *hdr,
 
 static HYD_status stdoe_cb(struct pmip_downstream *p, bool is_stdout)
 {
-    int closed, i, recvd;
+    int closed, recvd;
     char buf[HYD_TMPBUF_SIZE];
     struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
@@ -179,8 +179,6 @@ static HYD_status handle_pmi_cmd(struct pmip_downstream *p, char *buf, int bufle
     }
 
     /* We don't understand the command; forward it upstream */
-    int sent, closed;
-
     struct HYD_pmcd_hdr hdr;
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PMI;
@@ -261,8 +259,6 @@ static HYD_status check_pmi_cmd(char **buf, int *buflen_out, int *pmi_version, i
 
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
-    char *buf = NULL;
-    int closed, sent, linelen, pid = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -281,6 +277,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         }
     }
 
+    int closed, linelen;
   read_cmd:
     /* PMI-1 does not tell us how much to read. We read how much ever
      * we can, parse out full PMI commands from it, and process
@@ -349,6 +346,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
     int repeat;
     do {
+        char *buf = NULL;
         int buflen = 0;
         int pmi_version;
         status = check_pmi_cmd(&buf, &buflen, &pmi_version, &repeat);
@@ -736,7 +734,7 @@ static HYD_status launch_procs(struct pmip_pg *pg)
     struct HYD_env *env, *force_env = NULL;
     struct HYD_exec *exec;
     struct HYD_pmcd_hdr hdr;
-    int sent, closed, pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
+    int pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

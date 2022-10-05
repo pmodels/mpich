@@ -250,6 +250,7 @@ HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi)
 
     /* locate and initialize the downstream */
     struct pmip_downstream *p;
+    p = NULL;
     for (int i = 0; i < pg->num_procs; i++) {
         p = &pg->downstreams[i];
         if (p->pmi_rank == id) {
