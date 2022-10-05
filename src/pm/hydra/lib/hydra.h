@@ -565,7 +565,7 @@ void HYDU_sock_finalize(void);
 HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip);
 HYD_status
 HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_range,
-                                    char **port_str,
+                                    char **port_str, int *listenfd,
                                     HYD_status(*callback) (int fd, HYD_event_t events,
                                                            void *userp), void *userp);
 HYD_status HYDU_sock_cloexec(int fd);

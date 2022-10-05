@@ -774,9 +774,13 @@ static HYD_status launch_procs(struct pmip_pg *pg)
     }
 
     if (HYD_pmcd_pmip.user_global.pmi_port) {
+        int listen_fd;
         status = HYDU_sock_create_and_listen_portstr(HYD_pmcd_pmip.user_global.iface,
-                                                     NULL, NULL, &pmi_port, pmi_listen_cb, NULL);
+                                                     NULL, NULL, &pmi_port, &listen_fd,
+                                                     pmi_listen_cb, NULL);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
+
+        /* FIXME: should we close(listen_fd) at some point? */
 
         status = HYDU_env_create(&env, "PMI_PORT", pmi_port);
         HYDU_ERR_POP(status, "unable to create env\n");
