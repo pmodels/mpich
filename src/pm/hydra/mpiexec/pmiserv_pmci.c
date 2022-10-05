@@ -95,12 +95,19 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmiserv_epoch_init(pg);
     HYDU_ERR_POP(status, "unable to init epoch\n");
 
+    int listen_fd;
     status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
                                                  HYD_server_info.localhost,
                                                  HYD_server_info.port_range, &control_port,
+                                                 &listen_fd,
                                                  HYD_pmcd_pmiserv_control_listen_cb,
                                                  (void *) (size_t) pgid);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
+
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) PMISERV_pg_0->pg_scratch;
+    pg_scratch->control_listen_fd = listen_fd;
+
     if (HYD_server_info.user_global.debug)
         HYDU_dump(stdout, "Got a control port string of %s\n", control_port);
 

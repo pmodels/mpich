@@ -557,23 +557,10 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
 
 HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *userp)
 {
-    int accept_fd = -1, pgid;
-    struct HYD_pg *pg;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    int accept_fd = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    /* Get the PGID of the connection */
-    pgid = ((int) (size_t) userp);
-
-    /* Find the process group */
-    pg = PMISERV_pg_by_id(pgid);
-    if (!pg)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n", pgid);
-
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-    pg_scratch->control_listen_fd = fd;
 
     /* We got a control socket connection */
     status = HYDU_sock_accept(fd, &accept_fd);
