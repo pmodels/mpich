@@ -393,7 +393,6 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
     pg_scratch->epoch = 0;
     pg_scratch->fence_count = 0;
 
-    pg_scratch->control_listen_fd = HYD_FD_UNSET;
     pg_scratch->pmi_listen_fd = HYD_FD_UNSET;
 
     pg_scratch->dead_processes = MPL_strdup("");

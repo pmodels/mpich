@@ -36,6 +36,8 @@ void HYD_uiu_init_params(void)
     HYD_server_info.stderr_cb = NULL;
 
     HYD_server_info.node_list = NULL;
+    HYD_server_info.control_port = NULL;
+    HYD_server_info.control_listen_fd = -1;
 
 #if defined ENABLE_PROFILING
     HYD_server_info.enable_profiling = -1;
@@ -61,6 +63,12 @@ void HYD_uiu_free_params(void)
     MPL_free(HYD_ui_mpich_info.prepend_pattern);
     MPL_free(HYD_ui_mpich_info.outfile_pattern);
     MPL_free(HYD_ui_mpich_info.errfile_pattern);
+
+    MPL_free(HYD_server_info.control_port);
+    if (HYD_server_info.control_listen_fd != -1) {
+        close(HYD_server_info.control_listen_fd);
+        HYD_server_info.control_listen_fd = -1;
+    }
 
     for (run = stdoe_fd_list; run;) {
         close(run->fd);

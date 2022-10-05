@@ -49,6 +49,9 @@ struct HYD_server_info_s {
     char *localhost;
     char *rankmap;
     time_t time_start;
+    /* for proxies to connect back */
+    char *control_port;
+    int control_listen_fd;
 
     bool is_singleton;
     int singleton_port;
