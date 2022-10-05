@@ -77,6 +77,8 @@ HYD_status HYDU_alloc_node(struct HYD_node **node)
     (*node)->core_count = 0;
     (*node)->active_processes = 0;
     (*node)->node_id = -1;
+    (*node)->control_fd = -1;
+    (*node)->control_fd_refcnt = 0;
     (*node)->user = NULL;
     (*node)->local_binding = NULL;
     (*node)->next = NULL;

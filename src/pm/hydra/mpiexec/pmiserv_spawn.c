@@ -257,18 +257,34 @@ static HYD_status do_spawn(void)
     HYDU_ERR_POP(status, "error creating proxy list\n");
     HYDU_free_exec_list(exec_list);
 
-    status = HYD_control_listen();
-    HYDU_ERR_POP(status, "unable to create PMI port\n");
-
-    status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, HYD_server_info.control_port, pg->pgid);
-    HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
-
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, pg->proxy_count,
-                                    HYD_FALSE, NULL);
-    HYDU_ERR_POP(status, "launcher cannot launch processes\n");
+    struct HYD_proxy *filtered_proxy_list;
+    filtered_proxy_list = MPL_malloc(pg->proxy_count * sizeof(struct HYD_proxy), MPL_MEM_OTHER);
+    int rem_count = 0;
+    for (int i = 0; i < pg->proxy_count; i++) {
+        if (pg->proxy_list[i].node->control_fd != -1) {
+            pg->proxy_list[i].control_fd = pg->proxy_list[i].node->control_fd;
+            pg->proxy_list[i].node->control_fd_refcnt++;
+            status = HYD_send_exec_info(&pg->proxy_list[i]);
+        } else {
+            filtered_proxy_list[rem_count] = pg->proxy_list[i];
+            rem_count++;
+        }
+    }
+    if (rem_count > 0) {
+        HYDU_ASSERT(HYD_server_info.control_listen_fd >= 0, status);
+
+        status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, HYD_server_info.control_port,
+                                                 pg->pgid);
+        HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
+
+        status = HYDT_bsci_launch_procs(proxy_stash.strlist, filtered_proxy_list, rem_count,
+                                        HYD_FALSE, NULL);
+        HYDU_ERR_POP(status, "launcher cannot launch processes\n");
+    }
+    MPL_free(filtered_proxy_list);
 
   fn_exit:
     HYD_STRING_STASH_FREE(proxy_stash);

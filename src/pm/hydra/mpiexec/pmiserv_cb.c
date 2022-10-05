@@ -508,6 +508,8 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
     proxy = &pg->proxy_list[proxy_id];
 
     /* This will be the control socket for this proxy */
+    HYDU_ASSERT(proxy->node->control_fd == -1, status);
+    proxy->node->control_fd = fd;
     proxy->control_fd = fd;
 
     /* Send out the executable information */
