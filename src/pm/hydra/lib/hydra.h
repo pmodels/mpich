@@ -317,6 +317,8 @@ struct HYD_node {
     int active_processes;
 
     int node_id;
+    int control_fd;
+    int control_fd_refcnt;
 
     /* Username */
     char *user;
