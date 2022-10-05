@@ -128,6 +128,9 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
 
   fn_exit:
     *request = sreq;
+    if (sreq) {
+        MPII_SENDQ_REMEMBER(sreq, rank, tag, comm->recvcontext_id, buf, count);
+    }
 
     MPL_DBG_STMT(MPIDI_CH3_DBG_OTHER,VERBOSE,{
 	if (sreq != NULL)
