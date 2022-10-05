@@ -131,7 +131,7 @@ HYD_status HYD_pmci_launch_procs(void)
         if (control_fd[i] != HYD_FD_UNSET) {
             pg->proxy_list[i].control_fd = control_fd[i];
 
-            status = HYDT_dmx_register_fd(1, &control_fd[i], HYD_POLLIN, (void *) (size_t) pgid,
+            status = HYDT_dmx_register_fd(1, &control_fd[i], HYD_POLLIN, NULL,
                                           HYD_pmcd_pmiserv_proxy_init_cb);
             HYDU_ERR_POP(status, "unable to register fd\n");
         }
