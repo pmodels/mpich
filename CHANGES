@@ -33,6 +33,19 @@
 # New collective algorithms. All collective algorithms are listed in
   src/mpi/coll/coll_algorithms.txt
 
+# Removed hydra2. We will port unique features of hydra2, including
+  tree-launching, to hydra in the future release.
+
+# Added in-repository wiki documentation.
+
+# Added stream workq to support optimizations for enqueue operations.
+
+# Better support for large count APIs by eliminating type conversion issues.
+
+# Hydra now uses libpmi (src/pmi) for handling PMI messages.
+
+# Many bug fixes and enhancements.
+
 ===============================================================================
                                Changes in 4.0
 ===============================================================================
