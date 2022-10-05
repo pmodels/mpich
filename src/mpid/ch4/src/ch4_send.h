@@ -176,6 +176,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (*request) {
+        MPII_SENDQ_REMEMBER(*request, rank, tag, comm->recvcontext_id, buf, count);
+    }
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -273,6 +278,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (*request) {
+        MPII_SENDQ_REMEMBER(*request, rank, tag, comm->recvcontext_id, buf, count);
+    }
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
