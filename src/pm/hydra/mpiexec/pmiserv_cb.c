@@ -504,6 +504,7 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
         close(fd);
         goto fn_exit;
     }
+    HYDU_ASSERT(pgid == init_hdr.pgid, status);
     proxy_id = init_hdr.proxy_id;
 
     /* Find the process group */

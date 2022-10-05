@@ -99,7 +99,7 @@ HYD_status HYD_pmci_launch_procs(void)
                                                  HYD_server_info.localhost,
                                                  HYD_server_info.port_range, &control_port,
                                                  HYD_pmcd_pmiserv_control_listen_cb,
-                                                 (void *) (size_t) 0);
+                                                 (void *) (size_t) pgid);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
     if (HYD_server_info.user_global.debug)
         HYDU_dump(stdout, "Got a control port string of %s\n", control_port);
@@ -124,7 +124,7 @@ HYD_status HYD_pmci_launch_procs(void)
         if (control_fd[i] != HYD_FD_UNSET) {
             pg->proxy_list[i].control_fd = control_fd[i];
 
-            status = HYDT_dmx_register_fd(1, &control_fd[i], HYD_POLLIN, (void *) (size_t) 0,
+            status = HYDT_dmx_register_fd(1, &control_fd[i], HYD_POLLIN, (void *) (size_t) pgid,
                                           HYD_pmcd_pmiserv_proxy_init_cb);
             HYDU_ERR_POP(status, "unable to register fd\n");
         }

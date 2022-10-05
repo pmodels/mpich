@@ -109,6 +109,7 @@ int main(int argc, char **argv)
 
     struct HYD_pmcd_init_hdr init_hdr;
     strncpy(init_hdr.signature, "HYD", 4);
+    init_hdr.pgid = HYD_pmcd_pmip.local.pgid;
     init_hdr.proxy_id = HYD_pmcd_pmip.local.id;
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              &init_hdr, sizeof(init_hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
