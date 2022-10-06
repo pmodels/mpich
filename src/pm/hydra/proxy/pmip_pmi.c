@@ -376,7 +376,17 @@ HYD_status fn_get_usize(int fd, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-HYD_status fn_get(int fd, struct PMIU_cmd *pmi)
+static const char *get_jobattr(const char *key)
+{
+    if (strcmp(key, "PMI_process_mapping") == 0) {
+        return HYD_pmcd_pmip.system_global.pmi_process_mapping;
+    } else if (!strcmp(key, "PMI_hwloc_xmlfile")) {
+        return HYD_pmip_get_hwloc_xmlfile();
+    }
+    return NULL;
+}
+
+HYD_status fn_get(int fd, struct PMIU_cmd * pmi)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -388,11 +398,8 @@ HYD_status fn_get(int fd, struct PMIU_cmd *pmi)
 
     bool found = false;
     const char *val;
-    if (strcmp(key, "PMI_process_mapping") == 0) {
-        found = true;
-        val = HYD_pmcd_pmip.system_global.pmi_process_mapping;
-    } else if (!strcmp(key, "PMI_hwloc_xmlfile")) {
-        val = HYD_pmip_get_hwloc_xmlfile();
+    if (strncmp(key, "PMI_", 4) == 0) {
+        val = get_jobattr(key);
         if (val) {
             found = true;
         }
@@ -428,6 +435,7 @@ HYD_status fn_put(int fd, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
+    struct PMIU_cmd pmi_response;
     HYDU_FUNC_ENTER();
 
     if (pmi->version == 2) {
@@ -437,6 +445,17 @@ HYD_status fn_put(int fd, struct PMIU_cmd *pmi)
     const char *kvsname, *key, *val;
     pmi_errno = PMIU_msg_get_query_put(pmi, &kvsname, &key, &val);
     HYDU_ASSERT(!pmi_errno, status);
+
+    if (strncmp(key, "PMI_", 4) == 0) {
+        status = PMIU_msg_set_response_fail(pmi, &pmi_response, is_static,
+                                            1, "Keys with PMI_ prefix are reserved");
+        HYDU_ASSERT(!pmi_errno, status);
+
+        status = send_cmd_downstream(fd, &pmi_response);
+        HYDU_ERR_POP(status, "error sending command downstream\n");
+
+        goto fn_exit;
+    }
 
     /* add to the cache */
     int i = cache_put.keyval_len++;
@@ -452,7 +471,6 @@ HYD_status fn_put(int fd, struct PMIU_cmd *pmi)
         cache_put_flush(fd);
     }
 
-    struct PMIU_cmd pmi_response;
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
     HYDU_ASSERT(!pmi_errno, status);
 
@@ -596,16 +614,27 @@ HYD_status fn_info_putnodeattr(int fd, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int ret, pmi_errno;
+    struct PMIU_cmd pmi_response;
     HYDU_FUNC_ENTER();
 
     const char *key, *val;
     pmi_errno = PMIU_msg_get_query_putnodeattr(pmi, &key, &val);
     HYDU_ASSERT(!pmi_errno, status);
 
+    if (strncmp(key, "PMI_", 4) == 0) {
+        status = PMIU_msg_set_response_fail(pmi, &pmi_response, is_static,
+                                            1, "Keys with PMI_ prefix are reserved");
+        HYDU_ASSERT(!pmi_errno, status);
+
+        status = send_cmd_downstream(fd, &pmi_response);
+        HYDU_ERR_POP(status, "error sending command downstream\n");
+
+        goto fn_exit;
+    }
+
     status = HYD_pmcd_pmi_add_kvs(key, val, HYD_pmcd_pmip.local.kvs, &ret);
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
-    struct PMIU_cmd pmi_response;
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
     HYDU_ASSERT(!pmi_errno, status);
 
