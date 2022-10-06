@@ -449,11 +449,8 @@ PMI_API_PUBLIC
         pmi_errno = PMIU_SUCCESS;
     }
 
-  fn_exit:
     PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int parse_int_array(const char *str, int array[], int arraylen, int *outlen)
@@ -558,11 +555,8 @@ PMI_API_PUBLIC int PMI2_Info_GetJobAttr(const char name[], char value[], int val
         pmi_errno = PMIU_SUCCESS;
     }
 
-  fn_exit:
     PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 PMI_API_PUBLIC int PMI2_Info_GetJobAttrIntArray(const char name[], int array[], int arraylen,

@@ -689,10 +689,7 @@ int PMIU_cmd_output_v1_initack(struct PMIU_cmd *pmicmd, char **buf_out, int *buf
         *buflen_out += strlen(s);
     }
 
-  fn_exit:
     return pmi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
