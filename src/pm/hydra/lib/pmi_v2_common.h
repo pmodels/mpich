@@ -13,7 +13,6 @@ struct HYD_pmcd_pmi_v2_reqs {
     int fd;
     int pid;
     int pgid;
-    const char *thrid;
     struct PMIU_cmd *pmi;
     const char *key;
 

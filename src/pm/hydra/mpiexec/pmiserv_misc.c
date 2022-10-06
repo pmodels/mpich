@@ -44,16 +44,15 @@ HYD_status HYD_pmiserv_barrier(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 
 HYD_status HYD_pmiserv_abort(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
-    /* set a default exit code of 1 */
-    int exitcode = 1;
     HYD_status status = HYD_SUCCESS;
+    int pmi_errno;
 
     HYDU_FUNC_ENTER();
 
-    if (PMIU_cmd_find_keyval(pmi, "exitcode") == NULL)
-        HYDU_ERR_POP(status, "cannot find token: exitcode\n");
-
-    exitcode = strtol(PMIU_cmd_find_keyval(pmi, "exitcode"), NULL, 10);
+    int exitcode;
+    const char *error_msg;
+    pmi_errno = PMIU_msg_get_query_abort(pmi, &exitcode, &error_msg);
+    HYDU_ASSERT(!pmi_errno, status);
 
   fn_exit:
     /* clean everything up and exit */

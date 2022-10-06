@@ -58,9 +58,9 @@ HYD_status HYD_pmiserv_bcast_keyvals(int fd, int pid)
 
     keyval_count -= pg_scratch->keyval_dist_count;
 
-    struct PMIU_cmd pmi;
     if (keyval_count) {
-        PMIU_cmd_init_static(&pmi, 1, "keyval_cache");
+        struct PMIU_cmd pmi;
+        PMIU_msg_set_query(&pmi, PMIU_WIRE_V1, PMIU_CMD_KVSCACHE, false /* not static */);
         arg_count = 1;
         for (run = pg_scratch->kvs->key_pair, j = 0; run; run = run->next, j++) {
             if (j < pg_scratch->keyval_dist_count)
@@ -76,7 +76,7 @@ HYD_status HYD_pmiserv_bcast_keyvals(int fd, int pid)
                     HYDU_ERR_POP(status, "error writing PMI line\n");
                 }
 
-                PMIU_cmd_init_static(&pmi, 1, "keyval_cache");
+                PMIU_msg_set_query(&pmi, PMIU_WIRE_V1, PMIU_CMD_KVSCACHE, false /* not static */);
                 arg_count = 1;
             }
         }
@@ -88,6 +88,7 @@ HYD_status HYD_pmiserv_bcast_keyvals(int fd, int pid)
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
         }
+        PMIU_cmd_free_buf(&pmi);
     }
 
   fn_exit:

@@ -12,6 +12,9 @@
 
 #include <ctype.h>
 
+#define MAX_TMP_BUF_SIZE 1024
+static char tmp_buf_for_output[MAX_TMP_BUF_SIZE];
+
 #define IS_SPACE(c) ((c) == ' ')
 #define IS_EOS(c) ((c) == '\0')
 #define IS_EOL(c) ((c) == '\n' || (c) == '\0')
@@ -101,7 +104,6 @@ static int parse_v1(char *buf, struct PMIU_cmd *pmicmd)
     int pmi_errno = PMIU_SUCCESS;
 
     char *p = buf;
-    int idx = 0;
 
     if (strncmp(buf, "cmd=", 4) != 0) {
         PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, "Expecting cmd=");
@@ -146,13 +148,9 @@ static int parse_v1(char *buf, struct PMIU_cmd *pmicmd)
         if (strcmp(key, "cmd") == 0) {
             pmicmd->cmd = val;
         } else {
-            pmicmd->tokens[idx].key = key;
-            pmicmd->tokens[idx].val = val;
-            idx++;
-            PMIU_Assert(idx < MAX_PMI_ARGS);
+            PMIU_CMD_ADD_TOKEN(pmicmd, key, val);
         }
     }
-    pmicmd->num_tokens = idx;
 
   fn_exit:
     return pmi_errno;
@@ -165,11 +163,11 @@ static int parse_v1_mcmd(char *buf, struct PMIU_cmd *pmicmd)
     int pmi_errno = PMIU_SUCCESS;
 
     char *p = buf;
-    int idx = 0;
 
-    if (strncmp(buf, "mcmd=", 5) != 0) {
-        PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, "Expecting cmd=");
+    if (strncmp(buf, "mcmd=spawn", 10) != 0) {
+        PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, "Expecting cmd=spawn");
     }
+    pmicmd->cmd = "spawn";
 
     while (1) {
         char *key = NULL;
@@ -208,16 +206,14 @@ static int parse_v1_mcmd(char *buf, struct PMIU_cmd *pmicmd)
             unescape_val(val);
         }
 
+        /* turn the mcmd=spawn into NULL token, function as segment divider */
         if (strcmp(key, "mcmd") == 0) {
-            pmicmd->cmd = val;
-        } else {
-            pmicmd->tokens[idx].key = key;
-            pmicmd->tokens[idx].val = val;
-            idx++;
-            PMIU_Assert(idx < MAX_PMI_ARGS);
+            key = NULL;
+            val = NULL;
         }
+
+        PMIU_CMD_ADD_TOKEN(pmicmd, key, val);
     }
-    pmicmd->num_tokens = idx;
 
   fn_exit:
     return pmi_errno;
@@ -230,7 +226,6 @@ static int parse_v2(char *buf, struct PMIU_cmd *pmicmd)
     int pmi_errno = PMIU_SUCCESS;
 
     char *p = buf + 6;          /* first 6 chars is length */
-    int idx = 0;
 
     if (strncmp(p, "cmd=", 4) != 0) {
         PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, "Expecting cmd=");
@@ -273,13 +268,13 @@ static int parse_v2(char *buf, struct PMIU_cmd *pmicmd)
         if (strcmp(key, "cmd") == 0) {
             pmicmd->cmd = val;
         } else {
-            pmicmd->tokens[idx].key = key;
-            pmicmd->tokens[idx].val = val;
-            idx++;
-            PMIU_Assert(idx < MAX_PMI_ARGS);
+            if (strcmp(key, "subcmd") == 0) {
+                /* insert segment divider */
+                PMIU_CMD_ADD_TOKEN(pmicmd, NULL, NULL);
+            }
+            PMIU_CMD_ADD_TOKEN(pmicmd, key, val);
         }
     }
-    pmicmd->num_tokens = idx;
 
   fn_exit:
     return pmi_errno;
@@ -348,6 +343,90 @@ char *PMIU_wire_get_cmd(char *buf, int buflen, int pmi_version)
     return cmd;
 }
 
+/* Check whether we have a full command. */
+
+static void copy_word(char *dest, const char *src, int n)
+{
+    int i;
+    for (i = 0; i < n - 1; i++) {
+        if (IS_KEY(src[i])) {
+            dest[i] = src[i];
+        } else {
+            break;
+        }
+    }
+    dest[i] = '\0';
+}
+
+int PMIU_check_full_cmd(char *buf, int buflen, int *got_full_cmd,
+                        int *cmdlen, int *version, int *cmd_id)
+{
+    int pmi_errno = PMIU_SUCCESS;
+    int len = 0;
+
+    /* Parse the string and if a full command is found, make sure that
+     * cmdlen is the length of the buffer and NUL-terminated if necessary */
+    *got_full_cmd = 0;
+    char cmdbuf[100];
+    if (!strncmp(buf, "cmd=", strlen("cmd=")) || !strncmp(buf, "mcmd=", strlen("mcmd="))) {
+        /* PMI-1 format command; read the rest of it */
+        *version = PMIU_WIRE_V1;
+
+        if (!strncmp(buf, "cmd=", strlen("cmd="))) {
+            /* A newline marks the end of the command */
+            char *bufptr;
+            for (bufptr = buf; bufptr < buf + buflen; bufptr++) {
+                if (*bufptr == '\n') {
+                    *got_full_cmd = 1;
+                    *bufptr = '\0';
+                    *cmdlen = bufptr - buf + 1;
+                    /* cmd= */
+                    copy_word(cmdbuf, buf + 4, 100);
+                    break;
+                }
+            }
+        } else {        /* multi commands */
+            /* TODO: assert mcmd=spawn */
+            char *bufptr;
+            int totspawns = 0, spawnssofar = 0;
+            for (bufptr = buf; bufptr < buf + buflen - strlen("endcmd\n") + 1; bufptr++) {
+                if (strncmp(bufptr, "totspawns=", 10) == 0) {
+                    totspawns = atoi(bufptr + 10);
+                } else if (strncmp(bufptr, "spawnssofar=", 12) == 0) {
+                    spawnssofar = atoi(bufptr + 12);
+                } else if (strncmp(bufptr, "endcmd\n", 7) == 0 && spawnssofar == totspawns) {
+                    *got_full_cmd = 1;
+                    bufptr += strlen("endcmd\n") - 1;
+                    *bufptr = '\0';
+                    *cmdlen = bufptr - buf + 1;
+                    /* mcmd= */
+                    copy_word(cmdbuf, buf + 5, 100);
+                    break;
+                }
+            }
+        }
+    } else {
+        *version = PMIU_WIRE_V2;
+
+        /* We already made sure we had at least 6 bytes */
+        char lenptr[7];
+        memcpy(lenptr, buf, 6);
+        lenptr[6] = 0;
+        int len = atoi(lenptr);
+
+        if (buflen >= len + 6) {
+            *got_full_cmd = 1;
+            char *bufptr = buf + 6 + len - 1;
+            *bufptr = '\0';
+            *cmdlen = len + 6;
+            /* ------cmd= */
+            copy_word(cmdbuf, buf + 10, 100);
+        }
+    }
+    *cmd_id = PMIU_msg_cmd_to_id(cmdbuf);
+    return pmi_errno;
+}
+
 /* Construct MPII_pmi from scratch */
 void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd)
 {
@@ -357,12 +436,20 @@ void PMIU_cmd_init(struct PMIU_cmd *pmicmd, int version, const char *cmd)
     pmicmd->version = version;
     pmicmd->cmd = cmd;
     pmicmd->num_tokens = 0;
+    pmicmd->tokens = pmicmd->static_token_buf;
 }
 
 void PMIU_cmd_free_buf(struct PMIU_cmd *pmicmd)
 {
     if (pmicmd->buf_need_free) {
         MPL_free(pmicmd->buf);
+    }
+    if (pmicmd->tokens != pmicmd->static_token_buf) {
+        MPL_free(pmicmd->tokens);
+        pmicmd->tokens = pmicmd->static_token_buf;
+    }
+    if (pmicmd->tmp_buf && pmicmd->tmp_buf != tmp_buf_for_output) {
+        MPL_free(pmicmd->tmp_buf);
     }
     pmicmd->buf = NULL;
     pmicmd->tmp_buf = NULL;
@@ -376,6 +463,8 @@ void PMIU_cmd_free(struct PMIU_cmd *pmicmd)
 
 static void transfer_pmi(struct PMIU_cmd *from, struct PMIU_cmd *to)
 {
+    PMIU_Assert(from->num_tokens < MAX_STATIC_PMI_ARGS);
+    PMIU_cmd_init_zero(to);
     to->buf = from->buf;
     to->version = from->version;
     to->cmd = from->cmd;
@@ -390,19 +479,13 @@ static void transfer_pmi(struct PMIU_cmd *from, struct PMIU_cmd *to)
 void PMIU_cmd_add_str(struct PMIU_cmd *pmicmd, const char *key, const char *val)
 {
     if (val) {
-        int i = pmicmd->num_tokens;
-        pmicmd->tokens[i].key = key;
-        pmicmd->tokens[i].val = val;
-        pmicmd->num_tokens++;
+        PMIU_CMD_ADD_TOKEN(pmicmd, key, val);
     }
 }
 
 void PMIU_cmd_add_token(struct PMIU_cmd *pmicmd, const char *token_str)
 {
-    int i = pmicmd->num_tokens;
-    pmicmd->tokens[i].key = token_str;
-    pmicmd->tokens[i].val = NULL;
-    pmicmd->num_tokens++;
+    PMIU_CMD_ADD_TOKEN(pmicmd, token_str, NULL);
 }
 
 /* The following construction routine may need buffer. When needed, we'll
@@ -412,79 +495,79 @@ void PMIU_cmd_add_token(struct PMIU_cmd *pmicmd, const char *token_str)
  * We only use the buffer to construct the pmicmd object before PMIU_cmd_send.
  * The buffer will be freed by PMIU_cmd_send.
  */
-#define MAX_TOKEN_BUF_SIZE 50   /* We only use it for e.g. "%d", "%p", etc.
-                                 * The longest may be "infokey%d" */
 
 /* Initialize with static buffers, thus obviate the need to call PMIU_cmd_free_buf.
  * Obviously it won't work for concurrent PMIU_cmd instances, but most PMIU_cmd
  * usages are not concurrent.
  */
+static char static_pmi_buf[MAX_STATIC_PMI_BUF_SIZE];
+
 void PMIU_cmd_init_static(struct PMIU_cmd *pmicmd, int version, const char *cmd)
 {
-    static char buf[MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE];
-
     PMIU_cmd_init(pmicmd, version, cmd);
-    pmicmd->buf = buf;
+    pmicmd->buf = static_pmi_buf;;
+}
+
+bool PMIU_cmd_is_static(struct PMIU_cmd *pmicmd)
+{
+    return (pmicmd->buf == static_pmi_buf);
 }
 
 #define PMII_PMI_ALLOC(pmicmd) do { \
     if (pmicmd->buf == NULL) { \
-        pmicmd->buf = MPL_malloc(MAX_PMI_ARGS * MAX_TOKEN_BUF_SIZE, MPL_MEM_OTHER); \
+        pmicmd->buf = MPL_malloc(MAX_STATIC_PMI_BUF_SIZE, MPL_MEM_OTHER); \
         PMIU_Assert(pmicmd->buf); \
         pmicmd->buf_need_free = true; \
     } \
 } while (0)
 
-#define PMII_PMI_TOKEN_BUF(pmicmd, i) ((char *) pmicmd->buf + i * MAX_TOKEN_BUF_SIZE)
+#define PMII_PMI_TOKEN_BUF(pmicmd) ((char *) (pmicmd)->buf + (pmicmd)->num_tokens * MAX_TOKEN_BUF_SIZE)
 
 void PMIU_cmd_add_substr(struct PMIU_cmd *pmicmd, const char *key, int idx, const char *val)
 {
     /* FIXME: add assertions to ensure key fits in the static space. */
 
-    int i = pmicmd->num_tokens;
     PMII_PMI_ALLOC(pmicmd);
-    char *s = PMII_PMI_TOKEN_BUF(pmicmd, i);
+    char *s = PMII_PMI_TOKEN_BUF(pmicmd);
     snprintf(s, MAX_TOKEN_BUF_SIZE, key, idx);
-    pmicmd->tokens[i].key = s;
-    pmicmd->tokens[i].val = val;
-    pmicmd->num_tokens++;
+    PMIU_CMD_ADD_TOKEN(pmicmd, s, val);
 }
 
 void PMIU_cmd_add_int(struct PMIU_cmd *pmicmd, const char *key, int val)
 {
-    int i = pmicmd->num_tokens;
     PMII_PMI_ALLOC(pmicmd);
-    char *s = PMII_PMI_TOKEN_BUF(pmicmd, i);
+    char *s = PMII_PMI_TOKEN_BUF(pmicmd);
     snprintf(s, MAX_TOKEN_BUF_SIZE, "%d", val);
-    pmicmd->tokens[i].key = key;
-    pmicmd->tokens[i].val = s;
-    pmicmd->num_tokens++;
+    PMIU_CMD_ADD_TOKEN(pmicmd, key, s);
 }
 
 /* Used internally in PMIU_cmd_send to add thrid for PMI-v2 */
 static void pmi_add_thrid(struct PMIU_cmd *pmicmd)
 {
-    int i = pmicmd->num_tokens;
     PMII_PMI_ALLOC(pmicmd);
-    char *s = PMII_PMI_TOKEN_BUF(pmicmd, i);
+    char *s = PMII_PMI_TOKEN_BUF(pmicmd);
     snprintf(s, MAX_TOKEN_BUF_SIZE, "%p", pmicmd);
-    pmicmd->tokens[i].key = "thrid";
-    pmicmd->tokens[i].val = s;
-    pmicmd->num_tokens++;
+    PMIU_CMD_ADD_TOKEN(pmicmd, "thrid", s);
 }
 
 void PMIU_cmd_add_bool(struct PMIU_cmd *pmicmd, const char *key, int val)
 {
-    int i = pmicmd->num_tokens;
-    pmicmd->tokens[i].key = key;
-    pmicmd->tokens[i].val = val ? "TRUE" : "FALSE";
-    pmicmd->num_tokens++;
+    PMIU_CMD_ADD_TOKEN(pmicmd, key, (val ? "TRUE" : "FALSE"));
+}
+
+void PMIU_cmd_get_tokens(struct PMIU_cmd *pmicmd, int *num_tokens, const struct PMIU_token **tokens)
+{
+    *num_tokens = pmicmd->num_tokens;
+    *tokens = pmicmd->tokens;
 }
 
 /* keyval look up */
 const char *PMIU_cmd_find_keyval(struct PMIU_cmd *pmicmd, const char *key)
 {
     for (int i = 0; i < pmicmd->num_tokens; i++) {
+        if (pmicmd->tokens[i].key == NULL) {
+            continue;
+        }
         if (strcmp(pmicmd->tokens[i].key, key) == 0) {
             return pmicmd->tokens[i].val;
         }
@@ -492,15 +575,16 @@ const char *PMIU_cmd_find_keyval(struct PMIU_cmd *pmicmd, const char *key)
     return NULL;
 }
 
-/* This is for parsing PMI-v2 spawn command, which contains multiple segments
- * lead by "subcmd=exename".  */
-const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key,
-                                         const char *segment_key, int segment_index)
+/* This is for parsing spawn command, which contains multiple segments
+ * separated NULL token key  */
+const char *PMIU_cmd_find_keyval_segment(struct PMIU_cmd *pmi, const char *key, int segment_index)
 {
     int cur_segment = -1;
     for (int i = 0; i < pmi->num_tokens; i++) {
-        if (strcmp(pmi->tokens[i].key, segment_key) == 0) {
+        /* a NULL token starts a new segment */
+        if (pmi->tokens[i].key == NULL) {
             cur_segment++;
+            continue;
         }
         if (segment_index == cur_segment) {
             if (!strcmp(pmi->tokens[i].key, key)) {
@@ -519,6 +603,7 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
     assert(pmi_copy);
 
     PMIU_cmd_init(pmi_copy, pmicmd->version, NULL);
+    PMIU_Assert(pmicmd->num_tokens < MAX_STATIC_PMI_ARGS);
     pmi_copy->num_tokens = pmicmd->num_tokens;
     pmi_copy->cmd_id = pmicmd->cmd_id;
 
@@ -553,14 +638,20 @@ struct PMIU_cmd *PMIU_cmd_dup(struct PMIU_cmd *pmicmd)
 }
 
 
-#define MAX_TMP_BUF_SIZE 64*1024
-static char tmp_buf_for_output[MAX_TMP_BUF_SIZE];
-
 /* allocate serialization tmp_buf. Note: as safety, add 1 extra for NULL-termination */
-#define PMIU_CMD_ALLOC_TMP_BUF(pmicmd, len) \
+#define PMIU_CMD_ALLOC_TMP_BUF(pmi, len) \
     do { \
-        assert(len + 1 < MAX_TMP_BUF_SIZE); \
-        pmicmd->tmp_buf = tmp_buf_for_output; \
+        if (pmi->tmp_buf && pmi->tmp_buf != tmp_buf_for_output) { \
+                MPL_free(pmi->tmp_buf); \
+        } \
+        if (len + 1 <= MAX_TMP_BUF_SIZE) { \
+            pmi->tmp_buf = tmp_buf_for_output; \
+        } else { \
+            /* static pmi object cannot allocate memory */ \
+            PMIU_Assert(!PMIU_cmd_is_static(pmi)); \
+            pmi->tmp_buf = MPL_malloc(len + 1, MPL_MEM_OTHER); \
+            PMIU_Assert(pmi->tmp_buf); \
+        } \
     } while (0)
 
 /* serialization output */
@@ -997,4 +1088,222 @@ int PMIU_msg_set_response_fail(struct PMIU_cmd *pmi_query, struct PMIU_cmd *pmi_
     }
 
     return PMIU_SUCCESS;
+}
+
+/* Spawn message functions (not generated in pmi_msg.c) */
+
+void PMIU_msg_set_query_spawn(struct PMIU_cmd *pmi_query, int version, bool is_static,
+                              int count, const char *cmds[], const int maxprocs[],
+                              int argcs[], const char **argvs[],
+                              const int info_keyval_sizes[],
+                              const struct PMIU_token *info_keyval_vectors[],
+                              int preput_keyval_size,
+                              const struct PMIU_token preput_keyval_vector[])
+{
+    PMIU_msg_set_query(pmi_query, version, PMIU_CMD_SPAWN, is_static);
+    if (version == PMIU_WIRE_V1) {
+        for (int spawncnt = 0; spawncnt < count; spawncnt++) {
+            if (spawncnt > 0) {
+                /* Note: it is in fact multiple PMI commands */
+                /* FIXME: use a proper separator token */
+                PMIU_cmd_add_str(pmi_query, "mcmd", "spawn");
+            }
+            PMIU_cmd_add_int(pmi_query, "nprocs", maxprocs[spawncnt]);
+            PMIU_cmd_add_str(pmi_query, "execname", cmds[spawncnt]);
+            PMIU_cmd_add_int(pmi_query, "totspawns", count);
+            PMIU_cmd_add_int(pmi_query, "spawnssofar", spawncnt + 1);
+
+            PMIU_cmd_add_int(pmi_query, "argcnt", argcs[spawncnt]);
+            for (int i = 0; i < argcs[spawncnt]; i++) {
+                PMIU_cmd_add_substr(pmi_query, "arg%d", i + 1, argvs[spawncnt][i]);
+            }
+
+            if (spawncnt == 0) {
+                PMIU_cmd_add_int(pmi_query, "preput_num", preput_keyval_size);
+                for (int i = 0; i < preput_keyval_size; i++) {
+                    PMIU_cmd_add_substr(pmi_query, "preput_key_%d", i, preput_keyval_vector[i].key);
+                    PMIU_cmd_add_substr(pmi_query, "preput_val_%d", i, preput_keyval_vector[i].val);
+                }
+            }
+
+            PMIU_cmd_add_int(pmi_query, "info_num", info_keyval_sizes[spawncnt]);
+            for (int i = 0; i < info_keyval_sizes[spawncnt]; i++) {
+                PMIU_cmd_add_substr(pmi_query, "info_key_%d", i,
+                                    info_keyval_vectors[spawncnt][i].key);
+                PMIU_cmd_add_substr(pmi_query, "info_val_%d", i,
+                                    info_keyval_vectors[spawncnt][i].val);
+            }
+            PMIU_cmd_add_token(pmi_query, "endcmd");
+        }
+    } else if (version == PMIU_WIRE_V2) {
+        PMIU_cmd_add_int(pmi_query, "ncmds", count);
+
+        PMIU_cmd_add_int(pmi_query, "preputcount", preput_keyval_size);
+        for (int i = 0; i < preput_keyval_size; i++) {
+            PMIU_cmd_add_substr(pmi_query, "ppkey%d", i, preput_keyval_vector[i].key);
+            PMIU_cmd_add_substr(pmi_query, "ppval%d", i, preput_keyval_vector[i].val);
+        }
+
+        for (int spawncnt = 0; spawncnt < count; spawncnt++) {
+            PMIU_cmd_add_str(pmi_query, "subcmd", cmds[spawncnt]);
+            PMIU_cmd_add_int(pmi_query, "maxprocs", maxprocs[spawncnt]);
+
+            PMIU_cmd_add_int(pmi_query, "argc", argcs[spawncnt]);
+            for (int i = 0; i < argcs[spawncnt]; i++) {
+                PMIU_cmd_add_substr(pmi_query, "argv%d", i, argvs[spawncnt][i]);
+            }
+
+            PMIU_cmd_add_int(pmi_query, "infokeycount", info_keyval_sizes[spawncnt]);
+            for (int i = 0; i < info_keyval_sizes[spawncnt]; i++) {
+                PMIU_cmd_add_substr(pmi_query, "infokey%d", i,
+                                    info_keyval_vectors[spawncnt][i].key);
+                PMIU_cmd_add_substr(pmi_query, "infoval%d", i,
+                                    info_keyval_vectors[spawncnt][i].val);
+            }
+        }
+    } else {
+        PMIU_Assert(0);
+    }
+}
+
+/* macros to make the code less clutter */
+#define KEYi pmi->tokens[i].key
+#define VALi pmi->tokens[i].val
+
+int PMIU_msg_get_query_spawn_sizes(struct PMIU_cmd *pmi, int *count, int *total_args,
+                                   int *total_info_keys, int *num_preput)
+{
+    int pmi_errno = PMIU_SUCCESS;
+
+    *count = 0;
+    *num_preput = 0;
+    *total_args = 0;
+    *total_info_keys = 0;
+
+    int i_seg = 0;
+    for (int i = 0; i < pmi->num_tokens; i++) {
+        if (KEYi == NULL) {
+            i_seg++;
+            continue;
+        }
+        if (pmi->version == PMIU_WIRE_V1) {
+            if (i_seg == 1 && strcmp(KEYi, "totspawns") == 0) {
+                *count = atoi(VALi);
+            } else if (i_seg == 1 && strcmp(KEYi, "preput_num") == 0) {
+                *num_preput = atoi(VALi);
+            } else if (strcmp(KEYi, "argcnt") == 0) {
+                *total_args += atoi(VALi);
+            } else if (strcmp(KEYi, "info_num") == 0) {
+                *total_info_keys += atoi(VALi);
+            }
+        } else if (pmi->version == PMIU_WIRE_V2) {
+            if (strcmp(KEYi, "ncmds") == 0) {
+                *count = atoi(VALi);
+            } else if (strcmp(KEYi, "preputcount") == 0) {
+                *num_preput = atoi(VALi);
+            } else if (strcmp(KEYi, "argc") == 0) {
+                *total_args += atoi(VALi);
+            } else if (strcmp(KEYi, "infokeycount") == 0) {
+                *total_info_keys += atoi(VALi);
+            }
+        }
+    }
+
+    return pmi_errno;
+}
+
+int PMIU_msg_get_query_spawn(struct PMIU_cmd *pmi, const char **cmds, int *maxprocs,
+                             int *argcs, const char **argvs, int *info_counts,
+                             struct PMIU_token *info_keyvals, struct PMIU_token *preput_keyvals)
+{
+    int pmi_errno = PMIU_SUCCESS;
+
+    int count = 0;
+    int num_preput = 0, total_args = 0, total_info_keys = 0;
+    int i_cmd = 0, i_nprocs = 0, i_argc = 0, i_info_count = 0;
+    int i_argv = 0, i_info_key = 0, i_info_val = 0, i_preput_key = 0, i_preput_val = 0;
+
+    int i_seg = 0;
+    for (int i = 0; i < pmi->num_tokens; i++) {
+        if (KEYi == NULL) {
+            i_seg++;
+            continue;
+        }
+        if (pmi->version == PMIU_WIRE_V1) {
+            if (strcmp(KEYi, "totspawns") == 0) {
+                if (i_seg == 1) {
+                    count = atoi(VALi);
+                } else {
+                    PMIU_ERR_POP(atoi(VALi) != count);
+                }
+            } else if (strcmp(KEYi, "spawnssofar") == 0) {
+                PMIU_ERR_POP(atoi(VALi) != i_seg);
+            } else if (strcmp(KEYi, "execname") == 0) {
+                cmds[i_cmd++] = VALi;
+                PMIU_ERR_POP(i_cmd != i_seg);
+            } else if (strcmp(KEYi, "nprocs") == 0) {
+                maxprocs[i_nprocs++] = atoi(VALi);
+                PMIU_ERR_POP(i_nprocs != i_seg);
+            } else if (strcmp(KEYi, "argcnt") == 0) {
+                argcs[i_argc++] = atoi(VALi);
+                PMIU_ERR_POP(i_argc != i_seg);
+            } else if (strncmp(KEYi, "arg", 3) == 0) {
+                argvs[i_argv++] = VALi;
+            } else if (i_seg == 1 && strcmp(KEYi, "preput_num") == 0) {
+                num_preput = atoi(VALi);
+            } else if (i_seg == 1 && strncmp(KEYi, "preput_key_", 10) == 0) {
+                preput_keyvals[i_preput_key++].key = VALi;
+            } else if (i_seg == 1 && strncmp(KEYi, "preput_val_", 10) == 0) {
+                preput_keyvals[i_preput_val++].val = VALi;
+            } else if (strcmp(KEYi, "info_num") == 0) {
+                info_counts[i_info_count++] = atoi(VALi);
+                PMIU_ERR_POP(i_info_count != i_seg);
+            } else if (strncmp(KEYi, "info_key_", 8) == 0) {
+                info_keyvals[i_info_key++].key = VALi;
+            } else if (strncmp(KEYi, "info_val_", 8) == 0) {
+                info_keyvals[i_info_val++].val = VALi;
+            }
+        } else if (pmi->version == PMIU_WIRE_V2) {
+            if (i_seg == 0 && strcmp(KEYi, "ncmds") == 0) {
+                count = atoi(VALi);
+            } else if (strcmp(KEYi, "subcmd") == 0) {
+                cmds[i_cmd++] = VALi;
+                PMIU_ERR_POP(i_cmd != i_seg);
+            } else if (strcmp(KEYi, "maxprocs") == 0) {
+                maxprocs[i_nprocs++] = atoi(VALi);
+                PMIU_ERR_POP(i_nprocs != i_seg);
+            } else if (strcmp(KEYi, "argc") == 0) {
+                argcs[i_argc++] = atoi(VALi);
+                PMIU_ERR_POP(i_argc != i_seg);
+            } else if (strncmp(KEYi, "argv", 4) == 0) {
+                argvs[i_argv++] = VALi;
+            } else if (i_seg == 0 && strcmp(KEYi, "preputcount") == 0) {
+                num_preput = atoi(VALi);
+            } else if (i_seg == 0 && strncmp(KEYi, "ppkey", 5) == 0) {
+                preput_keyvals[i_preput_key++].key = VALi;
+            } else if (i_seg == 0 && strncmp(KEYi, "ppval", 5) == 0) {
+                preput_keyvals[i_preput_val++].val = VALi;
+            } else if (strcmp(KEYi, "infokeycount") == 0) {
+                info_counts[i_info_count++] = atoi(VALi);
+                PMIU_ERR_POP(i_info_count != i_seg);
+            } else if (strncmp(KEYi, "infokey", 7) == 0) {
+                info_keyvals[i_info_key++].key = VALi;
+            } else if (strncmp(KEYi, "infoval_", 7) == 0) {
+                info_keyvals[i_info_val++].val = VALi;
+            }
+        }
+    }
+    PMIU_ERR_POP(i_seg != count);
+    PMIU_ERR_POP(i_cmd != count);
+    PMIU_ERR_POP(i_nprocs != count);
+    PMIU_ERR_POP(i_argc != count);
+    PMIU_ERR_POP(i_info_count != count);
+    PMIU_ERR_POP(i_argv != total_args);
+    PMIU_ERR_POP(i_preput_val != num_preput || i_preput_key != num_preput);
+    PMIU_ERR_POP(i_info_val != total_info_keys || i_info_key != total_info_keys);
+
+  fn_exit:
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
 }

@@ -13,9 +13,12 @@ static struct HYD_pmcd_pmi_v2_reqs *pending_reqs = NULL;
 static bool check_epoch_reached(struct HYD_pg *pg, int fd, int pid);
 static HYD_status check_pending_reqs(const char *key);
 
+static const bool is_static = true;
+
 HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, bool sync)
 {
     HYD_status status = HYD_SUCCESS;
+    int pmi_errno;
     HYDU_FUNC_ENTER();
 
     struct HYD_proxy *proxy;
@@ -25,20 +28,13 @@ HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, 
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
 
-    const char *thrid = NULL;
     const char *kvsname;
     const char *key;
-    if (pmi->version == 1) {
-        HYD_PMI_GET_STRVAL(pmi, "kvsname", kvsname);
-        HYD_PMI_GET_STRVAL(pmi, "key", key);
-        if (strcmp(pg_scratch->kvs->kvsname, kvsname)) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "kvsname (%s) does not match this group's kvs space (%s)\n",
-                                kvsname, pg_scratch->kvs->kvsname);
-        }
-    } else {
-        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
-        HYD_PMI_GET_STRVAL(pmi, "key", key);
+    pmi_errno = PMIU_msg_get_query_get(pmi, &kvsname, &key);
+    if (kvsname && strcmp(pg_scratch->kvs->kvsname, kvsname) != 0) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "kvsname (%s) does not match this group's kvs space (%s)\n",
+                            kvsname, pg_scratch->kvs->kvsname);
     }
 
     int found;
@@ -71,38 +67,16 @@ HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, 
     }
 
     struct PMIU_cmd pmi_response;
-    if (pmi->version == 1) {
-        PMIU_cmd_init_static(&pmi_response, 1, "get_result");
-        if (val) {
-            PMIU_cmd_add_str(&pmi_response, "rc", "0");
-            PMIU_cmd_add_str(&pmi_response, "msg", "success");
-            PMIU_cmd_add_str(&pmi_response, "value", val);
+    if (val) {
+        if (sync) {
+            pmi_errno = PMIU_msg_set_response_kvsget(pmi, &pmi_response, is_static, val, true);
         } else {
-            static char tmp[100];
-            MPL_snprintf(tmp, 100, "key_%s_not_found", key);
-
-            PMIU_cmd_add_str(&pmi_response, "rc", "-1");
-            PMIU_cmd_add_str(&pmi_response, "msg", tmp);
-            PMIU_cmd_add_str(&pmi_response, "value", "unknown");
+            pmi_errno = PMIU_msg_set_response_get(pmi, &pmi_response, is_static, val, true);
         }
     } else {
-        if (strcmp(pmi->cmd, "kvs-get") == 0) {
-            PMIU_cmd_init_static(&pmi_response, 2, "kvs-get-response");
-        } else {
-            PMIU_cmd_init_static(&pmi_response, 2, "info-getjobattr-response");
-        }
-        if (thrid) {
-            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-        }
-        if (found) {
-            PMIU_cmd_add_str(&pmi_response, "found", "TRUE");
-            PMIU_cmd_add_str(&pmi_response, "value", val);
-            PMIU_cmd_add_str(&pmi_response, "rc", "0");
-        } else {
-            PMIU_cmd_add_str(&pmi_response, "found", "FALSE");
-            PMIU_cmd_add_str(&pmi_response, "rc", "0");
-        }
+        pmi_errno = PMIU_msg_set_response_fail(pmi, &pmi_response, is_static, 1, "key_not_found");
     }
+    HYDU_ASSERT(!pmi_errno, status);
 
     status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "error writing PMI line\n");
@@ -118,18 +92,12 @@ HYD_status HYD_pmiserv_kvs_get(int fd, int pid, int pgid, struct PMIU_cmd *pmi, 
 HYD_status HYD_pmiserv_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
+    int pmi_errno;
     HYDU_FUNC_ENTER();
 
-    const char *thrid = NULL;
-    const char *key, *val;
-    if (pmi->version == 1) {
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "PMI-v1 doesn't support server single key/val put\n");
-    } else {
-        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
-        HYD_PMI_GET_STRVAL(pmi, "key", key);
-        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "value", val, "");
-    }
+    const char *kvsname, *key, *val;
+    pmi_errno = PMIU_msg_get_query_put(pmi, &kvsname, &key, &val);
+    HYDU_ASSERT(!pmi_errno, status);
 
     struct HYD_proxy *proxy;
     proxy = HYD_pmcd_pmi_find_proxy(fd);
@@ -143,15 +111,8 @@ HYD_status HYD_pmiserv_kvs_put(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
     struct PMIU_cmd pmi_response;
-    if (pmi->version == 1) {
-        assert(0);
-    } else {
-        PMIU_cmd_init_static(&pmi_response, 2, "kvs-put-response");
-        if (thrid) {
-            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-        }
-        PMIU_cmd_add_int(&pmi_response, "rc", ret);
-    }
+    pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
+    HYDU_ASSERT(!pmi_errno, status);
 
     status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
@@ -198,13 +159,11 @@ HYD_status HYD_pmiserv_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi
 {
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    const char *thrid;
+    int pmi_errno;
     int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    thrid = PMIU_cmd_find_keyval(pmi, "thrid");
 
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
@@ -234,11 +193,8 @@ HYD_status HYD_pmiserv_kvs_fence(int fd, int pid, int pgid, struct PMIU_cmd *pmi
     }
 
     struct PMIU_cmd pmi_response;
-    PMIU_cmd_init_static(&pmi_response, 2, "kvs-fence-response");
-    if (thrid) {
-        PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-    }
-    PMIU_cmd_add_str(&pmi_response, "rc", "0");
+    pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
+    HYDU_ASSERT(!pmi_errno, status);
 
     status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");

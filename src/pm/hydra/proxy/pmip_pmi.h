@@ -27,9 +27,7 @@ HYD_status fn_barrier_in(int fd, struct PMIU_cmd *pmi);
 HYD_status fn_barrier_out(int fd, struct PMIU_cmd *pmi);
 HYD_status fn_finalize(int fd, struct PMIU_cmd *pmi);
 HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_job_getid(int fd, struct PMIU_cmd *pmi);
 HYD_status fn_info_putnodeattr(int fd, struct PMIU_cmd *pmi);
 HYD_status fn_info_getnodeattr(int fd, struct PMIU_cmd *pmi);
-HYD_status fn_info_getjobattr(int fd, struct PMIU_cmd *pmi);
 
 #endif /* PMIP_PMI_H_INCLUDED */

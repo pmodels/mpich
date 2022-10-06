@@ -7,7 +7,9 @@
 #define COMMON_H_INCLUDED
 
 #include "hydra.h"
-#include "pmi_wire.h"   /* from libpmi */
+/* from libpmi */
+#include "pmi_wire.h"
+#include "pmi_msg.h"
 
 /* Generic definitions */
 #define PMI_MAXKEYLEN    (64)   /* max length of key in keyval space */
@@ -84,58 +86,5 @@ struct HYD_pmcd_hdr {
 void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr);
 void HYD_pmcd_pmi_dump(struct PMIU_cmd *pmi);
 HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *hdr, int debug);
-
-/* macros for retrieving key/val from struct PMIU_cmd */
-#define HYD_PMI_GET_STRVAL(pmi, key, val) \
-    do { \
-        const char *tmp = PMIU_cmd_find_keyval(pmi, key); \
-        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
-                            "PMI command missing key %s\n", key); \
-        val = tmp; \
-    } while (0)
-
-#define HYD_PMI_GET_INTVAL(pmi, key, val) \
-    do { \
-        const char *tmp = PMIU_cmd_find_keyval(pmi, key); \
-        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
-                            "PMI command missing key %s\n", key); \
-        val = atoi(tmp); \
-    } while (0)
-
-#define HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, key, val, dflt) \
-    PMIU_CMD_GET_STRVAL_WITH_DEFAULT(pmi, key, val, dflt)
-
-#define HYD_PMI_GET_INTVAL_WITH_DEFAULT(pmi, key, val, dflt) \
-    PMIU_CMD_GET_INTVAL_WITH_DEFAULT(pmi, key, val, dflt)
-
-#define HYD_PMI_GET_BOOLVAL_WITH_DEFAULT(pmi, key, val, dflt) \
-    PMIU_CMD_GET_BOOLVAL_WITH_DEFAULT(pmi, key, val, dflt)
-
-/* Macro for parsing keyval within a spawn segment */
-#define HYD_PMI_GET_STRVAL_J(pmi, key, j, val) \
-    do { \
-        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
-        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
-                            "PMI command missing key %s\n", key); \
-        val = tmp; \
-    } while (0)
-
-#define HYD_PMI_GET_INTVAL_J(pmi, key, j, val) \
-    do { \
-        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
-        HYDU_ERR_CHKANDJUMP(status, tmp == NULL, HYD_INTERNAL_ERROR, \
-                            "PMI command missing key %s\n", key); \
-        val = atoi(tmp); \
-    } while (0)
-
-#define HYD_PMI_GET_INTVAL_J_WITH_DEFAULT(pmi, key, j, val, dflt) \
-    do { \
-        const char *tmp = PMIU_cmd_find_keyval_segment(pmi, key, "subcmd", j); \
-        if (tmp) { \
-            val = atoi(tmp); \
-        } else { \
-            val = dflt; \
-        } \
-    } while (0)
 
 #endif /* COMMON_H_INCLUDED */

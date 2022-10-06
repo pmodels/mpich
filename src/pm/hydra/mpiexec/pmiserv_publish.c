@@ -7,6 +7,8 @@
 #include "pmiserv_pmi.h"
 #include "pmiserv_utils.h"
 
+static const bool is_static = true;
+
 static HYD_status pmi_publish(const char *name, const char *port, int *success);
 static HYD_status pmi_unpublish(const char *name, int *success);
 static HYD_status pmi_lookup(const char *name, const char **value);
@@ -22,50 +24,25 @@ static HYD_status server_lookup(const char *name, const char **value);
 HYD_status HYD_pmiserv_publish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
+    int pmi_errno;
     HYDU_FUNC_ENTER();
 
     const char *name = NULL, *port = NULL;
-    const char *thrid = NULL;
-    if (pmi->version == 1) {
-        HYD_PMI_GET_STRVAL(pmi, "service", name);
-        HYD_PMI_GET_STRVAL(pmi, "port", port);
-    } else {
-        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
-        HYD_PMI_GET_STRVAL(pmi, "name", name);
-        HYD_PMI_GET_STRVAL(pmi, "port", port);
-    }
+    pmi_errno = PMIU_msg_get_query_publish(pmi, &name, &port);
+    HYDU_ASSERT(!pmi_errno, status);
 
     int success = 0;
     status = pmi_publish(name, port, &success);
     HYDU_ERR_POP(status, "error publishing service\n");
 
     struct PMIU_cmd pmi_response;
-    if (pmi->version == 1) {
-        PMIU_cmd_init_static(&pmi_response, 1, "publish_result");
-        if (success) {
-            PMIU_cmd_add_str(&pmi_response, "info", "ok");
-            PMIU_cmd_add_str(&pmi_response, "rc", "0");
-            PMIU_cmd_add_str(&pmi_response, "msg", "success");
-        } else {
-            PMIU_cmd_add_str(&pmi_response, "info", "ok");
-            PMIU_cmd_add_str(&pmi_response, "rc", "1");
-            PMIU_cmd_add_str(&pmi_response, "msg", "key_already_present");
-        }
+    if (success) {
+        pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
     } else {
-        PMIU_cmd_init_static(&pmi_response, 2, "name-publish-response");
-        if (thrid) {
-            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-        }
-        if (!success) {
-            char tmp[100];
-            MPL_snprintf(tmp, 100, "duplicate_service_%s", name);
-
-            PMIU_cmd_add_str(&pmi_response, "rc", "1");
-            PMIU_cmd_add_str(&pmi_response, "errmsg", tmp);
-        } else {
-            PMIU_cmd_add_str(&pmi_response, "rc", "0");
-        }
+        pmi_errno =
+            PMIU_msg_set_response_fail(pmi, &pmi_response, is_static, 1, "key_already_present");
     }
+    HYDU_ASSERT(!pmi_errno, status);
 
     status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
@@ -81,48 +58,25 @@ HYD_status HYD_pmiserv_publish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 HYD_status HYD_pmiserv_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
+    int pmi_errno;
     HYDU_FUNC_ENTER();
 
     const char *name;
-    const char *thrid = NULL;
-    if (pmi->version == 1) {
-        HYD_PMI_GET_STRVAL(pmi, "service", name);
-    } else {
-        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
-        HYD_PMI_GET_STRVAL(pmi, "name", name);
-    }
+    pmi_errno = PMIU_msg_get_query_unpublish(pmi, &name);
+    HYDU_ASSERT(!pmi_errno, status);
 
     int success = 0;
     status = pmi_unpublish(name, &success);
     HYDU_ERR_POP(status, "error unpublishing service\n");
 
     struct PMIU_cmd pmi_response;
-    if (pmi->version == 1) {
-        PMIU_cmd_init_static(&pmi_response, 1, "unpublish_result");
-        if (success) {
-            PMIU_cmd_add_str(&pmi_response, "info", "ok");
-            PMIU_cmd_add_str(&pmi_response, "rc", "0");
-            PMIU_cmd_add_str(&pmi_response, "msg", "success");
-        } else {
-            PMIU_cmd_add_str(&pmi_response, "info", "ok");
-            PMIU_cmd_add_str(&pmi_response, "rc", "1");
-            PMIU_cmd_add_str(&pmi_response, "msg", "service_not_found");
-        }
+    if (success) {
+        pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
     } else {
-        PMIU_cmd_init_static(&pmi_response, 2, "name-unpublish-response");
-        if (thrid) {
-            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-        }
-        if (success) {
-            PMIU_cmd_add_str(&pmi_response, "rc", "0");
-        } else {
-            char tmp[100];
-            MPL_snprintf(tmp, 100, "service_%s_not_found", name);
-
-            PMIU_cmd_add_str(&pmi_response, "rc", "1");
-            PMIU_cmd_add_str(&pmi_response, "errmsg", tmp);
-        }
+        pmi_errno =
+            PMIU_msg_set_response_fail(pmi, &pmi_response, is_static, 1, "service_not_found");
     }
+    HYDU_ASSERT(!pmi_errno, status);
 
     status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
@@ -138,47 +92,26 @@ HYD_status HYD_pmiserv_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *pmi
 HYD_status HYD_pmiserv_lookup(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
+    int pmi_errno;
     const char *value = NULL;
 
     HYDU_FUNC_ENTER();
 
     const char *name;
-    const char *thrid = NULL;
-    if (pmi->version == 1) {
-        HYD_PMI_GET_STRVAL(pmi, "service", name);
-    } else {
-        HYD_PMI_GET_STRVAL_WITH_DEFAULT(pmi, "thrid", thrid, NULL);
-        HYD_PMI_GET_STRVAL(pmi, "name", name);
-    }
+    pmi_errno = PMIU_msg_get_query_lookup(pmi, &name);
+    HYDU_ASSERT(!pmi_errno, status);
 
     status = pmi_lookup(name, &value);
     HYDU_ERR_POP(status, "error while looking up service\n");
 
     struct PMIU_cmd pmi_response;
-    if (pmi->version == 1) {
-        PMIU_cmd_init_static(&pmi_response, 1, "lookup_result");
-        if (value) {
-            PMIU_cmd_add_str(&pmi_response, "port", value);
-            PMIU_cmd_add_str(&pmi_response, "rc", "0");
-            PMIU_cmd_add_str(&pmi_response, "msg", "success");
-        } else {
-            PMIU_cmd_add_str(&pmi_response, "rc", "1");
-            PMIU_cmd_add_str(&pmi_response, "msg", "service_not_found");
-        }
+    if (value) {
+        pmi_errno = PMIU_msg_set_response_lookup(pmi, &pmi_response, is_static, value);
     } else {
-        PMIU_cmd_init_static(&pmi_response, 2, "name-lookup-response");
-        if (thrid) {
-            PMIU_cmd_add_str(&pmi_response, "thrid", thrid);
-        }
-        if (value) {
-            PMIU_cmd_add_str(&pmi_response, "port", value);
-            PMIU_cmd_add_str(&pmi_response, "found", "TRUE");
-            PMIU_cmd_add_str(&pmi_response, "rc", "0");
-        } else {
-            PMIU_cmd_add_str(&pmi_response, "found", "FALSE");
-            PMIU_cmd_add_str(&pmi_response, "rc", "1");
-        }
+        pmi_errno =
+            PMIU_msg_set_response_fail(pmi, &pmi_response, is_static, 1, "service_not_found");
     }
+    HYDU_ASSERT(!pmi_errno, status);
 
     status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
