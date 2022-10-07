@@ -108,6 +108,8 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
         if (tproxy->control_fd != HYD_FD_CLOSED)
             goto fn_exit;
 
+    pg->is_active = false;
+
     /* If there is no active proxy, ignore the proxies that haven't
      * connected back to us yet. */
     for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)

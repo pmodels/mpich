@@ -8,6 +8,7 @@
 void HYDU_init_pg(struct HYD_pg *pg, int pgid)
 {
     pg->pgid = pgid;
+    pg->is_active = true;
     pg->proxy_list = NULL;
     pg->proxy_count = 0;
     pg->pg_process_count = 0;

@@ -147,7 +147,6 @@ HYD_status HYD_pmci_launch_procs(void)
 HYD_status HYD_pmci_wait_for_completion(int timeout)
 {
     struct HYD_pg *pg;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     int time_elapsed, time_left;
     struct timeval start, now;
     HYD_status status = HYD_SUCCESS;
@@ -159,9 +158,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
     /* We first wait for the exit statuses to arrive till the timeout
      * period */
     for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
-        pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-
-        while (pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
+        while (pg->is_active) {
             gettimeofday(&now, NULL);
             time_elapsed = (now.tv_sec - start.tv_sec);
             time_left = timeout;

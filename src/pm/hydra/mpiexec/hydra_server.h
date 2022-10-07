@@ -26,6 +26,7 @@ struct HYD_pg {
     int proxy_count;
     int pg_process_count;
     int barrier_count;
+    bool is_active;
 
     struct HYD_pg *spawner_pg;
 
