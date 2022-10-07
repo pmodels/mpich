@@ -213,7 +213,8 @@ HYD_status HYDU_set_int(char *arg, int *var, int val)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, *var != -1, HYD_INTERNAL_ERROR, "duplicate setting: %s\n", arg);
+    HYDU_ERR_CHKANDJUMP(status, *var != -1 &&
+                        *var != val, HYD_INTERNAL_ERROR, "duplicate setting: %s\n", arg);
 
     *var = val;
 
