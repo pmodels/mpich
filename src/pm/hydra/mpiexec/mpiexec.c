@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 {
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int i, user_provided_host_list, global_core_count;
+    int user_provided_host_list;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -141,6 +141,7 @@ int main(int argc, char **argv)
 
     if (user_provided_host_list) {
         /* Reassign node IDs to each node */
+        int i;
         for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
             node->node_id = i;
 
@@ -167,7 +168,8 @@ int main(int argc, char **argv)
     pg->pg_process_count = 0;
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
         if (exec->proc_count <= 0) {
-            global_core_count = 0;
+            int i;
+            int global_core_count = 0;
             for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
                 global_core_count += node->core_count;
             exec->proc_count = global_core_count;
