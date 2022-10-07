@@ -23,8 +23,6 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.pgid = -1;
-    HYD_pmcd_pmip.local.iface_ip_env_name = NULL;
-    HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.retries = -1;
 
     PMIP_pg_init();
@@ -39,11 +37,6 @@ static void cleanup_params(void)
 
     /* Upstream */
     MPL_free(HYD_pmcd_pmip.upstream.server_name);
-
-
-    /* Local */
-    MPL_free(HYD_pmcd_pmip.local.iface_ip_env_name);
-    MPL_free(HYD_pmcd_pmip.local.hostname);
 
 
     PMIP_pg_finalize();
@@ -66,10 +59,11 @@ static void signal_cb(int sig)
     return;
 }
 
+static HYD_status pg_exit(struct pmip_pg *pg);
+
 int main(int argc, char **argv)
 {
     int pid, ret_status, sent, closed, ret, done;
-    struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     status = HYDU_dbg_init("proxy:unset");
@@ -152,12 +146,11 @@ int main(int argc, char **argv)
         }
     }
 
-    struct pmip_pg *pg_0;
-    pg_0 = PMIP_pg_0();
-    HYDU_ASSERT(pg_0, status);
+    /* collect the singleton's exit_status */
+    if (PMIP_pg_0()->is_singleton) {
+        struct pmip_pg *pg_0 = PMIP_pg_0();
+        HYDU_ASSERT(pg_0, status);
 
-    /* collect exit_status unless it is a singleton */
-    if (pg_0->is_singleton) {
         HYDU_ASSERT(pg_0->num_procs == 1, status);
         HYDU_ASSERT(pg_0->downstreams[0].pid == HYD_pmcd_pmip.singleton_pid, status);
         /* We won't get the singleton's exit status. Assume it's 0. */
@@ -192,15 +185,8 @@ int main(int argc, char **argv)
         }
     }
 
-    /* Send the exit status upstream */
-    HYD_pmcd_init_header(&hdr);
-    hdr.cmd = CMD_EXIT_STATUS;
-
-    int *exit_status_list;
-    exit_status_list = PMIP_pg_get_exit_status_list(pg_0);
-    PMIP_send_hdr_upstream(pg_0, &hdr, exit_status_list, pg_0->num_procs * sizeof(int));
-    HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
-    MPL_free(exit_status_list);
+    status = PMIP_foreach_pg_do(pg_exit);
+    HYDU_ERR_POP(status, "error sending exit statuses for each pg\n");
 
     status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.upstream.control);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
@@ -222,5 +208,26 @@ int main(int argc, char **argv)
   fn_fail:
     /* kill all processes */
     PMIP_bcast_signal(SIGKILL);
+    goto fn_exit;
+}
+
+static HYD_status pg_exit(struct pmip_pg *pg)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    struct HYD_pmcd_hdr hdr;
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = CMD_EXIT_STATUS;
+
+    int *exit_status_list;
+    exit_status_list = PMIP_pg_get_exit_status_list(pg);
+    PMIP_send_hdr_upstream(pg, &hdr, exit_status_list, pg->num_procs * sizeof(int));
+    HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream for proxy %d - %d\n",
+                 pg->pgid, pg->proxy_id);
+    MPL_free(exit_status_list);
+
+  fn_exit:
+    return status;
+  fn_fail:
     goto fn_exit;
 }
