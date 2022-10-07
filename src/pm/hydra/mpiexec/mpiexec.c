@@ -19,13 +19,14 @@ struct HYD_ui_mpich_info_s HYD_ui_mpich_info;
 static void signal_cb(int signum);
 static HYD_status qsort_node_list(void);
 static void HYD_ui_mpich_debug_print(void);
+static int get_exit_status(int pgid);
 
 int main(int argc, char **argv)
 {
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int exit_status = 0, i, user_provided_host_list, global_core_count;
+    int i, user_provided_host_list, global_core_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -225,32 +226,10 @@ int main(int argc, char **argv)
     status = HYD_pmci_wait_for_completion(HYD_ui_mpich_info.timeout);
     HYDU_ERR_POP(status, "process manager error waiting for completion\n");
 
-    /* Check for the exit status for all the processes */
-    if (HYD_ui_mpich_info.print_all_exitcodes)
-        HYDU_dump(stdout, "Exit codes: ");
-    exit_status = 0;
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        if (proxy->exit_status == NULL) {
-            /* We didn't receive the exit status for this proxy */
-            continue;
-        }
-
-        if (HYD_ui_mpich_info.print_all_exitcodes)
-            HYDU_dump_noprefix(stdout, "[%s] ", proxy->node->hostname);
-
-        for (i = 0; i < proxy->proxy_process_count; i++) {
-            if (HYD_ui_mpich_info.print_all_exitcodes) {
-                HYDU_dump_noprefix(stdout, "%d", proxy->exit_status[i]);
-                if (i < proxy->proxy_process_count - 1)
-                    HYDU_dump_noprefix(stdout, ",");
-            }
-
-            exit_status |= proxy->exit_status[i];
-        }
-
-        if (HYD_ui_mpich_info.print_all_exitcodes)
-            HYDU_dump_noprefix(stdout, "\n");
-    }
+    /* Not ideal: we only get exitcodes for pg 0, and we need make sure pg 0
+     *            survive till now (the end). This is not obvious. */
+    int exit_status;
+    exit_status = get_exit_status(0);
 
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_pmci_finalize();
@@ -297,7 +276,39 @@ int main(int argc, char **argv)
     goto fn_exit;
 }
 
-HYD_status HYD_uii_get_current_exec(struct HYD_exec **exec)
+static int get_exit_status(int pgid)
+{
+    struct HYD_pg *pg = HYDU_get_pg(pgid);
+    /* Check for the exit status for all the processes */
+    if (HYD_ui_mpich_info.print_all_exitcodes)
+        HYDU_dump(stdout, "Exit codes: ");
+    int exit_status = 0;
+    for (struct HYD_proxy * proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+        if (proxy->exit_status == NULL) {
+            /* We didn't receive the exit status for this proxy */
+            continue;
+        }
+
+        if (HYD_ui_mpich_info.print_all_exitcodes)
+            HYDU_dump_noprefix(stdout, "[%s] ", proxy->node->hostname);
+
+        for (int i = 0; i < proxy->proxy_process_count; i++) {
+            if (HYD_ui_mpich_info.print_all_exitcodes) {
+                HYDU_dump_noprefix(stdout, "%d", proxy->exit_status[i]);
+                if (i < proxy->proxy_process_count - 1)
+                    HYDU_dump_noprefix(stdout, ",");
+            }
+
+            exit_status |= proxy->exit_status[i];
+        }
+
+        if (HYD_ui_mpich_info.print_all_exitcodes)
+            HYDU_dump_noprefix(stdout, "\n");
+    }
+    return exit_status;
+}
+
+HYD_status HYD_uii_get_current_exec(struct HYD_exec ** exec)
 {
     HYD_status status = HYD_SUCCESS;
 
