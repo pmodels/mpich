@@ -182,10 +182,6 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
                 continue;
             HYDU_ERR_POP(status, "error waiting for event\n");
         }
-
-        struct HYD_pg *pg = HYDU_get_pg(i);
-        status = HYD_pmcd_pmi_free_pg_scratch(pg);
-        HYDU_ERR_POP(status, "error freeing PG scratch space\n");
     }
 
     /* Either all application processes exited or we have timed out.

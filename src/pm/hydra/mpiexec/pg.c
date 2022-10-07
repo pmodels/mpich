@@ -16,6 +16,9 @@ static void pg_dtor(void *_elt)
 
     if (pg->user_node_list)
         HYDU_free_node_list(pg->user_node_list);
+
+    if (pg->pg_scratch)
+        HYD_pmcd_pmi_free_pg_scratch(pg);
 }
 
 void HYDU_init_pg(void)

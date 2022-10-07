@@ -78,4 +78,7 @@ void HYDU_free_pg_list(void);
 int HYDU_pg_max_id(void);
 struct HYD_pg *HYDU_get_pg(int pgid);
 
+HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg);
+HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg);
+
 #endif /* HYDRA_SERVER_H_INCLUDED */
