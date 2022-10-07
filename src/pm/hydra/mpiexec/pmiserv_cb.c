@@ -220,37 +220,69 @@ HYD_status HYD_pmcd_pmiserv_send_signal(struct HYD_proxy *proxy, int signum)
     goto fn_exit;
 }
 
+static HYD_status stdin_cb(int fd, HYD_event_t events, void *userp)
+{
+    HYD_status status = HYD_SUCCESS;
+    HYDU_FUNC_ENTER();
+
+    struct HYD_proxy *proxy;
+    struct HYD_pg *pg;
+    /* assume stdin connected to the first pg and first proxy, but
+     * should be configurable */
+    int pgid = 0, proxy_id = 0;
+    pg = PMISERV_pg_by_id(pgid);
+    proxy = &pg->proxy_list[proxy_id];
+
+    /* Are we sure HYD_TMPBUF_SIZE (64k) is sufficient? */
+    HYDU_MALLOC_OR_JUMP(buf, char *, HYD_TMPBUF_SIZE, status);
+    HYDU_ERR_POP(status, "unable to allocate memory\n");
+
+    int count, closed;
+    char *buf;
+    status = HYDU_sock_read(STDIN_FILENO, buf, HYD_TMPBUF_SIZE, &count, &closed,
+                            HYDU_SOCK_COMM_NONE);
+    HYDU_ERR_POP(status, "error reading from stdin\n");
+
+    struct HYD_pmcd_hdr hdr;
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = CMD_STDIN;
+    send_hdr_downstream(proxy, &hdr, buf, count);
+    HYDU_ERR_POP(status, "error writing to control socket\n");
+
+    if (!count) {
+        status = HYDT_dmx_deregister_fd(STDIN_FILENO);
+        HYDU_ERR_POP(status, "unable to deregister STDIN\n");
+    }
+
+    MPL_free(buf);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 {
-    int count, closed;
-    struct HYD_pmcd_hdr hdr;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    char *buf;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
+    int count, closed;
+    struct HYD_pmcd_hdr hdr;
+    status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to read command from proxy\n");
+    HYDU_ASSERT(!closed, status);
+
     int pgid, proxy_id;
-    if (fd == STDIN_FILENO) {
-        HYD_pmcd_init_header(&hdr);
-        hdr.cmd = CMD_STDIN;
-        /* assume stdin connected to the first pg and first proxy, but
-         * should be configurable */
-        pgid = 0;
-        proxy_id = 0;
-    } else {
-        status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
-        HYDU_ERR_POP(status, "unable to read command from proxy\n");
-        HYDU_ASSERT(!closed, status);
-        pgid = hdr.pgid;
-        proxy_id = hdr.proxy_id;
-    }
+    pgid = hdr.pgid;
+    proxy_id = hdr.proxy_id;
 
     struct HYD_proxy *proxy;
     struct HYD_pg *pg;
     pg = PMISERV_pg_by_id(pgid);
     proxy = &pg->proxy_list[proxy_id];
-    HYDU_ASSERT(proxy == userp, status);
 
     if (hdr.cmd == CMD_PID_LIST) {      /* Got PIDs */
         HYDU_MALLOC_OR_JUMP(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
@@ -318,6 +350,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
             }
         }
     } else if (hdr.cmd == CMD_PMI) {
+        char *buf;
         HYDU_MALLOC_OR_JUMP(buf, char *, hdr.buflen + 1, status);
 
         status = HYDU_sock_read(fd, buf, hdr.buflen, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
@@ -332,6 +365,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         MPL_free(buf);
     } else if (hdr.cmd == CMD_STDOUT || hdr.cmd == CMD_STDERR) {
+        char *buf;
         HYDU_MALLOC_OR_JUMP(buf, char *, hdr.buflen, status);
 
         status = HYDU_sock_read(fd, buf, hdr.buflen, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
@@ -346,28 +380,11 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "error in the UI defined callback\n");
 
         MPL_free(buf);
-    } else if (hdr.cmd == CMD_STDIN) {
-        HYDU_MALLOC_OR_JUMP(buf, char *, HYD_TMPBUF_SIZE, status);
-        HYDU_ERR_POP(status, "unable to allocate memory\n");
-
-        status =
-            HYDU_sock_read(STDIN_FILENO, buf, HYD_TMPBUF_SIZE, &count, &closed,
-                           HYDU_SOCK_COMM_NONE);
-        HYDU_ERR_POP(status, "error reading from stdin\n");
-
-        send_hdr_downstream(proxy, &hdr, buf, count);
-        HYDU_ERR_POP(status, "error writing to control socket\n");
-
-        if (!count) {
-            status = HYDT_dmx_deregister_fd(STDIN_FILENO);
-            HYDU_ERR_POP(status, "unable to deregister STDIN\n");
-        }
-
-        MPL_free(buf);
     } else if (hdr.cmd == CMD_PROCESS_TERMINATED) {
         int terminated_rank = hdr.u.data;
         if (HYD_server_info.user_global.auto_cleanup == 0) {
             /* Update the map of the alive processes */
+            struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
             pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
             pg_scratch->dead_process_count++;
 
@@ -531,7 +548,7 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
         HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
 
         if (stdin_valid) {
-            status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_POLLIN, proxy, control_cb);
+            status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_POLLIN, proxy, stdin_cb);
             HYDU_ERR_POP(status, "unable to register fd\n");
         } else {
             hdr.cmd = CMD_STDIN;
