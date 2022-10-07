@@ -52,6 +52,24 @@ struct pmip_pg *PMIP_pg_0(void)
     }
 }
 
+/* iterate each pg */
+HYD_status PMIP_foreach_pg_do(HYD_status(*callback) (struct pmip_pg * pg))
+{
+    HYD_status status = HYD_SUCCESS;
+
+    int n = utarray_len(PMIP_pgs);
+    struct pmip_pg *arr = ut_type_array(PMIP_pgs, struct pmip_pg *);
+    for (int i = 0; i < n; i++) {
+        status = callback(&arr[i]);
+        HYDU_ERR_POP(status, "foreach_pg_do failed at i = %d / %d", i, n);
+    }
+
+  fn_exit:
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* linear search.
  * Typical case is the first pg when spawn is not used. When spawn is used, we don't
  * expect a single proxy to host too many active spawns
@@ -98,6 +116,8 @@ void PMIP_free_pg(struct pmip_pg *pg)
     MPL_free(pg->kvsname);
     MPL_free(pg->pmi_process_mapping);
     MPL_free(pg->downstreams);
+    MPL_free(pg->iface_ip_env_name);
+    MPL_free(pg->hostname);
     HYDU_free_exec_list(pg->exec_list);
     HYD_pmcd_free_pmi_kvs_list(pg->kvs);
 
