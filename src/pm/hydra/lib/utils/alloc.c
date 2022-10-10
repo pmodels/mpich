@@ -158,6 +158,46 @@ static HYD_status alloc_proxy_list(struct HYD_node *node_list, int pgid,
     goto fn_exit;
 }
 
+static HYD_status prune_proxy_list(int *count_p, struct HYD_proxy **proxy_list_p, int extra_count)
+{
+    HYD_status status = HYD_SUCCESS;
+    HYDU_FUNC_ENTER();
+
+    int proxy_count = *count_p;
+    struct HYD_proxy *proxy_list = *proxy_list_p;
+
+    int num_empty;
+    num_empty = 0;
+    for (int i = 0; i < proxy_count; i++) {
+        if (proxy_list[i].proxy_process_count == 0) {
+            num_empty++;
+        }
+    }
+    /* extra_count is the extra empty processes after proxy_count. Realloc if non-zero. */
+    if (num_empty > 0 || extra_count) {
+        struct HYD_proxy *new_list;
+        HYDU_MALLOC_OR_JUMP(new_list, struct HYD_proxy *,
+                            (proxy_count - num_empty) * sizeof(struct HYD_proxy), status);
+        int j = 0;
+        for (int i = 0; i < proxy_count; i++) {
+            if (proxy_list[i].proxy_process_count > 0) {
+                new_list[j] = proxy_list[i];
+                new_list[j].proxy_id = j;
+                j++;
+            }
+        }
+        MPL_free(proxy_list);
+        *proxy_list_p = new_list;
+        *count_p = proxy_count - num_empty;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
 void HYDU_free_proxy_list(struct HYD_proxy *proxy_list, int count)
 {
     HYDU_FUNC_ENTER();
@@ -337,6 +377,7 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
     status = alloc_proxy_list(node_list, pgid, &proxy_count, &proxy_list);
     HYDU_ERR_POP(status, "error allocating proxy_list\n");
 
+    int extra_proxy_count = 0;
     int allocated_procs = 0;
     int dummy_fillers = 1;
     for (int i = 0; i < proxy_count; i++) {
@@ -351,9 +392,9 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
             dummy_fillers = 0;
 
         if (allocated_procs >= count) {
+            extra_proxy_count = proxy_count - (i + 1);
             proxy_count = i + 1;
             proxy_list[i].next = NULL;
-            /* Is it worthwhile to realloc proxy_list to save memory? */
             break;
         }
     }
@@ -424,6 +465,10 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
             HYDU_ERR_POP(status, "unable to add executable to proxy\n");
         }
     }
+
+    /* We need remove the empty proxies */
+    status = prune_proxy_list(&proxy_count, &proxy_list, extra_proxy_count);
+    HYDU_ERR_POP(status, "error in prune_proxy_list\n");
 
     *proxy_count_p = proxy_count;
     *proxy_list_p = proxy_list;
