@@ -362,7 +362,6 @@ int PMIU_check_full_cmd(char *buf, int buflen, int *got_full_cmd,
                         int *cmdlen, int *version, int *cmd_id)
 {
     int pmi_errno = PMIU_SUCCESS;
-    int len = 0;
 
     /* Parse the string and if a full command is found, make sure that
      * cmdlen is the length of the buffer and NUL-terminated if necessary */
