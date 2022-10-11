@@ -50,11 +50,12 @@ static uint32_t max_subdev_id;
 static char **device_list = NULL;
 static int *engine_conversion = NULL;
 
-#define MPL_ZE_EVENT_POOL_SIZE    16384
+#define MPL_ZE_EVENT_POOL_SIZE    (131072)
 
 typedef struct {
     ze_command_queue_handle_t *cmdQueues;
     MPL_cmdlist_pool_t *cmdList_pool;
+    ze_command_list_handle_t *cmdlists; /* immediate command lists */
     unsigned int numQueues, curQueue;
 } MPL_ze_engine_entry_t;
 
@@ -62,8 +63,8 @@ typedef struct {
     int dev_id;
     unsigned int numQueueGroups;
     MPL_ze_engine_entry_t *engines;
-    ze_event_handle_t prev_event;       /* for imemcopy */
-    MPL_cmdlist_pool_t *last_cmdList_entry;     /* for imemcopy */
+    ze_event_handle_t prev_event[MPL_GPU_COPY_DIRECTION_TYPES]; /* for imemcopy */
+    MPL_cmdlist_pool_t *last_cmdList_entry[MPL_GPU_COPY_DIRECTION_TYPES];       /* for imemcopy */
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
     ze_pci_address_ext_t pci;
     int pci_avail;
@@ -919,8 +920,10 @@ static int gpu_ze_init_driver(void)
         unsigned int numQueueGroups = 0;
         MPL_ze_device_entry_t *device_state = device_states + d;
         device_state->dev_id = d;
-        device_state->prev_event = NULL;
-        device_state->last_cmdList_entry = NULL;
+        memset(device_state->prev_event, 0,
+               MPL_GPU_COPY_DIRECTION_TYPES * sizeof(ze_event_handle_t));
+        memset(device_state->last_cmdList_entry, 0,
+               MPL_GPU_COPY_DIRECTION_TYPES * sizeof(MPL_cmdlist_pool_t *));
         ret = zeDeviceGetCommandQueueGroupProperties(ze_devices_handle[d], &numQueueGroups, NULL);
         ZE_ERR_CHECK(ret);
         ze_command_queue_group_properties_t *queueProperties =
@@ -954,6 +957,12 @@ static int gpu_ze_init_driver(void)
                                                              MPL_MEM_OTHER);
                 memset(device_state->engines[i].cmdQueues, 0,
                        sizeof(ze_command_queue_handle_t) * device_state->engines[i].numQueues);
+                device_state->engines[i].cmdlists =
+                    (ze_command_list_handle_t *) MPL_malloc(sizeof(ze_command_list_handle_t) *
+                                                            device_state->engines[i].numQueues,
+                                                            MPL_MEM_OTHER);
+                memset(device_state->engines[i].cmdlists, 0,
+                       device_state->engines[i].numQueues * sizeof(ze_command_list_handle_t));
             }
         }
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
@@ -1220,8 +1229,11 @@ int MPL_gpu_finalize(void)
             for (k = 0; k < engine->numQueues; k++) {
                 if (engine->cmdQueues[k])
                     zeCommandQueueDestroy(engine->cmdQueues[k]);
+                if (engine->cmdlists[k])
+                    zeCommandListDestroy(engine->cmdlists[k]);
             }
             MPL_free(engine->cmdQueues);
+            MPL_free(engine->cmdlists);
             MPL_cmdlist_pool_t *cmdlist, *t, *pool = engine->cmdList_pool;
             DL_FOREACH_SAFE(pool, cmdlist, t) {
                 zeCommandListDestroy(cmdlist->cmdList);
@@ -1826,23 +1838,21 @@ static int create_cmdqueue(int dev, int engine)
     int mpl_err = MPL_SUCCESS;
     int ret;
 
-    ze_command_queue_desc_t cmdQueueDesc = {
-        .stype = ZE_STRUCTURE_TYPE_COMMAND_QUEUE_DESC,
-        .pNext = NULL,
-        .index = 0,
-        .flags = 0,
-        .ordinal = engine,
-        .mode = ZE_COMMAND_QUEUE_MODE_ASYNCHRONOUS,
-        .priority = ZE_COMMAND_QUEUE_PRIORITY_NORMAL,
-    };
-
     MPL_ze_device_entry_t *device_state = device_states + dev;
     assert(engine < device_state->numQueueGroups);
     MPL_ze_engine_entry_t *engine_state = device_state->engines + engine;
     assert(engine_state->numQueues);
 
     for (int i = 0; i < engine_state->numQueues; i++) {
-        cmdQueueDesc.index = i;
+        ze_command_queue_desc_t cmdQueueDesc = {
+            .stype = ZE_STRUCTURE_TYPE_COMMAND_QUEUE_DESC,
+            .pNext = NULL,
+            .index = i,
+            .flags = 0,
+            .ordinal = engine,
+            .mode = ZE_COMMAND_QUEUE_MODE_ASYNCHRONOUS,
+            .priority = ZE_COMMAND_QUEUE_PRIORITY_NORMAL,
+        };
         ret =
             zeCommandQueueCreate(ze_context, ze_devices_handle[dev], &cmdQueueDesc,
                                  &engine_state->cmdQueues[i]);
@@ -1868,9 +1878,10 @@ static int get_cmdlist(int dev, int engine, MPL_cmdlist_pool_t ** cl_entry)
     if (engine > device_states[dev].numQueueGroups - 1 ||
         device_states[dev].engines[engine].numQueues == 0) {
         /* certain type of engine may not be available on the subdevices */
-        dev = MPL_gpu_get_root_device(dev);
-        if (device_states[dev].engines[engine].numQueues == 0)
+        int parent_dev = MPL_gpu_get_root_device(dev);
+        if (parent_dev == dev || device_states[dev].engines[engine].numQueues == 0)
             goto fn_fail;
+        dev = parent_dev;
     }
     assert(dev < local_ze_device_count);
     device_state = device_states + dev;
@@ -1899,6 +1910,65 @@ static int get_cmdlist(int dev, int engine, MPL_cmdlist_pool_t ** cl_entry)
         cmdList_entry->engine = engine;
     }
     *cl_entry = cmdList_entry;
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+/* immediate command list utility functions */
+static inline int get_immediate_cmdlist(int *dev, MPL_gpu_copy_direction_t dir, int engine,
+                                        ze_command_list_handle_t * cl)
+{
+    int mpl_err = MPL_SUCCESS;
+    int ret, index;
+    MPL_ze_device_entry_t *device_state;
+
+    if (engine > device_states[*dev].numQueueGroups - 1 ||
+        device_states[*dev].engines[engine].numQueues == 0) {
+        /* certain type of engine may not be available on the subdevices */
+        *dev = MPL_gpu_get_root_device(*dev);
+        if (device_states[*dev].engines[engine].numQueues == 0)
+            goto fn_fail;
+    }
+    assert(*dev < local_ze_device_count);
+    device_state = device_states + *dev;
+    assert(engine < device_state->numQueueGroups);
+    MPL_ze_engine_entry_t *engine_state = device_state->engines + engine;
+
+    if (dir == MPL_GPU_COPY_DIRECTION_NONE) {
+        index = engine_state->curQueue;
+        /* move to next queue */
+        engine_state->curQueue++;
+        if (engine_state->curQueue == engine_state->numQueues)
+            engine_state->curQueue = 0;
+    } else {
+        index = dir % engine_state->numQueues;
+    }
+
+    if (!engine_state->cmdlists[index]) {
+        assert(engine_state->numQueues);
+
+        for (int i = 0; i < engine_state->numQueues; i++) {
+            ze_command_queue_desc_t cmdQueueDesc = {
+                .stype = ZE_STRUCTURE_TYPE_COMMAND_QUEUE_DESC,
+                .pNext = NULL,
+                .index = i,
+                .flags = 0,
+                .ordinal = engine,
+                .mode = ZE_COMMAND_QUEUE_MODE_ASYNCHRONOUS,
+                .priority = ZE_COMMAND_QUEUE_PRIORITY_NORMAL,
+            };
+            ret = zeCommandListCreateImmediate(ze_context, ze_devices_handle[*dev], &cmdQueueDesc,
+                                               &engine_state->cmdlists[i]);
+            ZE_ERR_CHECK(ret);
+        }
+    }
+    assert(engine_state->cmdlists[index]);
+
+    *cl = engine_state->cmdlists[index];
 
   fn_exit:
     return mpl_err;
@@ -1936,14 +2006,19 @@ static inline int get_next_event(ze_event_handle_t * event)
 /* no safety check in this function, call this function with safety protection.
    commit = false: append to command list only
    commit = true:  close the command list and submit to command queue
+   direction can be 0, 1:  for device to host   d2h h2d
+                    2, 3:  for device to device    local to remote, remote to local
+                    4:     no direction, can use random command list and queue
 */
-int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
-                    MPL_gpu_engine_type_t engine_type, MPL_gpu_request * req, bool commit)
+static int MPL_gpu_imemcpy_normal(void *dest_ptr, void *src_ptr, size_t size, int dev,
+                                  MPL_gpu_copy_direction_t dir, MPL_gpu_engine_type_t engine_type,
+                                  MPL_gpu_request * req, bool commit)
 {
+    int mpl_err = MPL_SUCCESS;
     MPL_ze_device_entry_t *device_state = NULL;
     ze_event_handle_t event;
     ze_command_list_handle_t cmdList = NULL;
-    int mpl_err = MPL_SUCCESS;
+    MPL_cmdlist_pool_t *cmdList_entry;
     int ret;
     int orig_dev = dev;
     int engine = engine_conversion[engine_type];
@@ -1951,60 +2026,137 @@ int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
     assert(dev >= 0 && dev < local_ze_device_count);
 
     if (dest_ptr && src_ptr) {
+        ze_event_handle_t pre_event = NULL;
+        int nevent = 0;
         ret = get_next_event(&event);
         ZE_ERR_CHECK(ret);
-        if (device_states[orig_dev].last_cmdList_entry == NULL) {
-            MPL_cmdlist_pool_t *cmdList_entry;
+        device_state = device_states + dev;
+        if (dir == MPL_GPU_COPY_DIRECTION_NONE) {
             ret = get_cmdlist(orig_dev, engine, &cmdList_entry);
             ZE_ERR_CHECK(ret);
-            device_states[orig_dev].last_cmdList_entry = cmdList_entry;
-            dev = cmdList_entry->dev;
+            cmdList = cmdList_entry->cmdList;
+        } else {
+            if (!device_states[orig_dev].last_cmdList_entry[dir]) {
+                ret = get_cmdlist(orig_dev, engine, &cmdList_entry);
+                ZE_ERR_CHECK(ret);
+                device_states[orig_dev].last_cmdList_entry[dir] = cmdList_entry;
+                dev = cmdList_entry->dev;
+                device_state = device_states + dev;
+            }
+            cmdList_entry = device_states[orig_dev].last_cmdList_entry[dir];
+            cmdList = cmdList_entry->cmdList;
+            if (device_state->prev_event[dir]) {
+                pre_event = device_state->prev_event[dir];
+                nevent = 1;
+            }
+            if (device_states[orig_dev].last_cmdList_entry[dir]->dev != dev)
+                goto fn_fail;
+            device_state->prev_event[dir] = event;
         }
-        cmdList = device_states[orig_dev].last_cmdList_entry->cmdList;
-        if (device_states[orig_dev].last_cmdList_entry->dev != dev)
-            goto fn_fail;
         assert(dev < local_ze_device_count);
-        device_state = device_states + dev;
         ret =
-            zeCommandListAppendMemoryCopy(cmdList, dest_ptr, src_ptr, size, event,
-                                          device_state->prev_event ? 1 : 0,
-                                          device_state->
-                                          prev_event ? &device_state->prev_event : NULL);
+            zeCommandListAppendMemoryCopy(cmdList, dest_ptr, src_ptr, size, event, nevent,
+                                          pre_event ? &pre_event : NULL);
         ZE_ERR_CHECK(ret);
         req->event = event;
-        device_state->prev_event = event;
     } else {
+        /* unlikely */
         device_state = device_states + dev;
-        assert(device_state->prev_event);
-        req->event = device_state->prev_event;
-        if (device_state->last_cmdList_entry)
-            cmdList = device_state->last_cmdList_entry->cmdList;
+        assert(device_state->prev_event[dir]);
+        req->event = device_state->prev_event[dir];
+        assert(dir < MPL_GPU_COPY_DIRECTION_TYPES);
+        cmdList_entry = device_states[orig_dev].last_cmdList_entry[dir];
+        assert(cmdList_entry);
+        cmdList = cmdList_entry->cmdList;
     }
     if (commit && cmdList) {
+        MPL_ze_engine_entry_t *engine_state = device_state->engines + engine;
         ret = zeCommandListClose(cmdList);
         ZE_ERR_CHECK(ret);
-        int q_index = device_state->engines[engine].curQueue;
-        assert(device_state->engines[engine].cmdQueues);
-        ze_command_queue_handle_t cmdq = device_state->engines[engine].cmdQueues[q_index];
+        int q_index;
+        if (dir == MPL_GPU_COPY_DIRECTION_NONE) {
+            q_index = engine_state->curQueue;
+            /* move to next queue */
+            engine_state->curQueue++;
+            if (engine_state->curQueue == engine_state->numQueues)
+                engine_state->curQueue = 0;
+        } else {
+            q_index = dir % engine_state->numQueues;
+        }
+        assert(engine_state->cmdQueues);
+        ze_command_queue_handle_t cmdq = engine_state->cmdQueues[q_index];
         if (cmdq == NULL) {
             mpl_err = create_cmdqueue(device_state->dev_id, engine);
             if (mpl_err != MPL_SUCCESS)
                 goto fn_fail;
-            cmdq = device_state->engines[engine].cmdQueues[q_index];
+            cmdq = engine_state->cmdQueues[q_index];
             assert(cmdq);
         }
         ret = zeCommandQueueExecuteCommandLists(cmdq, 1, &cmdList, NULL);
         ZE_ERR_CHECK(ret);
-        /* move to next queue */
-        device_state->engines[engine].curQueue++;
-        if (device_state->engines[engine].curQueue == device_state->engines[engine].numQueues)
-            device_state->engines[engine].curQueue = 0;
-        req->cmdList = device_states[orig_dev].last_cmdList_entry;
-        device_states[orig_dev].last_cmdList_entry = NULL;
+        req->cmdList = cmdList_entry;
+        if (dir != MPL_GPU_COPY_DIRECTION_NONE)
+            device_states[orig_dev].last_cmdList_entry[dir] = NULL;
     } else {
         /* continue building the command list till done */
         req->cmdList = NULL;
     }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+/* use immediate command list, commit is ignored */
+int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
+                    MPL_gpu_copy_direction_t dir, MPL_gpu_engine_type_t engine_type,
+                    MPL_gpu_request * req, bool commit)
+{
+    int mpl_err = MPL_SUCCESS;
+    int ret;
+    MPL_ze_device_entry_t *device_state = NULL;
+    ze_event_handle_t event, pre_event = NULL;
+    ze_command_list_handle_t cmdl;
+    int nevent = 0;
+    int engine = -1;
+
+    assert(dev >= 0 && dev < local_ze_device_count);
+    /* if engine type does not exist, e.g. link copy does not exist on ATS
+     * use the highest engine number */
+    assert(engine_type >= 0 && engine_type < MPL_GPU_ENGINE_TYPE_LAST);
+    engine = engine_conversion[engine_type];
+    if (engine >= device_states[dev].numQueueGroups) {
+        engine_type = device_states[dev].numQueueGroups - 1;
+        engine = engine_conversion[engine_type];
+    }
+
+    if (!MPL_gpu_info.use_immediate_cmdlist) {
+        return MPL_gpu_imemcpy_normal(dest_ptr, src_ptr, size, dev, dir, engine_type, req, commit);
+    }
+
+    assert(dest_ptr && src_ptr);
+
+    ret = get_next_event(&event);
+    ZE_ERR_CHECK(ret);
+    ret = get_immediate_cmdlist(&dev, dir, engine, &cmdl);
+    ZE_ERR_CHECK(ret);
+    assert(cmdl);
+    device_state = device_states + dev;
+    if (dir != MPL_GPU_COPY_DIRECTION_NONE) {
+        if (device_state->prev_event[dir]) {
+            nevent = 1;
+            pre_event = device_state->prev_event[dir];
+        }
+        device_state->prev_event[dir] = event;
+    }
+    ret =
+        zeCommandListAppendMemoryCopy(cmdl, dest_ptr, src_ptr, size, event, nevent,
+                                      nevent ? &pre_event : NULL);
+    ZE_ERR_CHECK(ret);
+    req->cmdList = NULL;
+    req->event = event;
 
   fn_exit:
     return mpl_err;
