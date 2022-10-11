@@ -55,6 +55,16 @@ cvars:
       description : >-
         If true, print GPU debug info
 
+    - name        : MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST
+      category    : GPU
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, mpl/ze will use immediate command list for copying
+
     - name        : MPIR_CVAR_NO_COLLECTIVE_FINALIZE
       category    : COLLECTIVE
       type        : boolean
@@ -227,6 +237,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
         MPL_gpu_info_t info;
         info.specialized_cache = specialized_cache;
         info.print_debug_info = MPIR_CVAR_GPU_DEBUG_INFO;
+        info.use_immediate_cmdlist = MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST;
 
         int debug_summary = 0;
         if (MPIR_CVAR_DEBUG_SUMMARY) {
