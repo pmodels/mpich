@@ -517,7 +517,8 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
 }
 
 int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
-                    MPL_gpu_engine_type_t engine_type, MPL_gpu_request * req, bool commit)
+                    MPL_gpu_copy_direction_t dir, MPL_gpu_engine_type_t engine_type,
+                    MPL_gpu_request * req, bool commit)
 {
     return MPL_ERR_GPU_INTERNAL;
 }

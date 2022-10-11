@@ -51,13 +51,25 @@ typedef enum {
     MPL_GPU_ENGINE_TYPE_COMPUTE = 0,
     MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH,
     MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY,
+    MPL_GPU_ENGINE_TYPE_LAST,
 } MPL_gpu_engine_type_t;
 
 #define MPL_GPU_ENGINE_NUM_TYPES 3
 
+typedef enum {
+    MPL_GPU_COPY_D2H = 0,
+    MPL_GPU_COPY_H2D,
+    MPL_GPU_COPY_D2D_INCOMING,
+    MPL_GPU_COPY_D2D_OUTGOING,
+    MPL_GPU_COPY_DIRECTION_NONE,
+} MPL_gpu_copy_direction_t;
+
+#define MPL_GPU_COPY_DIRECTION_TYPES 4
+
 typedef struct {
     /* Input */
     int debug_summary;
+    bool use_immediate_cmdlist;
     /* Output */
     bool enable_ipc;
     MPL_gpu_ipc_handle_type_t ipc_handle_type;
@@ -129,7 +141,8 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
                         MPL_pointer_attr_t * dest_attr, size_t size);
 
 int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
-                    MPL_gpu_engine_type_t engine_type, MPL_gpu_request * req, bool commit);
+                    MPL_gpu_copy_direction_t dir, MPL_gpu_engine_type_t engine_type,
+                    MPL_gpu_request * req, bool commit);
 int MPL_gpu_test(MPL_gpu_request * req, int *completed);
 
 typedef void (*MPL_gpu_hostfn) (void *data);
