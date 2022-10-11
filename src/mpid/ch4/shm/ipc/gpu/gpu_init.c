@@ -72,8 +72,6 @@ int MPIDI_GPU_init_world(void)
     int device_count;
     int my_max_dev_id, node_max_dev_id = -1;
 
-    MPIR_CHKPMEM_DECL(1);
-
     MPIDI_GPUI_global.initialized = 0;
     mpl_err = MPL_gpu_get_dev_count(&device_count, &my_max_dev_id);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_dev_count");
@@ -92,38 +90,6 @@ int MPIDI_GPU_init_world(void)
     MPIDU_Init_shm_barrier();
 
     MPIDI_GPUI_global.global_max_dev_id = node_max_dev_id;
-
-    MPIR_CHKPMEM_MALLOC(MPIDI_GPUI_global.visible_dev_global_id, int **,
-                        sizeof(int *) * MPIR_Process.local_size, mpi_errno, "gpu devmaps",
-                        MPL_MEM_SHM);
-    for (int i = 0; i < MPIR_Process.local_size; ++i) {
-        MPIDI_GPUI_global.visible_dev_global_id[i] =
-            (int *) MPL_malloc(sizeof(int) * (MPIDI_GPUI_global.global_max_dev_id + 1),
-                               MPL_MEM_OTHER);
-        MPIR_Assert(MPIDI_GPUI_global.visible_dev_global_id[i]);
-
-        if (i == MPIR_Process.local_rank) {
-            for (int j = 0; j < (MPIDI_GPUI_global.global_max_dev_id + 1); ++j) {
-                if (MPL_gpu_global_to_local_dev_id(j) != -1)
-                    MPIDI_GPUI_global.visible_dev_global_id[i][j] = 1;
-                else
-                    MPIDI_GPUI_global.visible_dev_global_id[i][j] = 0;
-            }
-            MPIDU_Init_shm_put(MPIDI_GPUI_global.visible_dev_global_id[i],
-                               sizeof(int) * (MPIDI_GPUI_global.global_max_dev_id + 1));
-        }
-    }
-    MPIDU_Init_shm_barrier();
-
-    /* FIXME: current implementation uses MPIDU_Init_shm_get to exchange visible id.
-     * shm buffer size is defined as 64 bytes by default. Therefore, if number of
-     * gpu device is larger than 16, the MPIDU_Init_shm_get would fail. */
-    MPIR_Assert((MPIDI_GPUI_global.global_max_dev_id + 1) <=
-                MPIDU_INIT_SHM_BLOCK_SIZE / sizeof(int));
-    for (int i = 0; i < MPIR_Process.local_size; ++i)
-        MPIDU_Init_shm_get(i, sizeof(int) * (MPIDI_GPUI_global.global_max_dev_id + 1),
-                           MPIDI_GPUI_global.visible_dev_global_id[i]);
-    MPIDU_Init_shm_barrier();
 
     MPIDI_GPUI_global.local_procs = MPIR_Process.node_local_map;
     MPIDI_GPUI_global.local_ranks =
@@ -198,7 +164,6 @@ int MPIDI_GPU_init_world(void)
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -210,9 +175,6 @@ int MPIDI_GPU_mpi_finalize_hook(void)
 
     if (MPIDI_GPUI_global.initialized) {
         MPL_free(MPIDI_GPUI_global.local_ranks);
-        for (int i = 0; i < MPIR_Process.local_size; ++i)
-            MPL_free(MPIDI_GPUI_global.visible_dev_global_id[i]);
-        MPL_free(MPIDI_GPUI_global.visible_dev_global_id);
     }
 
     if (MPIDI_GPUI_global.ipc_handle_mapped_trees) {
