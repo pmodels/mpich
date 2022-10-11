@@ -33,21 +33,16 @@ typedef struct {
     /* Fields in MPIR_Request (including structures within the request) */
     int req_status_offs;
     int req_cc_offs;
-    int req_dev_offs;
-    int req_tag_offs;
-    int req_rank_offs;
-    int req_context_id_offs;
-    int req_user_buf_offs;
-    int req_user_count_offs;
     int req_datatype_offs;
-    int req_next_offs;
 
-    /* Fields in MPIR_Sendq */
-    int sendq_next_offs;
-    int sendq_tag_offs;
-    int sendq_rank_offs;
-    int sendq_context_id_offs;
-    int sendq_req_offs;
+    /* Fields in MPIR_Debugq */
+    int debugq_next_offs;
+    int debugq_tag_offs;
+    int debugq_rank_offs;
+    int debugq_context_id_offs;
+    int debugq_user_buf_offs;
+    int debugq_user_count_offs;
+    int debugq_req_offs;
 } mpich_image_info;
 
 /***********************************************************************

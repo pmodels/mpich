@@ -287,87 +287,17 @@ int mqs_image_has_queues(mqs_image * image, const char **message)
         }
     }
 
-    /* Now the receive queues.  The receive queues contain MPIR_Request
-     * objects, and the various fields are within types in that object.
-     * To simplify the eventual access, we compute all offsets relative to the
-     * request.  This means diving into the types that make of the
-     * request definition */
+    /* Request queues */
     {
-        mqs_type *req_type = dbgr_find_type(image, (char *) "MPIR_Request", mqs_lang_c);
+        mqs_type *req_type = dbgr_find_type(image, (char *) "MPIR_Debugq", mqs_lang_c);
         if (req_type) {
-            int dev_offs;
-            dev_offs = dbgr_field_offset(req_type, (char *) "dev");
-            i_info->req_status_offs = dbgr_field_offset(req_type, (char *) "status");
-            i_info->req_cc_offs = dbgr_field_offset(req_type, (char *) "cc");
-            i_info->req_next_offs = dbgr_field_offset(req_type, (char *) "next");
-            if (dev_offs >= 0) {
-                i_info->req_dev_offs = dev_offs;
-#ifdef HAVE_CH4_DEBUGGER_SUPPORT
-                /* Only support CH4 active message */
-                /* buffer, count, rank, tag, context_id and datatype are stored in AM request */
-                mqs_type *dreq_type = dbgr_find_type(image, (char *) "MPIDI_Devreq_t", mqs_lang_c);
-
-                int am_offs = dev_offs + dbgr_field_offset(dreq_type, (char *) "am");
-                mqs_type *am_req_type = dbgr_find_type(image, (char *) "MPIDIG_req_t", mqs_lang_c);
-                i_info->req_user_buf_offs =
-                    am_offs + dbgr_field_offset(am_req_type, (char *) "buffer");
-                i_info->req_user_count_offs =
-                    am_offs + dbgr_field_offset(am_req_type, (char *) "count");
-                i_info->req_rank_offs = am_offs + dbgr_field_offset(am_req_type, (char *) "rank");
-                i_info->req_tag_offs = am_offs + dbgr_field_offset(am_req_type, (char *) "tag");
-                i_info->req_context_id_offs =
-                    am_offs + dbgr_field_offset(am_req_type, (char *) "context_id");
-                i_info->req_datatype_offs =
-                    am_offs + dbgr_field_offset(am_req_type, (char *) "datatype");
-#else
-                /* CH3 specific request definition */
-                mqs_type *dreq_type = dbgr_find_type(image, (char *) "MPIDI_Request",
-                                                     mqs_lang_c);
-                if (dreq_type) {
-                    int loff, match_offs;
-                    loff = dbgr_field_offset(dreq_type, (char *) "user_buf");
-                    i_info->req_user_buf_offs = dev_offs + loff;
-                    loff = dbgr_field_offset(dreq_type, (char *) "user_count");
-                    i_info->req_user_count_offs = dev_offs + loff;
-                    loff = dbgr_field_offset(dreq_type, (char *) "datatype");
-                    i_info->req_datatype_offs = dev_offs + loff;
-                    match_offs = dbgr_field_offset(dreq_type, (char *) "match");
-                    if (match_offs >= 0) {
-                        mqs_type *match_type =
-                            dbgr_find_type(image, (char *) "MPIDI_Message_match", mqs_lang_c);
-                        if (match_type) {
-                            int parts_offs = dbgr_field_offset(match_type, (char *) "parts");
-                            if (parts_offs >= 0) {
-                                mqs_type *parts_type =
-                                    dbgr_find_type(image, (char *) "MPIDI_Message_match_parts_t",
-                                                   mqs_lang_c);
-                                if (parts_type) {
-                                    int moff;
-                                    moff = dbgr_field_offset(parts_type, (char *) "tag");
-                                    i_info->req_tag_offs = dev_offs + match_offs + moff;
-                                    moff = dbgr_field_offset(parts_type, (char *) "rank");
-                                    i_info->req_rank_offs = dev_offs + match_offs + moff;
-                                    moff = dbgr_field_offset(parts_type, (char *) "context_id");
-                                    i_info->req_context_id_offs = dev_offs + match_offs + moff;
-                                }
-                            }
-                        }
-                    }
-                }
-#endif
-            }
-        }
-    }
-
-    /* Send queues use a separate system */
-    {
-        mqs_type *sreq_type = dbgr_find_type(image, (char *) "MPIR_Sendq", mqs_lang_c);
-        if (sreq_type) {
-            i_info->sendq_next_offs = dbgr_field_offset(sreq_type, (char *) "next");
-            i_info->sendq_tag_offs = dbgr_field_offset(sreq_type, (char *) "tag");
-            i_info->sendq_rank_offs = dbgr_field_offset(sreq_type, (char *) "rank");
-            i_info->sendq_context_id_offs = dbgr_field_offset(sreq_type, (char *) "context_id");
-            i_info->sendq_req_offs = dbgr_field_offset(sreq_type, (char *) "sreq");
+            i_info->debugq_next_offs = dbgr_field_offset(req_type, (char *) "next");
+            i_info->debugq_tag_offs = dbgr_field_offset(req_type, (char *) "tag");
+            i_info->debugq_rank_offs = dbgr_field_offset(req_type, (char *) "rank");
+            i_info->debugq_context_id_offs = dbgr_field_offset(req_type, (char *) "context_id");
+            i_info->debugq_user_buf_offs = dbgr_field_offset(req_type, (char *) "buf");
+            i_info->debugq_user_count_offs = dbgr_field_offset(req_type, (char *) "count");
+            i_info->debugq_req_offs = dbgr_field_offset(req_type, (char *) "req");
         }
     }
 
@@ -416,7 +346,6 @@ int mqs_process_has_queues(mqs_process * proc, char **msg)
     mpich_process_info *p_info = (mpich_process_info *) dbgr_get_process_info(proc);
     mqs_image *image = dbgr_get_image(proc);
     mpich_image_info *i_info = (mpich_image_info *) dbgr_get_image_info(image);
-    mqs_taddr_t head_ptr;
 
     /* Don't bother with a pop up here, it's unlikely to be helpful */
     *msg = 0;
@@ -427,13 +356,11 @@ int mqs_process_has_queues(mqs_process * proc, char **msg)
         return err_all_communicators;
 
     /* Check for the receive and send queues */
-    if (dbgr_find_symbol(image, (char *) "MPID_Recvq_posted_head_ptr", &head_ptr) != mqs_ok)
+    if (dbgr_find_symbol(image, (char *) "MPIR_Recvq_head", &p_info->posted_base) != mqs_ok)
         return err_posted;
-    p_info->posted_base = fetch_pointer(proc, head_ptr, p_info);
 
-    if (dbgr_find_symbol(image, (char *) "MPID_Recvq_unexpected_head_ptr", &head_ptr) != mqs_ok)
+    if (dbgr_find_symbol(image, (char *) "MPIR_Unexpq_head", &p_info->unexpected_base) != mqs_ok)
         return err_unexpected;
-    p_info->unexpected_base = fetch_pointer(proc, head_ptr, p_info);
 
     /* Send queues are optional */
     if (dbgr_find_symbol(image, (char *) "MPIR_Sendq_head", &p_info->sendq_base) == mqs_ok) {
@@ -462,9 +389,9 @@ const char *mqs_dll_error_string(int errcode)
             return
                 "Could not read a communicator's group from the process (probably a store corruption)";
         case err_unexpected:
-            return "Failed to find symbol MPID_Recvq_unexpected_head_ptr";
+            return "Failed to find symbol MPIR_Unexpq_head";
         case err_posted:
-            return "Failed to find symbol MPID_Recvq_posted_head_ptr";
+            return "Failed to find symbol MPIR_Recvq_head";
     }
     return "Unknown error code";
 }
@@ -636,7 +563,7 @@ static int fetch_receive(mqs_process * proc, mpich_process_info * p_info,
 #endif
     while (base != 0) {
         /* Check this entry to see if the context matches */
-        int16_t actual_context = fetch_int16(proc, base + i_info->req_context_id_offs, p_info);
+        int16_t actual_context = fetch_int16(proc, base + i_info->debugq_context_id_offs, p_info);
 
 #ifdef DEBUG_LIST_ITER
         initLogFile();
@@ -644,11 +571,13 @@ static int fetch_receive(mqs_process * proc, mpich_process_info * p_info,
 #endif
         if (actual_context == wanted_context) {
             /* Found a request for this communicator */
-            int tag = fetch_int(proc, base + i_info->req_tag_offs, p_info);
-            int rank = fetch_int16(proc, base + i_info->req_rank_offs, p_info);
-            int is_complete = fetch_int(proc, base + i_info->req_cc_offs, p_info);
-            mqs_tword_t user_buffer = fetch_pointer(proc, base + i_info->req_user_buf_offs, p_info);
-            int user_count = fetch_int(proc, base + i_info->req_user_count_offs, p_info);
+            int tag = fetch_int(proc, base + i_info->debugq_tag_offs, p_info);
+            int rank = fetch_int16(proc, base + i_info->debugq_rank_offs, p_info);
+            mqs_taddr_t rreq = fetch_pointer(proc, base + i_info->debugq_req_offs, p_info);
+            mqs_tword_t is_complete = fetch_int(proc, rreq + i_info->req_cc_offs, p_info);
+            mqs_tword_t user_buffer =
+                fetch_pointer(proc, base + i_info->debugq_user_buf_offs, p_info);
+            int user_count = fetch_int(proc, base + i_info->debugq_user_count_offs, p_info);
 
             /* Return -1 for ANY_TAG or ANY_SOURCE */
             res->desired_tag = (tag >= 0) ? tag : -1;
@@ -671,11 +600,11 @@ static int fetch_receive(mqs_process * proc, mpich_process_info * p_info,
             res->status = (is_complete != 0) ? mqs_st_pending : mqs_st_complete;
 
             /* Don't forget to step the queue ! */
-            p_info->next_msg = base + i_info->req_next_offs;
+            p_info->next_msg = base + i_info->debugq_next_offs;
             return mqs_ok;
         } else {
             /* Try the next one */
-            base = fetch_pointer(proc, base + i_info->req_next_offs, p_info);
+            base = fetch_pointer(proc, base + i_info->debugq_next_offs, p_info);
         }
     }
 #if 0
@@ -744,10 +673,10 @@ static int fetch_receive(mqs_process * proc, mpich_process_info * p_info,
             }
 
             /* Don't forget to step the queue ! */
-            p_info->next_msg = base + i_info->next_offs;
+            p_info->next_msg = base + i_info->debugq_next_offs;
             return mqs_ok;
         } else {        /* Try the next one */
-            base = fetch_pointer(proc, base + i_info->next_offs, p_info);
+            base = fetch_pointer(proc, base + i_info->debugq_next_offs, p_info);
         }
     }
 #endif
@@ -785,24 +714,24 @@ static int fetch_send(mqs_process * proc, mpich_process_info * p_info, mqs_pendi
 
     while (base != 0) {
         /* Check this entry to see if the context matches */
-        int actual_context = fetch_int16(proc, base + i_info->sendq_context_id_offs, p_info);
+        int actual_context = fetch_int16(proc, base + i_info->debugq_context_id_offs, p_info);
 
         if (actual_context == wanted_context) {
             /* Fill in some of the fields */
-            mqs_tword_t target = fetch_int(proc, base + i_info->sendq_rank_offs, p_info);
-            mqs_tword_t tag = fetch_int(proc, base + i_info->sendq_tag_offs, p_info);
+            mqs_tword_t target = fetch_int(proc, base + i_info->debugq_rank_offs, p_info);
+            mqs_tword_t tag = fetch_int(proc, base + i_info->debugq_tag_offs, p_info);
             mqs_tword_t length = 0;
             mqs_taddr_t data = 0;
-            mqs_taddr_t sreq = fetch_pointer(proc, base + i_info->sendq_req_offs, p_info);
+            mqs_taddr_t sreq = fetch_pointer(proc, base + i_info->debugq_req_offs, p_info);
             mqs_tword_t is_complete = fetch_int(proc, sreq + i_info->req_cc_offs, p_info);
-            data = fetch_pointer(proc, sreq + i_info->req_user_buf_offs, p_info);
-            length = fetch_int(proc, sreq + i_info->req_user_count_offs, p_info);
+            data = fetch_pointer(proc, base + i_info->debugq_user_buf_offs, p_info);
+            length = fetch_int(proc, base + i_info->debugq_user_count_offs, p_info);
             /* mqs_tword_t complete=0; */
 
 #ifdef DEBUG_LIST_ITER
             initLogFile();
             fprintf(debugfp, "sendq entry = %p, rank off = %d, tag off = %d, context = %d\n",
-                    base, i_info->sendq_rank_offs, i_info->sendq_tag_offs, actual_context);
+                    base, i_info->debugq_rank_offs, i_info->debugq_tag_offs, actual_context);
 #endif
 
             /* Ok, fill in the results */
@@ -817,11 +746,11 @@ static int fetch_send(mqs_process * proc, mpich_process_info * p_info, mqs_pendi
 
 
             /* Don't forget to step the queue ! */
-            p_info->next_msg = base + i_info->sendq_next_offs;
+            p_info->next_msg = base + i_info->debugq_next_offs;
             return mqs_ok;
         } else {
             /* Try the next one */
-            base = fetch_pointer(proc, base + i_info->sendq_next_offs, p_info);
+            base = fetch_pointer(proc, base + i_info->debugq_next_offs, p_info);
         }
     }
 #if 0

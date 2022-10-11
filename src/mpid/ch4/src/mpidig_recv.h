@@ -204,6 +204,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
                             MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
+        MPII_UNEXPQ_FORGET(unexp_req);
         unexp_req->comm = comm;
         MPIR_Comm_add_ref(comm);
         if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_BUSY) {
