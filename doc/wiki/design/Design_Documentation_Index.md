@@ -3,6 +3,7 @@
 - Architecture
 	- [Atomic Operations](Atomic_Operations.md)
 	- [Checkpointing Implementation](Checkpointing_implementation.md)
+	- [Checkpointing Notes](Checkpointing.md)
 	- [Communicators and Context IDs](Communicators_and_Context_IDs.md)
 	- [DAME](DAME.md)
 	- [DTPools](DTPools.md)
@@ -28,8 +29,8 @@
 - CH3
 	- [Channels](CH3_And_Channels.md)
 	- [VC Protocol](CH3_VC_protocol.md)
-    - [Object Model](CH3_Object_Model.md)
-    - [Netmod Packet Types](CH3_Netmod_Packet_Types.md)
+        - [Object Model](CH3_Object_Model.md)
+        - [Netmod Packet Types](CH3_Netmod_Packet_Types.md)
 	- [Changes and ADI3](Changes_to_CH3_and_ADI3.md)
 
 - Collectives
@@ -57,7 +58,9 @@
 	- [Runtime Netmod Selection](Nemesis_Runtime_Netmod_Selection.md)
 	- [TCP Netmod State Machine](Nemesis_tcp_netmod_state_machine.md)
 
-- PMI-2
+- PMI
+    - [Process-Management Interface] (PMI.md)
+    - PMI-v2 notes (outdated)
 	- [Specification](PMI-2_Specification.md)
 	- [API](PMI_v2_API.md)
 	- [Design Thoughts](PMI_v2_Design_Thoughts.md)
