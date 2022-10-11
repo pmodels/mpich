@@ -40,7 +40,7 @@ struct PMIU_cmd {
 
 #define CHECK_NUM_TOKENS(pmi) \
     do { \
-        PMIU_Assert(idx < MAX_PMI_ARGS); \
+        PMIU_Assert((pmi)->num_tokens < MAX_PMI_ARGS); \
         if (pmi->tokens == pmi->static_token_buf && pmi->num_tokens >= MAX_STATIC_PMI_ARGS) { \
             /* static pmi object cannot allocate memory */ \
             PMIU_Assert(!PMIU_cmd_is_static(pmi)); \
@@ -52,10 +52,10 @@ struct PMIU_cmd {
 
 #define PMIU_CMD_ADD_TOKEN(pmi, k, v) \
     do { \
-        int idx = (pmi)->num_tokens; \
-        pmicmd->tokens[idx].key = k; \
-        pmicmd->tokens[idx].val = v; \
-        (pmi)->num_tokens = idx + 1; \
+        int i_ = (pmi)->num_tokens; \
+        pmicmd->tokens[i_].key = k; \
+        pmicmd->tokens[i_].val = v; \
+        (pmi)->num_tokens = i_ + 1; \
         CHECK_NUM_TOKENS(pmi); \
     } while (0)
 
