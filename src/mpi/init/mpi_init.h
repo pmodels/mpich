@@ -51,6 +51,8 @@ void MPII_thread_mutex_destroy(void);
 
 int MPII_init_local_proc_attrs(int *p_thread_required);
 int MPII_init_tag_ub(void);
+int MPII_init_builtin_infos(void);
+int MPII_finalize_builtin_infos(void);
 
 void MPII_init_windows(void);
 void MPII_init_binding_cxx(void);
