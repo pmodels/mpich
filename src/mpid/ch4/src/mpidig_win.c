@@ -524,10 +524,6 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
         MPIR_CHKLMEM_MALLOC(shm_offsets, MPI_Aint *, shm_comm_ptr->local_size * sizeof(MPI_Aint),
                             mpi_errno, "shm offset", MPL_MEM_RMA);
 
-        /* No allreduce here because this is a shared memory domain
-         * and should be a relatively small number of processes
-         * and a non performance sensitive API.
-         */
         for (i = 0; i < shm_comm_ptr->local_size; i++) {
             shm_offsets[i] = (MPI_Aint) total_shm_size;
             if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
