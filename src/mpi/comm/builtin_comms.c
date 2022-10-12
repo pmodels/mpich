@@ -127,7 +127,7 @@ static int finalize_builtin_comm(MPIR_Comm * comm)
         comm->errhandler = NULL;
     }
 
-    MPIR_Comm_release_always(comm);
+    mpi_errno = MPIR_Comm_release_always(comm);
 
   fn_exit:
     return mpi_errno;

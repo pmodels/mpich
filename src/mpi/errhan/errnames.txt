@@ -486,6 +486,8 @@ unexpected messages queued.
 **failure_pending:Request pending due to failure
 **revoked:Communication object revoked
 **eagain:Operation could not be issued (EAGAIN)
+**commhasunmatched:Communicator being freed has unmatched message(s)
+**commhasunmatched %x %d:Communicator (handle=%x) being freed has %d unmatched message(s)
 # Duplicates?
 #**argnull:Invalid null parameter
 #**argnull %s:Invalid null parameter %s

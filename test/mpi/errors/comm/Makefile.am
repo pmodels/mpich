@@ -29,4 +29,5 @@ noinst_PROGRAMS = cfree \
                   intercomm_create_nullarg \
                   subcomm_abort \
                   subcomm_abort2 \
-                  intercomm_abort
+                  intercomm_abort \
+                  unmatched
