@@ -24,6 +24,7 @@ struct HYD_pg {
     int pgid;
     struct HYD_proxy *proxy_list;
     int proxy_count;
+    int *rankmap;
     int pg_process_count;
     int barrier_count;
     bool is_active;

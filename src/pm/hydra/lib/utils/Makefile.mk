@@ -10,6 +10,7 @@ libhydra_la_SOURCES += \
     lib/utils/env.c \
     lib/utils/launch.c \
     lib/utils/others.c \
+    lib/utils/rankmap.c \
     lib/utils/signals.c \
     lib/utils/sock.c \
     lib/utils/string.c
