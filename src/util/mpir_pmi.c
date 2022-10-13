@@ -1188,6 +1188,14 @@ static int build_nodemap_pmi2(int *nodemap, int sz);
 static int build_nodemap_pmix(int *nodemap, int sz);
 #endif
 
+/* TODO: if the process manager promises persistent node_id across multiple spawns,
+ *       we can use the node id to check intranode processes across comm worlds.
+ *       Currently we don't do this check and all dynamic processes are treated as
+ *       inter-node. When we add the optimization, we should switch off the flag
+ *       when appropriate environment variable from process manager is set.
+ */
+static bool do_normalize_nodemap = true;
+
 static int build_nodemap(int *nodemap, int sz, int *num_nodes)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1205,29 +1213,31 @@ static int build_nodemap(int *nodemap, int sz, int *num_nodes)
 #endif
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* node ids from process manager may not start from 0 or has gaps.
-     * Normalize it since most of the code assume a contiguous node id range */
-    int max_id = -1;
-    for (int i = 0; i < sz; i++) {
-        if (max_id < nodemap[i]) {
-            max_id = nodemap[i];
+    if (do_normalize_nodemap) {
+        /* node ids from process manager may not start from 0 or has gaps.
+         * Normalize it since most of the code assume a contiguous node id range */
+        int max_id = -1;
+        for (int i = 0; i < sz; i++) {
+            if (max_id < nodemap[i]) {
+                max_id = nodemap[i];
+            }
         }
-    }
-    int *nodeids = MPL_malloc((max_id + 1) * sizeof(int), MPL_MEM_OTHER);
-    for (int i = 0; i < max_id + 1; i++) {
-        nodeids[i] = -1;
-    }
-    int next_node_id = 0;
-    for (int i = 0; i < sz; i++) {
-        int old_id = nodemap[i];
-        if (nodeids[old_id] == -1) {
-            nodeids[old_id] = next_node_id;
-            next_node_id++;
+        int *nodeids = MPL_malloc((max_id + 1) * sizeof(int), MPL_MEM_OTHER);
+        for (int i = 0; i < max_id + 1; i++) {
+            nodeids[i] = -1;
         }
-        nodemap[i] = nodeids[old_id];
+        int next_node_id = 0;
+        for (int i = 0; i < sz; i++) {
+            int old_id = nodemap[i];
+            if (nodeids[old_id] == -1) {
+                nodeids[old_id] = next_node_id;
+                next_node_id++;
+            }
+            nodemap[i] = nodeids[old_id];
+        }
+        *num_nodes = next_node_id;
+        MPL_free(nodeids);
     }
-    *num_nodes = next_node_id;
-    MPL_free(nodeids);
 
     /* local cliques */
     int num_cliques = get_option_num_cliques();
@@ -1333,12 +1343,11 @@ static int build_nodemap_pmi1(int *nodemap, int sz)
         char *process_mapping = MPL_malloc(pmi_max_val_size, MPL_MEM_ADDRESS);
         pmi_errno = PMI_KVS_Get(pmi_kvs_name, "PMI_process_mapping",
                                 process_mapping, pmi_max_val_size);
-        if (pmi_errno == PMI_SUCCESS) {
-            mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, nodemap,
-                                                               &did_map);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno,
+        if (pmi_errno == PMI_SUCCESS && strcmp(process_mapping, "") != 0) {
+            int mpl_err = MPL_rankmap_str_to_array(process_mapping, sz, nodemap);
+            MPIR_ERR_CHKINTERNAL(mpl_err, mpi_errno,
                                  "unable to populate node ids from PMI_process_mapping");
+            did_map = 1;
         }
         MPL_free(process_mapping);
     }
@@ -1367,10 +1376,9 @@ static int build_nodemap_pmi2(int *nodemap, int sz)
                          "**pmi2_info_getjobattr", "**pmi2_info_getjobattr %d", pmi_errno);
     MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
 
-    int did_map;
-    mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, nodemap, &did_map);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno,
+    int mpl_err;
+    mpl_err = MPL_rankmap_str_to_array(process_mapping, sz, nodemap);
+    MPIR_ERR_CHKINTERNAL(mpl_err, mpi_errno,
                          "unable to populate node ids from PMI_process_mapping");
   fn_exit:
     return mpi_errno;
