@@ -31,7 +31,9 @@ int MPIR_Info_free_impl(MPIR_Info * info_ptr)
         MPL_direct_free(info_ptr->entries[i].value);
     }
     MPL_direct_free(info_ptr->entries);
-    MPIR_Info_handle_obj_free(&MPIR_Info_mem, info_ptr);
+    if (!HANDLE_IS_BUILTIN(info_ptr->handle)) {
+        MPIR_Info_handle_obj_free(&MPIR_Info_mem, info_ptr);
+    }
 
     return MPI_SUCCESS;
 }

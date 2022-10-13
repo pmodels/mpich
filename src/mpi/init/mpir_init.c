@@ -174,6 +174,9 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     mpi_errno = MPII_init_local_proc_attrs(&required);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPII_init_builtin_infos();
+    MPIR_ERR_CHECK(mpi_errno);
+
     mpi_errno = MPII_Coll_init();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -404,6 +407,9 @@ int MPII_Finalize(MPIR_Session * session_ptr)
 
     MPII_hwtopo_finalize();
     MPII_nettopo_finalize();
+
+    mpi_errno = MPII_finalize_builtin_infos();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Users did not call MPI_T_init_thread(), so we free memories allocated to
      * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */
