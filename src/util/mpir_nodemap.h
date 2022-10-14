@@ -176,9 +176,7 @@ static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
 }
 
 static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
-                                                         int sz,
-                                                         int *out_nodemap,
-                                                         int *out_max_node_id, int *did_map)
+                                                         int sz, int *out_nodemap, int *did_map)
 {
     int mpi_errno = MPI_SUCCESS;
     /* PMI_process_mapping is available */
@@ -189,7 +187,6 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
     int block, block_node, node_proc;
     int i;
     int found_wrap;
-    int local_max_node_id = -1;
 
     *did_map = 1;       /* reset upon failure */
 
@@ -224,19 +221,11 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
                 for (node_proc = 0; node_proc < mb[block].size; node_proc++) {
                     out_nodemap[rank] = mb[block].start_id + block_node;
                     if (++rank == sz)
-                        goto break_out;
+                        goto fn_exit;
                 }
             }
         }
     }
-
-  break_out:
-    /* identify maximum node id */
-    for (i = 0; i < sz; i++)
-        if (out_nodemap[i] + 1 > local_max_node_id)
-            local_max_node_id = out_nodemap[i];
-
-    *out_max_node_id = local_max_node_id;
 
   fn_exit:
     MPL_free(mb);
@@ -266,8 +255,7 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
      added to the list of node names.
 */
 
-static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *out_nodemap,
-                                                      int *out_max_node_id)
+static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *out_nodemap)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -323,8 +311,6 @@ static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *o
             node_names[max_node_id + 1][0] = '\0';
         out_nodemap[i] = j;
     }
-
-    *out_max_node_id = max_node_id;
 
   fn_exit:
     MPL_free(key);
