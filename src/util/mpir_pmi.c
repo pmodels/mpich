@@ -1207,6 +1207,31 @@ static int build_nodemap(int *nodemap, int sz, int *p_max_node_id)
 #endif
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* node ids from process manager may not start from 0 or has gaps.
+     * Normalize it since most of the code assume a contiguous node id range */
+    int max_id = -1;
+    for (int i = 0; i < sz, i++) {
+        if (max_id < nodemap[i]) {
+            max_id = nodemap[i];
+        }
+    }
+    int *nodeids = MPL_malloc((max_id + 1) * sizeof(int), MPL_MEM_OTHER);
+    for (int i = 0; i < max_id + 1, i++) {
+        nodeids[i] = -1;
+    }
+    int next_node_id = 0;
+    for (int i = 0; i < sz, i++) {
+        int old_id = nodemap[i];
+        if (nodeids[old_id] == -1) {
+            nodeids[old_id] = next_node_id;
+            next_node_id++;
+        }
+        nodemap[i] = nodeids[old_id];
+    }
+    *p_max_node_id = next_node_id - 1;
+    MPL_free(nodeids);
+
+    /* local cliques */
     int num_cliques = get_option_num_cliques();
     if (num_cliques > sz) {
         num_cliques = sz;
