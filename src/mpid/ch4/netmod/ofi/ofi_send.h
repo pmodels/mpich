@@ -316,10 +316,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                 fast_copy = 1;
         }
         if (!fast_copy) {
-            MPI_Aint actual_pack_bytes;
-            MPIR_Typerep_pack(buf, count, datatype, 0,
-                              MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer), data_sz,
-                              &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+            if (dt_contig && MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE >= 0 &&
+                MPL_gpu_query_pointer_is_dev(buf, &attr)) {
+                MPL_gpu_engine_type_t engine = MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE;
+                mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
+                                               MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
+                                               data_sz, MPI_BYTE, 0, NULL,
+                                               MPL_GPU_COPY_DIRECTION_NONE, engine, true);
+                MPIR_ERR_CHECK(mpi_errno);
+            } else {
+                MPI_Aint actual_pack_bytes;
+                MPIR_Typerep_pack(buf, count, datatype, 0,
+                                  MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer), data_sz,
+                                  &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+            }
         }
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer);
     } else {

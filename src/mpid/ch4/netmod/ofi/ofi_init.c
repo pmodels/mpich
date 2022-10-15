@@ -458,6 +458,28 @@ cvars:
       description : >-
         This is the threshold to start using GPU direct RDMA.
 
+    - name        : MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE
+      category    : CH4_OFI
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies GPU engine type (0-2) for GPU pt2pt on the sender side,
+        default is MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY, -1 to use Yaksa
+
+    - name        : MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE
+      category    : CH4_OFI
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies GPU engine type (0-2) for GPU pt2pt on the receiver side,
+        default is MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY, -1 to use Yaksa
+
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE
       category    : CH4_OFI
       type        : boolean
