@@ -71,13 +71,13 @@ int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendty
 int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                        MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
                        MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
-                       MPL_pointer_attr_t * recvattr, MPL_gpu_engine_type_t enginetype,
-                       bool commit);
+                       MPL_pointer_attr_t * recvattr, MPL_gpu_copy_direction_t dir,
+                       MPL_gpu_engine_type_t enginetype, bool commit);
 int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                         MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
                         MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
-                        MPL_pointer_attr_t * recvattr, MPL_gpu_engine_type_t enginetype,
-                        bool commit, MPIR_gpu_req * req);
+                        MPL_pointer_attr_t * recvattr, MPL_gpu_copy_direction_t dir,
+                        MPL_gpu_engine_type_t enginetype, bool commit, MPIR_gpu_req * req);
 int MPIR_Localcopy_stream(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                           void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, void *stream);
 
