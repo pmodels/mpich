@@ -267,8 +267,9 @@ typedef struct {
         fi_addr_t remote_addr;
         int ctx_idx;
         int vni_local;
-        uint64_t cq_data;
+        int chunk_sz;
         bool is_sync;
+        uint64_t cq_data;
         uint64_t match_bits;
         uint64_t mask_bits;
         size_t offset;
