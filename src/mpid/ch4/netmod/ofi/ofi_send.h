@@ -8,6 +8,19 @@
 
 #include "ofi_impl.h"
 
+MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_send_engine_type(int cvar)
+{
+    if (cvar == MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_compute) {
+        return MPL_GPU_ENGINE_TYPE_COMPUTE;
+    } else if (cvar == MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_copy_high_bandwidth) {
+        return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+    } else if (cvar == MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_copy_low_latency) {
+        return MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
+    } else {
+        return MPL_GPU_ENGINE_TYPE_LAST;
+    }
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                                         size_t data_sz,
                                                         uint64_t cq_data,
@@ -260,10 +273,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                 fast_copy = 1;
         }
         if (!fast_copy) {
-            MPI_Aint actual_pack_bytes;
-            MPIR_Typerep_pack(buf, count, datatype, 0,
-                              MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer), data_sz,
-                              &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+            MPL_gpu_engine_type_t engine =
+                MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
+            if (dt_contig && engine != MPL_GPU_ENGINE_TYPE_LAST &&
+                MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
+                mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, &attr,
+                                               MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
+                                               data_sz, MPI_BYTE, NULL, MPL_GPU_COPY_DIRECTION_NONE,
+                                               engine, true);
+                MPIR_ERR_CHECK(mpi_errno);
+            } else {
+                MPI_Aint actual_pack_bytes;
+                MPIR_Typerep_pack(buf, count, datatype, 0,
+                                  MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer), data_sz,
+                                  &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+            }
         }
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer);
     } else {

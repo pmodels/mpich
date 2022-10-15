@@ -14,6 +14,19 @@
 int MPIDI_OFI_rma_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
 int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 
+MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_recv_engine_type(int cvar)
+{
+    if (cvar == MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_compute) {
+        return MPL_GPU_ENGINE_TYPE_COMPUTE;
+    } else if (cvar == MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_copy_high_bandwidth) {
+        return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+    } else if (cvar == MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_copy_low_latency) {
+        return MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
+    } else {
+        return MPL_GPU_ENGINE_TYPE_LAST;
+    }
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 {
     if (MPIDI_OFI_ENABLE_DATA) {
@@ -81,11 +94,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
     if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer))) {
         MPI_Aint actual_unpack_bytes;
-        MPIR_Typerep_unpack(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
-                            MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf),
-                            MPIDI_OFI_REQUEST(rreq, noncontig.pack.count),
-                            MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0,
-                            &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
+        int is_contig;
+        MPL_pointer_attr_t attr;
+        MPI_Aint true_lb, true_extent;
+        MPIR_Type_get_true_extent_impl(MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), &true_lb,
+                                       &true_extent);
+        MPIR_Datatype_is_contig(MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), &is_contig);
+        void *recv_buf = MPIR_get_contig_ptr(MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf), true_lb);
+        MPIR_GPU_query_pointer_attr(recv_buf, &attr);
+        MPL_gpu_engine_type_t engine =
+            MPIDI_OFI_gpu_get_recv_engine_type(MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE);
+        if (is_contig && engine != MPL_GPU_ENGINE_TYPE_LAST &&
+            MPL_gpu_query_pointer_is_dev(recv_buf, &attr)) {
+            actual_unpack_bytes = wc->len;
+            mpi_errno =
+                MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
+                                   MPI_BYTE, NULL, recv_buf, count, MPI_BYTE, &attr,
+                                   MPL_GPU_COPY_DIRECTION_NONE, engine, true);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            MPIR_Typerep_unpack(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
+                                MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf),
+                                MPIDI_OFI_REQUEST(rreq, noncontig.pack.count),
+                                MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0,
+                                &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
+        }
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
         if (actual_unpack_bytes != (MPI_Aint) count) {
             rreq->status.MPI_ERROR =
