@@ -59,7 +59,7 @@ int MPIR_Localcopy_stream(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype 
 int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                        MPL_pointer_attr_t * sendattr, void *recvbuf, MPI_Aint recvcount,
                        MPI_Datatype recvtype, MPL_pointer_attr_t * recvattr,
-                       MPL_gpu_engine_type_t enginetype, bool commit);
+                       MPL_gpu_copy_direction_t dir, MPL_gpu_engine_type_t enginetype, bool commit);
 
 /* Contiguous datatype calculates buffer address with `(char *) buf + dt_true_lb`.
  * However, dt_true_lb is treated as ptrdiff_t (signed), and when buf is MPI_BOTTOM

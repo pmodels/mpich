@@ -184,8 +184,8 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
 static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                             MPL_pointer_attr_t * send_attr, void *recvbuf, MPI_Aint recvcount,
                             MPI_Datatype recvtype, MPL_pointer_attr_t * recv_attr,
-                            MPL_gpu_engine_type_t enginetype, bool commit,
-                            MPIR_Typerep_req * typerep_req)
+                            MPL_gpu_copy_direction_t dir, MPL_gpu_engine_type_t enginetype,
+                            bool commit, MPIR_Typerep_req * typerep_req)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpl_errno = MPL_SUCCESS;
@@ -269,7 +269,7 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
 
             mpl_errno = MPL_gpu_imemcpy(MPIR_get_contig_ptr(recvbuf, recvtype_true_lb),
                                         MPIR_get_contig_ptr(sendbuf, sendtype_true_lb), copy_sz,
-                                        dev_id, enginetype, &gpu_req, commit);
+                                        dev_id, dir, enginetype, &gpu_req, commit);
             MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_imemcpy");
 
@@ -365,7 +365,7 @@ int MPIR_Localcopy_stream(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype 
 int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                        MPL_pointer_attr_t * sendattr, void *recvbuf, MPI_Aint recvcount,
                        MPI_Datatype recvtype, MPL_pointer_attr_t * recvattr,
-                       MPL_gpu_engine_type_t enginetype, bool commit)
+                       MPL_gpu_copy_direction_t dir, MPL_gpu_engine_type_t enginetype, bool commit)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -373,7 +373,7 @@ int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sen
 
 #ifdef MPL_HAVE_GPU
     mpi_errno = do_localcopy_gpu(sendbuf, sendcount, sendtype, sendattr, recvbuf, recvcount,
-                                 recvtype, recvattr, enginetype, commit, NULL);
+                                 recvtype, recvattr, dir, enginetype, commit, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 #else
     mpi_errno =
