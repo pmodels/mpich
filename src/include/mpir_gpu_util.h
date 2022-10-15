@@ -84,7 +84,8 @@ MPL_STATIC_INLINE_PREFIX void MPIR_gpu_host_swap_gpu(const void *buf, MPI_Aint c
 {
     if (host_buf) {
         MPIR_Localcopy_gpu(buf, count, datatype, 0, &attr, host_buf, count, datatype, 0, NULL,
-                           MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
+                           MPL_GPU_COPY_DIRECTION_NONE, MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH,
+                           true);
     }
 }
 
@@ -99,7 +100,8 @@ MPL_STATIC_INLINE_PREFIX void MPIR_gpu_swap_back_gpu(void *host_buf, void *gpu_b
                                                      MPI_Datatype datatype, MPL_pointer_attr_t attr)
 {
     MPIR_Localcopy_gpu(host_buf, count, datatype, 0, NULL, gpu_buf, count, datatype, 0,
-                       &attr, MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH, true);
+                       &attr, MPL_GPU_COPY_DIRECTION_NONE, MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH,
+                       true);
 }
 
 #endif /* MPIR_GPU_UTIL_H_INCLUDED */
