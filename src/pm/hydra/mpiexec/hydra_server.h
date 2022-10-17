@@ -47,6 +47,7 @@ struct HYD_server_info_s {
     char *iface_ip_env_name;
     char *nameserver;
     char *localhost;
+    char *rankmap;
     time_t time_start;
 
     int singleton_port;

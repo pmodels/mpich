@@ -26,6 +26,7 @@ void HYD_uiu_init_params(void)
 
     HYD_server_info.nameserver = NULL;
     HYD_server_info.localhost = NULL;
+    HYD_server_info.rankmap = NULL;
     HYD_server_info.time_start = time(NULL);
 
     HYD_server_info.singleton_port = 0;
@@ -55,6 +56,7 @@ void HYD_uiu_free_params(void)
     MPL_free(HYD_server_info.iface_ip_env_name);
     MPL_free(HYD_server_info.nameserver);
     MPL_free(HYD_server_info.localhost);
+    MPL_free(HYD_server_info.rankmap);
     HYDU_free_node_list(HYD_server_info.node_list);
     MPL_free(HYD_ui_mpich_info.prepend_pattern);
     MPL_free(HYD_ui_mpich_info.outfile_pattern);

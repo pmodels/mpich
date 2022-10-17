@@ -178,8 +178,17 @@ int main(int argc, char **argv)
     status = HYDU_list_inherited_env(&HYD_server_info.user_global.global_env.inherited);
     HYDU_ERR_POP(status, "unable to get the inherited env list\n");
 
-    status = HYDU_gen_rankmap(pg->pg_process_count, HYD_server_info.node_list, &pg->rankmap);
-    HYDU_ERR_POP(status, "error create rankmap\n");
+    if (HYD_server_info.rankmap) {
+        pg->rankmap = MPL_malloc(pg->pg_process_count * sizeof(int), MPL_MEM_OTHER);
+        HYDU_ASSERT(pg->rankmap, status);
+
+        int err = MPL_rankmap_str_to_array(HYD_server_info.rankmap,
+                                           pg->pg_process_count, pg->rankmap);
+        HYDU_ASSERT(err == MPL_SUCCESS, status);
+    } else {
+        status = HYDU_gen_rankmap(pg->pg_process_count, HYD_server_info.node_list, &pg->rankmap);
+        HYDU_ERR_POP(status, "error create rankmap\n");
+    }
 
     if (HYD_server_info.singleton_port > 0) {
         status = HYDU_create_proxy_list_singleton(HYD_server_info.node_list, 0,

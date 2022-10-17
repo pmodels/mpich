@@ -40,6 +40,7 @@ static void help_help_fn(void)
     printf("  Other global options:\n");
     printf("    -f {name}                        file containing the host names\n");
     printf("    -hosts {host list}               comma separated host list\n");
+    printf("    -rankmap {rank map}              comma separated rank to node id list\n");
     printf("    -wdir {dirname}                  working directory to use\n");
     printf("    -configfile {name}               config file containing MPMD launch options\n");
 
@@ -360,6 +361,42 @@ static HYD_status hostlist_fn(char *arg, char ***argv)
     (*argv)++;
     return status;
 
+  fn_fail:
+    goto fn_exit;
+}
+
+static void rankmap_help_fn(void)
+{
+    printf("\n");
+    printf("-rankmap: rank to node id mapping\n\n");
+    printf("The basic format is a list of node ids, one for each rank. For example\n");
+    printf("    1,1,2,2\n");
+    printf("puts rank 0 and 1 on node 1, rank 2 and 3 on node 2.\n\n");
+    printf("Consecutive nodes with same number of process-per-node can be combined\n");
+    printf("using a block syntax \"(start_id, num_nodes, num_ranks)\", for example,\n");
+    printf("    (1,2,2)\n");
+    printf("describes the same rankmap as\n");
+    printf("    1,1,2,2\n");
+    printf("\n");
+}
+
+static HYD_status rankmap_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (strncmp(**argv, "(vector,", 8) != 0) {
+        int n = strlen(**argv);
+        char *tmp_str = MPL_malloc(n + 10, MPL_MEM_OTHER);
+        snprintf(tmp_str, n + 10, "(vector,%s)", **argv);
+        HYD_server_info.rankmap = tmp_str;
+    } else {
+        HYD_server_info.rankmap = MPL_strdup(**argv);
+    }
+    HYDU_ASSERT(HYD_server_info.rankmap, status);
+
+  fn_exit:
+    (*argv)++;
+    return status;
   fn_fail:
     goto fn_exit;
 }
@@ -1584,6 +1621,7 @@ struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     {"host", hostlist_fn, hostlist_help_fn},
     {"hosts", hostlist_fn, hostlist_help_fn},
     {"hostlist", hostlist_fn, hostlist_help_fn},
+    {"rankmap", rankmap_fn, rankmap_help_fn},
     {"ppn", ppn_fn, ppn_help_fn},
     {"profile", profile_fn, profile_help_fn},
     {"output-from", output_from_fn, output_from_help_fn},
