@@ -8,14 +8,7 @@
 
 #include "uthash.h"
 
-typedef struct MPIDI_GPUI_dev_id {
-    int local_dev_id;
-    int global_dev_id;
-    UT_hash_handle hh;
-} MPIDI_GPUI_dev_id_t;
-
 typedef struct {
-    int **visible_dev_global_id;
     int *local_ranks;
     int *local_procs;
     int local_device_count;
