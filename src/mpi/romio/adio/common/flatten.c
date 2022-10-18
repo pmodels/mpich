@@ -10,6 +10,119 @@
 #define FLATTEN_DEBUG 1
 #endif
 
+int ADIOI_Flattened_type_keyval = MPI_KEYVAL_INVALID;
+
+static int ADIOI_Flattened_type_copy(MPI_Datatype oldtype,
+                                     int type_keyval, void *extra_state, void *attribute_val_in,
+                                     void *attribute_val_out, int *flag)
+{
+    ADIOI_Flatlist_node *node = (ADIOI_Flatlist_node *) attribute_val_in;
+    if (node != NULL)
+        node->refct++;
+    *(ADIOI_Flatlist_node **) attribute_val_out = node;
+    *flag = 1;  /* attribute copied to new communicator */
+    return MPI_SUCCESS;
+}
+
+static int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
+                                       int type_keyval, void *attribute_val, void *extra_state)
+{
+    ADIOI_Flatlist_node *node = (ADIOI_Flatlist_node *) attribute_val;
+    ADIOI_Assert(node != NULL);
+    node->refct--;
+
+    if (node->refct <= 0) {
+        ADIOI_Free(node->blocklens);
+        ADIOI_Free(node);
+    }
+
+    return MPI_SUCCESS;
+}
+
+static ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype);
+
+ADIOI_Flatlist_node *ADIOI_Flatten_and_find(MPI_Datatype datatype)
+{
+    ADIOI_Flatlist_node *node;
+    int flag = 0;
+
+    if (ADIOI_Flattened_type_keyval == MPI_KEYVAL_INVALID) {
+        /* ADIOI_End_call will take care of cleanup */
+        MPI_Type_create_keyval(ADIOI_Flattened_type_copy,
+                               ADIOI_Flattened_type_delete, &ADIOI_Flattened_type_keyval, NULL);
+    }
+
+    MPI_Type_get_attr(datatype, ADIOI_Flattened_type_keyval, &node, &flag);
+    if (flag == 0) {
+        node = ADIOI_Flatten_datatype(datatype);
+    }
+
+    return node;
+}
+
+#ifdef HAVE_MPIX_TYPE_IOV
+ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
+{
+    MPI_Count type_size, num_iovs;
+    MPI_Count actual;
+
+    MPI_Type_size_x(datatype, &type_size);
+
+    MPIX_Type_iov_len(datatype, type_size, &num_iovs, &actual);
+    assert(num_iovs > 0);
+    assert(actual == type_size);
+
+    MPIX_Iov *iovs;
+    iovs = ADIOI_Malloc(num_iovs * sizeof(MPIX_Iov));
+    assert(iovs);
+
+    MPIX_Type_iov(datatype, 0, iovs, num_iovs, &actual);
+    assert(actual == num_iovs);
+
+    /* copy to flatlist */
+    ADIOI_Flatlist_node *flat;
+    flat = ADIOI_Malloc(sizeof(ADIOI_Flatlist_node));
+    flat->count = num_iovs;
+    flat->blocklens = (ADIO_Offset *) ADIOI_Malloc(flat->count * 2 * sizeof(ADIO_Offset));
+    flat->indices = flat->blocklens + flat->count;
+    flat->refct = 1;
+
+    for (MPI_Count i = 0; i < num_iovs; i++) {
+        flat->indices[i] = (ADIO_Offset) iovs[i].iov_base;
+        flat->blocklens[i] = (ADIO_Offset) iovs[i].iov_len;
+    }
+
+    /* update flags */
+    flat->flag = 0;
+    for (MPI_Count i = 0; i < flat->count; i++) {
+        /* Check if any of the displacements is negative */
+        if (flat->indices[i] < 0) {
+            flat->flag |= ADIOI_TYPE_NEGATIVE;
+        }
+
+        if (i > 0) {
+            MPI_Count j = i - 1;
+            /* Check if displacements are in a monotonic nondecreasing order */
+            if (flat->indices[j] > flat->indices[i]) {
+                flat->flag |= ADIOI_TYPE_DECREASE;
+            }
+
+            /* Check for overlapping regions */
+            if (flat->indices[j] + flat->blocklens[j] > flat->indices[i]) {
+                flat->flag |= ADIOI_TYPE_OVERLAP;
+            }
+        }
+    }
+
+    /* cache it to attribute */
+    MPI_Type_set_attr(datatype, ADIOI_Flattened_type_keyval, flat);
+
+    ADIOI_Free(iovs);
+    return flat;
+}
+
+#else
+
 static ADIOI_Flatlist_node *flatlist_node_new(MPI_Datatype datatype, MPI_Count count)
 {
     ADIOI_Flatlist_node *flat;
@@ -57,28 +170,11 @@ static void flatlist_node_grow(ADIOI_Flatlist_node * flat, int idx)
 
 static void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type);
 /* flatten datatype and add it to Flatlist */
-ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
+static ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 {
     MPI_Count flat_count, curr_index = 0;
-    int is_contig, flag;
+    int is_contig;
     ADIOI_Flatlist_node *flat;
-
-    if (ADIOI_Flattened_type_keyval == MPI_KEYVAL_INVALID) {
-        /* ADIOI_End_call will take care of cleanup */
-        MPI_Type_create_keyval(ADIOI_Flattened_type_copy,
-                               ADIOI_Flattened_type_delete, &ADIOI_Flattened_type_keyval, NULL);
-    }
-
-    /* check if necessary to flatten. */
-
-    /* has it already been flattened? */
-    MPI_Type_get_attr(datatype, ADIOI_Flattened_type_keyval, &flat, &flag);
-    if (flag) {
-#ifdef FLATTEN_DEBUG
-        DBG_FPRINTF(stderr, "ADIOI_Flatten_datatype:: found datatype %#X\n", datatype);
-#endif
-        return flat;
-    }
 
     /* is it entirely contiguous? */
     ADIOI_Datatype_iscontig(datatype, &is_contig);
@@ -322,8 +418,8 @@ static void ADIOI_Type_decode(MPI_Datatype datatype, int *combiner,
  *
  * Assumption: input datatype is not a basic!!!!
  */
-void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
-                   ADIO_Offset st_offset, MPI_Count * curr_index)
+static void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
+                          ADIO_Offset st_offset, MPI_Count * curr_index)
 {
     int k, m, n, is_hindexed_block = 0;
     int lb_updated = 0;
@@ -1105,7 +1201,7 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
  *
  * ASSUMES THAT TYPE IS NOT A BASIC!!!
  */
-MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_index)
+static MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_index)
 {
     int i, n;
     MPI_Count count = 0, prev_index, num, basic_num;
@@ -1445,50 +1541,4 @@ static void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
     return;
 }
 
-int ADIOI_Flattened_type_keyval = MPI_KEYVAL_INVALID;
-
-int ADIOI_Flattened_type_copy(MPI_Datatype oldtype,
-                              int type_keyval, void *extra_state, void *attribute_val_in,
-                              void *attribute_val_out, int *flag)
-{
-    ADIOI_Flatlist_node *node = (ADIOI_Flatlist_node *) attribute_val_in;
-    if (node != NULL)
-        node->refct++;
-    *(ADIOI_Flatlist_node **) attribute_val_out = node;
-    *flag = 1;  /* attribute copied to new communicator */
-    return MPI_SUCCESS;
-}
-
-int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
-                                int type_keyval, void *attribute_val, void *extra_state)
-{
-    ADIOI_Flatlist_node *node = (ADIOI_Flatlist_node *) attribute_val;
-    ADIOI_Assert(node != NULL);
-    node->refct--;
-
-    if (node->refct <= 0) {
-        ADIOI_Free(node->blocklens);
-        ADIOI_Free(node);
-    }
-
-    return MPI_SUCCESS;
-}
-
-ADIOI_Flatlist_node *ADIOI_Flatten_and_find(MPI_Datatype datatype)
-{
-    ADIOI_Flatlist_node *node;
-    int flag = 0;
-
-    if (ADIOI_Flattened_type_keyval == MPI_KEYVAL_INVALID) {
-        /* ADIOI_End_call will take care of cleanup */
-        MPI_Type_create_keyval(ADIOI_Flattened_type_copy,
-                               ADIOI_Flattened_type_delete, &ADIOI_Flattened_type_keyval, NULL);
-    }
-
-    MPI_Type_get_attr(datatype, ADIOI_Flattened_type_keyval, &node, &flag);
-    if (flag == 0) {
-        node = ADIOI_Flatten_datatype(datatype);
-    }
-
-    return node;
-}
+#endif /* HAVE_MPIX_TYPE_IOV */

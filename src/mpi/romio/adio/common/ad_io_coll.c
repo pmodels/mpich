@@ -895,7 +895,7 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, MPI_Aint count,
     ADIOI_Datatype_iscontig(custom_ftype, &f_is_contig);
     ADIOI_Datatype_iscontig(datatype, &m_is_contig);
     if (!f_is_contig)
-        ADIOI_Flatten_datatype(custom_ftype);
+        ADIOI_Flatten_and_find(custom_ftype);
 
     /* make appropriate Read/Write calls.  Let ROMIO figure out file
      * system specific stuff. */

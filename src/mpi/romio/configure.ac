@@ -1464,6 +1464,7 @@ elif test $FROM_MPICH = yes ; then
    AC_DEFINE(HAVE_MPI_TYPE_SIZE_X, 1, [Define if MPI library provides MPI_TYPE_SIZE_X])
    AC_DEFINE(HAVE_MPI_STATUS_SET_ELEMENTS_X, 1, [Define if MPI library provides MPI_STATUS_SET_ELEMENTS_X])
    AC_DEFINE(HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK, 1, [Define if MPI library provides HINDEXED_BLOCK datatype])
+   AC_DEFINE(HAVE_MPIX_TYPE_IOV, 1, [Define if MPI library provides MPIX_Type_iov and MPIX_Type_iov_len])
 fi
 #
 #

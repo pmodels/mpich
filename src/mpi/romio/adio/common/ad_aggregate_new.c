@@ -70,7 +70,7 @@ void ADIOI_Calc_file_realms(ADIO_File fd, ADIO_Offset min_st_offset, ADIO_Offset
         *file_realm_st_offs = min_st_offset;
         MPI_Type_contiguous((max_end_offset - min_st_offset + 1), MPI_BYTE, file_realm_types);
         MPI_Type_commit(file_realm_types);
-        ADIOI_Flatten_datatype(*file_realm_types);
+        ADIOI_Flatten_and_find(*file_realm_types);
     } else if (fd->file_realm_st_offs == NULL) {
         file_realm_st_offs = (ADIO_Offset *)
             ADIOI_Malloc(nprocs_for_coll * sizeof(ADIO_Offset));
@@ -84,13 +84,13 @@ void ADIOI_Calc_file_realms(ADIO_File fd, ADIO_Offset min_st_offset, ADIO_Offset
                                        file_realm_st_offs, file_realm_types);
             /* flatten file realm datatype for future use - only one
              * because all are the same*/
-            ADIOI_Flatten_datatype(file_realm_types[0]);
+            ADIOI_Flatten_and_find(file_realm_types[0]);
         } else if (file_realm_calc_type == ADIOI_FR_FSZ) {
             ADIOI_Calc_file_realms_fsize(fd, nprocs_for_coll, max_end_offset,
                                          file_realm_st_offs, file_realm_types);
             /* flatten file realm datatype for future use - only one
              * because all are the same*/
-            ADIOI_Flatten_datatype(file_realm_types[0]);
+            ADIOI_Flatten_and_find(file_realm_types[0]);
         } else if (file_realm_calc_type == ADIOI_FR_USR_REALMS) {
             /* copy user provided realm datatypes and realm offsets in
              * hints to file descriptor. may also want to verify that
@@ -101,7 +101,7 @@ void ADIOI_Calc_file_realms(ADIO_File fd, ADIO_Offset min_st_offset, ADIO_Offset
                                              nprocs_for_coll, file_realm_st_offs, file_realm_types);
             /* flatten file realm datatype for future use - only one
              * because all are the same */
-            ADIOI_Flatten_datatype(file_realm_types[0]);
+            ADIOI_Flatten_and_find(file_realm_types[0]);
         }
     }
     fd->file_realm_st_offs = file_realm_st_offs;
