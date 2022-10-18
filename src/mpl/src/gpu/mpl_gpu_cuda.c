@@ -358,7 +358,10 @@ int MPL_gpu_finalize(void)
 
 int MPL_gpu_global_to_local_dev_id(int global_dev_id)
 {
-    assert(global_dev_id <= max_dev_id);
+    if (global_dev_id > max_dev_id) {
+        return -1;
+    }
+
     return global_to_local_map[global_dev_id];
 }
 
