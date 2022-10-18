@@ -119,11 +119,11 @@ typedef struct MPIDIG_acc_req_t {
                                  * Not to be confused with result_addr below which saves the
                                  * result_addr parameter. */
     MPI_Aint result_data_sz;    /* only used in GET_ACC */
-    MPI_Op op;
     void *result_addr;
     MPI_Aint result_count;
     void *origin_addr;
     MPI_Datatype result_datatype;
+    MPI_Op op;
 } MPIDIG_acc_req_t;
 
 typedef int (*MPIDIG_req_cmpl_cb) (MPIR_Request * req);
