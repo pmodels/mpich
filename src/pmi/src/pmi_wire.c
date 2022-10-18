@@ -367,6 +367,7 @@ int PMIU_check_full_cmd(char *buf, int buflen, int *got_full_cmd,
      * cmdlen is the length of the buffer and NUL-terminated if necessary */
     *got_full_cmd = 0;
     char cmdbuf[100];
+    cmdbuf[0] = '\0';
     if (!strncmp(buf, "cmd=", strlen("cmd=")) || !strncmp(buf, "mcmd=", strlen("mcmd="))) {
         /* PMI-1 format command; read the rest of it */
         *version = PMIU_WIRE_V1;
