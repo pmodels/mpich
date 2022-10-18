@@ -280,10 +280,8 @@ int MPL_gpu_init(int debug_summary)
     if (visible_devices) {
         local_to_global_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
 
-        uintptr_t len = strlen(visible_devices);
-        char *devices = MPL_malloc(len + 1, MPL_MEM_OTHER);
+        char *devices = MPL_strdup(visible_devices);
         char *free_ptr = devices;
-        memcpy(devices, visible_devices, len + 1);
         for (int i = 0; i < device_count; i++) {
             char *tmp = strtok(devices, ",");
             assert(tmp);
