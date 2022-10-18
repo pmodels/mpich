@@ -14,7 +14,6 @@
 
 - [Creating New Bug Reports](source_code/Bug_Tickets.md)
 - [Using the Hydra Process Manager](how_to/Using_the_Hydra_Process_Manager.md)
-- [Checkpointing](how_to/Checkpointing.md)
 
 - Tools
     - [MPE](tools/MPE_by_example.md)
