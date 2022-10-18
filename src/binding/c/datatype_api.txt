@@ -111,7 +111,8 @@ MPI_Pack:
     message.
 */
 { -- error_check -- inbuf, outbuf
-    if (incount > 0) {
+    /* MPI_BOTTOM cannot be used when count > 1 */
+    if (incount > 1) {
         MPIR_ERRTEST_ARGNULL(inbuf, "inbuf", mpi_errno);
     }
 }
@@ -151,7 +152,8 @@ MPI_Unpack:
     .seealso: MPI_Pack, MPI_Pack_size
     .poly_impl: use_aint
 { -- error_check -- inbuf, outbuf
-    if (outcount > 0) {
+    /* MPI_BOTTOM cannot be used when count > 1 */
+    if (outcount > 1) {
         MPIR_ERRTEST_ARGNULL(outbuf, "outbuf", mpi_errno);
     }
 }
