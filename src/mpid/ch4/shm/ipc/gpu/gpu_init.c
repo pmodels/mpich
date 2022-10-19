@@ -113,7 +113,7 @@ int MPIDI_GPU_init_world(void)
                                         MPL_MEM_OTHER);
     MPIR_Assert(MPIDI_GPUI_global.ipc_handle_track_trees != NULL);
     memset(MPIDI_GPUI_global.ipc_handle_track_trees, 0,
-           sizeof(MPL_gavl_tree_t) * MPIR_Process.local_size);
+           sizeof(MPL_gavl_tree_t *) * MPIR_Process.local_size);
 
     for (int i = 0; i < MPIR_Process.local_size; ++i) {
         MPIDI_GPUI_global.ipc_handle_mapped_trees[i] =
@@ -130,7 +130,7 @@ int MPIDI_GPU_init_world(void)
                                            MPL_MEM_OTHER);
         MPIR_Assert(MPIDI_GPUI_global.ipc_handle_track_trees[i]);
         memset(MPIDI_GPUI_global.ipc_handle_track_trees[i], 0,
-               sizeof(MPL_gavl_tree_t *) * (MPIDI_GPUI_global.global_max_dev_id + 1));
+               sizeof(MPL_gavl_tree_t) * (MPIDI_GPUI_global.global_max_dev_id + 1));
 
         for (int j = 0; j < (MPIDI_GPUI_global.global_max_dev_id + 1); ++j) {
             MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j] =
