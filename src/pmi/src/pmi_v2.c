@@ -211,6 +211,10 @@ PMI_API_PUBLIC int PMI2_Job_Spawn(int count, const char *cmds[],
     if (PMIi_InitIfSingleton() != 0)
         return -1;
 
+    for (int i = 0; i < count; i++) {
+        total_num_processes += maxprocs[i];
+    }
+
     struct PMIU_cmd pmicmd;
     PMIU_msg_set_query_spawn(&pmicmd, USE_WIRE_VER, no_static,
                              count, cmds, maxprocs, argcs, argvs,
