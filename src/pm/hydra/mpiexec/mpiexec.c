@@ -19,13 +19,13 @@ struct HYD_ui_mpich_info_s HYD_ui_mpich_info;
 static void signal_cb(int signum);
 static HYD_status qsort_node_list(void);
 static void HYD_ui_mpich_debug_print(void);
+static int get_exit_status(int pgid);
 
 int main(int argc, char **argv)
 {
-    struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int exit_status = 0, i, user_provided_host_list, global_core_count;
+    int i, user_provided_host_list, global_core_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -40,6 +40,8 @@ int main(int argc, char **argv)
 
     status = HYDU_set_signal(SIGCHLD, signal_cb);
     HYDU_ERR_POP(status, "unable to set SIGCHLD\n");
+
+    PMISERV_pg_init();
 
     /* Get user preferences */
     status = HYD_uii_mpx_get_parameters(argv);
@@ -153,13 +155,16 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }
 
+    struct HYD_pg *pg;
+    pg = PMISERV_pg_by_id(0);
+
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
     /* NOTE:
      *   user may accidentally give on command line -np 0, or even -np -1,
      *   these cases will all be treated as if it is being ignored.
      */
-    HYD_server_info.pg_list.pg_process_count = 0;
+    pg->pg_process_count = 0;
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
         if (exec->proc_count <= 0) {
             global_core_count = 0;
@@ -167,20 +172,21 @@ int main(int argc, char **argv)
                 global_core_count += node->core_count;
             exec->proc_count = global_core_count;
         }
-        HYD_server_info.pg_list.pg_process_count += exec->proc_count;
+        pg->pg_process_count += exec->proc_count;
     }
 
     status = HYDU_list_inherited_env(&HYD_server_info.user_global.global_env.inherited);
     HYDU_ERR_POP(status, "unable to get the inherited env list\n");
 
-    status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_server_info.node_list,
-                                    &HYD_server_info.pg_list, HYD_server_info.singleton_port > 0);
+    if (HYD_server_info.singleton_port > 0) {
+        status = HYDU_create_proxy_list_singleton(HYD_server_info.node_list, 0,
+                                                  &pg->proxy_count, &pg->proxy_list);
+    } else {
+        status = HYDU_create_proxy_list(pg->pg_process_count,
+                                        HYD_uii_mpx_exec_list, HYD_server_info.node_list, 0,
+                                        &pg->proxy_count, &pg->proxy_list);
+    }
     HYDU_ERR_POP(status, "unable to create proxy list\n");
-
-    /* calculate the core count used by the PG */
-    HYD_server_info.pg_list.pg_core_count = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
-        HYD_server_info.pg_list.pg_core_count += proxy->node->core_count;
 
     /* If the user didn't specify a local hostname, try to find one in
      * the list of nodes passed to us */
@@ -220,32 +226,10 @@ int main(int argc, char **argv)
     status = HYD_pmci_wait_for_completion(HYD_ui_mpich_info.timeout);
     HYDU_ERR_POP(status, "process manager error waiting for completion\n");
 
-    /* Check for the exit status for all the processes */
-    if (HYD_ui_mpich_info.print_all_exitcodes)
-        HYDU_dump(stdout, "Exit codes: ");
-    exit_status = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
-        if (proxy->exit_status == NULL) {
-            /* We didn't receive the exit status for this proxy */
-            continue;
-        }
-
-        if (HYD_ui_mpich_info.print_all_exitcodes)
-            HYDU_dump_noprefix(stdout, "[%s] ", proxy->node->hostname);
-
-        for (i = 0; i < proxy->proxy_process_count; i++) {
-            if (HYD_ui_mpich_info.print_all_exitcodes) {
-                HYDU_dump_noprefix(stdout, "%d", proxy->exit_status[i]);
-                if (i < proxy->proxy_process_count - 1)
-                    HYDU_dump_noprefix(stdout, ",");
-            }
-
-            exit_status |= proxy->exit_status[i];
-        }
-
-        if (HYD_ui_mpich_info.print_all_exitcodes)
-            HYDU_dump_noprefix(stdout, "\n");
-    }
+    /* Not ideal: we only get exitcodes for pg 0, and we need make sure pg 0
+     *            survive till now (the end). This is not obvious. */
+    int exit_status;
+    exit_status = get_exit_status(0);
 
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_pmci_finalize();
@@ -264,6 +248,7 @@ int main(int argc, char **argv)
 
     /* Free the mpiexec params */
     HYD_uiu_free_params();
+    PMISERV_pg_finalize();
     HYDU_free_exec_list(HYD_uii_mpx_exec_list);
     HYDU_sock_finalize();
 
@@ -292,7 +277,40 @@ int main(int argc, char **argv)
     goto fn_exit;
 }
 
-HYD_status HYD_uii_get_current_exec(struct HYD_exec **exec)
+static int get_exit_status(int pgid)
+{
+    struct HYD_pg *pg = PMISERV_pg_by_id(pgid);
+    /* Check for the exit status for all the processes */
+    if (HYD_ui_mpich_info.print_all_exitcodes)
+        HYDU_dump(stdout, "Exit codes: ");
+    int exit_status = 0;
+    for (int i = 0; i < pg->proxy_count; i++) {
+        struct HYD_proxy *proxy = &pg->proxy_list[i];
+        if (proxy->exit_status == NULL) {
+            /* We didn't receive the exit status for this proxy */
+            continue;
+        }
+
+        if (HYD_ui_mpich_info.print_all_exitcodes)
+            HYDU_dump_noprefix(stdout, "[%s] ", proxy->node->hostname);
+
+        for (int j = 0; j < proxy->proxy_process_count; j++) {
+            if (HYD_ui_mpich_info.print_all_exitcodes) {
+                HYDU_dump_noprefix(stdout, "%d", proxy->exit_status[j]);
+                if (j < proxy->proxy_process_count - 1)
+                    HYDU_dump_noprefix(stdout, ",");
+            }
+
+            exit_status |= proxy->exit_status[j];
+        }
+
+        if (HYD_ui_mpich_info.print_all_exitcodes)
+            HYDU_dump_noprefix(stdout, "\n");
+    }
+    return exit_status;
+}
+
+HYD_status HYD_uii_get_current_exec(struct HYD_exec ** exec)
 {
     HYD_status status = HYD_SUCCESS;
 

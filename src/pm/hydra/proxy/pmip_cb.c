@@ -239,6 +239,7 @@ static HYD_status check_pmi_cmd(char **buf, int *buflen_out, int *pmi_version, i
             sptr = pmi_storage;
         }
         *buf = NULL;
+        *buflen_out = 0;
     }
 
   fn_exit:
@@ -329,7 +330,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
     int repeat;
     do {
-        int buflen;
+        int buflen = 0;
         int pmi_version;
         status = check_pmi_cmd(&buf, &buflen, &pmi_version, &repeat);
         HYDU_ERR_POP(status, "error checking the PMI command\n");

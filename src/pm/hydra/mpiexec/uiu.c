@@ -36,11 +36,6 @@ void HYD_uiu_init_params(void)
 
     HYD_server_info.node_list = NULL;
 
-    HYDU_init_pg(&HYD_server_info.pg_list, 0);
-
-    HYD_server_info.pg_list.pgid = 0;
-    HYD_server_info.pg_list.next = NULL;
-
 #if defined ENABLE_PROFILING
     HYD_server_info.enable_profiling = -1;
     HYD_server_info.num_pmi_calls = 0;
@@ -61,8 +56,6 @@ void HYD_uiu_free_params(void)
     MPL_free(HYD_server_info.nameserver);
     MPL_free(HYD_server_info.localhost);
     HYDU_free_node_list(HYD_server_info.node_list);
-    HYDU_free_proxy_list(HYD_server_info.pg_list.proxy_list);
-    HYDU_free_pg_list(HYD_server_info.pg_list.next);
     MPL_free(HYD_ui_mpich_info.prepend_pattern);
     MPL_free(HYD_ui_mpich_info.outfile_pattern);
     MPL_free(HYD_ui_mpich_info.errfile_pattern);
@@ -81,9 +74,7 @@ void HYD_uiu_free_params(void)
 void HYD_uiu_print_params(void)
 {
     struct HYD_env *env;
-    struct HYD_proxy *proxy;
     struct HYD_exec *exec;
-    int i;
 
     HYDU_FUNC_ENTER();
 
@@ -124,9 +115,11 @@ void HYD_uiu_print_params(void)
 
     HYDU_dump_noprefix(stdout, "    Proxy information:\n");
     HYDU_dump_noprefix(stdout, "    *********************\n");
-    i = 1;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
-        HYDU_dump_noprefix(stdout, "      [%d] proxy: %s (%d cores)\n", i++,
+    struct HYD_pg *pg;
+    pg = PMISERV_pg_by_id(0);
+    for (int i = 0; i < pg->proxy_count; i++) {
+        struct HYD_proxy *proxy = &pg->proxy_list[i];
+        HYDU_dump_noprefix(stdout, "      [%d] proxy: %s (%d cores)\n", i + 1,
                            proxy->node->hostname, proxy->node->core_count);
         HYDU_dump_noprefix(stdout, "      Exec list: ");
         for (exec = proxy->exec_list; exec; exec = exec->next)
@@ -198,15 +191,11 @@ static HYD_status resolve_pattern_string(const char *pattern, char **str, int pg
                                  (int) (time(NULL) - HYD_server_info.time_start));
                     break;
                 case 'h':
-                    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
-                        if (pg->pgid == pgid)
-                            break;
+                    pg = PMISERV_pg_by_id(pgid);
                     HYDU_ASSERT(pg, status);
+                    HYDU_ASSERT(proxy_id >= 0 && proxy_id < pg->proxy_count, status);
 
-                    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-                        if (proxy->proxy_id == proxy_id)
-                            break;
-                    HYDU_ASSERT(proxy, status);
+                    proxy = &pg->proxy_list[proxy_id];
                     MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%s", proxy->node->hostname);
                     break;
                 case '\0':

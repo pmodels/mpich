@@ -16,8 +16,6 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     struct HYD_cmd cmd;
     int count, closed;
-    struct HYD_pg *pg;
-    struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -56,9 +54,10 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
             }
         }
     } else if (cmd.type == HYD_SIGNAL) {
-        for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
-            for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-                status = HYD_pmcd_pmiserv_send_signal(proxy, cmd.signum);
+        for (int i = 0; i < PMISERV_pg_max_id(); i++) {
+            struct HYD_pg *pg = PMISERV_pg_by_id(i);
+            for (int j = 0; j < pg->proxy_count; j++) {
+                status = HYD_pmcd_pmiserv_send_signal(&pg->proxy_list[j], cmd.signum);
                 HYDU_ERR_POP(status, "unable to send signal downstream\n");
             }
         }
@@ -75,7 +74,6 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 
 HYD_status HYD_pmci_launch_procs(void)
 {
-    struct HYD_proxy *proxy;
     struct HYD_string_stash proxy_stash;
     char *control_port = NULL;
     int node_count, i, *control_fd;
@@ -88,11 +86,13 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYDT_dmx_register_fd(1, &HYD_server_info.cmd_pipe[0], POLLIN, NULL, ui_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_server_info.pg_list);
+    struct HYD_pg *pg;
+    pg = PMISERV_pg_by_id(0);
+    status = HYD_pmcd_pmi_alloc_pg_scratch(pg);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
 
     /* PMI-v2 kvs-fence */
-    status = HYD_pmiserv_epoch_init(&HYD_server_info.pg_list);
+    status = HYD_pmiserv_epoch_init(pg);
     HYDU_ERR_POP(status, "unable to init epoch\n");
 
     status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
@@ -107,29 +107,28 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, control_port, 0);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-    status = HYD_pmcd_pmi_fill_in_exec_launch_info(&HYD_server_info.pg_list);
+    status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    node_count = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
-        node_count++;
+    node_count = pg->proxy_count;
 
     HYDU_MALLOC_OR_JUMP(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
 
-    status = HYDT_bsci_launch_procs(proxy_stash.strlist, HYD_server_info.pg_list.proxy_list,
+    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, pg->proxy_count,
                                     HYD_TRUE, control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
-    for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
+    for (i = 0; i < pg->proxy_count; i++) {
         if (control_fd[i] != HYD_FD_UNSET) {
-            proxy->control_fd = control_fd[i];
+            pg->proxy_list[i].control_fd = control_fd[i];
 
             status = HYDT_dmx_register_fd(1, &control_fd[i], HYD_POLLIN, (void *) (size_t) 0,
                                           HYD_pmcd_pmiserv_proxy_init_cb);
             HYDU_ERR_POP(status, "unable to register fd\n");
         }
+    }
 
     MPL_free(control_fd);
 
@@ -145,8 +144,6 @@ HYD_status HYD_pmci_launch_procs(void)
 
 HYD_status HYD_pmci_wait_for_completion(int timeout)
 {
-    struct HYD_pg *pg;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     int time_elapsed, time_left;
     struct timeval start, now;
     HYD_status status = HYD_SUCCESS;
@@ -157,10 +154,10 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
 
     /* We first wait for the exit statuses to arrive till the timeout
      * period */
-    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
-        pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-
-        while (pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
+    for (int i = 0; i < PMISERV_pg_max_id(); i++) {
+        /* NOTE: avoid grab pg pointer because we use dynamic array for pg_list,
+         *       the pg pointer may not be persistent during the event loop */
+        while (PMISERV_pg_by_id(i)->is_active) {
             gettimeofday(&now, NULL);
             time_elapsed = (now.tv_sec - start.tv_sec);
             time_left = timeout;
@@ -183,9 +180,6 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
                 continue;
             HYDU_ERR_POP(status, "error waiting for event\n");
         }
-
-        status = HYD_pmcd_pmi_free_pg_scratch(pg);
-        HYDU_ERR_POP(status, "error freeing PG scratch space\n");
     }
 
     /* Either all application processes exited or we have timed out.

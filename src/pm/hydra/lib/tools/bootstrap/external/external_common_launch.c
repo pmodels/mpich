@@ -94,10 +94,10 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
-                                         int *control_fd)
+HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+                                         int use_rmk, int *control_fd)
 {
-    int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
+    int idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
     int *fd_list, *dummy;
     int sockpair[2];
     struct HYD_proxy *proxy;
@@ -175,10 +175,6 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
      * actual launcher */
     MPL_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
 
-    num_hosts = 0;
-    for (proxy = proxy_list; proxy; proxy = proxy->next)
-        num_hosts++;
-
     /* Increase pid list to accommodate these new pids */
     HYDT_bscu_pid_list_grow(num_hosts);
 
@@ -196,7 +192,8 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         autofork = 1;
 
     targs[idx] = NULL;
-    for (proxy = proxy_list; proxy; proxy = proxy->next) {
+    for (i = 0; i < num_hosts; i++) {
+        proxy = proxy_list + i;
 
         MPL_free(targs[host_idx]);
         if (proxy->node->user == NULL) {

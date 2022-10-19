@@ -11,7 +11,8 @@
 
 static int fd_stdout, fd_stderr;
 
-static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, char **node_list_str)
+static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, int num_hosts,
+                                         char **node_list_str)
 {
     int i;
     char *tmp[HYD_NUM_TMP_STRINGS], *foo = NULL;
@@ -21,7 +22,8 @@ static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, char **no
     HYDU_FUNC_ENTER();
 
     i = 0;
-    for (proxy = proxy_list; proxy; proxy = proxy->next) {
+    for (int j = 0; j < num_hosts; j++) {
+        proxy = proxy_list + j;
         tmp[i++] = MPL_strdup(proxy->node->hostname);
 
         if (proxy->node->next)
@@ -57,14 +59,13 @@ static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, char **no
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
-                                        int *control_fd)
+HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+                                        int use_rmk, int *control_fd)
 {
-    int num_hosts, idx, i;
+    int idx, i;
     int *fd_list;
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
     char *path = NULL, *extra_arg_list = NULL, *extra_arg;
-    struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -87,15 +88,11 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
     if (use_rmk == HYD_FALSE || strcmp(HYDT_bsci_info.rmk, "slurm")) {
         targs[idx++] = MPL_strdup("--nodelist");
 
-        status = proxy_list_to_node_str(proxy_list, &node_list_str);
+        status = proxy_list_to_node_str(proxy_list, num_hosts, &node_list_str);
         HYDU_ERR_POP(status, "unable to build a node list string\n");
 
         targs[idx++] = MPL_strdup(node_list_str);
     }
-
-    num_hosts = 0;
-    for (proxy = proxy_list; proxy; proxy = proxy->next)
-        num_hosts++;
 
     targs[idx++] = MPL_strdup("-N");
     targs[idx++] = HYDU_int_to_str(num_hosts);

@@ -21,7 +21,7 @@ static HYD_status server_publish(const char *name, const char *port, int *succes
 static HYD_status server_unpublish(const char *name, int *success);
 static HYD_status server_lookup(const char *name, const char **value);
 
-HYD_status HYD_pmiserv_publish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
+HYD_status HYD_pmiserv_publish(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
@@ -44,7 +44,7 @@ HYD_status HYD_pmiserv_publish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
     HYDU_ASSERT(!pmi_errno, status);
 
-    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(proxy, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
@@ -55,7 +55,7 @@ HYD_status HYD_pmiserv_publish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-HYD_status HYD_pmiserv_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
+HYD_status HYD_pmiserv_unpublish(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
@@ -78,7 +78,7 @@ HYD_status HYD_pmiserv_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *pmi
     }
     HYDU_ASSERT(!pmi_errno, status);
 
-    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(proxy, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:
@@ -89,7 +89,7 @@ HYD_status HYD_pmiserv_unpublish(int fd, int pid, int pgid, struct PMIU_cmd *pmi
     goto fn_exit;
 }
 
-HYD_status HYD_pmiserv_lookup(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
+HYD_status HYD_pmiserv_lookup(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
@@ -113,7 +113,7 @@ HYD_status HYD_pmiserv_lookup(int fd, int pid, int pgid, struct PMIU_cmd *pmi)
     }
     HYDU_ASSERT(!pmi_errno, status);
 
-    status = HYD_pmiserv_pmi_reply(fd, pid, &pmi_response);
+    status = HYD_pmiserv_pmi_reply(proxy, pid, &pmi_response);
     HYDU_ERR_POP(status, "send command failed\n");
 
   fn_exit:

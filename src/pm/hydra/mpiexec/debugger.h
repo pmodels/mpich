@@ -6,6 +6,8 @@
 #ifndef DEBUGGER_H_INCLUDED
 #define DEBUGGER_H_INCLUDED
 
+#include "hydra_server.h"
+
 /* This structure is defined by the debugger interface */
 typedef struct MPIR_PROCDESC {
     char *host_name;

@@ -310,26 +310,6 @@ struct HYD_exec {
     struct HYD_exec *next;
 };
 
-/* Process group */
-struct HYD_pg {
-    int pgid;
-    struct HYD_proxy *proxy_list;
-    int proxy_count;
-    int pg_process_count;
-    int barrier_count;
-
-    struct HYD_pg *spawner_pg;
-
-    /* user-specified node-list */
-    struct HYD_node *user_node_list;
-    int pg_core_count;
-
-    /* scratch space for the PM */
-    void *pg_scratch;
-
-    struct HYD_pg *next;
-};
-
 /* Information about the node itself */
 struct HYD_node {
     char *hostname;
@@ -350,8 +330,7 @@ struct HYD_node {
 /* Proxy information */
 struct HYD_proxy {
     struct HYD_node *node;
-
-    struct HYD_pg *pg;          /* Back pointer to the PG */
+    int pgid;
 
     char **exec_launch_info;
 
@@ -367,10 +346,6 @@ struct HYD_proxy {
     int *pid;
     int *exit_status;
     int control_fd;
-
-    struct HYD_proxy *next;
-
-    UT_hash_handle hh;
 };
 
 /* Global user parameters */
@@ -499,14 +474,13 @@ void HYDU_init_global_env(struct HYD_env_global *global_env);
 void HYDU_finalize_global_env(struct HYD_env_global *global_env);
 HYD_status HYDU_alloc_node(struct HYD_node **node);
 void HYDU_free_node_list(struct HYD_node *node_list);
-void HYDU_init_pg(struct HYD_pg *pg, int pgid);
-HYD_status HYDU_alloc_pg(struct HYD_pg **pg, int pgid);
-void HYDU_free_pg_list(struct HYD_pg *pg_list);
-void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
+void HYDU_free_proxy_list(struct HYD_proxy *proxy_list, int count);
 HYD_status HYDU_alloc_exec(struct HYD_exec **exec);
 void HYDU_free_exec_list(struct HYD_exec *exec_list);
-HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  struct HYD_pg *pg, bool is_singleton);
+HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
+                                            int *proxy_count_p, struct HYD_proxy **proxy_list_p);
+HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct HYD_node *node_list,
+                                  int pgid, int *proxy_count_p, struct HYD_proxy **proxy_list_p);
 HYD_status HYDU_correct_wdir(char **wdir);
 
 /* args */

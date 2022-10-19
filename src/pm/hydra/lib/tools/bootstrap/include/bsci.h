@@ -50,8 +50,8 @@ struct HYDT_bsci_fns {
 
     /* Launcher functions */
     /** \brief Launch processes */
-    HYD_status(*launch_procs) (char **args, struct HYD_proxy * proxy_list, int use_rmk,
-                               int *control_fd);
+    HYD_status(*launch_procs) (char **args, struct HYD_proxy * proxy_list, int num_hosts,
+                               int use_rmk, int *control_fd);
 
     /** \brief Finalize the bootstrap control device */
     HYD_status(*launcher_finalize) (void);
@@ -127,8 +127,8 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  * process.  On the other hand, if it is HYD_FALSE, we force not to
  * use RMK.  HYD_FALSE is passed in PMI spawn functions.
  */
-HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
-                                  int *control_fd);
+HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
+                                  int use_rmk, int *control_fd);
 
 
 /**
