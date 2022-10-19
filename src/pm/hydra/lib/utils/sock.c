@@ -241,7 +241,7 @@ HYD_status HYDU_sock_write(int fd, const void *buf, int maxlen, int *sent, int *
     while (1) {
         tmp = write(fd, (char *) buf + *sent, maxlen - *sent);
         if (tmp <= 0) {
-            if (errno == EAGAIN) {
+            if (errno == EAGAIN || errno == EINTR) {
                 if (flag == HYDU_SOCK_COMM_NONE)
                     goto fn_exit;
                 else
