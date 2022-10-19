@@ -35,6 +35,11 @@ information on bug fixes and new releases.
 1. Getting Started
 ==================
 
+Note: this guide assumes you are building MPICH from one of the MPICH
+release tarballs. If you are starting from a git checkout, you will need
+a few additional steps. Please refer to the wiki page --
+https://wiki.mpich.org. 
+
 The following instructions take you through a sequence of steps to get
 the default configuration (ch3 device, nemesis channel (with TCP and
 shared memory), Hydra process management) of MPICH up and running.
