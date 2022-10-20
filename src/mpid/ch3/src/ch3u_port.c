@@ -501,11 +501,9 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
     /* We use the second half of the context ID bits for dynamic
      * processes. This assumes that the context ID mask array is made
      * up of uint32_t's. */
-    /* FIXME: This code is still broken for the following case:
-     * If the same process opens connections to the multiple
-     * processes, this context ID might get out of sync.
-     */
-    tmp_comm->context_id     = MPIR_CONTEXT_SET_FIELD(DYNAMIC_PROC, context_id_offset, 1);
+    int context_id;
+    context_id = context_id_offset << MPIR_CONTEXT_PREFIX_SHIFT;
+    tmp_comm->context_id     = MPIR_CONTEXT_SET_FIELD(DYNAMIC_PROC, context_id, 1);
     tmp_comm->recvcontext_id = tmp_comm->context_id;
 
     /* sanity: the INVALID context ID value could potentially conflict with the
