@@ -130,11 +130,6 @@ int main(int argc, char **argv)
     status = init_params();
     HYDU_ERR_POP(status, "Error initializing proxy params\n");
 
-    status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
-                            HYD_pmcd_pmip.user_global.binding,
-                            HYD_pmcd_pmip.user_global.mapping, HYD_pmcd_pmip.user_global.membind);
-    HYDU_ERR_POP(status, "unable to initialize process topology\n");
-
     status = HYD_pmcd_pmip_get_params(argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 

@@ -973,6 +973,12 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         status = procinfo(fd);
         HYDU_ERR_POP(status, "error parsing process info\n");
 
+        status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
+                                HYD_pmcd_pmip.user_global.binding,
+                                HYD_pmcd_pmip.user_global.mapping,
+                                HYD_pmcd_pmip.user_global.membind);
+        HYDU_ERR_POP(status, "unable to initialize process topology\n");
+
         if (HYD_pmcd_pmip.user_global.singleton_port > 0) {
             status = singleton_init();
             HYDU_ERR_POP(status, "singleton_init returned error\n");
