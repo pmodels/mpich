@@ -41,7 +41,8 @@ AC_DEFUN([PAC_CONFIG_MPL],[
             ], [
                 dnl both mpl and pmi are in modules/
                 mpl_includedir="-I$srcdir/../mpl/include -I../mpl/include"
-                . $builddir/../mpl/localdefs
+                AC_MSG_NOTICE([sourcing ../mpl/localdefs])
+                . ../mpl/localdefs
             ])
         else
             PAC_CONFIG_MPL_EMBEDDED
