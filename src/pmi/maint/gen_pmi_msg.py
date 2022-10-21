@@ -253,6 +253,10 @@ def dump_all():
                 non_optional += dump_attrs("        ", is_set, is_query, attrs, attrs)
                 dump_if_version("    } else if", v_list[1]["version"], is_set, is_query)
                 non_optional += dump_attrs("        ", is_set, is_query, attrs_b, attrs)
+                if ret_errno:
+                    print("    } else {", file=Out)
+                    print("        PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, \"invalid version\");", file=Out)
+                    non_optional += 1
                 print("    }", file=Out)
 
             if non_optional > 0:
