@@ -179,6 +179,7 @@ def dump_all():
                 print(t_if + " (pmi->version == %s) {" % ver, file=Out)
 
         def dump_attrs(spaces, is_set, is_query, attrs, attrs0):
+            non_optional = 0
             for i in range(len(attrs)):
                 a = attrs[i]
                 var = get_var(attrs0[i][0])
@@ -207,6 +208,8 @@ def dump_all():
                     else:
                         pmiu = "PMIU_CMD_GET_%sVAL" % kind.upper()
                         print(spaces + "%s(pmi, \"%s\", *%s);" % (pmiu, a[0], var), file=Out)
+                        non_optional += 1
+            return non_optional
 
         def dump_it(NAME, v_list, is_set, is_query, attrs):
             print("", file=Out)
@@ -242,24 +245,25 @@ def dump_all():
                 else:
                     attrs_b = v_list[1]["response-attrs"]
 
+            non_optional = 0
             if attrs_b is None or attrs_identical(attrs, attrs_b):
-                dump_attrs("    ", is_set, is_query, attrs, attrs)
+                non_optional += dump_attrs("    ", is_set, is_query, attrs, attrs)
             else:
                 dump_if_version("    if", v_list[0]["version"], is_set, is_query)
-                dump_attrs("        ", is_set, is_query, attrs, attrs)
+                non_optional += dump_attrs("        ", is_set, is_query, attrs, attrs)
                 dump_if_version("    } else if", v_list[1]["version"], is_set, is_query)
-                dump_attrs("        ", is_set, is_query, attrs_b, attrs)
-                if ret_errno:
-                    print("    } else {", file=Out)
-                    print("        PMIU_ERR_SETANDJUMP(pmi_errno, PMIU_FAIL, \"invalid version\");", file=Out)
+                non_optional += dump_attrs("        ", is_set, is_query, attrs_b, attrs)
                 print("    }", file=Out)
 
-            if ret_errno:
+            if non_optional > 0:
                 print("", file=Out)
                 print("  fn_exit:", file=Out)
                 print("    return pmi_errno;", file=Out)
                 print("  fn_fail:", file=Out)
                 print("    goto fn_exit;", file=Out)
+            elif ret_errno:
+                print("", file=Out)
+                print("    return pmi_errno;", file=Out)
             print("}", file=Out)
 
 
