@@ -169,9 +169,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_gather_step_completion(void *v, i
     /* Gather phase begins */
     /* Wait for all my children to arrive */
     for (i = 0; i < num_children; i++) {
+        int child_rank = *(int *) utarray_eltptr(children, i);
         child_gather_flag_addr =
-            MPIDI_POSIX_RELEASE_GATHER_NB_IREDUCE_GATHER_FLAG_ADDR(*utarray_eltptr(children, i),
-                                                                   segment, num_ranks);
+            MPIDI_POSIX_RELEASE_GATHER_NB_IREDUCE_GATHER_FLAG_ADDR(child_rank, segment, num_ranks);
         if (MPL_atomic_acquire_load_uint64(child_gather_flag_addr) != per_call_data->seq_no) {
             /* Set *done to 0 even if a single child has not arrived */
             *done = 0;

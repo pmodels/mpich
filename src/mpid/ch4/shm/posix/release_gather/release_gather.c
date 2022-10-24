@@ -429,15 +429,13 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         MPIR_ERR_CHECK(mpi_errno_ret);
 
         /* Store address of each of the children's reduce buffer */
+        char *addr;
+        addr = RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr);
         for (i = 0; i < RELEASE_GATHER_FIELD(comm_ptr, reduce_tree.num_children); i++) {
-            MPIR_ERR_CHKANDJUMP(!utarray_eltptr
-                                (RELEASE_GATHER_FIELD(comm_ptr, reduce_tree.children), i),
-                                mpi_errno, MPI_ERR_OTHER, "**nomem");
+            int child_rank =
+                *(int *) utarray_eltptr(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree).children, i);
             RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr[i]) =
-                (char *) RELEASE_GATHER_FIELD(comm_ptr,
-                                              reduce_buf_addr) +
-                ((*utarray_eltptr(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree.children), i))
-                 * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
+                addr + (child_rank * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
         }
     }
 
