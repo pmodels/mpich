@@ -29,7 +29,7 @@ AC_DEFUN([PAC_CONFIG_MPL],[
             fi
             mpl_includedir="-I$main_top_builddir/src/mpl/include -I$main_top_srcdir/src/mpl/include"
             # source variables that are configured by MPL
-            AC_MSG_NOTICE([sourcing $main_top_srcdir/src/mpl/localdefs])
+            AC_MSG_NOTICE([sourcing $main_top_builddir/src/mpl/localdefs])
             . $main_top_builddir/src/mpl/localdefs
         elif test "$FROM_HYDRA" = "yes"; then
             m4_ifdef([HYDRA_CONFIGURE], [
@@ -41,7 +41,8 @@ AC_DEFUN([PAC_CONFIG_MPL],[
             ], [
                 dnl both mpl and pmi are in modules/
                 mpl_includedir="-I$srcdir/../mpl/include -I../mpl/include"
-                . $builddir/../mpl/localdefs
+                AC_MSG_NOTICE([sourcing ../mpl/localdefs])
+                . ../mpl/localdefs
             ])
         else
             PAC_CONFIG_MPL_EMBEDDED
