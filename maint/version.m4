@@ -14,7 +14,7 @@
 # changing this by playing with diversions, but then we would probably be
 # playing with autotools-fire.
 
-m4_define([MPICH_VERSION_m4],[4.0.2])dnl
+m4_define([MPICH_VERSION_m4],[4.0.3])dnl
 m4_define([MPICH_RELEASE_DATE_m4],[unreleased development copy])dnl
 
 # For libtool ABI versioning rules see:
@@ -35,6 +35,6 @@ m4_define([MPICH_RELEASE_DATE_m4],[unreleased development copy])dnl
 # libmpi so version only includes functionality defined in the MPI
 # standard, and does not include MPIX_ functions and C++ bindings.
 
-m4_define([libmpi_so_version_m4],[14:2:2])dnl
+m4_define([libmpi_so_version_m4],[14:3:2])dnl
 
 [#] end of __file__

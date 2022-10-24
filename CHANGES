@@ -1,4 +1,28 @@
 ===============================================================================
+                               Changes in 4.0.3
+===============================================================================
+
+# Fix message queue dumping interface support
+
+# Fix multinic usage in ch4:ofi
+
+# Fix bug in MPI_WIN_CREATE in ch4:ucx when UCX >= 1.13.0
+
+# Fix MPIR_pmi_barrier when PMI2 is used
+
+# Fix ROMIO lazy mutex initialization
+
+# Fix build with HIP support
+
+# Fix potential dynamic process message mixups in ch3
+
+# Add missing const to MPI_Pready_list array_of_partitions argument
+
+# Add support for C++ datatypes even when the C++ binding is disabled
+
+# Add support for Intel OneAPI compilers
+
+===============================================================================
                                Changes in 4.0.2
 ===============================================================================
 
