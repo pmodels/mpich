@@ -23,6 +23,11 @@ HYD_status PMIP_send_hdr_upstream(struct HYD_pmcd_hdr *hdr, void *buf, int bufle
     hdr->proxy_id = HYD_pmcd_pmip.local.id;
     hdr->buflen = buflen;
 
+    HYDU_ASSERT(hdr->cmd, status);
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "Sending upstream hdr.cmd = %s\n", HYD_pmcd_cmd_name(hdr->cmd));
+    }
+
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, hdr, sizeof(*hdr), &sent,
                              &upstream_sock_closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "sock write error\n");

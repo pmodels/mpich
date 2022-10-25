@@ -87,4 +87,6 @@ void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr);
 void HYD_pmcd_pmi_dump(struct PMIU_cmd *pmi);
 HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *hdr, int debug);
 
+const char *HYD_pmcd_cmd_name(int cmd);
+
 #endif /* COMMON_H_INCLUDED */
