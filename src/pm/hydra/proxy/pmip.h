@@ -91,7 +91,6 @@ extern struct HYD_arg_match_table HYD_pmcd_pmip_match_table[];
 HYD_status HYD_pmcd_pmip_get_params(char **t_argv);
 
 #define PMIP_EXIT_STATUS_UNSET -1
-void HYD_pmcd_pmip_send_signal(int sig);
 HYD_status PMIP_send_hdr_upstream(struct HYD_pmcd_hdr *hdr, void *buf, int buflen);
 
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp);
@@ -144,5 +143,6 @@ struct pmip_downstream *PMIP_find_downstream_by_fd(int fd);
 struct pmip_downstream *PMIP_find_downstream_by_pid(int pid);
 int PMIP_get_total_process_count(void);
 bool PMIP_has_open_stdoe(void);
+void PMIP_bcast_signal(int sig);
 
 #endif /* PMIP_H_INCLUDED */

@@ -11,25 +11,6 @@
 
 #include "pmi_util.h"   /* from libpmi, for PMIU_verbose */
 
-void HYD_pmcd_pmip_send_signal(int sig)
-{
-    int i, pgid;
-
-    /* Send the kill signal to all processes */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-        if (HYD_pmcd_pmip.downstream.pid[i] != -1) {
-#if defined(HAVE_GETPGID) && defined(HAVE_SETSID)
-            /* If we are able to get the process group ID, and the
-             * child process has its own process group ID, send a
-             * signal to the entire process group */
-            pgid = getpgid(HYD_pmcd_pmip.downstream.pid[i]);
-            killpg(pgid, sig);
-#else
-            kill(HYD_pmcd_pmip.downstream.pid[i], sig);
-#endif
-        }
-}
-
 static HYD_status control_port_fn(char *arg, char ***argv)
 {
     char *port = NULL, *name;

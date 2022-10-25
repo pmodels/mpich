@@ -317,7 +317,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                         HYD_pmcd_pmip.downstream.exit_status[i] = 0;
                     }
                 }
-                HYD_pmcd_pmip_send_signal(SIGKILL);
+                PMIP_bcast_signal(SIGKILL);
             } else {
                 /* If the user doesn't want to automatically cleanup,
                  * signal the remaining processes, and send this
@@ -325,7 +325,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
                 /* FIXME: This code needs to change from sending the
                  * SIGUSR1 signal to a PMI-2 notification message. */
-                HYD_pmcd_pmip_send_signal(SIGUSR1);
+                PMIP_bcast_signal(SIGUSR1);
 
                 struct HYD_pmcd_hdr hdr;
                 HYD_pmcd_init_header(&hdr);
@@ -484,7 +484,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         int signum = hdr.u.data;
         /* FIXME: This code needs to change from sending the signal to
          * a PMI-2 notification message. */
-        HYD_pmcd_pmip_send_signal(signum);
+        PMIP_bcast_signal(signum);
     } else if (hdr.cmd == CMD_STDIN) {
         int count;
 

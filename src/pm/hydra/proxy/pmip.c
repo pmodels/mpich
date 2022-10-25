@@ -99,9 +99,9 @@ static void signal_cb(int sig)
 
     if (sig == SIGPIPE) {
         /* Upstream socket closed; kill all processes */
-        HYD_pmcd_pmip_send_signal(SIGKILL);
+        PMIP_bcast_signal(SIGKILL);
     } else if (sig == SIGTSTP) {
-        HYD_pmcd_pmip_send_signal(sig);
+        PMIP_bcast_signal(sig);
     }
     /* Ignore other signals for now */
 
@@ -191,7 +191,7 @@ int main(int argc, char **argv)
                     HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
                     if (WIFSIGNALED(ret_status)) {
                         /* kill all processes */
-                        HYD_pmcd_pmip_send_signal(SIGKILL);
+                        PMIP_bcast_signal(SIGKILL);
                     }
                     done++;
                     break;
@@ -261,6 +261,6 @@ int main(int argc, char **argv)
 
   fn_fail:
     /* kill all processes */
-    HYD_pmcd_pmip_send_signal(SIGKILL);
+    PMIP_bcast_signal(SIGKILL);
     goto fn_exit;
 }

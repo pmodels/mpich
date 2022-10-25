@@ -188,3 +188,20 @@ bool PMIP_has_open_stdoe(void)
     }
     return false;
 }
+
+void PMIP_bcast_signal(int sig)
+{
+    int i, pgid;
+
+    /* Send the kill signal to all processes */
+    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+        if (HYD_pmcd_pmip.downstream.pid[i] != -1) {
+#if defined(HAVE_GETPGID) && defined(HAVE_SETSID)
+            pgid = getpgid(HYD_pmcd_pmip.downstream.pid[i]);
+            killpg(pgid, sig);
+#else
+            kill(HYD_pmcd_pmip.downstream.pid[i], sig);
+#endif
+        }
+    }
+}
