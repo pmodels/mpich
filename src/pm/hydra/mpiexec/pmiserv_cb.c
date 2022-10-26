@@ -13,8 +13,8 @@
 #include "pmiserv_common.h"
 #include "pmiserv_pmi.h"
 
-static HYD_status handle_pmi_cmd(struct HYD_proxy *proxy, int pgid, int pid, char *buf, int buflen,
-                                 int pmi_version)
+static HYD_status handle_pmi_cmd(struct HYD_proxy *proxy, int pgid, int process_fd, char *buf,
+                                 int buflen, int pmi_version)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -34,39 +34,39 @@ static HYD_status handle_pmi_cmd(struct HYD_proxy *proxy, int pgid, int pid, cha
 
     switch (pmi.cmd_id) {
         case PMIU_CMD_SPAWN:
-            status = HYD_pmiserv_spawn(proxy, pid, pgid, &pmi);
+            status = HYD_pmiserv_spawn(proxy, process_fd, pgid, &pmi);
             break;
         case PMIU_CMD_PUBLISH:
-            status = HYD_pmiserv_publish(proxy, pid, pgid, &pmi);
+            status = HYD_pmiserv_publish(proxy, process_fd, pgid, &pmi);
             break;
         case PMIU_CMD_UNPUBLISH:
-            status = HYD_pmiserv_unpublish(proxy, pid, pgid, &pmi);
+            status = HYD_pmiserv_unpublish(proxy, process_fd, pgid, &pmi);
             break;
         case PMIU_CMD_LOOKUP:
-            status = HYD_pmiserv_lookup(proxy, pid, pgid, &pmi);
+            status = HYD_pmiserv_lookup(proxy, process_fd, pgid, &pmi);
             break;
         case PMIU_CMD_GET:
-            status = HYD_pmiserv_kvs_get(proxy, pid, pgid, &pmi, false);
+            status = HYD_pmiserv_kvs_get(proxy, process_fd, pgid, &pmi, false);
             break;
         case PMIU_CMD_KVSGET:
-            status = HYD_pmiserv_kvs_get(proxy, pid, pgid, &pmi, true);
+            status = HYD_pmiserv_kvs_get(proxy, process_fd, pgid, &pmi, true);
             break;
         case PMIU_CMD_KVSPUT:
-            status = HYD_pmiserv_kvs_put(proxy, pid, pgid, &pmi);
+            status = HYD_pmiserv_kvs_put(proxy, process_fd, pgid, &pmi);
             break;
         case PMIU_CMD_MPUT:
             /* internal put with multiple key/val pairs */
-            status = HYD_pmiserv_kvs_mput(proxy, pid, pgid, &pmi);
+            status = HYD_pmiserv_kvs_mput(proxy, process_fd, pgid, &pmi);
             break;
         case PMIU_CMD_KVSFENCE:
-            status = HYD_pmiserv_kvs_fence(proxy, pid, pgid, &pmi);
+            status = HYD_pmiserv_kvs_fence(proxy, process_fd, pgid, &pmi);
             break;
         case PMIU_CMD_BARRIER:
             /* barrier_in from proxy */
-            status = HYD_pmiserv_barrier(proxy, pid, pgid, &pmi);
+            status = HYD_pmiserv_barrier(proxy, process_fd, pgid, &pmi);
             break;
         case PMIU_CMD_ABORT:
-            status = HYD_pmiserv_abort(proxy, pid, pgid, &pmi);
+            status = HYD_pmiserv_abort(proxy, process_fd, pgid, &pmi);
             break;
         default:
             /* We don't understand the command */
@@ -301,7 +301,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         buf[hdr.buflen] = 0;
 
-        status = handle_pmi_cmd(proxy, proxy->pgid, hdr.u.pmi.pid, buf, hdr.buflen,
+        status = handle_pmi_cmd(proxy, proxy->pgid, hdr.u.pmi.process_fd, buf, hdr.buflen,
                                 hdr.u.pmi.pmi_version);
         HYDU_ERR_POP(status, "unable to process PMI command\n");
 

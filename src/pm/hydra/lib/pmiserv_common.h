@@ -62,8 +62,8 @@ enum HYD_pmcd_cmd {
 
 /* PMI_CMD */
 struct HYD_hdr_pmi {
-    int pid;                    /* ID of the requesting process */
     int pmi_version;            /* PMI version */
+    int process_fd;             /* fd of the downstream process at proxy */
 };
 
 /* STDOUT/STDERR */

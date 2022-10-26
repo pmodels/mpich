@@ -173,7 +173,7 @@ static HYD_status send_cmd_upstream(struct PMIU_cmd *pmi, int fd)
 {
     struct HYD_pmcd_hdr hdr;
     hdr.cmd = CMD_PMI;
-    hdr.u.pmi.pid = fd;
+    hdr.u.pmi.process_fd = fd;
     return HYD_pmcd_pmi_send(HYD_pmcd_pmip.upstream.control, pmi, &hdr,
                              HYD_pmcd_pmip.user_global.debug);
 }

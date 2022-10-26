@@ -167,7 +167,7 @@ static HYD_status handle_pmi_cmd(int fd, char *buf, int buflen, int pmi_version)
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_PMI;
     hdr.u.pmi.pmi_version = pmi_version;
-    hdr.u.pmi.pid = fd;
+    hdr.u.pmi.process_fd = fd;
     hdr.buflen = buflen;
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
                              HYDU_SOCK_COMM_MSGWAIT);
@@ -358,7 +358,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-static HYD_status handle_pmi_response(int fd, int buflen, int pmi_version, int pid)
+static HYD_status handle_pmi_response(int fd, int buflen, int pmi_version, int process_fd)
 {
     int count, closed, sent;
     char *buf = NULL;
@@ -401,7 +401,7 @@ static HYD_status handle_pmi_response(int fd, int buflen, int pmi_version, int p
         HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n", cmd);
     }
 
-    status = HYDU_sock_write(pid, buf, buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_write(process_fd, buf, buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to forward PMI response to MPI process\n");
 
     if (HYD_pmcd_pmip.user_global.auto_cleanup) {
@@ -986,7 +986,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
             HYDU_ERR_POP(status, "launch_procs returned error\n");
         }
     } else if (hdr.cmd == CMD_PMI_RESPONSE) {
-        status = handle_pmi_response(fd, hdr.buflen, hdr.u.pmi.pmi_version, hdr.u.pmi.pid);
+        status = handle_pmi_response(fd, hdr.buflen, hdr.u.pmi.pmi_version, hdr.u.pmi.process_fd);
         HYDU_ERR_POP(status, "unable to handle PMI response\n");
     } else if (hdr.cmd == CMD_SIGNAL) {
         int signum = hdr.u.data;
