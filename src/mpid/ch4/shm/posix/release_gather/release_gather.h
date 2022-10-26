@@ -317,9 +317,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     /* Leaf nodes never skip checking */
     if (num_children == 0 || !skip_checking) {
         for (i = 0; i < num_children; i++) {
-            MPIR_ERR_CHKANDJUMP(!utarray_eltptr(children, i), mpi_errno, MPI_ERR_OTHER, "**nomem");
-            child_flag_addr =
-                MPIDI_POSIX_RELEASE_GATHER_GATHER_FLAG_ADDR(*utarray_eltptr(children, i));
+            int child_rank = *(int *) utarray_eltptr(children, i);
+            child_flag_addr = MPIDI_POSIX_RELEASE_GATHER_GATHER_FLAG_ADDR(child_rank);
             /* Wait until the child has arrived */
             MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN(child_flag_addr,
                                                             release_gather_info_ptr->gather_state -
