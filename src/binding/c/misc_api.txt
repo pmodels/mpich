@@ -135,7 +135,7 @@ MPI_Get_version:
     .skip: initcheck
 
 MPIX_GPU_query_support:
-    gpu_type: GPU_TYPE, [MPIX_GPU_SUPPORT_CUDA or MPIX_GPU_SUPPORT_ZE]
+    gpu_type: GPU_TYPE, [MPIX_GPU_SUPPORT_CUDA, MPIX_GPU_SUPPORT_ZE, or MPIX_GPU_SUPPORT_HIP]
     is_supported: LOGICAL, direction=out, [true if gpu of given type is supported, false otherwise.]
     .desc: Returns whether the specific type of GPU is supported
     .skip: global_cs, validate-GPU_TYPE
