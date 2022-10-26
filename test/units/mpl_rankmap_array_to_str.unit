@@ -1,0 +1,63 @@
+template:
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <ctype.h>
+    #include <string.h>
+    #include <stdbool.h>
+    #include <assert.h>
+
+    #define MAX_SZ 100
+    int map[MAX_SZ];
+
+    #define MPL_SUCCESS 0
+    #define MPL_ERR_FAIL 1
+    #define MPL_malloc(sz,t) malloc(sz)
+    #define MPL_realloc(p,sz,t) realloc(p,sz)
+    #define MPL_free free
+    #define MPL_snprintf snprintf
+
+    [src/mpl/src/mpl_rankmap.c:MPL_rankmap_array_to_str]
+
+    int main(int argc, char **argv)
+    {
+        int sz = argc - 1;
+        if (sz > MAX_SZ) {
+            printf("sz exceeds limit (%d > %d)\n", sz, MAX_SZ);
+            return 1;
+        }
+        for (int i = 0; i < sz; i++) {
+            map[i] = atoi(argv[1 + i]);
+        }
+
+        char *str;
+        int err = MPL_rankmap_array_to_str(map, sz, &str);
+        
+        if (err) {
+            printf("err = 0x%x\n", err);
+            return 1;
+        }
+        if (str == NULL) {
+            printf("str is NULL\n");
+            return 1;
+        }
+
+        printf("%s\n", str);
+
+        return 0;
+    }
+
+TESTS:
+    cmd: ./t 3 2 1 0
+    expect: (vector,3,2,1,0)
+
+    cmd: ./t 1 2 3 0
+    expect: (vector,(1,3,1),0)
+
+    cmd: ./t 0 0 0 0 1 1 1 1 2 2 2 2
+    expect: (vector,(0,3,4))
+
+    cmd: ./t 0 1 2 0 1 2 0 1 2 0 1 2
+    expect: (vector,[(0,3,1)]x4)
+
+    cmd: ./t 1 2 3 0 1 2 3 0 1 2 3 0
+    expect: (vector,[(1,3,1),0]x3)

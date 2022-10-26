@@ -1,0 +1,70 @@
+template:
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+
+    #define HAVE_POSIX_REGCOMP
+    #define MAX_SZ 100
+
+    #define HYD_status int
+    #define HYD_SUCCESS 0
+    #define MPL_free free
+    #define MPL_strdup strdup
+    #define MPL_snprintf_nowarn snprintf
+    #define MAX_HOSTNAME_LEN 256
+    #define HYDU_ERR_POP(status,msg) if (status) return 1
+
+    struct HYD_node {
+        char *hostname;
+        struct HYD_node *next;
+    };
+
+    static int HYDU_add_to_node_list(char *hostname, int core_count, struct HYD_node **node_list)
+    {
+        if (*node_list) {
+            HYDU_add_to_node_list(hostname, core_count, &(*node_list)->next);
+        } else {
+            (*node_list) = malloc(sizeof(struct HYD_node));
+            (*node_list)->hostname = strdup(hostname);
+            (*node_list)->next = NULL;
+        }
+        return 0;
+    }
+
+    [src/pm/hydra/lib/tools/bootstrap/external/slurm_query_node_list.c:list_to_nodes]
+
+    int main(int argc, char **argv)
+    {
+        tasks_per_node = malloc(MAX_SZ * sizeof(int));
+        list_to_nodes(argv[1]);
+        for(struct HYD_node *node = global_node_list; node; node = node->next) {
+            printf("%s,", node->hostname);
+        }
+        printf("\n");
+        return 0;
+    }
+
+TESTS:
+    cmd: ./t host
+    expect: host,
+
+    cmd: ./t 'host-[00-03]'
+    expect: host-00,host-01,host-02,host-03,
+
+    cmd: ./t 'host-[8-11]'
+    expect: host-8,host-9,host-10,host-11,
+
+    cmd: ./t 'host-[8-11,101]'
+    expect: host-8,host-9,host-10,host-11,host-101,
+
+    cmd: ./t '192.168.0.[100-104]'
+    expect: 192.168.0.100,192.168.0.101,192.168.0.102,192.168.0.103,192.168.0.104,
+
+    cmd: ./t 'h0-h2'
+    expect: h0,h1,h2,
+
+    cmd: ./t '[h0-h2]'
+    expect: h0,h1,h2,
+
+    cmd: ./t 'a1h[0-2]'
+    expect: a1h0,a1h1,a1h2,

@@ -11,6 +11,11 @@ static UT_array *pg_list;
 static void pg_dtor(void *_elt)
 {
     struct HYD_pg *pg = _elt;
+
+    if (pg->rankmap) {
+        MPL_free(pg->rankmap);
+    }
+
     if (pg->proxy_list)
         HYDU_free_proxy_list(pg->proxy_list, pg->proxy_count);
 

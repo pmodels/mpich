@@ -480,8 +480,10 @@ void HYDU_free_exec_list(struct HYD_exec *exec_list);
 HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
                                             int *proxy_count_p, struct HYD_proxy **proxy_list_p);
 HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  int pgid, int *proxy_count_p, struct HYD_proxy **proxy_list_p);
+                                  int pgid, int *rankmap,
+                                  int *proxy_count_p, struct HYD_proxy **proxy_list_p);
 HYD_status HYDU_correct_wdir(char **wdir);
+HYD_status HYDU_gen_rankmap(int process_count, struct HYD_node *node_list, int **rankmap);
 
 /* args */
 HYD_status HYDU_find_in_path(const char *execname, char **path);

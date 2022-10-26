@@ -134,126 +134,6 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
     goto fn_exit;
 }
 
-static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_str)
-{
-    int is_equal, filler_round, core_count;
-    struct HYD_string_stash stash;
-    struct block {
-        int start_idx;
-        int num_nodes;
-        int core_count;
-        struct block *next;
-    } *blocklist_head, *blocklist_tail = NULL, *block, *nblock;
-    struct HYD_node *node;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /*
-     * Blocks are of the format: (start node ID, number of nodes,
-     * core count): (sid, nn, cc)
-     *
-     * Assume B1 and B2 are neighboring blocks. The following blocks
-     * can be merged:
-     *
-     *   1. [B1(sid) + B1(nn) == B2(sid)] && [B1(cc) == B2(cc)]
-     *
-     *   2. [B1(sid) == B2(sid)] && [B1(nn) == 1]
-     *
-     * Special case: If all blocks are exactly the same, we delete all
-     *               except one.
-     */
-    blocklist_head = NULL;
-
-    filler_round = 1;
-    for (int i_proxy = 0;; i_proxy++) {
-        if (filler_round && i_proxy == pg->proxy_count) {
-            i_proxy = 0;
-            filler_round = 0;
-        } else if (i_proxy == pg->proxy_count) {
-            break;
-        }
-        struct HYD_proxy *proxy = &pg->proxy_list[i_proxy];
-
-        if (filler_round && proxy->filler_processes == 0)
-            continue;
-
-        node = proxy->node;
-        core_count = filler_round ? proxy->filler_processes : proxy->node->core_count;
-
-        if (blocklist_head == NULL) {
-            HYDU_MALLOC_OR_JUMP(block, struct block *, sizeof(struct block), status);
-            block->start_idx = node->node_id;
-            block->num_nodes = 1;
-            block->core_count = core_count;
-            block->next = NULL;
-
-            blocklist_tail = blocklist_head = block;
-        } else if (blocklist_tail->start_idx + blocklist_tail->num_nodes == node->node_id &&
-                   blocklist_tail->core_count == core_count) {
-            blocklist_tail->num_nodes++;
-        } else if (blocklist_tail->start_idx == node->node_id && blocklist_tail->num_nodes == 1) {
-            blocklist_tail->core_count += core_count;
-        } else {
-            HYDU_MALLOC_OR_JUMP(blocklist_tail->next, struct block *, sizeof(struct block), status);
-            blocklist_tail = blocklist_tail->next;
-            blocklist_tail->start_idx = node->node_id;
-            blocklist_tail->num_nodes = 1;
-            blocklist_tail->core_count = core_count;
-            blocklist_tail->next = NULL;
-        }
-    }
-
-    /* If all the blocks are equivalent, just use one block */
-    is_equal = 1;
-    for (block = blocklist_head; block->next; block = block->next) {
-        if (block->start_idx != block->next->start_idx ||
-            block->core_count != block->next->core_count) {
-            is_equal = 0;
-            break;
-        }
-    }
-    if (is_equal) {
-        for (block = blocklist_head; block->next;) {
-            nblock = block->next;
-            block->next = nblock->next;
-            MPL_free(nblock);
-        }
-        blocklist_tail = blocklist_head;
-    }
-
-    /* Create the mapping out of the blocks */
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, MPL_strdup("("), status);
-    HYD_STRING_STASH(stash, MPL_strdup("vector,"), status);
-    for (block = blocklist_head; block; block = block->next) {
-        HYD_STRING_STASH(stash, MPL_strdup("("), status);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(block->start_idx), status);
-        HYD_STRING_STASH(stash, MPL_strdup(","), status);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(block->num_nodes), status);
-        HYD_STRING_STASH(stash, MPL_strdup(","), status);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(block->core_count), status);
-        HYD_STRING_STASH(stash, MPL_strdup(")"), status);
-        if (block->next)
-            HYD_STRING_STASH(stash, MPL_strdup(","), status);
-    }
-    HYD_STRING_STASH(stash, MPL_strdup(")"), status);
-
-    HYD_STRING_SPIT(stash, *process_mapping_str, status);
-
-    for (block = blocklist_head; block; block = nblock) {
-        nblock = block->next;
-        MPL_free(block);
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status add_env_to_exec_stash(struct HYD_string_stash *exec_stash, const char *optname,
                                         struct HYD_env *env_list)
 {
@@ -293,9 +173,8 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     struct HYD_string_stash stash, exec_stash;
     HYD_status status = HYD_SUCCESS;
 
-    status = pmi_process_mapping(pg, &mapping);
-    HYDU_ERR_POP(status, "Unable to get process mapping information\n");
-    HYDU_ASSERT(mapping, status);
+    int mpl_err = MPL_rankmap_array_to_str(pg->rankmap, pg->pg_process_count, &mapping);
+    HYDU_ASSERT(mpl_err == MPL_SUCCESS && mapping, status);
 
     /* Make sure the mapping is within the size allowed by PMI */
     if (strlen(mapping) > PMI_MAXVALLEN) {

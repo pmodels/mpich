@@ -8,6 +8,7 @@
 #include "bscu.h"
 #include "slurm.h"
 
+/* START UNIT - list_to_nodes */
 #if defined(HAVE_SLURM)
 #include <slurm/slurm.h>        /* for slurm_hostlist_create */
 #elif defined(HAVE_POSIX_REGCOMP)
@@ -411,6 +412,7 @@ static HYD_status list_to_nodes(char *str)
     goto fn_exit;
 }
 #endif
+/* END UNIT - list_to_nodes */
 
 static HYD_status extract_tasks_per_node(int nnodes, char *task_list)
 {
