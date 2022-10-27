@@ -187,8 +187,8 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count,
                     count_sizes[ii] = gpfs_offsets[ii * 3 + 2];
                 }
             } else {
-                gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(2 * nprocs * sizeof(ADIO_Offset));
-                gpfs_offsets = (ADIO_Offset *) ADIOI_Malloc(2 * nprocs * sizeof(ADIO_Offset));
+                gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(4 * nprocs * sizeof(ADIO_Offset));
+                gpfs_offsets = gpfs_offsets0 + 2 * nprocs;
                 for (ii = 0; ii < nprocs; ii++) {
                     gpfs_offsets0[ii * 2] = 0;
                     gpfs_offsets0[ii * 2 + 1] = 0;
