@@ -1112,29 +1112,39 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
      * communicator must not be freed.  That is the reason for the
      * test on mpi_errno here. */
     if (mpi_errno == MPI_SUCCESS) {
-#ifdef HAVE_ERROR_CHECKING
-        /* receive any unmatched messages to clear the queue and avoid context_id
-         * reuse issues. unmatched messages could be the result of user error,
-         * or send operations that were unable to be canceled by the device layer */
-        MPIR_Object_add_ref(comm_ptr);
-        int flag;
-        MPI_Status status;
-        do {
-            mpi_errno = MPID_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, comm_ptr, 0, &flag, &status);
-            MPIR_ERR_CHECK(mpi_errno);
-            if (flag) {
-                /* receive the message, ignore truncation errors */
-                MPIR_Request *request;
-                MPID_Recv(NULL, 0, MPI_DATATYPE_NULL, status.MPI_SOURCE, status.MPI_TAG, comm_ptr,
-                          0, MPI_STATUS_IGNORE, &request);
-                if (request != NULL) {
-                    MPIR_Wait(&request->handle, MPI_STATUS_IGNORE);
+        bool do_message_check = false;
+#if defined(HAVE_ERROR_CHECKING)
+        do_message_check = true;
+#endif
+#if defined(MPICH_IS_THREADED) && MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+        /* anysrc/anytag probe is extremely messy with pervci thread-cs. Avoid for for now. */
+        if (MPIR_ThreadInfo.isThreaded) {
+            do_message_check = false;
+        }
+#endif
+        if (do_message_check) {
+            /* receive any unmatched messages to clear the queue and avoid context_id
+             * reuse issues. unmatched messages could be the result of user error,
+             * or send operations that were unable to be canceled by the device layer */
+            MPIR_Object_add_ref(comm_ptr);
+            int flag;
+            MPI_Status status;
+            do {
+                mpi_errno = MPID_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, comm_ptr, 0, &flag, &status);
+                MPIR_ERR_CHECK(mpi_errno);
+                if (flag) {
+                    /* receive the message, ignore truncation errors */
+                    MPIR_Request *request;
+                    MPID_Recv(NULL, 0, MPI_DATATYPE_NULL, status.MPI_SOURCE, status.MPI_TAG,
+                              comm_ptr, 0, MPI_STATUS_IGNORE, &request);
+                    if (request != NULL) {
+                        MPIR_Wait(&request->handle, MPI_STATUS_IGNORE);
+                    }
+                    unmatched_messages++;
                 }
-                unmatched_messages++;
-            }
-        } while (flag);
-        MPIR_Object_release_ref(comm_ptr, &in_use);
-#endif /* HAVE_ERROR_CHECKING */
+            } while (flag);
+            MPIR_Object_release_ref(comm_ptr, &in_use);
+        }
 
         /* If this communicator is our parent, and we're disconnecting
          * from the parent, mark that fact */
