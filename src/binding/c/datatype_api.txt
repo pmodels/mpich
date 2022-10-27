@@ -136,6 +136,13 @@ MPI_Pack:
         MPIR_ERRTEST_ARGNULL(inbuf, "inbuf", mpi_errno);
     }
 }
+{ -- early_return --
+    MPI_Aint dt_size;
+    MPIR_Datatype_get_size_macro(datatype, dt_size);
+    if (dt_size == 0) {
+        goto fn_exit;
+    }
+}
 
 MPI_Pack_external:
     .desc: Packs a datatype into contiguous memory, using the external32 format
@@ -167,6 +174,13 @@ MPI_Unpack:
 { -- error_check -- inbuf, outbuf
     if (outcount > 0) {
         MPIR_ERRTEST_ARGNULL(outbuf, "outbuf", mpi_errno);
+    }
+}
+{ -- early_return --
+    MPI_Aint dt_size;
+    MPIR_Datatype_get_size_macro(datatype, dt_size);
+    if (dt_size == 0) {
+        goto fn_exit;
     }
 }
 
