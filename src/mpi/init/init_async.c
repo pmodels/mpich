@@ -323,7 +323,7 @@ int MPII_init_async(void)
 
     utarray_new(async_thread_list, &icd_async_thread_list, MPL_MEM_OTHER);
 
-    if (MPIR_CVAR_ASYNC_PROGRESS) {
+    if (MPIR_CVAR_ASYNC_PROGRESS && MPII_world_is_initialized()) {
         if (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPID_Init_async_thread();
             MPIR_ERR_CHECK(mpi_errno);
