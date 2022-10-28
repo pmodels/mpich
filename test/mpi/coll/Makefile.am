@@ -23,6 +23,7 @@ noinst_PROGRAMS =      \
     allred4            \
     allred5            \
     allred6            \
+    allred_derived     \
     allredmany         \
     alltoall1          \
     alltoallv          \
