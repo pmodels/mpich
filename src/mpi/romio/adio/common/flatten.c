@@ -32,7 +32,9 @@ static int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
     node->refct--;
 
     if (node->refct <= 0) {
-        ADIOI_Free(node->blocklens);
+        if (node->blocklens) {
+            ADIOI_Free(node->blocklens);
+        }
         ADIOI_Free(node);
     }
 
@@ -63,12 +65,22 @@ ADIOI_Flatlist_node *ADIOI_Flatten_and_find(MPI_Datatype datatype)
 #ifdef HAVE_MPIX_TYPE_IOV
 ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 {
-    MPI_Count type_size, num_iovs;
-    MPI_Count actual;
+    MPI_Count type_size;
+    ADIOI_Flatlist_node *flat;
 
     MPI_Type_size_x(datatype, &type_size);
 
-    {
+    if (type_size == 0) {
+        /* copy to flatlist */
+        flat = ADIOI_Malloc(sizeof(ADIOI_Flatlist_node));
+        flat->count = 0;
+        flat->blocklens = NULL;
+        flat->indices = NULL;
+        flat->refct = 1;
+        flat->flag = 0;
+    } else {
+        MPI_Count num_iovs, actual;
+
         MPIX_Type_iov_len(datatype, type_size, &num_iovs, &actual);
         assert(num_iovs > 0);
         assert(actual == type_size);
@@ -81,7 +93,6 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
         assert(actual == num_iovs);
 
         /* copy to flatlist */
-        ADIOI_Flatlist_node *flat;
         flat = ADIOI_Malloc(sizeof(ADIOI_Flatlist_node));
         flat->count = num_iovs;
         flat->blocklens = (ADIO_Offset *) ADIOI_Malloc(flat->count * 2 * sizeof(ADIO_Offset));
@@ -92,6 +103,8 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
             flat->indices[i] = (ADIO_Offset) iovs[i].iov_base;
             flat->blocklens[i] = (ADIO_Offset) iovs[i].iov_len;
         }
+
+        ADIOI_Free(iovs);
 
         /* update flags */
         flat->flag = 0;
@@ -119,7 +132,6 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
     /* cache it to attribute */
     MPI_Type_set_attr(datatype, ADIOI_Flattened_type_keyval, flat);
 
-    ADIOI_Free(iovs);
     return flat;
 }
 
