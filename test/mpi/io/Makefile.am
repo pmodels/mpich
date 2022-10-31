@@ -17,6 +17,7 @@ noinst_PROGRAMS = \
     getextent     \
     setinfo       \
     setviewcur    \
+    setview_zero  \
     i_noncontig   \
     async         \
     async_any     \
