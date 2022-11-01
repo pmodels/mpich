@@ -5,6 +5,7 @@ rd_end 2
 getextent 2
 setinfo 4
 setviewcur 4
+setview_zero 3
 i_noncontig 2
 async 4
 async_any 4
