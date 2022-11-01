@@ -158,21 +158,25 @@ int main(int argc, char **argv)
     struct HYD_pg *pg;
     pg = PMISERV_pg_by_id(0);
 
-    /* If the number of processes is not given, we allocate all the
-     * available nodes to each executable */
-    /* NOTE:
-     *   user may accidentally give on command line -np 0, or even -np -1,
-     *   these cases will all be treated as if it is being ignored.
-     */
-    pg->pg_process_count = 0;
-    for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->proc_count <= 0) {
-            global_core_count = 0;
-            for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
-                global_core_count += node->core_count;
-            exec->proc_count = global_core_count;
+    if (HYD_server_info.singleton_port > 0) {
+        pg->pg_process_count = 1;
+    } else {
+        /* If the number of processes is not given, we allocate all the
+         * available nodes to each executable */
+        /* NOTE:
+         *   user may accidentally give on command line -np 0, or even -np -1,
+         *   these cases will all be treated as if it is being ignored.
+         */
+        pg->pg_process_count = 0;
+        for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
+            if (exec->proc_count <= 0) {
+                global_core_count = 0;
+                for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
+                    global_core_count += node->core_count;
+                exec->proc_count = global_core_count;
+            }
+            pg->pg_process_count += exec->proc_count;
         }
-        pg->pg_process_count += exec->proc_count;
     }
 
     status = HYDU_list_inherited_env(&HYD_server_info.user_global.global_env.inherited);

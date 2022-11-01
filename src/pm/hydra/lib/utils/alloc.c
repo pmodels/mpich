@@ -255,6 +255,7 @@ HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
 
     init_proxy(proxy, pgid, node);
 
+    proxy->proxy_id = 0;
     proxy->proxy_process_count = 1;
     proxy->node->active_processes = 1;
 

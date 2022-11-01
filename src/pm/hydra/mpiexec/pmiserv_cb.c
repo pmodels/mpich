@@ -232,9 +232,9 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "unable to read status from proxy\n");
         HYDU_ASSERT(!closed, status);
 
-        if (proxy->pgid != 0) {
+        if (proxy->pgid != 0 || HYD_server_info.singleton_port > 0) {
             /* We initialize the debugger code only for non-dynamically
-             * spawned processes */
+             * spawned processes and non-singleton */
             goto fn_exit;
         }
 
