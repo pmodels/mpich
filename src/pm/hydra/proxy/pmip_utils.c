@@ -131,7 +131,8 @@ static HYD_status singleton_port_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYD_pmcd_pmip.user_global.singleton_port = atoi(**argv);
+    HYD_pmcd_pmip.singleton_port = atoi(**argv);
+    HYD_pmcd_pmip.is_singleton = true;
 
     (*argv)++;
 
@@ -142,7 +143,7 @@ static HYD_status singleton_pid_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYD_pmcd_pmip.user_global.singleton_pid = atoi(**argv);
+    HYD_pmcd_pmip.singleton_pid = atoi(**argv);
 
     (*argv)++;
 

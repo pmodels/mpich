@@ -476,16 +476,15 @@ static HYD_status singleton_init(void)
 
     HYD_pmcd_pmip.downstream.out[0] = 0;
     HYD_pmcd_pmip.downstream.err[0] = 0;
-    HYD_pmcd_pmip.downstream.pid[0] = HYD_pmcd_pmip.user_global.singleton_pid;
+    HYD_pmcd_pmip.downstream.pid[0] = HYD_pmcd_pmip.singleton_pid;
     HYD_pmcd_pmip.downstream.exit_status[0] = PMIP_EXIT_STATUS_UNSET;
     HYD_pmcd_pmip.downstream.pmi_rank[0] = 0;
     HYD_pmcd_pmip.downstream.pmi_fd[0] = HYD_FD_UNSET;
     HYD_pmcd_pmip.downstream.pmi_fd_active[0] = 1;
 
     int fd;
-    status =
-        HYDU_sock_connect("localhost", HYD_pmcd_pmip.user_global.singleton_port, &fd, 0,
-                          HYD_CONNECT_DELAY);
+    status = HYDU_sock_connect("localhost", HYD_pmcd_pmip.singleton_port, &fd, 0,
+                               HYD_CONNECT_DELAY);
     HYDU_ERR_POP(status, "unable to connect to singleton process\n");
     HYD_pmcd_pmip.downstream.pmi_fd[0] = fd;
 
@@ -979,7 +978,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
                                 HYD_pmcd_pmip.user_global.membind);
         HYDU_ERR_POP(status, "unable to initialize process topology\n");
 
-        if (HYD_pmcd_pmip.user_global.singleton_port > 0) {
+        if (HYD_pmcd_pmip.is_singleton) {
             status = singleton_init();
             HYDU_ERR_POP(status, "singleton_init returned error\n");
         } else {

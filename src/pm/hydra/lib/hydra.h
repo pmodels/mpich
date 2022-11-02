@@ -380,8 +380,6 @@ struct HYD_user_global {
     int skip_launch_node;
     int gpus_per_proc;
     int gpu_subdevs_per_proc;
-    int singleton_port;
-    int singleton_pid;
 
     struct HYD_env_global global_env;
 };
