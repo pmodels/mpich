@@ -1496,6 +1496,7 @@ static HYD_status pmi_args_fn(char *arg, char ***argv)
 
     HYD_server_info.singleton_port = atoi((*argv)[0]);
     HYD_server_info.singleton_pid = atoi((*argv)[3]);
+    HYD_server_info.is_singleton = true;
 
     (*argv) += 4;
 
