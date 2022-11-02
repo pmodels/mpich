@@ -100,8 +100,7 @@ void adio_daos_coh_release(struct adio_daos_hdl *hdl);
 
 int ADIOI_DAOS_aio_free_fn(void *extra_state);
 int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status * status);
-int ADIOI_DAOS_aio_wait_fn(MPI_Aint count, void **array_of_states, double timeout,
-                           MPI_Status * status);
+int ADIOI_DAOS_aio_wait_fn(int count, void **array_of_states, double timeout, MPI_Status * status);
 int ADIOI_DAOS_err(const char *myname, const char *filename, int line, int rc);
 
 void ADIOI_DAOS_Open(ADIO_File fd, int *error_code);
