@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vni,
     if (c == 0) {
         if ((event_id == MPIDI_OFI_EVENT_SEND_PACK) &&
             (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer))) {
-            MPIR_gpu_free_host(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
+            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
         } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_SEND_NOPACK))
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
 
@@ -86,7 +86,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
                             MPIDI_OFI_REQUEST(rreq, noncontig.pack.count),
                             MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0,
                             &actual_unpack_bytes);
-        MPIR_gpu_free_host(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
+        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
         if (actual_unpack_bytes != (MPI_Aint) count) {
             rreq->status.MPI_ERROR =
                 MPIR_Err_create_code(MPI_SUCCESS,
@@ -133,7 +133,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
                                             ss_bits), vni_local, tinjectdata, FALSE /* eagain */);
     }
 
-    MPIDIU_request_complete(rreq);
+    MPIDI_Request_complete_fast(rreq);
 
   fn_exit:
     MPIR_FUNC_EXIT;

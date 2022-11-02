@@ -3,11 +3,11 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
+#include "mpitest.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "mpitest.h"
+#include <limits.h>
 
 /* Inspired by the Intel MPI_Type_vector_blklen test.
    Added to include a test of a typerep optimization that failed.
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     outbuf = (char *) malloc(outsize);
     for (i = 0; i < outsize; i++) {
         inbuf[i] = i % 64;
-        outbuf[i] = -1;
+        outbuf[i] = CHAR_MAX;
     }
 
     MPI_Pack_size(1, newtype, MPI_COMM_WORLD, &psize);
@@ -61,14 +61,20 @@ int main(int argc, char *argv[])
             for (k = 0; k < 59; k++) {
                 if (*p != k % 64) {
                     errs++;
-                    fprintf(stderr, "[%d,%d,%d]expected %d but saw %d\n", i, j, k, (k % 64), *p);
+                    if (errs < 10) {
+                        fprintf(stderr, "[%d,%d,%d]expected %d but saw %d\n", i, j, k, (k % 64),
+                                *p);
+                    }
                 }
                 p++;
             }
             for (k = 59; k < 64; k++) {
-                if (*p != -1) {
+                if (*p != CHAR_MAX) {
                     errs++;
-                    fprintf(stderr, "[%d,%d,%d]expected -1 but saw %d\n", i, j, k, *p);
+                    if (errs < 10) {
+                        fprintf(stderr, "[%d,%d,%d]expected %c but saw %d\n",
+                                i, j, k, CHAR_MAX, *p);
+                    }
                 }
                 p++;
             }

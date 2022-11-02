@@ -103,6 +103,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
     return MPI_SUCCESS;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_Request_complete_fast(MPIR_Request * req)
+{
+    int incomplete;
+    MPIR_cc_decr(req->cc_ptr, &incomplete);
+    if (!incomplete) {
+        MPIDI_CH4_REQUEST_FREE(req);
+    }
+}
+
 MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
 {
     MPIR_FUNC_ENTER;

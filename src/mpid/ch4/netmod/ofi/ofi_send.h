@@ -253,12 +253,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         /* Pack */
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_PACK;
 
-        /* FIXME: allocating a GPU registered host buffer adds some additional overhead.
-         * However, once the new buffer pool infrastructure is setup, we would simply be
-         * allocating a buffer from the pool, so whether it's a regular malloc buffer or a GPU
-         * registered buffer should be equivalent with respect to performance. */
-        MPIR_gpu_malloc_host((void **) &MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
-                             data_sz);
+        MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = MPL_malloc(data_sz, MPL_MEM_OTHER);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
@@ -414,7 +409,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
             if (!MPIDI_OFI_ENABLE_HMEM) {
                 /* Force pack for GPU buffer. */
                 void *host_buf = NULL;
-                MPIR_gpu_malloc_host(&host_buf, data_sz);
+                host_buf = MPL_malloc(data_sz, MPL_MEM_OTHER);
                 MPIR_Typerep_pack(buf, count, datatype, 0, host_buf, data_sz, &actual_pack_bytes);
                 MPIR_Assert(actual_pack_bytes == data_sz);
                 send_buf = host_buf;
@@ -425,7 +420,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         if (actual_pack_bytes > 0) {
             /* Free stage host buf (assigned to send_buf already) after
              * lightweight_send. */
-            MPIR_gpu_free_host(send_buf);
+            MPL_free(send_buf);
         }
         if (!noreq) {
             *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);

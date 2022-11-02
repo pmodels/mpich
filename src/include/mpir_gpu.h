@@ -74,6 +74,10 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_dev(const void *ptr)
     return false;
 }
 
+/* gpu registration or pinning has huge latency (~500us), thus the following
+ * functions should be avoided at all critical paths. Use unregistered buffer
+ * (MPL_malloc) instead. */
+
 MPL_STATIC_INLINE_PREFIX int MPIR_gpu_register_host(const void *ptr, size_t size)
 {
     if (ENABLE_GPU) {
