@@ -13,6 +13,12 @@
 
 /* Extended from src/pt2pt/pingping.c with partitioned APIs. */
 
+/* the stress testing of unexpected message queue is covered by the pt2pt/pingping,
+ * test. Use barrier to simplify this test to focus on testing partitioned
+ * communications.
+ */
+#define USE_BARRIER 1
+
 /*
 static char MTEST_Descrip[] = "Pingping test with partitioned point-to-point routines";
 */

@@ -12,6 +12,13 @@ int main(void)
 
     MTest_Init(NULL, NULL);
 
+    /* Current MPICH may not support thread multiple, especially with pervci */
+    int thread_level;
+    MPI_Query_thread(&thread_level);
+    if (thread_level == MPI_THREAD_MULTIPLE) {
+        goto fn_exit;
+    }
+
     MPI_Comm comm;
     MPI_Comm_dup(MPI_COMM_WORLD, &comm);
     MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
@@ -39,6 +46,7 @@ int main(void)
         errs++;
     }
 
+  fn_exit:
     MTest_Finalize(errs);
 
     return MTestReturnValue(errs);
