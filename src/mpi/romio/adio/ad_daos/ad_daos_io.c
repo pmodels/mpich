@@ -187,8 +187,7 @@ int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status * status)
 }
 
 /* wait for multiple requests to complete */
-int ADIOI_DAOS_aio_wait_fn(MPI_Aint count, void **array_of_states, double timeout,
-                           MPI_Status * status)
+int ADIOI_DAOS_aio_wait_fn(int count, void **array_of_states, double timeout, MPI_Status * status)
 {
 
     struct ADIO_DAOS_req **aio_reqlist;
