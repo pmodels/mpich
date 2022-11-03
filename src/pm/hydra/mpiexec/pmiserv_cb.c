@@ -232,25 +232,23 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "unable to read status from proxy\n");
         HYDU_ASSERT(!closed, status);
 
-        if (proxy->pgid != 0) {
-            /* We initialize the debugger code only for non-dynamically
-             * spawned processes */
-            goto fn_exit;
-        }
+        /* We initialize the debugger code only for non-dynamically
+         * spawned processes and non-singleton */
+        if (proxy->pgid == 0 && !HYD_server_info.is_singleton) {
+            struct HYD_pg *pg;
+            pg = PMISERV_pg_by_id(proxy->pgid);
 
-        struct HYD_pg *pg;
-        pg = PMISERV_pg_by_id(proxy->pgid);
-
-        /* Check if all the PIDs have been received */
-        for (int i = 0; i < pg->proxy_count; i++) {
-            if (pg->proxy_list[i].pid == NULL) {
-                goto fn_exit;
+            /* Check if all the PIDs have been received */
+            for (int i = 0; i < pg->proxy_count; i++) {
+                if (pg->proxy_list[i].pid == NULL) {
+                    goto fn_exit;
+                }
             }
-        }
 
-        /* Call the debugger initialization */
-        status = HYDT_dbg_setup_procdesc(pg);
-        HYDU_ERR_POP(status, "debugger setup failed\n");
+            /* Call the debugger initialization */
+            status = HYDT_dbg_setup_procdesc(pg);
+            HYDU_ERR_POP(status, "debugger setup failed\n");
+        }
     } else if (hdr.cmd == CMD_EXIT_STATUS) {
         HYDU_MALLOC_OR_JUMP(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int),
                             status);

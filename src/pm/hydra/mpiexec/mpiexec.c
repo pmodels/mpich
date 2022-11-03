@@ -155,50 +155,57 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }
 
-    struct HYD_pg *pg;
-    pg = PMISERV_pg_by_id(0);
-
-    /* If the number of processes is not given, we allocate all the
-     * available nodes to each executable */
-    /* NOTE:
-     *   user may accidentally give on command line -np 0, or even -np -1,
-     *   these cases will all be treated as if it is being ignored.
-     */
-    pg->pg_process_count = 0;
-    for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->proc_count <= 0) {
-            global_core_count = 0;
-            for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
-                global_core_count += node->core_count;
-            exec->proc_count = global_core_count;
-        }
-        pg->pg_process_count += exec->proc_count;
-    }
-
     status = HYDU_list_inherited_env(&HYD_server_info.user_global.global_env.inherited);
     HYDU_ERR_POP(status, "unable to get the inherited env list\n");
 
-    if (HYD_server_info.rankmap) {
-        pg->rankmap = MPL_malloc(pg->pg_process_count * sizeof(int), MPL_MEM_OTHER);
-        HYDU_ASSERT(pg->rankmap, status);
+    struct HYD_pg *pg;
+    pg = PMISERV_pg_by_id(0);
 
-        int err = MPL_rankmap_str_to_array(HYD_server_info.rankmap,
-                                           pg->pg_process_count, pg->rankmap);
-        HYDU_ASSERT(err == MPL_SUCCESS, status);
-    } else {
-        status = HYDU_gen_rankmap(pg->pg_process_count, HYD_server_info.node_list, &pg->rankmap);
+    if (HYD_server_info.is_singleton) {
+        pg->pg_process_count = 1;
+
+        status = HYDU_gen_rankmap(1, HYD_server_info.node_list, &pg->rankmap);
         HYDU_ERR_POP(status, "error create rankmap\n");
-    }
 
-    if (HYD_server_info.singleton_port > 0) {
         status = HYDU_create_proxy_list_singleton(HYD_server_info.node_list, 0,
                                                   &pg->proxy_count, &pg->proxy_list);
+        HYDU_ERR_POP(status, "unable to create singleton proxy list\n");
     } else {
+        /* If the number of processes is not given, we allocate all the
+         * available nodes to each executable */
+        /* NOTE:
+         *   user may accidentally give on command line -np 0, or even -np -1,
+         *   these cases will all be treated as if it is being ignored.
+         */
+        pg->pg_process_count = 0;
+        for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
+            if (exec->proc_count <= 0) {
+                global_core_count = 0;
+                for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
+                    global_core_count += node->core_count;
+                exec->proc_count = global_core_count;
+            }
+            pg->pg_process_count += exec->proc_count;
+        }
+
+        if (HYD_server_info.rankmap) {
+            pg->rankmap = MPL_malloc(pg->pg_process_count * sizeof(int), MPL_MEM_OTHER);
+            HYDU_ASSERT(pg->rankmap, status);
+
+            int err = MPL_rankmap_str_to_array(HYD_server_info.rankmap,
+                                               pg->pg_process_count, pg->rankmap);
+            HYDU_ASSERT(err == MPL_SUCCESS, status);
+        } else {
+            status = HYDU_gen_rankmap(pg->pg_process_count, HYD_server_info.node_list,
+                                      &pg->rankmap);
+            HYDU_ERR_POP(status, "error create rankmap\n");
+        }
+
         status = HYDU_create_proxy_list(pg->pg_process_count, HYD_uii_mpx_exec_list,
                                         HYD_server_info.node_list, 0, pg->rankmap,
                                         &pg->proxy_count, &pg->proxy_list);
+        HYDU_ERR_POP(status, "unable to create proxy list\n");
     }
-    HYDU_ERR_POP(status, "unable to create proxy list\n");
 
     /* If the user didn't specify a local hostname, try to find one in
      * the list of nodes passed to us */

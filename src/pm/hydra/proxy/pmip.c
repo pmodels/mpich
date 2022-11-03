@@ -201,10 +201,8 @@ int main(int argc, char **argv)
     }
 
     /* collect exit_status unless it is a singleton */
-    if (HYD_pmcd_pmip.user_global.singleton_pid > 0) {
+    if (HYD_pmcd_pmip.is_singleton) {
         HYDU_ASSERT(HYD_pmcd_pmip.local.proxy_process_count == 1, status);
-        HYDU_ASSERT(HYD_pmcd_pmip.downstream.pid[0] == HYD_pmcd_pmip.user_global.singleton_pid,
-                    status);
         /* We won't get the singleton's exit status. Assume it's 0. */
         if (HYD_pmcd_pmip.downstream.exit_status[0] == PMIP_EXIT_STATUS_UNSET) {
             HYD_pmcd_pmip.downstream.exit_status[0] = 0;

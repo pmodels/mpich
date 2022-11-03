@@ -27,8 +27,6 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->skip_launch_node = -1;
     user_global->gpus_per_proc = HYD_GPUS_PER_PROC_UNSET;
     user_global->gpu_subdevs_per_proc = HYD_GPUS_PER_PROC_UNSET;
-    user_global->singleton_port = 0;
-    user_global->singleton_pid = 0;
 
     HYDU_init_global_env(&user_global->global_env);
 }
@@ -255,6 +253,7 @@ HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
 
     init_proxy(proxy, pgid, node);
 
+    proxy->proxy_id = 0;
     proxy->proxy_process_count = 1;
     proxy->node->active_processes = 1;
 

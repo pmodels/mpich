@@ -19,6 +19,10 @@ struct HYD_pmcd_pmip_map {
 struct HYD_pmcd_pmip_s {
     struct HYD_user_global user_global;
 
+    bool is_singleton;
+    int singleton_port;
+    int singleton_pid;
+
     struct {
         struct {
             int local_filler;

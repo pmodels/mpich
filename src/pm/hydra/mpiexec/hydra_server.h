@@ -50,6 +50,7 @@ struct HYD_server_info_s {
     char *rankmap;
     time_t time_start;
 
+    bool is_singleton;
     int singleton_port;
     int singleton_pid;
 
@@ -84,8 +85,5 @@ void PMISERV_proxy_finalize(void);
 int PMISERV_proxy_alloc(void);  /* return proxy_id */
 int PMISERV_proxy_max_id(void);
 struct HYD_proxy *PMISERV_proxy_by_id(int proxy_id);
-
-HYD_status PMISERV_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                     int pgid, bool is_singleton);
 
 #endif /* HYDRA_SERVER_H_INCLUDED */

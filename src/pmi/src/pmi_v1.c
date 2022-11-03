@@ -857,16 +857,21 @@ static int PMII_singinit(void)
 
     if (pid == 0) {
         const char *newargv[8];
-        newargv[0] = "mpiexec";
-        newargv[1] = "-pmi_args";
-        newargv[2] = port_c;
+        int i = 0;
+        newargv[i++] = "mpiexec";
+        if (PMIU_verbose) {
+            newargv[i++] = "-v";
+        }
+        newargv[i++] = "-pmi_args";
+        newargv[i++] = port_c;
         /* FIXME: Use a valid hostname */
-        newargv[3] = "default_interface";       /* default interface name, for now */
-        newargv[4] = "default_key";     /* default authentication key, for now */
+        newargv[i++] = "default_interface";     /* default interface name, for now */
+        newargv[i++] = "default_key";   /* default authentication key, for now */
         char charpid[8];
         MPL_snprintf(charpid, 8, "%d", getpid());
-        newargv[5] = charpid;
-        newargv[6] = NULL;
+        newargv[i++] = charpid;
+        newargv[i++] = NULL;
+        PMIU_Assert(i <= 8);
         rc = execvp(newargv[0], (char **) newargv);
 
         /* never should return unless failed */
