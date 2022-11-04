@@ -121,6 +121,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
 
     MPIR_FUNC_ENTER;
 
+    /* FIXME: this fallback check assumes device algorithms are limited by release gather shm cell size */
+    MPI_Aint dt_size;
+    MPIR_Datatype_get_size_macro(datatype, dt_size);
+    if (dt_size >=
+        MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS) {
+        mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
+
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
@@ -655,6 +665,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
     };
 
     MPIR_FUNC_ENTER;
+
+    /* FIXME: this fallback check assumes device algorithms are limited by release gather shm cell size */
+    MPI_Aint dt_size;
+    MPIR_Datatype_get_size_macro(datatype, dt_size);
+    if (dt_size >=
+        MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS) {
+        mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
