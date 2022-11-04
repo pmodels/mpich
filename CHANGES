@@ -2,6 +2,8 @@
                                Changes in 4.1
 ===============================================================================
 
+# Thread-cs in ch4 changed to per-vci.
+
 # Testsuite (test/mpi) is configured separately from mpich configure.
 
 # Added options in autogen to accelerate CI builds, including using pre-built

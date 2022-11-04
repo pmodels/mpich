@@ -506,7 +506,7 @@ AC_ARG_ENABLE(thread-cs,
 			[Choose the method used for critical sections
                          and other atomic updates when multiple
                          threads are present.  Values may be default, global,
-                         per-object, per-vci, lock-free. Default is global.
+                         per-object, per-vci, lock-free. Default is global for ch3 and per-vci for ch4.
                         ]),,enable_thread_cs=default)
 
 AC_ARG_ENABLE(refcount,
@@ -1204,7 +1204,11 @@ thread_refcount=MPICH_REFCOUNT__NONE
 if test "$enable_threads" = "multiple" ; then
     # default depends on ch3 or ch4
     if test "$enable_thread_cs" = "default" ; then
-        enable_thread_cs="global"
+        if test "$device_name" = "ch4" ; then
+            enable_thread_cs="per-vci"
+        else
+            enable_thread_cs="global"
+        fi
     fi
 
     case $enable_thread_cs in
