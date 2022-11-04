@@ -399,13 +399,6 @@ sub LoadTests {
             }
 
             my $test_opt = {args=>[], envs=>[], mpiexecargs=>[]};
-            if ($g_opt{has_gpu_test}) {
-                if ($_f ne "testlist.gpu" and $curdir !~ /\bcuda$/) {
-                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=0";
-                } else {
-                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
-                }
-            }
 
             my $np = "";
             my $requiresStrict = "";
@@ -421,7 +414,7 @@ sub LoadTests {
                 if ($args[$i] =~ /([^=]+)=(.*)/) {
                     my $key = $1;
                     my $value = $2;
-                    if ($key =~ /^(resultTest|init|timeLimit|xfail|lock|mem)$/) {
+                    if ($key =~ /^(resultTest|init|timeLimit|xfail|lock|mem|gpu)$/) {
                         $test_opt->{$key} = $value;
                     }
                     elsif ($key eq "arg") {
@@ -439,6 +432,16 @@ sub LoadTests {
                     else {
                         print STDERR "Unrecognized key $key in $listfileSource\n";
                     }
+                }
+            }
+
+            if ($g_opt{has_gpu_test}) {
+                if ($test_opt->{gpu}) {
+                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
+                } elsif ($_f eq "testlist.gpu" or $curdir =~ /\bcuda$/) {
+                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=1";
+                } else {
+                    push @{$test_opt->{envs}}, "MPIR_CVAR_ENABLE_GPU=0";
                 }
             }
 

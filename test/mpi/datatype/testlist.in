@@ -12,8 +12,8 @@ transpose_pack_oldapi 1 strict=FALSE
 slice_pack 1
 struct_pack 1
 structpack2 1
-struct_pack_mpi_bottom 1
-struct_unpack_mpi_bottom 1
+struct_pack_mpi_bottom 1 gpu=yes
+struct_unpack_mpi_bottom 1 gpu=yes
 typecommit 1
 typename 1
 typename_oldapi 1 strict=FALSE
