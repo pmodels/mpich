@@ -408,6 +408,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
 
     is_commutative = MPIR_Op_is_commutative(op);
 
+    /* FIXME: this fallback check assumes device algorithms are limited by release gather shm cell size */
+    MPI_Aint dt_size;
+    MPIR_Datatype_get_size_macro(datatype, dt_size);
+    if (dt_size >=
+        MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS) {
+        goto fallback;
+    }
+
     switch (MPIR_CVAR_ALLREDUCE_COMPOSITION) {
         case 1:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
@@ -1253,6 +1261,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+
+    /* FIXME: this fallback check assumes device algorithms are limited by release gather shm cell size */
+    MPI_Aint dt_size;
+    MPIR_Datatype_get_size_macro(datatype, dt_size);
+    if (dt_size >=
+        MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS) {
+        goto fallback;
+    }
 
     switch (MPIR_CVAR_REDUCE_COMPOSITION) {
         case 1:
