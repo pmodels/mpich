@@ -1465,10 +1465,10 @@ def dump_coll_v_swap(func):
             replace_arg('rdispls', 'tmp_array + outdegree * 2 + indegree')
         else: # neighbor_alltoallw
             allocate_tmp_array("(outdegree + indegree)")
-            swap_one("indegree", "sendcounts")
-            swap_next("indegree", "outdegree", "recvcounts")
+            swap_one("outdegree", "sendcounts")
+            swap_next("outdegree", "indegree", "recvcounts")
             replace_arg('sendcounts', 'tmp_array')
-            replace_arg('recvcounts', 'tmp_array + indegree')
+            replace_arg('recvcounts', 'tmp_array + outdegree')
     # classical collectives
     elif RE.match(r'(mpi_i?reduce_scatter(_init)?\b)', func['name'], re.IGNORECASE):
         G.out.append("int n = comm_ptr->local_size;")
