@@ -127,7 +127,7 @@ static HYD_status singleton_port_fn(char *arg, char ***argv)
     HYD_status status = HYD_SUCCESS;
 
     HYD_pmcd_pmip.singleton_port = atoi(**argv);
-    HYD_pmcd_pmip.is_singleton = true;
+    assert(HYD_pmcd_pmip.singleton_port > 0);
 
     (*argv)++;
 

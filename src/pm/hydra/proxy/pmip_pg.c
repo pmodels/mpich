@@ -56,6 +56,11 @@ struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id)
     pg->pgid = pgid;
     pg->proxy_id = proxy_id;
 
+    if (HYD_pmcd_pmip.singleton_port > 0 && utarray_len(PMIP_pgs) == 1) {
+        assert(pgid == 0 && proxy_id == 0);
+        pg->is_singleton = true;
+    }
+
     HYD_pmcd_pmi_allocate_kvs(&pg->kvs);
     /* the rest of the fields have been zero-filled */
 

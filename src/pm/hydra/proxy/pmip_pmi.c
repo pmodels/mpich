@@ -594,7 +594,7 @@ HYD_status fn_finalize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     close(p->pmi_fd);
 
     /* mark singleton's stdio sockets as closed */
-    if (HYD_pmcd_pmip.is_singleton) {
+    if (pg->is_singleton) {
         HYDU_ASSERT(pg->num_procs == 1, status);
         p->out = HYD_FD_CLOSED;
         p->err = HYD_FD_CLOSED;

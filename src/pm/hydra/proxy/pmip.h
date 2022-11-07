@@ -19,8 +19,6 @@ struct HYD_pmcd_pmip_map {
 struct HYD_pmcd_pmip_s {
     struct HYD_user_global user_global;
 
-    /* FIXME: move to struct pmip_pg */
-    bool is_singleton;
     int singleton_port;
     int singleton_pid;
 
@@ -79,6 +77,7 @@ struct pmip_pg {
     int pgid;
     int proxy_id;
 
+    bool is_singleton;
     int num_procs;
     struct pmip_downstream *downstreams;
 

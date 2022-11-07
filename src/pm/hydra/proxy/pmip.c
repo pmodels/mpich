@@ -156,7 +156,7 @@ int main(int argc, char **argv)
     HYDU_ASSERT(pg_0, status);
 
     /* collect exit_status unless it is a singleton */
-    if (HYD_pmcd_pmip.is_singleton) {
+    if (pg_0->is_singleton) {
         HYDU_ASSERT(pg_0->num_procs == 1, status);
         HYDU_ASSERT(pg_0->downstreams[0].pid == HYD_pmcd_pmip.singleton_pid, status);
         /* We won't get the singleton's exit status. Assume it's 0. */

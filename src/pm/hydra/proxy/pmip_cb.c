@@ -578,7 +578,7 @@ static HYD_status handle_launch_procs(struct pmip_pg *pg)
                             HYD_pmcd_pmip.user_global.mapping, HYD_pmcd_pmip.user_global.membind);
     HYDU_ERR_POP(status, "unable to initialize process topology\n");
 
-    if (HYD_pmcd_pmip.is_singleton) {
+    if (pg->is_singleton) {
         status = singleton_init(pg, HYD_pmcd_pmip.singleton_pid, HYD_pmcd_pmip.singleton_port);
         HYDU_ERR_POP(status, "singleton_init returned error\n");
     } else {
