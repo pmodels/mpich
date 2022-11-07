@@ -63,6 +63,8 @@ noinst_PROGRAMS =             \
     struct_no_real_types      \
     struct_pack               \
     structpack2               \
+    struct_pack_mpi_bottom    \
+    struct_unpack_mpi_bottom  \
     struct_verydeep           \
     struct_zero_count         \
     subarray                  \
