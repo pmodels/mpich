@@ -506,7 +506,7 @@ AC_ARG_ENABLE(thread-cs,
 			[Choose the method used for critical sections
                          and other atomic updates when multiple
                          threads are present.  Values may be default, global,
-                         per-object, per-vci, lock-free. Default is global.
+                         per-vci, lock-free. Default is global for ch3 and per-vci for ch4.
                         ]),,enable_thread_cs=default)
 
 AC_ARG_ENABLE(refcount,
@@ -516,7 +516,7 @@ AC_ARG_ENABLE(refcount,
                          Values may be lock-free or none.  The
                          default depends on the thread-cs choice; for
                          global it is none (because none is required),
-                         for per-object, per-vci, and lock-free, lock-free]),,
+                         for per-vci, and lock-free, lock-free]),,
                          enable_refcount=default)
 
 AC_ARG_ENABLE(mutex-timing,
@@ -1204,17 +1204,17 @@ thread_refcount=MPICH_REFCOUNT__NONE
 if test "$enable_threads" = "multiple" ; then
     # default depends on ch3 or ch4
     if test "$enable_thread_cs" = "default" ; then
-        enable_thread_cs="global"
+        if test "$device_name" = "ch4" ; then
+            enable_thread_cs="per-vci"
+        else
+            enable_thread_cs="global"
+        fi
     fi
 
     case $enable_thread_cs in
     global)
     thread_granularity=MPICH_THREAD_GRANULARITY__GLOBAL
     if test "$enable_refcount" = "default" ; then enable_refcount=none ; fi
-    ;;
-    per-object|per_object)
-    thread_granularity=MPICH_THREAD_GRANULARITY__POBJ
-    if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
     ;;
     per-vci|per_vci)
     thread_granularity=MPICH_THREAD_GRANULARITY__VCI
@@ -1244,10 +1244,6 @@ if test "$enable_threads" = "multiple" ; then
     esac
 fi
 AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
-
-if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__POBJ" -a "$device_name" == "ch4" ; then
-    AC_MSG_ERROR([the ch4 device does not support the per-object critical section])
-fi
 
 if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__VCI" -a "$device_name" != "ch4" ; then
     AC_MSG_ERROR([per-vci critical section granularity is only supported for the ch4 device])

@@ -69,7 +69,7 @@ $hasDemon   = 0;
 		  'debuginfo', # Message queues
 		  'weak-symbols;no;yes',
                   'threads;single;multiple;runtime',
-                  'thread-cs;global;per-object;lock-free',
+                  'thread-cs;global;per-vci;lock-free',
                   'refcount;lock;lock-free;none',
                   'mutex-timing',
                   'multi-aliases',
