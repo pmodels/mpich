@@ -93,6 +93,8 @@ static void progress_fn(void *data)
     }
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    /* The async thread should avoid monopolize the clock */
+    sleep(0);
 
     return;
 }
