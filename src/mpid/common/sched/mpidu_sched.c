@@ -1187,9 +1187,14 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                     break;
             }
 
+            /* NOTE: persistent sched s may get freed by MPI_Request_free as soon as we
+             *       complete the request. Access s->kind before we complete the request.
+             */
+            bool not_persistent = s->kind != MPIR_SCHED_KIND_PERSISTENT;
+
             MPIR_Request_complete(s->req);
 
-            if (s->kind != MPIR_SCHED_KIND_PERSISTENT) {
+            if (not_persistent) {
                 MPIDU_Sched_free(s);
             }
 
