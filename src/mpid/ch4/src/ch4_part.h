@@ -25,8 +25,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_part_start(MPIR_Request * request)
 #endif
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_Part_request_activate(request);
-
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;

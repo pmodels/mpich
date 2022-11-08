@@ -36,6 +36,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
         mpi_errno = MPIDIG_part_issue_cts(request);
     }
 
+    MPIR_Part_request_activate(request);
+
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_EXIT;
     return mpi_errno;
