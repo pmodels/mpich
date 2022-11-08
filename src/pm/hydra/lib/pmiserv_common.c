@@ -51,7 +51,8 @@ HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *
 
     if (debug) {
         if (hdr) {
-            HYDU_dump(stdout, "Sending internal PMI command:\n");
+            HYDU_dump(stdout, "Sending internal PMI command (proxy:%d:%d):\n",
+                      hdr->pgid, hdr->proxy_id);
         } else {
             HYDU_dump(stdout, "Sending PMI command:\n");
         }
@@ -84,30 +85,12 @@ HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid)
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs)
 {
     HYD_status status = HYD_SUCCESS;
-    char hostname[MAX_HOSTNAME_LEN - 40];       /* Remove space taken up by the integers and other
-                                                 * characters below. */
-    unsigned int seed;
-    MPL_time_t tv;
-    double secs;
-    int rnd;
-
     HYDU_FUNC_ENTER();
 
-    if (gethostname(hostname, MAX_HOSTNAME_LEN - 40) < 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
-
-    MPL_wtime(&tv);
-    MPL_wtime_todouble(&tv, &secs);
-    seed = (unsigned int) (secs * 1e6);
-    srand(seed);
-    rnd = rand();
-
     HYDU_MALLOC_OR_JUMP(*kvs, struct HYD_pmcd_pmi_kvs *, sizeof(struct HYD_pmcd_pmi_kvs), status);
-    MPL_snprintf_nowarn((*kvs)->kvsname, PMI_MAXKVSLEN, "kvs_%d_%d_%d_%s", (int) getpid(), pgid,
-                        rnd, hostname);
     (*kvs)->key_pair = NULL;
     (*kvs)->tail = NULL;
 
@@ -182,4 +165,34 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmc
   fn_fail:
     MPL_free(key_pair);
     goto fn_exit;
+}
+
+const char *HYD_pmcd_cmd_name(int cmd)
+{
+    switch (cmd) {
+        case CMD_INVALID:
+            return "CMD_INVALID";
+        case CMD_PROC_INFO:
+            return "CMD_PROC_INFO";
+        case CMD_PMI_RESPONSE:
+            return "CMD_PMI_RESPONSE";
+        case CMD_SIGNAL:
+            return "CMD_SIGNAL";
+        case CMD_STDIN:
+            return "CMD_STDIN";
+        case CMD_PID_LIST:
+            return "CMD_PID_LIST";
+        case CMD_EXIT_STATUS:
+            return "CMD_EXIT_STATUS";
+        case CMD_PMI:
+            return "CMD_PMI";
+        case CMD_STDOUT:
+            return "CMD_STDOUT";
+        case CMD_STDERR:
+            return "CMD_STDERR";
+        case CMD_PROCESS_TERMINATED:
+            return "CMD_PROCESS_TERMINATED";
+        default:
+            return "UNKNOWN";
+    }
 }

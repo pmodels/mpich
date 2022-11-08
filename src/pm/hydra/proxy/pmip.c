@@ -17,41 +17,17 @@ static HYD_status init_params(void)
 
     HYDU_init_user_global(&HYD_pmcd_pmip.user_global);
 
-    HYD_pmcd_pmip.system_global.global_core_map.local_filler = -1;
-    HYD_pmcd_pmip.system_global.global_core_map.local_count = -1;
-    HYD_pmcd_pmip.system_global.global_core_map.global_count = -1;
-    HYD_pmcd_pmip.system_global.pmi_id_map.filler_start = -1;
-    HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start = -1;
-
-    HYD_pmcd_pmip.system_global.global_process_count = -1;
-    HYD_pmcd_pmip.system_global.pmi_fd = NULL;
-    HYD_pmcd_pmip.system_global.pmi_rank = -1;
-    HYD_pmcd_pmip.system_global.pmi_process_mapping = NULL;
-
     HYD_pmcd_pmip.upstream.server_name = NULL;
     HYD_pmcd_pmip.upstream.server_port = -1;
     HYD_pmcd_pmip.upstream.control = HYD_FD_UNSET;
-
-    HYD_pmcd_pmip.downstream.out = NULL;
-    HYD_pmcd_pmip.downstream.err = NULL;
-    HYD_pmcd_pmip.downstream.in = HYD_FD_UNSET;
-    HYD_pmcd_pmip.downstream.pid = NULL;
-    HYD_pmcd_pmip.downstream.exit_status = NULL;
-    HYD_pmcd_pmip.downstream.pmi_rank = NULL;
-    HYD_pmcd_pmip.downstream.pmi_fd = NULL;
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.pgid = -1;
     HYD_pmcd_pmip.local.iface_ip_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
-    HYD_pmcd_pmip.local.spawner_kvsname = NULL;
-    HYD_pmcd_pmip.local.proxy_core_count = -1;
-    HYD_pmcd_pmip.local.proxy_process_count = -1;
     HYD_pmcd_pmip.local.retries = -1;
 
-    HYD_pmcd_pmip.exec_list = NULL;
-
-    status = HYD_pmcd_pmi_allocate_kvs(&HYD_pmcd_pmip.local.kvs, -1);
+    PMIP_pg_init();
 
     return status;
 }
@@ -60,36 +36,17 @@ static void cleanup_params(void)
 {
     HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
 
-    /* System global */
-    MPL_free(HYD_pmcd_pmip.system_global.pmi_fd);
-    MPL_free(HYD_pmcd_pmip.system_global.pmi_process_mapping);
-
 
     /* Upstream */
     MPL_free(HYD_pmcd_pmip.upstream.server_name);
 
 
-    /* Downstream */
-    MPL_free(HYD_pmcd_pmip.downstream.out);
-    MPL_free(HYD_pmcd_pmip.downstream.err);
-    MPL_free(HYD_pmcd_pmip.downstream.pid);
-    MPL_free(HYD_pmcd_pmip.downstream.exit_status);
-    MPL_free(HYD_pmcd_pmip.downstream.pmi_rank);
-    MPL_free(HYD_pmcd_pmip.downstream.pmi_fd);
-    MPL_free(HYD_pmcd_pmip.downstream.pmi_fd_active);
-
-
     /* Local */
     MPL_free(HYD_pmcd_pmip.local.iface_ip_env_name);
     MPL_free(HYD_pmcd_pmip.local.hostname);
-    MPL_free(HYD_pmcd_pmip.local.spawner_kvsname);
-
-    HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 
 
-    /* Exec list */
-    HYDU_free_exec_list(HYD_pmcd_pmip.exec_list);
-
+    PMIP_pg_finalize();
     HYDT_topo_finalize();
 }
 
@@ -99,9 +56,9 @@ static void signal_cb(int sig)
 
     if (sig == SIGPIPE) {
         /* Upstream socket closed; kill all processes */
-        HYD_pmcd_pmip_send_signal(SIGKILL);
+        PMIP_bcast_signal(SIGKILL);
     } else if (sig == SIGTSTP) {
-        HYD_pmcd_pmip_send_signal(sig);
+        PMIP_bcast_signal(sig);
     }
     /* Ignore other signals for now */
 
@@ -111,7 +68,7 @@ static void signal_cb(int sig)
 
 int main(int argc, char **argv)
 {
-    int i, count, pid, ret_status, sent, closed, ret, done;
+    int pid, ret_status, sent, closed, ret, done;
     struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
@@ -169,63 +126,62 @@ int main(int argc, char **argv)
         status = HYDT_dmx_wait_for_event(-1);
         HYDU_ERR_POP(status, "demux engine error waiting for event\n");
 
-        /* Check to see if there's any open read socket left; if there
-         * are, we will just wait for more events. */
-        count = 0;
-        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-            if (HYD_pmcd_pmip.downstream.out[i] != HYD_FD_CLOSED)
-                count++;
-            if (HYD_pmcd_pmip.downstream.err[i] != HYD_FD_CLOSED)
-                count++;
-
-            if (count)
-                break;
+        if (!PMIP_pg_0()) {
+            /* processes haven't been launched yet */
+            continue;
         }
-        if (!count)
+
+        /* Exit the loop if no open read socket left */
+        if (!PMIP_has_open_stdoe()) {
             break;
+        }
 
         pid = waitpid(-1, &ret_status, WNOHANG);
+
         if (pid > 0) {
-            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-                if (HYD_pmcd_pmip.downstream.pid[i] == pid) {
-                    HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
-                    if (WIFSIGNALED(ret_status)) {
-                        /* kill all processes */
-                        HYD_pmcd_pmip_send_signal(SIGKILL);
-                    }
-                    done++;
-                    break;
+            struct pmip_downstream *p = PMIP_find_downstream_by_pid(pid);
+            if (p) {
+                p->exit_status = ret_status;
+                if (WIFSIGNALED(ret_status)) {
+                    /* kill all processes */
+                    PMIP_bcast_signal(SIGKILL);
                 }
+                done++;
             }
         }
     }
 
+    struct pmip_pg *pg_0;
+    pg_0 = PMIP_pg_0();
+    HYDU_ASSERT(pg_0, status);
+
     /* collect exit_status unless it is a singleton */
-    if (HYD_pmcd_pmip.is_singleton) {
-        HYDU_ASSERT(HYD_pmcd_pmip.local.proxy_process_count == 1, status);
+    if (pg_0->is_singleton) {
+        HYDU_ASSERT(pg_0->num_procs == 1, status);
+        HYDU_ASSERT(pg_0->downstreams[0].pid == HYD_pmcd_pmip.singleton_pid, status);
         /* We won't get the singleton's exit status. Assume it's 0. */
-        if (HYD_pmcd_pmip.downstream.exit_status[0] == PMIP_EXIT_STATUS_UNSET) {
-            HYD_pmcd_pmip.downstream.exit_status[0] = 0;
+        if (pg_0->downstreams[0].exit_status == PMIP_EXIT_STATUS_UNSET) {
+            pg_0->downstreams[0].exit_status = 0;
         }
     } else {
         /* Wait for the processes to finish */
+        int total_count = PMIP_get_total_process_count();
         while (1) {
             pid = waitpid(-1, &ret_status, 0);
 
             /* Find the pid and mark it as complete. */
             if (pid > 0) {
-                for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-                    if (HYD_pmcd_pmip.downstream.pid[i] == pid) {
-                        if (HYD_pmcd_pmip.downstream.exit_status[i] == PMIP_EXIT_STATUS_UNSET) {
-                            HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
-                        }
-                        done++;
+                struct pmip_downstream *tmp = PMIP_find_downstream_by_pid(pid);
+                if (tmp) {
+                    if (tmp->exit_status == PMIP_EXIT_STATUS_UNSET) {
+                        tmp->exit_status = ret_status;
                     }
+                    done++;
                 }
             }
 
             /* If no more processes are pending, break out */
-            if (done == HYD_pmcd_pmip.local.proxy_process_count)
+            if (done == total_count)
                 break;
 
             /* Check if there are any messages from the launcher */
@@ -238,18 +194,12 @@ int main(int argc, char **argv)
     /* Send the exit status upstream */
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = CMD_EXIT_STATUS;
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
-    HYDU_ASSERT(!closed, status);
 
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
-                             HYD_pmcd_pmip.downstream.exit_status,
-                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent,
-                             &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to return exit status upstream\n");
-    HYDU_ASSERT(!closed, status);
+    int *exit_status_list;
+    exit_status_list = PMIP_pg_get_exit_status_list(pg_0);
+    PMIP_send_hdr_upstream(pg_0, &hdr, exit_status_list, pg_0->num_procs * sizeof(int));
+    HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
+    MPL_free(exit_status_list);
 
     status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.upstream.control);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
@@ -270,6 +220,6 @@ int main(int argc, char **argv)
 
   fn_fail:
     /* kill all processes */
-    HYD_pmcd_pmip_send_signal(SIGKILL);
+    PMIP_bcast_signal(SIGKILL);
     goto fn_exit;
 }

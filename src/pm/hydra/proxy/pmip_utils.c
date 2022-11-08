@@ -11,23 +11,18 @@
 
 #include "pmi_util.h"   /* from libpmi, for PMIU_verbose */
 
-void HYD_pmcd_pmip_send_signal(int sig)
-{
-    int i, pgid;
+static struct pmip_pg *cur_pg = NULL;
 
-    /* Send the kill signal to all processes */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-        if (HYD_pmcd_pmip.downstream.pid[i] != -1) {
-#if defined(HAVE_GETPGID) && defined(HAVE_SETSID)
-            /* If we are able to get the process group ID, and the
-             * child process has its own process group ID, send a
-             * signal to the entire process group */
-            pgid = getpgid(HYD_pmcd_pmip.downstream.pid[i]);
-            killpg(pgid, sig);
-#else
-            kill(HYD_pmcd_pmip.downstream.pid[i], sig);
-#endif
-        }
+void HYD_set_cur_pg(struct pmip_pg *pg)
+{
+    cur_pg = pg;
+}
+
+/* For unused options, use dummy handler to prevent parsing errors */
+static HYD_status dummy1_fn(char *arg, char ***argv)
+{
+    (*argv)++;
+    return HYD_SUCCESS;
 }
 
 static HYD_status control_port_fn(char *arg, char ***argv)
@@ -132,7 +127,7 @@ static HYD_status singleton_port_fn(char *arg, char ***argv)
     HYD_status status = HYD_SUCCESS;
 
     HYD_pmcd_pmip.singleton_port = atoi(**argv);
-    HYD_pmcd_pmip.is_singleton = true;
+    assert(HYD_pmcd_pmip.singleton_port > 0);
 
     (*argv)++;
 
@@ -229,37 +224,37 @@ static HYD_status retries_fn(char *arg, char ***argv)
 
 static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
 {
-    MPL_snprintf(HYD_pmcd_pmip.local.kvs->kvsname, PMI_MAXKVSLEN, "%s", **argv);
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_str(arg, &cur_pg->kvsname, **argv);
     (*argv)++;
 
-    return HYD_SUCCESS;
+    return status;
 }
 
 static HYD_status pmi_spawner_kvsname_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.local.spawner_kvsname, char *, PMI_MAXKVSLEN, status);
-
-    MPL_snprintf(HYD_pmcd_pmip.local.spawner_kvsname, PMI_MAXKVSLEN, "%s", **argv);
+    status = HYDU_set_str(arg, &cur_pg->spawner_kvsname, **argv);
     (*argv)++;
 
-  fn_exit:
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static HYD_status pmi_process_mapping_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.system_global.pmi_process_mapping, **argv);
+    HYDU_ASSERT(cur_pg, status);
+    status = HYDU_set_str(arg, &cur_pg->pmi_process_mapping, **argv);
 
     (*argv)++;
 
+  fn_exit:
     return status;
+  fn_fail:
+    goto fn_exit;
 }
 
 static HYD_status binding_fn(char *arg, char ***argv)
@@ -363,15 +358,15 @@ static HYD_status global_core_map_fn(char *arg, char ***argv)
 
     tmp = strtok(map, ",");
     HYDU_ASSERT(tmp, status);
-    HYD_pmcd_pmip.system_global.global_core_map.local_filler = atoi(tmp);
+    cur_pg->global_core_map.local_filler = atoi(tmp);
 
     tmp = strtok(NULL, ",");
     HYDU_ASSERT(tmp, status);
-    HYD_pmcd_pmip.system_global.global_core_map.local_count = atoi(tmp);
+    cur_pg->global_core_map.local_count = atoi(tmp);
 
     tmp = strtok(NULL, ",");
     HYDU_ASSERT(tmp, status);
-    HYD_pmcd_pmip.system_global.global_core_map.global_count = atoi(tmp);
+    cur_pg->global_core_map.global_count = atoi(tmp);
 
     MPL_free(map);
 
@@ -390,17 +385,19 @@ static HYD_status pmi_id_map_fn(char *arg, char ***argv)
     char *map, *tmp;
     HYD_status status = HYD_SUCCESS;
 
+    HYDU_ASSERT(cur_pg, status);
+
     /* Split the core map into three different segments */
     map = MPL_strdup(**argv);
     HYDU_ASSERT(map, status);
 
     tmp = strtok(map, ",");
     HYDU_ASSERT(tmp, status);
-    HYD_pmcd_pmip.system_global.pmi_id_map.filler_start = atoi(tmp);
+    cur_pg->pmi_id_map.filler_start = atoi(tmp);
 
     tmp = strtok(NULL, ",");
     HYDU_ASSERT(tmp, status);
-    HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start = atoi(tmp);
+    cur_pg->pmi_id_map.non_filler_start = atoi(tmp);
 
     MPL_free(map);
 
@@ -418,7 +415,7 @@ static HYD_status global_process_count_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_int(arg, &HYD_pmcd_pmip.system_global.global_process_count, atoi(**argv));
+    status = HYDU_set_int(arg, &cur_pg->global_process_count, atoi(**argv));
 
     (*argv)++;
 
@@ -465,27 +462,16 @@ static HYD_status hostname_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status proxy_core_count_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_int(arg, &HYD_pmcd_pmip.local.proxy_core_count, atoi(**argv));
-
-    (*argv)++;
-
-    return status;
-}
-
 static HYD_status exec_fn(char *arg, char ***argv)
 {
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_pmcd_pmip.exec_list == NULL) {
-        status = HYDU_alloc_exec(&HYD_pmcd_pmip.exec_list);
+    if (cur_pg->exec_list == NULL) {
+        status = HYDU_alloc_exec(&cur_pg->exec_list);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
     } else {
-        for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+        for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
         status = HYDU_alloc_exec(&exec->next);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
     }
@@ -503,7 +489,7 @@ static HYD_status exec_appnum_fn(char *arg, char ***argv)
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
     status = HYDU_set_int(arg, &exec->appnum, atoi(**argv));
 
     (*argv)++;
@@ -516,7 +502,7 @@ static HYD_status exec_proc_count_fn(char *arg, char ***argv)
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
     status = HYDU_set_int(arg, &exec->proc_count, atoi(**argv));
 
     (*argv)++;
@@ -534,7 +520,7 @@ static HYD_status exec_local_env_fn(char *arg, char ***argv)
     if (**argv == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "NULL argument to exec local env\n");
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
 
     count = atoi(**argv);
     for (i = 0; i < count; i++) {
@@ -563,7 +549,7 @@ static HYD_status exec_env_prop_fn(char *arg, char ***argv)
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
 
     status = HYDU_set_str(arg, &exec->env_prop, **argv);
 
@@ -577,7 +563,7 @@ static HYD_status exec_wdir_fn(char *arg, char ***argv)
     struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
 
     status = HYDU_set_str(arg, &exec->wdir, **argv);
 
@@ -595,7 +581,7 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
     if (**argv == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "NULL argument to exec args\n");
 
-    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    for (exec = cur_pg->exec_list; exec->next; exec = exec->next);
 
     errno = 0;
     count = strtol(**argv, NULL, 10);
@@ -655,7 +641,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"version", version_fn, NULL},
     {"iface-ip-env-name", iface_ip_env_name_fn, NULL},
     {"hostname", hostname_fn, NULL},
-    {"proxy-core-count", proxy_core_count_fn, NULL},
+    {"proxy-core-count", dummy1_fn, NULL},
     {"exec", exec_fn, NULL},
     {"exec-appnum", exec_appnum_fn, NULL},
     {"exec-proc-count", exec_proc_count_fn, NULL},

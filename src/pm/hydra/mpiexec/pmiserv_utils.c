@@ -9,6 +9,8 @@
 #include "pmiserv_pmi.h"
 #include "pmiserv_utils.h"
 
+static HYD_status gen_kvsname(char kvsname[], int pgid);
+
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
                                            char *control_port, int pgid)
 {
@@ -266,13 +268,13 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
         HYD_STRING_STASH(exec_stash, MPL_strdup("--pmi-kvsname"), status);
-        HYD_STRING_STASH(exec_stash, MPL_strdup(pg_scratch->kvs->kvsname), status);
+        HYD_STRING_STASH(exec_stash, MPL_strdup(pg_scratch->kvsname), status);
 
         if (pg->spawner_pgid != -1) {
             struct HYD_pg *spawner_pg = PMISERV_pg_by_id(pg->spawner_pgid);
             pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) spawner_pg->pg_scratch;
             HYD_STRING_STASH(exec_stash, MPL_strdup("--pmi-spawner-kvsname"), status);
-            HYD_STRING_STASH(exec_stash, MPL_strdup(pg_scratch->kvs->kvsname), status);
+            HYD_STRING_STASH(exec_stash, MPL_strdup(pg_scratch->kvsname), status);
         }
 
         HYD_STRING_STASH(exec_stash, MPL_strdup("--pmi-process-mapping"), status);
@@ -397,7 +399,10 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
     pg_scratch->dead_processes = MPL_strdup("");
     pg_scratch->dead_process_count = 0;
 
-    status = HYD_pmcd_pmi_allocate_kvs(&pg_scratch->kvs, pg->pgid);
+    status = gen_kvsname(pg_scratch->kvsname, pg->pgid);
+    HYDU_ERR_POP(status, "error in generating kvsname\n");
+
+    status = HYD_pmcd_pmi_allocate_kvs(&pg_scratch->kvs);
     HYDU_ERR_POP(status, "unable to allocate kvs space\n");
 
     pg_scratch->keyval_dist_count = 0;
@@ -431,4 +436,34 @@ HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
 
     HYDU_FUNC_EXIT();
     return status;
+}
+
+static HYD_status gen_kvsname(char kvsname[], int pgid)
+{
+    HYD_status status = HYD_SUCCESS;
+    HYDU_FUNC_ENTER();
+
+    char hostname[MAX_HOSTNAME_LEN - 40];       /* Remove space taken up by the integers and other
+                                                 * characters below. */
+    unsigned int seed;
+    MPL_time_t tv;
+    double secs;
+    int rnd;
+
+    if (gethostname(hostname, MAX_HOSTNAME_LEN - 40) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
+
+    MPL_wtime(&tv);
+    MPL_wtime_todouble(&tv, &secs);
+    seed = (unsigned int) (secs * 1e6);
+    srand(seed);
+    rnd = rand();
+
+    MPL_snprintf_nowarn(kvsname, PMI_MAXKVSLEN, "kvs_%d_%d_%d_%s", (int) getpid(), pgid,
+                        rnd, hostname);
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+  fn_fail:
+    goto fn_exit;
 }

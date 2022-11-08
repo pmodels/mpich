@@ -10,7 +10,8 @@
 #include "pmiserv_utils.h"
 #include "bsci.h"
 
-HYD_status HYD_pmiserv_barrier(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi)
+HYD_status HYD_pmiserv_barrier(struct HYD_proxy *proxy, int process_fd, int pgid,
+                               struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -23,12 +24,12 @@ HYD_status HYD_pmiserv_barrier(struct HYD_proxy *proxy, int pid, int pgid, struc
     if (pg->barrier_count == pg->proxy_count) {
         pg->barrier_count = 0;
 
-        HYD_pmiserv_bcast_keyvals(proxy, pid);
+        HYD_pmiserv_bcast_keyvals(proxy, process_fd);
 
         struct PMIU_cmd pmi_response;
         PMIU_cmd_init_static(&pmi_response, 1, "barrier_out");
         for (int i = 0; i < pg->proxy_count; i++) {
-            status = HYD_pmiserv_pmi_reply(&pg->proxy_list[i], pid, &pmi_response);
+            status = HYD_pmiserv_pmi_reply(&pg->proxy_list[i], process_fd, &pmi_response);
             HYDU_ERR_POP(status, "error writing PMI line\n");
         }
     }
@@ -41,7 +42,8 @@ HYD_status HYD_pmiserv_barrier(struct HYD_proxy *proxy, int pid, int pgid, struc
     goto fn_exit;
 }
 
-HYD_status HYD_pmiserv_abort(struct HYD_proxy *proxy, int pid, int pgid, struct PMIU_cmd *pmi)
+HYD_status HYD_pmiserv_abort(struct HYD_proxy *proxy, int process_fd, int pgid,
+                             struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;

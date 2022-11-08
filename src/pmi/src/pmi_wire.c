@@ -1245,8 +1245,10 @@ int PMIU_msg_get_query_spawn(struct PMIU_cmd *pmi, const char **cmds, int *maxpr
                 maxprocs[i_nprocs++] = atoi(VALi);
                 PMIU_ERR_POP(i_nprocs != i_seg);
             } else if (strcmp(KEYi, "argcnt") == 0) {
-                argcs[i_argc++] = atoi(VALi);
+                int val = atoi(VALi);
+                argcs[i_argc++] = val;
                 PMIU_ERR_POP(i_argc != i_seg);
+                total_args += val;
             } else if (strncmp(KEYi, "arg", 3) == 0) {
                 argvs[i_argv++] = VALi;
             } else if (i_seg == 1 && strcmp(KEYi, "preput_num") == 0) {
@@ -1273,8 +1275,10 @@ int PMIU_msg_get_query_spawn(struct PMIU_cmd *pmi, const char **cmds, int *maxpr
                 maxprocs[i_nprocs++] = atoi(VALi);
                 PMIU_ERR_POP(i_nprocs != i_seg);
             } else if (strcmp(KEYi, "argc") == 0) {
-                argcs[i_argc++] = atoi(VALi);
+                int val = atoi(VALi);
+                argcs[i_argc++] = val;
                 PMIU_ERR_POP(i_argc != i_seg);
+                total_args += val;
             } else if (strncmp(KEYi, "argv", 4) == 0) {
                 argvs[i_argv++] = VALi;
             } else if (i_seg == 0 && strcmp(KEYi, "preputcount") == 0) {

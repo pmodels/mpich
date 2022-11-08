@@ -23,7 +23,6 @@ struct HYD_pmcd_pmi_kvs_pair {
 };
 
 struct HYD_pmcd_pmi_kvs {
-    char kvsname[PMI_MAXKVSLEN];        /* Name of this kvs */
     struct HYD_pmcd_pmi_kvs_pair *key_pair;
     struct HYD_pmcd_pmi_kvs_pair *tail;
 };
@@ -34,7 +33,7 @@ struct HYD_pmcd_init_hdr {
     int proxy_id;
 };
 
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid);
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs);
 void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmcd_pmi_kvs *kvs,
                                 int *ret);
@@ -62,20 +61,20 @@ enum HYD_pmcd_cmd {
 
 /* PMI_CMD */
 struct HYD_hdr_pmi {
-    int pid;                    /* ID of the requesting process */
     int pmi_version;            /* PMI version */
+    int process_fd;             /* fd of the downstream process at proxy */
 };
 
 /* STDOUT/STDERR */
 struct HYD_hdr_io {
-    int pgid;
-    int proxy_id;
     int rank;
 };
 
 struct HYD_pmcd_hdr {
     enum HYD_pmcd_cmd cmd;
     int buflen;
+    int pgid;
+    int proxy_id;
     union {
         int data;               /* for commands with a single integer data */
         struct HYD_hdr_pmi pmi;
@@ -86,5 +85,7 @@ struct HYD_pmcd_hdr {
 void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr);
 void HYD_pmcd_pmi_dump(struct PMIU_cmd *pmi);
 HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *hdr, int debug);
+
+const char *HYD_pmcd_cmd_name(int cmd);
 
 #endif /* COMMON_H_INCLUDED */
