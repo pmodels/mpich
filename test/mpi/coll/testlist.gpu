@@ -10,4 +10,5 @@ op_coll 4 arg=-memtype=all
 # The dtp test will iterate over all typelist and counts, each time will repeat [repeat] times and select seed, testsize, memtypes accordingly
 # set MPITEST_VERBOSE=1 to the list of tests being run.
 
-bcast 4 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=100 arg=-testsizes=2,50 arg=-memtype=random timeLimit=600
+bcast 4 arg=-typelist=MPI_INT arg=-counts=1,17,50,100,512,65530 arg=-seed=100 arg=-testsizes=2,50 arg=-memtype=random timeLimit=600
+bcast 4 arg=-typelist=MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512 arg=-seed=100 arg=-testsizes=10,50 arg=-memtype=random timeLimit=600
