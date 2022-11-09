@@ -118,6 +118,11 @@ int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     datatype_ptr->true_lb = flatten_hdr->true_lb;
     datatype_ptr->contents = NULL;
     datatype_ptr->flattened = NULL;
+    if (datatype_ptr->basic_type != MPI_DATATYPE_NULL) {
+        datatype_ptr->builtin_element_size = MPIR_Datatype_get_basic_size(datatype_ptr->basic_type);
+    } else {
+        datatype_ptr->builtin_element_size = 0;
+    }
 
 #if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
     int rc = yaksa_unflatten(&datatype_ptr->typerep.handle, flattened_typerep);
