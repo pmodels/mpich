@@ -416,6 +416,9 @@ int MPID_Init(int requested, int *provided)
         MPIDI_global.prev_sighandler = NULL;
 #endif
 
+    mpi_errno = MPIDI_Self_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
     choose_netmod();
 
     /* Create all ch4-layer granular locks.
