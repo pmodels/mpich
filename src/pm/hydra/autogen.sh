@@ -13,7 +13,7 @@ fi
 
 if test -d "modules/pmi" ; then
     echo "=== running autoreconf in 'modules/pmi' ==="
-    (cd modules/pmi && $autoreconf ${autoreconf_args:-"-vif"}) || exit 1
+    (cd modules/pmi && ./autogen.sh) || exit 1
 fi
 
 if test -d "modules/hwloc" ; then
