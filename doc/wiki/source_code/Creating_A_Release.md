@@ -19,7 +19,7 @@ this list. What follows is a partial list
 
 Check all tests. This includes
 
-1.  The four major test suites (MPICH, C++, Intel, MPICH2)
+1.  The major test suites (MPICH, C++, Intel)
 2.  The special tests (See
     [1](../testing/Testing_MPICH.md#running-the-special-tests)
     ); these are important for testing that various options and compiler
@@ -32,11 +32,7 @@ Check all tests. This includes
     start; a check with `totalview` should also be performed (e.g.:
     "totalview mpiexec -a -n 4 src/mpi/debugger/tvtest" and make sure
     that message queue status works fine)
-5.  Ensure that `make dist` works for the MPI testsuite. That is, make
-    sure `cd test/mpi ; make dist` produces a tar file that can be
-    unpacked and the test suite built against an installed MPI (not
-    necessarily MPICH, but that is usually sufficient for this test).
-6.  Ensure that there are no performance artifacts, both for
+5.  Ensure that there are no performance artifacts, both for
     point-to-point and collective operations.
 
 ## Update all necessary files and commit them to the trunk
@@ -82,7 +78,7 @@ brew install txt2man (on Mac)
 E.g.,
 
 ```
-./release.pl --branch=master --version=3.1.2 --git-repo=https://github.com/pmodels/mpich
+./release.pl --branch=master --version=X.Y.Z --git-repo=https://github.com/pmodels/mpich
 ```
 
 Notes:
@@ -160,21 +156,22 @@ git push mpich tag vX.Y.Z
 The static assets for the MPICH website are stored in
 <https://git.cels.anl.gov/pmodels/mpich-www>. It is recommended you
 clone the repo locally and add your changes. Once done, you can login to
-the CELS GCE environment and update the copy served by the website.
+the CELS GCE environment and update the copy served by the website. The
+following assume the repo as working directory.
 
   - Create directory for tarballs
 
 
 ```
-mkdir X.Y.Z
+mkdir downloads/X.Y.Z
 ```
 
-  - Copy MPICH and Hydra tarballs into new directory, e.g.,
+  - Copy release tarballs (mpich, hydra, libpmi, mpich-testsuite) into new
+    directory, e.g.,
 
 
 ```
-cp mpich-3.1.2.tar.gz 3.1.2
-cp hydra-3.1.2.tar.gz 3.1.2
+cp -v path/to/{mpich,hydra,libpmi,mpich-testsuite}-X.Y.Z.tar.gz downloads/X.Y.Z/
 ```
 
   - Copy a shortlog containing changes since the last stable release.
@@ -189,18 +186,18 @@ git log --no-merges --format="format:[%cd] %s" --date=short v3.4.2..v4.0a2 > sho
 
 
 ```
-mkdir ~/sandbox-3.1.2 && cd ~/sandbox-3.1.2
-tar zxvf /mcs/mpich/tarballs/3.1.2/mpich-3.1.2.tar.gz
-cp ./mpich-3.1.2/README  /mcs/mpich/tarballs/3.1.2/mpich-3.1.2-README.txt
-cp ./mpich-3.1.2/doc/installguide/install.pdf  /mcs/mpich/tarballs/3.1.2/mpich-3.1.2-installguide.pdf
-cp ./mpich-3.1.2/doc/userguide/user.pdf  /mcs/mpich/tarballs/3.1.2/mpich-3.1.2-userguide.pdf
+mkdir ~/sandbox-X.Y.Z && cd ~/sandbox-X.Y.Z
+tar zxvf $REPO/downloads/X.Y.Z/mpich-X.Y.Z.tar.gz
+cp ./mpich-X.Y.Z/README  $REPO/downloads/X.Y.Z/mpich-X.Y.Z-README.txt
+cp ./mpich-X.Y.Z/doc/installguide/install.pdf  $REPO/downloads/X.Y.Z/mpich-X.Y.Z-installguide.pdf
+cp ./mpich-X.Y.Z/doc/userguide/user.pdf  $REPO/downloads/X.Y.Z/mpich-X.Y.Z-userguide.pdf
 ```
 
   - Update git remote
 
 
 ```
-git add X.Y.Z/*
+git add downloads/X.Y.Z/*
 git commit
 ```
 
@@ -222,8 +219,8 @@ git pull
     "latest" symlink to point to the new version.
 
 ```
-cp -rf ~/sandbox-X.Y.Z/mpich-X.Y.Z/www /mcs/mpich/docs/vX.Y.Z
-cd /mcs/mpich/docs
+cp -rf ~/sandbox-X.Y.Z/mpich-X.Y.Z/www $REPO/docs/vX.Y.Z
+cd $REPO/docs
 rm -f latest
 ln -sf vX.Y.Z latest
 chgrp -h mpi latest
