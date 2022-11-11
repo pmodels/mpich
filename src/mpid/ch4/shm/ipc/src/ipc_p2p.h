@@ -158,7 +158,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_
 
 MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_IPCI_choose_engine(int dev1, int dev2)
 {
-    MPL_gpu_engine_type_t engine = MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
+    MPL_gpu_engine_type_t engine;
+
+    if (MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE != MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE_auto) {
+        return MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE - MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE_0;
+    }
+
+    /* auto select */
+    engine = MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
     if (dev1 == -1 || dev2 == -1) {
         return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
     }
