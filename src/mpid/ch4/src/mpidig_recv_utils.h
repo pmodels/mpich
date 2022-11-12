@@ -33,6 +33,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_check_rndv_cb(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb) {
+        /* the callback may complete the request. Increment the ref to prevent
+         * rreq from being freed */
+        MPIR_Request_add_ref(rreq);
+
         mpi_errno = MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb(rreq);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -46,6 +50,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_check_rndv_cb(MPIR_Request * rreq)
         if (MPIDIG_REQUEST(rreq, req)) {
             MPIDIG_REQUEST(rreq, req->recv_async).data_copy_cb = NULL;
         }
+        MPIR_Request_free_unsafe(rreq);
     }
 
   fn_exit:
