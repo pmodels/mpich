@@ -11,7 +11,6 @@ if test -d mpl ; then
     (cd mpl && ${AUTORECONF:-autoreconf} ${autoreconf_args:-"-vif"}) || exit 1
 fi
 
-PYTHON=
 check_python3() {
     PYTHON=
     if test 3 = `python -c 'import sys; print(sys.version_info[0])' 2> /dev/null || echo "0"`; then

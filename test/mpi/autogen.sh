@@ -9,7 +9,6 @@ echo_n() {
     printf "%s" "$*"
 }
 
-PYTHON=
 check_python3() {
     echo_n "Checking for Python 3... "
     PYTHON=
@@ -29,7 +28,9 @@ check_python3() {
     fi
 }
 
-check_python3
+if test -z "$PYTHON" ; then
+    check_python3
+fi
 echo "Generating collective cvar tests"
 $PYTHON maint/gen_coll_cvar.py
 
