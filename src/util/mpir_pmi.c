@@ -1556,8 +1556,9 @@ static void free_pmi_keyvals(INFO_TYPE ** kv, int size, int *counts)
 
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < counts[i]; j++) {
+            /* cast the "const" away */
             MPL_free((char *) INFO_TYPE_KEY(kv[i][j]));
-            MPL_free(INFO_TYPE_VAL(kv[i][j]));
+            MPL_free((char *) INFO_TYPE_VAL(kv[i][j]));
         }
         MPL_free(kv[i]);
     }
