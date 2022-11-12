@@ -315,6 +315,7 @@ fn_copy_confdb_etc() {
             rm -rf src/pm/hydra/modules/hwloc/.git
             confdb_dirs="${confdb_dirs} src/pm/hydra/modules/mpl/confdb"
             confdb_dirs="${confdb_dirs} src/pm/hydra/modules/pmi/confdb"
+            confdb_dirs="${confdb_dirs} src/pm/hydra/modules/pmi/mpl/confdb"
         fi
     fi
     if test "$do_test" = "yes" ; then
