@@ -234,7 +234,6 @@ set_externals() {
     fi
 }
 
-PYTHON=
 check_python3() {
     echo_n "Checking for Python 3... "
     PYTHON=
