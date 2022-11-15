@@ -874,7 +874,8 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
 
         int n;
         n = PMIU_readline(fd, recvbuf, PMIU_MAXLINE);
-        PMIU_ERR_CHKANDJUMP(n <= 0, pmi_errno, PMIU_FAIL, "readline failed\n");
+        PMIU_ERR_CHKANDJUMP2(n <= 0, pmi_errno, PMIU_FAIL, "readline failed. n=%d, errno=%d\n", n,
+                             errno);
 
         if (recvbuf[n - 1] == '\n') {
             PMIU_printf(PMIU_verbose, "got pmi response: %s", recvbuf);
