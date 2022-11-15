@@ -260,6 +260,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     if (p == NULL) {
         /* pmi_port path. We need find the downstream */
     }
+    HYDU_dump(stdout, ">>>> pmi_cb: p=%p, fd=%d\n", p, fd);
 
   read_cmd:
     /* PMI-1 does not tell us how much to read. We read how much ever
@@ -707,7 +708,7 @@ static HYD_status singleton_init(struct pmip_pg *pg, int singleton_pid, int sing
     status = HYDU_sock_write(fd, msg, strlen(msg), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send msg to singleton process\n");
 
-    status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, NULL, pmi_cb);
+    status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, p, pmi_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Send the PID list upstream */
