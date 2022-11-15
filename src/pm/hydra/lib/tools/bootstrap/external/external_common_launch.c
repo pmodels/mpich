@@ -255,6 +255,8 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
             else
                 dummy = NULL;
         }
+        HYDU_dump(stdout, "dummy=%p\n", dummy);
+        dummy = &fd;
 
         if (HYDT_bsci_info.debug) {
             HYDU_dump(stdout, "Launch arguments: ");
