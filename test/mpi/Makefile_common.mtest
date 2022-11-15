@@ -21,8 +21,8 @@ LDADD = $(top_builddir)/dtpools/src/libdtpools.la
 $(top_builddir)/dtpools/src/libdtpools.la:
 	(cd $(top_builddir)/dtpools && $(MAKE))
 
-TESTDIRS ?= @TESTDIRS@
-TESTLIST ?= @TESTLIST@
+TESTDIRS ?= @default_testdirs@
+TESTLIST ?= @default_testlist@
 SUMMARY_BASENAME ?= summary
 
 testing:
