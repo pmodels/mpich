@@ -812,26 +812,26 @@ PAC_POP_FLAG([LDFLAGS])
 PAC_POP_FLAG([LIBS])
 
 # setup which tests "make testing" will run
-TESTLIST=testlist
-TESTDIRS=
+default_testlist=testlist
+default_testdirs=
 if test $have_gpu = "yes" ; then
-    TESTLIST="${TESTLIST},testlist.gpu"
+    default_testlist="${default_testlist},testlist.gpu"
 fi
 if test $enable_dtpools = "yes" ; then
-    TESTLIST="${TESTLIST},testlist.dtp"
+    default_testlist="${default_testlist},testlist.dtp"
 fi
 if test $enable_collalgo_tests = "yes" ; then
-    TESTLIST="${TESTLIST},testlist.collalgo"
+    default_testlist="${default_testlist},testlist.collalgo"
 fi
 # handle --enable-gpu-tests-only
 if test $have_gpu = "no" -a $enable_gpu_tests_only = "yes" ; then
     AC_MSG_ERROR([GPU only test configuration requires GPU library (CUDA or LevelZero)])
 elif test $enable_gpu_tests_only = "yes" ; then
-    TESTDIRS=coll,pt2pt,rma
-    TESTLIST=testlist.gpu
+    default_testdirs=coll,pt2pt,rma
+    default_testlist=testlist.gpu
 fi
-AC_SUBST([TESTDIRS])
-AC_SUBST([TESTLIST])
+AC_SUBST([default_testdirs])
+AC_SUBST([default_testlist])
 
 # for tests that require large mem
 largetest="#"
