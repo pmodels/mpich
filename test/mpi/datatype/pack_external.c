@@ -122,57 +122,57 @@ static bool mpi_type_is_bool(MPI_Datatype mpi_type)
 
 static const void *get_in_buffer(struct dt dt)
 {
-    switch (dt.mpi_type) {
-        case MPI_INT:
-            return int_data;
-        case MPI_LONG:
-            return long_data;
-        case MPI_LONG_LONG_INT:
-            return long_long_data;
-        case MPI_FLOAT:
-            return float_data;
+    if (dt.mpi_type == MPI_INT) {
+        return int_data;
+    } else if (dt.mpi_type == MPI_LONG) {
+        return long_data;
+    } else if (dt.mpi_type == MPI_LONG_LONG_INT) {
+        return long_long_data;
+    } else if (dt.mpi_type == MPI_FLOAT) {
+        return float_data;
+    }
 #ifdef TEST_LONG_DOUBLE
-        case MPI_LONG_DOUBLE:
-            return long_double_data;
+    else if (dt.mpi_type == MPI_LONG_DOUBLE) {
+        return long_double_data;
+    }
 #endif
 #ifdef TEST_COMPLEX
-        case MPI_C_COMPLEX:
-            return complex_data;
-#endif
-        case MPI_C_BOOL:
-            return bool_data;
-        default:
-            /* TODO: add more datatypes */
-            return NULL;
+    else if (dt.mpi_type == MPI_C_COMPLEX) {
+        return complex_data;
     }
+#endif
+    else if (dt.mpi_type == MPI_C_BOOL) {
+        return bool_data;
+    }
+    /* TODO: add more datatypes */
     return NULL;
 }
 
 static const void *get_pack_buffer(struct dt dt)
 {
-    switch (dt.mpi_type) {
-        case MPI_INT:
-            return int_pack;
-        case MPI_LONG:
-            return long_pack;;
-        case MPI_LONG_LONG_INT:
-            return long_long_pack;
-        case MPI_FLOAT:
-            return float_pack;
+    if (dt.mpi_type == MPI_INT) {
+        return int_pack;
+    } else if (dt.mpi_type == MPI_LONG) {
+        return long_pack;
+    } else if (dt.mpi_type == MPI_LONG_LONG_INT) {
+        return long_long_pack;
+    } else if (dt.mpi_type == MPI_FLOAT) {
+        return float_pack;
+    }
 #ifdef TEST_LONG_DOUBLE
-        case MPI_LONG_DOUBLE:
-            return long_double_pack;
+    else if (dt.mpi_type == MPI_LONG_DOUBLE) {
+        return long_double_pack;
+    }
 #endif
 #ifdef TEST_COMPLEX
-        case MPI_C_COMPLEX:
-            return complex_pack;
-#endif
-        case MPI_C_BOOL:
-            return bool_pack;
-        default:
-            /* TODO: add more datatypes */
-            return NULL;
+    else if (dt.mpi_type == MPI_C_COMPLEX) {
+        return complex_pack;
     }
+#endif
+    else if (dt.mpi_type == MPI_C_BOOL) {
+        return bool_pack;
+    }
+    /* TODO: add more packtypes */
     return NULL;
 }
 
