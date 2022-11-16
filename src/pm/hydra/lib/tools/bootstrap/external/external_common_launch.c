@@ -236,25 +236,20 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
                 status = HYDU_sock_cloexec(control_fd[proxy->proxy_id]);
                 HYDU_ERR_POP(status, "unable to set control socket to close on exec\n");
             }
-
-            dummy = NULL;
         } else {
             offset = 0;
 
             /* We are not launching the executable directly; use the
              * quoted version */
             targs[exec_idx] = quoted_exec_string;
-
-            /* dummy is NULL only for launchers that can handle a
-             * closed stdin socket. Older versions of ssh and SGE seem
-             * to have problems when stdin is closed before they are
-             * launched. */
-            if (!strcmp(HYDT_bsci_info.launcher, "ssh") ||
-                !strcmp(HYDT_bsci_info.launcher, "rsh") || !strcmp(HYDT_bsci_info.launcher, "sge"))
-                dummy = &fd;
-            else
-                dummy = NULL;
         }
+
+        /* When stdin is closed, the launched process may later create a communication channel
+         * uses fd = 0. This may cause mysterious issues, esp. with ssh. In one case, we encounter
+         * bugs that interrupts CI's ssh connection. Always set stdin to a dummy to save some
+         * trouble.
+         */
+        dummy = &fd;
 
         if (HYDT_bsci_info.debug) {
             HYDU_dump(stdout, "Launch arguments: ");
