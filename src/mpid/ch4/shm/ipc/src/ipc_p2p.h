@@ -225,8 +225,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
                          &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-    MPID_Request_complete(rreq);
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
   fn_exit:
     MPIR_FUNC_EXIT;
