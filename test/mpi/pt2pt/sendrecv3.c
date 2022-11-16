@@ -27,6 +27,13 @@ int main(int argc, char *argv[])
     if (argc > 1 && strcmp(argv[1], "-isendrecv") == 0) {
         use_isendrecv = 1;
     }
+
+    /* skip the test if MPI_Isendrecv is not available */
+    if (use_isendrecv && !MTEST_HAVE_MIN_MPI_VERSION(4, 0)) {
+        printf("Test Skipped\n");
+        return 0;
+    }
+
     MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
@@ -58,11 +65,14 @@ int main(int argc, char *argv[])
             }
             partner = (rank + 1) % size;
 
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
             if (use_isendrecv) {
                 MPI_Isendrecv(MPI_BOTTOM, 0, MPI_INT, partner, 10,
                               MPI_BOTTOM, 0, MPI_INT, partner, 10, comm, &r[nmsg]);
                 num_requests = nmsg + 1;
-            } else {
+            } else
+#endif
+            {
                 MPI_Sendrecv(MPI_BOTTOM, 0, MPI_INT, partner, 10,
                              MPI_BOTTOM, 0, MPI_INT, partner, 10, comm, MPI_STATUS_IGNORE);
                 num_requests = nmsg;
@@ -77,10 +87,13 @@ int main(int argc, char *argv[])
             MPI_Waitall(num_requests, r, MPI_STATUSES_IGNORE);
 
             /* Repeat the test, but make one of the processes sleep */
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
             if (use_isendrecv) {
                 MPI_Isendrecv(MPI_BOTTOM, 0, MPI_INT, partner, 10,
                               MPI_BOTTOM, 0, MPI_INT, partner, 10, comm, &r[nmsg]);
-            } else {
+            } else
+#endif
+            {
                 MPI_Sendrecv(MPI_BOTTOM, 0, MPI_INT, partner, 10,
                              MPI_BOTTOM, 0, MPI_INT, partner, 10, comm, MPI_STATUS_IGNORE);
             }
