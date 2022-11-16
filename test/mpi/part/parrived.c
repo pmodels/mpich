@@ -50,8 +50,8 @@ static int check_recv_partition(int rp, int iter)
         if (buf[index] != exp_val) {
             if (errs < 10) {
                 fprintf(stderr,
-                        "expected %.1f but received %.1f at buf[%d] (partition %d count %ld off %d), iteration %d\n",
-                        exp_val, buf[index], index, rp, rcount, i, iter);
+                        "expected %.1f but received %.1f at buf[%d] (partition %d count %lld off %d), iteration %d\n",
+                        exp_val, buf[index], index, rp, (long long) rcount, i, iter);
                 fflush(stderr);
             }
             errs++;
@@ -88,9 +88,9 @@ int main(int argc, char *argv[])
     scount = tot_count / spart;
     rcount = tot_count / rpart;
     if (spart * scount != rpart * rcount) {
-        fprintf(stderr, "Invalid partitions (%d, %d) or tot_count (%ld),"
+        fprintf(stderr, "Invalid partitions (%d, %d) or tot_count (%lld),"
                 "(tot_count / spart * spart) and (tot_count / rpart * rpart) "
-                "must be identical\n", spart, rpart, tot_count);
+                "must be identical\n", spart, rpart, (long long) tot_count);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 

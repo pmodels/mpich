@@ -173,9 +173,9 @@ int main(int argc, char *argv[])
     scount = tot_count / spart;
     rcount = tot_count / rpart;
     if (spart * scount != rpart * rcount) {
-        fprintf(stderr, "Invalid partitions (%d, %d) or tot_count (%ld),"
+        fprintf(stderr, "Invalid partitions (%d, %d) or tot_count (%lld),"
                 "(tot_count / spart * spart) and (tot_count / rpart * rpart) "
-                "must be identical\n", spart, rpart, tot_count);
+                "must be identical\n", spart, rpart, (long long) tot_count);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
