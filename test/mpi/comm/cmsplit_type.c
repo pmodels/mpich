@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&comm);
     }
 
+#if MTEST_HAVE_MIN_MPI_VERSION(4,0)
     /* Check to see if MPI_COMM_TYPE_HW_GUIDED works correctly */
     for (i = 0; split_topo[i]; i++) {
         MPI_Info_create(&info);
@@ -113,6 +114,7 @@ int main(int argc, char *argv[])
 
         MPI_Comm_free(&comm);
     }
+#endif
 
     /* test for topology hints: pass a valid info value, but do not
      * expect that the MPI implementation will respect it.  */
