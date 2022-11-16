@@ -267,25 +267,27 @@ static void set_index_power(MPI_Datatype mpi_type, int category, void *arr, int 
     }
 }
 
-#define SET_PAIR_CASE(type, mpi_type) \
-    case mpi_type: \
-        { \
-            struct type ## _test *pp = p; \
-            pp->a = val_a; \
-            pp->b = val_b; \
-        }; \
-        break
+#define SET_PAIR(type) \
+    do { \
+        struct type ## _test *pp = p; \
+        pp->a = val_a; \
+        pp->b = val_b; \
+    } while (0)
 
 static void set_pair_val(MPI_Datatype mpi_type, void *p, int val_a, int val_b)
 {
-    switch (mpi_type) {
-            SET_PAIR_CASE(int, MPI_2INT);
-            SET_PAIR_CASE(long, MPI_LONG_INT);
-            SET_PAIR_CASE(short, MPI_SHORT_INT);
-            SET_PAIR_CASE(float, MPI_FLOAT_INT);
-            SET_PAIR_CASE(double, MPI_DOUBLE_INT);
-        default:
-            assert(0);
+    if (mpi_type == MPI_2INT) {
+        SET_PAIR(int);
+    } else if (mpi_type == MPI_LONG_INT) {
+        SET_PAIR(long);
+    } else if (mpi_type == MPI_SHORT_INT) {
+        SET_PAIR(short);
+    } else if (mpi_type == MPI_FLOAT_INT) {
+        SET_PAIR(float);
+    } else if (mpi_type == MPI_DOUBLE_INT) {
+        SET_PAIR(double);
+    } else {
+        assert(0);
     }
 }
 
@@ -356,29 +358,32 @@ static int cmp_int(void *p, void *q, int type_size)
     }
 }
 
-#define CMP_PAIR_CASE(type, mpi_type) \
-    case mpi_type: \
-        do { \
-            struct type ## _test *pp, *qq; \
-            pp = p; \
-            qq = q; \
-            if (pp->a == qq->a && pp->b == qq->b) { \
-                return 0; \
-            } else { \
-                return 1; \
-            } \
-        } while (0)
+#define CMP_PAIR(type) \
+    do { \
+        struct type ## _test *pp, *qq; \
+        pp = p; \
+        qq = q; \
+        if (pp->a == qq->a && pp->b == qq->b) { \
+            return 0; \
+        } else { \
+            return 1; \
+        } \
+    } while (0)
 
 static int cmp_pair(void *p, void *q, MPI_Datatype mpi_type)
 {
-    switch (mpi_type) {
-            CMP_PAIR_CASE(int, MPI_2INT);
-            CMP_PAIR_CASE(long, MPI_LONG_INT);
-            CMP_PAIR_CASE(short, MPI_SHORT_INT);
-            CMP_PAIR_CASE(float, MPI_FLOAT_INT);
-            CMP_PAIR_CASE(double, MPI_DOUBLE_INT);
-        default:
-            assert(0);
+    if (mpi_type == MPI_2INT) {
+        CMP_PAIR(int);
+    } else if (mpi_type == MPI_LONG_INT) {
+        CMP_PAIR(long);
+    } else if (mpi_type == MPI_SHORT_INT) {
+        CMP_PAIR(short);
+    } else if (mpi_type == MPI_FLOAT_INT) {
+        CMP_PAIR(float);
+    } else if (mpi_type == MPI_DOUBLE_INT) {
+        CMP_PAIR(double);
+    } else {
+        assert(0);
     }
     return 1;
 }
