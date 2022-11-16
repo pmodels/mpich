@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
-#if MPI_VERSION >= 4
+#ifndef USE_STRICT_MPI
     /* add and delete a bunch of times */
     for (int k = 0; k < 10000; k++) {
         for (i = 0; i < NCLASSES; i++) {
