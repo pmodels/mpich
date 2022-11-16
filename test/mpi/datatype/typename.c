@@ -83,10 +83,14 @@ static mpi_names_t mpi_names[] = {
      * compiler does not support it), the value may be MPI_DATATYPE_NULL */
     {MPI_REAL4, "MPI_REAL4"},
     {MPI_REAL8, "MPI_REAL8"},
+#ifdef HAVE_MPI_REAL16
     {MPI_REAL16, "MPI_REAL16"},
+#endif
     {MPI_COMPLEX8, "MPI_COMPLEX8"},
     {MPI_COMPLEX16, "MPI_COMPLEX16"},
+#ifdef HAVE_MPI_COMPLEX32
     {MPI_COMPLEX32, "MPI_COMPLEX32"},
+#endif
     {MPI_INTEGER1, "MPI_INTEGER1"},
     {MPI_INTEGER2, "MPI_INTEGER2"},
     {MPI_INTEGER4, "MPI_INTEGER4"},

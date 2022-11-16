@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
         errs++;
         printf("MPI_REAL8 has size %d\n", size);
     }
+#ifdef HAVE_MPI_REAL16
     if (MPI_REAL16 != MPI_DATATYPE_NULL) {
         MPI_Type_size(MPI_REAL16, &size);
         if (size != 16) {
@@ -36,6 +37,7 @@ int main(int argc, char *argv[])
             printf("MPI_REAL16 has size %d\n", size);
         }
     }
+#endif
 
     MPI_Type_size(MPI_COMPLEX8, &size);
     if (size != 8) {
@@ -47,6 +49,7 @@ int main(int argc, char *argv[])
         errs++;
         printf("MPI_COMPLEX16 has size %d\n", size);
     }
+#ifdef HAVE_MPI_COMPLEX32
     if (MPI_COMPLEX32 != MPI_DATATYPE_NULL) {
         MPI_Type_size(MPI_COMPLEX32, &size);
         if (size != 32) {
@@ -54,6 +57,7 @@ int main(int argc, char *argv[])
             printf("MPI_COMPLEX32 has size %d\n", size);
         }
     }
+#endif
 
     MPI_Type_size(MPI_INTEGER1, &size);
     if (size != 1) {
