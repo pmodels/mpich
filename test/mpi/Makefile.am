@@ -9,7 +9,7 @@ include $(top_srcdir)/Makefile_single.mtest
 ACLOCAL_AMFLAGS = -I confdb
 
 static_subdirs = util attr basic datatype coll comm errhan group info init \
-                 pt2pt rma topo errors manual perf mpi_t impls ckpoint ft dtpools \
+                 pt2pt rma topo errors manual perf mpi_t impls ckpoint dtpools \
                  part
 all_lang_subdirs = f77 cxx f90 f08
 
