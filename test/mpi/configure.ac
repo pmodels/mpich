@@ -626,6 +626,21 @@ AC_SUBST(mpix)
 # to noninst_PROGRAMS to skip building the tests when we do strict MPI test
 AM_CONDITIONAL([BUILD_MPIX_TESTS], [test "$enable_strictmpi" = "no"])
 
+# Many functions were deprecated in MPI-2 and deleted in MPI-3.
+# They are not present in implementations that have implemented MPI-3 deletions.
+#
+MPI_HAS_MPI3_DELETED=no
+#
+# If MPI is derived from MPICH and strictmpi not selected, let's test MPI-3 deleted features.
+if test "$MPI_IS_MPICH" = "yes" -a "$enable_strictmpi" = "no" ; then
+   MPI_HAS_MPI3_DELETED=yes
+fi
+AC_SUBST(MPI_HAS_MPI3_DELETED)
+
+# Use the conditional variable BUILD_MPI3_DELETED_TESTS to conditionally add these tests
+# to noninst_PROGRAMS to skip building the tests when we do strict MPI test
+AM_CONDITIONAL([BUILD_MPI3_DELETED_TESTS], [test "$enable_strictmpi" = "no"])
+
 dnl We cannot use AC_C_LONG_DOUBLE
 dnl because it does not support cross-compilation.  Instead, we use the
 dnl same test in the MPICH configure.
