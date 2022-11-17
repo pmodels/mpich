@@ -1501,6 +1501,16 @@ case "$with_pmi" in
     with_pmi=pmi2
     with_pmilib=mpich
     ;;
+  pmi1|pmi2)
+    ;;
+  *)
+    # allow user to specify an external libpmi
+    m4_define([skip_ac_arg_with_pmi], 1)
+    PAC_CHECK_HEADER_LIB_FATAL([pmi], [pmi.h], [pmi], [PMI_Init])
+    # assume using PMI-1
+    with_pmi=pmi1
+    with_pmilib=no
+    ;;
 esac
 
 case "$with_pmilib" in
@@ -1689,6 +1699,9 @@ case "$with_pmilib" in
     ;;
   pmix)
     # taken care of by PAC_CHECK_HEADER_LIB_EXPLICIT
+    ;;
+  no)
+    # taken care of by --with-pmi=path
     ;;
   *)
     AC_MSG_ERROR([pmilib $with_pmilib not supported.])
