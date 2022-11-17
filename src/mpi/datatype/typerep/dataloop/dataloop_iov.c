@@ -141,9 +141,9 @@ int MPIR_Dataloop_iov(const void *buf, MPI_Aint count, void *dataloop, MPI_Aint 
 
             iov[idx].iov_base = addr;
             iov[idx].iov_len = sub_size;
-            idx++;
 
             addr += iov[idx].iov_len;
+            idx++;
         } else {
             MPI_Aint cnt = dlp->loop_params.cm_t.count;
             MPII_Dataloop *child_dlp = dlp->loop_params.cm_t.dataloop;
