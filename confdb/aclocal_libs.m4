@@ -18,7 +18,9 @@ dnl TODO as written, this macro cannot handle a "with_option" arg that has "-"
 dnl characters in it.  Use AS_TR_SH (and possibly AS_VAR_* macros) to handle
 dnl this case if it ever arises.
 AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
-    AC_ARG_WITH([$1], [AS_HELP_STRING([--with-$1=[[PATH]]],PAC_WITH_LIB_HELP_STRING($1))])
+    m4_ifdef([skip_ac_arg_with_$1], [], [
+        AC_ARG_WITH([$1], [AS_HELP_STRING([--with-$1=[[PATH]]],PAC_WITH_LIB_HELP_STRING($1))])
+    ])
 
     AC_ARG_WITH([$1-include],
                 [AS_HELP_STRING([--with-$1-include=PATH],
