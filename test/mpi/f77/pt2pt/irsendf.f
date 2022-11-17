@@ -80,13 +80,13 @@ C
 C
          completed = 0
          do while (completed .lt. 2)
-            call MPI_Waitany(2, requests, index, statuses, ierr)
+            call MPI_Waitany(2, requests, index, status, ierr)
             completed = completed + 1
          end do
 C
          call rq_check( requests(1), 1, 'irsend and irecv' )
 C
-         call msg_check( recv_buf, next, tag, count, statuses,
+         call msg_check( recv_buf, next, tag, count, status,
      .           TEST_SIZE, 'irsend and irecv', errs )
 C
       else if (prev .eq. 0) then
