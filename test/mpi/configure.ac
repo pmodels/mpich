@@ -1578,6 +1578,31 @@ if test "$pac_cv_have_mpi_integer16" = yes ; then
     AC_DEFINE(HAVE_MPI_INTEGER16,1,[Define if MPI_INTEGER16 is available])
 fi
 
+# Check if MPI_REAL16 and MPI_COMPLEX32 are defined. Tests handle the case
+# where they are defined, but the value is the same as MPI_DATATYPE_NULL.
+AC_CACHE_CHECK([whether MPI_REAL16 is available],
+pac_cv_have_mpi_real16,[
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([#include "mpi.h"],[
+            MPI_Datatype t = MPI_REAL16;
+        ])
+    ],[pac_cv_have_mpi_real16=yes],[pac_cv_have_mpi_real16=no])
+])
+if test "$pac_cv_have_mpi_real16" = yes ; then
+    AC_DEFINE(HAVE_MPI_REAL16,1,[Define if MPI_REAL16 is available])
+fi
+AC_CACHE_CHECK([whether MPI_COMPLEX32 is available],
+pac_cv_have_mpi_complex32,[
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([#include "mpi.h"],[
+            MPI_Datatype t = MPI_COMPLEX32;
+        ])
+    ],[pac_cv_have_mpi_complex32=yes],[pac_cv_have_mpi_complex32=no])
+])
+if test "$pac_cv_have_mpi_complex32" = yes ; then
+    AC_DEFINE(HAVE_MPI_COMPLEX32,1,[Define if MPI_COMPLEX32 is available])
+fi
+
 # MPI_Aint was intended as an address-sized int.  However, MPI didn't
 # specify this - MPI_Aint must be large enough to hold an address-sized
 # integer, but it can be larger.  To get clean compilation in some places,
