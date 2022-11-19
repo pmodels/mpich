@@ -395,7 +395,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
                                                   MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = NULL;
     MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
@@ -414,12 +413,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
                                    target_rank, target_disp, target_count, target_datatype, win,
                                    winattr);
     if (mpi_errno == MPI_SUCCESS) {
-        /* create a completed request for user. */
-        MPIDI_CH4_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__RMA, vci, 2);
-        MPIR_Assert(sreq);
-
-        MPID_Request_complete(sreq);
-        *request = sreq;
+        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
     }
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
 
@@ -511,7 +505,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
                                                          MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = NULL;
     MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
@@ -524,20 +517,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
         goto fn_exit;
     }
 
-    int vci = MPIDI_WIN(win, am_vci);
     mpi_errno = MPIDI_POSIX_do_accumulate(origin_addr, origin_count, origin_datatype,
                                           target_rank, target_disp, target_count,
                                           target_datatype, op, win, winattr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* create a completed request for user. */
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
-    MPIDI_CH4_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__RMA, vci, 2);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
-    MPIR_Assert(sreq);
-
-    MPID_Request_complete(sreq);
-    *request = sreq;
+    *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -561,7 +546,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
                                                              MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = NULL;
     MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
@@ -575,22 +559,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
         goto fn_exit;
     }
 
-    int vci = MPIDI_WIN(win, am_vci);
-
     mpi_errno = MPIDI_POSIX_do_get_accumulate(origin_addr, origin_count, origin_datatype,
                                               result_addr, result_count, result_datatype,
                                               target_rank, target_disp, target_count,
                                               target_datatype, op, win, winattr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* create a completed request for user. */
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
-    MPIDI_CH4_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__RMA, vci, 2);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
-    MPIR_Assert(sreq);
-
-    MPID_Request_complete(sreq);
-    *request = sreq;
+    *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -688,7 +663,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
                                                   MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = NULL;
     MPIR_FUNC_ENTER;
 
     /* CH4 schedules operation only based on process locality.
@@ -707,12 +681,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
                                    target_rank, target_disp, target_count, target_datatype, win,
                                    winattr);
     if (mpi_errno == MPI_SUCCESS) {
-        /* create a completed request for user. */
-        MPIDI_CH4_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__RMA, vci, 2);
-        MPIR_Assert(sreq);
-
-        MPID_Request_complete(sreq);
-        *request = sreq;
+        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
     }
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
 
