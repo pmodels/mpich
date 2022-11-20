@@ -52,7 +52,8 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 {
     int pmi_errno = PMI2_SUCCESS;
 
-    struct PMIU_cmd pmicmd = { 0 };
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init_zero(&pmicmd);
 
     PMIU_thread_init();
 
