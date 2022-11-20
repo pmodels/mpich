@@ -26,6 +26,7 @@ int main(int argc, char **argv)
     struct HYD_exec *exec;
     struct HYD_node *node;
     int i, user_provided_host_list, global_core_count;
+    int exit_status = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -247,7 +248,6 @@ int main(int argc, char **argv)
 
     /* Not ideal: we only get exitcodes for pg 0, and we need make sure pg 0
      *            survive till now (the end). This is not obvious. */
-    int exit_status;
     exit_status = get_exit_status(0);
 
     /* Call finalize functions for lower layers to cleanup their resources */
