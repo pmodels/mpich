@@ -2231,14 +2231,12 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shar
         HASH_FIND(hh, ipc_cache_mapped[dev_id], &lookup_entry.remote_mem_id, keylen, cache_entry);
     }
 
+    *ptr = NULL;
     if (cache_entry) {
-        *ptr = cache_entry->mapped_ptr;
-    } else {
-        mpl_err = MPL_ze_ipc_handle_map(ipc_handle, is_shared_handle, dev_id, true, size, ptr);
-        if (mpl_err != MPL_SUCCESS) {
-            goto fn_fail;
+        if (cache_entry->mapped_ptr) {
+            *ptr = cache_entry->mapped_ptr;
         }
-
+    } else {
         if (likely(MPL_gpu_info.specialized_cache)) {
             /* Insert into the cache */
             cache_entry =
@@ -2250,6 +2248,17 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shar
             }
             memset(cache_entry, 0, sizeof(MPL_ze_mapped_buffer_entry_t));
             cache_entry->key = lookup_entry;
+            HASH_ADD(hh, ipc_cache_mapped[dev_id], key, keylen, cache_entry, MPL_MEM_OTHER);
+        }
+    }
+
+    if (*ptr == NULL) {
+        mpl_err = MPL_ze_ipc_handle_map(ipc_handle, is_shared_handle, dev_id, true, size, ptr);
+        if (mpl_err != MPL_SUCCESS) {
+            goto fn_fail;
+        }
+
+        if (likely(MPL_gpu_info.specialized_cache)) {
             cache_entry->mapped_ptr = *ptr;
             cache_entry->mapped_size = size;
 
@@ -2262,7 +2271,6 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shar
             }
             memcpy(removal_entry, cache_entry, sizeof(MPL_ze_mapped_buffer_entry_t));
 
-            HASH_ADD(hh, ipc_cache_mapped[dev_id], key, keylen, cache_entry, MPL_MEM_OTHER);
             HASH_ADD(hh, mmap_cache_removal[dev_id], mapped_ptr, sizeof(void *), removal_entry,
                      MPL_MEM_OTHER);
         }
