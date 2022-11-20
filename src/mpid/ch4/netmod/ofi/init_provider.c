@@ -252,8 +252,10 @@ static const char *get_prov_addr(struct fi_info *prov)
  */
 static int provider_preference(const char *prov_name)
 {
-    if (MPL_stricmp(prov_name, "UDP;ofi_rxd") == 0) {
-        return -1;
+    int n = strlen(prov_name);
+    if (n > 8 && strcmp(prov_name + n - 8, ";ofi_rxd") == 0) {
+        /* ofi_rxd have more test failures */
+        return -2;
     }
 
     return 0;
@@ -266,7 +268,6 @@ static struct fi_info *pick_provider_from_list(struct fi_info *list)
     MPIDI_OFI_init_settings(&minimal_settings, MPIDI_OFI_SET_NAME_MINIMAL);
 
     int best_score = 0;
-    int best_pref_score = 0;
     struct fi_info *best_prov = NULL;
     for (struct fi_info * prov = list; prov; prov = prov->next) {
         /* Confirm the NIC backed by the provider is actually up. */
@@ -276,9 +277,8 @@ static struct fi_info *pick_provider_from_list(struct fi_info *list)
 
         int score = MPIDI_OFI_match_provider(prov, &optimal_settings, &minimal_settings);
         int pref_score = provider_preference(prov->fabric_attr->prov_name);
-        if (best_score < score || (best_score == score && best_pref_score < pref_score)) {
-            best_score = score;
-            best_pref_score = pref_score;
+        if (best_score < score + pref_score) {
+            best_score = score + pref_score;
             best_prov = prov;
         }
         if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
