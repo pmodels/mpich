@@ -284,13 +284,6 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
 {
     int score = 0;
 
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
-                                                     prov->fabric_attr->prov_name));
-
-    CHECK_CAP(enable_scalable_endpoints,
-              prov->domain_attr->max_ep_tx_ctx <= 1 ||
-              (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);
-
     /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
      * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
      * and FI_RECV are mutually exclusive, so they should never be set both at the same
