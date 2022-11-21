@@ -920,11 +920,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
-        /* FIXME: shouldn't this be a lightweight completed request? */
-        MPIDI_CH4_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0, 2);
-        MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-        MPIDI_Request_complete_fast(*sigreq);
+        *sigreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
     }
     goto fn_exit;
 }
