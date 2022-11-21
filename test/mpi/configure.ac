@@ -449,6 +449,8 @@ if test "$MPI_IS_MPICH" = "yes" ; then
             AC_MSG_NOTICE([Detected MPICH with ch4:ucx netmod])
             AC_DEFINE(MPICH_CH4_UCX, 1, [define if it is mpich with ch4:ucx])
             enable_spawn=no
+        elif [grep 'MPICH Device:[[:blank:]]*ch3' conftest.output > /dev/null] ; then
+            enable_part=no
         fi
 
         # enable_checkerrors
