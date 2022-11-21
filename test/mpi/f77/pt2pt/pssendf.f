@@ -99,10 +99,10 @@ C
 C
          flag = .FALSE.
          do while (.not. flag)
-            call MPI_Testany(1, requests(1), index, flag,
-     .                       statuses(1,1), ierr)
+            call MPI_Testany(1, requests, index, flag,
+     .                       status, ierr)
          end do
-         call msg_check( recv_buf, prev, tag, count, statuses(1,1),
+         call msg_check( recv_buf, prev, tag, count, status,
      .           TEST_SIZE, 'testany', errs )
 
          do i = 1,count

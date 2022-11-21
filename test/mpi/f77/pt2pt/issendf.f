@@ -96,8 +96,8 @@ C
 C
          flag = .FALSE.
          do while (.not. flag)
-            call MPI_Testany(1, requests(1), index, flag,
-     .                       statuses(1,1), ierr)
+            call MPI_Testany(1, requests, index, flag,
+     .                       status, ierr)
          end do
 C
          call rq_check( requests, 1, 'issend and recv (testany)' )
