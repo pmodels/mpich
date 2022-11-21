@@ -62,8 +62,8 @@ static int check_recv_partition(int tid, int rp, int iter)
         if (buf[index] != exp_val) {
             if (errs < 10) {
                 fprintf(stderr, "Rank %d tid %d expected %.1f but received %.1f "
-                        "at buf[%d] (partition %d count %ld off %d), iteration %d\n",
-                        rank, tid, exp_val, buf[index], index, rp, rcount, i, iter);
+                        "at buf[%d] (partition %d count %lld off %d), iteration %d\n",
+                        rank, tid, exp_val, buf[index], index, rp, (long long) rcount, i, iter);
                 fflush(stderr);
             }
             errs++;
