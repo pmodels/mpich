@@ -82,7 +82,7 @@ noinst_PROGRAMS =             \
     zeroblks                  \
     zeroparms
 
-if BUILD_MPI3_DELETED_TESTS
+if BUILD_NONSTRICT_TESTS
 noinst_PROGRAMS +=            \
     indexed_misc_oldapi       \
     lbub_oldapi               \

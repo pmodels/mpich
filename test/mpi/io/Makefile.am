@@ -32,7 +32,7 @@ noinst_PROGRAMS = \
     zero_count
 
 
-if BUILD_MPIX_TESTS
+if BUILD_NONSTRICT_TESTS
 noinst_PROGRAMS +=      \
     i_bigtype           \
     i_hindexed_io       \

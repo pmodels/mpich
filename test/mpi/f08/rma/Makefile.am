@@ -25,7 +25,7 @@ noinst_PROGRAMS = \
     winattrf08      \
     winattr2f08
 
-if BUILD_MPIX_TESTS
+if BUILD_NONSTRICT_TESTS
 noinst_PROGRAMS += aintf08
 endif
 

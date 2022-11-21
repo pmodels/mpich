@@ -20,7 +20,7 @@ noinst_PROGRAMS =   \
     errstring2      \
     dynamic_errcode_predefined_errclass
 
-if BUILD_MPI3_DELETED_TESTS
+if BUILD_NONSTRICT_TESTS
 noinst_PROGRAMS +=  \
     commcall_oldapi
 endif
