@@ -171,8 +171,9 @@ int MPIR_Dataloop_iov(const void *buf, MPI_Aint count, void *dataloop, MPI_Aint 
                                           dlp->loop_params.bi_t.offset_array,
                                           child_dlp, dlp->el_extent, dlp->el_size,
                                           rem_skip, iov + idx, max_iov_len - idx, &tmp_len);
-                    addr += dlp->loop_params.bi_t.offset_array[cnt - 1] +
-                        dlp->loop_params.bi_t.blocksize * dt_extent;
+                    addr = (void *) ((intptr_t) addr +
+                                     dlp->loop_params.bi_t.offset_array[cnt - 1] +
+                                     dlp->loop_params.bi_t.blocksize * dt_extent);
                     break;
                 case MPII_DATALOOP_KIND_INDEXED:
                     fill_iov_indexed(addr, cnt, dlp->loop_params.i_t.blocksize_array,
@@ -197,7 +198,7 @@ int MPIR_Dataloop_iov(const void *buf, MPI_Aint count, void *dataloop, MPI_Aint 
             MPI_Aint shift = dt_extent;
             while (rem_count > 0) {
                 for (MPI_Aint i = 0; i < dlp->num_contig; i++) {
-                    iov[idx].iov_base = (char *) iov_from[i].iov_base + shift;
+                    iov[idx].iov_base = (void *) ((intptr_t) iov_from[i].iov_base + shift);
                     iov[idx].iov_len = iov_from[i].iov_len;
                     idx++;
                     if (idx >= max_iov_len) {
@@ -249,12 +250,13 @@ static void fill_iov_vector(void *buf, MPI_Aint cnt, MPI_Aint blklen, MPI_Aint s
     for (MPI_Aint i = i_start; i < cnt; i++) {
         if (child_is_contig) {
             /* rem_skip is 0 */
-            iov[idx].iov_base = addr + i * stride;
+            iov[idx].iov_base = (void *) ((intptr_t) addr + i * stride);
             iov[idx].iov_len = blklen * child_size;
             idx++;
         } else {
             MPI_Aint tmp_len;
-            MPIR_Dataloop_iov(addr + i * stride, blklen, child_dlp, child_extent,
+            void *ptr = (void *) ((intptr_t) addr + i * stride);
+            MPIR_Dataloop_iov(ptr, blklen, child_dlp, child_extent,
                               rem_skip, iov + idx, max_iov_len - idx, &tmp_len);
             idx += tmp_len;
         }
@@ -298,7 +300,7 @@ static void fill_iov_blockindexed(void *buf, MPI_Aint cnt, MPI_Aint blklen, MPI_
     for (MPI_Aint i = i_start; i < cnt; i++) {
         if (child_is_contig) {
             /* rem_skip is 0 */
-            iov[idx].iov_base = addr + offset_array[i];
+            iov[idx].iov_base = (void *) ((intptr_t) addr + offset_array[i]);
             iov[idx].iov_len = blklen * child_size;
             idx++;
         } else {
@@ -350,7 +352,7 @@ static void fill_iov_indexed(void *buf, MPI_Aint cnt, MPI_Aint * blklen_array,
         }
         if (child_is_contig) {
             /* rem_skip is 0 */
-            iov[idx].iov_base = addr + offset_array[i];
+            iov[idx].iov_base = (void *) ((intptr_t) addr + offset_array[i]);
             iov[idx].iov_len = blklen_array[i] * child_size;
             idx++;
         } else {
