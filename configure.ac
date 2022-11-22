@@ -2746,7 +2746,7 @@ if test "$MPID_NO_FLOAT16" != "yes" ; then
 fi
 
 # ----------------------------------------------------------------------------
-AC_CHECK_ALIGNOF([max_align_t],[0],[#include <stddef.h>])
+AC_CHECK_ALIGNOF([max_align_t],[#include <stddef.h>])
 
 if test "$ac_cv_alignof_max_align_t" != "0" ; then
     AC_DEFINE_UNQUOTED(MAX_ALIGNMENT,$ac_cv_alignof_max_align_t,[Controls byte alignment of structures (for aligning allocated structures)])
