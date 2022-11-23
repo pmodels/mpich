@@ -33,9 +33,7 @@ int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
 #ifdef ENABLE_COMM_OVERRIDES
     MPIDI_Comm_get_vc(comm, rreq->status.MPI_SOURCE, &vc);
     if (vc->comm_ops && vc->comm_ops->imrecv) {
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         vc->comm_ops->imrecv(vc, rreq);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         goto fn_exit;
     }
 #endif

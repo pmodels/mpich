@@ -52,10 +52,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
     {
 	iov_n += iovcnt;  /* add count of hdr iovs */
 	
-	/* Note this routine is invoked within a CH3 critical section */
-	/* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
 	mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, iov_n);
-	/* MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex); */
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
 	{
@@ -133,11 +130,9 @@ int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
     sreq->dev.msg_offset = 0;
     sreq->dev.msgsize = data_sz;
 	    
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = vc->sendNoncontig_fn(vc, sreq, eager_pkt, 
                                      sizeof(MPIDI_CH3_Pkt_eager_send_t),
                                      NULL, 0);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     MPIR_ERR_CHECK(mpi_errno);
 
  fn_exit:
@@ -187,9 +182,7 @@ int MPIDI_CH3_EagerContigSend( MPIR_Request **sreq_p,
     MPIDI_Pkt_set_seqnum(eager_pkt, seqnum);
     
     MPL_DBG_MSGPKT(vc,tag,eager_pkt->match.parts.context_id,rank,data_sz,"EagerContig");
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, 2, sreq_p);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|eagermsg");
     }
@@ -258,9 +251,7 @@ int MPIDI_CH3_EagerContigShortSend( MPIR_Request **sreq_p,
 
     MPL_DBG_MSGPKT(vc,tag,eagershort_pkt->match.parts.context_id,rank,data_sz,
 		    "EagerShort");
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, eagershort_pkt, sizeof(*eagershort_pkt), sreq_p);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|eagermsg");
     }
@@ -289,8 +280,6 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
     MPIR_Request * rreq;
     int found;
     int mpi_errno = MPI_SUCCESS;
-
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
     /* printf( "Receiving short eager!\n" ); fflush(stdout); */
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
@@ -488,10 +477,6 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
     MPIR_ERR_CHECK(mpi_errno);
 
  fn_fail:
-    /* MT note: it may be possible to narrow this CS after careful
-     * consideration.  Note though that the (!found) case must be wholly
-     * protected by this CS. */
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     return mpi_errno;
 }
 
@@ -541,9 +526,7 @@ int MPIDI_CH3_EagerContigIsend( MPIR_Request **sreq_p,
     MPIDI_Request_set_seqnum(sreq, seqnum);
     
     MPL_DBG_MSGPKT(vc,tag,eager_pkt->match.parts.context_id,rank,data_sz,"EagerIsend");
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, 2);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {
@@ -588,8 +571,6 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
     int complete;
     intptr_t data_len;
     int mpi_errno = MPI_SUCCESS;
-
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 	"received eager send pkt, sreq=0x%08x, rank=%d, tag=%d, context=%d",
@@ -654,7 +635,6 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
     }
 
  fn_fail:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     return mpi_errno;
 }
 

@@ -796,15 +796,6 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
 #ifdef ENABLE_COMM_OVERRIDES
     vc->comm_ops         = NULL;
 #endif
-    /* FIXME: We need a better abstraction for initializing the thread state 
-       for an object */
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-    {
-        int err;
-        MPID_Thread_mutex_create(&vc->pobj_mutex,&err);
-        MPIR_Assert(err == 0);
-    }
-#endif /* MPICH_THREAD_GRANULARITY */
     MPIDI_CH3_VC_Init(vc);
     MPIDI_DBG_PrintVCState(vc);
 

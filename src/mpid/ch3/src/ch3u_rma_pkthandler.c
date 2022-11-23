@@ -468,9 +468,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
             iov[0].iov_len = sizeof(*get_resp_pkt);
             iovcnt = 1;
 
-            MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
             mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, iovcnt);
-            MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
                 MPIR_Request_free(req);
@@ -485,9 +483,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
             iov[1].iov_len = get_pkt->count * type_size;
             iovcnt = 2;
 
-            MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
             mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, iovcnt);
-            MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
                 MPIR_Request_free(req);
@@ -505,10 +501,8 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
             req->dev.msg_offset = 0;
             req->dev.msgsize = get_pkt->count * type_size;
 
-            MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
             mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].iov_base, iov[0].iov_len,
                                              NULL, 0);
-            MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
             MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
 
@@ -887,9 +881,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
         iov[0].iov_len = sizeof(*get_accum_resp_pkt);
         iovcnt = 1;
 
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iSendv(vc, resp_req, iov, iovcnt);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_Request_free(resp_req);
@@ -1136,9 +1128,7 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     }
 
     /* Send the response packet */
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, cas_resp_pkt, sizeof(*cas_resp_pkt), &req);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 
     MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
@@ -1302,9 +1292,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         MPIR_ERR_CHECK(mpi_errno);
 
         /* send back the original data */
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, fop_resp_pkt, sizeof(*fop_resp_pkt), &resp_req);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (resp_req != NULL) {

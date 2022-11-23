@@ -56,9 +56,7 @@ int MPID_Comm_revoke(MPIR_Comm *comm_ptr, int is_remote)
             iov[0].iov_base = (void *) revoke_pkt;
             iov[0].iov_len = sizeof(*revoke_pkt);
 
-            MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
             mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, 1, &request);
-            MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
             if (mpi_errno) comm_ptr->dev.waiting_for_revoke--;
             if (NULL != request)
                 /* We don't need to keep a reference to this request. The
@@ -78,9 +76,7 @@ int MPID_Comm_revoke(MPIR_Comm *comm_ptr, int is_remote)
          * aren't any unexpected messages hanging around. */
 
         /* Clean up the receive and unexpected queues */
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
         MPIDI_CH3U_Clean_recvq(comm_ptr);
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     } else if (is_remote)  { /* If this is local, we've already revoked and don't need to do it again. */
         /* Decrement the revoke counter */
         comm_ptr->dev.waiting_for_revoke--;

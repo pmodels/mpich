@@ -34,8 +34,6 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
     match.parts.tag = tag;
     match.parts.context_id = comm->context_id + context_offset;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
-
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&match, &found);
     /* --BEGIN ERROR HANDLING-- */
     if (rreq == NULL)
@@ -79,9 +77,6 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
     {
 	intptr_t data_sz;
 	
-        /* we found a posted req, which we now own, so we can release the CS */
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
-
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		     "found posted receive request; copying data");
 	    
@@ -134,9 +129,6 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 	}
 	    
 	MPIDI_Request_set_msg_type(rreq, MPIDI_REQUEST_SELF_MSG);
-
-        /* can release now that we've set fields in the unexpected request */
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
         /* kick the progress engine in case another thread that is performing a
            blocking recv or probe is waiting in the progress engine */

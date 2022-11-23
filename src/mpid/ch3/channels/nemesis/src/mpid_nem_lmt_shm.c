@@ -755,13 +755,11 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
 
     /* If there is anything in the RTS queue, it needs to be cleared out. */
     if (MPIR_CVAR_ENABLE_FT) {
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         while (!MPID_nem_lmt_rtsq_empty(vc_ch->lmt_rts_queue)) {
             MPID_nem_lmt_rtsq_dequeue(&vc_ch->lmt_rts_queue, &req);
             req->status.MPI_ERROR = req_errno;
             MPID_Request_complete(req);
         }
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
 
     /* We empty the vc queue, but don't remove the vc from the global

@@ -472,11 +472,6 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 	vc_ch->free_queue = NULL;
     }
 
-    /* MT we acquire the LMT CS here, b/c there is at least a theoretical race
-     * on some fields, such as lmt_copy_buf.  In practice it's not an issue, but
-     * this will keep DRD happy. */
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
     /* override rendezvous functions */
     vc->rndvSend_fn = MPID_nem_lmt_RndvSend;
     vc->rndvRecv_fn = MPID_nem_lmt_RndvRecv;
@@ -596,8 +591,6 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 /*         MPIR_Assert(vc_ch->iStartContigMsg && vc_ch->iSendContig && vc->sendNoncontig_fn); */
 
     }
-
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* FIXME: ch3 assumes there is a field called sendq_head in the ch
        portion of the vc.  This is unused in nemesis and should be set

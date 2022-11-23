@@ -193,9 +193,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
             iovcnt++;
         }
 
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, iovcnt, &req);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (origin_dtp != NULL) {
@@ -246,9 +244,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
             iovcnt++;
         }
 
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, iovcnt);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
     else {
@@ -262,10 +258,8 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         req->dev.OnFinal = 0;
         req->dev.OnDataAvail = 0;
 
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].iov_base, iov[0].iov_len,
                                          &iov[1], iovcnt - 1);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
 
@@ -310,9 +304,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
     if (rma_op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED) {
         /* All origin data is in packet header, issue the header. */
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, put_pkt, sizeof(*put_pkt), &curr_req);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
     else {
@@ -390,9 +382,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         accum_pkt->pkt_flags |= pkt_flags;
 
         /* All origin data is in packet header, issue the header. */
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, accum_pkt, sizeof(*accum_pkt), &curr_req);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (curr_req != NULL) {
@@ -569,9 +559,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         get_accum_pkt->request_handle = resp_req->handle;
 
         /* All origin data is in packet header, issue the header. */
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, get_accum_pkt, sizeof(*get_accum_pkt), &curr_req);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (curr_req != NULL) {
@@ -803,9 +791,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(rma_op->pkt, target_datatype, mpi_errno);
     if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         /* basic datatype on target. simply send the get_pkt. */
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, get_pkt, sizeof(*get_pkt), &req);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     }
     else {
         /* derived datatype on target. */
@@ -830,9 +816,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         iov[1].iov_base = (void *) ext_hdr_ptr;
         iov[1].iov_len = ext_hdr_sz;
 
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, 2, &req);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 
         /* release the target datatype */
         MPIR_Datatype_ptr_release(dtp);
@@ -905,9 +889,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     cas_pkt->pkt_flags |= pkt_flags;
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, cas_pkt, sizeof(*cas_pkt), &rmw_req);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
     if (rmw_req != NULL) {
@@ -964,9 +946,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 
     if (rma_op->pkt.type == MPIDI_CH3_PKT_FOP_IMMED) {
         /* All origin data is in packet header, issue the header. */
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, fop_pkt, sizeof(*fop_pkt), &curr_req);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
     else {

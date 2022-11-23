@@ -340,9 +340,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     iov[1].iov_len = stream_data_len;
     iovcnt = 2;
 
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iSendv(vc, resp_req, iov, iovcnt);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 
     MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
@@ -467,9 +465,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     iov[1].iov_len = type_size;
     iovcnt = 2;
 
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iSendv(vc, resp_req, iov, iovcnt);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 
     MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
@@ -805,11 +801,8 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     sreq->dev.msg_offset = 0;
     sreq->dev.msgsize = new_dtp->size * sreq->dev.user_count;
 
-    /* Because this is in a packet handler, it is already within a critical section */
-    /* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
     mpi_errno = vc->sendNoncontig_fn(vc, sreq, get_resp_pkt, sizeof(*get_resp_pkt),
                                      NULL, 0);
-    /* MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex); */
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_Request_free(sreq);
@@ -1448,11 +1441,9 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
 
     if (fop_pkt->type == MPIDI_CH3_PKT_FOP_IMMED) {
         /* send back the original data */
-        MPID_THREAD_CS_ENTER(POBJ, target_lock_entry->vc->pobj_mutex);
         mpi_errno =
             MPIDI_CH3_iStartMsg(target_lock_entry->vc, fop_resp_pkt, sizeof(*fop_resp_pkt),
                                 &resp_req);
-        MPID_THREAD_CS_EXIT(POBJ, target_lock_entry->vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (resp_req != NULL) {
@@ -1549,10 +1540,8 @@ static inline int perform_cas_in_lock_queue(MPIR_Win * win_ptr,
     }
 
     /* Send the response packet */
-    MPID_THREAD_CS_ENTER(POBJ, target_lock_entry->vc->pobj_mutex);
     mpi_errno =
         MPIDI_CH3_iStartMsg(target_lock_entry->vc, cas_resp_pkt, sizeof(*cas_resp_pkt), &send_req);
-    MPID_THREAD_CS_EXIT(POBJ, target_lock_entry->vc->pobj_mutex);
 
     MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
