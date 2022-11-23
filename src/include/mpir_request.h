@@ -457,10 +457,8 @@ static inline MPIR_Request *MPIR_Request_create_from_pool_safe(MPIR_Request_kind
 static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[0].lock));
     req = MPIR_Request_create_from_pool(kind, 0, 1);
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[0].lock));
     return req;
 }
@@ -553,13 +551,7 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
 
         MPID_Request_destroy_hook(req);
 
-        if (need_safety) {
-            MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-            MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req, /* not info */ FALSE);
-            MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-        } else {
-            MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req, /* not info */ FALSE);
-        }
+        MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req, /* not info */ FALSE);
     }
     if (need_safety) {
         MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));

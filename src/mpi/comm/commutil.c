@@ -301,7 +301,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
 
     MPIR_stream_comm_init(comm_p);
 
-    /* mutex is only used in POBJ or VCI granularity. But the overhead of
+    /* mutex is only used in VCI granularity. But the overhead of
      * creation is low, so we always create it. */
     {
         int thr_err;
@@ -980,12 +980,12 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     }
 
     /* Inherit the error handler (if any) */
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
     newcomm_ptr->errhandler = comm_ptr->errhandler;
     if (comm_ptr->errhandler) {
         MPIR_Errhandler_add_ref(comm_ptr->errhandler);
     }
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
 
     if (info) {
         MPII_Comm_set_hints(newcomm_ptr, info, true);
@@ -1050,12 +1050,12 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** out
     newcomm_ptr->is_low_group = comm_ptr->is_low_group; /* only relevant for intercomms */
 
     /* Inherit the error handler (if any) */
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
     newcomm_ptr->errhandler = comm_ptr->errhandler;
     if (comm_ptr->errhandler) {
         MPIR_Errhandler_add_ref(comm_ptr->errhandler);
     }
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
+    MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
 
     if (info) {
         MPII_Comm_set_hints(newcomm_ptr, info, true);

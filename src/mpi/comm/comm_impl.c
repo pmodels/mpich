@@ -46,10 +46,8 @@ int MPIR_Comm_remote_size_impl(MPIR_Comm * comm_ptr, int *size)
 
 int MPIR_Comm_set_name_impl(MPIR_Comm * comm_ptr, const char *comm_name)
 {
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->mutex);
     MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
     MPL_strncpy(comm_ptr->name, comm_name, MPI_MAX_OBJECT_NAME);
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->mutex);
     MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
     return MPI_SUCCESS;
 }
@@ -1049,13 +1047,11 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     MPIR_Comm_map_dup(*new_intercomm_ptr, local_comm_ptr, MPIR_COMM_MAP_DIR__L2L);
 
     /* Inherit the error handler (if any) */
-    MPID_THREAD_CS_ENTER(POBJ, local_comm_ptr->mutex);
     MPID_THREAD_CS_ENTER(VCI, local_comm_ptr->mutex);
     (*new_intercomm_ptr)->errhandler = local_comm_ptr->errhandler;
     if (local_comm_ptr->errhandler) {
         MPIR_Errhandler_add_ref(local_comm_ptr->errhandler);
     }
-    MPID_THREAD_CS_EXIT(POBJ, local_comm_ptr->mutex);
     MPID_THREAD_CS_EXIT(VCI, local_comm_ptr->mutex);
 
     (*new_intercomm_ptr)->tainted = 1;
@@ -1099,13 +1095,11 @@ int MPIR_peer_intercomm_create(MPIR_Context_id_t context_id, MPIR_Context_id_t r
     MPIR_Comm_map_dup(*newcomm, comm_self, MPIR_COMM_MAP_DIR__L2L);
 
     /* Inherit the error handler  */
-    MPID_THREAD_CS_ENTER(POBJ, comm_self->mutex);
     MPID_THREAD_CS_ENTER(VCI, comm_self->mutex);
     (*newcomm)->errhandler = comm_self->errhandler;
     if (comm_self->errhandler) {
         MPIR_Errhandler_add_ref(comm_self->errhandler);
     }
-    MPID_THREAD_CS_EXIT(POBJ, comm_self->mutex);
     MPID_THREAD_CS_EXIT(VCI, comm_self->mutex);
 
     (*newcomm)->tainted = 1;
