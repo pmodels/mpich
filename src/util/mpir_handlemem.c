@@ -177,7 +177,7 @@ static MPL_initlock_t info_handle_obj_lock = MPL_INITLOCK_INITIALIZER;
                                even before MPI_Init() or after MPI_Finalize().
 
   This routine has an independent "static" lock that is different from
-  MPIR_THREAD_POBJ_HANDLE_MUTEX and MPIR_THREAD_VCI_HANDLE_MUTEX.  Since this
+  MPIR_THREAD_VCI_HANDLE_MUTEX.  Since this
   routine does not share the lock with MPIR_Handle_obj_alloc() and MPIR_Handle_obj_free(),
   this routine may not update any global data that can be updated by MPIR_Handle_obj_alloc()
   and MPIR_Handle_obj_free().
@@ -199,7 +199,7 @@ void *MPIR_Info_handle_obj_alloc(MPIR_Object_alloc_t * objmem)
                               even before MPI_Init() or after MPI_Finalize().
 
   This routine has an independent "static" lock that is different from
-  MPIR_THREAD_POBJ_HANDLE_MUTEX and MPIR_THREAD_VCI_HANDLE_MUTEX.  Since this
+  MPIR_THREAD_VCI_HANDLE_MUTEX.  Since this
   routine does not share the lock with MPIR_Handle_obj_alloc() and MPIR_Handle_obj_free(),
   this routine may not update any global data that can be updated by MPIR_Handle_obj_alloc()
   and MPIR_Handle_obj_free().
