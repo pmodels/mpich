@@ -6,6 +6,25 @@
 #ifndef MPIDU_THREAD_FALLBACK_H_INCLUDED
 #define MPIDU_THREAD_FALLBACK_H_INCLUDED
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ENABLE_HEAVY_YIELD
+      category    : THREADS
+      type        : boolean
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If enabled, use nanosleep to ensure other threads have a chance to grab the lock.
+        Note: this may not work with some thread runtimes, e.g. non-preemptive user-level
+        threads.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* some important critical section names:
  *   GLOBAL - entered/exited at beginning/end of (nearly) every MPI_ function
  *   INIT - entered before MPID_Init and exited near the end of MPI_Init(_thread)
@@ -183,9 +202,21 @@ M*/
             MPL_thread_self(&self_);                                    \
             MPL_thread_same(&self_, &mutex.owner, &equal_);             \
             MPIR_Assert(equal_ && mutex.count > 0);                     \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield %p", &mutex); \
-            MPIDU_Thread_yield(&mutex, &err_);                          \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield %p", &mutex); \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDUI_THREAD_CS_YIELD %p", &mutex); \
+            int saved_count_ = mutex.count;                             \
+            MPL_thread_id_t saved_owner_ = mutex.owner;                 \
+            MPIR_Assert(saved_count_ > 0);                              \
+            mutex.count = 0;                                            \
+            mutex.owner = 0;                                            \
+            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
+            MPIR_Assert(err_ == 0);                                     \
+            MPL_thread_yield();                                         \
+            MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_LOW);\
+            MPIR_Assert(mutex.count == 0);                              \
+            mutex.count = saved_count_;                                 \
+            mutex.owner = saved_owner_;                                 \
+            MPIR_Assert(err_ == 0);                                     \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDUI_THREAD_CS_YIELD %p", &mutex); \
             MPIR_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -252,24 +283,17 @@ M*/
 #define MPIDU_Thread_join       MPL_thread_join
 #define MPIDU_Thread_same       MPL_thread_same
 
-/*@
-  MPIDU_Thread_yield - voluntarily relinquish the CPU, giving other threads an opportunity to run
-@*/
-#define MPIDU_Thread_yield(mutex_ptr_, err_ptr_)                        \
-    do {                                                                \
-        int saved_count_ = (mutex_ptr_)->count;                         \
-        MPL_thread_id_t saved_owner_ = (mutex_ptr_)->owner;             \
-        MPIR_Assert(saved_count_ > 0);                                  \
-        (mutex_ptr_)->count = 0;                                        \
-        (mutex_ptr_)->owner = 0;                                        \
-        MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_);                \
-        MPIR_Assert(*err_ptr_ == 0);                                    \
-        MPL_thread_yield();                                             \
-        MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_, MPL_THREAD_PRIO_LOW);\
-        MPIR_Assert((mutex_ptr_)->count == 0);                          \
-        (mutex_ptr_)->count = saved_count_;                             \
-        (mutex_ptr_)->owner = saved_owner_;                             \
-        MPIR_Assert(*err_ptr_ == 0);                                    \
+#define MPIDU_Thread_yield() \
+    do { \
+        if (MPIR_CVAR_ENABLE_HEAVY_YIELD) { \
+            /* note: sleep time may be rounded up to the granularity of the underlying clock */ \
+            struct timespec t; \
+            t.tv_sec = 0; \
+            t.tv_nsec = 1; \
+            nanosleep(&t, NULL); \
+        } else { \
+            MPL_thread_yield(); \
+        } \
     } while (0)
 
 
