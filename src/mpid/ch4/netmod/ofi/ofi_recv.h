@@ -368,6 +368,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
             mpi_errno = MPIDI_OFI_progress_uninlined(vni);
             MPIR_ERR_CHECK(mpi_errno);
         }
+    } else {
+        /* run progress once to prevent accumulating cq errors. */
+        mpi_errno = MPIDI_OFI_progress_uninlined(vni);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
