@@ -162,9 +162,9 @@ int MPIR_Dataloop_iov(const void *buf, MPI_Aint count, void *dataloop, MPI_Aint 
                                     dlp->loop_params.v_t.stride,
                                     child_dlp, dlp->el_extent, dlp->el_size,
                                     rem_skip, iov + idx, max_iov_len - idx, &tmp_len);
-                    addr +=
-                        dlp->loop_params.v_t.stride * (cnt - 1) +
-                        dlp->loop_params.v_t.blocksize * dt_extent;
+                    addr = (void *) ((intptr_t) addr +
+                                     dlp->loop_params.v_t.stride * (cnt - 1) +
+                                     dlp->loop_params.v_t.blocksize * dlp->el_extent);
                     break;
                 case MPII_DATALOOP_KIND_BLOCKINDEXED:
                     fill_iov_blockindexed(addr, cnt, dlp->loop_params.bi_t.blocksize,
@@ -173,15 +173,17 @@ int MPIR_Dataloop_iov(const void *buf, MPI_Aint count, void *dataloop, MPI_Aint 
                                           rem_skip, iov + idx, max_iov_len - idx, &tmp_len);
                     addr = (void *) ((intptr_t) addr +
                                      dlp->loop_params.bi_t.offset_array[cnt - 1] +
-                                     dlp->loop_params.bi_t.blocksize * dt_extent);
+                                     dlp->loop_params.bi_t.blocksize * dlp->el_extent);
                     break;
                 case MPII_DATALOOP_KIND_INDEXED:
                     fill_iov_indexed(addr, cnt, dlp->loop_params.i_t.blocksize_array,
                                      dlp->loop_params.i_t.offset_array,
                                      child_dlp, dlp->el_extent, dlp->el_size,
                                      rem_skip, iov + idx, max_iov_len - idx, &tmp_len);
-                    addr += dlp->loop_params.i_t.offset_array[cnt - 1] +
-                        dlp->loop_params.i_t.blocksize_array[cnt - 1] * dt_extent;
+                    addr = (void *) ((intptr_t) addr +
+                                     dlp->loop_params.i_t.offset_array[cnt - 1] +
+                                     dlp->loop_params.i_t.blocksize_array[cnt - 1] *
+                                     dlp->el_extent);
                     break;
                 default:
                     MPIR_Assert(0);
