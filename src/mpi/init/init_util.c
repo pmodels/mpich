@@ -114,8 +114,8 @@ void MPII_dump_debug_summary(void)
 #endif
 
     printf("==== data structure summary ====\n");
-    printf("sizeof(MPIR_Comm): %ld\n", sizeof(MPIR_Comm));
-    printf("sizeof(MPIR_Request): %ld\n", sizeof(MPIR_Request));
-    printf("sizeof(MPIR_Datatype): %ld\n", sizeof(MPIR_Datatype));
+    printf("sizeof(MPIR_Comm): %zd\n", sizeof(MPIR_Comm));
+    printf("sizeof(MPIR_Request): %zd\n", sizeof(MPIR_Request));
+    printf("sizeof(MPIR_Datatype): %zd\n", sizeof(MPIR_Datatype));
     printf("================================\n");
 }
