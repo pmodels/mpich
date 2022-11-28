@@ -86,6 +86,7 @@ typedef struct MPIDIG_rreq_t {
 } MPIDIG_rreq_t;
 
 typedef struct MPIDIG_part_am_req_t {
+    MPIR_cc_t *cc_part_ptr;
     MPIR_Request *part_req_ptr;
 } MPIDIG_part_am_req_t;
 
@@ -190,6 +191,7 @@ typedef struct MPIDIG_req_t {
     void *rndv_hdr;
     void *buffer;
     MPI_Aint count;
+    MPI_Aint offset;            /* offset in byte to apply to the buffer */
     MPI_Datatype datatype;
     union {
         struct {
@@ -223,11 +225,15 @@ typedef struct MPIDI_prequest {
 
 /* Structures for partitioned pt2pt request */
 typedef struct MPIDIG_part_sreq {
-    MPIR_cc_t ready_cntr;
+    int msg_part;               /* the number of messages actually sent */
+    MPIR_cc_t cc_send;          /* counter on the number of msgs actually sent */
+    MPIR_cc_t *cc_part;         /* ready counter per partition */
 } MPIDIG_part_sreq_t;
 
 typedef struct MPIDIG_part_rreq {
-    MPI_Aint sdata_size;        /* size of entire send data */
+    int msg_part;               /* the number of msg actually received */
+    MPI_Aint send_dsize;        /* size of entire send data */
+    MPIR_cc_t *cc_part;         /* ready counter per partition */
 } MPIDIG_part_rreq_t;
 
 typedef struct MPIDIG_part_request {
@@ -257,6 +263,10 @@ typedef struct MPIDI_part_request {
     } u;
     union {
     MPIDI_NM_PART_DECL} netmod;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    union {
+    MPIDI_SHM_REQUEST_DECL} shm;
+#endif
 } MPIDI_part_request_t;
 
 /* message queue within "self"-comms, i.e. MPI_COMM_SELF and all communicators with size of 1. */
@@ -304,6 +314,7 @@ typedef struct MPIDI_Devreq_t {
 
         MPIDI_self_request_t self;
 
+        // TG: why having the netmod direct API here instead of in a sub-typed request?
         /* Used by the netmod direct apis */
         union {
         MPIDI_NM_REQUEST_DECL} netmod;
@@ -319,8 +330,8 @@ typedef struct MPIDI_Devreq_t {
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
 #define MPIDI_PREQUEST(req,field)       (((req)->dev.ch4.preq).field)
-#define MPIDI_PART_REQUEST(req,field)   (((req)->dev.ch4.part_req).field)
-#define MPIDIG_PART_REQUEST(req, field)   (((req)->dev.ch4.part_req).am.field)
+#define MPIDI_PART_REQUEST(req, field) (((req)->dev.ch4.part_req).field)
+#define MPIDIG_PART_REQUEST(req, field) (((req)->dev.ch4.part_req).am.field)
 #define MPIDI_SELF_REQUEST(req, field)  (((req)->dev.ch4.self).field)
 
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)

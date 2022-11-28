@@ -127,11 +127,35 @@ MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
     MPIR_FUNC_EXIT;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPID_Part_request_free_hook(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPID_Part_send_request_free_hook(MPIR_Request * req)
 {
     MPIR_FUNC_ENTER;
 
     MPIR_Datatype_release_if_not_builtin(MPIDI_PART_REQUEST(req, datatype));
+
+    /* TG: FIXME this function is in MPIDI and not MPIDIG */
+    MPIR_Assert(req->kind == MPIR_REQUEST_KIND__PART_SEND);
+    MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(req, u.send.cc_part);
+    if (cc_part != NULL) {
+        MPL_free(cc_part);
+    }
+
+    MPIR_FUNC_EXIT;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPID_Part_recv_request_free_hook(MPIR_Request * req)
+{
+    MPIR_FUNC_ENTER;
+
+    MPIR_Datatype_release_if_not_builtin(MPIDI_PART_REQUEST(req, datatype));
+
+    /* TG: FIXME this function is in MPIDI and not MPIDIG */
+    MPIR_Assert(req->kind == MPIR_REQUEST_KIND__PART_RECV);
+    MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(req, u.recv.cc_part);
+    if (cc_part != NULL) {
+        MPIR_Assert(MPIDIG_PART_REQUEST(req, u.recv.msg_part) >= 0);
+        MPL_free(cc_part);
+    }
 
     MPIR_FUNC_EXIT;
 }

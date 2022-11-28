@@ -75,6 +75,12 @@ static inline int MPL_ipow(int base, int exp)
     return result;
 }
 
+/* returns the Greatest Common Divisor of two integers */
+static inline int MPL_gcd(int a, int b)
+{
+    return (a == 0) ? b : MPL_gcd(b % a, a);
+}
+
 /* get the number at 'digit'th location in base k representation of 'number' */
 static inline int MPL_getdigit(int k, int number, int digit)
 {

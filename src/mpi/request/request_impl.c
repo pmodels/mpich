@@ -191,8 +191,10 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
             mpi_errno = MPIR_Grequest_free(request_ptr);
             break;
         case MPIR_REQUEST_KIND__PART_SEND:
+            MPID_Part_send_request_free_hook(request_ptr);
+            break;
         case MPIR_REQUEST_KIND__PART_RECV:
-            MPID_Part_request_free_hook(request_ptr);
+            MPID_Part_recv_request_free_hook(request_ptr);
             break;
         default:
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
