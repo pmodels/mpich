@@ -882,6 +882,17 @@ cvars:
         } \
     } while (0)
 
+/* Propagate the size mismatch error */
+#define MPIR_ERR_COLL_CHECK_SIZE(recv_sz, expect_sz, errflag_, err_ret_) \
+    do {                                                        \
+        if (recv_sz != expect_sz) { \
+            int err = MPI_SUCCESS; \
+            MPIR_ERR_SET2(err, MPI_ERR_OTHER, "**collective_size_mismatch", "**collective_size_mismatch %d %d", recv_sz, expect_sz); \
+            MPIR_ERR_ADD(err_ret_, err); \
+            errflag_ |= MPIR_ERR_OTHER; \
+        } \
+    } while (0)
+
 #else
 /* Simply set the class, being careful not to override a previously
    set class. */
@@ -953,6 +964,8 @@ cvars:
             errflag_ = (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(err_)) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER; \
         } \
     } while (0)
+
+#define MPIR_ERR_COLL_CHECK_SIZE(recv_sz, expect_sz, errflag_, err_ret_) do { } while (0)
 
 #endif
 

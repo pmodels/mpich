@@ -65,14 +65,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
 #ifdef HAVE_ERROR_CHECKING
                 /* check that we received as much as we expected */
                 MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
-                if (recvd_size != nbytes) {
-                    if (*errflag == MPIR_ERR_NONE)
-                        *errflag = MPIR_ERR_OTHER;
-                    MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
-                                  "**collective_size_mismatch",
-                                  "**collective_size_mismatch %d %d", recvd_size, nbytes);
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, *errflag, mpi_errno_ret);
 #endif
             }
 

@@ -96,15 +96,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         /* check that we received as much as we expected */
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
-        if (recvd_size != nbytes) {
-            if (*errflag == MPIR_ERR_NONE)
-                *errflag = MPIR_ERR_OTHER;
-            MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
-                          "**collective_size_mismatch",
-                          "**collective_size_mismatch %d %d", recvd_size, nbytes);
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-
+        MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, *errflag, mpi_errno_ret);
     }
     if (tree_type == MPIR_TREE_TYPE_KARY) {
         for (k = 1; k <= branching_factor; k++) {       /* Send to children */

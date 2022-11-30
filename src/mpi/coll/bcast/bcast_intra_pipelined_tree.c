@@ -134,14 +134,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 mpi_errno = MPIC_Wait(reqs[i], errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                 MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
-                if (recvd_size != msgsize) {
-                    if (*errflag == MPIR_ERR_NONE)
-                        *errflag = MPIR_ERR_OTHER;
-                    MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
-                                  "**collective_size_mismatch",
-                                  "**collective_size_mismatch %d %d", recvd_size, msgsize);
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECK_SIZE(recvd_size, msgsize, *errflag, mpi_errno_ret);
             }
         } else if (num_chunks > 3 && is_nb && i < 3 && !recv_pre_posted) {
             /* Wait to receive the chunk before it can be sent to the children */
@@ -149,14 +142,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 mpi_errno = MPIC_Wait(reqs[i], errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                 MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
-                if (recvd_size != msgsize) {
-                    if (*errflag == MPIR_ERR_NONE)
-                        *errflag = MPIR_ERR_OTHER;
-                    MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
-                                  "**collective_size_mismatch",
-                                  "**collective_size_mismatch %d %d", recvd_size, msgsize);
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECK_SIZE(recvd_size, msgsize, *errflag, mpi_errno_ret);
             }
         } else {
             /* Receive message from parent */
@@ -166,15 +152,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                               src, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
-                if (recvd_size != msgsize) {
-                    if (*errflag == MPIR_ERR_NONE)
-                        *errflag = MPIR_ERR_OTHER;
-                    MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
-                                  "**collective_size_mismatch",
-                                  "**collective_size_mismatch %d %d", recvd_size, msgsize);
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
-
+                MPIR_ERR_COLL_CHECK_SIZE(recvd_size, msgsize, *errflag, mpi_errno_ret);
             }
         }
         if (tree_type == MPIR_TREE_TYPE_KARY) {

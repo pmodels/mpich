@@ -129,14 +129,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
 #ifdef HAVE_ERROR_CHECKING
     /* check that we received as much as we expected */
-    if (curr_size != nbytes) {
-        if (*errflag == MPIR_ERR_NONE)
-            *errflag = MPIR_ERR_OTHER;
-        MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
-                      "**collective_size_mismatch",
-                      "**collective_size_mismatch %d %d", curr_size, nbytes);
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECK_SIZE(curr_size, nbytes, *errflag, mpi_errno_ret);
 #endif
 
     if (!is_contig) {
