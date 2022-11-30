@@ -86,11 +86,5 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
     }
 
     MPIR_FUNC_EXIT;
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-    /* --END ERROR HANDLING-- */
-    return mpi_errno;
+    return mpi_errno_ret;
 }

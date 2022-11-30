@@ -113,17 +113,12 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Ain
     MPIR_Type_free_impl(&newtype);
 
   fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    return mpi_errno_ret;
 
-    return mpi_errno;
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
     if (newtype != MPI_DATATYPE_NULL)
         MPIR_Type_free_impl(&newtype);
 
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

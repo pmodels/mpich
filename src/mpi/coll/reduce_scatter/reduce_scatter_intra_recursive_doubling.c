@@ -282,12 +282,8 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

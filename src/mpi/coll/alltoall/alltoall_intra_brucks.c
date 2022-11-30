@@ -149,14 +149,10 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     if (newtype != MPI_DATATYPE_NULL)
         MPIR_Type_free_impl(&newtype);
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

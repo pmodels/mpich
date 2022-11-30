@@ -88,10 +88,5 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
         }
     }
 
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-
-    return mpi_errno;
+    return mpi_errno_ret;
 }
