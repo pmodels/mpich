@@ -31,7 +31,7 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errf
         mpi_errno = MPIC_Sendrecv(NULL, 0, MPI_BYTE, dst,
                                   MPIR_BARRIER_TAG, NULL, 0, MPI_BYTE,
                                   src, MPIR_BARRIER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         mask <<= 1;
     }
 
@@ -102,7 +102,7 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t *
             mpi_errno =
                 MPIC_Irecv(NULL, 0, MPI_BYTE, from, MPIR_BARRIER_TAG, comm,
                            &recv_reqs[(j - 1) + ((k - 1) * (i & 1))]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
             /* wait on recvs from prev phase */
             if (i > 0 && j == 1) {
                 mpi_errno =
@@ -115,7 +115,7 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t *
             mpi_errno =
                 MPIC_Isend(NULL, 0, MPI_BYTE, to, MPIR_BARRIER_TAG, comm, &send_reqs[j - 1],
                            errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         }
         mpi_errno = MPIC_Waitall(k - 1, send_reqs, MPI_STATUSES_IGNORE, errflag);
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)

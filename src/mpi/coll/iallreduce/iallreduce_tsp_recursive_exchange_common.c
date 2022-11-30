@@ -98,7 +98,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
             mpi_errno = MPIR_TSP_sched_irecv(step1_recvbuf[i], count, datatype,
                                              step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs,
                                              &recv_id[i]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             if (count != 0) {   /* Reduce only if data is present */
                 /* setup reduce dependencies */
                 nvtcs = 1;
@@ -117,7 +117,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                 mpi_errno = MPIR_TSP_sched_reduce_local(step1_recvbuf[i], recvbuf, count,
                                                         datatype, op, sched, nvtcs, vtcs,
                                                         &reduce_id[i]);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
         }
     }

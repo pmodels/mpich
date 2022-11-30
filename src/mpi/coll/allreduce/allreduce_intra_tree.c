@@ -115,7 +115,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
                 MPIC_Recv(recv_address, msgsize, datatype, child, MPIR_ALLREDUCE_TAG, comm_ptr,
                           MPI_STATUS_IGNORE, errflag);
             /* for communication errors, just record the error but continue */
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
             if (is_commutative) {
                 mpi_errno = MPIR_Reduce_local(recv_address, reduce_address, msgsize, datatype, op);
@@ -136,14 +136,14 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
             mpi_errno =
                 MPIC_Isend(reduce_address, msgsize, datatype, my_tree.parent, MPIR_ALLREDUCE_TAG,
                            comm_ptr, &reqs[num_reqs++], errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         }
 
         if (my_tree.parent != -1) {
             mpi_errno = MPIC_Recv(reduce_address, msgsize,
                                   datatype, my_tree.parent, MPIR_ALLREDUCE_TAG, comm_ptr,
                                   MPI_STATUS_IGNORE, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         }
         if (num_children) {
             for (i = 0; i < num_children; i++) {
@@ -153,7 +153,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
                 mpi_errno = MPIC_Isend(reduce_address, msgsize,
                                        datatype, child,
                                        MPIR_ALLREDUCE_TAG, comm_ptr, &reqs[num_reqs++], errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
             }
         }
 
@@ -162,7 +162,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
 
     if (num_reqs > 0) {
         mpi_errno = MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
     }
 
     if (!is_tree_leaf) {
