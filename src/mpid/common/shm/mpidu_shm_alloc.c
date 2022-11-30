@@ -384,8 +384,7 @@ static int unmap_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg)
 }
 
 /* Allocate symmetric shared memory across all processes in comm */
-static int shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t offset, MPIDU_shm_seg_t * shm_seg,
-                              bool * fail_flag)
+static int shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t offset, MPIDU_shm_seg_t * shm_seg)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = comm_ptr->rank;
@@ -447,8 +446,7 @@ static int shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t offset, MPIDU_shm_seg
     }
 
     if (all_map_result != SYMSHM_SUCCESS) {
-        /* if fail to allocate, return and let the caller choose another method */
-        *fail_flag = true;
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
     }
 
   fn_exit:
@@ -458,7 +456,7 @@ static int shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t offset, MPIDU_shm_seg
 }
 #endif /* end of USE_SYM_HEAP */
 
-static int shm_alloc(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, bool * fail_flag)
+static int shm_alloc(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
     bool shm_fail_flag = false;
@@ -550,14 +548,13 @@ static int shm_alloc(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, bool *
             MPL_shm_seg_detach(shm_seg->hnd, (void **) &(shm_seg->base_addr), shm_seg->segment_len);
         MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**detach_shar_mem");
     }
-    *fail_flag = true;
+    MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
     goto fn_exit;
   fn_fail:
     goto fn_exit;
 }
 
-int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, void **ptr,
-                             bool * fail_flag)
+int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, void **ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 #ifdef USE_SYM_HEAP
@@ -578,9 +575,8 @@ int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, vo
 
     shm_seg->segment_len = len;
 
-    mpi_errno = shm_alloc_symm_all(comm_ptr, offset, shm_seg, fail_flag);
-    if (mpi_errno || *fail_flag)
-        goto fn_fail;
+    mpi_errno = shm_alloc_symm_all(comm_ptr, offset, shm_seg);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (len == 0) {
         /* process requested no memory, cleanup and return */
@@ -611,13 +607,12 @@ int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, vo
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 #else
-    /* always fail, return and let the caller choose another method */
-    *fail_flag = true;
+    MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
     return mpi_errno;
 #endif /* end of USE_SYM_HEAP */
 }
 
-int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr, bool * fail_flag)
+int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
     MPIDU_shm_seg_t *shm_seg = NULL;
@@ -639,9 +634,8 @@ int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr, bool * fai
 
     shm_seg->segment_len = len;
 
-    mpi_errno = shm_alloc(shm_comm_ptr, shm_seg, fail_flag);
-    if (mpi_errno || *fail_flag)
-        goto fn_fail;
+    mpi_errno = shm_alloc(shm_comm_ptr, shm_seg);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *ptr = shm_seg->base_addr;
 

@@ -416,7 +416,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
                                                                      MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS, coll_ret = MPI_SUCCESS;
-    bool mapfail_flag = false;
     char *shm_addr;
     int my_leader_rank = -1, iter;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
@@ -464,9 +463,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
         MPIDI_COMM(comm_ptr, shm_size_per_lead) = shm_size_per_lead;
 
         coll_ret = MPIDU_shm_alloc(comm_ptr->node_comm, num_leads * shm_size_per_lead,
-                                   (void **) &MPIDI_COMM_ALLREDUCE(comm_ptr, shm_addr),
-                                   &mapfail_flag);
-        if (coll_ret || mapfail_flag)
+                                   (void **) &MPIDI_COMM_ALLREDUCE(comm_ptr, shm_addr));
+        if (coll_ret)
             MPIR_ERR_ADD(mpi_errno, coll_ret);
     }
 
@@ -881,7 +879,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
     int my_node_comm_rank = MPIR_Comm_rank(comm_ptr->node_comm);
     int i, j, p = 0;
     MPI_Aint type_size;
-    bool mapfail_flag = false;
 
     if (sendcount == 0)
         goto fn_exit;
@@ -917,8 +914,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr->node_comm,
                             node_comm_size * num_ranks * MPIR_CVAR_ALLTOALL_SHM_PER_RANK,
-                            (void **) &MPIDI_COMM_ALLTOALL(comm_ptr, shm_addr), &mapfail_flag);
-        if (mpi_errno || mapfail_flag) {
+                            (void **) &MPIDI_COMM_ALLTOALL(comm_ptr, shm_addr));
+        if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
                 MPIX_ERR_PROC_FAILED ==
@@ -1100,7 +1097,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
     int my_node_comm_rank = MPIR_Comm_rank(comm_ptr->node_comm);
     MPI_Aint type_size, extent, true_extent, lb;
     int is_contig, offset;
-    bool mapfail_flag = false;
 
     if (sendcount < 1 && sendbuf != MPI_IN_PLACE)
         goto fn_exit;
@@ -1152,8 +1148,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
     if (MPIDI_COMM(comm_ptr, allgather_comp_info->shm_addr) == NULL) {
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr->node_comm, node_comm_size * MPIR_CVAR_ALLGATHER_SHM_PER_RANK,
-                            (void **) &MPIDI_COMM_ALLGATHER(comm_ptr, shm_addr), &mapfail_flag);
-        if (mpi_errno || mapfail_flag) {
+                            (void **) &MPIDI_COMM_ALLGATHER(comm_ptr, shm_addr));
+        if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
                 MPIX_ERR_PROC_FAILED ==

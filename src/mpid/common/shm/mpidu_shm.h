@@ -33,27 +33,22 @@ size_t MPIDU_shm_get_mapsize(size_t size, size_t * psz);
  *               has more than one process or private if the node has only one process.
  *               Either way, the value of ptr will be such that the base address of
  *               process memory will be symmetric across all processes in comm_ptr
- * - fail_flag:  if symmetric shared memory could not be allocated this flag is set to
- *               `true`, otherwise it is set to `false`
  *
  * The function returns MPI_SUCCESS if no error has happened while allocating memory.
  * Failure allocating symmetric memory is not considered an error. The function returns
  * MPI_ERR_OTHER if any other error occurred. */
-int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, void **ptr,
-                             bool * fail_flag);
+int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, void **ptr);
 
 /* MPIDU_shm_alloc - collectively allocate and return shared memory
  *
  * - shm_comm_ptr:  node communicator used for the collective call
  * - len         :  total length of memory requested by all processes in a node
  * - ptr         :  pointer to allocated shared memory
- * - fail_flag   :  if shared memory could not be allocated this flag is set to `true`,
- *                  otherwise it is set to `false`
  *
  * The function returns MPI_SUCCESS if no error has happened while allocating memory.
  * Failure allocating shared memory is not considered an error. The function returns
  * MPI_ERR_OTHER if any other error occurred. */
-int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr, bool * fail_flag);
+int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr);
 
 /* MPIDU_shm_free - free memory allocated using either of the previous two methods
  *

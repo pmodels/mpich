@@ -568,12 +568,9 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
         size_t my_offset = (shm_comm_ptr) ? shm_offsets[shm_comm_ptr->rank] : 0;
         MPIDIG_WIN(win, mmap_sz) = mapsize;
         mpi_errno =
-            MPIDU_shm_alloc_symm_all(comm_ptr, mapsize, my_offset, &MPIDIG_WIN(win, mmap_addr),
-                                     &symheap_mapfail_flag);
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_fail;
-
-        if (symheap_mapfail_flag) {
+            MPIDU_shm_alloc_symm_all(comm_ptr, mapsize, my_offset, &MPIDIG_WIN(win, mmap_addr));
+        if (mpi_errno != MPI_SUCCESS) {
+            symheap_mapfail_flag = true;
             MPIDIG_WIN(win, mmap_sz) = 0;
             MPIDIG_WIN(win, mmap_addr) = NULL;
         }
@@ -583,13 +580,11 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     if (!global_symheap_flag || symheap_mapfail_flag) {
         if (shm_comm_ptr != NULL && mapsize) {
             MPIDIG_WIN(win, mmap_sz) = mapsize;
-            mpi_errno =
-                MPIDU_shm_alloc(shm_comm_ptr, mapsize, &MPIDIG_WIN(win, mmap_addr),
-                                &shm_mapfail_flag);
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
-
-            if (shm_mapfail_flag) {
+            int err = MPIDU_shm_alloc(shm_comm_ptr, mapsize, &MPIDIG_WIN(win, mmap_addr));
+            if (err == MPI_SUCCESS) {
+                symheap_mapfail_flag = false;
+            } else {
+                symheap_mapfail_flag = true;
                 MPIDIG_WIN(win, mmap_sz) = 0;
                 MPIDIG_WIN(win, mmap_addr) = NULL;
             }

@@ -184,7 +184,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     size_t flags_shm_size = 0;
     const long pg_sz = sysconf(_SC_PAGESIZE);
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    bool mapfail_flag = false;
     int topotree_fail[2] = { -1, -1 };  /* -1 means topo trees not created due to reasons like not
                                          * specifying binding, no hwloc etc. 0 means topo trees were
                                          * created successfully. 1 means topo trees were created
@@ -367,8 +366,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, flags_shm_size,
-                            (void **) &(release_gather_info_ptr->flags_addr), &mapfail_flag);
-        if (mpi_errno || mapfail_flag) {
+                            (void **) &(release_gather_info_ptr->flags_addr));
+        if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
         }
@@ -399,9 +398,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         /* Allocate the shared memory for bcast buffer */
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size),
-                            (void **) &(RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr)),
-                            &mapfail_flag);
-        if (mapfail_flag) {
+                            (void **) &(RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr)));
+        if (mpi_errno) {
             MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
         }
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
@@ -419,9 +417,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, num_ranks * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size),
-                            (void **) &(RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr)),
-                            &mapfail_flag);
-        if (mapfail_flag) {
+                            (void **) &(RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr)));
+        if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
         }

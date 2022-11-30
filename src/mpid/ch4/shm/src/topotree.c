@@ -477,7 +477,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k, in
     int *package_ctr = NULL;
     int topo_depth = 0;
     int package_level = 0, i, max_ranks_per_package = 0;
-    bool mapfail_flag = false;
 
     MPIR_FUNC_ENTER;
 
@@ -490,11 +489,8 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k, in
     shm_size = sizeof(int) * topo_depth * num_ranks + sizeof(int) * 5 * num_ranks;
 
     /* STEP 1. Create shared memory region for exchanging topology information (root only) */
-    mpi_errno = MPIDU_shm_alloc(comm_ptr, shm_size, (void **) &shared_region, &mapfail_flag);
-    if (mpi_errno || mapfail_flag) {
-        /* for communication errors, just record the error but continue */
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
-    }
+    mpi_errno = MPIDU_shm_alloc(comm_ptr, shm_size, (void **) &shared_region);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
     /* STEP 2. Every process fills affinity information in shared_region */
     int (*shared_region_ptr)[topo_depth] = (int (*)[topo_depth]) shared_region;
