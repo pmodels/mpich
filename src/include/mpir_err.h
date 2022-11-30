@@ -873,14 +873,11 @@ cvars:
         (err_) = MPIR_Err_combine_codes((err_), (newerr_));     \
     } while (0)
 
-/* For collective communication errors, record the error and continue */
-/* NOTE: this one assumes we are using mpi_errno and mpi_errno_ret */
-/* TODO: document the cases or criteria that we can safely do this */
+/* For collective communication error, update errflag_ and err_ret_, do not abort */
 #define MPIR_ERR_COLL_CHECKANDCONT(err_, errflag_, err_ret_) \
     do { \
         if (err_) { \
-            errflag_ = (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(err_)) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER; \
-            MPIR_ERR_SET(err_, errflag_, "**fail"); \
+            errflag_ |= (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(err_)) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER; \
             MPIR_ERR_ADD(err_ret_, err_); \
         } \
     } while (0)
