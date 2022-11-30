@@ -141,30 +141,14 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
                                                 extent)), (MPI_Aint) recvblks * recvcount,
                                               recvtype, src, MPIR_GATHER_TAG, comm_ptr, &status,
                                               errflag);
-                        if (mpi_errno) {
-                            /* for communication errors, just record the error but continue */
-                            *errflag =
-                                MPIX_ERR_PROC_FAILED ==
-                                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED :
-                                MPIR_ERR_OTHER;
-                            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                        }
+                        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                     } else if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
                         /* small transfer size case. cast ok */
                         MPIR_Assert(recvblks * nbytes == (int) (recvblks * nbytes));
                         mpi_errno = MPIC_Recv(tmp_buf, (int) (recvblks * nbytes),
                                               MPI_BYTE, src, MPIR_GATHER_TAG,
                                               comm_ptr, &status, errflag);
-                        if (mpi_errno) {
-                            /* for communication errors, just record the error but continue */
-                            *errflag =
-                                MPIX_ERR_PROC_FAILED ==
-                                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED :
-                                MPIR_ERR_OTHER;
-                            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                        }
+                        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                         copy_offset = rank + mask;
                         copy_blks = recvblks;
                     } else {
@@ -184,15 +168,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
 
                         mpi_errno = MPIC_Recv(recvbuf, 1, tmp_type, src,
                                               MPIR_GATHER_TAG, comm_ptr, &status, errflag);
-                        if (mpi_errno) {
-                            /* for communication errors, just record the error but continue */
-                            *errflag =
-                                MPIX_ERR_PROC_FAILED ==
-                                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED :
-                                MPIR_ERR_OTHER;
-                            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                        }
+                        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
                         MPIR_Type_free_impl(&tmp_type);
                     }
@@ -213,14 +189,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
                     mpi_errno = MPIC_Recv(((char *) tmp_buf + offset),
                                           recvblks * nbytes, MPI_BYTE, src,
                                           MPIR_GATHER_TAG, comm_ptr, &status, errflag);
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                     curr_cnt += (recvblks * nbytes);
                 }
             }
@@ -232,25 +201,11 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
                 /* leaf nodes send directly from sendbuf */
                 mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, dst,
                                       MPIR_GATHER_TAG, comm_ptr, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
             } else if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
                 mpi_errno = MPIC_Send(tmp_buf, curr_cnt, MPI_BYTE, dst,
                                       MPIR_GATHER_TAG, comm_ptr, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
             } else {
                 MPI_Aint blocks[2];
                 MPI_Aint struct_displs[2];
@@ -275,14 +230,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
 
                 mpi_errno = MPIC_Send(MPI_BOTTOM, 1, tmp_type, dst,
                                       MPIR_GATHER_TAG, comm_ptr, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                 MPIR_Type_free_impl(&tmp_type);
                 if (types[1] != MPI_BYTE)
                     MPIR_Type_free_impl(&types[1]);

@@ -96,14 +96,7 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
             for (j = 0; j < 2 * ss; j++) {
                 if (starray[j].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = starray[j].MPI_ERROR;
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                 }
             }
         }

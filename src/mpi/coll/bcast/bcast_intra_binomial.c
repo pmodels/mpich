@@ -97,14 +97,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             else
                 mpi_errno = MPIC_Recv(buffer, count, datatype, src,
                                       MPIR_BCAST_TAG, comm_ptr, status_p, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 #ifdef HAVE_ERROR_CHECKING
             /* check that we received as much as we expected */
             MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
@@ -138,14 +131,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             else
                 mpi_errno = MPIC_Send(buffer, count, datatype, dst,
                                       MPIR_BCAST_TAG, comm_ptr, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         }
         mask >>= 1;
     }
