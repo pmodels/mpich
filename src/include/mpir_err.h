@@ -876,12 +876,12 @@ cvars:
 /* For collective communication errors, record the error and continue */
 /* NOTE: this one assumes we are using mpi_errno and mpi_errno_ret */
 /* TODO: document the cases or criteria that we can safely do this */
-#define MPIR_ERR_COLL_CHECKANDCONT(err_, errflag_) \
+#define MPIR_ERR_COLL_CHECKANDCONT(err_, errflag_, err_ret_) \
     do { \
         if (err_) { \
             errflag_ = (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(err_)) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER; \
-            MPIR_ERR_SET(mpi_errno, errflag_, "**fail"); \
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno); \
+            MPIR_ERR_SET(err_, errflag_, "**fail"); \
+            MPIR_ERR_ADD(err_ret_, err_); \
         } \
     } while (0)
 
@@ -950,7 +950,7 @@ cvars:
             err_ = newerr_;                     \
     } while (0)
 
-#define MPIR_ERR_COLL_CHECKANDCONT(err_, errflag_) \
+#define MPIR_ERR_COLL_CHECKANDCONT(err_, errflag_, err_ret_) \
     do { \
         if (err_) { \
             errflag_ = (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(err_)) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER; \
