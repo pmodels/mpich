@@ -16,7 +16,7 @@
  * process i sends to process (i + 2^k) % p and receives from process
  * (i - 2^k + p) % p.
  */
-int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int size, rank, src, dst, mask, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -31,7 +31,7 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errf
         mpi_errno = MPIC_Sendrecv(NULL, 0, MPI_BYTE, dst,
                                   MPIR_BARRIER_TAG, NULL, 0, MPI_BYTE,
                                   src, MPIR_BARRIER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         mask <<= 1;
     }
 
@@ -41,7 +41,7 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errf
 /* Algorithm: high radix dissemination
  * Similar to dissemination algorithm, but generalized with high radix k
  */
-int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t * errflag)
+int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     int i, j, nranks, rank;
@@ -98,27 +98,27 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t *
             mpi_errno =
                 MPIC_Irecv(NULL, 0, MPI_BYTE, from, MPIR_BARRIER_TAG, comm,
                            &recv_reqs[(j - 1) + ((k - 1) * (i & 1))]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             /* wait on recvs from prev phase */
             if (i > 0 && j == 1) {
                 mpi_errno =
                     MPIC_Waitall(k - 1, &recv_reqs[((k - 1) * ((i - 1) & 1))], MPI_STATUSES_IGNORE);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
 
             mpi_errno =
                 MPIC_Isend(NULL, 0, MPI_BYTE, to, MPIR_BARRIER_TAG, comm, &send_reqs[j - 1],
                            errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
         mpi_errno = MPIC_Waitall(k - 1, send_reqs, MPI_STATUSES_IGNORE);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         shift *= k;
     }
 
     mpi_errno =
         MPIC_Waitall(k - 1, recv_reqs + ((k - 1) * ((nphases - 1) & 1)), MPI_STATUSES_IGNORE);
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
   fn_exit:
     if (k > MAX_RADIX) {

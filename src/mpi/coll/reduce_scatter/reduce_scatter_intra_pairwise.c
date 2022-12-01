@@ -15,7 +15,7 @@
  */
 int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
                                        const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                       MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                       MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
@@ -90,7 +90,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
                                       MPIR_REDUCE_SCATTER_TAG, comm_ptr,
                                       MPI_STATUS_IGNORE, errflag);
 
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         if (sendbuf != MPI_IN_PLACE) {
             mpi_errno = MPIR_Reduce_local(tmp_recvbuf, recvbuf, recvcounts[rank], datatype, op);

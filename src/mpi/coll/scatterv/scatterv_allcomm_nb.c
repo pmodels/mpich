@@ -8,7 +8,7 @@
 int MPIR_Scatterv_allcomm_nb(const void *sendbuf, const MPI_Aint * sendcounts,
                              const MPI_Aint * displs, MPI_Datatype sendtype, void *recvbuf,
                              MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                             MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req_ptr = NULL;

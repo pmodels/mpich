@@ -7,7 +7,7 @@
 
 int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
                           MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
-                          MPIR_Errflag_t * errflag)
+                          MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -39,7 +39,7 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) == -1) {
         mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype,
                                 op, 0, comm_ptr->node_comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
     /* do the internode reduce to the root's node */
@@ -51,7 +51,7 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
             mpi_errno = MPIR_Reduce(buf, NULL, count, datatype,
                                     op, MPIR_Get_internode_rank(comm_ptr, root),
                                     comm_ptr->node_roots_comm, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         } else {        /* I am on root's node. I have not participated in the earlier reduce. */
             if (comm_ptr->rank != root) {
                 /* I am not the root though. I don't have a valid recvbuf.
@@ -60,7 +60,7 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
                 mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype,
                                         op, MPIR_Get_internode_rank(comm_ptr, root),
                                         comm_ptr->node_roots_comm, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
                 /* point sendbuf at tmp_buf to make final intranode reduce easy */
                 sendbuf = tmp_buf;
@@ -70,7 +70,7 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
                 mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype,
                                         op, MPIR_Get_internode_rank(comm_ptr, root),
                                         comm_ptr->node_roots_comm, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
                 /* set sendbuf to MPI_IN_PLACE to make final intranode reduce easy. */
                 sendbuf = MPI_IN_PLACE;
@@ -84,7 +84,7 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
         mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype,
                                 op, MPIR_Get_intranode_rank(comm_ptr, root),
                                 comm_ptr->node_comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
   fn_exit:

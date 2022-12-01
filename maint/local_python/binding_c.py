@@ -1368,7 +1368,7 @@ def push_impl_decl(func, impl_name=None):
         if func['dir'] == 'coll':
             # block collective use an extra errflag
             if not RE.match(r'MPI_(I.*|Neighbor.*|.*_init)$', func['name']):
-                params = params + ", MPIR_Errflag_t *errflag"
+                params = params + ", MPIR_Errflag_t errflag"
     else:
         params="void"
 
@@ -1416,8 +1416,7 @@ def dump_body_coll(func):
         dump_error_check("")
     else:
         # blocking collectives
-        G.out.append("MPIR_Errflag_t errflag = MPIR_ERR_NONE;")
-        dump_line_with_break("mpi_errno = %s(%s, &errflag);" % (mpir_name, args))
+        dump_line_with_break("mpi_errno = %s(%s, MPIR_ERR_NONE);" % (mpir_name, args))
         dump_error_check("")
 
 def dump_coll_v_swap(func):

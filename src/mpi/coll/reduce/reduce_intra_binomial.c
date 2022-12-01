@@ -13,7 +13,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
                                void *recvbuf,
                                MPI_Aint count,
                                MPI_Datatype datatype,
-                               MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                               MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -99,7 +99,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
                 source = (source + lroot) % comm_size;
                 mpi_errno = MPIC_Recv(tmp_buf, count, datatype, source,
                                       MPIR_REDUCE_TAG, comm_ptr, &status);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
                 /* The sender is above us, so the received buffer must be
                  * the second argument (in the noncommutative case). */
@@ -120,7 +120,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
             source = ((relrank & (~mask)) + lroot) % comm_size;
             mpi_errno = MPIC_Send(recvbuf, count, datatype,
                                   source, MPIR_REDUCE_TAG, comm_ptr, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             break;
         }
         mask <<= 1;
@@ -133,7 +133,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
         } else if (rank == root) {
             mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr, &status);
         }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
   fn_exit:

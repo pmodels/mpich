@@ -40,8 +40,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
                                                       MPI_Aint recvcount,
                                                       MPI_Datatype datatype,
                                                       MPI_Op op,
-                                                      MPIR_Comm * comm_ptr,
-                                                      MPIR_Errflag_t * errflag)
+                                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
@@ -118,7 +117,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
             mpi_errno = MPIC_Send(tmp_results, total_count,
                                   datatype, rank + 1,
                                   MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             /* temporarily set the rank to -1 so that this
              * process does not pariticipate in recursive
@@ -128,7 +127,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
             mpi_errno = MPIC_Recv(tmp_recvbuf, total_count,
                                   datatype, rank - 1,
                                   MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, MPI_STATUS_IGNORE);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             /* do the reduction on received data. since the
              * ordering is right, it doesn't matter whether
@@ -218,7 +217,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
                                       send_cnt, datatype,
                                       dst, MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, errflag);
 
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             /* tmp_recvbuf contains data received in this step.
              * tmp_results contains data accumulated so far */
@@ -257,7 +256,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
                                   datatype, rank + 1,
                                   MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, MPI_STATUS_IGNORE);
         }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
   fn_exit:

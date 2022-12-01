@@ -6,7 +6,7 @@
 #include "mpiimpl.h"
 
 int MPIR_Bcast_allcomm_nb(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                          MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                          MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req_ptr = NULL;

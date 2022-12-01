@@ -30,7 +30,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                                                           MPI_Datatype datatype,
                                                           int root,
                                                           MPIR_Comm * comm_ptr,
-                                                          MPIR_Errflag_t * errflag)
+                                                          MPIR_Errflag_t errflag)
 {
     MPI_Status status;
     int rank, comm_size, dst;
@@ -81,7 +81,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
 
     mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
                                        nbytes, tmp_buf, is_contig, errflag);
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
     /* curr_size is the amount of data that this process now has stored in
      * buffer at byte offset (relative_rank*scatter_size) */
@@ -121,7 +121,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                                       ((char *) tmp_buf + recv_offset),
                                       (nbytes - recv_offset < 0 ? 0 : nbytes - recv_offset),
                                       MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             if (mpi_errno) {
                 recv_size = 0;
             } else
@@ -189,7 +189,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                     /* recv_size was set in the previous
                      * receive. that's the amount of data to be
                      * sent now. */
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 }
                 /* recv only if this proc. doesn't have data and sender
                  * has data */
@@ -203,7 +203,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                                           MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status);
                     /* nprocs_completed is also equal to the no. of processes
                      * whose data we don't have */
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                     if (mpi_errno) {
                         recv_size = 0;
                     } else
@@ -224,7 +224,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
 
 #ifdef HAVE_ERROR_CHECKING
     /* check that we received as much as we expected */
-    MPIR_ERR_COLL_CHECK_SIZE(curr_size, nbytes, *errflag, mpi_errno_ret);
+    MPIR_ERR_COLL_CHECK_SIZE(curr_size, nbytes, errflag, mpi_errno_ret);
 #endif
 
     if (!is_contig) {

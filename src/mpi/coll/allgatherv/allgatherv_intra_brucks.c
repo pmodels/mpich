@@ -23,7 +23,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                  const MPI_Aint * recvcounts,
                                  const MPI_Aint * displs,
                                  MPI_Datatype recvtype,
-                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int comm_size, rank, j, i;
     int mpi_errno = MPI_SUCCESS;
@@ -80,7 +80,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                   ((char *) tmp_buf + curr_cnt * recvtype_sz),
                                   (total_count - curr_cnt) * recvtype_sz, MPI_BYTE,
                                   src, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         if (mpi_errno) {
             recv_cnt = 0;
         } else {
@@ -107,7 +107,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                   ((char *) tmp_buf + curr_cnt * recvtype_sz),
                                   (total_count - curr_cnt) * recvtype_sz, MPI_BYTE,
                                   src, MPIR_ALLGATHERV_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
     /* Rotate blocks in tmp_buf down by (rank) blocks and store

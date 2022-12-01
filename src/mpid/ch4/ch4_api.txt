@@ -451,7 +451,7 @@ PARAM:
     disp_unit_p: int *
     displs: const MPI_Aint *
     dst_vci: int
-    errflag: MPIR_Errflag_t *
+    errflag: MPIR_Errflag_t
     flag: int *
     group: MPIR_Group *
     handler_id: int

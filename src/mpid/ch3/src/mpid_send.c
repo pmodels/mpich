@@ -185,13 +185,13 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 
 int MPID_Send_coll(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
                    MPIR_Comm * comm, int attr, MPIR_Request ** request,
-                   MPIR_Errflag_t * errflag)
+                   MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
-    switch (*errflag) {
+    switch (errflag) {
     case MPIR_ERR_NONE:
         break;
     case MPIR_ERR_PROC_FAILED:

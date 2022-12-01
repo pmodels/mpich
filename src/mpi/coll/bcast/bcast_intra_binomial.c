@@ -13,7 +13,7 @@
 int MPIR_Bcast_intra_binomial(void *buffer,
                               MPI_Aint count,
                               MPI_Datatype datatype,
-                              int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                              int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int rank, comm_size, src, dst;
     int relative_rank, mask;
@@ -97,11 +97,11 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             else
                 mpi_errno = MPIC_Recv(buffer, count, datatype, src,
                                       MPIR_BCAST_TAG, comm_ptr, status_p);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 #ifdef HAVE_ERROR_CHECKING
             /* check that we received as much as we expected */
             MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
-            MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, errflag, mpi_errno_ret);
 #endif
             break;
         }
@@ -131,7 +131,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             else
                 mpi_errno = MPIC_Send(buffer, count, datatype, dst,
                                       MPIR_BCAST_TAG, comm_ptr, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
         mask >>= 1;
     }

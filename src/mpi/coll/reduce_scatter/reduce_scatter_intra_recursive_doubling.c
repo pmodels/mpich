@@ -20,7 +20,7 @@
 int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
                                                  const MPI_Aint recvcounts[], MPI_Datatype datatype,
                                                  MPI_Op op, MPIR_Comm * comm_ptr,
-                                                 MPIR_Errflag_t * errflag)
+                                                 MPIR_Errflag_t errflag)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
@@ -152,7 +152,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
                                       MPIR_REDUCE_SCATTER_TAG, comm_ptr,
                                       MPI_STATUS_IGNORE, errflag);
             received = 1;
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
 
         /* if some processes in this process's subtree in this step
@@ -192,7 +192,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
                     /* send the current result */
                     mpi_errno = MPIC_Send(tmp_recvbuf, 1, recvtype,
                                           dst, MPIR_REDUCE_SCATTER_TAG, comm_ptr, errflag);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 }
                 /* recv only if this proc. doesn't have data and sender
                  * has data */
@@ -202,7 +202,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
                     mpi_errno = MPIC_Recv(tmp_recvbuf, 1, recvtype, dst,
                                           MPIR_REDUCE_SCATTER_TAG, comm_ptr, MPI_STATUS_IGNORE);
                     received = 1;
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 }
                 tmp_mask >>= 1;
                 k--;

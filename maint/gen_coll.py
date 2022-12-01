@@ -665,7 +665,7 @@ def get_algo_params(params, algo):
     elif algo['func-commkind'].startswith('i'):
         algo_params += ", MPIR_Sched_t s"
     elif not algo['func-commkind'].startswith('neighbor_'):
-        algo_params += ", MPIR_Errflag_t *errflag"
+        algo_params += ", MPIR_Errflag_t errflag"
 
     return algo_params
 
@@ -682,7 +682,7 @@ def get_func_params(params, name, kind):
     func_params = params
     if kind == "blocking":
         if not name.startswith('neighbor_'):
-            func_params += ", MPIR_Errflag_t * errflag"
+            func_params += ", MPIR_Errflag_t errflag"
     elif kind == "nonblocking":
         func_params += ", MPIR_Request ** request"
     elif kind == "persistent":

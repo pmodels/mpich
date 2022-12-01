@@ -99,7 +99,7 @@ int MPIC_Wait(MPIR_Request * request_ptr)
    this is OK since there is no data that can be received corrupted. */
 
 int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+              MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -196,7 +196,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
 }
 
 int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -215,7 +215,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     attr |= (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
 
-    switch (*errflag) {
+    switch (errflag) {
         case MPIR_ERR_NONE:
             break;
         case MPIR_ERR_PROC_FAILED:
@@ -249,7 +249,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                   int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                   MPI_Datatype recvtype, int source, int recvtag,
-                  MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t * errflag)
+                  MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -330,7 +330,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
 int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
                           int dest, int sendtag,
                           int source, int recvtag,
-                          MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t * errflag)
+                          MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Status mystatus;
@@ -349,7 +349,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
 
     if (status == MPI_STATUS_IGNORE)
         status = &mystatus;
-    switch (*errflag) {
+    switch (errflag) {
         case MPIR_ERR_NONE:
             break;
         case MPIR_ERR_PROC_FAILED:
@@ -434,7 +434,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
 }
 
 int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-               MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t * errflag)
+               MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -469,7 +469,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 }
 
 int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t * errflag)
+                MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -487,7 +487,7 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
-    switch (*errflag) {
+    switch (errflag) {
         case MPIR_ERR_NONE:
             break;
         case MPIR_ERR_PROC_FAILED:
