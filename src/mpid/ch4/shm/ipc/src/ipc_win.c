@@ -60,7 +60,6 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int i;
     size_t total_shm_size = 0;
     MPIDIG_win_shared_info_t *shared_table = NULL;
@@ -119,7 +118,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                                0,
                                MPI_DATATYPE_NULL,
                                ipc_shared_table,
-                               sizeof(win_shared_info_t), MPI_BYTE, shm_comm_ptr, &errflag);
+                               sizeof(win_shared_info_t), MPI_BYTE, shm_comm_ptr, MPIR_ERR_NONE);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     MPIR_ERR_CHECK(mpi_errno);
 

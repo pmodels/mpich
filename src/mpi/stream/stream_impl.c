@@ -267,9 +267,8 @@ int MPIR_Stream_comm_create_impl(MPIR_Comm * comm_ptr, MPIR_Stream * stream_ptr,
     vci_table = MPL_malloc(comm_ptr->local_size * sizeof(int), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!vci_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    MPIR_Errflag_t errflag;
-    errflag = MPIR_ERR_NONE;
-    mpi_errno = MPIR_Allgather_impl(&vci, 1, MPI_INT, vci_table, 1, MPI_INT, comm_ptr, &errflag);
+    mpi_errno =
+        MPIR_Allgather_impl(&vci, 1, MPI_INT, vci_table, 1, MPI_INT, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     (*newcomm_ptr)->stream_comm_type = MPIR_STREAM_COMM_SINGLE;
@@ -311,10 +310,9 @@ int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
     displs = MPL_malloc((comm_ptr->local_size + 1) * sizeof(MPI_Aint), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!displs, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPI_Aint num_tmp = num_streams;
     mpi_errno = MPIR_Allgather_impl(&num_tmp, 1, MPI_AINT,
-                                    num_table, 1, MPI_AINT, comm_ptr, &errflag);
+                                    num_table, 1, MPI_AINT, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPI_Aint num_total = 0;
@@ -346,9 +344,9 @@ int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
         local_vcis[i] = stream_ptr ? stream_ptr->vci : 0;
     }
 
-    errflag = MPIR_ERR_NONE;
     mpi_errno = MPIR_Allgatherv_impl(local_vcis, num_streams, MPI_INT,
-                                     vci_table, num_table, displs, MPI_INT, comm_ptr, &errflag);
+                                     vci_table, num_table, displs, MPI_INT, comm_ptr,
+                                     MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     (*newcomm_ptr)->stream_comm_type = MPIR_STREAM_COMM_MULTIPLEX;

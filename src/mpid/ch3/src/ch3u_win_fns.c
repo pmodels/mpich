@@ -33,7 +33,6 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
 {
     int mpi_errno = MPI_SUCCESS, i, k, comm_size, rank;
     MPI_Aint *tmp_buf;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
 
@@ -63,10 +62,9 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
     tmp_buf[4 * rank + 3] = (MPI_Aint) (*win_ptr)->handle;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                               tmp_buf, 4, MPI_AINT, (*win_ptr)->comm_ptr, &errflag);
+                               tmp_buf, 4, MPI_AINT, (*win_ptr)->comm_ptr, MPIR_ERR_NONE);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     k = 0;
     for (i = 0; i < comm_size; i++) {

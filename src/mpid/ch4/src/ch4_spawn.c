@@ -73,8 +73,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
         bcast_ints[0] = total_num_processes;
         bcast_ints[1] = spawn_error;
     }
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    mpi_errno = MPIR_Bcast(bcast_ints, 2, MPI_INT, root, comm_ptr, &errflag);
+    mpi_errno = MPIR_Bcast(bcast_ints, 2, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     if (comm_ptr->rank != root) {
         total_num_processes = bcast_ints[0];
@@ -88,7 +87,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
     int should_accept = 1;
     if (errcodes != MPI_ERRCODES_IGNORE) {
         mpi_errno =
-            MPIR_Bcast(pmi_errcodes, total_num_processes, MPI_INT, root, comm_ptr, &errflag);
+            MPIR_Bcast(pmi_errcodes, total_num_processes, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (int i = 0; i < total_num_processes; i++) {
@@ -368,7 +367,6 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
 
     MPIR_Comm *peer_intercomm = NULL;
     int tag;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int bcast_ints[2];          /* used to bcast tag and errno */
     if (comm_ptr->rank == root) {
         /* NOTE: do not goto fn_fail on error, or it will leave children hanging */
@@ -394,12 +392,12 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
       bcast_tag_and_errno:
         bcast_ints[0] = tag;
         bcast_ints[1] = mpi_errno;
-        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = bcast_ints[1];
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         if (bcast_ints[1]) {
             /* errno from root cannot be directly returned */

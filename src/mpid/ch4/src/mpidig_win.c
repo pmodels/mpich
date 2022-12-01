@@ -376,13 +376,12 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     /* If no local processes on each node, set ACCU_NO_SHM to enable native atomics */
     bool no_local = false, all_no_local = false;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     if (!comm_ptr->node_comm)
         no_local = true;
 
     mpi_errno = MPIR_Allreduce(&no_local, &all_no_local, 1, MPI_C_BOOL,
-                               MPI_LAND, comm_ptr, &errflag);
-    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+                               MPI_LAND, comm_ptr, MPIR_ERR_NONE);
+    MPIR_ERR_CHECK(mpi_errno);
     if (all_no_local)
         MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_NO_SHM;
 
@@ -479,7 +478,6 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
                               MPIR_Win ** win_ptr, int shm_option)
 {
     int i, mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = NULL;
     size_t total_shm_size = 0LL;
     MPIDIG_win_shared_info_t *shared_table = NULL;
@@ -516,7 +514,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
                                    MPI_DATATYPE_NULL,
                                    shared_table,
                                    sizeof(MPIDIG_win_shared_info_t), MPI_BYTE, shm_comm_ptr,
-                                   &errflag);
+                                   MPIR_ERR_NONE);
         MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
@@ -553,8 +551,8 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
          * - user sets alloc_shared_noncontig=true, thus we can internally make
          *   the size aligned on each process. */
         mpi_errno = MPIR_Allreduce(&symheap_flag, &global_symheap_flag, 1, MPI_C_BOOL,
-                                   MPI_LAND, comm_ptr, &errflag);
-        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+                                   MPI_LAND, comm_ptr, MPIR_ERR_NONE);
+        MPIR_ERR_CHECK(mpi_errno);
     } else
         global_symheap_flag = false;
 
@@ -676,7 +674,6 @@ int MPIDIG_RMA_Init_sync_pvars(void)
 int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_FUNC_ENTER;
 
     mpi_errno = win_set_info(win, info, FALSE /* is_init */);
@@ -685,7 +682,7 @@ int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
     /* Do not update winattr except for info set at window creation.
      * Because it will change RMA's behavior which requires collective synchronization. */
 
-    mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier(win->comm_ptr, MPIR_ERR_NONE);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -837,14 +834,13 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 int MPIDIG_mpi_win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = *win_ptr;
     MPIR_FUNC_ENTER;
 
     MPIDIG_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
     MPIDIG_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
 
-    mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier(win->comm_ptr, MPIR_ERR_NONE);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
@@ -860,7 +856,6 @@ int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info 
                           MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win;
 
     MPIR_FUNC_ENTER;
@@ -882,7 +877,7 @@ int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info 
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier(win->comm_ptr, MPIR_ERR_NONE);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -921,7 +916,6 @@ int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * inf
                                    MPIR_Comm * comm_ptr, void **base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = NULL;
     MPIR_FUNC_ENTER;
 
@@ -944,7 +938,7 @@ int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * inf
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier(comm_ptr, MPIR_ERR_NONE);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -981,7 +975,6 @@ int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR
                             void *baseptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win;
     void **base_ptr = (void **) baseptr;
 
@@ -1009,7 +1002,7 @@ int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    mpi_errno = MPIR_Barrier(comm, &errflag);
+    mpi_errno = MPIR_Barrier(comm, MPIR_ERR_NONE);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -1027,7 +1020,6 @@ int MPIDIG_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win *
 {
     int mpi_errno = MPI_SUCCESS;
     int rc = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 
@@ -1049,7 +1041,7 @@ int MPIDIG_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win *
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    mpi_errno = MPIR_Barrier(comm, &errflag);
+    mpi_errno = MPIR_Barrier(comm, MPIR_ERR_NONE);
 
   fn_exit:
     MPIR_FUNC_EXIT;

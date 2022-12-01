@@ -482,7 +482,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int need_unlock = 0;
     MPIR_FUNC_ENTER;
 
@@ -523,7 +522,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
      * the VCI lock internally. */
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     need_unlock = 0;
-    mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier(win->comm_ptr, MPIR_ERR_NONE);
 
   fn_exit:
     if (need_unlock) {

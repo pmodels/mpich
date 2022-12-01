@@ -79,7 +79,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_root_datacopy_completion(void *v,
     nb_release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, nb_release_gather);
     int rank = MPIR_Comm_rank(comm_ptr);
     int num_ranks = MPIR_Comm_size(comm_ptr);
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int last_seq_no = nb_release_gather_info_ptr->ibcast_last_seq_no_completed[segment];
 
     MPL_atomic_uint64_t *my_release_flag_addr =
@@ -95,7 +94,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_root_datacopy_completion(void *v,
             /* Root sends data to rank 0 */
             if (rank == root) {
                 MPIC_Isend(per_call_data->local_buf, per_call_data->count, per_call_data->datatype,
-                           0, per_call_data->tag, comm_ptr, &(per_call_data->sreq), &errflag);
+                           0, per_call_data->tag, comm_ptr, &(per_call_data->sreq), MPIR_ERR_NONE);
                 *done = 1;
             } else if (rank == 0) {
                 MPIC_Irecv(MPIDI_POSIX_RELEASE_GATHER_NB_IBCAST_DATA_ADDR(segment),

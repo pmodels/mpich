@@ -727,8 +727,7 @@ static int init_comm_seq(MPIR_Comm * comm)
         /* Every rank need share the same seq from root. NOTE: it is possible for
          * different communicators to have the same seq. It is only used as an
          * opportunistic optimization */
-        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        mpi_errno = MPIR_Bcast_allcomm_auto(&tmp, 1, MPI_INT, 0, comm, &errflag);
+        mpi_errno = MPIR_Bcast_allcomm_auto(&tmp, 1, MPI_INT, 0, comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         comm->seq = tmp;
@@ -1271,20 +1270,20 @@ int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info
     int hint_str_equal_global = 0;
     char *hint_str_global = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     /* Find the maximum hint_str size.  Each process locally compares
      * its hint_str size to the global max, and makes sure that this
      * comparison is successful on all processes. */
     mpi_errno =
-        MPIR_Allreduce(&hint_str_size, &hint_str_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
+        MPIR_Allreduce(&hint_str_size, &hint_str_size_max, 1, MPI_INT, MPI_MAX, comm_ptr,
+                       MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     hint_str_equal = (hint_str_size == hint_str_size_max);
 
     mpi_errno =
         MPIR_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
-                       comm_ptr, &errflag);
+                       comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!hint_str_equal_global)
@@ -1297,14 +1296,14 @@ int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info
 
     mpi_errno =
         MPIR_Allreduce(hint_str, hint_str_global, strlen(hint_str), MPI_CHAR,
-                       MPI_MAX, comm_ptr, &errflag);
+                       MPI_MAX, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     hint_str_equal = !memcmp(hint_str, hint_str_global, strlen(hint_str));
 
     mpi_errno =
         MPIR_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
-                       comm_ptr, &errflag);
+                       comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
