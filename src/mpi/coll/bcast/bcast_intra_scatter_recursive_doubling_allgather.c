@@ -200,8 +200,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                      * relative_rank, dst); */
                     mpi_errno = MPIC_Recv(((char *) tmp_buf + offset),
                                           nbytes - offset < 0 ? 0 : nbytes - offset,
-                                          MPI_BYTE, dst, MPIR_BCAST_TAG,
-                                          comm_ptr, &status, errflag);
+                                          MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status);
                     /* nprocs_completed is also equal to the no. of processes
                      * whose data we don't have */
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);

@@ -18,7 +18,7 @@ int MPIR_Neighbor_alltoall_allcomm_nb(const void *sendbuf, MPI_Aint sendcount,
                                         recvbuf, recvcount, recvtype, comm_ptr, &req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIC_Wait(req_ptr, &errflag);
+    mpi_errno = MPIC_Wait(req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Request_free(req_ptr);
 

@@ -1097,14 +1097,14 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                         MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
                                         (MPL_DBG_FDEST, "completed RECV entry %d, rreq=%p\n",
                                          (int) i, e->u.recv.rreq));
-                        MPIR_Process_status(&e->u.recv.rreq->status, &s->req->u.nbc.errflag);
+                        int err = MPIR_Process_status(&e->u.recv.rreq->status);
                         if (e->u.recv.status != MPI_STATUS_IGNORE) {
                             MPI_Aint recvd;
                             e->u.recv.status->MPI_ERROR = e->u.recv.rreq->status.MPI_ERROR;
                             MPIR_Get_count_impl(&e->u.recv.rreq->status, MPI_BYTE, &recvd);
                             MPIR_STATUS_SET_COUNT(*(e->u.recv.status), recvd);
                         }
-                        if (s->req->u.nbc.errflag != MPIR_ERR_NONE)
+                        if (err)
                             e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
                         else
                             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;

@@ -199,7 +199,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
                          (rank >= tree_root + nprocs_completed)) {
                     mpi_errno = MPIC_Recv(tmp_recvbuf, 1, recvtype, dst,
                                           MPIR_REDUCE_SCATTER_BLOCK_TAG,
-                                          comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                          comm_ptr, MPI_STATUS_IGNORE);
                     received = 1;
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                 }

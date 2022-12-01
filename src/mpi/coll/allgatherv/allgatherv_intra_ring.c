@@ -111,8 +111,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
              * consecutive processes contribute 0 bytes each. */
         } else if (!sendnow) {  /* If there's no data to send, just do a recv call */
             mpi_errno =
-                MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm_ptr, &status,
-                          errflag);
+                MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm_ptr, &status);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
             torecv -= recvnow;
         } else if (!recvnow) {  /* If there's no data to receive, just do a send call */

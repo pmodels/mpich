@@ -194,7 +194,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
 
                     mpi_errno = MPIC_Recv(((char *) tmp_buf + offset * recvtype_sz),
                                           (total_count - offset) * recvtype_sz, MPI_BYTE,
-                                          dst, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
+                                          dst, MPIR_ALLGATHERV_TAG, comm_ptr, &status);
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                     if (mpi_errno) {
                         last_recv_cnt = 0;

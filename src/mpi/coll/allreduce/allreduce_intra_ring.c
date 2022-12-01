@@ -85,7 +85,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
                                datatype, dst, tag, comm, &reqs[1], errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
-        mpi_errno = MPIC_Waitall(2, reqs, MPI_STATUSES_IGNORE, errflag);
+        mpi_errno = MPIC_Waitall(2, reqs, MPI_STATUSES_IGNORE);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
         mpi_errno =

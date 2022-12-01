@@ -158,9 +158,8 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                                        MPIR_ALLREDUCE_TAG, comm, &recv_reqs[recv_nreq++]);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
             }
-            mpi_errno = MPIC_Waitall(recv_nreq, recv_reqs, MPI_STATUSES_IGNORE, errflag);
-            if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIC_Waitall(recv_nreq, recv_reqs, MPI_STATUSES_IGNORE);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
             /* Do reduction of reduced data */
             for (i = 0; i < step1_nrecvs && count > 0; i++) {   /* participating rank gets data from non-partcipating ranks */
@@ -206,14 +205,12 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
             }
         }
 
-        mpi_errno = MPIC_Waitall(send_nreq, send_reqs, MPI_STATUSES_IGNORE, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-            MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIC_Waitall(send_nreq, send_reqs, MPI_STATUSES_IGNORE);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
         buf = myidx - 1;
-        mpi_errno = MPIC_Waitall((k - 1), recv_reqs, MPI_STATUSES_IGNORE, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-            MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIC_Waitall((k - 1), recv_reqs, MPI_STATUSES_IGNORE);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
         for (i = myidx - 1; i >= 0 && count > 0; i--, buf--) {
             mpi_errno = MPIR_Reduce_local(nbr_buffer[buf], recvbuf, count, datatype, op);
@@ -253,14 +250,11 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                     }
                 }
 
-                mpi_errno = MPIC_Waitall(send_nreq, send_reqs, MPI_STATUSES_IGNORE, errflag);
-                if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                    MPIR_ERR_POP(mpi_errno);
+                mpi_errno = MPIC_Waitall(send_nreq, send_reqs, MPI_STATUSES_IGNORE);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
-                mpi_errno =
-                    MPIC_Waitall((k - 1), recv_reqs + (k - 1), MPI_STATUSES_IGNORE, errflag);
-                if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                    MPIR_ERR_POP(mpi_errno);
+                mpi_errno = MPIC_Waitall((k - 1), recv_reqs + (k - 1), MPI_STATUSES_IGNORE);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
                 buf = (k - 1) + myidx - 1;
                 for (i = myidx - 1; i >= 0 && count > 0; i--, buf--) {
@@ -292,7 +286,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
      * send the data to non-partcipating rans */
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
         mpi_errno = MPIC_Recv(recvbuf, count, datatype, step1_sendto, MPIR_ALLREDUCE_TAG, comm,
-                              MPI_STATUS_IGNORE, errflag);
+                              MPI_STATUS_IGNORE);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
     } else {
         for (i = 0; i < step1_nrecvs; i++) {
@@ -302,9 +296,8 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         }
 
-        mpi_errno = MPIC_Waitall(i, send_reqs, MPI_STATUSES_IGNORE, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-            MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIC_Waitall(i, send_reqs, MPI_STATUSES_IGNORE);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
     }
 
     if (in_step2 && (k > MAX_RADIX || count * extent > 8192)) {

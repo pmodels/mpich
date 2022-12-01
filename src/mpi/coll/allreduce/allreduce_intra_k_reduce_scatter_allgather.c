@@ -112,7 +112,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
         for (i = 0; i < step1_nrecvs; i++) {    /* participating rank gets data from non-partcipating ranks */
             mpi_errno =
                 MPIC_Recv(tmp_recvbuf, count, datatype, step1_recvfrom[i], MPIR_ALLREDUCE_TAG, comm,
-                          MPI_STATUS_IGNORE, errflag);
+                          MPI_STATUS_IGNORE);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
             /* Do reduction of reduced data */
             mpi_errno = MPIR_Reduce_local(tmp_recvbuf, recvbuf, count, datatype, op);
@@ -179,9 +179,8 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                                dst, MPIR_ALLREDUCE_TAG, comm, &recv_reqs[num_rreq++]);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
-                mpi_errno = MPIC_Waitall(num_rreq, recv_reqs, MPI_STATUSES_IGNORE, errflag);
-                if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                    MPIR_ERR_POP(mpi_errno);
+                mpi_errno = MPIC_Waitall(num_rreq, recv_reqs, MPI_STATUSES_IGNORE);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                 mpi_errno =
                     MPIR_Reduce_local((char *) tmp_recvbuf + recv_offset,
                                       (char *) recvbuf + recv_offset, recv_cnt, datatype, op);
@@ -231,9 +230,8 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
             }
             /* wait on prev recvs */
-            mpi_errno = MPIC_Waitall((k - 1), recv_reqs, MPI_STATUSES_IGNORE, errflag);
-            if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIC_Waitall((k - 1), recv_reqs, MPI_STATUSES_IGNORE);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
             phase--;
             if (single_phase_recv == false) {
@@ -255,17 +253,14 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                     }
                     /* wait on prev recvs */
-                    mpi_errno =
-                        MPIC_Waitall((k - 1), recv_reqs + (k - 1), MPI_STATUSES_IGNORE, errflag);
-                    if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                        MPIR_ERR_POP(mpi_errno);
+                    mpi_errno = MPIC_Waitall((k - 1), recv_reqs + (k - 1), MPI_STATUSES_IGNORE);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
                     phase--;
                 }
             }
-            mpi_errno = MPIC_Waitall(num_sreq, send_reqs, MPI_STATUSES_IGNORE, errflag);
-            if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIC_Waitall(num_sreq, send_reqs, MPI_STATUSES_IGNORE);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         }
     }
 
@@ -273,7 +268,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
      * send the data to non-partcipating rans */
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
         mpi_errno = MPIC_Recv(recvbuf, count, datatype, step1_sendto, MPIR_ALLREDUCE_TAG, comm,
-                              MPI_STATUS_IGNORE, errflag);
+                              MPI_STATUS_IGNORE);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
     } else {
         if (step1_nrecvs > 0) {
@@ -284,9 +279,8 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
             }
 
-            mpi_errno = MPIC_Waitall(i, send_reqs, MPI_STATUSES_IGNORE, errflag);
-            if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIC_Waitall(i, send_reqs, MPI_STATUSES_IGNORE);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         }
     }
 

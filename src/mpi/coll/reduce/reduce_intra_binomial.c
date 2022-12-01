@@ -98,7 +98,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
             if (source < comm_size) {
                 source = (source + lroot) % comm_size;
                 mpi_errno = MPIC_Recv(tmp_buf, count, datatype, source,
-                                      MPIR_REDUCE_TAG, comm_ptr, &status, errflag);
+                                      MPIR_REDUCE_TAG, comm_ptr, &status);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
                 /* The sender is above us, so the received buffer must be
@@ -131,8 +131,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
             mpi_errno = MPIC_Send(recvbuf, count, datatype, root,
                                   MPIR_REDUCE_TAG, comm_ptr, errflag);
         } else if (rank == root) {
-            mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0,
-                                  MPIR_REDUCE_TAG, comm_ptr, &status, errflag);
+            mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr, &status);
         }
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
     }

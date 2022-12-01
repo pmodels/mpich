@@ -14,7 +14,7 @@ int MPIR_Barrier_allcomm_nb(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     mpi_errno = MPIR_Ibarrier(comm_ptr, &req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIC_Wait(req_ptr, errflag);
+    mpi_errno = MPIC_Wait(req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Request_free(req_ptr);
 

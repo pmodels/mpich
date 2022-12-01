@@ -102,10 +102,8 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t *
             /* wait on recvs from prev phase */
             if (i > 0 && j == 1) {
                 mpi_errno =
-                    MPIC_Waitall(k - 1, &recv_reqs[((k - 1) * ((i - 1) & 1))], MPI_STATUSES_IGNORE,
-                                 errflag);
-                if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                    MPIR_ERR_POP(mpi_errno);
+                    MPIC_Waitall(k - 1, &recv_reqs[((k - 1) * ((i - 1) & 1))], MPI_STATUSES_IGNORE);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
             }
 
             mpi_errno =
@@ -113,17 +111,14 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t *
                            errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         }
-        mpi_errno = MPIC_Waitall(k - 1, send_reqs, MPI_STATUSES_IGNORE, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-            MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIC_Waitall(k - 1, send_reqs, MPI_STATUSES_IGNORE);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         shift *= k;
     }
 
     mpi_errno =
-        MPIC_Waitall(k - 1, recv_reqs + ((k - 1) * ((nphases - 1) & 1)), MPI_STATUSES_IGNORE,
-                     errflag);
-    if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-        MPIR_ERR_POP(mpi_errno);
+        MPIC_Waitall(k - 1, recv_reqs + ((k - 1) * ((nphases - 1) & 1)), MPI_STATUSES_IGNORE);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
   fn_exit:
     if (k > MAX_RADIX) {

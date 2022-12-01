@@ -131,7 +131,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
         if ((num_chunks <= 3 && is_nb) || (recv_pre_posted && is_nb)) {
             /* Wait to receive the chunk before it can be sent to the children */
             if (src != -1) {
-                mpi_errno = MPIC_Wait(reqs[i], errflag);
+                mpi_errno = MPIC_Wait(reqs[i]);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                 MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
                 MPIR_ERR_COLL_CHECK_SIZE(recvd_size, msgsize, *errflag, mpi_errno_ret);
@@ -139,7 +139,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
         } else if (num_chunks > 3 && is_nb && i < 3 && !recv_pre_posted) {
             /* Wait to receive the chunk before it can be sent to the children */
             if (src != -1) {
-                mpi_errno = MPIC_Wait(reqs[i], errflag);
+                mpi_errno = MPIC_Wait(reqs[i]);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                 MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
                 MPIR_ERR_COLL_CHECK_SIZE(recvd_size, msgsize, *errflag, mpi_errno_ret);
@@ -149,7 +149,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
             if (src != -1) {
                 mpi_errno =
                     MPIC_Recv((char *) sendbuf + offset, msgsize, MPI_BYTE,
-                              src, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                              src, MPIR_BCAST_TAG, comm_ptr, &status);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
                 MPIR_ERR_COLL_CHECK_SIZE(recvd_size, msgsize, *errflag, mpi_errno_ret);
@@ -196,7 +196,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
     }
 
     if (is_nb) {
-        mpi_errno = MPIC_Waitall(num_req, reqs, statuses, errflag);
+        mpi_errno = MPIC_Waitall(num_req, reqs, statuses);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
     }
 

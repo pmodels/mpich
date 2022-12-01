@@ -26,6 +26,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
                               MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int i, j;
     int nphases = 0;
     int src, dst, p_of_k = 0;   /* Largest power of k that is smaller than 'size' */
@@ -142,9 +143,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
             mpi_errno = MPIC_Irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
                                    count, recvtype, src, MPIR_ALLGATHER_TAG, comm,
                                    &reqs[num_reqs++]);
-            if (mpi_errno) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
                                                      "Phase#%d:, k:%d Recv at:%p for count:%d", i,
@@ -156,16 +155,15 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
             mpi_errno =
                 MPIC_Isend(tmp_recvbuf, count, recvtype, dst, MPIR_ALLGATHER_TAG, comm,
                            &reqs[num_reqs++], errflag);
-            if (mpi_errno) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
                                                      "Phase#%d:, k:%d Send from:%p for count:%d",
                                                      i, k, tmp_recvbuf, count));
 
         }
-        MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE, errflag);
+        mpi_errno = MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         delta *= k;
     }
 
@@ -191,7 +189,8 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPIR_CHKLMEM_FREEALL();
 
   fn_exit:
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

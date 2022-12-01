@@ -113,7 +113,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
 
             mpi_errno =
                 MPIC_Recv(recv_address, msgsize, datatype, child, MPIR_ALLREDUCE_TAG, comm_ptr,
-                          MPI_STATUS_IGNORE, errflag);
+                          MPI_STATUS_IGNORE);
             /* for communication errors, just record the error but continue */
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
 
@@ -142,7 +142,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         if (my_tree.parent != -1) {
             mpi_errno = MPIC_Recv(reduce_address, msgsize,
                                   datatype, my_tree.parent, MPIR_ALLREDUCE_TAG, comm_ptr,
-                                  MPI_STATUS_IGNORE, errflag);
+                                  MPI_STATUS_IGNORE);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         }
         if (num_children) {
@@ -161,7 +161,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
     }
 
     if (num_reqs > 0) {
-        mpi_errno = MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE, errflag);
+        mpi_errno = MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
     }
 

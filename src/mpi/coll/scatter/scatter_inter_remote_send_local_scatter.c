@@ -55,7 +55,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
                                 "tmp_buf", MPL_MEM_BUFFER);
 
             mpi_errno = MPIC_Recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
-                                  root, MPIR_SCATTER_TAG, comm_ptr, &status, errflag);
+                                  root, MPIR_SCATTER_TAG, comm_ptr, &status);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         } else {
             /* silience -Wmaybe-uninitialized due to MPIR_Scatter by non-zero ranks */

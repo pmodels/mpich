@@ -936,7 +936,7 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 	if (rank == root) {
 	    /* First, receive the pg description from the partner */
 	    mpi_errno = MPIC_Recv(&j, 1, MPI_INT, 0, recvtag++,
-				  tmp_comm, MPI_STATUS_IGNORE, &errflag);
+				  tmp_comm, MPI_STATUS_IGNORE);
 	    *recvtag_p = recvtag;
 	    MPIR_ERR_CHECK(mpi_errno);
 	    pg_str = (char*)MPL_malloc(j, MPL_MEM_DYNAMIC);
@@ -944,7 +944,7 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 		MPIR_ERR_POP(mpi_errno);
 	    }
 	    mpi_errno = MPIC_Recv(pg_str, j, MPI_CHAR, 0, recvtag++,
-				  tmp_comm, MPI_STATUS_IGNORE, &errflag);
+				  tmp_comm, MPI_STATUS_IGNORE);
 	    *recvtag_p = recvtag;
 	    MPIR_ERR_CHECK(mpi_errno);
 	}

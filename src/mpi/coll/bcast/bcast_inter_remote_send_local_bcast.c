@@ -38,8 +38,7 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
         rank = comm_ptr->rank;
 
         if (rank == 0) {
-            mpi_errno = MPIC_Recv(buffer, count, datatype, root,
-                                  MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+            mpi_errno = MPIC_Recv(buffer, count, datatype, root, MPIR_BCAST_TAG, comm_ptr, &status);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag, mpi_errno_ret);
         }
 
