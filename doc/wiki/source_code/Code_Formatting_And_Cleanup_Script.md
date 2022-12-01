@@ -72,13 +72,10 @@ distribution is still using version 2.2.11 we require this version in
 
 For certain distribution, in particular, Mac using Homebrew, a custom
 version need be installed. One can either install from source tar ball,
-or using a custom brew recipe.
+or using [a custom brew recipe](https://gist.github.com/thomasgillis/187ea639e7535f969b276b5b1f2e812f#file-gnu-indent-rb).
 
-To install from \`indent-2.2.12\` tarball, simply do \`./configure &&
+To install from \`indent-2.2.11\` tarball, simply do \`./configure &&
 make && make install\`. On Mac, it will complain at "missing texi2html".
 One can bypass that by manually edit \`Makefile\` by search \`^SUBDIRS\`
 and delete the \`doc\` target.
 
-Alternatively, there is patch to homebrew that one can try:
-
-<https://gist.github.com/wesbland/501063f151c1eb815d8001abf2285cbe>
