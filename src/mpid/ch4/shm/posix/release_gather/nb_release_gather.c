@@ -29,7 +29,6 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
     size_t ibcast_flags_shm_size = 0, ireduce_flags_shm_size = 0;
     const long pg_sz = sysconf(_SC_PAGESIZE);
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    bool mapfail_flag = false;
     int topotree_fail[2] = { -1, -1 };  /* -1 means topo trees not created due to reasons like not
                                          * specifying binding, no hwloc etc. 0 means topo trees were
                                          * created successfully. 1 means topo trees were created
@@ -205,12 +204,8 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
                             MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIDU_shm_alloc(comm_ptr, ibcast_flags_shm_size,
-                                    (void **) &(nb_release_gather_info_ptr->ibcast_flags_addr),
-                                    &mapfail_flag);
-        if (mpi_errno || mapfail_flag) {
-            /* for communication errors, just record the error but continue */
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
+                                    (void **) &(nb_release_gather_info_ptr->ibcast_flags_addr));
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         /* Calculate gather and release flag address and initialize to the gather and release states */
         for (i = 0; i < MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS; i++) {
             MPL_atomic_release_store_uint64(MPIDI_POSIX_RELEASE_GATHER_NB_IBCAST_GATHER_FLAG_ADDR
@@ -221,12 +216,8 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
         }
         /* Allocate the shared memory for ibcast buffer */
         mpi_errno = MPIDU_shm_alloc(comm_ptr, MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE,
-                                    (void **) &(NB_RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr)),
-                                    &mapfail_flag);
-        if (mpi_errno || mapfail_flag) {
-            /* for communication errors, just record the error but continue */
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
+                                    (void **) &(NB_RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr)));
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     }
 
     if (initialize_ireduce_buf) {
@@ -242,12 +233,8 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
             MPL_malloc(num_ranks * sizeof(void *), MPL_MEM_COLL);
 
         mpi_errno = MPIDU_shm_alloc(comm_ptr, ireduce_flags_shm_size,
-                                    (void **) &(nb_release_gather_info_ptr->ireduce_flags_addr),
-                                    &mapfail_flag);
-        if (mpi_errno || mapfail_flag) {
-            /* for communication errors, just record the error but continue */
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
+                                    (void **) &(nb_release_gather_info_ptr->ireduce_flags_addr));
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         for (i = 0; i < MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS; i++) {
             MPL_atomic_release_store_uint64(MPIDI_POSIX_RELEASE_GATHER_NB_IREDUCE_GATHER_FLAG_ADDR
                                             (rank, i, num_ranks), -1);
@@ -256,14 +243,10 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
             nb_release_gather_info_ptr->ireduce_last_seq_no_completed[i] = -1;
         }
         /* Allocate the shared memory for ireduce buffer */
-        mpi_errno = MPIDU_shm_alloc(comm_ptr,
-                                    num_ranks * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE,
-                                    (void **) &(NB_RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr)),
-                                    &mapfail_flag);
-        if (mpi_errno || mapfail_flag) {
-            /* for communication errors, just record the error but continue */
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
-        }
+        mpi_errno =
+            MPIDU_shm_alloc(comm_ptr, num_ranks * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE,
+                            (void **) &(NB_RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr)));
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
         /* Store address of each of the children's reduce buffer */
         char *addr;

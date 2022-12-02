@@ -155,7 +155,6 @@ int MPIDI_POSIX_mpi_win_allocate_hook(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win ATTRIBUTE((unused)) = NULL;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
-    bool mapfail_flag = false;
     MPIR_FUNC_ENTER;
 
     posix_win_init_common(win);
@@ -168,12 +167,12 @@ int MPIDI_POSIX_mpi_win_allocate_hook(MPIR_Win * win)
     posix_win = &win->dev.shm.posix;
 
     /* allocate interprocess mutex for RMA atomics over shared memory */
-    mpi_errno =
-        MPIDU_shm_alloc(shm_comm_ptr, sizeof(MPL_proc_mutex_t), (void **) &posix_win->shm_mutex_ptr,
-                        &mapfail_flag);
+    int err;
+    err = MPIDU_shm_alloc(shm_comm_ptr, sizeof(MPL_proc_mutex_t),
+                          (void **) &posix_win->shm_mutex_ptr);
 
     /* disable SHM_ALLOCATED optimization if mutex allocation fails */
-    if (!mapfail_flag) {
+    if (!err) {
         if (shm_comm_ptr->rank == 0)
             MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
         MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_SHM_ALLOCATED;
@@ -193,7 +192,6 @@ int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = NULL;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
-    bool mapfail_flag = false;
     MPIR_FUNC_ENTER;
 
     posix_win_init_common(win);
@@ -206,12 +204,12 @@ int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win)
     posix_win = &win->dev.shm.posix;
 
     /* allocate interprocess mutex for RMA atomics over shared memory */
-    mpi_errno =
-        MPIDU_shm_alloc(win->comm_ptr, sizeof(MPL_proc_mutex_t),
-                        (void **) &posix_win->shm_mutex_ptr, &mapfail_flag);
+    int err;
+    err = MPIDU_shm_alloc(win->comm_ptr, sizeof(MPL_proc_mutex_t),
+                          (void **) &posix_win->shm_mutex_ptr);
 
     /* disable SHM_ALLOCATED optimization if mutex allocation fails */
-    if (!mapfail_flag) {
+    if (!err) {
         if (win->comm_ptr->rank == 0)
             MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
         MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_SHM_ALLOCATED;
@@ -260,7 +258,6 @@ int MPIDI_POSIX_mpi_win_detach_hook(MPIR_Win * win ATTRIBUTE((unused)),
 int MPIDI_POSIX_shm_win_init_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    bool mapfail_flag = false;
     MPIDI_POSIX_win_t *posix_win ATTRIBUTE((unused)) = NULL;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
     MPIR_FUNC_ENTER;
@@ -274,12 +271,11 @@ int MPIDI_POSIX_shm_win_init_hook(MPIR_Win * win)
         goto fn_exit;
 
     /* allocate interprocess mutex for RMA atomics over shared memory */
-    mpi_errno =
-        MPIDU_shm_alloc(shm_comm_ptr, sizeof(MPL_proc_mutex_t), (void **) &posix_win->shm_mutex_ptr,
-                        &mapfail_flag);
-    MPIR_ERR_CHECK(mpi_errno);
+    int err;
+    err = MPIDU_shm_alloc(shm_comm_ptr, sizeof(MPL_proc_mutex_t),
+                          (void **) &posix_win->shm_mutex_ptr);
 
-    if (!mapfail_flag) {
+    if (!err) {
         if (shm_comm_ptr->rank == 0)
             MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
 
