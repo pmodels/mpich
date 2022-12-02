@@ -105,23 +105,9 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                     request_ptr->cc_ptr = &request_ptr->cc;
                     request_ptr->u.persist.real_request = NULL;
 
-                    if (prequest_ptr->kind != MPIR_REQUEST_KIND__GREQUEST) {
-                        MPIR_Status_set_cancel_bit(status,
-                                                   MPIR_STATUS_GET_CANCEL_BIT((prequest_ptr->status)));
-                        mpi_errno = prequest_ptr->status.MPI_ERROR;
-                    } else {
-                        mpi_errno = MPIR_Grequest_query(prequest_ptr);
-                        MPIR_Status_set_cancel_bit(status,
-                                                   MPIR_STATUS_GET_CANCEL_BIT
-                                                   (prequest_ptr->status));
-                        if (mpi_errno == MPI_SUCCESS) {
-                            mpi_errno = prequest_ptr->status.MPI_ERROR;
-                        }
-                        rc = MPIR_Grequest_free(prequest_ptr);
-                        if (mpi_errno == MPI_SUCCESS) {
-                            mpi_errno = rc;
-                        }
-                    }
+                    MPIR_Status_set_cancel_bit(status,
+                                               MPIR_STATUS_GET_CANCEL_BIT((prequest_ptr->status)));
+                    mpi_errno = prequest_ptr->status.MPI_ERROR;
 
                     MPIR_Request_free(prequest_ptr);
                 } else {
@@ -272,13 +258,7 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
             {
                 if (request_ptr->u.persist.real_request != NULL) {
-                    if (request_ptr->u.persist.real_request->kind == MPIR_REQUEST_KIND__GREQUEST) {
-                        /* This is needed for persistent Bsend requests */
-                        mpi_errno = MPIR_Grequest_query(request_ptr->u.persist.real_request);
-                    }
-                    if (mpi_errno == MPI_SUCCESS) {
-                        mpi_errno = request_ptr->u.persist.real_request->status.MPI_ERROR;
-                    }
+                    mpi_errno = request_ptr->u.persist.real_request->status.MPI_ERROR;
                 } else {
                     mpi_errno = request_ptr->status.MPI_ERROR;
                 }
