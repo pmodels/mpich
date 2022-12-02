@@ -167,7 +167,8 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
  */
 
 #define MPID_Prequest_free_hook(req_) do {} while(0)
-#define MPID_Part_request_free_hook(req_) do {} while(0)
+#define MPID_Part_send_request_free_hook(req_) do {} while(0)
+#define MPID_Part_recv_request_free_hook(req_) do {} while(0)
 
 /*
  * Device level progress engine macros
