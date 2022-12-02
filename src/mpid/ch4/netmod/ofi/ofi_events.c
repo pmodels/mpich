@@ -162,7 +162,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
             MPIR_gpu_req yreq;
             mpi_errno =
                 MPIR_Ilocalcopy_gpu(wc_buf, wc->len, MPI_BYTE, 0, NULL, recv_buf, recv_count,
-                                    datatype, 0, NULL, engine_type, 1, &yreq);
+                                    datatype, 0, NULL, MPL_GPU_COPY_H2D, engine_type, 1, &yreq);
             MPIR_ERR_CHECK(mpi_errno);
             actual_unpack_bytes = wc->len;
             task =
@@ -257,7 +257,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
                 MPIR_Ilocalcopy_gpu(wc_buf, (MPI_Aint) wc->len, MPI_BYTE, 0, NULL,
                                     (char *) recv_buf, (MPI_Aint) recv_count, datatype,
                                     MPIDI_OFI_REQUEST(rreq, pipeline_info.offset), NULL,
-                                    engine_type, 1, &yreq);
+                                    MPL_GPU_COPY_H2D, engine_type, 1, &yreq);
             MPIR_ERR_CHECK(mpi_errno);
             actual_unpack_bytes = wc->len;
             MPIDI_OFI_REQUEST(rreq, pipeline_info.offset) += (size_t) actual_unpack_bytes;
