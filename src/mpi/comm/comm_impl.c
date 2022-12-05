@@ -803,6 +803,10 @@ int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int loc
 
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr)
 {
+    if (comm_ptr == MPIR_Process.comm_parent) {
+        /* We only release comm_parent in MPI_Finalize */
+        return MPI_SUCCESS;
+    }
     return MPIR_Comm_release(comm_ptr);
 }
 
