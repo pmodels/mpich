@@ -14,9 +14,8 @@
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
 #include "mpir_refcount_global.h"
 /* For the VCI granularity, is this overkill? */
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ || \
-      MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-#include "mpir_refcount_pobj.h"
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+#include "mpir_refcount_vci.h"
 #endif
 
 #else

@@ -50,9 +50,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		     "attempting to cancel message sent to self");
 	
-	MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 	rreq = MPIDI_CH3U_Recvq_FDU(sreq->handle, &sreq->dev.match);
-	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 	if (rreq)
 	{
 	    MPIR_Assert(rreq->dev.partner_request == sreq);
@@ -188,9 +186,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
 	csr_pkt->match.parts.context_id = sreq->dev.match.parts.context_id;
 	csr_pkt->sender_req_id = sreq->handle;
 	
-	MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
 	mpi_errno = MPIDI_CH3_iStartMsg(vc, csr_pkt, sizeof(*csr_pkt), &csr_sreq);
-	MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|cancelreq");
 	}
@@ -262,10 +258,7 @@ int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, vo
     MPIDI_Pkt_init(resp_pkt, MPIDI_CH3_PKT_CANCEL_SEND_RESP);
     resp_pkt->sender_req_id = req_pkt->sender_req_id;
     resp_pkt->ack = ack;
-    /* FIXME: This is called within the packet handler */
-    /* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
     mpi_errno = MPIDI_CH3_iStartMsg(vc, resp_pkt, sizeof(*resp_pkt), &resp_sreq);
-    /* MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex); */
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
 			    "**ch3|cancelresp");

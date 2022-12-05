@@ -29,7 +29,7 @@
 /* _INVALID exists to avoid accidental macro evaluations to 0 */
 #define MPICH_THREAD_GRANULARITY__INVALID 0
 #define MPICH_THREAD_GRANULARITY__GLOBAL 1
-#define MPICH_THREAD_GRANULARITY__POBJ 2
+/* removed POBJ */
 #define MPICH_THREAD_GRANULARITY__LOCKFREE 3
 /* _SINGLE is the "null" granularity, where all processes are single-threaded */
 #define MPICH_THREAD_GRANULARITY__SINGLE 4

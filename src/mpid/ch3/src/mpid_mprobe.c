@@ -28,9 +28,7 @@ int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int attr,
                queue and improving the netmod, then do a progress
                test to make some progress. */
             do {
-                MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
                 *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm,&found);
-                MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
                 if (found) goto fn_exit;
 
                 mpi_errno = MPIDI_Anysource_improbe_fn(tag, comm, context_offset, &found, message, status);
@@ -81,9 +79,7 @@ int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int attr,
     MPIDI_CH3_Progress_start(&progress_state);
     do
     {
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
         *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm, &found);
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
         if (found)
             break;
 

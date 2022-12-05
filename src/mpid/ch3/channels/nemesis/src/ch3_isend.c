@@ -14,7 +14,6 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPIR_Request *sreq, void * hdr, intptr_t hd
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
-    int in_cs = FALSE;
 
     MPIR_FUNC_ENTER;
 
@@ -39,9 +38,6 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPIR_Request *sreq, void * hdr, intptr_t hd
      * is the maximum of all possible packet headers */
     hdr_sz = sizeof(MPIDI_CH3_Pkt_t);
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t*)hdr);
-
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    in_cs = TRUE;
 
     if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq))
     {
@@ -79,10 +75,6 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPIR_Request *sreq, void * hdr, intptr_t hd
 
 
  fn_exit:
-    if (in_cs) {
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    }
-
     MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:

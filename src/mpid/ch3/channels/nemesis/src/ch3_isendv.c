@@ -17,7 +17,6 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, struct iovec *iov, int
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
     int j;
-    int in_cs = FALSE;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
 
     MPIR_FUNC_ENTER;
@@ -56,9 +55,6 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, struct iovec *iov, int
      * the maximum of all possible packet headers */
     iov[0].iov_len = sizeof(MPIDI_CH3_Pkt_t);
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)iov[0].iov_base);
-
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    in_cs = TRUE;
 
     if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq))
     {
@@ -175,10 +171,6 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, struct iovec *iov, int
     }
 
  fn_exit:
-    if (in_cs) {
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    }
-
     MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:

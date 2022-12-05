@@ -204,16 +204,12 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 
     MPIR_FUNC_ENTER;
 
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
-
     MPIR_Assert( vc->state == MPIDI_VC_STATE_ACTIVE ||
 		 vc->state == MPIDI_VC_STATE_REMOTE_CLOSE );
 
     MPIDI_Pkt_init(close_pkt, MPIDI_CH3_PKT_CLOSE);
     close_pkt->ack = (vc->state == MPIDI_VC_STATE_ACTIVE) ? FALSE : TRUE;
     
-    /* MT: this is not thread safe, the POBJ CS is scoped to the vc and
-     * doesn't protect this global correctly */
     MPIDI_Outstanding_close_ops += 1;
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,(MPL_DBG_FDEST,
 		  "sending close(%s) on vc (pg=%p) %p to rank %d, ops = %d", 
@@ -244,8 +240,6 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
     }
 
  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
-
     MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:

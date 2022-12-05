@@ -35,9 +35,7 @@ static inline int send_lock_msg(int dest, int lock_type, MPIR_Win * win_ptr)
         lock_pkt->pkt_flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE;
     }
 
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_pkt, sizeof(*lock_pkt), &req);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
     /* release the request returned by iStartMsg */
@@ -73,9 +71,7 @@ static inline int send_unlock_msg(int dest, MPIR_Win * win_ptr, int pkt_flags)
     unlock_pkt->source_win_handle = win_ptr->handle;
     unlock_pkt->pkt_flags = pkt_flags;
 
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, unlock_pkt, sizeof(*unlock_pkt), &req);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
     /* Release the request returned by iStartMsg */
@@ -118,9 +114,7 @@ static inline int MPIDI_CH3I_Send_lock_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_p
                      (MPL_DBG_FDEST, "sending lock ack pkt on vc=%p, source_win_handle=%#08x",
                       vc, lock_ack_pkt->source_win_handle));
 
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_ack_pkt, sizeof(*lock_ack_pkt), &req);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     if (mpi_errno) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
@@ -160,9 +154,7 @@ static inline int MPIDI_CH3I_Send_lock_op_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * wi
                      (MPL_DBG_FDEST, "sending lock op ack pkt on vc=%p, source_win_handle=%#08x",
                       vc, lock_op_ack_pkt->source_win_handle));
 
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_op_ack_pkt, sizeof(*lock_op_ack_pkt), &req);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     if (mpi_errno) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
@@ -192,9 +184,7 @@ static inline int MPIDI_CH3I_Send_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_ptr,
     ack_pkt->target_rank = win_ptr->comm_ptr->rank;
 
     /* Because this is in a packet handler, it is already within a critical section */
-    /* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
     mpi_errno = MPIDI_CH3_iStartMsg(vc, ack_pkt, sizeof(*ack_pkt), &req);
-    /* MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex); */
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
@@ -225,9 +215,7 @@ static inline int send_decr_at_cnt_msg(int dst, MPIR_Win * win_ptr, int pkt_flag
 
     MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dst, &vc);
 
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, decr_at_cnt_pkt, sizeof(*decr_at_cnt_pkt), &request);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
@@ -261,9 +249,7 @@ static inline int send_flush_msg(int dest, MPIR_Win * win_ptr)
     flush_pkt->target_win_handle = win_ptr->basic_info_table[dest].win_handle;
     flush_pkt->source_win_handle = win_ptr->handle;
 
-    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, flush_pkt, sizeof(*flush_pkt), &req);
-    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
     /* Release the request returned by iStartMsg */

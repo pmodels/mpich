@@ -32,9 +32,7 @@ int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int attr,
                If still not found, call progress, and check again. */
 
             /* check shm*/
-            MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
             found = MPIDI_CH3U_Recvq_FU(source, tag, context, status);
-            MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
             if (!found) {
                 /* not found, check network */
                 mpi_errno = MPIDI_Anysource_iprobe_fn(tag, comm, context_offset, &found, status);
@@ -44,9 +42,7 @@ int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int attr,
                     mpi_errno = MPIDI_CH3_Progress_poke();
                     MPIR_ERR_CHECK(mpi_errno);
                     /* check shm again */
-                    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
                     found = MPIDI_CH3U_Recvq_FU(source, tag, context, status);
-                    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
                     if (!found) {
                         /* check network again */
                         mpi_errno = MPIDI_Anysource_iprobe_fn(tag, comm, context_offset, &found, status);
@@ -76,9 +72,7 @@ int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int attr,
        a request.  Note that in some cases it will be possible to 
        atomically query the unexpected receive list (which is what the
        probe routines are for). */
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     found = MPIDI_CH3U_Recvq_FU( source, tag, context, status );
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     if (!found) {
 	/* Always try to advance progress before returning failure
 	   from the iprobe test.  */
@@ -87,9 +81,7 @@ int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int attr,
 	   a second test of the receive queue if we knew that nothing
 	   had changed */
 	mpi_errno = MPID_Progress_poke();
-	MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 	found = MPIDI_CH3U_Recvq_FU( source, tag, context, status );
-	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     }
 	
     *flag = found;

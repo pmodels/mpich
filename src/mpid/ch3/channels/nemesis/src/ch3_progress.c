@@ -233,11 +233,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
 
     if (!sreq->dev.OnDataAvail)
     {
-        /* MT FIXME-N1 race under per-object, harmless to disable here but
-         * its a symptom of a bigger problem... */
-#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ))
         MPIR_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
-#endif
 
         mpi_errno = MPID_Request_complete(sreq);
         MPIR_ERR_CHECK(mpi_errno);
@@ -281,8 +277,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
     int made_progress = FALSE;
 
     MPIR_FUNC_ENTER;
-
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* sanity: if this doesn't hold, we can't track our local view of completion safely */
     if (is_blocking) {
@@ -487,7 +481,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                  * sections besides the MPIDCOMM CS at this point.
                  * Violating this will probably lead to lock-ordering
                  * deadlocks. */
-                MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                 MPIDI_CH3I_progress_blocked = FALSE;
                 MPIDI_CH3I_progress_wakeup_signalled = FALSE;
             }
@@ -512,7 +505,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #endif
 
  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_EXIT;
     return mpi_errno;
  fn_fail:
@@ -742,10 +734,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
                 reqFn = rreq->dev.OnDataAvail;
                 if (!reqFn)
                 {
-                    /* MT FIXME-N1 */
-#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ))
                     MPIR_Assert(MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_RESP);
-#endif
                     mpi_errno = MPID_Request_complete(rreq);
                     MPIR_ERR_CHECK(mpi_errno);
 
@@ -1111,22 +1100,11 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
 	MPIDI_Comm_get_vc((rreq)->comm, (rreq)->dev.match.parts.rank, &vc);
 
 #ifdef ENABLE_COMM_OVERRIDES
-        /* MT FIXME causes deadlock b/c of the POBJ ordering (acquired
-         * in reverse in some pkt handlers?) */
-        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         /* call vc-specific handler */
 	if (vc->comm_ops && vc->comm_ops->recv_posted)
             vc->comm_ops->recv_posted(vc, rreq);
-        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 #endif
 
-        /* MT FIXME we unfortunately must disable this optimization for now in
-         * per_object mode. There are possibly other ways to synchronize the
-         * fboxes that won't cause lock-ordering deadlocks.  There might also be
-         * ways to do this that don't require a hook on every request post, but
-         * instead do some sort of caching or something analogous to branch
-         * prediction. */
-#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ))
         /* enqueue fastbox */
 
         /* don't enqueue a fastbox for yourself */
@@ -1144,7 +1122,6 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
         local_rank = MPID_NEM_LOCAL_RANK(vc->pg_rank);
 
         MPID_nem_mpich_enqueue_fastbox(local_rank);
-#endif
     }
 
  fn_exit:
@@ -1164,10 +1141,6 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPIR_Request *rreq)
     {
 	matched = anysource_matched(rreq);
     }
-    /* MT FIXME we unfortunately must disable this optimization for now in
-     * per_object mode. There are possibly other ways to synchronize the
-     * fboxes that won't cause lock-ordering deadlocks */
-#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ))
     else
     {
         if (rreq->dev.match.parts.rank == rreq->comm->rank)
@@ -1186,7 +1159,6 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPIR_Request *rreq)
 
         MPID_nem_mpich_dequeue_fastbox(local_rank);
     }
-#endif
 
  fn_exit:
     MPIR_FUNC_EXIT;

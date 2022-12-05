@@ -656,8 +656,6 @@ int MPIDI_CH3U_Recvq_DP(MPIR_Request * rreq)
     found = FALSE;
     prev_rreq = NULL;
 
-    /* MT FIXME is this right? or should the caller do this? */
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     MPIR_T_PVAR_TIMER_START(RECVQ, time_failed_matching_postedq);
     cur_rreq = recvq_posted_head;
     while (cur_rreq != NULL) {
@@ -686,8 +684,6 @@ int MPIDI_CH3U_Recvq_DP(MPIR_Request * rreq)
     }
     if (!found)
         MPIR_T_PVAR_TIMER_END(RECVQ, time_failed_matching_postedq);
-
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
     MPIR_FUNC_EXIT;
     return found;
@@ -1091,8 +1087,6 @@ int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
 
     MPIR_FUNC_ENTER;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
-
     MPIR_ERR_SETSIMPLE(error, MPIX_ERR_PROC_FAILED, "**proc_failed");
 
     /* check each req in the posted queue and complete-with-error any requests
@@ -1108,8 +1102,6 @@ int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
         }
     }
     
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
-
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }

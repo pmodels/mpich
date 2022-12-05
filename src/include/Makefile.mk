@@ -25,7 +25,7 @@ noinst_HEADERS +=                   \
     src/include/bsocket.h           \
     src/include/mpir_refcount.h     \
     src/include/mpir_refcount_global.h \
-    src/include/mpir_refcount_pobj.h \
+    src/include/mpir_refcount_vci.h \
     src/include/mpir_refcount_single.h \
     src/include/mpir_refcount.h     \
     src/include/mpir_assert.h       \

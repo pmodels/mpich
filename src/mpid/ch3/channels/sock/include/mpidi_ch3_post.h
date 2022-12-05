@@ -22,10 +22,9 @@
  */
 #define MPIDI_CH3_Progress_start(progress_state_)			\
 {									\
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);\
     (progress_state_)->ch.completion_count = MPIDI_CH3I_progress_completion_count;\
 }
-#define MPIDI_CH3_Progress_end(progress_state_) MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX)
+#define MPIDI_CH3_Progress_end(progress_state_) do { } while (0)
 #define MPIDI_CH3_Progress_poke() (MPIDI_CH3_Progress_test())
 
 int MPIDI_CH3I_Progress(int blocking, MPID_Progress_state * state);
