@@ -27,6 +27,8 @@ parrived 2 arg=-spart=512 arg=-rpart=512 arg=-tot_count=4194304  arg=-iteration=
 parrived 2 arg=-spart=1 arg=-rpart=16 arg=-tot_count=64 arg=-iteration=5
 parrived 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=64 arg=-iteration=5
 parrived 2 arg=-spart=8192 arg=-rpart=512 arg=-tot_count=4194304 arg=-iteration=5
+parrived 2 arg=-spart=33 arg=-rpart=17 arg=-tot_count=561 arg=-iteration=7
+parrived 2 arg=-spart=17 arg=-rpart=33 arg=-tot_count=561 arg=-iteration=7
 
 parrived_wait 2 arg=-spart=1 arg=-rpart=1 arg=-tot_count=64 arg=-iteration=5
 parrived_wait 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-iteration=5
@@ -35,8 +37,18 @@ parrived_wait 2 arg=-spart=512 arg=-rpart=512 arg=-tot_count=4194304 arg=-iterat
 parrived_wait 2 arg=-spart=1 arg=-rpart=16 arg=-tot_count=64 arg=-iteration=5
 parrived_wait 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=64 arg=-iteration=5
 parrived_wait 2 arg=-spart=8192 arg=-rpart=512 arg=-tot_count=4194304 arg=-iteration=5
+parrived_wait 2 arg=-spart=33 arg=-rpart=17 arg=-tot_count=561 arg=-iteration=7
+parrived_wait 2 arg=-spart=17 arg=-rpart=33 arg=-tot_count=561 arg=-iteration=7
 
 parrived_pready_out_of_order 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=512 arg=-iteration=5
+parrived_pready_out_of_order 2 arg=-spart=33 arg=-rpart=17 arg=-tot_count=561 arg=-iteration=7
+parrived_pready_out_of_order 2 arg=-spart=17 arg=-rpart=33 arg=-tot_count=561 arg=-iteration=7
+
+parrived_strided 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-iteration=7 arg=-stride=2
+parrived_strided 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-iteration=7 arg=-stride=4
+parrived_strided 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-iteration=7 arg=-stride=8
+parrived_strided 2 arg=-spart=17 arg=-rpart=33 arg=-tot_count=1122 arg=-iteration=7 arg=-stride=2
+parrived_strided 2 arg=-spart=33 arg=-rpart=17 arg=-tot_count=1122 arg=-iteration=7 arg=-stride=2
 
 multipart 2
 nonblocking_pready 2
