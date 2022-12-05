@@ -157,6 +157,11 @@ int MPIR_finalize_builtin_comms(void)
         MPIR_Free_contextid(COMM_WORLD_CTXID);
     }
 
+    if (MPIR_Process.comm_parent) {
+        mpi_errno = finalize_builtin_comm(MPIR_Process.comm_parent);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Process.comm_parent = NULL;
+    }
 #ifdef MPID_NEEDS_ICOMM_WORLD
     if (MPIR_Process.icomm_world) {
         mpi_errno = finalize_builtin_comm(MPIR_Process.icomm_world);
