@@ -193,6 +193,15 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &true_extent);
 
     if (sendtype_iscontig && recvtype_iscontig) {
+        MPL_pointer_attr_t sendattr, recvattr;
+        if (send_attr == NULL) {
+            MPIR_GPU_query_pointer_attr(sendbuf, &sendattr);
+            send_attr = &sendattr;
+        }
+        if (recv_attr == NULL) {
+            MPIR_GPU_query_pointer_attr(recvbuf, &recvattr);
+            recv_attr = &recvattr;
+        }
         if (copy_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE) {
             mpl_errno =
                 MPL_gpu_fast_memcpy((char *) MPIR_get_contig_ptr(sendbuf, sendtype_true_lb) +
@@ -202,26 +211,10 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_fast_memcpy");
         } else {
-            if (send_attr == NULL) {
-                MPL_pointer_attr_t sendattr;
-                MPIR_GPU_query_pointer_attr(sendbuf, &sendattr);
-                if (sendattr.type == MPL_GPU_POINTER_DEV) {
-                    dev_id = MPL_gpu_get_dev_id_from_attr(&sendattr);
-                }
-            } else if (send_attr->type == MPL_GPU_POINTER_DEV) {
-                dev_id = MPL_gpu_get_dev_id_from_attr(send_attr);
-            }
+            dev_id = MPL_gpu_get_dev_id_from_attr(send_attr);
 
             if (dev_id == -1) {
-                if (recv_attr == NULL) {
-                    MPL_pointer_attr_t recvattr;
-                    MPIR_GPU_query_pointer_attr(recvbuf, &recvattr);
-                    if (recvattr.type == MPL_GPU_POINTER_DEV) {
-                        dev_id = MPL_gpu_get_dev_id_from_attr(&recvattr);
-                    } else {
-                        goto fn_fallback;
-                    }
-                } else if (recv_attr->type == MPL_GPU_POINTER_DEV) {
+                if (recv_attr->type == MPL_GPU_POINTER_DEV) {
                     dev_id = MPL_gpu_get_dev_id_from_attr(recv_attr);
                 } else {
                     /* fallback to do_localcopy */

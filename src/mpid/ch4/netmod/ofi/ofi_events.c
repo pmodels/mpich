@@ -129,7 +129,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
     void *wc_buf = NULL;
     int in_use MPL_UNUSED;
     MPIDI_OFI_gpu_task_t *task = NULL;
-    int engine_type = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_ENGINE_TYPE;
+    int engine_type = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_H2D_ENGINE_TYPE;
 
     MPIR_FUNC_ENTER;
 
@@ -168,7 +168,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
             task =
                 MPIDI_OFI_create_gpu_task(MPIDI_OFI_PIPELINE_RECV, wc_buf,
                                           actual_unpack_bytes, rreq, yreq);
-            DL_APPEND(MPIDI_OFI_global.gpu_queue[vni_local], task);
+            DL_APPEND(MPIDI_OFI_global.gpu_recv_task_queue[vni_local], task);
             MPIDI_OFI_REQUEST(rreq, pipeline_info.offset) += (size_t) actual_unpack_bytes;
             /* Post recv for remaining chunks. */
             for (i = 1; i < n_chunks; i++) {
@@ -215,7 +215,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
              * and do a single unpack in the end. */
             int c;
             MPIR_cc_decr(rreq->cc_ptr, &c);
-            MPIR_Assert(wc->len == MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ);
+            MPIR_Assert(wc->len <= MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ);
             size_t buf_sz = ((size_t) n_chunks) * MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ;
             char *host_buf = NULL;
             MPIDI_OFI_gpu_malloc_pack_buffer((void **) &host_buf, buf_sz);
@@ -264,7 +264,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
             task =
                 MPIDI_OFI_create_gpu_task(MPIDI_OFI_PIPELINE_RECV, wc_buf, actual_unpack_bytes,
                                           rreq, yreq);
-            DL_APPEND(MPIDI_OFI_global.gpu_queue[vni_local], task);
+            DL_APPEND(MPIDI_OFI_global.gpu_recv_task_queue[vni_local], task);
         } else {
             MPIR_Assert(event_id == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_PACKED);
             int c;
@@ -285,7 +285,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
                 task =
                     MPIDI_OFI_create_gpu_task(MPIDI_OFI_PIPELINE_RECV_PACKED, wc_buf,
                                               actual_unpack_bytes, rreq, yreq);
-                DL_APPEND(MPIDI_OFI_global.gpu_queue[vni_local], task);
+                DL_APPEND(MPIDI_OFI_global.gpu_recv_task_queue[vni_local], task);
             }
         }
     }

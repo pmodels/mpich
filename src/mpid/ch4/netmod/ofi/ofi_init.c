@@ -490,10 +490,20 @@ cvars:
       description : >-
         If true, enable pipeline for GPU data transfer.
 
+    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD
+      category    : CH4_OFI
+      type        : int
+      default     : 131072
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        This is the threshold to start using GPU direct RDMA.
+
     - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ
       category    : CH4_OFI
       type        : int
-      default     : 262144
+      default     : 1048576
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -503,7 +513,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK
       category    : CH4_OFI
       type        : int
-      default     : 8
+      default     : 32
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -514,23 +524,34 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_MAX_NUM_BUFFERS
       category    : CH4_OFI
       type        : int
-      default     : 1024
+      default     : 32
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Specifies the total number of buffers for GPU pipeline data transfer
 
-    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_ENGINE_TYPE
+    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_D2H_ENGINE_TYPE
       category    : CH4_OFI
       type        : int
-      default     : 1
+      default     : 0
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        Specifies the GPU engine type for GPU pipeline, default is
-        MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH
+        Specifies the GPU engine type for GPU pipeline on the sender side,
+        default is MPL_GPU_ENGINE_TYPE_COMPUTE
+
+    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_H2D_ENGINE_TYPE
+      category    : CH4_OFI
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the GPU engine type for GPU pipeline on the receiver side,
+        default is MPL_GPU_ENGINE_TYPE_COMPUTE
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
