@@ -70,6 +70,7 @@ typedef struct {
     bool specialized_cache;
     bool print_debug_info;
     bool use_immediate_cmdlist;
+    bool roundrobin_cmdq;
 } MPL_gpu_info_t;
 
 #ifndef MPL_HAVE_GPU
