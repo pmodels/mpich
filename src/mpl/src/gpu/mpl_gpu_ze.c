@@ -699,7 +699,7 @@ static int mmapFunction(int nfds, int *fds, size_t size, void **ptr)
         if (*ptr == (void *) -1) {
             mpl_err = MPL_ERR_GPU_INTERNAL;
             perror("mmap device to host");
-            printf("gdr_handle_open failed fd: %d\n", fds[0]);
+            printf("mmap failed fd: %d size: %ld\n", fds[0], size);
             goto fn_fail;
         }
     } else {
@@ -2058,13 +2058,20 @@ static inline int get_immediate_cmdlist(int *dev, MPL_gpu_copy_direction_t dir, 
     MPL_ze_engine_entry_t *engine_state = device_state->engines + engine;
 
     if (dir == MPL_GPU_COPY_DIRECTION_NONE) {
-        index = engine_state->curQueue;
-        /* move to next queue */
-        engine_state->curQueue++;
-        if (engine_state->curQueue == engine_state->numQueues)
-            engine_state->curQueue = 0;
+        if (MPL_gpu_info.roundrobin_cmdq) {
+            index = engine_state->curQueue;
+            /* move to next queue */
+            engine_state->curQueue++;
+            if (engine_state->curQueue == engine_state->numQueues)
+                engine_state->curQueue = 0;
+        } else {
+            index = 0;
+        }
     } else {
-        index = dir % engine_state->numQueues;
+        if (MPL_gpu_info.roundrobin_cmdq)
+            index = dir % engine_state->numQueues;
+        else
+            index = 0;
     }
 
     if (!engine_state->cmdlists[index]) {
@@ -2168,13 +2175,20 @@ static int MPL_gpu_imemcpy_normal(void *dest_ptr, void *src_ptr, size_t size, in
         ZE_ERR_CHECK(ret);
         int q_index;
         if (dir == MPL_GPU_COPY_DIRECTION_NONE) {
-            q_index = engine_state->curQueue;
-            /* move to next queue */
-            engine_state->curQueue++;
-            if (engine_state->curQueue == engine_state->numQueues)
-                engine_state->curQueue = 0;
+            if (MPL_gpu_info.roundrobin_cmdq) {
+                q_index = engine_state->curQueue;
+                /* move to next queue */
+                engine_state->curQueue++;
+                if (engine_state->curQueue == engine_state->numQueues)
+                    engine_state->curQueue = 0;
+            } else {
+                q_index = 0;
+            }
         } else {
-            q_index = dir % engine_state->numQueues;
+            if (MPL_gpu_info.roundrobin_cmdq)
+                q_index = dir % engine_state->numQueues;
+            else
+                q_index = 0;
         }
         assert(engine_state->cmdQueues);
         ze_command_queue_handle_t cmdq = engine_state->cmdQueues[q_index];

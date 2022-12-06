@@ -70,6 +70,7 @@ typedef struct {
     /* Input */
     int debug_summary;
     bool use_immediate_cmdlist;
+    bool roundrobin_cmdq;
     /* Output */
     bool enable_ipc;
     MPL_gpu_ipc_handle_type_t ipc_handle_type;

@@ -55,6 +55,17 @@ cvars:
       description : >-
         If true, mpl/ze will use immediate command list for copying
 
+    - name        : MPIR_CVAR_GPU_ROUND_ROBIN_COMMAND_QUEUES
+      category    : GPU
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, mpl/ze will use command queues in a round-robin fashion.
+        If false, only command queues of index 0 will be used.
+
     - name        : MPIR_CVAR_NO_COLLECTIVE_FINALIZE
       category    : COLLECTIVE
       type        : boolean
@@ -225,6 +236,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
 
         MPL_gpu_info.specialized_cache = specialized_cache;
         MPL_gpu_info.use_immediate_cmdlist = MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST;
+        MPL_gpu_info.roundrobin_cmdq = MPIR_CVAR_GPU_ROUND_ROBIN_COMMAND_QUEUES;
 
         int mpl_errno = MPL_gpu_init(debug_summary);
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
