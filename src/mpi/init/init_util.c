@@ -119,6 +119,11 @@ void MPII_dump_debug_summary(void)
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     print_setting("thread CS", "per-vci");
 #endif
+#ifdef ENABLE_THREADCOMM
+    print_setting("threadcomm", "enabled");
+#else
+    print_setting("threadcomm", "disabled");
+#endif
 
     printf("==== data structure summary ====\n");
     printf("sizeof(MPIR_Comm): %zd\n", sizeof(MPIR_Comm));
