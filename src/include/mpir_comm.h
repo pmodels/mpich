@@ -174,6 +174,7 @@ struct MPIR_Comm {
     MPIR_Errhandler *errhandler;        /* Pointer to the error handler structure */
     struct MPIR_Comm *local_comm;       /* Defined only for intercomms, holds
                                          * an intracomm for the local group */
+    struct MPIR_Threadcomm *threadcomm; /* Not NULL only if it's associated with a threadcomm */
 
     MPIR_Comm_hierarchy_kind_t hierarchy_kind;  /* flat, parent, node, or node_roots */
     struct MPIR_Comm *node_comm;        /* Comm of processes in this comm that are on
