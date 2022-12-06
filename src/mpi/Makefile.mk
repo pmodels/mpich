@@ -19,6 +19,7 @@ include $(top_srcdir)/src/mpi/rma/Makefile.mk
 include $(top_srcdir)/src/mpi/spawn/Makefile.mk
 include $(top_srcdir)/src/mpi/topo/Makefile.mk
 include $(top_srcdir)/src/mpi/stream/Makefile.mk
+include $(top_srcdir)/src/mpi/threadcomm/Makefile.mk
 
 if BUILD_ROMIO
 SUBDIRS += src/mpi/romio
