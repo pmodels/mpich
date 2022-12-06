@@ -320,7 +320,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         }
         if (!fast_copy) {
             if (dt_contig && MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE >= 0 &&
-                MPL_gpu_query_pointer_is_dev(buf, &attr)) {
+                MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
                 MPL_gpu_engine_type_t engine = MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE;
                 mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
                                                MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
@@ -500,8 +500,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                         actual_pack_bytes = data_sz;
                     }
                 } else {
-                    MPIR_Typerep_pack(buf, count, datatype, 0, host_buf, data_sz,
-                                      &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+                    if (dt_contig && MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE >= 0 &&
+                        MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
+                        MPL_gpu_engine_type_t engine = MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE;
+                        mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
+                                                       host_buf,
+                                                       data_sz, MPI_BYTE, 0, NULL,
+                                                       MPL_GPU_COPY_DIRECTION_NONE, engine, true);
+                        MPIR_ERR_CHECK(mpi_errno);
+                        actual_pack_bytes = data_sz;
+                    } else {
+                        MPIR_Typerep_pack(buf, count, datatype, 0, host_buf, data_sz,
+                                          &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+                    }
                 }
                 MPIR_Assert(actual_pack_bytes == data_sz);
                 send_buf = host_buf;
@@ -533,6 +544,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Common macro used by all MPIDI_NM_mpi_send routines to facilitate tuning */
