@@ -1258,6 +1258,11 @@ fi
 
 AC_DEFINE_UNQUOTED([MPICH_THREAD_REFCOUNT],$thread_refcount,[Method used to implement refcount updates])
 
+# threadcomm feature depends on compiler tls (checked by MPL) and pervci CS
+if test -n "$COMPILER_TLS" -a "$thread_granularity" = "MPICH_THREAD_GRANULARITY__VCI" ; then
+    AC_DEFINE([ENABLE_THREADCOMM], 1, "set to enable threadcomm feature")
+fi
+
 # enable-g
 # strip off multiple options, separated by commas
 save_IFS="$IFS"
