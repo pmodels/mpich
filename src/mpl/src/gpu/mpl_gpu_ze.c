@@ -2290,7 +2290,7 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
     int fds[2], handles[2], status;
-    uint32_t nfds = 1;
+    uint32_t nfds;
     ze_ipc_mem_handle_t ze_ipc_handle[2];
     fd_pid_t h;
     uint64_t mem_id = 0;
@@ -2298,12 +2298,14 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
     mem_id = ptr_attr->prop.id;
 
     if (zexMemGetIpcHandles) {
+        nfds = 0;       /* must initialized to 0 */
         ret = zexMemGetIpcHandles(ze_context, ptr, &nfds, NULL);
         ZE_ERR_CHECK(ret);
         assert(nfds <= 2);
         ret = zexMemGetIpcHandles(ze_context, ptr, &nfds, ze_ipc_handle);
     } else {
         ret = zeMemGetIpcHandle(ze_context, ptr, &ze_ipc_handle[0]);
+        nfds = 1;
     }
     ZE_ERR_CHECK(ret);
 
