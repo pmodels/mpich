@@ -801,11 +801,18 @@ int MPIR_Intercomm_create_from_groups_impl(MPIR_Group * local_group_ptr, int loc
 
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Comm_release(comm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
     if (comm_ptr == MPIR_Process.comm_parent) {
-        /* We only release comm_parent in MPI_Finalize */
-        return MPI_SUCCESS;
+        MPIR_Process.comm_parent = NULL;
     }
-    return MPIR_Comm_release(comm_ptr);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
