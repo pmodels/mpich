@@ -33,9 +33,11 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
 
     int *rank_offset_table;;
     rank_offset_table = MPL_malloc(comm_size * sizeof(int), MPL_MEM_OTHER);
-    rank_offset_table[0] = 0;
-    for (int i = 1; i < comm_size; i++) {
-        rank_offset_table[i] = rank_offset_table[i - 1] + threads_table[i - 1];
+
+    int offset = 0;
+    for (int i = 0; i < comm_size; i++) {
+        offset += threads_table[i];
+        rank_offset_table[i] = offset;
     }
 
     threadcomm->comm = dup_comm;
@@ -135,6 +137,25 @@ int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
 int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
 {
     /* NO-OP */
+    return MPI_SUCCESS;
+}
+
+int MPIR_Threadcomm_size_impl(MPIR_Comm * comm, int *size)
+{
+    MPIR_Assert(comm->threadcomm);
+    MPIR_Threadcomm *threadcomm = comm->threadcomm;
+
+    int comm_size = comm->local_size;
+    *size = threadcomm->rank_offset_table[comm_size - 1];
+    return MPI_SUCCESS;
+}
+
+int MPIR_Threadcomm_rank_impl(MPIR_Comm * comm, int *rank)
+{
+    MPIR_Assert(comm->threadcomm);
+    MPIR_Threadcomm *threadcomm = comm->threadcomm;
+
+    *rank = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, MPIR_Threadcomm_thread_id);
     return MPI_SUCCESS;
 }
 
