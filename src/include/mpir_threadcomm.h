@@ -48,13 +48,19 @@ typedef struct MPIR_Threadcomm {
     (((threadcomm)->rank_offset_table[(threadcomm)->comm->rank] - (threadcomm)->num_threads) + tid)
 
 #ifdef ENABLE_THREADCOMM
+typedef struct MPIR_threadcomm_unexp_t {
+    struct MPIR_threadcomm_unexp_t *next, *prev;
+    char cell[];
+} MPIR_threadcomm_unexp_t;
+
 typedef struct MPIR_threadcomm_tls_t {
     MPIR_Threadcomm *threadcomm;
     int tid;
     /* postponed send request */
-    MPIR_Request *pending_sreqs;
-    /* posted message queue */
-    /* unexpected message queue */
+    MPIR_Request *pending_list;
+    /* recv message queues */
+    MPIR_Request *posted_list;
+    MPIR_threadcomm_unexp_t *unexp_list;
 } MPIR_threadcomm_tls_t;
 
 /* TLS dynamic array to support multiple threadcomms */
@@ -113,6 +119,14 @@ MPL_STATIC_INLINE_PREFIX int MPIR_threadcomm_get_tid(MPIR_Threadcomm * threadcom
     MPIR_threadcomm_tls_t *p = MPIR_threadcomm_get_tls(threadcomm);
     return p->tid;
 }
+
+int MPIR_Threadcomm_isend_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                               int rank, int tag, MPIR_Threadcomm * threadcomm, int attr,
+                               MPIR_Request ** req);
+int MPIR_Threadcomm_irecv_attr(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                               int rank, int tag, MPIR_Threadcomm * threadcomm, int attr,
+                               MPIR_Request ** req);
+int MPIR_Threadcomm_progress(void);
 
 #endif /* ENABLE_THREADCOMM */
 

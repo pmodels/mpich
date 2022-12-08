@@ -222,6 +222,9 @@ struct MPIR_Request {
         struct {
             MPIR_Win *win;
         } rma;                  /* kind : MPIR_REQUEST_KIND__RMA */
+        /* Reserve space for local usages. For example, threadcomm, the actual struct
+         * is defined locally and is used via casting */
+        char dummy[32];
     } u;
 
 #if defined HAVE_DEBUGGER_SUPPORT

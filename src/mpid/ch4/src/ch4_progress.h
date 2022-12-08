@@ -100,6 +100,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
     }
 #endif
 
+#ifdef ENABLE_THREADCOMM
+    MPIR_Threadcomm_progress();
+#endif
+
     if (state->flag & MPIDI_PROGRESS_HOOKS) {
         mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
         MPIR_ERR_CHECK(mpi_errno);
