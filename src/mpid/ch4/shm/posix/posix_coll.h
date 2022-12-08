@@ -10,6 +10,7 @@
 #include "ch4_impl.h"
 #include "ch4_nb_coll_impl.h"
 #include "posix_coll_release_gather.h"
+#include "posix_coll_gpu_streamer.h"
 #include "posix_csel_container.h"
 #include "posix_coll_nb_release_gather.h"
 
@@ -29,6 +30,7 @@ cvars:
         mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
+        stream_read - Uses read-based collective from streamer
 
     - name        : MPIR_CVAR_IBCAST_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
@@ -190,6 +192,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast(void *buffer, MPI_Aint count,
                                            "Bcast release_gather cannot be applied.\n");
             mpi_errno =
                 MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm, errflag);
+            break;
+
+        case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_stream_read:
+            mpi_errno =
+                MPIDI_POSIX_mpi_bcast_gpu_stream_read(buffer, count, datatype, root, comm, errflag);
             break;
 
         case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_mpir:
