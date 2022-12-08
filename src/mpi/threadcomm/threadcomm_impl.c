@@ -6,6 +6,7 @@
 #include "mpiimpl.h"
 
 #ifdef ENABLE_THREADCOMM
+#include "threadcomm_pt2pt.h"
 
 bool MPIR_threadcomm_was_thread_single;
 UT_icd MPIR_threadcomm_icd = { sizeof(MPIR_threadcomm_tls_t), NULL, NULL, NULL };
@@ -55,6 +56,8 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     MPL_atomic_relaxed_store_int(&threadcomm->leave_counter, num_threads);
     MPL_atomic_relaxed_store_int(&threadcomm->barrier_flag, 0);
 
+    /* initialize transport */
+
     MPL_free(threads_table);
 
   fn_exit:
@@ -92,6 +95,8 @@ int MPIR_Threadcomm_free_impl(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(threadcomm->rank_offset_table);
+
+    /* free transport */
 
     MPL_free(threadcomm);
 

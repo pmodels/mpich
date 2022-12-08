@@ -171,6 +171,8 @@ enum MPIR_sched_type {
   (e.g., 'MPIR_Request_send_t') that extends the 'MPIR_Request'.
 
   S*/
+
+#define MPIR_REQUEST_UNION_SIZE  40
 struct MPIR_Request {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
 
@@ -222,6 +224,9 @@ struct MPIR_Request {
         struct {
             MPIR_Win *win;
         } rma;                  /* kind : MPIR_REQUEST_KIND__RMA */
+        /* Reserve space for local usages. For example, threadcomm, the actual struct
+         * is defined locally and is used via casting */
+        char dummy[MPIR_REQUEST_UNION_SIZE];
     } u;
 
 #if defined HAVE_DEBUGGER_SUPPORT

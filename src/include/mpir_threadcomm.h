@@ -8,6 +8,13 @@
 
 #include "utarray.h"
 
+#define MPIR_THREADCOMM_USE_NONE  0
+#define MPIR_THREADCOMM_USE_FBOX  1
+#define MPIR_THREADCOMM_USE_QUEUE 2
+
+/* TODO: add transport implementation */
+#define MPIR_THREADCOMM_TRANSPORT MPIR_THREADCOMM_USE_NONE
+
 typedef struct MPIR_Threadcomm {
     MPIR_OBJECT_HEADER;
     MPIR_Comm *comm;
@@ -43,8 +50,7 @@ typedef struct MPIR_threadcomm_tls_t {
     int tid;
     MPIR_Attribute *attributes;
     /* postponed send request */
-    MPIR_Request *pending_sreqs;
-    /* posted message queue */
+    /* posted receive queue */
     /* unexpected message queue */
 } MPIR_threadcomm_tls_t;
 
@@ -107,6 +113,14 @@ MPL_STATIC_INLINE_PREFIX int MPIR_threadcomm_get_tid(MPIR_Threadcomm * threadcom
     MPIR_threadcomm_tls_t *p = MPIR_threadcomm_get_tls(threadcomm);
     return p->tid;
 }
+
+int MPIR_Threadcomm_isend_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                               int rank, int tag, MPIR_Threadcomm * threadcomm, int attr,
+                               MPIR_Request ** req);
+int MPIR_Threadcomm_irecv_attr(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                               int rank, int tag, MPIR_Threadcomm * threadcomm, int attr,
+                               MPIR_Request ** req, bool has_status);
+int MPIR_Threadcomm_progress(int *made_progress);
 
 #endif /* ENABLE_THREADCOMM */
 
