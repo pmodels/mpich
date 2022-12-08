@@ -63,35 +63,22 @@ int MPIR_Cancel_impl(MPIR_Request * request_ptr)
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
             {
                 if (request_ptr->u.persist.real_request != NULL) {
-                    if (request_ptr->u.persist.real_request->kind != MPIR_REQUEST_KIND__GREQUEST) {
-                        /* jratt@us.ibm.com: I don't know about the bsend
-                         * comment below, but the CC stuff on the next
-                         * line is *really* needed for persistent Bsend
-                         * request cancels.  The CC of the parent was
-                         * disconnected from the child to allow an
-                         * MPI_Wait in user-level to complete immediately
-                         * (mpid/dcmfd/src/persistent/mpid_startall.c).
-                         * However, if the user tries to cancel the parent
-                         * (and thereby cancels the child), we cannot just
-                         * say the request is done.  We need to re-link
-                         * the parent's cc_ptr to the child CC, thus
-                         * causing an MPI_Wait on the parent to block
-                         * until the child is canceled or completed.
-                         */
-                        request_ptr->cc_ptr = request_ptr->u.persist.real_request->cc_ptr;
-                        mpi_errno = MPID_Cancel_send(request_ptr->u.persist.real_request);
-                        MPIR_ERR_CHECK(mpi_errno);
-                    } else {
-                        /* This is needed for persistent Bsend requests */
-                        /* FIXME why do we directly access the partner request's
-                         * cc field?  shouldn't our cc_ptr be set to the address
-                         * of the partner req's cc field? */
-                        mpi_errno = MPIR_Grequest_cancel(request_ptr->u.persist.real_request,
-                                                         MPIR_cc_is_complete(&request_ptr->
-                                                                             u.persist.
-                                                                             real_request->cc));
-                        MPIR_ERR_CHECK(mpi_errno);
-                    }
+                    /* jratt@us.ibm.com: The CC stuff on the next
+                     * line is *really* needed for persistent Bsend
+                     * request cancels.  The CC of the parent was
+                     * disconnected from the child to allow an
+                     * MPI_Wait in user-level to complete immediately
+                     * (mpid/dcmfd/src/persistent/mpid_startall.c).
+                     * However, if the user tries to cancel the parent
+                     * (and thereby cancels the child), we cannot just
+                     * say the request is done.  We need to re-link
+                     * the parent's cc_ptr to the child CC, thus
+                     * causing an MPI_Wait on the parent to block
+                     * until the child is canceled or completed.
+                     */
+                    request_ptr->cc_ptr = request_ptr->u.persist.real_request->cc_ptr;
+                    mpi_errno = MPID_Cancel_send(request_ptr->u.persist.real_request);
+                    MPIR_ERR_CHECK(mpi_errno);
                 } else {
                     MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**requestpersistactive");
                 }
@@ -157,10 +144,6 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
             /* If this is an active persistent request, we must also
              * release the partner request. */
             if (request_ptr->u.persist.real_request != NULL) {
-                if (request_ptr->u.persist.real_request->kind == MPIR_REQUEST_KIND__GREQUEST) {
-                    /* This is needed for persistent Bsend requests */
-                    mpi_errno = MPIR_Grequest_free(request_ptr->u.persist.real_request);
-                }
                 MPIR_Request_free(request_ptr->u.persist.real_request);
             }
             break;
@@ -224,23 +207,9 @@ int MPIR_Request_get_status_impl(MPIR_Request * request_ptr, int *flag, MPI_Stat
             case MPIR_REQUEST_KIND__PREQUEST_SEND:
                 prequest_ptr = request_ptr->u.persist.real_request;
                 if (prequest_ptr != NULL) {
-                    if (prequest_ptr->kind != MPIR_REQUEST_KIND__GREQUEST) {
-                        MPIR_Status_set_cancel_bit(status,
-                                                   MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
-                        mpi_errno = prequest_ptr->status.MPI_ERROR;
-                    } else {
-                        /* This is needed for persistent Bsend requests */
-                        rc = MPIR_Grequest_query(prequest_ptr);
-                        if (mpi_errno == MPI_SUCCESS) {
-                            mpi_errno = rc;
-                        }
-                        MPIR_Status_set_cancel_bit(status,
-                                                   MPIR_STATUS_GET_CANCEL_BIT
-                                                   (prequest_ptr->status));
-                        if (mpi_errno == MPI_SUCCESS) {
-                            mpi_errno = prequest_ptr->status.MPI_ERROR;
-                        }
-                    }
+                    MPIR_Status_set_cancel_bit(status,
+                                               MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                    mpi_errno = prequest_ptr->status.MPI_ERROR;
                 } else {
                     if (request_ptr->status.MPI_ERROR != MPI_SUCCESS) {
                         /* if the persistent request failed to start then
