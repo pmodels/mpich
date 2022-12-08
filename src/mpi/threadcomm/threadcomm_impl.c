@@ -7,7 +7,9 @@
 
 #ifdef ENABLE_THREADCOMM
 
-MPL_TLS int MPIR_Threadcomm_thread_id;
+UT_icd MPIR_threadcomm_icd = { sizeof(MPIR_threadcomm_tls_t), NULL, NULL, NULL };
+
+MPL_TLS UT_array *MPIR_threadcomm_array = NULL;
 
 int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** comm_out)
 {
@@ -123,11 +125,15 @@ int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
     MPIR_Assert(comm->threadcomm);
     MPIR_Threadcomm *threadcomm = comm->threadcomm;
 
-    MPIR_Threadcomm_thread_id = MPL_atomic_fetch_add_int(&threadcomm->next_id, 1);
+    MPIR_threadcomm_tls_t *p;
+    MPIR_THREADCOMM_TLS_ADD(threadcomm, p);
+
+    MPIR_Assert(p);
+    p->tid = MPL_atomic_fetch_add_int(&threadcomm->next_id, 1);
 
     /* Need reset next_id and a barrier to ensure next MPI_Threadcomm_start to work.
      * We can do this at either MPI_Threadcomm_start or MPI_Threadcomm_finish. */
-    if (MPIR_Threadcomm_thread_id == threadcomm->num_threads - 1) {
+    if (p->tid == threadcomm->num_threads - 1) {
         MPL_atomic_store_int(&threadcomm->next_id, 0);
     }
     mpi_errno = thread_barrier(threadcomm);
@@ -140,7 +146,10 @@ int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
 
 int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
 {
-    /* NO-OP */
+    MPIR_Threadcomm *threadcomm = comm->threadcomm;
+    MPIR_Assert(threadcomm);
+
+    MPIR_THREADCOMM_TLS_DELETE(threadcomm);
     return MPI_SUCCESS;
 }
 
@@ -159,8 +168,7 @@ int MPIR_Threadcomm_rank_impl(MPIR_Comm * comm, int *rank)
     MPIR_Assert(comm->threadcomm);
     MPIR_Threadcomm *threadcomm = comm->threadcomm;
 
-    int comm_rank = comm->rank;
-    *rank = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, comm_rank, MPIR_Threadcomm_thread_id);
+    *rank = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, MPIR_threadcomm_get_tid(threadcomm));
     return MPI_SUCCESS;
 }
 
