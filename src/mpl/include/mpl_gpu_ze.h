@@ -36,8 +36,13 @@ typedef struct MPL_cmdlist_pool {
     struct MPL_cmdlist_pool *next, *prev;
 } MPL_cmdlist_pool_t;
 
-typedef struct {
+typedef struct MPL_ze_event {
     ze_event_handle_t event;
+    struct MPL_ze_event *next, *prev;
+} MPL_gpu_event;
+
+typedef struct {
+    MPL_gpu_event *gpu_event;
     MPL_cmdlist_pool_t *cmdList;
 } MPL_gpu_request;
 
