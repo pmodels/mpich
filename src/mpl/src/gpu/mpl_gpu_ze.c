@@ -141,7 +141,12 @@ ze_context_handle_t ze_context;
 uint32_t local_ze_device_count; /* This counts both devices and subdevices */
 uint32_t global_ze_device_count;        /* This counts both devices and subdevices */
 
-#define MPL_ZE_EVENT_POOL_SIZE    (131072)
+#define MPL_ZE_EVENT_POOL_SIZE    (4096)
+
+typedef struct MPL_ze_event_pool {
+    ze_event_pool_handle_t pool;
+    struct MPL_ze_event_pool *next, *prev;
+} MPL_ze_event_pool;
 
 typedef struct {
     ze_command_queue_handle_t *cmdQueues;
@@ -154,7 +159,7 @@ typedef struct {
     int dev_id;
     unsigned int numQueueGroups;
     MPL_ze_engine_entry_t *engines;
-    ze_event_handle_t prev_event[MPL_GPU_COPY_DIRECTION_TYPES]; /* for imemcopy */
+    MPL_gpu_event *prev_event[MPL_GPU_COPY_DIRECTION_TYPES];    /* for imemcpy */
     MPL_cmdlist_pool_t *last_cmdList_entry[MPL_GPU_COPY_DIRECTION_TYPES];       /* for imemcopy */
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
     ze_pci_address_ext_t pci;
@@ -163,7 +168,9 @@ typedef struct {
 } MPL_ze_device_entry_t;
 
 static MPL_ze_device_entry_t *device_states;
-static ze_event_pool_handle_t eventPool;
+
+static MPL_ze_event_pool *ze_event_pools = NULL;
+static MPL_gpu_event *ze_events = NULL;
 
 /* *INDENT-OFF* */
 typedef ze_result_t (*pFnzexMemGetIpcHandles)(ze_context_handle_t, const void *, uint32_t *, ze_ipc_mem_handle_t *);
@@ -850,6 +857,9 @@ static inline int new_ipc_handle_cache(MPL_ze_ipc_handle_entry_t ** entry, int m
     goto fn_exit;
 }
 
+static int MPL_event_pool_add_new_pool(void);
+static void MPL_event_pool_destroy(void);
+
 /* Loads a global ze driver */
 static int gpu_ze_init_driver(void)
 {
@@ -1045,13 +1055,7 @@ static int gpu_ze_init_driver(void)
         MPL_free(queueProperties);
     }
 
-    ze_event_pool_desc_t pool_desc;
-    pool_desc.stype = ZE_STRUCTURE_TYPE_EVENT_POOL_DESC;
-    pool_desc.pNext = NULL;
-    pool_desc.flags = 0;
-    pool_desc.count = MPL_ZE_EVENT_POOL_SIZE;
-    ret = zeEventPoolCreate(ze_context, &pool_desc, 0, NULL, &eventPool);
-    ZE_ERR_CHECK(ret);
+    MPL_event_pool_add_new_pool();
 
     /* driver extension */
     ret =
@@ -1211,7 +1215,7 @@ int MPL_gpu_finalize(void)
     MPL_free(device_states);
     MPL_free(engine_conversion);
 
-    zeEventPoolDestroy(eventPool);
+    MPL_event_pool_destroy();
 
     return MPL_SUCCESS;
 }
@@ -1232,6 +1236,100 @@ int MPL_gpu_ipc_get_handle_type(MPL_gpu_ipc_handle_type_t * type)
 {
     *type = MPL_GPU_IPC_HANDLE_SHAREABLE_FD;
     return MPL_SUCCESS;
+}
+
+static int MPL_event_pool_add_new_pool(void)
+{
+    int mpl_err = MPL_SUCCESS;
+    int ret;
+    ze_event_pool_handle_t event_pool;
+
+    ze_event_pool_desc_t pool_desc;
+    pool_desc.stype = ZE_STRUCTURE_TYPE_EVENT_POOL_DESC;
+    pool_desc.pNext = NULL;
+    pool_desc.flags = 0;
+    pool_desc.count = MPL_ZE_EVENT_POOL_SIZE;
+    ret = zeEventPoolCreate(ze_context, &pool_desc, 0, NULL, &event_pool);
+    ZE_ERR_CHECK(ret);
+
+    MPL_ze_event_pool *ep =
+        (MPL_ze_event_pool *) MPL_calloc(1, sizeof(MPL_ze_event_pool), MPL_MEM_OTHER);
+    if (ep == NULL) {
+        mpl_err = MPL_ERR_GPU_NOMEM;
+        goto fn_exit;
+    }
+    ep->pool = event_pool;
+    DL_APPEND(ze_event_pools, ep);
+
+    for (int i = 0; i < MPL_ZE_EVENT_POOL_SIZE; i++) {
+        ze_event_handle_t event = NULL;
+        ze_event_desc_t event_desc = {
+            .stype = ZE_STRUCTURE_TYPE_EVENT_DESC,
+            .pNext = NULL,
+            .index = i,
+            .signal = ZE_EVENT_SCOPE_FLAG_HOST,
+            .wait = ZE_EVENT_SCOPE_FLAG_HOST
+        };
+        ret = zeEventCreate(event_pool, &event_desc, &event);
+        ZE_ERR_CHECK(ret);
+        MPL_gpu_event *e = (MPL_gpu_event *) MPL_calloc(1, sizeof(MPL_gpu_event), MPL_MEM_OTHER);
+        if (e == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_exit;
+        }
+        e->event = event;
+        DL_APPEND(ze_events, e);
+    }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+static inline int MPL_event_pool_get_event(MPL_gpu_event ** event)
+{
+    int mpl_err = MPL_SUCCESS;
+    MPL_gpu_event *e = NULL;
+
+    if (ze_events == NULL) {
+        mpl_err = MPL_event_pool_add_new_pool();
+        if (mpl_err != MPL_SUCCESS) {
+            goto fn_fail;
+        }
+    }
+    assert(ze_events);
+    e = ze_events;
+    DL_DELETE(ze_events, e);
+    zeEventHostReset(e->event);
+    *event = e;
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+static inline void MPL_event_pool_push_event(MPL_gpu_event * gpu_event)
+{
+    DL_APPEND(ze_events, gpu_event);
+}
+
+static void MPL_event_pool_destroy(void)
+{
+    MPL_gpu_event *e, *e_tmp;
+    MPL_ze_event_pool *ep, *ep_tmp;
+
+    DL_FOREACH_SAFE(ze_events, e, e_tmp) {
+        zeEventDestroy(e->event);
+        MPL_free(e);
+    }
+    DL_FOREACH_SAFE(ze_event_pools, ep, ep_tmp) {
+        zeEventPoolDestroy(ep->pool);
+        MPL_free(ep);
+    }
 }
 
 /* given a local device pointer, create an IPC handle */
@@ -1910,32 +2008,6 @@ static inline int get_immediate_cmdlist(int *dev, MPL_gpu_copy_direction_t dir, 
     goto fn_exit;
 }
 
-static inline int get_next_event(ze_event_handle_t * event)
-{
-    static int pool_idx = 0;
-    int mpl_err = MPL_SUCCESS;
-    int ret;
-
-    *event = NULL;
-    ze_event_desc_t event_desc = {
-        .stype = ZE_STRUCTURE_TYPE_EVENT_DESC,
-        .pNext = NULL,
-        .signal = ZE_EVENT_SCOPE_FLAG_HOST,
-        .wait = ZE_EVENT_SCOPE_FLAG_HOST
-    };
-    event_desc.index = pool_idx++;
-    if (pool_idx >= MPL_ZE_EVENT_POOL_SIZE)
-        pool_idx = 0;
-    ret = zeEventCreate(eventPool, &event_desc, event);
-    ZE_ERR_CHECK(ret);
-
-  fn_exit:
-    return mpl_err;
-  fn_fail:
-    mpl_err = MPL_ERR_GPU_INTERNAL;
-    goto fn_exit;
-}
-
 /* no safety check in this function, call this function with safety protection.
    commit = false: append to command list only
    commit = true:  close the command list and submit to command queue
@@ -1949,7 +2021,7 @@ static int MPL_gpu_imemcpy_normal(void *dest_ptr, void *src_ptr, size_t size, in
 {
     int mpl_err = MPL_SUCCESS;
     MPL_ze_device_entry_t *device_state = NULL;
-    ze_event_handle_t event;
+    MPL_gpu_event *mpl_event;
     ze_command_list_handle_t cmdList = NULL;
     MPL_cmdlist_pool_t *cmdList_entry;
     int ret;
@@ -1959,9 +2031,9 @@ static int MPL_gpu_imemcpy_normal(void *dest_ptr, void *src_ptr, size_t size, in
     assert(dev >= 0 && dev < local_ze_device_count);
 
     if (dest_ptr && src_ptr) {
-        ze_event_handle_t pre_event = NULL;
+        MPL_gpu_event *pre_event = NULL;
         int nevent = 0;
-        ret = get_next_event(&event);
+        ret = MPL_event_pool_get_event(&mpl_event);
         ZE_ERR_CHECK(ret);
         device_state = device_states + dev;
         if (dir == MPL_GPU_COPY_DIRECTION_NONE) {
@@ -1984,19 +2056,19 @@ static int MPL_gpu_imemcpy_normal(void *dest_ptr, void *src_ptr, size_t size, in
             }
             if (device_states[orig_dev].last_cmdList_entry[dir]->dev != dev)
                 goto fn_fail;
-            device_state->prev_event[dir] = event;
+            device_state->prev_event[dir] = mpl_event;
         }
         assert(dev < local_ze_device_count);
         ret =
-            zeCommandListAppendMemoryCopy(cmdList, dest_ptr, src_ptr, size, event, nevent,
-                                          pre_event ? &pre_event : NULL);
+            zeCommandListAppendMemoryCopy(cmdList, dest_ptr, src_ptr, size, mpl_event->event,
+                                          nevent, pre_event ? &pre_event->event : NULL);
         ZE_ERR_CHECK(ret);
-        req->event = event;
+        req->gpu_event = mpl_event;
     } else {
         /* unlikely */
         device_state = device_states + dev;
         assert(device_state->prev_event[dir]);
-        req->event = device_state->prev_event[dir];
+        req->gpu_event = device_state->prev_event[dir];
         assert(dir < MPL_GPU_COPY_DIRECTION_TYPES);
         cmdList_entry = device_states[orig_dev].last_cmdList_entry[dir];
         assert(cmdList_entry);
@@ -2050,7 +2122,7 @@ int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
     int mpl_err = MPL_SUCCESS;
     int ret;
     MPL_ze_device_entry_t *device_state = NULL;
-    ze_event_handle_t event, pre_event = NULL;
+    MPL_gpu_event *mpl_event, *pre_event = NULL;
     ze_command_list_handle_t cmdl;
     int nevent = 0;
     int engine = -1;
@@ -2071,7 +2143,7 @@ int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
 
     assert(dest_ptr && src_ptr);
 
-    ret = get_next_event(&event);
+    ret = MPL_event_pool_get_event(&mpl_event);
     ZE_ERR_CHECK(ret);
     ret = get_immediate_cmdlist(&dev, dir, engine, &cmdl);
     ZE_ERR_CHECK(ret);
@@ -2082,14 +2154,14 @@ int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
             nevent = 1;
             pre_event = device_state->prev_event[dir];
         }
-        device_state->prev_event[dir] = event;
+        device_state->prev_event[dir] = mpl_event;
     }
     ret =
-        zeCommandListAppendMemoryCopy(cmdl, dest_ptr, src_ptr, size, event, nevent,
-                                      nevent ? &pre_event : NULL);
+        zeCommandListAppendMemoryCopy(cmdl, dest_ptr, src_ptr, size, mpl_event->event, nevent,
+                                      nevent ? &pre_event->event : NULL);
     ZE_ERR_CHECK(ret);
     req->cmdList = NULL;
-    req->event = event;
+    req->gpu_event = mpl_event;
 
   fn_exit:
     return mpl_err;
@@ -2103,14 +2175,15 @@ int MPL_gpu_test(MPL_gpu_request * req, int *completed)
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
 
-    assert(req->event);
-    ret = zeEventQueryStatus(req->event);
+    assert(req->gpu_event->event);
+    ret = zeEventQueryStatus(req->gpu_event->event);
     if (ret == ZE_RESULT_SUCCESS) {
         *completed = 1;
         if (req->cmdList) {
             DL_APPEND(device_states[req->cmdList->dev].engines[req->cmdList->engine].cmdList_pool,
                       req->cmdList);
         }
+        MPL_event_pool_push_event(req->gpu_event);
     } else if (ret != ZE_RESULT_NOT_READY) {
         assert(0);
         goto fn_fail;
