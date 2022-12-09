@@ -95,7 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
             MPL_gpu_engine_type_t engine = MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE;
             mpi_errno =
                 MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
-                                   MPI_BYTE, 0, &attr, recv_buf, count, MPI_BYTE, 0, NULL,
+                                   MPI_BYTE, 0, NULL, recv_buf, count, MPI_BYTE, 0, &attr,
                                    MPL_GPU_COPY_DIRECTION_NONE, engine, true);
             MPIR_ERR_CHECK(mpi_errno);
         } else {

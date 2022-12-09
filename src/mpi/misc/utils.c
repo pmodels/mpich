@@ -211,7 +211,8 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_fast_memcpy");
         } else {
-            dev_id = MPL_gpu_get_dev_id_from_attr(send_attr);
+            if (send_attr->type == MPL_GPU_POINTER_DEV)
+                dev_id = MPL_gpu_get_dev_id_from_attr(send_attr);
 
             if (dev_id == -1) {
                 if (recv_attr->type == MPL_GPU_POINTER_DEV) {
