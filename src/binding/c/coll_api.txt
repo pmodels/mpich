@@ -73,6 +73,7 @@ MPI_Allgatherv_init:
 MPI_Allreduce:
     .desc: Combines values from all processes and distributes the result back to all processes
     .docnotes: collops
+    .extra: threadcomm
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
         if (sendbuf != MPI_IN_PLACE) {

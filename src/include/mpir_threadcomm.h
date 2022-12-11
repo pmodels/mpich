@@ -48,6 +48,28 @@ typedef struct MPIR_Threadcomm {
     (((threadcomm)->rank_offset_table[(threadcomm)->comm->rank] - (threadcomm)->num_threads) + tid)
 
 #ifdef ENABLE_THREADCOMM
+#define MPIR_THREADCOMM_RANK_SIZE(comm, rank_, size_) do { \
+        MPIR_Threadcomm *threadcomm = (comm)->threadcomm; \
+        if (threadcomm) { \
+            int intracomm_size = (comm)->local_size; \
+            size_ = threadcomm->rank_offset_table[intracomm_size - 1]; \
+            rank_ = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, MPIR_threadcomm_get_tid(threadcomm)); \
+        } else { \
+            rank_ = (comm)->rank; \
+            size_ = (comm)->local_size; \
+        } \
+    } while (0)
+
+#else
+#define MPIR_THREADCOMM_RANK_SIZE(comm, rank_, size_) do { \
+        MPIR_Assert((comm)->threadcomm == NULL); \
+        rank_ = (comm)->rank; \
+        size_ = (comm)->local_size; \
+    } while (0)
+
+#endif
+
+#ifdef ENABLE_THREADCOMM
 typedef struct MPIR_threadcomm_unexp_t {
     struct MPIR_threadcomm_unexp_t *next, *prev;
     char cell[];

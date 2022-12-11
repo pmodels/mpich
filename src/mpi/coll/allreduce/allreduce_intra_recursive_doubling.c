@@ -4,6 +4,7 @@
  */
 
 #include "mpiimpl.h"
+#include "mpir_threadcomm.h"
 
 /*
  * Algorithm: Recursive Doubling
@@ -31,8 +32,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -53,7 +53,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     }
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = comm_ptr->coll.pof2;
+    pof2 = MPL_pof2(comm_size);
 
     rem = comm_size - pof2;
 
