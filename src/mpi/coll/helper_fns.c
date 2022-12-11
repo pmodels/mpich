@@ -15,6 +15,39 @@
    sends/receives by setting the context offset MPIR_CONTEXT_COLL_OFFSET.
  */
 
+#ifdef ENABLE_THREADCOMM
+#define DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
+    do { \
+        if (comm_ptr->threadcomm) { \
+            mpi_errno = MPIR_Threadcomm_isend_attr(buf, count, datatype, dest, tag, \
+                                                   comm_ptr->threadcomm, attr, req); \
+        } else { \
+            mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr, attr, req); \
+        } \
+    } while (0)
+
+#define DO_MPID_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, req) \
+    do { \
+        if (comm_ptr->threadcomm) { \
+            mpi_errno = MPIR_Threadcomm_irecv_attr(buf, count, datatype, source, tag, \
+                                                   comm_ptr->threadcomm, attr, req, true); \
+        } else { \
+            mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr, attr, req); \
+        } \
+    } while (0)
+
+#else
+#define DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, req) \
+    do { \
+        mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr, attr, req); \
+    } while (0)
+
+#define DO_MPID_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, req) \
+    do { \
+        mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr, attr, req); \
+    } while (0)
+#endif
+
 int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -114,7 +147,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
     MPIR_PT2PT_ATTR_SET_CONTEXT_OFFSET(attr, MPIR_CONTEXT_COLL_OFFSET);
     MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
 
-    mpi_errno = MPID_Send(buf, count, datatype, dest, tag, comm_ptr, attr, &request_ptr);
+    DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, &request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     if (request_ptr) {
         mpi_errno = MPIC_Wait(request_ptr);
@@ -159,7 +192,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     if (status == MPI_STATUS_IGNORE)
         status = &mystatus;
 
-    mpi_errno = MPID_Recv(buf, count, datatype, source, tag, comm_ptr, attr, status, &request_ptr);
+    DO_MPID_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, &request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     if (request_ptr) {
         mpi_errno = MPIC_Wait(request_ptr);
@@ -168,12 +201,6 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
         *status = request_ptr->status;
         mpi_errno = status->MPI_ERROR;
         MPIR_Request_free(request_ptr);
-    } else {
-        mpi_errno = MPIR_Process_status(status);
-    }
-
-    if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
-        MPIR_Assert(status->MPI_TAG == tag);
     }
 
   fn_exit:
@@ -210,7 +237,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
     MPIR_PT2PT_ATTR_SET_SYNCFLAG(attr);
 
-    mpi_errno = MPID_Send(buf, count, datatype, dest, tag, comm_ptr, attr, &request_ptr);
+    DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, &request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     if (request_ptr) {
         mpi_errno = MPIC_Wait(request_ptr);
@@ -260,8 +287,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
                             "**nomemreq");
         MPIR_Status_set_procnull(&recv_req_ptr->status);
     } else {
-        mpi_errno = MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag,
-                               comm_ptr, attr, &recv_req_ptr);
+        DO_MPID_IRECV(recvbuf, recvcount, recvtype, source, recvtag, comm_ptr, attr, &recv_req_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -272,8 +298,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
                             "**nomemreq");
     } else {
         MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
-        mpi_errno = MPID_Isend(sendbuf, sendcount, sendtype, dest, sendtag,
-                               comm_ptr, attr, &send_req_ptr);
+        DO_MPID_ISEND(sendbuf, sendcount, sendtype, dest, sendtag, comm_ptr, attr, &send_req_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -363,7 +388,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Status_set_procnull(&rreq->status);
     } else {
-        mpi_errno = MPID_Irecv(buf, count, datatype, source, recvtag, comm_ptr, attr, &rreq);
+        DO_MPID_IRECV(buf, count, datatype, source, recvtag, comm_ptr, attr, &rreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -373,8 +398,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
         MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
-        mpi_errno = MPID_Isend(tmpbuf, actual_pack_bytes, MPI_PACKED, dest,
-                               sendtag, comm_ptr, attr, &sreq);
+        DO_MPID_ISEND(tmpbuf, actual_pack_bytes, MPI_PACKED, dest, sendtag, comm_ptr, attr, &sreq);
         MPIR_ERR_CHECK(mpi_errno);
         if (mpi_errno != MPI_SUCCESS) {
             /* --BEGIN ERROR HANDLING-- */
@@ -440,7 +464,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     MPIR_PT2PT_ATTR_SET_CONTEXT_OFFSET(attr, MPIR_CONTEXT_COLL_OFFSET);
     MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
 
-    mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr, attr, request_ptr);
+    DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -475,7 +499,7 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
     MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
     MPIR_PT2PT_ATTR_SET_SYNCFLAG(attr);
 
-    mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr, attr, request_ptr);
+    DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -509,7 +533,7 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
 
     MPIR_PT2PT_ATTR_SET_CONTEXT_OFFSET(attr, MPIR_CONTEXT_COLL_OFFSET);
 
-    mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr, attr, request_ptr);
+    DO_MPID_IRECV(buf, count, datatype, source, tag, comm_ptr, attr, request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
