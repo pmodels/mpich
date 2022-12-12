@@ -73,18 +73,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Isend_coll(const void *buf,
-                                             MPI_Aint count,
-                                             MPI_Datatype datatype,
-                                             int rank,
-                                             int tag,
-                                             MPIR_Comm * comm, int attr,
-                                             MPIR_Request ** request, MPIR_Errflag_t errflag)
-{
-    MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
-    return MPID_Isend(buf, count, datatype, rank, tag, comm, attr, request);
-}
-
 MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
@@ -92,17 +80,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
                                        int tag, MPIR_Comm * comm, int attr, MPIR_Request ** request)
 {
     return MPID_Isend(buf, count, datatype, rank, tag, comm, attr, request);
-}
-
-MPL_STATIC_INLINE_PREFIX int MPID_Send_coll(const void *buf,
-                                            MPI_Aint count,
-                                            MPI_Datatype datatype,
-                                            int rank,
-                                            int tag,
-                                            MPIR_Comm * comm, int attr,
-                                            MPIR_Request ** request, MPIR_Errflag_t errflag)
-{
-    return MPID_Isend_coll(buf, count, datatype, rank, tag, comm, attr, request, errflag);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
