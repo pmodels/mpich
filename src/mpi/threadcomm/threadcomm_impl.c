@@ -21,6 +21,7 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     MPIR_Comm *dup_comm;
     mpi_errno = MPIR_Comm_dup_impl(comm, &dup_comm);
     MPIR_ERR_CHECK(mpi_errno);
+    dup_comm->threadcomm = threadcomm;
 
     int *threads_table;
     threads_table = MPL_malloc(comm_size * sizeof(int), MPL_MEM_OTHER);
