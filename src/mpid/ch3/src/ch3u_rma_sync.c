@@ -706,8 +706,7 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
 
             if (dst != rank) {
                 MPIR_Request *req_ptr;
-                mpi_errno = MPID_Isend(&i, 0, MPI_INT, dst, SYNC_POST_TAG, win_comm_ptr,
-                                       MPIR_CONTEXT_INTRA_PT2PT, &req_ptr);
+                mpi_errno = MPID_Isend(&i, 0, MPI_INT, dst, SYNC_POST_TAG, win_comm_ptr, 0, &req_ptr);
                 MPIR_ERR_CHECK(mpi_errno);
                 req[i] = req_ptr->handle;
             }
@@ -824,7 +823,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
                 MPIDI_Comm_get_vc(comm_ptr, src, &target_vc);
 
                 mpi_errno = MPID_Irecv(NULL, 0, MPI_INT, src, SYNC_POST_TAG,
-                                       comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &req_ptr);
+                                       comm_ptr, 0, &req_ptr);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {

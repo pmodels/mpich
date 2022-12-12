@@ -281,7 +281,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
         case MPIDU_SCHED_ENTRY_PT2PT_SEND:
             ret_errno = MPID_Isend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
                                    e->u.send.dest, e->u.send.tag, e->u.send.comm,
-                                   MPIR_CONTEXT_INTRA_PT2PT, &e->u.send.sreq);
+                                   0, &e->u.send.sreq);
             if (unlikely(ret_errno)) {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
             } else {
@@ -291,7 +291,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
         case MPIDU_SCHED_ENTRY_PT2PT_RECV:
             ret_errno = MPID_Irecv(e->u.recv.buf, e->u.recv.count, e->u.recv.datatype,
                                    e->u.recv.src, e->u.recv.tag, e->u.recv.comm,
-                                   MPIR_CONTEXT_INTRA_PT2PT, &e->u.recv.rreq);
+                                   0, &e->u.recv.rreq);
             if (unlikely(ret_errno)) {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
             } else {

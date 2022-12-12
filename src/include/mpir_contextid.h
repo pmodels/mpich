@@ -48,10 +48,8 @@ typedef uint16_t MPIR_Context_id_t;
 #define MPIR_CONTEXT_SUFFIX_WIDTH (1)
 #define MPIR_CONTEXT_SUFFIX_SHIFT (0)
 #define MPIR_CONTEXT_SUFFIX_MASK ((1 << MPIR_CONTEXT_SUFFIX_WIDTH) - 1)
-#define MPIR_CONTEXT_INTRA_PT2PT (0)
-#define MPIR_CONTEXT_INTRA_COLL  (1)
-#define MPIR_CONTEXT_INTER_PT2PT (0)
-#define MPIR_CONTEXT_INTER_COLL  (1)
+#define MPIR_CONTEXT_PT2PT_OFFSET 0
+#define MPIR_CONTEXT_COLL_OFFSET  1
 
 /* Used to derive context IDs for sub-communicators from a parent communicator's
    context ID value.  This field comes after the one bit suffix.
