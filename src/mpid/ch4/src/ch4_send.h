@@ -79,9 +79,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend_coll(const void *buf,
                                              int rank,
                                              int tag,
                                              MPIR_Comm * comm, int attr,
-                                             MPIR_Request ** request, MPIR_Errflag_t * errflag)
+                                             MPIR_Request ** request, MPIR_Errflag_t errflag)
 {
-    MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, *errflag);
+    MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
     return MPID_Isend(buf, count, datatype, rank, tag, comm, attr, request);
 }
 
@@ -100,7 +100,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send_coll(const void *buf,
                                             int rank,
                                             int tag,
                                             MPIR_Comm * comm, int attr,
-                                            MPIR_Request ** request, MPIR_Errflag_t * errflag)
+                                            MPIR_Request ** request, MPIR_Errflag_t errflag)
 {
     return MPID_Isend_coll(buf, count, datatype, rank, tag, comm, attr, request, errflag);
 }

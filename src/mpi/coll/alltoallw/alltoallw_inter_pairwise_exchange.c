@@ -23,7 +23,7 @@ int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint s
                                            const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                            void *recvbuf, const MPI_Aint recvcounts[],
                                            const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                           MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                           MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int local_size, remote_size, max_size, i;
     int mpi_errno = MPI_SUCCESS;
@@ -68,18 +68,7 @@ int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint s
                                   dst, MPIR_ALLTOALLW_TAG, recvaddr,
                                   recvcount, recvtype, src,
                                   MPIR_ALLTOALLW_TAG, comm_ptr, &status, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
+    return mpi_errno_ret;
 }

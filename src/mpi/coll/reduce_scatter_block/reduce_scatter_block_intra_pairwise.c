@@ -25,7 +25,7 @@ int MPIR_Reduce_scatter_block_intra_pairwise(const void *sendbuf,
                                              MPI_Aint recvcount,
                                              MPI_Datatype datatype,
                                              MPI_Op op,
-                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
@@ -94,14 +94,7 @@ int MPIR_Reduce_scatter_block_intra_pairwise(const void *sendbuf,
                                       MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr,
                                       MPI_STATUS_IGNORE, errflag);
 
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         if (sendbuf != MPI_IN_PLACE) {
             mpi_errno = MPIR_Reduce_local(tmp_recvbuf, recvbuf, recvcount, datatype, op);
@@ -128,14 +121,8 @@ int MPIR_Reduce_scatter_block_intra_pairwise(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    /* --END ERROR HANDLING-- */
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

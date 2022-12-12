@@ -122,7 +122,6 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     int i, same_disp, mpi_errno = MPI_SUCCESS;
     uint32_t first;
     uint64_t local_key = 0;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *comm_ptr = win->comm_ptr;
     MPIDI_OFI_win_targetinfo_t *winfo;
     int nic = 0;
@@ -138,7 +137,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
              * available to the processes involved in the RMA window. Use the current maximum + 1
              * to ensure that the key is available for all processes. */
             mpi_errno = MPIR_Allreduce(&MPIDI_OFI_global.global_max_optimized_mr_key, &local_key, 1,
-                                       MPI_UNSIGNED, MPI_MAX, comm_ptr, &errflag);
+                                       MPI_UNSIGNED, MPI_MAX, comm_ptr, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (local_key + 1 < MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS) {
@@ -210,7 +209,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     }
 
     /* Check if any process fails to register. If so, release local MR and force AM path. */
-    MPIR_Allreduce(&rc, &allrc, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
+    MPIR_Allreduce(&rc, &allrc, 1, MPI_INT, MPI_MIN, comm_ptr, MPIR_ERR_NONE);
     if (allrc < 0) {
         if (rc >= 0 && MPIDI_OFI_WIN(win).mr)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), fi_close);
@@ -234,7 +233,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0,
                                MPI_DATATYPE_NULL,
-                               winfo, sizeof(*winfo), MPI_BYTE, comm_ptr, &errflag);
+                               winfo, sizeof(*winfo), MPI_BYTE, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
@@ -917,7 +916,6 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *comm_ptr = win->comm_ptr;
     dwin_target_mr_t *target_mrs;
     int mpl_err = MPL_SUCCESS, i;
@@ -960,7 +958,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     }
 
     /* Check if any process fails to register. If so, release local MR and force AM path. */
-    MPIR_Allreduce(&rc, &allrc, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
+    MPIR_Allreduce(&rc, &allrc, 1, MPI_INT, MPI_MIN, comm_ptr, MPIR_ERR_NONE);
     if (allrc < 0) {
         if (rc >= 0)
             MPIDI_OFI_CALL(fi_close(&mr->fid), fi_close);
@@ -985,7 +983,8 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     target_mrs[comm_ptr->rank].size = (uintptr_t) size;
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0,
                                MPI_DATATYPE_NULL,
-                               target_mrs, sizeof(dwin_target_mr_t), MPI_BYTE, comm_ptr, &errflag);
+                               target_mrs, sizeof(dwin_target_mr_t), MPI_BYTE, comm_ptr,
+                               MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Insert each remote MR which will be searched when issuing an RMA operation
@@ -1017,7 +1016,6 @@ int MPIDI_OFI_mpi_win_detach_hook(MPIR_Win * win, const void *base)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *comm_ptr = win->comm_ptr;
     const void **target_bases;
     int mpl_err = MPL_SUCCESS, i;
@@ -1043,7 +1041,8 @@ int MPIDI_OFI_mpi_win_detach_hook(MPIR_Win * win, const void *base)
      * that all processes collectively call detach. */
     target_bases[comm_ptr->rank] = base;
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                               target_bases, sizeof(const void *), MPI_BYTE, comm_ptr, &errflag);
+                               target_bases, sizeof(const void *), MPI_BYTE, comm_ptr,
+                               MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Search and delete each remote MR */

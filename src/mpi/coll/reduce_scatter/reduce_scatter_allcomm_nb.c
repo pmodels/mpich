@@ -7,7 +7,7 @@
 
 int MPIR_Reduce_scatter_allcomm_nb(const void *sendbuf, void *recvbuf, const MPI_Aint recvcounts[],
                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                   MPIR_Errflag_t * errflag)
+                                   MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req_ptr = NULL;
@@ -17,7 +17,7 @@ int MPIR_Reduce_scatter_allcomm_nb(const void *sendbuf, void *recvbuf, const MPI
         MPIR_Ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, &req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIC_Wait(req_ptr, errflag);
+    mpi_errno = MPIC_Wait(req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Request_free(req_ptr);
 

@@ -109,9 +109,10 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
                                  void *recvbuf,
                                  MPI_Aint recvcnt,
                                  MPI_Datatype recvtype, MPIR_Comm * comm, int k,
-                                 MPIR_Errflag_t * errflag)
+                                 MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int i, j;
     int rank, size;
     int nphases, max;
@@ -252,9 +253,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
             mpi_errno =
                 MPIC_Irecv(tmp_rbuf[j - 1], packsize, MPI_BYTE, src, MPIR_ALLTOALL_TAG, comm,
                            &reqs[num_reqs++]);
-            if (mpi_errno) {
-                MPIR_ERR_POP(mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             mpi_errno =
                 MPIC_Isend(tmp_sbuf[j - 1], packsize, MPI_BYTE, dst, MPIR_ALLTOALL_TAG, comm,
@@ -264,7 +263,8 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
             }
         }
 
-        MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE, errflag);
+        MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         for (j = 1; j < k; j++) {
             if (delta * j >= size)      /* if the first location exceeds comm size, nothing is to be sent */
@@ -328,7 +328,8 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
     MPIR_CHKLMEM_FREEALL();
 
   fn_exit:
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

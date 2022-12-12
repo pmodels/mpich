@@ -13,7 +13,6 @@ int MPIR_Neighbor_alltoallv_allcomm_nb(const void *sendbuf, const MPI_Aint sendc
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req_ptr = NULL;
-    MPIR_Errflag_t errflag;
 
     /* just call the nonblocking version and wait on it */
     mpi_errno =
@@ -21,7 +20,7 @@ int MPIR_Neighbor_alltoallv_allcomm_nb(const void *sendbuf, const MPI_Aint sendc
                                  rdispls, recvtype, comm_ptr, &req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIC_Wait(req_ptr, &errflag);
+    mpi_errno = MPIC_Wait(req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Request_free(req_ptr);
 

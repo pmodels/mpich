@@ -23,7 +23,7 @@
 int MPIR_Reduce_scatter_intra_noncommutative(const void *sendbuf, void *recvbuf,
                                              const MPI_Aint recvcounts[], MPI_Datatype datatype,
                                              MPI_Op op, MPIR_Comm * comm_ptr,
-                                             MPIR_Errflag_t * errflag)
+                                             MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -103,14 +103,7 @@ int MPIR_Reduce_scatter_intra_noncommutative(const void *sendbuf, void *recvbuf,
                                   incoming_data + recv_offset * true_extent,
                                   size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
                                   comm_ptr, MPI_STATUS_IGNORE, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         /* always perform the reduction at recv_offset, the data at send_offset
          * is now our peer's responsibility */
         if (rank > peer) {
@@ -141,11 +134,8 @@ int MPIR_Reduce_scatter_intra_noncommutative(const void *sendbuf, void *recvbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

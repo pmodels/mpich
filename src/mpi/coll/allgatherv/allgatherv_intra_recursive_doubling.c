@@ -25,7 +25,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                              const MPI_Aint * recvcounts,
                                              const MPI_Aint * displs,
                                              MPI_Datatype recvtype,
-                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int comm_size, rank, j, i;
     int mpi_errno = MPI_SUCCESS;
@@ -114,18 +114,14 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                       ((char *) tmp_buf + recv_offset * recvtype_sz),
                                       (total_count - recv_offset) * recvtype_sz, MPI_BYTE, dst,
                                       MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 last_recv_cnt = 0;
-            } else
+            } else {
                 /* for convenience, recv is posted for a bigger amount
                  * than will be sent */
                 MPIR_Get_count_impl(&status, recvtype, &last_recv_cnt);
+            }
             curr_cnt += last_recv_cnt;
         }
 
@@ -181,14 +177,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                     mpi_errno = MPIC_Send(((char *) tmp_buf + offset * recvtype_sz),
                                           last_recv_cnt * recvtype_sz,
                                           MPI_BYTE, dst, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                     /* last_recv_cnt was set in the previous
                      * receive. that's the amount of data to be
                      * sent now. */
@@ -205,14 +194,9 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
 
                     mpi_errno = MPIC_Recv(((char *) tmp_buf + offset * recvtype_sz),
                                           (total_count - offset) * recvtype_sz, MPI_BYTE,
-                                          dst, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
+                                          dst, MPIR_ALLGATHERV_TAG, comm_ptr, &status);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                     if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                         last_recv_cnt = 0;
                     } else
                         /* for convenience, recv is posted for a
@@ -247,12 +231,8 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

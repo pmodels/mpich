@@ -28,8 +28,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
                                void *recvbuf,
                                const MPI_Aint * recvcounts,
                                const MPI_Aint * displs,
-                               MPI_Datatype recvtype,
-                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int comm_size, rank, i, left, right;
     int mpi_errno = MPI_SUCCESS;
@@ -111,41 +110,19 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
              * consecutive processes contribute 0 bytes each. */
         } else if (!sendnow) {  /* If there's no data to send, just do a recv call */
             mpi_errno =
-                MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm_ptr, &status,
-                          errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+                MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm_ptr, &status);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             torecv -= recvnow;
         } else if (!recvnow) {  /* If there's no data to receive, just do a send call */
             mpi_errno =
                 MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             tosend -= sendnow;
         } else {        /* There's data to be sent and received */
             mpi_errno = MPIC_Sendrecv(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG,
                                       rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG,
                                       comm_ptr, &status, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             tosend -= sendnow;
             torecv -= recvnow;
         }
@@ -163,12 +140,8 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     }
 
   fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

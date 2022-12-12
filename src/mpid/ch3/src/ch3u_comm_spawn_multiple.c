@@ -75,17 +75,14 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     }
 
     if (errcodes != MPI_ERRCODES_IGNORE) {
-        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        mpi_errno = MPIR_Bcast(&should_accept, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast(&should_accept, 1, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Bcast(&total_num_processes, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast(&total_num_processes, 1, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         
-        mpi_errno = MPIR_Bcast(errcodes, total_num_processes, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast(errcodes, total_num_processes, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
-
-        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     }
 
     if (should_accept) {

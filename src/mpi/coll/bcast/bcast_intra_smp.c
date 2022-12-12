@@ -11,7 +11,7 @@
  * be able to make changes along these lines almost exclusively in this function
  * and some new functions. [goodell@ 2008/01/07] */
 int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                         MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                         MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -42,37 +42,16 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
             if (root == comm_ptr->rank) {
                 mpi_errno = MPIC_Send(buffer, count, datatype, 0,
                                       MPIR_BCAST_TAG, comm_ptr->node_comm, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             } else if (0 == comm_ptr->node_comm->rank) {
                 mpi_errno =
                     MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm_ptr, root),
-                              MPIR_BCAST_TAG, comm_ptr->node_comm, status_p, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                              MPIR_BCAST_TAG, comm_ptr->node_comm, status_p);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 #ifdef HAVE_ERROR_CHECKING
                 /* check that we received as much as we expected */
                 MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
-                if (recvd_size != nbytes) {
-                    if (*errflag == MPIR_ERR_NONE)
-                        *errflag = MPIR_ERR_OTHER;
-                    MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
-                                  "**collective_size_mismatch",
-                                  "**collective_size_mismatch %d %d", recvd_size, nbytes);
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, errflag, mpi_errno_ret);
 #endif
             }
 
@@ -83,27 +62,13 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
             mpi_errno = MPIR_Bcast(buffer, count, datatype,
                                    MPIR_Get_internode_rank(comm_ptr, root),
                                    comm_ptr->node_roots_comm, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
 
         /* perform the intranode broadcast on all except for the root's node */
         if (comm_ptr->node_comm != NULL) {
             mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
     } else {    /* (nbytes > MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_ptr->size >= MPIR_CVAR_BCAST_MIN_PROCS) */
 
@@ -121,14 +86,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                 mpi_errno = MPIR_Bcast(buffer, count, datatype,
                                        MPIR_Get_intranode_rank(comm_ptr, root),
                                        comm_ptr->node_comm, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
 
             /* perform the internode broadcast */
@@ -136,14 +94,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                 mpi_errno = MPIR_Bcast(buffer, count, datatype,
                                        MPIR_Get_internode_rank(comm_ptr, root),
                                        comm_ptr->node_roots_comm, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
 
             /* perform the intranode broadcast on all except for the root's node */
@@ -152,14 +103,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                  * bcast.  We need a more comprehensive system for selecting the
                  * right algorithms here. */
                 mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
         } else {        /* large msg or non-pof2 */
 
@@ -169,23 +113,10 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
             mpi_errno =
                 MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr,
                                                         errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
     }
 
   fn_exit:
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    /* --END ERROR HANDLING-- */
-    return mpi_errno;
+    return mpi_errno_ret;
 }

@@ -44,7 +44,7 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                                vtxp->u.isend.dt,
                                vtxp->u.isend.dest,
                                vtxp->u.isend.tag, vtxp->u.isend.comm, &vtxp->u.isend.req,
-                               &r->u.nbc.errflag);
+                               r->u.nbc.errflag);
 
                     if (MPIR_Request_is_complete(vtxp->u.isend.req)) {
                         MPIR_Request_free(vtxp->u.isend.req);
@@ -144,7 +144,7 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                                    vtxp->u.imcast.dt,
                                    dests[i],
                                    vtxp->u.imcast.tag, vtxp->u.imcast.comm, &vtxp->u.imcast.req[i],
-                                   &r->u.nbc.errflag);
+                                   r->u.nbc.errflag);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
@@ -160,7 +160,7 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                                 vtxp->u.issend.dt,
                                 vtxp->u.issend.dest,
                                 vtxp->u.issend.tag, vtxp->u.issend.comm, &vtxp->u.issend.req,
-                                &r->u.nbc.errflag);
+                                r->u.nbc.errflag);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,

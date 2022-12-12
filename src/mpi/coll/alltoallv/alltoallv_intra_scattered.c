@@ -25,7 +25,7 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
                                    const MPI_Aint * sdispls, MPI_Datatype sendtype, void *recvbuf,
                                    const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                   MPIR_Errflag_t * errflag)
+                                   MPIR_Errflag_t errflag)
 {
     int comm_size, i;
     MPI_Aint send_extent, recv_extent;
@@ -74,14 +74,7 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
                     mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst] * recv_extent,
                                            recvcounts[dst], recvtype, dst,
                                            MPIR_ALLTOALLV_TAG, comm_ptr, &reqarray[req_cnt]);
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                     req_cnt++;
                 }
             }
@@ -97,36 +90,21 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
                                            sendcounts[dst], sendtype, dst,
                                            MPIR_ALLTOALLV_TAG, comm_ptr,
                                            &reqarray[req_cnt], errflag);
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                     req_cnt++;
                 }
             }
         }
 
-        mpi_errno = MPIC_Waitall(req_cnt, reqarray, starray, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-            MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIC_Waitall(req_cnt, reqarray, starray);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {
             for (i = 0; i < req_cnt; i++) {
                 if (starray[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = starray[i].MPI_ERROR;
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 }
             }
         }
@@ -135,14 +113,8 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-
-    return mpi_errno;
-
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

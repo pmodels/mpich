@@ -18,7 +18,7 @@ int MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(const void *send
                                                                 MPI_Datatype datatype,
                                                                 MPI_Op op,
                                                                 MPIR_Comm * comm_ptr,
-                                                                MPIR_Errflag_t * errflag)
+                                                                MPIR_Errflag_t errflag)
 {
     int rank, mpi_errno, root, local_size;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -53,53 +53,25 @@ int MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(const void *send
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Reduce_allcomm_auto(sendbuf, tmp_buf, total_count, datatype, op,
                                              root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         /* reduce to rank 0 of right group */
         root = 0;
         mpi_errno = MPIR_Reduce_allcomm_auto(sendbuf, tmp_buf, total_count, datatype, op,
                                              root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     } else {
         /* reduce to rank 0 of left group */
         root = 0;
         mpi_errno = MPIR_Reduce_allcomm_auto(sendbuf, tmp_buf, total_count, datatype, op,
                                              root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Reduce_allcomm_auto(sendbuf, tmp_buf, total_count, datatype, op,
                                              root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
     /* Get the local intracommunicator */
@@ -110,24 +82,12 @@ int MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(const void *send
 
     mpi_errno = MPIR_Scatter(tmp_buf, recvcount, datatype, recvbuf,
                              recvcount, datatype, 0, newcomm_ptr, errflag);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    /* --END ERROR HANDLING-- */
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

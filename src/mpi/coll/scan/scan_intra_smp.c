@@ -8,7 +8,7 @@
 
 int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
                         MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                        MPIR_Errflag_t * errflag)
+                        MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -45,14 +45,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
      * one process, just copy the raw data. */
     if (comm_ptr->node_comm != NULL) {
         mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr->node_comm, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     } else if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         MPIR_ERR_CHECK(mpi_errno);
@@ -65,28 +58,14 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     if (comm_ptr->node_roots_comm != NULL && comm_ptr->node_comm != NULL) {
         mpi_errno = MPIC_Recv(localfulldata, count, datatype,
                               comm_ptr->node_comm->local_size - 1, MPIR_SCAN_TAG,
-                              comm_ptr->node_comm, &status, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+                              comm_ptr->node_comm, &status);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     } else if (comm_ptr->node_roots_comm == NULL &&
                comm_ptr->node_comm != NULL &&
                MPIR_Get_intranode_rank(comm_ptr, rank) == comm_ptr->node_comm->local_size - 1) {
         mpi_errno = MPIC_Send(recvbuf, count, datatype,
                               0, MPIR_SCAN_TAG, comm_ptr->node_comm, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     } else if (comm_ptr->node_roots_comm != NULL) {
         localfulldata = recvbuf;
     }
@@ -98,41 +77,20 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     if (comm_ptr->node_roots_comm != NULL) {
         mpi_errno = MPIR_Scan(localfulldata, prefulldata, count, datatype,
                               op, comm_ptr->node_roots_comm, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         if (MPIR_Get_internode_rank(comm_ptr, rank) != comm_ptr->node_roots_comm->local_size - 1) {
             mpi_errno = MPIC_Send(prefulldata, count, datatype,
                                   MPIR_Get_internode_rank(comm_ptr, rank) + 1,
                                   MPIR_SCAN_TAG, comm_ptr->node_roots_comm, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
         if (MPIR_Get_internode_rank(comm_ptr, rank) != 0) {
             mpi_errno = MPIC_Recv(tempbuf, count, datatype,
                                   MPIR_Get_internode_rank(comm_ptr, rank) - 1,
-                                  MPIR_SCAN_TAG, comm_ptr->node_roots_comm, &status, errflag);
+                                  MPIR_SCAN_TAG, comm_ptr->node_roots_comm, &status);
             noneed = 0;
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
     }
 
@@ -144,27 +102,13 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
     if (comm_ptr->node_comm != NULL) {
         mpi_errno = MPIR_Bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
     if (noneed == 0) {
         if (comm_ptr->node_comm != NULL) {
             mpi_errno = MPIR_Bcast(tempbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
 
         mpi_errno = MPIR_Reduce_local(tempbuf, recvbuf, count, datatype, op);
@@ -172,12 +116,8 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
-
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

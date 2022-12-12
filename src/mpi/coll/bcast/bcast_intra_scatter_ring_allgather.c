@@ -24,8 +24,7 @@
 int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
                                             MPI_Aint count,
                                             MPI_Datatype datatype,
-                                            int root,
-                                            MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                            int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;
@@ -73,14 +72,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
     mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
                                        nbytes, tmp_buf, is_contig, errflag);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
 
@@ -113,14 +105,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
                                   MPI_BYTE, right, MPIR_BCAST_TAG,
                                   (char *) tmp_buf + left_disp, left_count,
                                   MPI_BYTE, left, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
         curr_size += recvd_size;
         j = jnext;
@@ -129,14 +114,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
 #ifdef HAVE_ERROR_CHECKING
     /* check that we received as much as we expected */
-    if (curr_size != nbytes) {
-        if (*errflag == MPIR_ERR_NONE)
-            *errflag = MPIR_ERR_OTHER;
-        MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
-                      "**collective_size_mismatch",
-                      "**collective_size_mismatch %d %d", curr_size, nbytes);
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECK_SIZE(curr_size, nbytes, errflag, mpi_errno_ret);
 #endif
 
     if (!is_contig) {
@@ -148,13 +126,8 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    /* --END ERROR HANDLING-- */
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

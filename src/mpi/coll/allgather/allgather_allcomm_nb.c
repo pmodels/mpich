@@ -7,7 +7,7 @@
 
 int MPIR_Allgather_allcomm_nb(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                               void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                              MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req_ptr = NULL;
@@ -18,7 +18,7 @@ int MPIR_Allgather_allcomm_nb(const void *sendbuf, MPI_Aint sendcount, MPI_Datat
                         &req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIC_Wait(req_ptr, errflag);
+    mpi_errno = MPIC_Wait(req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Request_free(req_ptr);
 

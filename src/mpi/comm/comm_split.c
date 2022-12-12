@@ -89,7 +89,6 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         first_entry = 0, first_remote_entry = 0, *last_ptr;
     int in_newcomm;             /* TRUE iff *newcomm should be populated */
     MPIR_Context_id_t new_context_id, remote_context_id;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm_map_t *mapper;
     MPIR_CHKLMEM_DECL(4);
 
@@ -115,9 +114,8 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
     }
     /* Gather information on the local group of processes */
     mpi_errno =
-        MPIR_Allgather(MPI_IN_PLACE, 2, MPI_INT, table, 2, MPI_INT, local_comm_ptr, &errflag);
+        MPIR_Allgather(MPI_IN_PLACE, 2, MPI_INT, table, 2, MPI_INT, local_comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     /* Step 2: How many processes have our same color? */
     new_size = 0;
@@ -163,9 +161,8 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         mypair.color = color;
         mypair.key = key;
         mpi_errno = MPIR_Allgather(&mypair, 2, MPI_INT, remotetable, 2, MPI_INT,
-                                   comm_ptr, &errflag);
+                                   comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         /* Each process can now match its color with the entries in the table */
         new_remote_size = 0;
@@ -208,20 +205,18 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         if (comm_ptr->rank == 0) {
             mpi_errno = MPIC_Sendrecv(&new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
                                       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
-                                      0, 0, comm_ptr, MPI_STATUS_IGNORE, &errflag);
+                                      0, 0, comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno =
                 MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr,
-                           &errflag);
+                           MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
-            MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         } else {
             /* Broadcast to the other members of the local group */
             mpi_errno =
                 MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr,
-                           &errflag);
+                           MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
-            MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         }
     }
 

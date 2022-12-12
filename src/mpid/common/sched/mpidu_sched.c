@@ -227,16 +227,16 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                  * during realloc of entries, so this is easier */
                 ret_errno = MPIC_Isend(e->u.send.buf, *e->u.send.count_p, e->u.send.datatype,
                                        e->u.send.dest, s->tag, comm, &e->u.send.sreq,
-                                       &r->u.nbc.errflag);
+                                       r->u.nbc.errflag);
             } else {
                 if (e->u.send.is_sync) {
                     ret_errno = MPIC_Issend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
                                             e->u.send.dest, s->tag, comm, &e->u.send.sreq,
-                                            &r->u.nbc.errflag);
+                                            r->u.nbc.errflag);
                 } else {
                     ret_errno = MPIC_Isend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
                                            e->u.send.dest, s->tag, comm, &e->u.send.sreq,
-                                           &r->u.nbc.errflag);
+                                           r->u.nbc.errflag);
                 }
             }
             /* Check if the error is actually fatal to the NBC or we can continue. */
@@ -1097,14 +1097,14 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                         MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
                                         (MPL_DBG_FDEST, "completed RECV entry %d, rreq=%p\n",
                                          (int) i, e->u.recv.rreq));
-                        MPIR_Process_status(&e->u.recv.rreq->status, &s->req->u.nbc.errflag);
+                        int err = MPIR_Process_status(&e->u.recv.rreq->status);
                         if (e->u.recv.status != MPI_STATUS_IGNORE) {
                             MPI_Aint recvd;
                             e->u.recv.status->MPI_ERROR = e->u.recv.rreq->status.MPI_ERROR;
                             MPIR_Get_count_impl(&e->u.recv.rreq->status, MPI_BYTE, &recvd);
                             MPIR_STATUS_SET_COUNT(*(e->u.recv.status), recvd);
                         }
-                        if (s->req->u.nbc.errflag != MPIR_ERR_NONE)
+                        if (err)
                             e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
                         else
                             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;

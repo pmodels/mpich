@@ -16,7 +16,7 @@
 int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sendcount,
                                                MPI_Datatype sendtype, void *recvbuf,
                                                MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -36,15 +36,8 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sen
         /* root receives data from rank 0 on remote group */
         mpi_errno =
             MPIC_Recv(recvbuf, recvcount * remote_size, recvtype, 0, MPIR_GATHER_TAG, comm_ptr,
-                      &status, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+                      &status);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     } else {
         /* remote group. Rank 0 allocates temporary buffer, does
          * local intracommunicator gather, and then sends the data
@@ -76,37 +69,19 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sen
         mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype,
                                 tmp_buf, sendcount * sendtype_sz, MPI_BYTE, 0, newcomm_ptr,
                                 errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         if (rank == 0) {
             mpi_errno = MPIC_Send(tmp_buf, sendcount * local_size * sendtype_sz, MPI_BYTE,
                                   root, MPIR_GATHER_TAG, comm_ptr, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
     }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
-
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

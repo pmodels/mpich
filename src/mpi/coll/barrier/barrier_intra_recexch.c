@@ -9,7 +9,7 @@
 /* Algorithm: call Allreduce's recursive exchange algorithm
  */
 int MPIR_Barrier_intra_recexch(MPIR_Comm * comm, int k, int single_phase_recv,
-                               MPIR_Errflag_t * errflag)
+                               MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 

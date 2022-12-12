@@ -23,7 +23,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                                    const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                    void *recvbuf, const MPI_Aint recvcounts[],
                                    const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int comm_size, i;
     int mpi_errno = MPI_SUCCESS;
@@ -95,23 +95,15 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
             }
         }
 
-        mpi_errno = MPIC_Waitall(outstanding_requests, reqarray, starray, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-            MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIC_Waitall(outstanding_requests, reqarray, starray);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {
             for (i = 0; i < outstanding_requests; i++) {
                 if (starray[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = starray[i].MPI_ERROR;
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 }
             }
         }
@@ -120,12 +112,8 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
-
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

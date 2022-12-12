@@ -25,7 +25,7 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
                               MPI_Datatype sendtype,
                               void *recvbuf,
                               MPI_Aint recvcount,
-                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
@@ -65,26 +65,14 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
                                    jnext * recvcount * recvtype_extent),
                                   recvcount, recvtype, left,
                                   MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         j = jnext;
         jnext = (comm_size + jnext - 1) % comm_size;
     }
 
   fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-
-    return mpi_errno;
-
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

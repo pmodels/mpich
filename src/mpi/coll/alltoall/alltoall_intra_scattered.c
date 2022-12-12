@@ -33,9 +33,9 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
                                   void *recvbuf,
                                   MPI_Aint recvcount,
                                   MPI_Datatype recvtype,
-                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
-    int comm_size, i, j;
+    int comm_size, i;
     MPI_Aint sendtype_extent, recvtype_extent;
     int mpi_errno = MPI_SUCCESS, dst, rank;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -74,7 +74,7 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
                                    dst * recvcount * recvtype_extent,
                                    recvcount, recvtype, dst,
                                    MPIR_ALLTOALL_TAG, comm_ptr, &reqarray[i]);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
 
         for (i = 0; i < ss; i++) {
@@ -83,41 +83,18 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
                                    dst * sendcount * sendtype_extent,
                                    sendcount, sendtype, dst,
                                    MPIR_ALLTOALL_TAG, comm_ptr, &reqarray[i + ss], errflag);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
 
         /* ... then wait for them to finish: */
-        mpi_errno = MPIC_Waitall(2 * ss, reqarray, starray, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-            MPIR_ERR_POP(mpi_errno);
-
-        /* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno == MPI_ERR_IN_STATUS) {
-            for (j = 0; j < 2 * ss; j++) {
-                if (starray[j].MPI_ERROR != MPI_SUCCESS) {
-                    mpi_errno = starray[j].MPI_ERROR;
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
-                }
-            }
-        }
-        /* --END ERROR HANDLING-- */
+        mpi_errno = MPIC_Waitall(2 * ss, reqarray, starray);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

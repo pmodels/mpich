@@ -11,7 +11,7 @@
 
 int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
                               MPI_Datatype datatype, MPI_Op op,
-                              MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+                              MPIR_Comm * comm, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     int i, src, dst;
@@ -76,68 +76,36 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
 
         /* get a new tag to prevent out of order messages */
         mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIC_Irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, &reqs[0]);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         mpi_errno = MPIC_Isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
                                datatype, dst, tag, comm, &reqs[1], errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
-        mpi_errno = MPIC_Waitall(2, reqs, MPI_STATUSES_IGNORE, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-
+        mpi_errno = MPIC_Waitall(2, reqs, MPI_STATUSES_IGNORE);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         mpi_errno =
             MPIR_Reduce_local(tmpbuf, (char *) recvbuf + displs[recv_rank] * extent,
                               cnts[recv_rank], datatype, op);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
     /* Phase 3: Allgatherv ring, so everyone has the reduced data */
     mpi_errno = MPIR_Allgatherv_intra_ring(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, recvbuf, cnts,
                                            displs, datatype, comm, errflag);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag = MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
     MPL_free(cnts);
     MPL_free(displs);
     MPL_free(tmpbuf);
 
   fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
-
+    return mpi_errno_ret;
   fn_fail:
+    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

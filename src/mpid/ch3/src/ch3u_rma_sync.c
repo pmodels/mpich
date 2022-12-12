@@ -455,7 +455,6 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 {
     int i;
     MPIDI_RMA_Target_t *curr_target = NULL;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int comm_size = win_ptr->comm_ptr->local_size;
     int scalable_fence_enabled = 0;
     int *rma_target_marks = NULL;
@@ -490,9 +489,8 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
             if (win_ptr->shm_allocated == TRUE) {
                 MPIR_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
 
-                mpi_errno = MPIR_Barrier(node_comm_ptr, &errflag);
+                mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_ERR_NONE);
                 MPIR_ERR_CHECK(mpi_errno);
-                MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
             }
 
             mpi_errno = MPIR_Ibarrier(win_ptr->comm_ptr, &fence_sync_req_ptr);
@@ -541,10 +539,8 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
         win_ptr->at_completion_counter += comm_size;
 
         mpi_errno = MPIR_Reduce_scatter_block(MPI_IN_PLACE, rma_target_marks, 1,
-                                              MPI_INT, MPI_SUM, win_ptr->comm_ptr, &errflag);
+                                              MPI_INT, MPI_SUM, win_ptr->comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
-
-        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         win_ptr->at_completion_counter -= comm_size;
         win_ptr->at_completion_counter += rma_target_marks[0];
@@ -583,9 +579,8 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
     MPIR_ERR_CHECK(mpi_errno);
 
     if (scalable_fence_enabled) {
-        mpi_errno = MPIR_Barrier(win_ptr->comm_ptr, &errflag);
+        mpi_errno = MPIR_Barrier(win_ptr->comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         /* Set window access state properly. */
         if (assert & MPI_MODE_NOSUCCEED) {
@@ -634,9 +629,8 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 
             if (win_ptr->shm_allocated == TRUE) {
                 MPIR_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
-                mpi_errno = MPIR_Barrier(node_comm_ptr, &errflag);
+                mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_ERR_NONE);
                 MPIR_ERR_CHECK(mpi_errno);
-                MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
             }
         }
     }
