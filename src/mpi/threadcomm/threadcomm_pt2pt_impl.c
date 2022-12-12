@@ -17,7 +17,7 @@ int MPIR_Threadcomm_isend_attr(const void *buf, MPI_Aint count, MPI_Datatype dat
 
     if (MPIR_THREADCOMM_RANK_IS_INTERTHREAD(threadcomm, rank)) {
         int dst_id = MPIR_THREADCOMM_RANK_TO_TID(threadcomm, rank);
-        mpi_errno = MPIR_Threadcomm_send(buf, count, datatype, dst_id, tag, threadcomm, req);
+        mpi_errno = MPIR_Threadcomm_send(buf, count, datatype, dst_id, tag, threadcomm, attr, req);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* TODO */
@@ -39,7 +39,8 @@ int MPIR_Threadcomm_irecv_attr(void *buf, MPI_Aint count, MPI_Datatype datatype,
 
     if (MPIR_THREADCOMM_RANK_IS_INTERTHREAD(threadcomm, rank)) {
         int src_id = MPIR_THREADCOMM_RANK_TO_TID(threadcomm, rank);
-        mpi_errno = MPIR_Threadcomm_recv(buf, count, datatype, src_id, tag, threadcomm, req, true);
+        mpi_errno = MPIR_Threadcomm_recv(buf, count, datatype, src_id, tag, threadcomm, attr,
+                                         req, true);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* TODO */
@@ -78,7 +79,7 @@ int MPIR_Threadcomm_send_impl(const void *buf, MPI_Aint count, MPI_Datatype data
     if (MPIR_THREADCOMM_RANK_IS_INTERTHREAD(threadcomm, rank)) {
         MPIR_Request *sreq;
         int dst_id = MPIR_THREADCOMM_RANK_TO_TID(threadcomm, rank);
-        mpi_errno = MPIR_Threadcomm_send(buf, count, datatype, dst_id, tag, threadcomm, &sreq);
+        mpi_errno = MPIR_Threadcomm_send(buf, count, datatype, dst_id, tag, threadcomm, 0, &sreq);
         MPIR_ERR_CHECK(mpi_errno);
         /* wait */
         while (!MPIR_Request_is_complete(sreq)) {
@@ -109,7 +110,7 @@ int MPIR_Threadcomm_recv_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_Request *rreq;
         int src_id = MPIR_THREADCOMM_RANK_TO_TID(threadcomm, rank);
         bool has_status = (status != MPI_STATUS_IGNORE);
-        mpi_errno = MPIR_Threadcomm_recv(buf, count, datatype, src_id, tag, threadcomm, &rreq,
+        mpi_errno = MPIR_Threadcomm_recv(buf, count, datatype, src_id, tag, threadcomm, 0, &rreq,
                                          has_status);
         MPIR_ERR_CHECK(mpi_errno);
         while (!MPIR_Request_is_complete(rreq)) {

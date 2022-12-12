@@ -11,6 +11,7 @@
 struct send_hdr {
     int src_id;
     int tag;
+    int attr;
     bool is_eager;
     union {
         /* eager */
@@ -28,6 +29,7 @@ struct send_req {
     int src_id;
     int dst_id;
     int tag;
+    int attr;
 };
 
 struct posted_req {
@@ -36,18 +38,19 @@ struct posted_req {
     MPI_Datatype datatype;
     int src_id;
     int tag;
+    int attr;
 };
 
 static void threadcomm_data_copy(struct send_hdr *hdr,
                                  void *buf, MPI_Aint count, MPI_Datatype datatype);
 
 static MPIR_Request *threadcomm_enqueue_posted(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                               int src_id, int tag, MPIR_Request ** list);
-static MPIR_Request *threadcomm_match_posted(int src_id, int tag, MPIR_Request ** list);
+                                               int src_id, int tag, int attr, MPIR_Request ** list);
+static MPIR_Request *threadcomm_match_posted(int src_id, int tag, int attr, MPIR_Request ** list);
 static void threadcomm_complete_posted(struct send_hdr *hdr, MPIR_Request * rreq);
 
 static void threadcomm_enqueue_unexp(struct send_hdr *hdr, MPIR_threadcomm_unexp_t ** list);
-static MPIR_threadcomm_unexp_t *threadcomm_match_unexp(int src_id, int tag,
+static MPIR_threadcomm_unexp_t *threadcomm_match_unexp(int src_id, int tag, int attr,
                                                        MPIR_threadcomm_unexp_t ** list);
 
 /* TODO: refactor transport, add queue implementation */
@@ -62,7 +65,8 @@ static int threadcomm_progress_recv(void);
 
 MPL_STATIC_INLINE_PREFIX
     int MPIR_Threadcomm_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                             int dst_id, int tag, MPIR_Threadcomm * threadcomm, MPIR_Request ** req)
+                             int dst_id, int tag, MPIR_Threadcomm * threadcomm, int attr,
+                             MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -73,11 +77,13 @@ MPL_STATIC_INLINE_PREFIX
     MPIR_Datatype_get_size_macro(datatype, data_sz);
     data_sz *= count;
 
-    bool try_eager = (data_sz <= (MPIR_THREADCOMM_MAX_PAYLOAD - sizeof(struct send_hdr)));
+    bool try_eager = (data_sz <= (MPIR_THREADCOMM_MAX_PAYLOAD - sizeof(struct send_hdr))) &&
+        !(MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr));
     if (try_eager) {
         struct send_hdr hdr;
         hdr.src_id = p->tid;
         hdr.tag = tag;
+        hdr.attr = attr;
         hdr.is_eager = true;
         hdr.u.data_sz = data_sz;
 
@@ -100,11 +106,13 @@ MPL_STATIC_INLINE_PREFIX
     u->src_id = p->tid;
     u->dst_id = dst_id;
     u->tag = tag;
+    u->attr = attr;
 
     /* prepare send_hdr */
     struct send_hdr hdr;
     hdr.src_id = p->tid;
     hdr.tag = tag;
+    hdr.attr = attr;
     hdr.is_eager = false;
     hdr.u.sreq = sreq;
 
@@ -122,7 +130,7 @@ MPL_STATIC_INLINE_PREFIX
 MPL_STATIC_INLINE_PREFIX
     int MPIR_Threadcomm_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                              int src_id, int tag, MPIR_Threadcomm * threadcomm,
-                             MPIR_Request ** req, bool has_status)
+                             int attr, MPIR_Request ** req, bool has_status)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -130,13 +138,14 @@ MPL_STATIC_INLINE_PREFIX
 
     /* TODO: search mailboxes first */
 
-    MPIR_threadcomm_unexp_t *unexp = threadcomm_match_unexp(src_id, tag, &p->unexp_list);
+    MPIR_threadcomm_unexp_t *unexp = threadcomm_match_unexp(src_id, tag, attr, &p->unexp_list);
     if (unexp) {
         struct send_hdr *hdr = (struct send_hdr *) unexp->cell;
         if (has_status) {
             *req = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__RECV, 0, 2);
             (*req)->status.MPI_SOURCE = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, hdr->src_id);
             (*req)->status.MPI_TAG = hdr->tag;
+            (*req)->status.MPI_ERROR = MPIR_PT2PT_ATTR_GET_ERRFLAG(hdr->attr);
             MPIR_Request_complete(*req);
         } else {
             *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
@@ -144,7 +153,7 @@ MPL_STATIC_INLINE_PREFIX
         threadcomm_data_copy(hdr, buf, count, datatype);
         MPL_free(unexp);
     } else {
-        *req = threadcomm_enqueue_posted(buf, count, datatype, src_id, tag, &p->posted_list);
+        *req = threadcomm_enqueue_posted(buf, count, datatype, src_id, tag, attr, &p->posted_list);
     }
 
     return mpi_errno;
@@ -170,7 +179,7 @@ static void threadcomm_data_copy(struct send_hdr *hdr,
 }
 
 static MPIR_Request *threadcomm_enqueue_posted(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                               int src_id, int tag, MPIR_Request ** list)
+                                               int src_id, int tag, int attr, MPIR_Request ** list)
 {
     MPIR_Request *rreq;
     rreq = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__RECV, 0, 2);
@@ -180,19 +189,21 @@ static MPIR_Request *threadcomm_enqueue_posted(void *buf, MPI_Aint count, MPI_Da
     u->datatype = datatype;
     u->src_id = src_id;
     u->tag = tag;
+    u->attr = attr;
 
     DL_APPEND(*list, rreq);
 
     return rreq;
 }
 
-static MPIR_Request *threadcomm_match_posted(int src_id, int tag, MPIR_Request ** list)
+static MPIR_Request *threadcomm_match_posted(int src_id, int tag, int attr, MPIR_Request ** list)
 {
     MPIR_Request *req = NULL;
     MPIR_Request *curr, *tmp;
     DL_FOREACH_SAFE(*list, curr, tmp) {
         struct posted_req *u = (struct posted_req *) &curr->u;
-        if (u->src_id == src_id && u->tag == tag) {
+        if (u->src_id == src_id && u->tag == tag &&
+            MPIR_PT2PT_ATTR_CONTEXT_OFFSET(u->attr) == MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr)) {
             DL_DELETE(*list, curr);
             req = curr;
             break;
@@ -220,13 +231,14 @@ static void threadcomm_enqueue_unexp(struct send_hdr *hdr, UNEXP ** list)
     DL_APPEND(*list, unexp);
 }
 
-static UNEXP *threadcomm_match_unexp(int src_id, int tag, UNEXP ** list)
+static UNEXP *threadcomm_match_unexp(int src_id, int tag, int attr, UNEXP ** list)
 {
     UNEXP *req = NULL;
     UNEXP *curr, *tmp;
     DL_FOREACH_SAFE(*list, curr, tmp) {
         struct send_hdr *hdr = (struct send_hdr *) curr->cell;
-        if (hdr->src_id == src_id && hdr->tag == tag) {
+        if (hdr->src_id == src_id && hdr->tag == tag &&
+            MPIR_PT2PT_ATTR_CONTEXT_OFFSET(hdr->attr) == MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr)) {
             DL_DELETE(*list, curr);
             req = curr;
             break;
@@ -269,6 +281,7 @@ static int threadcomm_progress_send(void)
             struct send_hdr hdr;
             hdr.src_id = p[i].tid;
             hdr.tag = u->tag;
+            hdr.attr = u->attr;
             hdr.is_eager = false;
             hdr.u.sreq = curr;
 
@@ -293,7 +306,7 @@ static int threadcomm_progress_recv(void)
             if (MPL_atomic_load_int(&fbox->u.data_ready)) {
                 struct send_hdr *hdr = (void *) fbox->cell;
                 MPIR_Request *rreq =
-                    threadcomm_match_posted(hdr->src_id, hdr->tag, &p[i].posted_list);
+                    threadcomm_match_posted(hdr->src_id, hdr->tag, hdr->attr, &p[i].posted_list);
                 if (rreq) {
                     threadcomm_complete_posted(hdr, rreq);
                     rreq->status.MPI_TAG = hdr->tag;
