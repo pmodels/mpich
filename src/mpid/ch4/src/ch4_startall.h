@@ -19,57 +19,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_start(MPIR_Request * preq)
     switch (MPIDI_PREQUEST(preq, p_type)) {
 
         case MPIDI_PTYPE_RECV:
-            if (comm->remote_size == 1 && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-                mpi_errno = MPIDI_Self_irecv(MPIDI_PREQUEST(preq, buffer),
-                                             MPIDI_PREQUEST(preq, count),
-                                             MPIDI_PREQUEST(preq, datatype),
-                                             MPIDI_PREQUEST(preq, rank),
-                                             MPIDI_PREQUEST(preq, tag), comm,
-                                             MPIDI_prequest_get_context_offset(preq),
-                                             &preq->u.persist.real_request);
-            } else {
-                mpi_errno = MPID_Irecv(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
-                                       MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
-                                       MPIDI_PREQUEST(preq, tag), comm,
-                                       MPIDI_prequest_get_context_offset(preq),
-                                       &preq->u.persist.real_request);
-            }
+            mpi_errno = MPID_Irecv(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
+                                   MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
+                                   MPIDI_PREQUEST(preq, tag), comm,
+                                   MPIDI_prequest_get_context_offset(preq),
+                                   &preq->u.persist.real_request);
             break;
 
         case MPIDI_PTYPE_SEND:
-            if (comm->remote_size == 1 && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-                mpi_errno = MPIDI_Self_isend(MPIDI_PREQUEST(preq, buffer),
-                                             MPIDI_PREQUEST(preq, count),
-                                             MPIDI_PREQUEST(preq, datatype),
-                                             MPIDI_PREQUEST(preq, rank),
-                                             MPIDI_PREQUEST(preq, tag), comm,
-                                             MPIDI_prequest_get_context_offset(preq),
-                                             &preq->u.persist.real_request);
-            } else {
-                mpi_errno = MPID_Isend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
-                                       MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
-                                       MPIDI_PREQUEST(preq, tag), comm,
-                                       MPIDI_prequest_get_context_offset(preq),
-                                       &preq->u.persist.real_request);
-            }
+            mpi_errno = MPID_Isend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
+                                   MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
+                                   MPIDI_PREQUEST(preq, tag), comm,
+                                   MPIDI_prequest_get_context_offset(preq),
+                                   &preq->u.persist.real_request);
             break;
 
         case MPIDI_PTYPE_SSEND:
-            if (comm->remote_size == 1 && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-                mpi_errno = MPIDI_Self_isend(MPIDI_PREQUEST(preq, buffer),
-                                             MPIDI_PREQUEST(preq, count),
-                                             MPIDI_PREQUEST(preq, datatype),
-                                             MPIDI_PREQUEST(preq, rank),
-                                             MPIDI_PREQUEST(preq, tag), comm,
-                                             MPIDI_prequest_get_context_offset(preq),
-                                             &preq->u.persist.real_request);
-            } else {
-                mpi_errno = MPID_Issend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
-                                        MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
-                                        MPIDI_PREQUEST(preq, tag), comm,
-                                        MPIDI_prequest_get_context_offset(preq),
-                                        &preq->u.persist.real_request);
-            }
+            mpi_errno = MPID_Issend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
+                                    MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
+                                    MPIDI_PREQUEST(preq, tag), comm,
+                                    MPIDI_prequest_get_context_offset(preq),
+                                    &preq->u.persist.real_request);
             break;
 
         case MPIDI_PTYPE_BSEND:
