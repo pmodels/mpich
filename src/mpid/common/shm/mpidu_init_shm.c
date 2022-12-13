@@ -99,7 +99,7 @@ static int Init_shm_barrier(void)
     } else {
         /* wait */
         while (MPL_atomic_load_int(&barrier->wait) == sense)
-            MPL_sched_yield();  /* skip */
+            MPID_Thread_yield();        /* skip */
     }
     sense = 1 - sense;
 

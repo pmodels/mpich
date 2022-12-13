@@ -8,7 +8,7 @@
 
 /*#define YIELD_IN_SKIP*/
 #ifdef YIELD_IN_SKIP
-#define SKIP MPL_sched_yield()
+#define SKIP MPID_Thread_yield()
 #warning "SKIP is yield"
 #else /* YIELD_IN_SKIP */
 #define SKIP do{}while(0)
