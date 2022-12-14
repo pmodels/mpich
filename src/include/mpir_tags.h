@@ -114,4 +114,10 @@
 /* This macro defines tag bits available for user tags */
 #define MPIR_TAG_USABLE_BITS ((1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1)) - 1)
 
+#ifdef ENABLE_THREADCOMM
+#define MPIR_TAG_THREADCOMM_TID_BITS 6
+#define MPIR_TAG_THREADCOMM_USABLE_BITS \
+    (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1 - MPIR_TAG_THREADCOMM_TID_BITS * 2)
+#endif
+
 #endif /* MPIR_TAGS_H_INCLUDED */

@@ -9,6 +9,28 @@
 
 #include "threadcomm_pt2pt.h"
 
+/* NOTE: anysource and anytag is not supported in threadcomm. It is too complicated
+ *       to manage matching cross inter-thread, intra-node, and inter-node.
+ */
+
+#define THREADCOMM_INTERPROCESS_TAG(tag, src_id, dst_id) \
+    (((((src_id) << MPIR_TAG_THREADCOMM_TID_BITS) + (dst_id)) << MPIR_TAG_THREADCOMM_USABLE_BITS) + (tag))
+
+#define THREADCOMM_INTERPROCESS_GET_RANK_ID(threadcomm, rank, local_id, remote_rank, remote_id) \
+    do { \
+        local_id = MPIR_threadcomm_get_tid(threadcomm); \
+        int comm_size = threadcomm->comm->local_size; \
+        remote_rank = -1; \
+        remote_id = -1; \
+        for (int i = 0; i < comm_size; i++) { \
+            if (rank < threadcomm->rank_offset_table[i]) { \
+                remote_rank = i; \
+                remote_id = (i == 0 ? rank : rank - threadcomm->rank_offset_table[i - 1]); \
+                break; \
+            } \
+        } \
+    } while (0)
+
 int MPIR_Threadcomm_isend_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                int rank, int tag, MPIR_Threadcomm * threadcomm, int attr,
                                MPIR_Request ** req)
@@ -20,9 +42,12 @@ int MPIR_Threadcomm_isend_attr(const void *buf, MPI_Aint count, MPI_Datatype dat
         mpi_errno = MPIR_Threadcomm_send(buf, count, datatype, dst_id, tag, threadcomm, attr, req);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        /* TODO */
-        MPIR_Assert(0);
-        /* use threadcomm->comm, but we need patch the request or tag for proper matching */
+        int src_id, dst_rank, dst_id, new_tag;
+        THREADCOMM_INTERPROCESS_GET_RANK_ID(threadcomm, rank, src_id, dst_rank, dst_id);
+        new_tag = THREADCOMM_INTERPROCESS_TAG(tag, src_id, dst_id);
+        mpi_errno =
+            MPID_Isend(buf, count, datatype, dst_rank, new_tag, threadcomm->comm, attr, req);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
@@ -43,9 +68,13 @@ int MPIR_Threadcomm_irecv_attr(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                          req, true);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        /* TODO */
-        MPIR_Assert(0);
-        /* use threadcomm->comm, but we need patch the request or tag for proper matching */
+        int dst_id, src_rank, src_id, new_tag;
+        THREADCOMM_INTERPROCESS_GET_RANK_ID(threadcomm, rank, dst_id, src_rank, src_id);
+        new_tag = THREADCOMM_INTERPROCESS_TAG(tag, src_id, dst_id);
+        mpi_errno =
+            MPID_Irecv(buf, count, datatype, src_rank, new_tag, threadcomm->comm, attr, req);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* TODO: fix status.MPI_TAG in MPI_Wait */
     }
 
   fn_exit:
@@ -87,9 +116,19 @@ int MPIR_Threadcomm_send_impl(const void *buf, MPI_Aint count, MPI_Datatype data
         }
         MPIR_Request_free(sreq);
     } else {
-        /* TODO */
-        MPIR_Assert(0);
-        /* use threadcomm->comm, but we need patch the request or tag for proper matching */
+        int src_id, dst_rank, dst_id, new_tag;
+        THREADCOMM_INTERPROCESS_GET_RANK_ID(threadcomm, rank, src_id, dst_rank, dst_id);
+        new_tag = THREADCOMM_INTERPROCESS_TAG(tag, src_id, dst_id);
+
+        MPIR_Request *sreq;
+        mpi_errno = MPID_Send(buf, count, datatype, dst_rank, new_tag, threadcomm->comm, 0, &sreq);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPID_Wait(sreq, MPI_STATUS_IGNORE);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = sreq->status.MPI_ERROR;
+        MPIR_Request_free(sreq);
     }
 
   fn_exit:
@@ -120,9 +159,23 @@ int MPIR_Threadcomm_recv_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_Request_extract_status(rreq, status);
         MPIR_Request_free(rreq);
     } else {
-        /* TODO */
-        MPIR_Assert(0);
-        /* use threadcomm->comm, but we need patch the request or tag for proper matching */
+        int dst_id, src_rank, src_id, new_tag;
+        THREADCOMM_INTERPROCESS_GET_RANK_ID(threadcomm, rank, dst_id, src_rank, src_id);
+        new_tag = THREADCOMM_INTERPROCESS_TAG(tag, src_id, dst_id);
+
+        MPIR_Request *rreq;
+        mpi_errno = MPID_Recv(buf, count, datatype, src_rank, new_tag, threadcomm->comm, 0,
+                              status, &rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPID_Wait(rreq, MPI_STATUS_IGNORE);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        rreq->status.MPI_TAG &= (1 << MPIR_TAG_THREADCOMM_USABLE_BITS) - 1;
+
+        mpi_errno = rreq->status.MPI_ERROR;
+        MPIR_Request_extract_status(rreq, status);
+        MPIR_Request_free(rreq);
     }
 
   fn_exit:
