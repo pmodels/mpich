@@ -83,6 +83,32 @@ typedef struct MPIR_Threadcomm {
 #define MPIR_THREADCOMM_TID_TO_RANK(threadcomm, tid) \
     (((threadcomm)->rank_offset_table[(threadcomm)->comm->rank] - (threadcomm)->num_threads) + tid)
 
+MPL_STATIC_INLINE_PREFIX
+    void MPIR_Threadcomm_adjust_status(MPIR_Threadcomm * threadcomm, MPI_Status * status)
+{
+#ifdef ENABLE_THREADCOMM
+    int tag = status->MPI_TAG;
+
+#define TID_MASK ((1 << (MPIR_TAG_THREADCOMM_TID_BITS)) - 1)
+#define TAG_MASK ((1 << (MPIR_TAG_THREADCOMM_USABLE_BITS)) - 1)
+    if (tag & MPIR_TAG_THREADCOMM_INTERPROCESS_BIT) {
+        int src = status->MPI_SOURCE;
+        int src_id =
+            (tag >> (MPIR_TAG_THREADCOMM_TID_BITS + MPIR_TAG_THREADCOMM_USABLE_BITS)) & TID_MASK;
+
+        status->MPI_TAG = tag & TAG_MASK;
+        if (src == 0) {
+            status->MPI_SOURCE = src_id;
+        } else {
+            status->MPI_SOURCE = threadcomm->rank_offset_table[src - 1] + src_id;
+        }
+    }
+#undef TID_MASK
+#undef TAG_MASK
+
+#endif /* ENABLE_THREADCOMM */
+}
+
 #ifdef ENABLE_THREADCOMM
 typedef struct MPIR_threadcomm_tls_t {
     MPIR_Threadcomm *threadcomm;
