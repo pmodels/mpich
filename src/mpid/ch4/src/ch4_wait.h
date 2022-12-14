@@ -16,16 +16,10 @@ MPL_STATIC_INLINE_PREFIX int get_vci_wrapper(MPIR_Request * req)
         req->kind == MPIR_REQUEST_KIND__PREQUEST_SEND) {
         if (req->u.persist.real_request) {
             vci = MPIDI_Request_get_vci(req->u.persist.real_request);
-        } else {
-            /* TODO: skip it in MPIDI_set_progress_vci_n */
-            vci = 0;
         }
     } else if (req->kind == MPIR_REQUEST_KIND__PREQUEST_COLL) {
         if (req->u.persist_coll.real_request) {
             vci = MPIDI_Request_get_vci(req->u.persist_coll.real_request);
-        } else {
-            /* TODO: skip it in MPIDI_set_progress_vci_n */
-            vci = 0;
         }
     } else {
         vci = MPIDI_Request_get_vci(req);
@@ -54,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** re
 
     int idx = 0;
     for (int i = 0; i < n; i++) {
-        if (reqs[i] == NULL) {
+        if (!MPIR_Request_is_active(reqs[i])) {
             continue;
         }
 
