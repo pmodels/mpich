@@ -181,7 +181,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_psend_init(MPIDI_ptype ptype,
     MPIDI_PREQUEST(sreq, datatype) = datatype;
     MPIDI_PREQUEST(sreq, rank) = rank;
     MPIDI_PREQUEST(sreq, tag) = tag;
-    MPIDI_PREQUEST(sreq, context_id) = comm->context_id + context_offset;
+    MPIDI_PREQUEST(sreq, context_offset) = context_offset;
     sreq->u.persist.real_request = NULL;
     MPIR_cc_set(sreq->cc_ptr, 0);
 

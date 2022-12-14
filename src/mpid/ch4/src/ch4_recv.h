@@ -217,7 +217,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
     MPIDI_PREQUEST(rreq, datatype) = datatype;
     MPIDI_PREQUEST(rreq, rank) = rank;
     MPIDI_PREQUEST(rreq, tag) = tag;
-    MPIDI_PREQUEST(rreq, context_id) = comm->context_id + context_offset;
+    MPIDI_PREQUEST(rreq, context_offset) = context_offset;
     rreq->u.persist.real_request = NULL;
     MPIR_cc_set(rreq->cc_ptr, 0);
 

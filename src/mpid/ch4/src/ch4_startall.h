@@ -22,7 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_start(MPIR_Request * preq)
             mpi_errno = MPID_Irecv(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
                                    MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
                                    MPIDI_PREQUEST(preq, tag), comm,
-                                   MPIDI_prequest_get_context_offset(preq),
+                                   MPIDI_PREQUEST(preq, context_offset),
                                    &preq->u.persist.real_request);
             break;
 
@@ -30,7 +30,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_start(MPIR_Request * preq)
             mpi_errno = MPID_Isend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
                                    MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
                                    MPIDI_PREQUEST(preq, tag), comm,
-                                   MPIDI_prequest_get_context_offset(preq),
+                                   MPIDI_PREQUEST(preq, context_offset),
                                    &preq->u.persist.real_request);
             break;
 
@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_start(MPIR_Request * preq)
             mpi_errno = MPID_Issend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
                                     MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
                                     MPIDI_PREQUEST(preq, tag), comm,
-                                    MPIDI_prequest_get_context_offset(preq),
+                                    MPIDI_PREQUEST(preq, context_offset),
                                     &preq->u.persist.real_request);
             break;
 

@@ -56,24 +56,6 @@ uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
 /* Static inlines */
 
-/* Reconstruct context offset associated with a persistent request.
- * Input must be a persistent request. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_get_context_offset(MPIR_Request * preq)
-{
-    int context_offset;
-
-    MPIR_FUNC_ENTER;
-
-    MPIR_Assert(preq->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
-                preq->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
-
-    context_offset = MPIDI_PREQUEST(preq, context_id) - preq->comm->context_id;
-
-    MPIR_FUNC_EXIT;
-
-    return context_offset;
-}
-
 MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win_id)
 {
     MPIR_Context_id_t ret;
