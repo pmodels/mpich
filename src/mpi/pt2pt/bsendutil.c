@@ -269,7 +269,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
             /* Try to send the message.  We must use MPID_Isend
              * because this call must not block */
             mpi_errno = MPID_Isend(msg->msgbuf, msg->count, MPI_PACKED,
-                                   dest, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &p->request);
+                                   dest, tag, comm_ptr, 0, &p->request);
             MPIR_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Bsend internal error: isend returned err");
             /* If the error is "request not available", we should
              * put this on the pending list.  This will depend on

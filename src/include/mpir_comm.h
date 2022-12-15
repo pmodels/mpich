@@ -319,7 +319,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
 {
     int mpi_errno = MPI_SUCCESS;
 
-    *attr_out = MPIR_CONTEXT_INTRA_PT2PT;
+    *attr_out = 0;
 
     MPIR_ERR_CHKANDJUMP(comm->stream_comm_type != MPIR_STREAM_COMM_MULTIPLEX,
                         mpi_errno, MPI_ERR_OTHER, "**streamcomm_notmult");

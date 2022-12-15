@@ -60,7 +60,7 @@ static void send_enqueue_cb(void *data)
 
     struct send_data *p = data;
     mpi_errno = MPID_Send(p->buf, p->count, p->datatype, p->dest, p->tag, p->comm_ptr,
-                          MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+                          0, &request_ptr);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
     MPIR_Assertp(request_ptr != NULL);
 
@@ -139,7 +139,7 @@ static void recv_enqueue_cb(void *data)
 
     struct recv_data *p = data;
     mpi_errno = MPID_Irecv(p->buf, p->count, p->datatype, p->source, p->tag, p->comm_ptr,
-                           MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+                           0, &request_ptr);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
     MPIR_Assertp(request_ptr != NULL);
 
@@ -211,7 +211,7 @@ static void isend_enqueue_cb(void *data)
 
     struct send_data *p = data;
     mpi_errno = MPID_Send(p->buf, p->count, p->datatype, p->dest, p->tag, p->comm_ptr,
-                          MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+                          0, &request_ptr);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
     MPIR_Assertp(request_ptr != NULL);
 
@@ -282,7 +282,7 @@ static void irecv_enqueue_cb(void *data)
 
     struct recv_data *p = data;
     mpi_errno = MPID_Irecv(p->buf, p->count, p->datatype, p->source, p->tag, p->comm_ptr,
-                           MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
+                           0, &request_ptr);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
     MPIR_Assertp(request_ptr != NULL);
 

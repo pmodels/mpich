@@ -6,6 +6,15 @@
 #ifndef MPIR_PT2PT_H_INCLUDED
 #define MPIR_PT2PT_H_INCLUDED
 
+/* attr bits allocation:
+ *     0: context offset
+ *     1: MPIR_ERR_PROC_FAILED
+ *     2: MPIR_ERR_OTHER
+ *     3: sync flag
+ *  8-15: source (sender) vci
+ * 16-23: destination (receiver) vci
+ * 24-31: reserved (must be 0)
+ */
 /* NOTE: All explicit vci (allocated) must be greater than 0 */
 
 #define MPIR_PT2PT_ATTR_SRC_VCI_SHIFT 8
