@@ -146,9 +146,24 @@ MPI_Test:
     }
 }
 {
-    mpi_errno = MPIR_Test(request, flag, status);
+    mpi_errno = MPIR_Test(request_ptr, flag, status);
     if (mpi_errno)
         goto fn_fail;
+
+    if (*flag) {
+        mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
+        if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
+            MPIR_Request_free(request_ptr);
+            *request = MPI_REQUEST_NULL;
+        }
+        MPIR_ERR_CHECK(mpi_errno);
+        /* Fall through to the exit */
+    } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
+        MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+        if (status != MPI_STATUS_IGNORE)
+            status->MPI_ERROR = mpi_errno;
+        goto fn_fail;
+    }
 }
 
 MPI_Testall:
@@ -238,9 +253,16 @@ MPI_Wait:
     }
 }
 {
-    mpi_errno = MPIR_Wait(request, status);
+    mpi_errno = MPIR_Wait(request_ptr, status);
     if (mpi_errno)
         goto fn_fail;
+
+    mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
+    if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
+        MPIR_Request_free(request_ptr);
+        *request = MPI_REQUEST_NULL;
+    }
+    MPIR_ERR_CHECK(mpi_errno);
 }
 
 MPI_Waitall:

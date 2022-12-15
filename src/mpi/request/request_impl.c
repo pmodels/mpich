@@ -301,31 +301,13 @@ int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
     return MPIR_Test_state(request_ptr, flag, status, NULL);
 }
 
-int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
+int MPIR_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *request_ptr = NULL;
-
-    MPIR_Request_get_ptr(*request, request_ptr);
-    MPIR_Assert(request_ptr != NULL);
 
     mpi_errno = MPID_Test(request_ptr, flag, status);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (*flag) {
-        mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
-        if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
-            MPIR_Request_free(request_ptr);
-            *request = MPI_REQUEST_NULL;
-        }
-        MPIR_ERR_CHECK(mpi_errno);
-        /* Fall through to the exit */
-    } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
-        MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-        if (status != MPI_STATUS_IGNORE)
-            status->MPI_ERROR = mpi_errno;
-        goto fn_fail;
-    }
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -871,21 +853,17 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
     return mpi_errno;
 }
 
-int MPIR_Wait(MPI_Request * request, MPI_Status * status)
+int MPIR_Wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     int active_flag;
-    MPIR_Request *request_ptr = NULL;
-
-    MPIR_Request_get_ptr(*request, request_ptr);
-    MPIR_Assert(request_ptr != NULL);
 
     if (!MPIR_Request_is_complete(request_ptr)) {
         /* If this is an anysource request including a communicator with
          * anysource disabled, convert the call to an MPI_Test instead so we
          * don't get stuck in the progress engine. */
         if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
-            mpi_errno = MPIR_Test(request, &active_flag, status);
+            mpi_errno = MPIR_Test(request_ptr, &active_flag, status);
             goto fn_exit;
         }
 
@@ -902,13 +880,6 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
-
-    mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
-    if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
-        MPIR_Request_free(request_ptr);
-        *request = MPI_REQUEST_NULL;
-    }
-    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
