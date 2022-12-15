@@ -200,3 +200,4 @@ p_neighb_alltoall 4 strict=false
 p_neighb_alltoallv 4 strict=false
 p_neighb_alltoallw 4 strict=false
 p_order 2 strict=false
+p_inactive timeLimit=10
