@@ -68,12 +68,14 @@ void MPIR_Persist_coll_free_cb(MPIR_Request * request)
         MPIR_Datatype_release_if_not_builtin(coll->datatype);
     }
 
-    if (request->u.persist_coll.sched_type == MPIR_SCHED_NORMAL) {
-        MPIR_Sched_free(request->u.persist_coll.sched);
-    } else if (request->u.persist_coll.sched_type == MPIR_SCHED_GENTRAN) {
-        MPIR_TSP_sched_free(request->u.persist_coll.sched);
-    } else {
-        /* TODO: proper error return */
-        MPIR_Assert(0);
+    if (request->u.persist_coll.sched) {
+        if (request->u.persist_coll.sched_type == MPIR_SCHED_NORMAL) {
+            MPIR_Sched_free(request->u.persist_coll.sched);
+        } else if (request->u.persist_coll.sched_type == MPIR_SCHED_GENTRAN) {
+            MPIR_TSP_sched_free(request->u.persist_coll.sched);
+        } else {
+            /* TODO: proper error return */
+            MPIR_Assert(0);
+        }
     }
 }
