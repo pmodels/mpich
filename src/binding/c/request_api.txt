@@ -135,6 +135,16 @@ MPI_Test_cancelled:
 MPI_Test:
     .desc: Test for the completion of a request
     .docnotes: waitstatus
+{ -- early_return --
+    if (*request == MPI_REQUEST_NULL) {
+        *flag = 1;
+        MPIR_Status_set_empty(status);
+        if (status != MPI_STATUS_IGNORE) {
+            status->MPI_ERROR = MPI_SUCCESS;
+        }
+        goto fn_exit;
+    }
+}
 {
     mpi_errno = MPIR_Test(request, flag, status);
     if (mpi_errno)
@@ -218,6 +228,15 @@ MPI_Testsome:
 MPI_Wait:
     .desc: Waits for an MPI request to complete
     .docnotes: waitstatus
+{ -- early_return --
+    if (*request == MPI_REQUEST_NULL) {
+        MPIR_Status_set_empty(status);
+        if (status != MPI_STATUS_IGNORE) {
+            status->MPI_ERROR = MPI_SUCCESS;
+        }
+        goto fn_exit;
+    }
+}
 {
     mpi_errno = MPIR_Wait(request, status);
     if (mpi_errno)
