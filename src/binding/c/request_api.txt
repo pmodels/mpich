@@ -98,9 +98,6 @@ MPI_Request_get_status:
     if (request == MPI_REQUEST_NULL) {
         *flag = 1;
         MPIR_Status_set_empty(status);
-        if (status != MPI_STATUS_IGNORE) {
-            status->MPI_ERROR = MPI_SUCCESS;
-        }
         goto fn_exit;
     }
 }
@@ -139,9 +136,6 @@ MPI_Test:
     if (*request == MPI_REQUEST_NULL) {
         *flag = 1;
         MPIR_Status_set_empty(status);
-        if (status != MPI_STATUS_IGNORE) {
-            status->MPI_ERROR = MPI_SUCCESS;
-        }
         goto fn_exit;
     }
 }
@@ -246,9 +240,6 @@ MPI_Wait:
 { -- early_return --
     if (*request == MPI_REQUEST_NULL) {
         MPIR_Status_set_empty(status);
-        if (status != MPI_STATUS_IGNORE) {
-            status->MPI_ERROR = MPI_SUCCESS;
-        }
         goto fn_exit;
     }
 }

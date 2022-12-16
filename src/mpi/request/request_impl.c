@@ -533,9 +533,6 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
             }
         } else {
             MPIR_Status_set_empty(&array_of_statuses[i]);
-            if (mpi_errno == MPI_ERR_IN_STATUS) {
-                array_of_statuses[i].MPI_ERROR = MPI_SUCCESS;
-            }
         }
     }
 
