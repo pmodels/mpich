@@ -149,4 +149,7 @@ void MPL_gpu_event_init_count(MPL_gpu_event_t * var, int count);
 void MPL_gpu_event_complete(MPL_gpu_event_t * var);
 bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var);
 
+int MPL_gpu_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
+                                 int comm_size, int comm_rank, int *rank_to_global_dev_id);
+
 #endif /* ifndef MPL_GPU_H_INCLUDED */

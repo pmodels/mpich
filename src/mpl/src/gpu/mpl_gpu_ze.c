@@ -2013,6 +2013,27 @@ static inline int get_immediate_cmdlist(int *dev, MPL_gpu_copy_direction_t dir, 
     goto fn_exit;
 }
 
+static int return_cmdlist(int dev, int engine, MPL_cmdlist_pool_t * cl_entry)
+{
+    int mpl_err = MPL_SUCCESS;
+    if (engine > device_states[dev].numQueueGroups - 1 ||
+        device_states[dev].engines[engine].numQueues == 0) {
+        /* certain type of engine may not be available on the subdevices */
+        dev = MPL_gpu_get_root_device(dev);
+        if (device_states[dev].engines[engine].numQueues == 0)
+            goto fn_fail;
+    }
+    assert(dev < local_ze_device_count);
+    MPL_ze_device_entry_t *device_state = device_states + dev;
+    DL_APPEND(device_state->engines[engine].cmdList_pool, cl_entry);
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
 /* no safty check in this function, call this function with safty protection.
    commit = false: append to command list only
    commit = true:  close the command list and submit to command queue
@@ -2832,6 +2853,99 @@ void MPL_gpu_event_complete(MPL_gpu_event_t * var)
 bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var)
 {
     return (*var) <= 0;
+}
+
+int MPL_gpu_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
+                                 int comm_size, int comm_rank, int *rank_to_global_dev_id)
+{
+    int mpl_err = MPL_SUCCESS;
+    int ret;
+    int engine;
+
+    /* set up cmdList and cmdq array since we need to use multiple copies engines concurrently */
+    MPL_cmdlist_pool_t **cmdList_entry_array =
+        MPL_malloc(sizeof(MPL_cmdlist_pool_t *) * comm_size, MPL_MEM_COLL);
+    ze_command_queue_handle_t *cmdq_array =
+        MPL_malloc(sizeof(ze_command_queue_handle_t) * comm_size, MPL_MEM_COLL);
+    int dev_id = MPL_gpu_global_to_local_dev_id(rank_to_global_dev_id[comm_rank]);
+    MPL_ze_device_entry_t *device_state = device_states + dev_id;
+
+    unsigned int *q_indexes =
+        (unsigned int *) MPL_malloc(sizeof(unsigned int) * MPL_GPU_ENGINE_NUM_TYPES, MPL_MEM_COLL);
+    for (unsigned int i = 0; i < MPL_GPU_ENGINE_NUM_TYPES; i++) {
+        q_indexes[i] = 0;
+    }
+    for (unsigned int i = 0; i < comm_size; i++) {
+        if (MPL_gpu_query_is_same_dev(rank_to_global_dev_id[comm_rank], rank_to_global_dev_id[i])) {
+            engine = engine_conversion[MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH];
+        } else {
+            engine = engine_conversion[MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY];
+        }
+        assert(device_state->engines[engine].cmdQueues);
+        ze_command_queue_handle_t cmdq = device_state->engines[engine].cmdQueues[q_indexes[engine]];
+        if (cmdq == NULL) {
+            mpl_err = create_cmdqueue(device_state->dev_id, engine);
+            if (mpl_err != MPL_SUCCESS)
+                goto fn_fail;
+            cmdq = device_state->engines[engine].cmdQueues[q_indexes[engine]];
+            assert(cmdq);
+        }
+
+        /* set up command queue for next iteration, round robin */
+        q_indexes[engine]++;
+        if (q_indexes[engine] >= device_state->engines[engine].numQueues) {
+            q_indexes[engine] = 0;
+        }
+
+        /* set up command list */
+        MPL_cmdlist_pool_t *cmdList_entry;
+        mpl_err = get_cmdlist(dev_id, engine, &cmdList_entry);
+        if (mpl_err != MPL_SUCCESS)
+            goto fn_fail;
+        ze_command_list_handle_t cmdList = cmdList_entry->cmdList;
+
+        /* append memory copy */
+        ret =
+            zeCommandListAppendMemoryCopy(cmdList, (char *) recv_buf + i * count * data_sz,
+                                          (char *) (remote_bufs[i]) + comm_rank * count * data_sz,
+                                          count * data_sz, NULL, 0, NULL);
+        ZE_ERR_CHECK(ret);
+
+        ret = zeCommandListClose(cmdList);
+        ZE_ERR_CHECK(ret);
+
+        /* execute command list */
+        ret = zeCommandQueueExecuteCommandLists(cmdq, 1, &cmdList, NULL);
+        ZE_ERR_CHECK(ret);
+
+        cmdq_array[i] = cmdq;
+        cmdList_entry_array[i] = cmdList_entry;
+    }
+
+    for (unsigned int i = 0; i < comm_size; i++) {
+        if (MPL_gpu_query_is_same_dev(rank_to_global_dev_id[comm_rank], rank_to_global_dev_id[i])) {
+            engine = engine_conversion[MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH];
+        } else {
+            engine = engine_conversion[MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY];
+        }
+
+        ret = zeCommandQueueSynchronize(cmdq_array[i], UINT64_MAX);
+        ZE_ERR_CHECK(ret);
+
+        mpl_err = return_cmdlist(dev_id, engine, cmdList_entry_array[i]);
+
+        if (mpl_err != MPL_SUCCESS)
+            goto fn_fail;
+    }
+
+  fn_exit:
+    MPL_free(q_indexes);
+    MPL_free(cmdList_entry_array);
+    MPL_free(cmdq_array);
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 #endif /* MPL_HAVE_ZE */

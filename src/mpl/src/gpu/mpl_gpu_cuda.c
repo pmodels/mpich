@@ -490,3 +490,9 @@ bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
     result = cudaStreamQuery(stream);
     return (result != cudaErrorInvalidResourceHandle);
 }
+
+int MPL_gpu_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
+                                 int comm_size, int comm_rank, int *rank_to_dev_id)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}

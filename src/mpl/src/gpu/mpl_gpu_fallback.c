@@ -174,3 +174,9 @@ bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var)
 {
     return (*var) <= 0;
 }
+
+int MPL_gpu_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
+                                 int comm_size, int comm_rank, int *rank_to_dev_id)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}

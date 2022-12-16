@@ -203,7 +203,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_stream_read(const void
         }
     }
     if (errs > 0) {
-        MPL_free(ipc_handles);
         goto fallback;
     }
 
