@@ -1258,11 +1258,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_beta(const void *s
                                                                    MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
-                              recvcount, recvtype, comm_ptr, errflag);
-    MPIR_ERR_CHECK(mpi_errno);
+    int node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
+    int total_comm_size = MPIR_Comm_size(comm_ptr);
+    if (node_comm_size != total_comm_size) {
+        mpi_errno =
+            MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
+                                  recvcount, recvtype, comm_ptr, errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIDI_SHM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcount, recvtype, comm_ptr, errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     return mpi_errno;
