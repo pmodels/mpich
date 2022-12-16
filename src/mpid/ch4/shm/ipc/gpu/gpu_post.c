@@ -519,3 +519,35 @@ int MPIDI_GPU_ipc_event_pool_handle_size(void)
     return 0;
 #endif
 }
+
+int MPIDI_GPU_ipc_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count,
+                                       MPI_Datatype datatype, int comm_size,
+                                       int comm_rank, int *rank_to_global_dev_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPL_HAVE_ZE
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    MPIR_FUNC_ENTER;
+    int mpl_err = MPI_SUCCESS;
+    size_t data_sz;
+    MPIDI_Datatype_check_size(datatype, 1, data_sz);
+
+    mpl_err =
+        MPL_gpu_alltoall_stream_read(remote_bufs, recv_buf, count, data_sz,
+                                     comm_size, comm_rank, rank_to_global_dev_id);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                        "**gpu_alltoall_stream_read");
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    return mpi_errno;
+#endif
+#else
+    return mpi_errno;
+#endif
+}

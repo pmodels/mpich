@@ -949,6 +949,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **gpu_ipc_event_pool_handle_create: gpu_ipc_event_pool_handle_create failed
 **gpu_ipc_event_pool_handle_open: gpu_ipc_event_pool_handle_open failed
 **gpu_ipc_event_pool_handle_close: gpu_ipc_event_pool_handle_close failed
+**gpu_alltoall_stream_read: gpu_alltoall_stream_read failed
 **gpu_init: gpu_init failed
 **gpu_finalize: gpu_finalize failed
 **gpu_get_global_dev_ids: gpu_get_global_dev_ids failed
