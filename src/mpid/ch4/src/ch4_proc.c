@@ -196,6 +196,7 @@ int MPIDIU_avt_destroy(void)
     }
 
     MPL_free(MPIDI_global.avt_mgr.av_tables);
+    memset(&MPIDI_global.avt_mgr, 0, sizeof(MPIDI_global.avt_mgr));
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
