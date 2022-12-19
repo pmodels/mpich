@@ -235,6 +235,7 @@ void MPIR_pmi_finalize(void)
     MPL_free(MPIR_Process.node_local_map);
 
     MPL_free(hwloc_topology_xmlfile);
+    hwloc_topology_xmlfile = NULL;
 }
 
 void MPIR_pmi_abort(int exit_code, const char *error_msg)
