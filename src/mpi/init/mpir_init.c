@@ -161,6 +161,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
      * other and can be initialized in any order. */
     /**********************************************************************/
 
+    MPIR_context_id_init();
     MPIR_Typerep_init();
     MPII_thread_mutex_create();
     MPII_init_request();
