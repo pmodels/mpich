@@ -30,13 +30,14 @@ static inline int MPIR_T_cvar_env_init(void)
     return MPIR_T_cvar_init();
 }
 
+int MPIR_T_env_initialized = FALSE;
+
 int MPIR_T_env_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    static int initialized = FALSE;
 
-    if (!initialized) {
-        initialized = TRUE;
+    if (!MPIR_T_env_initialized) {
+        MPIR_T_env_initialized = TRUE;
         MPIR_T_enum_env_init();
         MPIR_T_cat_env_init();
         mpi_errno = MPIR_T_cvar_env_init();
