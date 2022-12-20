@@ -140,9 +140,13 @@ MPI_Test:
     }
 }
 {
-    mpi_errno = MPIR_Test(request_ptr, flag, status);
-    if (mpi_errno)
-        goto fn_fail;
+    if (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPIR_Test(request_ptr, flag, status);
+        if (mpi_errno)
+            goto fn_fail;
+    } else {
+        *flag = TRUE;
+    }
 
     if (*flag) {
         mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
@@ -244,9 +248,11 @@ MPI_Wait:
     }
 }
 {
-    mpi_errno = MPIR_Wait(request_ptr, status);
-    if (mpi_errno)
-        goto fn_fail;
+    if (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPIR_Wait(request_ptr, status);
+        if (mpi_errno)
+            goto fn_fail;
+    }
 
     mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
     if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
