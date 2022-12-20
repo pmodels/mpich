@@ -74,7 +74,7 @@ cvars:
             static int poll_count_ = 0;                         \
             if (poll_count_ >= MPIR_CVAR_POLLS_BEFORE_YIELD) { \
                 poll_count_ = 0;                                \
-                MPL_sched_yield();                              \
+                MPID_Thread_yield();                            \
             } else {                                            \
                 ++poll_count_;                                  \
             }                                                   \

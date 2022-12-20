@@ -8,6 +8,24 @@
 
 #include "ofi_impl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_OFI_DISABLE_INJECT_WRITE
+      category    : CH4_OFI
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Avoid use fi_inject_write. For some provider, e.g. tcp;ofi_rxm,
+        inject write may break the synchronization.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #define MPIDI_OFI_QUERY_ATOMIC_COUNT         0
 #define MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT   1
 #define MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT 2
@@ -201,7 +219,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         goto am_fallback;
 
     /* small contiguous messages */
-    if (origin_contig && target_contig && (origin_bytes <= MPIDI_OFI_global.max_buffered_write)) {
+    if (origin_contig && target_contig && (origin_bytes <= MPIDI_OFI_global.max_buffered_write) &&
+        !MPIR_CVAR_CH4_OFI_DISABLE_INJECT_WRITE) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         MPIDI_OFI_win_cntr_incr(win);
         MPIDI_OFI_CALL_RETRY(fi_inject_write(MPIDI_OFI_WIN(win).ep,
