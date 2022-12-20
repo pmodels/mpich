@@ -42,6 +42,9 @@ int main(int argc, char *argv[])
     MPI_Finalize();
 #else
     int rank = library_foo_test();
+#ifdef RE_INIT
+    library_foo_test();
+#endif
 #endif
     if (rank == 0 && errs == 0) {
         printf("No Errors\n");

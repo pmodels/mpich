@@ -18,6 +18,7 @@ noinst_PROGRAMS = \
     initstat      \
     session       \
     session_mult_init \
+    session_re_init \
     session_psets \
     session_self  \
     version       \
@@ -27,3 +28,5 @@ noinst_PROGRAMS = \
 
 session_mult_init_SOURCES = session.c
 session_mult_init_CPPFLAGS = -DMULT_INIT $(AM_CPPFLAGS)
+session_re_init_SOURCES = session.c
+session_re_init_CPPFLAGS = -DRE_INIT $(AM_CPPFLAGS)
