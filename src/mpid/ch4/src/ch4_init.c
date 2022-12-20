@@ -412,8 +412,10 @@ int MPID_Init(int requested, int *provided)
     MPIR_ERR_CHKANDJUMP1(MPIDI_global.prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER,
                          "**signal", "**signal %s",
                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
-    if (MPIDI_global.prev_sighandler == SIG_IGN || MPIDI_global.prev_sighandler == SIG_DFL)
+    if (MPIDI_global.prev_sighandler == SIG_IGN || MPIDI_global.prev_sighandler == SIG_DFL ||
+        MPIDI_global.prev_sighandler == MPIDI_sigusr1_handler) {
         MPIDI_global.prev_sighandler = NULL;
+    }
 #endif
 
     mpi_errno = MPIDI_Self_init();
@@ -685,6 +687,8 @@ int MPID_Finalize(void)
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
     }
+
+    memset(&MPIDI_global, 0, sizeof(MPIDI_global));
 
   fn_exit:
     MPIR_FUNC_EXIT;
