@@ -139,7 +139,7 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
         MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part) = msg_hdr->msg_part;
 
 #ifndef NDEBUG
-        /* make sure we don't split up a datatype */
+        /* make sure we don't split up a datatype on the sender side */
         MPI_Aint count;
         MPIR_Datatype_get_size_macro(MPIDI_PART_REQUEST(part_sreq, datatype), count);
         count *= part_sreq->u.part.partitions * MPIDI_PART_REQUEST(part_sreq, count);
@@ -165,13 +165,13 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
     /* if the request is active (i.e. has been started) then check if we can send something */
     const bool is_active = MPIR_Part_request_is_active(part_sreq);
     if (is_active) {
+        const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
         if (is_first_cts) {
             /* if the request is active and it's the first CTS then the correct cc value
              * was unknown when activating the request and we have to set it */
-            MPIR_cc_set(part_sreq->cc_ptr, msg_hdr->msg_part);
+            MPIR_cc_set(part_sreq->cc_ptr, msg_part);
         }
         /* might have partitions that are ready to be sent */
-        const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
         mpi_errno = MPIDIG_part_issue_msg_if_ready(0, msg_part, part_sreq, MPIDIG_PART_REPLY);
         MPIR_ERR_CHECK(mpi_errno);
     }

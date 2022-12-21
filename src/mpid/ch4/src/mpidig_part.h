@@ -78,7 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int p_low, int p_high,
         int incomplete;
         MPIR_cc_decr(&cc_part[i], &incomplete);
 
-        /* is complete, try to send the msg */
+        /* send the partition if matched and is complete, try to send the msg */
         if (!incomplete) {
             const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
             MPIR_Assert(msg_part >= 0);
@@ -89,6 +89,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int p_low, int p_high,
             const int msg_ub = MPIDIG_part_idx_ub(i, n_part, msg_part);
             mpi_errno =
                 MPIDIG_part_issue_msg_if_ready(msg_lb, msg_ub, part_sreq, MPIDIG_PART_REGULAR);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            /* if it's not matched or not complete then we miss the CTS (first one or not)
+             * so we poke progress and hopefully get it */
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+            mpi_errno = MPIDI_progress_test_vci(0);
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -111,7 +118,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
 
     const int n_part = part_sreq->u.part.partitions;
     MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_part);
-
     for (int i = 0; i < length; i++) {
         const int ipart = array_of_partitions[i];
         // mark the partition as ready
@@ -123,11 +129,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
             const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
             MPIR_Assert(msg_part >= 0);
 
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
             const int msg_lb = MPIDIG_part_idx_lb(ipart, n_part, msg_part);
             const int msg_ub = MPIDIG_part_idx_ub(ipart, n_part, msg_part);
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
             mpi_errno =
                 MPIDIG_part_issue_msg_if_ready(msg_lb, msg_ub, part_sreq, MPIDIG_PART_REGULAR);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            /* if it's not matched or not complete then we miss the CTS
+             * so we poke progress and hopefully get it
+             * if we receive the CTS then we will proceed to the send there*/
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+            mpi_errno = MPIDI_progress_test_vci(0);
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -175,8 +189,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
         // TODO: is it correct to lock the VCI that late in the process?
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPIDI_progress_test_vci(0);
-        MPIR_ERR_CHECK(mpi_errno);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
