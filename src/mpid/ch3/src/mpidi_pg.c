@@ -47,6 +47,7 @@ int MPIDI_PG_Init(MPIDI_PG_Compare_ids_fn_t compare_ids_fn,
     return mpi_errno;
 }
 
+extern int MPIDI_lpid_counter;
 /*@ 
    MPIDI_PG_Finalize - Finalize the process groups, including freeing all
    process group structures
@@ -98,6 +99,7 @@ int MPIDI_PG_Finalize(void)
 	MPIDI_PG_Destroy(MPIDI_Process.my_pg);
     } 
     MPIDI_Process.my_pg = NULL;
+    MPIDI_lpid_counter = 0;
 
     /* ifdefing out this check because the list will not be NULL in 
        Ch3_finalize because
