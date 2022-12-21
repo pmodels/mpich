@@ -853,15 +853,6 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
 int MPIR_Wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    int active_flag;
-
-    /* If this is an anysource request including a communicator with
-     * anysource disabled, convert the call to an MPI_Test instead so we
-     * don't get stuck in the progress engine. */
-    if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
-        mpi_errno = MPIR_Test(request_ptr, &active_flag, status);
-        goto fn_exit;
-    }
 
     if (MPIR_Request_has_poll_fn(request_ptr)) {
         while (!MPIR_Request_is_complete(request_ptr)) {
