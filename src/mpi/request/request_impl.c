@@ -279,16 +279,6 @@ int MPIR_Test_state(MPIR_Request * request_ptr, int *flag, MPI_Status * status,
     mpi_errno = MPID_Progress_test(state);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (MPIR_Request_has_poll_fn(request_ptr)) {
-        mpi_errno = MPIR_Grequest_poll(request_ptr, status);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    if (MPIR_Request_is_complete(request_ptr))
-        *flag = TRUE;
-    else
-        *flag = FALSE;
-
   fn_exit:
     return mpi_errno;
 
@@ -307,6 +297,16 @@ int MPIR_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 
     mpi_errno = MPID_Test(request_ptr, flag, status);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIR_Request_has_poll_fn(request_ptr)) {
+        mpi_errno = MPIR_Grequest_poll(request_ptr, status);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (MPIR_Request_is_complete(request_ptr))
+        *flag = TRUE;
+    else
+        *flag = FALSE;
 
   fn_exit:
     return mpi_errno;
