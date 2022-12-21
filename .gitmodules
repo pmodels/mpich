@@ -1,0 +1,15 @@
+[submodule "modules/libfabric"]
+	path = modules/libfabric
+	url = https://github.com/pmodels/libfabric
+[submodule "modules/hwloc"]
+	path = modules/hwloc
+	url = https://github.com/pmodels/hwloc
+[submodule "modules/ucx"]
+	path = modules/ucx
+	url = https://github.com/pmodels/ucx
+[submodule "modules/json-c"]
+	path = modules/json-c
+	url = https://github.com/pmodels/json-c
+[submodule "modules/yaksa"]
+	path = modules/yaksa
+	url = https://github.com/pmodels/yaksa
