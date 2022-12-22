@@ -484,6 +484,10 @@ int MPL_dbg_init(int wnum, int wrank)
     int ret;
     FILE *dbg_fp = NULL;
 
+    /* in case of re-init */
+    num_classnames = 0;
+    num_unregistered_classes = 0;
+
     /* if the DBG_MSG system was already initialized, say by the
      * device, then return immediately.  Note that the device is then
      * responsible for handling the file mode (e.g., reopen when the
