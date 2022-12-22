@@ -109,6 +109,8 @@ cvars:
         Variable to select algorithm for intra-node alltoall
         mpir           - Fallback to MPIR collectives (default)
         stream_read    - Uses read-based collective from streamer
+        kernel_read    - Uses read-based collective from kernel
+        kernel_write    - Uses write-based collective from kernel
 
     - name        : MPIR_CVAR_POSIX_POLL_FREQUENCY
       category    : COLLECTIVE
@@ -476,6 +478,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall(const void *sendbuf, MPI_A
             mpi_errno = MPIDI_POSIX_mpi_alltoall_gpu_stream_read(sendbuf, sendcount, sendtype,
                                                                  recvbuf, recvcount, recvtype,
                                                                  comm, errflag);
+            break;
+
+        case MPIR_CVAR_ALLTOALL_POSIX_INTRA_ALGORITHM_kernel_read:
+            mpi_errno = MPIDI_POSIX_mpi_alltoall_gpu_kernel_read(sendbuf, sendcount, sendtype,
+                                                                 recvbuf, recvcount, recvtype,
+                                                                 comm, errflag);
+            break;
+
+        case MPIR_CVAR_ALLTOALL_POSIX_INTRA_ALGORITHM_kernel_write:
+            mpi_errno = MPIDI_POSIX_mpi_alltoall_gpu_kernel_write(sendbuf, sendcount, sendtype,
+                                                                  recvbuf, recvcount, recvtype,
+                                                                  comm, errflag);
             break;
 
         case MPIR_CVAR_ALLTOALL_POSIX_INTRA_ALGORITHM_mpir:

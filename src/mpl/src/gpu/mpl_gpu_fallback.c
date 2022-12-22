@@ -180,3 +180,17 @@ int MPL_gpu_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count, 
 {
     return MPL_ERR_GPU_INTERNAL;
 }
+
+int MPL_gpu_alltoall_kernel_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
+                                 int comm_size, int comm_rank, int dev_id,
+                                 const char *datatype_name, const char *kernel_location)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_alltoall_kernel_write(void *send_buf, void **remote_bufs, int count, size_t data_sz,
+                                  int comm_size, int comm_rank, int dev_id,
+                                  const char *datatype_name, const char *kernel_location)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}

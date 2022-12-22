@@ -138,6 +138,10 @@ ze_driver_handle_t ze_driver_handle;
  * shared_device_fds, since these are only opened on the upper devices. */
 ze_device_handle_t *ze_devices_handle = NULL;
 ze_context_handle_t ze_context;
+ze_module_handle_t ze_module;
+ze_kernel_handle_t ze_kernel;
+bool is_ze_module_initialized = false;
+bool is_ze_kernel_initialized = false;
 uint32_t local_ze_device_count; /* This counts both devices and subdevices */
 uint32_t global_ze_device_count;        /* This counts both devices and subdevices */
 
@@ -1193,6 +1197,9 @@ int MPL_gpu_finalize(void)
     }
     MPL_free(device_states);
     MPL_free(engine_conversion);
+
+    zeKernelDestroy(ze_kernel);
+    zeModuleDestroy(ze_module);
 
     MPL_event_pool_destroy();
     zeEventPoolDestroy(local_event_pool);
@@ -2948,4 +2955,270 @@ int MPL_gpu_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count, 
     goto fn_exit;
 }
 
+static uint8_t *read_kernel_file(const char *file, uint32_t * length)
+{
+    FILE *bin_file;
+    uint8_t *file_buf;
+    int i = 0;
+
+    bin_file = fopen(file, "rb");
+    if (bin_file == NULL) {
+        printf("WARNING: File not found\n");
+        return NULL;
+    }
+
+    fseek(bin_file, 0L, SEEK_END);
+    *length = ftell(bin_file);
+    if (!*length)
+        return NULL;
+
+    file_buf = (uint8_t *) MPL_malloc(*length * sizeof(*file_buf), MPL_MEM_OTHER);
+    rewind(bin_file);
+    while (i < *length) {
+        file_buf[i++] = fgetc(bin_file);
+    }
+    fclose(bin_file);
+    return file_buf;
+}
+
+static ze_result_t init_module(ze_device_handle_t device, const char *kernel_location)
+{
+    ze_result_t ret;
+    uint32_t file_len = 0;
+    uint8_t *file_buf = NULL;
+    file_buf = read_kernel_file(kernel_location, &file_len);
+
+    ze_module_desc_t module_desc = {
+        .stype = ZE_STRUCTURE_TYPE_MODULE_DESC,
+        .pNext = NULL,
+        .format = ZE_MODULE_FORMAT_IL_SPIRV,
+        .inputSize = file_len,
+        .pInputModule = file_buf,
+        .pBuildFlags = NULL,
+        .pConstants = NULL,
+    };
+
+    ze_module_build_log_handle_t build_log;
+    ret = zeModuleCreate(ze_context, device, &module_desc, &ze_module, &build_log);
+    if (ret) {
+        size_t log_size = 0;
+        char *log_string = NULL;
+        int i = 0;
+        zeModuleBuildLogGetString(build_log, &log_size, NULL);
+        log_string = (char *) MPL_malloc(log_size * sizeof(log_string), MPL_MEM_OTHER);
+        zeModuleBuildLogGetString(build_log, &log_size, log_string);
+        while (i < log_size) {
+            printf("%c", log_string[i++]);
+        }
+        MPL_free(log_string);
+    }
+
+    if (zeModuleBuildLogDestroy(build_log)) {
+        printf("WARNING: Error destroying build log\n");
+    }
+
+    MPL_free(file_buf);
+    return ret;
+}
+
+static ze_result_t init_kernel(ze_kernel_handle_t * kernel, const char *kernel_name)
+{
+    const ze_kernel_desc_t kernel_desc = {
+        .stype = ZE_STRUCTURE_TYPE_KERNEL_DESC,
+        .pNext = NULL,
+        .flags = 0,
+        .pKernelName = kernel_name,
+    };
+    return zeKernelCreate(ze_module, &kernel_desc, kernel);
+}
+
+int MPL_gpu_alltoall_kernel_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
+                                 int comm_size, int comm_rank, int dev_id,
+                                 const char *datatype_name, const char *kernel_location)
+{
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
+    int engine = engine_conversion[MPL_GPU_ENGINE_TYPE_COMPUTE];
+
+    MPL_ze_device_entry_t *device_state = device_states + dev_id;
+
+    /* set up command queue */
+    int q_index = device_state->engines[engine].curQueue;
+    assert(device_state->engines[engine].cmdQueues);
+    ze_command_queue_handle_t cmdq = device_state->engines[engine].cmdQueues[q_index];
+    if (cmdq == NULL) {
+        mpl_err = create_cmdqueue(device_state->dev_id, engine);
+        if (mpl_err != MPL_SUCCESS)
+            goto fn_fail;
+        cmdq = device_state->engines[engine].cmdQueues[q_index];
+        assert(cmdq);
+    }
+
+    /* set up command list */
+    MPL_cmdlist_pool_t *cmdList_entry;
+    mpl_err = get_cmdlist(dev_id, engine, &cmdList_entry);
+    if (mpl_err != MPL_SUCCESS)
+        goto fn_fail;
+    ze_command_list_handle_t cmdList = cmdList_entry->cmdList;
+
+    /* init ze_module and ze_kernel */
+    if (!is_ze_module_initialized) {
+        ret = init_module(ze_devices_handle[dev_id], kernel_location);
+        ZE_ERR_CHECK(ret);
+        is_ze_module_initialized = true;
+    }
+    if (!is_ze_kernel_initialized) {
+        char kernel_name[128];
+        snprintf(kernel_name, 128, "alltoall_kernel_%d_%s", comm_size, datatype_name);
+        ret = init_kernel(&ze_kernel, kernel_name);
+        ZE_ERR_CHECK(ret);
+        is_ze_kernel_initialized = true;
+    }
+
+    char **in_bufs = (char **) MPL_malloc(sizeof(char *) * comm_size, MPL_MEM_COLL);
+    char **out_bufs = (char **) MPL_malloc(sizeof(char *) * comm_size, MPL_MEM_COLL);
+    for (unsigned int i = 0; i < comm_size; i++) {
+        in_bufs[i] = (char *) (remote_bufs[i]) + comm_rank * count * data_sz;
+        out_bufs[i] = (char *) recv_buf + i * count * data_sz;
+    }
+
+    uint32_t groupSizeX, groupSizeY, groupSizeZ;
+    unsigned long temp_count = count;
+    ret =
+        zeKernelSuggestGroupSize(ze_kernel, temp_count, 1, 1, &groupSizeX, &groupSizeY,
+                                 &groupSizeZ);
+    ZE_ERR_CHECK(ret);
+    ret = zeKernelSetGroupSize(ze_kernel, groupSizeX, 1, 1);
+    ZE_ERR_CHECK(ret);
+    uint32_t groupCountX = (uint32_t) temp_count / groupSizeX;
+    if (groupCountX < 1) {
+        groupCountX = 1;
+    }
+    ze_group_count_t launch_args = { groupCountX, 1, 1 };
+    for (int i = 0; i < comm_size; i++) {
+        ret = zeKernelSetArgumentValue(ze_kernel, 2 * i, sizeof(int *), &(in_bufs[i]));
+        ZE_ERR_CHECK(ret);
+        ret = zeKernelSetArgumentValue(ze_kernel, 2 * i + 1, sizeof(int *), &(out_bufs[i]));
+        ZE_ERR_CHECK(ret);
+    }
+    ret = zeKernelSetArgumentValue(ze_kernel, 2 * comm_size, sizeof(unsigned long), &temp_count);
+    ZE_ERR_CHECK(ret);
+    ret = zeCommandListAppendLaunchKernel(cmdList, ze_kernel, &launch_args, NULL, 0, NULL);
+    ZE_ERR_CHECK(ret);
+    ret = zeCommandListClose(cmdList);
+    ZE_ERR_CHECK(ret);
+    ret = zeCommandQueueExecuteCommandLists(cmdq, 1, &cmdList, NULL);
+    ZE_ERR_CHECK(ret);
+
+    ret = zeCommandQueueSynchronize(cmdq, UINT64_MAX);
+    ZE_ERR_CHECK(ret);
+
+    mpl_err = return_cmdlist(dev_id, engine, cmdList_entry);
+    if (mpl_err != MPL_SUCCESS)
+        goto fn_fail;
+
+    MPL_free(in_bufs);
+    MPL_free(out_bufs);
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+int MPL_gpu_alltoall_kernel_write(void *send_buf, void **remote_bufs, int count, size_t data_sz,
+                                  int comm_size, int comm_rank, int dev_id,
+                                  const char *datatype_name, const char *kernel_location)
+{
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
+    int engine = engine_conversion[MPL_GPU_ENGINE_TYPE_COMPUTE];
+
+    MPL_ze_device_entry_t *device_state = device_states + dev_id;
+
+    /* set up command queue */
+    int q_index = device_state->engines[engine].curQueue;
+    assert(device_state->engines[engine].cmdQueues);
+    ze_command_queue_handle_t cmdq = device_state->engines[engine].cmdQueues[q_index];
+    if (cmdq == NULL) {
+        mpl_err = create_cmdqueue(device_state->dev_id, engine);
+        if (mpl_err != MPL_SUCCESS)
+            goto fn_fail;
+        cmdq = device_state->engines[engine].cmdQueues[q_index];
+        assert(cmdq);
+    }
+
+    /* set up command list */
+    MPL_cmdlist_pool_t *cmdList_entry;
+    mpl_err = get_cmdlist(dev_id, engine, &cmdList_entry);
+    if (mpl_err != MPL_SUCCESS)
+        goto fn_fail;
+    ze_command_list_handle_t cmdList = cmdList_entry->cmdList;
+
+    /* init ze_module and ze_kernel */
+    if (!is_ze_module_initialized) {
+        ret = init_module(ze_devices_handle[dev_id], kernel_location);
+        ZE_ERR_CHECK(ret);
+        is_ze_module_initialized = true;
+    }
+    if (!is_ze_kernel_initialized) {
+        char kernel_name[128];
+        snprintf(kernel_name, 128, "alltoall_kernel_%d_%s", comm_size, datatype_name);
+        ret = init_kernel(&ze_kernel, kernel_name);
+        ZE_ERR_CHECK(ret);
+        is_ze_kernel_initialized = true;
+    }
+
+    char **in_bufs = (char **) MPL_malloc(sizeof(char *) * comm_size, MPL_MEM_COLL);
+    char **out_bufs = (char **) MPL_malloc(sizeof(char *) * comm_size, MPL_MEM_COLL);
+    for (unsigned int i = 0; i < comm_size; i++) {
+        in_bufs[i] = (char *) send_buf + i * count * data_sz;
+        out_bufs[i] = (char *) (remote_bufs[i]) + comm_rank * count * data_sz;
+    }
+
+    uint32_t groupSizeX, groupSizeY, groupSizeZ;
+    unsigned long temp_count = count;
+    ret =
+        zeKernelSuggestGroupSize(ze_kernel, temp_count, 1, 1, &groupSizeX, &groupSizeY,
+                                 &groupSizeZ);
+    ZE_ERR_CHECK(ret);
+    ret = zeKernelSetGroupSize(ze_kernel, groupSizeX, 1, 1);
+    ZE_ERR_CHECK(ret);
+    uint32_t groupCountX = (uint32_t) temp_count / groupSizeX;
+    if (groupCountX < 1) {
+        groupCountX = 1;
+    }
+    ze_group_count_t launch_args = { groupCountX, 1, 1 };
+    for (int i = 0; i < comm_size; i++) {
+        ret = zeKernelSetArgumentValue(ze_kernel, 2 * i, sizeof(int *), &(in_bufs[i]));
+        ZE_ERR_CHECK(ret);
+        ret = zeKernelSetArgumentValue(ze_kernel, 2 * i + 1, sizeof(int *), &(out_bufs[i]));
+        ZE_ERR_CHECK(ret);
+    }
+    ret = zeKernelSetArgumentValue(ze_kernel, 2 * comm_size, sizeof(unsigned long), &temp_count);
+    ZE_ERR_CHECK(ret);
+    ret = zeCommandListAppendLaunchKernel(cmdList, ze_kernel, &launch_args, NULL, 0, NULL);
+    ZE_ERR_CHECK(ret);
+    ret = zeCommandListClose(cmdList);
+    ZE_ERR_CHECK(ret);
+    ret = zeCommandQueueExecuteCommandLists(cmdq, 1, &cmdList, NULL);
+    ZE_ERR_CHECK(ret);
+
+    ret = zeCommandQueueSynchronize(cmdq, UINT64_MAX);
+    ZE_ERR_CHECK(ret);
+
+    mpl_err = return_cmdlist(dev_id, engine, cmdList_entry);
+    if (mpl_err != MPL_SUCCESS)
+        goto fn_fail;
+
+    MPL_free(in_bufs);
+    MPL_free(out_bufs);
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
 #endif /* MPL_HAVE_ZE */

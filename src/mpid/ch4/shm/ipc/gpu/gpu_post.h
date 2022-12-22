@@ -75,5 +75,13 @@ int MPIDI_GPU_ipc_event_pool_handle_size(void);
 int MPIDI_GPU_ipc_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count,
                                        MPI_Datatype datatype, int comm_size,
                                        int comm_rank, int *rank_to_global_dev_id);
+int MPIDI_GPU_ipc_alltoall_kernel_read(void **remote_bufs, void *recv_buf, int count,
+                                       MPI_Datatype datatype, int comm_size,
+                                       int comm_rank, int dev_id, const char *datatype_name,
+                                       const char *kernel_location);
+int MPIDI_GPU_ipc_alltoall_kernel_write(void *send_buf, void **remote_bufs, int count,
+                                        MPI_Datatype datatype, int comm_size,
+                                        int comm_rank, int dev_id, const char *datatype_name,
+                                        const char *kernel_location);
 
 #endif /* GPU_POST_H_INCLUDED */

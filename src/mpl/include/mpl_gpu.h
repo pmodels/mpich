@@ -151,5 +151,11 @@ bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var);
 
 int MPL_gpu_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
                                  int comm_size, int comm_rank, int *rank_to_global_dev_id);
+int MPL_gpu_alltoall_kernel_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
+                                 int comm_size, int comm_rank, int dev_id,
+                                 const char *datatype_name, const char *kernel_location);
+int MPL_gpu_alltoall_kernel_write(void *send_buf, void **remote_bufs, int count, size_t data_sz,
+                                  int comm_size, int comm_rank, int dev_id,
+                                  const char *datatype_name, const char *kernel_location);
 
 #endif /* ifndef MPL_GPU_H_INCLUDED */
