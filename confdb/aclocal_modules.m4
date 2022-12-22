@@ -108,18 +108,28 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
             fi
             PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
             PAC_APPEND_FLAG([-I${main_top_builddir}/modules/hwloc/include],[CPPFLAGS])
+            hwloc_config_status="${main_top_builddir}/modules/hwloc/config.status"
         ], [
             dnl ---- sub-configure (hydra) ----
             if test "$FROM_MPICH" = "yes"; then
                 hwloc_includedir="-I${main_top_srcdir}/modules/hwloc/include -I${main_top_builddir}/modules/hwloc/include"
                 hwloc_lib="${main_top_builddir}/modules/hwloc/hwloc/libhwloc_embedded.la"
+                hwloc_config_status="${main_top_builddir}/modules/hwloc/config.status"
             else
                 PAC_CONFIG_HWLOC_EMBEDDED()
                 dnl Note that single quote is intentional to pass the variable as is
                 hwloc_srcdir="hwloc_embedded_dir"
                 hwloc_includedir='-I${srcdir}/${hwloc_srcdir}/include -I${builddir}/${hwloc_srcdir}/include'
                 hwloc_lib='${builddir}/${hwloc_srcdir}/hwloc/libhwloc_embedded.la'
+                hwloc_config_status="${builddir}/${hwloc_srcdir}/config.status"
             fi
         ])
+
+        # capture the line -- S["HWLOC_DARWIN_LDFLAGS"]=" -framework Foundation -framework IOKit"
+        hwloc_darwin_ldflags=$(awk -F'"' '/^S."HWLOC_DARWIN_LDFLAGS"/ {print $[]4}' "$hwloc_config_status")
+        if test -n "$hwloc_darwin_ldflags" ; then
+            echo "hwloc_darwin_ldflags = $hwloc_darwin_ldflags"
+            PAC_APPEND_FLAG([$hwloc_darwin_ldflags], [LDFLAGS])
+        fi
     fi
 ])
