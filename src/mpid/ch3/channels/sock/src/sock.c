@@ -1225,6 +1225,8 @@ int MPIDI_CH3I_Sock_finalize(void)
 
     if (MPIDI_CH3I_Socki_initialized == 0) {
         MPIDI_CH3I_Socki_free_eventq_mem();
+        MPIDI_CH3I_Socki_eventq_pool = NULL;
+        MPIDI_CH3I_Socki_set_next_id = 0;
     }
 #ifdef USE_SOCK_VERIFY
   fn_exit:
