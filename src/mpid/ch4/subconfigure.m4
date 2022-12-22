@@ -395,10 +395,6 @@ if test "$ac_cv_func_gethostname" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
 fi
 
-# make sure we support signal
-AC_CHECK_HEADERS(signal.h)
-AC_CHECK_FUNCS(signal)
-
 AC_CONFIG_FILES([
 src/mpid/ch4/src/mpid_ch4_net_array.c
 src/mpid/ch4/include/netmodpre.h

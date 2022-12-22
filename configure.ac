@@ -3699,6 +3699,10 @@ if test "$enable_g_mem" != "yes" ; then
     fi
 fi
 
+# make sure we support signal
+AC_CHECK_HEADERS(signal.h)
+AC_CHECK_FUNCS(signal)
+
 # ----------------------------------------------------------------------------
 # Look for some non-posix, but commonly provided functions
 # ----------------------------------------------------------------------------

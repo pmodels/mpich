@@ -94,10 +94,6 @@ fi
 AC_ARG_ENABLE(fast, [--enable-fast - pick the appropriate options for fast execution.
 This turns off error checking and timing collection],,enable_fast=no)
 
-# make sure we support signal
-AC_CHECK_HEADERS(signal.h)
-AC_CHECK_FUNCS(signal)
-
 nemesis_nets_dirs=""
 nemesis_nets_strings=""
 nemesis_nets_array=""   

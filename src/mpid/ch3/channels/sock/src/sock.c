@@ -1200,6 +1200,12 @@ int MPIDI_CH3I_Sock_init(void)
     MPIDI_CH3I_DBG_SOCK_CONNECT = MPL_dbg_class_alloc("SOCK_CONNECT", "sock_connect");
 #endif
 
+#ifdef HAVE_SIGNAL
+    /* ch3:sock do not support fault-tolerance feature, disable the signal so
+     * hydra's -disable-auto-cleanup can still work */
+    signal(SIGUSR1, SIG_IGN);
+#endif
+
     MPIDI_CH3I_Socki_initialized++;
 
     MPIR_FUNC_EXIT;
