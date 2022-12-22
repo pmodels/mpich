@@ -176,9 +176,10 @@ int MPIR_Bsend_detach(void *bufferp, MPI_Aint * size)
         MPII_Bsend_data_t *p = BsendBuffer.active;
 
         while (p) {
-            MPI_Request r = p->request->handle;
-            mpi_errno = MPIR_Wait(&r, MPI_STATUS_IGNORE);
+            MPIR_Request *r = p->request;
+            mpi_errno = MPID_Wait(r, MPI_STATUS_IGNORE);
             MPIR_ERR_CHECK(mpi_errno);
+            MPIR_Request_free(r);
             p = p->next;
         }
     }

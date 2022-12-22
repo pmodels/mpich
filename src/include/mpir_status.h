@@ -43,13 +43,13 @@
             MPIR_STATUS_SET_CANCEL_BIT(*(status_), cancelled_)  \
     }
 
-/* Do not set MPI_ERROR (only set if ERR_IN_STATUS is returned */
 #define MPIR_Status_set_empty(status_)                          \
     {                                                           \
         if ((status_) != MPI_STATUS_IGNORE)                     \
         {                                                       \
             (status_)->MPI_SOURCE = MPI_ANY_SOURCE;             \
             (status_)->MPI_TAG = MPI_ANY_TAG;                   \
+            (status_)->MPI_ERROR = MPI_SUCCESS;                 \
             MPIR_STATUS_SET_COUNT(*(status_), 0);               \
             MPIR_STATUS_SET_CANCEL_BIT(*(status_), FALSE);      \
         }                                                       \

@@ -279,16 +279,6 @@ int MPIR_Test_state(MPIR_Request * request_ptr, int *flag, MPI_Status * status,
     mpi_errno = MPID_Progress_test(state);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (MPIR_Request_has_poll_fn(request_ptr)) {
-        mpi_errno = MPIR_Grequest_poll(request_ptr, status);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    if (MPIR_Request_is_complete(request_ptr))
-        *flag = TRUE;
-    else
-        *flag = FALSE;
-
   fn_exit:
     return mpi_errno;
 
@@ -301,38 +291,23 @@ int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
     return MPIR_Test_state(request_ptr, flag, status, NULL);
 }
 
-int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
+int MPIR_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *request_ptr = NULL;
-
-    /* If this is a null request handle, then return an empty status */
-    if (*request == MPI_REQUEST_NULL) {
-        MPIR_Status_set_empty(status);
-        *flag = TRUE;
-        goto fn_exit;
-    }
-
-    MPIR_Request_get_ptr(*request, request_ptr);
-    MPIR_Assert(request_ptr != NULL);
 
     mpi_errno = MPID_Test(request_ptr, flag, status);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (*flag) {
-        mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
-        if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
-            MPIR_Request_free(request_ptr);
-            *request = MPI_REQUEST_NULL;
-        }
+    if (MPIR_Request_has_poll_fn(request_ptr)) {
+        mpi_errno = MPIR_Grequest_poll(request_ptr, status);
         MPIR_ERR_CHECK(mpi_errno);
-        /* Fall through to the exit */
-    } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
-        MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-        if (status != MPI_STATUS_IGNORE)
-            status->MPI_ERROR = mpi_errno;
-        goto fn_fail;
     }
+
+    if (MPIR_Request_is_complete(request_ptr))
+        *flag = TRUE;
+    else
+        *flag = FALSE;
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -558,9 +533,6 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
             }
         } else {
             MPIR_Status_set_empty(&array_of_statuses[i]);
-            if (mpi_errno == MPI_ERR_IN_STATUS) {
-                array_of_statuses[i].MPI_ERROR = MPI_SUCCESS;
-            }
         }
     }
 
@@ -878,50 +850,22 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
     return mpi_errno;
 }
 
-int MPIR_Wait(MPI_Request * request, MPI_Status * status)
+int MPIR_Wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    int active_flag;
-    MPIR_Request *request_ptr = NULL;
 
-    /* If this is a null request handle, then return an empty status */
-    if (*request == MPI_REQUEST_NULL) {
-        MPIR_Status_set_empty(status);
-        goto fn_exit;
-    }
-
-    MPIR_Request_get_ptr(*request, request_ptr);
-    MPIR_Assert(request_ptr != NULL);
-
-    if (!MPIR_Request_is_complete(request_ptr)) {
-        /* If this is an anysource request including a communicator with
-         * anysource disabled, convert the call to an MPI_Test instead so we
-         * don't get stuck in the progress engine. */
-        if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
-            mpi_errno = MPIR_Test(request, &active_flag, status);
-            goto fn_exit;
-        }
-
-        if (MPIR_Request_has_poll_fn(request_ptr)) {
-            while (!MPIR_Request_is_complete(request_ptr)) {
-                mpi_errno = MPIR_Grequest_poll(request_ptr, status);
-                MPIR_ERR_CHECK(mpi_errno);
-
-                /* Avoid blocking other threads since I am inside an infinite loop */
-                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            }
-        } else {
-            mpi_errno = MPID_Wait(request_ptr, status);
+    if (MPIR_Request_has_poll_fn(request_ptr)) {
+        while (!MPIR_Request_is_complete(request_ptr)) {
+            mpi_errno = MPIR_Grequest_poll(request_ptr, status);
             MPIR_ERR_CHECK(mpi_errno);
-        }
-    }
 
-    mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
-    if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
-        MPIR_Request_free(request_ptr);
-        *request = MPI_REQUEST_NULL;
+            /* Avoid blocking other threads since I am inside an infinite loop */
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        }
+    } else {
+        mpi_errno = MPID_Wait(request_ptr, status);
+        MPIR_ERR_CHECK(mpi_errno);
     }
-    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

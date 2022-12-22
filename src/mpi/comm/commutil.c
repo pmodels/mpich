@@ -1137,7 +1137,8 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
                     MPID_Recv(NULL, 0, MPI_DATATYPE_NULL, status.MPI_SOURCE, status.MPI_TAG,
                               comm_ptr, 0, MPI_STATUS_IGNORE, &request);
                     if (request != NULL) {
-                        MPIR_Wait(&request->handle, MPI_STATUS_IGNORE);
+                        MPID_Wait(request, MPI_STATUS_IGNORE);
+                        MPIR_Request_free(request);
                     }
                     unmatched_messages++;
                 }

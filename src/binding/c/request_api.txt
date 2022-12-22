@@ -98,9 +98,6 @@ MPI_Request_get_status:
     if (request == MPI_REQUEST_NULL) {
         *flag = 1;
         MPIR_Status_set_empty(status);
-        if (status != MPI_STATUS_IGNORE) {
-            status->MPI_ERROR = MPI_SUCCESS;
-        }
         goto fn_exit;
     }
 }
@@ -135,10 +132,36 @@ MPI_Test_cancelled:
 MPI_Test:
     .desc: Test for the completion of a request
     .docnotes: waitstatus
+{ -- early_return --
+    if (*request == MPI_REQUEST_NULL) {
+        *flag = 1;
+        MPIR_Status_set_empty(status);
+        goto fn_exit;
+    }
+}
 {
-    mpi_errno = MPIR_Test(request, flag, status);
-    if (mpi_errno)
+    if (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPIR_Test(request_ptr, flag, status);
+        if (mpi_errno)
+            goto fn_fail;
+    } else {
+        *flag = TRUE;
+    }
+
+    if (*flag) {
+        mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
+        if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
+            MPIR_Request_free(request_ptr);
+            *request = MPI_REQUEST_NULL;
+        }
+        MPIR_ERR_CHECK(mpi_errno);
+        /* Fall through to the exit */
+    } else if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
+        MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+        if (status != MPI_STATUS_IGNORE)
+            status->MPI_ERROR = mpi_errno;
         goto fn_fail;
+    }
 }
 
 MPI_Testall:
@@ -218,10 +241,25 @@ MPI_Testsome:
 MPI_Wait:
     .desc: Waits for an MPI request to complete
     .docnotes: waitstatus
+{ -- early_return --
+    if (*request == MPI_REQUEST_NULL) {
+        MPIR_Status_set_empty(status);
+        goto fn_exit;
+    }
+}
 {
-    mpi_errno = MPIR_Wait(request, status);
-    if (mpi_errno)
-        goto fn_fail;
+    if (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPIR_Wait(request_ptr, status);
+        if (mpi_errno)
+            goto fn_fail;
+    }
+
+    mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
+    if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
+        MPIR_Request_free(request_ptr);
+        *request = MPI_REQUEST_NULL;
+    }
+    MPIR_ERR_CHECK(mpi_errno);
 }
 
 MPI_Waitall:
