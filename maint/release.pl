@@ -74,8 +74,8 @@ sub check_autotools_version
     my $curr_ver;
 
     $curr_ver = `$tool --version | head -1 | cut -f4 -d' ' | xargs echo -n`;
-    if ("$curr_ver" ne "$req_ver") {
-	print("\tERROR: $tool version mismatch ($req_ver) required\n\n");
+    if ("$curr_ver" lt "$req_ver") {
+	print("\tERROR: $tool version $curr_ver too old (>=$req_ver) required\n\n");
 	exit;
     }
 }
