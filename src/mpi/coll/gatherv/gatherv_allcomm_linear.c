@@ -54,14 +54,12 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
     MPI_Status *starray;
     MPIR_CHKLMEM_DECL(2);
 
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* If rank == root, then I recv lots, otherwise I send */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
         ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            comm_size = comm_ptr->local_size;
-        else
+        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
             comm_size = comm_ptr->remote_size;
 
         MPIR_Datatype_get_extent_macro(recvtype, extent);
@@ -99,7 +97,8 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
             /* we want local size in both the intracomm and intercomm cases
              * because the size of the root's group (group A in the standard) is
              * irrelevant here. */
-            comm_size = comm_ptr->local_size;
+            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+                comm_size = comm_ptr->local_size;
 
             min_procs = MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS;
             if (min_procs == -1)

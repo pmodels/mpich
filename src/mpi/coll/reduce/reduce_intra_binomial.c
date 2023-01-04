@@ -24,8 +24,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
     void *tmp_buf;
     MPIR_CHKLMEM_DECL(2);
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
     /* Create a temporary buffer */
 
