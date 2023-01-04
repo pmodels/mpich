@@ -6,4 +6,5 @@
 mpi_core_sources +=   \
     src/mpi/threadcomm/threadcomm_impl.c \
     src/mpi/threadcomm/threadcomm_pt2pt_impl.c \
-    src/mpi/threadcomm/threadcomm_coll_impl.c
+    src/mpi/threadcomm/threadcomm_coll_impl.c \
+    src/mpi/threadcomm/threadcomm_misc_impl.c

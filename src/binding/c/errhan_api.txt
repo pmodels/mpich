@@ -120,7 +120,7 @@ MPI_Comm_get_errhandler:
 MPI_Comm_set_errhandler:
     .desc: Set the error handler for a communicator
     .seealso: MPI_Comm_get_errhandler, MPI_Comm_call_errhandler
-    .extra: ignore_revoked_comm
+    .extra: ignore_revoked_comm, threadcomm
     .docnotes: ThreadSafeNoUpdate
 
 MPI_File_call_errhandler:
