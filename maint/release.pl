@@ -164,7 +164,7 @@ print("\n");
 ## autoconf and libtool. We do require a minimum version of automake so tarballs
 ## contain up-to-date config.guess files. Always double check using the ABI
 ## compatibility tool before the final release.
-check_autotools_version("automake", "1.16.5")
+check_autotools_version("automake", "1.16.5");
 
 my $tdir = tempdir(CLEANUP => 1);
 my $local_git_clone = "${tdir}/mpich-clone";
