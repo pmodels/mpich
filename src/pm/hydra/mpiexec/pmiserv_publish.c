@@ -121,7 +121,7 @@ HYD_status HYD_pmiserv_lookup(struct HYD_proxy *proxy, int process_fd, int pgid,
 
   fn_exit:
     if (value)
-        MPL_free(value);
+        MPL_free((void *) value);       /* cast away const qualifier */
     HYDU_FUNC_EXIT();
     return status;
 

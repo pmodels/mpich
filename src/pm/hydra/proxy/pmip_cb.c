@@ -202,6 +202,7 @@ static HYD_status check_pmi_cmd(char **buf, int *buflen_out, int *pmi_version, i
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
 
+    *pmi_version = 0;
     *repeat = 0;
 
     /* We need to read at least 6 bytes before we can decide if this
