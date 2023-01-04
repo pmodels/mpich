@@ -174,29 +174,30 @@ ring_neighbor_alltoall 2
 ring_neighbor_alltoall 1
 
 # Tests for persistent collectives
-p_bcast 4 strict=false
-p_bcast2 8 strict=false
+p_bcast 4
+p_bcast2 8
 
 coll_large 8
-p_allred 4 strict=false
-p_red 4 strict=false
-p_alltoall 8 strict=false
-p_allgather 10 strict=false
-p_allgatherv 10 strict=false
-p_red_scat_block 4 strict=false
-p_redscat 4 strict=false
-p_scan 4 strict=false
-p_gather 4 strict=false
-p_gatherv 5 strict=false
-p_scatter 4 strict=false
-p_scatterv 4 strict=false
-p_alltoallv 10 strict=false
-p_alltoallw 10 strict=false
-p_exscan 5 strict=false
-p_barrier 2 strict=false
-p_neighb_allgather 4 strict=false
-p_neighb_allgatherv 4 strict=false
-p_neighb_alltoall 4 strict=false
-p_neighb_alltoallv 4 strict=false
-p_neighb_alltoallw 4 strict=false
-p_order 2 strict=false
+p_allred 4
+p_red 4
+p_alltoall 8
+p_allgather 10
+p_allgatherv 10
+p_red_scat_block 4
+p_redscat 4
+p_scan 4
+p_gather 4
+p_gatherv 5
+p_scatter 4
+p_scatterv 4
+p_alltoallv 10
+p_alltoallw 10
+p_exscan 5
+p_barrier 2
+p_neighb_allgather 4
+p_neighb_allgatherv 4
+p_neighb_alltoall 4
+p_neighb_alltoallv 4
+p_neighb_alltoallw 4
+p_order 2
+p_inactive timeLimit=10

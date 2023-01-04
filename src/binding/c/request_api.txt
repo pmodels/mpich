@@ -95,7 +95,7 @@ MPI_Request_get_status:
     'MPI_Request_free' should be made to release the request object.
 */
 { -- early_return --
-    if (request == MPI_REQUEST_NULL) {
+    if (request == MPI_REQUEST_NULL || !MPIR_Request_is_active(request_ptr)) {
         *flag = 1;
         MPIR_Status_set_empty(status);
         goto fn_exit;
@@ -133,7 +133,7 @@ MPI_Test:
     .desc: Test for the completion of a request
     .docnotes: waitstatus
 { -- early_return --
-    if (*request == MPI_REQUEST_NULL) {
+    if (*request == MPI_REQUEST_NULL || !MPIR_Request_is_active(request_ptr)) {
         *flag = 1;
         MPIR_Status_set_empty(status);
         goto fn_exit;
@@ -242,7 +242,7 @@ MPI_Wait:
     .desc: Waits for an MPI request to complete
     .docnotes: waitstatus
 { -- early_return --
-    if (*request == MPI_REQUEST_NULL) {
+    if (*request == MPI_REQUEST_NULL || !MPIR_Request_is_active(request_ptr)) {
         MPIR_Status_set_empty(status);
         goto fn_exit;
     }

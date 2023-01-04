@@ -147,6 +147,7 @@
 /coll/p_exscan
 /coll/p_gather
 /coll/p_gatherv
+/coll/p_inactive
 /coll/p_neighb_allgather
 /coll/p_neighb_allgatherv
 /coll/p_neighb_alltoall
