@@ -2,6 +2,7 @@
 
 MPI_Allgather:
     .desc: Gathers data from all tasks and distribute the combined data to all tasks
+    .extra: threadcomm
 /*
     Notes:
      The MPI standard (1.0 and 1.1) says that
@@ -34,6 +35,7 @@ MPI_Allgather_init:
 
 MPI_Allgatherv:
     .desc: Gathers data from all tasks and deliver the combined data to all tasks
+    .extra: threadcomm
 /*
     Notes:
      The MPI standard (1.0 and 1.1) says that
@@ -88,6 +90,7 @@ MPI_Allreduce_init:
 
 MPI_Alltoall:
     .desc: Sends data from all to all processes
+    .extra: threadcomm
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && recvcount == 0) {
         goto fn_exit;
@@ -99,18 +102,21 @@ MPI_Alltoall_init:
 
 MPI_Alltoallv:
     .desc: Sends data from all to all processes; each process may send a different amount of data and provide displacements for the input and output data.
+    .extra: threadcomm
 
 MPI_Alltoallv_init:
     .desc: Create a persistent request for alltoallv.
 
 MPI_Alltoallw:
     .desc: Generalized all-to-all communication allowing different datatypes, counts, and displacements for each partner
+    .extra: threadcomm
 
 MPI_Alltoallw_init:
     .desc: Create a persistent request for alltoallw.
 
 MPI_Barrier:
     .desc: Blocks until all processes in the communicator have reached this routine.
+    .extra: threadcomm
 /*
     Notes:
     Blocks the caller until all processes in the communicator have called it;
@@ -128,6 +134,7 @@ MPI_Barrier_init:
 
 MPI_Bcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator
+    .extra: threadcomm
 { -- early_return --
     if (count == 0 || MPIR_is_self_comm(comm_ptr)) {
         goto fn_exit;
@@ -140,7 +147,7 @@ MPI_Bcast_init:
 MPI_Exscan:
     .desc: Computes the exclusive scan (partial reductions) of data on a collection of processes
     .docnotes: collops
-    .extra: errtest_comm_intra
+    .extra: errtest_comm_intra, threadcomm
 /*
     Notes:
       'MPI_Exscan' is like 'MPI_Scan', except that the contribution from the
@@ -158,6 +165,7 @@ MPI_Exscan_init:
 
 MPI_Gather:
     .desc: Gathers together values from a group of processes
+    .extra: threadcomm
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         if ((MPIR_Comm_rank(comm_ptr) == root && recvcount == 0) || (MPIR_Comm_rank(comm_ptr) != root && sendcount == 0)) {
@@ -171,6 +179,7 @@ MPI_Gather_init:
 
 MPI_Gatherv:
     .desc: Gathers into specified locations from all processes in a group
+    .extra: threadcomm
 
 MPI_Gatherv_init:
     .desc: Create a persistent request for gatherv.
@@ -413,6 +422,7 @@ MPI_Neighbor_alltoallw_init:
 MPI_Reduce:
     .desc: Reduces values on all processes to a single value
     .docnotes: collops
+    .extra: threadcomm
 { -- early_return --
     if (count == 0 && comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         goto fn_exit;
@@ -446,6 +456,7 @@ MPI_Reduce_local:
 MPI_Reduce_scatter:
     .desc: Combines values and scatters the results
     .docnotes: collops
+    .extra: threadcomm
 { -- early_return --
     if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
@@ -461,6 +472,7 @@ MPI_Reduce_scatter_init:
 MPI_Reduce_scatter_block:
     .desc: Combines values and scatters the results
     .docnotes: collops
+    .extra: threadcomm
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (recvcount == 0 || MPIR_is_self_comm(comm_ptr))) {
         if (sendbuf != MPI_IN_PLACE) {
@@ -476,7 +488,7 @@ MPI_Reduce_scatter_block_init:
 MPI_Scan:
     .desc: Computes the scan (partial reductions) of data on a collection of processes
     .docnotes: collops
-    .extra: errtest_comm_intra
+    .extra: errtest_comm_intra, threadcomm
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count == 0) {
         goto fn_exit;
@@ -488,6 +500,7 @@ MPI_Scan_init:
 
 MPI_Scatter:
     .desc: Sends data from one process to all other processes in a communicator
+    .extra: threadcomm
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         if ((MPIR_Comm_rank(comm_ptr) == root && sendcount == 0) || (MPIR_Comm_rank(comm_ptr) != root && recvcount == 0)) {
@@ -501,6 +514,7 @@ MPI_Scatter_init:
 
 MPI_Scatterv:
     .desc: Scatters a buffer in parts to all processes in a communicator
+    .extra: threadcomm
 
 MPI_Scatterv_init:
     .desc: Create a persistent request for scatterv.
