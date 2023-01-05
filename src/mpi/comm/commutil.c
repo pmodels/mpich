@@ -288,6 +288,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
     comm_p->node_comm = NULL;
     comm_p->node_roots_comm = NULL;
+    comm_p->subcomm_depth = 0;
     comm_p->intranode_table = NULL;
     comm_p->internode_table = NULL;
 
@@ -699,6 +700,18 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
     comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
 
+    /* create new lightweight subcomms */
+    comm->subcomm_depth = 1;
+    comm->child_subcomm[0].size = num_local;
+    comm->child_subcomm[0].rank = local_rank;
+    comm->child_subcomm[0].ranklist = local_procs;
+    local_procs = NULL;
+
+    comm->roots_subcomm[0].size = num_external;
+    comm->roots_subcomm[0].rank = external_rank;
+    comm->roots_subcomm[0].ranklist = external_procs;
+    external_procs = NULL;
+
   fn_exit:
     MPL_free(local_procs);
     MPL_free(external_procs);
@@ -818,7 +831,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
    collective communication, for example. */
 int MPIR_Comm_is_parent_comm(MPIR_Comm * comm)
 {
-    return (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
+    return (comm->subcomm_depth > 0);
 }
 
 /* Returns true if the communicator is node-aware and processes in all the nodes
@@ -1174,6 +1187,10 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
             MPIR_Comm_release(comm_ptr->node_comm);
         if (comm_ptr->node_roots_comm)
             MPIR_Comm_release(comm_ptr->node_roots_comm);
+        for (int i = 0; i < comm_ptr->subcomm_depth; i++) {
+            MPL_free(comm_ptr->child_subcomm[i].ranklist);
+            MPL_free(comm_ptr->roots_subcomm[i].ranklist);
+        }
         MPL_free(comm_ptr->intranode_table);
         MPL_free(comm_ptr->internode_table);
 

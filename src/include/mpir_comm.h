@@ -102,6 +102,16 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };
 
+/* lightweight comm struct defines a sub-comm for collectives */
+typedef struct MPIR_sub_comm {
+    int rank;                   /* rank in this sub-comm */
+    int size;                   /* size of this sub-comm */
+    int *ranklist;              /* A list of ranks (as in parent comm) in this sub-comm.
+                                 * NULL is interpreted as identity array */
+} MPIR_sub_comm;
+
+#define MPIR_MAX_SUBCOMM_DEPTH 1
+
 /*S
   MPIR_Comm - Description of the Communicator data structure
 
@@ -180,6 +190,9 @@ struct MPIR_Comm {
     struct MPIR_Comm *node_comm;        /* Comm of processes in this comm that are on
                                          * the same node as this process. */
     struct MPIR_Comm *node_roots_comm;  /* Comm of root processes for other nodes. */
+    int subcomm_depth;
+    MPIR_sub_comm child_subcomm[MPIR_MAX_SUBCOMM_DEPTH];
+    MPIR_sub_comm roots_subcomm[MPIR_MAX_SUBCOMM_DEPTH];
     int *intranode_table;       /* intranode_table[i] gives the rank in
                                  * node_comm of rank i in this comm or -1 if i
                                  * is not in this process' node_comm.
@@ -264,6 +277,7 @@ struct MPIR_Comm {
      MPID_DEV_COMM_DECL
 #endif
 };
+
 extern MPIR_Object_alloc_t MPIR_Comm_mem;
 
 /* this function should not be called by normal code! */
