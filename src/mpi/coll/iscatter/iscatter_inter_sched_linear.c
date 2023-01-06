@@ -15,7 +15,7 @@
 
 int MPIR_Iscatter_inter_sched_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                     int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     int root, MPIR_Comm * comm_ptr, int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int remote_size;
@@ -34,12 +34,12 @@ int MPIR_Iscatter_inter_sched_linear(const void *sendbuf, MPI_Aint sendcount, MP
         for (i = 0; i < remote_size; i++) {
             mpi_errno =
                 MPIR_Sched_send(((char *) sendbuf + sendcount * i * extent), sendcount, sendtype, i,
-                                comm_ptr, s);
+                                comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);
     } else {
-        mpi_errno = MPIR_Sched_recv(recvbuf, recvcount, recvtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Sched_recv(recvbuf, recvcount, recvtype, root, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }

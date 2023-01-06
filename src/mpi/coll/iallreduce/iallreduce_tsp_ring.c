@@ -12,7 +12,7 @@
  * explained here: http://andrew.gibiansky.com/ */
 int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                          MPI_Datatype datatype, MPI_Op op,
-                                         MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+                                         MPIR_Comm * comm, int collattr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -89,8 +89,8 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
         nvtcs = (i == 0) ? 0 : 1;
         vtcs = (i == 0) ? 0 : reduce_id[(i - 1) % 2];
         mpi_errno =
-            MPIR_TSP_sched_irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, sched, nvtcs,
-                                 &vtcs, &recv_id);
+            MPIR_TSP_sched_irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, collattr, sched,
+                                 nvtcs, &vtcs, &recv_id);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         mpi_errno =
@@ -102,7 +102,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
 
         mpi_errno =
             MPIR_TSP_sched_isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
-                                 datatype, dst, tag, comm, sched, nvtcs, &vtcs, &vtx_id);
+                                 datatype, dst, tag, comm, collattr, sched, nvtcs, &vtcs, &vtx_id);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
     MPIR_CHKLMEM_MALLOC(reduce_id, int *, 2 * sizeof(int), mpi_errno, "reduce_id", MPL_MEM_COLL);
@@ -112,7 +112,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
 
     /* Phase 3: Allgatherv ring, so everyone has the reduced data */
     MPIR_TSP_Iallgatherv_sched_intra_ring(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, recvbuf, cnts,
-                                          displs, datatype, comm, sched);
+                                          displs, datatype, comm, collattr, sched);
 
     MPIR_CHKLMEM_FREEALL();
 

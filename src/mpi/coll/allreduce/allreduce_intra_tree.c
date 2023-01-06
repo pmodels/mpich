@@ -16,10 +16,11 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
                               MPI_Datatype datatype,
                               MPI_Op op, MPIR_Comm * comm_ptr,
                               int tree_type, int k, int chunk_size,
-                              int buffer_per_child, MPIR_Errflag_t errflag)
+                              int buffer_per_child, int collattr)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     int is_commutative;
     MPI_Aint true_extent, type_lb;
     void **child_buffer = NULL; /* Buffer array in which data from children is received */
@@ -113,7 +114,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
 
             mpi_errno =
                 MPIC_Recv(recv_address, msgsize, datatype, child, MPIR_ALLREDUCE_TAG, comm_ptr,
-                          MPI_STATUS_IGNORE);
+                          collattr, MPI_STATUS_IGNORE);
             /* for communication errors, just record the error but continue */
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
@@ -135,14 +136,14 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         if (rank != root) {     /* send data to the parent */
             mpi_errno =
                 MPIC_Isend(reduce_address, msgsize, datatype, my_tree.parent, MPIR_ALLREDUCE_TAG,
-                           comm_ptr, &reqs[num_reqs++], errflag);
+                           comm_ptr, &reqs[num_reqs++], collattr | errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
 
         if (my_tree.parent != -1) {
             mpi_errno = MPIC_Recv(reduce_address, msgsize,
                                   datatype, my_tree.parent, MPIR_ALLREDUCE_TAG, comm_ptr,
-                                  MPI_STATUS_IGNORE);
+                                  collattr, MPI_STATUS_IGNORE);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
         if (num_children) {
@@ -152,7 +153,8 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
                 MPIR_Assert(child != 0);
                 mpi_errno = MPIC_Isend(reduce_address, msgsize,
                                        datatype, child,
-                                       MPIR_ALLREDUCE_TAG, comm_ptr, &reqs[num_reqs++], errflag);
+                                       MPIR_ALLREDUCE_TAG, comm_ptr, &reqs[num_reqs++],
+                                       collattr | errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
         }

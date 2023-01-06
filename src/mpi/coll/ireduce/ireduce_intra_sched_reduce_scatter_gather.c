@@ -34,7 +34,8 @@
 */
 int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *recvbuf,
                                                    MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
-                                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                   int root, MPIR_Comm * comm_ptr, int collattr,
+                                                   MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, comm_size, rank, pof2, is_commutative ATTRIBUTE((unused));
@@ -104,7 +105,7 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
 
     if (rank < 2 * rem) {
         if (rank % 2 != 0) {    /* odd */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank - 1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank - 1, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -113,7 +114,7 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
              * doubling */
             newrank = -1;
         } else {        /* even */
-            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, rank + 1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, rank + 1, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -182,11 +183,11 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
 
             /* Send data from recvbuf. Recv into tmp_buf */
             mpi_errno = MPIR_Sched_send(((char *) recvbuf + disps[send_idx] * extent),
-                                        send_cnt, datatype, dst, comm_ptr, s);
+                                        send_cnt, datatype, dst, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier here */
             mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + disps[recv_idx] * extent),
-                                        recv_cnt, datatype, dst, comm_ptr, s);
+                                        recv_cnt, datatype, dst, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -231,7 +232,7 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
                 for (i = 1; i < pof2; i++)
                     disps[i] = disps[i - 1] + cnts[i - 1];
 
-                mpi_errno = MPIR_Sched_recv(recvbuf, cnts[0], datatype, 0, comm_ptr, s);
+                mpi_errno = MPIR_Sched_recv(recvbuf, cnts[0], datatype, 0, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
@@ -239,7 +240,8 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
                 send_idx = 0;
                 last_idx = 2;
             } else if (newrank == 0) {  /* send */
-                mpi_errno = MPIR_Sched_send(recvbuf, cnts[0], datatype, root, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_send(recvbuf, cnts[0], datatype, root, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
                 newrank = -1;
@@ -304,14 +306,14 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
                 /* send and exit */
                 /* Send data from recvbuf. Recv into tmp_buf */
                 mpi_errno = MPIR_Sched_send(((char *) recvbuf + disps[send_idx] * extent),
-                                            send_cnt, datatype, dst, comm_ptr, s);
+                                            send_cnt, datatype, dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
                 break;
             } else {
                 /* recv and continue */
                 mpi_errno = MPIR_Sched_recv(((char *) recvbuf + disps[recv_idx] * extent),
-                                            recv_cnt, datatype, dst, comm_ptr, s);
+                                            recv_cnt, datatype, dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }

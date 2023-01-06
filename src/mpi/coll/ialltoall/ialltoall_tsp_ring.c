@@ -36,7 +36,7 @@ copy (buf1)<--recv (buf1)            send (buf2)   /
 int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                                         MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                         MPI_Datatype recvtype, MPIR_Comm * comm,
-                                        MPIR_TSP_sched_t sched)
+                                        int collattr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -132,8 +132,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
         }
 
         mpi_errno =
-            MPIR_TSP_sched_isend((char *) sbuf, size * recvcount, recvtype, dst, tag, comm, sched,
-                                 nvtcs, vtcs, &send_id[i % 3]);
+            MPIR_TSP_sched_isend((char *) sbuf, size * recvcount, recvtype, dst, tag, comm,
+                                 collattr, sched, nvtcs, vtcs, &send_id[i % 3]);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         /* schedule recv */
         if (i == 0)
@@ -150,8 +150,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
         }
 
         mpi_errno =
-            MPIR_TSP_sched_irecv((char *) rbuf, size * recvcount, recvtype, src, tag, comm, sched,
-                                 nvtcs, vtcs, &recv_id[i % 3]);
+            MPIR_TSP_sched_irecv((char *) rbuf, size * recvcount, recvtype, src, tag, comm,
+                                 collattr, sched, nvtcs, vtcs, &recv_id[i % 3]);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         /* destination offset of the copy */

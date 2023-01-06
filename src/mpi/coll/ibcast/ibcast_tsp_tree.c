@@ -11,7 +11,7 @@
 /* Routine to schedule a pipelined tree based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
                                      MPIR_Comm * comm, int tree_type, int k, int chunk_size,
-                                     MPIR_TSP_sched_t sched)
+                                     int collattr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -71,7 +71,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
 #ifdef HAVE_ERROR_CHECKING
             mpi_errno =
                 MPIR_TSP_sched_irecv_status((char *) buffer + offset * extent, msgsize,
-                                            datatype, my_tree.parent, tag, comm,
+                                            datatype, my_tree.parent, tag, comm, collattr,
                                             &ibcast_state->status, sched, 0, NULL, &recv_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
@@ -79,7 +79,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
 #else
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) buffer + offset * extent, msgsize, datatype,
-                                     my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
+                                     my_tree.parent, tag, comm, collattr, sched, 0, NULL, &recv_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 #endif
         }
@@ -88,8 +88,8 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
             /* Multicast data to the children */
             mpi_errno = MPIR_TSP_sched_imcast((char *) buffer + offset * extent, msgsize, datatype,
                                               ut_int_array(my_tree.children), num_children, tag,
-                                              comm, sched, (my_tree.parent != -1) ? 1 : 0, &recv_id,
-                                              &vtx_id);
+                                              comm, collattr, sched, (my_tree.parent != -1) ? 1 : 0,
+                                              &recv_id, &vtx_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
         offset += msgsize;

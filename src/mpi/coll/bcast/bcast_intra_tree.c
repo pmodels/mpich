@@ -13,12 +13,13 @@ int MPIR_Bcast_intra_tree(void *buffer,
                           MPI_Aint count,
                           MPI_Datatype datatype,
                           int root, MPIR_Comm * comm_ptr, int tree_type,
-                          int branching_factor, int is_nb, MPIR_Errflag_t errflag)
+                          int branching_factor, int is_nb, int collattr)
 {
     int rank, comm_size, src, dst, *p, j, k, lrank, is_contig;
     int parent = -1, num_children = 0, num_req = 0, is_root = 0;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     MPI_Aint nbytes = 0, type_size, actual_packed_unpacked_bytes, recvd_size;
     MPI_Aint saved_count = count;
     MPI_Status status;
@@ -91,7 +92,8 @@ int MPIR_Bcast_intra_tree(void *buffer,
     if ((parent != -1 && tree_type != MPIR_TREE_TYPE_KARY)
         || (!is_root && tree_type == MPIR_TREE_TYPE_KARY)) {
         src = parent;
-        mpi_errno = MPIC_Recv(send_buf, count, dtype, src, MPIR_BCAST_TAG, comm_ptr, &status);
+        mpi_errno =
+            MPIC_Recv(send_buf, count, dtype, src, MPIR_BCAST_TAG, comm_ptr, collattr, &status);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         /* check that we received as much as we expected */
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
@@ -107,10 +109,12 @@ int MPIR_Bcast_intra_tree(void *buffer,
 
             if (!is_nb) {
                 mpi_errno =
-                    MPIC_Send(send_buf, count, dtype, dst, MPIR_BCAST_TAG, comm_ptr, errflag);
+                    MPIC_Send(send_buf, count, dtype, dst, MPIR_BCAST_TAG, comm_ptr,
+                              collattr | errflag);
             } else {
                 mpi_errno = MPIC_Isend(send_buf, count, dtype, dst,
-                                       MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
+                                       MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++],
+                                       collattr | errflag);
             }
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
@@ -121,10 +125,12 @@ int MPIR_Bcast_intra_tree(void *buffer,
 
             if (!is_nb) {
                 mpi_errno =
-                    MPIC_Send(send_buf, count, dtype, dst, MPIR_BCAST_TAG, comm_ptr, errflag);
+                    MPIC_Send(send_buf, count, dtype, dst, MPIR_BCAST_TAG, comm_ptr,
+                              collattr | errflag);
             } else {
                 mpi_errno = MPIC_Isend(send_buf, count, dtype, dst,
-                                       MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
+                                       MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++],
+                                       collattr | errflag);
             }
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }

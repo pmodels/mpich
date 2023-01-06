@@ -27,7 +27,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
                                                    size_t recv_extent, const MPI_Aint * recvcounts,
                                                    const MPI_Aint * displs, MPI_Datatype recvtype,
                                                    int is_dist_halving, MPIR_Comm * comm,
-                                                   MPIR_TSP_sched_t sched);
+                                                   int collattr, MPIR_TSP_sched_t sched);
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *tmp_recvbuf,
                                                        const MPI_Aint * recvcounts,
                                                        MPI_Aint * displs, MPI_Datatype datatype,
@@ -36,6 +36,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
                                                        int step2_nphases, int **step2_nbrs,
                                                        int rank, int nranks, int sink_id,
                                                        int is_out_vtcs, int *reduce_id_,
-                                                       MPIR_TSP_sched_t sched);
+                                                       int collattr, MPIR_TSP_sched_t sched);
 
 #endif /* RECEXCHALGO_H_INCLUDED */

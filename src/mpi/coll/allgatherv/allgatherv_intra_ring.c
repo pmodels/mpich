@@ -28,11 +28,12 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
                                void *recvbuf,
                                const MPI_Aint * recvcounts,
                                const MPI_Aint * displs,
-                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int collattr)
 {
     int comm_size, rank, i, left, right;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     MPI_Status status;
     MPI_Aint recvtype_extent;
     int total_count;
@@ -110,18 +111,20 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
              * consecutive processes contribute 0 bytes each. */
         } else if (!sendnow) {  /* If there's no data to send, just do a recv call */
             mpi_errno =
-                MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm_ptr, &status);
+                MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm_ptr, collattr,
+                          &status);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             torecv -= recvnow;
         } else if (!recvnow) {  /* If there's no data to receive, just do a send call */
             mpi_errno =
-                MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
+                MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm_ptr,
+                          collattr | errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             tosend -= sendnow;
         } else {        /* There's data to be sent and received */
             mpi_errno = MPIC_Sendrecv(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG,
                                       rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG,
-                                      comm_ptr, &status, errflag);
+                                      comm_ptr, &status, collattr | errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             tosend -= sendnow;
             torecv -= recvnow;

@@ -10,7 +10,8 @@ int
 MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        MPI_Aint recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched)
+                                       MPIR_Comm * comm, int k, int collattr,
+                                       MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -117,18 +118,19 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Receive at the exact location. */
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
-                                     count, recvtype, src, tag, comm, sched, 0, NULL, &vtx_id);
+                                     count, recvtype, src, tag, comm, collattr, sched, 0, NULL,
+                                     &vtx_id);
 
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             recv_id[i_recv++] = vtx_id;
             /* Send from the start of recv till `count` amount of data. */
             if (i == 0)
                 mpi_errno =
-                    MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst, tag, comm, sched, 0,
-                                         NULL, &vtx_id);
+                    MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst, tag, comm, collattr,
+                                         sched, 0, NULL, &vtx_id);
             else
                 mpi_errno = MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst, tag,
-                                                 comm, sched, n_invtcs, recv_id, &vtx_id);
+                                                 comm, collattr, sched, n_invtcs, recv_id, &vtx_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
         n_invtcs += (k - 1);

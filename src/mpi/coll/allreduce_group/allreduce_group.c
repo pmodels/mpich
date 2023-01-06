@@ -17,11 +17,12 @@
 
 int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
                                MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                               MPIR_Group * group_ptr, int tag, MPIR_Errflag_t errflag)
+                               MPIR_Group * group_ptr, int tag, int collattr)
 {
     MPI_Aint type_size;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     /* newrank is a rank in group_ptr */
     int mask, dst, is_commutative, pof2, newrank, rem, newdst, i, send_idx, recv_idx, last_idx;
     MPI_Aint true_extent, true_lb, extent;
@@ -68,7 +69,8 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
     if (group_rank < 2 * rem) {
         if (group_rank % 2 == 0) {      /* even */
             to_comm_rank(cdst, group_rank + 1);
-            mpi_errno = MPIC_Send(recvbuf, count, datatype, cdst, tag, comm_ptr, errflag);
+            mpi_errno =
+                MPIC_Send(recvbuf, count, datatype, cdst, tag, comm_ptr, collattr | errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             /* temporarily set the rank to -1 so that this
@@ -77,7 +79,9 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
             newrank = -1;
         } else {        /* odd */
             to_comm_rank(csrc, group_rank - 1);
-            mpi_errno = MPIC_Recv(tmp_buf, count, datatype, csrc, tag, comm_ptr, MPI_STATUS_IGNORE);
+            mpi_errno =
+                MPIC_Recv(tmp_buf, count, datatype, csrc, tag, comm_ptr, collattr,
+                          MPI_STATUS_IGNORE);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             /* do the reduction on received data. since the
@@ -117,7 +121,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
                 mpi_errno = MPIC_Sendrecv(recvbuf, count, datatype,
                                           cdst, tag, tmp_buf,
                                           count, datatype, cdst,
-                                          tag, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                          tag, comm_ptr, MPI_STATUS_IGNORE, collattr | errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 if (!mpi_errno) {
                     /* tmp_buf contains data received in this step.
@@ -198,7 +202,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
                                           (char *) tmp_buf +
                                           disps[recv_idx] * extent,
                                           recv_cnt, datatype, cdst,
-                                          tag, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                          tag, comm_ptr, MPI_STATUS_IGNORE, collattr | errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
                 /* tmp_buf contains data received in this step.
@@ -258,7 +262,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
                                           (char *) recvbuf +
                                           disps[recv_idx] * extent,
                                           recv_cnt, datatype, cdst,
-                                          tag, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                          tag, comm_ptr, MPI_STATUS_IGNORE, collattr | errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
                 if (newrank > newdst)
@@ -275,10 +279,13 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
     if (group_rank < 2 * rem) {
         if (group_rank % 2) {   /* odd */
             to_comm_rank(cdst, group_rank - 1);
-            mpi_errno = MPIC_Send(recvbuf, count, datatype, cdst, tag, comm_ptr, errflag);
+            mpi_errno =
+                MPIC_Send(recvbuf, count, datatype, cdst, tag, comm_ptr, collattr | errflag);
         } else {        /* even */
             to_comm_rank(csrc, group_rank + 1);
-            mpi_errno = MPIC_Recv(recvbuf, count, datatype, csrc, tag, comm_ptr, MPI_STATUS_IGNORE);
+            mpi_errno =
+                MPIC_Recv(recvbuf, count, datatype, csrc, tag, comm_ptr, collattr,
+                          MPI_STATUS_IGNORE);
         }
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
@@ -293,7 +300,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
 
 int MPII_Allreduce_group(void *sendbuf, void *recvbuf, MPI_Aint count,
                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                         MPIR_Group * group_ptr, int tag, MPIR_Errflag_t errflag)
+                         MPIR_Group * group_ptr, int tag, int collattr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -301,7 +308,7 @@ int MPII_Allreduce_group(void *sendbuf, void *recvbuf, MPI_Aint count,
                         "**commnotintra");
 
     mpi_errno = MPII_Allreduce_group_intra(sendbuf, recvbuf, count, datatype,
-                                           op, comm_ptr, group_ptr, tag, errflag);
+                                           op, comm_ptr, group_ptr, tag, collattr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

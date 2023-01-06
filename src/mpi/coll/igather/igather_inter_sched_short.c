@@ -15,7 +15,7 @@
  */
 int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   int root, MPIR_Comm * comm_ptr, int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -30,7 +30,8 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_
         mpi_errno = MPI_SUCCESS;
     } else if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
-        mpi_errno = MPIR_Sched_recv(recvbuf, recvcount * remote_size, recvtype, 0, comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_recv(recvbuf, recvcount * remote_size, recvtype, 0, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* remote group. Rank 0 allocates temporary buffer, does
@@ -52,7 +53,7 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_
 
         /* all processes in remote group form new intracommunicator */
         if (!comm_ptr->local_comm) {
-            mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
+            mpi_errno = collattr, MPII_Setup_intercomm_localcomm(comm_ptr);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -61,12 +62,12 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_
         /* now do the a local gather on this intracommunicator */
         mpi_errno = MPIR_Igather_intra_sched_auto(sendbuf, sendcount, sendtype,
                                                   tmp_buf, sendcount * sendtype_sz, MPI_BYTE, 0,
-                                                  newcomm_ptr, s);
+                                                  newcomm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (rank == 0) {
             mpi_errno = MPIR_Sched_send(tmp_buf, sendcount * local_size * sendtype_sz, MPI_BYTE,
-                                        root, comm_ptr, s);
+                                        root, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

@@ -9,7 +9,7 @@ int MPIR_Ialltoallv_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
                                         const MPI_Aint sdispls[], MPI_Datatype sendtype,
                                         void *recvbuf, const MPI_Aint recvcounts[],
                                         const MPI_Aint rdispls[], MPI_Datatype recvtype,
-                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                        MPIR_Comm * comm_ptr, int collattr, MPIR_Sched_t s)
 {
     void *tmp_buf = NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -58,10 +58,10 @@ int MPIR_Ialltoallv_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
                     dst = i;
 
                 mpi_errno = MPIR_Sched_send(((char *) recvbuf + rdispls[dst] * recvtype_extent),
-                                            recvcounts[dst], recvtype, dst, comm_ptr, s);
+                                            recvcounts[dst], recvtype, dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_recv(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
-                                            dst, comm_ptr, s);
+                                            dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 

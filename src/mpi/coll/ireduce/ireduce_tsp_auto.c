@@ -12,7 +12,7 @@
 static int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *recvbuf,
                                                   MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
                                                   int root, MPIR_Comm * comm_ptr,
-                                                  MPIR_TSP_sched_t sched)
+                                                  int collattr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
@@ -27,7 +27,7 @@ static int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *rec
     mpi_errno = MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count,
                                                   datatype, op, root, comm_ptr,
                                                   tree_type, radix, block_size,
-                                                  buffer_per_child, sched);
+                                                  buffer_per_child, collattr, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -40,7 +40,8 @@ static int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *rec
 /* sched version of CVAR and json based collective selection. Meant only for gentran scheduler */
 int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                           MPI_Datatype datatype, MPI_Op op, int root,
-                                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched)
+                                          MPIR_Comm * comm_ptr, int collattr,
+                                          MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -64,13 +65,15 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
             /*Only knomial_1 tree supports non-commutative operations */
             MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, MPIR_Op_is_commutative(op) ||
                                            MPIR_Ireduce_tree_type == MPIR_TREE_TYPE_KNOMIAL_1,
-                                           mpi_errno, "Ireduce gentran_tree cannot be applied.\n");
+                                           mpi_errno,
+                                           "Ireduce gentran_tree cannot be collattr, applied.\n");
             mpi_errno =
                 MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
                                                   comm_ptr, MPIR_Ireduce_tree_type,
                                                   MPIR_CVAR_IREDUCE_TREE_KVAL,
                                                   MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE,
-                                                  MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD, sched);
+                                                  MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD, collattr,
+                                                  sched);
             break;
 
         case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_tsp_ring:
@@ -78,7 +81,8 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
                 MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
                                                   comm_ptr, MPIR_TREE_TYPE_KARY, 1,
                                                   MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE,
-                                                  MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD, sched);
+                                                  MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD, collattr,
+                                                  sched);
             break;
 
         default:
@@ -94,7 +98,8 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
                                                           cnt->u.ireduce.intra_tsp_tree.k,
                                                           cnt->u.ireduce.intra_tsp_tree.chunk_size,
                                                           cnt->u.ireduce.
-                                                          intra_tsp_tree.buffer_per_child, sched);
+                                                          intra_tsp_tree.buffer_per_child, collattr,
+                                                          sched);
                     break;
 
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_tsp_ring:
@@ -103,14 +108,16 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
                                                           root, comm_ptr, MPIR_TREE_TYPE_KARY, 1,
                                                           cnt->u.ireduce.intra_tsp_ring.chunk_size,
                                                           cnt->u.ireduce.
-                                                          intra_tsp_ring.buffer_per_child, sched);
+                                                          intra_tsp_ring.buffer_per_child, collattr,
+                                                          sched);
                     break;
 
                 default:
                     /* Replace this call with MPIR_Assert(0) when json files have gentran algos */
                     mpi_errno =
                         MPIR_Ireduce_sched_intra_tsp_flat_auto(sendbuf, recvbuf, count,
-                                                               datatype, op, root, comm_ptr, sched);
+                                                               datatype, op, root, comm_ptr,
+                                                               collattr, sched);
                     break;
             }
     }
@@ -122,7 +129,7 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
         MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
                                           comm_ptr, MPIR_TREE_TYPE_KARY, 1,
                                           MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE,
-                                          MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD, sched);
+                                          MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD, collattr, sched);
 
 
   fn_exit:

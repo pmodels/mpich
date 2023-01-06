@@ -10,7 +10,7 @@
 int MPIR_TSP_Ibcast_sched_intra_scatterv_ring_allgatherv(void *buffer, MPI_Aint count,
                                                          MPI_Datatype datatype, int root,
                                                          MPIR_Comm * comm, int scatterv_k,
-                                                         MPIR_TSP_sched_t sched)
+                                                         int collattr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -19,7 +19,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_ring_allgatherv(void *buffer, MPI_Aint 
     mpi_errno = MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(buffer, count, datatype, root,
                                                                 comm,
                                                                 MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_ring,
-                                                                scatterv_k, 0, sched);
+                                                                scatterv_k, 0, collattr, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

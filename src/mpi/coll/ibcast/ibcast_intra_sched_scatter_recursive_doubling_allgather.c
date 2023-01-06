@@ -30,8 +30,8 @@
  */
 /* It would be nice to just call:
  * ----8<----
- * MPIR_Iscatter_intra_sched_auto(...);
- * MPIR_Iallgather_intra_sched_auto(...);
+ * collattr, MPIR_Iscatter_intra_sched_auto(...);
+ * collattr, MPIR_Iallgather_intra_sched_auto(...);
  * ----8<----
  *
  * But that results in inefficient additional memory allocation and copies
@@ -49,7 +49,7 @@
 int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, MPI_Aint count,
                                                                  MPI_Datatype datatype, int root,
                                                                  MPIR_Comm * comm_ptr,
-                                                                 MPIR_Sched_t s)
+                                                                 int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, dst;
@@ -110,7 +110,7 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
     }
 
 
-    mpi_errno = MPII_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, nbytes, s);
+    mpi_errno = MPII_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, nbytes, collattr, s);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPI_Aint scatter_size, curr_size, incoming_count;
@@ -162,12 +162,13 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
                 incoming_count = 0;
 
             mpi_errno = MPIR_Sched_send(((char *) tmp_buf + send_offset),
-                                        curr_size, MPI_BYTE, dst, comm_ptr, s);
+                                        curr_size, MPI_BYTE, dst, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier */
             mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + recv_offset),
                                                incoming_count,
-                                               MPI_BYTE, dst, comm_ptr, &ibcast_state->status, s);
+                                               MPI_BYTE, dst, comm_ptr, &ibcast_state->status,
+                                               collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
             mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
@@ -228,7 +229,8 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
                      * receive. that's the amount of data to be
                      * sent now. */
                     mpi_errno = MPIR_Sched_send(((char *) tmp_buf + offset),
-                                                incoming_count, MPI_BYTE, dst, comm_ptr, s);
+                                                incoming_count, MPI_BYTE, dst, comm_ptr, collattr,
+                                                s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 }
@@ -248,7 +250,7 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
                      * whose data we don't have */
                     mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + offset),
                                                        incoming_count, MPI_BYTE, dst, comm_ptr,
-                                                       &ibcast_state->status, s);
+                                                       &ibcast_state->status, collattr, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                     mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);

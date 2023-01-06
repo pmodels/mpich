@@ -15,7 +15,7 @@
  */
 int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
                                        const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                       MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                       MPI_Op op, MPIR_Comm * comm_ptr, int collattr)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
@@ -23,6 +23,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
     void *tmp_recvbuf;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     int total_count, src, dst;
     MPIR_CHKLMEM_DECL(5);
 
@@ -81,14 +82,14 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
                                       MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
                                       recvcounts[rank], datatype, src,
                                       MPIR_REDUCE_SCATTER_TAG, comm_ptr,
-                                      MPI_STATUS_IGNORE, errflag);
+                                      MPI_STATUS_IGNORE, collattr | errflag);
         else
             mpi_errno = MPIC_Sendrecv(((char *) recvbuf + disps[dst] * extent),
                                       recvcounts[dst], datatype, dst,
                                       MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
                                       recvcounts[rank], datatype, src,
                                       MPIR_REDUCE_SCATTER_TAG, comm_ptr,
-                                      MPI_STATUS_IGNORE, errflag);
+                                      MPI_STATUS_IGNORE, collattr | errflag);
 
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 

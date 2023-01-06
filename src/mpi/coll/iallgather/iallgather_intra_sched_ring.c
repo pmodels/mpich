@@ -22,7 +22,8 @@
  */
 int MPIR_Iallgather_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype
                                      sendtype, void *recvbuf, MPI_Aint recvcount,
-                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int collattr,
+                                     MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -52,11 +53,11 @@ int MPIR_Iallgather_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount, MP
     jnext = left;
     for (i = 1; i < comm_size; i++) {
         mpi_errno = MPIR_Sched_send(((char *) recvbuf + j * recvcount * recvtype_extent),
-                                    recvcount, recvtype, right, comm_ptr, s);
+                                    recvcount, recvtype, right, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
         /* concurrent, no barrier here */
         mpi_errno = MPIR_Sched_recv(((char *) recvbuf + jnext * recvcount * recvtype_extent),
-                                    recvcount, recvtype, left, comm_ptr, s);
+                                    recvcount, recvtype, left, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 

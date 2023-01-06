@@ -9,7 +9,7 @@
 int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                                          MPI_Datatype sendtype, void *recvbuf,
                                          MPI_Aint recvcount, MPI_Datatype recvtype,
-                                         MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+                                         MPIR_Comm * comm, int collattr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -91,14 +91,16 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
             nvtcs = 1;
             vtcs[0] = dtcopy_id[0];
             mpi_errno = MPIR_TSP_sched_isend((char *) sbuf, recvcount, recvtype,
-                                             dst, tag, comm, sched, nvtcs, vtcs, &send_id[0]);
+                                             dst, tag, comm, collattr, sched, nvtcs, vtcs,
+                                             &send_id[0]);
             nvtcs = 0;
         } else {
             nvtcs = 2;
             vtcs[0] = recv_id[(i - 1) % 3];
             vtcs[1] = send_id[(i - 1) % 3];
             mpi_errno = MPIR_TSP_sched_isend((char *) sbuf, recvcount, recvtype,
-                                             dst, tag, comm, sched, nvtcs, vtcs, &send_id[i % 3]);
+                                             dst, tag, comm, collattr, sched, nvtcs, vtcs,
+                                             &send_id[i % 3]);
             if (i == 1) {
                 nvtcs = 2;
                 vtcs[0] = send_id[0];
@@ -113,7 +115,8 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         mpi_errno = MPIR_TSP_sched_irecv((char *) rbuf, recvcount, recvtype,
-                                         src, tag, comm, sched, nvtcs, vtcs, &recv_id[i % 3]);
+                                         src, tag, comm, collattr, sched, nvtcs, vtcs,
+                                         &recv_id[i % 3]);
 
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 

@@ -13,7 +13,8 @@
 /* Remove this function when gentran algos are in json file */
 static int MPIR_Ibcast_sched_intra_tsp_flat_auto(void *buffer, MPI_Aint count,
                                                  MPI_Datatype datatype, int root,
-                                                 MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched)
+                                                 MPIR_Comm * comm_ptr, int collattr,
+                                                 MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size;
@@ -31,14 +32,15 @@ static int MPIR_Ibcast_sched_intra_tsp_flat_auto(void *buffer, MPI_Aint count,
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
         /* gentran tree with knomial tree type, radix 2 and pipeline block size 0 */
         mpi_errno = MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm_ptr,
-                                                     tree_type, radix, block_size, sched);
+                                                     tree_type, radix, block_size, collattr, sched);
     } else {
         /* gentran scatterv recexch allgather with radix 2 */
         mpi_errno =
             MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(buffer, count, datatype, root,
                                                             comm_ptr,
                                                             MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_recexch_doubling,
-                                                            scatterv_k, allgatherv_k, sched);
+                                                            scatterv_k, allgatherv_k, collattr,
+                                                            sched);
     }
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -51,7 +53,8 @@ static int MPIR_Ibcast_sched_intra_tsp_flat_auto(void *buffer, MPI_Aint count,
 
 /* sched version of CVAR and json based collective selection. Meant only for gentran scheduler */
 int MPIR_TSP_Ibcast_sched_intra_tsp_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                         int root, MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched)
+                                         int root, MPIR_Comm * comm_ptr, int collattr,
+                                         MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -74,7 +77,8 @@ int MPIR_TSP_Ibcast_sched_intra_tsp_auto(void *buffer, MPI_Aint count, MPI_Datat
                 MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm_ptr,
                                                  MPIR_Ibcast_tree_type,
                                                  MPIR_CVAR_IBCAST_TREE_KVAL,
-                                                 MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE, sched);
+                                                 MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE,
+                                                 collattr, sched);
             break;
 
         case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_tsp_scatterv_recexch_allgatherv:
@@ -84,20 +88,21 @@ int MPIR_TSP_Ibcast_sched_intra_tsp_auto(void *buffer, MPI_Aint count, MPI_Datat
                                                                 MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_recexch_doubling,
                                                                 MPIR_CVAR_IBCAST_SCATTERV_KVAL,
                                                                 MPIR_CVAR_IBCAST_ALLGATHERV_RECEXCH_KVAL,
-                                                                sched);
+                                                                collattr, sched);
             break;
 
         case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_tsp_scatterv_ring_allgatherv:
             mpi_errno =
                 MPIR_TSP_Ibcast_sched_intra_scatterv_ring_allgatherv(buffer, count, datatype,
-                                                                     root, comm_ptr, 1, sched);
+                                                                     root, comm_ptr, 1, collattr,
+                                                                     sched);
             break;
 
         case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_tsp_ring:
             mpi_errno =
                 MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm_ptr,
                                                  MPIR_TREE_TYPE_KARY, 1,
-                                                 MPIR_CVAR_IBCAST_RING_CHUNK_SIZE, sched);
+                                                 MPIR_CVAR_IBCAST_RING_CHUNK_SIZE, collattr, sched);
             break;
 
         default:
@@ -111,7 +116,7 @@ int MPIR_TSP_Ibcast_sched_intra_tsp_auto(void *buffer, MPI_Aint count, MPI_Datat
                                                          cnt->u.ibcast.intra_tsp_tree.tree_type,
                                                          cnt->u.ibcast.intra_tsp_tree.k,
                                                          cnt->u.ibcast.intra_tsp_tree.chunk_size,
-                                                         sched);
+                                                         collattr, sched);
                     break;
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_scatterv_recexch_allgatherv:
                     mpi_errno =
@@ -122,14 +127,15 @@ int MPIR_TSP_Ibcast_sched_intra_tsp_auto(void *buffer, MPI_Aint count, MPI_Datat
                                                                         ibcast.intra_tsp_scatterv_recexch_allgatherv.scatterv_k,
                                                                         cnt->u.
                                                                         ibcast.intra_tsp_scatterv_recexch_allgatherv.allgatherv_k,
-                                                                        sched);
+                                                                        collattr, sched);
                     break;
 
                 case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_tsp_scatterv_ring_allgatherv:
                     mpi_errno =
                         MPIR_TSP_Ibcast_sched_intra_scatterv_ring_allgatherv(buffer, count,
                                                                              datatype, root,
-                                                                             comm_ptr, 1, sched);
+                                                                             comm_ptr, 1, collattr,
+                                                                             sched);
                     break;
 
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_ring:
@@ -137,7 +143,7 @@ int MPIR_TSP_Ibcast_sched_intra_tsp_auto(void *buffer, MPI_Aint count, MPI_Datat
                         MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm_ptr,
                                                          MPIR_TREE_TYPE_KARY, 1,
                                                          cnt->u.ibcast.intra_tsp_tree.chunk_size,
-                                                         sched);
+                                                         collattr, sched);
                     break;
                 default:
                     /* Replace this call with MPIR_Assert(0) when json files have gentran algos */
@@ -150,7 +156,7 @@ int MPIR_TSP_Ibcast_sched_intra_tsp_auto(void *buffer, MPI_Aint count, MPI_Datat
 
   fallback:
     mpi_errno = MPIR_Ibcast_sched_intra_tsp_flat_auto(buffer, count, datatype, root,
-                                                      comm_ptr, sched);
+                                                      comm_ptr, collattr, sched);
 
   fn_exit:
     return mpi_errno;

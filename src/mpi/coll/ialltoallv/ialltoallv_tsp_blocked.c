@@ -11,7 +11,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                                             const MPI_Aint sdispls[], MPI_Datatype sendtype,
                                             void *recvbuf, const MPI_Aint recvcounts[],
                                             const MPI_Aint rdispls[], MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, int bblock, MPIR_TSP_sched_t sched)
+                                            MPIR_Comm * comm, int bblock, int collattr,
+                                            MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -56,8 +57,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
             dst = (rank + j + i) % nranks;
             if (recvcounts[dst] && recvtype_size) {
                 mpi_errno = MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[dst] * recv_extent,
-                                                 recvcounts[dst], recvtype, dst, tag, comm, sched,
-                                                 0, NULL, &vtx_id);
+                                                 recvcounts[dst], recvtype, dst, tag, comm,
+                                                 collattr, sched, 0, NULL, &vtx_id);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
         }
@@ -66,8 +67,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
             dst = (rank - j - i + nranks) % nranks;
             if (sendcounts[dst] && sendtype_size) {
                 mpi_errno = MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst] * send_extent,
-                                                 sendcounts[dst], sendtype, dst, tag, comm, sched,
-                                                 0, NULL, &vtx_id);
+                                                 sendcounts[dst], sendtype, dst, tag, comm,
+                                                 collattr, sched, 0, NULL, &vtx_id);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
         }

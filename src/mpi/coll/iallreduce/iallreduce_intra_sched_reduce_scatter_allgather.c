@@ -9,7 +9,7 @@
 int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, void *recvbuf,
                                                          MPI_Aint count, MPI_Datatype datatype,
                                                          MPI_Op op, MPIR_Comm * comm_ptr,
-                                                         MPIR_Sched_t s)
+                                                         int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, newrank, pof2, rem;
@@ -57,7 +57,7 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
 
     if (rank < 2 * rem) {
         if (rank % 2 == 0) {    /* even */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank + 1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank + 1, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -66,7 +66,7 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
              * doubling */
             newrank = -1;
         } else {        /* odd */
-            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, rank - 1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, rank - 1, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -133,11 +133,11 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
 
             /* Send data from recvbuf. Recv into tmp_buf */
             mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + disps[recv_idx] * extent),
-                                        recv_cnt, datatype, dst, comm_ptr, s);
+                                        recv_cnt, datatype, dst, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier here */
             mpi_errno = MPIR_Sched_send(((char *) recvbuf + disps[send_idx] * extent),
-                                        send_cnt, datatype, dst, comm_ptr, s);
+                                        send_cnt, datatype, dst, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -192,11 +192,11 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
             }
 
             mpi_errno = MPIR_Sched_recv(((char *) recvbuf + disps[recv_idx] * extent),
-                                        recv_cnt, datatype, dst, comm_ptr, s);
+                                        recv_cnt, datatype, dst, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier here */
             mpi_errno = MPIR_Sched_send(((char *) recvbuf + disps[send_idx] * extent),
-                                        send_cnt, datatype, dst, comm_ptr, s);
+                                        send_cnt, datatype, dst, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -212,10 +212,10 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
      * (rank-1), the ranks who didn't participate above. */
     if (rank < 2 * rem) {
         if (rank % 2) { /* odd */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank - 1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank - 1, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
         } else {        /* even */
-            mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, rank + 1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, rank + 1, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

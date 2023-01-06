@@ -10,7 +10,7 @@
 int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                       int k, MPIR_TSP_sched_t sched)
+                                       int k, int collattr, MPIR_TSP_sched_t sched)
 {
     MPIR_FUNC_ENTER;
 
@@ -149,7 +149,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     /* receive data from the parent */
     if (my_tree.parent != -1) {
         mpi_errno = MPIR_TSP_sched_irecv(tmp_buf, recv_size, recvtype, my_tree.parent,
-                                         tag, comm, sched, 0, NULL, &recv_id);
+                                         tag, comm, collattr, sched, 0, NULL, &recv_id);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv", rank));
     }
@@ -159,7 +159,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
         int child = *(int *) utarray_eltptr(my_tree.children, i);
         mpi_errno = MPIR_TSP_sched_isend((char *) tmp_buf + child_data_offset[i] * sendtype_extent,
                                          child_subtree_size[i] * sendcount, sendtype,
-                                         child, tag, comm, sched, num_send_dependencies,
+                                         child, tag, comm, collattr, sched, num_send_dependencies,
                                          (lrank == 0) ? dtcopy_id : &recv_id, &vtx_id);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }

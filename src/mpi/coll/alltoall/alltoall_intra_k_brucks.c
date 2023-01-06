@@ -108,11 +108,11 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
                                  MPI_Datatype sendtype,
                                  void *recvbuf,
                                  MPI_Aint recvcnt,
-                                 MPI_Datatype recvtype, MPIR_Comm * comm, int k,
-                                 MPIR_Errflag_t errflag)
+                                 MPI_Datatype recvtype, MPIR_Comm * comm, int k, int collattr)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     int i, j;
     int rank, size;
     int nphases, max;
@@ -252,12 +252,12 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
 
             mpi_errno =
                 MPIC_Irecv(tmp_rbuf[j - 1], packsize, MPI_BYTE, src, MPIR_ALLTOALL_TAG, comm,
-                           &reqs[num_reqs++]);
+                           collattr, &reqs[num_reqs++]);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             mpi_errno =
                 MPIC_Isend(tmp_sbuf[j - 1], packsize, MPI_BYTE, dst, MPIR_ALLTOALL_TAG, comm,
-                           &reqs[num_reqs++], errflag);
+                           &reqs[num_reqs++], collattr | errflag);
             if (mpi_errno) {
                 MPIR_ERR_POP(mpi_errno);
             }

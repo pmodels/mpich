@@ -11,7 +11,7 @@
 int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void *recvbuf,
                                                        MPI_Aint recvcount, MPI_Datatype datatype,
                                                        MPI_Op op, MPIR_Comm * comm, int k,
-                                                       MPIR_TSP_sched_t sched)
+                                                       int collattr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -76,8 +76,8 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
         else
             buf_to_send = (void *) sendbuf;
         mpi_errno =
-            MPIR_TSP_sched_isend(buf_to_send, total_count, datatype, step1_sendto, tag, comm, sched,
-                                 0, NULL, &vtx_id);
+            MPIR_TSP_sched_isend(buf_to_send, total_count, datatype, step1_sendto, tag, comm,
+                                 collattr, sched, 0, NULL, &vtx_id);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     } else {    /* Step 2 participating rank */
         for (i = 0; i < step1_nrecvs; i++) {    /* participating rank gets data from non-partcipating ranks */
@@ -85,8 +85,8 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
             nvtcs = 1;
             vtcs[0] = (i == 0) ? dtcopy_id : reduce_id;
             mpi_errno = MPIR_TSP_sched_irecv(tmp_recvbuf, total_count, datatype,
-                                             step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs,
-                                             &recv_id);
+                                             step1_recvfrom[i], tag, comm, collattr, sched, nvtcs,
+                                             vtcs, &recv_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             nvtcs++;
             vtcs[1] = recv_id;
@@ -119,7 +119,8 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
 
             mpi_errno =
                 MPIR_TSP_sched_isend((char *) tmp_results + send_offset, send_cnt * recvcount,
-                                     datatype, dst, tag, comm, sched, nvtcs, vtcs, &send_id);
+                                     datatype, dst, tag, comm, collattr, sched, nvtcs, vtcs,
+                                     &send_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             MPII_Recexchalgo_get_count_and_offset(rank, phase, k, nranks, &recv_cnt, &offset);
@@ -127,7 +128,8 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
 
             mpi_errno =
                 MPIR_TSP_sched_irecv(tmp_recvbuf, recv_cnt * recvcount,
-                                     datatype, dst, tag, comm, sched, nvtcs, vtcs, &recv_id);
+                                     datatype, dst, tag, comm, collattr, sched, nvtcs, vtcs,
+                                     &recv_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             nvtcs = 2;
@@ -156,8 +158,8 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
      * send the data to non-partcipating ranks */
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
         mpi_errno =
-            MPIR_TSP_sched_irecv(recvbuf, recvcount, datatype, step1_sendto, tag, comm, sched, 1,
-                                 &step1_id, &vtx_id);
+            MPIR_TSP_sched_irecv(recvbuf, recvcount, datatype, step1_sendto, tag, comm, collattr,
+                                 sched, 1, &step1_id, &vtx_id);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
     for (i = 0; i < step1_nrecvs; i++) {
@@ -165,8 +167,8 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
         vtcs[0] = reduce_id;
         mpi_errno =
             MPIR_TSP_sched_isend((char *) tmp_results + recvcount * step1_recvfrom[i] * extent,
-                                 recvcount, datatype, step1_recvfrom[i], tag, comm, sched, nvtcs,
-                                 vtcs, &vtx_id);
+                                 recvcount, datatype, step1_recvfrom[i], tag, comm, collattr, sched,
+                                 nvtcs, vtcs, &vtx_id);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 

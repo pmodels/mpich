@@ -23,10 +23,11 @@ int
 MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
                               MPI_Datatype sendtype, void *recvbuf,
                               MPI_Aint recvcount, MPI_Datatype recvtype, MPIR_Comm * comm, int k,
-                              MPIR_Errflag_t errflag)
+                              int collattr)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     int i, j;
     int nphases = 0;
     int src, dst, p_of_k = 0;   /* Largest power of k that is smaller than 'size' */
@@ -142,7 +143,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Receive at the exact location. */
             mpi_errno = MPIC_Irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
                                    count, recvtype, src, MPIR_ALLGATHER_TAG, comm,
-                                   &reqs[num_reqs++]);
+                                   collattr, &reqs[num_reqs++]);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
@@ -154,7 +155,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Send from the start of recv till `count` amount of data. */
             mpi_errno =
                 MPIC_Isend(tmp_recvbuf, count, recvtype, dst, MPIR_ALLGATHER_TAG, comm,
-                           &reqs[num_reqs++], errflag);
+                           &reqs[num_reqs++], collattr | errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,

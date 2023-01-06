@@ -5,13 +5,13 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Barrier_allcomm_nb(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+int MPIR_Barrier_allcomm_nb(MPIR_Comm * comm_ptr, int collattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req_ptr = NULL;
 
     /* just call the nonblocking version and wait on it */
-    mpi_errno = MPIR_Ibarrier(comm_ptr, &req_ptr);
+    mpi_errno = MPIR_Ibarrier(comm_ptr, collattr, &req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIC_Wait(req_ptr);

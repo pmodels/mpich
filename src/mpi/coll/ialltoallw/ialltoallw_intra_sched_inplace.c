@@ -21,7 +21,7 @@ int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
                                         const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                         void *recvbuf, const MPI_Aint recvcounts[],
                                         const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                        MPIR_Comm * comm_ptr, int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, i, j;
@@ -67,10 +67,11 @@ int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
 
                 MPIR_Datatype_get_size_macro(recvtypes[i], recvtype_sz);
                 mpi_errno = MPIR_Sched_send(((char *) recvbuf + rdispls[dst]),
-                                            recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
+                                            recvcounts[dst], recvtypes[dst], dst, comm_ptr,
+                                            collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_recv(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
-                                            dst, comm_ptr, s);
+                                            dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 

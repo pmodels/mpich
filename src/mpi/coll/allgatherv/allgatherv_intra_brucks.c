@@ -22,12 +22,12 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                  void *recvbuf,
                                  const MPI_Aint * recvcounts,
                                  const MPI_Aint * displs,
-                                 MPI_Datatype recvtype,
-                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                 MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int collattr)
 {
     int comm_size, rank, j, i;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     MPI_Status status;
     MPI_Aint recvtype_extent, recvtype_sz;
     int pof2, src, rem, send_cnt;
@@ -79,7 +79,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                   MPIR_ALLGATHERV_TAG,
                                   ((char *) tmp_buf + curr_cnt * recvtype_sz),
                                   (total_count - curr_cnt) * recvtype_sz, MPI_BYTE,
-                                  src, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
+                                  src, MPIR_ALLGATHERV_TAG, comm_ptr, &status, collattr | errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         if (mpi_errno) {
             recv_cnt = 0;
@@ -106,7 +106,8 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                   dst, MPIR_ALLGATHERV_TAG,
                                   ((char *) tmp_buf + curr_cnt * recvtype_sz),
                                   (total_count - curr_cnt) * recvtype_sz, MPI_BYTE,
-                                  src, MPIR_ALLGATHERV_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  src, MPIR_ALLGATHERV_TAG, comm_ptr, MPI_STATUS_IGNORE,
+                                  collattr | errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 

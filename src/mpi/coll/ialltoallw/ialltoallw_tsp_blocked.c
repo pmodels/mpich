@@ -12,7 +12,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                                             const MPI_Datatype sendtypes[], void *recvbuf,
                                             const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
                                             const MPI_Datatype recvtypes[], MPIR_Comm * comm,
-                                            int bblock, MPIR_TSP_sched_t sched)
+                                            int bblock, int collattr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -49,7 +49,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                 if (recvtype_size) {
                     mpi_errno = MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[dst],
                                                      recvcounts[dst], recvtypes[dst], dst, tag,
-                                                     comm, sched, 0, NULL, &vtx_id);
+                                                     comm, collattr, sched, 0, NULL, &vtx_id);
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 }
             }
@@ -62,7 +62,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                 if (sendtype_size) {
                     mpi_errno = MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst],
                                                      sendcounts[dst], sendtypes[dst], dst, tag,
-                                                     comm, sched, 0, NULL, &vtx_id);
+                                                     comm, collattr, sched, 0, NULL, &vtx_id);
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 }
             }
