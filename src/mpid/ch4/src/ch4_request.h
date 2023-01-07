@@ -108,6 +108,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_Request_complete_fast(MPIR_Request * req)
     int incomplete;
     MPIR_cc_decr(req->cc_ptr, &incomplete);
     if (!incomplete) {
+        if (req->dev.completion_notification) {
+            MPIR_cc_dec(req->dev.completion_notification);
+        }
         MPIDI_CH4_REQUEST_FREE(req);
     }
 }

@@ -213,8 +213,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 int rank,
                                                 int tag,
                                                 MPIR_Comm * comm, int attr,
-                                                MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                                MPIR_Request * partner)
+                                                MPIDI_av_entry_t * addr,
+                                                MPIR_cc_t * parent_cc_ptr,
+                                                MPIR_Request ** request, MPIR_Request * partner)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
@@ -238,6 +239,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
         MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vci_dst,
                        request);
     MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
+
+    /* if the parent_cc_ptr exists */
+    if (parent_cc_ptr) {
+        if (MPIR_Request_is_complete(*request)) {
+            /* if the request is already completed, decrement the parent counter */
+            MPIR_cc_dec(parent_cc_ptr);
+        } else {
+            /* if the request is not done yet, assign the completion pointer to the parent one and it will be decremented later */
+            (*request)->dev.completion_notification = parent_cc_ptr;
+        }
+    }
     if (need_cs) {
         MPIDI_UCX_THREAD_CS_EXIT_VCI(vci_dst);
     }

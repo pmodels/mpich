@@ -10,7 +10,7 @@
 #   - src/mpid/ch4/shm/src/shm_noinline.h
 #   - src/mpid/ch4/shm/posix/posix_noinline.h
 #   - src/mpid/ch4/shm/stubshm/shm_noinline.h
-# It also gnerates the stub codes in 
+# It also generates the stub codes in 
 #   - src/mpid/ch4/netmod/stubnm
 #   - src/mpid/ch4/shm/stubshm
 #
@@ -136,14 +136,14 @@ Non Native API:
 
 Native API:
   mpi_isend : int
-      NM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p
-     SHM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p
+      NM*: buf, count, datatype, rank, tag, comm, attr-2, addr, parent_cc_ptr, req_p
+     SHM*: buf, count, datatype, rank, tag, comm, attr-2, addr, parent_cc_ptr, req_p
   mpi_cancel_send : int
       NM*: sreq
      SHM*: sreq
   mpi_irecv : int
-      NM*: buf-2, count, datatype, rank, tag, comm, attr-2, addr, req_p, partner
-     SHM*: buf-2, count, datatype, rank, tag, comm, attr-2, req_p
+      NM*: buf-2, count, datatype, rank, tag, comm, attr-2, addr, parent_cc_ptr, req_p, partner
+     SHM*: buf-2, count, datatype, rank, tag, comm, attr-2, parent_cc_ptr, req_p
   mpi_imrecv : int
       NM*: buf-2, count, datatype, message
      SHM*: buf-2, count, datatype, message
@@ -477,6 +477,7 @@ PARAM:
     origin_addr-2: void *
     origin_count: MPI_Aint
     origin_datatype: MPI_Datatype
+    parent_cc_ptr: MPIR_cc_t*
     partner: MPIR_Request *
     port_name: const char *
     port_name-2: char *
