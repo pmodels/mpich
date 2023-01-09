@@ -219,7 +219,7 @@ typedef struct MPIDI_prequest {
     MPI_Aint count;
     int rank;
     int tag;
-    MPIR_Context_id_t context_id;
+    int context_offset;
     MPI_Datatype datatype;
 } MPIDI_prequest_t;
 
