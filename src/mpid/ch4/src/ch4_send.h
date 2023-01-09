@@ -78,6 +78,52 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPID_Isend_parent(const void *buf,
+                                               MPI_Aint count,
+                                               MPI_Datatype datatype,
+                                               int rank,
+                                               int tag,
+                                               MPIR_Comm * comm, int attr,
+                                               MPIR_cc_t * parent_cc_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = NULL;
+    MPIR_FUNC_ENTER;
+
+    if (MPIDI_is_self_comm(comm)) {
+        mpi_errno =
+            MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, parent_cc_ptr, request);
+    } else {
+        av = MPIDIU_comm_rank_to_av(comm, rank);
+        mpi_errno =
+            MPIDI_isend(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr, request);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (*request) {
+        MPII_SENDQ_REMEMBER(*request, rank, tag, comm->recvcontext_id, buf, count);
+    }
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Isend_coll(const void *buf,
+                                             MPI_Aint count,
+                                             MPI_Datatype datatype,
+                                             int rank,
+                                             int tag,
+                                             MPIR_Comm * comm, int attr,
+                                             MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, *errflag);
+    return MPID_Isend(buf, count, datatype, rank, tag, comm, attr, request);
+}
+
 MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
