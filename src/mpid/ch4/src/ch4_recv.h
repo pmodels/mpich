@@ -257,6 +257,36 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPID_Irecv_parent(void *buf,
+                                               MPI_Aint count,
+                                               MPI_Datatype datatype,
+                                               int rank,
+                                               int tag,
+                                               MPIR_Comm * comm, int attr,
+                                               MPIR_cc_t * parent_cc_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    if (MPIDI_is_self_comm(comm)) {
+        mpi_errno =
+            MPIDI_Self_irecv(buf, count, datatype, rank, tag, comm, attr, parent_cc_ptr, request);
+    } else {
+        MPIDI_av_entry_t *av = (rank == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, rank));
+        mpi_errno =
+            MPIDI_irecv(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr, request);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPII_RECVQ_REMEMBER(*request, rank, tag, comm->recvcontext_id, buf, count);
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request * rreq)
 {
     int mpi_errno;
