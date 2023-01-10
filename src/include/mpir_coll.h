@@ -9,6 +9,47 @@
 #include "coll_impl.h"
 #include "coll_algos.h"
 
+/* collective attr bits allocation:
+ * 0-7:   errflag
+ * 8-15:  subcomm type
+ * 16-23: subcomm index
+ */
+
+#define MPIR_COLL_ATTR_NONE 0
+#define MPIR_COLL_ATTR_GET_ERRFLAG(attr) ((attr) & 0xff)
+#define MPIR_COLL_ATTR_GET_SUBCOMM_TYPE(attr) (((attr) >> 8) & 0xff)
+#define MPIR_COLL_ATTR_GET_SUBCOMM_INDEX(attr) (((attr) >> 16) & 0xff)
+
+#define MPIR_COLL_SUBCOMM_TYPE_NONE 0
+#define MPIR_COLL_SUBCOMM_TYPE_CHILD 1
+#define MPIR_COLL_SUBCOMM_TYPE_ROOTS 2
+
+#define MPIR_COLL_GET_RANK_SIZE(comm_ptr, collattr, rank_, size_) \
+    do { \
+        int subcomm_type = MPIR_COLL_ATTR_GET_SUBCOMM_TYPE(collattr); \
+        if (subcomm_type) { \
+            int subcomm_index = MPIR_COLL_ATTR_GET_SUBCOMM_INDEX(collattr); \
+            switch(subcomm_type) { \
+                case MPIR_COLL_SUBCOMM_TYPE_CHILD: \
+                    rank_ = comm_ptr->child_subcomm[subcomm_index].rank; \
+                    size_ = comm_ptr->child_subcomm[subcomm_index].size; \
+                    break; \
+                case MPIR_COLL_SUBCOMM_TYPE_ROOTS: \
+                    rank_ = comm_ptr->roots_subcomm[subcomm_index].rank; \
+                    size_ = comm_ptr->roots_subcomm[subcomm_index].size; \
+                    break; \
+                default: \
+                    MPIR_Assert(0); \
+                    rank_ = -1; \
+                    size_ = 0; \
+            } \
+        } else { \
+            rank_ = (comm_ptr)->rank; \
+            size_ = (comm_ptr)->local_size; \
+        } \
+    } while (0)
+
+
 /* During init, not all algorithms are safe to use. For example, the csel
  * may not have been initialized. We define a set of fallback routines that
  * are safe to use during init. They are all intra algorithms.
