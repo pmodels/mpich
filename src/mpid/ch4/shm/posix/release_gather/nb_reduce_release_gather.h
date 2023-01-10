@@ -240,6 +240,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_reduce_start_sendrecv_completion(
     int root = per_call_data->root;
     int segment = per_call_data->seq_no % MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS;
     MPIR_Comm *comm_ptr = per_call_data->comm_ptr;
+    int collattr = per_call_data->collattr;
     MPIDI_POSIX_release_gather_comm_t *nb_release_gather_info_ptr;
     nb_release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, nb_release_gather);
     int rank = MPIR_Comm_rank(comm_ptr);
@@ -248,11 +249,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_reduce_start_sendrecv_completion(
     if (root != 0) {
         if (rank == root) {
             MPIC_Irecv(per_call_data->recv_buf, per_call_data->count, per_call_data->datatype,
-                       0, per_call_data->tag, comm_ptr, &(per_call_data->rreq));
+                       0, per_call_data->tag, comm_ptr, collattr, &(per_call_data->rreq));
         } else if (rank == 0) {
             MPIC_Isend(MPIDI_POSIX_RELEASE_GATHER_NB_REDUCE_DATA_ADDR(rank, segment),
                        per_call_data->count, per_call_data->datatype, per_call_data->root,
-                       per_call_data->tag, comm_ptr, &(per_call_data->sreq), MPIR_ERR_NONE);
+                       per_call_data->tag, comm_ptr, &(per_call_data->sreq), collattr);
         }
     }
 
@@ -348,6 +349,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
                                                                         MPI_Datatype datatype,
                                                                         MPI_Op op, const int root,
                                                                         MPIR_Comm * comm_ptr,
+                                                                        int collattr,
                                                                         MPIR_TSP_sched_t sched)
 {
     MPIR_FUNC_ENTER;
@@ -437,6 +439,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
         data->root = root;
         data->op = op;
         data->comm_ptr = comm_ptr;
+        data->collattr = collattr;
         data->tag = tag;
         data->sreq = NULL;
         data->rreq = NULL;

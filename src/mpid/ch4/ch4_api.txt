@@ -272,56 +272,56 @@ Native API:
   rank_is_local : int
       NM*: target, comm
   mpi_barrier : int
-      NM*: comm, errflag
-     SHM*: comm, errflag
+      NM*: comm, collattr
+     SHM*: comm, collattr
   mpi_bcast : int
-      NM*: buffer, count, datatype, root, comm, errflag
-     SHM*: buffer, count, datatype, root, comm, errflag
+      NM*: buffer, count, datatype, root, comm, collattr
+     SHM*: buffer, count, datatype, root, comm, collattr
   mpi_allreduce : int
-      NM*: sendbuf, recvbuf, count, datatype, op, comm, errflag
-     SHM*: sendbuf, recvbuf, count, datatype, op, comm, errflag
+      NM*: sendbuf, recvbuf, count, datatype, op, comm, collattr
+     SHM*: sendbuf, recvbuf, count, datatype, op, comm, collattr
   mpi_allgather : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, errflag
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, errflag
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, collattr
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, collattr
   mpi_allgatherv : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, errflag
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, errflag
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, collattr
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, collattr
   mpi_scatter : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, errflag
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, errflag
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, collattr
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, collattr
   mpi_scatterv : int
-      NM*: sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag
-     SHM*: sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag
+      NM*: sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, collattr
+     SHM*: sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, collattr
   mpi_gather : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, errflag
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, errflag
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, collattr
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, collattr
   mpi_gatherv : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, errflag
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, errflag
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, collattr
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, collattr
   mpi_alltoall : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, errflag
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, errflag
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, collattr
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, collattr
   mpi_alltoallv : int
-      NM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, errflag
-     SHM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, errflag
+      NM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, collattr
+     SHM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, collattr
   mpi_alltoallw : int
-      NM*: sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, errflag
-     SHM*: sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, errflag
+      NM*: sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, collattr
+     SHM*: sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, collattr
   mpi_reduce : int
-      NM*: sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag
-     SHM*: sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag
+      NM*: sendbuf, recvbuf, count, datatype, op, root, comm_ptr, collattr
+     SHM*: sendbuf, recvbuf, count, datatype, op, root, comm_ptr, collattr
   mpi_reduce_scatter : int
-      NM*: sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag
-     SHM*: sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag
+      NM*: sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, collattr
+     SHM*: sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, collattr
   mpi_reduce_scatter_block : int
-      NM*: sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag
-     SHM*: sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag
+      NM*: sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, collattr
+     SHM*: sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, collattr
   mpi_scan : int
-      NM*: sendbuf, recvbuf, count, datatype, op, comm, errflag
-     SHM*: sendbuf, recvbuf, count, datatype, op, comm, errflag
+      NM*: sendbuf, recvbuf, count, datatype, op, comm, collattr
+     SHM*: sendbuf, recvbuf, count, datatype, op, comm, collattr
   mpi_exscan : int
-      NM*: sendbuf, recvbuf, count, datatype, op, comm, errflag
-     SHM*: sendbuf, recvbuf, count, datatype, op, comm, errflag
+      NM*: sendbuf, recvbuf, count, datatype, op, comm, collattr
+     SHM*: sendbuf, recvbuf, count, datatype, op, comm, collattr
   mpi_neighbor_allgather : int
       NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm
      SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm
@@ -353,56 +353,56 @@ Native API:
       NM*: sendbuf, sendcounts, sdispls-2, sendtypes, recvbuf, recvcounts, rdispls-2, recvtypes, comm, req_p
      SHM*: sendbuf, sendcounts, sdispls-2, sendtypes, recvbuf, recvcounts, rdispls-2, recvtypes, comm, req_p
   mpi_ibarrier : int
-      NM*: comm, req_p
-     SHM*: comm, req_p
+      NM*: comm, collattr, req_p
+     SHM*: comm, collattr, req_p
   mpi_ibcast : int
-      NM*: buffer, count, datatype, root, comm, req_p
-     SHM*: buffer, count, datatype, root, comm, req_p
+      NM*: buffer, count, datatype, root, comm, collattr, req_p
+     SHM*: buffer, count, datatype, root, comm, collattr, req_p
   mpi_iallgather : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, req_p
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, req_p
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, collattr, req_p
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, collattr, req_p
   mpi_iallgatherv : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, req_p
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, req_p
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, collattr, req_p
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, collattr, req_p
   mpi_iallreduce : int
-      NM*: sendbuf, recvbuf, count, datatype, op, comm, req_p
-     SHM*: sendbuf, recvbuf, count, datatype, op, comm, req_p
+      NM*: sendbuf, recvbuf, count, datatype, op, comm, collattr, req_p
+     SHM*: sendbuf, recvbuf, count, datatype, op, comm, collattr, req_p
   mpi_ialltoall : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, req_p
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, req_p
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, collattr, req_p
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, collattr, req_p
   mpi_ialltoallv : int
-      NM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, req_p
-     SHM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, req_p
+      NM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, collattr, req_p
+     SHM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, collattr, req_p
   mpi_ialltoallw : int
-      NM*: sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, req_p
-     SHM*: sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, req_p
+      NM*: sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, collattr, req_p
+     SHM*: sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, collattr, req_p
   mpi_iexscan : int
-      NM*: sendbuf, recvbuf, count, datatype, op, comm, req_p
-     SHM*: sendbuf, recvbuf, count, datatype, op, comm, req_p
+      NM*: sendbuf, recvbuf, count, datatype, op, comm, collattr, req_p
+     SHM*: sendbuf, recvbuf, count, datatype, op, comm, collattr, req_p
   mpi_igather : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, req_p
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, req_p
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, collattr, req_p
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, collattr, req_p
   mpi_igatherv : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, req_p
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, req_p
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, collattr, req_p
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, collattr, req_p
   mpi_ireduce_scatter_block : int
-      NM*: sendbuf, recvbuf, recvcount, datatype, op, comm, req_p
-     SHM*: sendbuf, recvbuf, recvcount, datatype, op, comm, req_p
+      NM*: sendbuf, recvbuf, recvcount, datatype, op, comm, collattr, req_p
+     SHM*: sendbuf, recvbuf, recvcount, datatype, op, comm, collattr, req_p
   mpi_ireduce_scatter : int
-      NM*: sendbuf, recvbuf, recvcounts, datatype, op, comm, req_p
-     SHM*: sendbuf, recvbuf, recvcounts, datatype, op, comm, req_p
+      NM*: sendbuf, recvbuf, recvcounts, datatype, op, comm, collattr, req_p
+     SHM*: sendbuf, recvbuf, recvcounts, datatype, op, comm, collattr, req_p
   mpi_ireduce : int
-      NM*: sendbuf, recvbuf, count, datatype, op, root, comm_ptr, req_p
-     SHM*: sendbuf, recvbuf, count, datatype, op, root, comm_ptr, req_p
+      NM*: sendbuf, recvbuf, count, datatype, op, root, comm, collattr, req_p
+     SHM*: sendbuf, recvbuf, count, datatype, op, root, comm, collattr, req_p
   mpi_iscan : int
-      NM*: sendbuf, recvbuf, count, datatype, op, comm, req_p
-     SHM*: sendbuf, recvbuf, count, datatype, op, comm, req_p
+      NM*: sendbuf, recvbuf, count, datatype, op, comm, collattr, req_p
+     SHM*: sendbuf, recvbuf, count, datatype, op, comm, collattr, req_p
   mpi_iscatter : int
-      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, req_p
-     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, req_p
+      NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, collattr, req_p
+     SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, collattr, req_p
   mpi_iscatterv : int
-      NM*: sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, req_p
-     SHM*: sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, req_p
+      NM*: sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm, collattr, req_p
+     SHM*: sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm, collattr, req_p
   mpi_type_commit_hook : int
       NM : datatype_p
      SHM : type
@@ -438,6 +438,7 @@ PARAM:
     buf: const void *
     buf-2: void *
     buffer: void *
+    collattr: int
     comm: MPIR_Comm *
     comm_ptr: MPIR_Comm *
     compare_addr: const void *
@@ -451,7 +452,6 @@ PARAM:
     disp_unit_p: int *
     displs: const MPI_Aint *
     dst_vci: int
-    errflag: MPIR_Errflag_t
     flag: int *
     group: MPIR_Group *
     handler_id: int

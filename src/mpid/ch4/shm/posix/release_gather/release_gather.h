@@ -68,7 +68,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                                                                     MPI_Datatype datatype,
                                                                     const int root,
                                                                     MPIR_Comm * comm_ptr,
-                                                                    MPIR_Errflag_t errflag,
+                                                                    int collattr,
                                                                     const
                                                                     MPIDI_POSIX_release_gather_opcode_t
                                                                     operation)
@@ -77,6 +77,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
 
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank;
     void *bcast_data_addr = NULL;
@@ -101,7 +102,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
             /* Root sends data to rank 0 */
             if (rank == root) {
                 mpi_errno =
-                    MPIC_Send(local_buf, count, datatype, 0, MPIR_BCAST_TAG, comm_ptr, errflag);
+                    MPIC_Send(local_buf, count, datatype, 0, MPIR_BCAST_TAG, comm_ptr,
+                              collattr | errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             } else if (rank == 0) {
 #ifdef HAVE_ERROR_CHECKING
@@ -113,7 +115,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 MPI_Aint recv_bytes;
                 mpi_errno =
                     MPIC_Recv((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
-                              datatype, root, MPIR_BCAST_TAG, comm_ptr, &status);
+                              datatype, root, MPIR_BCAST_TAG, comm_ptr, collattr, &status);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recv_bytes);
                 MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(int),
@@ -123,7 +125,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                  * roots might expect same data as other ranks but different from the actual root.
                  * So only datasize mismatch handling is not sufficient */
                 MPIR_Typerep_copy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, &errflag,
-                                  sizeof(MPIR_Errflag_t), MPIR_TYPEREP_FLAG_NONE);
+                                  sizeof(int), MPIR_TYPEREP_FLAG_NONE);
                 if ((int) recv_bytes != count) {
                     /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
                     errflag = MPIR_ERR_OTHER;
@@ -134,7 +136,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 /* When error checking is disabled, MPI_STATUS_IGNORE is used */
                 mpi_errno =
                     MPIC_Recv(bcast_data_addr, count, datatype, root, MPIR_BCAST_TAG, comm_ptr,
-                              MPI_STATUS_IGNORE);
+                              collattr, MPI_STATUS_IGNORE);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 #endif
             }
@@ -149,7 +151,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
              * expect same data as other ranks but different from the actual root. So only
              * datasize mismatch handling is not sufficient */
             MPIR_Typerep_copy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, &errflag,
-                              sizeof(MPIR_Errflag_t), MPIR_TYPEREP_FLAG_NONE);
+                              sizeof(int), MPIR_TYPEREP_FLAG_NONE);
             mpi_errno =
                 MPIR_Localcopy(local_buf, count, datatype,
                                (char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
@@ -247,7 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
                                                                    MPI_Datatype datatype, MPI_Op op,
                                                                    const int root,
                                                                    MPIR_Comm * comm_ptr,
-                                                                   MPIR_Errflag_t errflag,
+                                                                   int collattr,
                                                                    const
                                                                    MPIDI_POSIX_release_gather_opcode_t
                                                                    operation)
@@ -260,6 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     MPL_atomic_uint64_t *child_flag_addr;
     void *reduce_data_addr = NULL;
     int i, mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     bool skip_checking = false;
     /* Set the relaxation to 0 because in Reduce, release step is "relaxed" to make sure multiple
      * buffers can be used to pipeline the copying in and out of shared memory, and data is not
@@ -352,14 +355,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
             /* send-recv between root and rank 0 */
             if (rank == root) {
                 mpi_errno =
-                    MPIC_Recv(outbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr,
+                    MPIC_Recv(outbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr, collattr,
                               MPI_STATUS_IGNORE);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             } else if (rank == 0) {
                 MPIR_ERR_CHKANDJUMP(!reduce_data_addr, mpi_errno, MPI_ERR_OTHER, "**nomem");
                 mpi_errno =
                     MPIC_Send((void *) reduce_data_addr, count, datatype, root, MPIR_REDUCE_TAG,
-                              comm_ptr, errflag);
+                              comm_ptr, collattr | errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
         }
