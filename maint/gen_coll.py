@@ -434,7 +434,8 @@ def dump_mpir_impl_persistent(name):
     dump_split(0, "int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
-    G.out.append("int collattr = 0;")
+    if not re.match(r'Neighbor_', Name):
+        G.out.append("int collattr = 0;")
     G.out.append("")
     G.out.append("MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_COLL);")
     G.out.append("MPIR_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, \"**nomem\");")
