@@ -434,6 +434,7 @@ def dump_mpir_impl_persistent(name):
     dump_split(0, "int MPIR_%s_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
+    G.out.append("int collattr = 0;")
     G.out.append("")
     G.out.append("MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_COLL);")
     G.out.append("MPIR_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, \"**nomem\");")
@@ -646,12 +647,13 @@ def get_algo_args(args, algo, kind):
     if 'extra_params' in algo:
         algo_args += ", " + get_algo_extra_args(algo, kind)
 
+    if not re.match(r'i?neighbor', algo['func-commkind']):
+        algo_args += ', collattr'
+
     if algo['name'].startswith('tsp_'):
         algo_args += ", *sched_p"
     elif algo['func-commkind'].startswith('i'):
         algo_args += ", *sched_p"
-    elif not algo['func-commkind'].startswith('neighbor_'):
-        algo_args += ", errflag"
 
     return algo_args
 
@@ -660,12 +662,13 @@ def get_algo_params(params, algo):
     if 'extra_params' in algo:
         algo_params += ", " + get_algo_extra_params(algo)
 
+    if not re.match(r'i?neighbor_', algo['func-commkind']):
+        algo_params += ', int collattr'
+
     if algo['name'].startswith('tsp_'):
         algo_params += ", MPIR_TSP_sched_t sched"
     elif algo['func-commkind'].startswith('i'):
         algo_params += ", MPIR_Sched_t s"
-    elif not algo['func-commkind'].startswith('neighbor_'):
-        algo_params += ", MPIR_Errflag_t errflag"
 
     return algo_params
 
@@ -680,9 +683,12 @@ def get_algo_name(algo):
 
 def get_func_params(params, name, kind):
     func_params = params
+
+    if not (name.startswith('neighbor_') or kind == "persistent"):
+        func_params += ', int collattr'
+
     if kind == "blocking":
-        if not name.startswith('neighbor_'):
-            func_params += ", MPIR_Errflag_t errflag"
+        pass
     elif kind == "nonblocking":
         func_params += ", MPIR_Request ** request"
     elif kind == "persistent":
@@ -700,9 +706,11 @@ def get_func_params(params, name, kind):
 
 def get_func_args(args, name, kind):
     func_args = args
+    if not (name.startswith('neighbor_') or kind == "persistent"):
+        func_args += ", collattr"
+
     if kind == "blocking":
-        if not name.startswith('neighbor_'):
-            func_args += ", errflag"
+        pass
     elif kind == "nonblocking":
         func_args += ", request"
     elif kind == "persistent":
