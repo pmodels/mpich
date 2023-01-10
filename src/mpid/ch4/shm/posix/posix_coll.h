@@ -97,6 +97,18 @@ cvars:
         release_gather - Force shm optimized algo using release, gather primitives
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
 
+    - name        : MPIR_CVAR_ALLTOALL_POSIX_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      default     : mpir
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select algorithm for intra-node alltoall
+        mpir           - Fallback to MPIR collectives (default)
+        ipc_read    - Uses read-based collective with ipc
+
     - name        : MPIR_CVAR_POSIX_POLL_FREQUENCY
       category    : COLLECTIVE
       type        : int
@@ -454,18 +466,34 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall(const void *sendbuf, MPI_A
                                                       MPI_Aint recvcount, MPI_Datatype recvtype,
                                                       MPIR_Comm * comm, MPIR_Errflag_t errflag)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype,
-                                   recvbuf, recvcount, recvtype, comm, errflag);
+    switch (MPIR_CVAR_ALLTOALL_POSIX_INTRA_ALGORITHM) {
+        case MPIR_CVAR_ALLTOALL_POSIX_INTRA_ALGORITHM_ipc_read:
+            mpi_errno = MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(sendbuf, sendcount, sendtype,
+                                                              recvbuf, recvcount, recvtype,
+                                                              comm, errflag);
+            break;
+
+        case MPIR_CVAR_ALLTOALL_POSIX_INTRA_ALGORITHM_mpir:
+            goto fallback;
+
+        default:
+            MPIR_Assert(0);
+    }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
 
-    MPIR_FUNC_EXIT;
+  fallback:
+    mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype,
+                                   recvbuf, recvcount, recvtype, comm, errflag);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
