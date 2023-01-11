@@ -2175,12 +2175,16 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         G.out.append("    }")
         G.out.append("}")
         # test sendbuf
+        cond_a = cond_intra
+        cond_b = cond_inter + " && root != MPI_ROOT && root != MPI_PROC_NULL"
+        dump_if_open("(" + cond_a + ") || (" + cond_b + ")")
         G.out.append("if (" + cond_inter + ") {")
         G.out.append("    MPIR_ERRTEST_SENDBUF_INPLACE(%s, %s, mpi_errno);" % (sbuf, ct))
         G.out.append("}")
         G.out.append("if (%s > 0 && %s != MPI_IN_PLACE) {" % (ct, sbuf))
         G.out.append("    MPIR_ERRTEST_USERBUFFER(%s, %s, %s, mpi_errno);" % (sbuf, ct, dt))
         G.out.append("}")
+        dump_if_close()
 
         G.out.append("DEDENT")
         G.out.append("}")
