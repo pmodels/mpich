@@ -108,18 +108,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv(void *buf,
     *(req) = NULL;
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
-        MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, av, NULL, req, NULL);
+        MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr, req,
+                           NULL);
 #else
     if (unlikely(rank == MPI_ANY_SOURCE)) {
-        mpi_errno = anysource_irecv(buf, count, datatype, rank, tag, comm, attr, av, NULL, req);
+        mpi_errno =
+            anysource_irecv(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr, req);
 
     } else {
         if (MPIDI_av_is_local(av))
-            mpi_errno = MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, NULL, req);
+            mpi_errno =
+                MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, parent_cc_ptr,
+                                    req);
         else
             mpi_errno =
-                MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, av, NULL, req,
-                                   NULL);
+                MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr,
+                                   req, NULL);
     }
 #endif
     MPIR_ERR_CHECK(mpi_errno);
