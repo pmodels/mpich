@@ -33,7 +33,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
         MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, comm->rank, dst_rank, tag);
     ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, sender_nic);
 
-    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, dst_rank, tag, 0);
+    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vni_local, vni_remote);
     if (MPIDI_OFI_ENABLE_DATA) {
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
@@ -178,7 +178,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         type = 0;
     }
 
-    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, dst_rank, tag, type);
+    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
