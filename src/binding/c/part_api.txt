@@ -85,7 +85,7 @@ MPI_Parrived:
     MPIR_ERRTEST_PARTITION(partition, request_ptr, mpi_errno);
 }
 { -- early_return --
-    if (request == MPI_REQUEST_NULL) {
+    if (request == MPI_REQUEST_NULL || !MPIR_Part_request_is_active(request_ptr)) {
         *flag = TRUE;
         goto fn_exit;
     }
