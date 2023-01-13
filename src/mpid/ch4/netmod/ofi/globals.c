@@ -111,6 +111,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_PSM2}
     ,
     {   /* psm3 */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_PSM3,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_PSM3,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM3,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_PSM3,
@@ -197,6 +198,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_BGQ}
     ,
     {   /* cxi */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_CXI,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_CXI,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_CXI,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_CXI,
@@ -225,6 +227,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_CXI}
     ,
     {   /* VERBS_RXM */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_VERBS_RXM,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_VERBS_RXM,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_VERBS_RXM,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_VERBS_RXM,
@@ -282,6 +285,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_RXM}
     ,
     {   /* GNI */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_GNI,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_GNI,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_GNI,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_GNI,

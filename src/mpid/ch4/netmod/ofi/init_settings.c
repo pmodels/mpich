@@ -224,6 +224,7 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
     memset(p_settings, 0, sizeof(MPIDI_OFI_capabilities_t));
 
     /* Seed the settings values for cases where we are using runtime sets */
+    UPDATE_SETTING_BY_CAP(enable_data, MPIR_CVAR_CH4_OFI_ENABLE_DATA);
     UPDATE_SETTING_BY_CAP(enable_av_table, MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE);
     UPDATE_SETTING_BY_CAP(enable_scalable_endpoints, MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS);
     /* If the user specifies -1 (=don't care) and the provider supports it, then try to use STX
