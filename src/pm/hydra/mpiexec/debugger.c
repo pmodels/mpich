@@ -44,8 +44,9 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
      * proxy. */
 
     i = 0;
-    for (int i_proxy = 0;; i_proxy = (i_proxy + 1) % pg->proxy_count) {
-        struct HYD_proxy *proxy = &pg->proxy_list[i_proxy];
+    for (int i_proxy = 0;; i_proxy++) {
+        struct HYD_proxy *proxy = &pg->proxy_list[i_proxy % pg->proxy_count];
+        round = i_proxy / pg->proxy_count;
         j = 0;
         k = 0;
         for (exec = proxy->exec_list; exec; exec = exec->next) {
