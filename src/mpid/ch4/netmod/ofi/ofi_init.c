@@ -365,7 +365,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING
       category    : CH4
       type        : int
-      default     : 1
+      default     : 0
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
