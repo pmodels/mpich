@@ -57,7 +57,10 @@ MPI_Allgatherv:
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
         if (sendbuf != MPI_IN_PLACE) {
-            MPIR_Localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcounts[0], recvtype);
+            MPI_Aint recvtype_extent;
+            MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
+            MPIR_Localcopy(sendbuf, sendcount, sendtype,
+                           (char *) recvbuf + displs[0] * recvtype_extent, recvcounts[0], recvtype);
         }
         goto fn_exit;
     }
@@ -188,7 +191,10 @@ MPI_Iallgatherv:
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
         if (sendbuf != MPI_IN_PLACE) {
-            MPIR_Localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcounts[0], recvtype);
+            MPI_Aint recvtype_extent;
+            MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
+            MPIR_Localcopy(sendbuf, sendcount, sendtype,
+                           (char *) recvbuf + displs[0] * recvtype_extent, recvcounts[0], recvtype);
         }
         MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
         *request = request_ptr->handle;
