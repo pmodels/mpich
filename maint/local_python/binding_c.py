@@ -1411,9 +1411,6 @@ def push_impl_decl(func, impl_name=None):
         G.impl_declares.append("int %s(%s);" % (mpir_name, params))
     # dump MPIR_Xxx_impl(...)
     G.impl_declares.append("int %s(%s);" % (impl_name, params))
-    if func['dir'] == 'coll':
-        mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
-        G.impl_declares.append("int %s(%s);" % (mpir_name, params))
 
 def dump_CHECKENUM(var, errname, t, type="ENUM"):
     val_list = t.split()
