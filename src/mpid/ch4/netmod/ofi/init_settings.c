@@ -361,4 +361,13 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
         MPIDI_OFI_global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_REGULAR;
         MPIDI_OFI_global.settings.max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR;
     }
+
+    /* if CQ data is disabled, make sure we have sufficient source_bits */
+    if (!MPIDI_OFI_global.settings.enable_data) {
+        if (MPIDI_OFI_global.settings.source_bits == 0) {
+            MPIDI_OFI_global.settings.context_bits = 16;
+            MPIDI_OFI_global.settings.source_bits = 24;
+            MPIDI_OFI_global.settings.tag_bits = 20;
+        }
+    }
 }
