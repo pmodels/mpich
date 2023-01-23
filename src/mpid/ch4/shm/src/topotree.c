@@ -203,7 +203,7 @@ int MPIDI_SHM_topotree_get_package_level(int topo_depth, int *max_entries_per_le
         }
     }
     /* STEP 3.3. Determine the package level based on first level (top-down) with #nodes >1 */
-    socket_level = topo_depth;
+    socket_level = topo_depth - 1;
     {
         for (i = topo_depth - 1; i >= 0; --i) {
             if (max_entries_per_level[i] > 1) {
