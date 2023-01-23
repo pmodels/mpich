@@ -233,11 +233,14 @@ typedef struct MPIDIG_part_sreq {
 typedef struct MPIDIG_part_rreq {
     int msg_part;               /* the number of msg actually received */
     MPI_Aint send_dsize;        /* size of entire send data */
+    MPIR_cc_t status_matched;   /* indicate if the req has matched (=1) and if the first CTS has been issued (=2)  */
     MPIR_cc_t *cc_part;         /* ready counter per partition */
 } MPIDIG_part_rreq_t;
 
 typedef struct MPIDIG_part_request {
+    bool do_tag;                /* indicate if tag matching is used (true) or not for this request */
     MPIR_Request *peer_req_ptr;
+    MPIR_Request **tag_req_ptr; /* store the array of pointers to the children request */
     union {
         MPIDIG_part_sreq_t send;
         MPIDIG_part_rreq_t recv;

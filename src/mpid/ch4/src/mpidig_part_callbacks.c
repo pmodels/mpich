@@ -7,6 +7,7 @@
 #include "mpidch4r.h"
 #include "mpidig_part_callbacks.h"
 #include "mpidig_part_utils.h"
+#include "mpidpre.h"
 
 /* Called when data transfer completes on receiver */
 static int part_send_data_target_cmpl_cb(MPIR_Request * rreq)
@@ -68,16 +69,27 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
 
         /* If rreq matches and local start has been called, notify sender CTS */
         if (MPIR_Part_request_is_active(posted_req)) {
-            // reset the counter per partition
-            MPIDIG_part_rreq_reset_cc_part(posted_req);
 
             // set the cc value to the number of partitions
             const int msg_part = MPIDIG_PART_REQUEST(posted_req, u.recv.msg_part);
             MPIR_Assert(msg_part >= 0);
             MPIR_cc_set(posted_req->cc_ptr, msg_part);
 
-            // notify the sender we are now ready
+            // reset the counter per partition
+            MPIDIG_part_rreq_reset_cc_part(posted_req);
+
+            if (MPIDIG_PART_REQUEST(posted_req, do_tag)) {
+                /* in tag matching we issue the recv requests */
+                mpi_errno = MPIDIG_part_issue_recv(posted_req);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+
+            /* issue the CTS is last to ensure we are fully ready */
+            MPIR_Assert(!MPIDIG_Part_rreq_status_has_first_cts(posted_req));
             mpi_errno = MPIDIG_part_issue_cts(posted_req);
+            MPIR_ERR_CHECK(mpi_errno);
+
+            MPIDIG_Part_rreq_status_first_cts(posted_req);
         }
 
         /* release handshake reference */
@@ -150,7 +162,7 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
     MPIR_Assert(MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part) == msg_hdr->msg_part);
 
     /* reset the correct cc value for the number of actually sent msgs */
-    MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(part_sreq, u.send.cc_send)) == 0);
+    // FIXME this is NOT the best option as we reset it twice (once at the start and once here)
     MPIR_cc_set(&MPIDIG_PART_REQUEST(part_sreq, u.send.cc_send), msg_hdr->msg_part);
 
     /* decrements the counter of all the partitions at once because a msg

@@ -40,7 +40,9 @@
 #define MPIR_AGREE_TAG                30
 #define MPIR_FIRST_HCOLL_TAG          31
 #define MPIR_LAST_HCOLL_TAG           (MPIR_FIRST_HCOLL_TAG + 255)
-#define MPIR_FIRST_NBC_TAG            (MPIR_LAST_HCOLL_TAG + 1)
+#define MPIR_FIRST_PART_TAG           (MPIR_LAST_HCOLL_TAG + 1)
+#define MPIR_LAST_PART_TAG            (MPIR_FIRST_PART_TAG + 511)
+#define MPIR_FIRST_NBC_TAG            (MPIR_LAST_PART_TAG + 1)
 
 #define MPIR_TAG_BITS_DEFAULT (31)
 

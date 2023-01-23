@@ -214,6 +214,9 @@ struct MPIR_Comm {
      */
     int tainted;
 
+    /* due to the current TAG space (see mpir_tags.h) we can only use a fixed number of
+     * simultaneous partitioned communication at a time and this counter keeps track of it */
+    MPIR_cc_t part_context_cc;
 
     int hints[MPIR_COMM_HINT_MAX];      /* Hints to the communicator
                                          * use int array for fast access */

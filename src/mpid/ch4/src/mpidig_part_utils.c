@@ -5,6 +5,8 @@
 
 #include "mpidimpl.h"
 #include "mpidig_part_utils.h"
+#include "mpidpre.h"
+#include "mpl_base.h"
 
 /* creates a MPIDIG SEND request */
 void MPIDIG_part_sreq_create(MPIR_Request ** req)
@@ -29,6 +31,7 @@ void MPIDIG_part_rreq_create(MPIR_Request ** req)
 
     MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = -1;
     MPIDIG_PART_REQUEST(rreq, u.recv.cc_part) = NULL;
+    MPIR_cc_set(&MPIDIG_PART_REQUEST(rreq, u.recv.status_matched), 0);
 }
 
 /* called when a receive Request has been matched
@@ -64,12 +67,25 @@ void MPIDIG_part_rreq_matched(MPIR_Request * rreq)
     MPIR_Assert(msg_part >= 0);
     MPIDIG_PART_REQUEST(rreq, u.recv.cc_part) =
         MPL_malloc(sizeof(MPIR_cc_t) * msg_part, MPL_MEM_OTHER);
+
+    const bool do_tag = MPIDIG_PART_REQUEST(rreq, do_tag);
+    if (do_tag) {
+        MPIDIG_PART_REQUEST(rreq, tag_req_ptr) =
+            MPL_malloc(sizeof(MPIR_Request *) * msg_part, MPL_MEM_OTHER);
+        for (int i = 0; i < msg_part; ++i) {
+            MPIDIG_PART_REQUEST(rreq, tag_req_ptr[i]) = NULL;
+        }
+    } else {
+        MPIDIG_PART_REQUEST(rreq, tag_req_ptr) = NULL;
+    }
+    /* indicate that we have matched */
+    MPIDIG_Part_rreq_status_matched(rreq);
 }
 
 /* partition recv request - reset cc_part array of an activated request */
 void MPIDIG_part_rreq_reset_cc_part(MPIR_Request * rqst)
 {
-    MPIR_Assert(MPIR_Part_request_is_active(rqst));
+    MPIR_Assert(MPIDIG_Part_rreq_status_has_matched(rqst));
     MPIR_Assert(rqst->kind == MPIR_REQUEST_KIND__PART_RECV);
 
     /* reset the counters to the init value */
@@ -82,16 +98,18 @@ void MPIDIG_part_rreq_reset_cc_part(MPIR_Request * rqst)
 }
 
 /* partition send requests - resets the cc_part */
-void MPIDIG_part_sreq_reset_cc_part(MPIR_Request * rqst)
+void MPIDIG_part_sreq_set_cc_part(MPIR_Request * rqst)
 {
     MPIR_Assert(rqst->kind == MPIR_REQUEST_KIND__PART_SEND);
-    MPIR_Assert(MPIDIG_PART_REQUEST(rqst, u.send.msg_part) < 0);
 
+    const int init_value = MPIDIG_PART_REQUEST(rqst,
+                                               do_tag) ? MPIDIG_PART_STATUS_SEND_TAG_FIRST_INIT :
+        MPIDIG_PART_STATUS_SEND_AM_INIT;
     const int send_part = rqst->u.part.partitions;
     MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(rqst, u.send.cc_part);
     MPIR_Assert(send_part >= 0);
     for (int i = 0; i < send_part; ++i) {
-        MPIR_cc_set(&cc_part[i], MPIDIG_PART_STATUS_SEND_INIT);
+        MPIR_cc_set(&cc_part[i], init_value);
     }
 }
 
@@ -102,8 +120,21 @@ void MPIDIG_part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_ms
 
     MPIDIG_PART_REQUEST(rreq, u.recv.send_dsize) = msg_hdr->data_sz;
     MPIDIG_PART_REQUEST(rreq, peer_req_ptr) = msg_hdr->sreq_ptr;
+    MPIDIG_PART_REQUEST(rreq, do_tag) = msg_hdr->do_tag;
 
-    MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = msg_hdr->send_npart;
+    /* the receiver decides how many msgs are used
+     * if the total number of datatypes can be divided by the number of send partition
+     * we use the number of send partitions to communicate datat
+     * if the modulo is not null then we use the gcd approach */
+    const int send_part = msg_hdr->send_npart;
+    const int recv_part = rreq->u.part.partitions;
+    MPI_Aint ttl_count = recv_part * MPIDI_PART_REQUEST(rreq, count);
+    if (ttl_count % send_part) {
+        MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = MPL_gcd(send_part, recv_part);
+    } else {
+        MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = send_part;
+    }
+    fprintf(stdout, "u.recv.msg_part = %d\n", MPIDIG_PART_REQUEST(rreq, u.recv.msg_part));
 
     /* 0 partition is illegual so at least one message must happen */
     MPIR_Assert(MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) > 0);

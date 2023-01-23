@@ -5,36 +5,70 @@
 #ifndef MPIDIG_PART_UTILS_H_INCLUDED
 #define MPIDIG_PART_UTILS_H_INCLUDED
 
+#include <stdio.h>
+#include "ch4_wait.h"
+#include "mpi.h"
+#include "mpidpre.h"
+#include "mpiimpl.h"
 #include "ch4_impl.h"
+#include "mpir_assert.h"
+#include "mpir_request.h"
+#include "mpir_tags.h"
+#include "mpl_base.h"
 
-/* defines the different stages a send partitions must go through */
-enum MPIDIG_part_status_send_cc_t {
-    MPIDIG_PART_STATUS_SEND_READY,      /* 0 = partition is ready to be sent */
-    /* below insert all the needed operations */
-    MPIDIG_PART_STATUS_SEND_CTS,        /* CTS received */
-    /* the last value is the initialization value */
-    MPIDIG_PART_STATUS_SEND_INIT
-};
-
-/* defines the different stages a recv partitions must go through */
-enum MPIDIG_part_status_recv_cc_t {
-    MPIDIG_PART_STATUS_RECV_ARRIVED,    /* 0 = partition has arrived */
-    /* below insert all the needed operations */
-    /* the last value is the initialization value */
-    MPIDIG_PART_STATUS_RECV_INIT
-};
+/*------------------------------------------------------------------------------------------------*/
+/* definition of the send status which depends from the code path and the iteation */
+#define MPIDIG_PART_STATUS_SEND_READY 0
+/* must go through the CTS reception (-1) and the Pready (-1) before being ready to send */
+#define MPIDIG_PART_STATUS_SEND_AM_INIT 2
+/* tag-based messaging must go through the CTS reception (-1) and the Pready (-1) at the FIRST iteration only
+ * other iteration only require the pready*/
+#define MPIDIG_PART_STATUS_SEND_TAG_FIRST_INIT 2
+#define MPIDIG_PART_STATUS_SEND_TAG_LATER_INIT 1
+/*------------------------------------------------------------------------------------------------*/
+/* definition of the send status which depends from the code path and the iteation */
+#define MPIDIG_PART_STATUS_RECV_READY 0
+#define MPIDIG_PART_STATUS_RECV_INIT 1
+/*------------------------------------------------------------------------------------------------*/
 
 /* functions defined in .c */
-void MPIDIG_part_rreq_create(MPIR_Request ** req);
 void MPIDIG_part_sreq_create(MPIR_Request ** req);
+void MPIDIG_part_rreq_create(MPIR_Request ** req);
 
+void MPIDIG_part_sreq_set_cc_part(MPIR_Request * rqst);
 void MPIDIG_part_rreq_reset_cc_part(MPIR_Request * rqst);
-void MPIDIG_part_sreq_reset_cc_part(MPIR_Request * rqst);
 
 void MPIDIG_part_rreq_matched(MPIR_Request * rreq);
 void MPIDIG_part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_msg_t * msg_hdr);
 
-/* Receiver issues a TS to sender once reach MPIDIG_PART_REQ_CTS */
+
+MPL_STATIC_INLINE_PREFIX void MPIDIG_Part_rreq_status_matched(MPIR_Request * rreq)
+{
+    MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
+    MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(rreq, u.recv.status_matched)) == 0);
+    MPIR_cc_inc(&MPIDIG_PART_REQUEST(rreq, u.recv.status_matched));
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDIG_Part_rreq_status_first_cts(MPIR_Request * rreq)
+{
+    MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
+    MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(rreq, u.recv.status_matched)) == 1);
+    MPIR_cc_inc(&MPIDIG_PART_REQUEST(rreq, u.recv.status_matched));
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_Part_rreq_status_has_matched(MPIR_Request * rreq)
+{
+    MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
+    return MPIR_cc_get(MPIDIG_PART_REQUEST(rreq, u.recv.status_matched)) >= 1;
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_Part_rreq_status_has_first_cts(MPIR_Request * rreq)
+{
+    MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
+    return MPIR_cc_get(MPIDIG_PART_REQUEST(rreq, u.recv.status_matched)) >= 2;
+}
+
+/* Receiver issues a CTS to sender once reach MPIDIG_PART_REQ_CTS */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
 {
     MPIR_Assert(rreq_ptr->kind == MPIR_REQUEST_KIND__PART_RECV);
@@ -49,6 +83,118 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
     int source = MPIDI_PART_REQUEST(rreq_ptr, u.recv.source);
     CH4_CALL(am_send_hdr_reply(rreq_ptr->comm, source, MPIDIG_PART_CTS, &am_hdr, sizeof(am_hdr),
                                0, 0), MPIDI_REQUEST(rreq_ptr, is_local), mpi_errno);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+/* Issue the receive request for the receiver for tag-matching approach
+ * the non-blocking receive are issued at start time*/
+MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_recv(MPIR_Request * rreq)
+{
+    MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
+    MPIR_Assert(MPIDIG_PART_REQUEST(rreq, do_tag));
+
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* get the count per the msg partition and the shift in the buffer from the datatype */
+    const int msg_part = MPIDIG_PART_REQUEST(rreq, u.recv.msg_part);
+    MPI_Aint count = MPIDI_PART_REQUEST(rreq, count) * rreq->u.part.partitions;
+    MPIR_Assert(count % msg_part == 0);
+    count /= msg_part;
+    MPIR_Assert(count < MPIR_AINT_MAX);
+
+    MPI_Aint part_offset;
+    MPI_Datatype dtype_recv = MPIDI_PART_REQUEST(rreq, datatype);
+    MPIR_Datatype_get_extent_macro(dtype_recv, part_offset);
+    part_offset *= count;
+
+    //const int count_recv = MPIDI_PART_REQUEST(rreq, count);
+    const int source_rank = MPIDI_PART_REQUEST(rreq, u.recv.source);
+    MPIR_cc_t *cc_ptr = rreq->cc_ptr;
+    MPIR_Comm *comm = rreq->comm;
+
+    /* attr = 1 isolates the traffic of internal vs external communications */
+    /*const int     attr       = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ? MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL; */
+    const int attr = 1;
+    MPIR_Assert(MPIR_cc_get(*cc_ptr) == msg_part);
+
+    MPIR_Request **child_req = MPIDIG_PART_REQUEST(rreq, tag_req_ptr);
+    for (int im = 0; im < msg_part; ++im) {
+        const int source_tag = MPIR_FIRST_PART_TAG + im;
+        void *buf_recv = (char *) MPIDI_PART_REQUEST(rreq, buffer) + im * part_offset;
+
+        /* free the previous request as that one is not needed anymore */
+        if (child_req[im]) {
+            MPIR_Request_free(child_req[im]);
+        }
+
+        /* initialize the next request, the ref count should be 2 here: one for mpich, one for me */
+        MPID_Irecv_parent(buf_recv, count, dtype_recv, source_rank, source_tag, comm, attr,
+                          cc_ptr, child_req + im);
+    }
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request * sreq)
+{
+    MPIR_Assert(sreq->kind == MPIR_REQUEST_KIND__PART_SEND);
+    MPIR_Assert(MPIDIG_PART_REQUEST(sreq, do_tag));
+
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* decrease the counter of the number of msgs requested to be send
+     * if we have requested the send of every msgs then we can reset the counters */
+    int incomplete;
+    MPIR_cc_decr(&MPIDIG_PART_REQUEST(sreq, u.send.cc_send), &incomplete);
+    if (!incomplete) {
+        const int n_part = sreq->u.part.partitions;
+        MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(sreq, u.send.cc_part);
+        for (int ip = 0; ip < n_part; ++ip) {
+            MPIR_cc_set(&cc_part[ip], MPIDIG_PART_STATUS_SEND_TAG_LATER_INIT);
+        }
+    }
+
+    /* get the count per the msg partition and the shift in the buffer from the datatype */
+    const int msg_part = MPIDIG_PART_REQUEST(sreq, u.send.msg_part);
+    MPI_Aint count = MPIDI_PART_REQUEST(sreq, count) * sreq->u.part.partitions;
+    MPIR_Assert(count % msg_part == 0);
+    count /= msg_part;
+    MPIR_Assert(count < MPIR_AINT_MAX);
+
+    MPI_Aint part_offset;
+    MPI_Datatype dtype_send = MPIDI_PART_REQUEST(sreq, datatype);
+    MPIR_Datatype_get_extent_macro(dtype_send, part_offset);
+    part_offset *= count;
+
+    const int count_send = MPIDI_PART_REQUEST(sreq, count);
+    const int dest_rank = MPIDI_PART_REQUEST(sreq, u.send.dest);
+    MPIR_cc_t *cc_ptr = sreq->cc_ptr;
+    MPIR_Comm *comm = sreq->comm;
+
+    /* attr = 1 isolates the traffic of internal vs external communications */
+    /*const int attr = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ? MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL; */
+    const int attr = 1;
+
+    MPIR_Assert(imsg <= (MPIR_LAST_PART_TAG - MPIR_FIRST_PART_TAG));
+    const int dest_tag = MPIR_FIRST_PART_TAG + imsg;
+    void *buf_send = (char *) MPIDI_PART_REQUEST(sreq, buffer) + imsg * part_offset;
+    MPIR_Request *child_req = MPIDIG_PART_REQUEST(sreq, tag_req_ptr)[imsg];
+
+    /* free the previous request as that one is not needed anymore */
+    if (child_req) {
+        /* we cannot have a non-completed request here */
+        MPIR_Assert(MPIR_Request_is_complete(child_req));
+        MPIR_Request_free(child_req);
+    }
+
+    /* initialize the next request, the ref count should be 2 here: one for mpich, one for me */
+    MPID_Isend_parent(buf_send, count_send, dtype_send, dest_rank, dest_tag, comm, attr, cc_ptr,
+                      &child_req);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -124,7 +270,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(const int imsg, MPIR_Request
         const int n_part = part_sreq->u.part.partitions;
         MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_part);
         for (int ip = 0; ip < n_part; ++ip) {
-            MPIR_cc_set(&cc_part[ip], MPIDIG_PART_STATUS_SEND_INIT);
+            MPIR_cc_set(&cc_part[ip], MPIDIG_PART_STATUS_SEND_AM_INIT);
         }
     }
 
@@ -160,6 +306,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(const int imsg, MPIR_Request
     goto fn_exit;
 }
 
+
+
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_lb, const int msg_ub,
                                                             MPIR_Request * sreq,
                                                             enum MPIDIG_part_issue_mode mode)
@@ -173,6 +321,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_lb, co
     const MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(sreq, u.send.cc_part);
     MPIR_Assert(msg_part > 0);
 
+    const bool do_tag = MPIDIG_PART_REQUEST(sreq, do_tag);
+
+
     /*for each of the communication msgs in the range, try to see if they are ready */
     for (int im = msg_lb; im < msg_ub; ++im) {
         const int ip_lb = MPIDIG_part_idx_lb(im, msg_part, send_part);
@@ -185,7 +336,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_lb, co
             ready &= (MPIDIG_PART_STATUS_SEND_READY == MPIR_cc_get(cc_part[ip]));
         }
         if (ready) {
-            mpi_errno = MPIDIG_part_issue_data(im, sreq, MPIDIG_PART_REPLY);
+            if (do_tag) {
+                mpi_errno = MPIDIG_part_issue_send(im, sreq);
+            } else {
+                mpi_errno = MPIDIG_part_issue_data(im, sreq, MPIDIG_PART_REPLY);
+            }
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

@@ -6,6 +6,30 @@
 #include "mpidimpl.h"
 #include "mpidch4r.h"
 #include "mpidig_part_utils.h"
+#include "mpidpre.h"
+
+
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories :
+    - name : PARTITION
+      description : A category for partitioned communication related variables
+
+cvars:
+    - name        : MPIR_CVAR_PART_MAXREQ_PERCOMM
+      category    : PARTITION
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        The maximum number of simultaneous partitioned communications initiated from a given process
+        on a communicator
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 /* Create a MPIR_Request for part comm, both send and recv ones */
 static int MPIDI_part_req_create(void *buf, int partitions, MPI_Aint count,
@@ -63,11 +87,6 @@ static int MPIDI_part_req_create(void *buf, int partitions, MPI_Aint count,
     goto fn_exit;
 }
 
-static void part_req_am_init(MPIR_Request * part_req)
-{
-    MPIDIG_PART_REQUEST(part_req, peer_req_ptr) = NULL;
-}
-
 int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count, MPI_Datatype datatype,
                           int dest, int tag, MPIR_Comm * comm, MPIR_Info * info,
                           MPIR_Request ** request)
@@ -87,10 +106,36 @@ int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count, MPI_D
     /* initialize the MPIDIG part of the request and reset the cc_part counters
      * they are allocated and set to the number of partitions as we don't have anything else yet */
     MPIDIG_part_sreq_create(request);
-    MPIDIG_part_sreq_reset_cc_part(*request);
 
-    /* Initialize am components for send */
-    part_req_am_init(*request);
+    //--------------------------------------------------------------------------
+    /* we decide if we use the AM or the regular send code path using tags
+     * due to the tag structure we can only perform a given number of simultaneous
+     * partitioned communications */
+    const bool do_tag = MPIR_cc_get(comm->part_context_cc) < MPIR_CVAR_PART_MAXREQ_PERCOMM;
+    MPIR_cc_inc(&comm->part_context_cc);
+    if (do_tag) {
+        fprintf(stdout, "we are going to use do_tag\n");
+        fflush(stdout);
+        /* Initialize tag-matching components for send */
+        MPIDIG_PART_REQUEST(*request, do_tag) = true;
+        MPIDIG_PART_REQUEST(*request, peer_req_ptr) = NULL;
+        const int send_part = partitions;
+        MPIDIG_PART_REQUEST(*request, tag_req_ptr) =
+            MPL_malloc(sizeof(MPIR_Request *) * send_part, MPL_MEM_OTHER);
+        for (int i = 0; i < send_part; ++i) {
+            MPIDIG_PART_REQUEST(*request, tag_req_ptr[i]) = NULL;
+        }
+        /* initialize counters usually done at the first CTS in AM */
+        //MPIDIG_PART_REQUEST(*request, u.send.msg_part) = partitions;
+    } else {
+        /* Initialize am components for send */
+        MPIDIG_PART_REQUEST(*request, do_tag) = false;
+        MPIDIG_PART_REQUEST(*request, peer_req_ptr) = NULL;
+        MPIDIG_PART_REQUEST(*request, tag_req_ptr) = NULL;
+    }
+
+    /* we need to know do_tag to set the cc_part values */
+    MPIDIG_part_sreq_set_cc_part(*request);
 
     //--------------------------------------------------------------------------
     /* Initiate handshake with receiver for message matching */
@@ -99,6 +144,7 @@ int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count, MPI_D
     am_hdr.tag = tag;
     am_hdr.context_id = comm->context_id;
     am_hdr.sreq_ptr = *request;
+    am_hdr.do_tag = do_tag;
 
     MPI_Aint dtype_size = 0;
     MPIR_Datatype_get_size_macro(datatype, dtype_size);
@@ -137,8 +183,9 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
     /*initialize the MPIDIG part of the request */
     MPIDIG_part_rreq_create(request);
 
-    /* Initialize am components for receive */
-    part_req_am_init(*request);
+    /* set the tag and AM components to NULL */
+    MPIDIG_PART_REQUEST(*request, peer_req_ptr) = NULL;
+    MPIDIG_PART_REQUEST(*request, tag_req_ptr) = NULL;
 
     /*--------------------------------------------------------------------------*/
     /* Try matching a request or post a new one */
@@ -155,6 +202,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
         MPIDIG_PART_REQUEST(*request, peer_req_ptr) = MPIDIG_PART_REQUEST(unexp_req, peer_req_ptr);
         MPIDIG_PART_REQUEST(*request, u.recv.msg_part) =
             MPIDIG_PART_REQUEST(unexp_req, u.recv.msg_part);
+        MPIDIG_PART_REQUEST(*request, do_tag) = MPIDIG_PART_REQUEST(unexp_req, do_tag);
         MPIDI_CH4_REQUEST_FREE(unexp_req);
 
         /* we have matched, fill the missing part of the requests: fill the status and allocate cc_part */

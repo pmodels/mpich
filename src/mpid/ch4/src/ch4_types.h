@@ -80,6 +80,7 @@ typedef struct MPIDIG_ssend_ack_msg_t {
 } MPIDIG_ssend_ack_msg_t;
 
 typedef struct MPIDIG_part_send_init_msg_t {
+    bool do_tag;                /* use tag matching or not */
     int send_npart;             /* the number of send partitions */
     int send_ttl_dcount;        /* the total number of datatypes in the WHOLE buffer */
     int src_rank;               /* rank of the send */

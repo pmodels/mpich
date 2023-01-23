@@ -76,8 +76,7 @@ static inline int MPL_ipow(int base, int exp)
 }
 
 /* returns the Greatest Common Divisor of two integers */
-static inline int MPL_gcd(int a, int b)
-{
+static inline int MPL_gcd(int a, int b) {
     return (a == 0) ? b : MPL_gcd(b % a, a);
 }
 

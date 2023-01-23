@@ -61,6 +61,7 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
     int mpi_errno = MPI_SUCCESS;
     int rc;
 
+
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
             {
@@ -190,7 +191,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
         case MPIR_REQUEST_KIND__PART_RECV:
             {
                 MPIR_Part_request_inactivate(request_ptr);
-
                 MPIR_Request_extract_status(request_ptr, status);
                 mpi_errno = request_ptr->status.MPI_ERROR;
                 break;
