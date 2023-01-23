@@ -16,10 +16,14 @@ int MPIDI_OFI_dispatch_function(int vni, struct fi_cq_tagged_entry *wc, MPIR_Req
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 {
-    if (unlikely(has_err)) {
-        return wc->data & ((1 << MPIDI_OFI_IDATA_SRC_BITS) - 1);
+    if (MPIDI_OFI_ENABLE_DATA) {
+        if (unlikely(has_err)) {
+            return wc->data & ((1 << MPIDI_OFI_IDATA_SRC_BITS) - 1);
+        }
+        return wc->data;
+    } else {
+        return MPIDI_OFI_init_get_source(wc->tag);
     }
-    return wc->data;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vni,
@@ -111,11 +115,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
     /* If synchronous, ack and complete when the ack is done */
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
         /* Read ordering unnecessary for context_id stored in util_id here, so use relaxed load */
+        MPIR_Comm *c = rreq->comm;
         uint64_t ss_bits =
             MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int(&MPIDI_OFI_REQUEST(rreq, util_id)),
-                                   rreq->status.MPI_TAG,
+                                   MPIR_Comm_rank(c), rreq->status.MPI_TAG,
                                    MPIDI_OFI_SYNC_SEND_ACK);
-        MPIR_Comm *c = rreq->comm;
         int r = rreq->status.MPI_SOURCE;
         /* NOTE: use target rank, reply to src */
         int vni_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
@@ -125,12 +129,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
         MPIR_Assert(vni_local == vni);
         int nic = 0;
         int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni_local, nic);
-        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL /* buf */ ,
-                                            0 /* len */ ,
-                                            MPIR_Comm_rank(c),
-                                            MPIDI_OFI_comm_to_phys(c, r, nic, vni_local,
-                                                                   vni_remote),
-                                            ss_bits), vni_local, tinjectdata, FALSE /* eagain */);
+        fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(c, r, nic, vni_local, vni_remote);
+        if (MPIDI_OFI_ENABLE_DATA) {
+            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
+                                                MPIR_Comm_rank(c), dest_addr, ss_bits),
+                                 vni_local, tinjectdata, FALSE /* eagain */);
+        } else {
+            MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
+                                            dest_addr, ss_bits),
+                                 vni_local, tinject, FALSE /* eagain */);
+        }
     }
 
     MPIDI_Request_complete_fast(rreq);

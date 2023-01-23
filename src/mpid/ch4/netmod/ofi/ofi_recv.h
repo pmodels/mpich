@@ -162,7 +162,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIDI_OFI_REQUEST(rreq, nic_num) = receiver_nic;
     ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
 
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, tag);
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, rank, tag);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     MPIDI_OFI_REQUEST(rreq, datatype) = datatype;

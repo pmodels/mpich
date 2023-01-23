@@ -120,12 +120,6 @@ static int find_provider(struct fi_info **prov_out)
 
         MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
 
-        /* OFI provider doesn't expose FI_DIRECTED_RECV by default for performance consideration.
-         * MPICH should request this flag to enable it. */
-        if (prov->caps & FI_TAGGED) {
-            prov->caps |= FI_DIRECTED_RECV;
-        }
-
         provname = prov->fabric_attr->prov_name;
         /* Initialize MPIDI_OFI_global.settings */
         MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings, provname);

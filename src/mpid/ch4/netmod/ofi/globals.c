@@ -24,6 +24,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
  * capability set at runtime */
 {
     {   /* default required capability */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_DEFAULT,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_DEFAULT,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_DEFAULT,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_DEFAULT,
@@ -52,6 +53,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_DEFAULT}
     ,
     {   /* minimal required capability */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_MINIMAL,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_MINIMAL,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_MINIMAL,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_MINIMAL,
@@ -80,6 +82,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_MINIMAL}
     ,
     {   /* psm2 */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_PSM2,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_PSM2,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM2,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_PSM2,
@@ -108,6 +111,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_PSM2}
     ,
     {   /* psm3 */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_PSM3,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_PSM3,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM3,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_PSM3,
@@ -136,6 +140,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_PSM3}
     ,
     {   /* sockets */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_SOCKETS,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_SOCKETS,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_SOCKETS,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_SOCKETS,
@@ -164,6 +169,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_SOCKETS}
     ,
     {   /* bgq */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_BGQ,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_BGQ,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_BGQ,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_BGQ,
@@ -192,6 +198,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_BGQ}
     ,
     {   /* cxi */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_CXI,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_CXI,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_CXI,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_CXI,
@@ -220,6 +227,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_CXI}
     ,
     {   /* VERBS_RXM */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_VERBS_RXM,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_VERBS_RXM,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_VERBS_RXM,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_VERBS_RXM,
@@ -248,6 +256,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_RXM}
     ,
     {   /* RxM */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_RXM,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_RXM,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_RXM,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_RXM,
@@ -276,6 +285,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .minor_version = MPIDI_OFI_MINOR_VERSION_RXM}
     ,
     {   /* GNI */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_GNI,
      .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_GNI,
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_GNI,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_GNI,
