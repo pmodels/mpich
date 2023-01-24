@@ -45,7 +45,8 @@ static void threadcomm_data_copy(struct send_hdr *hdr,
                                  void *buf, MPI_Aint count, MPI_Datatype datatype);
 
 static MPIR_Request *threadcomm_enqueue_posted(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                               int src_id, int tag, int attr, MPIR_Request ** list);
+                                               int src_id, int tag, int attr,
+                                               int tid, MPIR_Request ** list);
 static MPIR_Request *threadcomm_match_posted(int src_id, int tag, int attr, MPIR_Request ** list);
 static void threadcomm_complete_posted(struct send_hdr *hdr, MPIR_Request * rreq);
 
@@ -96,7 +97,8 @@ MPL_STATIC_INLINE_PREFIX
 
     /* ---- do ipc ---- */
     /* prepare request */
-    MPIR_Request *sreq = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__SEND, 0, 2);
+    int pool = p->tid % MPIR_REQUEST_NUM_POOLS;
+    MPIR_Request *sreq = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__SEND, pool, 2);
     MPIR_Assert(sreq);
     MPIR_Assert(sizeof(struct send_req) <= sizeof(sreq->u));
     struct send_req *u = (struct send_req *) &sreq->u;
@@ -142,7 +144,8 @@ MPL_STATIC_INLINE_PREFIX
     if (unexp) {
         struct send_hdr *hdr = (struct send_hdr *) unexp->cell;
         if (has_status) {
-            *req = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__RECV, 0, 2);
+            int pool = p->tid % MPIR_REQUEST_NUM_POOLS;
+            *req = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__RECV, pool, 2);
             (*req)->status.MPI_SOURCE = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, hdr->src_id);
             (*req)->status.MPI_TAG = hdr->tag;
             (*req)->status.MPI_ERROR = MPIR_PT2PT_ATTR_GET_ERRFLAG(hdr->attr);
@@ -153,7 +156,8 @@ MPL_STATIC_INLINE_PREFIX
         threadcomm_data_copy(hdr, buf, count, datatype);
         MPL_free(unexp);
     } else {
-        *req = threadcomm_enqueue_posted(buf, count, datatype, src_id, tag, attr, &p->posted_list);
+        *req = threadcomm_enqueue_posted(buf, count, datatype, src_id, tag, attr,
+                                         p->tid, &p->posted_list);
     }
 
     return mpi_errno;
@@ -179,10 +183,12 @@ static void threadcomm_data_copy(struct send_hdr *hdr,
 }
 
 static MPIR_Request *threadcomm_enqueue_posted(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                               int src_id, int tag, int attr, MPIR_Request ** list)
+                                               int src_id, int tag, int attr,
+                                               int tid, MPIR_Request ** list)
 {
     MPIR_Request *rreq;
-    rreq = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__RECV, 0, 2);
+    int pool = tid % MPIR_REQUEST_NUM_POOLS;
+    rreq = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__RECV, pool, 2);
     struct posted_req *u = (void *) &rreq->u;
     u->buf = buf;
     u->count = count;
