@@ -3820,6 +3820,15 @@ AC_ARG_ENABLE(checkpointing,
       fi ],
 )
 
+# NVCC can be used to compile examples/cuda/cudapi.cu
+if test -z "$NVCC" ; then
+    if test -n "${with_cuda}" -a "$with_cuda" != "no" ; then
+        AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found], [$with_cuda/bin:$PATH])
+    else
+        AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found])
+    fi
+fi
+
 # Update the cache first with the results of the previous configure steps
 # We don't use the subdir cache because ensuring that the cache is consistent
 # with the way in which configure wishes to use it is very difficult and
