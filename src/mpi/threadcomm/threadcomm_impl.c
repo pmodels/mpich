@@ -16,6 +16,15 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     int mpi_errno = MPI_SUCCESS;
     int comm_size = comm->local_size;
 
+    /* When each thread use different request pool, we don't necessarily need
+     * MPI_THREAD_MULTIPLE for lock safety. But check when num_threads exceed
+     * MPIR_REQUEST_NUM_POOLS.
+     */
+    if (num_threads > MPIR_REQUEST_NUM_POOLS) {
+        MPIR_ERR_CHKANDJUMP(!MPIR_ThreadInfo.isThreaded, mpi_errno, MPI_ERR_OTHER,
+                            "**threadcomm_threadlevel");
+    }
+
     MPIR_Threadcomm *threadcomm;
     threadcomm = MPL_malloc(sizeof(MPIR_Threadcomm), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!threadcomm, mpi_errno, MPI_ERR_OTHER, "**nomem");

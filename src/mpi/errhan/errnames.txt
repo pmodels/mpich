@@ -980,6 +980,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **streamcomm_srcidx:The source stream index exceeds the number of streams.
 **streamcomm_dstidx:The destination stream index exceeds the number of streams.
 **gpu_enqueue_noncontig:Non-contig datatype not supported due to missing TLS.
+**threadcomm_threadlevel:Thread communicator require MPIR_THREAD_MULTIPLE.
 
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
