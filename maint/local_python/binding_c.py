@@ -26,6 +26,14 @@ def dump_mpi_c(func, is_large=False):
     # for poly functions, decide impl interface
     check_large_parameters(func)
 
+    # whether we need potentially swap the counts array argument
+    func["_need_coll_v_swap"] = False
+    func["_need_type_create_swap"] = False
+    if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
+        func["_need_coll_v_swap"] = True
+    elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
+        func["_need_type_create_swap"] = True
+
     process_func_parameters(func)
 
     G.mpi_declares.append(get_declare_function(func, is_large, "proto"))
@@ -1325,9 +1333,9 @@ def dump_poly_pre_filter(func):
                 replace_impl_arg_list(func['_impl_arg_list'], p['name'], "&%s_c" % p['name'])
 
     def filter_array():
-        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
+        if func["_need_coll_v_swap"]:
             dump_coll_v_swap(func)
-        elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
+        elif func["_need_type_create_swap"]:
             dump_type_create_swap(func)
         else:
             if func['_poly_in_arrays']:
@@ -1368,9 +1376,9 @@ def dump_poly_post_filter(func):
                     G.out.append("*%s = %s;" % (p['name'], val))
 
     def filter_array(int_max):
-        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
+        if func["_need_coll_v_swap"]:
             dump_coll_v_exit(func)
-        elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
+        elif func["_need_type_create_swap"]:
             dump_type_create_exit(func)
 
     # ----
@@ -1489,6 +1497,30 @@ def dump_coll_v_swap(func):
         dump_for_close()
 
     # -------------------------
+    def get_comm_size_n(intra_only):
+        G.out.append("int n;")
+        if intra_only:
+            G.out.append("n = comm_ptr->local_size;")
+        else:
+            cond = "(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)"
+            G.out.append("n = %s ? comm_ptr->remote_size : comm_ptr->local_size;" % cond)
+        G.out.append("#ifdef ENABLE_THREADCOMM")
+        dump_if_open("comm_ptr->threadcomm")
+        G.out.append("int intracomm_size = comm_ptr->local_size;")
+        G.out.append("n = comm_ptr->threadcomm->rank_offset_table[intracomm_size - 1];")
+        dump_if_close()
+        G.out.append("#endif")
+
+    def get_comm_rank_r():
+        G.out.append("int r;")
+        G.out.append("r = comm_ptr->rank;")
+        G.out.append("#ifdef ENABLE_THREADCOMM")
+        dump_if_open("comm_ptr->threadcomm")
+        G.out.append("r = MPIR_THREADCOMM_TID_TO_RANK(comm_ptr->threadcomm, MPIR_threadcomm_get_tid(comm_ptr->threadcomm));")
+        dump_if_close()
+        G.out.append("#endif")
+
+    # -------------------------
     if RE.match(r'mpi_i?neighbor_', func['name'], re.IGNORECASE):
         # neighborhood collectives
         G.out.append("int indegree, outdegree, weighted;")
@@ -1517,13 +1549,12 @@ def dump_coll_v_swap(func):
             replace_arg('recvcounts', 'tmp_array + outdegree')
     # classical collectives
     elif RE.match(r'(mpi_i?reduce_scatter(_init)?\b)', func['name'], re.IGNORECASE):
-        G.out.append("int n = comm_ptr->local_size;")
+        get_comm_size_n(True) # intracomm-only
         allocate_tmp_array("n")
         swap_one("n", "recvcounts")
         replace_arg('recvcounts', 'tmp_array')
     else:
-        cond = "(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)"
-        G.out.append("int n = %s ? comm_ptr->remote_size : comm_ptr->local_size;" % cond)
+        get_comm_size_n(False) # not intra-only
         if RE.search(r'alltoall[vw]', func['name'], re.IGNORECASE):
             allocate_tmp_array("n * 4")
             dump_if_open("sendbuf != MPI_IN_PLACE")
@@ -1549,12 +1580,13 @@ def dump_coll_v_swap(func):
             else: # gatherv
                 counts = "recvcounts"
             # only root need the v-array
+            get_comm_rank_r()
             cond_intra = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM"
             cond_inter = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM"
-            cond_a = cond_intra + " && comm_ptr->rank == root"
+            cond_a = cond_intra + " && r == root"
             cond_b = cond_inter + " && root == MPI_ROOT"
-
-            dump_if_open("(%s) || (%s)" % (cond_a, cond_b))
+            cond = "(%s) || (%s)" % (cond_a, cond_b)
+            dump_if_open(cond)
             swap_one("n", counts)
             swap_next("n", "n", "displs")
             dump_if_close()
