@@ -329,6 +329,9 @@ Makefile.am-stamp
 /examples/spawn_merge_child2
 /examples/spawn_merge_parent
 
+# /examples/cuda/
+/examples/cuda/cudapi
+
 # /examples/cxx/
 /examples/cxx/cxxpi
 
