@@ -15,7 +15,7 @@ int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                       MPIR_Sched_t s)
+                                       int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -46,7 +46,7 @@ int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
                     }
                 } else {
                     mpi_errno = MPIR_Sched_recv(((char *) recvbuf + displs[i] * extent),
-                                                recvcounts[i], recvtype, i, comm_ptr, s);
+                                                recvcounts[i], recvtype, i, comm_ptr, collattr, s);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
             }
@@ -66,9 +66,11 @@ int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
                 MPIR_CVAR_GET_DEFAULT_INT(GATHERV_INTER_SSEND_MIN_PROCS, &min_procs);
 
             if (comm_size >= min_procs)
-                mpi_errno = MPIR_Sched_ssend(sendbuf, sendcount, sendtype, root, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_ssend(sendbuf, sendcount, sendtype, root, comm_ptr, collattr, s);
             else
-                mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, root, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_send(sendbuf, sendcount, sendtype, root, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

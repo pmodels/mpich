@@ -41,12 +41,12 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
                                 void *recvbuf,
                                 const MPI_Aint * recvcounts,
                                 const MPI_Aint * displs,
-                                MPI_Datatype recvtype,
-                                int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, int collattr)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     MPI_Aint extent;
     int i, reqs;
     int min_procs;
@@ -84,7 +84,7 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
                 } else {
                     mpi_errno = MPIC_Irecv(((char *) recvbuf + displs[i] * extent),
                                            recvcounts[i], recvtype, i,
-                                           MPIR_GATHERV_TAG, comm_ptr, &reqarray[reqs++]);
+                                           MPIR_GATHERV_TAG, comm_ptr, collattr, &reqarray[reqs++]);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
             }
@@ -109,11 +109,11 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
 
             if (comm_size >= min_procs) {
                 mpi_errno = MPIC_Ssend(sendbuf, sendcount, sendtype, root,
-                                       MPIR_GATHERV_TAG, comm_ptr, errflag);
+                                       MPIR_GATHERV_TAG, comm_ptr, collattr | errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             } else {
                 mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, root,
-                                      MPIR_GATHERV_TAG, comm_ptr, errflag);
+                                      MPIR_GATHERV_TAG, comm_ptr, collattr | errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
         }

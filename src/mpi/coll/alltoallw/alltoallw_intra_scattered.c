@@ -23,11 +23,12 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                                    const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                    void *recvbuf, const MPI_Aint recvcounts[],
                                    const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                   MPIR_Comm * comm_ptr, int collattr)
 {
     int comm_size, i;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     MPI_Status *starray;
     MPIR_Request **reqarray;
     int dst, rank;
@@ -71,7 +72,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                     mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst],
                                            recvcounts[dst], recvtypes[dst], dst,
                                            MPIR_ALLTOALLW_TAG, comm_ptr,
-                                           &reqarray[outstanding_requests]);
+                                           collattr, &reqarray[outstanding_requests]);
                     MPIR_ERR_CHECK(mpi_errno);
 
                     outstanding_requests++;
@@ -87,7 +88,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                     mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst],
                                            sendcounts[dst], sendtypes[dst], dst,
                                            MPIR_ALLTOALLW_TAG, comm_ptr,
-                                           &reqarray[outstanding_requests], errflag);
+                                           &reqarray[outstanding_requests], collattr | errflag);
                     MPIR_ERR_CHECK(mpi_errno);
 
                     outstanding_requests++;

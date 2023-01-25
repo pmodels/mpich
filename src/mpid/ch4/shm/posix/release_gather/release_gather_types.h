@@ -54,6 +54,7 @@ typedef struct MPIDI_POSIX_per_call_ibcast_info_t {
     int root, tag;
     MPI_Datatype datatype;
     MPIR_Comm *comm_ptr;
+    int collattr;
     MPIR_Request *sreq, *rreq;
 } MPIDI_POSIX_per_call_ibcast_info_t;
 
@@ -66,6 +67,7 @@ typedef struct MPIDI_POSIX_per_call_ireduce_info_t {
     MPI_Op op;
     MPI_Datatype datatype;
     MPIR_Comm *comm_ptr;
+    int collattr;
     MPIR_Request *sreq, *rreq;
 } MPIDI_POSIX_per_call_ireduce_info_t;
 

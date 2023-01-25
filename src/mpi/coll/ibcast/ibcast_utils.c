@@ -69,7 +69,7 @@ int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state)
  * typical scatter arguments.  At the moment this function always
  * scatters a buffer of nbytes starting at tmp_buf address. */
 int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr, MPI_Aint nbytes,
-                                  MPIR_Sched_t s)
+                                  int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, src, dst;
@@ -110,7 +110,7 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr,
 
             if (recv_size > 0) {
                 mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + relative_rank * scatter_size),
-                                            recv_size, MPI_BYTE, src, comm_ptr, s);
+                                            recv_size, MPI_BYTE, src, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
@@ -135,7 +135,7 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr,
                     dst -= comm_size;
                 mpi_errno =
                     MPIR_Sched_send(((char *) tmp_buf + scatter_size * (relative_rank + mask)),
-                                    send_size, MPI_BYTE, dst, comm_ptr, s);
+                                    send_size, MPI_BYTE, dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 curr_size -= send_size;

@@ -9,7 +9,8 @@
 /* Routine to schedule a recursive exchange based scan */
 int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
                                                   MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
-                                                  MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+                                                  MPIR_Comm * comm, int collattr,
+                                                  MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -75,8 +76,8 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
             nvtcs = 1;
             vtcs[0] = (loop_count == 0) ? dtcopy_id : reduce_id;
             mpi_errno =
-                MPIR_TSP_sched_isend(partial_scan, count, datatype, dst, tag, comm, sched, nvtcs,
-                                     vtcs, &send_id);
+                MPIR_TSP_sched_isend(partial_scan, count, datatype, dst, tag, comm, collattr, sched,
+                                     nvtcs, vtcs, &send_id);
 
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
@@ -85,8 +86,8 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
                 vtcs[1] = recv_reduce;
             }
             mpi_errno =
-                MPIR_TSP_sched_irecv(tmp_buf, count, datatype, dst, tag, comm, sched, nvtcs, vtcs,
-                                     &recv_id);
+                MPIR_TSP_sched_irecv(tmp_buf, count, datatype, dst, tag, comm, collattr, sched,
+                                     nvtcs, vtcs, &recv_id);
 
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 

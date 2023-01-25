@@ -18,7 +18,7 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
                                                         MPI_Datatype sendtype, void *recvbuf,
                                                         MPI_Aint recvcount, MPI_Datatype recvtype,
                                                         int root, MPIR_Comm * comm_ptr,
-                                                        MPIR_Sched_t s)
+                                                        int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, local_size, remote_size;
@@ -34,7 +34,8 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
 
     if (root == MPI_ROOT) {
         /* root sends all data to rank 0 on remote group and returns */
-        mpi_errno = MPIR_Sched_send(sendbuf, sendcount * remote_size, sendtype, 0, comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_send(sendbuf, sendcount * remote_size, sendtype, 0, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
         goto fn_exit;
@@ -53,7 +54,7 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
 
             mpi_errno =
                 MPIR_Sched_recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
-                                root, comm_ptr, s);
+                                root, comm_ptr, collattr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         } else {
@@ -70,7 +71,8 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
         /* now do the usual scatter on this intracommunicator */
         mpi_errno =
             MPIR_Iscatter_intra_sched_auto(tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
-                                           recvbuf, recvcount, recvtype, 0, newcomm_ptr, s);
+                                           recvbuf, recvcount, recvtype, 0, newcomm_ptr, collattr,
+                                           s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }

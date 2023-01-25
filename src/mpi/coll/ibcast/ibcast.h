@@ -21,6 +21,6 @@ int MPII_Ibcast_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state);
 int MPII_Ibcast_sched_init_length(MPIR_Comm * comm, int tag, void *state);
 int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state);
 int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr, MPI_Aint nbytes,
-                                  MPIR_Sched_t s);
+                                  int collattr, MPIR_Sched_t s);
 
 #endif /* IBCAST_H_INCLUDED */

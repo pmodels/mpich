@@ -10,10 +10,10 @@
 #include "mpiimpl.h"
 
 int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                              MPI_Datatype datatype, MPI_Op op,
-                              MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm, int collattr)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     int i, src, dst;
     int nranks, is_inplace, rank;
     size_t extent;
@@ -78,11 +78,12 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
         mpi_errno = MPIR_Sched_next_tag(comm, &tag);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIC_Irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, &reqs[0]);
+        mpi_errno =
+            MPIC_Irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, collattr, &reqs[0]);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         mpi_errno = MPIC_Isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
-                               datatype, dst, tag, comm, &reqs[1], errflag);
+                               datatype, dst, tag, comm, &reqs[1], collattr | errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         mpi_errno = MPIC_Waitall(2, reqs, MPI_STATUSES_IGNORE);
@@ -96,7 +97,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
 
     /* Phase 3: Allgatherv ring, so everyone has the reduced data */
     mpi_errno = MPIR_Allgatherv_intra_ring(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, recvbuf, cnts,
-                                           displs, datatype, comm, errflag);
+                                           displs, datatype, comm, collattr | errflag);
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
     MPL_free(cnts);

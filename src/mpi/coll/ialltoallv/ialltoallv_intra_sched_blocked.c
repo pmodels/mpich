@@ -9,7 +9,7 @@ int MPIR_Ialltoallv_intra_sched_blocked(const void *sendbuf, const MPI_Aint send
                                         const MPI_Aint sdispls[], MPI_Datatype sendtype,
                                         void *recvbuf, const MPI_Aint recvcounts[],
                                         const MPI_Aint rdispls[], MPI_Datatype recvtype,
-                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                        MPIR_Comm * comm_ptr, int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size;
@@ -46,7 +46,7 @@ int MPIR_Ialltoallv_intra_sched_blocked(const void *sendbuf, const MPI_Aint send
             dst = (rank + i + ii) % comm_size;
             if (recvcounts[dst] && recvtype_size) {
                 mpi_errno = MPIR_Sched_recv((char *) recvbuf + rdispls[dst] * recv_extent,
-                                            recvcounts[dst], recvtype, dst, comm_ptr, s);
+                                            recvcounts[dst], recvtype, dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
@@ -55,7 +55,7 @@ int MPIR_Ialltoallv_intra_sched_blocked(const void *sendbuf, const MPI_Aint send
             dst = (rank - i - ii + comm_size) % comm_size;
             if (sendcounts[dst] && sendtype_size) {
                 mpi_errno = MPIR_Sched_send((char *) sendbuf + sdispls[dst] * send_extent,
-                                            sendcounts[dst], sendtype, dst, comm_ptr, s);
+                                            sendcounts[dst], sendtype, dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }

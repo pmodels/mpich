@@ -11,7 +11,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
                                           MPI_Datatype sendtype, void *recvbuf,
                                           const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                           MPI_Datatype recvtype, MPIR_Comm * comm,
-                                          MPIR_TSP_sched_t sched)
+                                          int collattr, MPIR_TSP_sched_t sched)
 {
     size_t extent;
     MPI_Aint lb, true_extent;
@@ -95,8 +95,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
             vtcs[0] = dtcopy_id[0];
 
             mpi_errno =
-                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm, sched,
-                                     nvtcs, vtcs, &send_id[i % 3]);
+                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm,
+                                     collattr, sched, nvtcs, vtcs, &send_id[i % 3]);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             nvtcs = 0;
         } else {
@@ -105,8 +105,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
             vtcs[1] = send_id[(i - 1) % 3];
 
             mpi_errno =
-                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm, sched,
-                                     nvtcs, vtcs, &send_id[i % 3]);
+                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm,
+                                     collattr, sched, nvtcs, vtcs, &send_id[i % 3]);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             if (i == 1) {
@@ -122,8 +122,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
         }
 
         mpi_errno =
-            MPIR_TSP_sched_irecv(rbuf, recvcounts[recv_rank], recvtype, src, tag, comm, sched,
-                                 nvtcs, vtcs, &recv_id[i % 3]);
+            MPIR_TSP_sched_irecv(rbuf, recvcounts[recv_rank], recvtype, src, tag, comm, collattr,
+                                 sched, nvtcs, vtcs, &recv_id[i % 3]);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         /* Copy to correct position in recvbuf */
         mpi_errno =

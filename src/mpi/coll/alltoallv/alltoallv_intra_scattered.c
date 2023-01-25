@@ -24,13 +24,13 @@
 int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcounts,
                                    const MPI_Aint * sdispls, MPI_Datatype sendtype, void *recvbuf,
                                    const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
-                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                   MPIR_Errflag_t errflag)
+                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int collattr)
 {
     int comm_size, i;
     MPI_Aint send_extent, recv_extent;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     MPI_Status *starray;
     MPIR_Request **reqarray;
     int dst, rank, req_cnt;
@@ -73,7 +73,8 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
                 if (type_size) {
                     mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst] * recv_extent,
                                            recvcounts[dst], recvtype, dst,
-                                           MPIR_ALLTOALLV_TAG, comm_ptr, &reqarray[req_cnt]);
+                                           MPIR_ALLTOALLV_TAG, comm_ptr, collattr,
+                                           &reqarray[req_cnt]);
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                     req_cnt++;
                 }
@@ -89,7 +90,7 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
                     mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst] * send_extent,
                                            sendcounts[dst], sendtype, dst,
                                            MPIR_ALLTOALLV_TAG, comm_ptr,
-                                           &reqarray[req_cnt], errflag);
+                                           &reqarray[req_cnt], collattr | errflag);
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                     req_cnt++;
                 }

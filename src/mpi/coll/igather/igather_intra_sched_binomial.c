@@ -28,7 +28,7 @@
 int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                       MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                      MPIR_Sched_t s)
+                                      int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;
@@ -125,14 +125,15 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                         char *rp =
                             (char *) recvbuf + (((rank + mask) % comm_size) * recvcount * extent);
                         mpi_errno =
-                            MPIR_Sched_recv(rp, (recvblks * recvcount), recvtype, src, comm_ptr, s);
+                            MPIR_Sched_recv(rp, (recvblks * recvcount), recvtype, src, comm_ptr,
+                                            collattr, s);
                         MPIR_ERR_CHECK(mpi_errno);
                         mpi_errno = MPIR_Sched_barrier(s);
                         MPIR_ERR_CHECK(mpi_errno);
                     } else if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
                         mpi_errno =
                             MPIR_Sched_recv(tmp_buf, (recvblks * nbytes), MPI_BYTE, src,
-                                            comm_ptr, s);
+                                            comm_ptr, collattr, s);
                         MPIR_ERR_CHECK(mpi_errno);
                         mpi_errno = MPIR_Sched_barrier(s);
                         MPIR_ERR_CHECK(mpi_errno);
@@ -151,7 +152,8 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                         mpi_errno = MPIR_Type_commit_impl(&tmp_type);
                         MPIR_ERR_CHECK(mpi_errno);
 
-                        mpi_errno = MPIR_Sched_recv(recvbuf, 1, tmp_type, src, comm_ptr, s);
+                        mpi_errno =
+                            MPIR_Sched_recv(recvbuf, 1, tmp_type, src, comm_ptr, collattr, s);
                         MPIR_ERR_CHECK(mpi_errno);
                         mpi_errno = MPIR_Sched_barrier(s);
                         MPIR_ERR_CHECK(mpi_errno);
@@ -174,7 +176,7 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                         offset = (mask - 1) * nbytes;
                     mpi_errno =
                         MPIR_Sched_recv(((char *) tmp_buf + offset), (recvblks * nbytes),
-                                        MPI_BYTE, src, comm_ptr, s);
+                                        MPI_BYTE, src, comm_ptr, collattr, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     mpi_errno = MPIR_Sched_barrier(s);
                     MPIR_ERR_CHECK(mpi_errno);
@@ -187,12 +189,14 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
 
             if (!tmp_buf_size) {
                 /* leaf nodes send directly from sendbuf */
-                mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, dst, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_send(sendbuf, sendcount, sendtype, dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_barrier(s);
                 MPIR_ERR_CHECK(mpi_errno);
             } else if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
-                mpi_errno = MPIR_Sched_send(tmp_buf, curr_cnt, MPI_BYTE, dst, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_send(tmp_buf, curr_cnt, MPI_BYTE, dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_barrier(s);
                 MPIR_ERR_CHECK(mpi_errno);
@@ -217,7 +221,7 @@ int MPIR_Igather_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                 mpi_errno = MPIR_Type_commit_impl(&tmp_type);
                 MPIR_ERR_CHECK(mpi_errno);
 
-                mpi_errno = MPIR_Sched_send(MPI_BOTTOM, 1, tmp_type, dst, comm_ptr, s);
+                mpi_errno = MPIR_Sched_send(MPI_BOTTOM, 1, tmp_type, dst, comm_ptr, collattr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 

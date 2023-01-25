@@ -50,6 +50,7 @@ typedef struct MPII_Genutil_vtx_t {
             int dest;
             int tag;
             MPIR_Comm *comm;
+            int collattr;
             MPIR_Request *req;
         } isend;
         struct {
@@ -59,6 +60,7 @@ typedef struct MPII_Genutil_vtx_t {
             int src;
             int tag;
             MPIR_Comm *comm;
+            int collattr;
             MPIR_Request *req;
         } irecv;
         struct {
@@ -68,6 +70,7 @@ typedef struct MPII_Genutil_vtx_t {
             int src;
             int tag;
             MPIR_Comm *comm;
+            int collattr;
             MPIR_Request *req;
             MPI_Status *status;
         } irecv_status;
@@ -79,6 +82,7 @@ typedef struct MPII_Genutil_vtx_t {
             int num_dests;
             int tag;
             MPIR_Comm *comm;
+            int collattr;
             MPIR_Request **req;
             int last_complete;
         } imcast;
@@ -89,6 +93,7 @@ typedef struct MPII_Genutil_vtx_t {
             int dest;
             int tag;
             MPIR_Comm *comm;
+            int collattr;
             MPIR_Request *req;
         } issend;
         struct {

@@ -1366,9 +1366,14 @@ def push_impl_decl(func, impl_name=None):
     if func['_impl_param_list']:
         params = ', '.join(func['_impl_param_list'])
         if func['dir'] == 'coll':
-            # block collective use an extra errflag
-            if not RE.match(r'MPI_(I.*|Neighbor.*|.*_init)$', func['name']):
-                params = params + ", MPIR_Errflag_t errflag"
+            if RE.match(r'MPI_(Neighbor.*|Ineighbor.*|.*_init)$', func['name']):
+                pass
+            elif RE.match(r'MPI_I\w+', func['name']):
+                # non-blocking
+                params = re.sub(r'MPIR_Request', 'int collattr, MPIR_Request', params)
+            else:
+                # blocking
+                params = params + ", int collattr"
     else:
         params="void"
 
@@ -1378,9 +1383,6 @@ def push_impl_decl(func, impl_name=None):
         G.impl_declares.append("int %s(%s);" % (mpir_name, params))
     # dump MPIR_Xxx_impl(...)
     G.impl_declares.append("int %s(%s);" % (impl_name, params))
-    if func['dir'] == 'coll':
-        mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
-        G.impl_declares.append("int %s(%s);" % (mpir_name, params))
 
 def dump_CHECKENUM(var, errname, t, type="ENUM"):
     val_list = t.split()
@@ -1401,6 +1403,15 @@ def dump_body_coll(func):
     mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
 
     args = ", ".join(func['_impl_arg_list'])
+    if RE.match(r'mpi_(i?neighbor_.*|.*_init)$', func['name'], re.IGNORECASE):
+        pass
+    elif RE.match(r'mpi_i', func['name'], re.IGNORECASE):
+        # non-blocking
+        args = re.sub(r'&request_ptr', 'MPIR_COLL_ATTR_NONE, &request_ptr', args)
+    else:
+        # blocking
+        args += ", MPIR_COLL_ATTR_NONE"
+
 
     if RE.match(r'MPI_(I.*|.*_init)$', func['name'], re.IGNORECASE):
         # non-blocking collectives
@@ -1411,12 +1422,9 @@ def dump_body_coll(func):
         G.out.append("    request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);")
         G.out.append("}")
         G.out.append("*request = request_ptr->handle;")
-    elif RE.match(r'mpi_neighbor_', func['name'], re.IGNORECASE):
-        dump_line_with_break("mpi_errno = %s(%s);" % (mpir_name, args))
-        dump_error_check("")
     else:
         # blocking collectives
-        dump_line_with_break("mpi_errno = %s(%s, MPIR_ERR_NONE);" % (mpir_name, args))
+        dump_line_with_break("mpi_errno = %s(%s);" % (mpir_name, args))
         dump_error_check("")
 
 def dump_coll_v_swap(func):

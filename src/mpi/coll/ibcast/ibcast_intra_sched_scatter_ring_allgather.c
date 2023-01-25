@@ -26,7 +26,8 @@
  */
 int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
                                                    MPI_Datatype datatype, int root,
-                                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                   MPIR_Comm * comm_ptr, int collattr,
+                                                   MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;
@@ -78,7 +79,7 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
         }
     }
 
-    mpi_errno = MPII_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, nbytes, s);
+    mpi_errno = MPII_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, nbytes, collattr, s);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPI_Aint scatter_size, curr_size;
@@ -119,12 +120,12 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
         right_disp = rel_j * scatter_size;
 
         mpi_errno = MPIR_Sched_send(((char *) tmp_buf + right_disp),
-                                    right_count, MPI_BYTE, right, comm_ptr, s);
+                                    right_count, MPI_BYTE, right, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
         /* sendrecv, no barrier here */
         mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + left_disp),
                                            left_count, MPI_BYTE, left, comm_ptr,
-                                           &ibcast_state->status, s);
+                                           &ibcast_state->status, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
         mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);

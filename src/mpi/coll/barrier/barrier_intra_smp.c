@@ -5,22 +5,23 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Barrier_intra_smp(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+int MPIR_Barrier_intra_smp(MPIR_Comm * comm_ptr, int collattr)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
 
     MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
 
     /* do the intranode barrier on all nodes */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Barrier(comm_ptr->node_comm, errflag);
+        mpi_errno = MPIR_Barrier(comm_ptr->node_comm, collattr | errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
     /* do the barrier across roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        mpi_errno = MPIR_Barrier(comm_ptr->node_roots_comm, errflag);
+        mpi_errno = MPIR_Barrier(comm_ptr->node_roots_comm, collattr | errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
@@ -29,7 +30,7 @@ int MPIR_Barrier_intra_smp(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
      * anything) */
     if (comm_ptr->node_comm != NULL) {
         int i = 0;
-        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, 0, comm_ptr->node_comm, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, 0, comm_ptr->node_comm, collattr | errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 

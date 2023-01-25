@@ -12,13 +12,13 @@
  */
 int MPIR_Bcast_intra_binomial(void *buffer,
                               MPI_Aint count,
-                              MPI_Datatype datatype,
-                              int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                              MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr, int collattr)
 {
     int rank, comm_size, src, dst;
     int relative_rank, mask;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     MPI_Aint nbytes = 0;
     MPI_Status *status_p;
 #ifdef HAVE_ERROR_CHECKING
@@ -93,10 +93,10 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 src += comm_size;
             if (!is_contig)
                 mpi_errno = MPIC_Recv(tmp_buf, nbytes, MPI_BYTE, src,
-                                      MPIR_BCAST_TAG, comm_ptr, status_p);
+                                      MPIR_BCAST_TAG, comm_ptr, collattr, status_p);
             else
                 mpi_errno = MPIC_Recv(buffer, count, datatype, src,
-                                      MPIR_BCAST_TAG, comm_ptr, status_p);
+                                      MPIR_BCAST_TAG, comm_ptr, collattr, status_p);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 #ifdef HAVE_ERROR_CHECKING
             /* check that we received as much as we expected */
@@ -127,10 +127,10 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 dst -= comm_size;
             if (!is_contig)
                 mpi_errno = MPIC_Send(tmp_buf, nbytes, MPI_BYTE, dst,
-                                      MPIR_BCAST_TAG, comm_ptr, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr, collattr | errflag);
             else
                 mpi_errno = MPIC_Send(buffer, count, datatype, dst,
-                                      MPIR_BCAST_TAG, comm_ptr, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr, collattr | errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
         mask >>= 1;

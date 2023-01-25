@@ -115,7 +115,8 @@ int
 MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                       MPI_Datatype recvtype, MPIR_Comm * comm,
-                                      int k, int buffer_per_phase, MPIR_TSP_sched_t sched)
+                                      int k, int buffer_per_phase, int collattr,
+                                      MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -284,7 +285,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
             mpi_errno =
                 MPIR_TSP_sched_isend(tmp_sbuf[i][j - 1], packsize, MPI_BYTE, dst, tag,
-                                     comm, sched, 1, &packids[j - 1], &sendids[j - 1]);
+                                     comm, collattr, sched, 1, &packids[j - 1], &sendids[j - 1]);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             if (i != 0 && buffer_per_phase == 0) {      /* this dependency holds only when we don't have dedicated recv buffer per phase */
@@ -293,7 +294,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             }
             mpi_errno =
                 MPIR_TSP_sched_irecv(tmp_rbuf[i][j - 1], packsize, MPI_BYTE,
-                                     src, tag, comm, sched, recv_ninvtcs, recv_invtcs,
+                                     src, tag, comm, collattr, sched, recv_ninvtcs, recv_invtcs,
                                      &recvids[j - 1]);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 

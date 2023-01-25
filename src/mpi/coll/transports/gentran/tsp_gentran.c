@@ -191,8 +191,8 @@ int MPIR_TSP_sched_isend(const void *buf,
                          MPI_Datatype dt,
                          int dest,
                          int tag,
-                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
-                         int *vtx_id)
+                         MPIR_Comm * comm_ptr, int collattr, MPIR_TSP_sched_t s, int n_in_vtcs,
+                         int *in_vtcs, int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
@@ -209,6 +209,7 @@ int MPIR_TSP_sched_isend(const void *buf,
     vtxp->u.isend.dest = dest;
     vtxp->u.isend.tag = tag;
     vtxp->u.isend.comm = comm_ptr;
+    vtxp->u.isend.collattr = collattr;
 
     /* the user may free the comm & type after initiating but before the
      * underlying send is actually posted, so we must add a reference here and
@@ -228,8 +229,8 @@ int MPIR_TSP_sched_irecv(void *buf,
                          MPI_Datatype dt,
                          int source,
                          int tag,
-                         MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
-                         int *vtx_id)
+                         MPIR_Comm * comm_ptr, int collattr, MPIR_TSP_sched_t s, int n_in_vtcs,
+                         int *in_vtcs, int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
@@ -247,6 +248,7 @@ int MPIR_TSP_sched_irecv(void *buf,
     vtxp->u.irecv.src = source;
     vtxp->u.irecv.tag = tag;
     vtxp->u.irecv.comm = comm_ptr;
+    vtxp->u.irecv.collattr = collattr;
 
     MPIR_Comm_add_ref(comm_ptr);
     MPIR_Datatype_add_ref_if_not_builtin(dt);
@@ -262,7 +264,7 @@ int MPIR_TSP_sched_irecv_status(void *buf,
                                 MPI_Datatype dt,
                                 int source,
                                 int tag,
-                                MPIR_Comm * comm_ptr, MPI_Status * status,
+                                MPIR_Comm * comm_ptr, int collattr, MPI_Status * status,
                                 MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id)
 {
     vtx_t *vtxp;
@@ -282,6 +284,7 @@ int MPIR_TSP_sched_irecv_status(void *buf,
     vtxp->u.irecv_status.tag = tag;
     vtxp->u.irecv_status.comm = comm_ptr;
     vtxp->u.irecv_status.status = status;
+    vtxp->u.irecv_status.collattr = collattr;
 
     MPIR_Comm_add_ref(comm_ptr);
     MPIR_Datatype_add_ref_if_not_builtin(dt);
@@ -300,8 +303,8 @@ int MPIR_TSP_sched_imcast(const void *buf,
                           int *dests,
                           int num_dests,
                           int tag,
-                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
-                          int *vtx_id)
+                          MPIR_Comm * comm_ptr, int collattr, MPIR_TSP_sched_t s, int n_in_vtcs,
+                          int *in_vtcs, int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
@@ -321,6 +324,7 @@ int MPIR_TSP_sched_imcast(const void *buf,
     memcpy(ut_int_array(&vtxp->u.imcast.dests), dests, num_dests * sizeof(int));
     vtxp->u.imcast.tag = tag;
     vtxp->u.imcast.comm = comm_ptr;
+    vtxp->u.imcast.collattr = collattr;
     vtxp->u.imcast.req =
         (struct MPIR_Request **) MPL_malloc(sizeof(struct MPIR_Request *) * num_dests,
                                             MPL_MEM_COLL);
@@ -339,8 +343,8 @@ int MPIR_TSP_sched_issend(const void *buf,
                           MPI_Datatype dt,
                           int dest,
                           int tag,
-                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
-                          int *vtx_id)
+                          MPIR_Comm * comm_ptr, int collattr, MPIR_TSP_sched_t s, int n_in_vtcs,
+                          int *in_vtcs, int *vtx_id)
 {
     MPII_Genutil_sched_t *sched = s;
     vtx_t *vtxp;
@@ -357,6 +361,7 @@ int MPIR_TSP_sched_issend(const void *buf,
     vtxp->u.issend.dest = dest;
     vtxp->u.issend.tag = tag;
     vtxp->u.issend.comm = comm_ptr;
+    vtxp->u.issend.collattr = collattr;
 
     MPIR_Comm_add_ref(comm_ptr);
     MPIR_Datatype_add_ref_if_not_builtin(dt);

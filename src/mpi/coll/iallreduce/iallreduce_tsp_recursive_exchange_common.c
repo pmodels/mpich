@@ -46,13 +46,13 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                                                   int step1_sendto, bool in_step2, int step1_nrecvs,
                                                   int *step1_recvfrom, int per_nbr_buffer,
                                                   void ***step1_recvbuf_, MPIR_Comm * comm,
-                                                  MPIR_TSP_sched_t sched)
+                                                  int collattr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, nvtcs, vtx_id;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     void **step1_recvbuf;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
     /* Step 1 */
@@ -64,8 +64,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
         else
             buf_to_send = sendbuf;
         mpi_errno =
-            MPIR_TSP_sched_isend(buf_to_send, count, datatype, step1_sendto, tag, comm, sched, 0,
-                                 NULL, &vtx_id);
+            MPIR_TSP_sched_isend(buf_to_send, count, datatype, step1_sendto, tag, comm, collattr,
+                                 sched, 0, NULL, &vtx_id);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             errflag = MPIR_ERR_OTHER;
@@ -96,8 +96,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                                  reduce_id[i - 1]));
             }
             mpi_errno = MPIR_TSP_sched_irecv(step1_recvbuf[i], count, datatype,
-                                             step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs,
-                                             &recv_id[i]);
+                                             step1_recvfrom[i], tag, comm, collattr, sched, nvtcs,
+                                             vtcs, &recv_id[i]);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             if (count != 0) {   /* Reduce only if data is present */
                 /* setup reduce dependencies */

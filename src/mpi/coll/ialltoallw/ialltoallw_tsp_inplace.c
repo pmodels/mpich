@@ -12,7 +12,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
                                             const MPI_Datatype sendtypes[], void *recvbuf,
                                             const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
                                             const MPI_Datatype recvtypes[], MPIR_Comm * comm,
-                                            MPIR_TSP_sched_t sched)
+                                            int collattr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
@@ -59,12 +59,12 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
             adj_tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 
             mpi_errno = MPIR_TSP_sched_isend((char *) recvbuf + rdispls[dst],
-                                             recvcounts[dst], recvtypes[dst], dst, tag, comm, sched,
-                                             nvtcs, vtcs, &send_id);
+                                             recvcounts[dst], recvtypes[dst], dst, tag, comm,
+                                             collattr, sched, nvtcs, vtcs, &send_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             mpi_errno =
                 MPIR_TSP_sched_irecv(adj_tmp_buf, recvcounts[dst], recvtypes[dst], dst, tag, comm,
-                                     sched, nvtcs, vtcs, &recv_id);
+                                     collattr, sched, nvtcs, vtcs, &recv_id);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             nvtcs = 2;

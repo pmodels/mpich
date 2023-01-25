@@ -24,7 +24,8 @@
  */
 int MPIR_Ialltoall_intra_sched_pairwise(const void *sendbuf, MPI_Aint sendcount,
                                         MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int collattr,
+                                        MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -62,10 +63,10 @@ int MPIR_Ialltoall_intra_sched_pairwise(const void *sendbuf, MPI_Aint sendcount,
         }
 
         mpi_errno = MPIR_Sched_send(((char *) sendbuf + dst * sendcount * sendtype_extent),
-                                    sendcount, sendtype, dst, comm_ptr, s);
+                                    sendcount, sendtype, dst, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Sched_recv(((char *) recvbuf + src * recvcount * recvtype_extent),
-                                    recvcount, recvtype, src, comm_ptr, s);
+                                    recvcount, recvtype, src, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }

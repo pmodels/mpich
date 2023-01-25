@@ -6,11 +6,11 @@
 #include "mpiimpl.h"
 
 int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                             MPIR_Errflag_t errflag)
+                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, int collattr)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
 
     /* on each node, do a reduce to the local root */
     if (comm_ptr->node_comm != NULL) {
@@ -23,11 +23,13 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
              * allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
 
             mpi_errno =
-                MPIR_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, errflag);
+                MPIR_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm,
+                            collattr | errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         } else {
             mpi_errno =
-                MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm, errflag);
+                MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm,
+                            collattr | errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
     } else {
@@ -42,13 +44,14 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     if (comm_ptr->node_roots_comm != NULL) {
         mpi_errno =
             MPIR_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm,
-                           errflag);
+                           collattr | errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
 
     /* now broadcast the result among local processes */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
+        mpi_errno =
+            MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, collattr | errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
     goto fn_exit;

@@ -36,8 +36,7 @@
  */
 int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvbuf,
                                                 const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                                MPI_Op op, MPIR_Comm * comm_ptr,
-                                                MPIR_Errflag_t errflag)
+                                                MPI_Op op, MPIR_Comm * comm_ptr, int collattr)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
@@ -45,6 +44,7 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
     void *tmp_recvbuf, *tmp_results;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int errflag = 0;
     int total_count, dst;
     int mask;
     int rem, newdst, send_idx, recv_idx, last_idx, send_cnt, recv_cnt;
@@ -115,7 +115,8 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
     if (rank < 2 * rem) {
         if (rank % 2 == 0) {    /* even */
             mpi_errno = MPIC_Send(tmp_results, total_count,
-                                  datatype, rank + 1, MPIR_REDUCE_SCATTER_TAG, comm_ptr, errflag);
+                                  datatype, rank + 1, MPIR_REDUCE_SCATTER_TAG, comm_ptr,
+                                  collattr | errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             /* temporarily set the rank to -1 so that this
@@ -125,7 +126,7 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
         } else {        /* odd */
             mpi_errno = MPIC_Recv(tmp_recvbuf, total_count,
                                   datatype, rank - 1,
-                                  MPIR_REDUCE_SCATTER_TAG, comm_ptr, MPI_STATUS_IGNORE);
+                                  MPIR_REDUCE_SCATTER_TAG, comm_ptr, collattr, MPI_STATUS_IGNORE);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             /* do the reduction on received data. since the
@@ -202,17 +203,18 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
                                           newdisps[recv_idx] * extent,
                                           recv_cnt, datatype, dst,
                                           MPIR_REDUCE_SCATTER_TAG, comm_ptr,
-                                          MPI_STATUS_IGNORE, errflag);
+                                          MPI_STATUS_IGNORE, collattr | errflag);
             else if ((send_cnt == 0) && (recv_cnt != 0))
                 mpi_errno = MPIC_Recv((char *) tmp_recvbuf +
                                       newdisps[recv_idx] * extent,
                                       recv_cnt, datatype, dst,
-                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, MPI_STATUS_IGNORE);
+                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, collattr,
+                                      MPI_STATUS_IGNORE);
             else if ((recv_cnt == 0) && (send_cnt != 0))
                 mpi_errno = MPIC_Send((char *) tmp_results +
                                       newdisps[send_idx] * extent,
                                       send_cnt, datatype,
-                                      dst, MPIR_REDUCE_SCATTER_TAG, comm_ptr, errflag);
+                                      dst, MPIR_REDUCE_SCATTER_TAG, comm_ptr, collattr | errflag);
 
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
@@ -252,14 +254,15 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
                 mpi_errno = MPIC_Send((char *) tmp_results +
                                       disps[rank - 1] * extent, recvcounts[rank - 1],
                                       datatype, rank - 1,
-                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, errflag);
+                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, collattr | errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
         } else {        /* even */
             if (recvcounts[rank]) {
                 mpi_errno = MPIC_Recv(recvbuf, recvcounts[rank],
                                       datatype, rank + 1,
-                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, MPI_STATUS_IGNORE);
+                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, collattr,
+                                      MPI_STATUS_IGNORE);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
         }

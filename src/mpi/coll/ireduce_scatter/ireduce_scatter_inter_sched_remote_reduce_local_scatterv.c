@@ -17,7 +17,7 @@ int MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv(const void *se
                                                                   const MPI_Aint recvcounts[],
                                                                   MPI_Datatype datatype, MPI_Op op,
                                                                   MPIR_Comm * comm_ptr,
-                                                                  MPIR_Sched_t s)
+                                                                  int collattr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, root, local_size, total_count, i;
@@ -62,7 +62,7 @@ int MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv(const void *se
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Ireduce_inter_sched_auto(sendbuf, tmp_buf, total_count,
-                                                  datatype, op, root, comm_ptr, s);
+                                                  datatype, op, root, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* sched barrier intentionally omitted here to allow both reductions to
@@ -71,13 +71,13 @@ int MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv(const void *se
         /* reduce to rank 0 of right group */
         root = 0;
         mpi_errno = MPIR_Ireduce_inter_sched_auto(sendbuf, tmp_buf, total_count,
-                                                  datatype, op, root, comm_ptr, s);
+                                                  datatype, op, root, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* reduce to rank 0 of right group */
         root = 0;
         mpi_errno = MPIR_Ireduce_inter_sched_auto(sendbuf, tmp_buf, total_count,
-                                                  datatype, op, root, comm_ptr, s);
+                                                  datatype, op, root, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* sched barrier intentionally omitted here to allow both reductions to
@@ -86,7 +86,7 @@ int MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv(const void *se
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Ireduce_inter_sched_auto(sendbuf, tmp_buf, total_count,
-                                                  datatype, op, root, comm_ptr, s);
+                                                  datatype, op, root, comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
     MPIR_SCHED_BARRIER(s);
@@ -101,7 +101,7 @@ int MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv(const void *se
 
     mpi_errno = MPIR_Iscatterv_intra_sched_auto(tmp_buf, recvcounts, disps, datatype,
                                                 recvbuf, recvcounts[rank], datatype, 0, newcomm_ptr,
-                                                s);
+                                                collattr, s);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

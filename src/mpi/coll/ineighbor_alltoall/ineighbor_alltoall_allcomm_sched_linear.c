@@ -22,6 +22,7 @@ int MPIR_Ineighbor_alltoall_allcomm_sched_linear(const void *sendbuf, MPI_Aint s
     int k, l;
     int *srcs, *dsts;
     MPI_Aint sendtype_extent, recvtype_extent;
+    int collattr = 0;
     MPIR_CHKLMEM_DECL(2);
 
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
@@ -38,7 +39,7 @@ int MPIR_Ineighbor_alltoall_allcomm_sched_linear(const void *sendbuf, MPI_Aint s
 
     for (k = 0; k < outdegree; ++k) {
         char *sb = ((char *) sendbuf) + k * sendcount * sendtype_extent;
-        mpi_errno = MPIR_Sched_send(sb, sendcount, sendtype, dsts[k], comm_ptr, s);
+        mpi_errno = MPIR_Sched_send(sb, sendcount, sendtype, dsts[k], comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -57,7 +58,7 @@ int MPIR_Ineighbor_alltoall_allcomm_sched_linear(const void *sendbuf, MPI_Aint s
      */
     for (l = indegree - 1; l >= 0; l--) {
         char *rb = ((char *) recvbuf) + l * recvcount * recvtype_extent;
-        mpi_errno = MPIR_Sched_recv(rb, recvcount, recvtype, srcs[l], comm_ptr, s);
+        mpi_errno = MPIR_Sched_recv(rb, recvcount, recvtype, srcs[l], comm_ptr, collattr, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
