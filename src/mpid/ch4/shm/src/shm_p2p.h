@@ -29,7 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
                                           parent_cc_ptr, request);
     } else {
         mpi_errno = MPIDI_IPC_mpi_isend(buf, count, datatype, rank, tag, comm, attr, addr,
-                                        parent_cc_ptr request);
+                                        parent_cc_ptr, request);
     }
     MPIR_ERR_CHECK(mpi_errno);
 

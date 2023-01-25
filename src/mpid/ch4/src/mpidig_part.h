@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "ch4_impl.h"
 #include "ch4_send.h"
+#include "ch4_wait.h"
 #include "mpidig_part_utils.h"
 #include "mpidpre.h"
 #include "mpir_request.h"
@@ -119,15 +120,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int p_low, int p_high,
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            const bool do_tag = MPIDIG_PART_REQUEST(part_sreq, do_tag);
-            if (!do_tag) {
-                /* if it's not matched or not complete then we miss the CTS (first one or not)
-                 * so we poke progress and hopefully get it */
-                MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-                mpi_errno = MPIDI_progress_test_vci(0);
-                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
+            //const bool do_tag = MPIDIG_PART_REQUEST(part_sreq, do_tag);
+            /* if it's not matched or not complete then we miss the CTS for AM or the first CTS
+             * for tag send.
+             * if we receive the CTS then we will proceed to the send there*/
+            //if (!do_tag || !MPIDIG_Part_rreq_status_has_first_cts(part_sreq)) {
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+            mpi_errno = MPIDI_progress_test_vci(0);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+            MPIR_ERR_CHECK(mpi_errno);
+            //}
         }
     }
 
@@ -167,16 +169,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            const bool do_tag = MPIDIG_PART_REQUEST(part_sreq, do_tag);
-            if (!do_tag) {
-                /* if it's not matched or not complete then we miss the CTS
-                 * so we poke progress and hopefully get it
-                 * if we receive the CTS then we will proceed to the send there*/
-                MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-                mpi_errno = MPIDI_progress_test_vci(0);
-                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
+            //const bool do_tag = MPIDIG_PART_REQUEST(part_sreq, do_tag);
+            /* if it's not matched or not complete then we miss the CTS for AM or the first CTS
+             * for tag send.
+             * if we receive the CTS then we will proceed to the send there*/
+            //if (!do_tag || !MPIDIG_Part_rreq_status_has_first_cts(part_sreq)) {
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+            mpi_errno = MPIDI_progress_test_vci(0);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+            MPIR_ERR_CHECK(mpi_errno);
+            //}
         }
     }
 
@@ -228,11 +230,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
         if (!is_busy) {
             *flag = TRUE;
             goto fn_exit;
+        } else {
+            *flag = FALSE;
+            /* we want to force progress on the VCI relative to the child_request */
+            if (do_tag) {
+                MPIR_Request **child_req = MPIDIG_PART_REQUEST(request, tag_req_ptr);
+                for (int ip = start_msg; ip < end_msg; ++ip) {
+                    int vci_id = MPIDI_Request_get_vci(child_req[ip]);
+                    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_id).lock);
+                    mpi_errno = MPIDI_progress_test_vci(vci_id);
+                    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_id).lock);
+                    MPIR_ERR_CHECK(mpi_errno);
+                }
+            } else {
+                // TODO force progress on the corresponding VCI
+            }
+            goto fn_exit;
         }
     }
+
     *flag = FALSE;
     /* Trigger progress to process AM packages in case wait with parrived in a loop.
-     * also if we don't have the CTS yet we have to receive it*/
+     * also if we don't have the CTS yet we have to receive it -> always on VCI = 0*/
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     mpi_errno = MPIDI_progress_test_vci(0);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);

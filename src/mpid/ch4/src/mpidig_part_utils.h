@@ -41,6 +41,10 @@ void MPIDIG_part_rreq_reset_cc_part(MPIR_Request * rqst);
 void MPIDIG_part_rreq_matched(MPIR_Request * rreq);
 void MPIDIG_part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_msg_t * msg_hdr);
 
+MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_vci_am(const int imsg)
+{
+    return (imsg % MPIDI_global.n_vcis);
+}
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_Part_rreq_status_matched(MPIR_Request * rreq)
 {
