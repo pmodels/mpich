@@ -114,8 +114,6 @@ int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count, MPI_D
     const bool do_tag = MPIR_cc_get(comm->part_context_cc) < MPIR_CVAR_PART_MAXREQ_PERCOMM;
     MPIR_cc_inc(&comm->part_context_cc);
     if (do_tag) {
-        fprintf(stdout, "we are going to use do_tag\n");
-        fflush(stdout);
         /* Initialize tag-matching components for send */
         MPIDIG_PART_REQUEST(*request, do_tag) = true;
         MPIDIG_PART_REQUEST(*request, peer_req_ptr) = NULL;

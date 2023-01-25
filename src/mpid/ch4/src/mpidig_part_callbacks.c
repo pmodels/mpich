@@ -79,8 +79,11 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
             MPIDIG_part_rreq_reset_cc_part(posted_req);
 
             if (MPIDIG_PART_REQUEST(posted_req, do_tag)) {
-                /* in tag matching we issue the recv requests */
+                /* in tag matching we issue the recv requests we need to remove the lock from the
+                 * callback */
+                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
                 mpi_errno = MPIDIG_part_issue_recv(posted_req);
+                MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
@@ -183,8 +186,11 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
              * was unknown when activating the request and we have to set it */
             MPIR_cc_set(part_sreq->cc_ptr, msg_part);
         }
-        /* might have partitions that are ready to be sent */
+        /* might have partitions that are ready to be sent we need to remove the lock currently set
+         * on VCI 0 */
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPIDIG_part_issue_msg_if_ready(0, msg_part, part_sreq, MPIDIG_PART_REPLY);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -57,8 +57,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
 
             const bool do_tag = MPIDIG_PART_REQUEST(request, do_tag);
             if (do_tag) {
-                /* in tag matching we issue the recv requests */
+                /* in tag matching we issue the recv requests we need to remove the lock as the lock
+                 * is re-acquired in the recv request creation*/
+                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
                 mpi_errno = MPIDIG_part_issue_recv(request);
+                MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
                 MPIR_ERR_CHECK(mpi_errno);
                 /* we need to issue the CTS at last to ensure we are fully ready
                  * done only the first time for tag-matching*/
@@ -111,13 +114,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int p_low, int p_high,
             const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
             MPIR_Assert(msg_part >= 0);
 
-            // TODO change the VCI here
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
             const int msg_lb = MPIDIG_part_idx_lb(i, n_part, msg_part);
             const int msg_ub = MPIDIG_part_idx_ub(i, n_part, msg_part);
             mpi_errno =
                 MPIDIG_part_issue_msg_if_ready(msg_lb, msg_ub, part_sreq, MPIDIG_PART_REGULAR);
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             //const bool do_tag = MPIDIG_PART_REQUEST(part_sreq, do_tag);

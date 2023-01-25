@@ -134,8 +134,6 @@ void MPIDIG_part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_ms
     } else {
         MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = send_part;
     }
-    fprintf(stdout, "u.recv.msg_part = %d\n", MPIDIG_PART_REQUEST(rreq, u.recv.msg_part));
-
     /* 0 partition is illegual so at least one message must happen */
     MPIR_Assert(MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) > 0);
 }
