@@ -1144,6 +1144,7 @@ def dump_function_normal(func):
         else:
             G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
     G.out.append("MPIR_FUNC_TERSE_ENTER;")
+
     if '_handle_ptr_list' in func:
         G.out.append("")
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
@@ -1199,6 +1200,14 @@ def dump_function_normal(func):
 
     # ----
     def dump_body_of_routine():
+        if RE.search(r'threadcomm', func['extra'], re.IGNORECASE):
+            G.out.append("#ifdef ENABLE_THREADCOMM")
+            dump_if_open("comm_ptr->threadcomm")
+            dump_body_threadcomm(func)
+            G.out.append("goto fn_exit;")
+            dump_if_close()
+            G.out.append("#endif")
+
         if 'body' in func:
             if func['_is_large'] and func['_poly_impl'] == "separate":
                 if 'code-large_count' not in func:
@@ -1412,6 +1421,14 @@ def push_impl_decl(func, impl_name=None):
     # dump MPIR_Xxx_impl(...)
     G.impl_declares.append("int %s(%s);" % (impl_name, params))
 
+def push_threadcomm_impl_decl(func):
+    impl_name = re.sub(r'^mpix?_(comm_)?', 'MPIR_Threadcomm_', func['name'].lower())
+    impl_name += '_impl'
+
+    params = ', '.join(func['_impl_param_list'])
+
+    G.impl_declares.append("int %s(%s);" % (impl_name, params))
+
 def dump_CHECKENUM(var, errname, t, type="ENUM"):
     val_list = t.split()
     if type == "ENUM":
@@ -1606,6 +1623,24 @@ def dump_body_impl(func, prefix='mpir'):
             G.out.append("*%s = %s;" % (p['name'], G.handle_NULLs[p['kind']]))
         else:
             print("Not sure how to handle inout %s" % p['name'], file=sys.stderr)
+
+def dump_body_threadcomm(func):
+    # return MPIR_Threadcomm_Xxx(...);
+    impl = func['name']
+    if func['_is_large'] and func['_poly_impl'] == "separate":
+        impl += '_large'
+    impl += '_impl'
+    impl = re.sub(r'^mpix?_(comm_)?', 'MPIR_Threadcomm_', impl.lower())
+
+    args = ", ".join(func['_impl_arg_list'])
+    if RE.match(r'.*request_ptr$', args):
+        G.out.append("MPIR_Request *request_ptr = NULL;")
+    dump_line_with_break("mpi_errno = %s(%s);" % (impl, args))
+    dump_error_check("")
+    if RE.match(r'.*request_ptr$', args):
+        G.out.append("*request = request_ptr->handle;")
+
+    push_threadcomm_impl_decl(func)
 
 def dump_function_replace(func, repl_call):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
