@@ -123,16 +123,13 @@ static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request 
 
 static int ssend_ack_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
-    int mpi_errno;
     MPIDI_OFI_ssendack_request_t *req = (MPIDI_OFI_ssendack_request_t *) sreq;
     MPIR_FUNC_ENTER;
-    mpi_errno =
-        MPIDI_OFI_send_event(vci, NULL, req->signal_req,
-                             MPIDI_OFI_REQUEST(req->signal_req, event_id));
-
+    /* no need to cleanup the packed data buffer, it's done when the main send completes */
+    MPIDI_Request_complete_fast(req->signal_req);
     MPL_free(req);
     MPIR_FUNC_EXIT;
-    return mpi_errno;
+    return MPI_SUCCESS;
 }
 
 static int chunk_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req)
