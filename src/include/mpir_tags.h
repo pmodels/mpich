@@ -65,9 +65,14 @@
 #define MPIR_TAG_ERROR_BITS (0)
 #endif
 
-/* This bitmask is used to differentiate between collective operations
+/* This bitmask is used to differentiate between collective and partitioned operations
    with user-supplied tags and internally-defined tags. */
+#define MPIR_TAG_RESERVED_BITS (2)
 #define MPIR_TAG_COLL_BIT (1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1))
+#define MPIR_TAG_PART_BIT (1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 2))
+
+/* this macro sets the part bit to 1 */
+#define MPIR_TAG_SET_PART_BIT(tag) ((tag) |= MPIR_TAG_PART_BIT)
 
 /* This macro checks the value of the error bit in the MPI tag and returns 1
  * if the tag is set and 0 if it is not. */
@@ -114,7 +119,8 @@
 #endif
 
 /* This macro defines tag bits available for user tags */
-#define MPIR_TAG_USABLE_BITS ((1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1)) - 1)
+#define MPIR_TAG_USABLE_BITS \
+    ((1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - MPIR_TAG_RESERVED_BITS)) - 1)
 
 #ifdef ENABLE_THREADCOMM
 #define MPIR_TAG_THREADCOMM_TID_BITS 6

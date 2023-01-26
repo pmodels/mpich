@@ -41,9 +41,34 @@ void MPIDIG_part_rreq_reset_cc_part(MPIR_Request * rqst);
 void MPIDIG_part_rreq_matched(MPIR_Request * rreq);
 void MPIDIG_part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_msg_t * msg_hdr);
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_vci_am(const int imsg)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_vci(const int im)
 {
-    return (imsg % MPIDI_global.n_vcis);
+    return (im % MPIDI_global.n_vcis);
+}
+
+/* given the bit encoding strategy returns the maximum tag id (included) */
+MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_max_tag(void)
+{
+    return (MPIR_TAG_USABLE_BITS >> 15);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_tag(const int im)
+{
+    /* get the VCI id, we use symmetric VCI ids for the moment */
+    const int vci = MPIDIG_Part_get_vci(im);
+    /* encode the src and destination vci on bit [5-10[ and bit [10-15[. If the VCI doesn't fit on 5
+     * bits then we only select the information that will. This is not an error we just only use the
+     * VCI from 0 to 31 */
+    int tag = 0;
+    tag |= ((vci & 0x1f) << 5);
+    tag |= ((vci & 0x1f) << 10);
+    /* encode the msg id on the rest of the bits, if the message id is too big for the reamining
+     * bits then it's an error to keep going as we will have conflicting tag ids on the network */
+    MPIR_Assert(im <= MPIDIG_Part_get_max_tag());
+    tag |= (im << 15);
+    /* finally add the TAG bit to the tag */
+    MPIR_TAG_SET_PART_BIT(tag);
+    return tag;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_Part_rreq_status_matched(MPIR_Request * rreq)
@@ -118,15 +143,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_recv(MPIR_Request * rreq)
     const int source_rank = MPIDI_PART_REQUEST(rreq, u.recv.source);
     MPIR_cc_t *cc_ptr = rreq->cc_ptr;
     MPIR_Comm *comm = rreq->comm;
-
-    /* attr = 1 isolates the traffic of internal vs external communications */
-    /*const int     attr       = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ? MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL; */
-    const int attr = 1;
     MPIR_Assert(MPIR_cc_get(*cc_ptr) == msg_part);
 
     MPIR_Request **child_req = MPIDIG_PART_REQUEST(rreq, tag_req_ptr);
     for (int im = 0; im < msg_part; ++im) {
-        const int source_tag = MPIR_FIRST_PART_TAG + im;
+        int source_tag = MPIDIG_Part_get_tag(im);
         void *buf_recv = (char *) MPIDI_PART_REQUEST(rreq, buffer) + im * part_offset;
 
         /* free the previous request as that one is not needed anymore */
@@ -134,9 +155,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_recv(MPIR_Request * rreq)
             MPIR_Request_free(child_req[im]);
         }
 
+        /* attr = 1 isolates the traffic of internal vs external communications */
+        const int attr = 0;
         /* initialize the next request, the ref count should be 2 here: one for mpich, one for me */
-        MPID_Irecv_parent(buf_recv, count, dtype_recv, source_rank, source_tag, comm, attr,
-                          cc_ptr, child_req + im);
+        MPID_Irecv_parent(buf_recv, count, dtype_recv, source_rank, source_tag, comm, attr, cc_ptr,
+                          child_req + im);
     }
 
     MPIR_FUNC_EXIT;
@@ -180,12 +203,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
     MPIR_cc_t *cc_ptr = sreq->cc_ptr;
     MPIR_Comm *comm = sreq->comm;
 
-    /* attr = 1 isolates the traffic of internal vs external communications */
-    /*const int attr = (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) ? MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL; */
-    const int attr = 1;
-
-    MPIR_Assert(imsg <= (MPIR_LAST_PART_TAG - MPIR_FIRST_PART_TAG));
-    const int dest_tag = MPIR_FIRST_PART_TAG + imsg;
+    int dest_tag = MPIDIG_Part_get_tag(imsg);
     void *buf_send = (char *) MPIDI_PART_REQUEST(sreq, buffer) + imsg * part_offset;
     MPIR_Request *child_req = MPIDIG_PART_REQUEST(sreq, tag_req_ptr)[imsg];
 
@@ -196,6 +214,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
         MPIR_Request_free(child_req);
     }
 
+    /* attr = 1 isolates the traffic of internal vs external communications */
+    const int attr = 0;
     /* initialize the next request, the ref count should be 2 here: one for mpich, one for me */
     MPID_Isend_parent(buf_send, count_send, dtype_send, dest_rank, dest_tag, comm, attr, cc_ptr,
                       &child_req);
