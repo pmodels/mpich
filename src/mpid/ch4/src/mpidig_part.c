@@ -201,6 +201,9 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
         MPIDIG_PART_REQUEST(*request, u.recv.msg_part) =
             MPIDIG_PART_REQUEST(unexp_req, u.recv.msg_part);
         MPIDIG_PART_REQUEST(*request, do_tag) = MPIDIG_PART_REQUEST(unexp_req, do_tag);
+        MPIDIG_PART_REQUEST(*request, u.recv.msg_part) =
+            MPIDIG_PART_REQUEST(unexp_req, u.recv.msg_part);
+
         MPIDI_CH4_REQUEST_FREE(unexp_req);
 
         /* we have matched, fill the missing part of the requests: fill the status and allocate cc_part */

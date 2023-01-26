@@ -198,7 +198,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
     MPIR_Datatype_get_extent_macro(dtype_send, part_offset);
     part_offset *= count;
 
-    const int count_send = MPIDI_PART_REQUEST(sreq, count);
     const int dest_rank = MPIDI_PART_REQUEST(sreq, u.send.dest);
     MPIR_cc_t *cc_ptr = sreq->cc_ptr;
     MPIR_Comm *comm = sreq->comm;
@@ -216,8 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
 
     /* attr = 1 isolates the traffic of internal vs external communications */
     const int attr = 0;
-    /* initialize the next request, the ref count should be 2 here: one for mpich, one for me */
-    MPID_Isend_parent(buf_send, count_send, dtype_send, dest_rank, dest_tag, comm, attr, cc_ptr,
+    MPID_Isend_parent(buf_send, count, dtype_send, dest_rank, dest_tag, comm, attr, cc_ptr,
                       &child_req);
 
     MPIR_FUNC_EXIT;

@@ -49,6 +49,23 @@ void MPIDIG_part_rreq_matched(MPIR_Request * rreq)
     rreq->status.MPI_TAG = MPIDI_PART_REQUEST(rreq, u.recv.tag);
     rreq->status.MPI_ERROR = MPI_SUCCESS;
 
+    /* now that we have matched the receiver decides how many msgs are used
+     * if the total number of datatypes can be divided by the number of send partition
+     * we use the number of send partitions to communicate datat
+     * if the modulo is not null then we use the gcd approach */
+    const int send_part = MPIDIG_PART_REQUEST(rreq, u.recv.msg_part);
+    const int recv_part = rreq->u.part.partitions;
+    MPI_Aint ttl_count = recv_part * MPIDI_PART_REQUEST(rreq, count);
+
+    if (ttl_count % send_part) {
+        MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = MPL_gcd(send_part, recv_part);
+    } else {
+        MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = send_part;
+    }
+
+    /* 0 partition is illegual so at least one message must happen */
+    MPIR_Assert(MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) > 0);
+
     /* Additional check for partitioned pt2pt: require identical buffer size */
     if (rreq->status.MPI_ERROR == MPI_SUCCESS) {
         MPI_Aint rdata_size;
@@ -121,19 +138,7 @@ void MPIDIG_part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_ms
     MPIDIG_PART_REQUEST(rreq, u.recv.send_dsize) = msg_hdr->data_sz;
     MPIDIG_PART_REQUEST(rreq, peer_req_ptr) = msg_hdr->sreq_ptr;
     MPIDIG_PART_REQUEST(rreq, do_tag) = msg_hdr->do_tag;
-
-    /* the receiver decides how many msgs are used
-     * if the total number of datatypes can be divided by the number of send partition
-     * we use the number of send partitions to communicate datat
-     * if the modulo is not null then we use the gcd approach */
-    const int send_part = msg_hdr->send_npart;
-    const int recv_part = rreq->u.part.partitions;
-    MPI_Aint ttl_count = recv_part * MPIDI_PART_REQUEST(rreq, count);
-    if (ttl_count % send_part) {
-        MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = MPL_gcd(send_part, recv_part);
-    } else {
-        MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = send_part;
-    }
-    /* 0 partition is illegual so at least one message must happen */
+    /* store the sender number of partitions in the msg_part temporarily */
+    MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = msg_hdr->send_npart;
     MPIR_Assert(MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) > 0);
 }
