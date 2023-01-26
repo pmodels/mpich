@@ -81,9 +81,10 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
             if (MPIDIG_PART_REQUEST(posted_req, do_tag)) {
                 /* in tag matching we issue the recv requests we need to remove the lock from the
                  * callback */
-                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+                int vci_id = get_vci_wrapper(posted_req);
+                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_id).lock);
                 mpi_errno = MPIDIG_part_issue_recv(posted_req);
-                MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+                MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_id).lock);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
@@ -187,10 +188,11 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
             MPIR_cc_set(part_sreq->cc_ptr, msg_part);
         }
         /* might have partitions that are ready to be sent we need to remove the lock currently set
-         * on VCI 0 */
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+         * on VCI associated to the current request*/
+        int vci_id = get_vci_wrapper(part_sreq);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_id).lock);
         mpi_errno = MPIDIG_part_issue_msg_if_ready(0, msg_part, part_sreq, MPIDIG_PART_REPLY);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_id).lock);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -163,10 +163,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
 
             const int msg_lb = MPIDIG_part_idx_lb(ipart, n_part, msg_part);
             const int msg_ub = MPIDIG_part_idx_ub(ipart, n_part, msg_part);
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
             mpi_errno =
                 MPIDIG_part_issue_msg_if_ready(msg_lb, msg_ub, part_sreq, MPIDIG_PART_REGULAR);
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             //const bool do_tag = MPIDIG_PART_REQUEST(part_sreq, do_tag);
