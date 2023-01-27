@@ -72,6 +72,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_tag(const int im)
     return tag;
 }
 
+/* Convert the 'origin' indexing layout into the 'arget' indexing layout.
+ * For a given index in the origin (io) return the lower index to vising in the target indexing layout.
+ * no = the number of indexes in the origin indexing layout
+ * nt = the number of indexes in the target indexing layout
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDIG_part_idx_lb(const int io, const int no, const int nt)
+{
+    return (io * nt) / no;
+}
+
+/* Convert the 'origin' indexing layout into the 'arget' indexing layout.
+ * For a given index in the origin (io) return the upper index (not included!) to vising in the target indexing layout.
+ * no = the number of indexes in the origin indexing layout
+ * nt = the number of indexes in the target indexing layout
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDIG_part_idx_ub(const int io, const int no, const int nt)
+{
+    const int tmp = (io + 1) * nt;
+    const int it = tmp / no + (tmp % no > 0);
+    return MPL_MIN(it, nt);
+}
+
+
 MPL_STATIC_INLINE_PREFIX void MPIDIG_Part_rreq_status_matched(MPIR_Request * rreq)
 {
     MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
@@ -185,6 +208,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
         for (int ip = 0; ip < n_part; ++ip) {
             MPIR_cc_set(&cc_part[ip], MPIDIG_PART_STATUS_SEND_TAG_LATER_INIT);
         }
+        /* reset the counter per msg to be ready for the next iteration */
+        const int msg_part = MPIDIG_PART_REQUEST(sreq, u.send.msg_part);
+        MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(sreq, u.send.cc_msg);
+        for (int i = 0; i < msg_part; ++i) {
+            const int ip_lb = MPIDIG_part_idx_lb(i, msg_part, n_part);
+            const int ip_ub = MPIDIG_part_idx_ub(i, msg_part, n_part);
+            MPIR_cc_set(cc_msg + i, ip_ub - ip_lb);
+        }
     }
 
     /* get the count per the msg partition and the shift in the buffer from the datatype */
@@ -227,28 +258,6 @@ enum MPIDIG_part_issue_mode {
     MPIDIG_PART_REGULAR,        /* when called outside of the progress engine */
     MPIDIG_PART_REPLY,          /* when called from the progress engine */
 };
-
-/* Convert the 'origin' indexing layout into the 'arget' indexing layout.
- * For a given index in the origin (io) return the lower index to vising in the target indexing layout.
- * no = the number of indexes in the origin indexing layout
- * nt = the number of indexes in the target indexing layout
- */
-MPL_STATIC_INLINE_PREFIX int MPIDIG_part_idx_lb(const int io, const int no, const int nt)
-{
-    return (io * nt) / no;
-}
-
-/* Convert the 'origin' indexing layout into the 'arget' indexing layout.
- * For a given index in the origin (io) return the upper index (not included!) to vising in the target indexing layout.
- * no = the number of indexes in the origin indexing layout
- * nt = the number of indexes in the target indexing layout
- */
-MPL_STATIC_INLINE_PREFIX int MPIDIG_part_idx_ub(const int io, const int no, const int nt)
-{
-    const int tmp = (io + 1) * nt;
-    const int it = tmp / no + (tmp % no > 0);
-    return MPL_MIN(it, nt);
-}
 
 /* Sender issues data after all partitions are ready and CTS; called by pready functions. */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(const int imsg, MPIR_Request * part_sreq,
@@ -295,6 +304,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(const int imsg, MPIR_Request
         for (int ip = 0; ip < n_part; ++ip) {
             MPIR_cc_set(&cc_part[ip], MPIDIG_PART_STATUS_SEND_AM_INIT);
         }
+        /* reset the counter per msg to be ready for the next iteration */
+        MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_msg);
+        for (int i = 0; i < msg_part; ++i) {
+            const int ip_lb = MPIDIG_part_idx_lb(i, msg_part, n_part);
+            const int ip_ub = MPIDIG_part_idx_ub(i, msg_part, n_part);
+            MPIR_cc_set(cc_msg + i, ip_ub - ip_lb);
+        }
     }
 
     /* get the count per the msg partition and the shift in the buffer from the datatype */
@@ -337,28 +353,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_lb, co
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-
     MPIR_Assert(sreq->kind == MPIR_REQUEST_KIND__PART_SEND);
-    const int send_part = sreq->u.part.partitions;
-    const int msg_part = MPIDIG_PART_REQUEST(sreq, u.send.msg_part);
-    const MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(sreq, u.send.cc_part);
-    MPIR_Assert(msg_part > 0);
-
-    const bool do_tag = MPIDIG_PART_REQUEST(sreq, do_tag);
-
 
     /*for each of the communication msgs in the range, try to see if they are ready */
+    const bool do_tag = MPIDIG_PART_REQUEST(sreq, do_tag);
+    MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(sreq, u.send.cc_msg);
     for (int im = msg_lb; im < msg_ub; ++im) {
-        const int ip_lb = MPIDIG_part_idx_lb(im, msg_part, send_part);
-        const int ip_ub = MPIDIG_part_idx_ub(im, msg_part, send_part);
-
-        bool ready = true;
-        for (int ip = ip_lb; ip < ip_ub; ++ip) {
-            MPIR_Assert(ip >= 0);
-            MPIR_Assert(ip < send_part);
-            ready &= (MPIDIG_PART_STATUS_SEND_READY == MPIR_cc_get(cc_part[ip]));
-        }
-        if (ready) {
+        /* decrement the counter of the specific msg */
+        int incomplete;
+        MPIR_cc_decr(cc_msg + im, &incomplete);
+        if (!incomplete) {
             if (do_tag) {
                 /* the lock in the VCI happens inside the send function */
                 mpi_errno = MPIDIG_part_issue_send(im, sreq);

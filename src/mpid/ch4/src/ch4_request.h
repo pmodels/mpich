@@ -143,6 +143,12 @@ MPL_STATIC_INLINE_PREFIX void MPID_Part_send_request_free_hook(MPIR_Request * re
         MPL_free(cc_part);
     }
 
+    /* release the counter per msg */
+    MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(req, u.send.cc_msg);
+    if (cc_msg) {
+        MPL_free(cc_msg);
+    }
+
     /* if we do tag, release the request array and decrease the cc value */
     const bool do_tag = MPIDIG_PART_REQUEST(req, do_tag);
     MPIR_Request **tag_req_ptr = MPIDIG_PART_REQUEST(req, tag_req_ptr);

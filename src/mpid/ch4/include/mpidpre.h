@@ -228,6 +228,7 @@ typedef struct MPIDIG_part_sreq {
     int msg_part;               /* the number of messages actually sent */
     MPIR_cc_t cc_send;          /* counter on the number of msgs actually sent */
     MPIR_cc_t *cc_part;         /* ready counter per partition */
+    MPIR_cc_t *cc_msg;          /* ready counter per partition */
 } MPIDIG_part_sreq_t;
 
 typedef struct MPIDIG_part_rreq {

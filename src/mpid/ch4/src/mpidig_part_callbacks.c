@@ -62,12 +62,14 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
     posted_req = MPIDIG_rreq_dequeue(msg_hdr->src_rank, msg_hdr->tag, msg_hdr->context_id,
                                      &MPIDI_global.part_posted_list, MPIDIG_PART);
 
+    int vci_id;
     if (posted_req) {
         /* update and match the received request */
         MPIDIG_part_rreq_update_sinfo(posted_req, msg_hdr);
         MPIDIG_part_rreq_matched(posted_req);
 
         /* If rreq matches and local start has been called, notify sender CTS */
+        vci_id = get_vci_wrapper(posted_req);
         if (MPIR_Part_request_is_active(posted_req)) {
             /* allocate the arrays, the request has been started (cannot be done if not started) */
             MPIDIG_Part_rreq_allocate(posted_req);
@@ -83,16 +85,10 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
             if (MPIDIG_PART_REQUEST(posted_req, do_tag)) {
                 /* in tag matching we issue the recv requests we need to remove the lock from the
                  * callback */
-                int vci_id = get_vci_wrapper(posted_req);
                 MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_id).lock);
                 mpi_errno = MPIDIG_part_issue_recv(posted_req);
                 MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_id).lock);
                 MPIR_ERR_CHECK(mpi_errno);
-                /* we must notify progress as the send rqst might not have done it in case of
-                 * lightweight sends. The progress count must be incremented on the VCI which has
-                 * been entered from, not the one from the child request */
-                // TODO: check this statement!!
-                MPL_atomic_fetch_add_int(&MPIDI_VCI(vci_id).progress_count, 1);
             }
 
             /* issue the CTS is last to ensure we are fully ready */
@@ -107,6 +103,7 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
         // TG: why?? is it because we get a copy?
         MPIR_Request_free_unsafe(posted_req);
     } else {
+        vci_id = 0;
         MPIR_Request *unexp_req = NULL;
 
         /* Create temporary unexpected request, freed when matched with a precv_init.
@@ -126,7 +123,11 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
         MPIDIG_enqueue_request(unexp_req, &MPIDI_global.part_unexp_list, MPIDIG_PART);
     }
 
-    fflush(stdout);
+    /* we must notify progress as the send rqst might not have done it in case of
+     * lightweight sends. The progress count must be incremented on the VCI which has
+     * been entered from, not the one from the child request */
+    // TODO: check this statement!!
+    MPL_atomic_fetch_add_int(&MPIDI_VCI(vci_id).progress_count, 1);
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
@@ -161,6 +162,19 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
         MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr) = msg_hdr->rreq_ptr;
         MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part) = msg_hdr->msg_part;
 
+        /* we need to allocate the data associated to the number of actual msgs */
+        const int send_part = part_sreq->u.part.partitions;
+        const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
+        MPIDIG_PART_REQUEST(part_sreq, u.send.cc_msg) =
+            MPL_malloc(sizeof(MPIR_cc_t) * msg_part, MPL_MEM_OTHER);
+        /* each msg can be updated by multiple partitions, but only once! */
+        MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_msg);
+        for (int i = 0; i < msg_part; ++i) {
+            const int ip_lb = MPIDIG_part_idx_lb(i, msg_part, send_part);
+            const int ip_ub = MPIDIG_part_idx_ub(i, msg_part, send_part);
+            MPIR_cc_set(cc_msg + i, ip_ub - ip_lb);
+        }
+
 #ifndef NDEBUG
         /* make sure we don't split up a datatype on the sender side */
         MPI_Aint count;
@@ -176,37 +190,45 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
     // FIXME this is NOT the best option as we reset it twice (once at the start and once here)
     MPIR_cc_set(&MPIDIG_PART_REQUEST(part_sreq, u.send.cc_send), msg_hdr->msg_part);
 
-    /* decrements the counter of all the partitions at once because a msg
-     * might depend on multiple partitions */
+    const bool is_active = MPIR_Part_request_is_active(part_sreq);
+    int vci_id = get_vci_wrapper(part_sreq);
+    const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
+    if (is_active) {
+        /* if the request is active then the correct cc value was unknown when activating the
+         * request and we have to set it we don't want to reset the value if the request is not
+         * active as we would prevent wait to complete if start is never called */
+        MPIR_cc_set(part_sreq->cc_ptr, msg_part);
+    }
+
+    /* need to decrement the partition counter and send the partitions if ready */
     const int n_part = part_sreq->u.part.partitions;
     MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_part);
     MPIR_Assert(n_part >= 0);
-    for (int i = 0; i < n_part; ++i) {
-        MPIR_cc_dec(&cc_part[i]);
-    }
 
-    /* if the request is active (i.e. has been started) then check if we can send something */
-    const bool is_active = MPIR_Part_request_is_active(part_sreq);
-    if (is_active) {
-        const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
-        if (is_first_cts) {
-            /* if the request is active and it's the first CTS then the correct cc value
-             * was unknown when activating the request and we have to set it */
-            MPIR_cc_set(part_sreq->cc_ptr, msg_part);
+    /* we exit the lock only once and come back to it only once as well, cc_part is atomic so
+     * it's okay to do it */
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_id).lock);
+    for (int i = 0; i < n_part; ++i) {
+        int incomplete;
+        MPIR_cc_decr(&cc_part[i], &incomplete);
+
+        /* we could makesure that the request is active BUT if the request is not active we will
+         * no be able to send anything because the pready counter has not been decreased */
+        if (!incomplete) {
+            const int msg_lb = MPIDIG_part_idx_lb(i, n_part, msg_part);
+            const int msg_ub = MPIDIG_part_idx_ub(i, n_part, msg_part);
+            mpi_errno =
+                MPIDIG_part_issue_msg_if_ready(msg_lb, msg_ub, part_sreq, MPIDIG_PART_REPLY);
+            MPIR_ERR_CHECK(mpi_errno);
         }
-        /* might have partitions that are ready to be sent we need to remove the lock currently set
-         * on VCI associated to the current request*/
-        int vci_id = get_vci_wrapper(part_sreq);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_id).lock);
-        mpi_errno = MPIDIG_part_issue_msg_if_ready(0, msg_part, part_sreq, MPIDIG_PART_REPLY);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_id).lock);
-        /* we must notify progress as the send rqst might not have done it in case of lightweight
-         * sends. The progress count must be incremented on the VCI which has been entered from, not
-         * the one from the child request */
-        // TODO: check this statement!!
-        MPL_atomic_fetch_add_int(&MPIDI_VCI(vci_id).progress_count, 1);
-        MPIR_ERR_CHECK(mpi_errno);
     }
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_id).lock);
+
+    /* we must notify progress as the send rqst might not have done it in case of lightweight
+     * sends. The progress count must be incremented on the VCI which has been entered from, not
+     * the one from the child request */
+    // TODO: check this statement!!
+    MPL_atomic_fetch_add_int(&MPIDI_VCI(vci_id).progress_count, 1);
 
   fn_exit:
     MPIR_FUNC_EXIT;

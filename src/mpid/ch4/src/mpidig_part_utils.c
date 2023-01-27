@@ -21,6 +21,7 @@ void MPIDIG_part_sreq_create(MPIR_Request ** req)
     MPIDIG_PART_REQUEST(sreq, u.send.msg_part) = -1;
     /* set the counter of msgs actually sent to 0 */
     MPIR_cc_set(&MPIDIG_PART_REQUEST(sreq, u.send.cc_send), 0);
+    MPIDIG_PART_REQUEST(sreq, u.send.cc_msg) = NULL;
 }
 
 /* creates a MPIDIG RECV request */
