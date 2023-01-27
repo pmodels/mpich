@@ -34,6 +34,31 @@ void MPIDIG_part_rreq_create(MPIR_Request ** req)
     MPIR_cc_set(&MPIDIG_PART_REQUEST(rreq, u.recv.status_matched), 0);
 }
 
+void MPIDIG_Part_rreq_allocate(MPIR_Request * rreq)
+{
+
+    MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
+
+    /* allocate partitions tracking */
+    // TODO remove the cc_part from the receiver, it's not used
+    const int msg_part = MPIDIG_PART_REQUEST(rreq, u.recv.msg_part);
+    MPIR_Assert(msg_part >= 0);
+    MPIDIG_PART_REQUEST(rreq, u.recv.cc_part) =
+        MPL_malloc(sizeof(MPIR_cc_t) * msg_part, MPL_MEM_OTHER);
+
+    /* if we do the tag matching then we need an array of request */
+    const bool do_tag = MPIDIG_PART_REQUEST(rreq, do_tag);
+    if (do_tag) {
+        MPIDIG_PART_REQUEST(rreq, tag_req_ptr) =
+            MPL_malloc(sizeof(MPIR_Request *) * msg_part, MPL_MEM_OTHER);
+        for (int i = 0; i < msg_part; ++i) {
+            MPIDIG_PART_REQUEST(rreq, tag_req_ptr[i]) = NULL;
+        }
+    } else {
+        MPIDIG_PART_REQUEST(rreq, tag_req_ptr) = NULL;
+    }
+}
+
 /* called when a receive Request has been matched
  * - set the status
  * - allocate the cc_part
@@ -80,21 +105,6 @@ void MPIDIG_part_rreq_matched(MPIR_Request * rreq)
         }
     }
 
-    const int msg_part = MPIDIG_PART_REQUEST(rreq, u.recv.msg_part);
-    MPIR_Assert(msg_part >= 0);
-    MPIDIG_PART_REQUEST(rreq, u.recv.cc_part) =
-        MPL_malloc(sizeof(MPIR_cc_t) * msg_part, MPL_MEM_OTHER);
-
-    const bool do_tag = MPIDIG_PART_REQUEST(rreq, do_tag);
-    if (do_tag) {
-        MPIDIG_PART_REQUEST(rreq, tag_req_ptr) =
-            MPL_malloc(sizeof(MPIR_Request *) * msg_part, MPL_MEM_OTHER);
-        for (int i = 0; i < msg_part; ++i) {
-            MPIDIG_PART_REQUEST(rreq, tag_req_ptr[i]) = NULL;
-        }
-    } else {
-        MPIDIG_PART_REQUEST(rreq, tag_req_ptr) = NULL;
-    }
     /* indicate that we have matched */
     MPIDIG_Part_rreq_status_matched(rreq);
 }

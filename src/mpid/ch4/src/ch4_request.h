@@ -173,7 +173,6 @@ MPL_STATIC_INLINE_PREFIX void MPID_Part_recv_request_free_hook(MPIR_Request * re
     const bool do_tag = MPIDIG_PART_REQUEST(req, do_tag);
     MPIR_Request **tag_req_ptr = MPIDIG_PART_REQUEST(req, tag_req_ptr);
     if (do_tag) {
-        MPIR_Assert(tag_req_ptr != NULL);
         MPL_free(tag_req_ptr);
     }
 

@@ -52,6 +52,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
          * we can use the pointer to check matching status as the pointer is always written inside a lock section */
         const bool is_matched = MPIDIG_Part_rreq_status_has_matched(request);
         if (is_matched) {
+            /* we can only allocate now as it's valid to call Precv_init and free immediately (no
+             * call to start)*/
+            const bool first_cts = MPIDIG_Part_rreq_status_has_first_cts(request);
+            if (!first_cts) {
+                MPIDIG_Part_rreq_allocate(request);
+            }
+
             MPIR_Assert(MPIDIG_PART_REQUEST(request, u.recv.msg_part) >= 0);
             MPIDIG_part_rreq_reset_cc_part(request);
 
@@ -63,9 +70,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
                 mpi_errno = MPIDIG_part_issue_recv(request);
                 MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
                 MPIR_ERR_CHECK(mpi_errno);
+
                 /* we need to issue the CTS at last to ensure we are fully ready
                  * done only the first time for tag-matching*/
-                const bool first_cts = MPIDIG_Part_rreq_status_has_first_cts(request);
                 if (!first_cts) {
                     mpi_errno = MPIDIG_part_issue_cts(request);
                     MPIR_ERR_CHECK(mpi_errno);
@@ -74,7 +81,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
             } else {
                 mpi_errno = MPIDIG_part_issue_cts(request);
                 MPIR_ERR_CHECK(mpi_errno);
-                const bool first_cts = MPIDIG_Part_rreq_status_has_first_cts(request);
                 if (!first_cts) {
                     MPIDIG_Part_rreq_status_first_cts(request);
                 }

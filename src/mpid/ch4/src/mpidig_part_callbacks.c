@@ -69,13 +69,15 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
 
         /* If rreq matches and local start has been called, notify sender CTS */
         if (MPIR_Part_request_is_active(posted_req)) {
+            /* allocate the arrays, the request has been started (cannot be done if not started) */
+            MPIDIG_Part_rreq_allocate(posted_req);
 
-            // set the cc value to the number of partitions
+            /* set the cc value to the number of partitions */
             const int msg_part = MPIDIG_PART_REQUEST(posted_req, u.recv.msg_part);
             MPIR_Assert(msg_part >= 0);
             MPIR_cc_set(posted_req->cc_ptr, msg_part);
 
-            // reset the counter per partition
+            /* reset the counter per partition */
             MPIDIG_part_rreq_reset_cc_part(posted_req);
 
             if (MPIDIG_PART_REQUEST(posted_req, do_tag)) {

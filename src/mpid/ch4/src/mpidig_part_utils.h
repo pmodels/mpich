@@ -40,6 +40,7 @@ void MPIDIG_part_rreq_reset_cc_part(MPIR_Request * rqst);
 
 void MPIDIG_part_rreq_matched(MPIR_Request * rreq);
 void MPIDIG_part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_msg_t * msg_hdr);
+void MPIDIG_Part_rreq_allocate(MPIR_Request * rreq);
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_vci(const int im)
 {
