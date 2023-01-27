@@ -111,14 +111,6 @@ typedef struct {
 
 static MPL_ze_mem_id_entry_t *mem_id_cache = NULL;
 
-typedef struct {
-    int fds[2];
-    uint32_t nfds;
-    pid_t pid;
-    int dev_id;
-    uint64_t mem_id;
-} fd_pid_t;
-
 typedef struct gpu_free_hook {
     void (*free_hook) (void *dptr);
     struct gpu_free_hook *next;
@@ -1475,7 +1467,7 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
     goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id, void **ptr)
 {
     int mpl_err = MPL_SUCCESS;
     MPL_ze_mapped_buffer_entry_t *cache_entry = NULL;
@@ -1484,7 +1476,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
     unsigned keylen = 0;
 
     fd_pid_t h;
-    memcpy(&h, &ipc_handle, sizeof(fd_pid_t));
+    h = mpl_ipc_handle->data;
 
     if (likely(ze_info.specialized_cache)) {
         /* Check if ipc-mapped buffer is already cached */
@@ -1500,7 +1492,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
     if (cache_entry && cache_entry->ipc_buf) {
         *ptr = cache_entry->ipc_buf;
     } else {
-        mpl_err = MPL_ze_ipc_handle_map(ipc_handle, true, dev_id, false, 0, ptr);
+        mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, false, 0, ptr);
         if (mpl_err != MPL_SUCCESS) {
             goto fn_fail;
         }
@@ -2387,7 +2379,7 @@ void MPL_ze_ipc_remove_cache_handle(void *dptr)
 }
 
 int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, int local_dev_id,
-                             int use_shared_fd, MPL_gpu_ipc_mem_handle_t * ipc_handle)
+                             int use_shared_fd, MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle)
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
@@ -2464,8 +2456,10 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
     h.pid = mypid;
     h.mem_id = mem_id;
 
-    memset(ipc_handle, 0, sizeof(MPL_gpu_ipc_mem_handle_t));
-    memcpy(ipc_handle, &h, sizeof(fd_pid_t));
+    for (int i = 0; i < nfds; i++) {
+        memcpy(&mpl_ipc_handle->ipc_handles[i], &ze_ipc_handle[i], sizeof(ze_ipc_mem_handle_t));
+    }
+    mpl_ipc_handle->data = h;
 
   fn_exit:
     return mpl_err;
@@ -2474,8 +2468,8 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
     goto fn_exit;
 }
 
-int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shared_handle, int dev_id,
-                          int is_mmap, size_t size, void **ptr)
+int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shared_handle,
+                          int dev_id, int is_mmap, size_t size, void **ptr)
 {
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
@@ -2484,7 +2478,7 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shared_han
     MPL_gpu_device_handle_t dev_handle;
 
     fd_pid_t h;
-    memcpy(&h, &ipc_handle, sizeof(fd_pid_t));
+    h = mpl_ipc_handle->data;
     nfds = h.nfds;
 
     if (shared_device_fds != NULL) {
@@ -2532,7 +2526,7 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shared_han
             goto fn_fail;
         }
         for (int i = 0; i < nfds; i++) {
-            memset(&ze_ipc_handle[i], 0, sizeof(ze_ipc_mem_handle_t));
+            memcpy(&ze_ipc_handle[i], &mpl_ipc_handle->ipc_handles[i], sizeof(ze_ipc_mem_handle_t));
             memcpy(&ze_ipc_handle[i], &fds[i], sizeof(int));
         }
 
@@ -2551,7 +2545,7 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shared_han
 }
 
 /* given an remote IPC handle, mmap it to host */
-int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shared_handle,
+int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shared_handle,
                                 int dev_id, size_t size, void **ptr)
 {
     int mpl_err = MPL_SUCCESS;
@@ -2561,7 +2555,7 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shar
     MPL_ze_mapped_buffer_lookup_t lookup_entry;
 
     fd_pid_t h;
-    memcpy(&h, &ipc_handle, sizeof(fd_pid_t));
+    h = mpl_ipc_handle->data;
 
     if (likely(ze_info.specialized_cache)) {
         /* Check if ipc-mapped buffer is already cached */
@@ -2597,7 +2591,7 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shar
     }
 
     if (*ptr == NULL) {
-        mpl_err = MPL_ze_ipc_handle_map(ipc_handle, is_shared_handle, dev_id, true, size, ptr);
+        mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, ptr);
         if (mpl_err != MPL_SUCCESS) {
             goto fn_fail;
         }
