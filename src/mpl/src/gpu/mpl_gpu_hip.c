@@ -144,7 +144,7 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, void **ptr)
 {
     int mpl_err = MPL_SUCCESS;
     hipError_t ret;
@@ -152,7 +152,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
 
     hipGetDevice(&prev_devid);
     hipSetDevice(dev_id);
-    ret = hipIpcOpenMemHandle(ptr, ipc_handle, hipIpcMemLazyEnablePeerAccess);
+    ret = hipIpcOpenMemHandle(ptr, *ipc_handle, hipIpcMemLazyEnablePeerAccess);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
