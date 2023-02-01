@@ -236,19 +236,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
 
     int dest_tag = MPIDIG_Part_get_tag(imsg);
     void *buf_send = (char *) MPIDI_PART_REQUEST(sreq, buffer) + imsg * part_offset;
-    MPIR_Request *child_req = MPIDIG_PART_REQUEST(sreq, tag_req_ptr)[imsg];
+    MPIR_Request **child_req = MPIDIG_PART_REQUEST(sreq, tag_req_ptr);
 
     /* free the previous request as that one is not needed anymore */
-    if (child_req) {
+    if (child_req[imsg]) {
         /* we cannot have a non-completed request here */
-        MPIR_Assert(MPIR_Request_is_complete(child_req));
-        MPIR_Request_free(child_req);
+        MPIR_Assert(MPIR_Request_is_complete(child_req[imsg]));
+        MPIR_Request_free(child_req[imsg]);
     }
 
     /* attr = 1 isolates the traffic of internal vs external communications */
     const int attr = 0;
     MPID_Isend_parent(buf_send, count, dtype_send, dest_rank, dest_tag, comm, attr, cc_ptr,
-                      &child_req);
+                      child_req + imsg);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
