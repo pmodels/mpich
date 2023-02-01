@@ -236,26 +236,9 @@ chgrp -h mpi latest
 
 At the moment, this is just Homebrew. To do this, you need to:
 
-  - Fork the [original](https://github.com/mxcl/homebrew) on github to
+  - Fork the [original](https://github.com/Homebrew/homebrew-core) on github to
     get your own version
-      - Yes, this has to be done on GitHub itself
-  - Make a branch to make your changes to the MPICH
-      - Doing this in master will only bring pain. Don't do it.
-  - Make the changes to Library/Formula/mpich2.rb
-      - At the moment, this formula is still named mpich2 and can't be
-        changed.
-      - There is however, an alias to mpich so people can just say that
-        they want to install that.
-  - Unless there have been any major changes to the way people should
-    build MPICH, all this requires is changing the URL for the formula
-    to whatever the new URL is.
-      - If there have been new changes to the way people do the usual
-        configure/make/make install setup, the rest of the script may
-        need to change.
-      - If there are new options that we should include in the package
-        manager versions (don't read "add all new options here"), then
-        they can be added.
-  - Push your changes to your own fork on GitHub
-  - Send a pull-request to the original mxcl repository
+  - In the repo directory, run `brew bump-formula-pr --version <version> mpich`
+    - This makes the changes and opens the PR for you
 
 ## Send out the release announcement to announce@mpich.org and party\! Yay\!
