@@ -76,6 +76,7 @@ typedef struct {
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
     ze_pci_address_ext_t pci;
     int pci_avail;
+    int sys_device_index;
 #endif
 } MPL_ze_device_entry_t;
 
@@ -103,8 +104,13 @@ static int *subdevice_map = NULL;
 static uint32_t *subdevice_count = NULL;
 
 /* For drmfd */
-static int shared_device_fd_count = 0;
-static int *shared_device_fds = NULL;
+typedef struct _physical_device_state {
+    int fd;
+    int domain, bus, device, function;
+} physical_device_state;
+
+static int physical_device_count = 0;
+static physical_device_state *physical_device_states = NULL;
 
 typedef struct {
     const void *ptr;
@@ -193,6 +199,9 @@ static int gpu_mem_hook_init(void);
 static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
 static int MPL_event_pool_add_new_pool(void);
 static void MPL_event_pool_destroy(void);
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+static int search_physical_devices(ze_pci_address_ext_t pci);
+#endif
 
 /* For zeMemFree callbacks */
 static gpu_free_hook_s *free_hook_chain = NULL;
@@ -565,6 +574,16 @@ int MPL_gpu_init(int debug_summary)
 /* Get dev_id for shared_device_fds from regular dev_id */
 int MPL_gpu_get_root_device(int dev_id)
 {
+    return subdevice_map[dev_id];
+}
+
+/* Get dev_id for shared_device_fds from regular dev_id */
+static int get_physical_device(int dev_id)
+{
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+    if (device_states[dev_id].sys_device_index != -1)
+        return device_states[dev_id].sys_device_index;
+#endif
     return subdevice_map[dev_id];
 }
 
@@ -975,6 +994,7 @@ static int gpu_ze_init_driver(void)
             }
         }
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
+        device_state->sys_device_index = -1;
         ze_pci_ext_properties_t pci_property = {
             .stype = ZE_STRUCTURE_TYPE_PCI_EXT_PROPERTIES,
             .pNext = NULL,
@@ -1212,11 +1232,11 @@ int MPL_gpu_finalize(void)
         MPL_free(entry);
     }
 
-    for (i = 0; i < shared_device_fd_count; ++i) {
-        close(shared_device_fds[i]);
+    for (i = 0; i < physical_device_count; ++i) {
+        close(physical_device_states[i].fd);
     }
 
-    MPL_free(shared_device_fds);
+    MPL_free(physical_device_states);
 
     gpu_free_hook_s *prev;
     while (free_hook_chain) {
@@ -1460,7 +1480,7 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
     int dev_id;
     uint64_t mem_id;
 
-    if (shared_device_fds != NULL) {
+    if (physical_device_states != NULL) {
         MPL_ze_gem_hash_entry_t *entry = NULL;
         HASH_FIND_PTR(gem_hash, &ptr, entry);
         if (entry == NULL) {
@@ -1469,15 +1489,16 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
         }
 
         HASH_DEL(gem_hash, entry);
-        MPL_free(entry);
 
         /* close GEM handle */
         for (int i = 0; i < entry->nhandles; i++) {
-            status = close_handle(shared_device_fds[entry->dev_id], entry->handles[i]);
+            status = close_handle(physical_device_states[entry->dev_id].fd, entry->handles[i]);
             if (status) {
                 goto fn_fail;
             }
         }
+
+        MPL_free(entry);
     }
 
     if (likely(MPL_gpu_info.specialized_cache)) {
@@ -1803,7 +1824,8 @@ int MPL_gpu_query_is_same_dev(int global_dev1, int global_dev2)
         return 0;
 
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
-    if (MPL_gpu_get_root_device(local_dev1) == MPL_gpu_get_root_device(local_dev2))
+    if (get_physical_device(local_dev1) != -1 && get_physical_device(local_dev2) != -1 &&
+        get_physical_device(local_dev1) == get_physical_device(local_dev2))
         return 1;
 
     device_state1 = device_states + local_dev1;
@@ -2357,7 +2379,27 @@ ze_result_t ZE_APICALL zeMemFree(ze_context_handle_t hContext, void *dptr)
 
 /* ZE-Specific Functions */
 
-int MPL_ze_init_device_fds(int *num_fds, int *device_fds)
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+static void queryBDF(char *pcipath, int *domain, int *b, int *d, int *f)
+{
+    char *endptr = NULL;
+    const char *device_suffix = "-render";
+
+    char *rdsPos = strstr(pcipath, device_suffix);
+    assert(rdsPos);
+
+    char *bdfstr = rdsPos - 12;
+
+    *domain = strtol(bdfstr, &endptr, 16);
+    bdfstr = endptr + 1;
+    *b = strtol(bdfstr, &endptr, 16);
+    bdfstr = endptr + 1;
+    *d = strtol(bdfstr, &endptr, 16);
+    bdfstr = endptr + 1;
+    *f = strtol(bdfstr, &endptr, 16);
+}
+
+static int get_bdfs(int nfds, int *bdfs)
 {
     const char *device_directory = "/dev/dri/by-path";
     const char *device_suffix = "-render";
@@ -2391,15 +2433,13 @@ int MPL_ze_init_device_fds(int *num_fds, int *device_fds)
         strcat(dev_name, "/");
         strcat(dev_name, ent->d_name);
 
-        /* Open the device */
-        if (device_fds) {
-            device_fds[n] = open(dev_name, O_RDWR);
-        }
-
-        n++;
+        int domain, b, d, f;
+        queryBDF(dev_name, &domain, &b, &d, &f);
+        bdfs[n++] = domain;
+        bdfs[n++] = b;
+        bdfs[n++] = d;
+        bdfs[n++] = f;
     }
-
-    *num_fds = n;
 
   fn_exit:
     return MPL_SUCCESS;
@@ -2407,10 +2447,138 @@ int MPL_ze_init_device_fds(int *num_fds, int *device_fds)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-void MPL_ze_set_fds(int num_fds, int *fds)
+static int search_physical_devices(ze_pci_address_ext_t pci)
 {
-    shared_device_fds = fds;
-    shared_device_fd_count = num_fds;
+    for (int i = 0; i < physical_device_count; i++) {
+        if (physical_device_states[i].domain == pci.domain &&
+            physical_device_states[i].bus == pci.bus &&
+            physical_device_states[i].device == pci.device &&
+            physical_device_states[i].function == pci.function)
+            return i;
+    }
+    return -1;
+}
+#endif
+
+static int compareBDFFn(const void *_a, const void *_b)
+{
+    int *a = (int *) _a;
+    int *b = (int *) _b;
+
+    if (a[0] != b[0])
+        return a[0] - b[0];
+
+    if (a[1] != b[1])
+        return a[1] - b[1];
+
+    if (a[2] != b[2])
+        return a[2] - b[2];
+
+    return a[3] - b[3];
+}
+
+static void sort_bdfs(int n, int *bdfs)
+{
+    qsort(bdfs, n, sizeof(int) * 4, compareBDFFn);
+}
+
+int MPL_ze_init_device_fds(int *num_fds, int *device_fds, int *bdfs)
+{
+    const char *device_directory = "/dev/dri/by-path";
+    const char *device_suffix = "-render";
+    struct dirent *ent = NULL;
+    int n = 0;
+
+#ifndef MPL_ENABLE_DRMFD
+    printf("Error> drmfd is not supported!");
+    goto fn_fail;
+#endif
+
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+    if (device_fds) {
+        get_bdfs(*num_fds, bdfs);
+        /* sort bdf */
+        sort_bdfs(*num_fds, bdfs);
+    }
+#endif
+
+    DIR *dir = opendir(device_directory);
+    if (dir == NULL) {
+        goto fn_fail;
+    }
+
+    /* Search for all devices in the device directory */
+    while ((ent = readdir(dir)) != NULL) {
+        char dev_name[128];
+
+        if (ent->d_name[0] == '.') {
+            continue;
+        }
+
+        /* They must contain the device suffix */
+        if (strstr(ent->d_name, device_suffix) == NULL) {
+            continue;
+        }
+
+        strcpy(dev_name, device_directory);
+        strcat(dev_name, "/");
+        strcat(dev_name, ent->d_name);
+
+        /* Open the device */
+        if (device_fds) {
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+            int domain, b, d, f;
+            queryBDF(dev_name, &domain, &b, &d, &f);
+            /* find in bdfs */
+            n = -1;
+            for (int i = 0; i < *num_fds; i++) {
+                if (domain == bdfs[i * 4] && b == bdfs[i * 4 + 1] && d == bdfs[i * 4 + 2] &&
+                    f == bdfs[i * 4 + 3])
+                    n = i;
+            }
+            assert(n != -1);
+#endif
+            device_fds[n] = open(dev_name, O_RDWR);
+        }
+
+        n++;
+    }
+
+    if (device_fds == NULL)
+        *num_fds = n;
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+void MPL_ze_set_fds(int num_fds, int *fds, int *bdfs)
+{
+    physical_device_count = num_fds;
+    physical_device_states =
+        (physical_device_state *) MPL_malloc(num_fds * sizeof(physical_device_state),
+                                             MPL_MEM_OTHER);
+    for (int i = 0; i < num_fds; i++) {
+        physical_device_states[i].fd = fds[i];
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+        physical_device_states[i].domain = bdfs[4 * i];
+        physical_device_states[i].bus = bdfs[4 * i + 1];
+        physical_device_states[i].device = bdfs[4 * i + 2];
+        physical_device_states[i].function = bdfs[4 * i + 3];
+#endif
+    }
+    MPL_free(fds);
+    MPL_free(bdfs);
+
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+    /* update sys_device_index for each logical device */
+    for (int d = 0; d < local_ze_device_count; d++) {
+        MPL_ze_device_entry_t *device_state = device_states + d;
+        device_state->sys_device_index = search_physical_devices(device_state->pci);
+        assert(device_state->sys_device_index != -1);
+    }
+#endif
 }
 
 void MPL_ze_ipc_remove_cache_handle(void *dptr)
@@ -2481,13 +2649,14 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
     ZE_ERR_CHECK(ret);
 
     h.nfds = nfds;
-    if (shared_device_fds != NULL) {
+    if (physical_device_states != NULL) {
         if (use_shared_fd) {
-            int shared_dev_id = MPL_gpu_get_root_device(local_dev_id);
+            int shared_dev_id = get_physical_device(local_dev_id);
             for (int i = 0; i < nfds; i++) {
                 /* convert dma_buf fd to GEM handle */
                 memcpy(&fds[i], &ze_ipc_handle[i], sizeof(int));
-                status = fd_to_handle(shared_device_fds[shared_dev_id], fds[i], &handles[i]);
+                status =
+                    fd_to_handle(physical_device_states[shared_dev_id].fd, fds[i], &handles[i]);
                 if (status) {
                     goto fn_fail;
                 }
@@ -2558,10 +2727,10 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shar
     h = mpl_ipc_handle->data;
     nfds = h.nfds;
 
-    if (shared_device_fds != NULL) {
+    if (physical_device_states != NULL) {
         /* convert GEM handle to fd */
         for (int i = 0; i < nfds; i++) {
-            status = handle_to_fd(shared_device_fds[h.dev_id], h.fds[i], &fds[i]);
+            status = handle_to_fd(physical_device_states[h.dev_id].fd, h.fds[i], &fds[i]);
             if (status) {
                 goto fn_fail;
             }

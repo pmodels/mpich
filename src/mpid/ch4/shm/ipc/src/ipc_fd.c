@@ -93,37 +93,42 @@ static int MPIDI_IPC_mpi_ze_fd_setup(void)
 
 #if defined(MPL_HAVE_ZE)
     int num_fds, i, r, mpl_err = MPL_SUCCESS;
-    int *fds;
+    int *fds, *bdfs;
 
     /* Get the number of ze devices */
-    mpl_err = MPL_ze_init_device_fds(&num_fds, NULL);
+    mpl_err = MPL_ze_init_device_fds(&num_fds, NULL, NULL);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                         "**mpl_ze_init_device_fds");
 
     fds = (int *) MPL_malloc(num_fds * sizeof(int), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!fds, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
+    bdfs = (int *) MPL_malloc(num_fds * 4 * sizeof(int), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!bdfs, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
     if (MPIR_Process.local_rank == 0) {
         /* Setup the device fds */
-        mpl_err = MPL_ze_init_device_fds(&num_fds, fds);
+        mpl_err = MPL_ze_init_device_fds(&num_fds, fds, bdfs);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**mpl_ze_init_device_fds");
 
         /* Send the fds to all other local processes */
         for (r = 1; r < MPIR_Process.local_size; r++) {
-            for (i = 0; i < num_fds; i++) {
+            MPIDI_IPC_mpi_fd_send(r, fds[0], bdfs, 4 * num_fds * sizeof(int));
+            for (i = 1; i < num_fds; i++) {
                 MPIDI_IPC_mpi_fd_send(r, fds[i], NULL, 0);
             }
         }
     } else {
         /* Receive the fds from local process 0 */
-        for (i = 0; i < num_fds; i++) {
+        MPIDI_IPC_mpi_fd_recv(0, fds, bdfs, 4 * num_fds * sizeof(int), 0);
+        for (i = 1; i < num_fds; i++) {
             MPIDI_IPC_mpi_fd_recv(0, fds + i, NULL, 0, 0);
         }
     }
 
     /* Save the fds in MPL */
-    MPL_ze_set_fds(num_fds, fds);
+    MPL_ze_set_fds(num_fds, fds, bdfs);
 
   fn_exit:
     return mpi_errno;
