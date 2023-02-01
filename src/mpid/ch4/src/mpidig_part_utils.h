@@ -368,7 +368,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_lb, co
                 mpi_errno = MPIDIG_part_issue_send(im, sreq);
             } else {
                 MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-                mpi_errno = MPIDIG_part_issue_data(im, sreq, MPIDIG_PART_REPLY);
+                mpi_errno = MPIDIG_part_issue_data(im, sreq, mode);
                 MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
             }
             MPIR_ERR_CHECK(mpi_errno);
