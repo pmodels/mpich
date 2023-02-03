@@ -347,7 +347,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(const int imsg, MPIR_Request
 
 
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_lb, const int msg_ub,
+MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_id,
                                                             MPIR_Request * sreq,
                                                             enum MPIDIG_part_issue_mode mode)
 {
@@ -358,21 +358,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_lb, co
     /*for each of the communication msgs in the range, try to see if they are ready */
     const bool do_tag = MPIDIG_PART_REQUEST(sreq, do_tag);
     MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(sreq, u.send.cc_msg);
-    for (int im = msg_lb; im < msg_ub; ++im) {
-        /* decrement the counter of the specific msg */
-        int incomplete;
-        MPIR_cc_decr(cc_msg + im, &incomplete);
-        if (!incomplete) {
-            if (do_tag) {
-                /* the lock in the VCI happens inside the send function */
-                mpi_errno = MPIDIG_part_issue_send(im, sreq);
-            } else {
-                MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-                mpi_errno = MPIDIG_part_issue_data(im, sreq, mode);
-                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-            }
-            MPIR_ERR_CHECK(mpi_errno);
+    /* decrement the counter of the specific msg */
+    int incomplete;
+    MPIR_cc_decr(cc_msg + msg_id, &incomplete);
+    if (!incomplete) {
+        if (do_tag) {
+            /* the lock in the VCI happens inside the send function */
+            mpi_errno = MPIDIG_part_issue_send(msg_id, sreq);
+        } else {
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+            mpi_errno = MPIDIG_part_issue_data(msg_id, sreq, mode);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
         }
+        MPIR_ERR_CHECK(mpi_errno);
     }
   fn_exit:
     MPIR_FUNC_EXIT;

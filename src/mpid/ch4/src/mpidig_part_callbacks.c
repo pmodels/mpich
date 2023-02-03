@@ -190,9 +190,9 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
     // FIXME this is NOT the best option as we reset it twice (once at the start and once here)
     MPIR_cc_set(&MPIDIG_PART_REQUEST(part_sreq, u.send.cc_send), msg_hdr->msg_part);
 
-    const bool is_active = MPIR_Part_request_is_active(part_sreq);
-    int vci_id = get_vci_wrapper(part_sreq);
+    const int vci_id = get_vci_wrapper(part_sreq);
     const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
+    const bool is_active = MPIR_Part_request_is_active(part_sreq);
     if (is_active) {
         /* if the request is active then the correct cc value was unknown when activating the
          * request and we have to set it we don't want to reset the value if the request is not
@@ -216,9 +216,11 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
          * no be able to send anything because the pready counter has not been decreased */
         if (!incomplete) {
             const int msg_lb = MPIDIG_part_idx_lb(i, n_part, msg_part);
+#ifndef NDEBUG
             const int msg_ub = MPIDIG_part_idx_ub(i, n_part, msg_part);
-            mpi_errno =
-                MPIDIG_part_issue_msg_if_ready(msg_lb, msg_ub, part_sreq, MPIDIG_PART_REPLY);
+            MPIR_Assert(msg_ub - msg_lb == 1);
+#endif
+            mpi_errno = MPIDIG_part_issue_msg_if_ready(msg_lb, part_sreq, MPIDIG_PART_REPLY);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

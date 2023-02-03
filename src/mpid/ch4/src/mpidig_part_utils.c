@@ -81,13 +81,10 @@ void MPIDIG_part_rreq_matched(MPIR_Request * rreq)
      * if the modulo is not null then we use the gcd approach */
     const int send_part = MPIDIG_PART_REQUEST(rreq, u.recv.msg_part);
     const int recv_part = rreq->u.part.partitions;
-    MPI_Aint ttl_count = recv_part * MPIDI_PART_REQUEST(rreq, count);
 
-    if (ttl_count % send_part) {
-        MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = MPL_gcd(send_part, recv_part);
-    } else {
-        MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = send_part;
-    }
+    /* we must guarantee that the one partition on both the send and recv side corresponds to only
+     * one actual msgs */
+    MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = MPL_gcd(send_part, recv_part);
 
     /* 0 partition is illegual so at least one message must happen */
     MPIR_Assert(MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) > 0);

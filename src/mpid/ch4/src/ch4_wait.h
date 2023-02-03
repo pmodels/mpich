@@ -63,6 +63,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request *req,
      * ones. This avoids deadlocks when waiting for CTS/RTS etc (typical in partitioned comm)*/
     int n_child_req = 0;
     MPIR_Request **child_req = NULL;
+    /* TODO: we might want to skip the requests already completed? when doing so we could also not
+     * include the main request's VCI */
     if (req->kind == MPIR_REQUEST_KIND__PART_SEND) {
         child_req = MPIDIG_PART_REQUEST(req, tag_req_ptr);
         n_child_req = MPIDIG_PART_REQUEST(req, u.send.msg_part);

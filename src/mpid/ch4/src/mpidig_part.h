@@ -121,21 +121,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int p_low, int p_high,
             MPIR_Assert(msg_part >= 0);
 
             const int msg_lb = MPIDIG_part_idx_lb(i, n_part, msg_part);
+#ifndef NDEBUG
             const int msg_ub = MPIDIG_part_idx_ub(i, n_part, msg_part);
-            mpi_errno =
-                MPIDIG_part_issue_msg_if_ready(msg_lb, msg_ub, part_sreq, MPIDIG_PART_REGULAR);
+            MPIR_Assert(msg_ub - msg_lb == 1);
+#endif
+            mpi_errno = MPIDIG_part_issue_msg_if_ready(msg_lb, part_sreq, MPIDIG_PART_REGULAR);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            //const bool do_tag = MPIDIG_PART_REQUEST(part_sreq, do_tag);
-            /* if it's not matched or not complete then we miss the CTS for AM or the first CTS
-             * for tag send.
-             * if we receive the CTS then we will proceed to the send there*/
-            //if (!do_tag || !MPIDIG_Part_rreq_status_has_first_cts(part_sreq)) {
+            /* if it's not matched or not complete then we miss the CTS for AM or the first CTS for
+             * tag send. if we receive the CTS then we will proceed to the send there*/
             MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
             mpi_errno = MPIDI_progress_test_vci(0);
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
             MPIR_ERR_CHECK(mpi_errno);
-            //}
         }
     }
 
@@ -156,8 +154,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
 
     const int n_part = part_sreq->u.part.partitions;
     MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_part);
-    for (int i = 0; i < length; i++) {
-        const int ipart = array_of_partitions[i];
+    for (int ip = 0; ip < length; ip++) {
+        const int ipart = array_of_partitions[ip];
         // mark the partition as ready
         int incomplete;
         MPIR_cc_decr(&cc_part[ipart], &incomplete);
@@ -168,21 +166,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
             MPIR_Assert(msg_part >= 0);
 
             const int msg_lb = MPIDIG_part_idx_lb(ipart, n_part, msg_part);
+#ifndef NDEBUG
             const int msg_ub = MPIDIG_part_idx_ub(ipart, n_part, msg_part);
-            mpi_errno =
-                MPIDIG_part_issue_msg_if_ready(msg_lb, msg_ub, part_sreq, MPIDIG_PART_REGULAR);
+            MPIR_Assert(msg_lb - msg_ub == 1);
+#endif
+            mpi_errno = MPIDIG_part_issue_msg_if_ready(msg_lb, part_sreq, MPIDIG_PART_REGULAR);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            //const bool do_tag = MPIDIG_PART_REQUEST(part_sreq, do_tag);
-            /* if it's not matched or not complete then we miss the CTS for AM or the first CTS
-             * for tag send.
-             * if we receive the CTS then we will proceed to the send there*/
-            //if (!do_tag || !MPIDIG_Part_rreq_status_has_first_cts(part_sreq)) {
+            /* if it's not matched or not complete then we miss the CTS for AM or the first CTS for
+             * tag send. if we receive the CTS then we will proceed to the send there*/
             MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
             mpi_errno = MPIDI_progress_test_vci(0);
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
             MPIR_ERR_CHECK(mpi_errno);
-            //}
         }
     }
 
@@ -202,65 +198,56 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
     MPIR_Assert(MPIR_Part_request_is_active(request));
     MPIR_Assert(request->kind == MPIR_REQUEST_KIND__PART_RECV);
 
-    /* to be ready to look for answers we must have matched AND started the first CTS */
-    if (MPIDIG_Part_rreq_status_has_first_cts(request)) {
-        // get the span of send request to check from start_part to end_part (included!)
-        const int msg_part = MPIDIG_PART_REQUEST(request, u.recv.msg_part);
-        const int n_part = request->u.part.partitions;
-        const int start_msg = MPIDIG_part_idx_lb(partition, n_part, msg_part);
-        const int end_msg = MPIDIG_part_idx_ub(partition, n_part, msg_part);
-        MPIR_Assert(start_msg >= 0);
-        MPIR_Assert(end_msg >= 0);
-        MPIR_Assert(start_msg <= msg_part);
-        MPIR_Assert(end_msg <= msg_part);
-
-        /* it's safe to check do_tag here because we have matched */
-        const bool do_tag = MPIDIG_PART_REQUEST(request, do_tag);
-
-        /* get the number of partitions that are still busy. if the sum is 0 then they have all finished */
-        int is_busy = 0;
-        if (do_tag) {
-            MPIR_Request **child_req = MPIDIG_PART_REQUEST(request, tag_req_ptr);
-            for (int ip = start_msg; ip < end_msg; ++ip) {
-                is_busy += !(MPIR_Request_is_complete(child_req[ip]));
-            }
-        } else {
-            MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(request, u.recv.cc_part);
-            for (int ip = start_msg; ip < end_msg; ++ip) {
-                is_busy += MPIR_cc_get(cc_part[ip]);
-            }
-        }
-        /* if none of the parts are busy then we can set to true and return */
-        if (!is_busy) {
-            *flag = TRUE;
-            goto fn_exit;
-        } else {
-            *flag = FALSE;
-            /* we want to force progress on the VCI relative to the child_request */
-            if (do_tag) {
-                MPIR_Request **child_req = MPIDIG_PART_REQUEST(request, tag_req_ptr);
-                for (int ip = start_msg; ip < end_msg; ++ip) {
-                    int vci_id = MPIDI_Request_get_vci(child_req[ip]);
-                    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_id).lock);
-                    mpi_errno = MPIDI_progress_test_vci(vci_id);
-                    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_id).lock);
-                    MPIR_ERR_CHECK(mpi_errno);
-                }
-            } else {
-                // TODO force progress on the corresponding VCI
-            }
-            goto fn_exit;
-        }
+    int vci = 0;
+    /* the request has no cts, check VCI 0 and exit */
+    if (unlikely(!MPIDIG_Part_rreq_status_has_first_cts(request))) {
+        goto fn_not_arrived;
     }
 
+    /* get the msg to check */
+    const int msg_part = MPIDIG_PART_REQUEST(request, u.recv.msg_part);
+    const int n_part = request->u.part.partitions;
+    const int msg_id = MPIDIG_part_idx_lb(partition, n_part, msg_part);
+#ifndef NDEBUG
+    const int end_msg = MPIDIG_part_idx_ub(partition, n_part, msg_part);
+    MPIR_Assert(msg_id >= 0);
+    MPIR_Assert(end_msg >= 0);
+    MPIR_Assert(msg_id <= msg_part);
+    MPIR_Assert(end_msg - msg_id == 1);
+#endif
+
+    /* it's safe to check do_tag here because we have matched */
+    const bool do_tag = MPIDIG_PART_REQUEST(request, do_tag);
+    if (likely(do_tag)) {
+        MPIR_Request *child_req = MPIDIG_PART_REQUEST(request, tag_req_ptr)[msg_id];
+        const bool arrived = MPIR_Request_is_complete(child_req);
+        if (arrived) {
+            goto fn_arrived;
+        } else {
+            vci = MPIDI_Request_get_vci(child_req);
+            goto fn_not_arrived;
+        }
+    } else {
+        MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(request, u.recv.cc_part);
+        const bool arrived = (0 == MPIR_cc_get(cc_part[msg_id]));
+        if (arrived) {
+            goto fn_arrived;
+        } else {
+            goto fn_not_arrived;
+        }
+    }
+  fn_arrived:
+    *flag = TRUE;
+    goto fn_exit;
+  fn_not_arrived:
     *flag = FALSE;
     /* Trigger progress to process AM packages in case wait with parrived in a loop.
      * also if we don't have the CTS yet we have to receive it -> always on VCI = 0*/
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    mpi_errno = MPIDI_progress_test_vci(0);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    mpi_errno = MPIDI_progress_test_vci(vci);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_ERR_CHECK(mpi_errno);
-
+    goto fn_exit;
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
