@@ -16,6 +16,7 @@ def main():
 
     binding_dir = G.get_srcdir_path("src/binding")
     c_dir = "src/binding/c"
+    abi_dir = "src/binding/abi"
     func_list = load_C_func_list(binding_dir)
 
     # -- Loading extra api prototypes (needed until other `buildiface` scripts are updated)
@@ -80,6 +81,34 @@ def main():
             G.doc3_src_txt.append(f)
 
     dump_out(c_dir + "/c_binding.c")
+
+    # ---- dump c_binding_abi.c
+    G.out = []
+    G.out.append("#include \"mpiimpl.h\"")
+    G.out.append("#include \"mpi_abi_util.h\"")
+    G.out.append("")
+
+    for func in func_list:
+        if re.match(r'MPIX_', func['name']):
+            if re.match(r'MPIX_(Grequest_|Type_iov)', func['name']):
+                # needed by ROMIO
+                pass
+            else:
+                continue
+        func['_is_abi'] = True
+        G.err_codes = {}
+        # dumps the code to G.out array
+        # Note: set func['_has_poly'] = False to skip embiggenning
+        func['_has_poly'] = function_has_POLY_parameters(func)
+        dump_mpi_c(func, False)
+        if func['_has_poly']:
+            dump_mpi_c(func, True)
+        del func['_is_abi']
+
+    abi_file_path = abi_dir + "/c_binding_abi.c"
+    G.check_write_path(abi_file_path)
+    dump_c_file(abi_file_path, G.out)
+    G.out = []
 
     # -- Dump other files --
     G.check_write_path("src/include")
