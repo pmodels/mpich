@@ -42,7 +42,10 @@ def main():
 
     # -- Generating code --
     G.out = []
+    G.out.append("#include \"mpiimpl.h\"")
+    G.out.append("")
     G.doc3_src_txt = []
+
     # internal function to dump G.out into filepath
     def dump_out(file_path):
         G.check_write_path(file_path)
@@ -50,6 +53,8 @@ def main():
         # add to mpi_sources for dump_Makefile_mk()
         G.mpi_sources.append(file_path)
         G.out = []
+        G.out.append("#include \"mpiimpl.h\"")
+        G.out.append("")
 
     # ----
     for func in func_list:
