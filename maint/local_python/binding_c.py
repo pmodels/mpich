@@ -53,7 +53,6 @@ def dump_mpi_c(func, is_large=False):
     # -- "dump" accumulates output lines in G.out
     if not is_large:
         # only include once (skipping "BIG")
-        G.out.append("#include \"mpiimpl.h\"")
         if 'include' in func:
             for a in func['include'].replace(',', ' ').split():
                 G.out.append("#include \"%s\"" % a)
