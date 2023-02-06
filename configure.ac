@@ -807,9 +807,7 @@ export FCFLAGS
 export FFLAGS
 export LDFLAGS
 export LIBS
-export MPILIBNAME
-export PMPILIBNAME
-export OPALIBNAME
+
 # ----------------------------------------------------------------------------
 # with-device
 #
