@@ -462,6 +462,10 @@ AC_ARG_ENABLE(debuginfo,
 	AS_HELP_STRING([--enable-debuginfo], [Enable support for debuggers]),,
 	enable_debuginfo=no)
 
+AC_ARG_ENABLE(mpi-abi,
+        AS_HELP_STRING([--enable-mpi-abi], [Enable building libmpi_abi.so]),,
+        enable_mpi_abi=no)
+AM_CONDITIONAL([BUILD_ABI_LIB], [test "$enable_mpi_abi" = "yes"])
 
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
@@ -840,6 +844,8 @@ m4_map([PAC_SUBCFG_DO_PREREQ], [PAC_SUBCFG_MODULE_LIST])
 # Set default library names if names haven't already been provided
 AC_ARG_VAR([MPILIBNAME],[can be used to override the name of the MPI library (default: "mpi")])
 AC_ARG_VAR([PMPILIBNAME],[can be used to override the name of the MPI profiling library (default: "p$MPILIBNAME")])
+AC_ARG_VAR([MPIABILIBNAME],[can be used to override the name of the MPI library (default: "mpi_abi")])
+AC_ARG_VAR([PMPIABILIBNAME],[can be used to override the name of the MPI profiling library (default: "p$MPIABILIBNAME")])
 AC_ARG_VAR([MPICXXLIBNAME],[can be used to override the name of the MPI C++ library (default: "${MPILIBNAME}cxx")])
 AC_ARG_VAR([MPIFCLIBNAME],[can be used to override the name of the MPI fortran library (default: "${MPILIBNAME}fort")])
 MPILIBNAME=${MPILIBNAME:-"mpi"}
@@ -848,6 +854,8 @@ if test -n "$PMPILIBNAME" ; then
    PMPILIBNAME_set=yes
 fi
 PMPILIBNAME=${PMPILIBNAME:-"p$MPILIBNAME"}
+MPIABILIBNAME=${MPIABILIBNAME:-"mpi_abi"}
+PMPIABILIBNAME=${PMPIABILIBNAME:-"p$MPIABILIBNAME"}
 # Note that the name for this library may be updated after we check for
 # enable_shmem
 # Fortran names are set later.
@@ -3711,11 +3719,15 @@ fi
 # Setup other replaceable values
 AC_SUBST(MPILIBNAME)
 AC_SUBST(PMPILIBNAME)
+AC_SUBST(MPIABILIBNAME)
+AC_SUBST(PMPIABILIBNAME)
 
 if test "$NEEDSPLIB" = "yes" ; then
    LPMPILIBNAME="-l${PMPILIBNAME}"
+   LPMPIABILIBNAME="-l${PMPILABIIBNAME}"
 fi
 AC_SUBST(LPMPILIBNAME)
+AC_SUBST(LPMPIABILIBNAME)
 
 # ----------------------------------------------------------------------------
 
@@ -3958,12 +3970,14 @@ export MPI_NO_RMA
 
 # Attach program prefix and suffix to executable names for Makefile
 AC_SUBST(MPICC_NAME)
+AC_SUBST(MPICC_ABI_NAME)
 AC_SUBST(MPICXX_NAME)
 AC_SUBST(MPICPP_NAME)
 AC_SUBST(MPIFORT_NAME)
 AC_SUBST(MPIF90_NAME)
 AC_SUBST(MPIF77_NAME)
 PAC_GET_EXENAME("mpicc", MPICC_NAME)
+PAC_GET_EXENAME("mpicc_abi", MPICC_ABI_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
 PAC_GET_EXENAME("mpic++", MPICPP_NAME)
 PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
@@ -4236,6 +4250,8 @@ AC_CONFIG_FILES([Makefile \
           src/env/mpixxx_opts.conf \
           src/env/mpicc.sh \
 	  src/env/mpicc.bash \
+          src/env/mpicc_abi.sh \
+	  src/env/mpicc_abi.bash \
           src/env/mpicxx.sh \
 	  src/env/mpicxx.bash \
 	  src/env/mpifort.sh \
