@@ -3,6 +3,10 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#ifdef MPI_ABI
+#include "mpi_abi.h"
+#else
+
 /* @configure_input@ */
 #ifndef MPI_INCLUDED
 #define MPI_INCLUDED
@@ -982,4 +986,5 @@ typedef struct MPIX_Iov {
 #endif
 #endif
 
-#endif
+#endif  /* MPI_INCLUDED */
+#endif  /* MPI_ABI */
