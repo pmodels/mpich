@@ -3,6 +3,10 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#ifdef MPI_ABI
+#include "mpi_abi.h"
+#else
+
 /* @configure_input@ */
 #ifndef MPI_INCLUDED
 #define MPI_INCLUDED
@@ -1032,4 +1036,5 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 #endif 
 #endif
 
-#endif
+#endif  /* MPI_INCLUDED */
+#endif  /* MPI_ABI */
