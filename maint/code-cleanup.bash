@@ -126,6 +126,7 @@ ignore_list="$ignore_list|test/mpi/f77/spawn/type1aint.h.in"
 ignore_list="$ignore_list|src/include/mpi.h.in"
 ignore_list="$ignore_list|src/mpi/romio/include/mpio.h.in"
 ignore_list="$ignore_list|src/mpi/romio/adio/include/adioi_errmsg.h"
+ignore_list="$ignore_list|src/binding/abi/mpi_abi.h"
 
 filelist=""
 
