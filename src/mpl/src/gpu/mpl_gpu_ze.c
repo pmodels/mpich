@@ -14,6 +14,16 @@
 
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
+/* 1: loader  0: driver */
+#define USELOADERTRACING    1
+
+#if USELOADERTRACING == 1
+#include "level_zero/layers/zel_tracing_api.h"
+#include "level_zero/layers/zel_tracing_register_cb.h"
+#else
+#include <level_zero/zet_api.h>
+#endif
+
 #ifdef MPL_HAVE_ZE
 #include <dirent.h>
 #if defined(MPL_HAVE_DRM_I915_DRM_H)
@@ -211,6 +221,14 @@ static pFnzexMemGetIpcHandles zexMemGetIpcHandles = NULL;
 static pFnzexMemOpenIpcHandles zexMemOpenIpcHandles = NULL;
 /* *INDENT-ON* */
 
+/* tracing */
+#if USELOADERTRACING == 1
+static zel_tracer_handle_t freeTracer;
+#else
+static zet_tracer_exp_handle_t freeTracer;
+#endif
+static int callbacksEnabled = 0;
+
 /* Backend-specific functions */
 /* *INDENT-OFF* */
 typedef ze_result_t (*pFnzexDriverImportExternalPointer)(ze_driver_handle_t, void *, size_t);
@@ -235,6 +253,8 @@ static void MPL_event_pool_destroy(void);
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
 static int search_physical_devices(ze_pci_address_ext_t pci);
 #endif
+static void onEnterMemFree(ze_mem_free_params_t * tracerParams, ze_result_t result,
+                           void *traceUserData, void **tracerInstanceUserData);
 
 /* For zeMemFree callbacks */
 static gpu_free_hook_s *free_hook_chain = NULL;
@@ -533,7 +553,6 @@ int MPL_gpu_init(int debug_summary)
     }
 
     MPL_gpu_info.debug_summary = debug_summary;
-    MPL_gpu_info.enable_ipc = true;
 
     if (MPL_gpu_info.debug_summary) {
         printf("==== GPU Init (ZE) ====\n");
@@ -543,7 +562,6 @@ int MPL_gpu_init(int debug_summary)
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
 
-    MPL_gpu_info.debug_summary = debug_summary;
     MPL_gpu_info.enable_ipc = true;
     MPL_gpu_info.ipc_handle_type = MPL_GPU_IPC_HANDLE_SHAREABLE_FD;
 
@@ -648,7 +666,12 @@ int MPL_gpu_init(int debug_summary)
             ipc_max_entries[i] = max_cache_entries;
         }
 
-        MPL_gpu_free_hook_register(MPL_ze_ipc_remove_cache_handle);
+        if (!callbacksEnabled) {
+            MPL_gpu_free_hook_register(MPL_ze_ipc_remove_cache_handle);
+            if (MPL_gpu_info.debug_summary) {
+                printf("GPU mem free hook registered\n");
+            }
+        }
     } else {
         MPL_gpu_info.specialized_cache = false;
     }
@@ -661,9 +684,11 @@ int MPL_gpu_init(int debug_summary)
 
     mypid = getpid();
 
-    MPL_initlock_lock(&free_hook_mutex);
-    gpu_mem_hook_init();
-    MPL_initlock_unlock(&free_hook_mutex);
+    if (!callbacksEnabled) {
+        MPL_initlock_lock(&free_hook_mutex);
+        gpu_mem_hook_init();
+        MPL_initlock_unlock(&free_hook_mutex);
+    }
     gpu_initialized = 1;
 
     if (MPL_gpu_info.debug_summary) {
@@ -1217,6 +1242,48 @@ static int gpu_ze_init_driver(void)
                                             (void **) &zexDriverGetHostPointerBaseAddress);
     ZE_ERR_CHECK(ret);
 
+    ret =
+        zeDriverGetExtensionFunctionAddress(ze_driver_handle, "zexMemGetIpcHandles",
+                                            (void **) &zexMemGetIpcHandles);
+    if (ZE_RESULT_SUCCESS != ret)
+        zexMemGetIpcHandles = NULL;
+
+    ret =
+        zeDriverGetExtensionFunctionAddress(ze_driver_handle, "zexMemOpenIpcHandles",
+                                            (void **) &zexMemOpenIpcHandles);
+    if (ZE_RESULT_SUCCESS != ret)
+        zexMemOpenIpcHandles = NULL;
+
+    /* tracing */
+    if (likely(MPL_gpu_info.specialized_cache)) {
+#if USELOADERTRACING == 1
+        char *s = getenv("ZE_ENABLE_TRACING_LAYER");
+        if (s && strncmp(s, "0", 1) != 0) {
+            zel_tracer_desc_t tracerDesc = { ZEL_STRUCTURE_TYPE_TRACER_DESC, NULL, NULL };
+            ret = zelTracerCreate(&tracerDesc, &freeTracer);
+            if (ret == ZE_RESULT_SUCCESS) {
+                callbacksEnabled = 1;
+                zelTracerMemFreeRegisterCallback(freeTracer, ZEL_REGISTER_PROLOGUE, onEnterMemFree);
+                ret = zelTracerSetEnabled(freeTracer, true);
+                if (MPL_gpu_info.debug_summary)
+                    printf("ZE loader tracing is enabled.\n");
+            }
+        }
+#else
+        zet_tracer_exp_desc_t tracerDesc = { ZET_STRUCTURE_TYPE_TRACER_EXP_DESC, NULL, NULL };
+        ret = zetTracerExpCreate(ze_context, &tracerDesc, &freeTracer);
+        if (ret == ZE_RESULT_SUCCESS) {
+            callbacksEnabled = 1;
+            ze_callbacks_t prologCbs = { };
+            prologCbs.Mem.pfnFreeCb = onEnterMemFree;
+            zetTracerExpSetPrologues(freeTracer, &prologCbs);
+            zetTracerExpSetEnabled(freeTracer, true);
+            if (MPL_gpu_info.debug_summary)
+                printf("ZE driver tracing is enabled. \n");
+        }
+#endif
+    }
+
   fn_exit:
     MPL_free(all_drivers);
     return ret_error;
@@ -1386,6 +1453,17 @@ int MPL_gpu_finalize(void)
         MPL_free(ipc_lru_mapped_order_head);
         MPL_free(ipc_lru_mapped_order_tail);
         MPL_free(ipc_curr_mapped_entries);
+
+        /* tracing */
+        if (callbacksEnabled) {
+#if USELOADERTRACING == 1
+            zelTracerSetEnabled(freeTracer, false);
+            zelTracerDestroy(freeTracer);
+#else
+            zetTracerExpSetEnabled(freeTracer, false);
+            zetTracerExpDestroy(freeTracer);
+#endif
+        }
     }
 
     MPL_free(ipc_max_entries);
@@ -2752,6 +2830,17 @@ ze_result_t ZE_APICALL zeMemFree(ze_context_handle_t hContext, void *dptr)
 
     MPL_initlock_unlock(&free_hook_mutex);
     return (result);
+}
+
+/* tracing */
+static void onEnterMemFree(ze_mem_free_params_t * tracerParams, ze_result_t result,
+                           void *traceUserData, void **tracerInstanceUserData)
+{
+    if (MPL_gpu_info.debug_summary == 2) {
+        printf("GPU memory being freed: %lx\n", (unsigned long int) *tracerParams->pptr);
+    }
+    MPL_ze_ipc_remove_cache_handle(*tracerParams->pptr);
+    *tracerInstanceUserData = NULL;
 }
 
 /* ZE-Specific Functions */
