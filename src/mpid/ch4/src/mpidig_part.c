@@ -115,21 +115,18 @@ int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count, MPI_D
     MPIR_cc_inc(&comm->part_context_cc);
     if (do_tag) {
         /* Initialize tag-matching components for send */
-        MPIDIG_PART_REQUEST(*request, do_tag) = true;
-        MPIDIG_PART_REQUEST(*request, peer_req_ptr) = NULL;
+        MPIDIG_PART_REQUEST(*request, mode) = 1;
         const int send_part = partitions;
-        MPIDIG_PART_REQUEST(*request, tag_req_ptr) =
+        MPIDIG_PART_SREQUEST(*request, tag_req_ptr) =
             MPL_malloc(sizeof(MPIR_Request *) * send_part, MPL_MEM_OTHER);
         for (int i = 0; i < send_part; ++i) {
-            MPIDIG_PART_REQUEST(*request, tag_req_ptr[i]) = NULL;
+            MPIDIG_PART_SREQUEST(*request, tag_req_ptr[i]) = NULL;
         }
         /* initialize counters usually done at the first CTS in AM */
         //MPIDIG_PART_REQUEST(*request, u.send.msg_part) = partitions;
     } else {
         /* Initialize am components for send */
-        MPIDIG_PART_REQUEST(*request, do_tag) = false;
-        MPIDIG_PART_REQUEST(*request, peer_req_ptr) = NULL;
-        MPIDIG_PART_REQUEST(*request, tag_req_ptr) = NULL;
+        MPIDIG_PART_REQUEST(*request, mode) = 0;
     }
 
     /* we need to know do_tag to set the cc_part values */
@@ -181,10 +178,6 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
     /*initialize the MPIDIG part of the request */
     MPIDIG_part_rreq_create(request);
 
-    /* set the tag and AM components to NULL */
-    MPIDIG_PART_REQUEST(*request, peer_req_ptr) = NULL;
-    MPIDIG_PART_REQUEST(*request, tag_req_ptr) = NULL;
-
     /*--------------------------------------------------------------------------*/
     /* Try matching a request or post a new one */
     MPIR_Request *unexp_req = NULL;
@@ -197,13 +190,9 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
          * copy sender info from unexp_req to local part_rreq as stored in MPIDIG_part_rreq_update_sinfo */
         MPIDIG_PART_REQUEST(*request, u.recv.send_dsize) =
             MPIDIG_PART_REQUEST(unexp_req, u.recv.send_dsize);
+        MPIDIG_PART_REQUEST(*request, msg_part) = MPIDIG_PART_REQUEST(unexp_req, msg_part);
+        MPIDIG_PART_REQUEST(*request, mode) = MPIDIG_PART_REQUEST(unexp_req, mode);
         MPIDIG_PART_REQUEST(*request, peer_req_ptr) = MPIDIG_PART_REQUEST(unexp_req, peer_req_ptr);
-        MPIDIG_PART_REQUEST(*request, u.recv.msg_part) =
-            MPIDIG_PART_REQUEST(unexp_req, u.recv.msg_part);
-        MPIDIG_PART_REQUEST(*request, do_tag) = MPIDIG_PART_REQUEST(unexp_req, do_tag);
-        MPIDIG_PART_REQUEST(*request, u.recv.msg_part) =
-            MPIDIG_PART_REQUEST(unexp_req, u.recv.msg_part);
-
         MPIDI_CH4_REQUEST_FREE(unexp_req);
 
         /* we have matched, fill the missing part of the requests: fill the status and allocate cc_part */

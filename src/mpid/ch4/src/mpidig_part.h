@@ -33,23 +33,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
         /* cc_ptr > 0 indicate data transfer has started and will be completed when cc_ptr = 0
          * the counter depends on the total number of messages, which is know upon reception of the CTS
          * if we have not received the first CTS yet (aka the value of msg_part == -1) we set a temp value of 1*/
-        const int msg_part = MPIDIG_PART_REQUEST(request, u.send.msg_part);
+        const int msg_part = MPIDIG_PART_REQUEST(request, msg_part);
         MPIR_cc_set(request->cc_ptr, MPL_MAX(1, msg_part));
 
         /* we have to reset information for the current iteration.
          * The reset is done in the CTS reception callback as well but no msgs has been sent
          * so it's safe to overwrite it*/
-        if (MPIDIG_PART_REQUEST(request, do_tag)) {
+        if (MPIDIG_PART_DO_TAG(request)) {
             MPIR_cc_set(&MPIDIG_PART_REQUEST(request, u.send.cc_send), msg_part);
         }
     } else {
         /* cc_ptr > 0 indicate data transfer starts and will be completed when cc_ptr = 0
          * the counter is set to the max of 1 (to avoid early completion) and the number of msg parts
          * that will actually be sent if we have already matched (-1 if not)*/
-        MPIR_cc_set(request->cc_ptr, MPL_MAX(1, MPIDIG_PART_REQUEST(request, u.recv.msg_part)));
+        MPIR_cc_set(request->cc_ptr, MPL_MAX(1, MPIDIG_PART_REQUEST(request, msg_part)));
 
-        /* if the peer_req_ptr is filled the request has been matched
-         * we can use the pointer to check matching status as the pointer is always written inside a lock section */
+        /* if the request has been matched we can use the pointer to check matching status as the
+         * pointer is always written inside a lock section */
         const bool is_matched = MPIDIG_Part_rreq_status_has_matched(request);
         if (is_matched) {
             /* we can only allocate now as it's valid to call Precv_init and free immediately (no
@@ -58,11 +58,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
             if (!first_cts) {
                 MPIDIG_Part_rreq_allocate(request);
             }
+            MPIR_Assert(MPIDIG_PART_REQUEST(request, msg_part) >= 0);
 
-            MPIR_Assert(MPIDIG_PART_REQUEST(request, u.recv.msg_part) >= 0);
-            MPIDIG_part_rreq_reset_cc_part(request);
-
-            const bool do_tag = MPIDIG_PART_REQUEST(request, do_tag);
+            const bool do_tag = MPIDIG_PART_DO_TAG(request);
             if (do_tag) {
                 /* in tag matching we issue the recv requests we need to remove the lock as the lock
                  * is re-acquired in the recv request creation*/
@@ -79,6 +77,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
                     MPIDIG_Part_rreq_status_first_cts(request);
                 }
             } else {
+                MPIDIG_part_rreq_reset_cc_part(request);
                 mpi_errno = MPIDIG_part_issue_cts(request);
                 MPIR_ERR_CHECK(mpi_errno);
                 if (!first_cts) {
@@ -117,7 +116,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int p_low, int p_high,
 
         /* send the partition if matched and is complete, try to send the msg */
         if (!incomplete) {
-            const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
+            const int msg_part = MPIDIG_PART_REQUEST(part_sreq, msg_part);
             MPIR_Assert(msg_part >= 0);
 
             const int msg_lb = MPIDIG_part_idx_lb(i, n_part, msg_part);
@@ -162,7 +161,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
 
         /* send the partition if matched and is complete, try to send the msg */
         if (!incomplete) {
-            const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
+            const int msg_part = MPIDIG_PART_REQUEST(part_sreq, msg_part);
             MPIR_Assert(msg_part >= 0);
 
             const int msg_lb = MPIDIG_part_idx_lb(ipart, n_part, msg_part);
@@ -205,7 +204,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
     }
 
     /* get the msg to check */
-    const int msg_part = MPIDIG_PART_REQUEST(request, u.recv.msg_part);
+    const int msg_part = MPIDIG_PART_REQUEST(request, msg_part);
     const int n_part = request->u.part.partitions;
     const int msg_id = MPIDIG_part_idx_lb(partition, n_part, msg_part);
 #ifndef NDEBUG
@@ -217,9 +216,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
 #endif
 
     /* it's safe to check do_tag here because we have matched */
-    const bool do_tag = MPIDIG_PART_REQUEST(request, do_tag);
+    const bool do_tag = MPIDIG_PART_DO_TAG(request);
     if (likely(do_tag)) {
-        MPIR_Request *child_req = MPIDIG_PART_REQUEST(request, tag_req_ptr)[msg_id];
+        MPIR_Request *child_req = MPIDIG_PART_RREQUEST(request, tag_req_ptr[msg_id]);
         const bool arrived = MPIR_Request_is_complete(child_req);
         if (arrived) {
             goto fn_arrived;
@@ -228,7 +227,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
             goto fn_not_arrived;
         }
     } else {
-        MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(request, u.recv.cc_part);
+        MPIR_cc_t *cc_part = MPIDIG_PART_RREQUEST(request, cc_part);
         const bool arrived = (0 == MPIR_cc_get(cc_part[msg_id]));
         if (arrived) {
             goto fn_arrived;

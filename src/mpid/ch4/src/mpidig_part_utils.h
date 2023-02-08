@@ -129,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
     MPIR_FUNC_ENTER;
 
     MPIDIG_part_cts_msg_t am_hdr;
-    am_hdr.msg_part = MPIDIG_PART_REQUEST(rreq_ptr, u.recv.msg_part);
+    am_hdr.msg_part = MPIDIG_PART_REQUEST(rreq_ptr, msg_part);
     am_hdr.sreq_ptr = MPIDIG_PART_REQUEST(rreq_ptr, peer_req_ptr);
     am_hdr.rreq_ptr = rreq_ptr;
 
@@ -146,13 +146,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_recv(MPIR_Request * rreq)
 {
     MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
-    MPIR_Assert(MPIDIG_PART_REQUEST(rreq, do_tag));
+    MPIR_Assert(MPIDIG_PART_DO_TAG(rreq));
 
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     /* get the count per the msg partition and the shift in the buffer from the datatype */
-    const int msg_part = MPIDIG_PART_REQUEST(rreq, u.recv.msg_part);
+    const int msg_part = MPIDIG_PART_REQUEST(rreq, msg_part);
     MPI_Aint count = MPIDI_PART_REQUEST(rreq, count) * rreq->u.part.partitions;
     MPIR_Assert(count % msg_part == 0);
     count /= msg_part;
@@ -169,7 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_recv(MPIR_Request * rreq)
     MPIR_Comm *comm = rreq->comm;
     MPIR_Assert(MPIR_cc_get(*cc_ptr) == msg_part);
 
-    MPIR_Request **child_req = MPIDIG_PART_REQUEST(rreq, tag_req_ptr);
+    MPIR_Request **child_req = MPIDIG_PART_RREQUEST(rreq, tag_req_ptr);
     for (int im = 0; im < msg_part; ++im) {
         int source_tag = MPIDIG_Part_get_tag(im);
         void *buf_recv = (char *) MPIDI_PART_REQUEST(rreq, buffer) + im * part_offset;
@@ -193,7 +193,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_recv(MPIR_Request * rreq)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request * sreq)
 {
     MPIR_Assert(sreq->kind == MPIR_REQUEST_KIND__PART_SEND);
-    MPIR_Assert(MPIDIG_PART_REQUEST(sreq, do_tag));
+    MPIR_Assert(MPIDIG_PART_DO_TAG(sreq));
 
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -209,7 +209,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
             MPIR_cc_set(&cc_part[ip], MPIDIG_PART_STATUS_SEND_TAG_LATER_INIT);
         }
         /* reset the counter per msg to be ready for the next iteration */
-        const int msg_part = MPIDIG_PART_REQUEST(sreq, u.send.msg_part);
+        const int msg_part = MPIDIG_PART_REQUEST(sreq, msg_part);
         MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(sreq, u.send.cc_msg);
         for (int i = 0; i < msg_part; ++i) {
             const int ip_lb = MPIDIG_part_idx_lb(i, msg_part, n_part);
@@ -219,7 +219,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
     }
 
     /* get the count per the msg partition and the shift in the buffer from the datatype */
-    const int msg_part = MPIDIG_PART_REQUEST(sreq, u.send.msg_part);
+    const int msg_part = MPIDIG_PART_REQUEST(sreq, msg_part);
     MPI_Aint count = MPIDI_PART_REQUEST(sreq, count) * sreq->u.part.partitions;
     MPIR_Assert(count % msg_part == 0);
     count /= msg_part;
@@ -236,7 +236,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
 
     int dest_tag = MPIDIG_Part_get_tag(imsg);
     void *buf_send = (char *) MPIDI_PART_REQUEST(sreq, buffer) + imsg * part_offset;
-    MPIR_Request **child_req = MPIDIG_PART_REQUEST(sreq, tag_req_ptr);
+    MPIR_Request **child_req = MPIDIG_PART_SREQUEST(sreq, tag_req_ptr);
 
     /* free the previous request as that one is not needed anymore */
     if (child_req[imsg]) {
@@ -264,7 +264,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(const int imsg, MPIR_Request
                                                     enum MPIDIG_part_issue_mode mode)
 {
     int mpi_errno = MPI_SUCCESS;
-
+    MPIR_Assert(MPIDIG_PART_DO_AM(part_sreq));
     MPIR_FUNC_ENTER;
 
     // TG: why is the user-request created with MPIDI_CH4_REQUEST_CREATE and this one a normal request on the VCI (target + source)
@@ -279,7 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(const int imsg, MPIR_Request
     /* we already know which request is assigned at the receiver
      * so there is no need to match anything here
      */
-    const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
+    const int msg_part = MPIDIG_PART_REQUEST(part_sreq, msg_part);
     MPIR_Assert(msg_part >= 0);
 
     MPIDIG_part_send_data_msg_t am_hdr;
@@ -356,7 +356,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_id,
     MPIR_Assert(sreq->kind == MPIR_REQUEST_KIND__PART_SEND);
 
     /*for each of the communication msgs in the range, try to see if they are ready */
-    const bool do_tag = MPIDIG_PART_REQUEST(sreq, do_tag);
+    const bool do_tag = MPIDIG_PART_DO_TAG(sreq);
     MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(sreq, u.send.cc_msg);
     /* decrement the counter of the specific msg */
     int incomplete;

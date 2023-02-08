@@ -16,12 +16,11 @@ void MPIDIG_part_sreq_create(MPIR_Request ** req)
 
     /*allocate the cc_part array to the send_part size */
     const int n_part = sreq->u.part.partitions;
-    MPIDIG_PART_REQUEST(sreq, u.send.cc_part) =
-        MPL_malloc(sizeof(MPIR_cc_t) * n_part, MPL_MEM_OTHER);
-    MPIDIG_PART_REQUEST(sreq, u.send.msg_part) = -1;
-    /* set the counter of msgs actually sent to 0 */
-    MPIR_cc_set(&MPIDIG_PART_REQUEST(sreq, u.send.cc_send), 0);
-    MPIDIG_PART_REQUEST(sreq, u.send.cc_msg) = NULL;
+    MPIDIG_PART_REQUEST(sreq, msg_part) = -1;
+    MPIDIG_PART_REQUEST(sreq, peer_req_ptr) = NULL;
+    MPIR_cc_set(&MPIDIG_PART_SREQUEST(sreq, cc_send), 0);
+    MPIDIG_PART_SREQUEST(sreq, cc_msg) = NULL;
+    MPIDIG_PART_SREQUEST(sreq, cc_part) = MPL_malloc(sizeof(MPIR_cc_t) * n_part, MPL_MEM_OTHER);
 }
 
 /* creates a MPIDIG RECV request */
@@ -30,33 +29,30 @@ void MPIDIG_part_rreq_create(MPIR_Request ** req)
     MPIR_Request *rreq = req[0];
     MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
 
-    MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = -1;
-    MPIDIG_PART_REQUEST(rreq, u.recv.cc_part) = NULL;
+    MPIDIG_PART_REQUEST(rreq, msg_part) = -1;
+    MPIDIG_PART_REQUEST(rreq, peer_req_ptr) = NULL;
     MPIR_cc_set(&MPIDIG_PART_REQUEST(rreq, u.recv.status_matched), 0);
 }
 
 void MPIDIG_Part_rreq_allocate(MPIR_Request * rreq)
 {
-
     MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
 
     /* allocate partitions tracking */
-    // TODO remove the cc_part from the receiver, it's not used
-    const int msg_part = MPIDIG_PART_REQUEST(rreq, u.recv.msg_part);
-    MPIR_Assert(msg_part >= 0);
-    MPIDIG_PART_REQUEST(rreq, u.recv.cc_part) =
-        MPL_malloc(sizeof(MPIR_cc_t) * msg_part, MPL_MEM_OTHER);
+    const int msg_part = MPIDIG_PART_REQUEST(rreq, msg_part);
+    MPIR_Assert(msg_part > 0);
 
     /* if we do the tag matching then we need an array of request */
-    const bool do_tag = MPIDIG_PART_REQUEST(rreq, do_tag);
+    const bool do_tag = MPIDIG_PART_DO_TAG(rreq);
     if (do_tag) {
-        MPIDIG_PART_REQUEST(rreq, tag_req_ptr) =
+        MPIDIG_PART_RREQUEST(rreq, tag_req_ptr) =
             MPL_malloc(sizeof(MPIR_Request *) * msg_part, MPL_MEM_OTHER);
         for (int i = 0; i < msg_part; ++i) {
-            MPIDIG_PART_REQUEST(rreq, tag_req_ptr[i]) = NULL;
+            MPIDIG_PART_RREQUEST(rreq, tag_req_ptr[i]) = NULL;
         }
     } else {
-        MPIDIG_PART_REQUEST(rreq, tag_req_ptr) = NULL;
+        MPIDIG_PART_RREQUEST(rreq, cc_part) =
+            MPL_malloc(sizeof(MPIR_cc_t) * msg_part, MPL_MEM_OTHER);
     }
 }
 
@@ -79,15 +75,15 @@ void MPIDIG_part_rreq_matched(MPIR_Request * rreq)
      * if the total number of datatypes can be divided by the number of send partition
      * we use the number of send partitions to communicate datat
      * if the modulo is not null then we use the gcd approach */
-    const int send_part = MPIDIG_PART_REQUEST(rreq, u.recv.msg_part);
+    const int send_part = MPIDIG_PART_REQUEST(rreq, msg_part);
     const int recv_part = rreq->u.part.partitions;
 
     /* we must guarantee that the one partition on both the send and recv side corresponds to only
      * one actual msgs */
-    MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = MPL_gcd(send_part, recv_part);
+    MPIDIG_PART_REQUEST(rreq, msg_part) = MPL_gcd(send_part, recv_part);
 
     /* 0 partition is illegual so at least one message must happen */
-    MPIR_Assert(MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) > 0);
+    MPIR_Assert(MPIDIG_PART_REQUEST(rreq, msg_part) > 0);
 
     /* Additional check for partitioned pt2pt: require identical buffer size */
     if (rreq->status.MPI_ERROR == MPI_SUCCESS) {
@@ -112,10 +108,11 @@ void MPIDIG_part_rreq_reset_cc_part(MPIR_Request * rqst)
 {
     MPIR_Assert(MPIDIG_Part_rreq_status_has_matched(rqst));
     MPIR_Assert(rqst->kind == MPIR_REQUEST_KIND__PART_RECV);
+    MPIR_Assert(!MPIDIG_PART_DO_TAG(rqst));
 
     /* reset the counters to the init value */
-    const int msg_part = MPIDIG_PART_REQUEST(rqst, u.recv.msg_part);
-    MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(rqst, u.recv.cc_part);
+    const int msg_part = MPIDIG_PART_REQUEST(rqst, msg_part);
+    MPIR_cc_t *cc_part = MPIDIG_PART_RREQUEST(rqst, cc_part);
     MPIR_Assert(msg_part >= 0);
     for (int i = 0; i < msg_part; ++i) {
         MPIR_cc_set(&cc_part[i], MPIDIG_PART_STATUS_RECV_INIT);
@@ -127,9 +124,8 @@ void MPIDIG_part_sreq_set_cc_part(MPIR_Request * rqst)
 {
     MPIR_Assert(rqst->kind == MPIR_REQUEST_KIND__PART_SEND);
 
-    const int init_value = MPIDIG_PART_REQUEST(rqst,
-                                               do_tag) ? MPIDIG_PART_STATUS_SEND_TAG_FIRST_INIT :
-        MPIDIG_PART_STATUS_SEND_AM_INIT;
+    const int init_value = MPIDIG_PART_DO_TAG(rqst) ? MPIDIG_PART_STATUS_SEND_TAG_FIRST_INIT
+        : MPIDIG_PART_STATUS_SEND_AM_INIT;
     const int send_part = rqst->u.part.partitions;
     MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(rqst, u.send.cc_part);
     MPIR_Assert(send_part >= 0);
@@ -144,9 +140,10 @@ void MPIDIG_part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_ms
     MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
 
     MPIDIG_PART_REQUEST(rreq, u.recv.send_dsize) = msg_hdr->data_sz;
-    MPIDIG_PART_REQUEST(rreq, peer_req_ptr) = msg_hdr->sreq_ptr;
-    MPIDIG_PART_REQUEST(rreq, do_tag) = msg_hdr->do_tag;
+    /* if do_tag in the header, mode is 1 */
+    MPIDIG_PART_REQUEST(rreq, mode) = msg_hdr->do_tag;
     /* store the sender number of partitions in the msg_part temporarily */
-    MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) = msg_hdr->send_npart;
-    MPIR_Assert(MPIDIG_PART_REQUEST(rreq, u.recv.msg_part) > 0);
+    MPIDIG_PART_REQUEST(rreq, msg_part) = msg_hdr->send_npart;
+    MPIR_Assert(MPIDIG_PART_REQUEST(rreq, msg_part) > 0);
+    MPIDIG_PART_REQUEST(rreq, peer_req_ptr) = msg_hdr->sreq_ptr;
 }

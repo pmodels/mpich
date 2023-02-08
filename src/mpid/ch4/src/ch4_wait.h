@@ -66,11 +66,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request *req,
     /* TODO: we might want to skip the requests already completed? when doing so we could also not
      * include the main request's VCI */
     if (req->kind == MPIR_REQUEST_KIND__PART_SEND) {
-        child_req = MPIDIG_PART_REQUEST(req, tag_req_ptr);
-        n_child_req = MPIDIG_PART_REQUEST(req, u.send.msg_part);
+        child_req = MPIDIG_PART_SREQUEST(req, tag_req_ptr);
+        n_child_req = MPIDIG_PART_REQUEST(req, msg_part);
     } else if (req->kind == MPIR_REQUEST_KIND__PART_RECV) {
-        child_req = MPIDIG_PART_REQUEST(req, tag_req_ptr);
-        n_child_req = MPIDIG_PART_REQUEST(req, u.recv.msg_part);
+        child_req = MPIDIG_PART_RREQUEST(req, tag_req_ptr);
+        n_child_req = MPIDIG_PART_REQUEST(req, msg_part);
     }
     if (n_child_req > 0 && child_req) {
         MPIDI_append_progress_vci_n(n_child_req, child_req, state);

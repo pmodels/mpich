@@ -75,20 +75,20 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
             MPIDIG_Part_rreq_allocate(posted_req);
 
             /* set the cc value to the number of partitions */
-            const int msg_part = MPIDIG_PART_REQUEST(posted_req, u.recv.msg_part);
+            const int msg_part = MPIDIG_PART_REQUEST(posted_req, msg_part);
             MPIR_Assert(msg_part >= 0);
             MPIR_cc_set(posted_req->cc_ptr, msg_part);
 
-            /* reset the counter per partition */
-            MPIDIG_part_rreq_reset_cc_part(posted_req);
-
-            if (MPIDIG_PART_REQUEST(posted_req, do_tag)) {
+            if (MPIDIG_PART_DO_TAG(posted_req)) {
                 /* in tag matching we issue the recv requests we need to remove the lock from the
                  * callback */
                 MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_id).lock);
                 mpi_errno = MPIDIG_part_issue_recv(posted_req);
                 MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_id).lock);
                 MPIR_ERR_CHECK(mpi_errno);
+            } else {
+                /* reset the counter per partition */
+                MPIDIG_part_rreq_reset_cc_part(posted_req);
             }
 
             /* issue the CTS is last to ensure we are fully ready */
@@ -157,18 +157,18 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
 
     /* detect if it's the first CTS that we receive.
      * if so then we assign the value to peer_prt and msg_part*/
-    const bool is_first_cts = (!MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr));
-    if (is_first_cts) {
+    const bool is_first_cts = MPIDIG_PART_REQUEST(part_sreq, msg_part) < 0;
+    if (unlikely(is_first_cts)) {
+        MPIDIG_PART_REQUEST(part_sreq, msg_part) = msg_hdr->msg_part;
         MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr) = msg_hdr->rreq_ptr;
-        MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part) = msg_hdr->msg_part;
 
         /* we need to allocate the data associated to the number of actual msgs */
         const int send_part = part_sreq->u.part.partitions;
-        const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
-        MPIDIG_PART_REQUEST(part_sreq, u.send.cc_msg) =
+        const int msg_part = MPIDIG_PART_REQUEST(part_sreq, msg_part);
+        MPIDIG_PART_SREQUEST(part_sreq, cc_msg) =
             MPL_malloc(sizeof(MPIR_cc_t) * msg_part, MPL_MEM_OTHER);
         /* each msg can be updated by multiple partitions, but only once! */
-        MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_msg);
+        MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(part_sreq, cc_msg);
         for (int i = 0; i < msg_part; ++i) {
             const int ip_lb = MPIDIG_part_idx_lb(i, msg_part, send_part);
             const int ip_ub = MPIDIG_part_idx_ub(i, msg_part, send_part);
@@ -180,18 +180,18 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
         MPI_Aint count;
         MPIR_Datatype_get_size_macro(MPIDI_PART_REQUEST(part_sreq, datatype), count);
         count *= part_sreq->u.part.partitions * MPIDI_PART_REQUEST(part_sreq, count);
-        MPIR_Assert(count % MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part) == 0);
+        MPIR_Assert(count % MPIDIG_PART_REQUEST(part_sreq, msg_part) == 0);
 #endif
     }
     MPIR_Assert(MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr) == msg_hdr->rreq_ptr);
-    MPIR_Assert(MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part) == msg_hdr->msg_part);
+    MPIR_Assert(MPIDIG_PART_REQUEST(part_sreq, msg_part) == msg_hdr->msg_part);
 
     /* reset the correct cc value for the number of actually sent msgs */
     // FIXME this is NOT the best option as we reset it twice (once at the start and once here)
-    MPIR_cc_set(&MPIDIG_PART_REQUEST(part_sreq, u.send.cc_send), msg_hdr->msg_part);
+    MPIR_cc_set(&MPIDIG_PART_SREQUEST(part_sreq, cc_send), msg_hdr->msg_part);
 
     const int vci_id = get_vci_wrapper(part_sreq);
-    const int msg_part = MPIDIG_PART_REQUEST(part_sreq, u.send.msg_part);
+    const int msg_part = MPIDIG_PART_REQUEST(part_sreq, msg_part);
     const bool is_active = MPIR_Part_request_is_active(part_sreq);
     if (is_active) {
         /* if the request is active then the correct cc value was unknown when activating the
@@ -258,7 +258,7 @@ int MPIDIG_part_send_data_target_msg_cb(void *am_hdr, void *data,
 
     /* get the right partition location */
     const int imsg = msg_hdr->imsg;
-    const int msg_part = MPIDIG_PART_REQUEST(part_rreq, u.recv.msg_part);
+    const int msg_part = MPIDIG_PART_REQUEST(part_rreq, msg_part);
     MPIR_Assert(imsg >= 0);
     MPIR_Assert(imsg < msg_part);
 
@@ -283,7 +283,7 @@ int MPIDIG_part_send_data_target_msg_cb(void *am_hdr, void *data,
     MPIDIG_REQUEST(rreq, count) = count;
 
     /*register the cc_part ptr to complete the partition's counter as well once the callback is called */
-    MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(part_rreq, u.recv.cc_part);
+    MPIR_cc_t *cc_part = MPIDIG_PART_RREQUEST(part_rreq, cc_part);
     MPIR_Assert(MPIR_cc_get(cc_part[imsg]) == MPIDIG_PART_STATUS_RECV_INIT);
     MPIDIG_REQUEST(rreq, req->part_am_req.cc_part_ptr) = cc_part + imsg;
 
