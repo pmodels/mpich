@@ -129,11 +129,9 @@ static bool is_vci_restricted_to_zero(MPIR_Comm * comm)
     if (!(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !comm->tainted)) {
         vci_restricted |= true;
     }
-#ifdef  MPIDI_OFI_VNI_USE_DOMAIN
     if (!MPIDI_global.is_initialized) {
         vci_restricted |= true;
     }
-#endif /* ifdef  MPIDI_OFI_VNI_USE_DOMAIN */
 
     return vci_restricted;
 }
