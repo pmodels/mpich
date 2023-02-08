@@ -132,6 +132,7 @@ ignore_list="$ignore_list|src/pmi/include/pmix_abi_support_bottom.h"
 ignore_list="$ignore_list|src/pmi/include/pmix_fns.h"
 ignore_list="$ignore_list|src/pmi/include/pmix_macros.h"
 ignore_list="$ignore_list|src/pmi/include/pmix_types.h"
+ignore_list="$ignore_list|src/binding/abi/mpi_abi.h"
 
 filelist=""
 
