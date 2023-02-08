@@ -147,6 +147,9 @@ Makefile.am-stamp
 # random stuff
 /maint/gcovmerge
 /src/binding/cxx/buildiface-stamp
+/src/binding/abi/mpi_abi_internal.h
+/src/binding/abi/mpi_abi_util.c
+/src/binding/abi/c_binding_abi.c
 
 # script-generated f90 test files
 
