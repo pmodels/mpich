@@ -1133,6 +1133,8 @@ static int gpu_ze_init_driver(void)
     goto fn_exit;
 }
 
+static void remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
+
 int MPL_gpu_finalize(void)
 {
     int i, j, k;
@@ -1142,7 +1144,7 @@ int MPL_gpu_finalize(void)
             if (ipc_cache_removal[i]) {
                 MPL_ze_mapped_buffer_entry_t *entry = NULL, *tmp = NULL;
                 HASH_ITER(hh, ipc_cache_removal[i], entry, tmp) {
-                    MPL_gpu_ipc_handle_unmap(entry->ipc_buf);
+                    remove_ipc_handle_entry(entry, i);
                 }
             }
 
@@ -1666,6 +1668,29 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
   fn_fail:
     mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
+}
+
+/* at finalize, to free a cache entry in ipc_cache_removal cache */
+static void remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id)
+{
+    unsigned keylen;
+    MPL_ze_mapped_buffer_lookup_t lookup_entry;
+
+    lookup_entry = cache_entry->key;
+    keylen = sizeof(MPL_ze_mapped_buffer_lookup_t);
+
+    HASH_DEL(ipc_cache_removal[dev_id], cache_entry);
+    MPL_free(cache_entry);
+    cache_entry = NULL;
+
+    HASH_FIND(hh, ipc_cache_mapped[dev_id], &lookup_entry.remote_mem_id, keylen, cache_entry);
+
+    if (cache_entry != NULL) {
+        // FIXME: need to unmap?
+        HASH_DEL(ipc_cache_mapped[dev_id], cache_entry);
+        MPL_free(cache_entry);
+        cache_entry = NULL;
+    }
 }
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
