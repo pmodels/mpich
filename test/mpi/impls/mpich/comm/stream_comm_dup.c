@@ -73,7 +73,7 @@ static int test_stream_comm_dup_single(MPIX_Stream stream)
 
     MPIX_Comm_get_stream(dup_comm, 0, &stream_check);
     if (stream_check != stream) {
-        printf("MPIX_Comm_get_stream did not return expected stread\n");
+        printf("MPIX_Comm_get_stream did not return expected stream\n");
         errs++;
     }
 
@@ -108,7 +108,7 @@ static int test_stream_comm_idup_multiplex(MPIX_Stream stream)
     for (int i = 0; i < 2; i++) {
         MPIX_Comm_get_stream(dup_comm, i, &stream_check);
         if (stream_check != local_streams[i]) {
-            printf("MPIX_Comm_get_stream (idx=%d) did not return expected stread\n", i);
+            printf("MPIX_Comm_get_stream (idx=%d) did not return expected stream\n", i);
             errs++;
         }
     }
