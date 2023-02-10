@@ -8,32 +8,13 @@
 
 #include "ch4_impl.h"
 
-/* a local wrapper that accounts for persistent request */
-MPL_STATIC_INLINE_PREFIX int get_vci_wrapper(MPIR_Request * req)
-{
-    int vci;
-    if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV ||
-        req->kind == MPIR_REQUEST_KIND__PREQUEST_SEND) {
-        if (req->u.persist.real_request) {
-            vci = MPIDI_Request_get_vci(req->u.persist.real_request);
-        }
-    } else if (req->kind == MPIR_REQUEST_KIND__PREQUEST_COLL) {
-        if (req->u.persist_coll.real_request) {
-            vci = MPIDI_Request_get_vci(req->u.persist_coll.real_request);
-        }
-    } else {
-        vci = MPIDI_Request_get_vci(req);
-    }
-    return vci;
-}
-
 MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
                                                      MPID_Progress_state * state)
 {
     state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
     state->progress_made = 0;
 
-    int vci = get_vci_wrapper(req);
+    int vci = MPIDI_Request_get_vci(req);
 
     state->progress_counts[0] = MPL_atomic_relaxed_load_int(&MPIDI_VCI(vci).progress_count);
     state->vci_count = 1;
@@ -52,7 +33,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** re
             continue;
         }
 
-        int vci = get_vci_wrapper(reqs[i]);
+        int vci = MPIDI_Request_get_vci(reqs[i]);
         int found = 0;
         for (int j = 0; j < idx; j++) {
             if (state->vci[j] == vci) {
