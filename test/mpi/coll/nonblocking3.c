@@ -95,8 +95,8 @@ struct laundry {
     int *recvcounts;
     int *sdispls;
     int *rdispls;
-    int *sendtypes;
-    int *recvtypes;
+    MPI_Datatype *sendtypes;
+    MPI_Datatype *recvtypes;
 };
 
 static void cleanup_laundry(struct laundry *l)
@@ -136,8 +136,8 @@ static void start_random_nonblocking(MPI_Comm comm, unsigned int rndnum, MPI_Req
     int *recvcounts = NULL;
     int *sdispls = NULL;
     int *rdispls = NULL;
-    int *sendtypes = NULL;
-    int *recvtypes = NULL;
+    MPI_Datatype *sendtypes = NULL;
+    MPI_Datatype *recvtypes = NULL;
     signed char *buf_alias = NULL;
 
     MPI_Comm_rank(comm, &rank);
