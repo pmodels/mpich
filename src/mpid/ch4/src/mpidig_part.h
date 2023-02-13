@@ -167,7 +167,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
             const int msg_lb = MPIDIG_part_idx_lb(ipart, n_part, msg_part);
 #ifndef NDEBUG
             const int msg_ub = MPIDIG_part_idx_ub(ipart, n_part, msg_part);
-            MPIR_Assert(msg_lb - msg_ub == 1);
+            MPIR_Assert(msg_ub - msg_lb == 1);
 #endif
             mpi_errno = MPIDIG_part_issue_msg_if_ready(msg_lb, part_sreq, MPIDIG_PART_REGULAR);
             MPIR_ERR_CHECK(mpi_errno);
