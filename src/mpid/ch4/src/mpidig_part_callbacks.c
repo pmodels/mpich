@@ -202,7 +202,7 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
 
     /* need to decrement the partition counter and send the partitions if ready */
     const int n_part = part_sreq->u.part.partitions;
-    MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_part);
+    MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(part_sreq, cc_part);
     MPIR_Assert(n_part >= 0);
 
     /* we exit the lock only once and come back to it only once as well, cc_part is atomic so

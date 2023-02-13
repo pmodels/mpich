@@ -127,7 +127,7 @@ void MPIDIG_part_sreq_set_cc_part(MPIR_Request * rqst)
     const int init_value = MPIDIG_PART_DO_TAG(rqst) ? MPIDIG_PART_STATUS_SEND_TAG_FIRST_INIT
         : MPIDIG_PART_STATUS_SEND_AM_INIT;
     const int send_part = rqst->u.part.partitions;
-    MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(rqst, u.send.cc_part);
+    MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(rqst, cc_part);
     MPIR_Assert(send_part >= 0);
     for (int i = 0; i < send_part; ++i) {
         MPIR_cc_set(&cc_part[i], init_value);

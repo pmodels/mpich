@@ -40,7 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
          * The reset is done in the CTS reception callback as well but no msgs has been sent
          * so it's safe to overwrite it*/
         if (MPIDIG_PART_DO_TAG(request)) {
-            MPIR_cc_set(&MPIDIG_PART_REQUEST(request, u.send.cc_send), msg_part);
+            MPIR_cc_set(&MPIDIG_PART_SREQUEST(request, cc_send), msg_part);
         }
     } else {
         /* cc_ptr > 0 indicate data transfer starts and will be completed when cc_ptr = 0
@@ -152,7 +152,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
     MPIR_Assert(part_sreq->kind == MPIR_REQUEST_KIND__PART_SEND);
 
     const int n_part = part_sreq->u.part.partitions;
-    MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_part);
+    MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(part_sreq, cc_part);
     for (int ip = 0; ip < length; ip++) {
         const int ipart = array_of_partitions[ip];
         // mark the partition as ready

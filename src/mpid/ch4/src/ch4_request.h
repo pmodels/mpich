@@ -138,13 +138,13 @@ MPL_STATIC_INLINE_PREFIX void MPID_Part_send_request_free_hook(MPIR_Request * re
 
     /* TG: FIXME this function is in MPIDI and not MPIDIG */
     MPIR_Assert(req->kind == MPIR_REQUEST_KIND__PART_SEND);
-    MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(req, u.send.cc_part);
+    MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(req, cc_part);
     if (cc_part != NULL) {
         MPL_free(cc_part);
     }
 
     /* release the counter per msg */
-    MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(req, u.send.cc_msg);
+    MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(req, cc_msg);
     if (cc_msg) {
         MPL_free(cc_msg);
     }

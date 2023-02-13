@@ -98,27 +98,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_idx_ub(const int io, const int no, cons
 MPL_STATIC_INLINE_PREFIX void MPIDIG_Part_rreq_status_matched(MPIR_Request * rreq)
 {
     MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
-    MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(rreq, u.recv.status_matched)) == 0);
-    MPIR_cc_inc(&MPIDIG_PART_REQUEST(rreq, u.recv.status_matched));
+    MPIR_Assert(MPIR_cc_get(MPIDIG_PART_RREQUEST(rreq, status_matched)) == 0);
+    MPIR_cc_inc(&MPIDIG_PART_RREQUEST(rreq, status_matched));
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_Part_rreq_status_first_cts(MPIR_Request * rreq)
 {
     MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
-    MPIR_Assert(MPIR_cc_get(MPIDIG_PART_REQUEST(rreq, u.recv.status_matched)) == 1);
-    MPIR_cc_inc(&MPIDIG_PART_REQUEST(rreq, u.recv.status_matched));
+    MPIR_Assert(MPIR_cc_get(MPIDIG_PART_RREQUEST(rreq, status_matched)) == 1);
+    MPIR_cc_inc(&MPIDIG_PART_RREQUEST(rreq, status_matched));
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_Part_rreq_status_has_matched(MPIR_Request * rreq)
 {
     MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
-    return MPIR_cc_get(MPIDIG_PART_REQUEST(rreq, u.recv.status_matched)) >= 1;
+    return MPIR_cc_get(MPIDIG_PART_RREQUEST(rreq, status_matched)) >= 1;
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_Part_rreq_status_has_first_cts(MPIR_Request * rreq)
 {
     MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__PART_RECV);
-    return MPIR_cc_get(MPIDIG_PART_REQUEST(rreq, u.recv.status_matched)) >= 2;
+    return MPIR_cc_get(MPIDIG_PART_RREQUEST(rreq, status_matched)) >= 2;
 }
 
 /* Receiver issues a CTS to sender once reach MPIDIG_PART_REQ_CTS */
@@ -201,16 +201,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
     /* decrease the counter of the number of msgs requested to be send
      * if we have requested the send of every msgs then we can reset the counters */
     int incomplete;
-    MPIR_cc_decr(&MPIDIG_PART_REQUEST(sreq, u.send.cc_send), &incomplete);
+    MPIR_cc_decr(&MPIDIG_PART_SREQUEST(sreq, cc_send), &incomplete);
     if (!incomplete) {
         const int n_part = sreq->u.part.partitions;
-        MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(sreq, u.send.cc_part);
+        MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(sreq, cc_part);
         for (int ip = 0; ip < n_part; ++ip) {
             MPIR_cc_set(&cc_part[ip], MPIDIG_PART_STATUS_SEND_TAG_LATER_INIT);
         }
         /* reset the counter per msg to be ready for the next iteration */
         const int msg_part = MPIDIG_PART_REQUEST(sreq, msg_part);
-        MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(sreq, u.send.cc_msg);
+        MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(sreq, cc_msg);
         for (int i = 0; i < msg_part; ++i) {
             const int ip_lb = MPIDIG_part_idx_lb(i, msg_part, n_part);
             const int ip_ub = MPIDIG_part_idx_ub(i, msg_part, n_part);
@@ -290,15 +290,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(const int imsg, MPIR_Request
     /* decrease the counter of the number of msgs requested to be send
      * if we have requested the send of every msgs then we can reset the counters */
     int incomplete;
-    MPIR_cc_decr(&MPIDIG_PART_REQUEST(part_sreq, u.send.cc_send), &incomplete);
+    MPIR_cc_decr(&MPIDIG_PART_SREQUEST(part_sreq, cc_send), &incomplete);
     if (!incomplete) {
         const int n_part = part_sreq->u.part.partitions;
-        MPIR_cc_t *cc_part = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_part);
+        MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(part_sreq, cc_part);
         for (int ip = 0; ip < n_part; ++ip) {
             MPIR_cc_set(&cc_part[ip], MPIDIG_PART_STATUS_SEND_AM_INIT);
         }
         /* reset the counter per msg to be ready for the next iteration */
-        MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(part_sreq, u.send.cc_msg);
+        MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(part_sreq, cc_msg);
         for (int i = 0; i < msg_part; ++i) {
             const int ip_lb = MPIDIG_part_idx_lb(i, msg_part, n_part);
             const int ip_ub = MPIDIG_part_idx_ub(i, msg_part, n_part);
@@ -350,7 +350,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_id,
 
     /*for each of the communication msgs in the range, try to see if they are ready */
     const bool do_tag = MPIDIG_PART_DO_TAG(sreq);
-    MPIR_cc_t *cc_msg = MPIDIG_PART_REQUEST(sreq, u.send.cc_msg);
+    MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(sreq, cc_msg);
     /* decrement the counter of the specific msg */
     int incomplete;
     MPIR_cc_decr(cc_msg + msg_id, &incomplete);
