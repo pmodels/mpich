@@ -315,12 +315,8 @@ static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
 {
     return (req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
             req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_RECV ||
-            req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_COLL);
-}
-
-static inline int MPIR_Request_is_partitioned(MPIR_Request * req_ptr)
-{
-    return (req_ptr->kind == MPIR_REQUEST_KIND__PART_SEND ||
+            req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_COLL ||
+            req_ptr->kind == MPIR_REQUEST_KIND__PART_SEND ||
             req_ptr->kind == MPIR_REQUEST_KIND__PART_RECV);
 }
 

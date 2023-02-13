@@ -150,7 +150,7 @@ MPI_Test:
 
     if (*flag) {
         mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
-        if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
+        if (!MPIR_Request_is_persistent(request_ptr)) {
             MPIR_Request_free(request_ptr);
             *request = MPI_REQUEST_NULL;
         }
@@ -255,7 +255,7 @@ MPI_Wait:
     }
 
     mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
-    if (!MPIR_Request_is_persistent(request_ptr) && !MPIR_Request_is_partitioned(request_ptr)) {
+    if (!MPIR_Request_is_persistent(request_ptr)) {
         MPIR_Request_free(request_ptr);
         *request = MPI_REQUEST_NULL;
     }
