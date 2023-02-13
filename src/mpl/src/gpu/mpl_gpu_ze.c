@@ -128,6 +128,8 @@ typedef struct {
     void *ipc_buf;
     void *mapped_ptr;
     size_t mapped_size;
+    int fds[2];
+    int nfds;                   /* used when doing mmap */
     UT_hash_handle hh;
 } MPL_ze_mapped_buffer_entry_t;
 
@@ -175,7 +177,7 @@ static int close_handle(int dev_fd, int handle);
 static int parse_affinity_mask();
 static void get_max_dev_id(int *max_dev_id, int *max_subdev_id);
 static int gpu_mem_hook_init(void);
-static void remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
+static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
 
 /* For zeMemFree callbacks */
 static gpu_free_hook_s *free_hook_chain = NULL;
@@ -1415,21 +1417,16 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id
     goto fn_exit;
 }
 
+/* free a cache entry in mmap_cache_removal */
 int MPL_ze_mmap_handle_unmap(void *ptr, int dev_id)
 {
-    int ret_err, mpl_err = MPL_SUCCESS;
+    int mpl_err = MPL_SUCCESS;
     unsigned keylen;
-    size_t size = 0;
     MPL_ze_mapped_buffer_entry_t *cache_entry = NULL;
     MPL_ze_mapped_buffer_lookup_t lookup_entry;
 
     if (likely(MPL_gpu_info.specialized_cache)) {
         HASH_FIND(hh, mmap_cache_removal[dev_id], &ptr, sizeof(void *), cache_entry);
-
-        if (cache_entry != NULL) {
-            size = cache_entry->mapped_size;
-        }
-
         if (cache_entry != NULL) {
             lookup_entry = cache_entry->key;
             keylen = sizeof(MPL_ze_mapped_buffer_lookup_t);
@@ -1440,19 +1437,19 @@ int MPL_ze_mmap_handle_unmap(void *ptr, int dev_id)
 
             HASH_FIND(hh, ipc_cache_mapped[dev_id], &lookup_entry, keylen, cache_entry);
 
+            /* since ipc_cache_removal is removed first, only mapped_ptr
+             * need to be considered */
             if (cache_entry != NULL) {
-                // FIXME: need to close IPC handle?
+                if (cache_entry->mapped_ptr) {
+                    munmapFunction(cache_entry->nfds, cache_entry->fds, cache_entry->mapped_ptr,
+                                   cache_entry->mapped_size);
+                }
                 HASH_DEL(ipc_cache_mapped[dev_id], cache_entry);
                 MPL_free(cache_entry);
                 cache_entry = NULL;
             }
         }
     } else {
-        goto fn_fail;
-    }
-
-    ret_err = munmap(ptr, size);
-    if (ret_err == -1) {
         goto fn_fail;
     }
 
@@ -1505,7 +1502,10 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
                       cache_entry);
 
             if (cache_entry != NULL) {
-                // FIXME: need to unmap?
+                if (cache_entry->mapped_ptr) {
+                    munmapFunction(cache_entry->nfds, cache_entry->fds, cache_entry->mapped_ptr,
+                                   cache_entry->mapped_size);
+                }
                 HASH_DEL(ipc_cache_mapped[dev_id], cache_entry);
                 MPL_free(cache_entry);
                 cache_entry = NULL;
@@ -1525,8 +1525,10 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
 }
 
 /* at finalize, to free a cache entry in ipc_cache_removal cache */
-static void remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id)
+static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id)
 {
+    int mpl_err = MPL_SUCCESS;
+    ze_result_t ret;
     unsigned keylen;
     MPL_ze_mapped_buffer_lookup_t lookup_entry;
 
@@ -1540,11 +1542,24 @@ static void remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, 
     HASH_FIND(hh, ipc_cache_mapped[dev_id], &lookup_entry.remote_mem_id, keylen, cache_entry);
 
     if (cache_entry != NULL) {
-        // FIXME: need to unmap?
+        if (cache_entry->ipc_buf) {
+            ret = zeMemCloseIpcHandle(ze_context, cache_entry->ipc_buf);
+            ZE_ERR_CHECK(ret);
+        }
+        if (cache_entry->mapped_ptr) {
+            munmapFunction(cache_entry->nfds, cache_entry->fds, cache_entry->mapped_ptr,
+                           cache_entry->mapped_size);
+        }
         HASH_DEL(ipc_cache_mapped[dev_id], cache_entry);
         MPL_free(cache_entry);
         cache_entry = NULL;
     }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
@@ -2279,6 +2294,10 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int i
         if (likely(MPL_gpu_info.specialized_cache)) {
             cache_entry->mapped_ptr = *ptr;
             cache_entry->mapped_size = size;
+            cache_entry->nfds = h.nfds;
+            for (int i = 0; i < h.nfds; i++) {
+                cache_entry->fds[i] = h.fds[1];
+            }
 
             removal_entry =
                 (MPL_ze_mapped_buffer_entry_t *) MPL_malloc(sizeof(MPL_ze_mapped_buffer_entry_t),
