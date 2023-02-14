@@ -365,6 +365,10 @@ int MPII_Finalize(MPIR_Session * session_ptr)
         MPID_Thread_mutex_destroy(&session_ptr->mutex, &thr_err);
         MPIR_Assert(thr_err == 0);
 
+        if (session_ptr->errhandler != NULL) {
+            MPIR_Errhandler_free_impl(session_ptr->errhandler);
+        }
+
         MPIR_Handle_obj_free(&MPIR_Session_mem, session_ptr);
     }
 
