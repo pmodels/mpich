@@ -438,7 +438,11 @@ def dump_f77_c_func(func):
         c_arg_list_B.append("&%s_i" % v)
         code_list_common.append("int %s_i;" % v)
         end_list_common.append("if (*ierr == MPI_SUCCESS) {")
-        end_list_common.append("    *%s = %s_i + 1;" % (v, v))
+        end_list_common.append("    if (%s_i == MPI_UNDEFINED) {" % v)
+        end_list_common.append("        *%s = %s_i;" % (v, v))
+        end_list_common.append("    } else {")
+        end_list_common.append("        *%s = %s_i + 1;" % (v, v))
+        end_list_common.append("    }")
         end_list_common.append("}")
 
     def dump_string_len_inout(v):
