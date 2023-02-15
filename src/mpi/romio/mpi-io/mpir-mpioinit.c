@@ -44,7 +44,7 @@ void MPIR_MPIOInit(int *error_code)
          * in MPI-2 section 4.8, the standard mandates that attributes on
          * MPI_COMM_SELF get cleaned up early in MPI_Finalize */
 
-        MPI_Attr_put(MPI_COMM_SELF, ADIO_Init_keyval, (void *) 0);
+        MPI_Comm_set_attr(MPI_COMM_SELF, ADIO_Init_keyval, (void *) 0);
 
         /* initialize ADIO */
         ADIO_Init((int *) 0, (char ***) 0, error_code);
