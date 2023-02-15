@@ -128,6 +128,7 @@ typedef int MPI_Fint;
 
 
 /* MPI-IO function prototypes */
+#ifndef HAVE_MPIO_PROTOTYPES
 
 /* The compiler must support ANSI C style prototypes, otherwise 
    long long constants (e.g. 0) may get passed as ints. */
@@ -690,6 +691,8 @@ int PMPI_Info_free(MPI_Info *) ROMIO_API_PUBLIC;
 MPI_Fint PMPI_Info_c2f(MPI_Info) ROMIO_API_PUBLIC;
 MPI_Info PMPI_Info_f2c(MPI_Fint) ROMIO_API_PUBLIC;
 #endif
+
+#endif  /* ifndef HAVE_MPIO_PROTOTYPES */
 
 #if defined(__cplusplus)
 }
