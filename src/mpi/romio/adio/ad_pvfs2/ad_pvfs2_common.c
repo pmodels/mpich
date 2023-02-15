@@ -78,7 +78,7 @@ void ADIOI_PVFS2_Init(int *error_code)
     MPI_Keyval_create(MPI_NULL_COPY_FN, ADIOI_PVFS2_End_call, &ADIOI_PVFS2_Initialized, (void *) 0);
     /* just like romio does, we make a dummy attribute so we
      * get cleaned up */
-    MPI_Attr_put(MPI_COMM_SELF, ADIOI_PVFS2_Initialized, (void *) 0);
+    MPI_Comm_set_attr(MPI_COMM_SELF, ADIOI_PVFS2_Initialized, (void *) 0);
 }
 
 void ADIOI_PVFS2_makeattribs(PVFS_sys_attr * attribs)
