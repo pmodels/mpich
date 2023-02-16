@@ -65,7 +65,7 @@ int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
                 else
                     dst = i;
 
-                MPIR_Datatype_get_size_macro(recvtypes[i], recvtype_sz);
+                MPIR_Datatype_get_size_macro(recvtypes[dst], recvtype_sz);
                 mpi_errno = MPIR_Sched_send(((char *) recvbuf + rdispls[dst]),
                                             recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
                 MPIR_ERR_CHECK(mpi_errno);
