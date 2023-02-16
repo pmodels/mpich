@@ -230,10 +230,12 @@ static bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
     return valid_flag;
 }
 
-static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
+int MPIDI_OFI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
 {
     *fi_dt = FI_DATATYPE_LAST;
-    *fi_op = FI_ATOMIC_OP_LAST;
+
+    if (fi_op != NULL)
+        *fi_op = FI_ATOMIC_OP_LAST;
 
     int dt_size;
     MPIR_Datatype_get_size_macro(dt, dt_size);
@@ -259,7 +261,7 @@ static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum
                 break;
             default:
                 /* no matching type */
-                goto fn_exit;
+                goto fn_fail;
         }
     } else if (dt == MPI_UNSIGNED_CHAR || dt == MPI_UNSIGNED_SHORT || dt == MPI_UNSIGNED ||
                dt == MPI_UNSIGNED_LONG || dt == MPI_UNSIGNED_LONG_LONG ||
@@ -280,7 +282,7 @@ static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum
                 break;
             default:
                 /* no matching type */
-                goto fn_exit;
+                goto fn_fail;
         }
     } else if (isFLOAT(dt)) {
         *fi_dt = FI_FLOAT;
@@ -294,8 +296,11 @@ static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum
         *fi_dt = FI_DOUBLE_COMPLEX;
     } else {
         /* no matching type */
-        goto fn_exit;
+        goto fn_fail;
     }
+
+    if (fi_op == NULL)
+        goto fn_exit;
 
     *fi_op = FI_ATOMIC_OP_LAST;
 
@@ -350,11 +355,13 @@ static void mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum
             break;
         default:
             /* no matching op */
-            break;
+            goto fn_fail;
     }
 
   fn_exit:
-    return;
+    return MPI_SUCCESS;
+  fn_fail:
+    return -1;
 }
 
 #define _TBL MPIDI_OFI_global.win_op_table[i][j]
@@ -404,7 +411,7 @@ static void create_dt_map(struct fid_ep *ep)
             enum fi_datatype fi_dt = (enum fi_datatype) -1;
             enum fi_op fi_op = (enum fi_op) -1;
 
-            mpi_to_ofi(dt, &fi_dt, op, &fi_op);
+            MPIDI_OFI_mpi_to_ofi(dt, &fi_dt, op, &fi_op);
             MPIR_Assert(fi_dt != (enum fi_datatype) -1);
             MPIR_Assert(fi_op != (enum fi_op) -1);
             _TBL.dt = fi_dt;
