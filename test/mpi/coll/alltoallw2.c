@@ -24,7 +24,7 @@
  */
 
 static int test_noinplace(MPI_Comm comm);
-static int test_inplace(MPI_Comm comm);
+static int test_inplace(MPI_Comm comm, bool sametype);
 
 int main(int argc, char **argv)
 {
@@ -39,7 +39,8 @@ int main(int argc, char **argv)
         errs += test_noinplace(comm);
 
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
-        errs += test_inplace(comm);
+        errs += test_inplace(comm, true);
+        errs += test_inplace(comm, false);
 #endif
         MTestFreeComm(&comm);
     }
@@ -119,7 +120,7 @@ static int test_noinplace(MPI_Comm comm)
 }
 
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
-static int test_inplace(MPI_Comm comm)
+static int test_inplace(MPI_Comm comm, bool sametype)
 {
     int errs = 0;
     int *rbuf;
@@ -154,19 +155,32 @@ static int test_inplace(MPI_Comm comm)
         fprintf(stderr, "Could not allocate arg items!\n");
         MPI_Abort(comm, 1);
     }
+
     for (int i = 0; i < size; i++) {
         /* alltoallw displs are in bytes, not in type extents */
         rdispls[i] = i * (2 * size) * sizeof(int);
-        recvtypes[i] = MPI_INT;
-        recvcounts[i] = i + rank;
+        if (sametype) {
+            recvtypes[i] = MPI_INT;
+            recvcounts[i] = i + rank;
+        } else {
+            MPI_Type_contiguous(i + rank, MPI_INT, &recvtypes[i]);
+            MPI_Type_commit(&recvtypes[i]);
+            recvcounts[i] = 1;
+        }
     }
 
     MPI_Alltoallw(MPI_IN_PLACE, NULL, NULL, NULL, rbuf, recvcounts, rdispls, recvtypes, comm);
 
+    if (!sametype) {
+        for (int i = 0; i < size; i++) {
+            MPI_Type_free(&recvtypes[i]);
+        }
+    }
+
     /* Check rbuf */
     for (int i = 0; i < size; i++) {
         int *p = rbuf + (rdispls[i] / sizeof(int));
-        for (int j = 0; j < recvcounts[i]; j++) {
+        for (int j = 0; j < i + rank; j++) {
             int expected = 100 * i + 10 * rank + j;
             if (p[j] != expected) {
                 fprintf(stderr, "[%d] got %d expected %d for block=%d, element=%dth\n",
