@@ -831,8 +831,10 @@ int MPIDI_CH3I_Progress_init(void)
     prev_sighandler = signal(SIGUSR1, sigusr1_handler);
     MPIR_ERR_CHKANDJUMP1(prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s",
                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
-    if (prev_sighandler == SIG_IGN || prev_sighandler == SIG_DFL)
+    if (prev_sighandler == SIG_IGN || prev_sighandler == SIG_DFL ||
+        prev_sighandler == sigusr1_handler) {
         prev_sighandler = NULL;
+    }
 #endif
 
  fn_exit:

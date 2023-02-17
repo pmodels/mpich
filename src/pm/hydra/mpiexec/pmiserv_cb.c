@@ -416,6 +416,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
                 /* Add this process to the end of the list */
                 if (!included) {
+                    MPL_free(current_list);
                     HYDU_MALLOC_OR_JUMP(str, char *, PMI_MAXVALLEN, status);
 
                     MPL_snprintf(str, PMI_MAXVALLEN, "%s,%d", pg_scratch->dead_processes,
@@ -423,6 +424,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 } else {
                     str = current_list;
                 }
+                MPL_free(pg_scratch->dead_processes);
                 pg_scratch->dead_processes = str;
             }
 

@@ -123,6 +123,10 @@ void MPIDI_RMA_finalize(void)
 
     MPL_free(global_rma_op_pool_start);
     MPL_free(global_rma_target_pool_start);
+    global_rma_op_pool_head = NULL;
+    global_rma_op_pool_start = NULL;
+    global_rma_target_pool_head = NULL;
+    global_rma_target_pool_start = NULL;
 
     MPIR_FUNC_EXIT;
 }

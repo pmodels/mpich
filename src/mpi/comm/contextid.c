@@ -35,7 +35,6 @@ cvars:
  * available context id values.
  */
 static uint32_t context_mask[MPIR_MAX_CONTEXT_MASK];
-static int initialize_context_mask = 1;
 const int ALL_OWN_MASK_FLAG = MPIR_MAX_CONTEXT_MASK;
 
 /* utility function to pretty print a context ID for debugging purposes, see
@@ -154,7 +153,7 @@ static int check_context_ids_on_finalize(void *context_mask_ptr)
 }
 #endif
 
-static void context_id_init(void)
+void MPIR_context_id_init(void)
 {
     int i;
 
@@ -169,7 +168,6 @@ static void context_id_init(void)
 #else
     context_mask[0] = 0xFFFFFFFC;
 #endif
-    initialize_context_mask = 0;
 
 #ifdef MPICH_DEBUG_HANDLEALLOC
     /* check for context ID leaks in MPI_Finalize.  Use (_PRIO-1) to make sure
@@ -378,10 +376,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
         /* We lock only around access to the mask (except in the global locking
          * case).  If another thread is using the mask, we take a mask of zero. */
         MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-        if (initialize_context_mask) {
-            context_id_init();
-        }
 
         if (eager_nelem < 0) {
             /* Ensure that at least one word of deadlock-free context IDs is
@@ -900,10 +894,6 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = NULL;
     MPIR_CHKPMEM_DECL(1);
-
-    if (initialize_context_mask) {
-        context_id_init();
-    }
 
     MPIR_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state",
                         MPL_MEM_COMM);

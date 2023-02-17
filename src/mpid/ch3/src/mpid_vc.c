@@ -765,7 +765,7 @@ int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
 /*
  * The lpid counter counts new processes that this process knows about.
  */
-static int lpid_counter = 0;
+int MPIDI_lpid_counter = 0;
 
 /* Fully initialize a VC.  This invokes the channel-specific 
    VC initialization routine MPIDI_CH3_VC_Init . */
@@ -776,7 +776,7 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
     MPIR_Object_set_ref(vc, 0);
     vc->pg      = pg;
     vc->pg_rank = rank;
-    vc->lpid    = lpid_counter++;
+    vc->lpid    = MPIDI_lpid_counter++;
     vc->node_id = -1;
     MPIDI_VC_Init_seqnum_send(vc);
     MPIDI_VC_Init_seqnum_recv(vc);

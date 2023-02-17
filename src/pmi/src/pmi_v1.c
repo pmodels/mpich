@@ -306,8 +306,11 @@ PMI_API_PUBLIC int PMI_Finalize(void)
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
         PMIU_ERR_POP(pmi_errno);
 
-        shutdown(PMI_fd, SHUT_RDWR);
-        close(PMI_fd);
+        if (0) {
+            /* closing PMI_fd prevents re-init. Disable for now. */
+            shutdown(PMI_fd, SHUT_RDWR);
+            close(PMI_fd);
+        }
     }
 
   fn_exit:

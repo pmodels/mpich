@@ -368,6 +368,8 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
     for (int i = 0; i < MPIDI_UCX_global.num_vnis; i++) {
         if (MPIDI_UCX_global.ctx[i].worker != NULL) {
+            ucp_worker_release_address(MPIDI_UCX_global.ctx[i].worker,
+                                       MPIDI_UCX_global.ctx[i].if_address);
             ucp_worker_destroy(MPIDI_UCX_global.ctx[i].worker);
         }
     }

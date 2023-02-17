@@ -589,9 +589,12 @@ HYD_status fn_finalize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
 
-    status = HYDT_dmx_deregister_fd(p->pmi_fd);
-    HYDU_ERR_POP(status, "unable to deregister fd\n");
-    close(p->pmi_fd);
+    if (HYD_pmcd_pmip.user_global.auto_cleanup) {
+        /* deregister to prevent the cleanup kill on fd close */
+        status = HYDT_dmx_deregister_fd(p->pmi_fd);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+        close(p->pmi_fd);
+    }
 
     /* mark singleton's stdio sockets as closed */
     if (pg->is_singleton) {

@@ -921,6 +921,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_SPAWN_MUTEX, &err);
     MPIR_Assert(err == 0);
 
+    memset(&MPIDI_OFI_global, 0, sizeof(MPIDI_OFI_global));
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
