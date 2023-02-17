@@ -15,11 +15,15 @@ EXTRA_DIST = testlist
 noinst_PROGRAMS =   \
     adderr          \
     commcall        \
-    commcall_oldapi \
     errfatal        \
     predef_eh       \
     errstring2      \
     dynamic_errcode_predefined_errclass
+
+if NOT_STRICTMPI
+noinst_PROGRAMS += \
+    commcall_oldapi
+endif
 
 EXTRA_PROGRAMS = errcode errring errstring
 
