@@ -260,6 +260,10 @@ AC_ARG_WITH(mpi,
                 [Use the selected MPI; compilation scripts for mpicc,
                 mpifort and mpicxx should be in dir/bin])],,)
 
+AC_ARG_ENABLE(mpi-abi,
+        [AC_HELP_STRING([--enable-mpi-abi=dir],
+                [Compile the C tests using mpicc_abi])],,[enable_mpi_abi=no])
+
 AC_ARG_WITH(pm,
         AC_HELP_STRING([--with-pm=name],
                 [Specify the process manager for MPICH.  "no" or "none" are
@@ -340,7 +344,12 @@ if test "$with_config_args" != "no" ; then
 fi
 
 # Attach program prefix and suffix to executable names
-PAC_GET_EXENAME("mpicc", MPICC_NAME)
+if test "$enable_mpi_abi" = "yes" ; then
+    enable_strictmpi="yes"
+    PAC_GET_EXENAME("mpicc_abi", MPICC_NAME)
+else
+    PAC_GET_EXENAME("mpicc", MPICC_NAME)
+fi
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
