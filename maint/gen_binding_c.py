@@ -11,7 +11,7 @@ from local_python.info_hints import collect_info_hint_blocks
 import glob
 
 def main():
-    # currently support: -single-source
+    # currently support: -output-mansrc
     G.parse_cmdline()
 
     binding_dir = G.get_srcdir_path("src/binding")
@@ -77,12 +77,7 @@ def main():
                     print(l.rstrip(), file=Out)
             G.doc3_src_txt.append(f)
 
-        if 'single-source' not in G.opts:
-            # dump individual functions in separate source files
-            dump_out(get_func_file_path(func, c_dir))
-    if 'single-source' in G.opts:
-        # otherwise, dump all functions in binding.c
-        dump_out(c_dir + "/c_binding.c")
+    dump_out(c_dir + "/c_binding.c")
 
     # -- Dump other files --
     G.check_write_path("src/include")
