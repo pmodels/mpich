@@ -75,7 +75,7 @@ def dump_mpi_c(func, is_large=False):
     if 'polymorph' in func:
         dump_function_internal(func, kind="call-polymorph")
     elif 'replace' in func and 'body' not in func:
-        dump_function_internal(func, kind="call-replace")
+        declare_call_replace_internal(func)
     else:
         dump_function_internal(func, kind="normal")
     G.out.append("")
@@ -766,8 +766,7 @@ def dump_qmpi_wrappers(func, is_large):
     func_decl = get_declare_function(func, is_large)
     qmpi_decl = get_qmpi_decl_from_func_decl(func_decl)
 
-    static_call = re.sub(r'MPI(X?)_', r'internal\1_', func_name, 1)
-    static_call = static_call + "(" + get_function_args(func) + ")"
+    static_call = get_static_call_internal(func, is_large)
 
     G.out.append("#ifdef ENABLE_QMPI")
     G.out.append("#ifndef MPICH_MPI_FROM_PMPI")
@@ -1020,12 +1019,6 @@ def dump_function_internal(func, kind):
         repl_args = get_function_args(func) + ', ' + extra_arg
         repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
         dump_function_replace(func, repl_call)
-    elif kind == 'call-replace':
-        RE.search(r'with\s+(\w+)', func['replace'])
-        repl_name = "P" + RE.m.group(1)
-        repl_args = get_function_args(func)
-        repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
-        dump_function_replace(func, repl_call)
     else:
         dump_function_normal(func)
 
@@ -1044,6 +1037,28 @@ def dump_function_internal(func, kind):
             pass
         else:
             push_impl_decl(func)
+
+def declare_call_replace_internal(func):
+    m = re.search(r'with\s+(MPI_\w+)', func['replace'])
+    repl_name = m.group(1).lower()
+    if repl_name not in G.FUNCS:
+        raise Exception("Replacement function %s not found!" % repl_name)
+    repl_func = G.FUNCS[repl_name]
+    s = get_declare_function(repl_func, func['_is_large'])
+    s = "static " + re.sub(r'MPI(X?)_', r'internal_', s, 1)
+
+    G.out.append("")
+    dump_line_with_break(s + ';')
+
+# used in dump_qmpi_wrappers, call the internal function
+def get_static_call_internal(func, is_large):
+    func_name = get_function_name(func, is_large)
+    if 'replace' in func and 'body' not in func:
+        m = re.search(r'with\s+(MPI_\w+)', func['replace'])
+        func_name = m.group(1)
+    static_call = re.sub(r'MPI(X?)_', r'internal\1_', func_name, 1)
+    static_call = static_call + "(" + get_function_args(func) + ")"
+    return static_call
 
 def check_large_parameters(func):
     if not func['_has_poly']:
