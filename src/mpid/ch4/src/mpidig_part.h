@@ -36,6 +36,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
         const int msg_part = MPIDIG_PART_REQUEST(request, msg_part);
         MPIR_cc_set(request->cc_ptr, MPL_MAX(1, msg_part));
 
+        /* if we have already a CTS (it's not the first iteration, we must reset the cc_msg, if not
+         * the values will be initialized upon reception of the first CTS.
+         * NOTE: it's okay to check the value of msg_part, we are in the lock so no progress will
+         * happen*/
+        if (likely(msg_part > 0)) {
+            const int n_part = request->u.part.partitions;
+            MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(request, cc_msg);
+            for (int i = 0; i < msg_part; ++i) {
+                const int ip_lb = MPIDIG_part_idx_lb(i, msg_part, n_part);
+                const int ip_ub = MPIDIG_part_idx_ub(i, msg_part, n_part);
+                MPIR_cc_set(cc_msg + i, ip_ub - ip_lb);
+            }
+        }
+
         /* we have to reset information for the current iteration.
          * The reset is done in the CTS reception callback as well but no msgs has been sent
          * so it's safe to overwrite it*/

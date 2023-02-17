@@ -198,26 +198,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    /* decrease the counter of the number of msgs requested to be send
-     * if we have requested the send of every msgs then we can reset the counters */
-    int incomplete;
-    MPIR_cc_decr(&MPIDIG_PART_SREQUEST(sreq, cc_send), &incomplete);
-    if (!incomplete) {
-        const int n_part = sreq->u.part.partitions;
-        MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(sreq, cc_part);
-        for (int ip = 0; ip < n_part; ++ip) {
-            MPIR_cc_set(&cc_part[ip], MPIDIG_PART_STATUS_SEND_TAG_LATER_INIT);
-        }
-        /* reset the counter per msg to be ready for the next iteration */
-        const int msg_part = MPIDIG_PART_REQUEST(sreq, msg_part);
-        MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(sreq, cc_msg);
-        for (int i = 0; i < msg_part; ++i) {
-            const int ip_lb = MPIDIG_part_idx_lb(i, msg_part, n_part);
-            const int ip_ub = MPIDIG_part_idx_ub(i, msg_part, n_part);
-            MPIR_cc_set(cc_msg + i, ip_ub - ip_lb);
-        }
-    }
-
     /* get the count per the msg partition and the shift in the buffer from the datatype */
     const int msg_part = MPIDIG_PART_REQUEST(sreq, msg_part);
     MPI_Aint count = MPIDI_PART_REQUEST(sreq, count) * sreq->u.part.partitions;
@@ -226,8 +206,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
     MPIR_Assert(count < MPIR_AINT_MAX);
 
     MPI_Aint part_offset;
-    MPI_Datatype dtype_send = MPIDI_PART_REQUEST(sreq, datatype);
-    MPIR_Datatype_get_extent_macro(dtype_send, part_offset);
+    MPI_Datatype *dtype_send = &MPIDI_PART_REQUEST(sreq, datatype);
+    MPIR_Datatype_get_extent_macro(*dtype_send, part_offset);
     part_offset *= count;
 
     const int dest_rank = MPIDI_PART_REQUEST(sreq, u.send.dest);
@@ -240,7 +220,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
 
     /* attr = 1 isolates the traffic of internal vs external communications */
     const int attr = 0;
-    MPID_Isend_parent(buf_send, count, dtype_send, dest_rank, dest_tag, comm, attr, cc_ptr,
+    MPID_Isend_parent(buf_send, count, *dtype_send, dest_rank, dest_tag, comm, attr, cc_ptr,
                       child_req + imsg);
 
     MPIR_FUNC_EXIT;
@@ -287,25 +267,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_data(const int imsg, MPIR_Request
      * TODO: can we get rid of the pointer? */
     MPIDIG_REQUEST(sreq, req->part_am_req.part_req_ptr) = part_sreq;
 
-    /* decrease the counter of the number of msgs requested to be send
-     * if we have requested the send of every msgs then we can reset the counters */
-    int incomplete;
-    MPIR_cc_decr(&MPIDIG_PART_SREQUEST(part_sreq, cc_send), &incomplete);
-    if (!incomplete) {
-        const int n_part = part_sreq->u.part.partitions;
-        MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(part_sreq, cc_part);
-        for (int ip = 0; ip < n_part; ++ip) {
-            MPIR_cc_set(&cc_part[ip], MPIDIG_PART_STATUS_SEND_AM_INIT);
-        }
-        /* reset the counter per msg to be ready for the next iteration */
-        MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(part_sreq, cc_msg);
-        for (int i = 0; i < msg_part; ++i) {
-            const int ip_lb = MPIDIG_part_idx_lb(i, msg_part, n_part);
-            const int ip_ub = MPIDIG_part_idx_ub(i, msg_part, n_part);
-            MPIR_cc_set(cc_msg + i, ip_ub - ip_lb);
-        }
-    }
-
     /* get the count per the msg partition and the shift in the buffer from the datatype */
     MPI_Aint count = MPIDI_PART_REQUEST(part_sreq, count) * part_sreq->u.part.partitions;
     MPIR_Assert(count % msg_part == 0);
@@ -348,13 +309,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_id,
     MPIR_FUNC_ENTER;
     MPIR_Assert(sreq->kind == MPIR_REQUEST_KIND__PART_SEND);
 
-    /*for each of the communication msgs in the range, try to see if they are ready */
     const bool do_tag = MPIDIG_PART_DO_TAG(sreq);
     MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(sreq, cc_msg);
     /* decrement the counter of the specific msg */
     int incomplete;
     MPIR_cc_decr(cc_msg + msg_id, &incomplete);
     if (!incomplete) {
+        /* decrease the counter of the number of msgs requested to be send,
+         * if we have requested the send of every msgs then we can reset the counters, must be done
+         * before the last send */
+        int no_reset;
+        MPIR_cc_decr(&MPIDIG_PART_SREQUEST(sreq, cc_send), &no_reset);
+        if (!no_reset) {
+            const int n_part = sreq->u.part.partitions;
+            MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(sreq, cc_part);
+            const int init_value =
+                (do_tag) ? MPIDIG_PART_STATUS_SEND_TAG_LATER_INIT : MPIDIG_PART_STATUS_SEND_AM_INIT;
+            for (int ip = 0; ip < n_part; ++ip) {
+                MPIR_cc_set(&cc_part[ip], init_value);
+            }
+        }
+        /* actually send the data */
         if (do_tag) {
             /* the lock in the VCI happens inside the send function */
             mpi_errno = MPIDIG_part_issue_send(msg_id, sreq);
