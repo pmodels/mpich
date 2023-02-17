@@ -204,7 +204,7 @@ noinst_PROGRAMS =          \
     putfence1              \
     putpscw1
 
-if BUILD_MPIX_TESTS
+if BUILD_NONSTRICT_TESTS
 noinst_PROGRAMS += aint   \
                    aint_collattach
 endif

@@ -32,7 +32,7 @@ noinst_PROGRAMS = \
     c2fmultio \
     c2f2ciof
 
-if BUILD_MPIX_TESTS
+if BUILD_NONSTRICT_TESTS
 noinst_PROGRAMS += \
     i_setviewcurf  \
     iwriteatallf

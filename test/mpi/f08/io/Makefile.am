@@ -32,7 +32,7 @@ noinst_PROGRAMS = \
     c2f90multio \
     c2f2ciof90
 
-if BUILD_MPIX_TESTS
+if BUILD_NONSTRICT_TESTS
 noinst_PROGRAMS += \
     i_fcoll_test \
     iwriteatallf90

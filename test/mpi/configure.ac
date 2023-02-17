@@ -622,9 +622,10 @@ if test "$enable_strictmpi" = "no"; then
 fi
 AC_SUBST(mpix)
 
-# Use the conditional variable BUILD_MPIX_TESTS to conditionally add MPIX tests
-# to noninst_PROGRAMS to skip building the tests when we do strict MPI test
-AM_CONDITIONAL([BUILD_MPIX_TESTS], [test "$enable_strictmpi" = "no"])
+# Use the conditional variable BUILD_NONSTRICT_TESTS to conditionally
+# add MPIX tests and tests that use deleted interfaces to
+# noninst_PROGRAMS to skip building the tests when we do strict MPI test
+AM_CONDITIONAL([BUILD_NONSTRICT_TESTS], [test "$enable_strictmpi" = "no"])
 
 dnl We cannot use AC_C_LONG_DOUBLE
 dnl because it does not support cross-compilation.  Instead, we use the
