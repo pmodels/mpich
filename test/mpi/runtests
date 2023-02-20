@@ -479,13 +479,6 @@ sub LoadTests {
                 next;
             }
 
-            if ($g_opt{strict}) {
-                # Strict MPI testing was requested, so assume that a non-MPICH MPI
-                # implementation is being tested and the "xfail" implementation
-                # assumptions do not hold.
-                delete($test_opt->{xfail});
-            }
-
             if ($test_opt->{xfail} && !$g_opt{runxfail}) {
                 # Skip xfail tests if they are not configured. Strict MPI tests that are
                 # marked xfail will still run with --enable-strictmpi.
