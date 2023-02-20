@@ -1,5 +1,5 @@
-sendself 1 test/mpi/pt2pt/sendself arg=-type=MPI_C_DOUBLE_COMPLEX arg=-sendcnt=8192 arg=-recvcnt=8192 arg=-seed=47 arg=-testsize=100
-sendself 2 test/mpi/pt2pt/sendself arg=-type=MPI_C_DOUBLE_COMPLEX arg=-sendcnt=8192 arg=-recvcnt=8192 arg=-seed=47 arg=-testsize=100
+sendself 1 arg=-type=MPI_C_DOUBLE_COMPLEX arg=-sendcnt=8192 arg=-recvcnt=8192 arg=-seed=47 arg=-testsize=100
+sendself 2 arg=-type=MPI_C_DOUBLE_COMPLEX arg=-sendcnt=8192 arg=-recvcnt=8192 arg=-seed=47 arg=-testsize=100
 sendrecv2 2
 sendrecv2 2 env=MPIR_CVAR_ASYNC_PROGRESS=1 env=MPIR_CVAR_CH4_PROGRESS_THREAD_AFFINITY=1,2 env=MPIR_CVAR_ODD_EVEN_CLIQUES=0 env=MPIR_CVAR_NUM_CLIQUES=1
 sendrecv2 2 env=MPIR_CVAR_ASYNC_PROGRESS=1 env=MPIR_CVAR_CH4_PROGRESS_THREAD_AFFINITY=auto env=MPIR_CVAR_ODD_EVEN_CLIQUES=0 env=MPIR_CVAR_NUM_CLIQUES=1
@@ -40,11 +40,11 @@ probenull 1
 probenull 1 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
 probenull 1 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
 # For testing, scancel will run with 1 process as well
-scancel 2 xfail=ticket2266 xfail=ticket2270
-scancel2 2 xfail=ticket2266 xfail=ticket2270
-pscancel 2 xfail=ticket2266 xfail=ticket2270
+scancel 2 xfail=ticket2266
+scancel2 2 xfail=ticket2266
+pscancel 2 xfail=ticket2266
 rcancel 2
-cancelrecv 2 xfail=ticket2266 xfail=ticket2270
+cancelrecv 2 xfail=ticket2266
 scancel_unmatch 2 xfail=ticket2276
 cancelanysrc 2
 isendselfprobe 1
