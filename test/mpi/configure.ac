@@ -472,6 +472,9 @@ if test "$MPI_IS_MPICH" = "yes" ; then
 fi
 
 AM_CONDITIONAL([NOT_STRICTMPI], [test x$enable_strictmpi = xno])
+if test "$enable_strictmpi" = "yes" ; then
+    AC_DEFINE([ENABLE_STRICTMPI], [1], [Define if configured with --enable-strictmpi])
+fi
 
 # First, determine whether we are/can support the language bindings
 #
