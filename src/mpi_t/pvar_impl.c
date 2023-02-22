@@ -9,7 +9,17 @@
 /* Define storage for the ALL_HANDLES constant */
 MPIR_T_pvar_handle_t MPIR_T_pvar_all_handles_obj;
 
+#ifndef BUILD_MPI_ABI
 MPIR_T_pvar_handle_t *const MPI_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_handles_obj;
+#define CHECK_PVAR_ALL_HANDLES(handle) do { } while (0)
+#else
+#define CHECK_PVAR_ALL_HANDLES(handle) \
+    do { \
+        if (handle == MPI_T_PVAR_ALL_HANDLES) { \
+            handle = &MPIR_T_pvar_all_handles_obj; \
+        } \
+    } while (0)
+#endif
 
 void MPIR_T_pvar_env_init(void)
 {
@@ -371,6 +381,8 @@ int MPIR_T_pvar_reset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_pvar_watermark_t *mark;
 
+    CHECK_PVAR_ALL_HANDLES(handle);
+
     if (MPIR_T_pvar_is_sum(handle)) {
         /* Use zero as starting value */
         memset(handle->accum, 0, handle->bytes * handle->count);
@@ -454,6 +466,8 @@ int MPIR_T_pvar_start_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_pvar_watermark_t *mark;
 
+    CHECK_PVAR_ALL_HANDLES(handle);
+
     if (MPIR_T_pvar_is_sum(handle)) {
         /* To start SUM, we only need to cache its current value into offset.
          * If it has ever been started, accum holds correct value. Otherwise,
@@ -491,6 +505,8 @@ int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {
     int i, mpi_errno = MPI_SUCCESS;
     MPIR_T_pvar_watermark_t *mark;
+
+    CHECK_PVAR_ALL_HANDLES(handle);
 
     MPIR_T_pvar_unset_started(handle);
 
