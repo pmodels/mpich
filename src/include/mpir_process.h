@@ -82,7 +82,11 @@ typedef struct MPIR_Process_t {
      * and the C function to call (itself a function defined by the
      * C++ interface and exported to C).  The first argument is used
      * to specify the kind (comm,file,win) */
+#ifndef BUILD_MPI_ABI
     void (*cxx_call_errfn) (int, int *, int *, void (*)(void));
+#else
+    void (*cxx_call_errfn) (int, ABI_Comm *, int *, void (*)(void));
+#endif
 #endif                          /* HAVE_CXX_BINDING */
 } MPIR_Process_t;
 extern MPIR_Process_t MPIR_Process;

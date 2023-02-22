@@ -166,7 +166,7 @@ typedef struct {
 
 /* Compute maxloc for unsigned long long type.
  * If more than one max value exists, the loc with lower rank is returned. */
-static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype)
+static void ull_maxloc_op(void *invec, void *inoutvec, int *len)
 {
     ull_maxloc_t *inmaxloc = (ull_maxloc_t *) invec;
     ull_maxloc_t *outmaxloc = (ull_maxloc_t *) inoutvec;
@@ -179,6 +179,18 @@ static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Dataty
             outmaxloc->loc = inmaxloc->loc;
     }
 }
+
+#ifndef BUILD_MPI_ABI
+static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype)
+{
+    ull_maxloc_op(invec, inoutvec, len);
+}
+#else
+static void ull_maxloc_op_func(void *invec, void *inoutvec, int *len, ABI_Datatype * datatype)
+{
+    ull_maxloc_op(invec, inoutvec, len);
+}
+#endif
 
 /* Allreduce MAXLOC for unsigned size type by using user defined operator
  * and derived datatype. We have to customize it because standard MAXLOC

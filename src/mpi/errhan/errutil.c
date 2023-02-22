@@ -25,6 +25,10 @@
 /* stdio is needed for vsprintf and vsnprintf */
 #include <stdio.h>
 
+#ifdef BUILD_MPI_ABI
+#include "mpi_abi_util.h"
+#endif
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -179,7 +183,11 @@ void MPII_Errhandler_set_cxx(MPI_Errhandler errhand, void (*errcall) (void))
 
     MPIR_Errhandler_get_ptr(errhand, errhand_ptr);
     errhand_ptr->language = MPIR_LANG__CXX;
+#ifndef BUILD_MPI_ABI
     MPIR_Process.cxx_call_errfn = (void (*)(int, int *, int *, void (*)(void))) errcall;
+#else
+    MPIR_Process.cxx_call_errfn = (void (*)(int, ABI_Comm *, int *, void (*)(void))) errcall;
+#endif
 }
 #endif /* HAVE_CXX_BINDING */
 
@@ -311,14 +319,18 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
         errhandler->handle != MPIR_ERRORS_THROW_EXCEPTIONS) {
         /* We pass a final 0 (for a null pointer) to these routines
          * because MPICH-1 expected that */
+#ifndef BUILD_MPI_ABI
+        int comm_handle = comm_ptr->handle;
+#else
+        ABI_Comm comm_handle = ABI_Comm_from_mpi(comm_ptr->handle);
+#endif
         switch (comm_ptr->errhandler->language) {
             case MPIR_LANG__C:
-                (*comm_ptr->errhandler->errfn.C_Comm_Handler_function) (&comm_ptr->handle, &errcode,
-                                                                        0);
+                (*comm_ptr->errhandler->errfn.C_Comm_Handler_function) (&comm_handle, &errcode, 0);
                 break;
 #ifdef HAVE_CXX_BINDING
             case MPIR_LANG__CXX:
-                (*MPIR_Process.cxx_call_errfn) (0, &comm_ptr->handle, &errcode,
+                (*MPIR_Process.cxx_call_errfn) (0, &comm_handle, &errcode,
                                                 (void (*)(void)) *comm_ptr->errhandler->
                                                 errfn.C_Comm_Handler_function);
                 /* The C++ code throws an exception if the error handler
@@ -388,14 +400,18 @@ int MPIR_Err_return_win(MPIR_Win * win_ptr, const char fcname[], int errcode)
 
         /* We pass a final 0 (for a null pointer) to these routines
          * because MPICH-1 expected that */
+#ifndef BUILD_MPI_ABI
+        int win_handle = win_ptr->handle;
+#else
+        ABI_Win win_handle = ABI_Win_from_mpi(win_ptr->handle);
+#endif
         switch (win_ptr->errhandler->language) {
             case MPIR_LANG__C:
-                (*win_ptr->errhandler->errfn.C_Win_Handler_function) (&win_ptr->handle, &errcode,
-                                                                      0);
+                (*win_ptr->errhandler->errfn.C_Win_Handler_function) (&win_handle, &errcode, 0);
                 break;
 #ifdef HAVE_CXX_BINDING
             case MPIR_LANG__CXX:
-                (*MPIR_Process.cxx_call_errfn) (2, &win_ptr->handle, &errcode,
+                (*MPIR_Process.cxx_call_errfn) (2, (void *) &win_handle, &errcode,
                                                 (void (*)(void)) *win_ptr->errhandler->
                                                 errfn.C_Win_Handler_function);
                 /* The C++ code throws an exception if the error handler
@@ -430,7 +446,6 @@ int MPIR_Err_return_session(struct MPIR_Session *session_ptr, const char fcname[
     const int error_class = ERROR_GET_CLASS(errcode);
     MPIR_Errhandler *errhandler = NULL;
     int errhandler_handle;
-    int session_handle;
 
     checkValidErrcode(error_class, fcname, &errcode);
 
@@ -471,7 +486,6 @@ int MPIR_Err_return_session(struct MPIR_Session *session_ptr, const char fcname[
 
     errhandler = session_ptr->errhandler;
     errhandler_handle = errhandler->handle;
-    session_handle = session_ptr->handle;
 
     /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Err_is_fatal(errcode) ||
@@ -487,13 +501,18 @@ int MPIR_Err_return_session(struct MPIR_Session *session_ptr, const char fcname[
     if (errhandler_handle != MPI_ERRORS_RETURN && errhandler_handle != MPIR_ERRORS_THROW_EXCEPTIONS) {
         /* We pass a final 0 (for a null pointer) to these routines
          * because MPICH-1 expected that */
+#ifndef BUILD_MPI_ABI
+        int session_handle = session_ptr->handle;
+#else
+        ABI_Session session_handle = ABI_Session_from_mpi(session_ptr->handle);
+#endif
         switch (errhandler->language) {
             case MPIR_LANG__C:
                 (*errhandler->errfn.C_Session_Handler_function) (&session_handle, &errcode, 0);
                 break;
 #ifdef HAVE_CXX_BINDING
             case MPIR_LANG__CXX:
-                (*MPIR_Process.cxx_call_errfn) (0, &session_handle, &errcode,
+                (*MPIR_Process.cxx_call_errfn) (0, (void *) &session_handle, &errcode,
                                                 (void (*)(void)) *errhandler->
                                                 errfn.C_Session_Handler_function);
                 /* The C++ code throws an exception if the error handler
@@ -510,7 +529,7 @@ int MPIR_Err_return_session(struct MPIR_Session *session_ptr, const char fcname[
                      * convert.  As this is not performance critical, we
                      * do this even if MPI_Fint and int are the same size. */
                     MPI_Fint ferr = errcode;
-                    MPI_Fint handle = (MPI_Fint) session_handle;
+                    MPI_Fint handle = (MPI_Fint) session_ptr->handle;
                     (*errhandler->errfn.F77_Handler_function) (&handle, &ferr);
                 }
                 break;
@@ -556,7 +575,6 @@ int MPIR_Err_return_session_init(MPIR_Errhandler * errhandler_ptr, const char fc
 
     MPIR_Assert(errhandler_ptr != NULL);
     errhandler_handle = errhandler_ptr->handle;
-    MPI_Session session_null_handle = MPI_SESSION_NULL;
 
     /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Err_is_fatal(errcode) ||
@@ -572,6 +590,11 @@ int MPIR_Err_return_session_init(MPIR_Errhandler * errhandler_ptr, const char fc
     if (errhandler_handle != MPI_ERRORS_RETURN && errhandler_handle != MPIR_ERRORS_THROW_EXCEPTIONS) {
         /* We pass a final 0 (for a null pointer) to these routines
          * because MPICH-1 expected that */
+#ifndef BUILD_MPI_ABI
+        MPI_Session session_null_handle = MPI_SESSION_NULL;
+#else
+        ABI_Session session_null_handle = ABI_SESSION_NULL;
+#endif
         switch (errhandler_ptr->language) {
             case MPIR_LANG__C:
                 (*errhandler_ptr->errfn.C_Session_Handler_function) (&session_null_handle, &errcode,
@@ -579,7 +602,7 @@ int MPIR_Err_return_session_init(MPIR_Errhandler * errhandler_ptr, const char fc
                 break;
 #ifdef HAVE_CXX_BINDING
             case MPIR_LANG__CXX:
-                (*MPIR_Process.cxx_call_errfn) (0, &session_null_handle, &errcode,
+                (*MPIR_Process.cxx_call_errfn) (0, (void *) &session_null_handle, &errcode,
                                                 (void (*)(void)) *errhandler_ptr->
                                                 errfn.C_Session_Handler_function);
                 /* The C++ code throws an exception if the error handler
@@ -596,7 +619,7 @@ int MPIR_Err_return_session_init(MPIR_Errhandler * errhandler_ptr, const char fc
                      * convert.  As this is not performance critical, we
                      * do this even if MPI_Fint and int are the same size. */
                     MPI_Fint ferr = errcode;
-                    MPI_Fint handle = (MPI_Fint) session_null_handle;
+                    MPI_Fint handle = (MPI_Fint) MPI_SESSION_NULL;
                     (*errhandler_ptr->errfn.F77_Handler_function) (&handle, &ferr);
                 }
                 break;
@@ -651,7 +674,6 @@ int MPIR_Err_return_comm_create_from_group(MPIR_Errhandler * errhandler_ptr, con
 
     MPIR_Assert(errhandler_ptr != NULL);
     errhandler_handle = errhandler_ptr->handle;
-    MPI_Comm comm_null_handle = MPI_COMM_NULL;
 
     /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Err_is_fatal(errcode) ||
@@ -667,13 +689,18 @@ int MPIR_Err_return_comm_create_from_group(MPIR_Errhandler * errhandler_ptr, con
     if (errhandler_handle != MPI_ERRORS_RETURN && errhandler_handle != MPIR_ERRORS_THROW_EXCEPTIONS) {
         /* We pass a final 0 (for a null pointer) to these routines
          * because MPICH-1 expected that */
+#ifndef BUILD_MPI_ABI
+        MPI_Comm comm_null_handle = MPI_COMM_NULL;
+#else
+        ABI_Comm comm_null_handle = ABI_COMM_NULL;
+#endif
         switch (errhandler_ptr->language) {
             case MPIR_LANG__C:
                 (*errhandler_ptr->errfn.C_Comm_Handler_function) (&comm_null_handle, &errcode, 0);
                 break;
 #ifdef HAVE_CXX_BINDING
             case MPIR_LANG__CXX:
-                (*MPIR_Process.cxx_call_errfn) (0, &comm_null_handle, &errcode,
+                (*MPIR_Process.cxx_call_errfn) (0, (void *) &comm_null_handle, &errcode,
                                                 (void (*)(void)) *errhandler_ptr->
                                                 errfn.C_Comm_Handler_function);
                 /* The C++ code throws an exception if the error handler
@@ -690,7 +717,7 @@ int MPIR_Err_return_comm_create_from_group(MPIR_Errhandler * errhandler_ptr, con
                      * convert.  As this is not performance critical, we
                      * do this even if MPI_Fint and int are the same size. */
                     MPI_Fint ferr = errcode;
-                    MPI_Fint handle = (MPI_Fint) comm_null_handle;
+                    MPI_Fint handle = (MPI_Fint) MPI_COMM_NULL;
                     (*errhandler_ptr->errfn.F77_Handler_function) (&handle, &ferr);
                 }
                 break;
