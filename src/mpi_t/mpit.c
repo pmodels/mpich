@@ -303,8 +303,8 @@ int MPIR_T_cat_add_event(const char *cat_name, int event_index)
  * IN: desc, Description of the cvar
  */
 void MPIR_T_CVAR_REGISTER_impl(MPI_Datatype dtype, const char *name, const void *addr, int count,
-                               MPIR_T_enum_t * etype, MPIR_T_verbosity_t verb,
-                               MPIR_T_bind_t binding, MPIR_T_scope_t scope,
+                               MPIR_T_enum_t * etype, int verb,
+                               int binding, int scope,
                                MPIR_T_cvar_get_addr_cb get_addr, MPIR_T_cvar_get_count_cb get_count,
                                MPIR_T_cvar_value_t defaultval, const char *cat, const char *desc)
 {
@@ -387,9 +387,9 @@ void MPIR_T_CVAR_REGISTER_impl(MPI_Datatype dtype, const char *name, const void 
  * IN: cat, Catogery name of the pvar
  * IN: desc, Description of the pvar
  */
-void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype dtype, const char *name,
+void MPIR_T_PVAR_REGISTER_impl(int varclass, MPI_Datatype dtype, const char *name,
                                void *addr, int count, MPIR_T_enum_t * etype,
-                               MPIR_T_verbosity_t verb, MPIR_T_bind_t binding, int flags,
+                               int verb, int binding, int flags,
                                MPIR_T_pvar_get_value_cb get_value,
                                MPIR_T_pvar_get_count_cb get_count, const char *cat,
                                const char *desc)

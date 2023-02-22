@@ -10,9 +10,9 @@ static MPIR_T_source_t *sources;
 static int global_num_events;
 static MPIR_T_event_t *events;
 
-void MPIR_T_register_event(int source_index, const char *name, MPIR_T_verbosity_t verbosity,
+void MPIR_T_register_event(int source_index, const char *name, int verbosity,
                            MPI_Datatype array_of_datatypes[], MPI_Aint array_of_displacements[],
-                           MPI_Aint num_elements, const char *desc, MPIR_T_bind_t bind,
+                           MPI_Aint num_elements, const char *desc, int bind,
                            const char *category, int *index)
 {
 #ifdef HAVE_MPIT_EVENTS
