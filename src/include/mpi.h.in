@@ -15,6 +15,46 @@
 #define MPICH_API_PUBLIC
 #endif
 
+#define MPI_VERSION    4
+#define MPI_SUBVERSION 0
+#define MPICH_NAME     4
+#define MPICH         1
+#define MPICH_HAS_C2F  1
+
+/* MPICH_VERSION is the version string. MPICH_NUMVERSION is the
+ * numeric version that can be used in numeric comparisons.
+ *
+ * MPICH_VERSION uses the following format:
+ * Version: [MAJ].[MIN].[REV][EXT][EXT_NUMBER]
+ * Example: 1.0.7rc1 has
+ *          MAJ = 1
+ *          MIN = 0
+ *          REV = 7
+ *          EXT = rc
+ *          EXT_NUMBER = 1
+ *
+ * MPICH_NUMVERSION will convert EXT to a format number:
+ *          ALPHA (a) = 0
+ *          BETA (b)  = 1
+ *          RC (rc)   = 2
+ *          PATCH (p) = 3
+ * Regular releases are treated as patch 0
+ *
+ * Numeric version will have 1 digit for MAJ, 2 digits for MIN, 2
+ * digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER. So,
+ * 1.0.7rc1 will have the numeric version 10007201.
+ */
+#define MPICH_VERSION "@MPICH_VERSION@"
+#define MPICH_NUMVERSION @MPICH_NUMVERSION@
+
+#define MPICH_RELEASE_TYPE_ALPHA  0
+#define MPICH_RELEASE_TYPE_BETA   1
+#define MPICH_RELEASE_TYPE_RC     2
+#define MPICH_RELEASE_TYPE_PATCH  3
+
+#define MPICH_CALC_VERSION(MAJOR, MINOR, REVISION, TYPE, PATCH) \
+    (((MAJOR) * 10000000) + ((MINOR) * 100000) + ((REVISION) * 1000) + ((TYPE) * 100) + (PATCH))
+
 /* Keep C++ compilers from getting confused */
 #if defined(__cplusplus)
 extern "C" {
@@ -68,13 +108,13 @@ extern "C" {
 #  define MPICH_ATTR_TYPE_TAG_STDINT(type)
 #endif
 
-#ifdef __STDC_VERSION__ 
+#ifdef __STDC_VERSION__
 #if __STDC_VERSION__ >= 199901
 #  define MPICH_ATTR_TYPE_TAG_C99(type) MPICH_ATTR_TYPE_TAG(type)
 #else
 #  define MPICH_ATTR_TYPE_TAG_C99(type)
 #endif
-#else 
+#else
 #  define MPICH_ATTR_TYPE_TAG_C99(type)
 #endif
 
@@ -84,6 +124,7 @@ extern "C" {
 #  define MPICH_ATTR_TYPE_TAG_CXX(type)
 #endif
 
+@MPIU_DLL_SPEC_DEF@
 
 /* Define some null objects */
 #define MPI_COMM_NULL      ((MPI_Comm)0x04000000)
@@ -95,12 +136,6 @@ extern "C" {
 #define MPI_MESSAGE_NULL   ((MPI_Message)0x2c000000)
 #define MPI_MESSAGE_NO_PROC ((MPI_Message)0x6c000000)
 #define MPIX_STREAM_NULL   ((MPIX_Stream)0x3c000000)
-
-/* Results of the compare operations. */
-#define MPI_IDENT     0
-#define MPI_CONGRUENT 1
-#define MPI_SIMILAR   2
-#define MPI_UNEQUAL   3
 
 typedef int MPI_Datatype;
 #define MPI_CHAR           ((MPI_Datatype)@MPI_CHAR@)
@@ -121,38 +156,17 @@ typedef int MPI_Datatype;
 #define MPI_UNSIGNED_LONG_LONG ((MPI_Datatype)@MPI_UNSIGNED_LONG_LONG@)
 #define MPI_LONG_LONG      MPI_LONG_LONG_INT
 
-#ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
-static const MPI_Datatype mpich_mpi_char               MPICH_ATTR_TYPE_TAG(char)               = MPI_CHAR;
-static const MPI_Datatype mpich_mpi_signed_char        MPICH_ATTR_TYPE_TAG(signed char)        = MPI_SIGNED_CHAR;
-static const MPI_Datatype mpich_mpi_unsigned_char      MPICH_ATTR_TYPE_TAG(unsigned char)      = MPI_UNSIGNED_CHAR;
-/*static const MPI_Datatype mpich_mpi_byte               MPICH_ATTR_TYPE_TAG(char)               = MPI_BYTE;*/
-static const MPI_Datatype mpich_mpi_wchar              MPICH_ATTR_TYPE_TAG(wchar_t)            = MPI_WCHAR;
-static const MPI_Datatype mpich_mpi_short              MPICH_ATTR_TYPE_TAG(short)              = MPI_SHORT;
-static const MPI_Datatype mpich_mpi_unsigned_short     MPICH_ATTR_TYPE_TAG(unsigned short)     = MPI_UNSIGNED_SHORT;
-static const MPI_Datatype mpich_mpi_int                MPICH_ATTR_TYPE_TAG(int)                = MPI_INT;
-static const MPI_Datatype mpich_mpi_unsigned           MPICH_ATTR_TYPE_TAG(unsigned)           = MPI_UNSIGNED;
-static const MPI_Datatype mpich_mpi_long               MPICH_ATTR_TYPE_TAG(long)               = MPI_LONG;
-static const MPI_Datatype mpich_mpi_unsigned_long      MPICH_ATTR_TYPE_TAG(unsigned long)      = MPI_UNSIGNED_LONG;
-static const MPI_Datatype mpich_mpi_float              MPICH_ATTR_TYPE_TAG(float)              = MPI_FLOAT;
-static const MPI_Datatype mpich_mpi_double             MPICH_ATTR_TYPE_TAG(double)             = MPI_DOUBLE;
-#if @MPI_LONG_DOUBLE@ != 0x0c000000
-static const MPI_Datatype mpich_mpi_long_double        MPICH_ATTR_TYPE_TAG(long double)        = MPI_LONG_DOUBLE;
-#endif
-static const MPI_Datatype mpich_mpi_long_long_int      MPICH_ATTR_TYPE_TAG(long long int)      = MPI_LONG_LONG_INT;
-static const MPI_Datatype mpich_mpi_unsigned_long_long MPICH_ATTR_TYPE_TAG(unsigned long long) = MPI_UNSIGNED_LONG_LONG;
-#endif
-
 #define MPI_PACKED         ((MPI_Datatype)@MPI_PACKED@)
 #define MPI_LB             ((MPI_Datatype)@MPI_LB@)
 #define MPI_UB             ((MPI_Datatype)@MPI_UB@)
 
-/* 
+/*
    The layouts for the types MPI_DOUBLE_INT etc are simply
-   struct { 
+   struct {
        double var;
        int    loc;
    }
-   This is documented in the man pages on the various datatypes.   
+   This is documented in the man pages on the various datatypes.
  */
 #define MPI_FLOAT_INT         ((MPI_Datatype)@MPI_FLOAT_INT@)
 #define MPI_DOUBLE_INT        ((MPI_Datatype)@MPI_DOUBLE_INT@)
@@ -160,40 +174,6 @@ static const MPI_Datatype mpich_mpi_unsigned_long_long MPICH_ATTR_TYPE_TAG(unsig
 #define MPI_SHORT_INT         ((MPI_Datatype)@MPI_SHORT_INT@)
 #define MPI_2INT              ((MPI_Datatype)@MPI_2INT@)
 #define MPI_LONG_DOUBLE_INT   ((MPI_Datatype)@MPI_LONG_DOUBLE_INT@)
-
-#ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
-struct mpich_struct_mpi_float_int       { float f; int i; };
-struct mpich_struct_mpi_double_int      { double d; int i; };
-struct mpich_struct_mpi_long_int        { long l; int i; };
-struct mpich_struct_mpi_short_int       { short s; int i; };
-struct mpich_struct_mpi_2int            { int i1; int i2; };
-#if @MPI_LONG_DOUBLE_INT@ != 0x0c000000
-struct mpich_struct_mpi_long_double_int { long double ld; int i; };
-#endif
-
-static const MPI_Datatype mpich_mpi_float_int       MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_float_int)       = MPI_FLOAT_INT;
-static const MPI_Datatype mpich_mpi_double_int      MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_double_int)      = MPI_DOUBLE_INT;
-static const MPI_Datatype mpich_mpi_long_int        MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_long_int)        = MPI_LONG_INT;
-static const MPI_Datatype mpich_mpi_short_int       MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_short_int)       = MPI_SHORT_INT;
-
-/*
- * The MPI_2INT line is commented out because currently Clang 3.3 flags
- * struct {int i1; int i2;} as different from int[2]. But actually these
- * two types are of the same layout. Clang gives a type mismatch warning
- * for a definitely correct code like the following:
- *  int in[2], out[2];
- *  MPI_Reduce(in, out, 1, MPI_2INT, MPI_MAXLOC, 0, MPI_COMM_WORLD);
- *
- * So, we disable type checking for MPI_2INT until Clang fixes this bug.
- */
-
-/* static const MPI_Datatype mpich_mpi_2int            MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_2int)            = MPI_2INT
- */
-
-#if @MPI_LONG_DOUBLE_INT@ != 0x0c000000
-static const MPI_Datatype mpich_mpi_long_double_int MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_long_double_int) = MPI_LONG_DOUBLE_INT;
-#endif
-#endif
 
 /* Fortran types */
 #define MPI_COMPLEX           ((MPI_Datatype)@MPI_COMPLEX@)
@@ -230,17 +210,6 @@ static const MPI_Datatype mpich_mpi_long_double_int MPICH_ATTR_TYPE_TAG_LAYOUT_C
 #define MPI_UINT32_T          ((MPI_Datatype)@MPI_UINT32_T@)
 #define MPI_UINT64_T          ((MPI_Datatype)@MPI_UINT64_T@)
 
-#ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
-static const MPI_Datatype mpich_mpi_int8_t   MPICH_ATTR_TYPE_TAG_STDINT(int8_t)   = MPI_INT8_T;
-static const MPI_Datatype mpich_mpi_int16_t  MPICH_ATTR_TYPE_TAG_STDINT(int16_t)  = MPI_INT16_T;
-static const MPI_Datatype mpich_mpi_int32_t  MPICH_ATTR_TYPE_TAG_STDINT(int32_t)  = MPI_INT32_T;
-static const MPI_Datatype mpich_mpi_int64_t  MPICH_ATTR_TYPE_TAG_STDINT(int64_t)  = MPI_INT64_T;
-static const MPI_Datatype mpich_mpi_uint8_t  MPICH_ATTR_TYPE_TAG_STDINT(uint8_t)  = MPI_UINT8_T;
-static const MPI_Datatype mpich_mpi_uint16_t MPICH_ATTR_TYPE_TAG_STDINT(uint16_t) = MPI_UINT16_T;
-static const MPI_Datatype mpich_mpi_uint32_t MPICH_ATTR_TYPE_TAG_STDINT(uint32_t) = MPI_UINT32_T;
-static const MPI_Datatype mpich_mpi_uint64_t MPICH_ATTR_TYPE_TAG_STDINT(uint64_t) = MPI_UINT64_T;
-#endif
-
 /* other C99 types */
 #define MPI_C_BOOL                 ((MPI_Datatype)@MPI_C_BOOL@)
 #define MPI_C_FLOAT_COMPLEX        ((MPI_Datatype)@MPI_C_FLOAT_COMPLEX@)
@@ -249,15 +218,6 @@ static const MPI_Datatype mpich_mpi_uint64_t MPICH_ATTR_TYPE_TAG_STDINT(uint64_t
 #define MPI_C_LONG_DOUBLE_COMPLEX  ((MPI_Datatype)@MPI_C_LONG_DOUBLE_COMPLEX@)
 /* other extension types */
 #define MPIX_C_FLOAT16             ((MPI_Datatype)@MPIX_C_FLOAT16@)
-
-#ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
-static const MPI_Datatype mpich_mpi_c_bool                MPICH_ATTR_TYPE_TAG_C99(_Bool)           = MPI_C_BOOL;
-static const MPI_Datatype mpich_mpi_c_float_complex       MPICH_ATTR_TYPE_TAG_C99(float _Complex)  = MPI_C_FLOAT_COMPLEX;
-static const MPI_Datatype mpich_mpi_c_double_complex      MPICH_ATTR_TYPE_TAG_C99(double _Complex) = MPI_C_DOUBLE_COMPLEX;
-#if @MPI_C_LONG_DOUBLE_COMPLEX@ != 0x0c000000
-static const MPI_Datatype mpich_mpi_c_long_double_complex MPICH_ATTR_TYPE_TAG_C99(long double _Complex) = MPI_C_LONG_DOUBLE_COMPLEX;
-#endif
-#endif
 
 /* address/offset types */
 #define MPI_AINT          ((MPI_Datatype)@MPI_AINT_DATATYPE@)
@@ -269,11 +229,6 @@ static const MPI_Datatype mpich_mpi_c_long_double_complex MPICH_ATTR_TYPE_TAG_C9
 #define MPI_CXX_FLOAT_COMPLEX       ((MPI_Datatype)@MPIR_CXX_FLOAT_COMPLEX@)
 #define MPI_CXX_DOUBLE_COMPLEX      ((MPI_Datatype)@MPIR_CXX_DOUBLE_COMPLEX@)
 #define MPI_CXX_LONG_DOUBLE_COMPLEX ((MPI_Datatype)@MPIR_CXX_LONG_DOUBLE_COMPLEX@)
-
-/* typeclasses */
-#define MPI_TYPECLASS_REAL 1
-#define MPI_TYPECLASS_INTEGER 2
-#define MPI_TYPECLASS_COMPLEX 3
 
 /* Communicators */
 typedef int MPI_Comm;
@@ -318,16 +273,49 @@ typedef int MPI_Op;
 #define MPI_REPLACE (MPI_Op)(0x5800000d)
 #define MPI_NO_OP   (MPI_Op)(0x5800000e)
 
+/* MPI errhandler objects */
+typedef int MPI_Errhandler;
+
+/* Built in (0x1 in 30-31), errhandler (0x5 in bits 26-29, allkind (0
+   in 22-25), index in the low bits */
+#define MPI_ERRORS_ARE_FATAL ((MPI_Errhandler)0x54000000)
+#define MPI_ERRORS_RETURN    ((MPI_Errhandler)0x54000001)
+/* MPIR_ERRORS_THROW_EXCEPTIONS is not part of the MPI standard, it is here to
+   facilitate the c++ binding which has MPI::ERRORS_THROW_EXCEPTIONS.
+   Using the MPIR prefix preserved the MPI_ names for objects defined by
+   the standard. */
+#define MPIR_ERRORS_THROW_EXCEPTIONS ((MPI_Errhandler)0x54000002)
+#define MPI_ERRORS_ABORT     ((MPI_Errhandler)0x54000003)
+
+/* MPI request objects */
+typedef int MPI_Request;
+
+/* MPI message objects for Mprobe and related functions */
+typedef int MPI_Message;
+
+/* Generalized requests extensions */
+typedef int MPIX_Grequest_class;
+
+/* MPI stream objects */
+typedef int MPIX_Stream;
+
+/* for info */
+typedef int MPI_Info;
+#define MPI_INFO_NULL         ((MPI_Info)0x1c000000)
+#define MPI_INFO_ENV          ((MPI_Info)0x5c000001)
+
 /* Permanent key values */
+#define MPI_KEYVAL_INVALID 0x24000000
+
 /* C Versions (return pointer to value),
    Fortran Versions (return integer value).
    Handled directly by the attribute value routine
-   
+
    DO NOT CHANGE THESE.  The values encode:
    builtin kind (0x1 in bit 30-31)
    Keyval object (0x9 in bits 26-29)
    for communicator (0x1 in bits 22-25)
-   
+
    Fortran versions of the attributes are formed by adding one to
    the C version.
  */
@@ -349,7 +337,132 @@ typedef int MPI_Op;
 
 #ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
 static const MPI_Datatype mpich_mpi_datatype_null MPICH_ATTR_TYPE_TAG_MUST_BE_NULL() = MPI_DATATYPE_NULL;
+static const MPI_Datatype mpich_mpi_char               MPICH_ATTR_TYPE_TAG(char)               = MPI_CHAR;
+static const MPI_Datatype mpich_mpi_signed_char        MPICH_ATTR_TYPE_TAG(signed char)        = MPI_SIGNED_CHAR;
+static const MPI_Datatype mpich_mpi_unsigned_char      MPICH_ATTR_TYPE_TAG(unsigned char)      = MPI_UNSIGNED_CHAR;
+/*static const MPI_Datatype mpich_mpi_byte               MPICH_ATTR_TYPE_TAG(char)               = MPI_BYTE;*/
+static const MPI_Datatype mpich_mpi_wchar              MPICH_ATTR_TYPE_TAG(wchar_t)            = MPI_WCHAR;
+static const MPI_Datatype mpich_mpi_short              MPICH_ATTR_TYPE_TAG(short)              = MPI_SHORT;
+static const MPI_Datatype mpich_mpi_unsigned_short     MPICH_ATTR_TYPE_TAG(unsigned short)     = MPI_UNSIGNED_SHORT;
+static const MPI_Datatype mpich_mpi_int                MPICH_ATTR_TYPE_TAG(int)                = MPI_INT;
+static const MPI_Datatype mpich_mpi_unsigned           MPICH_ATTR_TYPE_TAG(unsigned)           = MPI_UNSIGNED;
+static const MPI_Datatype mpich_mpi_long               MPICH_ATTR_TYPE_TAG(long)               = MPI_LONG;
+static const MPI_Datatype mpich_mpi_unsigned_long      MPICH_ATTR_TYPE_TAG(unsigned long)      = MPI_UNSIGNED_LONG;
+static const MPI_Datatype mpich_mpi_float              MPICH_ATTR_TYPE_TAG(float)              = MPI_FLOAT;
+static const MPI_Datatype mpich_mpi_double             MPICH_ATTR_TYPE_TAG(double)             = MPI_DOUBLE;
+#if @MPI_LONG_DOUBLE@ != 0x0c000000
+static const MPI_Datatype mpich_mpi_long_double        MPICH_ATTR_TYPE_TAG(long double)        = MPI_LONG_DOUBLE;
 #endif
+static const MPI_Datatype mpich_mpi_long_long_int      MPICH_ATTR_TYPE_TAG(long long int)      = MPI_LONG_LONG_INT;
+static const MPI_Datatype mpich_mpi_unsigned_long_long MPICH_ATTR_TYPE_TAG(unsigned long long) = MPI_UNSIGNED_LONG_LONG;
+struct mpich_struct_mpi_float_int       { float f; int i; };
+struct mpich_struct_mpi_double_int      { double d; int i; };
+struct mpich_struct_mpi_long_int        { long l; int i; };
+struct mpich_struct_mpi_short_int       { short s; int i; };
+struct mpich_struct_mpi_2int            { int i1; int i2; };
+#if @MPI_LONG_DOUBLE_INT@ != 0x0c000000
+struct mpich_struct_mpi_long_double_int { long double ld; int i; };
+#endif
+
+static const MPI_Datatype mpich_mpi_float_int       MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_float_int)       = MPI_FLOAT_INT;
+static const MPI_Datatype mpich_mpi_double_int      MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_double_int)      = MPI_DOUBLE_INT;
+static const MPI_Datatype mpich_mpi_long_int        MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_long_int)        = MPI_LONG_INT;
+static const MPI_Datatype mpich_mpi_short_int       MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_short_int)       = MPI_SHORT_INT;
+
+/*
+ * The MPI_2INT line is commented out because currently Clang 3.3 flags
+ * struct {int i1; int i2;} as different from int[2]. But actually these
+ * two types are of the same layout. Clang gives a type mismatch warning
+ * for a definitely correct code like the following:
+ *  int in[2], out[2];
+ *  MPI_Reduce(in, out, 1, MPI_2INT, MPI_MAXLOC, 0, MPI_COMM_WORLD);
+ *
+ * So, we disable type checking for MPI_2INT until Clang fixes this bug.
+ */
+
+/* static const MPI_Datatype mpich_mpi_2int            MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_2int)            = MPI_2INT
+ */
+
+#if @MPI_LONG_DOUBLE_INT@ != 0x0c000000
+static const MPI_Datatype mpich_mpi_long_double_int MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_long_double_int) = MPI_LONG_DOUBLE_INT;
+#endif
+
+static const MPI_Datatype mpich_mpi_int8_t   MPICH_ATTR_TYPE_TAG_STDINT(int8_t)   = MPI_INT8_T;
+static const MPI_Datatype mpich_mpi_int16_t  MPICH_ATTR_TYPE_TAG_STDINT(int16_t)  = MPI_INT16_T;
+static const MPI_Datatype mpich_mpi_int32_t  MPICH_ATTR_TYPE_TAG_STDINT(int32_t)  = MPI_INT32_T;
+static const MPI_Datatype mpich_mpi_int64_t  MPICH_ATTR_TYPE_TAG_STDINT(int64_t)  = MPI_INT64_T;
+static const MPI_Datatype mpich_mpi_uint8_t  MPICH_ATTR_TYPE_TAG_STDINT(uint8_t)  = MPI_UINT8_T;
+static const MPI_Datatype mpich_mpi_uint16_t MPICH_ATTR_TYPE_TAG_STDINT(uint16_t) = MPI_UINT16_T;
+static const MPI_Datatype mpich_mpi_uint32_t MPICH_ATTR_TYPE_TAG_STDINT(uint32_t) = MPI_UINT32_T;
+static const MPI_Datatype mpich_mpi_uint64_t MPICH_ATTR_TYPE_TAG_STDINT(uint64_t) = MPI_UINT64_T;
+
+static const MPI_Datatype mpich_mpi_c_bool                MPICH_ATTR_TYPE_TAG_C99(_Bool)           = MPI_C_BOOL;
+static const MPI_Datatype mpich_mpi_c_float_complex       MPICH_ATTR_TYPE_TAG_C99(float _Complex)  = MPI_C_FLOAT_COMPLEX;
+static const MPI_Datatype mpich_mpi_c_double_complex      MPICH_ATTR_TYPE_TAG_C99(double _Complex) = MPI_C_DOUBLE_COMPLEX;
+#if @MPI_C_LONG_DOUBLE_COMPLEX@ != 0x0c000000
+static const MPI_Datatype mpich_mpi_c_long_double_complex MPICH_ATTR_TYPE_TAG_C99(long double _Complex) = MPI_C_LONG_DOUBLE_COMPLEX;
+#endif
+
+static const MPI_Datatype mpich_mpi_aint   MPICH_ATTR_TYPE_TAG(MPI_Aint)   = MPI_AINT;
+static const MPI_Datatype mpich_mpi_offset MPICH_ATTR_TYPE_TAG(MPI_Offset) = MPI_OFFSET;
+#endif
+
+/* Definitions that are determined by configure. */
+typedef @MPI_AINT@ MPI_Aint;
+typedef @MPI_FINT@ MPI_Fint;
+typedef @MPI_COUNT@ MPI_Count;
+
+/* Let ROMIO know that MPI_Offset is already defined */
+#define HAVE_MPI_OFFSET
+/* MPI_OFFSET_TYPEDEF is set in configure and is
+      typedef $MPI_OFFSET MPI_Offset;
+   where $MPI_OFFSET is the correct C type */
+@MPI_OFFSET_TYPEDEF@
+
+/* The order of these elements must match that in mpif.h, mpi_f08_types.f90,
+   and mpi_c_interface_types.f90 */
+typedef struct MPI_Status {
+    int count_lo;
+    int count_hi_and_cancelled;
+    int MPI_SOURCE;
+    int MPI_TAG;
+    int MPI_ERROR;
+} MPI_Status;
+
+/* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
+extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
+extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
+/* The annotation MPIU_DLL_SPEC to the extern statements is used
+   as a hook for systems that require C extensions to correctly construct
+   DLLs, and is defined as an empty string otherwise
+ */
+
+/* C type for MPI_STATUS in F08.
+   The field order should match that in mpi_f08_types.f90, and mpi_c_interface_types.f90.
+ */
+typedef struct {
+    MPI_Fint count_lo;
+    MPI_Fint count_hi_and_cancelled;
+    MPI_Fint MPI_SOURCE;
+    MPI_Fint MPI_TAG;
+    MPI_Fint MPI_ERROR;
+} MPI_F08_status;
+
+/* MPI 4 added following constants to allow access F90 STATUS as an array of MPI_Fint */
+#define MPI_F_STATUS_SIZE 5
+#define MPI_F_SOURCE 2
+#define MPI_F_TAG 3
+#define MPI_F_ERROR 4
+
+/* Provided in libmpifort.so */
+extern MPI_F08_status *MPI_F08_STATUS_IGNORE;
+extern MPI_F08_status *MPI_F08_STATUSES_IGNORE;
+
+/* FIXME: The following two definition are not defined by MPI and must not be
+   included in the mpi.h file, as the MPI namespace is reserved to the MPI
+   standard */
+#define MPI_AINT_FMT_DEC_SPEC "@MPI_AINT_FMT_DEC_SPEC@"
+#define MPI_AINT_FMT_HEX_SPEC "@MPI_AINT_FMT_HEX_SPEC@"
 
 /* These are only guesses; make sure you change them in mpif.h as well */
 #define MPI_MAX_PROCESSOR_NAME @MPI_MAX_PROCESSOR_NAME@
@@ -359,10 +472,8 @@ static const MPI_Datatype mpich_mpi_datatype_null MPICH_ATTR_TYPE_TAG_MUST_BE_NU
 #define MPI_MAX_OBJECT_NAME    128
 #define MPI_MAX_STRINGTAG_LEN  256
 #define MPI_MAX_PSET_NAME_LEN  256
-
-/* Pre-defined constants */
-#define MPI_UNDEFINED      (-32766)
-#define MPI_KEYVAL_INVALID 0x24000000
+#define MPI_MAX_INFO_KEY       255
+#define MPI_MAX_INFO_VAL      1024
 
 /* MPI-3 window flavors */
 typedef enum MPIR_Win_flavor {
@@ -384,7 +495,6 @@ typedef enum MPIR_Win_model {
 /* Topology types */
 typedef enum MPIR_Topo_type { MPI_GRAPH=1, MPI_CART=2, MPI_DIST_GRAPH=3 } MPIR_Topo_type;
 
-#define MPI_BOTTOM      (void *)0
 extern int * const MPI_UNWEIGHTED MPICH_API_PUBLIC;
 extern int * const MPI_WEIGHTS_EMPTY MPICH_API_PUBLIC;
 
@@ -393,15 +503,241 @@ extern int * const MPI_WEIGHTS_EMPTY MPICH_API_PUBLIC;
 #define MPI_ROOT        (-3)
 #define MPI_ANY_TAG     (-1)
 
+#define MPI_BOTTOM      (void *)0
+#define MPI_IN_PLACE  (void *) -1
+
+#define MPI_UNDEFINED      (-32766)
+
+#define MPI_STATUS_IGNORE (MPI_Status *)1
+#define MPI_STATUSES_IGNORE (MPI_Status *)1
+#define MPI_ERRCODES_IGNORE (int *)0
+
+/* The MPI standard requires that the ARGV_NULL values be the same as
+   NULL (see 5.3.2) */
+#define MPI_ARGV_NULL (char **)0
+#define MPI_ARGVS_NULL (char ***)0
+
+/* Results of the compare operations. */
+#define MPI_IDENT     0
+#define MPI_CONGRUENT 1
+#define MPI_SIMILAR   2
+#define MPI_UNEQUAL   3
+
+/* typeclasses */
+#define MPI_TYPECLASS_REAL 1
+#define MPI_TYPECLASS_INTEGER 2
+#define MPI_TYPECLASS_COMPLEX 3
+
 #define MPI_LOCK_EXCLUSIVE  234
 #define MPI_LOCK_SHARED     235
 
-/* C functions */
+/* for the datatype decoders */
+enum MPIR_Combiner_enum {
+    MPI_COMBINER_NAMED            = 1,
+    MPI_COMBINER_DUP              = 2,
+    MPI_COMBINER_CONTIGUOUS       = 3,
+    MPI_COMBINER_VECTOR           = 4,
+    MPI_COMBINER_HVECTOR_INTEGER  = 5,
+    MPI_COMBINER_HVECTOR          = 6,
+    MPI_COMBINER_INDEXED          = 7,
+    MPI_COMBINER_HINDEXED_INTEGER = 8,
+    MPI_COMBINER_HINDEXED         = 9,
+    MPI_COMBINER_INDEXED_BLOCK    = 10,
+    MPI_COMBINER_STRUCT_INTEGER   = 11,
+    MPI_COMBINER_STRUCT           = 12,
+    MPI_COMBINER_SUBARRAY         = 13,
+    MPI_COMBINER_DARRAY           = 14,
+    MPI_COMBINER_F90_REAL         = 15,
+    MPI_COMBINER_F90_COMPLEX      = 16,
+    MPI_COMBINER_F90_INTEGER      = 17,
+    MPI_COMBINER_RESIZED          = 18,
+    MPI_COMBINER_HINDEXED_BLOCK   = 19
+};
+
+/* for subarray and darray constructors */
+#define MPI_ORDER_C              56
+#define MPI_ORDER_FORTRAN        57
+#define MPI_DISTRIBUTE_BLOCK    121
+#define MPI_DISTRIBUTE_CYCLIC   122
+#define MPI_DISTRIBUTE_NONE     123
+#define MPI_DISTRIBUTE_DFLT_DARG -49767
+
+/* asserts for one-sided communication */
+#define MPI_MODE_NOCHECK      1024
+#define MPI_MODE_NOSTORE      2048
+#define MPI_MODE_NOPUT        4096
+#define MPI_MODE_NOPRECEDE    8192
+#define MPI_MODE_NOSUCCEED   16384
+
+/* predefined types for MPI_Comm_split_type */
+#define MPI_COMM_TYPE_SHARED    1
+#define MPI_COMM_TYPE_HW_GUIDED 2
+#define MPI_COMM_TYPE_HW_UNGUIDED 3
+
+/* MPICH-specific types */
+#define MPIX_COMM_TYPE_NEIGHBORHOOD 4
+
+/* For supported thread levels */
+#define MPI_THREAD_SINGLE 0
+#define MPI_THREAD_FUNNELED 1
+#define MPI_THREAD_SERIALIZED 2
+#define MPI_THREAD_MULTIPLE 3
+
+/* MPI's error classes */
+#define MPI_SUCCESS          0      /* Successful return code */
+/* Communication argument parameters */
+#define MPI_ERR_BUFFER       1      /* Invalid buffer pointer */
+#define MPI_ERR_COUNT        2      /* Invalid count argument */
+#define MPI_ERR_TYPE         3      /* Invalid datatype argument */
+#define MPI_ERR_TAG          4      /* Invalid tag argument */
+#define MPI_ERR_COMM         5      /* Invalid communicator */
+#define MPI_ERR_RANK         6      /* Invalid rank */
+#define MPI_ERR_ROOT         7      /* Invalid root */
+#define MPI_ERR_TRUNCATE    14      /* Message truncated on receive */
+
+/* MPI Objects (other than COMM) */
+#define MPI_ERR_GROUP        8      /* Invalid group */
+#define MPI_ERR_OP           9      /* Invalid operation */
+#define MPI_ERR_REQUEST     19      /* Invalid mpi_request handle */
+
+/* Special topology argument parameters */
+#define MPI_ERR_TOPOLOGY    10      /* Invalid topology */
+#define MPI_ERR_DIMS        11      /* Invalid dimension argument */
+
+/* All other arguments.  This is a class with many kinds */
+#define MPI_ERR_ARG         12      /* Invalid argument */
+
+/* Other errors that are not simply an invalid argument */
+#define MPI_ERR_OTHER       15      /* Other error; use Error_string */
+
+#define MPI_ERR_UNKNOWN     13      /* Unknown error */
+#define MPI_ERR_INTERN      16      /* Internal error code    */
+
+/* Multiple completion has three special error classes */
+#define MPI_ERR_IN_STATUS           17      /* Look in status for error value */
+#define MPI_ERR_PENDING             18      /* Pending request */
+
+/* New MPI-2 Error classes */
+#define MPI_ERR_ACCESS      20      /* */
+#define MPI_ERR_AMODE       21      /* */
+#define MPI_ERR_BAD_FILE    22      /* */
+#define MPI_ERR_CONVERSION  23      /* */
+#define MPI_ERR_DUP_DATAREP 24      /* */
+#define MPI_ERR_FILE_EXISTS 25      /* */
+#define MPI_ERR_FILE_IN_USE 26      /* */
+#define MPI_ERR_FILE        27      /* */
+#define MPI_ERR_IO          32      /* */
+#define MPI_ERR_NO_SPACE    36      /* */
+#define MPI_ERR_NO_SUCH_FILE 37     /* */
+#define MPI_ERR_READ_ONLY   40      /* */
+#define MPI_ERR_UNSUPPORTED_DATAREP   43  /* */
+
+/* MPI_ERR_INFO is NOT defined in the MPI-2 standard.  I believe that
+   this is an oversight */
+#define MPI_ERR_INFO        28      /* */
+#define MPI_ERR_INFO_KEY    29      /* */
+#define MPI_ERR_INFO_VALUE  30      /* */
+#define MPI_ERR_INFO_NOKEY  31      /* */
+
+#define MPI_ERR_NAME        33      /* */
+#define MPI_ERR_NO_MEM      34      /* Alloc_mem could not allocate memory */
+#define MPI_ERR_NOT_SAME    35      /* */
+#define MPI_ERR_PORT        38      /* */
+#define MPI_ERR_QUOTA       39      /* */
+#define MPI_ERR_SERVICE     41      /* */
+#define MPI_ERR_SPAWN       42      /* */
+#define MPI_ERR_UNSUPPORTED_OPERATION 44 /* */
+#define MPI_ERR_WIN         45      /* */
+
+#define MPI_ERR_BASE        46      /* */
+#define MPI_ERR_LOCKTYPE    47      /* */
+#define MPI_ERR_KEYVAL      48      /* Erroneous attribute key */
+#define MPI_ERR_RMA_CONFLICT 49     /* */
+#define MPI_ERR_RMA_SYNC    50      /* */
+#define MPI_ERR_SIZE        51      /* */
+#define MPI_ERR_DISP        52      /* */
+#define MPI_ERR_ASSERT      53      /* */
+
+#define MPI_ERR_RMA_RANGE  55       /* */
+#define MPI_ERR_RMA_ATTACH 56       /* */
+#define MPI_ERR_RMA_SHARED 57       /* */
+#define MPI_ERR_RMA_FLAVOR 58       /* */
+
+/* Return codes for functions in the MPI Tool Information Interface */
+#define MPI_T_ERR_MEMORY            59  /* Out of memory */
+#define MPI_T_ERR_NOT_INITIALIZED   60  /* Interface not initialized */
+#define MPI_T_ERR_CANNOT_INIT       61  /* Interface not in the state to
+                                           be initialized */
+#define MPI_T_ERR_INVALID_INDEX     62  /* The index is invalid or
+                                           has been deleted  */
+#define MPI_T_ERR_INVALID_ITEM      63  /* Deprecated.  If a queried item index is out of range,
+                                         * MPI-4 will return MPI_T_ERR_INVALID_INDEX instead. */
+#define MPI_T_ERR_INVALID_HANDLE    64  /* The handle is invalid */
+#define MPI_T_ERR_OUT_OF_HANDLES    65  /* No more handles available */
+#define MPI_T_ERR_OUT_OF_SESSIONS   66  /* No more sessions available */
+#define MPI_T_ERR_INVALID_SESSION   67  /* Session argument is not valid */
+#define MPI_T_ERR_CVAR_SET_NOT_NOW  68  /* Cvar can't be set at this moment */
+#define MPI_T_ERR_CVAR_SET_NEVER    69  /* Cvar can't be set until
+                                           end of execution */
+#define MPI_T_ERR_PVAR_NO_STARTSTOP 70  /* Pvar can't be started or stopped */
+#define MPI_T_ERR_PVAR_NO_WRITE     71  /* Pvar can't be written or reset */
+#define MPI_T_ERR_PVAR_NO_ATOMIC    72  /* Pvar can't be R/W atomically */
+#define MPI_T_ERR_INVALID_NAME      73  /* Name doesn't match */
+#define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
+
+#define MPI_ERR_SESSION            75  /* Invalid session handle */
+#define MPI_ERR_PROC_ABORTED       76  /* Trying to communicate with aborted processes */
+#define MPI_ERR_VALUE_TOO_LARGE    77  /* Value is too large to store */
+
+#define MPI_T_ERR_NOT_SUPPORTED    78  /* Requested functionality not supported */
+#define MPI_T_ERR_NOT_ACCESSIBLE   79  /* Requested functionality not accessible */
+
+#define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a
+					   predefined error class */
+#define MPICH_ERR_LAST_CLASS 79     /* It is also helpful to know the
+				       last valid class */
+
+#define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
+                                  * already using some of the values in this
+                                  * range. All MPIX error codes will be
+                                  * above this value to be ABI complaint. */
+
+#define MPIX_ERR_PROC_FAILED          MPICH_ERR_FIRST_MPIX+1 /* Process failure */
+#define MPIX_ERR_PROC_FAILED_PENDING  MPICH_ERR_FIRST_MPIX+2 /* A failure has caused this request
+                                                              * to be pending */
+#define MPIX_ERR_REVOKED              MPICH_ERR_FIRST_MPIX+3 /* The communication object has been revoked */
+#define MPIX_ERR_EAGAIN               MPICH_ERR_FIRST_MPIX+4 /* Operation could not be issued */
+#define MPIX_ERR_NOREQ                MPICH_ERR_FIRST_MPIX+5 /* Cannot allocate request */
+#define MPIX_ERR_STREAM               MPICH_ERR_FIRST_MPIX+6 /* Invalid stream */
+#define MPIX_ERR_TIMEOUT              MPICH_ERR_FIRST_MPIX+7 /* Operation timed out */
+
+#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+7
+
+/* End of MPI's error classes */
+
+/* GPU extensions */
+#define MPIX_GPU_SUPPORT_CUDA  (0)
+#define MPIX_GPU_SUPPORT_ZE    (1)
+#define MPIX_GPU_SUPPORT_HIP   (2)
+
+/* feature advertisement */
+#define MPIIMPL_ADVERTISES_FEATURES 1
+#define MPIIMPL_HAVE_MPI_INFO 1
+#define MPIIMPL_HAVE_MPI_COMBINER_DARRAY 1
+#define MPIIMPL_HAVE_MPI_TYPE_CREATE_DARRAY 1
+#define MPIIMPL_HAVE_MPI_COMBINER_SUBARRAY 1
+#define MPIIMPL_HAVE_MPI_TYPE_CREATE_DARRAY 1
+#define MPIIMPL_HAVE_MPI_COMBINER_DUP 1
+#define MPIIMPL_HAVE_MPI_GREQUEST 1
+#define MPIIMPL_HAVE_STATUS_SET_BYTES 1
+#define MPIIMPL_HAVE_STATUS_SET_INFO 1
+
+/* C callback functions */
 typedef void (MPI_Handler_function) ( MPI_Comm *, int *, ... );
-typedef int (MPI_Comm_copy_attr_function)(MPI_Comm, int, void *, void *, 
+typedef int (MPI_Comm_copy_attr_function)(MPI_Comm, int, void *, void *,
 					  void *, int *);
 typedef int (MPI_Comm_delete_attr_function)(MPI_Comm, int, void *, void *);
-typedef int (MPI_Type_copy_attr_function)(MPI_Datatype, int, void *, void *, 
+typedef int (MPI_Type_copy_attr_function)(MPI_Datatype, int, void *, void *,
 					  void *, int *);
 typedef int (MPI_Type_delete_attr_function)(MPI_Datatype, int, void *, void *);
 typedef int (MPI_Win_copy_attr_function)(MPI_Win, int, void *, void *, void *,
@@ -418,20 +754,31 @@ typedef MPI_File_errhandler_function MPI_File_errhandler_fn;
 typedef MPI_Win_errhandler_function MPI_Win_errhandler_fn;
 typedef MPI_Session_errhandler_function MPI_Session_errhandler_fn;
 
-/* Built in (0x1 in 30-31), errhandler (0x5 in bits 26-29, allkind (0
-   in 22-25), index in the low bits */
-#define MPI_ERRORS_ARE_FATAL ((MPI_Errhandler)0x54000000)
-#define MPI_ERRORS_RETURN    ((MPI_Errhandler)0x54000001)
-/* MPIR_ERRORS_THROW_EXCEPTIONS is not part of the MPI standard, it is here to
-   facilitate the c++ binding which has MPI::ERRORS_THROW_EXCEPTIONS. 
-   Using the MPIR prefix preserved the MPI_ names for objects defined by
-   the standard. */
-#define MPIR_ERRORS_THROW_EXCEPTIONS ((MPI_Errhandler)0x54000002)
-#define MPI_ERRORS_ABORT     ((MPI_Errhandler)0x54000003)
-typedef int MPI_Errhandler;
+/* MPI Attribute copy and delete functions */
+typedef int (MPI_Copy_function) ( MPI_Comm, int, void *, void *, void *, int * );
+typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
+
+/* User combination function */
+typedef void (MPI_User_function) ( void *, void *, int *, MPI_Datatype * );
+typedef void (MPI_User_function_c) ( void *, void *, MPI_Count *, MPI_Datatype * );
+
+/* Typedefs for generalized requests */
+typedef int (MPI_Grequest_cancel_function)(void *, int);
+typedef int (MPI_Grequest_free_function)(void *);
+typedef int (MPI_Grequest_query_function)(void *, MPI_Status *);
+typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);
+typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
+
+/* Function type defs */
+typedef int (MPI_Datarep_conversion_function)(void *, MPI_Datatype, int,
+             void *, MPI_Offset, void *);
+typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
+                      void *);
+typedef int (MPI_Datarep_conversion_function_c)(void *, MPI_Datatype, MPI_Count,
+             void *, MPI_Offset, void *);
 
 /* Make the C names for the dup function mixed case.
-   This is required for systems that use all uppercase names for Fortran 
+   This is required for systems that use all uppercase names for Fortran
    externals.  */
 /* MPI 1 names */
 #define MPI_NULL_COPY_FN   ((MPI_Copy_function *)0)
@@ -448,157 +795,8 @@ typedef int MPI_Errhandler;
 #define MPI_TYPE_NULL_DELETE_FN ((MPI_Type_delete_attr_function*)0)
 #define MPI_TYPE_DUP_FN ((MPI_Type_copy_attr_function*)MPI_DUP_FN)
 
-/* MPI request objects */
-typedef int MPI_Request;
-
-/* MPI message objects for Mprobe and related functions */
-typedef int MPI_Message;
-
-/* Generalized requests extensions */
-typedef int MPIX_Grequest_class;
-
-/* MPI stream objects */
-typedef int MPIX_Stream;
-
-/* MPI Attribute copy and delete functions */
-typedef int (MPI_Copy_function) ( MPI_Comm, int, void *, void *, void *, int * );
-typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
-
-#define MPI_VERSION    4
-#define MPI_SUBVERSION 0
-#define MPICH_NAME     4
-#define MPICH         1
-#define MPICH_HAS_C2F  1
-
-
-/* MPICH_VERSION is the version string. MPICH_NUMVERSION is the
- * numeric version that can be used in numeric comparisons.
- *
- * MPICH_VERSION uses the following format:
- * Version: [MAJ].[MIN].[REV][EXT][EXT_NUMBER]
- * Example: 1.0.7rc1 has
- *          MAJ = 1
- *          MIN = 0
- *          REV = 7
- *          EXT = rc
- *          EXT_NUMBER = 1
- *
- * MPICH_NUMVERSION will convert EXT to a format number:
- *          ALPHA (a) = 0
- *          BETA (b)  = 1
- *          RC (rc)   = 2
- *          PATCH (p) = 3
- * Regular releases are treated as patch 0
- *
- * Numeric version will have 1 digit for MAJ, 2 digits for MIN, 2
- * digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER. So,
- * 1.0.7rc1 will have the numeric version 10007201.
- */
-#define MPICH_VERSION "@MPICH_VERSION@"
-#define MPICH_NUMVERSION @MPICH_NUMVERSION@
-
-#define MPICH_RELEASE_TYPE_ALPHA  0
-#define MPICH_RELEASE_TYPE_BETA   1
-#define MPICH_RELEASE_TYPE_RC     2
-#define MPICH_RELEASE_TYPE_PATCH  3
-
-#define MPICH_CALC_VERSION(MAJOR, MINOR, REVISION, TYPE, PATCH) \
-    (((MAJOR) * 10000000) + ((MINOR) * 100000) + ((REVISION) * 1000) + ((TYPE) * 100) + (PATCH))
-
-/* for the datatype decoders */
-enum MPIR_Combiner_enum {
-    MPI_COMBINER_NAMED            = 1,
-    MPI_COMBINER_DUP              = 2,
-    MPI_COMBINER_CONTIGUOUS       = 3, 
-    MPI_COMBINER_VECTOR           = 4,
-    MPI_COMBINER_HVECTOR_INTEGER  = 5,
-    MPI_COMBINER_HVECTOR          = 6,
-    MPI_COMBINER_INDEXED          = 7,
-    MPI_COMBINER_HINDEXED_INTEGER = 8, 
-    MPI_COMBINER_HINDEXED         = 9, 
-    MPI_COMBINER_INDEXED_BLOCK    = 10, 
-    MPI_COMBINER_STRUCT_INTEGER   = 11,
-    MPI_COMBINER_STRUCT           = 12,
-    MPI_COMBINER_SUBARRAY         = 13,
-    MPI_COMBINER_DARRAY           = 14,
-    MPI_COMBINER_F90_REAL         = 15,
-    MPI_COMBINER_F90_COMPLEX      = 16,
-    MPI_COMBINER_F90_INTEGER      = 17,
-    MPI_COMBINER_RESIZED          = 18,
-    MPI_COMBINER_HINDEXED_BLOCK   = 19
-};
-
-/* for info */
-typedef int MPI_Info;
-#define MPI_INFO_NULL         ((MPI_Info)0x1c000000)
-#define MPI_INFO_ENV          ((MPI_Info)0x5c000001)
-#define MPI_MAX_INFO_KEY       255
-#define MPI_MAX_INFO_VAL      1024
-
-/* for subarray and darray constructors */
-#define MPI_ORDER_C              56
-#define MPI_ORDER_FORTRAN        57
-#define MPI_DISTRIBUTE_BLOCK    121
-#define MPI_DISTRIBUTE_CYCLIC   122
-#define MPI_DISTRIBUTE_NONE     123
-#define MPI_DISTRIBUTE_DFLT_DARG -49767
-
-#define MPI_IN_PLACE  (void *) -1
-
-/* asserts for one-sided communication */
-#define MPI_MODE_NOCHECK      1024
-#define MPI_MODE_NOSTORE      2048
-#define MPI_MODE_NOPUT        4096
-#define MPI_MODE_NOPRECEDE    8192
-#define MPI_MODE_NOSUCCEED   16384 
-
-/* predefined types for MPI_Comm_split_type */
-#define MPI_COMM_TYPE_SHARED    1
-#define MPI_COMM_TYPE_HW_GUIDED 2
-#define MPI_COMM_TYPE_HW_UNGUIDED 3
-
-/* MPICH-specific types */
-#define MPIX_COMM_TYPE_NEIGHBORHOOD 4
-
-/* Definitions that are determined by configure. */
-typedef @MPI_AINT@ MPI_Aint;
-typedef @MPI_FINT@ MPI_Fint;
-typedef @MPI_COUNT@ MPI_Count;
-
-#ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
-static const MPI_Datatype mpich_mpi_aint   MPICH_ATTR_TYPE_TAG(MPI_Aint)   = MPI_AINT;
-#endif
-
-/* FIXME: The following two definition are not defined by MPI and must not be
-   included in the mpi.h file, as the MPI namespace is reserved to the MPI 
-   standard */
-#define MPI_AINT_FMT_DEC_SPEC "@MPI_AINT_FMT_DEC_SPEC@"
-#define MPI_AINT_FMT_HEX_SPEC "@MPI_AINT_FMT_HEX_SPEC@"
-
-/* Let ROMIO know that MPI_Offset is already defined */
-#define HAVE_MPI_OFFSET
-/* MPI_OFFSET_TYPEDEF is set in configure and is 
-      typedef $MPI_OFFSET MPI_Offset;
-   where $MPI_OFFSET is the correct C type */
-@MPI_OFFSET_TYPEDEF@
-
-#ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
-static const MPI_Datatype mpich_mpi_offset MPICH_ATTR_TYPE_TAG(MPI_Offset) = MPI_OFFSET;
-#endif
-
-/* The order of these elements must match that in mpif.h, mpi_f08_types.f90,
-   and mpi_c_interface_types.f90 */
-typedef struct MPI_Status {
-    int count_lo;
-    int count_hi_and_cancelled;
-    int MPI_SOURCE;
-    int MPI_TAG;
-    int MPI_ERROR;
-} MPI_Status;
-
-/* User combination function */
-typedef void (MPI_User_function) ( void *, void *, int *, MPI_Datatype * );
-typedef void (MPI_User_function_c) ( void *, void *, MPI_Count *, MPI_Datatype * );
+#define MPI_CONVERSION_FN_NULL ((MPI_Datarep_conversion_function *)0)
+#define MPI_CONVERSION_FN_NULL_C ((MPI_Datarep_conversion_function_c *)0)
 
 /* types for the MPI_T_ interface */
 struct MPIR_T_enum_s;
@@ -715,6 +913,22 @@ typedef void (MPI_T_event_cb_function)(MPI_T_event_instance event_instance, MPI_
 typedef void (MPI_T_event_free_cb_function)(MPI_T_event_registration event_registration, MPI_T_cb_safety cb_safety, void *user_data);
 typedef void (MPI_T_event_dropped_cb_function)(MPI_Count count, MPI_T_event_registration event_registration, int source_index, MPI_T_cb_safety cb_safety, void *user_data);
 
+typedef struct {
+    void **storage_stack;
+} QMPI_Context;
+
+#define QMPI_MAX_TOOL_NAME_LENGTH 256
+
+int QMPI_Register_tool_name(const char *tool_name,
+                            void (*init_function_ptr) (int tool_id)) MPICH_API_PUBLIC;
+int QMPI_Register_tool_storage(int tool_id, void *tool_storage) MPICH_API_PUBLIC;
+int QMPI_Register_function(int calling_tool_id, int function_enum,
+                           void (*function_ptr) (void)) MPICH_API_PUBLIC;
+int QMPI_Get_function(int calling_tool_id, int function_enum,
+                      void (**function_ptr) (void), int *next_tool_id) MPICH_API_PUBLIC;
+int QMPI_Get_tool_storage(QMPI_Context context, int tool_id, void **storage) MPICH_API_PUBLIC;
+int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUBLIC;
+
 /* Handle conversion types/functions */
 
 /* Programs that need to convert types used in MPICH should use these */
@@ -761,222 +975,10 @@ typedef void (MPI_T_event_dropped_cb_function)(MPI_Count count, MPI_T_event_regi
 #define PMPI_Session_c2f(session) (MPI_Fint)(session)
 #define PMPI_Session_f2c(session) (MPI_Session)(session)
 
-#define MPI_STATUS_IGNORE (MPI_Status *)1
-#define MPI_STATUSES_IGNORE (MPI_Status *)1
-#define MPI_ERRCODES_IGNORE (int *)0
-
-/* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
-@MPIU_DLL_SPEC_DEF@
-extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
-/* The annotation MPIU_DLL_SPEC to the extern statements is used 
-   as a hook for systems that require C extensions to correctly construct
-   DLLs, and is defined as an empty string otherwise
- */
-
-/* The MPI standard requires that the ARGV_NULL values be the same as
-   NULL (see 5.3.2) */
-#define MPI_ARGV_NULL (char **)0
-#define MPI_ARGVS_NULL (char ***)0
-
-/* C type for MPI_STATUS in F08.
-   The field order should match that in mpi_f08_types.f90, and mpi_c_interface_types.f90.
- */
-typedef struct {
-    MPI_Fint count_lo;
-    MPI_Fint count_hi_and_cancelled;
-    MPI_Fint MPI_SOURCE;
-    MPI_Fint MPI_TAG;
-    MPI_Fint MPI_ERROR;
-} MPI_F08_status;
-
-/* MPI 4 added following constants to allow access F90 STATUS as an array of MPI_Fint */
-#define MPI_F_STATUS_SIZE 5
-#define MPI_F_SOURCE 2
-#define MPI_F_TAG 3
-#define MPI_F_ERROR 4
-
-/* Provided in libmpifort.so */
-extern MPI_F08_status *MPI_F08_STATUS_IGNORE;
-extern MPI_F08_status *MPI_F08_STATUSES_IGNORE;
-
-/* For supported thread levels */
-#define MPI_THREAD_SINGLE 0
-#define MPI_THREAD_FUNNELED 1
-#define MPI_THREAD_SERIALIZED 2
-#define MPI_THREAD_MULTIPLE 3
-
-/* Typedefs for generalized requests */
-typedef int (MPI_Grequest_cancel_function)(void *, int); 
-typedef int (MPI_Grequest_free_function)(void *); 
-typedef int (MPI_Grequest_query_function)(void *, MPI_Status *); 
-typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);
-typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
-
-/* MPI's error classes */
-#define MPI_SUCCESS          0      /* Successful return code */
-/* Communication argument parameters */
-#define MPI_ERR_BUFFER       1      /* Invalid buffer pointer */
-#define MPI_ERR_COUNT        2      /* Invalid count argument */
-#define MPI_ERR_TYPE         3      /* Invalid datatype argument */
-#define MPI_ERR_TAG          4      /* Invalid tag argument */
-#define MPI_ERR_COMM         5      /* Invalid communicator */
-#define MPI_ERR_RANK         6      /* Invalid rank */
-#define MPI_ERR_ROOT         7      /* Invalid root */
-#define MPI_ERR_TRUNCATE    14      /* Message truncated on receive */
-
-/* MPI Objects (other than COMM) */
-#define MPI_ERR_GROUP        8      /* Invalid group */
-#define MPI_ERR_OP           9      /* Invalid operation */
-#define MPI_ERR_REQUEST     19      /* Invalid mpi_request handle */
-
-/* Special topology argument parameters */
-#define MPI_ERR_TOPOLOGY    10      /* Invalid topology */
-#define MPI_ERR_DIMS        11      /* Invalid dimension argument */
-
-/* All other arguments.  This is a class with many kinds */
-#define MPI_ERR_ARG         12      /* Invalid argument */
-
-/* Other errors that are not simply an invalid argument */
-#define MPI_ERR_OTHER       15      /* Other error; use Error_string */
-
-#define MPI_ERR_UNKNOWN     13      /* Unknown error */
-#define MPI_ERR_INTERN      16      /* Internal error code    */
-
-/* Multiple completion has three special error classes */
-#define MPI_ERR_IN_STATUS           17      /* Look in status for error value */
-#define MPI_ERR_PENDING             18      /* Pending request */
-
-/* New MPI-2 Error classes */
-#define MPI_ERR_ACCESS      20      /* */
-#define MPI_ERR_AMODE       21      /* */
-#define MPI_ERR_BAD_FILE    22      /* */
-#define MPI_ERR_CONVERSION  23      /* */
-#define MPI_ERR_DUP_DATAREP 24      /* */
-#define MPI_ERR_FILE_EXISTS 25      /* */
-#define MPI_ERR_FILE_IN_USE 26      /* */
-#define MPI_ERR_FILE        27      /* */
-#define MPI_ERR_IO          32      /* */
-#define MPI_ERR_NO_SPACE    36      /* */
-#define MPI_ERR_NO_SUCH_FILE 37     /* */
-#define MPI_ERR_READ_ONLY   40      /* */
-#define MPI_ERR_UNSUPPORTED_DATAREP   43  /* */
-
-/* MPI_ERR_INFO is NOT defined in the MPI-2 standard.  I believe that
-   this is an oversight */
-#define MPI_ERR_INFO        28      /* */
-#define MPI_ERR_INFO_KEY    29      /* */
-#define MPI_ERR_INFO_VALUE  30      /* */
-#define MPI_ERR_INFO_NOKEY  31      /* */
-
-#define MPI_ERR_NAME        33      /* */
-#define MPI_ERR_NO_MEM      34      /* Alloc_mem could not allocate memory */
-#define MPI_ERR_NOT_SAME    35      /* */
-#define MPI_ERR_PORT        38      /* */
-#define MPI_ERR_QUOTA       39      /* */
-#define MPI_ERR_SERVICE     41      /* */
-#define MPI_ERR_SPAWN       42      /* */
-#define MPI_ERR_UNSUPPORTED_OPERATION 44 /* */
-#define MPI_ERR_WIN         45      /* */
-
-#define MPI_ERR_BASE        46      /* */
-#define MPI_ERR_LOCKTYPE    47      /* */
-#define MPI_ERR_KEYVAL      48      /* Erroneous attribute key */
-#define MPI_ERR_RMA_CONFLICT 49     /* */
-#define MPI_ERR_RMA_SYNC    50      /* */ 
-#define MPI_ERR_SIZE        51      /* */
-#define MPI_ERR_DISP        52      /* */
-#define MPI_ERR_ASSERT      53      /* */
-
-#define MPI_ERR_RMA_RANGE  55       /* */
-#define MPI_ERR_RMA_ATTACH 56       /* */
-#define MPI_ERR_RMA_SHARED 57       /* */
-#define MPI_ERR_RMA_FLAVOR 58       /* */
-
-/* Return codes for functions in the MPI Tool Information Interface */
-#define MPI_T_ERR_MEMORY            59  /* Out of memory */
-#define MPI_T_ERR_NOT_INITIALIZED   60  /* Interface not initialized */
-#define MPI_T_ERR_CANNOT_INIT       61  /* Interface not in the state to
-                                           be initialized */
-#define MPI_T_ERR_INVALID_INDEX     62  /* The index is invalid or
-                                           has been deleted  */
-#define MPI_T_ERR_INVALID_ITEM      63  /* Deprecated.  If a queried item index is out of range,
-                                         * MPI-4 will return MPI_T_ERR_INVALID_INDEX instead. */
-#define MPI_T_ERR_INVALID_HANDLE    64  /* The handle is invalid */
-#define MPI_T_ERR_OUT_OF_HANDLES    65  /* No more handles available */
-#define MPI_T_ERR_OUT_OF_SESSIONS   66  /* No more sessions available */
-#define MPI_T_ERR_INVALID_SESSION   67  /* Session argument is not valid */
-#define MPI_T_ERR_CVAR_SET_NOT_NOW  68  /* Cvar can't be set at this moment */
-#define MPI_T_ERR_CVAR_SET_NEVER    69  /* Cvar can't be set until
-                                           end of execution */
-#define MPI_T_ERR_PVAR_NO_STARTSTOP 70  /* Pvar can't be started or stopped */
-#define MPI_T_ERR_PVAR_NO_WRITE     71  /* Pvar can't be written or reset */
-#define MPI_T_ERR_PVAR_NO_ATOMIC    72  /* Pvar can't be R/W atomically */
-#define MPI_T_ERR_INVALID_NAME      73  /* Name doesn't match */
-#define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
-
-#define MPI_ERR_SESSION            75  /* Invalid session handle */
-#define MPI_ERR_PROC_ABORTED       76  /* Trying to communicate with aborted processes */
-#define MPI_ERR_VALUE_TOO_LARGE    77  /* Value is too large to store */
-
-#define MPI_T_ERR_NOT_SUPPORTED    78  /* Requested functionality not supported */
-#define MPI_T_ERR_NOT_ACCESSIBLE   79  /* Requested functionality not accessible */
-
-#define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
-					   predefined error class */
-#define MPICH_ERR_LAST_CLASS 79     /* It is also helpful to know the
-				       last valid class */
-
-#define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
-                                  * already using some of the values in this
-                                  * range. All MPIX error codes will be
-                                  * above this value to be ABI complaint. */
-
-#define MPIX_ERR_PROC_FAILED          MPICH_ERR_FIRST_MPIX+1 /* Process failure */
-#define MPIX_ERR_PROC_FAILED_PENDING  MPICH_ERR_FIRST_MPIX+2 /* A failure has caused this request
-                                                              * to be pending */
-#define MPIX_ERR_REVOKED              MPICH_ERR_FIRST_MPIX+3 /* The communication object has been revoked */
-#define MPIX_ERR_EAGAIN               MPICH_ERR_FIRST_MPIX+4 /* Operation could not be issued */
-#define MPIX_ERR_NOREQ                MPICH_ERR_FIRST_MPIX+5 /* Cannot allocate request */
-#define MPIX_ERR_STREAM               MPICH_ERR_FIRST_MPIX+6 /* Invalid stream */
-#define MPIX_ERR_TIMEOUT              MPICH_ERR_FIRST_MPIX+7 /* Operation timed out */
-
-#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+7
-
-
-/* End of MPI's error classes */
-
-/* Function type defs */
-typedef int (MPI_Datarep_conversion_function)(void *, MPI_Datatype, int, 
-             void *, MPI_Offset, void *);
-typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
-                      void *);
-#define MPI_CONVERSION_FN_NULL ((MPI_Datarep_conversion_function *)0)
-
-typedef int (MPI_Datarep_conversion_function_c)(void *, MPI_Datatype, MPI_Count,
-             void *, MPI_Offset, void *);
-#define MPI_CONVERSION_FN_NULL_C ((MPI_Datarep_conversion_function_c *)0)
-
-typedef struct {
-    void **storage_stack;
-} QMPI_Context;
-
-#define QMPI_MAX_TOOL_NAME_LENGTH 256
-
-int QMPI_Register_tool_name(const char *tool_name,
-                            void (*init_function_ptr) (int tool_id)) MPICH_API_PUBLIC;
-int QMPI_Register_tool_storage(int tool_id, void *tool_storage) MPICH_API_PUBLIC;
-int QMPI_Register_function(int calling_tool_id, int function_enum,
-                           void (*function_ptr) (void)) MPICH_API_PUBLIC;
-int QMPI_Get_function(int calling_tool_id, int function_enum,
-                      void (**function_ptr) (void), int *next_tool_id) MPICH_API_PUBLIC;
-int QMPI_Get_tool_storage(QMPI_Context context, int tool_id, void **storage) MPICH_API_PUBLIC;
-int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUBLIC;
-
-/* 
+/*
    For systems that may need to add additional definitions to support
-   different declaration styles and options (e.g., different calling 
-   conventions or DLL import/export controls).  
+   different declaration styles and options (e.g., different calling
+   conventions or DLL import/export controls).
 */
 /* --Insert Additional Definitions Here-- */
 
@@ -995,29 +997,12 @@ typedef struct MPIX_Iov {
 #include <mpi_proto.h>
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
 
-/* GPU extensions */
-#define MPIX_GPU_SUPPORT_CUDA  (0)
-#define MPIX_GPU_SUPPORT_ZE    (1)
-#define MPIX_GPU_SUPPORT_HIP   (2)
-
-/* feature advertisement */
-#define MPIIMPL_ADVERTISES_FEATURES 1
-#define MPIIMPL_HAVE_MPI_INFO 1                                                 
-#define MPIIMPL_HAVE_MPI_COMBINER_DARRAY 1                                      
-#define MPIIMPL_HAVE_MPI_TYPE_CREATE_DARRAY 1
-#define MPIIMPL_HAVE_MPI_COMBINER_SUBARRAY 1                                    
-#define MPIIMPL_HAVE_MPI_TYPE_CREATE_DARRAY 1
-#define MPIIMPL_HAVE_MPI_COMBINER_DUP 1                                         
-#define MPIIMPL_HAVE_MPI_GREQUEST 1      
-#define MPIIMPL_HAVE_STATUS_SET_BYTES 1
-#define MPIIMPL_HAVE_STATUS_SET_INFO 1
-
 @HAVE_ROMIO@
 
 #if defined(__cplusplus)
 }
 /* Add the C++ bindings */
-/* 
+/*
    If MPICH_SKIP_MPICXX is defined, the mpicxx.h file will *not* be included.
    This is necessary, for example, when building the C++ interfaces.  It
    can also be used when you want to use a C++ compiler to compile C code,
@@ -1025,11 +1010,11 @@ typedef struct MPIX_Iov {
    be made by the C++ compilation script
  */
 #if !defined(MPICH_SKIP_MPICXX)
-/* mpicxx.h contains the MPI C++ binding.  In the mpi.h.in file, this 
-   include is in an autoconf variable in case the compiler is a C++ 
+/* mpicxx.h contains the MPI C++ binding.  In the mpi.h.in file, this
+   include is in an autoconf variable in case the compiler is a C++
    compiler but MPI was built without the C++ bindings */
 @INCLUDE_MPICXX_H@
-#endif 
+#endif
 #endif
 
 #endif
