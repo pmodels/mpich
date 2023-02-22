@@ -58,8 +58,13 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPIR_Op ** p_o
 
     op_ptr->language = MPIR_LANG__C;
     op_ptr->kind = commute ? MPIR_OP_KIND__USER : MPIR_OP_KIND__USER_NONCOMMUTE;
+#ifndef BUILD_MPI_ABI
     op_ptr->function.c_function = (void (*)(const void *, void *,
                                             const int *, const MPI_Datatype *)) user_fn;
+#else
+    op_ptr->function.c_function = (void (*)(const void *, void *,
+                                            const int *, const ABI_Datatype *)) user_fn;
+#endif
     MPIR_Object_set_ref(op_ptr, 1);
 
     MPID_Op_commit_hook(op_ptr);
@@ -78,9 +83,15 @@ int MPIR_Op_create_large_impl(MPI_User_function_c * user_fn, int commute, MPIR_O
     if (mpi_errno == MPI_SUCCESS) {
         (*p_op_ptr)->kind =
             commute ? MPIR_OP_KIND__USER_LARGE : MPIR_OP_KIND__USER_NONCOMMUTE_LARGE;
+#ifndef BUILD_MPI_ABI
         (*p_op_ptr)->function.c_large_function = (void (*)(const void *, void *,
                                                            const MPI_Count *,
                                                            const MPI_Datatype *)) user_fn;
+#else
+        (*p_op_ptr)->function.c_large_function = (void (*)(const void *, void *,
+                                                           const MPI_Count *,
+                                                           const ABI_Datatype *)) user_fn;
+#endif
     }
     return mpi_errno;
 }

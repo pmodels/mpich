@@ -79,8 +79,13 @@ typedef enum MPIR_Op_kind {
   Collective-DS
   S*/
 typedef union MPIR_User_function {
+#ifndef BUILD_MPI_ABI
     void (*c_function) (const void *, void *, const int *, const MPI_Datatype *);
     void (*c_large_function) (const void *, void *, const MPI_Count *, const MPI_Datatype *);
+#else
+    void (*c_function) (const void *, void *, const int *, const ABI_Datatype *);
+    void (*c_large_function) (const void *, void *, const MPI_Count *, const ABI_Datatype *);
+#endif
     void (*f77_function) (const void *, void *, const MPI_Fint *, const MPI_Fint *);
 } MPIR_User_function;
 /* FIXME: Should there be "restrict" in the definitions above, e.g.,

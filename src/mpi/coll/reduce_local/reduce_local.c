@@ -4,13 +4,21 @@
  */
 
 #include "mpiimpl.h"
+#ifdef BUILD_MPI_ABI
+#include "mpi_abi_util.h"
+#endif
 
 static void call_user_op(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype,
                          MPIR_User_function uop)
 {
     /* Take off the global locks before calling user functions */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#ifndef BUILD_MPI_ABI
     (uop.c_function) ((void *) inbuf, inoutbuf, &count, &datatype);
+#else
+    ABI_Datatype t = ABI_Datatype_from_mpi(datatype);
+    (uop.c_function) ((void *) inbuf, inoutbuf, &count, &t);
+#endif
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
@@ -19,7 +27,12 @@ static void call_user_op_large(const void *inbuf, void *inoutbuf, MPI_Count coun
 {
     /* Take off the global locks before calling user functions */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#ifndef BUILD_MPI_ABI
     (uop.c_large_function) ((void *) inbuf, inoutbuf, &count, &datatype);
+#else
+    ABI_Datatype t = ABI_Datatype_from_mpi(datatype);
+    (uop.c_large_function) ((void *) inbuf, inoutbuf, &count, &t);
+#endif
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 

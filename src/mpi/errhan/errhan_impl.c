@@ -4,6 +4,9 @@
  */
 
 #include "mpiimpl.h"
+#ifdef BUILD_MPI_ABI
+#include "mpi_abi_util.h"
+#endif
 
 int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * comm_errhandler_fn,
                                      MPIR_Errhandler ** errhandler_ptr)
@@ -206,10 +209,19 @@ static int call_errhandler(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler, i
     }
 #endif
 
+#ifdef BUILD_MPI_ABI
+    void *abi_handle = ABI_Handle_from_mpi(handle);
+#endif
+
     /* Process any user-defined error handling function */
     switch (errhandler->language) {
         case MPIR_LANG__C:
+#ifndef BUILD_MPI_ABI
             (*errhandler->errfn.C_Comm_Handler_function) (&handle, &errorcode);
+#else
+
+            (*errhandler->errfn.C_Comm_Handler_function) ((void *) &abi_handle, &errorcode);
+#endif
             break;
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
@@ -222,9 +234,16 @@ static int call_errhandler(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler, i
                 } else {
                     MPIR_Assert_error("kind not supported");
                 }
+#ifndef BUILD_MPI_ABI
                 MPIR_Process.cxx_call_errfn(cxx_kind, &handle, &errorcode,
                                             (void (*)(void)) errhandler->
                                             errfn.C_Comm_Handler_function);
+#else
+
+                MPIR_Process.cxx_call_errfn(cxx_kind, (void *) &abi_handle, &errorcode,
+                                            (void (*)(void)) errhandler->
+                                            errfn.C_Comm_Handler_function);
+#endif
                 break;
             }
 #endif
