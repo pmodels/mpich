@@ -56,6 +56,18 @@ void MPIDIG_Part_rreq_allocate(MPIR_Request * rreq)
     }
 }
 
+
+/* return the greatest divisor of a, smaller than the limit L */
+MPL_STATIC_INLINE_PREFIX int gdst(int a, int L)
+{
+    MPIR_Assert(L >= 1);
+    int res = MPL_MIN(a, L);
+    while (a % res) {
+        res--;
+    }
+    return res;
+}
+
 /* called when a receive Request has been matched
  * - set the status
  * - allocate the cc_part
@@ -80,7 +92,25 @@ void MPIDIG_part_rreq_matched(MPIR_Request * rreq)
 
     /* we must guarantee that the one partition on both the send and recv side corresponds to only
      * one actual msgs */
-    MPIDIG_PART_REQUEST(rreq, msg_part) = MPL_gcd(send_part, recv_part);
+    //MPIDIG_PART_REQUEST(rreq, msg_part) = MPL_gcd(send_part, recv_part);
+    const int n_msg = MPL_gcd(send_part, recv_part);
+
+    /* try to gather messages together to reduce the latency: get the number byte in 1 msg and then
+     * get the GCD(number of msgs, number of msgs/chunk). This we are sure that we always send
+     * multiples of datatypes*/
+
+    /* gather the messages to try to match the size of a chunk, the results must be a multiple of
+     * the number of partitions (and therefore a multiple of the number of msgs)
+     * - get the number of bytes in 1 msg
+     * - get the MAX number of msgs that fits within one chunk of size MPIR_CVAR_PART_AGGR_SIZE
+     * - find the largest factor of the number of msgs that is lower then the max number of msgs
+     * - the number of messages is the original msg one divided by that factor*/
+    MPI_Aint part_byte;
+    MPIR_Datatype_get_size_macro(MPIDI_PART_REQUEST(rreq, datatype), part_byte);
+    part_byte *= MPIDI_PART_REQUEST(rreq, count) * recv_part / n_msg;
+    const int max_msg_per_chunk = MPL_MAX(1, MPIR_CVAR_PART_AGGR_SIZE / part_byte);
+    MPIDIG_PART_REQUEST(rreq, msg_part) =
+        (MPIR_CVAR_PART_AGGR_SIZE > 0) ? n_msg / gdst(n_msg, max_msg_per_chunk) : n_msg;
 
     /* 0 partition is illegual so at least one message must happen */
     MPIR_Assert(MPIDIG_PART_REQUEST(rreq, msg_part) > 0);

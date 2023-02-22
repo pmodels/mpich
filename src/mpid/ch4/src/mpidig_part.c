@@ -27,6 +27,17 @@ cvars:
       description : >-
         The maximum number of simultaneous partitioned communications initiated from a given process
         on a communicator
+    - name        : MPIR_CVAR_PART_AGGR_SIZE
+      category    : PARTITION
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        The sizes up to which the partitions should be gathered together to be sent and reduce
+        latency for small messages. This size will be matched as best as possible but might not be
+        matched exactly
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
