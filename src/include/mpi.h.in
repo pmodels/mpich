@@ -963,6 +963,16 @@ typedef struct {
 
 #define QMPI_MAX_TOOL_NAME_LENGTH 256
 
+int QMPI_Register_tool_name(const char *tool_name,
+                            void (*init_function_ptr) (int tool_id)) MPICH_API_PUBLIC;
+int QMPI_Register_tool_storage(int tool_id, void *tool_storage) MPICH_API_PUBLIC;
+int QMPI_Register_function(int calling_tool_id, int function_enum,
+                           void (*function_ptr) (void)) MPICH_API_PUBLIC;
+int QMPI_Get_function(int calling_tool_id, int function_enum,
+                      void (**function_ptr) (void), int *next_tool_id) MPICH_API_PUBLIC;
+int QMPI_Get_tool_storage(QMPI_Context context, int tool_id, void **storage) MPICH_API_PUBLIC;
+int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUBLIC;
+
 /* 
    For systems that may need to add additional definitions to support
    different declaration styles and options (e.g., different calling 
@@ -984,16 +994,6 @@ typedef struct MPIX_Iov {
 /* We require that the C compiler support prototypes */
 #include <mpi_proto.h>
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
-
-int QMPI_Register_tool_name(const char *tool_name,
-                            void (*init_function_ptr) (int tool_id)) MPICH_API_PUBLIC;
-int QMPI_Register_tool_storage(int tool_id, void *tool_storage) MPICH_API_PUBLIC;
-int QMPI_Register_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,
-                           void (*function_ptr) (void)) MPICH_API_PUBLIC;
-int QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,
-                      void (**function_ptr) (void), int *next_tool_id) MPICH_API_PUBLIC;
-int QMPI_Get_tool_storage(QMPI_Context context, int tool_id, void **storage) MPICH_API_PUBLIC;
-int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUBLIC;
 
 /* GPU extensions */
 #define MPIX_GPU_SUPPORT_CUDA  (0)
