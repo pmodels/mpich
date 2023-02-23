@@ -542,6 +542,8 @@ def process_func_parameters(func):
             # -- output parameter --
             if p['length']:
                 validation_list.append({'kind': "ARGNULL-length", 'name': name, 'length': p['length']})
+            elif p['kind'] == 'STATUS':
+                pass
             else:
                 validation_list.append({'kind': "ARGNULL", 'name': name})
             if RE.search(r'(get_errhandler|mpi_comm_get_parent)$', func_name, re.IGNORECASE):
