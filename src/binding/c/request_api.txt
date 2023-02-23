@@ -225,11 +225,6 @@ MPI_Testall:
     'array_of_requests', such an action is considered erroneous and may cause the
     program to unexecpectedly terminate or produce incorrect results.
 */
-{ -- error_check -- array_of_statuses
-    if (count > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
-    }
-}
 {
     mpi_errno = MPIR_Testall(count, array_of_requests, flag, array_of_statuses);
     if (mpi_errno != MPI_SUCCESS)
@@ -263,11 +258,10 @@ MPI_Testsome:
     'array_of_requests', such an action is considered erroneous and may cause the
     program to unexecpectedly terminate or produce incorrect results.
 */
-{ -- error_check -- array_of_indices, array_of_statuses
+{ -- error_check -- array_of_indices
     if (incount > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_requests, "array_of_requests", mpi_errno);
         MPIR_ERRTEST_ARGNULL(array_of_indices, "array_of_indices", mpi_errno);
-        MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
     }
 }
 {
@@ -320,11 +314,6 @@ MPI_Waitall:
     array_of_requests, such an action is considered erroneous and may cause the
     program to unexecpectedly terminate or produce incorrect results.
 */
-{ -- error_check -- array_of_statuses
-    if (count > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
-    }
-}
 {
     mpi_errno = MPIR_Waitall(count, array_of_requests, array_of_statuses);
     if (mpi_errno)
@@ -376,10 +365,9 @@ MPI_Waitsome:
 
     .N waitstatus
 */
-{ -- error_check -- array_of_indices, array_of_statuses
+{ -- error_check -- array_of_indices
     if (incount > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_indices, "array_of_indices", mpi_errno);
-        MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
     }
 }
 {
