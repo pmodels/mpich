@@ -156,6 +156,7 @@ int MPIDU_genq_shmem_pool_destroy(MPIDU_genq_shmem_pool_t pool)
 
     MPL_free(pool_obj->cell_headers);
 
+    MPIR_gpu_unregister_host(pool_obj->slab);
     MPIDU_Init_shm_free(pool_obj->slab);
 
     /* free self */
