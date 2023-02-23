@@ -169,12 +169,14 @@ static int run_test(void)
     /* 1. Specify working window and displacement.
      *  - Target:  no RMA issued, always check results on wins[0].
      *  - Origins: issue RMA on different window and different memory location */
+    int win_idx;
     if (rank == target) {
-        win = wins[0];
+        win_idx = 0;
     } else {
-        win = wins[rank];
+        win_idx = rank;
         target_disp = rank;
     }
+    win = wins[win_idx];
     dst = target;
 
     /* 2. Every one resets local data */
@@ -188,8 +190,8 @@ static int run_test(void)
 
         /* 3. Origins issue RMA to target over its working window */
         MPI_Win_lock(MPI_LOCK_SHARED, dst, 0, win);
-        verbose_print("[%d] RMA start, test %s (dst=%d, target_disp=%d, win 0x%x) - flush\n",
-                      rank, rma_name, dst, target_disp, win);
+        verbose_print("[%d] RMA start, test %s (dst=%d, target_disp=%d, wins[%d]) - flush\n",
+                      rank, rma_name, dst, target_disp, win_idx);
 
         for (x = 0; x < ITER; x++) {
             /* update local buffers and expected value in every iteration */

@@ -108,7 +108,7 @@ int probetest_invoke_probe(int sender_rank, int tag, MPI_Comm comm, int *recv_co
             break;
         case Improbe:
             while (!flag) {
-                RECORD_ERROR(*message != MPI_REQUEST_NULL);
+                RECORD_ERROR(*message != MPI_MESSAGE_NULL);
                 MPI_Improbe(sender_rank, tag, comm, &flag, message, status);
             }
             break;
