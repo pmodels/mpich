@@ -53,6 +53,16 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn
         MPIR_Process.attr_dup = MPIR_Attr_dup_list;
         MPIR_Process.attr_free = MPIR_Attr_delete_list;
     }
+#ifdef BUILD_MPI_ABI
+    if (comm_copy_attr_fn == MPI_COMM_NULL_COPY_FN) {
+        comm_copy_attr_fn = NULL;
+    } else if (comm_copy_attr_fn == MPI_COMM_DUP_FN) {
+        comm_copy_attr_fn = MPIR_Comm_dup_fn;
+    }
+    if (comm_delete_attr_fn == MPI_COMM_NULL_DELETE_FN) {
+        comm_delete_attr_fn = NULL;
+    }
+#endif
 
     /* The handle encodes the keyval kind.  Modify it to have the correct
      * field */
@@ -90,6 +100,16 @@ int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn
         MPIR_Process.attr_dup = MPIR_Attr_dup_list;
         MPIR_Process.attr_free = MPIR_Attr_delete_list;
     }
+#ifdef BUILD_MPI_ABI
+    if (type_copy_attr_fn == MPI_TYPE_NULL_COPY_FN) {
+        type_copy_attr_fn = NULL;
+    } else if (type_copy_attr_fn == MPI_TYPE_DUP_FN) {
+        type_copy_attr_fn = MPIR_Type_dup_fn;
+    }
+    if (type_delete_attr_fn == MPI_TYPE_NULL_DELETE_FN) {
+        type_delete_attr_fn = NULL;
+    }
+#endif
 
     /* The handle encodes the keyval kind.  Modify it to have the correct
      * field */
@@ -131,6 +151,16 @@ int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
         MPIR_Process.attr_dup = MPIR_Attr_dup_list;
         MPIR_Process.attr_free = MPIR_Attr_delete_list;
     }
+#ifdef BUILD_MPI_ABI
+    if (win_copy_attr_fn == MPI_WIN_NULL_COPY_FN) {
+        win_copy_attr_fn = NULL;
+    } else if (win_copy_attr_fn == MPI_WIN_DUP_FN) {
+        win_copy_attr_fn = MPIR_Win_dup_fn;
+    }
+    if (win_delete_attr_fn == MPI_WIN_NULL_DELETE_FN) {
+        win_delete_attr_fn = NULL;
+    }
+#endif
 
     /* The handle encodes the keyval kind.  Modify it to have the correct
      * field */
