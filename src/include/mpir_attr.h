@@ -204,4 +204,15 @@ int MPIR_Call_attr_copy(int, MPIR_Attribute *, void **, int *);
 
 void MPIR_free_keyval(MPII_Keyval * keyval_ptr);
 
+int MPIR_Dup_fn(MPI_Comm comm, int keyval, void *extra_state,
+                void *attr_in, void *attr_out, int *flag);
+#ifdef BUILD_MPI_ABI
+int MPIR_Comm_dup_fn(ABI_Comm comm, int keyval, void *extra_state,
+                     void *attr_in, void *attr_out, int *flag);
+int MPIR_Type_dup_fn(ABI_Datatype datatype, int keyval, void *extra_state,
+                     void *attr_in, void *attr_out, int *flag);
+int MPIR_Win_dup_fn(ABI_Win win, int keyval, void *extra_state,
+                    void *attr_in, void *attr_out, int *flag);
+#endif
+
 #endif /* MPIR_ATTR_H_INCLUDED */
