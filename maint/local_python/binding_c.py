@@ -1246,6 +1246,7 @@ def dump_function_normal(func):
     G.out.append("fn_exit:")
     for l in func['code-clean_up']:
         G.out.append(l)
+    func['code-clean_up'] = []
     G.out.append("MPIR_FUNC_TERSE_EXIT;")
 
     if not '_skip_global_cs' in func:
