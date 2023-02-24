@@ -277,7 +277,7 @@ int MPIDI_POSIX_coll_init(int rank, int size)
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json,
                                               create_container, &MPIDI_global.shm.posix.csel_root);
     } else {
-        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE,
+        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE,
                                                create_container, &MPIDI_global.shm.posix.csel_root);
     }
     MPIR_ERR_CHECK(mpi_errno);
