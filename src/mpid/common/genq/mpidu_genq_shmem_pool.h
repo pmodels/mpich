@@ -17,9 +17,10 @@
 int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_proc,
                                  uintptr_t num_proc, int rank, MPIDU_genq_shmem_pool_t * pool);
 int MPIDU_genq_shmem_pool_destroy(MPIDU_genq_shmem_pool_t pool);
+int MPIDU_genqi_shmem_pool_register(MPIDU_genqi_shmem_pool_s * pool_obj);
 
 static inline int MPIDU_genq_shmem_pool_cell_alloc(MPIDU_genq_shmem_pool_t pool, void **cell,
-                                                   int block_idx)
+                                                   int block_idx, const void *src_buf)
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_pool_s *pool_obj = (MPIDU_genqi_shmem_pool_s *) pool;
@@ -27,6 +28,12 @@ static inline int MPIDU_genq_shmem_pool_cell_alloc(MPIDU_genq_shmem_pool_t pool,
     *cell = NULL;
 
     MPIR_FUNC_ENTER;
+
+    /* lazy registration of the shmem pool with the gpu */
+    if (!pool_obj->gpu_registered && MPIR_GPU_query_pointer_is_dev(src_buf)) {
+        rc = MPIDU_genqi_shmem_pool_register(pool_obj);
+        MPIR_ERR_CHECK(rc);
+    }
 
     rc = MPIDU_genq_shmem_queue_dequeue(pool, &pool_obj->free_queues[block_idx], cell);
     MPIR_ERR_CHECK(rc);
