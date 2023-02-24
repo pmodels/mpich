@@ -41,6 +41,19 @@ cvars:
         By default, the queue will continue to use sender-side queues until the performance impact
         is verified.
 
+    - name        : MPIR_CVAR_GENQ_SHMEM_POOL_GPU_REGISTER
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Control whether to register the shmem pool with the GPU runtime. This could lower the
+        latency of small GPU-to-GPU messages at the cost of some amount of GPU memory consumed
+        by the MPI library. By default, we do not register with the GPU since we expect most
+        GPU-to-GPU messages will take the IPC path,.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -115,8 +128,10 @@ int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_proc,
     rc = MPIDU_Init_shm_alloc(slab_size, &pool_obj->slab);
     MPIR_ERR_CHECK(rc);
 
-    rc = MPIR_gpu_register_host(pool_obj->slab, slab_size);
-    MPIR_ERR_CHECK(rc);
+    if (MPIR_CVAR_GENQ_SHMEM_POOL_GPU_REGISTER) {
+        rc = MPIR_gpu_register_host(pool_obj->slab, slab_size);
+        MPIR_ERR_CHECK(rc);
+    }
 
     pool_obj->cell_header_base = (MPIDU_genqi_shmem_cell_header_s *) pool_obj->slab;
     pool_obj->free_queues =
@@ -156,7 +171,9 @@ int MPIDU_genq_shmem_pool_destroy(MPIDU_genq_shmem_pool_t pool)
 
     MPL_free(pool_obj->cell_headers);
 
-    MPIR_gpu_unregister_host(pool_obj->slab);
+    if (MPIR_CVAR_GENQ_SHMEM_POOL_GPU_REGISTER) {
+        MPIR_gpu_unregister_host(pool_obj->slab);
+    }
     MPIDU_Init_shm_free(pool_obj->slab);
 
     /* free self */
