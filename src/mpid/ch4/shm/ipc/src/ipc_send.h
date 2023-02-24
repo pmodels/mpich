@@ -133,11 +133,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-
     bool done = false;
     mpi_errno = MPIDI_IPCI_try_lmt_isend(buf, count, datatype, rank, tag, comm,
-                                         context_offset, addr, request, &done);
+                                         attr, addr, request, &done);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!done) {
