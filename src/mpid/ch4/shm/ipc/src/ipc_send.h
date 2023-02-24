@@ -31,10 +31,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
 
     MPIDI_POSIX_THREAD_CS_ENTER_VCI(vsi_src);
 
-    if (rank == comm->rank) {
-        goto fn_exit;
-    }
-
     MPIR_Datatype *dt_ptr;
     bool dt_contig;
     MPI_Aint true_lb;
