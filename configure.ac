@@ -1487,7 +1487,11 @@ if test "$enable_romio" = "yes" ; then
        HAVE_ROMIO='#include "mpio.h"'
        # tell mpicxx.h that we have IO
        HAVE_CXX_IO=1
-       PAC_CONFIG_SUBDIR_ARGS([src/mpi/romio],[],[],[AC_MSG_ERROR([src/mpi/romio configure failed])])
+       romio_subdir_args=""
+       if test "$enable_mpi_abi" = "yes" ; then
+           romio_subdir_args="--enable-mpi-abi"
+       fi
+       PAC_CONFIG_SUBDIR_ARGS([src/mpi/romio],[$romio_subdir_args],[],[AC_MSG_ERROR([src/mpi/romio configure failed])])
    else
        AC_MSG_WARN([ROMIO src directory is not available])
    fi

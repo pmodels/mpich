@@ -8,7 +8,6 @@
 #include "adio_cb_config_list.h"
 #include "hint_fns.h"
 
-#include "mpio.h"
 static int is_aggregator(int rank, ADIO_File fd);
 static int uses_generic_read(ADIO_File fd);
 static int uses_generic_write(ADIO_File fd);

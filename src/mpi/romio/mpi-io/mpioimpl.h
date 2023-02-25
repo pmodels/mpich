@@ -11,7 +11,6 @@
 #define MPIOIMPL_H_INCLUDED
 
 #include "adio.h"
-#include "mpio.h"
 
 #ifdef ROMIO_INSIDE_MPICH
 #include "mpir_ext.h"

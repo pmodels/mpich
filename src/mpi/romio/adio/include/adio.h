@@ -62,8 +62,13 @@
 #define ROMIOCONF_H_INCLUDED
 #endif
 
+#ifdef BUILD_MPI_ABI
+#include "romio_abi_internal.h"
+#else
 #include "mpi.h"
 #include "mpio.h"
+#endif
+
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -259,6 +264,7 @@ typedef struct {
 
 
 /* access modes */
+#ifndef BUILD_MPI_ABI
 #define ADIO_CREATE              1
 #define ADIO_RDONLY              2
 #define ADIO_WRONLY              4
@@ -268,6 +274,19 @@ typedef struct {
 #define ADIO_EXCL                64
 #define ADIO_APPEND             128
 #define ADIO_SEQUENTIAL         256
+#else
+/* FIXME: maybe we should always do this rather than define two sets of macros */
+#define ADIO_CREATE              MPI_MODE_CREATE
+#define ADIO_RDONLY              MPI_MODE_RDONLY
+#define ADIO_WRONLY              MPI_MODE_WRONLY
+#define ADIO_RDWR                MPI_MODE_RDWR
+#define ADIO_DELETE_ON_CLOSE     MPI_MODE_DELETE_ON_CLOSE
+#define ADIO_UNIQUE_OPEN         MPI_MODE_UNIQUE_OPEN
+#define ADIO_EXCL                MPI_MODE_EXCL
+#define ADIO_APPEND              MPI_MODE_APPEND
+#define ADIO_SEQUENTIAL          MPI_MODE_SEQUENTIAL
+#endif
+
 
 #define ADIO_AMODE_NOMATCH  ~(ADIO_CREATE|ADIO_RDONLY|ADIO_WRONLY|ADIO_RDWR|ADIO_DELETE_ON_CLOSE|ADIO_UNIQUE_OPEN|ADIO_EXCL|ADIO_APPEND|ADIO_SEQUENTIAL)
 

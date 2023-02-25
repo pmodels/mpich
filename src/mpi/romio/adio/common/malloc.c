@@ -13,7 +13,6 @@
    MPID_trmalloc. */
 
 #include "adio.h"
-#include "mpi.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpipr.h"

@@ -148,6 +148,12 @@ lib_lib@MPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI
 lib_lib@MPILIBNAME@_la_LIBADD = lib/lib@PMPILIBNAME@.la $(mpi_convenience_libs)
 
+if BUILD_ROMIO
+    # libpromio contains the PMPI symbols (unlike libpmpi, which contains MPI
+    # symbols) and should be added to libpmpi
+    lib_lib@PMPILIBNAME@_la_LIBADD += src/mpi/romio/libpromio.la
+    lib_lib@MPILIBNAME@_la_LIBADD += src/mpi/romio/libromio.la
+endif
 else !BUILD_PROFILING_LIB
 
 lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
@@ -156,6 +162,10 @@ lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
 lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
 lib_lib@MPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
 EXTRA_lib_lib@MPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
+
+if BUILD_ROMIO
+    lib_lib@MPILIBNAME@_la_LIBADD += src/mpi/romio/libromio.la
+endif
 endif !BUILD_PROFILING_LIB
 
 if BUILD_ABI_LIB
@@ -179,6 +189,10 @@ lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI $(abi_cppflags)
 lib_lib@MPIABILIBNAME@_la_LIBADD = lib/lib@PMPIABILIBNAME@.la $(mpi_convenience_libs)
 
+if BUILD_ROMIO
+    lib_lib@PMPIABILIBNAME@_la_LIBADD += src/mpi/romio/libpromio_abi.la
+    lib_lib@MPIABILIBNAME@_la_LIBADD += src/mpi/romio/libromio_abi.la
+endif
 else !BUILD_PROFILING_LIB
 
 lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
@@ -187,6 +201,10 @@ lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
 lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) $(abi_cppflags)
 lib_lib@MPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
 EXTRA_lib_lib@MPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
+
+if BUILD_ROMIO
+    lib_lib@MPIABILIBNAME@_la_LIBADD += src/mpi/romio/libromio_abi.la
+endif
 endif !BUILD_PROFILING_LIB
 endif BUILD_ABI_LIB
 

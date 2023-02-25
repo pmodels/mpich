@@ -96,6 +96,23 @@ libromio_la_LDFLAGS = $(external_ldflags)
 libromio_la_LIBADD = $(external_libs)
 endif !BUILD_PROFILING_LIB
 
+if BUILD_ABI_LIB
+noinst_LTLIBRARIES += libromio_abi.la
+libromio_abi_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
+libromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DBUILD_MPI_ABI
+
+if BUILD_PROFILING_LIB
+noinst_LTLIBRARIES += libpromio_abi.la
+libpromio_abi_la_SOURCES = $(romio_mpi_sources)
+libpromio_abi_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING -DBUILD_MPI_ABI
+libpromio_abi_la_LDFLAGS = $(external_ldflags)
+libpromio_abi_la_LIBADD = $(external_libs)
+endif BUILD_PROFILING_LIB
+libromio_abi_la_LDFLAGS = $(external_ldflags)
+libromio_abi_la_LIBADD = $(external_libs)
+endif BUILD_ABI_LIB
+
+# ---------------------------
 else !BUILD_ROMIO_EMBEDDED
 lib_LTLIBRARIES = libromio.la
 libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
