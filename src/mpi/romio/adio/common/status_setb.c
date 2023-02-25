@@ -4,7 +4,6 @@
  */
 
 #include "adio.h"
-#include "mpi.h"
 
 #if defined(HAVE_MPI_STATUS_SET_ELEMENTS_X)
 /* Not quite correct, but much closer for MPI2 */

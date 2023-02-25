@@ -27,13 +27,6 @@ SUBDIRS += src/mpi/romio
 DIST_SUBDIRS += src/mpi/romio
 MANDOC_SUBDIRS += src/mpi/romio
 HTMLDOC_SUBDIRS += src/mpi/romio
-mpi_convenience_libs += src/mpi/romio/libromio.la
-
-# libpromio contains the PMPI symbols (unlike libpmpi, which contains MPI
-# symbols) and should be added to libmpi as well
-if BUILD_PROFILING_LIB
-pmpi_convenience_libs += src/mpi/romio/libpromio.la
-endif BUILD_PROFILING_LIB
 
 # This was previously a hard copy (not a symlink) performed by config.status
 # (specified via AC_CONFIG_COMMANDS).  Ideally we would eliminate this "copy"
