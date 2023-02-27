@@ -16,6 +16,18 @@ cvars:
       description : >-
         By default, we will cache ipc handle. To manually disable ipc
         handle cache, user can set this variable to 0.
+
+    - name        : MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD
+      category    : CH4
+      type        : int
+      default     : 1048576
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If a send message size is greater than or equal to MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD (in
+        bytes), then enable GPU-based single copy protocol for intranode communication. The
+        environment variable is valid only when then GPU IPC shmmod is enabled.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 

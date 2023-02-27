@@ -13,6 +13,42 @@
 #include "../gpu/gpu_post.h"
 #include "ipc_p2p.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+cvars:
+    - name        : MPIR_CVAR_CH4_IPC_MAP_REPEAT_ADDR
+      category    : CH4
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If an address is used more than once in the last ten send operations,
+        map it for IPC use even if it is below the IPC threshold.
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_IPCI_is_repeat_addr(void *addr)
+{
+    if (!MPIR_CVAR_CH4_IPC_MAP_REPEAT_ADDR) {
+        return false;
+    }
+
+    static void *repeat_addr[10] = { 0 };
+    static int addr_idx = 0;
+
+    for (int i = 0; i < 10; i++) {
+        if (addr == repeat_addr[i]) {
+            return true;
+        }
+    }
+
+    repeat_addr[addr_idx] = addr;
+    addr_idx = (addr_idx + 1) % 10;
+    return false;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint count,
                                                       MPI_Datatype datatype, int rank, int tag,
                                                       MPIR_Comm * comm, int attr,
@@ -30,10 +66,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     MPIDI_POSIX_SEND_VSIS(vsi_src, vsi_dst);
 
     MPIDI_POSIX_THREAD_CS_ENTER_VCI(vsi_src);
-
-    if (rank == comm->rank) {
-        goto fn_exit;
-    }
 
     MPIR_Datatype *dt_ptr;
     bool dt_contig;
@@ -93,7 +125,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__NONE) {
         goto fn_exit;
     }
-    if (data_sz < ipc_attr.threshold.send_lmt_sz) {
+    if (data_sz < ipc_attr.threshold.send_lmt_sz && !MPIDI_IPCI_is_repeat_addr(mem_addr)) {
         goto fn_exit;
     }
 

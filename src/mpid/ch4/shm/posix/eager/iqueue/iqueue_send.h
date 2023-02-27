@@ -57,7 +57,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
      * queuing. */
     MPIDU_genq_shmem_pool_cell_alloc(transport->cell_pool, (void **) &cell,
                                      MPIR_CVAR_GENQ_SHMEM_POOL_FREE_QUEUE_SENDER_SIDE ?
-                                     MPIR_Process.local_rank : grank);
+                                     MPIR_Process.local_rank : grank, buf);
 
     /* If a cell wasn't available, let the caller know that we weren't able to send the message
      * immediately. */

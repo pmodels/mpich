@@ -54,6 +54,7 @@ typedef struct MPIDU_genqi_shmem_pool {
     int rank;
 
     void *slab;
+    bool gpu_registered;
     MPIDU_genqi_shmem_cell_header_s *cell_header_base;
     MPIDU_genqi_shmem_cell_header_s **cell_headers;
     union MPIDU_genq_shmem_queue *free_queues;
