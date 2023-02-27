@@ -227,7 +227,7 @@ typedef struct MPIDI_OFI_cq_list_t {
 typedef struct {
     struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    void *am_bufs;
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
 
     MPIDU_genq_private_pool_t am_hdr_buf_pool;
