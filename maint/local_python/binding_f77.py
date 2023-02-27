@@ -514,7 +514,7 @@ def dump_f77_c_func(func):
         G.out.append("FORT_DLL_SPEC %s FORT_CALL %s(%s) {" % (return_type, name, param_str))
         G.out.append("INDENT")
         if re.match(r'MPI_File_|MPI_Register_datarep', func['name'], re.IGNORECASE):
-            G.out.append("#ifndef MPI_MODE_RDONLY")
+            G.out.append("#ifndef HAVE_ROMIO")
             G.out.append("*ierr = MPI_ERR_INTERN;")
             G.out.append("#else")
 
