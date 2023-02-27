@@ -897,6 +897,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             MPIDIU_map_destroy(MPIDI_OFI_global.per_vni[vni].am_send_seq_tracker);
             MPIDIU_map_destroy(MPIDI_OFI_global.per_vni[vni].am_recv_seq_tracker);
 
+            MPIDI_OFI_unregister_am_bufs();
             MPL_free(MPIDI_OFI_global.per_vni[vni].am_bufs);
 
             MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vni[vni].am_hdr_buf_pool);

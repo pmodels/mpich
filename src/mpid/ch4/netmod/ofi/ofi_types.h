@@ -371,6 +371,7 @@ typedef struct {
     int num_close_nics;
     int num_comms_enabled_striping;     /* Number of active communicators with striping enabled */
     int num_comms_enabled_hashing;      /* Number of active communicators with hashingenabled */
+    bool am_bufs_registered;    /* whether active message buffers are GPU registered */
 
     /* Window/RMA Globals */
     void *win_map;
