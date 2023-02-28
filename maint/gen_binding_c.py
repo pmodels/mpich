@@ -45,6 +45,7 @@ def main():
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("")
     G.doc3_src_txt = []
+    G.need_dump_romio_reference = True
 
     # internal function to dump G.out into filepath
     def dump_out(file_path):
@@ -55,6 +56,7 @@ def main():
         G.out = []
         G.out.append("#include \"mpiimpl.h\"")
         G.out.append("")
+        G.need_dump_romio_reference = True
 
     # ----
     for func in func_list:

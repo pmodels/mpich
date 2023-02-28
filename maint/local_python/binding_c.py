@@ -42,13 +42,15 @@ def dump_mpi_c(func, is_large=False):
     # As an hack, we reference these symbols in selected routines to force the inclusion of romio
     # routines.
     def dump_romio_reference(name):
-        G.out.append("#if defined(HAVE_ROMIO) && defined(MPICH_MPI_FROM_PMPI)")
-        G.out.append("void *dummy_refs_%s[] = {" % name)
-        G.out.append("    (void *) MPIR_Comm_split_filesystem,")
-        G.out.append("    (void *) MPIR_ROMIO_Get_file_errhand,")
-        G.out.append("    (void *) MPIR_ROMIO_Set_file_errhand,")
-        G.out.append("};")
-        G.out.append("#endif")
+        if G.need_dump_romio_reference:
+            G.out.append("#if defined(HAVE_ROMIO) && defined(MPICH_MPI_FROM_PMPI)")
+            G.out.append("void *dummy_refs_%s[] = {" % name)
+            G.out.append("    (void *) MPIR_Comm_split_filesystem,")
+            G.out.append("    (void *) MPIR_ROMIO_Get_file_errhand,")
+            G.out.append("    (void *) MPIR_ROMIO_Set_file_errhand,")
+            G.out.append("};")
+            G.out.append("#endif")
+            G.need_dump_romio_reference = False
 
     # -- "dump" accumulates output lines in G.out
     if not is_large:
