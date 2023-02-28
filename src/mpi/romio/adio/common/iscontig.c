@@ -6,12 +6,10 @@
 #include "adio.h"
 
 #if defined(MPICH)
-/* MPICH also provides this routine */
-void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag);
 
 void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
-    MPIR_Datatype_iscontig(datatype, flag);
+    MPIR_Ext_datatype_iscontig(datatype, flag);
 
     /* if the datatype is reported as contiguous, check if the true_lb is
      * non-zero, and if so, mark the datatype as noncontiguous */

@@ -7,15 +7,6 @@
 
 #include "mpiimpl.h"
 
-/* stdarg is required to handle the variable argument lists for
-   MPIR_Err_create_code */
-#include <stdarg.h>
-/* Define USE_ERR_CODE_VALIST to get the prototype for the valist version
-   of MPIR_Err_create_code in mpir_err.h (without this definition,
-   the prototype is not included.  The "valist" version of the function
-   is used in only a few places, here and potentially in ROMIO) */
-#define USE_ERR_CODE_VALIST
-
 /* defmsg is generated automatically from the source files and contains
    all of the error messages, both the generic and specific.  Depending
    on the value of MPICH_ERROR_MSG_LEVEL, different amounts of message
