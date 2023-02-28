@@ -47,7 +47,7 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
                 MPIR_Comm * comm_ptr, MPIR_Request ** request, MPIR_Errflag_t errflag);
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
                int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request);
-int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[]);
+int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses);
 
 int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
                       MPI_Op op);
