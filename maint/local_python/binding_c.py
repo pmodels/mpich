@@ -54,6 +54,9 @@ def dump_mpi_c(func, is_large=False):
     def dump_romio_reference(name):
         if G.need_dump_romio_reference:
             G.out.append("#if defined(HAVE_ROMIO) && defined(MPICH_MPI_FROM_PMPI)")
+            G.out.append("void MPIR_Comm_split_filesystem(void);")
+            G.out.append("void MPIR_ROMIO_Get_file_errhand(void);")
+            G.out.append("void MPIR_ROMIO_Set_file_errhand(void);")
             G.out.append("void *dummy_refs_%s[] = {" % name)
             G.out.append("    (void *) MPIR_Comm_split_filesystem,")
             G.out.append("    (void *) MPIR_ROMIO_Get_file_errhand,")
