@@ -374,10 +374,6 @@ int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 int MPIR_peer_intercomm_create(MPIR_Context_id_t context_id, MPIR_Context_id_t recvcontext_id,
                                uint64_t remote_lpid, int is_low_group, MPIR_Comm ** newcomm);
 
-#if defined(HAVE_ROMIO)
-int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm);
-#endif
-
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 

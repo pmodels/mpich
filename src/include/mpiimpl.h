@@ -175,7 +175,6 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_topo.h"
 #include "mpir_tags.h"
 #include "mpir_pt2pt.h"
-#include "mpir_ext.h"
 #include "mpir_gpu.h"
 
 #ifdef HAVE_CXX_BINDING

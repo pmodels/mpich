@@ -55,6 +55,30 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
     goto fn_exit;
 }
 
+#ifdef HAVE_ROMIO
+#ifndef BUILD_MPI_ABI
+#include "mpir_ext.h"
+
+static int ext_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm)
+{
+    return MPIR_Comm_split_filesystem(comm, key, dirname, newcomm);
+}
+
+#else
+#include "mpi_abi_util.h"
+int MPIR_Comm_split_filesystem(ABI_Comm comm, int key, const char *dirname, ABI_Comm * newcomm);
+
+static int ext_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm)
+{
+    ABI_Comm comm_out;
+    int ret = MPIR_Comm_split_filesystem(ABI_Comm_from_mpi(comm), key, dirname, &comm_out);
+    *newcomm = ABI_Comm_to_mpi(comm_out);
+    return ret;
+}
+
+#endif /* BUILD_MPI_ABI */
+#endif /* HAVE_ROMIO */
+
 static int split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
                                       MPIR_Comm ** newcomm_ptr)
 {
@@ -68,7 +92,7 @@ static int split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const 
 
     /* ROMIO will call MPI-functions. Take off the lock taken by MPI_Comm_split_type */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    mpi_errno = MPIR_Comm_split_filesystem(user_comm_ptr->handle, key, hintval, &dummycomm);
+    mpi_errno = ext_split_filesystem(user_comm_ptr->handle, key, hintval, &dummycomm);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_ERR_CHECK(mpi_errno);
 

@@ -12,6 +12,11 @@
 
 #include <stdarg.h>
 
+/* Routines defined in romio, used in MPICH */
+int MPIR_ROMIO_Get_file_errhand(MPI_File, MPI_Errhandler *);
+int MPIR_ROMIO_Set_file_errhand(MPI_File, MPI_Errhandler);
+int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm);
+
 /* This routine, given an MPI_Errhandler (from a file), returns
    a pointer to the user-supplied error function.  The last argument
    is set to an integer indicating that the function is MPI_ERRORS_RETURN
@@ -28,12 +33,6 @@ void MPIR_Get_file_error_routine(MPI_Errhandler, void (**)(MPI_File *, int *, ..
  code from throwing an exception when the user routine returns.
 */
 int MPIR_File_call_cxx_errhandler(MPI_File *, int *, void (*)(MPI_File *, int *, ...));
-/*
-   These routines provide access to the MPI_Errhandler field within the
-   ROMIO MPI_File structure
- */
-int MPIR_ROMIO_Get_file_errhand(MPI_File, MPI_Errhandler *);
-int MPIR_ROMIO_Set_file_errhand(MPI_File, MPI_Errhandler);
 
 /* FIXME: This routine is also defined in adio.h */
 int MPIO_Err_return_file(MPI_File, int);
