@@ -110,10 +110,11 @@ MPICH_API_PUBLIC int MPIR_Err_return_file(MPI_File, const char[], int); /* Romio
 MPICH_API_PUBLIC int MPIR_Err_create_code(int, int, const char[], int, int, const char[],
                                           const char[], ...);
 
-#ifdef USE_ERR_CODE_VALIST
 int MPIR_Err_create_code_valist(int, int, const char[], int, int, const char[], const char[],
                                 va_list);
-#endif
+
+typedef int (*MPIR_Err_get_class_string_func_t) (int error, char *str, int length);
+void MPIR_Err_get_string(int, char *, int, MPIR_Err_get_class_string_func_t);
 
 /*@
   MPIR_Err_combine_codes - Combine two error codes, or more importantly

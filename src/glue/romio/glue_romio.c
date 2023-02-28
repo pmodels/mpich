@@ -8,7 +8,16 @@
  * the headers it includes) directly inside of ROMIO. */
 
 #include "mpiimpl.h"
+
+#ifndef BUILD_MPI_ABI
 #include "mpir_ext.h"
+#else
+#include "mpi_abi_util.h"
+int MPIR_Ext_datatype_iscommitted(ABI_Datatype datatype);
+int MPIR_Ext_datatype_iscontig(ABI_Datatype datatype, int *flag);
+int MPIR_Get_node_id(ABI_Comm comm, int rank, int *id);
+int MPIR_Abort(ABI_Comm comm, int mpi_errno, int exit_code, const char *error_msg);
+#endif
 
 #if defined (MPL_USE_DBG_LOGGING)
 static MPL_dbg_class DBG_ROMIO;
@@ -130,7 +139,7 @@ void MPIR_Ext_cs_yield(void)
 }
 
 /* will consider MPI_DATATYPE_NULL to be an error */
-int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype)
+static int ext_datatype_iscommitted(MPI_Datatype datatype)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -152,9 +161,25 @@ int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype)
     return mpi_errno;
 }
 
+/* This will eventually be removed once ROMIO knows more about MPICH */
+static int ext_datatype_iscontig(MPI_Datatype datatype, int *flag)
+{
+    if (HANDLE_IS_BUILTIN(datatype))
+        *flag = 1;
+    else {
+        MPIR_Datatype *dt_ptr;
+        MPIR_Datatype_get_ptr(datatype, dt_ptr);
+        if (!dt_ptr->is_committed) {
+            MPIR_Type_commit_impl(&datatype);
+        }
+        MPIR_Datatype_is_contig(datatype, flag);
+    }
+    return MPI_SUCCESS;
+}
+
 /* ROMIO could parse hostnames but it's easier if we can let it know
  * node ids */
-int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id)
+static int ext_get_node_id(MPI_Comm comm, int rank, int *id)
 {
     MPIR_Comm *comm_ptr;
 
@@ -164,7 +189,7 @@ int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id)
     return MPI_SUCCESS;
 }
 
-int MPIR_Abort(MPI_Comm comm, int mpi_errno, int exit_code, const char *error_msg)
+static int ext_abort(MPI_Comm comm, int mpi_errno, int exit_code, const char *error_msg)
 {
     MPIR_Comm *comm_ptr;
 
@@ -172,3 +197,46 @@ int MPIR_Abort(MPI_Comm comm, int mpi_errno, int exit_code, const char *error_ms
 
     return MPID_Abort(comm_ptr, mpi_errno, exit_code, error_msg);
 }
+
+#ifndef BUILD_MPI_ABI
+int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype)
+{
+    return ext_datatype_iscommitted(datatype);
+}
+
+int MPIR_Ext_datatype_iscontig(MPI_Datatype datatype, int *flag)
+{
+    return ext_datatype_iscontig(datatype, flag);
+}
+
+int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id)
+{
+    return ext_get_node_id(comm, rank, id);
+}
+
+int MPIR_Abort(MPI_Comm comm, int mpi_errno, int exit_code, const char *error_msg)
+{
+    return ext_abort(comm, mpi_errno, exit_code, error_msg);
+}
+
+#else
+int MPIR_Ext_datatype_iscommitted(ABI_Datatype datatype)
+{
+    return ext_datatype_iscommitted(ABI_Datatype_to_mpi(datatype));
+}
+
+int MPIR_Ext_datatype_iscontig(ABI_Datatype datatype, int *flag)
+{
+    return ext_datatype_iscontig(ABI_Datatype_to_mpi(datatype), flag);
+}
+
+int MPIR_Get_node_id(ABI_Comm comm, int rank, int *id)
+{
+    return ext_get_node_id(ABI_Comm_to_mpi(comm), rank, id);
+}
+
+int MPIR_Abort(ABI_Comm comm, int mpi_errno, int exit_code, const char *error_msg)
+{
+    return ext_abort(ABI_Comm_to_mpi(comm), mpi_errno, exit_code, error_msg);
+}
+#endif

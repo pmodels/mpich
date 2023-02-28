@@ -12,7 +12,6 @@
 int MPIR_Datatype_builtintype_alignment(MPI_Datatype type);
 extern int MPIR_Datatype_init_predefined(void);
 extern int MPIR_Datatype_commit_pairtypes(void);
-extern void MPIR_Datatype_iscontig(MPI_Datatype, int *);
 
 /* LB/UB calculation helper macros */
 

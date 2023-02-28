@@ -80,6 +80,7 @@ void MPIR_Ext_cs_yield(void);
 
 /* to facilitate error checking */
 int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype);
+int MPIR_Ext_datatype_iscontig(MPI_Datatype datatype, int *flag);
 
 /* make comm split based on access to a common file system easier */
 int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id);
