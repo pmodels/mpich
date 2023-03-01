@@ -1177,10 +1177,10 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
             /* TODO refactor into a sched_complete routine? */
             switch (s->req->u.nbc.errflag) {
                 case MPIR_ERR_PROC_FAILED:
-                    MPIR_ERR_SET(s->req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm");
+                    MPIR_ERR_SET(s->req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
                     break;
                 case MPIR_ERR_OTHER:
-                    MPIR_ERR_SET(s->req->status.MPI_ERROR, MPI_ERR_OTHER, "**comm");
+                    MPIR_ERR_SET(s->req->status.MPI_ERROR, MPI_ERR_OTHER, "**other");
                     break;
                 case MPIR_ERR_NONE:
                 default:
