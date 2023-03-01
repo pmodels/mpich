@@ -8,6 +8,7 @@
 /* helper callbacks and associated state structures */
 struct shared_state {
     int recvtype;
+    int recvcount;
     MPI_Aint curr_count;
     MPI_Aint last_recv_count;
     MPI_Status status;
@@ -19,6 +20,14 @@ static int get_count(MPIR_Comm * comm, int tag, void *state)
     MPIR_Get_count_impl(&ss->status, ss->recvtype, &recv_count);
     ss->last_recv_count = recv_count;
     ss->curr_count += ss->last_recv_count;
+    return MPI_SUCCESS;
+}
+
+static int reset_shared_state(MPIR_Comm * comm, int tag, void *state)
+{
+    struct shared_state *ss = state;
+    ss->curr_count = ss->recvcount;
+
     return MPI_SUCCESS;
 }
 
@@ -71,6 +80,7 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
     MPIR_ERR_CHKANDJUMP(!ss, mpi_errno, MPI_ERR_OTHER, "**nomem");
     ss->curr_count = recvcount;
     ss->recvtype = recvtype;
+    ss->recvcount = recvcount;
 
     mask = 0x1;
     i = 0;
@@ -188,6 +198,9 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
         mask <<= 1;
         i++;
     }
+
+    mpi_errno = MPIR_Sched_cb(reset_shared_state, ss, s);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
