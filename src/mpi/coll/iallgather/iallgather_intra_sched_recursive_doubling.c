@@ -22,13 +22,6 @@ static int get_count(MPIR_Comm * comm, int tag, void *state)
     return MPI_SUCCESS;
 }
 
-static int dtp_release_ref(MPIR_Comm * comm, int tag, void *state)
-{
-    MPIR_Datatype *recv_dtp = state;
-    MPIR_Datatype_ptr_release(recv_dtp);
-    return MPI_SUCCESS;
-}
-
 /*
  * Recursive Doubling Algorithm:
  *
@@ -53,7 +46,6 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
     int mask, tmp_mask, dst;
     int dst_tree_root, my_tree_root, tree_root;
     MPI_Aint recvtype_extent;
-    MPIR_Datatype *recv_dtp;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -63,11 +55,6 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
      * Non power-of-2 comm_size is still experimental */
     MPIR_Assert(!(comm_size & (comm_size - 1)));
 #endif /* HAVE_ERROR_CHECKING */
-
-    recv_dtp = NULL;
-    if (!HANDLE_IS_BUILTIN(recvtype)) {
-        MPIR_Datatype_get_ptr(recvtype, recv_dtp);
-    }
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
@@ -84,9 +71,6 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
     MPIR_ERR_CHKANDJUMP(!ss, mpi_errno, MPI_ERR_OTHER, "**nomem");
     ss->curr_count = recvcount;
     ss->recvtype = recvtype;
-    /* ensure that recvtype doesn't disappear immediately after last _recv but before _cb */
-    if (recv_dtp)
-        MPIR_Datatype_ptr_add_ref(recv_dtp);
 
     mask = 0x1;
     i = 0;
@@ -203,11 +187,6 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
 
         mask <<= 1;
         i++;
-    }
-
-    if (recv_dtp) {
-        mpi_errno = MPIR_Sched_cb(dtp_release_ref, recv_dtp, s);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
