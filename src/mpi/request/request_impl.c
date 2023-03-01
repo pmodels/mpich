@@ -22,7 +22,9 @@ cvars:
         MPIR_CVAR_REQUEST_ERR_FATAL is set to true, these routines will
         return the error code of the request immediately. The default
         MPI_ERRS_ARE_FATAL error handler will dump a error stack in this
-        case, which maybe more convenient for debugging.
+        case, which maybe more convenient for debugging. This cvar will also
+        make nonblocking shched return error right away as it issues
+        operations.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
