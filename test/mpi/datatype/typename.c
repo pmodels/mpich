@@ -156,8 +156,14 @@ int main(int argc, char **argv)
     isSynonymName = 0;
     for (i = 0; mpi_names[i].name != 0; i++) {
         /* Are we in the optional types? */
-        if (strcmp(mpi_names[i].name, "MPI_REAL4") == 0)
+        if (strcmp(mpi_names[i].name, "MPI_REAL4") == 0) {
             inOptional = 1;
+#ifdef ENABLE_STRICTMPI
+            /* strictly we can't use MPI_DATATYPE_NULL to test datatype availability,
+             * just skip the optional datatypes */
+            break;
+#endif
+        }
         /* If this optional type is not supported, skip it */
         if (inOptional && mpi_names[i].dtype == MPI_DATATYPE_NULL)
             continue;
