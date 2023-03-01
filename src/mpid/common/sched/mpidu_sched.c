@@ -251,6 +251,9 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                 e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
                 MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Sched SEND failed. Errflag: %d\n",
                               (int) r->u.nbc.errflag);
+                if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                    return ret_errno;
+                }
             } else {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             }
@@ -274,6 +277,9 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                 e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
                 MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Sched RECV failed. Errflag: %d\n",
                               (int) r->u.nbc.errflag);
+                if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                    return ret_errno;
+                }
             } else {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             }
@@ -284,6 +290,9 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                                    0, &e->u.send.sreq);
             if (unlikely(ret_errno)) {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                    return ret_errno;
+                }
             } else {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             }
@@ -294,6 +303,9 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                                    0, &e->u.recv.rreq);
             if (unlikely(ret_errno)) {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                    return ret_errno;
+                }
             } else {
                 e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             }
@@ -336,6 +348,9 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                         }
                     }
                     e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                    if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                        return ret_errno;
+                    }
                 } else {
                     e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
                 }
@@ -356,6 +371,9 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                         }
                     }
                     e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                    if (MPIR_CVAR_REQUEST_ERR_FATAL) {
+                        return ret_errno;
+                    }
                 } else {
                     e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
                 }
@@ -1177,10 +1195,10 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
             /* TODO refactor into a sched_complete routine? */
             switch (s->req->u.nbc.errflag) {
                 case MPIR_ERR_PROC_FAILED:
-                    MPIR_ERR_SET(s->req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm");
+                    MPIR_ERR_SET(s->req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
                     break;
                 case MPIR_ERR_OTHER:
-                    MPIR_ERR_SET(s->req->status.MPI_ERROR, MPI_ERR_OTHER, "**comm");
+                    MPIR_ERR_SET(s->req->status.MPI_ERROR, MPI_ERR_OTHER, "**other");
                     break;
                 case MPIR_ERR_NONE:
                 default:
