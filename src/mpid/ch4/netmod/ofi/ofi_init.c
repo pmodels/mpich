@@ -738,7 +738,7 @@ static int flush_send(int dst, int nic, int vci, MPIDI_OFI_dynamic_process_reque
     req->done = 0;
     req->event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
     if (MPIDI_OFI_ENABLE_DATA) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           &data, 4, NULL, 0, addr, match_bits, &req->context),
@@ -770,7 +770,7 @@ static int flush_recv(int src, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 
     /* we don't care the data and the tag field is not used */
     void *recvbuf = &(req->tag);
-    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(NULL, vci, nic)].rx,
+    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vci, nic)].rx,
                                   recvbuf, 4, NULL, addr, match_bits, mask_bits, &req->context),
                          vci, trecv);
 
@@ -1016,7 +1016,7 @@ static int create_vci_context(int vci, int nic)
         tx = ep;
         rx = ep;
     }
-    ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
     MPIDI_OFI_global.ctx[ctx_idx].domain = domain;
     MPIDI_OFI_global.ctx[ctx_idx].av = av;
     MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr = rma_cmpl_cntr;
@@ -1034,7 +1034,7 @@ static int create_vci_context(int vci, int nic)
         mpi_errno = create_vci_domain(&domain, &av, &rma_cmpl_cntr, nic);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
+        ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
         domain = MPIDI_OFI_global.ctx[ctx_idx].domain;
         av = MPIDI_OFI_global.ctx[ctx_idx].av;
         rma_cmpl_cntr = MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr;
@@ -1058,7 +1058,7 @@ static int create_vci_context(int vci, int nic)
             MPIDI_OFI_CALL(fi_enable(ep), ep_enable);
         }
     } else {
-        ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
+        ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
         ep = MPIDI_OFI_global.ctx[ctx_idx].ep;
     }
 
@@ -1073,7 +1073,7 @@ static int create_vci_context(int vci, int nic)
     }
 
     if (vci == 0) {
-        ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+        ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
         MPIDI_OFI_global.ctx[ctx_idx].domain = domain;
         MPIDI_OFI_global.ctx[ctx_idx].av = av;
         MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr = rma_cmpl_cntr;
@@ -1081,10 +1081,10 @@ static int create_vci_context(int vci, int nic)
     } else {
         /* non-zero vci share most fields with vci 0, copy them
          * so we don't have to switch during runtime */
-        MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(NULL, vci, nic)] =
-            MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(NULL, 0, nic)];
+        MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vci, nic)] =
+            MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(0, nic)];
     }
-    ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
     MPIDI_OFI_global.ctx[ctx_idx].cq = cq;
     MPIDI_OFI_global.ctx[ctx_idx].tx = tx;
     MPIDI_OFI_global.ctx[ctx_idx].rx = rx;
@@ -1100,7 +1100,7 @@ static int create_vci_context(int vci, int nic)
 static int destroy_vci_context(int vci, int nic)
 {
     int mpi_errno = MPI_SUCCESS;
-    int ctx_num = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    int ctx_num = MPIDI_OFI_get_ctx_index(vci, nic);
 
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
@@ -1533,7 +1533,7 @@ int ofi_am_post_recv(int vci, int nic)
     MPIR_Assert(nic == 0);
 
     if (MPIDI_OFI_ENABLE_AM) {
-        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
         size_t optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
 
         MPIDI_OFI_CALL(fi_setopt(&(MPIDI_OFI_global.ctx[ctx_idx].rx->fid),
@@ -1573,7 +1573,8 @@ int ofi_am_post_recv(int vci, int nic)
 int MPIDI_OFI_am_repost_buffer(int vci, int am_idx)
 {
     int mpi_errno = MPI_SUCCESS;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, 0);
+    int nic = 0;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
     MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                        &MPIDI_OFI_global.per_vci[vci].am_msg[am_idx],
                                        FI_MULTI_RECV | FI_COMPLETION), prepost);

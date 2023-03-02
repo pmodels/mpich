@@ -551,7 +551,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
     ssize_t ret_cqerr;
     MPIR_FUNC_ENTER;
 
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
     switch (ret) {
         case -FI_EAVAIL:
             /* Provide separate error buffer for each thread. This makes the

@@ -90,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
         mpi_errno = MPIDI_OFI_handle_cq_entries(vci, wc, num);
     } else if (likely(1)) {
         for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-            int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+            int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
             ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, (void *) wc,
                              MPIDI_OFI_NUM_CQ_ENTRIES);
 

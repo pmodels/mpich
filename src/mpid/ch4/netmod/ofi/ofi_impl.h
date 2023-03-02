@@ -215,25 +215,31 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
 #endif
 }
 
-/* Calculate the OFI context index.
- * The total number of OFI contexts will be the number of nics * number of vcis
- * Each nic will contain num_vcis vcis. Each corresponding to their respective vci index. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_ctx_index(MPIR_Comm * comm_ptr, int vci, int nic)
+/* This is similar to MPIDI_OFI_multx_{sender,receiver}_nic_index, except no hashing */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_pref_nic(MPIR_Comm * comm_ptr, int rank)
 {
     if (comm_ptr == NULL || MPIDI_OFI_COMM(comm_ptr).pref_nic == NULL) {
-        return nic * MPIDI_OFI_global.num_vcis + vci;
+        return 0;
     } else {
-        return MPIDI_OFI_COMM(comm_ptr).pref_nic[comm_ptr->rank] * MPIDI_OFI_global.num_vcis + vci;
+        return MPIDI_OFI_COMM(comm_ptr).pref_nic[rank];
     }
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(MPIR_Comm * comm, int vci, int nic)
+/* Calculate the OFI context index.
+ * The total number of OFI contexts will be the number of nics * number of vcis
+ * Each nic will contain num_vcis vcis. Each corresponding to their respective vci index. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_ctx_index(int vci, int nic)
+{
+    return nic * MPIDI_OFI_global.num_vcis + vci;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(int vci, int nic)
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
-    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vci, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
 #else
     /* NOTE: shared with ctx[0] */
-    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, 0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
 #endif
 
 #if defined(MPIDI_CH4_USE_MT_RUNTIME) || defined(MPIDI_CH4_USE_MT_LOCKLESS)
@@ -604,7 +610,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vci)
     /* Caller must hold MPIDI_OFI_THREAD_FI_MUTEX */
 
     for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
         ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, &cq_entry, 1);
 
         if (unlikely(ret == -FI_EAGAIN))

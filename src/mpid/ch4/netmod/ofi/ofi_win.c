@@ -160,7 +160,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
 
     /* we need register mr on the correct domain for the vci */
     int vci = MPIDI_WIN(win, am_vci);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
 
     /* Register the allocated win buffer or MPI_BOTTOM (NULL) for dynamic win.
      * It is clear that we cannot register NULL when FI_MR_ALLOCATED is set, thus
@@ -274,7 +274,7 @@ static int win_set_per_win_sync(MPIR_Win * win)
     int ret, mpi_errno = MPI_SUCCESS;
     int nic = 0;
     int vci = MPIDI_WIN(win, am_vci);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
 
     MPIR_FUNC_ENTER;
 
@@ -332,7 +332,7 @@ static int win_init_sep(MPIR_Win * win)
     struct fi_info *finfo;
     int nic = 0;
     int vci = MPIDI_WIN(win, am_vci);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
 
     MPIR_FUNC_ENTER;
 
@@ -460,7 +460,7 @@ static int win_init_stx(MPIR_Win * win)
     bool have_per_win_cntr = false;
     int nic = 0;
     int vci = MPIDI_WIN(win, am_vci);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
 
     MPIR_FUNC_ENTER;
 
@@ -575,14 +575,14 @@ static int win_init_global(MPIR_Win * win)
 
     int vci = MPIDI_WIN(win, am_vci);
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
 
     MPIDI_OFI_WIN(win).ep = MPIDI_OFI_global.ctx[ctx_idx].tx;
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr;
     MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr;
 #else
-    ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
+    ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
     /* NOTE: shared with ctx[0] */
     MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_global.ctx[ctx_idx].rma_cmpl_cntr;
     MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr;
@@ -921,7 +921,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     int mpl_err = MPL_SUCCESS, i;
     int nic = 0;
     int vci = MPIDI_WIN(win, am_vci);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
 
     MPIR_FUNC_ENTER;
 
@@ -1070,7 +1070,7 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
 
     if (MPIDI_OFI_ENABLE_RMA) {
         int vci = MPIDI_WIN(win, am_vci);
-        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
         MPIDI_OFI_mr_key_free(MPIDI_OFI_COLL_MR_KEY, MPIDI_OFI_WIN(win).win_id);
         MPIDIU_map_erase(MPIDI_OFI_global.win_map, MPIDI_OFI_WIN(win).win_id);
         /* For scalable EP: push transmit context index back into available pool. */
