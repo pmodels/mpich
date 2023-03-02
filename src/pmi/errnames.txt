@@ -110,6 +110,10 @@
 **pmix_resolve_peers %d: PMIx_Resolve_peers returned %d
 **pmix_spawn: PMIx_Spawn failed
 **pmix_spawn %s: PMIx_Spawn failed with error %s
+**pmix_register_event_handler:PMIX_Register_event_handler failed
+**pmix_register_event_handler %d:PMIX_Register_event_handler returned %d
+**pmix_deregister_event_handler:PMIX_Deregister_event_handler failed
+**pmix_deregister_event_handler %d:PMIX_Deregister_event_handler returned %d
 #
 # PMI finalize exit handler registration
 #
