@@ -4,6 +4,7 @@
  */
 
 #include <mpir_pmi.h>
+#include <mpir_pset.h>
 #include <mpiimpl.h>
 #include "uthash.h"     /* for hash function */
 

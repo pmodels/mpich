@@ -148,6 +148,9 @@ typedef struct MPIR_Topology MPIR_Topology;
 struct MPIR_Session;
 typedef struct MPIR_Session MPIR_Session;
 
+struct MPIR_Pset;
+typedef struct MPIR_Pset MPIR_Pset;
+
 struct MPIR_Stream;
 typedef struct MPIR_Stream MPIR_Stream;
 
