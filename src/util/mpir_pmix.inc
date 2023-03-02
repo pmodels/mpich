@@ -103,6 +103,8 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     *appnum = (int) pvalue->data.uint32;
     PMIX_VALUE_RELEASE(pvalue);
 
+    pmix_register_event_handlers();
+
   fn_exit:
     return mpi_errno;
   fn_fail:
