@@ -131,6 +131,8 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
         }
     }
 
+    pmix_register_event_handlers();
+
   fn_exit:
     return mpi_errno;
   fn_fail:
