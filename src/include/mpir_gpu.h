@@ -6,6 +6,10 @@
 #ifndef MPIR_GPU_H_INCLUDED
 #define MPIR_GPU_H_INCLUDED
 
+/* mpidpre.h and mpir_thread.h are needed by mpir_cvars.h */
+#include "mpidpre.h"
+#include "mpir_thread.h"
+#include "mpir_cvars.h"
 #include "mpir_err.h"
 
 /*
@@ -39,6 +43,19 @@ cvars:
         If set to 1, avoid allocate allocating GPU registered host buffers
         for temporary buffers. When stream workq and GPU wait kernels are
         in use, access APIs for GPU registered memory may cause deadlock.
+
+    - name        : MPIR_CVAR_ENABLE_GPU_REGISTER
+      category    : GPU
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Control whether to actually register buffers with the GPU runtime in
+        MPIR_gpu_register_host. This could lower the latency of certain GPU
+        communication at the cost of some amount of GPU memory consumed by
+        the MPI library. By default, registration is enabled.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -97,7 +114,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_dev(const void *ptr)
 
 MPL_STATIC_INLINE_PREFIX int MPIR_gpu_register_host(const void *ptr, size_t size)
 {
-    if (ENABLE_GPU) {
+    if (ENABLE_GPU && MPIR_CVAR_ENABLE_GPU_REGISTER) {
         return MPL_gpu_register_host(ptr, size);
     }
     return MPI_SUCCESS;
@@ -105,7 +122,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_gpu_register_host(const void *ptr, size_t size
 
 MPL_STATIC_INLINE_PREFIX int MPIR_gpu_unregister_host(const void *ptr)
 {
-    if (ENABLE_GPU) {
+    if (ENABLE_GPU && MPIR_CVAR_ENABLE_GPU_REGISTER) {
         return MPL_gpu_unregister_host(ptr);
     }
     return MPI_SUCCESS;

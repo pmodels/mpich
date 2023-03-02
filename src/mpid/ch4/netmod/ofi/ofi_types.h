@@ -227,7 +227,7 @@ typedef struct MPIDI_OFI_cq_list_t {
 typedef struct {
     struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    void *am_bufs;
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
 
     MPIDU_genq_private_pool_t am_hdr_buf_pool;
@@ -371,6 +371,7 @@ typedef struct {
     int num_close_nics;
     int num_comms_enabled_striping;     /* Number of active communicators with striping enabled */
     int num_comms_enabled_hashing;      /* Number of active communicators with hashingenabled */
+    bool am_bufs_registered;    /* whether active message buffers are GPU registered */
 
     /* Window/RMA Globals */
     void *win_map;

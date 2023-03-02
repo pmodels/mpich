@@ -706,6 +706,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged
     return num;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_register_am_bufs(void)
+{
+    if (!MPIDI_OFI_global.am_bufs_registered) {
+        for (int i = 0; i < MPIDI_OFI_global.num_vnis; i++) {
+            MPIR_gpu_register_host(MPIDI_OFI_global.per_vni[i].am_bufs,
+                                   MPIDI_OFI_AM_BUFF_SZ * MPIDI_OFI_NUM_AM_BUFFERS);
+        }
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_unregister_am_bufs(void)
+{
+    if (MPIDI_OFI_global.am_bufs_registered) {
+        for (int i = 0; i < MPIDI_OFI_global.num_vnis; i++) {
+            MPIR_gpu_unregister_host(MPIDI_OFI_global.per_vni[i].am_bufs);
+        }
+    }
+}
+
 #undef CQ_S_LIST
 #undef CQ_S_HEAD
 #undef CQ_S_TAIL

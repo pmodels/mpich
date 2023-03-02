@@ -897,8 +897,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             MPIDIU_map_destroy(MPIDI_OFI_global.per_vni[vni].am_send_seq_tracker);
             MPIDIU_map_destroy(MPIDI_OFI_global.per_vni[vni].am_recv_seq_tracker);
 
-            for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
-                MPIR_gpu_free_host(MPIDI_OFI_global.per_vni[vni].am_bufs[i]);
+            MPIDI_OFI_unregister_am_bufs();
+            MPL_free(MPIDI_OFI_global.per_vni[vni].am_bufs);
 
             MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.per_vni[vni].am_hdr_buf_pool);
 
@@ -1542,13 +1542,15 @@ int ofi_am_post_recv(int vni, int nic)
                                  FI_OPT_ENDPOINT,
                                  FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
 
+        /* we allocate a single buffer and post recvs using an offset */
+        MPIDI_OFI_global.per_vni[vni].am_bufs =
+            MPL_malloc(MPIDI_OFI_AM_BUFF_SZ * MPIDI_OFI_NUM_AM_BUFFERS, MPL_MEM_BUFFER);
         for (int i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
-            MPIR_gpu_malloc_host(&(MPIDI_OFI_global.per_vni[vni].am_bufs[i]), MPIDI_OFI_AM_BUFF_SZ);
             MPIDI_OFI_global.per_vni[vni].am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
             MPIDI_OFI_global.per_vni[vni].am_reqs[i].index = i;
-            MPIR_Assert(MPIDI_OFI_global.per_vni[vni].am_bufs[i]);
+            MPIR_Assert(MPIDI_OFI_global.per_vni[vni].am_bufs);
             MPIDI_OFI_global.per_vni[vni].am_iov[i].iov_base =
-                MPIDI_OFI_global.per_vni[vni].am_bufs[i];
+                (char *) MPIDI_OFI_global.per_vni[vni].am_bufs + (MPIDI_OFI_AM_BUFF_SZ * i);
             MPIDI_OFI_global.per_vni[vni].am_iov[i].iov_len = MPIDI_OFI_AM_BUFF_SZ;
             MPIDI_OFI_global.per_vni[vni].am_msg[i].msg_iov =
                 &MPIDI_OFI_global.per_vni[vni].am_iov[i];
