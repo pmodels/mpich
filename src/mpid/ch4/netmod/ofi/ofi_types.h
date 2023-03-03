@@ -451,7 +451,9 @@ typedef struct MPIDI_OFI_pack_chunk {
 typedef struct MPIDI_OFI_win_request {
     struct MPIDI_OFI_win_request *next;
     struct MPIDI_OFI_win_request *prev;
-    int vci;
+    int vci_local;
+    int vci_target;
+    int nic_target;
     int rma_type;
     MPIR_Request **sigreq;
     MPIDI_OFI_pack_chunk *chunks;
