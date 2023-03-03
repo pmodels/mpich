@@ -39,9 +39,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
     MPIR_FUNC_ENTER;
 
     int vni = msg_hdr->vni_dst;
-    cache_rreq =
-        MPIDIG_req_cache_lookup(MPIDI_OFI_global.per_vni[vni].req_map,
-                                (uint64_t) msg_hdr->fi_src_addr);
+    void *req_map = MPIDI_OFI_global.per_vni[vni].req_map;
+    uint64_t remote_id = msg_hdr->src_id;
+
+    cache_rreq = MPIDIG_req_cache_lookup(req_map, remote_id);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "cached req %p handle=0x%x", cache_rreq,
                      cache_rreq ? cache_rreq->handle : 0));
@@ -54,15 +55,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
         MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, p_data, msg_hdr->payload_sz,
                                                            attr, &rreq);
         MPIDIG_recv_setup(rreq);
-        MPIDIG_req_cache_add(MPIDI_OFI_global.per_vni[vni].req_map, (uint64_t) msg_hdr->fi_src_addr,
-                             rreq);
+        MPIDIG_req_cache_add(req_map, remote_id, rreq);
     }
 
     is_done = MPIDIG_recv_copy_seg(p_data, msg_hdr->payload_sz, rreq);
     if (is_done) {
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-        MPIDIG_req_cache_remove(MPIDI_OFI_global.per_vni[vni].req_map,
-                                (uint64_t) msg_hdr->fi_src_addr);
+        MPIDIG_req_cache_remove(req_map, remote_id);
     }
 
     MPIR_FUNC_EXIT;

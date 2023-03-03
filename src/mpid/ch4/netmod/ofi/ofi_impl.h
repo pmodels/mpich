@@ -436,13 +436,6 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, i
 #endif
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_rank_to_phys(int rank, int nic,
-                                                          int vci_local, int vci_remote)
-{
-    MPIDI_av_entry_t *av = &MPIDIU_get_av(0, rank);
-    return MPIDI_OFI_av_to_phys(av, nic, vci_local, vci_remote);
-}
-
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int nic,
                                                           int vci_local, int vci_remote)
 {

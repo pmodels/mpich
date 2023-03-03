@@ -24,52 +24,74 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vci_idx);
  * the send_seqno. If they are out-of-order, we postpone the message by
  * enqueuing to MPIDI_OFI_global.am_unordered_msgs. The matching seqno is
  * similar to how TCP protocol works.
+ *
+ * The seq need be tracked between local (rank, vci) and remote (rank, vci).
+ * We don't need local rank since it is implicit on each process.
+ *
+ * LOCAL_ID is send to remote precess to identify self.
+ * REMOTE_ID is used locally to track remote process.
+ * I realize the confusing part of the naming.
+ *
  */
 
-MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(int vci, fi_addr_t addr)
+#define MPIDI_OFI_LOCAL_ID(nic, vci) \
+    (((uint64_t) MPIR_Process.world_id << 32) + \
+    ((uint64_t) MPIR_Process.rank << 16) + ((nic) << 8) + (vci))
+
+#define MPIDI_OFI_REMOTE_ID(comm, rank, nic, vci) \
+    MPIDI_OFI_comm_to_phys(comm, rank, nic, vci, vci)
+
+#define MPIDI_OFI_SET_AM_HDR_COMMON(msg_hdr, comm, rank, nic_src, vci_src, nic_dst, vci_dst) \
+    do { \
+        (msg_hdr)->vci_src = vci_src; \
+        (msg_hdr)->vci_dst = vci_dst; \
+        (msg_hdr)->src_id = MPIDI_OFI_LOCAL_ID(nic_src, vci_src); \
+        uint64_t remote_id = MPIDI_OFI_REMOTE_ID(comm, rank, nic_dst, vci_dst); \
+        (msg_hdr)->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vci_src, remote_id); \
+    } while (0)
+
+MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(int vci, uint64_t remote_id)
 {
-    uint64_t id = addr;
     uint16_t seq, old_seq;
     void *ret;
 
-    ret = MPIDIU_map_lookup(MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker, id);
+    ret = MPIDIU_map_lookup(MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker, remote_id);
     if (ret == MPIDIU_MAP_NOT_FOUND)
         old_seq = 0;
     else
         old_seq = (uint16_t) (uintptr_t) ret;
 
     seq = old_seq + 1;
-    MPIDIU_map_update(MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker, id,
+    MPIDIU_map_update(MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker, remote_id,
                       (void *) (uintptr_t) seq, MPL_MEM_OTHER);
 
     return old_seq;
 }
 
-MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_get_next_recv_seqno(int vci, fi_addr_t addr)
+MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_get_next_recv_seqno(int vci, uint64_t remote_id)
 {
-    uint64_t id = addr;
     void *r;
 
-    r = MPIDIU_map_lookup(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker, id);
+    r = MPIDIU_map_lookup(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker, remote_id);
     if (r == MPIDIU_MAP_NOT_FOUND) {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "First time adding recv seqno addr=%" PRIx64 "\n", addr));
-        MPIDIU_map_set(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker, id, 0, MPL_MEM_OTHER);
+                        (MPL_DBG_FDEST, "First time adding recv seqno, remote_id=%" PRIx64 "\n",
+                         remote_id));
+        MPIDIU_map_set(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker, remote_id, 0,
+                       MPL_MEM_OTHER);
         return 0;
     } else {
         return (uint16_t) (uintptr_t) r;
     }
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_set_next_recv_seqno(int vci, fi_addr_t addr,
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_set_next_recv_seqno(int vci, uint64_t remote_id,
                                                                uint16_t seqno)
 {
-    uint64_t id = addr;
-
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "Next recv seqno=%d addr=%" PRIx64 "\n", seqno, addr));
-
-    MPIDIU_map_update(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker, id,
+                    (MPL_DBG_FDEST, "Next recv seqno=%d remote_id=%" PRIx64 "\n", seqno,
+                     remote_id));
+    MPIDIU_map_update(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker, remote_id,
                       (void *) (uintptr_t) seqno, MPL_MEM_OTHER);
 }
 
@@ -101,7 +123,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(int vci,
 /* Find and dequeue a message that matches (comm, src_rank, seqno), then return it.
  * Caller must free the returned pointer. */
 MPL_STATIC_INLINE_PREFIX MPIDI_OFI_am_unordered_msg_t
-    * MPIDI_OFI_am_claim_unordered_msg(int vci, fi_addr_t addr, uint16_t seqno)
+    * MPIDI_OFI_am_claim_unordered_msg(int vci, uint64_t remote_id, uint16_t seqno)
 {
     MPIDI_OFI_am_unordered_msg_t *uo_msg;
 
@@ -111,12 +133,12 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_am_unordered_msg_t
      * If it's not the case, we should consider using better data structure and algorithm
      * to look up. */
     DL_FOREACH(MPIDI_OFI_global.per_vci[vci].am_unordered_msgs, uo_msg) {
-        if (uo_msg->am_hdr.fi_src_addr == addr && uo_msg->am_hdr.seqno == seqno) {
+        if (uo_msg->am_hdr.src_id == remote_id && uo_msg->am_hdr.seqno == seqno) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, TERSE,
                             (MPL_DBG_FDEST,
-                             "Found unordered message in the queue: addr=%" PRIx64 ", seqno=%d\n",
-                             addr, seqno));
-            DL_DELETE(MPIDI_OFI_global.per_vci[0].am_unordered_msgs, uo_msg);
+                             "Found unordered message in the queue: remote_id=%" PRIx64
+                             ", seqno=%d\n", remote_id, seqno));
+            DL_DELETE(MPIDI_OFI_global.per_vci[vci].am_unordered_msgs, uo_msg);
             return uo_msg;
         }
     }
@@ -252,10 +274,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
     msg_hdr->am_hdr_sz = am_hdr_sz;
     msg_hdr->payload_sz = 0;    /* LMT info sent as header */
     msg_hdr->am_type = MPIDI_AMTYPE_RDMA_READ;
-    msg_hdr->vci_src = vci_src;
-    msg_hdr->vci_dst = vci_dst;
-    msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vci_src, dst_addr);
-    msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vci_src, vci_src);
+    MPIDI_OFI_SET_AM_HDR_COMMON(msg_hdr, comm, rank, nic, vci_src, nic, vci_dst);
 
     lmt_info = (void *) ((char *) msg_hdr + sizeof(MPIDI_OFI_am_header_t) + am_hdr_sz);
     lmt_info->context_id = comm->context_id;
@@ -337,10 +356,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     msg_hdr->am_hdr_sz = MPIDI_OFI_AM_SREQ_HDR(sreq, am_hdr_sz);
     msg_hdr->payload_sz = data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
-    msg_hdr->vci_src = vci_src;
-    msg_hdr->vci_dst = vci_dst;
-    msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vci_src, dst_addr);
-    msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vci_src, vci_src);
+    MPIDI_OFI_SET_AM_HDR_COMMON(msg_hdr, comm, rank, nic, vci_src, nic, vci_dst);
 
     MPIR_cc_inc(sreq->cc_ptr);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
@@ -402,10 +418,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     msg_hdr->am_hdr_sz = am_hdr_sz;
     msg_hdr->payload_sz = seg_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_PIPELINE;
-    msg_hdr->vci_src = vci_src;
-    msg_hdr->vci_dst = vci_dst;
-    msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vci_src, dst_addr);
-    msg_hdr->fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vci_src, vci_src);
+    MPIDI_OFI_SET_AM_HDR_COMMON(msg_hdr, comm, rank, nic, vci_src, nic, vci_dst);
 
     MPIR_cc_inc(sreq->cc_ptr);
     send_req->event_id = MPIDI_OFI_EVENT_AM_SEND_PIPELINE;
@@ -590,10 +603,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
     msg_hdr.am_hdr_sz = am_hdr_sz;
     msg_hdr.payload_sz = 0;
     msg_hdr.am_type = MPIDI_AMTYPE_SHORT_HDR;
-    msg_hdr.vci_src = vci_src;
-    msg_hdr.vci_dst = vci_dst;
-    msg_hdr.seqno = MPIDI_OFI_am_fetch_incr_send_seqno(vci_src, dst_addr);
-    msg_hdr.fi_src_addr = MPIDI_OFI_rank_to_phys(MPIR_Process.rank, nic, vci_src, vci_src);
+    MPIDI_OFI_SET_AM_HDR_COMMON((&msg_hdr), comm, rank, nic, vci_src, nic, vci_dst);
 
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
