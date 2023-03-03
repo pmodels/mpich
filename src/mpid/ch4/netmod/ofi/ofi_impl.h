@@ -417,30 +417,35 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
     MPL_free(winreq);
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, int nic,
-                                                        int vci_local, int vci_remote)
+/* NOTE: in general, the address can be different between any two endpoints. Thus, we need
+ *       a 4 dimension tuple of (nic_local, vci_local, nic_remote, vci_remote) for a given addr.
+ *       However, libfabric let us to have the same addr for a (nic_remote, vci_remote) pair
+ *       on any local endpoints, as long as we are careful in the insertion order). Thus,
+ *       we get away with simplified interface using just (nic, vci) pair.
+ */
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, int nic, int vci)
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][vci_remote], 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][vci], 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        return MPIDI_OFI_AV(av).dest[nic][vci_remote];
+        return MPIDI_OFI_AV(av).dest[nic][vci];
     }
 #else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][0], vci_remote, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][0], vci, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        MPIR_Assert(vci_remote == 0);
+        MPIR_Assert(vci == 0);
         return MPIDI_OFI_AV(av).dest[nic][0];
     }
 #endif
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int nic,
-                                                          int vci_local, int vci_remote)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank,
+                                                          int nic, int vci)
 {
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, rank);
-    return MPIDI_OFI_av_to_phys(av, nic, vci_local, vci_remote);
+    return MPIDI_OFI_av_to_phys(av, nic, vci);
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)

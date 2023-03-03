@@ -121,7 +121,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
         int vci = MPIDI_WIN(win, am_vci);
         int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vci, vci);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vci);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -215,7 +215,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
 
         int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, nic, vci, vci);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, nic, vci);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -299,7 +299,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
 
         int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, nic, vci, vci);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, nic, vci);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;

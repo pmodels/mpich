@@ -32,7 +32,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     if (unlikely(MPI_ANY_SOURCE == source))
         remote_proc = FI_ADDR_UNSPEC;
     else
-        remote_proc = MPIDI_OFI_av_to_phys(addr, nic, vci_local, vci_remote);
+        remote_proc = MPIDI_OFI_av_to_phys(addr, nic, vci_remote);
 
     if (message) {
         MPIDI_CH4_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__MPROBE, vci_dst, 1);

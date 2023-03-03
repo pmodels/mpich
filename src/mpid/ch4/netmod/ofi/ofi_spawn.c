@@ -18,7 +18,7 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     int ctx_idx = 0;
     int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
     int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
-    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci, vci);
+    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 

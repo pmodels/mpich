@@ -38,8 +38,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
 
     MPIR_FUNC_ENTER;
 
-    int vni = msg_hdr->vni_dst;
-    void *req_map = MPIDI_OFI_global.per_vni[vni].req_map;
+    int vci = msg_hdr->vci_dst;
+    void *req_map = MPIDI_OFI_global.per_vci[vci].req_map;
     uint64_t remote_id = msg_hdr->src_id;
 
     cache_rreq = MPIDIG_req_cache_lookup(req_map, remote_id);
@@ -133,7 +133,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
             .msg_iov = &iov,
             .desc = NULL,
             .iov_count = 1,
-            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, nic, vci_local, vci_remote),
+            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, nic, vci_remote),
             .rma_iov = &rma_iov,
             .rma_iov_count = 1,
             .context = &am_req->context,

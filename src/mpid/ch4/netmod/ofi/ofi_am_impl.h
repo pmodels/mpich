@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vci_idx);
     ((uint64_t) MPIR_Process.rank << 16) + ((nic) << 8) + (vci))
 
 #define MPIDI_OFI_REMOTE_ID(comm, rank, nic, vci) \
-    MPIDI_OFI_comm_to_phys(comm, rank, nic, vci, vci)
+    MPIDI_OFI_comm_to_phys(comm, rank, nic, vci)
 
 #define MPIDI_OFI_SET_AM_HDR_COMMON(msg_hdr, comm, rank, nic_src, vci_src, nic_dst, vci_dst) \
     do { \
@@ -258,7 +258,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
     MPIDI_OFI_lmt_msg_payload_t *lmt_info;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(vci_src, nic);
-    fi_addr_t dst_addr = MPIDI_OFI_comm_to_phys(comm, rank, nic, vci_src, vci_dst);
+    fi_addr_t dst_addr = MPIDI_OFI_comm_to_phys(comm, rank, nic, vci_dst);
 
     MPIR_FUNC_ENTER;
 
@@ -332,7 +332,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     int mpi_errno = MPI_SUCCESS;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(vci_src, nic);
-    fi_addr_t dst_addr = MPIDI_OFI_comm_to_phys(comm, rank, nic, vci_src, vci_dst);
+    fi_addr_t dst_addr = MPIDI_OFI_comm_to_phys(comm, rank, nic, vci_dst);
 
     MPIR_FUNC_ENTER;
 
@@ -397,7 +397,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * c
     MPIDI_OFI_am_header_t *msg_hdr;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(vci_src, nic);
-    fi_addr_t dst_addr = MPIDI_OFI_comm_to_phys(comm, rank, nic, vci_src, vci_dst);
+    fi_addr_t dst_addr = MPIDI_OFI_comm_to_phys(comm, rank, nic, vci_dst);
 
     MPIR_FUNC_ENTER;
 
@@ -591,7 +591,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
     size_t buff_len;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(vci_src, nic);
-    fi_addr_t dst_addr = MPIDI_OFI_comm_to_phys(comm, rank, nic, vci_src, vci_dst);
+    fi_addr_t dst_addr = MPIDI_OFI_comm_to_phys(comm, rank, nic, vci_dst);
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_ENTER;

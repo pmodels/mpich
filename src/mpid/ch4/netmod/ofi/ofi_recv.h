@@ -88,9 +88,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     msg.ignore = mask_bits;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
     msg.data = 0;
-    msg.addr =
-        (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr, sender_nic,
-                                                                         vci_local, vci_remote);
+    msg.addr = (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC :
+        MPIDI_OFI_av_to_phys(addr, sender_nic, vci_remote);
 
     MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg, flags), vci_local,
                          trecv);
@@ -240,7 +239,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                       data_sz,
                                       NULL,
                                       (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC :
-                                      MPIDI_OFI_av_to_phys(addr, sender_nic, vci_local, vci_remote),
+                                      MPIDI_OFI_av_to_phys(addr, sender_nic, vci_remote),
                                       match_bits, mask_bits,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), vci_local,
                              trecv);
