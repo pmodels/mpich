@@ -1,4 +1,33 @@
 ===============================================================================
+                               Changes in 4.1.1
+===============================================================================
+
+# Update embedded UCX module to 1.13.1. Fixes a build issue with
+  binutils >= 2.39.
+
+# Update yaksa module. Support explicit NVCC setting by the user. Fixes
+  a build issue when there is no libtool available in PATH.
+
+# Fix ch4:ucx initialization when configured with
+  --enable-ch4-vci-method=implicit.
+
+# Fix potential error handler leak during MPI_SESSION_FINALIZE
+
+# Fix value of MPI_UNDEFINED in mpif.h binding
+
+# Fix MPI_IALLTOALLW with MPI_IN_PLACE
+
+# Fix send attribute handling in IPC path
+
+# Fix a bug in persistent MPI_ALLGATHER
+
+# Fix tests for use with non-MPICH libraries
+
+# Add missing MPI_T_ERR_NOT_ACCESSIBLE error code
+
+# Fix manpages for MPIX functions
+
+===============================================================================
                                Changes in 4.1
 ===============================================================================
 

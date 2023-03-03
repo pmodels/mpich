@@ -12,12 +12,16 @@ EXTRA_DIST = testlist
 ## correctly
 noinst_PROGRAMS = getcnterr \
                   type_contiguous_nullarg \
-                  type_extent_nullarg \
                   type_get_extent_nullarg \
                   type_get_true_extent_nullarg \
                   type_get_true_extent_x_nullarg \
-                  type_lb_nullarg \
-                  type_ub_nullarg \
                   type_size_x_nullarg \
                   type_vector_nullarg
+
+if NOT_STRICTMPI
+noinst_PROGRAMS += \
+                  type_extent_nullarg \
+                  type_lb_nullarg \
+                  type_ub_nullarg
+endif
 

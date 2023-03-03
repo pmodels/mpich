@@ -36,6 +36,10 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* FIXME: Here we allocate tmp_buf using extent and send/recv with datatype directly,
+     *        which can be potentially very inefficient. Why don't we use bytes as in
+     *        ialltoallw_intra_sched_inplace.c ?
+     */
     MPI_Aint max_size;
     max_size = 0;
     for (i = 0; i < nranks; ++i) {

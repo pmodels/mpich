@@ -81,10 +81,8 @@ def dump_mpi_c(func, is_large=False):
         dump_function_internal(func, kind="normal")
     G.out.append("")
 
-    # NOTE: dump_manpage is now called inside dump_qmpi_wrappers
-
     # Create the MPI and QMPI wrapper functions that will call the above, "real" version of the
-    # function in the MPII prefix
+    # function in the internal prefix
     dump_qmpi_wrappers(func, func['_is_large'])
 
 def get_func_file_path(func, root_dir):
@@ -868,6 +866,9 @@ def dump_manpage(func, out):
         if l > 0:
             out.append('  ' + ' '.join(words[i0:]))
     # ----
+    if not func['desc']:
+        # place holder to make the man page render
+        func['desc'] = "[short description]"
     out.append("/*D")
     out.append("   %s - %s" % (get_function_name(func, False), func['desc']))
     out.append("")
