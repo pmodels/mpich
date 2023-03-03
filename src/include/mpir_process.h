@@ -43,6 +43,9 @@ typedef struct MPIR_Process_t {
     int *node_local_map;        /* int[local_size], maps local_id to rank of local proc */
     int *node_root_map;         /* int[num_nodes], maps node_id to the rank of node root */
 
+    unsigned world_id;          /* this is a hash of pmi_kvs_name. One use is for
+                                 * ofi netmod active message to synchronize seq number. */
+
     /* -------------- */
     int do_error_checks;        /* runtime error check control */
     struct MPIR_Comm *comm_world;       /* Easy access to comm_world for
