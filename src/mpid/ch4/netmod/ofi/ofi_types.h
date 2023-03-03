@@ -246,6 +246,9 @@ typedef struct {
     /* Queue (utlist) to store early-arrival active messages */
     MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
 
+    /* Used by am pipeline to track rreq */
+    void *req_map;
+
     /* Completion queue buffering */
     struct fi_cq_tagged_entry cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
     int cq_buffered_static_head;
@@ -391,8 +394,6 @@ typedef struct {
     size_t addrnamelen;         /* OFI uses the same name length within a provider. */
     char pname[MPI_MAX_PROCESSOR_NAME];
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
-
-    void *req_map;
 
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS

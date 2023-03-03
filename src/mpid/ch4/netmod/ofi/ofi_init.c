@@ -554,7 +554,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* Create the id to object maps     */
     /* -------------------------------- */
     MPIDIU_map_create(&MPIDI_OFI_global.win_map, MPL_MEM_RMA);
-    MPIDIU_map_create(&MPIDI_OFI_global.req_map, MPL_MEM_OTHER);
 
     /* Initialize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
@@ -883,7 +882,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     }
 
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
-    MPIDIU_map_destroy(MPIDI_OFI_global.req_map);
 
     if (MPIDI_OFI_ENABLE_AM) {
         for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
@@ -894,6 +892,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             }
             MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker);
             MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker);
+
+            MPIDIU_map_destroy(MPIDI_OFI_global.per_vci[vci].req_map);
 
             MPIDI_OFI_unregister_am_bufs();
             MPL_free(MPIDI_OFI_global.per_vci[vci].am_bufs);
@@ -1509,6 +1509,8 @@ int ofi_am_init(void)
             MPIDIU_map_create(&MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker, MPL_MEM_BUFFER);
             MPIDIU_map_create(&MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker, MPL_MEM_BUFFER);
             MPIDI_OFI_global.per_vci[vci].am_unordered_msgs = NULL;
+
+            MPIDIU_map_create(&MPIDI_OFI_global.per_vci[vci].req_map, MPL_MEM_OTHER);
 
             MPIDI_OFI_global.per_vci[vci].deferred_am_isend_q = NULL;
 
