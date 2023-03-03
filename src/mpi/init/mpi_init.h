@@ -49,6 +49,8 @@ int MPII_Finalize(MPIR_Session * session_ptr);
 void MPII_thread_mutex_create(void);
 void MPII_thread_mutex_destroy(void);
 
+const char *MPII_threadlevel_name(int threadlevel);
+
 int MPII_init_local_proc_attrs(int *p_thread_required);
 int MPII_init_tag_ub(void);
 int MPII_init_builtin_infos(void);
