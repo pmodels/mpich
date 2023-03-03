@@ -34,8 +34,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     MPI_Aint num_contig, size;
     int vci_remote = vci_src;
     int vci_local = vci_dst;
-    int ctx_idx = 0;
-    int sender_nic = 0, receiver_nic = 0;
+    int ctx_idx;
+    int sender_nic, receiver_nic;
 
     MPIR_FUNC_ENTER;
 
@@ -129,8 +129,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     bool force_gpu_pack = false;
     int vci_remote = vci_src;
     int vci_local = vci_dst;
-    int sender_nic = 0, receiver_nic = 0;
-    int ctx_idx = 0;
+    int sender_nic, receiver_nic;
+    int ctx_idx;
 
     MPIR_FUNC_ENTER;
 

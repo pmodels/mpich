@@ -20,8 +20,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     int mpi_errno = MPI_SUCCESS;
     int vci_local = vci_src;
     int vci_remote = vci_dst;
-    int sender_nic = 0, receiver_nic = 0;
-    int ctx_idx = 0;
+    int sender_nic, receiver_nic;
+    int ctx_idx;
     uint64_t match_bits;
 
     MPIR_FUNC_ENTER;
@@ -77,8 +77,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     MPI_Aint num_contig, size;
     int vci_local = vci_src;
     int vci_remote = vci_dst;
-    int sender_nic = 0, receiver_nic = 0;
-    int ctx_idx = 0;
+    int sender_nic, receiver_nic;
+    int ctx_idx;
 
     MPIR_FUNC_ENTER;
 
@@ -155,8 +155,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     bool force_gpu_pack = false;
     int vci_local = vci_src;
     int vci_remote = vci_dst;
-    int sender_nic = 0, receiver_nic = 0;
-    int ctx_idx = 0;
+    int sender_nic, receiver_nic;
+    int ctx_idx;
 
     MPIR_FUNC_ENTER;
 
