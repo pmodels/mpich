@@ -458,6 +458,13 @@ int MPL_gpu_init(int debug_summary)
         goto fn_exit;
     }
 
+    MPL_gpu_info.debug_summary = debug_summary;
+    MPL_gpu_info.enable_ipc = true;
+
+    if (MPL_gpu_info.debug_summary) {
+        printf("==== GPU Init (ZE) ====\n");
+    }
+
     mpl_err = gpu_ze_init_driver();
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
@@ -534,7 +541,6 @@ int MPL_gpu_init(int debug_summary)
     gpu_initialized = 1;
 
     if (MPL_gpu_info.debug_summary) {
-        printf("==== GPU Init (ZE) ====\n");
         printf("device_count: %d\n", device_count);
         printf("subdevice_count: %d\n", local_ze_device_count - device_count);
         printf("=========================\n");
@@ -794,6 +800,9 @@ static int gpu_ze_init_driver(void)
     ret = zeDriverGet(&driver_count, NULL);
     ZE_ERR_CHECK(ret);
     if (driver_count == 0) {
+        if (MPL_gpu_info.debug_summary) {
+            printf("No Intel GPU library driver found.\n");
+        }
         goto fn_fail;
     }
 
@@ -888,6 +897,10 @@ static int gpu_ze_init_driver(void)
 
             dev_id += subdevice_count[d];
         }
+    } else {
+        if (MPL_gpu_info.debug_summary) {
+            printf("No Intel GPU device found.\n");
+        }
     }
 
     ze_context_desc_t contextDesc = {
@@ -979,6 +992,47 @@ static int gpu_ze_init_driver(void)
                                             (void **) &zexMemOpenIpcHandles);
     if (ZE_RESULT_SUCCESS != ret)
         zexMemOpenIpcHandles = NULL;
+
+    if (MPL_gpu_info.debug_summary) {
+        for (d = 0; d < local_ze_device_count; ++d) {
+            MPL_ze_device_entry_t *device_state = device_states + d;
+            ze_device_properties_t device_properties;
+            memset(&device_properties, 0, sizeof(ze_device_properties_t));
+            device_properties.stype = ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES;
+            device_properties.pNext = NULL;
+            ret = zeDeviceGetProperties(ze_devices_handle[d], &device_properties);
+            fprintf(stderr, "==== Device %d ====\n", d);
+            if (d < device_count) {
+                fprintf(stderr, "\troot device: %d tiles\n", subdevice_count[d]);
+            }
+            fprintf(stderr, "  device name: %s\n", device_properties.name);
+            fprintf(stderr, "  deviceId: %d\n", device_properties.deviceId);
+            fprintf(stderr, "  subdeviceId: %d\n", device_properties.subdeviceId);
+            fprintf(stderr, "  coreClockRate: %d\n", device_properties.coreClockRate);
+            fprintf(stderr, "  maxMemAllocSize: %ld\n", device_properties.maxMemAllocSize);
+            fprintf(stderr, "  maxHardwareContexts: %d\n", device_properties.maxHardwareContexts);
+            fprintf(stderr, "  numThreadsPerEU: %d\n", device_properties.numThreadsPerEU);
+            char uuid_str[1024];
+            strcpy(uuid_str, "uuid: ");
+            for (int j = 0; j < ZE_MAX_DRIVER_UUID_SIZE; j++) {
+                char s[128];
+                sprintf(s, "%x ", device_properties.uuid.id[j]);
+                strcat(uuid_str, s);
+            }
+            fprintf(stderr, "  %s\n", uuid_str);
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+            if (device_state->pci_avail)
+                fprintf(stderr, "  BDF: domain:%x B:%x D:%x F:%x\n", device_state->pci.domain,
+                        device_state->pci.bus, device_state->pci.device,
+                        device_state->pci.function);
+#endif
+            fprintf(stderr, "  Command Queue (engine) types: %d \n", device_state->numQueueGroups);
+            for (i = 0; i < device_state->numQueueGroups; i++) {
+                fprintf(stderr, "    Engine: %d  numQueues: %d \n", i,
+                        device_state->engines[i].numQueues);
+            }
+        }
+    }
 
   fn_exit:
     MPL_free(all_drivers);
