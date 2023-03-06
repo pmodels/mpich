@@ -202,9 +202,8 @@ int MPL_gpu_init(int debug_summary)
         goto fn_fail;
 
     MPL_gpu_info.debug_summary = debug_summary;
-    MPL_gpu_info.enable_ipc = false;
+    MPL_gpu_info.enable_ipc = true;
     MPL_gpu_info.ipc_handle_type = MPL_GPU_IPC_HANDLE_SHAREABLE_FD;
-
 
     device_count = global_ze_device_count;
     max_dev_id = device_count - 1;
