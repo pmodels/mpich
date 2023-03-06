@@ -203,7 +203,7 @@ int MPL_gpu_init(MPL_gpu_info_t * info)
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
 
-    info->enable_ipc = false;
+    info->enable_ipc = true;
 
     device_count = global_ze_device_count;
     max_dev_id = device_count - 1;
