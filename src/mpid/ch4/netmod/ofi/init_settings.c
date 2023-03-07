@@ -299,6 +299,7 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
     UPDATE_SETTING_BY_CAP(num_optimized_memory_regions,
                           MPIR_CVAR_CH4_OFI_NUM_OPTIMIZED_MEMORY_REGIONS);
     UPDATE_SETTING_BY_CAP(enable_hmem, MPIR_CVAR_CH4_OFI_ENABLE_HMEM);
+    UPDATE_SETTING_BY_CAP(enable_mr_hmem, MPIR_CVAR_CH4_OFI_ENABLE_MR_HMEM);
 }
 
 #define CHECK_CAP(setting, cond_bad) \
