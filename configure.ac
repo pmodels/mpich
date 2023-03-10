@@ -1534,6 +1534,12 @@ case "$with_pmilib" in
     ;;
 esac
 
+PAC_CHECK_HEADER_LIB_EXPLICIT(pmi2, pmi2.h, pmi2, PMI2_Init)
+if test "$pac_have_pmi2" = "yes" ; then
+    with_pmi=pmi2
+    with_pmilib=no
+fi
+
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
 if test "$pac_have_pmix" = "yes" ; then
     with_pmi=pmix
