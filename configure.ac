@@ -1448,16 +1448,18 @@ fi
 # Configuring pmi, pmilib, and pm
 #
 
-AC_ARG_WITH(pmi,
-	AS_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
-	with_pmi=pmi1)
+AC_ARG_WITH(pmi, [
+  --with-pmi=name - Specify the pmi interface for MPICH.
+                      pmi1 - use PMIv1 (default)
+                      pmi2 - use PMI2
+                      pmix - use PMIx
+],, with_pmi=pmi1)
 
-AC_ARG_WITH(pmilib,
-	AS_HELP_STRING([--with-pmilib=name],
-                [Specify the PMI library. Deprecated. Use --with-pmi, or
-                 --with-pmi2, or --with-pmix to specify library path.
-                ]),,
-	with_pmilib=mpich)
+AC_ARG_WITH(pmilib, [
+  --with-pmilib=option -  [Deprecated] Specify the PMI library. Use --with-pmi=[PATH],
+                          or --with-pmi2=[PATH], or --with-pmix=[PATH] to specify
+                          PMI library path.
+],,with_pmilib=mpich)
 
 AC_ARG_WITH(pm,
 	AS_HELP_STRING([--with-pm=name],
