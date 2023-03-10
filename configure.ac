@@ -1491,7 +1491,7 @@ case "$with_pmi" in
     ;;
   pmix)
     with_pmi=pmix
-    with_pmilib=pmix
+    with_pmilib=no
     with_pm=no
     ;;
   bgq)
@@ -1528,10 +1528,6 @@ case "$with_pmilib" in
     fi
     with_pm=no
     ;;
-  pmix)
-    with_pmi=pmix
-    with_pm=no
-    ;;
 esac
 
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmi2, pmi2.h, pmi2, PMI2_Init)
@@ -1543,7 +1539,7 @@ fi
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
 if test "$pac_have_pmix" = "yes" ; then
     with_pmi=pmix
-    with_pmilib=pmix
+    with_pmilib=no
     with_pm=no
 fi
 
@@ -1707,9 +1703,6 @@ case "$with_pmilib" in
     # includes PMI functions, but no header file.
     PAC_PREPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
     AC_DEFINE([NO_PMI_SPAWN_MULTIPLE], 1, [The PMI library does not have PMI_Spawn_multiple.])
-    ;;
-  pmix)
-    # taken care of by PAC_CHECK_HEADER_LIB_EXPLICIT
     ;;
   no)
     # taken care of by --with-pmi=path
