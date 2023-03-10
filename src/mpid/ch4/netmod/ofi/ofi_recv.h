@@ -134,6 +134,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     int vci_local = vci_dst;
     int receiver_nic;
     int ctx_idx;
+    bool register_mem = false;
+    struct fid_mr *mr = NULL;
+    void *desc = NULL;
 
     MPIR_FUNC_ENTER;
 
@@ -170,15 +173,34 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr;
-    MPIR_GPU_query_pointer_attr(recv_buf, &attr);
+
+    if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD) {
+        if (MPIDI_OFI_ENABLE_MR_HMEM) {
+            if (dt_contig) {
+                MPIR_GPU_query_pointer_attr(recv_buf, &attr);
+                if (attr.type == MPL_GPU_POINTER_DEV) {
+                    register_mem = true;
+                }
+            }
+        }
+    }
+
     if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
         MPIDI_OFI_register_am_bufs();
-        if (!MPIDI_OFI_ENABLE_HMEM) {
+        if (!MPIDI_OFI_ENABLE_HMEM || !dt_contig || (MPIDI_OFI_ENABLE_MR_HMEM && !register_mem)) {
+            MPIR_GPU_query_pointer_attr(recv_buf, &attr);
             /* FIXME: at this point, GPU data takes host-buffer staging
              * path for the whole chunk. For large memory size, pipeline
              * transfer should be applied. */
             force_gpu_pack = true;
             dt_contig = 0;
+        }
+    }
+
+    if (register_mem) {
+        MPIDI_OFI_register_memory(recv_buf, data_sz, attr, ctx_idx, &mr);
+        if (mr != NULL) {
+            desc = fi_mr_desc(mr);
         }
     }
 
@@ -245,12 +267,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             sender_addr = MPIDI_OFI_av_to_phys(addr, sender_nic, vci_remote);
         }
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
-                                      recv_buf, data_sz, NULL, sender_addr, match_bits, mask_bits,
+                                      recv_buf, data_sz, desc, sender_addr, match_bits, mask_bits,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), vci_local,
                              trecv);
     } else {
         msg.msg_iov = &MPIDI_OFI_REQUEST(rreq, util.iov);
-        msg.desc = NULL;
+        msg.desc = desc;
         msg.iov_count = 1;
         msg.tag = match_bits;
         msg.ignore = mask_bits;
