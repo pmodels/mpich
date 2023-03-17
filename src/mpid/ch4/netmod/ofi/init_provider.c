@@ -25,7 +25,7 @@ cvars:
     - name        : MPIR_CVAR_SINGLE_HOST_ENABLED
       category    : DEVELOPER
       type        : boolean
-      default     : false
+      default     : true
       class       : none
       verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -264,7 +264,8 @@ static int provider_preference(const char *prov_name)
         return -2;
     }
 
-    if (MPIR_CVAR_SINGLE_HOST_ENABLED && strcmp(prov_name, "cxi") == 0) {
+    if (MPIR_Process.num_nodes == 1 && MPIR_CVAR_SINGLE_HOST_ENABLED &&
+        strcmp(prov_name, "cxi") == 0) {
         return -100;
     }
 
