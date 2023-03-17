@@ -200,4 +200,4 @@ p_neighb_alltoall 4
 p_neighb_alltoallv 4
 p_neighb_alltoallw 4
 p_order 2
-p_inactive timeLimit=10
+p_inactive 1 timeLimit=10
