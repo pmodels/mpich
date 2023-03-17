@@ -609,6 +609,11 @@ AC_ARG_WITH(name-publisher,
 AC_ARG_ENABLE(nolocal, AS_HELP_STRING([--enable-nolocal], [enables nolocal mode where shared-memory communication is disabled]),
     AC_DEFINE(ENABLE_NO_LOCAL, 1, [Define to disable shared-memory communication]))
 
+# options passed to sub configures
+AC_ARG_WITH([cuda], [AS_HELP_STRING([--with-cuda=[[PATH]]],PAC_WITH_LIB_HELP_STRING(cuda))])
+AC_ARG_WITH([hip], [AS_HELP_STRING([--with-hip=[[PATH]]],PAC_WITH_LIB_HELP_STRING(hip))])
+AC_ARG_WITH([ze], [AS_HELP_STRING([--with-ze=[[PATH]]],PAC_WITH_LIB_HELP_STRING(ze))])
+
 AC_CANONICAL_TARGET
 
 # Find a C compiler.
