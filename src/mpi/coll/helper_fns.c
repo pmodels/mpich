@@ -525,7 +525,7 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
 }
 
 
-int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[])
+int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
