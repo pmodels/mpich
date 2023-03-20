@@ -1454,14 +1454,8 @@ AC_ARG_WITH(pmi,
 
 AC_ARG_WITH(pmilib,
 	AS_HELP_STRING([--with-pmilib=name],
-                [Specify the PMI library. Accepted options are:
-                   mpich - use MPICH PMI library (default).
-                   slurm - use Slurm PMI library. Use --with-slurm=path to configure
-                           Slurm library path.
-                   cray  - use Cray PMI library. Use --with-craypmi=path to configure
-                           Cray PMI library path.
-                   pmix  - use PMIx library. Use --with-pmix=path to configure
-                           PMIx library path.
+                [Specify the PMI library. Deprecated. Use --with-pmi, or
+                 --with-pmi2, or --with-pmix to specify library path.
                 ]),,
 	with_pmilib=mpich)
 
@@ -1479,38 +1473,22 @@ AC_ARG_WITH(pm,
 # --- check and normalize the options ----
 
 case "$with_pmi" in
+  pmi1|pmi2|pmix)
+    ;;
   slurm)
+    # deprecate
     with_pmi=pmi1
     with_pmilib=slurm
     with_pm=no
     ;;
-  cray)
-    with_pmi=pmi2
-    with_pmilib=cray
-    with_pm=no
-    ;;
-  pmix)
-    with_pmi=pmix
-    with_pmilib=pmix
-    with_pm=no
-    ;;
-  bgq)
+  oldcray)
+    # deprecate
     with_pmi=pmi1
-    with_pmilib=no
-    ;;
-  simple)
-    with_pmi=pmi1
-    with_pmilib=mpich
-    ;;
-  pmi2/simple)
-    with_pmi=pmi2
-    with_pmilib=mpich
-    ;;
-  pmi1|pmi2)
+    with_pmilib=oldcray
+    with_pm=no
     ;;
   *)
     # allow user to specify an external libpmi
-    m4_define([skip_ac_arg_with_pmi], 1)
     PAC_CHECK_HEADER_LIB_FATAL([pmi], [pmi.h], [pmi], [PMI_Init])
     # assume using PMI-1
     with_pmi=pmi1
@@ -1518,26 +1496,16 @@ case "$with_pmi" in
     ;;
 esac
 
-case "$with_pmilib" in
-  slurm)
-    with_pm=no
-    ;;
-  cray)
-    if test "$with_pmi" = "pmi1" ; then
-        AC_MSG_ERROR([Cray PMI only support PMI-2. Please reconfigure with --with-pmi=pmi2 --with-pmilib=cray])
-    fi
-    with_pm=no
-    ;;
-  pmix)
-    with_pmi=pmix
-    with_pm=no
-    ;;
-esac
+PAC_CHECK_HEADER_LIB_EXPLICIT(pmi2, pmi2.h, pmi2, PMI2_Init)
+if test "$pac_have_pmi2" = "yes" ; then
+    with_pmi=pmi2
+    with_pmilib=no
+fi
 
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
 if test "$pac_have_pmix" = "yes" ; then
     with_pmi=pmix
-    with_pmilib=pmix
+    with_pmilib=no
     with_pm=no
 fi
 
@@ -1673,8 +1641,8 @@ case "$with_pmilib" in
         AC_DEFINE([USE_PMI2_SLURM], 1, [Define if using Slurm PMI 2])
     fi
     ;;
-  cray)  
-    # set CPPFLAGS and LDFLAGS
+  oldcray)
+    # deprecate
     PAC_PREPEND_FLAG([$CRAY_PMI_INCLUDE_OPTS], [CPPFLAGS])
     PAC_PREPEND_FLAG([$CRAY_PMI_POST_LINK_OPTS], [LDFLAGS])
 
@@ -1697,16 +1665,14 @@ case "$with_pmilib" in
     fi
     ;;
   bgq)
+    # deprecate
     # This is a hack to include the pmi.h header. The OFI/BGQ provider
     # includes PMI functions, but no header file.
     PAC_PREPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
     AC_DEFINE([NO_PMI_SPAWN_MULTIPLE], 1, [The PMI library does not have PMI_Spawn_multiple.])
     ;;
-  pmix)
-    # taken care of by PAC_CHECK_HEADER_LIB_EXPLICIT
-    ;;
   no)
-    # taken care of by --with-pmi=path
+    # taken care of by --with-pmi=path, or --with-pmi2=path, or --with-pmix=path
     ;;
   *)
     AC_MSG_ERROR([pmilib $with_pmilib not supported.])
