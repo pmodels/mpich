@@ -22,6 +22,18 @@ cvars:
         This variable is no longer supported. Use FI_PROVIDER instead to
         select libfabric providers.
 
+    - name        : MPIR_CVAR_SINGLE_HOST_ENABLED
+      category    : DEVELOPER
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Set this variable to true to indicate that processes are
+        launched on a single host. The current implication is to avoid
+        the cxi provider to prevent the use of scarce hardware resources.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -250,6 +262,11 @@ static int provider_preference(const char *prov_name)
     if (n > 8 && strcmp(prov_name + n - 8, ";ofi_rxd") == 0) {
         /* ofi_rxd have more test failures */
         return -2;
+    }
+
+    if (MPIR_Process.num_nodes == 1 && MPIR_CVAR_SINGLE_HOST_ENABLED &&
+        strcmp(prov_name, "cxi") == 0) {
+        return -100;
     }
 
     return 0;
