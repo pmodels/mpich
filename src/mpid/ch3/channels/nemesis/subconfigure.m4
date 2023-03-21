@@ -91,9 +91,6 @@ if test "$ac_cv_header_netinet_in_h" = yes ; then
     AC_DEFINE(HAVE_NETINET_IN_H,1,[Define if netinet/in.h exists])
 fi
 
-AC_ARG_ENABLE(fast, [--enable-fast - pick the appropriate options for fast execution.
-This turns off error checking and timing collection],,enable_fast=no)
-
 nemesis_nets_dirs=""
 nemesis_nets_strings=""
 nemesis_nets_array=""   
@@ -149,7 +146,7 @@ for net in $nemesis_networks ; do
 done
 nemesis_nets_array_sz=$net_index
 
-AC_ARG_WITH(papi, [--with-papi[=path] - specify path where papi include and lib directories can be found],, with_papi=no)
+AC_ARG_WITH(papi, [  --with-papi[=path] - specify path where papi include and lib directories can be found],, with_papi=no)
 
 if test "${with_papi}" != "no" ; then
     if test "${with_papi}" != "yes" ; then
@@ -178,7 +175,9 @@ fi
 #    AC_MSG_ERROR([cannot support shared memory:  need either sysv shared memory functions or mmap in order to support shared memory])
 #fi
 
-AC_ARG_ENABLE(nemesis-shm-collectives, [--enable-nemesis-shm-collectives - enables use of shared memory for collective communication within a node],
+AC_ARG_ENABLE(nemesis-shm-collectives, [
+  --enable-nemesis-shm-collectives - enables use of shared memory for collective
+                                     communication within a node],
     AC_DEFINE(ENABLED_SHM_COLLECTIVES, 1, [Define to enable shared-memory collectives]))
 
 
@@ -188,7 +187,12 @@ AC_DEFINE(PREFETCH_CELL,1,[Define to turn on the prefetching optimization in Nem
 AC_DEFINE(USE_FASTBOX,1,[Define to use the fastboxes in Nemesis code])  
 
 # allow the user to select different local LMT implementations
-AC_ARG_WITH(nemesis-local-lmt, [--with-nemesis-local-lmt=method - specify an implementation for local large message transfers (LMT).  Method is one of: 'default', 'shm_copy', or 'none'.  'default' is the same as 'shm_copy'.],,with_nemesis_local_lmt=default)
+AC_ARG_WITH(nemesis-local-lmt, [
+  --with-nemesis-local-lmt=method - specify an implementation for local large
+                                    message transfers (LMT).  Method is one of:
+                                    'default', 'shm_copy', or 'none'.
+                                    'default' is the same as 'shm_copy'.
+],,with_nemesis_local_lmt=default)
 case "$with_nemesis_local_lmt" in
     shm_copy|default)
     local_lmt_impl=MPID_NEM_LOCAL_LMT_SHM_COPY
