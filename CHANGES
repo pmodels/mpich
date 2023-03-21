@@ -7,6 +7,8 @@
 
 # Error checking default changed to runtime (used to be all).
 
+# Use the error handler bound to MPI_COMM_SELF as the default error handler.
+
 ===============================================================================
                                Changes in 4.1
 ===============================================================================
