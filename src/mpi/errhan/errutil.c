@@ -224,7 +224,7 @@ int MPIR_Err_is_fatal(int errcode)
 /*
  * This is the routine that is invoked by most MPI routines to
  * report an error.  It is legitimate to pass NULL for comm_ptr in order to get
- * the default (MPI_COMM_WORLD) error handling.
+ * the default (MPI_COMM_SELF) error handling.
  */
 int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
 {
@@ -237,7 +237,7 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
     if (!MPIR_Errutil_is_initialized()) {
         /* for whatever reason, we aren't initialized (perhaps error
          * during MPI_Init) */
-        MPIR_Handle_fatal_error(MPIR_Process.comm_world, fcname, errcode);
+        MPIR_Handle_fatal_error(MPIR_Process.comm_self, fcname, errcode);
         return MPI_ERR_INTERN;
     }
     /* --END ERROR HANDLING-- */
@@ -254,10 +254,10 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
 
     if (errhandler == NULL) {
         /* Try to replace with the default handler, which is the one on
-         * MPI_COMM_WORLD.  This gives us correct behavior for the
-         * case where the error handler on MPI_COMM_WORLD has been changed. */
-        if (MPIR_Process.comm_world) {
-            comm_ptr = MPIR_Process.comm_world;
+         * MPI_COMM_SELF.  This gives us correct behavior for the
+         * case where the error handler on MPI_COMM_SELF has been changed. */
+        if (MPIR_Process.comm_self) {
+            comm_ptr = MPIR_Process.comm_self;
         }
     }
 
@@ -271,7 +271,7 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
 
     MPIR_Assert(comm_ptr != NULL);
 
-    /* comm_ptr may have changed to comm_world.  Keep this locked as long as we
+    /* comm_ptr may have changed to comm_self.  Keep this locked as long as we
      * are using the errhandler to prevent it from disappearing out from under
      * us. */
     MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
