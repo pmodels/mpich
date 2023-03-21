@@ -230,30 +230,28 @@ AM_SUBST_NOTMAKE(ch4_netmod_addr_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_op_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_part_decl)
 
-AC_ARG_ENABLE(ch4-netmod-inline,
-    [--enable-ch4-netmod-inline
-       Enables inlined netmod build when a single netmod is used
-       level:
-         yes       - Enabled (default)
-         no        - Disabled (may improve build times and code size)
-    ],,enable_ch4_netmod_inline=yes)
+AC_ARG_ENABLE(ch4-netmod-inline, [
+  --enable-ch4-netmod-inline  Enables inlined netmod build when a single netmod is used
+                              level:
+                                yes       - Enabled (default)
+                                no        - Disabled (may improve build times and code size)
+],,enable_ch4_netmod_inline=yes)
 
 
-AC_ARG_ENABLE(ch4-netmod-direct,
-    [--enable-ch4-netmod-direct
-       (Deprecated in favor of ch4-netmod-inline)
-       Enables inlined netmod build when a single netmod is used
-       level:
-         yes       - Enabled (default)
-         no        - Disabled (may improve build times and code size)
-    ],,)
+AC_ARG_ENABLE(ch4-netmod-direct, [
+  --enable-ch4-netmod-direct (Deprecated in favor of ch4-netmod-inline)
+                             Enables inlined netmod build when a single netmod is used
+                             level:
+                               yes       - Enabled (default)
+                               no        - Disabled (may improve build times and code size)
+],,)
 
 if test "$ch4_nets_array_sz" = "1" && (test "$enable_ch4_netmod_inline" = "yes" || test "$enable_ch4_netmod_direct" = "yes") ;  then
    PAC_APPEND_FLAG([-DNETMOD_INLINE=__netmod_inline_${ch4_netmods}__], [CPPFLAGS])
 fi
 
 AC_ARG_ENABLE([ch4-direct],
-              [--enable-ch4-direct   DO NOT USE!  Use --without-ch4-shmmods instead],
+              [  --enable-ch4-direct   DO NOT USE!  Use --without-ch4-shmmods instead],
               [enable_ch4_direct=yes],[enable_ch4_direct=no])
 if test "${enable_ch4_direct}" = "yes" ; then
     AC_MSG_ERROR([do not use --enable-ch4-direct; use --without-ch4-shmmods instead])
@@ -309,9 +307,9 @@ AC_MSG_NOTICE([RUNNING CONFIGURE FOR CH4 DEVICE])
 
 dnl Note: the maximum of 64 is due to the fact that we use 6 bits in the
 dnl request handle to encode pool index
-AC_ARG_WITH(ch4-max-vcis,
-    [--with-ch4-max-vcis=<N>
-       Select max number of VCIs to configure (default is 64; minimum is 1; maximum is 64)],
+AC_ARG_WITH(ch4-max-vcis, [
+  --with-ch4-max-vcis=<N> - Select max number of VCIs to configure (default
+                            is 64; minimum is 1; maximum is 64)],
     [], [with_ch4_max_vcis=64])
 
 if test $with_ch4_max_vcis -lt 1 -o $with_ch4_max_vcis -gt 64; then
@@ -360,13 +358,12 @@ case $enable_ch4_vci_method in
 esac
 AC_DEFINE_UNQUOTED([MPIDI_CH4_VCI_METHOD], $vci_method, [Method used to select vci])
 
-AC_ARG_ENABLE(ch4-mt,
-    [--enable-ch4-mt=model
-       Select model for multi-threading
-         direct    - Each thread directly accesses lower-level fabric (default)
-         lockless  - Use the thread safe serialization model supported by the provider
-         runtime   - Determine the model at runtime through a CVAR
-    ],,enable_ch4_mt=direct)
+AC_ARG_ENABLE(ch4-mt, [
+  --enable-ch4-mt=model - Select model for multi-threading
+                            direct    - Each thread directly accesses lower-level fabric (default)
+                            lockless  - Use the thread safe serialization model supported by the provider
+                            runtime   - Determine the model at runtime through a CVAR
+],,enable_ch4_mt=direct)
 
 case $enable_ch4_mt in
      direct)

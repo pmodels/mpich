@@ -62,7 +62,7 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH3],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR CH3 DEVICE])
 
-AC_ARG_WITH(ch3-rank-bits, [--with-ch3-rank-bits=16/32     Number of bits allocated to the rank field (16 or 32)],
+AC_ARG_WITH(ch3-rank-bits, [  --with-ch3-rank-bits=16/32     Number of bits allocated to the rank field (16 or 32)],
 			   [ rankbits=$withval ],
 			   [ rankbits=16 ])
 if test "$rankbits" != "16" -a "$rankbits" != "32" ; then

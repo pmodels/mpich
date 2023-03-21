@@ -61,7 +61,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AC_CHECK_FUNCS([strerror])
 
 AC_ARG_ENABLE([sock-debug],
-              [--enable-sock-debug - Turn on tests of the socket data structures],
+              [  --enable-sock-debug - Turn on tests of the socket data structures],
               [],
               [enable_sock_debug=no])
 
