@@ -5,6 +5,8 @@
   Convenience options for Slurm and cray deprecated. Use --with-pmi=oldcray
   for older Cray environment.
 
+# Error checking default changed to runtime (used to be all).
+
 ===============================================================================
                                Changes in 4.1
 ===============================================================================
