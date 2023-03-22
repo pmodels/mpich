@@ -63,6 +63,11 @@ MPI_Info_set:
 MPI_Info_get_string:
     .desc: Retrieves the value associated with a key
     .skip: initcheck
+{ -- error_check -- value
+    if (*buflen > 0) {
+        MPIR_ERRTEST_ARGNULL(value, "value", mpi_errno);
+    }
+}
 
 MPI_Info_create_env:
     .desc: Creates an info object containing information about the application

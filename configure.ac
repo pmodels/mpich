@@ -333,7 +333,7 @@ AC_ARG_ENABLE(error-checking,
         runtime   - error checking controllable at runtime through environment
                     variables
         all       - error checking always enabled (default)
-],,enable_error_checking=all)
+],,enable_error_checking=runtime)
 
 AC_ARG_ENABLE(error-messages,
 [  --enable-error-messages=level - Control the amount of detail in error messages.
