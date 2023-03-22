@@ -18,8 +18,8 @@ typedef struct MPIDI_POSIX_eager_recv_transaction {
     size_t payload_sz;          /* 2GB limit */
 
     int src_local_rank;
-    int src_vsi;
-    int dst_vsi;
+    int src_vci;
+    int dst_vci;
 
     /* Private */
 

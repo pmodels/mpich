@@ -10,7 +10,7 @@
 #include "mpidu_genq.h"
 
 MPL_STATIC_INLINE_PREFIX int
-MPIDI_POSIX_eager_recv_begin(int vsi, MPIDI_POSIX_eager_recv_transaction_t * transaction)
+MPIDI_POSIX_eager_recv_begin(int vci, MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
     MPIDI_POSIX_eager_iqueue_cell_t *cell = NULL;
@@ -18,16 +18,16 @@ MPIDI_POSIX_eager_recv_begin(int vsi, MPIDI_POSIX_eager_recv_transaction_t * tra
 
     MPIR_FUNC_ENTER;
 
-    /* TODO: measure the latency overhead due to multiple vsi */
-    for (int vsi_src = 0; vsi_src < MPIDI_POSIX_global.num_vsis; vsi_src++) {
-        transport = MPIDI_POSIX_eager_iqueue_get_transport(vsi_src, vsi);
+    /* TODO: measure the latency overhead due to multiple vci */
+    for (int vci_src = 0; vci_src < MPIDI_POSIX_global.num_vcis; vci_src++) {
+        transport = MPIDI_POSIX_eager_iqueue_get_transport(vci_src, vci);
 
         MPIDU_genq_shmem_queue_dequeue(transport->cell_pool, transport->my_terminal,
                                        (void **) &cell);
         if (cell) {
             transaction->src_local_rank = cell->from;
-            transaction->src_vsi = vsi_src;
-            transaction->dst_vsi = vsi;
+            transaction->src_vci = vci_src;
+            transaction->dst_vci = vci;
             transaction->payload = MPIDI_POSIX_EAGER_IQUEUE_CELL_PAYLOAD(cell);
             transaction->payload_sz = cell->payload_size;
 
@@ -64,7 +64,7 @@ MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction
 
     MPIR_FUNC_ENTER;
 
-    transport = MPIDI_POSIX_eager_iqueue_get_transport(transaction->src_vsi, transaction->dst_vsi);
+    transport = MPIDI_POSIX_eager_iqueue_get_transport(transaction->src_vci, transaction->dst_vci);
     cell = (MPIDI_POSIX_eager_iqueue_cell_t *) transaction->transport.iqueue.pointer_to_cell;
     MPIDU_genq_shmem_pool_cell_free(transport->cell_pool, cell);
 

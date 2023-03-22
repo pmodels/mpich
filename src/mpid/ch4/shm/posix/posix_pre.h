@@ -66,8 +66,8 @@ typedef struct MPIDI_POSIX_am_request_header {
     void *rreq_ptr;
     void *am_hdr;
 
-    int8_t src_vsi;
-    int8_t dst_vsi;
+    int8_t src_vci;
+    int8_t dst_vci;
     uint16_t am_hdr_sz;
     uint8_t pad[4];
 

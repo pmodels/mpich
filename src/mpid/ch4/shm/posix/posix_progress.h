@@ -10,7 +10,7 @@
 #include "posix_eager.h"
 #include "posix_am.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vsi, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vci, int blocking)
 {
 
     MPIDI_POSIX_eager_recv_transaction_t transaction;
@@ -25,7 +25,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vsi, int blocking)
     MPIR_FUNC_ENTER;
 
     /* Check to see if any new messages are ready for processing from the eager submodule. */
-    result = MPIDI_POSIX_eager_recv_begin(vsi, &transaction);
+    result = MPIDI_POSIX_eager_recv_begin(vci, &transaction);
 
     if (MPIDI_POSIX_OK != result) {
         goto fn_exit;
@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vsi, int blocking)
 
     if (!msg_hdr) {
         /* Fragment handling. Set currently active recv request */
-        rreq = MPIDI_POSIX_global.per_vsi[vsi].active_rreq[transaction.src_local_rank];
+        rreq = MPIDI_POSIX_global.per_vci[vci].active_rreq[transaction.src_local_rank];
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "posix cached req handle=0x%x", rreq->handle));
     } else {
@@ -50,7 +50,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vsi, int blocking)
         payload_left -= msg_hdr->am_hdr_sz;
 
         uint32_t attr = MPIDIG_AM_ATTR__IS_LOCAL;
-        MPIDIG_AM_ATTR_SET_VCIS(attr, transaction.src_vsi, transaction.dst_vsi);
+        MPIDIG_AM_ATTR_SET_VCIS(attr, transaction.src_vci, transaction.dst_vci);
         switch (msg_hdr->am_type) {
             case MPIDI_POSIX_AM_TYPE__HDR:
             case MPIDI_POSIX_AM_TYPE__SHORT:
@@ -66,8 +66,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vsi, int blocking)
                 MPIDIG_recv_setup(rreq);
 
                 MPIR_Assert(MPIDI_POSIX_global.
-                            per_vsi[vsi].active_rreq[transaction.src_local_rank] == NULL);
-                MPIDI_POSIX_global.per_vsi[vsi].active_rreq[transaction.src_local_rank] = rreq;
+                            per_vci[vci].active_rreq[transaction.src_local_rank] == NULL);
+                MPIDI_POSIX_global.per_vci[vci].active_rreq[transaction.src_local_rank] = rreq;
                 break;
             default:
                 MPIR_Assert(0);
@@ -76,7 +76,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vsi, int blocking)
 
     int is_done = MPIDIG_recv_copy_seg(payload, payload_left, rreq);
     if (is_done) {
-        MPIDI_POSIX_global.per_vsi[vsi].active_rreq[transaction.src_local_rank] = NULL;
+        MPIDI_POSIX_global.per_vci[vci].active_rreq[transaction.src_local_rank] = NULL;
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     }
 
@@ -87,7 +87,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vsi, int blocking)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vsi, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vci, int blocking)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -95,17 +95,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vsi, int blocking)
 
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_POSIX_global.per_vsi[vsi].postponed_queue) {
+    if (MPIDI_POSIX_global.per_vci[vci].postponed_queue) {
         /* Drain postponed queue */
-        curr_sreq_hdr = MPIDI_POSIX_global.per_vsi[vsi].postponed_queue;
+        curr_sreq_hdr = MPIDI_POSIX_global.per_vci[vci].postponed_queue;
 
         switch (curr_sreq_hdr->msg_hdr->am_type) {
             case MPIDI_POSIX_AM_TYPE__HDR:
                 mpi_errno = MPIDI_POSIX_do_am_send_hdr(curr_sreq_hdr->dst_grank,
                                                        curr_sreq_hdr->msg_hdr,
                                                        curr_sreq_hdr->am_hdr, true,
-                                                       curr_sreq_hdr->src_vsi,
-                                                       curr_sreq_hdr->dst_vsi);
+                                                       curr_sreq_hdr->src_vci,
+                                                       curr_sreq_hdr->dst_vci);
 
                 break;
             case MPIDI_POSIX_AM_TYPE__SHORT:
@@ -117,8 +117,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vsi, int blocking)
                                                     curr_sreq_hdr->buf,
                                                     curr_sreq_hdr->count,
                                                     curr_sreq_hdr->datatype, curr_sreq_hdr->request,
-                                                    true, curr_sreq_hdr->src_vsi,
-                                                    curr_sreq_hdr->dst_vsi);
+                                                    true, curr_sreq_hdr->src_vci,
+                                                    curr_sreq_hdr->dst_vci);
 
                 break;
             default:
@@ -136,12 +136,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int vci, int blocking)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    int vsi = vci % MPIDI_POSIX_global.num_vsis;
+    MPIR_Assert(vci < MPIDI_POSIX_global.num_vcis);
 
-    mpi_errno = MPIDI_POSIX_progress_recv(vsi, blocking);
+    mpi_errno = MPIDI_POSIX_progress_recv(vci, blocking);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_POSIX_progress_send(vsi, blocking);
+    mpi_errno = MPIDI_POSIX_progress_send(vci, blocking);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
