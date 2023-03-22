@@ -12,16 +12,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int vni = MPIDI_UCX_vci_to_vni(vci);
-
     MPIR_FUNC_ENTER;
 
-    if (vni < 0) {
+    MPIR_Assert(vci < MPIDI_UCX_global.num_vcis);
+    if (vci < 0) {
         /* skip if the vci is not for us */
         return MPI_SUCCESS;
     }
 
-    ucp_worker_progress(MPIDI_UCX_global.ctx[vni].worker);
+    ucp_worker_progress(MPIDI_UCX_global.ctx[vci].worker);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

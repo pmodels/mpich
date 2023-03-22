@@ -36,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
                                             int context_offset,
                                             MPIDI_av_entry_t * addr,
                                             MPIR_Request ** request,
-                                            int vni_src, int vni_dst, int have_request, int is_sync)
+                                            int vci_src, int vci_dst, int have_request, int is_sync)
 {
     int dt_contig;
     size_t data_sz;
@@ -55,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
         .cb.send = MPIDI_UCX_send_cmpl_cb,
     };
 
-    ep = MPIDI_UCX_AV_TO_EP(addr, vni_src, vni_dst);
+    ep = MPIDI_UCX_AV_TO_EP(addr, vci_src, vci_dst);
     ucx_tag = MPIDI_UCX_init_tag(comm->context_id + context_offset, comm->rank, tag);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
@@ -84,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
 
     if (ucp_request) {
         if (req == NULL) {
-            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, vni_src, 2);
+            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, vci_src, 2);
         } else {
             MPIR_Request_add_ref(req);
         }
@@ -104,12 +104,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     goto fn_exit;
 }
 
-#define MPIDI_UCX_SEND_VNIS(vni_src_, vni_dst_) \
+#define MPIDI_UCX_SEND_VNIS(vci_src_, vci_dst_) \
     do { \
-        MPIDI_EXPLICIT_VCIS(comm, attr, comm->rank, rank, vni_src_, vni_dst_); \
-        if (vni_src_ == 0 && vni_dst_ == 0) { \
-            vni_src = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
-            vni_dst = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+        MPIDI_EXPLICIT_VCIS(comm, attr, comm->rank, rank, vci_src_, vci_dst_); \
+        if (vci_src_ == 0 && vci_dst_ == 0) { \
+            vci_src = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+            vci_dst = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
         } \
     } while (0)
 
@@ -127,8 +127,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int is_sync = MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr) ? 1 : 0;
 
-    int vni_src, vni_dst;
-    MPIDI_UCX_SEND_VNIS(vni_src, vni_dst);
+    int vci_src, vci_dst;
+    MPIDI_UCX_SEND_VNIS(vci_src, vci_dst);
 
     MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
     switch (errflag) {
@@ -141,10 +141,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
 
-    MPIDI_UCX_THREAD_CS_ENTER_VCI(vni_src);
+    MPIDI_UCX_THREAD_CS_ENTER_VCI(vci_src);
     mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
-                               addr, request, vni_src, vni_dst, 1, is_sync);
-    MPIDI_UCX_THREAD_CS_EXIT_VCI(vni_src);
+                               addr, request, vci_src, vci_dst, 1, is_sync);
+    MPIDI_UCX_THREAD_CS_EXIT_VCI(vci_src);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

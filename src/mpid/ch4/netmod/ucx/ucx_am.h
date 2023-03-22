@@ -54,11 +54,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
     MPIR_FUNC_ENTER;
 
-    int src_vni = src_vci;
-    int dst_vni = dst_vci;
-    MPIR_Assert(src_vni < MPIDI_UCX_global.num_vnis);
-    MPIR_Assert(dst_vni < MPIDI_UCX_global.num_vnis);
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, src_vni, dst_vni);
+    MPIR_Assert(src_vci < MPIDI_UCX_global.num_vcis);
+    MPIR_Assert(dst_vci < MPIDI_UCX_global.num_vcis);
+    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, src_vci, dst_vci);
 
     int dt_contig;
     size_t data_sz;
@@ -68,8 +66,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
-    ucx_hdr.src_vci = src_vni;
-    ucx_hdr.dst_vci = dst_vni;
+    ucx_hdr.src_vci = src_vci;
+    ucx_hdr.dst_vci = dst_vci;
     ucx_hdr.data_sz = data_sz;
 
     MPL_pointer_attr_t attr;
@@ -188,16 +186,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
 
     MPIR_FUNC_ENTER;
 
-    int src_vni = src_vci;
-    int dst_vni = dst_vci;
-    MPIR_Assert(src_vni < MPIDI_UCX_global.num_vnis);
-    MPIR_Assert(dst_vni < MPIDI_UCX_global.num_vnis);
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, src_vni, dst_vni);
+    MPIR_Assert(src_vci < MPIDI_UCX_global.num_vcis);
+    MPIR_Assert(dst_vci < MPIDI_UCX_global.num_vcis);
+    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, src_vci, dst_vci);
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
-    ucx_hdr.src_vci = src_vni;
-    ucx_hdr.dst_vci = dst_vni;
+    ucx_hdr.src_vci = src_vci;
+    ucx_hdr.dst_vci = dst_vci;
     ucx_hdr.data_sz = 0;
 
     /* just pack and send for now */

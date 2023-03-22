@@ -72,7 +72,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
                                             int tag, MPIR_Comm * comm,
                                             int context_offset,
                                             MPIDI_av_entry_t * addr,
-                                            int vni_dst, MPIR_Request ** request)
+                                            int vci_dst, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
@@ -86,7 +86,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     MPIR_FUNC_ENTER;
 
     if (req == NULL) {
-        req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst, 2);
+        req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vci_dst, 2);
         MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
         MPIR_Request_add_ref(req);
@@ -117,7 +117,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     }
 
     ucp_request =
-        (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nbx(MPIDI_UCX_global.ctx[vni_dst].worker,
+        (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nbx(MPIDI_UCX_global.ctx[vci_dst].worker,
                                                      recv_buf, recv_count,
                                                      ucp_tag, tag_mask, &param);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
@@ -132,12 +132,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     goto fn_exit;
 }
 
-#define MPIDI_UCX_RECV_VNIS(vni_dst_) \
+#define MPIDI_UCX_RECV_VNIS(vci_dst_) \
     do { \
-        int vni_src_tmp; \
-        MPIDI_EXPLICIT_VCIS(comm, attr, rank, comm->rank, vni_src_tmp, vni_dst_); \
-        if (vni_src_tmp == 0 && vni_dst_ == 0) { \
-            vni_dst_ = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
+        int vci_src_tmp; \
+        MPIDI_EXPLICIT_VCIS(comm, attr, rank, comm->rank, vci_src_tmp, vci_dst_); \
+        if (vci_src_tmp == 0 && vci_dst_ == 0) { \
+            vci_dst_ = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
         } \
     } while (0)
 
@@ -210,15 +210,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
 
-    int vni_dst;
-    MPIDI_UCX_RECV_VNIS(vni_dst);
+    int vci_dst;
+    MPIDI_UCX_RECV_VNIS(vci_dst);
 
-    MPIDI_UCX_THREAD_CS_ENTER_VCI(vni_dst);
+    MPIDI_UCX_THREAD_CS_ENTER_VCI(vci_dst);
     mpi_errno =
-        MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vni_dst,
+        MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vci_dst,
                        request);
     MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
-    MPIDI_UCX_THREAD_CS_EXIT_VCI(vni_dst);
+    MPIDI_UCX_THREAD_CS_EXIT_VCI(vci_dst);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
