@@ -19,7 +19,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * m
     MPIR_FUNC_ENTER;
 
     int attr = 0;               /* is_local = 0, is_async = 0 */
-    MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vni_src, msg_hdr->vni_dst);
+    MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vci_src, msg_hdr->vci_dst);
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr,
                                                        p_data, msg_hdr->payload_sz, attr, NULL);
 
@@ -47,7 +47,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
 
     if (!rreq) {
         int attr = MPIDIG_AM_ATTR__IS_ASYNC;
-        MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vni_src, msg_hdr->vni_dst);
+        MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vci_src, msg_hdr->vci_dst);
         MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, p_data, msg_hdr->payload_sz,
                                                            attr, &rreq);
         MPIDIG_recv_setup(rreq);
@@ -72,7 +72,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t
     MPIR_FUNC_ENTER;
 
     int attr = 0;
-    MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vni_src, msg_hdr->vni_dst);
+    MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vci_src, msg_hdr->vci_dst);
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, 0, attr, NULL);
 
     MPIR_FUNC_EXIT;
@@ -93,13 +93,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
 
     rem = data_sz;
 
-    int vni_local = MPIDIG_REQUEST(rreq, req->local_vci);
-    int vni_remote = MPIDIG_REQUEST(rreq, req->remote_vci);
+    int vci_local = MPIDIG_REQUEST(rreq, req->local_vci);
+    int vci_remote = MPIDIG_REQUEST(rreq, req->remote_vci);
     while (done != data_sz) {
         curr_len = MPL_MIN(rem, MPIDI_OFI_global.max_msg_size);
 
         MPIR_Assert(sizeof(MPIDI_OFI_am_request_t) <= MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vni[vni_local].am_hdr_buf_pool,
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.per_vci[vci_local].am_hdr_buf_pool,
                                            (void **) &am_req);
         MPIR_Assert(am_req);
 
@@ -114,7 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
 
         /* am uses nic 0 */
         int nic = 0;
-        MPIDI_OFI_cntr_incr(comm, vni_local, nic);
+        MPIDI_OFI_cntr_incr(comm, vci_local, nic);
 
         struct iovec iov = {
             .iov_base = (char *) dst + done,
@@ -129,14 +129,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
             .msg_iov = &iov,
             .desc = NULL,
             .iov_count = 1,
-            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, nic, vni_local, vni_remote),
+            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, nic, vci_local, vci_remote),
             .rma_iov = &rma_iov,
             .rma_iov_count = 1,
             .context = &am_req->context,
             .data = 0
         };
 
-        int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vci_local, nic);
         MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_OFI_global.ctx[ctx_idx].tx, &msg, FI_COMPLETION),
                                 rdma_readfrom);
 
@@ -163,7 +163,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
     MPIR_FUNC_ENTER;
 
     int attr = MPIDIG_AM_ATTR__IS_ASYNC | MPIDIG_AM_ATTR__IS_RNDV | MPIDI_OFI_AM_ATTR__RDMA;
-    MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vni_src, msg_hdr->vni_dst);
+    MPIDIG_AM_ATTR_SET_VCIS(attr, msg_hdr->vci_src, msg_hdr->vci_dst);
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, NULL, 0, attr, &rreq);
 
     if (!rreq)

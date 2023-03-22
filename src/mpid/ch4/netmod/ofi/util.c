@@ -181,8 +181,8 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
             break;
 
         case MPIDI_OFI_CTRL_HUGE:
-            MPIR_Assert(local_vci == ctrlsend->u.huge.info.vni_dst);
-            MPIR_Assert(remote_vci == ctrlsend->u.huge.info.vni_src);
+            MPIR_Assert(local_vci == ctrlsend->u.huge.info.vci_dst);
+            MPIR_Assert(remote_vci == ctrlsend->u.huge.info.vci_src);
             mpi_errno = MPIDI_OFI_recv_huge_control(local_vci,
                                                     ctrlsend->u.huge.info.comm_id,
                                                     ctrlsend->u.huge.info.origin_rank,

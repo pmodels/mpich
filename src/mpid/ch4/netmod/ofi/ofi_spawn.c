@@ -14,13 +14,13 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
 
     int nic = 0;                /* dynamic process only use nic 0 */
-    int vni = 0;                /* dynamic process only use vni 0 */
+    int vci = 0;                /* dynamic process only use vci 0 */
     int ctx_idx = 0;
     int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
     int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
-    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vni, vni);
+    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci, vci);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
     MPIDI_OFI_dynamic_process_request_t req;
     req.done = 0;
@@ -35,14 +35,14 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           buf, size, NULL /* desc */ , 0,
                                           remote_addr, match_bits, (void *) &req.context),
-                             vni, tsenddata, FALSE /* eagain */);
+                             vci, tsenddata, FALSE /* eagain */);
     } else {
         MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx, buf, size, NULL /* desc */ ,
                                       remote_addr, match_bits, (void *) &req.context),
-                             vni, tsend, FALSE /* eagain */);
+                             vci, tsend, FALSE /* eagain */);
     }
     do {
-        mpi_errno = MPIDI_OFI_progress_uninlined(vni);
+        mpi_errno = MPIDI_OFI_progress_uninlined(vci);
         // mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -61,7 +61,7 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
 
         }
         while (!req.done) {
-            mpi_errno = MPIDI_OFI_progress_uninlined(vni);
+            mpi_errno = MPIDI_OFI_progress_uninlined(vci);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -69,7 +69,7 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -81,7 +81,7 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
 
     MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
 
-    int vni = 0;                /* dynamic process only use vni 0 */
+    int vci = 0;                /* dynamic process only use vci 0 */
     int ctx_idx = 0;
     MPIDI_OFI_dynamic_process_request_t req;
     req.done = 0;
@@ -91,7 +91,7 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, 0, MPI_ANY_SOURCE, tag);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
     MPL_time_t time_start, time_now;
     double time_gap;
@@ -99,9 +99,9 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                   buf, size, NULL,
                                   FI_ADDR_UNSPEC, match_bits, mask_bits, &req.context),
-                         vni, trecv, FALSE);
+                         vci, trecv, FALSE);
     do {
-        mpi_errno = MPIDI_OFI_progress_uninlined(vni);
+        mpi_errno = MPIDI_OFI_progress_uninlined(vci);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPL_wtime(&time_now);
@@ -119,7 +119,7 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
 
         }
         while (!req.done) {
-            mpi_errno = MPIDI_OFI_progress_uninlined(vni);
+            mpi_errno = MPIDI_OFI_progress_uninlined(vci);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -127,7 +127,7 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

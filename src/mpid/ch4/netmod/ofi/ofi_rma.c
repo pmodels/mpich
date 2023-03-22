@@ -28,7 +28,7 @@ static MPIDI_OFI_pack_chunk *create_chunk(void *pack_buffer, MPI_Aint unpack_siz
 void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq)
 {
     MPIDI_OFI_pack_chunk *chunk = winreq->chunks;
-    int vni = winreq->vni;
+    int vci = winreq->vci;
 
     while (chunk) {
         if (chunk->unpack_size > 0) {
@@ -42,7 +42,7 @@ void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq)
         }
 
         MPIDI_OFI_pack_chunk *next = chunk->next;
-        MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vni].pack_buf_pool,
+        MPIDU_genq_private_pool_free_cell(MPIDI_global.per_vci[vci].pack_buf_pool,
                                           chunk->pack_buffer);
         MPL_free(chunk);
         chunk = next;
@@ -66,7 +66,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->vni = MPIDI_WIN(win, am_vci);
+    req->vci = MPIDI_WIN(win, am_vci);
     req->next = MPIDI_OFI_WIN(win).syncQ;
     MPIDI_OFI_WIN(win).syncQ = req;
     req->sigreq = sigreq;
@@ -118,10 +118,10 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
 
         msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
 
-        int vni = MPIDI_WIN(win, am_vci);
+        int vci = MPIDI_WIN(win, am_vci);
         int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vni, vni);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vci, vci);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -135,11 +135,11 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
         riov.key = target_mr.mr_key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         if (rma_type == MPIDI_OFI_PUT) {
-            MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni, rdma_write,
+            MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vci, rdma_write,
                                  FALSE);
             req->rma_type = MPIDI_OFI_PUT;
         } else {        /* MPIDI_OFI_GET */
-            MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni, rdma_write,
+            MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vci, rdma_write,
                                  FALSE);
             req->rma_type = MPIDI_OFI_GET;
         }
@@ -179,7 +179,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     struct fi_rma_iov riov;
     uint64_t flags;
     void *pack_buffer;
-    int vni = req->vni;
+    int vci = req->vci;
 
     if (sigreq)
         flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
@@ -189,7 +189,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     int j = req->noncontig.put.target.iov_cur;
     size_t msg_len;
     while (req->noncontig.put.origin.pack_offset < req->noncontig.put.origin.total_bytes) {
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vni].pack_buf_pool, &pack_buffer);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vci].pack_buf_pool, &pack_buffer);
         if (pack_buffer == NULL)
             break;
 
@@ -217,7 +217,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
 
         int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, nic, vni, vni);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, nic, vci, vci);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -230,7 +230,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         riov.len = msg_len;
         riov.key = req->noncontig.put.target.key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni, rdma_write,
+        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vci, rdma_write,
                              FALSE);
         req->noncontig.put.origin.pack_offset += msg_len;
 
@@ -269,7 +269,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     struct fi_rma_iov riov;
     uint64_t flags;
     void *pack_buffer;
-    int vni = req->vni;
+    int vci = req->vci;
 
     if (sigreq)
         flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
@@ -279,7 +279,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     int j = req->noncontig.get.target.iov_cur;
     size_t msg_len;
     while (req->noncontig.get.origin.pack_offset < req->noncontig.get.origin.total_bytes) {
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vni].pack_buf_pool, &pack_buffer);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_global.per_vci[vci].pack_buf_pool, &pack_buffer);
         if (pack_buffer == NULL)
             break;
 
@@ -302,7 +302,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
 
         int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, nic, vni, vni);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, nic, vci, vci);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -315,7 +315,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         riov.len = msg_len;
         riov.key = req->noncontig.get.target.key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vni, rdma_write,
+        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vci, rdma_write,
                              FALSE);
         req->noncontig.get.origin.pack_offset += msg_len;
 
@@ -360,7 +360,7 @@ int MPIDI_OFI_pack_put(const void *origin_addr, MPI_Aint origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->vni = MPIDI_WIN(win, am_vci);
+    req->vci = MPIDI_WIN(win, am_vci);
     req->sigreq = sigreq;
 
     /* allocate target iovecs */
@@ -419,7 +419,7 @@ int MPIDI_OFI_pack_get(void *origin_addr, MPI_Aint origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->vni = MPIDI_WIN(win, am_vci);
+    req->vci = MPIDI_WIN(win, am_vci);
     req->sigreq = sigreq;
 
     /* allocate target iovecs */

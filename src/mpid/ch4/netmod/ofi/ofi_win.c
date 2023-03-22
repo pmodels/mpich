@@ -158,9 +158,9 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
 
-    /* we need register mr on the correct domain for the vni */
-    int vni = MPIDI_WIN(win, am_vci);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+    /* we need register mr on the correct domain for the vci */
+    int vci = MPIDI_WIN(win, am_vci);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
 
     /* Register the allocated win buffer or MPI_BOTTOM (NULL) for dynamic win.
      * It is clear that we cannot register NULL when FI_MR_ALLOCATED is set, thus
@@ -273,8 +273,8 @@ static int win_set_per_win_sync(MPIR_Win * win)
 {
     int ret, mpi_errno = MPI_SUCCESS;
     int nic = 0;
-    int vni = MPIDI_WIN(win, am_vci);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+    int vci = MPIDI_WIN(win, am_vci);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
 
     MPIR_FUNC_ENTER;
 
@@ -314,7 +314,7 @@ static int win_set_per_win_sync(MPIR_Win * win)
 
 static void win_init_am(MPIR_Win * win)
 {
-    MPIR_Assert(MPIDI_WIN(win, am_vci) < MPIDI_OFI_global.num_vnis);
+    MPIR_Assert(MPIDI_WIN(win, am_vci) < MPIDI_OFI_global.num_vcis);
 }
 
 /*
@@ -331,8 +331,8 @@ static int win_init_sep(MPIR_Win * win)
     int i, ret, mpi_errno = MPI_SUCCESS;
     struct fi_info *finfo;
     int nic = 0;
-    int vni = MPIDI_WIN(win, am_vci);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+    int vci = MPIDI_WIN(win, am_vci);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
 
     MPIR_FUNC_ENTER;
 
@@ -342,7 +342,7 @@ static int win_init_sep(MPIR_Win * win)
 
     /* Initialize scalable EP when first window is created. */
     if (MPIDI_OFI_global.ctx[ctx_idx].rma_sep == NULL) {
-        /* NOTE: if MPIDI_OFI_VNI_USE_SEPCTX, we could share rma_stx_ctx across vnis */
+        /* NOTE: if MPIDI_OFI_VNI_USE_SEPCTX, we could share rma_stx_ctx across vcis */
 
         MPIDI_OFI_global.max_rma_sep_tx_cnt =
             MPL_MIN(MPIDI_OFI_global.prov_use[0]->domain_attr->max_ep_tx_ctx,
@@ -459,8 +459,8 @@ static int win_init_stx(MPIR_Win * win)
     struct fi_info *finfo;
     bool have_per_win_cntr = false;
     int nic = 0;
-    int vni = MPIDI_WIN(win, am_vci);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+    int vci = MPIDI_WIN(win, am_vci);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
 
     MPIR_FUNC_ENTER;
 
@@ -471,7 +471,7 @@ static int win_init_stx(MPIR_Win * win)
 
     /* Initialize rma shared context when first window is created. */
     if (MPIDI_OFI_global.ctx[ctx_idx].rma_stx_ctx == NULL) {
-        /* NOTE: if MPIDI_OFI_VNI_USE_SEPCTX, we could share rma_stx_ctx across vnis */
+        /* NOTE: if MPIDI_OFI_VNI_USE_SEPCTX, we could share rma_stx_ctx across vcis */
 
         struct fi_tx_attr tx_attr;
         memset(&tx_attr, 0, sizeof(tx_attr));
@@ -573,9 +573,9 @@ static int win_init_global(MPIR_Win * win)
 {
     MPIR_FUNC_ENTER;
 
-    int vni = MPIDI_WIN(win, am_vci);
+    int vci = MPIDI_WIN(win, am_vci);
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
 
     MPIDI_OFI_WIN(win).ep = MPIDI_OFI_global.ctx[ctx_idx].tx;
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
@@ -920,8 +920,8 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     dwin_target_mr_t *target_mrs;
     int mpl_err = MPL_SUCCESS, i;
     int nic = 0;
-    int vni = MPIDI_WIN(win, am_vci);
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+    int vci = MPIDI_WIN(win, am_vci);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
 
     MPIR_FUNC_ENTER;
 
@@ -1069,8 +1069,8 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_ENTER;
 
     if (MPIDI_OFI_ENABLE_RMA) {
-        int vni = MPIDI_WIN(win, am_vci);
-        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+        int vci = MPIDI_WIN(win, am_vci);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
         MPIDI_OFI_mr_key_free(MPIDI_OFI_COLL_MR_KEY, MPIDI_OFI_WIN(win).win_id);
         MPIDIU_map_erase(MPIDI_OFI_global.win_map, MPIDI_OFI_WIN(win).win_id);
         /* For scalable EP: push transmit context index back into available pool. */
