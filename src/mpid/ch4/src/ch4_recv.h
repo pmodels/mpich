@@ -22,11 +22,11 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
      * 3. MPIDI_NM_mpi_irecv need use recursive locking in case it share the shm vci lock
      */
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    int vsi;
-    MPIDI_POSIX_RECV_VSI(vsi);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vsi).lock);
+    int vci;
+    MPIDI_POSIX_RECV_VSI(vci);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
-    MPIDI_CH4_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vsi, 1);
+    MPIDI_CH4_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vci, 1);
     MPIR_Assert(*request);
 #endif
 
@@ -54,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
     }
   fn_exit:
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vsi).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
 #endif
     return mpi_errno;
   fn_fail:
