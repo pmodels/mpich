@@ -224,7 +224,7 @@ int MPIR_Err_is_fatal(int errcode)
 /*
  * This is the routine that is invoked by most MPI routines to
  * report an error.  It is legitimate to pass NULL for comm_ptr in order to get
- * the default (MPI_COMM_SELF) error handling.
+ * the default error handling.
  */
 int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
 {
@@ -255,9 +255,17 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
     if (errhandler == NULL) {
         /* Try to replace with the default handler, which is the one on
          * MPI_COMM_SELF.  This gives us correct behavior for the
-         * case where the error handler on MPI_COMM_SELF has been changed. */
-        if (MPIR_Process.comm_self) {
+         * case where the error handler on MPI_COMM_SELF has been changed.
+         * NOTE: Prior to MPI 4.0, the default error handler was defined to
+         * be the one on MPI_COMM_WORLD. Since codes had the default changed
+         * from under them, MPICH decided that in the case where no error
+         * handler had been set on MPI_COMM_SELF, it would also check for
+         * and use the error handler on MPI_COMM_WORLD. This maintains
+         * backward compatibility with programs written for MPI <= 3.1. */
+        if (MPIR_Process.comm_self && MPIR_Process.comm_self->errhandler) {
             comm_ptr = MPIR_Process.comm_self;
+        } else if (MPIR_Process.comm_world && MPIR_Process.comm_world->errhandler) {
+            comm_ptr = MPIR_Process.comm_world;
         }
     }
 
@@ -271,9 +279,9 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
 
     MPIR_Assert(comm_ptr != NULL);
 
-    /* comm_ptr may have changed to comm_self.  Keep this locked as long as we
-     * are using the errhandler to prevent it from disappearing out from under
-     * us. */
+    /* comm_ptr may have changed.  Keep this locked as long as we are using
+     * the errhandler to prevent it from disappearing out from under us.
+     */
     MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
     errhandler = comm_ptr->errhandler;
 
