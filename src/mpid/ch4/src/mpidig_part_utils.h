@@ -50,11 +50,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_vci(const int im)
 /* given the bit encoding strategy returns the maximum tag id (included) */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_max_tag(void)
 {
-    return (MPIR_TAG_USABLE_BITS >> 15);
+    // in the VCI_tag approach we can use all the remaining bits (usable-15) + the 5 bits in front
+    // of the tag
+    return (MPIR_TAG_USABLE_BITS >> (15 - 5));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_tag(const int im)
 {
+#if (MPIDI_CH4_VCI_METHOD == MPICH_VCI__TAG)
     /* get the VCI id, we use symmetric VCI ids for the moment */
     const int vci = MPIDIG_Part_get_vci(im);
     /* encode the src and destination vci on bit [5-10[ and bit [10-15[. If the VCI doesn't fit on 5
@@ -66,10 +69,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_tag(const int im)
     /* encode the msg id on the rest of the bits, if the message id is too big for the reamining
      * bits then it's an error to keep going as we will have conflicting tag ids on the network */
     MPIR_Assert(im <= MPIDIG_Part_get_max_tag());
-    tag |= (im << 15);
+    // register the first 5 bits of the partition id
+    const int mask = 0x1f;
+    tag |= (im & mask);
+    tag |= (im & ~mask) << 15;
     /* finally add the TAG bit to the tag */
     MPIR_TAG_SET_PART_BIT(tag);
     return tag;
+#else
+    MPIR_Assert(im <= MPIR_TAG_USABLE_BITS);
+    return im;
+#endif
 }
 
 /* Convert the 'origin' indexing layout into the 'arget' indexing layout.
@@ -222,6 +232,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
     const int attr = 0;
     MPID_Isend_parent(buf_send, count, *dtype_send, dest_rank, dest_tag, comm, attr, cc_ptr,
                       child_req + imsg);
+    // free immediately the request so that it gets deallocated once completed
+    MPIR_Request_free(child_req[imsg]);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
