@@ -91,7 +91,6 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     /* device specific hints.
      * Potentially, we can use macros and configure to hide them */
     MPIR_COMM_HINT_EAGER_THRESH,        /* ch3 */
-    MPIR_COMM_HINT_EAGAIN,      /* ch4:ofi */
     MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING,   /* ch4:ofi */
     MPIR_COMM_HINT_ENABLE_MULTI_NIC_HASHING,    /* ch4:ofi */
     MPIR_COMM_HINT_MULTI_NIC_PREF_NIC,  /* ch4:ofi */

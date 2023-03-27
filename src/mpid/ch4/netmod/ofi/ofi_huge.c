@@ -116,7 +116,7 @@ static int get_huge_issue_read(MPIR_Request * rreq)
                                      (void *) ((char *) recv_buf + cur_offset),
                                      bytesToGet, NULL, addr, recv_rbase(info) + cur_offset,
                                      remote_key, (void *) &chunk->context),
-                             vci_local, rdma_readfrom, FALSE);
+                             vci_local, rdma_readfrom);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[nic], bytesToGet);
         if (MPIDI_OFI_COMM(comm).enable_striping) {
             MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_recvd_bytes_count[nic], bytesToGet);

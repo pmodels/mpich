@@ -559,7 +559,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* Initialize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
 
-    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGAIN, "eagain", NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
     MPIDI_OFI_global.num_comms_enabled_striping = 0;
     MPIDI_OFI_global.num_comms_enabled_hashing = 0;
 
@@ -743,11 +742,10 @@ static int flush_send(int dst, int nic, int vci, MPIDI_OFI_dynamic_process_reque
     if (MPIDI_OFI_ENABLE_DATA) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           &data, 4, NULL, 0, addr, match_bits, &req->context),
-                             vci, tsenddata, FALSE);
+                             vci, tsenddata);
     } else {
         MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                      &data, 4, NULL, addr, match_bits, &req->context),
-                             vci, tsend, FALSE);
+                                      &data, 4, NULL, addr, match_bits, &req->context), vci, tsend);
     }
 
   fn_exit:
@@ -774,7 +772,7 @@ static int flush_recv(int src, int nic, int vci, MPIDI_OFI_dynamic_process_reque
     void *recvbuf = &(req->tag);
     MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(NULL, vci, nic)].rx,
                                   recvbuf, 4, NULL, addr, match_bits, mask_bits, &req->context),
-                         vci, trecv, FALSE);
+                         vci, trecv);
 
   fn_exit:
     return mpi_errno;
@@ -1561,7 +1559,7 @@ int ofi_am_post_recv(int vci, int nic)
             MPIDI_OFI_global.per_vci[vci].am_msg[i].iov_count = 1;
             MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                             &MPIDI_OFI_global.per_vci[vci].am_msg[i],
-                                            FI_MULTI_RECV | FI_COMPLETION), 0, prepost, FALSE);
+                                            FI_MULTI_RECV | FI_COMPLETION), 0, prepost);
         }
     }
 
