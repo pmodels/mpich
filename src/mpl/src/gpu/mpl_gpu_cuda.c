@@ -450,6 +450,9 @@ int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
     return MPL_SUCCESS;
 }
 
+#ifdef HAVE_VISIBILITY
+__attribute__ ((visibility("default")))
+#endif
 CUresult CUDAAPI cuMemFree(CUdeviceptr dptr)
 {
     CUresult result;
@@ -458,6 +461,9 @@ CUresult CUDAAPI cuMemFree(CUdeviceptr dptr)
     return (result);
 }
 
+#ifdef HAVE_VISIBILITY
+__attribute__ ((visibility("default")))
+#endif
 cudaError_t CUDARTAPI cudaFree(void *dptr)
 {
     cudaError_t result;
