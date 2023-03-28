@@ -154,6 +154,12 @@ MPL_STATIC_INLINE_PREFIX void MPID_Part_send_request_free_hook(MPIR_Request * re
     if (do_tag) {
         MPIR_Request **tag_req_ptr = MPIDIG_PART_SREQUEST(req, tag_req_ptr);
         MPIR_Assert(tag_req_ptr != NULL);
+        const int msg_part = MPIDIG_PART_REQUEST(req, msg_part);
+        for (int i = 0; i < msg_part; ++i) {
+            if (tag_req_ptr[i]) {
+                MPIR_Request_free(tag_req_ptr[i]);
+            }
+        }
         MPL_free(tag_req_ptr);
         MPIR_cc_dec(&req->comm->part_context_cc);
     }
@@ -172,6 +178,12 @@ MPL_STATIC_INLINE_PREFIX void MPID_Part_recv_request_free_hook(MPIR_Request * re
     const bool do_tag = MPIDIG_PART_DO_TAG(req);
     if (do_tag) {
         MPIR_Request **tag_req_ptr = MPIDIG_PART_RREQUEST(req, tag_req_ptr);
+        const int msg_part = MPIDIG_PART_REQUEST(req, msg_part);
+        for (int i = 0; i < msg_part; ++i) {
+            if (tag_req_ptr[i]) {
+                MPIR_Request_free(tag_req_ptr[i]);
+            }
+        }
         MPL_free(tag_req_ptr);
     } else {
         MPIR_cc_t *cc_part = MPIDIG_PART_RREQUEST(req, cc_part);

@@ -66,7 +66,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_tag(const int im)
     int tag = 0;
     tag |= ((vci & 0x1f) << 5);
     tag |= ((vci & 0x1f) << 10);
-    /* encode the msg id on the rest of the bits, if the message id is too big for the reamining
+    /* encode the msg id on the rest of the bits, if the message id is too big for the remaining
      * bits then it's an error to keep going as we will have conflicting tag ids on the network */
     MPIR_Assert(im <= MPIDIG_Part_get_max_tag());
     // register the first 5 bits of the partition id
@@ -187,11 +187,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_recv(MPIR_Request * rreq)
         /* free the previous request as that one is not needed anymore */
         if (child_req[im]) {
             MPIR_Request_free(child_req[im]);
+            child_req[im] = NULL;
         }
 
         /* attr = 1 isolates the traffic of internal vs external communications */
         const int attr = 0;
         /* initialize the next request, the ref count should be 2 here: one for mpich, one for me */
+        MPIR_Assert(child_req[im] == NULL);
         MPID_Irecv_parent(buf_recv, count, dtype_recv, source_rank, source_tag, comm, attr, cc_ptr,
                           child_req + im);
     }
@@ -228,12 +230,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
     void *buf_send = (char *) MPIDI_PART_REQUEST(sreq, buffer) + imsg * part_offset;
     MPIR_Request **child_req = MPIDIG_PART_SREQUEST(sreq, tag_req_ptr);
 
+    /* free the previous request as that one is not needed anymore */
+    if (child_req[imsg]) {
+        MPIR_Request_free(child_req[imsg]);
+        child_req[imsg] = NULL;
+    }
+
     /* attr = 1 isolates the traffic of internal vs external communications */
     const int attr = 0;
+    MPIR_Assert(child_req[imsg] == NULL);
     MPID_Isend_parent(buf_send, count, *dtype_send, dest_rank, dest_tag, comm, attr, cc_ptr,
                       child_req + imsg);
-    // free immediately the request so that it gets deallocated once completed
-    MPIR_Request_free(child_req[imsg]);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
