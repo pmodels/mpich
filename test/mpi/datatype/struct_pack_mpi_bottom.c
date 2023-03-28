@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        MTestFree(memtypes[outb_memtype], outbufs[STAGE_BUF], outbufs[MAIN_BUF]);
+        MTestFree(outb_memtype, outbufs[STAGE_BUF], outbufs[MAIN_BUF]);
     }
 
     MTest_Finalize(errs);
