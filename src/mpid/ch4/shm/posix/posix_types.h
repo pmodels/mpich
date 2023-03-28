@@ -29,10 +29,10 @@ typedef struct {
     MPIDI_POSIX_am_request_header_t *postponed_queue;
     MPIR_Request **active_rreq;
     char pad MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
-} MPIDI_POSIX_per_vsi_t;
+} MPIDI_POSIX_per_vci_t;
 
 typedef struct {
-    MPIDI_POSIX_per_vsi_t per_vsi[MPIDI_CH4_MAX_VCIS];
+    MPIDI_POSIX_per_vci_t per_vci[MPIDI_CH4_MAX_VCIS];
     void *shm_ptr;
     /* Keep track of all of the local processes in MPI_COMM_WORLD and what their original rank was
      * in that communicator. */
@@ -41,7 +41,7 @@ typedef struct {
     int *local_ranks;
     int *local_procs;
     int local_rank_0;
-    int num_vsis;
+    int num_vcis;
 } MPIDI_POSIX_global_t;
 
 extern MPIDI_POSIX_global_t MPIDI_POSIX_global;

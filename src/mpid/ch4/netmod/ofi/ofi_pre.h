@@ -87,13 +87,13 @@ typedef struct MPIDI_OFI_am_header_t {
     uint64_t payload_sz:MPIDI_OFI_AM_PAYLOAD_SZ_BITS;   /* data size on this OFI message. This
                                                          * could be the size of a pipeline segment
                                                          * */
-    /* vnis are needed for callbacks and to reply.
-     * Note: technically the vni_dst don't need be transported since the receiver
-     * always know which vni it receives the message. However, having both of them
+    /* vcis are needed for callbacks and to reply.
+     * Note: technically the vci_dst don't need be transported since the receiver
+     * always know which vci it receives the message. However, having both of them
      * in the header makes the design symmetric and thus easier to maintain.
      */
-    uint8_t vni_src;
-    uint8_t vni_dst;
+    uint8_t vci_src;
+    uint8_t vci_dst;
     uint16_t seqno:MPIDI_OFI_AM_SEQ_NO_BITS;    /* Sequence number of this message.
                                                  * Number is unique to (fi_src_addr,
                                                  * fi_dest_addr) pair. */
@@ -167,8 +167,8 @@ typedef struct MPIDI_OFI_deferred_am_isend_req {
     MPIR_Request *sreq;
     bool need_packing;
     MPI_Aint data_sz;
-    int vni_src;
-    int vni_dst;
+    int vci_src;
+    int vci_dst;
 
     struct MPIDI_OFI_deferred_am_isend_req *prev;
     struct MPIDI_OFI_deferred_am_isend_req *next;
@@ -288,7 +288,7 @@ typedef struct {
 
 typedef struct {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
-    fi_addr_t dest[MPIDI_OFI_MAX_NICS][MPIDI_CH4_MAX_VCIS];     /* [nic][vni] */
+    fi_addr_t dest[MPIDI_OFI_MAX_NICS][MPIDI_CH4_MAX_VCIS];     /* [nic][vci] */
 #else
     fi_addr_t dest[MPIDI_OFI_MAX_NICS][1];
 #endif

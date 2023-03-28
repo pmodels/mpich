@@ -13,17 +13,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_he
                                                     const void *am_hdr, MPI_Aint am_hdr_sz,
                                                     const void *buf, MPI_Aint count,
                                                     MPI_Datatype datatype, MPI_Aint offset,
-                                                    int src_vsi, int dst_vsi, MPI_Aint * bytes_sent)
+                                                    int src_vci, int dst_vci, MPI_Aint * bytes_sent)
 {
     return MPIDI_POSIX_eager_func->send(grank, msg_hdr, am_hdr, am_hdr_sz, buf, count, datatype,
-                                        offset, src_vsi, dst_vsi, bytes_sent);
+                                        offset, src_vci, dst_vci, bytes_sent);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(int vsi,
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(int vci,
                                                           MPIDI_POSIX_eager_recv_transaction_t *
                                                           transaction)
 {
-    return MPIDI_POSIX_eager_func->recv_begin(vsi, transaction);
+    return MPIDI_POSIX_eager_func->recv_begin(vci, transaction);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t *

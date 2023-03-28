@@ -82,8 +82,8 @@ static int get_huge_issue_read(MPIR_Request * rreq)
     int num_chunks = MPL_DIV_ROUNDUP(bytesLeft, chunk_size);
 
     /* note: this is receiver read from sender */
-    int vni_remote = info->vni_src;
-    int vni_local = info->vni_dst;
+    int vci_remote = info->vci_src;
+    int vci_local = info->vci_dst;
 
     /* We'll issue multiple fi_read for every chunks. All the chunks will be tracked by a
      * chunks_outstanding counter. */
@@ -99,9 +99,9 @@ static int get_huge_issue_read(MPIR_Request * rreq)
 
     int nic = 0;
     while (bytesLeft > 0) {
-        int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni_local, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vci_local, nic);
         fi_addr_t addr =
-            MPIDI_OFI_comm_to_phys(comm, info->origin_rank, nic, vni_local, vni_remote);
+            MPIDI_OFI_comm_to_phys(comm, info->origin_rank, nic, vci_local, vci_remote);
         uint64_t remote_key = info->rma_keys[nic];
 
         MPI_Aint bytesToGet = MPL_MIN(chunk_size, bytesLeft);
@@ -111,12 +111,12 @@ static int get_huge_issue_read(MPIR_Request * rreq)
         chunk->localreq = rreq;
         chunk->chunks_outstanding = cc_ptr;
 
-        MPIDI_OFI_cntr_incr(comm, vni_local, nic);
+        MPIDI_OFI_cntr_incr(comm, vci_local, nic);
         MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                      (void *) ((char *) recv_buf + cur_offset),
                                      bytesToGet, NULL, addr, recv_rbase(info) + cur_offset,
                                      remote_key, (void *) &chunk->context),
-                             vni_local, rdma_readfrom, FALSE);
+                             vci_local, rdma_readfrom, FALSE);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[nic], bytesToGet);
         if (MPIDI_OFI_COMM(comm).enable_striping) {
             MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_recvd_bytes_count[nic], bytesToGet);
@@ -146,8 +146,8 @@ static int get_huge_complete(MPIR_Request * rreq)
     MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(rreq, huge.remote_info);
 
     /* note: it's receiver ack sender */
-    int vni_remote = info->vni_src;
-    int vni_local = info->vni_dst;
+    int vci_remote = info->vci_src;
+    int vci_local = info->vci_dst;
 
     /* important: save comm_ptr because MPIDI_OFI_recv_event may free the request. */
     MPIR_Comm *comm_ptr = rreq->comm;
@@ -156,14 +156,14 @@ static int get_huge_complete(MPIR_Request * rreq)
     wc.len = info->msgsize;
     wc.data = info->origin_rank;
     wc.tag = info->tag;
-    MPIDI_OFI_recv_event(vni_local, &wc, rreq, MPIDI_OFI_EVENT_GET_HUGE);
+    MPIDI_OFI_recv_event(vci_local, &wc, rreq, MPIDI_OFI_EVENT_GET_HUGE);
 
     MPIDI_OFI_send_control_t ctrl;
     ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
     ctrl.u.huge_ack.ackreq = info->ackreq;
     mpi_errno = MPIDI_NM_am_send_hdr(info->origin_rank, comm_ptr,
                                      MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
-                                     &ctrl, sizeof(ctrl), vni_local, vni_remote);
+                                     &ctrl, sizeof(ctrl), vci_local, vci_remote);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(info);
@@ -176,7 +176,7 @@ static int get_huge_complete(MPIR_Request * rreq)
 }
 
 /* this function called by recv event of a huge message */
-int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr;
@@ -204,11 +204,11 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
         int rank = MPIDI_OFI_cqe_get_source(wc, false);
         int tag = (MPIDI_OFI_TAG_MASK & wc->tag);
 
-        LL_FOREACH(MPIDI_OFI_global.per_vni[vni].huge_ctrl_head, list_ptr) {
+        LL_FOREACH(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head, list_ptr) {
             if (list_ptr->comm_id == comm_id && list_ptr->rank == rank && list_ptr->tag == tag) {
                 MPIDI_OFI_REQUEST(rreq, huge.remote_info) = list_ptr->u.info;
-                LL_DELETE(MPIDI_OFI_global.per_vni[vni].huge_ctrl_head,
-                          MPIDI_OFI_global.per_vni[vni].huge_ctrl_tail, list_ptr);
+                LL_DELETE(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head,
+                          MPIDI_OFI_global.per_vci[vci].huge_ctrl_tail, list_ptr);
                 MPL_free(list_ptr);
                 ready_to_get = true;
                 break;
@@ -228,8 +228,8 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
         list_ptr->tag = (MPIDI_OFI_TAG_MASK & wc->tag);
         list_ptr->u.rreq = rreq;
 
-        LL_APPEND(MPIDI_OFI_global.per_vni[vni].huge_recv_head,
-                  MPIDI_OFI_global.per_vni[vni].huge_recv_tail, list_ptr);
+        LL_APPEND(MPIDI_OFI_global.per_vci[vci].huge_recv_head,
+                  MPIDI_OFI_global.per_vci[vci].huge_recv_tail, list_ptr);
         /* control handler will finish the recv */
     } else {
         /* proceed to get the huge message */
@@ -245,7 +245,7 @@ int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
 }
 
 /* This function is called when we receive a huge control message */
-int MPIDI_OFI_recv_huge_control(int vni, MPIR_Context_id_t comm_id, int rank, int tag,
+int MPIDI_OFI_recv_huge_control(int vci, MPIR_Context_id_t comm_id, int rank, int tag,
                                 MPIDI_OFI_huge_remote_info_t * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -262,11 +262,11 @@ int MPIDI_OFI_recv_huge_control(int vni, MPIR_Context_id_t comm_id, int rank, in
 
     /* If there has been a posted receive, search through the list of unmatched
      * receives to find the one that goes with the incoming message. */
-    LL_FOREACH(MPIDI_OFI_global.per_vni[vni].huge_recv_head, list_ptr) {
+    LL_FOREACH(MPIDI_OFI_global.per_vci[vci].huge_recv_head, list_ptr) {
         if (list_ptr->comm_id == comm_id && list_ptr->rank == rank && list_ptr->tag == tag) {
             rreq = list_ptr->u.rreq;
-            LL_DELETE(MPIDI_OFI_global.per_vni[vni].huge_recv_head,
-                      MPIDI_OFI_global.per_vni[vni].huge_recv_tail, list_ptr);
+            LL_DELETE(MPIDI_OFI_global.per_vci[vci].huge_recv_head,
+                      MPIDI_OFI_global.per_vci[vci].huge_recv_tail, list_ptr);
             MPL_free(list_ptr);
             break;
         }
@@ -283,8 +283,8 @@ int MPIDI_OFI_recv_huge_control(int vni, MPIR_Context_id_t comm_id, int rank, in
         list_ptr->tag = tag;
         list_ptr->u.info = info;
 
-        LL_APPEND(MPIDI_OFI_global.per_vni[vni].huge_ctrl_head,
-                  MPIDI_OFI_global.per_vni[vni].huge_ctrl_tail, list_ptr);
+        LL_APPEND(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head,
+                  MPIDI_OFI_global.per_vci[vci].huge_ctrl_tail, list_ptr);
         /* let MPIDI_OFI_recv_huge_event finish the recv */
     } else if (MPIDI_OFI_REQUEST(rreq, kind) == MPIDI_OFI_req_kind__mprobe) {
         /* attach info and finish the mprobe */
@@ -305,7 +305,7 @@ int MPIDI_OFI_recv_huge_control(int vni, MPIR_Context_id_t comm_id, int rank, in
     goto fn_exit;
 }
 
-int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -316,7 +316,7 @@ int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
 
     /* If this is a huge message, find the control message on the unexpected list that matches
      * with this and return the size in that. */
-    LL_FOREACH(MPIDI_OFI_global.per_vni[vni].huge_ctrl_head, list_ptr) {
+    LL_FOREACH(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head, list_ptr) {
         /* FIXME: fix the type of comm_id */
         MPIR_Context_id_t comm_id = rreq->comm->recvcontext_id;
         int rank = MPIDI_OFI_cqe_get_source(wc, false);
@@ -330,8 +330,8 @@ int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
     if (found_msg) {
         if (MPIDI_OFI_REQUEST(rreq, kind) == MPIDI_OFI_req_kind__mprobe) {
             MPIDI_OFI_REQUEST(rreq, huge.remote_info) = list_ptr->u.info;
-            LL_DELETE(MPIDI_OFI_global.per_vni[vni].huge_ctrl_head,
-                      MPIDI_OFI_global.per_vni[vni].huge_ctrl_tail, list_ptr);
+            LL_DELETE(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head,
+                      MPIDI_OFI_global.per_vci[vci].huge_ctrl_tail, list_ptr);
             MPL_free(list_ptr);
         }
         rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
@@ -363,8 +363,8 @@ int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
         huge_list_ptr->tag = MPIDI_OFI_TAG_MASK & wc->tag;
         huge_list_ptr->u.rreq = rreq;
 
-        LL_APPEND(MPIDI_OFI_global.per_vni[vni].huge_recv_head,
-                  MPIDI_OFI_global.per_vni[vni].huge_recv_tail, huge_list_ptr);
+        LL_APPEND(MPIDI_OFI_global.per_vci[vci].huge_recv_head,
+                  MPIDI_OFI_global.per_vci[vci].huge_recv_tail, huge_list_ptr);
     }
 
 
@@ -375,7 +375,7 @@ int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Reque
     goto fn_exit;
 }
 
-int MPIDI_OFI_huge_chunk_done_event(int vni, struct fi_cq_tagged_entry *wc, void *req)
+int MPIDI_OFI_huge_chunk_done_event(int vci, struct fi_cq_tagged_entry *wc, void *req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_read_chunk_t *chunk_req = (MPIDI_OFI_read_chunk_t *) req;

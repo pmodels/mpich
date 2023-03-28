@@ -16,12 +16,12 @@
 
 #include "posix_impl.h"
 
-#define MPIDI_POSIX_SEND_VSIS(vsi_src_, vsi_dst_) \
+#define MPIDI_POSIX_SEND_VSIS(vci_src_, vci_dst_) \
     do { \
-        MPIDI_EXPLICIT_VCIS(comm, attr, comm->rank, rank, vsi_src_, vsi_dst_); \
-        if (vsi_src_ == 0 && vsi_dst_ == 0) { \
-            vsi_src_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
-            vsi_dst_ = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+        MPIDI_EXPLICIT_VCIS(comm, attr, comm->rank, rank, vci_src_, vci_dst_); \
+        if (vci_src_ == 0 && vci_dst_ == 0) { \
+            vci_src_ = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+            vci_dst_ = MPIDI_get_vci(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
         } \
     } while (0)
 
@@ -36,13 +36,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
     MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
     bool syncflag = MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
 
-    int vsi_src, vsi_dst;
-    MPIDI_POSIX_SEND_VSIS(vsi_src, vsi_dst);
+    int vci_src, vci_dst;
+    MPIDI_POSIX_SEND_VSIS(vci_src, vci_dst);
 
-    MPIDI_POSIX_THREAD_CS_ENTER_VCI(vsi_src);
+    MPIDI_POSIX_THREAD_CS_ENTER_VCI(vci_src);
     mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                 vsi_src, vsi_dst, request, syncflag, errflag);
-    MPIDI_POSIX_THREAD_CS_EXIT_VCI(vsi_src);
+                                 vci_src, vci_dst, request, syncflag, errflag);
+    MPIDI_POSIX_THREAD_CS_EXIT_VCI(vci_src);
 
     return mpi_errno;
 }

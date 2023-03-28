@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_buf_limit(void)
 MPL_STATIC_INLINE_PREFIX int
 MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void *am_hdr,
                        MPI_Aint am_hdr_sz, const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                       MPI_Aint offset, int src_vsi, int dst_vsi, MPI_Aint * bytes_sent)
+                       MPI_Aint offset, int src_vci, int dst_vci, MPI_Aint * bytes_sent)
 {
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
@@ -50,7 +50,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     MPIR_FUNC_ENTER;
 
     /* Get the transport object that holds all of the global variables. */
-    transport = MPIDI_POSIX_eager_iqueue_get_transport(src_vsi, dst_vsi);
+    transport = MPIDI_POSIX_eager_iqueue_get_transport(src_vci, dst_vci);
 
     /* Try to get a new cell to hold the message */
     /* Select the appropriate pool depending on whether we are using sender-side or receiver-side

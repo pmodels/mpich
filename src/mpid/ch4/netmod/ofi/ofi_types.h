@@ -223,7 +223,7 @@ typedef struct MPIDI_OFI_cq_list_t {
     struct MPIDI_OFI_cq_list_t *next;
 } MPIDI_OFI_cq_list_t;
 
-/* global per-vni am related fields */
+/* global per-vci am related fields */
 typedef struct {
     struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
@@ -259,7 +259,7 @@ typedef struct {
     struct MPIDI_OFI_huge_recv_list *huge_recv_tail;
 
     char pad MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
-} MPIDI_OFI_per_vni_t;
+} MPIDI_OFI_per_vci_t;
 
 typedef struct {
     struct fid_domain *domain;
@@ -365,8 +365,8 @@ typedef struct {
     /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];
     MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_VNIS * MPIDI_OFI_MAX_NICS];
-    MPIDI_OFI_per_vni_t per_vni[MPIDI_OFI_MAX_VNIS];
-    int num_vnis;
+    MPIDI_OFI_per_vci_t per_vci[MPIDI_OFI_MAX_VNIS];
+    int num_vcis;
     int num_nics;
     int num_close_nics;
     int num_comms_enabled_striping;     /* Number of active communicators with striping enabled */
@@ -408,8 +408,8 @@ typedef struct {
     void *send_buf;
     size_t msgsize;
     uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
-    int vni_src;
-    int vni_dst;
+    int vci_src;
+    int vci_dst;
 } MPIDI_OFI_huge_remote_info_t;
 
 typedef struct {
@@ -450,7 +450,7 @@ typedef struct MPIDI_OFI_pack_chunk {
 typedef struct MPIDI_OFI_win_request {
     struct MPIDI_OFI_win_request *next;
     struct MPIDI_OFI_win_request *prev;
-    int vni;
+    int vci;
     int rma_type;
     MPIR_Request **sigreq;
     MPIDI_OFI_pack_chunk *chunks;

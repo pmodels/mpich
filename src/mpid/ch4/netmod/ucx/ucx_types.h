@@ -31,7 +31,7 @@ typedef struct {
 typedef struct {
     ucp_context_h context;
     MPIDI_UCX_context_t ctx[MPIDI_CH4_MAX_VCIS];
-    int num_vnis;
+    int num_vcis;
 } MPIDI_UCX_global_t;
 
 #define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)

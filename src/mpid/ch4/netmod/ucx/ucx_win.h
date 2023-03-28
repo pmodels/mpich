@@ -129,9 +129,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_flush_cmpl_cb(void *request, ucs_status_
 {
 }
 
-MPL_STATIC_INLINE_PREFIX ucs_status_t MPIDI_UCX_flush(int vni)
+MPL_STATIC_INLINE_PREFIX ucs_status_t MPIDI_UCX_flush(int vci)
 {
-    void *request = ucp_worker_flush_nb(MPIDI_UCX_global.ctx[vni].worker,
+    void *request = ucp_worker_flush_nb(MPIDI_UCX_global.ctx[vci].worker,
                                         0, &MPIDI_UCX_flush_cmpl_cb);
     if (request == NULL) {
         return UCS_OK;
@@ -140,7 +140,7 @@ MPL_STATIC_INLINE_PREFIX ucs_status_t MPIDI_UCX_flush(int vni)
     } else {
         ucs_status_t status;
         do {
-            ucp_worker_progress(MPIDI_UCX_global.ctx[vni].worker);
+            ucp_worker_progress(MPIDI_UCX_global.ctx[vci].worker);
             status = ucp_request_check_status(request);
         } while (status == UCS_INPROGRESS);
         ucp_request_release(request);
@@ -155,10 +155,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
 
     if (MPIDI_UCX_WIN(win).info_table && MPIDI_UCX_win_need_flush(win)) {
         ucs_status_t ucp_status;
-        int vni = MPIDI_WIN(win, am_vci);
-        MPIDI_UCX_THREAD_CS_ENTER_VCI(vni);
-        ucp_status = MPIDI_UCX_flush(vni);
-        MPIDI_UCX_THREAD_CS_EXIT_VCI(vni);
+        int vci = MPIDI_WIN(win, am_vci);
+        MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
+        ucp_status = MPIDI_UCX_flush(vci);
+        MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
         MPIDI_UCX_CHK_STATUS(ucp_status);
         MPIDI_UCX_win_unset_sync(win);
     }
@@ -180,10 +180,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
 
         /* currently, UCP does not support local flush, so we have to call
          * a global flush. This is not good for performance - but OK for now */
-        int vni = MPIDI_WIN(win, am_vci);
-        MPIDI_UCX_THREAD_CS_ENTER_VCI(vni);
-        ucp_status = MPIDI_UCX_flush(vni);
-        MPIDI_UCX_THREAD_CS_EXIT_VCI(vni);
+        int vci = MPIDI_WIN(win, am_vci);
+        MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
+        ucp_status = MPIDI_UCX_flush(vci);
+        MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
         MPIDI_UCX_CHK_STATUS(ucp_status);
 
         /* TODO: should set to FLUSH after replace with real local flush. */
@@ -207,13 +207,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync >= MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL) {
 
         ucs_status_t ucp_status;
-        int vni = MPIDI_WIN(win, am_vci);
-        int vni_target = MPIDI_WIN_TARGET_VCI(win, rank);
-        ucp_ep_h ep = MPIDI_UCX_WIN_TO_EP(win, rank, vni, vni_target);
+        int vci = MPIDI_WIN(win, am_vci);
+        int vci_target = MPIDI_WIN_TARGET_VCI(win, rank);
+        ucp_ep_h ep = MPIDI_UCX_WIN_TO_EP(win, rank, vci, vci_target);
         /* only flush the endpoint */
-        MPIDI_UCX_THREAD_CS_ENTER_VCI(vni);
+        MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
         ucp_status = ucp_ep_flush(ep);
-        MPIDI_UCX_THREAD_CS_EXIT_VCI(vni);
+        MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
         MPIDI_UCX_CHK_STATUS(ucp_status);
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync = MPIDI_UCX_WIN_SYNC_UNSET;
     }
@@ -234,14 +234,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync == MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL) {
         ucs_status_t ucp_status;
 
-        int vni = MPIDI_WIN(win, am_vci);
-        int vni_target = MPIDI_WIN_TARGET_VCI(win, rank);
-        ucp_ep_h ep = MPIDI_UCX_WIN_TO_EP(win, rank, vni, vni_target);
+        int vci = MPIDI_WIN(win, am_vci);
+        int vci_target = MPIDI_WIN_TARGET_VCI(win, rank);
+        ucp_ep_h ep = MPIDI_UCX_WIN_TO_EP(win, rank, vci, vci_target);
         /* currently, UCP does not support local flush, so we have to call
          * a global flush. This is not good for performance - but OK for now */
-        MPIDI_UCX_THREAD_CS_ENTER_VCI(vni);
+        MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
         ucp_status = ucp_ep_flush(ep);
-        MPIDI_UCX_THREAD_CS_EXIT_VCI(vni);
+        MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
         MPIDI_UCX_CHK_STATUS(ucp_status);
 
         /* TODO: should set to FLUSH after replace with real local flush. */

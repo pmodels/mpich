@@ -50,10 +50,10 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     /* Create one terminal for each process with which we will be able to communicate. */
     size_of_terminals = (size_t) MPIDI_POSIX_global.num_local * sizeof(MPIDU_genq_shmem_queue_u);
 
-    for (int vsi_src = 0; vsi_src < MPIDI_POSIX_global.num_vsis; vsi_src++) {
-        for (int vsi_dst = 0; vsi_dst < MPIDI_POSIX_global.num_vsis; vsi_dst++) {
+    for (int vci_src = 0; vci_src < MPIDI_POSIX_global.num_vcis; vci_src++) {
+        for (int vci_dst = 0; vci_dst < MPIDI_POSIX_global.num_vcis; vci_dst++) {
             MPIDI_POSIX_eager_iqueue_transport_t *transport;
-            transport = MPIDI_POSIX_eager_iqueue_get_transport(vsi_src, vsi_dst);
+            transport = MPIDI_POSIX_eager_iqueue_get_transport(vci_src, vci_dst);
 
             transport->num_cells = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NUM_CELLS;
             transport->size_of_cell = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE;
@@ -94,10 +94,10 @@ int MPIDI_POSIX_iqueue_finalize(void)
 
     MPIR_FUNC_ENTER;
 
-    for (int vsi_src = 0; vsi_src < MPIDI_POSIX_global.num_vsis; vsi_src++) {
-        for (int vsi_dst = 0; vsi_dst < MPIDI_POSIX_global.num_vsis; vsi_dst++) {
+    for (int vci_src = 0; vci_src < MPIDI_POSIX_global.num_vcis; vci_src++) {
+        for (int vci_dst = 0; vci_dst < MPIDI_POSIX_global.num_vcis; vci_dst++) {
             MPIDI_POSIX_eager_iqueue_transport_t *transport;
-            transport = MPIDI_POSIX_eager_iqueue_get_transport(vsi_src, vsi_dst);
+            transport = MPIDI_POSIX_eager_iqueue_get_transport(vci_src, vci_dst);
 
             mpi_errno = MPIDU_Init_shm_free(transport->terminals);
             MPIR_ERR_CHECK(mpi_errno);

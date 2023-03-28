@@ -150,25 +150,25 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 
     MPIDI_POSIX_global.local_rank_0 = local_rank_0;
 
-    MPIDI_POSIX_global.num_vsis = MPIDI_global.n_total_vcis;
+    MPIDI_POSIX_global.num_vcis = MPIDI_global.n_total_vcis;
     /* This is used to track messages that the eager submodule was not ready to send. */
-    for (int vsi = 0; vsi < MPIDI_global.n_total_vcis; vsi++) {
+    for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
         mpi_errno = MPIDU_genq_private_pool_create(MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE,
                                                    MPIDI_POSIX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
                                                    0 /* unlimited */ ,
                                                    host_alloc, host_free,
                                                    &MPIDI_POSIX_global.
-                                                   per_vsi[vsi].am_hdr_buf_pool);
+                                                   per_vci[vci].am_hdr_buf_pool);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPIDI_POSIX_global.per_vsi[vsi].postponed_queue = NULL;
+        MPIDI_POSIX_global.per_vci[vci].postponed_queue = NULL;
 
-        MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_global.per_vsi[vsi].active_rreq, MPIR_Request **,
+        MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_global.per_vci[vci].active_rreq, MPIR_Request **,
                             MPIR_Process.local_size * sizeof(MPIR_Request *), mpi_errno,
                             "active recv req", MPL_MEM_SHM);
 
         for (i = 0; i < MPIR_Process.local_size; i++) {
-            MPIDI_POSIX_global.per_vsi[vsi].active_rreq[i] = NULL;
+            MPIDI_POSIX_global.per_vci[vci].active_rreq[i] = NULL;
         }
 
     }
@@ -251,9 +251,9 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
         utarray_free(shm_mutex_free_list);
     }
 
-    for (int vsi = 0; vsi < MPIDI_global.n_total_vcis; vsi++) {
-        MPIDU_genq_private_pool_destroy(MPIDI_POSIX_global.per_vsi[vsi].am_hdr_buf_pool);
-        MPL_free(MPIDI_POSIX_global.per_vsi[vsi].active_rreq);
+    for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
+        MPIDU_genq_private_pool_destroy(MPIDI_POSIX_global.per_vci[vci].am_hdr_buf_pool);
+        MPL_free(MPIDI_POSIX_global.per_vci[vci].active_rreq);
     }
 
     MPL_free(MPIDI_POSIX_global.local_ranks);

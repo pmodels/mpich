@@ -38,21 +38,21 @@ ATTRIBUTE((unused));
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
-int MPIDI_OFI_progress_uninlined(int vni);
-int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
+int MPIDI_OFI_progress_uninlined(int vci);
+int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 
 /*
  * Helper routines and macros for request completion
  */
-#define MPIDI_OFI_PROGRESS(vni)                                   \
+#define MPIDI_OFI_PROGRESS(vci)                                   \
     do {                                                          \
-        mpi_errno = MPIDI_NM_progress(vni, 0);                   \
+        mpi_errno = MPIDI_NM_progress(vci, 0);                   \
         MPIR_ERR_CHECK(mpi_errno);                                \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
 
-#define MPIDI_OFI_PROGRESS_WHILE(cond, vni) \
-    while (cond) MPIDI_OFI_PROGRESS(vni)
+#define MPIDI_OFI_PROGRESS_WHILE(cond, vci) \
+    while (cond) MPIDI_OFI_PROGRESS(vci)
 
 #define MPIDI_OFI_ERR  MPIR_ERR_CHKANDJUMP4
 #define MPIDI_OFI_CALL(FUNC,STR)                                     \
@@ -211,9 +211,9 @@ int MPIDI_OFI_handle_cq_error(int vni, int nic, ssize_t ret);
                             #STR);                              \
     } while (0)
 
-#define MPIDI_OFI_REQUEST_CREATE(req, kind, vni) \
+#define MPIDI_OFI_REQUEST_CREATE(req, kind, vci) \
     do {                                                      \
-        MPIDI_CH4_REQUEST_CREATE(req, kind, vni, 2);                    \
+        MPIDI_CH4_REQUEST_CREATE(req, kind, vci, 2);                    \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
     } while (0)
 
@@ -246,20 +246,20 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
 
 /* Calculate the OFI context index.
  * The total number of OFI contexts will be the number of nics * number of vcis
- * Each nic will contain num_vcis vnis. Each corresponding to their respective vci index. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_ctx_index(MPIR_Comm * comm_ptr, int vni, int nic)
+ * Each nic will contain num_vcis vcis. Each corresponding to their respective vci index. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_ctx_index(MPIR_Comm * comm_ptr, int vci, int nic)
 {
     if (comm_ptr == NULL || MPIDI_OFI_COMM(comm_ptr).pref_nic == NULL) {
-        return nic * MPIDI_OFI_global.num_vnis + vni;
+        return nic * MPIDI_OFI_global.num_vcis + vci;
     } else {
-        return MPIDI_OFI_COMM(comm_ptr).pref_nic[comm_ptr->rank] * MPIDI_OFI_global.num_vnis + vni;
+        return MPIDI_OFI_COMM(comm_ptr).pref_nic[comm_ptr->rank] * MPIDI_OFI_global.num_vcis + vci;
     }
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(MPIR_Comm * comm, int vni, int nic)
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(MPIR_Comm * comm, int vci, int nic)
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
-    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vni, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vci, nic);
 #else
     /* NOTE: shared with ctx[0] */
     int ctx_idx = MPIDI_OFI_get_ctx_index(comm, 0, nic);
@@ -303,11 +303,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_mr_bind(struct fi_info *prov, struct fid_
 #define MPIDI_OFI_COLL_MR_KEY 1
 #define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
 int MPIDI_OFI_retry_progress(void);
-int MPIDI_OFI_recv_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-int MPIDI_OFI_recv_huge_control(int vni, MPIR_Context_id_t comm_id, int rank, int tag,
+int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+int MPIDI_OFI_recv_huge_control(int vci, MPIR_Context_id_t comm_id, int rank, int tag,
                                 MPIDI_OFI_huge_remote_info_t * info);
-int MPIDI_OFI_peek_huge_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-int MPIDI_OFI_huge_chunk_done_event(int vni, struct fi_cq_tagged_entry *wc, void *req);
+int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+int MPIDI_OFI_huge_chunk_done_event(int vci, struct fi_cq_tagged_entry *wc, void *req);
 int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
                               uint32_t attr, MPIR_Request ** req);
 int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
@@ -440,52 +440,37 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
     MPL_free(winreq);
 }
 
-/* This function implements netmod vci to vni(context) mapping.
- * Currently, we only support one-to-one mapping.
- */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni(int vci)
-{
-    return vci;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni_assert(int vci)
-{
-    int vni = MPIDI_OFI_vci_to_vni(vci);
-    MPIR_Assert(vni < MPIDI_OFI_global.num_vnis);
-    return vni;
-}
-
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, int nic,
-                                                        int vni_local, int vni_remote)
+                                                        int vci_local, int vci_remote)
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][vni_remote], 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][vci_remote], 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        return MPIDI_OFI_AV(av).dest[nic][vni_remote];
+        return MPIDI_OFI_AV(av).dest[nic][vci_remote];
     }
 #else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][0], vni_remote, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][0], vci_remote, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        MPIR_Assert(vni_remote == 0);
+        MPIR_Assert(vci_remote == 0);
         return MPIDI_OFI_AV(av).dest[nic][0];
     }
 #endif
 }
 
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_rank_to_phys(int rank, int nic,
-                                                          int vni_local, int vni_remote)
+                                                          int vci_local, int vci_remote)
 {
     MPIDI_av_entry_t *av = &MPIDIU_get_av(0, rank);
-    return MPIDI_OFI_av_to_phys(av, nic, vni_local, vni_remote);
+    return MPIDI_OFI_av_to_phys(av, nic, vci_local, vci_remote);
 }
 
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int nic,
-                                                          int vni_local, int vni_remote)
+                                                          int vci_local, int vci_remote)
 {
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, rank);
-    return MPIDI_OFI_av_to_phys(av, nic, vni_local, vni_remote);
+    return MPIDI_OFI_av_to_phys(av, nic, vci_local, vci_remote);
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
@@ -628,18 +613,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm
  */
 
 /* local macros to make the code cleaner */
-#define CQ_S_LIST MPIDI_OFI_global.per_vni[vni].cq_buffered_static_list
-#define CQ_S_HEAD MPIDI_OFI_global.per_vni[vni].cq_buffered_static_head
-#define CQ_S_TAIL MPIDI_OFI_global.per_vni[vni].cq_buffered_static_tail
-#define CQ_D_HEAD MPIDI_OFI_global.per_vni[vni].cq_buffered_dynamic_head
-#define CQ_D_TAIL MPIDI_OFI_global.per_vni[vni].cq_buffered_dynamic_tail
+#define CQ_S_LIST MPIDI_OFI_global.per_vci[vci].cq_buffered_static_list
+#define CQ_S_HEAD MPIDI_OFI_global.per_vci[vci].cq_buffered_static_head
+#define CQ_S_TAIL MPIDI_OFI_global.per_vci[vci].cq_buffered_static_tail
+#define CQ_D_HEAD MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_head
+#define CQ_D_TAIL MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_tail
 
-MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_has_cq_buffered(int vni)
+MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_has_cq_buffered(int vci)
 {
     return (CQ_S_HEAD != CQ_S_TAIL) || (CQ_D_HEAD != NULL);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vci)
 {
     int mpi_errno = MPI_SUCCESS, ret = 0;
     struct fi_cq_tagged_entry cq_entry;
@@ -648,14 +633,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
     /* Caller must hold MPIDI_OFI_THREAD_FI_MUTEX */
 
     for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
         ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, &cq_entry, 1);
 
         if (unlikely(ret == -FI_EAGAIN))
             goto fn_exit;
 
         if (ret < 0) {
-            mpi_errno = MPIDI_OFI_handle_cq_error(vni, nic, ret);
+            mpi_errno = MPIDI_OFI_handle_cq_error(vci, nic, ret);
             goto fn_fail;
         }
 
@@ -680,7 +665,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni)
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged_entry *wc)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vci, struct fi_cq_tagged_entry *wc)
 {
     int num = 0;
 
@@ -709,8 +694,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vni, struct fi_cq_tagged
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_register_am_bufs(void)
 {
     if (!MPIDI_OFI_global.am_bufs_registered) {
-        for (int i = 0; i < MPIDI_OFI_global.num_vnis; i++) {
-            MPIR_gpu_register_host(MPIDI_OFI_global.per_vni[i].am_bufs,
+        for (int i = 0; i < MPIDI_OFI_global.num_vcis; i++) {
+            MPIR_gpu_register_host(MPIDI_OFI_global.per_vci[i].am_bufs,
                                    MPIDI_OFI_AM_BUFF_SZ * MPIDI_OFI_NUM_AM_BUFFERS);
         }
     }
@@ -719,8 +704,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_register_am_bufs(void)
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_unregister_am_bufs(void)
 {
     if (MPIDI_OFI_global.am_bufs_registered) {
-        for (int i = 0; i < MPIDI_OFI_global.num_vnis; i++) {
-            MPIR_gpu_unregister_host(MPIDI_OFI_global.per_vni[i].am_bufs);
+        for (int i = 0; i < MPIDI_OFI_global.num_vcis; i++) {
+            MPIR_gpu_unregister_host(MPIDI_OFI_global.per_vci[i].am_bufs);
         }
     }
 }

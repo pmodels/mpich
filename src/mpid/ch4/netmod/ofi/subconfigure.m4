@@ -352,7 +352,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     fi
 
     AC_ARG_ENABLE(ofi-domain, [
-  --enable-ofi-domain - Use fi_domain for vni contexts. This is the default.
+  --enable-ofi-domain - Use fi_domain for vci contexts. This is the default.
                         Use --disable-ofi-domain to use fi_contexts within
                         a scalable endpoint instead.
                             yes        - Enabled (default)
@@ -360,7 +360,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
 ],,enable_ofi_domain=yes)
 
     if test "$enable_ofi_domain" = "yes"; then
-        AC_DEFINE(MPIDI_OFI_VNI_USE_DOMAIN, 1, [CH4/OFI should use domain for vni contexts])
+        AC_DEFINE(MPIDI_OFI_VNI_USE_DOMAIN, 1, [CH4/OFI should use domain for vci contexts])
     fi
 
     AC_MSG_CHECKING([if fi_info struct has nic field])

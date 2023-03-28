@@ -16,9 +16,9 @@ typedef int (*MPIDI_POSIX_eager_finalize_t) (void);
 typedef int (*MPIDI_POSIX_eager_send_t) (int grank, MPIDI_POSIX_am_header_t * msg_hdr,
                                          const void *am_hdr, MPI_Aint am_hdr_sz, const void *buf,
                                          MPI_Aint count, MPI_Datatype datatype, MPI_Aint offset,
-                                         int src_vsi, int dst_vsi, MPI_Aint * bytes_sent);
+                                         int src_vci, int dst_vci, MPI_Aint * bytes_sent);
 
-typedef int (*MPIDI_POSIX_eager_recv_begin_t) (int vsi,
+typedef int (*MPIDI_POSIX_eager_recv_begin_t) (int vci,
                                                MPIDI_POSIX_eager_recv_transaction_t * transaction);
 
 typedef void (*MPIDI_POSIX_eager_recv_memcpy_t) (MPIDI_POSIX_eager_recv_transaction_t * transaction,
@@ -62,10 +62,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_he
                                                     const void *am_hdr, MPI_Aint am_hdr_sz,
                                                     const void *buf, MPI_Aint count,
                                                     MPI_Datatype datatype, MPI_Aint offset,
-                                                    int src_vsi, int dst_vsi,
+                                                    int src_vci, int dst_vci,
                                                     MPI_Aint * bytes_sent) MPL_STATIC_INLINE_SUFFIX;
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(int vsi,
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(int vci,
                                                           MPIDI_POSIX_eager_recv_transaction_t *
                                                           transaction) MPL_STATIC_INLINE_SUFFIX;
 

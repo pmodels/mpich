@@ -11,8 +11,8 @@
 #include "ofi_am_events.h"
 #include "utlist.h"
 
-int MPIDI_OFI_rma_done_event(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
-int MPIDI_OFI_dispatch_function(int vni, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
+int MPIDI_OFI_rma_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
+int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 {
@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry 
     }
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vni,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
                                                   struct fi_cq_tagged_entry *wc /* unused */ ,
                                                   MPIR_Request * sreq, int event_id)
 {
@@ -50,7 +50,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vni,
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_entry *wc,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_entry *wc,
                                                   MPIR_Request * rreq, int event_id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -58,7 +58,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
     MPIR_FUNC_ENTER;
 
     if (wc->tag & MPIDI_OFI_HUGE_SEND) {
-        mpi_errno = MPIDI_OFI_recv_huge_event(vni, wc, rreq);
+        mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
         goto fn_exit;
     }
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
@@ -122,22 +122,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
                                    MPIDI_OFI_SYNC_SEND_ACK);
         int r = rreq->status.MPI_SOURCE;
         /* NOTE: use target rank, reply to src */
-        int vni_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
-        int vni_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
-        int vni_local = vni_dst;
-        int vni_remote = vni_src;
-        MPIR_Assert(vni_local == vni);
+        int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
+        int vci_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
+        int vci_local = vci_dst;
+        int vci_remote = vci_src;
+        MPIR_Assert(vci_local == vci);
         int nic = 0;
-        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vni_local, nic);
-        fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(c, r, nic, vni_local, vni_remote);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci_local, nic);
+        fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(c, r, nic, vci_local, vci_remote);
         if (MPIDI_OFI_ENABLE_DATA) {
             MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
                                                 MPIR_Comm_rank(c), dest_addr, ss_bits),
-                                 vni_local, tinjectdata, FALSE /* eagain */);
+                                 vci_local, tinjectdata, FALSE /* eagain */);
         } else {
             MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
                                             dest_addr, ss_bits),
-                                 vni_local, tinject, FALSE /* eagain */);
+                                 vci_local, tinject, FALSE /* eagain */);
         }
     }
 
@@ -151,18 +151,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vni, struct fi_cq_tagged_e
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_optimized(int vni, struct fi_cq_tagged_entry *wc,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_optimized(int vci, struct fi_cq_tagged_entry *wc,
                                                           MPIR_Request * req)
 {
     /* fast path */
     if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_SEND) {
-        return MPIDI_OFI_send_event(vni, wc, req, MPIDI_OFI_EVENT_SEND);
+        return MPIDI_OFI_send_event(vci, wc, req, MPIDI_OFI_EVENT_SEND);
     } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_RECV) {
-        return MPIDI_OFI_recv_event(vni, wc, req, MPIDI_OFI_EVENT_RECV);
+        return MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV);
     }
 
     /* slow path */
-    return MPIDI_OFI_dispatch_function(vni, wc, req);
+    return MPIDI_OFI_dispatch_function(vci, wc, req);
 }
 
 #endif /* OFI_EVENTS_H_INCLUDED */
