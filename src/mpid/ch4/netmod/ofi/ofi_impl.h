@@ -85,10 +85,10 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                               __LINE__,                     \
                               __func__,                       \
                               fi_strerror(-_ret));          \
-        MPIR_ERR_CHKANDJUMP(_retry == 0,                    \
-                            mpi_errno,                      \
-                            MPIX_ERR_EAGAIN,                \
-                            "**eagain");                    \
+        if (_retry > 0) { \
+            _retry--; \
+            MPIR_ERR_CHKANDJUMP(_retry == 0, mpi_errno, MPIX_ERR_EAGAIN, "**eagain"); \
+        } \
         /* FIXME: by fixing the recursive locking interface to account
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
@@ -97,8 +97,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
         mpi_errno = MPIDI_OFI_retry_progress();                      \
         MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_);			     \
         MPIR_ERR_CHECK(mpi_errno);                               \
-        _retry--;                                           \
-    } while (_ret == -FI_EAGAIN);                           \
+    } while (1);                                            \
     } while (0)
 
 /* per-vci macros - we'll transition into these macros once the locks are
