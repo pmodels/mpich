@@ -131,7 +131,7 @@ int MPIDI_GPU_ipc_handle_cache_insert(int rank, MPIR_Comm * comm, MPIDI_GPU_ipc_
         handle_obj->handle_status = MPIDI_GPU_IPC_HANDLE_VALID;
 
         mpi_errno = ipc_handle_cache_insert(MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank]
-                                            [handle.global_dev_id],
+                                            [handle.local_dev_id],
                                             (void *) handle.remote_base_addr, handle.len,
                                             handle_obj, &insert_successful);
         MPIR_ERR_CHECK(mpi_errno);
@@ -178,8 +178,7 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
         goto fn_fail;
     }
 
-    MPL_gavl_tree_t track_tree =
-        MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank][global_dev_id];
+    MPL_gavl_tree_t track_tree = MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank][local_dev_id];
     mpi_errno = ipc_handle_cache_search(track_tree, pbase, len, (void **) &handle_obj);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -204,6 +203,7 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     ipc_attr->ipc_handle.gpu.offset = (uintptr_t) vaddr - (uintptr_t) pbase;
 
     ipc_attr->ipc_handle.gpu.global_dev_id = global_dev_id;
+    ipc_attr->ipc_handle.gpu.local_dev_id = local_dev_id;
 
     if (handle_obj == NULL) {
         mpi_errno = MPIDI_GPU_ipc_handle_cache_insert(rank, comm, ipc_attr->ipc_handle.gpu);
@@ -261,7 +261,7 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void
     int mpl_err = MPL_SUCCESS;
     MPIDI_GPUI_handle_obj_s *handle_obj = NULL;
 
-#define MAPPED_TREE(i) MPIDI_GPUI_global.ipc_handle_mapped_trees[handle.node_rank][handle.global_dev_id][i]
+#define MAPPED_TREE(i) MPIDI_GPUI_global.ipc_handle_mapped_trees[handle.node_rank][handle.local_dev_id][i]
     if (handle.handle_status == MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED) {
         for (int i = 0; i < MPIDI_GPUI_global.local_device_count; ++i) {
             mpi_errno = ipc_handle_cache_delete(MAPPED_TREE(i),

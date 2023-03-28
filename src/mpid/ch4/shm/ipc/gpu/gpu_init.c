@@ -37,7 +37,7 @@ static void ipc_handle_free_hook(void *dptr)
     void *pbase;
     uintptr_t len;
     int mpl_err ATTRIBUTE((unused));
-    int local_dev_id, global_dev_id;
+    int local_dev_id;
     MPL_pointer_attr_t gpu_attr;
 
     MPIR_FUNC_ENTER;
@@ -49,11 +49,10 @@ static void ipc_handle_free_hook(void *dptr)
         MPIR_GPU_query_pointer_attr(pbase, &gpu_attr);
         if (gpu_attr.type == MPL_GPU_POINTER_DEV) {
             local_dev_id = MPL_gpu_get_dev_id_from_attr(&gpu_attr);
-            global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
 
             for (int i = 0; i < MPIR_Process.local_size; ++i) {
                 MPL_gavl_tree_t track_tree =
-                    MPIDI_GPUI_global.ipc_handle_track_trees[i][global_dev_id];
+                    MPIDI_GPUI_global.ipc_handle_track_trees[i][local_dev_id];
                 mpl_err = MPL_gavl_tree_delete_range(track_tree, pbase, len);
                 MPIR_Assert(mpl_err == MPL_SUCCESS);
             }
