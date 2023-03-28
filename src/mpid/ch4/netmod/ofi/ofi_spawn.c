@@ -35,11 +35,10 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           buf, size, NULL /* desc */ , 0,
                                           remote_addr, match_bits, (void *) &req.context),
-                             vci, tsenddata, FALSE /* eagain */);
+                             vci, tsenddata);
     } else {
         MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx, buf, size, NULL /* desc */ ,
-                                      remote_addr, match_bits, (void *) &req.context),
-                             vci, tsend, FALSE /* eagain */);
+                                      remote_addr, match_bits, (void *) &req.context), vci, tsend);
     }
     do {
         mpi_errno = MPIDI_OFI_progress_uninlined(vci);
@@ -98,8 +97,7 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     MPL_wtime(&time_start);
     MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                   buf, size, NULL,
-                                  FI_ADDR_UNSPEC, match_bits, mask_bits, &req.context),
-                         vci, trecv, FALSE);
+                                  FI_ADDR_UNSPEC, match_bits, mask_bits, &req.context), vci, trecv);
     do {
         mpi_errno = MPIDI_OFI_progress_uninlined(vci);
         MPIR_ERR_CHECK(mpi_errno);

@@ -93,7 +93,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
                                                                          vci_local, vci_remote);
 
     MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg, flags), vci_local,
-                         trecv, FALSE);
+                         trecv);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -243,7 +243,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                       MPIDI_OFI_av_to_phys(addr, sender_nic, vci_local, vci_remote),
                                       match_bits, mask_bits,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), vci_local,
-                             trecv, FALSE);
+                             trecv);
     } else {
         msg.msg_iov = &MPIDI_OFI_REQUEST(rreq, util.iov);
         msg.desc = NULL;
@@ -255,7 +255,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         msg.addr = FI_ADDR_UNSPEC;
 
         MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg, flags), vci_local,
-                             trecv, FALSE);
+                             trecv);
     }
 
   fn_exit:

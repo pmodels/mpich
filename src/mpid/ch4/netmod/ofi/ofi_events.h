@@ -133,11 +133,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         if (MPIDI_OFI_ENABLE_DATA) {
             MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
                                                 MPIR_Comm_rank(c), dest_addr, ss_bits),
-                                 vci_local, tinjectdata, FALSE /* eagain */);
+                                 vci_local, tinjectdata);
         } else {
             MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
-                                            dest_addr, ss_bits),
-                                 vci_local, tinject, FALSE /* eagain */);
+                                            dest_addr, ss_bits), vci_local, tinject);
         }
     }
 

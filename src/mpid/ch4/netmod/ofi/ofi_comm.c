@@ -145,11 +145,6 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     MPIDI_OFI_COMM(comm).enable_hashing = 0;
     MPIDI_OFI_COMM(comm).pref_nic = NULL;
 
-    /* eagain defaults to off */
-    if (comm->hints[MPIR_COMM_HINT_EAGAIN] == 0) {
-        comm->hints[MPIR_COMM_HINT_EAGAIN] = FALSE;
-    }
-
     if (comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING] == -1) {
         comm->hints[MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING] =
             MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING;

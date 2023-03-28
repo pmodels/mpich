@@ -38,11 +38,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     if (MPIDI_OFI_ENABLE_DATA) {
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                             buf, data_sz, cq_data, dest_addr, match_bits),
-                             vci_local, tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
+                             vci_local, tinjectdata);
     } else {
         MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                        buf, data_sz, dest_addr, match_bits),
-                             vci_local, tinject, comm->hints[MPIR_COMM_HINT_EAGAIN]);
+                                        buf, data_sz, dest_addr, match_bits), vci_local, tinject);
     }
     MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
   fn_exit:
@@ -125,7 +124,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vci_local, vci_remote);
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                     &msg, flags), vci_local, tsendv, FALSE);
+                                     &msg, flags), vci_local, tsendv);
     MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
 
   fn_exit:
@@ -210,7 +209,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                       MPIDI_OFI_av_to_phys(addr, sender_nic, vci_local, vci_remote),    /* remote proc */
                                       ssend_match,      /* match bits  */
                                       0ULL,     /* mask bits   */
-                                      (void *) &(ackreq->context)), vci_local, trecvsync, FALSE);
+                                      (void *) &(ackreq->context)), vci_local, trecvsync);
     }
 
     send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
@@ -267,11 +266,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         if (MPIDI_OFI_ENABLE_DATA) {
             MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                                 send_buf, data_sz, cq_data, dest_addr, match_bits),
-                                 vci_local, tinjectdata, FALSE /* eagain */);
+                                 vci_local, tinjectdata);
         } else {
             MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                             send_buf, data_sz, dest_addr, match_bits),
-                                 vci_local, tinject, FALSE /* eagain */);
+                                 vci_local, tinject);
         }
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
         MPIDI_OFI_send_event(vci_src, NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
@@ -281,12 +280,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                               send_buf, data_sz, NULL, cq_data, dest_addr,
                                               match_bits,
                                               (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                                 vci_local, tsenddata, FALSE /* eagain */);
+                                 vci_local, tsenddata);
         } else {
             MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                           send_buf, data_sz, NULL, dest_addr, match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                                 vci_local, tsend, FALSE /* eagain */);
+                                 vci_local, tsend);
         }
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
     } else if (unlikely(1)) {
@@ -378,7 +377,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                                vci_remote),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                             vci_local, tsenddata, FALSE /* eagain */);
+                             vci_local, tsenddata);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], msg_size);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_sent_bytes_count[sender_nic], msg_size);
     }
