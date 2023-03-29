@@ -22,17 +22,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     MPIR_Request r, *rreq;      /* don't need to init request, output only */
     struct fi_msg_tagged msg;
     int ofi_err;
-    int vci_local = vci_dst;
-    int vci_remote = vci_src;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vci_dst, nic);
+    int receiver_nic, ctx_idx;
+
+    receiver_nic = MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id,
+                                                      source, comm->rank, tag);
+    ctx_idx = MPIDI_OFI_get_ctx_index(vci_dst, receiver_nic);
 
     MPIR_FUNC_ENTER;
 
-    if (unlikely(MPI_ANY_SOURCE == source))
+    if (unlikely(MPI_ANY_SOURCE == source)) {
         remote_proc = FI_ADDR_UNSPEC;
-    else
-        remote_proc = MPIDI_OFI_av_to_phys(addr, nic, vci_local, vci_remote);
+    } else {
+        int sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->recvcontext_id,
+                                                          source, comm->rank, tag);
+        remote_proc = MPIDI_OFI_av_to_phys(addr, sender_nic, vci_src);
+    }
 
     if (message) {
         MPIDI_CH4_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__MPROBE, vci_dst, 1);

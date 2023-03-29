@@ -265,7 +265,6 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *am_hdr;
     MPIDI_OFI_am_unordered_msg_t *uo_msg = NULL;
-    fi_addr_t fi_src_addr;
     uint16_t expected_seqno, next_seqno;
     MPIR_FUNC_ENTER;
 
@@ -294,23 +293,24 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
     }
 #endif
 
-    expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(vci, am_hdr->fi_src_addr);
+    expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(vci, am_hdr->src_id);
     if (am_hdr->seqno != expected_seqno) {
         /* This message came earlier than the one that we were expecting.
          * Put it in the queue to process it later. */
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, TERSE,
                         (MPL_DBG_FDEST,
-                         "Expected seqno=%d but got %d (am_type=%d addr=%" PRIx64 "). "
+                         "Expected seqno=%d but got %d (am_type=%d src_rank=%d). "
                          "Enqueueing it to the queue.\n",
-                         expected_seqno, am_hdr->seqno, am_hdr->am_type, am_hdr->fi_src_addr));
+                         expected_seqno, am_hdr->seqno, am_hdr->am_type, am_hdr->src_rank));
         mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(vci, orig_buf);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
     /* Received an expected message */
+    uint64_t remote_id;
   fn_repeat:
-    fi_src_addr = am_hdr->fi_src_addr;
+    remote_id = am_hdr->src_id;
     next_seqno = am_hdr->seqno + 1;
 
     void *p_data;
@@ -368,7 +368,8 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
     MPL_free(uo_msg);
 
     /* See if we can process other messages in the queue */
-    if ((uo_msg = MPIDI_OFI_am_claim_unordered_msg(vci, fi_src_addr, next_seqno)) != NULL) {
+    uo_msg = MPIDI_OFI_am_claim_unordered_msg(vci, remote_id, next_seqno);
+    if (uo_msg != NULL) {
         am_hdr = &uo_msg->am_hdr;
         orig_buf = am_hdr;
 #ifdef NEEDS_STRICT_ALIGNMENT
@@ -379,8 +380,8 @@ static int am_recv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
         goto fn_repeat;
     }
 
-    /* Record the next expected sequence number from fi_src_addr */
-    MPIDI_OFI_am_set_next_recv_seqno(vci, fi_src_addr, next_seqno);
+    /* Record the next expected sequence number */
+    MPIDI_OFI_am_set_next_recv_seqno(vci, remote_id, next_seqno);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -551,7 +552,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
     ssize_t ret_cqerr;
     MPIR_FUNC_ENTER;
 
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
     switch (ret) {
         case -FI_EAVAIL:
             /* Provide separate error buffer for each thread. This makes the

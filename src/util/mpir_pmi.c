@@ -6,6 +6,7 @@
 #include <mpir_pmi.h>
 #include <mpiimpl.h>
 #include "mpir_nodemap.h"
+#include "uthash.h"     /* for hash function */
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -202,6 +203,7 @@ int MPIR_pmi_init(void)
     MPIR_Process.rank = rank;
     MPIR_Process.size = size;
     MPIR_Process.appnum = appnum;
+    HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), MPIR_Process.world_id);
 
     MPIR_Process.node_map = (int *) MPL_malloc(size * sizeof(int), MPL_MEM_ADDRESS);
 

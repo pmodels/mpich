@@ -38,7 +38,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
 
     MPIR_FUNC_ENTER;
 
-    cache_rreq = MPIDIG_req_cache_lookup(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr);
+    int vci = msg_hdr->vci_dst;
+    void *req_map = MPIDI_OFI_global.per_vci[vci].req_map;
+    uint64_t remote_id = msg_hdr->src_id;
+
+    cache_rreq = MPIDIG_req_cache_lookup(req_map, remote_id);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "cached req %p handle=0x%x", cache_rreq,
                      cache_rreq ? cache_rreq->handle : 0));
@@ -51,13 +55,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
         MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (am_hdr, p_data, msg_hdr->payload_sz,
                                                            attr, &rreq);
         MPIDIG_recv_setup(rreq);
-        MPIDIG_req_cache_add(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr, rreq);
+        MPIDIG_req_cache_add(req_map, remote_id, rreq);
     }
 
     is_done = MPIDIG_recv_copy_seg(p_data, msg_hdr->payload_sz, rreq);
     if (is_done) {
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-        MPIDIG_req_cache_remove(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr);
+        MPIDIG_req_cache_remove(req_map, remote_id);
     }
 
     MPIR_FUNC_EXIT;
@@ -114,7 +118,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
 
         /* am uses nic 0 */
         int nic = 0;
-        MPIDI_OFI_cntr_incr(comm, vci_local, nic);
+        MPIDI_OFI_cntr_incr(vci_local, nic);
 
         struct iovec iov = {
             .iov_base = (char *) dst + done,
@@ -129,14 +133,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
             .msg_iov = &iov,
             .desc = NULL,
             .iov_count = 1,
-            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, nic, vci_local, vci_remote),
+            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, nic, vci_remote),
             .rma_iov = &rma_iov,
             .rma_iov_count = 1,
             .context = &am_req->context,
             .data = 0
         };
 
-        int ctx_idx = MPIDI_OFI_get_ctx_index(comm, vci_local, nic);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
         MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_OFI_global.ctx[ctx_idx].tx, &msg, FI_COMPLETION),
                                 rdma_readfrom);
 

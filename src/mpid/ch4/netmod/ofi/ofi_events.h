@@ -128,8 +128,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         int vci_remote = vci_src;
         MPIR_Assert(vci_local == vci);
         int nic = 0;
-        int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, vci_local, nic);
-        fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(c, r, nic, vci_local, vci_remote);
+        int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
+        fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(c, r, nic, vci_remote);
         if (MPIDI_OFI_ENABLE_DATA) {
             MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
                                                 MPIR_Comm_rank(c), dest_addr, ss_bits),

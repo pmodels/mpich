@@ -29,7 +29,6 @@
 #define MPIDI_OFI_AM_TYPE_BITS         8
 #define MPIDI_OFI_AM_HDR_SZ_BITS       8
 #define MPIDI_OFI_AM_PAYLOAD_SZ_BITS  24
-#define MPIDI_OFI_AM_SEQ_NO_BITS      16
 #define MPIDI_OFI_AM_RANK_BITS        32
 #define MPIDI_OFI_AM_MSG_HEADER_SIZE (sizeof(MPIDI_OFI_am_header_t))
 
@@ -94,10 +93,10 @@ typedef struct MPIDI_OFI_am_header_t {
      */
     uint8_t vci_src;
     uint8_t vci_dst;
-    uint16_t seqno:MPIDI_OFI_AM_SEQ_NO_BITS;    /* Sequence number of this message.
-                                                 * Number is unique to (fi_src_addr,
-                                                 * fi_dest_addr) pair. */
-    fi_addr_t fi_src_addr;      /* OFI address of the sender */
+    uint16_t seqno;             /* Sequence number of this message. Number is unique between
+                                 * (src_rank, src_vci) and (dst_rank, dst_vci) */
+    uint64_t src_id;            /* needed for destination to track seqno, combines
+                                 * communicator context_id, rank, and vci */
 } MPIDI_OFI_am_header_t;
 
 /* Represents early-arrived active messages.

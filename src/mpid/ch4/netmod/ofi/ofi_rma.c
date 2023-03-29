@@ -28,7 +28,7 @@ static MPIDI_OFI_pack_chunk *create_chunk(void *pack_buffer, MPI_Aint unpack_siz
 void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq)
 {
     MPIDI_OFI_pack_chunk *chunk = winreq->chunks;
-    int vci = winreq->vci;
+    int vci = winreq->vci_local;
 
     while (chunk) {
         if (chunk->unpack_size > 0) {
@@ -66,7 +66,9 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->vci = MPIDI_WIN(win, am_vci);
+    req->vci_local = MPIDI_WIN(win, am_vci);
+    req->vci_target = MPIDI_WIN_TARGET_VCI(win, target_rank);
+    req->nic_target = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);
     req->next = MPIDI_OFI_WIN(win).syncQ;
     MPIDI_OFI_WIN(win).syncQ = req;
     req->sigreq = sigreq;
@@ -119,9 +121,9 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
         msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
 
         int vci = MPIDI_WIN(win, am_vci);
-        int nic = 0;
+        int nic = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vci, vci);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vci);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -177,7 +179,9 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     struct fi_rma_iov riov;
     uint64_t flags;
     void *pack_buffer;
-    int vci = req->vci;
+    int vci = req->vci_local;
+    int vci_target = req->vci_target;
+    int nic_target = req->nic_target;
 
     if (sigreq)
         flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
@@ -213,9 +217,8 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         MPIDI_OFI_pack_chunk *chunk = create_chunk(pack_buffer, 0, 0, req);
         MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
-        int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, nic, vci, vci);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, nic_target, vci_target);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -266,7 +269,9 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     struct fi_rma_iov riov;
     uint64_t flags;
     void *pack_buffer;
-    int vci = req->vci;
+    int vci = req->vci_local;
+    int vci_target = req->vci_target;
+    int nic_target = req->nic_target;
 
     if (sigreq)
         flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
@@ -297,9 +302,8 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
             create_chunk(pack_buffer, msg_len, req->noncontig.get.origin.pack_offset, req);
         MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
-        int nic = 0;
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, nic, vci, vci);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, nic_target, vci_target);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -356,7 +360,9 @@ int MPIDI_OFI_pack_put(const void *origin_addr, MPI_Aint origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->vci = MPIDI_WIN(win, am_vci);
+    req->vci_local = MPIDI_WIN(win, am_vci);
+    req->vci_target = MPIDI_WIN_TARGET_VCI(win, target_rank);
+    req->nic_target = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);
     req->sigreq = sigreq;
 
     /* allocate target iovecs */
@@ -415,7 +421,9 @@ int MPIDI_OFI_pack_get(void *origin_addr, MPI_Aint origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->vci = MPIDI_WIN(win, am_vci);
+    req->vci_local = MPIDI_WIN(win, am_vci);
+    req->vci_target = MPIDI_WIN_TARGET_VCI(win, target_rank);
+    req->nic_target = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);
     req->sigreq = sigreq;
 
     /* allocate target iovecs */

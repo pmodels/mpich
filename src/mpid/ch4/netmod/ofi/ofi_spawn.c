@@ -18,7 +18,7 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     int ctx_idx = 0;
     int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
     int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
-    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci, vci);
+    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
@@ -144,7 +144,7 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
     int n_avts;
     char *curr_upid;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(NULL, 0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
 
     MPIR_CHKLMEM_DECL(2);
 
@@ -220,7 +220,7 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     int i, total_size = 0;
     char *temp_buf = NULL, *curr_ptr = NULL;
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(comm, 0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
 
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(1);
