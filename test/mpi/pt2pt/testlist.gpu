@@ -1,4 +1,20 @@
 # The dtp test will iterate over all typelist and counts, each time will repeat [repeat] times and select seed, testsize, memtypes accordingly
 # set MPITEST_VERBOSE=1 to the list of tests being run.
 
-sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-memtype=random arg=-repeat=2 timeLimit=600
+# sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-memtype=random arg=-repeat=2 timeLimit=600
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=device arg=-recvmem=device
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=device arg=-recvmem=host
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=device arg=-recvmem=reg_host
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=device arg=-recvmem=shared
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=host arg=-recvmem=device
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=host arg=-recvmem=host
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=host arg=-recvmem=reg_host
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=host arg=-recvmem=shared
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=reg_host arg=-recvmem=device
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=reg_host arg=-recvmem=host
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=reg_host arg=-recvmem=reg_host
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=reg_host arg=-recvmem=shared
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=shared arg=-recvmem=device
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=shared arg=-recvmem=host
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=shared arg=-recvmem=reg_host
+sendrecv1 2 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=200 arg=-testsizes=8,100 arg=-sendmem=shared arg=-recvmem=shared
