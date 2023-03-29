@@ -401,8 +401,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
  * CAUTION: the macro uses MPIR_ERR_CHECK, be careful of it escaping the
  * critical section.
  *
- * NOTE: when used in a loop, we insert a yield of global lock to prevent
- * blocking other progress (under global granularity).
+ * NOTE: when used in a loop, we insert a yield of global or vci lock to
+ * prevent blocking other progress.
  */
 
 /* declare to avoid header order dance */
@@ -413,6 +413,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci);
         mpi_errno = MPIDI_progress_test_vci(vci);   \
         MPIR_ERR_CHECK(mpi_errno); \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
+        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI(vci).lock);                 \
     }
 
 #define MPIDIU_PROGRESS_DO_WHILE(cond, vci) \
@@ -420,6 +421,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci);
         mpi_errno = MPIDI_progress_test_vci(vci); \
         MPIR_ERR_CHECK(mpi_errno); \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
+        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI(vci).lock);                 \
     } while (cond)
 
 #ifdef HAVE_ERROR_CHECKING
