@@ -410,8 +410,8 @@ int MPIR_Wait_enqueue_impl(MPIR_Request * req_ptr, MPI_Status * status)
 /* ---- waitall enqueue ---- */
 struct waitall_data {
     int count;
-    MPI_Request *array_of_requests;
-    MPI_Status *array_of_statuses;
+    MPI_Request *array_of_requests;     /* need malloc and free */
+    MPI_Status *array_of_statuses;      /* user allocated */
 };
 
 static void waitall_enqueue_cb(void *data)
@@ -450,6 +450,7 @@ static void waitall_enqueue_cb(void *data)
         MPIR_Request_free(enqueue_req);
     }
     MPL_free(reqs);
+    MPL_free(p->array_of_requests);
     MPL_free(p);
 }
 
@@ -476,14 +477,21 @@ int MPIR_Waitall_enqueue_impl(int count, MPI_Request * array_of_requests,
     MPIR_ERR_CHKANDJUMP(!p, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     p->count = count;
-    p->array_of_requests = array_of_requests;
+    /* copy array_of_requests because they are of input semantics. Reset to MPI_REQUEST_NULL
+     * to signify that we are taking over the ownerships */
+    p->array_of_requests = MPL_malloc(count * sizeof(MPI_Request), MPL_MEM_OTHER);
+    for (int i = 0; i < count; i++) {
+        p->array_of_requests[i] = array_of_requests[i];
+        array_of_requests[i] = MPI_REQUEST_NULL;
+    }
+    /* User is still responsible for array_of_statuses since they may need to check them */
     p->array_of_statuses = array_of_statuses;
 
     MPL_gpu_launch_hostfn(gpu_stream, waitall_enqueue_cb, p);
 
     for (int i = 0; i < count; i++) {
         MPIR_Request *enqueue_req;
-        MPIR_Request_get_ptr(array_of_requests[i], enqueue_req);
+        MPIR_Request_get_ptr(p->array_of_requests[i], enqueue_req);
         if (!enqueue_req->u.enqueue.is_send) {
             struct recv_data *p2 = enqueue_req->u.enqueue.data;
             if (p2->host_buf) {
