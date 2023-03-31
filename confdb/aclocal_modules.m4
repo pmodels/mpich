@@ -5,7 +5,7 @@ AC_DEFUN([PAC_CONFIG_MPL_EMBEDDED],[
     mpl_subdir_args="--disable-versioning --enable-embedded"
     PAC_PUSH_FLAG([CFLAGS])
     if test -n "$VISIBILITY_CFLAGS" ; then
-        CFLAGS="$CFLAGS $VISIBILITY_CFLAGS"
+        CFLAGS="$CFLAGS $VISIBILITY_CFLAGS -DHAVE_VISIBILITY"
     fi
     PAC_CONFIG_SUBDIR_ARGS(mpl_embedded_dir,[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
     PAC_POP_FLAG([CFLAGS])
