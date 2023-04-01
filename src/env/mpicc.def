@@ -1,0 +1,561 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
+# NOTE: $(...) are MyDef macros
+#       @...@  are Autoconf substitutions
+#       ${...} are shell variables
+
+module: general
+
+page: mpicc.sh.in
+    $call mpicc_main, sh, cc
+
+page: mpicc.bash.in
+    $call mpicc_main, bash, cc
+
+page: mpicxx.sh.in
+    $call mpicc_main, sh, cxx
+
+page: mpicxx.bash.in
+    $call mpicc_main, bash, cxx
+
+page: mpifort.sh.in
+    $call mpicc_main, sh, fc
+
+page: mpifort.bash.in
+    $call mpicc_main, bash, fc
+
+#----------------------------------------
+subcode: mpicc_main(sh, cc)
+    $(if:cc=cc)
+        $(set:mpicc=mpicc)
+        $(set:MPICC=MPICC)
+        $(set:C=C)
+        $(set:CC=CC)
+        $(set:cflags=cflags)
+        $(set:CFLAGS=CFLAGS)
+    $(elif:cc=cxx)
+        $(set:mpicc=mpicxx)
+        $(set:MPICC=MPICXX)
+        $(set:C=C++)
+        $(set:CC=CXX)
+        $(set:cflags=cxxflags)
+        $(set:CFLAGS=CXXFLAGS)
+    $(elif:cc=fc)
+        $(set:mpicc=mpifort)
+        $(set:MPICC=MPIFORT)
+        $(set:C=Fortran 90)
+        $(set:CC=FC)
+        $(set:cflags=fcflags)
+        $(set:CFLAGS=FCFLAGS)
+
+    $(shebang_$(sh))
+    $call copyright
+    $call description
+    $call init
+    $call set_wrapper_dl_type_flags
+    $call custom_environment # MPICH_CC, MPICC_PROFILE
+    $call parse_args
+    $call check_recursion # in case MPICH_CC=mpicc
+    $call handle_profConf
+    $call set_final_vars
+
+    $call run_command
+
+    rc=$?
+    $call @cleanup_rmfiles
+    exit $rc
+
+#----------------------------------------
+macros:
+    shebang_sh:   #! /bin/sh
+    shebang_bash: #! @BASH_SHELL
+
+template: copyright
+    ##
+    ## Copyright (C) by Argonne National Laboratory
+    ##     See COPYRIGHT in top-level directory
+    ##
+    NEWLINE
+
+subcode: description
+    \x23 Simple script to compile and/or link MPI programs.
+    \x23 This script knows the default flags and libraries, and can handle
+    \x23 alternative $(C) compilers and the associated flags and libraries.
+    \x23 The important terms are:
+    \x23    includedir, libdir - Directories containing an *installed* mpich
+    \x23    prefix, execprefix - Often used to define includedir and libdir
+    \x23    $(CC)                 - $(C) compiler
+    \x23    WRAPPER_$(CFLAGS)     - Any special flags needed to compile
+    \x23    WRAPPER_LDFLAGS    - Any special flags needed to link
+    \x23    WRAPPER_LIBS       - Any special libraries needed in order to link
+    $(if:cc=fc)
+        \x23    FC_OTHER_LIBS       - Yet more libraries, needed just with FC
+
+    \x23
+    \x23 We assume that (a) the $(C) compiler can both compile and link programs
+    \x23
+    \x23 Handling of command-line options:
+    \x23   This is a little tricky because some options may contain blanks.
+    \x23
+    \x23 Special issues with shared libraries - todo
+    \x23
+
+subcode: init
+    # Set the default values of all variables.
+    #
+    # Directory locations: Fixed for any MPI implementation.
+    # Set from the directory arguments to configure (e.g., --prefix=/usr/local)
+    prefix=__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
+    exec_prefix=__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
+    sysconfdir=__SYSCONFDIR_TO_BE_FILLED_AT_INSTALL_TIME__
+    includedir=__INCLUDEDIR_TO_BE_FILLED_AT_INSTALL_TIME__
+    libdir=__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__
+    $(if:cc=fc)
+        modincdir=@modincdir@
+
+    # Default settings for compiler, flags, and libraries.
+    # Determined by a combination of environment variables and tests within
+    # configure (e.g., determining whether -lsocket is needee)
+    $(CC)="@$(CC)@"
+    $(if:cc=fc)
+        $call init_FC_vars
+    MPICH_VERSION="@MPICH_VERSION@"
+
+    # Internal variables
+    # Show is set to echo to cause the compilation command to be echoed instead
+    # of executed.
+    $(if:sh=sh)
+        Show=eval
+    $(else)
+        Show=
+
+subcode: set_wrapper_dl_type_flags
+    @$(cc)_shlib_conf@
+
+    # Attempt to construct dynamic loading info, based on the user
+    # preference of rpath, runpath or none and on the detected libdir
+    # flags.
+    with_wrapper_dl_type=@with_wrapper_dl_type@
+    if test "X${with_wrapper_dl_type}" = "Xrunpath" ; then
+        eval wrapper_dl_type_flags=\"${hardcode_libdir_flag_spec} ${enable_dtags_flag}\"
+    elif test "X${with_wrapper_dl_type}" = "Xrpath" ; then
+        eval wrapper_dl_type_flags=\"${hardcode_libdir_flag_spec} ${disable_dtags_flag}\"
+    else
+        wrapper_dl_type_flags=""
+    fi
+
+# Environment Variables.
+# The environment variables MPICH_CC may be used to override the
+# default choices.
+# In addition, if there is a file $sysconfdir/mpicc-$CCname.conf,
+# where CCname is the name of the compiler with all spaces replaced by hyphens
+# (e.g., "cc -64" becomes "cc--64", that file is sources, allowing other
+# changes to the compilation environment.  See the variables used by the
+# script (defined above)
+# Added MPICH_CC_OLD, MPICH_CC can be used to prefix CC with external utility,
+# e.g. setenv MPICH_CC 'eval linkcache $MPICH_CC_OLD'
+subcode: custom_environment
+    if [ -n "$MPICH_$(CC)" ] ; then
+        MPICH_$(CC)_OLD="$$(CC)"
+        $(CC)="$MPICH_$(CC)"
+        $(CC)name=`echo $$(CC) | sed 's/ /-/g'`
+        if [ -s $sysconfdir/$(mpicc)-$$(CC)name.conf ] ; then
+            . $sysconfdir/$(mpicc)-$$(CC)name.conf
+        fi
+    fi
+    # Allow a profiling option to be selected through an environment variable
+    if [ -n "$$(MPICC)_PROFILE" ] ; then
+        profConf=$$(MPICC)_PROFILE
+    fi
+
+# Argument processing.
+# This is somewhat awkward because of the handling of arguments within
+# the shell.  We want to handle arguments that include spaces without
+# losing the spacing (an alternative would be to use a more powerful
+# scripting language that would allow us to retain the array of values,
+# which the basic (rather than enhanced) Bourne shell does not.
+#
+# Look through the arguments for arguments that indicate compile only.
+# If these are *not* found, add the library options
+subcode: parse_args
+    linking=yes
+    interlib_deps=yes
+    static_mpi=no
+    showinfo=""
+    DUMP_STUB parse_args_init
+    for arg in "$@" ; do
+        DUMP_STUB pre_arg_case
+        addarg=yes
+        qarg=$arg
+        case $arg in
+            $call parse_arg_cases
+            $call filter_arg_cases
+            $call filter_delay_libs
+            $(if:cc=fc)
+                $call filter_fc_args
+            $call filter_other_args_$(sh)
+        esac
+        DUMP_STUB post_arg_case
+    done
+
+    if [ $# -eq 0 ] ; then
+        echo "Error: Command line argument is needed!"
+        "$0" -help
+        exit 1
+    fi
+    #-----------------------
+    subcode: case(@pat)
+        $(pat))
+            BLOCK
+            $(if:skip_arg)
+                addarg=no
+            ;;
+
+    # options for cc but we also check
+    subcode: filter_arg_cases
+        &call case, -c|-S|-E|-M|-MM
+            # The compiler links by default
+            linking=no
+        &call case, -static
+            interlib_deps=no
+        &call case, -v
+            # Pass this argument to the compiler as well.
+            echo "$(mpicc) for MPICH version $MPICH_VERSION"
+            # if there is only 1 argument, it must be -v.
+            if [ "$#" -eq "1" ] ; then
+                linking=no
+            fi
+
+    # options for mpicc
+    subcode: parse_arg_cases
+        $(set:skip_arg=1)
+        &call case, -static-mpi
+            interlib_deps=no
+            static_mpi=yes
+        &call case, -echo
+            set -x
+        &call case, -$(cc)=*
+            $(CC)=`echo A$arg | sed -e 's/A-$(cc)=//g'`
+        &call case, -show
+            Show=echo
+        &call case, -show-compile-info
+            Show=echo
+            show_info=compile
+        &call case, -show-link-info
+            Show=echo
+            show_info=link
+        &call case, -config=*
+            CCname=`echo A$arg | sed -e 's/A-config=//g'`
+            if [ -s "$sysconfdir/$(mpicc)-$CCname.conf" ] ; then
+                . "$sysconfdir/$(mpicc)-$CCname.conf"
+            else
+                echo "Configuration file $(mpicc)-$CCname.conf not found"
+            fi
+        &call case, -compile-info|-compile_info
+            # -compile_info included for backward compatibility
+            Show=echo
+        &call case, -link-info|-link_info
+            # -link_info included for backward compatibility
+            Show=echo
+        &call case, -profile=*
+            # Pass the name of a profiling configuration.  As
+            # a special case, lib<name>.so or lib<name>.la may be used
+            # if the library is in $libdir
+            profConf=`echo A$arg | sed -e 's/A-profile=//g'`
+            # Loading the profConf file is handled below
+        &call case, -nativelinking
+            # Internal option to use native compiler for linking without MPI libraries
+            nativelinking=yes
+        &call case, -help
+            $call show_help
+            exit 0
+
+    # Other arguments.  We are careful to handle arguments with
+    # quotes (we try to quote all arguments in case they include
+    # any spaces)
+    # Set addarg to no if this arg should be ignored by the C compiler
+    subcode: filter_other_args_sh
+        &call case, *\'*
+            qarg="'"`echo $arg | sed -e "s/'/'\"'\"'/g"`"'"
+        &call case, *
+            qarg="'$arg'"
+
+        $(block:parse_args_init)
+            allargs=""
+        $(block:pre_arg_case)
+            addarg=yes
+            qarg=$arg
+        $(block:post_arg_case)
+            if [ $addarg = yes ] ; then
+                allargs="$allargs $qarg"
+            fi
+
+        $(setmacro:allargs=$allargs)
+
+    subcode: filter_other_args_bash
+        # use array, no need for quoting
+
+        $(block:parse_args_init)
+            allargs=("$@")
+            argno=0
+        $(block:pre_arg_case)
+            addarg=yes
+        $(block:post_arg_case)
+            if [ $addarg = no ] ; then
+                unset allargs[$argno]
+            fi
+            # Some versions of bash do not accept ((argno++))
+            argno=`expr $argno + 1`
+
+        $(setmacro:allargs="${allargs[@]}")
+
+    subcode: filter_delay_libs
+        $(block:parse_args_init)
+            delay_libs=""
+        &call case, -lcuda|-lcudart
+            delay_libs="$delay_libs $arg"
+            addarg=no
+
+    subcode: show_help
+        NC=`echo "$$(CC)" | sed 's%\/% %g' | awk '{print $NF}' -`
+        if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
+            . $sysconfdir/mpixxx_opts.conf
+            echo "    -$(cc)=xxx       - Reset the native compiler to xxx."
+        else
+            if [ -f "./mpixxx_opts.conf" ] ; then
+                . ./mpixxx_opts.conf
+                echo "    -$(cc)=xxx       - Reset the native compiler to xxx."
+            fi
+        fi
+
+    subcode: filter_fc_args
+        &call case, -I*|-D*
+            cppflags="$cppflags $arg"
+        &call case, *.F|*.F90|.fpp|.FPP
+            if [ -n "$FCCPP" ] ; then
+                $call patch_FCCPP
+            fi
+
+subcode: check_recursion
+    # Check recursive situations
+    # User mistakes, e.g. setting MPICH_CC=mpicc, may end up recursively running
+    # this script. A simple check to bail if that's the case.
+    if [ -n "$MPICH_RECURSION_CHECK" ] ; then
+        echo "This script ($0) is being called recursively, check that MPICH_$(CC) does not refer to $(mpicc)."
+        exit 1
+    fi
+    MPICH_RECURSION_CHECK=1
+    export MPICH_RECURSION_CHECK
+
+subcode: handle_profConf
+    PROFILE_FOO=
+    # Handle the case of a profile switch
+    if [ -n "$profConf" ] ; then
+        profConffile=
+        if [ -s "$libdir/lib$profConf.a" -o -s "$libdir/lib$profConf.so" ] ; then
+            PROFILE_FOO="-l$profConf"
+        elif [ -s "$sysconfdir/$profConf.conf" ] ; then
+            profConffile="$sysconfdir/$profConf.conf"
+        elif [ -s "$profConf.conf" ] ; then
+            profConffile="$profConf.conf"
+        else
+            echo "Profiling configuration file $profConf.conf not found in $sysconfdir"
+        fi
+        if [ -n "$profConffile" -a -s "$profConffile" ] ; then
+            . $profConffile
+        fi
+    fi
+
+subcode: set_final_vars
+    # Derived variables.  These are assembled from variables set from the
+    # default, environment, configuration file (if any) and command-line
+    # options (if any)
+
+    final_$(cflags)="@MPICH_$(MPICC)_$(CFLAGS)@ @WRAPPER_$(CFLAGS)@"
+    $(if:cc!=fc)
+        final_cppflags="@MPICH_$(MPICC)_CPPFLAGS@ @WRAPPER_CPPFLAGS@"
+    final_ldflags="@MPICH_$(MPICC)_LDFLAGS@ @WRAPPER_LDFLAGS@"
+    final_libs="@MPICH_$(MPICC)_LIBS@"
+    if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
+        final_ldflags="${final_ldflags} @LDFLAGS@"
+        final_libs="${final_libs} __LIBS_TO_BE_FILLED_AT_INSTALL_TIME__"
+    fi
+
+    $(if:cc=fc)
+        $call set_fc_final_vars
+
+# A temporary statement to invoke the compiler
+# Place the -L before any args in case there are any mpi libraries in there.
+# Eventually, we'll want to move this after any non-MPI implementation
+# libraries.
+# We use a single invocation of the compiler.  This will be adequate until
+# we run into a system that uses a separate linking command.  With any luck,
+# such archaic systems are no longer with us.  This also lets us
+# accept any argument; we don't need to know if we've seen a source
+# file or an object file.  Instead, we just check for an option that
+# suppressing linking, such as -c or -M.
+
+subcode: set_cmd_macros
+    $(set:LD0=-L$libdir)
+    $(if:cc=cxx)
+        cxxlibs=
+        if [ "@MPICXXLIBNAME@" != "@MPILIBNAME@" ] ; then
+            cxxlibs="-l@MPICXXLIBNAME@"
+        fi
+        $(set:LD0.= $cxxlibs)
+    $(elif:cc=fc)
+        $(set:LD0.= -l@MPIFCLIBNAME@)
+
+    $(if:cc!=fc)
+        $(set:OPTS_CC=${final_cppflags} $PROFILE_INCPATHS ${final_$(cflags)})
+        $(set:OPTS_INC=-I$includedir)
+    $(else)
+        $(set:OPTS_CC=$PROFILE_INCPATHS ${final_$(cflags)})
+        $(set:OPTS_INC=$FCINCDIRS $FCMODDIRS)
+    $(set:OPTS_LD1=$(LD0) $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags})
+    $(set:OPTS_LD2=@LPMPILIBNAME@ $PROFILE_POSTLIB ${delay_libs} ${final_libs})
+    $(if:cc=fc)
+        $(set:OPTS_LD2.= @FC_OTHER_LIBS@)
+    $(set:OPTS_DYNAMIC=$(OPTS_LD1) -l@MPILIBNAME@ $(OPTS_LD2))
+    $(set:OPTS_STATIC=$(OPTS_LD1) $libdir/lib@MPILIBNAME@.a $(OPTS_LD2))
+    #----------------------------------------
+    $(export:info_compile=$(OPTS_CC) $(OPTS_INC))
+    $(export:info_link_native=${final_ldflags})
+    $(export:info_link_dynamic=${final_ldflags} $(OPTS_DYNAMIC))
+    $(export:info_link_static=${final_ldflags} $(OPTS_STATIC))
+
+    #----------------------------------------
+    # allargs marco were set in filter_other_args_{sh,bash}
+    $(export:cmd_compile=$$(CC) $(OPTS_CC) $(allargs) $(OPTS_INC))
+    $(export:cmd_link_native=$$(CC) $(OPTS_CC) ${final_ldflags} $(allargs) $(OPTS_INC))
+    $(export:cmd_link_dynamic=$(cmd_link_native) $(OPTS_DYNAMIC))
+    $(export:cmd_link_static=$(cmd_link_native) $(OPTS_STATIC))
+
+subcode: run_command
+    $call set_cmd_macros
+    if [ "$show_info" = compile ] ; then
+        echo $(info_compile)
+    elif [ "$show_info" = link ] ; then
+        if [ "$nativelinking" = yes ] ; then
+            echo $(info_link_native)
+        else
+            if [ "$static_mpi" = no ] ; then
+                echo $(info_link_dynamic)
+            else
+                echo $(info_link_static)
+            fi
+        fi
+    elif [ "$linking" = yes ] ; then
+        if [ "$nativelinking" = yes ] ; then
+            $Show $(cmd_link_native)
+        else
+            if [ "$static_mpi" = no ] ; then
+                $Show $(cmd_link_dynamic)
+            else
+                $Show $(cmd_link_static)
+            fi
+        fi
+    else
+        $Show $(cmd_compile)
+    fi
+
+#---- Fortran stuff ------------------------------------
+
+subcode: init_FC_vars
+    FCCPP="@FCCPP@"
+    FCINC="@FCINC@"
+    # f90modinc specifies how to add a directory to the search path for modules.
+    # Some compilers (Intel ifc version 5) do not support this concept, and
+    # instead need
+    # a specific list of files that contain module names and directories.
+    # The FCMODINCSPEC is a more general approach that uses <dir> and <file>
+    FCMODINC="@FCMODINCFLAG@"
+    FCMODINCSPEC="@FCMODINCSPEC@"
+    FCEXT="@FCEXT@"
+
+subcode: set_fc_final_vars
+    # Construct the line to add the include directory (not all compilers
+    # use -I, unfortunately)
+    if [ -z "${FCINC}" ] ; then
+        # If there is no path, add a link to the mpif.h file.
+        # There *must* be a way to provide the path the any modules (there
+        # may be too many to link)
+        if [ ! -r mpif.h ] ; then
+            #echo "Adding a symbolic link for mpif.h"
+            trap "$Show rm -f mpif.h" 0
+            # This should really be the (related) f77includedir.
+            $Show ln -s ${includedir}/mpif.h mpif.h
+            # Remember to remove this file
+            rmfiles="$rmfiles mpif.h"
+        fi
+        FCINCDIRS=
+    else
+        # Normally, FCINC is just -I, but some compilers have used different
+        # command line arguments
+        FCINCDIRS=${FCINC}${includedir}
+    fi
+
+    # Handle the specification of the directory containing the modules
+    if [ -n "$FCMODINCSPEC" ] ; then
+        newarg=`echo A"$FCMODINCSPEC" | \
+            sed -e 's/^A//' -e 's%<dir>%'"$includedir%g" -e 's/<file>/mpi/g'`
+        FCMODDIRS="$newarg"
+    elif [ -n "$FCMODINC" ] ; then
+        FCMODDIRS="${FCMODINC}$modincdir"
+    fi
+
+    extra_f77_flags="@WRAPPER_EXTRA_F77_FLAGS@"
+    if test "mpif77" = ${0##*/} -a -n "$extra_f77_flags" ; then
+        final_fcflags="${final_fcflags} $extra_f77_flags"
+    fi
+
+
+# If FCCPP is not empty, then we need to do the following:
+#    If any input files have the .F or .F90 extension, then
+#        If FCCPP = false, then
+#            generate an error message and exit
+#        Use FCCPP to convert the file from .F to .f, using
+#            $TMPDIR/f$$-$count.f as the output file name
+#            Replace the input file with this name in the args
+# This is needed only for very broken systems
+subcode: patch_FCCPP
+    if [ "$FCCPP" = "false" ] ; then
+        echo "This Fortran compiler does not accept .F or .F90 files"
+        exit 1
+    fi
+    addarg=no
+    # Remove and directory names and extension
+    $ext=`expr "$arg" : '.*\(\..*\)'`
+    bfile=`basename $arg $ext`
+    #
+    TMPDIR=${TMPDIR:-/tmp}
+    # Make sure that we use a valid extension for the temp file.
+    tmpfile=$TMPDIR/f$$-$bfile.$FCEXT
+    if $FCCPP $cppflags $arg > $tmpfile ; then
+        # Add this file to the commandline list
+        count=`expr $count + 1`
+        allargs="$allargs $tmpfile"
+        rmfiles="$rmfiles $tmpfile"
+    else
+        echo "Aborting compilation because of failure in preprocessing step"
+        echo "for file $arg ."
+        exit 1
+    fi
+
+subcode: cleanup_rmfiles
+    $(if:cc=fc)
+        if [ -n "$rmfiles" ] ; then
+            for file in $rmfiles ; do
+                objfile=`basename $file .f`
+                if [ -s "${objfile}.o" ] ; then
+                    # Rename
+                    destfile=`echo $objfile | sed -e "s/.*$$-//"`
+                    mv -f ${objfile}.o ${destfile}.o
+                fi
+                rm -f $file
+            done
+            rm -f $rmfiles
+        fi
