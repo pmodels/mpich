@@ -441,29 +441,18 @@ Makefile.am-stamp
 /src/mpi/coll/include/coll_algos.h
 
 # /src/env/
+/src/env/*.sh.in
+/src/env/*.bash.in
+/src/env/*.sh
+/src/env/*.bash
+/src/env/*.conf
 /src/env/mpicc
-/src/env/mpicc.sh
-/src/env/mpicc.bash
-/src/env/mpicc.conf
 /src/env/mpicxx
-/src/env/mpicxx.sh
-/src/env/mpicxx.bash
-/src/env/mpicxx.conf
 /src/env/mpif77
-/src/env/mpif77.sh
-/src/env/mpif77.bash
-/src/env/mpif77.conf
 /src/env/mpifort
-/src/env/mpifort.sh
-/src/env/mpifort.bash
 /src/env/mpichversion
 /src/env/parkill
 /src/env/mpivars
-/src/env/mpixxx_opts.conf
-/src/env/cc_shlib.conf
-/src/env/cxx_shlib.conf
-/src/env/f77_shlib.conf
-/src/env/fc_shlib.conf
 
 # /src/include/
 /src/include/mpi.h
