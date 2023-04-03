@@ -186,10 +186,6 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
     MPIR_Assert(MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr) == msg_hdr->rreq_ptr);
     MPIR_Assert(MPIDIG_PART_REQUEST(part_sreq, msg_part) == msg_hdr->msg_part);
 
-    /* reset the correct cc value for the number of actually sent msgs */
-    // FIXME this is NOT the best option as we reset it twice (once at the start and once here)
-    MPIR_cc_set(&MPIDIG_PART_SREQUEST(part_sreq, cc_send), msg_hdr->msg_part);
-
     const int vci_id = get_vci_wrapper(part_sreq);
     const int msg_part = MPIDIG_PART_REQUEST(part_sreq, msg_part);
     const bool is_active = MPIR_Part_request_is_active(part_sreq);
@@ -205,8 +201,18 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
     MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(part_sreq, cc_part);
     MPIR_Assert(n_part >= 0);
 
+    // reset the correct cc value for the number of actually sent msgs
+    // WARNING: we use this value as a check to decide if we have received the CTS and we can skip
+    // the parititons cc_decr operation in the pready, so it must be the last operation done here
+    // FIXME this is NOT the best option as we reset it twice (once at the start and once here)
+    MPIR_cc_set(&MPIDIG_PART_SREQUEST(part_sreq, cc_send), msg_hdr->msg_part);
+    // after this point the Pready will not check the partitioned values anymore.
+    // if the value was 1, it will be sent over here, if the value was 2, it will be sent during the
+    // pready call
+
     /* we exit the lock only once and come back to it only once as well, cc_part is atomic so
      * it's okay to do it */
+    // WARNING THE PROGRESS MIGHT HAPPEN AFTER THIS
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_id).lock);
     for (int i = 0; i < n_part; ++i) {
         int incomplete;
@@ -231,6 +237,7 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
      * the one from the child request */
     // TODO: check this statement!!
     MPL_atomic_fetch_add_int(&MPIDI_VCI(vci_id).progress_count, 1);
+
 
   fn_exit:
     MPIR_FUNC_EXIT;

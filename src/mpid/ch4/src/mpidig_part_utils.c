@@ -154,7 +154,7 @@ void MPIDIG_part_sreq_set_cc_part(MPIR_Request * rqst)
 {
     MPIR_Assert(rqst->kind == MPIR_REQUEST_KIND__PART_SEND);
 
-    const int init_value = MPIDIG_PART_DO_TAG(rqst) ? MPIDIG_PART_STATUS_SEND_TAG_FIRST_INIT
+    const int init_value = MPIDIG_PART_DO_TAG(rqst) ? MPIDIG_PART_STATUS_SEND_TAG_INIT
         : MPIDIG_PART_STATUS_SEND_AM_INIT;
     const int send_part = rqst->u.part.partitions;
     MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(rqst, cc_part);

@@ -21,10 +21,9 @@
 #define MPIDIG_PART_STATUS_SEND_READY 0
 /* must go through the CTS reception (-1) and the Pready (-1) before being ready to send */
 #define MPIDIG_PART_STATUS_SEND_AM_INIT 2
-/* tag-based messaging must go through the CTS reception (-1) and the Pready (-1) at the FIRST iteration only
- * other iteration only require the pready*/
-#define MPIDIG_PART_STATUS_SEND_TAG_FIRST_INIT 2
-#define MPIDIG_PART_STATUS_SEND_TAG_LATER_INIT 1
+// tag-based messaging must go through the CTS reception (-1) and the Pready (-1) at the FIRST
+// iteration only. other iteration, the value is not used
+#define MPIDIG_PART_STATUS_SEND_TAG_INIT 2
 /*------------------------------------------------------------------------------------------------*/
 /* definition of the send status which depends from the code path and the iteation */
 #define MPIDIG_PART_STATUS_RECV_READY 0
@@ -57,7 +56,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_max_tag(void)
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_tag(const int im)
 {
-#if (MPIDI_CH4_VCI_METHOD == MPICH_VCI__TAG)
+#if MPIDI_CH4_VCI_METHOD == MPICH_VCI__TAG
+    const int mask = 0x1f;
     /* get the VCI id, we use symmetric VCI ids for the moment */
     const int vci = MPIDIG_Part_get_vci(im);
     /* encode the src and destination vci on bit [5-10[ and bit [10-15[. If the VCI doesn't fit on 5
@@ -70,7 +70,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_Part_get_tag(const int im)
      * bits then it's an error to keep going as we will have conflicting tag ids on the network */
     MPIR_Assert(im <= MPIDIG_Part_get_max_tag());
     // register the first 5 bits of the partition id
-    const int mask = 0x1f;
     tag |= (im & mask);
     tag |= (im & ~mask) << 15;
     /* finally add the TAG bit to the tag */
@@ -331,6 +330,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_id,
     const bool do_tag = MPIDIG_PART_DO_TAG(sreq);
     MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(sreq, cc_msg);
     /* decrement the counter of the specific msg */
+
     int incomplete;
     MPIR_cc_decr(cc_msg + msg_id, &incomplete);
     if (!incomplete) {
@@ -347,8 +347,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_id,
             if (!no_reset) {
                 const int n_part = sreq->u.part.partitions;
                 MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(sreq, cc_part);
-                const int init_value = (do_tag) ? MPIDIG_PART_STATUS_SEND_TAG_LATER_INIT
-                    : MPIDIG_PART_STATUS_SEND_AM_INIT;
+                const int init_value = MPIDIG_PART_STATUS_SEND_TAG_INIT;
                 for (int ip = 0; ip < n_part; ++ip) {
                     MPIR_cc_set(&cc_part[ip], init_value);
                 }
@@ -360,8 +359,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_id,
             if (!no_reset) {
                 const int n_part = sreq->u.part.partitions;
                 MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(sreq, cc_part);
-                const int init_value = (do_tag) ? MPIDIG_PART_STATUS_SEND_TAG_LATER_INIT
-                    : MPIDIG_PART_STATUS_SEND_AM_INIT;
+                const int init_value = MPIDIG_PART_STATUS_SEND_AM_INIT;
                 for (int ip = 0; ip < n_part; ++ip) {
                     MPIR_cc_set(&cc_part[ip], init_value);
                 }

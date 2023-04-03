@@ -125,11 +125,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int p_low, int p_high,
 
     /* for each partition mark it as ready and start them if we can */
     for (int i = p_low; i <= p_high; ++i) {
-        int incomplete;
-        MPIR_cc_decr(&cc_part[i], &incomplete);
-
+        // check if we have processed the CTS for the tag-matching optimization
+        const int cc_send = MPIR_cc_get(MPIDIG_PART_SREQUEST(part_sreq, cc_send));
+        const bool skip_part_cc = MPIDIG_PART_DO_TAG(part_sreq) && (cc_send > 0);
+        int incomplete = 0;
+        if (unlikely(!skip_part_cc)) {
+            MPIR_cc_decr(&cc_part[i], &incomplete);
+        }
         /* send the partition if matched and is complete, try to send the msg */
-        if (!incomplete) {
+        if (likely(!incomplete)) {
             const int msg_part = MPIDIG_PART_REQUEST(part_sreq, msg_part);
             MPIR_Assert(msg_part >= 0);
 
@@ -169,12 +173,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
     MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(part_sreq, cc_part);
     for (int ip = 0; ip < length; ip++) {
         const int ipart = array_of_partitions[ip];
-        // mark the partition as ready
-        int incomplete;
-        MPIR_cc_decr(&cc_part[ipart], &incomplete);
+        // check if we have processed the CTS for the tag-matching optimization
+        const int cc_send = MPIR_cc_get(MPIDIG_PART_SREQUEST(part_sreq, cc_send));
+        const bool skip_part_cc = MPIDIG_PART_DO_TAG(part_sreq) && (cc_send > 0);
+        int incomplete = 0;
+        if (unlikely(!skip_part_cc)) {
+            MPIR_cc_decr(&cc_part[ipart], &incomplete);
+        }
 
         /* send the partition if matched and is complete, try to send the msg */
-        if (!incomplete) {
+        if (likely(!incomplete)) {
             const int msg_part = MPIDIG_PART_REQUEST(part_sreq, msg_part);
             MPIR_Assert(msg_part >= 0);
 
