@@ -55,6 +55,20 @@ int main(int argc, char *argv[])
 static MPI_Session lib_shandle = MPI_SESSION_NULL;
 static MPI_Comm lib_comm = MPI_COMM_NULL;
 
+int check_thread_level(char *value)
+{
+    int ret = MPI_SUCCESS;
+
+    if (strcmp(value, "MPI_THREAD_MULTIPLE") &&
+        strcmp(value, "MPI_THREAD_SERIALIZED") &&
+        strcmp(value, "MPI_THREAD_SINGLE") && strcmp(value, "MPI_THREAD_FUNNELED")) {
+
+        ret = MPI_ERR_OTHER;
+    }
+
+    return ret;
+}
+
 int library_foo_test(void)
 {
     int rank, size;
@@ -111,8 +125,8 @@ void library_foo_init(void)
         errs++;
         goto fn_exit;
     }
-    if (strcmp(out_value, mt_value)) {
-        printf("Did not get thread multiple support, got %s\n", out_value);
+    if (check_thread_level(out_value)) {
+        printf("Did not get valid thread level, got %s\n", out_value);
         errs++;
         goto fn_exit;
     }

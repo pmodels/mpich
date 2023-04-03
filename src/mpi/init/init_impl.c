@@ -107,6 +107,78 @@ const char **MPIR_pset_list = default_pset_list;
 
 /* Implementations */
 
+static
+int thread_level_to_int(char *value_str, int *value_i)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (value_str == NULL || value_i == NULL) {
+        mpi_errno = MPI_ERR_OTHER;
+        goto fn_fail;
+    }
+
+    if (strcmp(value_str, "MPI_THREAD_MULTIPLE") == 0) {
+        *value_i = MPI_THREAD_MULTIPLE;
+    } else if (strcmp(value_str, "MPI_THREAD_SINGLE") == 0) {
+        *value_i = MPI_THREAD_SINGLE;
+    } else if (strcmp(value_str, "MPI_THREAD_FUNNELED") == 0) {
+        *value_i = MPI_THREAD_FUNNELED;
+    } else if (strcmp(value_str, "MPI_THREAD_SERIALIZED") == 0) {
+        *value_i = MPI_THREAD_SERIALIZED;
+    } else {
+        mpi_errno = MPI_ERR_OTHER;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static
+int get_thread_level_from_info(MPIR_Info * info_ptr, int *threadlevel)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int buflen = 0;
+    char *thread_level_s = NULL;
+    int flag = 0;
+    const char key[] = "thread_level";
+
+    /* No info pointer, nothing todo here */
+    if (info_ptr == NULL) {
+        goto fn_exit;
+    }
+
+    /* Get the length of the thread level value */
+    mpi_errno = MPIR_Info_get_valuelen_impl(info_ptr, key, &buflen, &flag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (!flag) {
+        /* Key thread_level not found in info object */
+        goto fn_exit;
+    }
+
+    /* Get thread level value. No need to check flag afterwards
+     * because we would not be here if thread_level key was not in info object.
+     */
+    thread_level_s = MPL_malloc(buflen + 1, MPL_MEM_BUFFER);
+    mpi_errno = MPIR_Info_get_impl(info_ptr, key, buflen, thread_level_s, &flag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Set requested thread level value as output */
+    mpi_errno = thread_level_to_int(thread_level_s, threadlevel);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    if (thread_level_s) {
+        MPL_free(thread_level_s);
+    }
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
 int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_ptr,
                            MPIR_Session ** p_session_ptr)
 {
@@ -114,13 +186,27 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     MPIR_Session *session_ptr = NULL;
 
     int provided;
-    /* Let's try ask for MPI_THREAD_MULTIPLE, but it probably still works with
-     * MPI_THREAD_SINGLE since we use MPL_Initlock_lock for cross-session locks.
+
+    /* Remark on MPI_THREAD_SINGLE: Multiple sessions may run in threads
+     * concurrently, so significant work is needed to support per-session MPI_THREAD_SINGLE.
+     * For now, it probably still works with MPI_THREAD_SINGLE since we use MPL_Initlock_lock
+     * for cross-session locks in MPII_Init_thread.
+     *
+     * The MPI4 standard recommends users to _not_ request MPI_THREAD_SINGLE thread
+     * support level for sessions "because this will conflict with other components of an
+     * application requesting higher levels of thread support" (Sec. 11.3.1).
+     *
+     * TODO: support per-session MPI_THREAD_SINGLE, use user-requested thread level here
+     * instead of MPI_THREAD_MULTIPLE, and optimize
      */
     mpi_errno = MPII_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &provided, &session_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     session_ptr->thread_level = provided;
+
+    /* Get the thread level requested by the user via info object (if any) */
+    mpi_errno = get_thread_level_from_info(info_ptr, &(session_ptr->thread_level));
+    MPIR_ERR_CHECK(mpi_errno);
 
     *p_session_ptr = session_ptr;
 
@@ -198,15 +284,13 @@ int MPIR_Session_get_nth_pset_impl(MPIR_Session * session_ptr, MPIR_Info * info_
 int MPIR_Session_get_info_impl(MPIR_Session * session_ptr, MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
+    const char *buf_thread_level = MPII_threadlevel_name(session_ptr->thread_level);
 
     mpi_errno = MPIR_Info_alloc(info_p_p);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Currently we only support session in MPI_THREAD_MULTIPLE */
-    /* Multiple session may run in threads concurrently, so significant work is needed to support
-     * per-session MPI_THREAD_SINGLE */
-    /* TODO: support per-session MPI_THREAD_SINGLE and optimize */
-    mpi_errno = MPIR_Info_set_impl(*info_p_p, "thread_level", "MPI_THREAD_MULTIPLE");
+    /* Set thread level */
+    mpi_errno = MPIR_Info_set_impl(*info_p_p, "thread_level", buf_thread_level);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

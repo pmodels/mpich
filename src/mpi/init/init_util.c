@@ -69,7 +69,14 @@ void MPII_Call_finalize_callbacks(int min_prio, int max_prio)
     }
 }
 
-static const char *threadlevel_name(int threadlevel)
+/**
+ * @brief   Convert thread level integer to a string representation
+ *
+ * @param   threadlevel Thread level integer (input)
+ *
+ * @return  char*       String representation of thread level
+ */
+const char *MPII_threadlevel_name(int threadlevel)
 {
     if (threadlevel == MPI_THREAD_SINGLE) {
         return "MPI_THREAD_SINGLE";
@@ -106,7 +113,7 @@ void MPII_dump_debug_summary(void)
 #else
     print_setting("debugger support", "disabled");
 #endif
-    print_setting("thread level", threadlevel_name(MPIR_ThreadInfo.thread_provided));
+    print_setting("thread level", MPII_threadlevel_name(MPIR_ThreadInfo.thread_provided));
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
     print_setting("thread CS", "global");
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
