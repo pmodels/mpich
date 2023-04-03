@@ -121,6 +121,7 @@ int MPIR_pmi_init(void)
     MPL_env2int("PMI_SUBVERSION", &pmi_subversion);
 
     int has_parent, rank, size, appnum;
+    unsigned world_id = 0;
 #ifdef USE_PMI1_API
     pmi_errno = PMI_Init(&has_parent);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -153,6 +154,8 @@ int MPIR_pmi_init(void)
                          "**pmi_kvs_get_value_length_max",
                          "**pmi_kvs_get_value_length_max %d", pmi_errno);
 
+    HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
+
 #elif defined USE_PMI2_API
     pmi_max_key_size = PMI2_MAX_KEYLEN;
     pmi_max_val_size = PMI2_MAX_VALLEN;
@@ -165,6 +168,8 @@ int MPIR_pmi_init(void)
     pmi_errno = PMI2_Job_GetId(pmi_jobid, PMI2_MAX_VALLEN);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_job_getid", "**pmi_job_getid %d", pmi_errno);
+
+    HASH_FNV(pmi_jobid, strlen(pmi_jobid), world_id);
 
 #elif defined USE_PMIX_API
     pmi_max_key_size = PMIX_MAX_KEYLEN;
@@ -193,17 +198,25 @@ int MPIR_pmi_init(void)
     size = pvalue->data.uint32;
     PMIX_VALUE_RELEASE(pvalue);
 
-    /* appnum, has_parent is not set for now */
+    /* PMIX_JOBID seems to be more supported than PMIX_NSPACE */
+    /* TODO: fallback in case the key is not supported */
+    pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_JOBID, NULL, 0, &pvalue);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_get", "**pmix_get %d", pmi_errno);
+    HASH_FNV(pvalue->data.string, strlen(pvalue->data.string), world_id);
+    PMIX_VALUE_RELEASE(pvalue);
+
   singleton_out:
     appnum = 0;
     has_parent = 0;
+    world_id = 0;
 
 #endif
     MPIR_Process.has_parent = has_parent;
     MPIR_Process.rank = rank;
     MPIR_Process.size = size;
     MPIR_Process.appnum = appnum;
-    HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), MPIR_Process.world_id);
+    MPIR_Process.world_id = world_id;
 
     MPIR_Process.node_map = (int *) MPL_malloc(size * sizeof(int), MPL_MEM_ADDRESS);
 
