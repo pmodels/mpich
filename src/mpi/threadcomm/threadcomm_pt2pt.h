@@ -43,6 +43,8 @@ struct posted_req {
 
 static void threadcomm_data_copy(struct send_hdr *hdr,
                                  void *buf, MPI_Aint count, MPI_Datatype datatype);
+static void threadcomm_set_status(MPIR_Threadcomm * threadcomm, struct send_hdr *hdr,
+                                  MPI_Status * status);
 
 static MPIR_Request *threadcomm_enqueue_posted(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                                int src_id, int tag, int attr,
@@ -146,9 +148,7 @@ MPL_STATIC_INLINE_PREFIX
         if (has_status) {
             int pool = p->tid % MPIR_REQUEST_NUM_POOLS;
             *req = MPIR_Request_create_from_pool_safe(MPIR_REQUEST_KIND__RECV, pool, 2);
-            (*req)->status.MPI_SOURCE = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, hdr->src_id);
-            (*req)->status.MPI_TAG = hdr->tag;
-            (*req)->status.MPI_ERROR = MPIR_PT2PT_ATTR_GET_ERRFLAG(hdr->attr);
+            threadcomm_set_status(threadcomm, hdr, &(*req)->status);
             MPIR_Request_complete(*req);
         } else {
             *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
@@ -158,6 +158,9 @@ MPL_STATIC_INLINE_PREFIX
     } else {
         *req = threadcomm_enqueue_posted(buf, count, datatype, src_id, tag, attr,
                                          p->tid, &p->posted_list);
+        /* we need threadcomm to update status (tid -> source). Need make sure to reset it
+         * to NULL before free since we don't refcount it. FIXME: this is hacky. */
+        (*req)->comm = (void *) threadcomm;
     }
 
     return mpi_errno;
@@ -180,6 +183,25 @@ static void threadcomm_data_copy(struct send_hdr *hdr,
         MPIR_Localcopy(sreq_u->buf, sreq_u->count, sreq_u->datatype, buf, count, datatype);
         MPIR_Request_complete(sreq);
     }
+}
+
+static void threadcomm_set_status(MPIR_Threadcomm * threadcomm, struct send_hdr *hdr,
+                                  MPI_Status * status)
+{
+    status->MPI_SOURCE = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, hdr->src_id);
+    status->MPI_TAG = hdr->tag;
+    status->MPI_ERROR = MPIR_PT2PT_ATTR_GET_ERRFLAG(hdr->attr);
+
+    MPI_Aint data_sz;
+    if (hdr->is_eager) {
+        data_sz = hdr->u.data_sz;
+    } else {
+        MPIR_Request *sreq = hdr->u.sreq;
+        struct send_req *sreq_u = (struct send_req *) &(sreq->u);
+        MPIR_Datatype_get_size_macro(sreq_u->datatype, data_sz);
+        data_sz *= sreq_u->count;
+    }
+    MPIR_STATUS_SET_COUNT((*status), data_sz);
 }
 
 static MPIR_Request *threadcomm_enqueue_posted(void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -222,6 +244,9 @@ static void threadcomm_complete_posted(struct send_hdr *hdr, MPIR_Request * rreq
 {
     struct posted_req *u = (struct posted_req *) &rreq->u;
     threadcomm_data_copy(hdr, u->buf, u->count, u->datatype);
+    MPIR_Assert(rreq->comm);
+    threadcomm_set_status((MPIR_Threadcomm *) rreq->comm, hdr, &rreq->status);
+    rreq->comm = NULL;
     MPIR_Request_complete(rreq);
 }
 
