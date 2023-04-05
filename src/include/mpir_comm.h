@@ -266,7 +266,8 @@ struct MPIR_Comm {
 };
 
 #define MPIR_is_self_comm(comm) \
-    ((comm)->remote_size == 1 && (comm)->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+    ((comm)->remote_size == 1 && (comm)->comm_kind == MPIR_COMM_KIND__INTRACOMM && \
+     (!(comm)->threadcomm || (comm)->threadcomm->num_threads == 1))
 
 extern MPIR_Object_alloc_t MPIR_Comm_mem;
 
