@@ -178,6 +178,57 @@ int get_thread_level_from_info(MPIR_Info * info_ptr, int *threadlevel)
     goto fn_exit;
 }
 
+int MPIR_Session_create(MPIR_Session ** p_session_ptr, int thread_level)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *p_session_ptr = (MPIR_Session *) MPIR_Handle_obj_alloc(&MPIR_Session_mem);
+    /* --BEGIN ERROR HANDLING-- */
+    MPIR_ERR_CHKHANDLEMEM(*p_session_ptr);
+    /* --END ERROR HANDLING-- */
+    MPIR_Object_set_ref(*p_session_ptr, 1);
+
+    (*p_session_ptr)->errhandler = NULL;
+    /* FIXME: actually do something with session thread_level */
+    (*p_session_ptr)->thread_level = thread_level;
+
+    {
+        int thr_err;
+        MPID_Thread_mutex_create(&(*p_session_ptr)->mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Session_release(MPIR_Session * session_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int inuse;
+
+    MPIR_Session_release_ref(session_ptr, &inuse);
+    if (!inuse) {
+        /* Only if refcount is 0 do we actually free. */
+
+        /* Handle any clean up on session */
+
+        int thr_err;
+        MPID_Thread_mutex_destroy(&session_ptr->mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+
+        /* Free the error handler */
+        if (session_ptr->errhandler) {
+            MPIR_Errhandler_free_impl(session_ptr->errhandler);
+        }
+
+        MPIR_Handle_obj_free(&MPIR_Session_mem, session_ptr);
+    }
+
+    return mpi_errno;
+}
 
 int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_ptr,
                            MPIR_Session ** p_session_ptr)
@@ -215,7 +266,7 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
 
   fn_fail:
     if (session_ptr) {
-        MPIR_Handle_obj_free(&MPIR_Session_mem, session_ptr);
+        MPIR_Session_release(session_ptr);
     }
     goto fn_exit;
 }

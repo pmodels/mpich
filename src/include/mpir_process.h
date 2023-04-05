@@ -27,6 +27,15 @@ struct MPIR_Session {
 extern MPIR_Session MPIR_Session_direct[];
 extern MPIR_Object_alloc_t MPIR_Session_mem;
 
+#define MPIR_Session_add_ref(_session) \
+    do { MPIR_Object_add_ref(_session); } while (0)
+
+#define MPIR_Session_release_ref(_session, _inuse) \
+    do { MPIR_Object_release_ref(_session, _inuse); } while (0)
+
+int MPIR_Session_create(MPIR_Session **, int);
+int MPIR_Session_release(MPIR_Session * session_prt);
+
 typedef struct MPIR_Process_t {
     MPL_atomic_int_t mpich_state;       /* Need use atomics due to MPI_Initialized() etc.
                                          * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
