@@ -92,7 +92,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
     int mpi_errno, flag = 0;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_is_self_comm(comm)) {
+    if (MPIR_is_self_comm(comm)) {
         /* There better be another thread sending the self message */
         while (!flag) {
             mpi_errno = MPIDI_Self_iprobe(source, tag, comm, attr, &flag, status);
@@ -128,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
     int mpi_errno = MPI_SUCCESS, flag = 0;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_is_self_comm(comm)) {
+    if (MPIR_is_self_comm(comm)) {
         /* There better be another thread sending the self message */
         while (!flag) {
             mpi_errno = MPIDI_Self_improbe(source, tag, comm, attr, &flag, message, status);
@@ -163,7 +163,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_is_self_comm(comm)) {
+    if (MPIR_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_improbe(source, tag, comm, attr, flag, message, status);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
@@ -195,7 +195,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_is_self_comm(comm)) {
+    if (MPIR_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_iprobe(source, tag, comm, attr, flag, status);
         MPIR_ERR_CHECK(mpi_errno);
     } else {

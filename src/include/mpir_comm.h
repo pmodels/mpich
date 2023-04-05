@@ -264,6 +264,12 @@ struct MPIR_Comm {
      MPID_DEV_COMM_DECL
 #endif
 };
+
+#define MPIR_is_self_comm(comm) \
+    ((comm)->remote_size == 1 && \
+     (comm)->comm_kind == MPIR_COMM_KIND__INTRACOMM && \
+     (!(comm)->threadcomm || (comm)->threadcomm->num_threads == 1))
+
 extern MPIR_Object_alloc_t MPIR_Comm_mem;
 
 /* this function should not be called by normal code! */
