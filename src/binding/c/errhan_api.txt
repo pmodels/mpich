@@ -6,12 +6,15 @@
 
 MPI_Add_error_class:
     .desc: Add an MPI error class to the known classes
+    .extra: global_cs
 
 MPI_Add_error_code:
     .desc: Add an MPI error code to an MPI error class
+    .extra: global_cs
 
 MPI_Add_error_string:
     .desc: Associates an error string with an MPI error code or class
+    .extra: global_cs
 /*
     Notes:
     The string must be no more than 'MPI_MAX_ERROR_STRING' characters long.
@@ -29,14 +32,17 @@ MPI_Add_error_string:
 MPI_Delete_error_class:
     errorclass: ERROR_CLASS, [value of the error class to be remoed]
     .desc: Delete an MPI error class from the known classes
+    .extra: global_cs
 
 MPI_Delete_error_code:
     errorcode: ERROR_CODE, [value of the error code to be remoed]
     .desc: Delete an MPI error code
+    .extra: global_cs
 
 MPI_Delete_error_string:
     errorcode: ERROR_CODE, [value of the error code whose string is to be remoed]
     .desc: Delete the error string associated with an MPI error code or class
+    .extra: global_cs
 /*
     Notes:
     According to the MPI 4.1 standard, it is erroneous to call 'MPI_Delete_error_string'
@@ -65,9 +71,11 @@ MPI_Errhandler_create:
     .desc: Creates an MPI-style errorhandler
     .replace: removed with MPI_Comm_create_errhandler
     .seealso: MPI_Comm_create_errhandler, MPI_Errhandler_free
+    .extra: global_cs
 
 MPI_Errhandler_free:
     .desc: Frees an MPI-style errorhandler
+    .extra: global_cs
 
 MPI_Errhandler_get:
     comm: COMMUNICATOR
@@ -81,6 +89,7 @@ MPI_Errhandler_set:
     .desc: Sets the error handler for a communicator
     .replace: removed with MPI_Comm_set_errhandler
     .seealso: MPI_Comm_set_errhandler, MPI_Errhandler_create, MPI_Comm_create_errhandler
+    .extra: global_cs
 
 MPI_Comm_call_errhandler:
     .desc: Call the error handler installed on a communicator
@@ -90,6 +99,7 @@ MPI_Comm_call_errhandler:
 
 MPI_Comm_create_errhandler:
     .desc: Create a communicator error handler
+    .extra: global_cs
 /*
     Notes:
     The MPI Standard states that an implementation may make the output value
@@ -122,6 +132,7 @@ MPI_Comm_set_errhandler:
     .seealso: MPI_Comm_get_errhandler, MPI_Comm_call_errhandler
     .extra: ignore_revoked_comm, threadcomm
     .docnotes: ThreadSafeNoUpdate
+    .extra: global_cs
 
 MPI_File_call_errhandler:
     .desc: Call the error handler installed on a file
@@ -154,14 +165,17 @@ MPI_Win_call_errhandler:
 
 MPI_Win_create_errhandler:
     .desc: Create an error handler for use with MPI window
+    .extra: global_cs
 
 MPI_Win_get_errhandler:
     .desc: Get the error handler for the MPI RMA window
     .docnotes: ThreadSafeNoUpdate
+    .extra: global_cs
 
 MPI_Win_set_errhandler:
     .desc: Set window error handler
     .docnotes: ThreadSafeNoUpdate
+    .extra: global_cs
 { -- error_check --
     if (!HANDLE_IS_BUILTIN(errhandler) && errhandler_ptr->kind != MPIR_WIN) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -179,14 +193,17 @@ MPI_Session_call_errhandler:
 MPI_Session_create_errhandler:
     .desc: Create an error handler for use with MPI session
     .skip: initcheck
+    .extra: global_cs
 
 MPI_Session_get_errhandler:
     .desc: Get the error handler for the MPI session
     .docnotes: ThreadSafeNoUpdate
+    .extra: global_cs
 
 MPI_Session_set_errhandler:
     .desc: Set MPI session error handler
     .docnotes: ThreadSafeNoUpdate
+    .extra: global_cs
 { -- error_check --
     if (!HANDLE_IS_BUILTIN(errhandler) && errhandler_ptr->kind != MPIR_SESSION) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,

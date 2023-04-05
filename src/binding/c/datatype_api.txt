@@ -200,9 +200,11 @@ MPI_Status_set_elements:
 
 MPI_Status_set_elements_x:
     .desc: Set the number of elements in a status
+    .extra: global_cs
 
 MPI_Type_commit:
     .desc: Commits the datatype
+    .extra: global_cs
 { -- early_return --
     if (MPIR_DATATYPE_IS_PREDEFINED(*datatype)) {
         goto fn_exit;
@@ -317,6 +319,7 @@ MPI_Type_size_x:
 MPI_Type_set_name:
     .desc: set datatype name
     .skip: ThreadSafe
+    .extra: global_cs
 
 MPI_Type_get_name:
     .desc: Get the print name for a datatype
@@ -324,10 +327,12 @@ MPI_Type_get_name:
 
 MPI_Type_contiguous:
     .desc: Creates a contiguous datatype
+    .extra: global_cs
 
 MPI_Type_create_darray:
     .desc: Create a datatype representing a distributed array
     .skip: validate-ORDER, validate-RANK_NNI
+    .extra: global_cs
 { -- error_check --
     CHECKENUM: order, storageorder, MPI_ORDER_C MPI_ORDER_FORTRAN
     MPIR_ERR_CHKANDJUMP3((rank < 0 || rank >= size), mpi_errno, MPI_ERR_RANK,
@@ -337,21 +342,26 @@ MPI_Type_create_darray:
 MPI_Type_create_subarray:
     .desc: Create a datatype for a subarray of a regular, multidimensional array
     .skip: validate-ORDER
+    .extra: global_cs
 { -- error_check --
     CHECKENUM: order, storageorder, MPI_ORDER_C MPI_ORDER_FORTRAN
 }
 
 MPI_Type_create_hindexed:
     .desc: Create a datatype for an indexed datatype with displacements in bytes
+    .extra: global_cs
 
 MPI_Type_create_hindexed_block:
     .desc: Create an hindexed datatype with constant-sized blocks
+    .extra: global_cs
 
 MPI_Type_create_hvector:
     .desc: Create a datatype with a constant stride given in bytes
+    .extra: global_cs
 
 MPI_Type_create_indexed_block:
     .desc: Create an indexed datatype with constant-sized blocks
+    .extra: global_cs
 /* -- notes-2 --
     Notes:
     The indices are displacements, and are based on a zero origin.  A common error
@@ -378,12 +388,15 @@ MPI_Type_create_indexed_block:
 
 MPI_Type_create_resized:
     .desc: Create a datatype with a new lower bound and extent from an existing datatype
+    .extra: global_cs
 
 MPI_Type_create_struct:
     .desc: Create an MPI datatype from a general set of datatypes, displacements, and block sizes
+    .extra: global_cs
 
 MPI_Type_dup:
     .desc: Duplicate a datatype
+    .extra: global_cs
 
 MPI_Type_hindexed:
     count: DTYPE_NUM_ELEM_NNI_SMALL, [number of blocks -- also number of entries in array_of_displacements and array_of_blocklengths]
@@ -394,6 +407,7 @@ MPI_Type_hindexed:
     .desc: Creates an indexed datatype with offsets in bytes
     .skip: Fortran
     .replace: removed with MPI_Type_create_hindexed
+    .extra: global_cs
 /* -- notes-2 --
     .N Fortran
     The array_of_displacements are displacements, and are based on a zero origin.  A common error
@@ -428,10 +442,12 @@ MPI_Type_hvector:
     .desc: type_hvector
     .replace: removed with MPI_Type_create_hvector
     .skip: validate-DTYPE_STRIDE_BYTES_SMALL
+    .extra: global_cs
 
 MPI_Type_indexed:
     .desc: Creates an indexed datatype
     .skip: Fortran
+    .extra: global_cs
 /* -- notes-2 --
     .N Fortran
     The array_of_displacements are displacements, and are based on a zero origin.  A common error
@@ -465,6 +481,7 @@ MPI_Type_struct:
     newtype: DATATYPE, direction=out, [new datatype]
     .desc: Creates a struct datatype
     .replace: removed with MPI_Type_create_struct
+    .extra: global_cs
 /*
     Notes:
     If an upperbound is set explicitly by using the MPI datatype 'MPI_UB', the
@@ -507,10 +524,12 @@ MPI_Type_struct:
 
 MPI_Type_vector:
     .desc: Creates a vector (strided) datatype
+    .extra: global_cs
 
 MPI_Type_match_size:
     .desc: Find an MPI datatype matching a specified size
     .skip: validate-TYPECLASS, validate-TYPECLASS_SIZE
+    .extra: global_cs
 /*
     Notes:
     'typeclass' is one of 'MPI_TYPECLASS_REAL', 'MPI_TYPECLASS_INTEGER' and
