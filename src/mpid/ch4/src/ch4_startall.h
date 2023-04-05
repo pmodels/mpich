@@ -23,19 +23,45 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_start(MPIR_Request * preq)
     switch (MPIDI_PREQUEST(preq, p_type)) {
 
         case MPIDI_PTYPE_RECV:
-            mpi_errno = MPID_Irecv(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
-                                   MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
-                                   MPIDI_PREQUEST(preq, tag), comm,
-                                   MPIDI_PREQUEST(preq, context_offset),
-                                   &preq->u.persist.real_request);
+            if (comm->threadcomm) {
+#ifdef ENABLE_THREADCOMM
+                mpi_errno = MPIR_Threadcomm_irecv_impl(MPIDI_PREQUEST(preq, buffer),
+                                                       MPIDI_PREQUEST(preq, count),
+                                                       MPIDI_PREQUEST(preq, datatype),
+                                                       MPIDI_PREQUEST(preq, rank),
+                                                       MPIDI_PREQUEST(preq, tag),
+                                                       comm, &preq->u.persist.real_request);
+#else
+                MPIR_Assert(0);
+#endif
+            } else {
+                mpi_errno = MPID_Irecv(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
+                                       MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
+                                       MPIDI_PREQUEST(preq, tag), comm,
+                                       MPIDI_PREQUEST(preq, context_offset),
+                                       &preq->u.persist.real_request);
+            }
             break;
 
         case MPIDI_PTYPE_SEND:
-            mpi_errno = MPID_Isend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
-                                   MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
-                                   MPIDI_PREQUEST(preq, tag), comm,
-                                   MPIDI_PREQUEST(preq, context_offset),
-                                   &preq->u.persist.real_request);
+            if (comm->threadcomm) {
+#ifdef ENABLE_THREADCOMM
+                mpi_errno = MPIR_Threadcomm_isend_impl(MPIDI_PREQUEST(preq, buffer),
+                                                       MPIDI_PREQUEST(preq, count),
+                                                       MPIDI_PREQUEST(preq, datatype),
+                                                       MPIDI_PREQUEST(preq, rank),
+                                                       MPIDI_PREQUEST(preq, tag),
+                                                       comm, &preq->u.persist.real_request);
+#else
+                MPIR_Assert(0);
+#endif
+            } else {
+                mpi_errno = MPID_Isend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
+                                       MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
+                                       MPIDI_PREQUEST(preq, tag), comm,
+                                       MPIDI_PREQUEST(preq, context_offset),
+                                       &preq->u.persist.real_request);
+            }
             break;
 
         case MPIDI_PTYPE_SSEND:
