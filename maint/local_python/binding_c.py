@@ -1153,6 +1153,10 @@ def dump_function_normal(func):
             G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
     G.out.append("MPIR_FUNC_TERSE_ENTER;")
 
+    if RE.search(r'global_cs', func['extra'], re.IGNORECASE):
+        G.out.append("MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);")
+
+
     if '_handle_ptr_list' in func:
         G.out.append("")
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
@@ -1284,6 +1288,9 @@ def dump_function_normal(func):
             G.out.append("MPIR_T_THREAD_CS_EXIT();")
         else:
             G.out.append("MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
+    if RE.search(r'global_cs', func['extra'], re.IGNORECASE):
+        G.out.append("MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);")
+
     G.out.append("return mpi_errno;")
     G.out.append("")
     G.out.append("fn_fail:")

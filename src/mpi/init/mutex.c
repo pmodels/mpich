@@ -18,6 +18,7 @@ MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_VCI_CTX_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_VCI_PMI_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_VCI_BSEND_MUTEX;
+MPID_Thread_mutex_t MPIR_THREAD_VCI_GLOBAL_MUTEX;
 #endif /* MPICH_THREAD_GRANULARITY */
 
 /* called the first thing in init so it can enter critical section immediately */
@@ -40,6 +41,9 @@ void MPII_thread_mutex_create(void)
     MPIR_Assert(err == 0);
 
     MPID_Thread_mutex_create(&MPIR_THREAD_VCI_BSEND_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIR_THREAD_VCI_GLOBAL_MUTEX, &err);
     MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
@@ -77,6 +81,9 @@ void MPII_thread_mutex_destroy(void)
     MPIR_Assert(err == 0);
 
     MPID_Thread_mutex_destroy(&MPIR_THREAD_VCI_BSEND_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_VCI_GLOBAL_MUTEX, &err);
     MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
