@@ -55,7 +55,7 @@ MPI_Allgatherv:
      clarification to the MPI standard by the MPI-Forum.
 */
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+    if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
             MPI_Aint recvtype_extent;
             MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
@@ -74,7 +74,7 @@ MPI_Allreduce:
     .desc: Combines values from all processes and distributes the result back to all processes
     .docnotes: collops
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+    if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
             MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         }
@@ -117,7 +117,7 @@ MPI_Barrier:
     communicator have entered the call.
 */
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+    if (MPIR_is_self_comm(comm_ptr)) {
         goto fn_exit;
     }
 }
@@ -128,7 +128,7 @@ MPI_Barrier_init:
 MPI_Bcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator
 { -- early_return --
-    if (count == 0 || (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1)) {
+    if (count == 0 || MPIR_is_self_comm(comm_ptr)) {
         goto fn_exit;
     }
 }
@@ -189,7 +189,7 @@ MPI_Iallgather:
 MPI_Iallgatherv:
     .desc: Gathers data from all tasks and deliver the combined data to all tasks in a nonblocking way
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+    if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
             MPI_Aint recvtype_extent;
             MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
@@ -205,7 +205,7 @@ MPI_Iallgatherv:
 MPI_Iallreduce:
     .desc: Combines values from all processes and distributes the result back to all processes in a nonblocking way
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+    if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
             MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         }
@@ -245,7 +245,7 @@ MPI_Ibarrier:
     group have called MPI_Ibarrier.
 */
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+    if (MPIR_is_self_comm(comm_ptr)) {
         MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
         *request = request_ptr->handle;
         goto fn_exit;
@@ -255,7 +255,7 @@ MPI_Ibarrier:
 MPI_Ibcast:
     .desc: Broadcasts a message from the process with rank "root" to all other processes of the communicator in a nonblocking way
 { -- early_return --
-    if (count == 0 || (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1)) {
+    if (count == 0 || MPIR_is_self_comm(comm_ptr)) {
         MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
         *request = request_ptr->handle;
         goto fn_exit;
@@ -307,7 +307,7 @@ MPI_Ineighbor_alltoallw:
 MPI_Ireduce:
     .desc: Reduces values on all processes to a single value in a nonblocking way
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (count == 0 || MPIR_Comm_size(comm_ptr) == 1)) {
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (count == 0 || MPIR_is_self_comm(comm_ptr))) {
         if (sendbuf != MPI_IN_PLACE) {
             MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         }
@@ -320,7 +320,7 @@ MPI_Ireduce:
 MPI_Ireduce_scatter:
     .desc: Combines values and scatters the results in a nonblocking way
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+    if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
             MPIR_Localcopy(sendbuf, recvcounts[0], datatype, recvbuf, recvcounts[0], datatype);
         }
@@ -333,7 +333,7 @@ MPI_Ireduce_scatter:
 MPI_Ireduce_scatter_block:
     .desc: Combines values and scatters the results in a nonblocking way
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (MPIR_Comm_size(comm_ptr) == 1 || recvcount == 0)) {
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (recvcount == 0 || MPIR_is_self_comm(comm_ptr))) {
         if (sendbuf != MPI_IN_PLACE) {
             MPIR_Localcopy(sendbuf, recvcount, datatype, recvbuf, recvcount, datatype);
         }
@@ -413,7 +413,10 @@ MPI_Reduce:
     .desc: Reduces values on all processes to a single value
     .docnotes: collops
 { -- early_return --
-    if ((comm_ptr->remote_size == 1 || count == 0) && comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+    if (count == 0 && comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        goto fn_exit;
+    }
+    if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf == MPI_IN_PLACE) {
             goto fn_exit;
         }
@@ -443,7 +446,7 @@ MPI_Reduce_scatter:
     .desc: Combines values and scatters the results
     .docnotes: collops
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && MPIR_Comm_size(comm_ptr) == 1) {
+    if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
             MPIR_Localcopy(sendbuf, recvcounts[0], datatype, recvbuf, recvcounts[0], datatype);
         }
@@ -458,7 +461,7 @@ MPI_Reduce_scatter_block:
     .desc: Combines values and scatters the results
     .docnotes: collops
 { -- early_return --
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (MPIR_Comm_size(comm_ptr) == 1 || recvcount == 0)) {
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (recvcount == 0 || MPIR_is_self_comm(comm_ptr))) {
         if (sendbuf != MPI_IN_PLACE) {
             MPIR_Localcopy(sendbuf, recvcount, datatype, recvbuf, recvcount, datatype);
         }

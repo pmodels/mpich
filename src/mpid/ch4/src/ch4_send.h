@@ -53,7 +53,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_is_self_comm(comm)) {
+    if (MPIR_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, request);
     } else {
         av = MPIDIU_comm_rank_to_av(comm, rank);
@@ -109,7 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_is_self_comm(comm)) {
+    if (MPIR_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, request);
     } else {
         av = MPIDIU_comm_rank_to_av(comm, rank);
@@ -155,7 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Cancel_send(MPIR_Request * sreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (sreq->comm && MPIDI_is_self_comm(sreq->comm)) {
+    if (sreq->comm && MPIR_is_self_comm(sreq->comm)) {
         mpi_errno = MPIDI_Self_cancel(sreq);
     } else {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
