@@ -12,10 +12,12 @@
 
 struct MPIR_Comm;
 struct MPIR_Win;
+struct MPIR_Session;
 
 /* Bindings for internal routines */
 MPICH_API_PUBLIC int MPIR_Err_return_comm(struct MPIR_Comm *, const char[], int);
 MPICH_API_PUBLIC int MPIR_Err_return_win(struct MPIR_Win *, const char[], int);
+MPICH_API_PUBLIC int MPIR_Err_return_session(struct MPIR_Session *, const char[], int);
 #ifdef MPI__FILE_DEFINED
 /* Only define if we have MPI_File */
 MPICH_API_PUBLIC int MPIR_Err_return_file(MPI_File, const char[], int); /* Romio version */
