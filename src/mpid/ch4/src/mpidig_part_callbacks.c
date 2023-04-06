@@ -204,9 +204,10 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
     // reset the correct cc value for the number of actually sent msgs
     // WARNING: we use this value as a check to decide if we have received the CTS and we can skip
     // the parititons cc_decr operation in the pready, so it must be the last operation done here
-    // FIXME this is NOT the best option as we reset it twice (once at the start and once here)
+    // when doing tag-matching, DO NOT decrement the value of cc_send!
     MPIR_cc_set(&MPIDIG_PART_SREQUEST(part_sreq, cc_send), msg_hdr->msg_part);
-    // after this point the Pready will not check the partitioned values anymore.
+
+    // WARNING: after this point the Pready will not check the partitioned values anymore.
     // if the value was 1, it will be sent over here, if the value was 2, it will be sent during the
     // pready call
 

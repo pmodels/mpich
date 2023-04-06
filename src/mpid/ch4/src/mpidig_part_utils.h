@@ -334,25 +334,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_id,
     int incomplete;
     MPIR_cc_decr(cc_msg + msg_id, &incomplete);
     if (!incomplete) {
-        // decrease the counter of the number of msgs requested to be sent, must be done BEFORE
-        // the last send to avoid data races with the MPI_Start resetting the cc_send value
-        int no_reset;
-        MPIR_cc_decr(&MPIDIG_PART_SREQUEST(sreq, cc_send), &no_reset);
         // actually send the data
         if (do_tag) {
-            // sending data, the lock in the VCI happens inside the send function
+            // no need to reset the cc_send, it will be used over the entire simulation to
+            // acknowledge CTS reception sending data
+            // the lock in the VCI happens inside the send function
             mpi_errno = MPIDIG_part_issue_send(msg_id, sreq);
-            // if we have requested the send of every msgs then we can reset the counters, it can be
-            // done AFTER the last send as we don't expect another CTS when using the tag mechanism
-            if (!no_reset) {
-                const int n_part = sreq->u.part.partitions;
-                MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(sreq, cc_part);
-                const int init_value = MPIDIG_PART_STATUS_SEND_TAG_INIT;
-                for (int ip = 0; ip < n_part; ++ip) {
-                    MPIR_cc_set(&cc_part[ip], init_value);
-                }
-            }
         } else {
+            // decrease the counter of the number of msgs requested to be sent, must be done BEFORE
+            // the last send to avoid data races with the MPI_Start resetting the cc_send value
+            int no_reset;
+            MPIR_cc_decr(&MPIDIG_PART_SREQUEST(sreq, cc_send), &no_reset);
             // if we have requested the send of every msgs then we can reset the counters, must be
             // done BEFORE the last send to avoid conflict with an early CTS arriving from the
             // receiver

@@ -49,13 +49,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
                 MPIR_cc_set(cc_msg + i, ip_ub - ip_lb);
             }
         }
-
-        /* we have to reset information for the current iteration.
-         * The reset is done in the CTS reception callback as well but no msgs has been sent
-         * so it's safe to overwrite it*/
-        if (MPIDIG_PART_DO_TAG(request)) {
-            MPIR_cc_set(&MPIDIG_PART_SREQUEST(request, cc_send), msg_part);
-        }
     } else {
         /* cc_ptr > 0 indicate data transfer starts and will be completed when cc_ptr = 0
          * the counter is set to the max of 1 (to avoid early completion) and the number of msg parts
