@@ -214,9 +214,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-
-    /* we must be active to call p_arrived */
-    MPIR_Assert(MPIR_Part_request_is_active(request));
     MPIR_Assert(request->kind == MPIR_REQUEST_KIND__PART_RECV);
 
     int vci = 0;
