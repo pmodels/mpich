@@ -233,13 +233,6 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
     }
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_id).lock);
 
-    /* we must notify progress as the send rqst might not have done it in case of lightweight
-     * sends. The progress count must be incremented on the VCI which has been entered from, not
-     * the one from the child request */
-    // TODO: check this statement!!
-    MPL_atomic_fetch_add_int(&MPIDI_VCI(vci_id).progress_count, 1);
-
-
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
