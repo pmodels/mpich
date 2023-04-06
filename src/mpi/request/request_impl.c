@@ -859,15 +859,13 @@ int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progre
     int mpi_errno = MPI_SUCCESS;
 
     while (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPID_Progress_wait(state);
+        MPIR_ERR_CHECK(mpi_errno);
+        // if partitioned communication, we need to obtain the VCI list
         if (request_ptr->kind == MPIR_REQUEST_KIND__PART_RECV ||
             request_ptr->kind == MPIR_REQUEST_KIND__PART_SEND) {
-            MPID_Progress_state new_state;
-            MPIDI_set_progress_vci(request_ptr, &new_state);
-            mpi_errno = MPID_Progress_wait(&new_state);
-        } else {
-            mpi_errno = MPID_Progress_wait(state);
+            MPIDI_set_progress_vci(request_ptr, state);
         }
-        MPIR_ERR_CHECK(mpi_errno);
 
         if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
             mpi_errno = MPIR_Request_handle_proc_failed(request_ptr);
