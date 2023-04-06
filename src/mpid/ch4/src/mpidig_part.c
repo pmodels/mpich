@@ -127,14 +127,6 @@ int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count, MPI_D
     if (do_tag) {
         /* Initialize tag-matching components for send */
         MPIDIG_PART_REQUEST(*request, mode) = 1;
-        const int send_part = partitions;
-        MPIDIG_PART_SREQUEST(*request, tag_req_ptr) =
-            MPL_malloc(sizeof(MPIR_Request *) * send_part, MPL_MEM_OTHER);
-        for (int i = 0; i < send_part; ++i) {
-            MPIDIG_PART_SREQUEST(*request, tag_req_ptr[i]) = NULL;
-        }
-        /* initialize counters usually done at the first CTS in AM */
-        //MPIDIG_PART_REQUEST(*request, u.send.msg_part) = partitions;
     } else {
         /* Initialize am components for send */
         MPIDIG_PART_REQUEST(*request, mode) = 0;

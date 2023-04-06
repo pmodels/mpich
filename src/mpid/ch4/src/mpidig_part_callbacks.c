@@ -175,6 +175,13 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
             MPIR_cc_set(cc_msg + i, ip_ub - ip_lb);
         }
 
+        // allocate the array of send requests
+        MPIDIG_PART_SREQUEST(part_sreq, tag_req_ptr) =
+            MPL_malloc(sizeof(MPIR_Request *) * msg_part, MPL_MEM_OTHER);
+        for (int i = 0; i < send_part; ++i) {
+            MPIDIG_PART_SREQUEST(part_sreq, tag_req_ptr[i]) = NULL;
+        }
+
 #ifndef NDEBUG
         /* make sure we don't split up a datatype on the sender side */
         MPI_Aint count;
