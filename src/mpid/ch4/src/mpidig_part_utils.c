@@ -20,6 +20,7 @@ void MPIDIG_part_sreq_create(MPIR_Request ** req)
     MPIDIG_PART_REQUEST(sreq, peer_req_ptr) = NULL;
     MPIR_cc_set(&MPIDIG_PART_SREQUEST(sreq, cc_send), 0);
     MPIDIG_PART_SREQUEST(sreq, cc_msg) = NULL;
+    MPIDIG_PART_SREQUEST(sreq, tag_req_ptr) = NULL;
     MPIDIG_PART_SREQUEST(sreq, cc_part) = MPL_malloc(sizeof(MPIR_cc_t) * n_part, MPL_MEM_OTHER);
 }
 
@@ -32,6 +33,8 @@ void MPIDIG_part_rreq_create(MPIR_Request ** req)
     MPIDIG_PART_REQUEST(rreq, msg_part) = -1;
     MPIDIG_PART_REQUEST(rreq, peer_req_ptr) = NULL;
     MPIR_cc_set(&MPIDIG_PART_REQUEST(rreq, u.recv.status_matched), 0);
+
+    MPIDIG_PART_RREQUEST(rreq, tag_req_ptr) = NULL;
 }
 
 void MPIDIG_Part_rreq_allocate(MPIR_Request * rreq)

@@ -183,12 +183,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_recv(MPIR_Request * rreq)
         int source_tag = MPIDIG_Part_get_tag(im);
         void *buf_recv = (char *) MPIDI_PART_REQUEST(rreq, buffer) + im * part_offset;
 
-        /* free the previous request as that one is not needed anymore */
-        if (child_req[im]) {
-            MPIR_Request_free(child_req[im]);
-            child_req[im] = NULL;
-        }
-
         /* attr = 1 isolates the traffic of internal vs external communications */
         const int attr = 0;
         /* initialize the next request, the ref count should be 2 here: one for mpich, one for me */
@@ -228,12 +222,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_send(const int imsg, MPIR_Request
     int dest_tag = MPIDIG_Part_get_tag(imsg);
     void *buf_send = (char *) MPIDI_PART_REQUEST(sreq, buffer) + imsg * part_offset;
     MPIR_Request **child_req = MPIDIG_PART_SREQUEST(sreq, tag_req_ptr);
-
-    /* free the previous request as that one is not needed anymore */
-    if (child_req[imsg]) {
-        MPIR_Request_free(child_req[imsg]);
-        child_req[imsg] = NULL;
-    }
 
     /* attr = 1 isolates the traffic of internal vs external communications */
     const int attr = 0;
@@ -362,7 +350,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_id,
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
         }
         MPIR_ERR_CHECK(mpi_errno);
-        // we have to explicity increment the progress counter to ensure progress on the main thread
+        // we have to explicitly increment the progress counter to ensure progress on the main thread
         // when using multiple VCIs
         const int vci_id = get_vci_wrapper(sreq);
         MPL_atomic_fetch_add_int(&MPIDI_VCI(vci_id).progress_count, 1);

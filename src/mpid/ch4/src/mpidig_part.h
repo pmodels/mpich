@@ -40,6 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
          * the values will be initialized upon reception of the first CTS.
          * NOTE: it's okay to check the value of msg_part, we are in the lock so no progress will
          * happen*/
+        // FIXME: can we use the value of cc_send instead?
         if (likely(msg_part > 0)) {
             const int n_part = request->u.part.partitions;
             MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(request, cc_msg);
@@ -48,6 +49,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
                 const int ip_ub = MPIDIG_part_idx_ub(i, msg_part, n_part);
                 MPIR_cc_set(cc_msg + i, ip_ub - ip_lb);
             }
+
+            // free the previous requests, needed only at the second iteration so we will have
+            // msg_part > 0. the lock can be around the loop as we have matched, so the tag_req_ptr
+            // is not being changed by anybody else
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+            MPIR_Request **child_req = MPIDIG_PART_SREQUEST(request, tag_req_ptr);
+            if (child_req) {
+                for (int ip = 0; ip < msg_part; ++ip) {
+                    if (child_req[ip]) {
+                        MPIR_Request_free(child_req[ip]);
+                        child_req[ip] = NULL;
+                    }
+                }
+            }
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         }
     } else {
         /* cc_ptr > 0 indicate data transfer starts and will be completed when cc_ptr = 0
@@ -66,6 +82,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
                 MPIDIG_Part_rreq_allocate(request);
             }
             MPIR_Assert(MPIDIG_PART_REQUEST(request, msg_part) >= 0);
+
+            // reset the tag_req_ptr if it exists, it is only needed after one iteration, so we have
+            // matched.
+            // the request_free will lock to free the request.
+            // the lock can be around the loop as we have matched, so the tag_req_ptr is not being
+            // changed by anybody else
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+            MPIR_Request **child_req = MPIDIG_PART_RREQUEST(request, tag_req_ptr);
+            if (child_req) {
+                for (int ip = 0; ip < MPIDIG_PART_REQUEST(request, msg_part); ++ip) {
+                    if (child_req[ip]) {
+                        MPIR_Request_free(child_req[ip]);
+                        child_req[ip] = NULL;
+                    }
+                }
+            }
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
             const bool do_tag = MPIDIG_PART_DO_TAG(request);
             if (do_tag) {
