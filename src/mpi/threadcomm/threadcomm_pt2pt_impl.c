@@ -59,7 +59,17 @@ int MPIR_Threadcomm_irecv_attr(void *buf, MPI_Aint count, MPI_Datatype datatype,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_THREADCOMM_RANK_IS_INTERTHREAD(threadcomm, rank)) {
+    if (rank == MPI_ANY_SOURCE) {
+        if (threadcomm->comm->local_size == 1) {
+            mpi_errno = MPIR_Threadcomm_recv(buf, count, datatype,
+                                             MPI_ANY_SOURCE, tag, threadcomm, attr, req,
+                                             has_status);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            /* FIXME */
+            MPIR_Assert(0 && "MPI_ANY_SOURCE on interprocess threadcomm not supported yet");
+        }
+    } else if (MPIR_THREADCOMM_RANK_IS_INTERTHREAD(threadcomm, rank)) {
         int src_id = MPIR_THREADCOMM_RANK_TO_TID(threadcomm, rank);
         mpi_errno = MPIR_Threadcomm_recv(buf, count, datatype, src_id, tag,
                                          threadcomm, attr, req, has_status);
