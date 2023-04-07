@@ -78,6 +78,7 @@ typedef struct MPIR_threadcomm_unexp_t {
 typedef struct MPIR_threadcomm_tls_t {
     MPIR_Threadcomm *threadcomm;
     int tid;
+    MPIR_Attribute *attributes;
     /* postponed send request */
     MPIR_Request *pending_list;
     /* recv message queues */

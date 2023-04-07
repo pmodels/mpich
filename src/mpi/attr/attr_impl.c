@@ -294,7 +294,15 @@ int MPIR_Comm_get_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribu
             }
         }
     } else {
-        MPIR_Attribute *p = comm_ptr->attributes;
+        MPIR_Attribute *p;
+        p = comm_ptr->attributes;
+#ifdef ENABLE_THREADCOMM
+        if (comm_ptr->threadcomm) {
+            MPIR_threadcomm_tls_t *tls = MPIR_threadcomm_get_tls(comm_ptr->threadcomm);
+            MPIR_Assert(tls);
+            p = tls->attributes;
+        }
+#endif
 
         /*   */
         *flag = 0;
@@ -344,7 +352,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
                             MPIR_Attr_type attrType)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Attribute *p;
+    MPIR_Attribute *p, **old_p; /* old_p is needed if we are adding new attribute */
 
     /* CHANGE FOR MPI 2.2:  Look for attribute.  They are ordered by when they
      * were added, with the most recent first. This uses
@@ -353,6 +361,15 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
 
     /* printf("Setting attr val to %x\n", attribute_val); */
     p = comm_ptr->attributes;
+    old_p = &(comm_ptr->attributes);
+#ifdef ENABLE_THREADCOMM
+    if (comm_ptr->threadcomm) {
+        MPIR_threadcomm_tls_t *tls = MPIR_threadcomm_get_tls(comm_ptr->threadcomm);
+        MPIR_Assert(tls);
+        p = tls->attributes;
+        old_p = &(tls->attributes);
+    }
+#endif
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             /* If found, call the delete function before replacing the
@@ -387,9 +404,9 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
         /* FIXME: See the comment above on this dual cast. */
         new_p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
         new_p->post_sentinal = 0;
-        new_p->next = comm_ptr->attributes;
+        new_p->next = *old_p;
         MPII_Keyval_add_ref(keyval_ptr);
-        comm_ptr->attributes = new_p;
+        *old_p = new_p;
         /* printf("Creating attr at %x\n", &new_p->value); */
     }
 
@@ -432,11 +449,20 @@ static void delete_attr(MPIR_Attribute ** attributes_list, MPIR_Attribute * attr
 int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Attribute *p;
+    MPIR_Attribute *p, **attributes_list;
 
     /* Look for attribute.  They are ordered by keyval handle */
 
-    p = comm_ptr->attributes;
+    attributes_list = &comm_ptr->attributes;
+#ifdef ENABLE_THREADCOMM
+    MPIR_threadcomm_tls_t *tls = NULL;
+    if (comm_ptr->threadcomm) {
+        tls = MPIR_threadcomm_get_tls(comm_ptr->threadcomm);
+        MPIR_Assert(tls);
+        attributes_list = &tls->attributes;
+    }
+#endif
+    p = *attributes_list;
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             break;
@@ -462,7 +488,7 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
 
         /* NOTE: it's incorrect to remove p by its parent pointer because the delete function
          *       may have invalidated the parent pointer, e.g. by removing the parent attribute */
-        delete_attr(&comm_ptr->attributes, p);
+        delete_attr(attributes_list, p);
     }
 
   fn_exit:

@@ -158,6 +158,13 @@ int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
 {
     MPIR_Threadcomm *threadcomm = comm->threadcomm;
     MPIR_Assert(threadcomm);
+    MPIR_threadcomm_tls_t *tls = MPIR_threadcomm_get_tls(comm->threadcomm);
+    MPIR_Assert(tls);
+
+    if (MPIR_Process.attr_free && tls->attributes) {
+        int mpi_errno = MPIR_Process.attr_free(comm->handle, &tls->attributes);
+        MPIR_Assertp(mpi_errno == MPI_SUCCESS);
+    }
 
     MPIR_THREADCOMM_TLS_DELETE(threadcomm);
     return MPI_SUCCESS;
