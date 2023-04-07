@@ -208,7 +208,7 @@ static MPIR_Request *threadcomm_match_posted(int src_id, int tag, int attr, MPIR
     MPIR_Request *curr, *tmp;
     DL_FOREACH_SAFE(*list, curr, tmp) {
         struct posted_req *u = (struct posted_req *) &curr->u;
-        if (u->src_id == src_id && u->tag == tag &&
+        if ((u->src_id == src_id || u->src_id == MPI_ANY_SOURCE) && u->tag == tag &&
             MPIR_PT2PT_ATTR_CONTEXT_OFFSET(u->attr) == MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr)) {
             DL_DELETE(*list, curr);
             req = curr;
@@ -243,7 +243,7 @@ static UNEXP *threadcomm_match_unexp(int src_id, int tag, int attr, UNEXP ** lis
     UNEXP *curr, *tmp;
     DL_FOREACH_SAFE(*list, curr, tmp) {
         struct send_hdr *hdr = (struct send_hdr *) curr->cell;
-        if (hdr->src_id == src_id && hdr->tag == tag &&
+        if ((hdr->src_id == src_id || src_id == MPI_ANY_SOURCE) && hdr->tag == tag &&
             MPIR_PT2PT_ATTR_CONTEXT_OFFSET(hdr->attr) == MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr)) {
             DL_DELETE(*list, curr);
             req = curr;
