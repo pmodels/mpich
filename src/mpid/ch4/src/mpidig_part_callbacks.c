@@ -178,7 +178,7 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
         // allocate the array of send requests
         MPIDIG_PART_SREQUEST(part_sreq, tag_req_ptr) =
             MPL_malloc(sizeof(MPIR_Request *) * msg_part, MPL_MEM_OTHER);
-        for (int i = 0; i < send_part; ++i) {
+        for (int i = 0; i < msg_part; ++i) {
             MPIDIG_PART_SREQUEST(part_sreq, tag_req_ptr[i]) = NULL;
         }
 
