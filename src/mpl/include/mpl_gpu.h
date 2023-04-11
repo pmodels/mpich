@@ -42,6 +42,15 @@ typedef enum {
     MPL_GPU_TYPE_HIP,
 } MPL_gpu_type_t;
 
+typedef struct {
+    /* Input */
+    int debug_summary;
+    /* Output */
+    bool enable_ipc;
+} MPL_gpu_info_t;
+
+extern MPL_gpu_info_t MPL_gpu_info;
+
 #ifndef MPL_HAVE_GPU
 /* inline the query function in the fallback path to provide compiler optimization opportunity */
 static inline int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)

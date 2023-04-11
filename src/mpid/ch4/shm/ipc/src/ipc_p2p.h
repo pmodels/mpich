@@ -77,11 +77,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
         MPIR_cc_inc(sreq->cc_ptr);      /* expecting SSEND_ACK */
     }
 
-    if (ipc_attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
-        mpi_errno = MPIDI_GPU_ipc_handle_cache_insert(rank, comm, ipc_attr.ipc_handle.gpu);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
     int is_local = 1;
     void *hdr;
     MPI_Aint hdr_sz;

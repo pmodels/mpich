@@ -259,6 +259,9 @@ int MPL_gpu_init(int debug_summary)
     hipError_t ret = hipGetDeviceCount(&device_count);
     HIP_ERR_CHECK(ret);
 
+    MPL_gpu_info.debug_summary = debug_summary;
+    MPL_gpu_info.enable_ipc = true;
+
     char *visible_devices = getenv("HIP_VISIBLE_DEVICES");
     if (visible_devices) {
         local_to_global_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
@@ -304,7 +307,7 @@ int MPL_gpu_init(int debug_summary)
     gpu_mem_hook_init();
     gpu_initialized = 1;
 
-    if (debug_summary) {
+    if (MPL_gpu_info.debug_summary) {
         printf("==== GPU Init (HIP) ====\n");
         printf("device_count: %d\n", device_count);
         if (visible_devices) {

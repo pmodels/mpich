@@ -112,6 +112,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
         mem_size = dt_ptr->true_ub + (count - 1) * dt_ptr->extent;
     }
     MPIDI_IPCI_ipc_attr_t ipc_attr;
+    memset(&ipc_attr, 0, sizeof(ipc_attr));
     MPIR_GPU_query_pointer_attr(mem_addr, &ipc_attr.gpu_attr);
 
     if (ipc_attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
@@ -122,10 +123,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__NONE) {
-        goto fn_exit;
-    }
-    if (data_sz < ipc_attr.threshold.send_lmt_sz && !MPIDI_IPCI_is_repeat_addr(mem_addr)) {
+    if (ipc_attr.threshold.send_lmt_sz < 0 || ipc_attr.ipc_type == MPIDI_IPCI_TYPE__NONE) {
         goto fn_exit;
     }
 

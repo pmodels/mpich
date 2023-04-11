@@ -26,7 +26,7 @@ typedef struct MPIDI_IPCI_ipc_attr {
     MPIDI_IPCI_ipc_handle_t ipc_handle;
     MPL_pointer_attr_t gpu_attr;
     struct {
-        size_t send_lmt_sz;
+        int send_lmt_sz;
     } threshold;
 } MPIDI_IPCI_ipc_attr_t;
 

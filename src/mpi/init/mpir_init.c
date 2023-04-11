@@ -228,6 +228,11 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
 
         if (device_count <= 0) {
             MPIR_CVAR_ENABLE_GPU = 0;
+        } else {
+            /* If the MPL backend doesn't support IPC, disable it for the upper layer */
+            if (!MPL_gpu_info.enable_ipc) {
+                MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD = -1;
+            }
         }
     }
 
