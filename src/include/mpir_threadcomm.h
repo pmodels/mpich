@@ -8,11 +8,12 @@
 
 #include "utarray.h"
 
-#define MPIR_THREADCOMM_FBOX_SIZE   256
-#define MPIR_THREADCOMM_MAX_PAYLOAD (MPIR_THREADCOMM_FBOX_SIZE - sizeof(MPIR_threadcomm_fbox_t))
-#define MPIR_THREADCOMM_MAILBOX(threadcomm, src, dst) \
-    (MPIR_threadcomm_fbox_t *) (((char *) (threadcomm)->mailboxes) + ((src) + (threadcomm)->num_threads * (dst)) * MPIR_THREADCOMM_FBOX_SIZE)
+/* define MPIR_THREADCOMM_USE_FBOX to use fbox for interthread messaging.
+ * Comment it off to use lockless MPSC queue instead.
+ */
+/* #define MPIR_THREADCOMM_USE_FBOX 1 */
 
+#ifdef MPIR_THREADCOMM_USE_FBOX
 typedef struct MPIR_threadcomm_fbox_t {
     union {
         MPL_atomic_int_t data_ready;
@@ -20,6 +21,27 @@ typedef struct MPIR_threadcomm_fbox_t {
     } u;
     char cell[];
 } MPIR_threadcomm_fbox_t;
+
+#define MPIR_THREADCOMM_FBOX_SIZE   256
+#define MPIR_THREADCOMM_MAX_PAYLOAD (MPIR_THREADCOMM_FBOX_SIZE - sizeof(MPIR_threadcomm_fbox_t))
+#define MPIR_THREADCOMM_MAILBOX(threadcomm, src, dst) \
+    (MPIR_threadcomm_fbox_t *) (((char *) (threadcomm)->mailboxes) + ((src) + (threadcomm)->num_threads * (dst)) * MPIR_THREADCOMM_FBOX_SIZE)
+
+#else
+typedef struct MPIR_threadcomm_cell_t {
+    MPL_atomic_ptr_t next;
+    char payload[];
+} MPIR_threadcomm_cell_t;
+
+typedef struct MPIR_threadcomm_queue_t {
+    MPL_atomic_ptr_t head;
+    MPL_atomic_ptr_t tail;
+} MPIR_threadcomm_queue_t;
+
+#define MPIR_THREADCOMM_CELL_SIZE  4096
+#define MPIR_THREADCOMM_MAX_PAYLOAD (MPIR_THREADCOMM_CELL_SIZE - sizeof(MPIR_threadcomm_cell_t))
+
+#endif
 
 typedef struct MPIR_Threadcomm {
     MPIR_OBJECT_HEADER;
@@ -33,8 +55,13 @@ typedef struct MPIR_Threadcomm {
     MPL_atomic_int_t arrive_counter;
     MPL_atomic_int_t leave_counter;
     MPL_atomic_int_t barrier_flag;
+#ifdef MPIR_THREADCOMM_USE_FBOX
     /* fast box */
     MPIR_threadcomm_fbox_t *mailboxes;
+#else
+    /* lockless MPSC queue */
+    MPIR_threadcomm_queue_t *queues;
+#endif
 } MPIR_Threadcomm;
 
 #define MPIR_THREADCOMM_RANK_IS_INTERTHREAD(threadcomm, rank) \

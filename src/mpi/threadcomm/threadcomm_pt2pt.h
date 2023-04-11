@@ -57,12 +57,55 @@ static MPIR_threadcomm_unexp_t *threadcomm_match_unexp(int src_id, int tag, int 
                                                        MPIR_threadcomm_unexp_t ** list);
 
 /* TODO: refactor transport, add queue implementation */
-static int threadcomm_fbox_send(int src_id, int dst_id, struct send_hdr *hdr,
-                                const void *data, MPI_Aint count, MPI_Datatype datatype,
-                                MPIR_Threadcomm * threadcomm);
+static int threadcomm_eager_send(int src_id, int dst_id, struct send_hdr *hdr,
+                                 const void *data, MPI_Aint count, MPI_Datatype datatype,
+                                 MPIR_Threadcomm * threadcomm);
 
 static int threadcomm_progress_send(void);
 static int threadcomm_progress_recv(void);
+
+#ifndef MPIR_THREADCOMM_USE_FBOX
+/* MPSC queue */
+static void threadcomm_mpsc_enqueue(MPIR_threadcomm_queue_t * queue, MPIR_threadcomm_cell_t * cell)
+{
+    MPL_atomic_relaxed_store_ptr(&cell->next, NULL);
+
+    void *tail_ptr = MPL_atomic_swap_ptr(&queue->tail, cell);
+    if (tail_ptr == NULL) {
+        /* queue was empty */
+        MPL_atomic_store_ptr(&queue->head, cell);
+    } else {
+        MPL_atomic_store_ptr(&((MPIR_threadcomm_cell_t *) tail_ptr)->next, cell);
+    }
+}
+
+static MPIR_threadcomm_cell_t *threadcomm_mpsc_dequeue(MPIR_threadcomm_queue_t * queue)
+{
+    MPIR_threadcomm_cell_t *cell = MPL_atomic_load_ptr(&queue->head);
+    if (cell) {
+        void *next = MPL_atomic_load_ptr(&cell->next);
+        if (next != NULL) {
+            /* just dequeue the head */
+            MPL_atomic_store_ptr(&queue->head, next);
+        } else {
+            /* single element, tail == head,
+             * have to make sure no enqueuing is in progress */
+            MPL_atomic_store_ptr(&queue->head, NULL);
+            if (MPL_atomic_cas_ptr(&queue->tail, cell, NULL) == cell) {
+                /* no enqueuing in progress, we are done */
+            } else {
+                /* busy wait for the enqueuing to finish */
+                do {
+                    next = MPL_atomic_load_ptr(&cell->next);
+                } while (next == NULL);
+                /* then set the header */
+                MPL_atomic_store_ptr(&queue->head, next);
+            }
+        }
+    }
+    return cell;
+}
+#endif /* !MPIR_THREADCOMM_USE_FBOX */
 
 /* ---- The main functions: send, recv, progress ---- */
 
@@ -90,7 +133,7 @@ MPL_STATIC_INLINE_PREFIX
         hdr.is_eager = true;
         hdr.u.data_sz = data_sz;
 
-        int ret = threadcomm_fbox_send(p->tid, dst_id, &hdr, buf, count, datatype, threadcomm);
+        int ret = threadcomm_eager_send(p->tid, dst_id, &hdr, buf, count, datatype, threadcomm);
         if (ret == 0) {
             *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
             goto fn_exit;
@@ -120,7 +163,7 @@ MPL_STATIC_INLINE_PREFIX
     hdr.is_eager = false;
     hdr.u.sreq = sreq;
 
-    int ret = threadcomm_fbox_send(p->tid, dst_id, &hdr, NULL, 0, MPI_DATATYPE_NULL, threadcomm);
+    int ret = threadcomm_eager_send(p->tid, dst_id, &hdr, NULL, 0, MPI_DATATYPE_NULL, threadcomm);
     if (ret) {
         /* enqueue request */
         DL_APPEND(p->pending_list, sreq);
@@ -278,32 +321,47 @@ static UNEXP *threadcomm_match_unexp(int src_id, int tag, int attr, UNEXP ** lis
     return req;
 }
 
-static int threadcomm_fbox_send(int src_id, int dst_id, struct send_hdr *hdr,
-                                const void *data, MPI_Aint count, MPI_Datatype datatype,
-                                MPIR_Threadcomm * threadcomm)
+static inline void threadcomm_load_cell(void *cell, struct send_hdr *hdr,
+                                        const void *data, MPI_Aint count, MPI_Datatype datatype)
 {
+    memcpy(cell, hdr, sizeof(struct send_hdr));
+    if (count > 0) {
+        MPIR_Assert(hdr->is_eager);
+        MPI_Aint actual_pack_bytes;
+        void *p = (char *) cell + sizeof(struct send_hdr);
+        MPIR_Typerep_pack(data, count, datatype, 0, p, hdr->u.data_sz, &actual_pack_bytes,
+                          MPIR_TYPEREP_FLAG_NONE);
+        MPIR_Assert(actual_pack_bytes == hdr->u.data_sz);
+    }
+}
+
+static int threadcomm_eager_send(int src_id, int dst_id, struct send_hdr *hdr,
+                                 const void *data, MPI_Aint count, MPI_Datatype datatype,
+                                 MPIR_Threadcomm * threadcomm)
+{
+#ifdef MPIR_THREADCOMM_USE_FBOX
     MPIR_threadcomm_fbox_t *fbox = MPIR_THREADCOMM_MAILBOX(threadcomm, src_id, dst_id);
 
     if (MPL_atomic_load_int(&fbox->u.data_ready)) {
         return -1;
     }
 
-    memcpy(fbox->cell, hdr, sizeof(struct send_hdr));
-    if (count > 0) {
-        MPIR_Assert(hdr->is_eager);
-        MPI_Aint actual_pack_bytes;
-        void *p = (char *) fbox->cell + sizeof(struct send_hdr);
-        MPIR_Typerep_pack(data, count, datatype, 0, p, hdr->u.data_sz, &actual_pack_bytes,
-                          MPIR_TYPEREP_FLAG_NONE);
-        MPIR_Assert(actual_pack_bytes == hdr->u.data_sz);
-    }
+    threadcomm_load_cell(fbox->cell, hdr, data, count, datatype);
     MPL_atomic_store_int(&fbox->u.data_ready, 1);
 
+#else
+    MPIR_threadcomm_cell_t *cell = MPL_malloc(MPIR_THREADCOMM_CELL_SIZE, MPL_MEM_OTHER);
+    threadcomm_load_cell(cell->payload, hdr, data, count, datatype);
+
+    threadcomm_mpsc_enqueue(&threadcomm->queues[dst_id], cell);
+
+#endif
     return 0;
 }
 
 static int threadcomm_progress_send(void)
 {
+#ifdef MPIR_THREADCOMM_USE_FBOX
     MPIR_threadcomm_tls_t *p = ut_type_array(MPIR_threadcomm_array, MPIR_threadcomm_tls_t *);
     for (int i = 0; i < utarray_len(MPIR_threadcomm_array); i++) {
         MPIR_Request *curr, *tmp;
@@ -316,15 +374,31 @@ static int threadcomm_progress_send(void)
             hdr.is_eager = false;
             hdr.u.sreq = curr;
 
-            int ret = threadcomm_fbox_send(p[i].tid, u->dst_id, &hdr,
-                                           NULL, 0, MPI_DATATYPE_NULL, p[i].threadcomm);
+            int ret = threadcomm_eager_send(p[i].tid, u->dst_id, &hdr,
+                                            NULL, 0, MPI_DATATYPE_NULL, p[i].threadcomm);
             if (ret == 0) {
                 DL_DELETE(p[i].pending_list, curr);
             }
         }
     }
+#else
+    /* queues won't need pending_list sends */
+#endif
 
     return MPI_SUCCESS;
+}
+
+static inline void threadcomm_recv_event(void *cell, MPIR_threadcomm_tls_t * p)
+{
+    struct send_hdr *hdr = cell;
+    MPIR_Request *rreq = threadcomm_match_posted(hdr->src_id, hdr->tag, hdr->attr, &p->posted_list);
+    if (rreq) {
+        threadcomm_complete_posted(hdr, rreq);
+        rreq->status.MPI_TAG = hdr->tag;
+        rreq->status.MPI_SOURCE = MPIR_THREADCOMM_TID_TO_RANK(p->threadcomm, hdr->src_id);
+    } else {
+        threadcomm_enqueue_unexp(hdr, &p->unexp_list);
+    }
 }
 
 static int threadcomm_progress_recv(void)
@@ -332,22 +406,23 @@ static int threadcomm_progress_recv(void)
     MPIR_threadcomm_tls_t *p = ut_type_array(MPIR_threadcomm_array, MPIR_threadcomm_tls_t *);
     for (int i = 0; i < utarray_len(MPIR_threadcomm_array); i++) {
         int num_threads = p[i].threadcomm->num_threads;
+#ifdef MPIR_THREADCOMM_USE_FBOX
         for (int j = 0; j < num_threads; j++) {
             MPIR_threadcomm_fbox_t *fbox = MPIR_THREADCOMM_MAILBOX(p[i].threadcomm, j, p[i].tid);
             if (MPL_atomic_load_int(&fbox->u.data_ready)) {
-                struct send_hdr *hdr = (void *) fbox->cell;
-                MPIR_Request *rreq =
-                    threadcomm_match_posted(hdr->src_id, hdr->tag, hdr->attr, &p[i].posted_list);
-                if (rreq) {
-                    threadcomm_complete_posted(hdr, rreq);
-                    rreq->status.MPI_TAG = hdr->tag;
-                    rreq->status.MPI_SOURCE = MPIR_THREADCOMM_TID_TO_RANK(p[i].threadcomm, j);
-                } else {
-                    threadcomm_enqueue_unexp(hdr, &p[i].unexp_list);
-                }
+                threadcomm_recv_event(fbox->cell, &p[i]);
                 MPL_atomic_store_int(&fbox->u.data_ready, 0);
             }
         }
+#else
+        MPIR_threadcomm_queue_t *queue = &(p[i].threadcomm->queues[p[i].tid]);
+        MPIR_threadcomm_cell_t *cell =
+            threadcomm_mpsc_dequeue(&(p[i].threadcomm->queues[p[i].tid]));
+        if (cell) {
+            threadcomm_recv_event(cell->payload, &p[i]);
+            MPL_free(cell);
+        }
+#endif
     }
 
     return MPI_SUCCESS;
