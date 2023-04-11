@@ -2196,12 +2196,6 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", %s, mpi_errno);" % (sbuf, sbuf, ct))
         G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", %s, mpi_errno);" % (rbuf, rbuf, ct))
     elif RE.match(r'mpi_i?reduce(_init)?$', func['name'], re.IGNORECASE):
-        G.out.append("if (" + cond_intra + ") {")
-        G.out.append("    MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);")
-        G.out.append("} else {")
-        G.out.append("    MPIR_ERRTEST_INTER_ROOT(comm_ptr, root, mpi_errno);")
-        G.out.append("}")
-
         # exclude intercomm MPI_PROC_NULL
         G.out.append("if (" + cond_intra + " || root != MPI_PROC_NULL) {")
         G.out.append("INDENT")
