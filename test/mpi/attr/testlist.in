@@ -7,6 +7,7 @@ attrend2 1
 attrend2 5
 attrerrcomm 1
 attrerrtype 1
+attrdelete 1
 attrdeleteget 1
 attr2type 1
 attrorder 1
