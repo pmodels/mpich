@@ -63,24 +63,6 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     struct fi_rma_iov riov;
     struct iovec iov;
 
-    /* allocate request */
-    MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
-    MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->vci_local = MPIDI_WIN(win, am_vci);
-    req->vci_target = MPIDI_WIN_TARGET_VCI(win, target_rank);
-    req->nic_target = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);
-    req->next = MPIDI_OFI_WIN(win).syncQ;
-    MPIDI_OFI_WIN(win).syncQ = req;
-    req->sigreq = sigreq;
-    req->chunks = NULL;
-    if (rma_type == MPIDI_OFI_PUT) {
-        req->noncontig.put.origin.datatype = MPI_DATATYPE_NULL;
-        req->noncontig.put.target.datatype = MPI_DATATYPE_NULL;
-    } else {
-        req->noncontig.get.origin.datatype = MPI_DATATYPE_NULL;
-        req->noncontig.get.target.datatype = MPI_DATATYPE_NULL;
-    }
-
     /* allocate target iovecs */
     struct iovec *target_iov;
     MPI_Aint total_target_iov_len;
@@ -138,10 +120,8 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         if (rma_type == MPIDI_OFI_PUT) {
             MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vci, rdma_write);
-            req->rma_type = MPIDI_OFI_PUT;
         } else {        /* MPIDI_OFI_GET */
             MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), vci, rdma_write);
-            req->rma_type = MPIDI_OFI_GET;
         }
 
         if (msg_len < origin_iov[origin_cur].iov_len) {
