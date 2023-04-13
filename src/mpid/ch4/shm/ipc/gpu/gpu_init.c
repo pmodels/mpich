@@ -47,12 +47,18 @@ static void ipc_handle_free_hook(void *dptr)
         MPIR_Assert(mpl_err == MPL_SUCCESS);
 
         MPIR_GPU_query_pointer_attr(pbase, &gpu_attr);
-        local_dev_id = MPL_gpu_get_dev_id_from_attr(&gpu_attr);
-        global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
+        if (gpu_attr.type == MPL_GPU_POINTER_DEV) {
+            local_dev_id = MPL_gpu_get_dev_id_from_attr(&gpu_attr);
+            global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
 
-        for (int i = 0; i < MPIR_Process.local_size; ++i) {
-            MPL_gavl_tree_t track_tree = MPIDI_GPUI_global.ipc_handle_track_trees[i][global_dev_id];
-            mpl_err = MPL_gavl_tree_delete_range(track_tree, pbase, len);
+            for (int i = 0; i < MPIR_Process.local_size; ++i) {
+                MPL_gavl_tree_t track_tree =
+                    MPIDI_GPUI_global.ipc_handle_track_trees[i][global_dev_id];
+                mpl_err = MPL_gavl_tree_delete_range(track_tree, pbase, len);
+                MPIR_Assert(mpl_err == MPL_SUCCESS);
+            }
+
+            mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
             MPIR_Assert(mpl_err == MPL_SUCCESS);
         }
     }
@@ -159,6 +165,10 @@ int MPIDI_GPU_init_world(void)
     MPIDI_GPUI_global.local_device_count = device_count;
     MPL_gpu_free_hook_register(ipc_handle_free_hook);
 
+    /* This hook is needed when using the drmfd shareable ipc handle implementation in ze backend */
+    mpi_errno = MPIDI_FD_mpi_init_hook();
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPIDI_GPUI_global.initialized = 1;
 
   fn_exit:
@@ -174,6 +184,9 @@ int MPIDI_GPU_mpi_finalize_hook(void)
     MPIR_FUNC_ENTER;
 
     if (MPIDI_GPUI_global.initialized) {
+        mpi_errno = MPIDI_FD_mpi_finalize_hook();
+        MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_finalize");
+
         MPL_free(MPIDI_GPUI_global.local_ranks);
     }
 
@@ -210,6 +223,9 @@ int MPIDI_GPU_mpi_finalize_hook(void)
     }
     MPL_free(MPIDI_GPUI_global.ipc_handle_track_trees);
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

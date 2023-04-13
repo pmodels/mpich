@@ -26,4 +26,8 @@ typedef volatile int MPL_gpu_event_t;
 
 #define MPL_GPU_DEV_AFFINITY_ENV "ZE_AFFINITY_MASK"
 
+/* ZE specific function */
+int MPL_ze_init_device_fds(int *num_fds, int *device_fds);
+void MPL_ze_set_fds(int num_fds, int *fds);
+
 #endif /* ifndef MPL_GPU_ZE_H_INCLUDED */

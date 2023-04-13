@@ -29,6 +29,11 @@ typedef enum {
     MPL_GPU_POINTER_MANAGED
 } MPL_pointer_type_t;
 
+typedef enum {
+    MPL_GPU_IPC_HANDLE_SHAREABLE = 0,
+    MPL_GPU_IPC_HANDLE_SHAREABLE_FD
+} MPL_gpu_ipc_handle_type_t;
+
 typedef struct {
     MPL_pointer_type_t type;
     MPL_gpu_device_handle_t device;
@@ -47,6 +52,7 @@ typedef struct {
     int debug_summary;
     /* Output */
     bool enable_ipc;
+    MPL_gpu_ipc_handle_type_t ipc_handle_type;
 } MPL_gpu_info_t;
 
 extern MPL_gpu_info_t MPL_gpu_info;
@@ -67,6 +73,8 @@ int MPL_gpu_query_support(MPL_gpu_type_t * type);
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
 
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle);
+/* Used in ipc_handle_free_hook. Needed for fd-based ipc mechanism. */
+int MPL_gpu_ipc_handle_destroy(const void *ptr);
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr);
 int MPL_gpu_ipc_handle_unmap(void *ptr);
 
