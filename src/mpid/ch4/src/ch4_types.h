@@ -238,11 +238,6 @@ extern MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[REQUEST_POOL_MAX]
 /* per-VCI structure -- using union to force minimum size */
 typedef struct MPIDI_per_vci {
     MPID_Thread_mutex_t lock;
-    /* The progress counts are mostly accessed in a VCI critical section and thus updated in a
-     * relaxed manner.  MPL_atomic_int_t is used here only for MPIDI_set_progress_vci() and
-     * MPIDI_set_progress_vci_n(), which access these progress counts outside a VCI critical
-     * section. */
-    MPL_atomic_int_t progress_count;
 
     MPIR_Request *posted_list;
     MPIR_Request *unexp_list;

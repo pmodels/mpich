@@ -12,11 +12,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
                                                      MPID_Progress_state * state)
 {
     state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
-    state->progress_made = 0;
 
     int vci = MPIDI_Request_get_vci(req);
 
-    state->progress_counts[0] = MPL_atomic_relaxed_load_int(&MPIDI_VCI(vci).progress_count);
     state->vci_count = 1;
     state->vci[0] = vci;
 }
@@ -25,7 +23,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** re
                                                        MPID_Progress_state * state)
 {
     state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
-    state->progress_made = 0;
 
     int idx = 0;
     for (int i = 0; i < n; i++) {
@@ -47,10 +44,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** re
         }
     }
     state->vci_count = idx;
-    for (int i = 0; i < state->vci_count; i++) {
-        int vci = state->vci[i];
-        state->progress_counts[i] = MPL_atomic_relaxed_load_int(&MPIDI_VCI(vci).progress_count);
-    }
 }
 
 /* MPID_Test, MPID_Testall, MPID_Testany, MPID_Testsome */
