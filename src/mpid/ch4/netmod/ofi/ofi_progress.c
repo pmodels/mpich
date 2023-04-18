@@ -9,5 +9,6 @@
 
 int MPIDI_OFI_progress_uninlined(int vci)
 {
-    return MPIDI_NM_progress(vci, 0);
+    int made_progress;
+    return MPIDI_NM_progress(vci, &made_progress);
 }

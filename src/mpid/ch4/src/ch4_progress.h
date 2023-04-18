@@ -61,7 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
     do {                                              \
         if (state->flag & MPIDI_PROGRESS_NM) {	      \
             MPIDI_THREAD_CS_ENTER_VCI_OPTIONAL(vci);  \
-            mpi_errno = MPIDI_NM_progress(vci, 0);    \
+            mpi_errno = MPIDI_NM_progress(vci, &made_progress); \
             MPIDI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);   \
         }                                             \
     } while (0)
@@ -71,12 +71,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
     do {                                                \
         if (state->flag & MPIDI_PROGRESS_NM) {                  \
             MPIDI_THREAD_CS_ENTER_VCI_OPTIONAL(vci);            \
-            mpi_errno = MPIDI_NM_progress(vci, 0);              \
+            mpi_errno = MPIDI_NM_progress(vci, &made_progress); \
             MPIDI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);                     \
         }                                                               \
         if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) { \
             MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);             \
-            mpi_errno = MPIDI_SHM_progress(vci, 0);                     \
+            mpi_errno = MPIDI_SHM_progress(vci, &made_progress); \
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);              \
         }                                                               \
   } while (0)
@@ -175,10 +175,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci)
         mpi_errno = MPID_Progress_test(NULL);
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     } else {
-        mpi_errno = MPIDI_NM_progress(vci, 0);
+        int made_progress = 0;
+        mpi_errno = MPIDI_NM_progress(vci, &made_progress);
         MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_progress(vci, 0);
+        mpi_errno = MPIDI_SHM_progress(vci, &made_progress);
         MPIR_ERR_CHECK(mpi_errno);
 #endif
     }

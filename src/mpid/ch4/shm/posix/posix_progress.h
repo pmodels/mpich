@@ -10,7 +10,7 @@
 #include "posix_eager.h"
 #include "posix_am.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vci, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vci, int *made_progress)
 {
 
     MPIDI_POSIX_eager_recv_transaction_t transaction;
@@ -30,6 +30,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vci, int blocking)
     if (MPIDI_POSIX_OK != result) {
         goto fn_exit;
     }
+
+    /* We are making progress. Flag made_progress potentially can skip the netmod progress poll */
+    *made_progress = 1;
 
     /* Process the eager message */
     msg_hdr = transaction.msg_hdr;
@@ -87,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int vci, int blocking)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vci, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vci, int *made_progress)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -96,6 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vci, int blocking)
     MPIR_FUNC_ENTER;
 
     if (MPIDI_POSIX_global.per_vci[vci].postponed_queue) {
+        *made_progress = 1;
         /* Drain postponed queue */
         curr_sreq_hdr = MPIDI_POSIX_global.per_vci[vci].postponed_queue;
 
@@ -131,17 +135,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vci, int blocking)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int vci, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int vci, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     MPIR_Assert(vci < MPIDI_POSIX_global.num_vcis);
 
-    mpi_errno = MPIDI_POSIX_progress_recv(vci, blocking);
+    mpi_errno = MPIDI_POSIX_progress_recv(vci, made_progress);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_POSIX_progress_send(vci, blocking);
+    mpi_errno = MPIDI_POSIX_progress_send(vci, made_progress);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
