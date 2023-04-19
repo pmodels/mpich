@@ -69,7 +69,7 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
         MPIDIG_part_rreq_matched(posted_req);
 
         /* If rreq matches and local start has been called, notify sender CTS */
-        vci_id = get_vci_wrapper(posted_req);
+        vci_id = MPIDI_Request_get_vci(posted_req);
         if (MPIR_Part_request_is_active(posted_req)) {
             /* allocate the arrays, the request has been started (cannot be done if not started) */
             MPIDIG_Part_rreq_allocate(posted_req);
@@ -193,7 +193,7 @@ int MPIDIG_part_cts_target_msg_cb(void *am_hdr, void *data,
     MPIR_Assert(MPIDIG_PART_REQUEST(part_sreq, peer_req_ptr) == msg_hdr->rreq_ptr);
     MPIR_Assert(MPIDIG_PART_REQUEST(part_sreq, msg_part) == msg_hdr->msg_part);
 
-    const int vci_id = get_vci_wrapper(part_sreq);
+    const int vci_id = MPIDI_Request_get_vci(part_sreq);
     const int msg_part = MPIDIG_PART_REQUEST(part_sreq, msg_part);
     const bool is_active = MPIR_Part_request_is_active(part_sreq);
     if (is_active) {

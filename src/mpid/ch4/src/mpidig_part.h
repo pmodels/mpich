@@ -51,7 +51,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
             }
 
             // free the previous requests, needed only at the second iteration so we will have
-            // msg_part > 0. the lock can be around the loop as we have matched, so the tag_req_ptr
+            // msg_part > 0. The lock can be around the loop as we have matched, so the tag_req_ptr
             // is not being changed by anybody else
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
             MPIR_Request **child_req = MPIDIG_PART_SREQUEST(request, tag_req_ptr);
