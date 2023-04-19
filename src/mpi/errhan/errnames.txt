@@ -940,6 +940,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 # Argobots related error messages
 **argobots_uninitialized:Argobots is not initialized
 
+# Qthreads related error messages
+**qthreads_uninitialized:Qthreads is not initialized
+
 ## XPMEM related error messages
 **xpmem_make: xpmem_make failed
 **xpmem_segid: xpmem remote segid is unset

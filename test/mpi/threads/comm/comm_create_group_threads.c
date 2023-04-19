@@ -68,7 +68,7 @@ static MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
 
     if (verbose)
         printf("%d: Thread %d - Done.\n", rank, *(int *) arg);
-    return NULL;
+    MTEST_THREAD_RETURN_EXPRESSION;
 }
 
 
