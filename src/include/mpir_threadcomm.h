@@ -177,7 +177,7 @@ int MPIR_Threadcomm_isend_attr(const void *buf, MPI_Aint count, MPI_Datatype dat
 int MPIR_Threadcomm_irecv_attr(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                int rank, int tag, MPIR_Threadcomm * threadcomm, int attr,
                                MPIR_Request ** req);
-int MPIR_Threadcomm_progress(void);
+int MPIR_Threadcomm_progress(int *made_progress);
 
 #endif /* ENABLE_THREADCOMM */
 

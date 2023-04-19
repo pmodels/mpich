@@ -61,8 +61,8 @@ static int threadcomm_eager_send(int src_id, int dst_id, struct send_hdr *hdr,
                                  const void *data, MPI_Aint count, MPI_Datatype datatype,
                                  MPIR_Threadcomm * threadcomm);
 
-static int threadcomm_progress_send(void);
-static int threadcomm_progress_recv(void);
+static int threadcomm_progress_send(int *made_progress);
+static int threadcomm_progress_recv(int *made_progress);
 
 #ifndef MPIR_THREADCOMM_USE_FBOX
 /* MPSC queue */
@@ -359,7 +359,7 @@ static int threadcomm_eager_send(int src_id, int dst_id, struct send_hdr *hdr,
     return 0;
 }
 
-static int threadcomm_progress_send(void)
+static int threadcomm_progress_send(int *made_progress)
 {
 #ifdef MPIR_THREADCOMM_USE_FBOX
     MPIR_threadcomm_tls_t *p = ut_type_array(MPIR_threadcomm_array, MPIR_threadcomm_tls_t *);
@@ -401,7 +401,7 @@ static inline void threadcomm_recv_event(void *cell, MPIR_threadcomm_tls_t * p)
     }
 }
 
-static int threadcomm_progress_recv(void)
+static int threadcomm_progress_recv(int *made_progress)
 {
     MPIR_threadcomm_tls_t *p = ut_type_array(MPIR_threadcomm_array, MPIR_threadcomm_tls_t *);
     for (int i = 0; i < utarray_len(MPIR_threadcomm_array); i++) {
@@ -410,6 +410,7 @@ static int threadcomm_progress_recv(void)
         for (int j = 0; j < num_threads; j++) {
             MPIR_threadcomm_fbox_t *fbox = MPIR_THREADCOMM_MAILBOX(p[i].threadcomm, j, p[i].tid);
             if (MPL_atomic_load_int(&fbox->u.data_ready)) {
+                *made_progress = 1;
                 threadcomm_recv_event(fbox->cell, &p[i]);
                 MPL_atomic_store_int(&fbox->u.data_ready, 0);
             }
@@ -419,6 +420,7 @@ static int threadcomm_progress_recv(void)
         MPIR_threadcomm_cell_t *cell =
             threadcomm_mpsc_dequeue(&(p[i].threadcomm->queues[p[i].tid]));
         if (cell) {
+            *made_progress = 1;
             threadcomm_recv_event(cell->payload, &p[i]);
             MPL_free(cell);
         }

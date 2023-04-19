@@ -121,7 +121,8 @@ int MPIR_Threadcomm_send_impl(const void *buf, MPI_Aint count, MPI_Datatype data
         MPIR_ERR_CHECK(mpi_errno);
         /* wait */
         while (!MPIR_Request_is_complete(sreq)) {
-            MPIR_Threadcomm_progress();
+            int made_progress;
+            MPIR_Threadcomm_progress(&made_progress);
         }
         MPIR_Request_free(sreq);
     } else {
@@ -162,7 +163,8 @@ int MPIR_Threadcomm_recv_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                          has_status);
         MPIR_ERR_CHECK(mpi_errno);
         while (!MPIR_Request_is_complete(rreq)) {
-            MPIR_Threadcomm_progress();
+            int made_progress;
+            MPIR_Threadcomm_progress(&made_progress);
         }
         mpi_errno = rreq->status.MPI_ERROR;
         MPIR_Request_extract_status(rreq, status);
@@ -193,13 +195,13 @@ int MPIR_Threadcomm_recv_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
     goto fn_exit;
 }
 
-int MPIR_Threadcomm_progress(void)
+int MPIR_Threadcomm_progress(int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIR_threadcomm_array && utarray_len(MPIR_threadcomm_array)) {
-        threadcomm_progress_send();
-        threadcomm_progress_recv();
+        threadcomm_progress_send(made_progress);
+        threadcomm_progress_recv(made_progress);
     }
 
     return mpi_errno;
