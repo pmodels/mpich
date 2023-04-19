@@ -350,12 +350,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_msg_if_ready(const int msg_id,
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
         }
         MPIR_ERR_CHECK(mpi_errno);
-#if MPIDI_CH4_VCI_METHOD == MPICH_VCI__TAG
         // we have to explicitly increment the progress counter to ensure progress on the main
         // thread when using multiple VCIs
         const int vci_id = MPIDI_Request_get_vci(sreq);
         MPL_atomic_fetch_add_int(&MPIDI_VCI(vci_id).progress_count, 1);
-#endif
     }
   fn_exit:
     MPIR_FUNC_EXIT;
