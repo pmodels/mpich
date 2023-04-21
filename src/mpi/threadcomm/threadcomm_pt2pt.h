@@ -47,8 +47,8 @@ struct posted_req {
     int attr;
 };
 
-static void threadcomm_data_copy(struct send_hdr *hdr,
-                                 void *buf, MPI_Aint count, MPI_Datatype datatype);
+static void threadcomm_data_copy(struct send_hdr *hdr, void *buf, MPI_Aint count,
+                                 MPI_Datatype datatype, MPIR_threadcomm_tls_t * p);
 static void threadcomm_set_status(MPIR_Threadcomm * threadcomm, struct send_hdr *hdr,
                                   MPI_Status * status);
 
@@ -56,7 +56,8 @@ static MPIR_Request *threadcomm_enqueue_posted(void *buf, MPI_Aint count, MPI_Da
                                                int src_id, int tag, int attr,
                                                int tid, MPIR_Request ** list);
 static MPIR_Request *threadcomm_match_posted(int src_id, int tag, int attr, MPIR_Request ** list);
-static void threadcomm_complete_posted(struct send_hdr *hdr, MPIR_Request * rreq);
+static void threadcomm_complete_posted(struct send_hdr *hdr, MPIR_Request * rreq,
+                                       MPIR_threadcomm_tls_t * p);
 
 static void threadcomm_enqueue_unexp(struct send_hdr *hdr, MPIR_threadcomm_unexp_t ** list);
 static MPIR_threadcomm_unexp_t *threadcomm_match_unexp(int src_id, int tag, int attr,
@@ -202,7 +203,7 @@ MPL_STATIC_INLINE_PREFIX
         } else {
             *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RECV);
         }
-        threadcomm_data_copy(hdr, buf, count, datatype);
+        threadcomm_data_copy(hdr, buf, count, datatype, p);
         MPL_free(unexp);
     } else {
         *req = threadcomm_enqueue_posted(buf, count, datatype, src_id, tag, attr,
@@ -217,8 +218,8 @@ MPL_STATIC_INLINE_PREFIX
 
 /* ---- internal functions ---- */
 
-static void threadcomm_data_copy(struct send_hdr *hdr,
-                                 void *buf, MPI_Aint count, MPI_Datatype datatype)
+static void threadcomm_data_copy(struct send_hdr *hdr, void *buf, MPI_Aint count,
+                                 MPI_Datatype datatype, MPIR_threadcomm_tls_t * p)
 {
     if (hdr->type == MPIR_THREADCOMM_MSGTYPE_EAGER) {
         MPI_Aint actual_unpack_bytes;
@@ -230,7 +231,14 @@ static void threadcomm_data_copy(struct send_hdr *hdr,
         MPIR_Request *sreq = hdr->u.sreq;
         struct send_req *sreq_u = (struct send_req *) &(sreq->u);
         MPIR_Localcopy(sreq_u->buf, sreq_u->count, sreq_u->datatype, buf, count, datatype);
-        /* FIXME: send sync */
+
+        /* send ack */
+        struct send_hdr tmp_hdr;
+        tmp_hdr.type = MPIR_THREADCOMM_MSGTYPE_SYNC;
+        tmp_hdr.src_id = p->tid;
+        tmp_hdr.u.sreq = sreq;
+        threadcomm_eager_send(p->tid, hdr->src_id, &tmp_hdr, NULL, 0, MPI_DATATYPE_NULL,
+                              p->threadcomm);
     }
 }
 
@@ -291,10 +299,11 @@ static MPIR_Request *threadcomm_match_posted(int src_id, int tag, int attr, MPIR
     return req;
 }
 
-static void threadcomm_complete_posted(struct send_hdr *hdr, MPIR_Request * rreq)
+static void threadcomm_complete_posted(struct send_hdr *hdr, MPIR_Request * rreq,
+                                       MPIR_threadcomm_tls_t * p)
 {
     struct posted_req *u = (struct posted_req *) &rreq->u;
-    threadcomm_data_copy(hdr, u->buf, u->count, u->datatype);
+    threadcomm_data_copy(hdr, u->buf, u->count, u->datatype, p);
     MPIR_Assert(rreq->comm);
     threadcomm_set_status((MPIR_Threadcomm *) rreq->comm, hdr, &rreq->status);
     rreq->comm = NULL;
@@ -399,9 +408,16 @@ static int threadcomm_progress_send(int *made_progress)
 static inline void threadcomm_recv_event(void *cell, MPIR_threadcomm_tls_t * p)
 {
     struct send_hdr *hdr = cell;
+
+    if (hdr->type == MPIR_THREADCOMM_MSGTYPE_SYNC) {
+        /* This is sync message from receiver */
+        MPIR_Request_complete(hdr->u.sreq);
+        return;
+    }
+
     MPIR_Request *rreq = threadcomm_match_posted(hdr->src_id, hdr->tag, hdr->attr, &p->posted_list);
     if (rreq) {
-        threadcomm_complete_posted(hdr, rreq);
+        threadcomm_complete_posted(hdr, rreq, p);
         rreq->status.MPI_TAG = hdr->tag;
         rreq->status.MPI_SOURCE = MPIR_THREADCOMM_TID_TO_RANK(p->threadcomm, hdr->src_id);
     } else {
