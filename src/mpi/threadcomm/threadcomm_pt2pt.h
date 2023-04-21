@@ -8,11 +8,17 @@
 
 /* this is an internal header for threadcomm_pt2pt_impl.c */
 
+typedef enum {
+    MPIR_THREADCOMM_MSGTYPE_EAGER,
+    MPIR_THREADCOMM_MSGTYPE_IPC,
+    MPIR_THREADCOMM_MSGTYPE_SYNC,
+} MPIR_Threadcomm_msgtype_t;
+
 struct send_hdr {
+    MPIR_Threadcomm_msgtype_t type;
     int src_id;
     int tag;
     int attr;
-    bool is_eager;
     union {
         /* eager */
         MPI_Aint data_sz;
@@ -127,10 +133,10 @@ MPL_STATIC_INLINE_PREFIX
         !(MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr));
     if (try_eager) {
         struct send_hdr hdr;
+        hdr.type = MPIR_THREADCOMM_MSGTYPE_EAGER;
         hdr.src_id = p->tid;
         hdr.tag = tag;
         hdr.attr = attr;
-        hdr.is_eager = true;
         hdr.u.data_sz = data_sz;
 
         int ret = threadcomm_eager_send(p->tid, dst_id, &hdr, buf, count, datatype, threadcomm);
@@ -157,10 +163,10 @@ MPL_STATIC_INLINE_PREFIX
 
     /* prepare send_hdr */
     struct send_hdr hdr;
+    hdr.type = MPIR_THREADCOMM_MSGTYPE_IPC;
     hdr.src_id = p->tid;
     hdr.tag = tag;
     hdr.attr = attr;
-    hdr.is_eager = false;
     hdr.u.sreq = sreq;
 
     int ret = threadcomm_eager_send(p->tid, dst_id, &hdr, NULL, 0, MPI_DATATYPE_NULL, threadcomm);
@@ -214,17 +220,17 @@ MPL_STATIC_INLINE_PREFIX
 static void threadcomm_data_copy(struct send_hdr *hdr,
                                  void *buf, MPI_Aint count, MPI_Datatype datatype)
 {
-    if (hdr->is_eager) {
+    if (hdr->type == MPIR_THREADCOMM_MSGTYPE_EAGER) {
         MPI_Aint actual_unpack_bytes;
         const void *data = hdr + 1;
         MPIR_Typerep_unpack(data, hdr->u.data_sz, buf, count, datatype,
                             0, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
         MPIR_Assert(actual_unpack_bytes == hdr->u.data_sz);
-    } else {
+    } else if (hdr->type == MPIR_THREADCOMM_MSGTYPE_IPC) {
         MPIR_Request *sreq = hdr->u.sreq;
         struct send_req *sreq_u = (struct send_req *) &(sreq->u);
         MPIR_Localcopy(sreq_u->buf, sreq_u->count, sreq_u->datatype, buf, count, datatype);
-        MPIR_Request_complete(sreq);
+        /* FIXME: send sync */
     }
 }
 
@@ -236,13 +242,15 @@ static void threadcomm_set_status(MPIR_Threadcomm * threadcomm, struct send_hdr 
     status->MPI_ERROR = MPIR_PT2PT_ATTR_GET_ERRFLAG(hdr->attr);
 
     MPI_Aint data_sz;
-    if (hdr->is_eager) {
+    if (hdr->type == MPIR_THREADCOMM_MSGTYPE_EAGER) {
         data_sz = hdr->u.data_sz;
-    } else {
+    } else if (hdr->type == MPIR_THREADCOMM_MSGTYPE_IPC) {
         MPIR_Request *sreq = hdr->u.sreq;
         struct send_req *sreq_u = (struct send_req *) &(sreq->u);
         MPIR_Datatype_get_size_macro(sreq_u->datatype, data_sz);
         data_sz *= sreq_u->count;
+    } else {
+        MPIR_Assert(0);
     }
     MPIR_STATUS_SET_COUNT((*status), data_sz);
 }
@@ -297,7 +305,7 @@ static void threadcomm_complete_posted(struct send_hdr *hdr, MPIR_Request * rreq
 static void threadcomm_enqueue_unexp(struct send_hdr *hdr, UNEXP ** list)
 {
     MPI_Aint cell_sz = sizeof(*hdr);
-    if (hdr->is_eager) {
+    if (hdr->type == MPIR_THREADCOMM_MSGTYPE_EAGER) {
         cell_sz += hdr->u.data_sz;
     }
     UNEXP *unexp = MPL_malloc(sizeof(UNEXP) + cell_sz, MPL_MEM_OTHER);
@@ -326,7 +334,7 @@ static inline void threadcomm_load_cell(void *cell, struct send_hdr *hdr,
 {
     memcpy(cell, hdr, sizeof(struct send_hdr));
     if (count > 0) {
-        MPIR_Assert(hdr->is_eager);
+        MPIR_Assert(hdr->type == MPIR_THREADCOMM_MSGTYPE_EAGER);
         MPI_Aint actual_pack_bytes;
         void *p = (char *) cell + sizeof(struct send_hdr);
         MPIR_Typerep_pack(data, count, datatype, 0, p, hdr->u.data_sz, &actual_pack_bytes,
@@ -368,10 +376,10 @@ static int threadcomm_progress_send(int *made_progress)
         DL_FOREACH_SAFE(p[i].pending_list, curr, tmp) {
             struct send_req *u = (struct send_req *) &curr->u;
             struct send_hdr hdr;
+            hdr.type = MPIR_THREADCOMM_MSGTYPE_IPC;
             hdr.src_id = p[i].tid;
             hdr.tag = u->tag;
             hdr.attr = u->attr;
-            hdr.is_eager = false;
             hdr.u.sreq = curr;
 
             int ret = threadcomm_eager_send(p[i].tid, u->dst_id, &hdr,
