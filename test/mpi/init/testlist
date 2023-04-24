@@ -6,9 +6,3 @@ version 1
 finalized 1
 attrself 1
 library_version 1
-session 4
-session_mult_init 4
-session_mult_init 4 arg=5
-session_re_init 4 mpiexecarg=-disable-auto-cleanup
-session_psets 1
-session_self 1

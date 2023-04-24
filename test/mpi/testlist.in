@@ -11,6 +11,7 @@ mpi_t
 pt2pt
 @partdir@
 @rmadir@
+session
 @spawndir@
 topo
 @perfdir@

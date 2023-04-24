@@ -11,12 +11,13 @@ EXTRA_DIST = testlist
 ## file, we don't need per-target _SOURCES rules, automake will infer them
 ## correctly
 noinst_PROGRAMS = \
-    attrself      \
-    exitst1       \
-    exitst2       \
-    exitst3       \
-    initstat      \
-    version       \
-    library_version \
-    timeout       \
-    finalized
+    session       \
+    session_mult_init \
+    session_re_init \
+    session_psets \
+    session_self
+
+session_mult_init_SOURCES = session.c
+session_mult_init_CPPFLAGS = -DMULT_INIT $(AM_CPPFLAGS)
+session_re_init_SOURCES = session.c
+session_re_init_CPPFLAGS = -DRE_INIT $(AM_CPPFLAGS)
