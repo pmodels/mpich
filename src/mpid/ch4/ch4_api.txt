@@ -43,8 +43,8 @@ Non Native API:
   post_init : int
       NM : void
   progress : int
-      NM*: vci, blocking
-     SHM*: vci, blocking
+      NM*: vci, made_progress
+     SHM*: vci, made_progress
   comm_set_hints : int
       NM : comm_ptr, info
      SHM : comm_ptr, info
@@ -434,7 +434,6 @@ PARAM:
     base-2: const void *
     baseptr: void *
     baseptr_p: void **
-    blocking: int
     buf: const void *
     buf-2: void *
     buffer: void *
@@ -468,6 +467,7 @@ PARAM:
     lock_type: int
     gpid_ptr: uint64_t *
     lpids: const int[]
+    made_progress: int *
     message: MPIR_Request *
     message_p: MPIR_Request **
     newcomm_ptr: MPIR_Comm **

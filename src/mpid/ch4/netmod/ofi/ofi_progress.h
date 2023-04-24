@@ -69,7 +69,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(int vci, struct fi_cq_t
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_tagged_entry wc[MPIDI_OFI_NUM_CQ_ENTRIES];

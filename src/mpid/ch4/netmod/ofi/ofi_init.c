@@ -801,8 +801,9 @@ static int flush_send_queue(void)
 
     bool all_done = false;
     while (!all_done) {
+        int made_progress;
         for (int vci = 0; vci < num_vcis; vci++) {
-            mpi_errno = MPIDI_NM_progress(vci, 0);
+            mpi_errno = MPIDI_NM_progress(vci, &made_progress);
             MPIR_ERR_CHECK(mpi_errno);
         }
         all_done = true;

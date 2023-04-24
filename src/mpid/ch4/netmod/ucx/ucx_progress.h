@@ -8,7 +8,7 @@
 
 #include "ucx_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
 

@@ -46,7 +46,8 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
  */
 #define MPIDI_OFI_PROGRESS(vci)                                   \
     do {                                                          \
-        mpi_errno = MPIDI_NM_progress(vci, 0);                   \
+        int made_progress = 0; \
+        mpi_errno = MPIDI_NM_progress(vci, &made_progress); \
         MPIR_ERR_CHECK(mpi_errno);                                \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
@@ -104,8 +105,9 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
  * moved down to ofi-layer */
 #define MPIDI_OFI_VCI_PROGRESS(vci_)                                    \
     do {                                                                \
+        int made_progress = 0; \
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                \
-        mpi_errno = MPIDI_NM_progress(vci_, 0);                        \
+        mpi_errno = MPIDI_NM_progress(vci_, &made_progress); \
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);                 \
         MPIR_ERR_CHECK(mpi_errno);                                      \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
@@ -113,9 +115,10 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 
 #define MPIDI_OFI_VCI_PROGRESS_WHILE(vci_, cond)                            \
     do {                                                                    \
+        int made_progress = 0; \
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                    \
         while (cond) {                                                      \
-            mpi_errno = MPIDI_NM_progress(vci_, 0);                        \
+            mpi_errno = MPIDI_NM_progress(vci_, &made_progress);                        \
             if (mpi_errno) {                                                \
                 MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);             \
                 MPIR_ERR_POP(mpi_errno);                                    \
