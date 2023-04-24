@@ -4,6 +4,7 @@ comm
 datatype
 group
 pt2pt
+session
 topo
 @rmadir@
 @spawndir@

@@ -1,6 +1,7 @@
 adderr 1
 commcall 2
 commcall_oldapi 2 strict=FALSE
+sessioncall 1
 errfatal 1 resultTest=TestErrFatal
 predef_eh 1
 predef_eh 2

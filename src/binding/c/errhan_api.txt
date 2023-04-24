@@ -178,6 +178,7 @@ MPI_Session_call_errhandler:
 
 MPI_Session_create_errhandler:
     .desc: Create an error handler for use with MPI session
+    .skip: initcheck
 
 MPI_Session_get_errhandler:
     .desc: Get the error handler for the MPI session
