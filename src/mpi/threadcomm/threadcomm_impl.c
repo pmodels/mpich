@@ -55,6 +55,9 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     threadcomm->num_threads = num_threads;
     threadcomm->rank_offset_table = rank_offset_table;
 
+    threadcomm->in_counters = MPL_calloc(num_threads * num_threads, MPL_CACHELINE_SIZE,
+                                         MPL_MEM_OTHER);
+
     MPL_atomic_relaxed_store_int(&threadcomm->next_id, 0);
     MPL_atomic_relaxed_store_int(&threadcomm->arrive_counter, 0);
     MPL_atomic_relaxed_store_int(&threadcomm->leave_counter, num_threads);
@@ -90,6 +93,8 @@ int MPIR_Threadcomm_free_impl(MPIR_Comm * comm)
 
     mpi_errno = MPIR_Comm_free_impl(comm);
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPL_free(threadcomm->in_counters);
 
     MPL_free(threadcomm->rank_offset_table);
 #ifdef MPIR_THREADCOMM_USE_FBOX

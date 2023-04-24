@@ -7,11 +7,37 @@
 
 #ifdef ENABLE_THREADCOMM
 
+#define BARRIER_COUNTER(i, j) (MPL_atomic_int_t *) ((char *)(threadcomm->in_counters) + (i*P+j) * MPL_CACHELINE_SIZE)
+
+static void thread_barrier(MPIR_Threadcomm * threadcomm)
+{
+    int P = threadcomm->num_threads;
+    int tid = MPIR_threadcomm_get_tid(threadcomm);
+
+    /* dissemination */
+    int mask = 0x1;
+    int expect_count = 0;
+    while (mask < P) {
+        int dst = (tid + mask) % P;
+        int src = (tid - mask + P) % P;
+        MPL_atomic_fetch_add_int(BARRIER_COUNTER(tid, dst), 1);
+        // printf("[%d] mask=%x, dst = %d, expect_count = %d, cur = %d\n", tid, mask, dst, expect_count, MPL_atomic_load_int(my_counter));
+        while (MPL_atomic_load_int(BARRIER_COUNTER(src, tid)) < 1) {
+        }
+        MPL_atomic_fetch_add_int(BARRIER_COUNTER(src, tid), -1);
+        mask <<= 1;
+    }
+}
+
 int MPIR_Threadcomm_barrier_impl(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier_intra_dissemination(comm, MPIR_ERR_NONE);
+    if (comm->local_size == 1) {
+        thread_barrier(comm->threadcomm);
+    } else {
+        mpi_errno = MPIR_Barrier_intra_dissemination(comm, MPIR_ERR_NONE);
+    }
 
     return mpi_errno;
 }

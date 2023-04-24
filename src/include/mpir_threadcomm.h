@@ -56,6 +56,8 @@ typedef struct MPIR_Threadcomm {
     MPL_atomic_int_t arrive_counter;
     MPL_atomic_int_t leave_counter;
     MPL_atomic_int_t barrier_flag;
+    /* thread barrier - dissemination */
+    void *in_counters;
 #ifdef MPIR_THREADCOMM_USE_FBOX
     /* fast box */
     MPIR_threadcomm_fbox_t *mailboxes;
