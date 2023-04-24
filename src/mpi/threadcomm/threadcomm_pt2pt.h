@@ -237,8 +237,15 @@ static void threadcomm_data_copy(struct send_hdr *hdr, void *buf, MPI_Aint count
         tmp_hdr.type = MPIR_THREADCOMM_MSGTYPE_SYNC;
         tmp_hdr.src_id = p->tid;
         tmp_hdr.u.sreq = sreq;
-        threadcomm_eager_send(p->tid, hdr->src_id, &tmp_hdr, NULL, 0, MPI_DATATYPE_NULL,
-                              p->threadcomm);
+        int ret = threadcomm_eager_send(p->tid, hdr->src_id, &tmp_hdr, NULL, 0, MPI_DATATYPE_NULL,
+                                        p->threadcomm);
+        if (ret) {
+            /* HACK: use tag=-1 to mark as sync message */
+            struct send_req *u = (struct send_req *) &sreq->u;
+            u->tag = -1;
+            u->dst_id = hdr->src_id;
+            DL_APPEND(p->pending_list, sreq);
+        }
     }
 }
 
@@ -385,16 +392,26 @@ static int threadcomm_progress_send(int *made_progress)
         DL_FOREACH_SAFE(p[i].pending_list, curr, tmp) {
             struct send_req *u = (struct send_req *) &curr->u;
             struct send_hdr hdr;
-            hdr.type = MPIR_THREADCOMM_MSGTYPE_IPC;
-            hdr.src_id = p[i].tid;
-            hdr.tag = u->tag;
-            hdr.attr = u->attr;
-            hdr.u.sreq = curr;
+
+            if (u->tag == -1) {
+                /* sync message */
+                hdr.type = MPIR_THREADCOMM_MSGTYPE_SYNC;
+                hdr.src_id = p[i].tid;
+                hdr.u.sreq = curr;
+            } else {
+                hdr.type = MPIR_THREADCOMM_MSGTYPE_IPC;
+                hdr.src_id = p[i].tid;
+                hdr.tag = u->tag;
+                hdr.attr = u->attr;
+                hdr.u.sreq = curr;
+            }
 
             int ret = threadcomm_eager_send(p[i].tid, u->dst_id, &hdr,
                                             NULL, 0, MPI_DATATYPE_NULL, p[i].threadcomm);
             if (ret == 0) {
                 DL_DELETE(p[i].pending_list, curr);
+            } else {
+                break;
             }
         }
     }
