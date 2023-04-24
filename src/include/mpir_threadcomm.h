@@ -62,7 +62,8 @@ typedef struct MPIR_Threadcomm {
     MPL_atomic_int_t barrier_flag;
     /* bcast during comm_dup */
     void *bcast_value;
-
+    /* thread barrier - dissemination */
+    void *in_counters;
 #if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
     MPIR_threadcomm_fbox_t *mailboxes;
 #elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
