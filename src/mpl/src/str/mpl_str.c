@@ -18,151 +18,6 @@
 #include <time.h>
 #endif
 
-#if !defined MPL_HAVE_SNPRINTF
-int MPL_snprintf(char *str, size_t size, const char *format, ...)
-{
-    int n;
-    const char *p;
-    char *out_str = str;
-    va_list list;
-
-    va_start(list, format);
-
-    p = format;
-    while (*p && size > 0) {
-        char *nf;
-
-        nf = strchr(p, '%');
-        if (!nf) {
-            /* No more format characters */
-            while (size-- > 0 && *p) {
-                *out_str++ = *p++;
-            }
-        } else {
-            int nc;
-            int width = -1;
-
-            /* Copy until nf */
-            while (p < nf && size-- > 0) {
-                *out_str++ = *p++;
-            }
-            /* p now points at nf */
-            /* Handle the format character */
-            nc = nf[1];
-            if (isdigit(nc)) {
-                /* Get the field width */
-                /* FIXME : Assumes ASCII */
-                width = nc - '0';
-                p = nf + 2;
-                while (*p && isdigit(*p)) {
-                    width = 10 * width + (*p++ - '0');
-                }
-                /* When there is no longer a digit, get the format
-                 * character */
-                nc = *p++;
-            } else {
-                /* Skip over the format string */
-                p += 2;
-            }
-
-            switch (nc) {
-                case '%':
-                    *out_str++ = '%';
-                    size--;
-                    break;
-
-                case 'd':
-                    {
-                        int val;
-                        char tmp[20];
-                        char *t = tmp;
-                        /* Get the argument, of integer type */
-                        val = va_arg(list, int);
-                        sprintf(tmp, "%d", val);
-                        if (width > 0) {
-                            size_t tmplen = strlen(tmp);
-                            /* If a width was specified, pad with spaces on the
-                             * left (on the right if %-3d given; not implemented yet */
-                            while (size-- > 0 && width-- > tmplen)
-                                *out_str++ = ' ';
-                        }
-                        while (size-- > 0 && *t) {
-                            *out_str++ = *t++;
-                        }
-                    }
-                    break;
-
-                case 'x':
-                    {
-                        int val;
-                        char tmp[20];
-                        char *t = tmp;
-                        /* Get the argument, of integer type */
-                        val = va_arg(list, int);
-                        sprintf(tmp, "%x", val);
-                        if (width > 0) {
-                            size_t tmplen = strlen(tmp);
-                            /* If a width was specified, pad with spaces on the
-                             * left (on the right if %-3d given; not implemented yet */
-                            while (size-- > 0 && width-- > tmplen)
-                                *out_str++ = ' ';
-                        }
-                        while (size-- > 0 && *t) {
-                            *out_str++ = *t++;
-                        }
-                    }
-                    break;
-
-                case 'p':
-                    {
-                        void *val;
-                        char tmp[20];
-                        char *t = tmp;
-                        /* Get the argument, of pointer type */
-                        val = va_arg(list, void *);
-                        sprintf(tmp, "%p", val);
-                        if (width > 0) {
-                            size_t tmplen = strlen(tmp);
-                            /* If a width was specified, pad with spaces on the
-                             * left (on the right if %-3d given; not implemented yet */
-                            while (size-- > 0 && width-- > tmplen)
-                                *out_str++ = ' ';
-                        }
-                        while (size-- > 0 && *t) {
-                            *out_str++ = *t++;
-                        }
-                    }
-                    break;
-
-                case 's':
-                    {
-                        char *s_arg;
-                        /* Get the argument, of pointer to char type */
-                        s_arg = va_arg(list, char *);
-                        while (size-- > 0 && s_arg && *s_arg) {
-                            *out_str++ = *s_arg++;
-                        }
-                    }
-                    break;
-
-                default:
-                    /* Error, unknown case */
-                    return -1;
-                    break;
-            }
-        }
-    }
-
-    va_end(list);
-
-    if (size-- > 0)
-        *out_str++ = '\0';
-
-    n = (int) (out_str - str);
-    return n;
-}
-#endif /* MPL_HAVE_SNPRINTF */
-
 /*@
   MPL_strdup - Duplicate a string
 
@@ -410,10 +265,10 @@ void MPL_create_pathname(char *dest_filename, const char *dirname,
     const unsigned int pid = (unsigned int) getpid();
 
     if (dirname) {
-        MPL_snprintf(dest_filename, PATH_MAX, "%s/%s.%u.%u%c", dirname, prefix,
-                     rdm, pid, is_dir ? '/' : '\0');
+        snprintf(dest_filename, PATH_MAX, "%s/%s.%u.%u%c", dirname, prefix,
+                 rdm, pid, is_dir ? '/' : '\0');
     } else {
-        MPL_snprintf(dest_filename, PATH_MAX, "%s.%u.%u%c", prefix, rdm, pid, is_dir ? '/' : '\0');
+        snprintf(dest_filename, PATH_MAX, "%s.%u.%u%c", prefix, rdm, pid, is_dir ? '/' : '\0');
     }
 }
 

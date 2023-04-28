@@ -175,7 +175,7 @@ int MPL_dbg_outevent(const char *file, int line, int class, int kind, const char
         case 1:
             va_start(list, fmat);
             str = va_arg(list, char *);
-            MPL_snprintf(stmp, sizeof(stmp), fmat, str);
+            snprintf(stmp, sizeof(stmp), fmat, str);
             va_end(list);
             fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
                     world_num, world_rank, threadID, pid, class, curtime, file, line, stmp);
@@ -183,7 +183,7 @@ int MPL_dbg_outevent(const char *file, int line, int class, int kind, const char
         case 2:
             va_start(list, fmat);
             i = va_arg(list, int);
-            MPL_snprintf(stmp, sizeof(stmp), fmat, i);
+            snprintf(stmp, sizeof(stmp), fmat, i);
             va_end(list);
             fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
                     world_num, world_rank, threadID, pid, class, curtime, file, line, stmp);
@@ -191,7 +191,7 @@ int MPL_dbg_outevent(const char *file, int line, int class, int kind, const char
         case 3:
             va_start(list, fmat);
             p = va_arg(list, void *);
-            MPL_snprintf(stmp, sizeof(stmp), fmat, p);
+            snprintf(stmp, sizeof(stmp), fmat, p);
             va_end(list);
             fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
                     world_num, world_rank, threadID, pid, class, curtime, file, line, stmp);
@@ -714,7 +714,7 @@ static int dbg_get_filename(char *filename, int len)
             p++;
             if (*p == 'd') {
                 char rankAsChar[20];
-                MPL_snprintf(rankAsChar, sizeof(rankAsChar), "%d", world_rank);
+                snprintf(rankAsChar, sizeof(rankAsChar), "%d", world_rank);
                 *pDest = 0;
                 MPL_strnapp(filename, rankAsChar, len);
                 pDest += strlen(rankAsChar);
@@ -725,7 +725,7 @@ static int dbg_get_filename(char *filename, int len)
                 MPL_thread_self(&tid);
                 threadID = (unsigned long long int) tid;
 
-                MPL_snprintf(threadIDAsChar, sizeof(threadIDAsChar), "%llx", threadID);
+                snprintf(threadIDAsChar, sizeof(threadIDAsChar), "%llx", threadID);
                 *pDest = 0;
                 MPL_strnapp(filename, threadIDAsChar, len);
                 pDest += strlen(threadIDAsChar);
@@ -745,7 +745,7 @@ static int dbg_get_filename(char *filename, int len)
 #else
                 int pid = -1;
 #endif /* MPL_HAVE_GETPID */
-                MPL_snprintf(pidAsChar, sizeof(pidAsChar), "%d", (int) pid);
+                snprintf(pidAsChar, sizeof(pidAsChar), "%d", (int) pid);
                 *pDest = 0;
                 MPL_strnapp(filename, pidAsChar, len);
                 pDest += strlen(pidAsChar);

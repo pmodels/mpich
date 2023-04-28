@@ -196,7 +196,7 @@ int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
     int ret = MPL_SUCCESS;
     memset(affinity_env, 0, MAX_GPU_STR_LEN);
     if (dev_count == 0) {
-        MPL_snprintf(affinity_env, 3, "-1");
+        snprintf(affinity_env, 3, "-1");
     } else {
         int str_offset = 0;
         for (int i = 0; i < dev_count; ++i) {

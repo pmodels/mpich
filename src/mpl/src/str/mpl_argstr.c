@@ -31,7 +31,7 @@ static int encode_buffer(char *dest, int dest_length, const char *src,
         }
     }
     while (src_length && dest_length) {
-        num_used = MPL_snprintf(dest, dest_length, "%02X", (unsigned char) *src);
+        num_used = snprintf(dest, dest_length, "%02X", (unsigned char) *src);
         if (num_used < 0) {
             *num_encoded = n;
             return MPL_ERR_STR_TRUNCATED;
@@ -497,9 +497,9 @@ int MPL_str_add_string(char **str_ptr, int *maxlen_ptr, const char *val)
         }
     } else {
         if (*val == '\0') {
-            num_chars = MPL_snprintf(str, maxlen, MPL_STR_QUOTE_STR MPL_STR_QUOTE_STR /*"\"\"" */);
+            num_chars = snprintf(str, maxlen, MPL_STR_QUOTE_STR MPL_STR_QUOTE_STR /*"\"\"" */);
         } else {
-            num_chars = MPL_snprintf(str, maxlen, "%s%c", val, MPL_STR_SEPAR_CHAR);
+            num_chars = snprintf(str, maxlen, "%s%c", val, MPL_STR_SEPAR_CHAR);
         }
         if (num_chars == maxlen) {
             *str = '\0';
@@ -612,7 +612,7 @@ int MPL_str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag, co
         flag[0] == MPL_STR_QUOTE_CHAR) {
         num_chars = quoted_printf(*str_ptr, *maxlen_ptr, flag);
     } else {
-        num_chars = MPL_snprintf(*str_ptr, *maxlen_ptr, "%s", flag);
+        num_chars = snprintf(*str_ptr, *maxlen_ptr, "%s", flag);
     }
     *maxlen_ptr = *maxlen_ptr - num_chars;
     if (*maxlen_ptr < 1) {
@@ -633,10 +633,10 @@ int MPL_str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag, co
         num_chars = quoted_printf(*str_ptr, *maxlen_ptr, val);
     } else {
         if (*val == '\0') {
-            num_chars = MPL_snprintf(*str_ptr, *maxlen_ptr,
-                                     MPL_STR_QUOTE_STR MPL_STR_QUOTE_STR /*"\"\"" */);
+            num_chars = snprintf(*str_ptr, *maxlen_ptr,
+                                 MPL_STR_QUOTE_STR MPL_STR_QUOTE_STR /*"\"\"" */);
         } else {
-            num_chars = MPL_snprintf(*str_ptr, *maxlen_ptr, "%s", val);
+            num_chars = snprintf(*str_ptr, *maxlen_ptr, "%s", val);
         }
     }
     *str_ptr = *str_ptr + num_chars;
@@ -681,7 +681,7 @@ Output Parameters:
 int MPL_str_add_int_arg(char **str_ptr, int *maxlen_ptr, const char *flag, int val)
 {
     char val_str[12];
-    MPL_snprintf(val_str, 12, "%d", val);
+    snprintf(val_str, 12, "%d", val);
     return MPL_str_add_string_arg(str_ptr, maxlen_ptr, flag, val_str);
 }
 
@@ -729,7 +729,7 @@ int MPL_str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
         flag[0] == MPL_STR_QUOTE_CHAR) {
         num_chars = quoted_printf(*str_ptr, *maxlen_ptr, flag);
     } else {
-        num_chars = MPL_snprintf(*str_ptr, *maxlen_ptr, "%s", flag);
+        num_chars = snprintf(*str_ptr, *maxlen_ptr, "%s", flag);
     }
     *maxlen_ptr = *maxlen_ptr - num_chars;
     if (*maxlen_ptr < 1) {
