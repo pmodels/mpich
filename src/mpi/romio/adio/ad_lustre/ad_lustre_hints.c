@@ -106,8 +106,8 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                  * value in fd unless it was in user_info, but knowing
                  * the value - default or explicit - is useful.
                  * Set the final number of extents in the fd->info */
-                MPL_snprintf(value, MPI_MAX_INFO_VAL + 1, "%d",
-                             fd->hints->fs_hints.lustre.lock_ahead_num_extents);
+                snprintf(value, MPI_MAX_INFO_VAL + 1, "%d",
+                         fd->hints->fs_hints.lustre.lock_ahead_num_extents);
                 ADIOI_Info_set(fd->info, "romio_lustre_cb_lock_ahead_num_extents", value);
 
                 /* Get user's flags */

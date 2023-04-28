@@ -568,7 +568,7 @@ static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
         if (bufsize % segsize > 0) {
             num_segs++;
         }
-        MPL_snprintf(val, pmi_max_val_size, "segments=%d", num_segs);
+        snprintf(val, pmi_max_val_size, "segments=%d", num_segs);
         mpi_errno = MPIR_pmi_kvs_put(key, val);
         MPIR_ERR_CHECK(mpi_errno);
         for (int i = 0; i < num_segs; i++) {
@@ -1508,7 +1508,7 @@ static int hex(unsigned char c)
 static void encode(int size, const char *src, char *dest)
 {
     for (int i = 0; i < size; i++) {
-        MPL_snprintf(dest, 3, "%02X", (unsigned char) *src);
+        snprintf(dest, 3, "%02X", (unsigned char) *src);
         src++;
         dest += 2;
     }

@@ -14,7 +14,6 @@ template:
     #define MPL_malloc(sz,t) malloc(sz)
     #define MPL_realloc(p,sz,t) realloc(p,sz)
     #define MPL_free free
-    #define MPL_snprintf snprintf
 
     [src/mpl/src/mpl_rankmap.c:MPL_rankmap_array_to_str]
 

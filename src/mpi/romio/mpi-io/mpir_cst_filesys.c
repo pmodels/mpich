@@ -54,7 +54,7 @@ static int comm_split_filesystem_exhaustive(MPI_Comm comm, int key,
     ret = mkdir(testdirname, S_IRWXU);
     if (ret == -1 && errno != EEXIST)
         goto fn_fail;
-    MPL_snprintf(filename, PATH_MAX, "%s/%d", testdirname, rank);
+    snprintf(filename, PATH_MAX, "%s/%d", testdirname, rank);
     open(filename, O_CREAT, S_IRUSR | S_IWUSR);
 
     MPI_Barrier(comm);

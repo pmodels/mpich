@@ -59,7 +59,7 @@ int MPIDU_CH3U_GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 	   the process manager only delievers the same values for the 
 	   environment to each process */
 	char namebuf[1024];
-	MPL_snprintf( namebuf, sizeof(namebuf), 
+	snprintf( namebuf, sizeof(namebuf),
 		       "MPICH_INTERFACE_HOSTNAME_R%d", myRank );
 	ifname_string = getenv( namebuf );
 	if (dbg_ifname && ifname_string) {

@@ -231,7 +231,7 @@ int MPIE_Args(int argc, char *argv[], ProcessUniverse * mypUniv,
         } else if (strncmp(argv[i], "-channel=", 9) == 0) {
             const char *channame = argv[i] + 9;
             char envstring[256];
-            MPL_snprintf(envstring, sizeof(envstring), "MPICH_CH3CHANNEL=%s", channame);
+            snprintf(envstring, sizeof(envstring), "MPICH_CH3CHANNEL=%s", channame);
             MPIE_Putenv(mypUniv->worlds, envstring);
         }
 /* End of the MPICH mpiexec common extensions */

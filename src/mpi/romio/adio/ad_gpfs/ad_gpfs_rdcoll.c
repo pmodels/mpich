@@ -680,7 +680,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 #endif
         if (flag) {
             char round[50];
-            MPL_snprintf(round, sizeof(round), "two-phase-round=%d", m);
+            snprintf(round, sizeof(round), "two-phase-round=%d", m);
             setenv("LIBIOLOG_EXTRA_INFO", round, 1);
             ADIOI_Assert(size == (int) size);
             ADIO_ReadContig(fd, read_buf + for_curr_iter, (int) size, MPI_BYTE,

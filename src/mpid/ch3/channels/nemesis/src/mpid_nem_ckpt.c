@@ -242,7 +242,7 @@ static int restore_env(pid_t parent_pid, int rank)
     int ret;
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
-    MPL_snprintf(env_filename, MAX_STR_LEN, "/tmp/hydra-env-file-%d:%d", parent_pid, rank); 
+    snprintf(env_filename, MAX_STR_LEN, "/tmp/hydra-env-file-%d:%d", parent_pid, rank);
 
     f = fopen(env_filename, "r");
     CHECK_ERR(!f, MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));

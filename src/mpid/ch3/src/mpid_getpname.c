@@ -95,7 +95,7 @@ static inline void setupProcessorName( void )
 static inline void setupProcessorName( void )
 {
     /* Set the name as the rank of the process */
-    MPL_snprintf( processorName, MPI_MAX_PROCESSOR_NAME, "%d", 
+    snprintf( processorName, MPI_MAX_PROCESSOR_NAME, "%d",
 		   MPIDI_Process.my_pg_rank );
     processorNameLen = (int)strlen( processorName );
 }

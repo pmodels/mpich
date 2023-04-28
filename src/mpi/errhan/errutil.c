@@ -610,7 +610,7 @@ void MPIR_Handle_fatal_error(MPIR_Comm * comm_ptr, const char fcname[], int errc
     /* FIXME: Not internationalized.  Since we are using MPIR_Err_get_string,
      * we are assuming that the code is still able to execute a full
      * MPICH error code to message conversion. */
-    MPL_snprintf(error_msg, MAX_ERRMSG_STRING, "Fatal error in %s: ", fcname);
+    snprintf(error_msg, MAX_ERRMSG_STRING, "Fatal error in %s: ", fcname);
     len = (int) strlen(error_msg);
     MPIR_Err_get_string(errcode, &error_msg[len], MAX_ERRMSG_STRING - len, NULL);
 
@@ -787,7 +787,7 @@ void MPIR_Err_get_string(int errorcode, char *msg, int length, MPIR_Err_get_clas
             generic_idx = ((errorcode & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT) - 1;
 
             if (generic_idx >= 0) {
-                MPL_snprintf(msg, num_remaining, ", %s", generic_err_msgs[generic_idx].long_name);
+                snprintf(msg, num_remaining, ", %s", generic_err_msgs[generic_idx].long_name);
                 msg[num_remaining - 1] = '\0';
                 goto fn_exit;
             }
@@ -1102,7 +1102,7 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
                 } else {
                     specific_fmt = specific_msg;
                 }
-                MPL_snprintf(user_ring_msg, sizeof(user_ring_msg), specific_fmt, user_error_code);
+                snprintf(user_ring_msg, sizeof(user_ring_msg), specific_fmt, user_error_code);
             } else {
                 user_ring_msg[0] = 0;
             }
@@ -1194,8 +1194,7 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
             }
 
             if (fcname != NULL) {
-                MPL_snprintf(ErrorRing[ring_idx].location, MAX_LOCATION_LEN, "%s(%d)", fcname,
-                             line);
+                snprintf(ErrorRing[ring_idx].location, MAX_LOCATION_LEN, "%s(%d)", fcname, line);
                 ErrorRing[ring_idx].location[MAX_LOCATION_LEN] = '\0';
             } else {
                 ErrorRing[ring_idx].location[0] = '\0';
@@ -1286,7 +1285,7 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
 
             if (ErrorRing[ring_idx].id == ring_id) {
                 int nchrs;
-                MPL_snprintf(str, maxlen, "%s", ErrorRing[ring_idx].location);
+                snprintf(str, maxlen, "%s", ErrorRing[ring_idx].location);
                 len = (int) strlen(str);
                 maxlen -= len;
                 str += len;
@@ -1317,8 +1316,8 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
                             if (len > maxlen)
                                 break;
                             /* FIXME: Don't use Snprint to append a string ! */
-                            MPL_snprintf(str, MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len,
-                                         "%s", cur_pos);
+                            snprintf(str, MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len,
+                                     "%s", cur_pos);
                             str[MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len] = '\n';
                             cur_pos += MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len;
                             str += MPIR_CVAR_CHOP_ERROR_STACK - max_location_len;
@@ -1326,13 +1325,13 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
                             if (maxlen < max_location_len)
                                 break;
                             for (i = 0; i < max_location_len; i++) {
-                                MPL_snprintf(str, maxlen, " ");
+                                snprintf(str, maxlen, " ");
                                 maxlen--;
                                 str++;
                             }
                             len = (int) strlen(cur_pos);
                         } else {
-                            MPL_snprintf(str, maxlen, "%s\n", cur_pos);
+                            snprintf(str, maxlen, "%s\n", cur_pos);
                             len = (int) strlen(str);
                             maxlen -= len;
                             str += len;
@@ -1340,7 +1339,7 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
                         }
                     }
                 } else {
-                    MPL_snprintf(str, maxlen, "%s\n", ErrorRing[ring_idx].msg);
+                    snprintf(str, maxlen, "%s\n", ErrorRing[ring_idx].msg);
                     len = (int) strlen(str);
                     maxlen -= len;
                     str += len;
@@ -1372,7 +1371,7 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
             if (!p) {
                 p = "<NULL>";
             }
-            MPL_snprintf(str, maxlen, "(unknown)(): %s\n", p);
+            snprintf(str, maxlen, "(unknown)(): %s\n", p);
             len = (int) strlen(str);
             maxlen -= len;
             str += len;
@@ -1386,13 +1385,13 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen)
         error_class = ERROR_GET_CLASS(errcode);
 
         if (error_class <= MPICH_ERR_LAST_MPIX) {
-            MPL_snprintf(str, maxlen, "(unknown)(): %s\n", get_class_msg(ERROR_GET_CLASS(errcode)));
+            snprintf(str, maxlen, "(unknown)(): %s\n", get_class_msg(ERROR_GET_CLASS(errcode)));
             len = (int) strlen(str);
             maxlen -= len;
             str += len;
         } else {
             /* FIXME: Not internationalized */
-            MPL_snprintf(str, maxlen, "Error code contains an invalid class (%d)\n", error_class);
+            snprintf(str, maxlen, "Error code contains an invalid class (%d)\n", error_class);
             len = (int) strlen(str);
             maxlen -= len;
             str += len;
@@ -1531,9 +1530,9 @@ static const char *GetAssertString(int d)
     }
     if (d) {
         if (len < ASSERT_STR_MAXLEN)
-            MPL_snprintf(cur, len, " | 0x%x", d);
+            snprintf(cur, len, " | 0x%x", d);
         else
-            MPL_snprintf(cur, len, "assert=0x%x", d);
+            snprintf(cur, len, "assert=0x%x", d);
     }
     return str;
 }
@@ -1561,7 +1560,7 @@ static const char *GetDTypeString(MPI_Datatype d)
     if (combiner == MPI_COMBINER_NAMED) {
         str = MPIR_Datatype_builtin_to_string(d);
         if (str == NULL) {
-            MPL_snprintf(default_str, sizeof(default_str), "dtype=0x%08x", d);
+            snprintf(default_str, sizeof(default_str), "dtype=0x%08x", d);
             return default_str;
         }
         return str;
@@ -1570,10 +1569,10 @@ static const char *GetDTypeString(MPI_Datatype d)
     /* default is not thread safe */
     str = MPIR_Datatype_combiner_to_string(combiner);
     if (str == NULL) {
-        MPL_snprintf(default_str, sizeof(default_str), "dtype=USER<0x%08x>", d);
+        snprintf(default_str, sizeof(default_str), "dtype=USER<0x%08x>", d);
         return default_str;
     }
-    MPL_snprintf(default_str, sizeof(default_str), "dtype=USER<%s>", str);
+    snprintf(default_str, sizeof(default_str), "dtype=USER<%s>", str);
     return default_str;
 }
 
@@ -1614,7 +1613,7 @@ static const char *GetMPIOpString(MPI_Op o)
             return "MPI_NO_OP";
     }
     /* FIXME: default is not thread safe */
-    MPL_snprintf(default_str, sizeof(default_str), "op=0x%x", o);
+    snprintf(default_str, sizeof(default_str), "op=0x%x", o);
     return default_str;
 }
 
@@ -1651,7 +1650,7 @@ static const char *get_keyval_string(int keyval)
             return "MPI_WIN_MODEL";
     }
     /* FIXME: default is not thread safe */
-    MPL_snprintf(default_str, sizeof(default_str), "keyval=0x%x", keyval);
+    snprintf(default_str, sizeof(default_str), "keyval=0x%x", keyval);
     return default_str;
 }
 
@@ -1717,19 +1716,19 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                 break;
             case (int) 'd':
                 d = va_arg(list, int);
-                MPL_snprintf(str, maxlen, "%d", d);
+                snprintf(str, maxlen, "%d", d);
                 break;
             case (int) 'L':
                 ll = va_arg(list, long long);
-                MPL_snprintf(str, maxlen, "%lld", ll);
+                snprintf(str, maxlen, "%lld", ll);
                 break;
             case (int) 'x':
                 d = va_arg(list, int);
-                MPL_snprintf(str, maxlen, "%x", d);
+                snprintf(str, maxlen, "%x", d);
                 break;
             case (int) 'X':
                 ll = va_arg(list, long long);
-                MPL_snprintf(str, maxlen, "%llx", ll);
+                snprintf(str, maxlen, "%llx", ll);
                 break;
             case (int) 'i':
                 i = va_arg(list, int);
@@ -1744,7 +1743,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                         MPL_strncpy(str, "MPI_ROOT", maxlen);
                         break;
                     default:
-                        MPL_snprintf(str, maxlen, "%d", i);
+                        snprintf(str, maxlen, "%d", i);
                         break;
                 }
                 break;
@@ -1759,7 +1758,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                          * though there is one example in the MPI-3.0 standard
                          * that sets status.MPI_TAG to MPI_UNDEFINED in a
                          * generalized request example. */
-                        MPL_snprintf(str, maxlen, "%d", t);
+                        snprintf(str, maxlen, "%d", t);
                         break;
                 }
                 break;
@@ -1774,7 +1773,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                      * (including Windows) that don't prefix %p with 0x.
                      * This must be done with a capability, not a test on
                      * particular OS or header files */
-                    MPL_snprintf(str, maxlen, "%p", p);
+                    snprintf(str, maxlen, "%p", p);
                 }
                 break;
             case (int) 'C':
@@ -1790,7 +1789,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                         MPL_strncpy(str, "MPI_COMM_NULL", maxlen);
                         break;
                     default:
-                        MPL_snprintf(str, maxlen, "comm=0x%x", C);
+                        snprintf(str, maxlen, "comm=0x%x", C);
                         break;
                 }
                 break;
@@ -1799,12 +1798,12 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                 if (info == MPI_INFO_NULL) {
                     MPL_strncpy(str, "MPI_INFO_NULL", maxlen);
                 } else {
-                    MPL_snprintf(str, maxlen, "info=0x%x", info);
+                    snprintf(str, maxlen, "info=0x%x", info);
                 }
                 break;
             case (int) 'D':
                 D = va_arg(list, MPI_Datatype);
-                MPL_snprintf(str, maxlen, "%s", GetDTypeString(D));
+                snprintf(str, maxlen, "%s", GetDTypeString(D));
                 break;
                 /* Include support for %F only if MPI-IO is enabled */
 #ifdef HAVE_ROMIO
@@ -1815,7 +1814,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                     if (F == MPI_FILE_NULL) {
                         MPL_strncpy(str, "MPI_FILE_NULL", maxlen);
                     } else {
-                        MPL_snprintf(str, maxlen, "file=0x%lx", (unsigned long) F);
+                        snprintf(str, maxlen, "file=0x%lx", (unsigned long) F);
                     }
                 }
                 break;
@@ -1825,31 +1824,31 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                 if (W == MPI_WIN_NULL) {
                     MPL_strncpy(str, "MPI_WIN_NULL", maxlen);
                 } else {
-                    MPL_snprintf(str, maxlen, "win=0x%x", W);
+                    snprintf(str, maxlen, "win=0x%x", W);
                 }
                 break;
             case (int) 'A':
                 d = va_arg(list, int);
-                MPL_snprintf(str, maxlen, "%s", GetAssertString(d));
+                snprintf(str, maxlen, "%s", GetAssertString(d));
                 break;
             case (int) 'G':
                 G = va_arg(list, MPI_Group);
                 if (G == MPI_GROUP_NULL) {
                     MPL_strncpy(str, "MPI_GROUP_NULL", maxlen);
                 } else {
-                    MPL_snprintf(str, maxlen, "group=0x%x", G);
+                    snprintf(str, maxlen, "group=0x%x", G);
                 }
                 break;
             case (int) 'O':
                 O = va_arg(list, MPI_Op);
-                MPL_snprintf(str, maxlen, "%s", GetMPIOpString(O));
+                snprintf(str, maxlen, "%s", GetMPIOpString(O));
                 break;
             case (int) 'R':
                 R = va_arg(list, MPI_Request);
                 if (R == MPI_REQUEST_NULL) {
                     MPL_strncpy(str, "MPI_REQUEST_NULL", maxlen);
                 } else {
-                    MPL_snprintf(str, maxlen, "req=0x%x", R);
+                    snprintf(str, maxlen, "req=0x%x", R);
                 }
                 break;
             case (int) 'E':
@@ -1857,7 +1856,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                 if (E == MPI_ERRHANDLER_NULL) {
                     MPL_strncpy(str, "MPI_ERRHANDLER_NULL", maxlen);
                 } else {
-                    MPL_snprintf(str, maxlen, "errh=0x%x", E);
+                    snprintf(str, maxlen, "errh=0x%x", E);
                 }
                 break;
             case (int) 'S':
@@ -1865,17 +1864,17 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                 if (S == MPI_SESSION_NULL) {
                     MPL_strncpy(str, "MPI_SESSION_NULL", maxlen);
                 } else {
-                    MPL_snprintf(str, maxlen, "session=0x%x", S);
+                    snprintf(str, maxlen, "session=0x%x", S);
                 }
                 break;
             case (int) 'K':
                 d = va_arg(list, int);
-                MPL_snprintf(str, maxlen, "%s", get_keyval_string(d));
+                snprintf(str, maxlen, "%s", get_keyval_string(d));
                 break;
             case (int) 'c':
                 c = va_arg(list, MPI_Count);
                 MPIR_Assert(sizeof(long long) >= sizeof(MPI_Count));
-                MPL_snprintf(str, maxlen, "%lld", (long long) c);
+                snprintf(str, maxlen, "%lld", (long long) c);
                 break;
             default:
                 /* Error: unhandled output type */
@@ -2138,7 +2137,7 @@ static int ErrGetInstanceString(int errorcode, char msg[], int num_remaining)
                 if (ErrorRing[ring_idx].id == ring_id) {
                     /* just keep clobbering old values until the
                      * end of the stack is reached */
-                    MPL_snprintf(msg, num_remaining, ", %s", ErrorRing[ring_idx].msg);
+                    snprintf(msg, num_remaining, ", %s", ErrorRing[ring_idx].msg);
                     msg[num_remaining - 1] = '\0';
                     errorcode = ErrorRing[ring_idx].prev_error;
                 } else {

@@ -3650,12 +3650,6 @@ if test "$ac_cv_func_strerror_r" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strerror_r)
 fi
 
-# Use snprintf if possible when creating messages
-AC_CHECK_FUNCS(snprintf)
-if test "$ac_cv_func_snprintf" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
-fi
-
 # qsort will be used in MPI_Comm_split, if available
 AC_CHECK_FUNCS([qsort])
 

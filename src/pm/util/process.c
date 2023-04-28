@@ -270,24 +270,24 @@ int MPIE_ExecProgram(ProcessState * pState, char *envp[])
 
     DBG_PRINTF(("Creating pmi env\n"));
     if (pState->initWithEnv) {
-        MPL_snprintf(env_pmi_rank, MAXNAMELEN, "PMI_RANK=%d", pState->wRank);
+        snprintf(env_pmi_rank, MAXNAMELEN, "PMI_RANK=%d", pState->wRank);
         client_env[j++] = env_pmi_rank;
-        MPL_snprintf(env_pmi_size, MAXNAMELEN, "PMI_SIZE=%d", app->pWorld->nProcess);
+        snprintf(env_pmi_size, MAXNAMELEN, "PMI_SIZE=%d", app->pWorld->nProcess);
         client_env[j++] = env_pmi_size;
-        MPL_snprintf(env_pmi_debug, MAXNAMELEN, "PMI_DEBUG=%d", MPIE_Debug);
+        snprintf(env_pmi_debug, MAXNAMELEN, "PMI_DEBUG=%d", MPIE_Debug);
         client_env[j++] = env_pmi_debug;
     } else {
         /* We must also communicate the ID to the process.
          * This id is saved in the pState so that we can match it
          * when it comes back to us (it is the same as the rank
          * in the simple case) */
-        MPL_snprintf(env_pmi_id, sizeof(env_pmi_id), "PMI_ID=%d", pState->id);
+        snprintf(env_pmi_id, sizeof(env_pmi_id), "PMI_ID=%d", pState->id);
         client_env[j++] = env_pmi_id;
     }
 
-    MPL_snprintf(env_appnum, MAXNAMELEN, "MPI_APPNUM=%d", app->myAppNum);
+    snprintf(env_appnum, MAXNAMELEN, "MPI_APPNUM=%d", app->myAppNum);
     client_env[j++] = env_appnum;
-    MPL_snprintf(env_universesize, MAXNAMELEN, "MPI_UNIVERSE_SIZE=%d", pUniv.size);
+    snprintf(env_universesize, MAXNAMELEN, "MPI_UNIVERSE_SIZE=%d", pUniv.size);
     client_env[j++] = env_universesize;
     client_env[j] = 0;
 
@@ -330,7 +330,7 @@ int MPIE_ExecProgram(ProcessState * pState, char *envp[])
     /* pathname argument should be used here */
     if (app->path) {
         /* Set up the search path */
-        MPL_snprintf(pathstring, sizeof(pathstring) - 1, "PATH=%s", app->path);
+        snprintf(pathstring, sizeof(pathstring) - 1, "PATH=%s", app->path);
         /* Some systems require that the path include the path to
          * certain files or libraries, for example cygwin1.dll for
          * Cygwin */

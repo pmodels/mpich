@@ -791,7 +791,7 @@ int MPIDI_CH3_PktPrint_EagerShortSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 	int i;
 	if (datalen > 32) datalen = 32;
 	for (i=0; i<datalen; i++) {
-	    MPL_snprintf( &databytes[2*i], 64 - 2*i, "%2x", p[i] );
+	    snprintf( &databytes[2*i], 64 - 2*i, "%2x", p[i] );
 	}
 	MPL_DBG_MSG_S(MPIDI_CH3_DBG_OTHER,TERSE," data ......... %s\n", databytes);
     }

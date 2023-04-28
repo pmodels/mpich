@@ -129,8 +129,8 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmc
 
     HYDU_MALLOC_OR_JUMP(key_pair, struct HYD_pmcd_pmi_kvs_pair *,
                         sizeof(struct HYD_pmcd_pmi_kvs_pair), status);
-    MPL_snprintf(key_pair->key, PMI_MAXKEYLEN, "%s", key);
-    MPL_snprintf(key_pair->val, PMI_MAXVALLEN, "%s", val);
+    snprintf(key_pair->key, PMI_MAXKEYLEN, "%s", key);
+    snprintf(key_pair->val, PMI_MAXVALLEN, "%s", val);
     key_pair->next = NULL;
 
     *ret = 0;

@@ -1364,7 +1364,7 @@ static int win_ctrl_handler(int handler_id, void *am_hdr, void *data, MPI_Aint i
             break;
 
         default:
-            MPL_snprintf(buff, sizeof(buff), "Invalid message type: %d\n", handler_id);
+            snprintf(buff, sizeof(buff), "Invalid message type: %d\n", handler_id);
             MPID_Abort(NULL, MPI_ERR_INTERN, 1, buff);
     }
 

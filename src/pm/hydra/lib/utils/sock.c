@@ -506,7 +506,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
     sport = HYDU_int_to_str(port);
     HYDU_ERR_CHKANDJUMP(status, NULL == sport, HYD_INTERNAL_ERROR, "%s", "");
     HYDU_MALLOC_OR_JUMP(*port_str, char *, strlen(ip) + 1 + strlen(sport) + 1, status);
-    MPL_snprintf(*port_str, strlen(ip) + 1 + strlen(sport) + 1, "%s:%s", ip, sport);
+    snprintf(*port_str, strlen(ip) + 1 + strlen(sport) + 1, "%s:%s", ip, sport);
     MPL_free(sport);
 
   fn_exit:
