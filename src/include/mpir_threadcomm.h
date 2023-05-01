@@ -36,6 +36,7 @@ typedef struct MPIR_threadcomm_cell_t {
 typedef struct MPIR_threadcomm_queue_t {
     MPL_atomic_ptr_t head;
     MPL_atomic_ptr_t tail;
+    char dummy[MPL_CACHELINE_SIZE];
 } MPIR_threadcomm_queue_t;
 
 #define MPIR_THREADCOMM_CELL_SIZE  4096
