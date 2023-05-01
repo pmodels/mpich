@@ -54,9 +54,6 @@ int MPIC_Wait(MPIR_Request * request_ptr)
 
     MPIR_FUNC_ENTER;
 
-    if (request_ptr->kind == MPIR_REQUEST_KIND__SEND)
-        request_ptr->status.MPI_TAG = 0;
-
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
