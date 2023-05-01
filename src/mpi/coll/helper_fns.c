@@ -565,8 +565,10 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
     if (numreq > MPIC_REQUEST_PTR_ARRAY_SIZE) {
         MPIR_CHKLMEM_MALLOC(request_ptrs, MPI_Request *, numreq * sizeof(MPI_Request), mpi_errno,
                             "request pointers", MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(status_array, MPI_Status *, numreq * sizeof(MPI_Status), mpi_errno,
-                            "status objects", MPL_MEM_BUFFER);
+        if (statuses == MPI_STATUSES_IGNORE) {
+            MPIR_CHKLMEM_MALLOC(status_array, MPI_Status *, numreq * sizeof(MPI_Status), mpi_errno,
+                                "status objects", MPL_MEM_BUFFER);
+        }
     }
 
     for (i = 0; i < numreq; ++i) {
