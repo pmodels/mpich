@@ -64,6 +64,8 @@ typedef struct MPIR_Threadcomm {
 #else
     /* lockless MPSC queue */
     MPIR_threadcomm_queue_t *queues;
+    char *cell_slab;
+    MPIR_threadcomm_queue_t *pools;
 #endif
 } MPIR_Threadcomm;
 
