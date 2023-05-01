@@ -30,6 +30,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     int mpi_errno_ret = MPI_SUCCESS;
     int mask, dst, is_commutative, pof2, newrank, rem, newdst;
     MPI_Aint true_extent, true_lb, extent;
+    int local_tmp_buf[1024];
     void *tmp_buf;
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
@@ -40,8 +41,13 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)), mpi_errno,
-                        "temporary buffer", MPL_MEM_BUFFER);
+    MPI_Aint data_sz = count * (MPL_MAX(extent, true_extent));
+    if (data_sz <= 1024) {
+        tmp_buf = local_tmp_buf;
+    } else {
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)), mpi_errno,
+                            "temporary buffer", MPL_MEM_BUFFER);
+    }
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);
