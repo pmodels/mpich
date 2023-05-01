@@ -158,6 +158,9 @@ static int thread_barrier(MPIR_Threadcomm * threadcomm)
     return MPI_SUCCESS;
 }
 
+/* MPIR_Threadcomm_{start,finish} called inside parallel region by every thread.
+ * threadcomm->next_id can be used to test whether it is active (started).
+ */
 int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -171,13 +174,6 @@ int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
     MPIR_Assert(p);
     p->tid = MPL_atomic_fetch_add_int(&threadcomm->next_id, 1);
 
-    /* Need reset next_id and a barrier to ensure next MPI_Threadcomm_start to work.
-     * We can do this at either MPI_Threadcomm_start or MPI_Threadcomm_finish. */
-    if (p->tid == threadcomm->num_threads - 1) {
-        MPL_atomic_store_int(&threadcomm->next_id, 0);
-    }
-    mpi_errno = thread_barrier(threadcomm);
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -190,6 +186,12 @@ int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
     MPIR_Assert(threadcomm);
     MPIR_threadcomm_tls_t *tls = MPIR_threadcomm_get_tls(comm->threadcomm);
     MPIR_Assert(tls);
+
+    if (tls->tid == 0) {
+        /* reset next_id and a barrier to ensure next MPI_Threadcomm_start to work */
+        MPL_atomic_store_int(&threadcomm->next_id, 0);
+    }
+    mpi_errno = thread_barrier(threadcomm);
 
     if (MPIR_Process.attr_free && tls->attributes) {
         int mpi_errno = MPIR_Process.attr_free(comm->handle, &tls->attributes);
