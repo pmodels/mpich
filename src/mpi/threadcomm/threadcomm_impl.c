@@ -63,6 +63,20 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
 #elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
     threadcomm->queues = MPL_calloc(num_threads, sizeof(MPIR_threadcomm_queue_t), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!threadcomm->queues, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    /* init cell allocation pools */
+    threadcomm->pools = MPL_calloc(num_threads, sizeof(MPIR_threadcomm_queue_t), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!threadcomm->pools, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPI_Aint slab_sz = MPIR_THREADCOMM_CELL_SIZE * 1024 * num_threads;
+    threadcomm->cell_slab = MPL_malloc(slab_sz, MPL_MEM_OTHER);
+    for (int i = 0; i < num_threads; i++) {
+        char *slab = threadcomm->cell_slab + i * MPIR_THREADCOMM_CELL_SIZE * 1024;
+        for (int j = 0; j < 1024; j++) {
+            threadcomm_mpsc_enqueue(&threadcomm->pools[i],
+                                    (void *) (slab + j * MPIR_THREADCOMM_CELL_SIZE));
+        }
+    }
 #endif
 
     MPL_free(threads_table);
@@ -107,6 +121,8 @@ int MPIR_Threadcomm_free_impl(MPIR_Comm * comm)
     MPL_free(threadcomm->mailboxes);
 #elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
     MPL_free(threadcomm->queues);
+    MPL_free(threadcomm->pools);
+    MPL_free(threadcomm->cell_slab);
 #endif
 
     MPL_free(threadcomm);

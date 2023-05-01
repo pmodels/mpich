@@ -249,8 +249,10 @@ MPL_STATIC_INLINE_PREFIX int threadcomm_progress_recv(int *made_progress)
             threadcomm_mpsc_dequeue(&(p[i].threadcomm->queues[p[i].tid]));
         if (cell) {
             *made_progress = 1;
-            threadcomm_recv_event(cell->payload, &p[i]);
-            MPL_free(cell);
+            struct send_hdr *hdr = (void *) (cell->payload);
+            threadcomm_recv_event(hdr, &p[i]);
+
+            threadcomm_mpsc_enqueue(&(p[i].threadcomm->pools[hdr->src_id]), cell);
         }
 #endif
     }
@@ -274,11 +276,7 @@ static int threadcomm_eager_send(int src_id, int dst_id, struct send_hdr *hdr,
     MPL_atomic_store_int(&fbox->u.data_ready, 1);
 
 #elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
-    MPI_Aint cell_sz = sizeof(MPIR_threadcomm_cell_t) + sizeof(struct send_hdr);
-    if (hdr->type == MPIR_THREADCOMM_MSGTYPE_EAGER) {
-        cell_sz += hdr->u.data_sz;
-    }
-    MPIR_threadcomm_cell_t *cell = MPL_malloc(cell_sz, MPL_MEM_OTHER);
+    MPIR_threadcomm_cell_t *cell = threadcomm_mpsc_dequeue(&threadcomm->pools[src_id]);
     if (!cell) {
         return -1;
     }

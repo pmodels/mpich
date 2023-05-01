@@ -67,6 +67,8 @@ typedef struct MPIR_Threadcomm {
     MPIR_threadcomm_fbox_t *mailboxes;
 #elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
     MPIR_threadcomm_queue_t *queues;
+    char *cell_slab;
+    MPIR_threadcomm_queue_t *pools;
 #endif                          /* MPIR_THREADCOMM_TRANSPORT */
 
 } MPIR_Threadcomm;
