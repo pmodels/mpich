@@ -164,7 +164,7 @@ extern MPIR_Object_alloc_t MPIR_Grequest_class_mem;
     } while (0)
 #endif
 
-#define MPIR_Request_is_complete(req_) (MPIR_cc_is_complete((req_)->cc_ptr))
+#define MPIR_Request_is_complete(req_) (HANDLE_IS_BUILTIN((req_)->handle) || MPIR_cc_is_complete((req_)->cc_ptr))
 
 /* types of sched structure used in persistent collective */
 enum MPIR_sched_type {
