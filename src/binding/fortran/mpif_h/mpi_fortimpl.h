@@ -368,11 +368,11 @@ typedef char *MPID_FCHAR_T;
 #endif /* MPI_DUP_FN */
 
 /* A special case to help out when ROMIO is disabled */
-#ifndef MPI_MODE_RDONLY
+#ifndef HAVE_ROMIO
 #ifndef MPI_File_f2c
 #define MPI_File_f2c(a) ((MPI_File)(MPI_Aint)(a))
 #endif
-#endif /* MPI_MODE_RDONLY */
+#endif /* HAVE_ROMIO */
 
 /* The F90 attr copy/delete function prototype and calling convention */
 typedef void (FORT_CALL F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,

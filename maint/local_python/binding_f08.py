@@ -133,7 +133,7 @@ def dump_f08_wrappers_c(func, is_large):
             G.out.append("    return MPI_ERR_INTERN;")
             G.out.append("}")
             return
-        G.out.append("#ifndef MPI_MODE_RDONLY")
+        G.out.append("#ifndef HAVE_ROMIO")
         G.out.append("    return MPI_ERR_INTERN;")
         G.out.append("#else")
     G.out.append("INDENT");

@@ -109,9 +109,9 @@ typedef struct cvar_table_entry_s {
 
     /* Properties of the cvar */
     MPI_T_enum enumtype;
-    MPIR_T_verbosity_t verbosity;
-    MPIR_T_bind_t bind;
-    MPIR_T_scope_t scope;
+    int verbosity;
+    int bind;
+    int scope;
 
     /* Default value */
     MPIR_T_cvar_value_t defaultval;
@@ -137,12 +137,12 @@ typedef struct MPIR_T_cvar_handle_s {
 
     /* Cached value from cvar_table_entry_t to avoid indirection */
     MPI_Datatype datatype;
-    MPIR_T_scope_t scope;
+    int scope;
 } MPIR_T_cvar_handle_t;
 
 void MPIR_T_CVAR_REGISTER_impl(MPI_Datatype dtype, const char *name, const void *addr, int count,
-                               MPIR_T_enum_t * etype, MPIR_T_verbosity_t verb, MPIR_T_bind_t bind,
-                               MPIR_T_scope_t scope, MPIR_T_cvar_get_addr_cb get_addr,
+                               MPIR_T_enum_t * etype, int verb, int bind,
+                               int scope, MPIR_T_cvar_get_addr_cb get_addr,
                                MPIR_T_cvar_get_count_cb get_count, MPIR_T_cvar_value_t defaultval,
                                const char *cat, const char *desc);
 
@@ -198,10 +198,10 @@ typedef struct {
     int count;
 
     /* Properties of the pvar */
-    MPIR_T_pvar_class_t varclass;
-    MPIR_T_verbosity_t verbosity;
+    int varclass;
+    int verbosity;
     MPIR_T_enum_t *enumtype;
-    MPIR_T_bind_t bind;
+    int bind;
 
     /* Basic flags of the pvar */
     int flags;
@@ -292,7 +292,7 @@ typedef struct MPIR_T_pvar_handle_s {
     MPI_Datatype datatype;
     int count;
     MPIR_T_pvar_get_value_cb *get_value;
-    MPIR_T_pvar_class_t varclass;
+    int varclass;
 
     /* Bytes of an element of datatype */
     int bytes;
@@ -351,10 +351,10 @@ typedef struct MPIR_T_pvar_session_s {
     MPIR_T_pvar_handle_t *hlist;
 } MPIR_T_pvar_session_t;
 
-extern void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype dtype,
+extern void MPIR_T_PVAR_REGISTER_impl(int varclass, MPI_Datatype dtype,
                                       const char *name, void *addr, int count,
-                                      MPIR_T_enum_t * etype, MPIR_T_verbosity_t verb,
-                                      MPIR_T_bind_t bind, int flags,
+                                      MPIR_T_enum_t * etype, int verb,
+                                      int bind, int flags,
                                       MPIR_T_pvar_get_value_cb get_value,
                                       MPIR_T_pvar_get_count_cb get_count, const char *cat,
                                       const char *desc);
@@ -1275,13 +1275,13 @@ typedef struct MPIR_T_event_s {
     int index;
     int source_index;
     char *name;
-    MPIR_T_verbosity_t verbosity;
+    int verbosity;
     MPI_Datatype *array_of_datatypes;
     MPI_Aint *array_of_displacements;
     int num_elements;
     MPIR_T_enum_t *enumtype;
     char *desc;
-    MPIR_T_bind_t bind;
+    int bind;
 
     struct MPIR_T_event_registration_s *reg_list_head;
     struct MPIR_T_event_registration_s *reg_list_tail;
@@ -1289,9 +1289,9 @@ typedef struct MPIR_T_event_s {
     UT_hash_handle hh;          /* Makes this structure hashable */
 } MPIR_T_event_t;
 
-void MPIR_T_register_event(int source_index, const char *name, MPIR_T_verbosity_t verbosity,
+void MPIR_T_register_event(int source_index, const char *name, int verbosity,
                            MPI_Datatype array_of_datatypes[], MPI_Aint array_of_displacements[],
-                           MPI_Aint num_elements, const char *desc, MPIR_T_bind_t bind,
+                           MPI_Aint num_elements, const char *desc, int bind,
                            const char *category, int *index);
 
 typedef struct MPIR_T_event_cb_s {

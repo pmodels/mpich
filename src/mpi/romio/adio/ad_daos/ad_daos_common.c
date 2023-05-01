@@ -58,7 +58,7 @@ void ADIOI_DAOS_Init(int *error_code)
 
     /** attach to comm_self destroy to finalize DAOS */
     MPI_Keyval_create(MPI_NULL_COPY_FN, ad_daos_end, &ADIOI_DAOS_Initialized, (void *) 0);
-    MPI_Attr_put(MPI_COMM_SELF, ADIOI_DAOS_Initialized, (void *) 0);
+    MPI_Comm_set_attr(MPI_COMM_SELF, ADIOI_DAOS_Initialized, (void *) 0);
 }
 
 int ADIOI_DAOS_err(const char *myname, const char *filename, int line, int rc)

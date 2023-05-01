@@ -48,7 +48,7 @@ typedef struct MPII_Dist_graph_topology {
 } MPII_Dist_graph_topology;
 
 struct MPIR_Topology {
-    MPIR_Topo_type kind;
+    int kind;
     union topo {
         MPII_Graph_topology graph;
         MPII_Cart_topology cart;

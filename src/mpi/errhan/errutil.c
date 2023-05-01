@@ -1807,7 +1807,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                 MPL_snprintf(str, maxlen, "%s", GetDTypeString(D));
                 break;
                 /* Include support for %F only if MPI-IO is enabled */
-#ifdef MPI_MODE_RDWR
+#ifdef HAVE_ROMIO
             case (int) 'F':
                 {
                     MPI_File F;
@@ -1819,7 +1819,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                     }
                 }
                 break;
-#endif /* MODE_RDWR */
+#endif /* HAVE_ROMIO */
             case (int) 'W':
                 W = va_arg(list, MPI_Win);
                 if (W == MPI_WIN_NULL) {

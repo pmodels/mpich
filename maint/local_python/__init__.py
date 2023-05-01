@@ -56,6 +56,7 @@ class MPI_API_Global:
     mpi_declares = []
     impl_declares = []
     mpi_errnames = []
+    mpix_symbols = {}
 
     status_fields = ["count_lo", "count_hi_and_cancelled", "MPI_SOURCE", "MPI_TAG", "MPI_ERROR"]
     handle_list = ["MPI_Comm", "MPI_Datatype", "MPI_Errhandler", "MPI_File", "MPI_Group", "MPI_Info", "MPI_Op", "MPI_Request", "MPI_Win", "MPI_Message", "MPI_Session", "MPIX_Stream"]

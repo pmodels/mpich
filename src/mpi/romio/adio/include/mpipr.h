@@ -29,10 +29,6 @@
 #define MPI_Alltoallw PMPI_Alltoallw
 #undef MPI_Attr_delete
 #define MPI_Attr_delete PMPI_Attr_delete
-#undef MPI_Attr_get
-#define MPI_Attr_get PMPI_Attr_get
-#undef MPI_Attr_put
-#define MPI_Attr_put PMPI_Attr_put
 #undef MPI_Barrier
 #define MPI_Barrier PMPI_Barrier
 #undef MPI_Bcast
@@ -75,6 +71,8 @@
 #define MPI_Comm_dup PMPI_Comm_dup
 #undef MPI_Comm_free
 #define MPI_Comm_free PMPI_Comm_free
+#undef MPI_Comm_get_attr
+#define MPI_Comm_get_attr PMPI_Comm_get_attr
 #undef MPI_Comm_group
 #define MPI_Comm_group PMPI_Comm_group
 #undef MPI_Comm_rank
@@ -83,6 +81,8 @@
 #define MPI_Comm_remote_group PMPI_Comm_remote_group
 #undef MPI_Comm_remote_size
 #define MPI_Comm_remote_size PMPI_Comm_remote_size
+#undef MPI_Comm_set_attr
+#define MPI_Comm_set_attr PMPI_Comm_set_attr
 #undef MPI_Comm_size
 #define MPI_Comm_size PMPI_Comm_size
 #undef MPI_Comm_split

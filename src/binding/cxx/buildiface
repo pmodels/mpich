@@ -1257,7 +1257,7 @@ typedef int MPI_File;\
     # Hack to ifdef out the file routines
     if ($class eq "file") {
 	# Define the file type only if supported.
-	print $OUTFD "#ifdef MPI_MODE_RDONLY\n";
+	print $OUTFD "#ifdef HAVE_ROMIO\n";
     }
 
     foreach $mpilevel (@mpilevels) {
@@ -1347,7 +1347,7 @@ typedef int MPI_File;\
     # Only define these typedefs when MPI-IO is available (this is the same
     # test as used for the rest of the I/O routines );
 print $OUTFD "\
-#ifdef MPI_MODE_RDONLY
+#ifdef HAVE_ROMIO
 typedef int Datarep_extent_function( const Datatype&, Aint&, void *);
 typedef int Datarep_conversion_function( void *, Datatype &, int, void *,
                 Offset, void * );
@@ -2003,7 +2003,7 @@ extern Datatype TWOINTEGER;
     }
 
     print $OUTFD "// Include these only if MPI-IO is available\n";
-    print $OUTFD "#ifdef MPI_MODE_RDONLY\n";
+    print $OUTFD "#ifdef HAVE_ROMIO\n";
 
     # Other file constants
     foreach $int (MAX_DATAREP_STRING) {
@@ -2085,9 +2085,9 @@ sub build_specials {
     open( $OUTFD, ">${filename}.new" ) || die "Cannot open ${filename}.new\n";
     $files[$#files+1] = "initcxx.cxx";
     &print_header;
+    print $OUTFD "#include \"mpichconf.h\"\n"; # Requires for HAVE_FORTRAN_BINDING
     print $OUTFD "#include \"mpi.h\"\n";
     print $OUTFD "#include <stdarg.h>\n";    # Required for pcontrol
-    print $OUTFD "#include \"mpichconf.h\"\n"; # Requires for HAVE_FORTRAN_BINDING
 
     # Add exception for coding style checker
     print $OUTFD "/* style:PMPIuse:PMPI_Type_set_name:4 sig:0 */\n";
@@ -2664,7 +2664,7 @@ void MPIR_Call_errhandler_function( int kind, int *handle, int *errcode,
 		}
 	    }
 	    break;
-#ifdef MPI_MODE_RDONLY
+#ifdef HAVE_ROMIO
     case 1: // file
 	    {
 		MPI::File fh = (MPI_File)*(MPI_File*)handle;
@@ -2682,7 +2682,7 @@ void MPIR_Call_errhandler_function( int kind, int *handle, int *errcode,
 	    break;
     }
 }
-#ifdef MPI_MODE_RDONLY
+#ifdef HAVE_ROMIO
 Errhandler File::Create_errhandler( Errhandler_function *f )
 {
     MPI_Errhandler eh;
@@ -2764,7 +2764,7 @@ void Win::Call_errhandler( int errorcode ) const
     MPI_Win_call_errhandler( (MPI_Win) the_real_win, errorcode );
 }
 
-#ifdef MPI_MODE_RDONLY
+#ifdef HAVE_ROMIO
 void File::Call_errhandler( int errorcode ) const
 {
     // we must free the Errhandler object returned from Get_errhandler because
@@ -2795,7 +2795,7 @@ EOT
     # The data rep conversion functions need to be wrapped in C code
     # Only define this routine when MPI-IO is available (this is the same
     # test as used for the rest of the I/O routines );
-print $OUTFD "#ifdef MPI_MODE_RDONLY\n";
+print $OUTFD "#ifdef HAVE_ROMIO\n";
     print $OUTFD "
 extern \"C\" {
 //

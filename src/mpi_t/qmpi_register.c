@@ -303,8 +303,7 @@ int QMPI_Register_tool_storage(int tool_id, void *tool_storage)
     return mpi_errno;
 }
 
-int QMPI_Register_function(int tool_id, enum QMPI_Functions_enum function_enum,
-                           void (*function_ptr) (void))
+int QMPI_Register_function(int tool_id, int function_enum, void (*function_ptr) (void))
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -320,7 +319,7 @@ int QMPI_Register_function(int tool_id, enum QMPI_Functions_enum function_enum,
     return mpi_errno;
 }
 
-int QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,
+int QMPI_Get_function(int calling_tool_id, int function_enum,
                       void (**function_ptr) (void), int *next_tool_id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -410,13 +409,12 @@ int QMPI_Register_tool_storage(int tool_id, void *tool_storage)
     return MPI_ERR_UNSUPPORTED_OPERATION;
 }
 
-int QMPI_Register_function(int tool_id, enum QMPI_Functions_enum function_enum,
-                           void (*function_ptr) (void))
+int QMPI_Register_function(int tool_id, int function_enum, void (*function_ptr) (void))
 {
     return MPI_ERR_UNSUPPORTED_OPERATION;
 }
 
-int QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,
+int QMPI_Get_function(int calling_tool_id, int function_enum,
                       void (**function_ptr) (void), int *next_tool_id)
 {
     return MPI_ERR_UNSUPPORTED_OPERATION;

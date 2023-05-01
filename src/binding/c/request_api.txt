@@ -122,6 +122,46 @@ MPI_Startall:
     are required, multiple calls to 'MPI_Start' should be used instead.
 */
 
+MPI_Status_c2f:
+    .desc: Convert MPI_Status object to MPI_Fint array
+{
+    if (c_status == MPI_STATUS_IGNORE || c_status == MPI_STATUSES_IGNORE) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                         __func__, __LINE__, MPI_ERR_OTHER,
+                                         "**notcstatignore", 0);
+        goto fn_fail;
+    }
+#ifdef HAVE_FINT_IS_INT
+    *(MPI_Status *) f_status = *c_status;
+#else
+    f_status[0] = (MPI_Fint) c_status->count_lo;
+    f_status[1] = (MPI_Fint) c_status->count_hi_and_cancelled;
+    f_status[2] = (MPI_Fint) c_status->MPI_SOURCE;
+    f_status[3] = (MPI_Fint) c_status->MPI_TAG;
+    f_status[4] = (MPI_Fint) c_status->MPI_ERROR;
+#endif
+}
+
+MPI_Status_f2c:
+    .desc: Convert MPI_Status object from MPI_Fint array
+{
+    if (f_status == MPI_F_STATUS_IGNORE) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                         __func__, __LINE__, MPI_ERR_OTHER,
+                                         "**notfstatignore", 0);
+        goto fn_fail;
+    }
+#ifdef HAVE_FINT_IS_INT
+    *c_status = *(MPI_Status *) f_status;
+#else
+    c_status->count_lo = (int) f_status[0];
+    c_status->count_hi_and_cancelled = (int) f_status[1];
+    c_status->MPI_SOURCE = (int) f_status[2];
+    c_status->MPI_TAG = (int) f_status[3];
+    c_status->MPI_ERROR = (int) f_status[4];
+#endif
+}
+
 MPI_Status_set_cancelled:
     .desc: Sets the cancelled state associated with a request
 
@@ -185,11 +225,6 @@ MPI_Testall:
     'array_of_requests', such an action is considered erroneous and may cause the
     program to unexecpectedly terminate or produce incorrect results.
 */
-{ -- error_check -- array_of_statuses
-    if (count > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
-    }
-}
 {
     mpi_errno = MPIR_Testall(count, array_of_requests, flag, array_of_statuses);
     if (mpi_errno != MPI_SUCCESS)
@@ -223,11 +258,10 @@ MPI_Testsome:
     'array_of_requests', such an action is considered erroneous and may cause the
     program to unexecpectedly terminate or produce incorrect results.
 */
-{ -- error_check -- array_of_indices, array_of_statuses
+{ -- error_check -- array_of_indices
     if (incount > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_requests, "array_of_requests", mpi_errno);
         MPIR_ERRTEST_ARGNULL(array_of_indices, "array_of_indices", mpi_errno);
-        MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
     }
 }
 {
@@ -280,11 +314,6 @@ MPI_Waitall:
     array_of_requests, such an action is considered erroneous and may cause the
     program to unexecpectedly terminate or produce incorrect results.
 */
-{ -- error_check -- array_of_statuses
-    if (count > 0) {
-        MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
-    }
-}
 {
     mpi_errno = MPIR_Waitall(count, array_of_requests, array_of_statuses);
     if (mpi_errno)
@@ -336,10 +365,9 @@ MPI_Waitsome:
 
     .N waitstatus
 */
-{ -- error_check -- array_of_indices, array_of_statuses
+{ -- error_check -- array_of_indices
     if (incount > 0) {
         MPIR_ERRTEST_ARGNULL(array_of_indices, "array_of_indices", mpi_errno);
-        MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
     }
 }
 {

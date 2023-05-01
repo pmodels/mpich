@@ -11,7 +11,7 @@ from local_python.info_hints import collect_info_hint_blocks
 import glob
 
 def main():
-    # currently support: -single-source
+    # currently support: -output-mansrc
     G.parse_cmdline()
 
     binding_dir = G.get_srcdir_path("src/binding")
@@ -24,7 +24,7 @@ def main():
     # -- functions that are not generated yet
     extras = []
     extras.append("MPI_DUP_FN")
-    for a in ['c2f', 'f2c', 'f082c', 'c2f08', 'f082f', 'f2f08']:
+    for a in ['f082c', 'c2f08', 'f082f', 'f2f08']:
         extras.append("MPI_Status_%s" % a)
     for a in ['integer', 'real', 'complex']:
         extras.append("MPI_Type_create_f90_%s" % a)
@@ -42,7 +42,11 @@ def main():
 
     # -- Generating code --
     G.out = []
+    G.out.append("#include \"mpiimpl.h\"")
+    G.out.append("")
     G.doc3_src_txt = []
+    G.need_dump_romio_reference = True
+
     # internal function to dump G.out into filepath
     def dump_out(file_path):
         G.check_write_path(file_path)
@@ -50,6 +54,9 @@ def main():
         # add to mpi_sources for dump_Makefile_mk()
         G.mpi_sources.append(file_path)
         G.out = []
+        G.out.append("#include \"mpiimpl.h\"")
+        G.out.append("")
+        G.need_dump_romio_reference = True
 
     # ----
     for func in func_list:
@@ -72,12 +79,7 @@ def main():
                     print(l.rstrip(), file=Out)
             G.doc3_src_txt.append(f)
 
-        if 'single-source' not in G.opts:
-            # dump individual functions in separate source files
-            dump_out(get_func_file_path(func, c_dir))
-    if 'single-source' in G.opts:
-        # otherwise, dump all functions in binding.c
-        dump_out(c_dir + "/c_binding.c")
+    dump_out(c_dir + "/c_binding.c")
 
     # -- Dump other files --
     G.check_write_path("src/include")

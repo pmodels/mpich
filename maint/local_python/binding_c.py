@@ -42,18 +42,19 @@ def dump_mpi_c(func, is_large=False):
     # As an hack, we reference these symbols in selected routines to force the inclusion of romio
     # routines.
     def dump_romio_reference(name):
-        G.out.append("#if defined(HAVE_ROMIO) && defined(MPICH_MPI_FROM_PMPI)")
-        G.out.append("void *dummy_refs_%s[] = {" % name)
-        G.out.append("    (void *) MPIR_Comm_split_filesystem,")
-        G.out.append("    (void *) MPIR_ROMIO_Get_file_errhand,")
-        G.out.append("    (void *) MPIR_ROMIO_Set_file_errhand,")
-        G.out.append("};")
-        G.out.append("#endif")
+        if G.need_dump_romio_reference:
+            G.out.append("#if defined(HAVE_ROMIO) && defined(MPICH_MPI_FROM_PMPI)")
+            G.out.append("void *dummy_refs_%s[] = {" % name)
+            G.out.append("    (void *) MPIR_Comm_split_filesystem,")
+            G.out.append("    (void *) MPIR_ROMIO_Get_file_errhand,")
+            G.out.append("    (void *) MPIR_ROMIO_Set_file_errhand,")
+            G.out.append("};")
+            G.out.append("#endif")
+            G.need_dump_romio_reference = False
 
     # -- "dump" accumulates output lines in G.out
     if not is_large:
         # only include once (skipping "BIG")
-        G.out.append("#include \"mpiimpl.h\"")
         if 'include' in func:
             for a in func['include'].replace(',', ' ').split():
                 G.out.append("#include \"%s\"" % a)
@@ -76,7 +77,7 @@ def dump_mpi_c(func, is_large=False):
     if 'polymorph' in func:
         dump_function_internal(func, kind="call-polymorph")
     elif 'replace' in func and 'body' not in func:
-        dump_function_internal(func, kind="call-replace")
+        declare_call_replace_internal(func)
     else:
         dump_function_internal(func, kind="normal")
     G.out.append("")
@@ -539,7 +540,20 @@ def process_func_parameters(func):
             pass
         elif p['param_direction'] == 'out':
             # -- output parameter --
-            if p['length']:
+            if p['kind'] == 'STATUS':
+                if p['length']:
+                    length = p['length']
+                    if length == '*':
+                        if RE.match(r'MPI_(Test|Wait)all', func_name, re.IGNORECASE):
+                            length = "count"
+                        elif RE.match(r'MPI_(Test|Wait)some', func_name, re.IGNORECASE):
+                            length = "incount"
+                        else:
+                            raise Exception("Unexpected")
+                    validation_list.append({'kind': "STATUS-length", 'name': name, 'length': length})
+                else:
+                    validation_list.append({'kind': "STATUS", 'name': name})
+            elif p['length']:
                 validation_list.append({'kind': "ARGNULL-length", 'name': name, 'length': p['length']})
             else:
                 validation_list.append({'kind': "ARGNULL", 'name': name})
@@ -769,8 +783,7 @@ def dump_qmpi_wrappers(func, is_large):
     func_decl = get_declare_function(func, is_large)
     qmpi_decl = get_qmpi_decl_from_func_decl(func_decl)
 
-    static_call = re.sub(r'MPI(X?)_', r'internal\1_', func_name, 1)
-    static_call = static_call + "(" + get_function_args(func) + ")"
+    static_call = get_static_call_internal(func, is_large)
 
     G.out.append("#ifdef ENABLE_QMPI")
     G.out.append("#ifndef MPICH_MPI_FROM_PMPI")
@@ -1023,12 +1036,6 @@ def dump_function_internal(func, kind):
         repl_args = get_function_args(func) + ', ' + extra_arg
         repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
         dump_function_replace(func, repl_call)
-    elif kind == 'call-replace':
-        RE.search(r'with\s+(\w+)', func['replace'])
-        repl_name = "P" + RE.m.group(1)
-        repl_args = get_function_args(func)
-        repl_call = "mpi_errno = %s(%s);" % (repl_name, repl_args)
-        dump_function_replace(func, repl_call)
     else:
         dump_function_normal(func)
 
@@ -1047,6 +1054,28 @@ def dump_function_internal(func, kind):
             pass
         else:
             push_impl_decl(func)
+
+def declare_call_replace_internal(func):
+    m = re.search(r'with\s+(MPI_\w+)', func['replace'])
+    repl_name = m.group(1).lower()
+    if repl_name not in G.FUNCS:
+        raise Exception("Replacement function %s not found!" % repl_name)
+    repl_func = G.FUNCS[repl_name]
+    s = get_declare_function(repl_func, func['_is_large'])
+    s = "static " + re.sub(r'MPI(X?)_', r'internal_', s, 1)
+
+    G.out.append("")
+    dump_line_with_break(s + ';')
+
+# used in dump_qmpi_wrappers, call the internal function
+def get_static_call_internal(func, is_large):
+    func_name = get_function_name(func, is_large)
+    if 'replace' in func and 'body' not in func:
+        m = re.search(r'with\s+(MPI_\w+)', func['replace'])
+        func_name = m.group(1)
+    static_call = re.sub(r'MPI(X?)_', r'internal\1_', func_name, 1)
+    static_call = static_call + "(" + get_function_args(func) + ")"
+    return static_call
 
 def check_large_parameters(func):
     if not func['_has_poly']:
@@ -1230,6 +1259,7 @@ def dump_function_normal(func):
     G.out.append("fn_exit:")
     for l in func['code-clean_up']:
         G.out.append(l)
+    func['code-clean_up'] = []
     G.out.append("MPIR_FUNC_TERSE_EXIT;")
 
     if not '_skip_global_cs' in func:
@@ -1983,6 +2013,16 @@ def dump_validation(func, t):
             dump_validate_userbuffer_coll(func, kind, p[0], p[1], p[3], p[2])
         else:
             dump_validate_userbuffer_coll(func, kind, p[0], p[1], p[2], "")
+    elif RE.match(r'STATUS$', kind):
+        G.err_codes['MPI_ERR_ARG'] = 1
+        dump_if_open("%s != MPI_STATUS_IGNORE" % name)
+        G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
+        dump_if_close()
+    elif RE.match(r'STATUS-length$', kind):
+        G.err_codes['MPI_ERR_ARG'] = 1
+        dump_if_open("%s != MPI_STATUSES_IGNORE && %s > 0" % (name, t['length']))
+        G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
+        dump_if_close()
     elif RE.match(r'(ARGNULL)$', kind):
         if func['dir'] == 'mpit':
             G.err_codes['MPI_T_ERR_INVALID'] = 1

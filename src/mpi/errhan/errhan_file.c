@@ -9,7 +9,7 @@
 int MPIR_File_create_errhandler_impl(MPI_File_errhandler_function * file_errhandler_fn,
                                      MPIR_Errhandler ** errhandler_ptr)
 {
-#ifdef MPI_MODE_RDONLY
+#ifdef HAVE_ROMIO
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errhandler *errhan_ptr;
 
@@ -34,7 +34,7 @@ int MPIR_File_create_errhandler_impl(MPI_File_errhandler_function * file_errhand
 /* File is handled differently from Comm/Win due to ROMIO abstraction */
 int MPIR_File_get_errhandler_impl(MPI_File file, MPI_Errhandler * errhandler)
 {
-#ifdef MPI_MODE_RDONLY
+#ifdef HAVE_ROMIO
     MPI_Errhandler eh;
     MPIR_Errhandler *e;
 
@@ -56,7 +56,7 @@ int MPIR_File_get_errhandler_impl(MPI_File file, MPI_Errhandler * errhandler)
 
 int MPIR_File_set_errhandler_impl(MPI_File file, MPIR_Errhandler * errhan_ptr)
 {
-#ifdef MPI_MODE_RDONLY
+#ifdef HAVE_ROMIO
     MPIR_Errhandler *old_errhandler_ptr;
     MPI_Errhandler old_errhandler;
 
@@ -84,7 +84,7 @@ int MPIR_File_set_errhandler_impl(MPI_File file, MPIR_Errhandler * errhan_ptr)
 
 int MPIR_File_call_errhandler_impl(MPI_File fh, int errorcode)
 {
-#ifdef MPI_MODE_RDONLY
+#ifdef HAVE_ROMIO
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errhandler *e;
     MPI_Errhandler eh;
@@ -150,10 +150,10 @@ int MPIR_File_call_errhandler_impl(MPI_File fh, int errorcode)
 
   fn_exit:
     return mpi_errno;
-#else /* MPI_MODE_RDONLY */
+#else /* HAVE_ROMIO */
     /* Dummy in case ROMIO is not defined */
     return MPI_ERR_INTERN;
-#endif /* MPI_MODE_RDONLY */
+#endif /* HAVE_ROMIO */
 }
 
 /* Export this routine only once (if we need to compile this file twice
