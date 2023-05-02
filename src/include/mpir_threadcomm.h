@@ -47,6 +47,11 @@ typedef struct MPIR_threadcomm_queue_t {
 typedef struct MPIR_Threadcomm {
     MPIR_OBJECT_HEADER;
     MPIR_Comm *comm;
+    enum {
+        MPIR_THREADCOMM_KIND__PERSIST,  /* created via MPIX_Threadcomm_init */
+        MPIR_THREADCOMM_KIND__DERIVED,  /* created inside a parallel region,
+                                         * must be freed before exit the parallel region */
+    } kind;
     int num_threads;            /* number of threads in this rank */
     int *rank_offset_table;     /* offset table for inter-process rank to
                                  * threadcomm rank conversion */
@@ -58,6 +63,8 @@ typedef struct MPIR_Threadcomm {
     MPL_atomic_int_t barrier_flag;
     /* thread barrier - dissemination */
     void *in_counters;
+    /* bcast during comm_dup */
+    void *bcast_value;
 #ifdef MPIR_THREADCOMM_USE_FBOX
     /* fast box */
     MPIR_threadcomm_fbox_t *mailboxes;

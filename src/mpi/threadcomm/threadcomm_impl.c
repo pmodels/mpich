@@ -52,6 +52,7 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
         rank_offset_table[i] = offset;
     }
 
+    threadcomm->kind = MPIR_THREADCOMM_KIND__PERSIST;
     threadcomm->comm = dup_comm;
     threadcomm->num_threads = num_threads;
     threadcomm->rank_offset_table = rank_offset_table;
@@ -101,6 +102,19 @@ int MPIR_Threadcomm_free_impl(MPIR_Comm * comm)
 
     MPIR_Assert(comm->threadcomm);
     MPIR_Threadcomm *threadcomm = comm->threadcomm;
+
+    if (threadcomm->kind == MPIR_THREADCOMM_KIND__DERIVED) {
+        /* duplicated threadcomm are freed inside the parallel region using MPI_Comm_free */
+        MPIR_threadcomm_tls_t *p = MPIR_threadcomm_get_tls(threadcomm);
+        MPIR_Assert(p);
+
+        mpi_errno = MPIR_Threadcomm_finish_impl(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (p->tid > 0) {
+            goto fn_exit;
+        }
+    }
 
     /* make sure MPIR_Comm_free_impl do not invoke the threadcomm paths */
     comm->threadcomm = NULL;
@@ -227,6 +241,43 @@ int MPIR_Threadcomm_rank_impl(MPIR_Comm * comm, int *rank)
 
     *rank = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, MPIR_threadcomm_get_tid(threadcomm));
     return MPI_SUCCESS;
+}
+
+int MPIR_Threadcomm_dup_impl(MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(comm->threadcomm);
+
+    MPIR_Threadcomm *threadcomm = comm->threadcomm;
+    int num_threads = threadcomm->num_threads;
+    MPIR_threadcomm_tls_t *p = MPIR_threadcomm_get_tls(threadcomm);
+    MPIR_Assert(p);
+
+    MPIR_Comm *newcomm = NULL;
+    if (p->tid == 0) {
+        mpi_errno = MPIR_Threadcomm_init_impl(comm, num_threads, &newcomm);
+        newcomm->threadcomm->kind = MPIR_THREADCOMM_KIND__DERIVED;
+        MPIR_ERR_CHECK(mpi_errno);
+        /* bcast to all threads */
+        threadcomm->bcast_value = newcomm;
+    }
+    mpi_errno = thread_barrier(threadcomm);
+    MPIR_ERR_CHECK(mpi_errno);
+    if (p->tid > 0) {
+        newcomm = threadcomm->bcast_value;
+    }
+
+    mpi_errno = MPIR_Threadcomm_start_impl(newcomm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    *newcomm_ptr = newcomm;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    *newcomm_ptr = NULL;
+    goto fn_exit;
 }
 
 #else /* ! ENABLE_THREADCOMM */
