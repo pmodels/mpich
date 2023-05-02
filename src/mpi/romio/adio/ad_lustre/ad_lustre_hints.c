@@ -14,8 +14,6 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 {
     char *value;
     int flag;
-    ADIO_Offset stripe_val[3], str_factor = -1, str_unit = 0, start_iodev = -1;
-    int myrank;
     static char myname[] = "ADIOI_LUSTRE_SETINFO";
 
 
@@ -49,23 +47,16 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         if (users_info != MPI_INFO_NULL) {
             /* striping information */
             ADIOI_Info_get(users_info, "striping_unit", MPI_MAX_INFO_VAL, value, &flag);
-            if (flag) {
+            if (flag)
                 ADIOI_Info_set(fd->info, "striping_unit", value);
-                str_unit = atoll(value);
-            }
 
             ADIOI_Info_get(users_info, "striping_factor", MPI_MAX_INFO_VAL, value, &flag);
-            if (flag) {
+            if (flag)
                 ADIOI_Info_set(fd->info, "striping_factor", value);
-                str_factor = atoll(value);
-            }
 
             ADIOI_Info_get(users_info, "start_iodevice", MPI_MAX_INFO_VAL, value, &flag);
-            if (flag) {
+            if (flag)
                 ADIOI_Info_set(fd->info, "start_iodevice", value);
-                start_iodev = atoll(value);
-            }
-
 
             /* direct read and write */
             ADIOI_Info_get(users_info, "direct_read", MPI_MAX_INFO_VAL, value, &flag);
@@ -117,28 +108,6 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
             }
 #endif
         }
-
-
-
-        /* set striping information with ioctl */
-        MPI_Comm_rank(fd->comm, &myrank);
-        if (myrank == 0) {
-            stripe_val[0] = str_factor;
-            stripe_val[1] = str_unit;
-            stripe_val[2] = start_iodev;
-        }
-        MPI_Bcast(stripe_val, 3, MPI_OFFSET, 0, fd->comm);
-
-        /* do not open file in hint processing.   Open file in open routines,
-         * where we can better deal with EXCL flag .  Continue to check the
-         * "all processors set a value" condition holds.  */
-        if (stripe_val[0] != str_factor
-            || stripe_val[1] != str_unit || stripe_val[2] != start_iodev) {
-            MPIO_ERR_CREATE_CODE_INFO_NOT_SAME("ADIOI_LUSTRE_SetInfo",
-                                               "str_factor or str_unit or start_iodev", error_code);
-            ADIOI_Free(value);
-            return;
-        }
     }
 
     /* get other hint */
@@ -164,11 +133,6 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     }
     /* set the values for collective I/O and data sieving parameters */
     ADIOI_GEN_SetInfo(fd, users_info, error_code);
-
-    /* generic hints might step on striping_unit */
-    if (users_info != MPI_INFO_NULL) {
-        ADIOI_Info_check_and_install_int(fd, users_info, "striping_unit", NULL, myname, error_code);
-    }
 
     if (ADIOI_Direct_read)
         fd->direct_read = 1;
