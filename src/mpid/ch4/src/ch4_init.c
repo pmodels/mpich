@@ -725,7 +725,7 @@ int MPID_Get_processor_name(char *name, int namelen, int *resultlen)
             MPIDI_global.pname_len = (int) strlen(MPIDI_global.pname);
 
 #else
-        MPL_snprintf(MPIDI_global.pname, MPI_MAX_PROCESSOR_NAME, "%d", MPIR_Process.rank);
+        snprintf(MPIDI_global.pname, MPI_MAX_PROCESSOR_NAME, "%d", MPIR_Process.rank);
         MPIDI_global.pname_len = (int) strlen(MPIDI_global.pname);
 #endif
         MPIDI_global.pname_set = 1;

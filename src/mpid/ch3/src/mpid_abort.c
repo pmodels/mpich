@@ -37,12 +37,12 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
 	{
 	    MPIR_Err_get_string(mpi_errno, msg, MPI_MAX_ERROR_STRING, NULL);
 	    /* FIXME: Not internationalized */
-	    MPL_snprintf(error_str, sizeof(error_str), "internal ABORT - process %d: %s", rank, msg);
+	    snprintf(error_str, sizeof(error_str), "internal ABORT - process %d: %s", rank, msg);
 	}
 	else
 	{
 	    /* FIXME: Not internationalized */
-	    MPL_snprintf(error_str, sizeof(error_str), "internal ABORT - process %d", rank);
+	    snprintf(error_str, sizeof(error_str), "internal ABORT - process %d", rank);
 	}
     }
     

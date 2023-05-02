@@ -50,7 +50,7 @@ static HYD_status lsf_get_path(char **path)
         if (MPL_env2str("LSF_BINDIR", (const char **) &bin_dir) && bin_dir) {
             length = strlen(bin_dir) + 2 + strlen("blaunch");
             HYDU_MALLOC_OR_JUMP(*path, char *, length, status);
-            MPL_snprintf(*path, length, "%s/blaunch", bin_dir);
+            snprintf(*path, length, "%s/blaunch", bin_dir);
         }
     }
     if (*path == NULL)
@@ -79,7 +79,7 @@ static HYD_status sge_get_path(char **path)
             MPL_env2str("ARC", (const char **) &arc) && sge_root && arc) {
             length = strlen(sge_root) + strlen("/bin/") + strlen(arc) + 1 + strlen("qrsh") + 1;
             HYDU_MALLOC_OR_JUMP(*path, char *, length, status);
-            MPL_snprintf(*path, length, "%s/bin/%s/qrsh", sge_root, arc);
+            snprintf(*path, length, "%s/bin/%s/qrsh", sge_root, arc);
         }
     }
     if (*path == NULL)
@@ -173,7 +173,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     /* Create a quoted version of the exec string, which is only used
      * when the executable is not launched directly, but through an
      * actual launcher */
-    MPL_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
+    snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
 
     /* Increase pid list to accommodate these new pids */
     HYDT_bscu_pid_list_grow(num_hosts);
@@ -202,7 +202,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
             len = strlen(proxy->node->user) + strlen("@") + strlen(proxy->node->hostname) + 1;
 
             HYDU_MALLOC_OR_JUMP(targs[host_idx], char *, len, status);
-            MPL_snprintf(targs[host_idx], len, "%s@%s", proxy->node->user, proxy->node->hostname);
+            snprintf(targs[host_idx], len, "%s@%s", proxy->node->user, proxy->node->hostname);
         }
 
         /* append proxy ID */

@@ -774,8 +774,7 @@ int PMIU_cmd_output_v1_initack(struct PMIU_cmd *pmicmd, char **buf_out, int *buf
     if (rank >= 0 && size >= 0) {
         char *s = *buf_out + (*buflen_out);
         int len = MAX_TMP_BUF_SIZE - (*buflen_out);
-        MPL_snprintf(s, len, "cmd=set size=%d\ncmd=set rank=%d\ncmd=set debug=%d\n", size, rank,
-                     debug);
+        snprintf(s, len, "cmd=set size=%d\ncmd=set rank=%d\ncmd=set debug=%d\n", size, rank, debug);
 
         *buflen_out += strlen(s);
     }
@@ -807,7 +806,7 @@ int PMIU_cmd_output_v2(struct PMIU_cmd *pmicmd, char **buf_out, int *buflen_out)
     char *s;
     s = pmicmd->tmp_buf;
 
-    MPL_snprintf(s, 7, "%6u", buflen - 6);
+    snprintf(s, 7, "%6u", buflen - 6);
     s += 6;
 
     strcpy(s, "cmd=");

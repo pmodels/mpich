@@ -178,7 +178,7 @@ void ADIOI_Calc_file_realms_aar(ADIO_File fd, int nprocs_for_coll, int cb_pfr,
 #endif
     }
     if (fd->hints->cb_pfr == ADIOI_HINT_ENABLE) {
-        MPL_snprintf(value, sizeof(value), "%d", fr_size);
+        snprintf(value, sizeof(value), "%d", fr_size);
         ADIOI_Info_set(fd->info, "romio_cb_fr_type", value);
     }
 }

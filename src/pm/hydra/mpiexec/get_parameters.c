@@ -64,7 +64,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
             len = strlen(home) + strlen("/.mpiexec.hydra.conf") + 1;
 
             HYDU_MALLOC_OR_JUMP(conf_file, char *, len, status);
-            MPL_snprintf(conf_file, len, "%s/.mpiexec.hydra.conf", home);
+            snprintf(conf_file, len, "%s/.mpiexec.hydra.conf", home);
 
             ret = open(conf_file, O_RDONLY);
             if (ret < 0) {

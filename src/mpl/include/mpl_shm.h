@@ -66,14 +66,14 @@
 
 /* Returns -1 on error, 0 on success */
 #define MPLI_shm_ghnd_get_by_val(hnd, str, strlen)  (\
-    (MPL_snprintf(str, strlen, "%s",                                       \
+    (snprintf(str, strlen, "%s",                                       \
         MPLI_shm_ghnd_get_by_ref(hnd))) ? MPL_SUCCESS : MPL_ERR_SHM_INTERN \
 )
 #define MPLI_shm_ghnd_set_by_ref(hnd, val) ((hnd)->ghnd = val)
 /* Returns -1 on error, 0 on success */
 /* FIXME: What if val is a non-null terminated string ? */
 #define MPLI_shm_ghnd_set_by_val(hnd, fmt, val) (\
-    (MPL_snprintf(MPLI_shm_ghnd_get_by_ref(hnd),                         \
+    (snprintf(MPLI_shm_ghnd_get_by_ref(hnd),                         \
         MPLI_SHM_GHND_SZ, fmt, val)) ? MPL_SUCCESS : MPL_ERR_SHM_INTERN  \
 )
 

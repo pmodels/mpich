@@ -1158,12 +1158,6 @@ if test "$ac_cv_func_strdup" = "yes" ; then
    PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
 fi
 
-# Check for snprintf
-AC_CHECK_FUNCS(snprintf)
-if test "$ac_cv_func_snprintf" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
-fi
-
 # Check for putenv
 AC_CHECK_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then

@@ -87,7 +87,7 @@
 #define MPL_DBG_OUT_FMT(_class,_fmatargs)                               \
     {                                                                   \
         char _s[MPL_DBG_MAXLINE];                                       \
-        MPL_snprintf _fmatargs ;                                        \
+        snprintf _fmatargs ;                                            \
         MPL_dbg_outevent(__FILE__, __LINE__, _class, 0, "%s", _s);      \
     }
 

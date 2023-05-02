@@ -193,7 +193,7 @@ int MPL_rankmap_str_to_array(char *mapping, int sz, int *out_rankmap)
 #define MAPSTR_APPEND(...) do {\
     /* assuming every block fits in 20 spaces, true if node_id fits in 5 digits */ \
     MAPSTR_GROW(20); \
-    pos += MPL_snprintf(str + pos, str_size - pos, __VA_ARGS__); \
+    pos += snprintf(str + pos, str_size - pos, __VA_ARGS__); \
 } while (0)
 
 /* get maximum node id and minimum node id in a rankmap array */

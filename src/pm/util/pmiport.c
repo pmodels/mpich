@@ -181,7 +181,7 @@ int PMIServGetPort(int *fdout, char *portString, int portLen)
         char hostname[MAX_HOST_NAME + 1];
         hostname[0] = 0;
         MPIE_GetMyHostName(hostname, sizeof(hostname));
-        MPL_snprintf(portString, portLen, "%s:%d", hostname, portnum);
+        snprintf(portString, portLen, "%s:%d", hostname, portnum);
     }
 
     return 0;

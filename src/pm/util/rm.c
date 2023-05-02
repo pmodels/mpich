@@ -235,7 +235,7 @@ MachineTable *MPIE_ReadMachines(const char *arch, int nNeeded, void *data)
 
         /* Construct the final path name */
         if (arch) {
-            MPL_snprintf(machinesfile, PATH_MAX, "%s/machines.%s", dirname, arch);
+            snprintf(machinesfile, PATH_MAX, "%s/machines.%s", dirname, arch);
         } else {
             MPL_strncpy(machinesfile, dirname, PATH_MAX);
             MPL_strnapp(machinesfile, "/machines", PATH_MAX);

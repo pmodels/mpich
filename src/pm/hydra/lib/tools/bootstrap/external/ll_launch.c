@@ -67,7 +67,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, 
     /* Create a quoted version of the exec string, which is only used
      * when the executable is not launched directly, but through an
      * actual launcher */
-    MPL_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
+    snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
     MPL_free(targs[exec_idx]);
     targs[exec_idx] = quoted_exec_string;
 

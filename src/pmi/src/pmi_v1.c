@@ -351,7 +351,7 @@ PMI_API_PUBLIC int PMI_KVS_Get_my_name(char kvsname[], int length)
         /* Return a dummy name */
         /* Upon singinit of server, we'll check and replace "singinit" with
          * initialized singinit_kvsname */
-        MPL_snprintf(kvsname, length, "singinit");
+        snprintf(kvsname, length, "singinit");
         goto fn_exit;
     }
 
@@ -849,7 +849,7 @@ static int PMII_singinit(void)
     MPL_LISTEN_POP;     /* back to default: use_loopback=0, max_conn=SOMAXCONN */
     PMIU_ERR_CHKANDJUMP(rc, pmi_errno, PMI_FAIL, "PMII_singinit: listen failed");
 
-    MPL_snprintf(port_c, sizeof(port_c), "%d", port);
+    snprintf(port_c, sizeof(port_c), "%d", port);
 
     PMIU_printf(PMIU_verbose, "Starting mpiexec with %s\n", port_c);
 
@@ -871,7 +871,7 @@ static int PMII_singinit(void)
         newargv[i++] = "default_interface";     /* default interface name, for now */
         newargv[i++] = "default_key";   /* default authentication key, for now */
         char charpid[8];
-        MPL_snprintf(charpid, 8, "%d", getpid());
+        snprintf(charpid, 8, "%d", getpid());
         newargv[i++] = charpid;
         newargv[i++] = NULL;
         PMIU_Assert(i <= 8);

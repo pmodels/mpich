@@ -68,9 +68,9 @@ static int MPIDI_IPC_mpi_fd_cleanup(void)
         }
 
         if (MPIDI_IPCI_global_fd_pids[MPIR_Process.local_rank] != 0 && MPIR_Process.local_rank != i) {
-            MPL_snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d",
-                         MPIDI_IPCI_global_fd_pids[MPIR_Process.local_rank],
-                         MPIR_Process.local_rank, i);
+            snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d",
+                     MPIDI_IPCI_global_fd_pids[MPIR_Process.local_rank],
+                     MPIR_Process.local_rank, i);
             sock_err = unlink(sock_name);
             MPIR_ERR_CHKANDJUMP2(sock_err == -1, mpi_errno, MPI_ERR_OTHER, "**sock_unlink",
                                  "**sock_unlink %s %d",
@@ -179,8 +179,8 @@ int MPIDI_IPC_mpi_socks_init(void)
         int sock;
 
         /* Create the local socket name */
-        MPL_snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d", pid,
-                     MPIR_Process.local_rank, j);
+        snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d", pid,
+                 MPIR_Process.local_rank, j);
 
         /* Create a socket for local rank i */
         sock = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -213,12 +213,12 @@ int MPIDI_IPC_mpi_socks_init(void)
         struct sockaddr_un remote_sockaddr;
 
         /* Create the remote socket name */
-        MPL_snprintf(remote_sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d",
-                     MPIDI_IPCI_global_fd_pids[i], i, MPIR_Process.local_rank);
+        snprintf(remote_sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d",
+                 MPIDI_IPCI_global_fd_pids[i], i, MPIR_Process.local_rank);
 
         /* Create the local socket name */
-        MPL_snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d", pid,
-                     MPIR_Process.local_rank, i);
+        snprintf(sock_name, SOCK_MAX_STR_LEN, "/tmp/mpich-ipc-fd-sock-%d:%d-%d", pid,
+                 MPIR_Process.local_rank, i);
 
         /* Create a socket for local rank j */
         MPIDI_IPCI_global_fd_socks[i] = socket(AF_UNIX, SOCK_STREAM, 0);

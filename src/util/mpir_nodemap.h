@@ -34,7 +34,7 @@ static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
     /* Put my hostname id */
     if (sz > 1) {
         memset(key, 0, key_max_sz);
-        MPL_snprintf(key, key_max_sz, "hostname[%d]", myrank);
+        snprintf(key, key_max_sz, "hostname[%d]", myrank);
 
         mpi_errno = MPIR_pmi_kvs_put(key, hostname);
         MPIR_ERR_CHECK(mpi_errno);
@@ -99,11 +99,11 @@ static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *o
                                  "**sock_gethost %s %d",
                                  MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
             hostname[MAX_HOSTNAME_LEN - 1] = '\0';
-            MPL_snprintf(node_names[max_node_id + 1], key_max_sz, "%s", hostname);
+            snprintf(node_names[max_node_id + 1], key_max_sz, "%s", hostname);
             MPL_free(hostname);
         } else {
             memset(key, 0, key_max_sz);
-            MPL_snprintf(key, key_max_sz, "hostname[%d]", i);
+            snprintf(key, key_max_sz, "hostname[%d]", i);
 
             mpi_errno = MPIR_pmi_kvs_get(i, key, node_names[max_node_id + 1], key_max_sz);
             MPIR_ERR_CHECK(mpi_errno);

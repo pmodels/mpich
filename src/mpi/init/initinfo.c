@@ -25,22 +25,22 @@ const char MPII_Version_custom[] = MPICH_CUSTOM_STRING;
 int MPIR_Get_library_version_impl(char *version, int *resultlen)
 {
     int printed_len;
-    printed_len = MPL_snprintf(version, MPI_MAX_LIBRARY_VERSION_STRING,
-                               "MPICH Version:      %s\n"
-                               "MPICH Release date: %s\n"
-                               "MPICH ABI:          %s\n"
-                               "MPICH Device:       %s\n"
-                               "MPICH configure:    %s\n"
-                               "MPICH CC:           %s\n"
-                               "MPICH CXX:          %s\n"
-                               "MPICH F77:          %s\n"
-                               "MPICH FC:           %s\n",
-                               MPII_Version_string, MPII_Version_date, MPII_Version_ABI,
-                               MPII_Version_device, MPII_Version_configure, MPII_Version_CC,
-                               MPII_Version_CXX, MPII_Version_F77, MPII_Version_FC);
+    printed_len = snprintf(version, MPI_MAX_LIBRARY_VERSION_STRING,
+                           "MPICH Version:      %s\n"
+                           "MPICH Release date: %s\n"
+                           "MPICH ABI:          %s\n"
+                           "MPICH Device:       %s\n"
+                           "MPICH configure:    %s\n"
+                           "MPICH CC:           %s\n"
+                           "MPICH CXX:          %s\n"
+                           "MPICH F77:          %s\n"
+                           "MPICH FC:           %s\n",
+                           MPII_Version_string, MPII_Version_date, MPII_Version_ABI,
+                           MPII_Version_device, MPII_Version_configure, MPII_Version_CC,
+                           MPII_Version_CXX, MPII_Version_F77, MPII_Version_FC);
     if (strlen(MPII_Version_custom) > 0)
-        MPL_snprintf(version + printed_len, MPI_MAX_LIBRARY_VERSION_STRING - printed_len,
-                     "MPICH Custom Information:\t%s\n", MPII_Version_custom);
+        snprintf(version + printed_len, MPI_MAX_LIBRARY_VERSION_STRING - printed_len,
+                 "MPICH Custom Information:\t%s\n", MPII_Version_custom);
 
     *resultlen = (int) strlen(version);
 

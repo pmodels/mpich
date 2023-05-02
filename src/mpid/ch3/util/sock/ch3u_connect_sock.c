@@ -412,7 +412,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 	info = gethostbyname( ifname );
 	if (info && info->h_addr_list) {
 	    p = (unsigned char *)(info->h_addr_list[0]);
-	    MPL_snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", 
+	    snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u",
 			   p[0], p[1], p[2], p[3] );
 	    MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
 	    str_errno = MPL_str_add_string_arg( bc_val_p,
@@ -1239,7 +1239,7 @@ const char * MPIDI_CH3_VC_SockGetStateString( struct MPIDI_VC *vc )
     case MPIDI_CH3I_VC_STATE_CONNECTED:   name = "CH3I_VC_STATE_CONNECTED"; break;
     case MPIDI_CH3I_VC_STATE_FAILED:      name = "CH3I_VC_STATE_FAILED"; break;
     default:
-	MPL_snprintf( asdigits, sizeof(asdigits), "%d", state );
+	snprintf( asdigits, sizeof(asdigits), "%d", state );
 	asdigits[20-1] = 0;
 	name = (const char *)asdigits;
     }

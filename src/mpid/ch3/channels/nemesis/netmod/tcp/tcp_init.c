@@ -329,7 +329,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname, MPL_soc
          * environment to each process.  There's no way to do this with
          * the param interface, so we need to use getenv() here. */
         char namebuf[1024];
-        MPL_snprintf(namebuf, sizeof(namebuf), "MPICH_INTERFACE_HOSTNAME_R%d", myRank);
+        snprintf(namebuf, sizeof(namebuf), "MPICH_INTERFACE_HOSTNAME_R%d", myRank);
         ifname_string = getenv(namebuf);
 
         if (DBG_IFNAME && ifname_string) {

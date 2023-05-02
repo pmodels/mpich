@@ -253,7 +253,7 @@ PMI_API_PUBLIC int PMI2_Job_GetId(char jobid[], int jobid_size)
 
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
         /* Return a dummy name */
-        MPL_snprintf(jobid, jobid_size, "singinit_kvs_%d_0", (int) getpid());
+        snprintf(jobid, jobid_size, "singinit_kvs_%d_0", (int) getpid());
         goto fn_exit;
     }
 

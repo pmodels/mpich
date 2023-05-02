@@ -1304,7 +1304,7 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av, i
     av_attr.count = MPIR_Process.size;
 
     char av_name[128];
-    MPL_snprintf(av_name, sizeof(av_name), "FI_NAMED_AV_%d\n", MPIR_Process.appnum);
+    snprintf(av_name, sizeof(av_name), "FI_NAMED_AV_%d\n", MPIR_Process.appnum);
     av_attr.name = av_name;
     av_attr.flags = FI_READ;
     av_attr.map_addr = 0;

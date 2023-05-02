@@ -429,7 +429,7 @@ static HYD_status extract_tasks_per_node(int nnodes, char *task_list)
     i = 0;
     do {
         HYDU_MALLOC_OR_JUMP(tmp_core_list[i], char *, strlen(task_set) + 1, status);
-        MPL_snprintf(tmp_core_list[i], strlen(task_set) + 1, "%s", task_set);
+        snprintf(tmp_core_list[i], strlen(task_set) + 1, "%s", task_set);
         i++;
         task_set = strtok(NULL, ",");
     } while (task_set);

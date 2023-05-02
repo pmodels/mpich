@@ -307,14 +307,14 @@ int mypreamble(void *data, ProcessState * pState)
         /* Create the string of ranks.  These are ranks in comm_world */
         ranks[0] = 0;
         for (i = 0; i < size; i++) {
-            MPL_snprintf(digits, sizeof(digits), "%d,", i);
+            snprintf(digits, sizeof(digits), "%d,", i);
             MPL_strnapp(ranks, digits, sizeof(ranks));
         }
         /* Remove the trailing comma */
         if (size > 0)
             ranks[strlen(ranks) - 1] = 0;
         /* Add this to the predefined keys */
-        MPL_snprintf(key, sizeof(key), "pmiPrivateLocalRanks_%d", pState->wRank);
+        snprintf(key, sizeof(key), "pmiPrivateLocalRanks_%d", pState->wRank);
         /* printf("%s = %s\n", key, ranks); */
 
         pmix_preput(key, ranks);

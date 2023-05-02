@@ -32,14 +32,6 @@
 #include "process.h"
 #include "labelout.h"
 
-#ifdef HAVE_SNPRINTF
-#define MPL_snprintf snprintf
-#ifdef NEEDS_SNPRINTF_DECL
-/* style: allow:sprintf:1 sig:0 */
-int snprintf(char *, size_t, const char *, ...);
-#endif
-#endif
-
 #define MAX_LABEL 32
 
 typedef struct {
@@ -201,9 +193,9 @@ static int IOLabelSetLabelText(const char pattern[], char label[],
     char worldnumAsChar[12];
 
     /* Convert the rank in world to characters */
-    MPL_snprintf(rankAsChar, sizeof(rankAsChar), "%d", rank);
+    snprintf(rankAsChar, sizeof(rankAsChar), "%d", rank);
     /* Convert the world number to characters */
-    MPL_snprintf(worldnumAsChar, sizeof(worldnumAsChar), "%d", worldnum);
+    snprintf(worldnumAsChar, sizeof(worldnumAsChar), "%d", worldnum);
 
     pout[0] = 0;
     /* Copy the pattern looking for format commands */

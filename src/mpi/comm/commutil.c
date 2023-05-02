@@ -89,7 +89,7 @@ static int get_string_value(char *s, int type, int val)
     if (type == MPIR_COMM_HINT_TYPE_BOOL) {
         strncpy(s, val ? "true" : "false", MPI_MAX_INFO_VAL);
     } else if (type == MPIR_COMM_HINT_TYPE_INT) {
-        MPL_snprintf(s, MPI_MAX_INFO_VAL, "%d", val);
+        snprintf(s, MPI_MAX_INFO_VAL, "%d", val);
     } else {
         return -1;
     }

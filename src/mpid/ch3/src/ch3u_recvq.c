@@ -1117,7 +1117,7 @@ static char *tag_val_to_str(int tag, char *out, int max)
         MPL_strncpy(out, "MPI_ANY_TAG", max);
     }
     else {
-        MPL_snprintf(out, max, "%d", tag);
+        snprintf(out, max, "%d", tag);
     }
     return out;
 }
@@ -1129,7 +1129,7 @@ static char *rank_val_to_str(int rank, char *out, int max)
         MPL_strncpy(out, "MPI_ANY_SOURCE", max);
     }
     else {
-        MPL_snprintf(out, max, "%d", rank);
+        snprintf(out, max, "%d", rank);
     }
     return out;
 }

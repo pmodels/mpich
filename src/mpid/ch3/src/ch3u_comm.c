@@ -84,7 +84,7 @@ int MPIDI_CH3I_Comm_init(void)
             int size = strlen("HCOLL_BCOL=") + strlen(MPID_CH3I_CH_HCOLL_BCOL) + 1;
 
             MPIR_CHKLMEM_MALLOC(envstr, char *, size, mpi_errno, "**malloc", MPL_MEM_COMM);
-            MPL_snprintf(envstr, size, "HCOLL_BCOL=%s", MPID_CH3I_CH_HCOLL_BCOL);
+            snprintf(envstr, size, "HCOLL_BCOL=%s", MPID_CH3I_CH_HCOLL_BCOL);
 
             r = MPL_putenv(envstr);
             MPIR_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
