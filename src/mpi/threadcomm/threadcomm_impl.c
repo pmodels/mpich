@@ -182,24 +182,32 @@ int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
 
 int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_Threadcomm *threadcomm = comm->threadcomm;
     MPIR_Assert(threadcomm);
     MPIR_threadcomm_tls_t *tls = MPIR_threadcomm_get_tls(comm->threadcomm);
     MPIR_Assert(tls);
 
+    mpi_errno = thread_barrier(threadcomm);
+    MPIR_ERR_CHECK(mpi_errno);
+
     if (tls->tid == 0) {
         /* reset next_id and a barrier to ensure next MPI_Threadcomm_start to work */
         MPL_atomic_store_int(&threadcomm->next_id, 0);
     }
-    mpi_errno = thread_barrier(threadcomm);
 
     if (MPIR_Process.attr_free && tls->attributes) {
-        int mpi_errno = MPIR_Process.attr_free(comm->handle, &tls->attributes);
-        MPIR_Assertp(mpi_errno == MPI_SUCCESS);
+        mpi_errno = MPIR_Process.attr_free(comm->handle, &tls->attributes);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_THREADCOMM_TLS_DELETE(threadcomm);
-    return MPI_SUCCESS;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Threadcomm_size_impl(MPIR_Comm * comm, int *size)
