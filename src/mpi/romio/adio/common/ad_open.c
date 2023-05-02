@@ -106,7 +106,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
      * 2: have all processes participate in hintfile processing (so we can read-and-broadcast)
      *
      * a code might do an "initialize from 0", so we can only skip hint
-     * processing once everyone has particpiated in hint processing */
+     * processing once everyone has participated in hint processing */
     if (ADIOI_syshints == MPI_INFO_NULL)
         syshints_processed = 0;
     else
@@ -138,7 +138,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
      * (which means the user hinted 'no_indep_rw' and collective buffering).
      * Furthermore, we only do this if our collective read/write routines use
      * our generic function, and not an fs-specific routine (we can defer opens
-     * only if we use our aggreagation code). */
+     * only if we use our aggregation code). */
     if (fd->hints->deferred_open && !(uses_generic_read(fd)
                                       && uses_generic_write(fd))) {
         fd->hints->deferred_open = 0;
@@ -176,14 +176,14 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
      * i/o for metadata), that deferred open will use the access_mode provided
      * by the user.  CREATE|EXCL only makes sense here -- exclusive access in
      * the deferred open case is going to fail and surprise the user.  Turn off
-     * the excl amode bit. Save user's ammode for MPI_FILE_GET_AMODE */
+     * the excl amode bit. Save user's amode for MPI_FILE_GET_AMODE */
     fd->orig_access_mode = access_mode;
     if (fd->access_mode & ADIO_EXCL)
         fd->access_mode ^= ADIO_EXCL;
 
 
     /* for debugging, it can be helpful to see the hints selected. Some file
-     * systes set up the hints in the open call (e.g. lustre) */
+     * systems set up the hints in the open call (e.g. lustre) */
     p = getenv("ROMIO_PRINT_HINTS");
     if (rank == 0 && p != NULL) {
         ADIOI_Info_print_keyvals(fd->info);
@@ -227,7 +227,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     return fd;
 }
 
-/* a simple linear search. possible enancement: add a my_cb_nodes_index member
+/* a simple linear search. possible enhancement: add a my_cb_nodes_index member
  * (index into cb_nodes, else -1 if not aggregator) for faster lookups
  *
  * fd->hints->cb_nodes is the number of aggregators
