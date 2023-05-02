@@ -60,10 +60,9 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                 str_factor = atoll(value);
             }
 
-            ADIOI_Info_get(users_info, "romio_lustre_start_iodevice",
-                           MPI_MAX_INFO_VAL, value, &flag);
+            ADIOI_Info_get(users_info, "start_iodevice", MPI_MAX_INFO_VAL, value, &flag);
             if (flag) {
-                ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
+                ADIOI_Info_set(fd->info, "start_iodevice", value);
                 start_iodev = atoll(value);
             }
 

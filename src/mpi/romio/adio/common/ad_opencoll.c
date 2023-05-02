@@ -129,8 +129,8 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
             snprintf(value, sizeof(value), "%d", fd->hints->striping_factor);
             ADIOI_Info_set(fd->info, "striping_factor", value);
 
-            snprintf(value, sizeof(value), "%d", fd->hints->start_iodevice);
-            ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
+            MPL_snprintf(value, sizeof(value), "%d", fd->hints->start_iodevice);
+            ADIOI_Info_set(fd->info, "start_iodevice", value);
 
             *error_code = MPI_SUCCESS;
             MPI_Type_free(&stats_type);

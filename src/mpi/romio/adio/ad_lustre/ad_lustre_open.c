@@ -66,7 +66,7 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
         if (flag)
             str_factor = atoll(value);
 
-        ADIOI_Info_get(fd->info, "romio_lustre_start_iodevice", MPI_MAX_INFO_VAL, value, &flag);
+        ADIOI_Info_get(fd->info, "start_iodevice", MPI_MAX_INFO_VAL, value, &flag);
         if (flag)
             start_iodev = atoll(value);
     }
@@ -136,8 +136,8 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
         ADIOI_Info_set(fd->info, "striping_factor", value);
 
         fd->hints->start_iodevice = lum->lmm_stripe_offset;
-        snprintf(value, value_sz, "%d", lum->lmm_stripe_offset);
-        ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
+        MPL_snprintf(value, value_sz, "%d", lum->lmm_stripe_offset);
+        ADIOI_Info_set(fd->info, "start_iodevice", value);
 
     }
 
