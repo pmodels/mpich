@@ -1635,10 +1635,14 @@ def dump_body_threadcomm(func):
     args = ", ".join(func['_impl_arg_list'])
     if RE.match(r'.*request_ptr$', args):
         G.out.append("MPIR_Request *request_ptr = NULL;")
+    elif RE.match(r'.*newcomm_ptr$', args):
+        G.out.append("MPIR_Comm *newcomm_ptr = NULL;")
     dump_line_with_break("mpi_errno = %s(%s);" % (impl, args))
     dump_error_check("")
     if RE.match(r'.*request_ptr$', args):
         G.out.append("*request = request_ptr->handle;")
+    elif RE.match(r'.*newcomm_ptr$', args):
+        G.out.append("*newcomm = newcomm_ptr->handle;")
 
     push_threadcomm_impl_decl(func)
 
