@@ -184,6 +184,15 @@ MPI_Comm_test_inter:
     .desc: Tests to see if a comm is an inter-communicator
     .skip: global_cs
 
+MPIX_Comm_test_threadcomm:
+    comm: COMMUNICATOR, [communicator]
+    flag: LOGICAL, direction=out, [true if comm is an inter-communicator]
+    .desc: Tests to see if a comm is a threadcomm
+    .skip: global_cs
+{
+    *flag = (comm_ptr->threadcomm != NULL);
+}
+
 MPI_Intercomm_create_from_groups:
     .desc: Create an intercommuncator from local and remote groups
 
