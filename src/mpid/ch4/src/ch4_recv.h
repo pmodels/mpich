@@ -208,7 +208,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     message->kind = MPIR_REQUEST_KIND__RECV;
 
-    if (message->comm && MPIDI_is_self_comm(message->comm)) {
+    if (message->comm && MPIR_is_self_comm(message->comm)) {
         mpi_errno = MPIDI_Self_imrecv(buf, count, datatype, message, rreqp);
     } else {
         *rreqp = message;
@@ -236,7 +236,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_is_self_comm(comm)) {
+    if (MPIR_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_irecv(buf, count, datatype, rank, tag, comm, attr, request);
     } else {
         MPIDI_av_entry_t *av = (rank == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, rank));
@@ -258,7 +258,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request * rreq)
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
-    if (rreq->comm && MPIDI_is_self_comm(rreq->comm)) {
+    if (rreq->comm && MPIR_is_self_comm(rreq->comm)) {
         mpi_errno = MPIDI_Self_cancel(rreq);
     } else {
         mpi_errno = MPIDI_cancel_recv_safe(rreq);

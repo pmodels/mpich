@@ -1411,9 +1411,6 @@ def push_impl_decl(func, impl_name=None):
         G.impl_declares.append("int %s(%s);" % (mpir_name, params))
     # dump MPIR_Xxx_impl(...)
     G.impl_declares.append("int %s(%s);" % (impl_name, params))
-    if func['dir'] == 'coll':
-        mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
-        G.impl_declares.append("int %s(%s);" % (mpir_name, params))
 
 def dump_CHECKENUM(var, errname, t, type="ENUM"):
     val_list = t.split()
@@ -2199,12 +2196,6 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", %s, mpi_errno);" % (sbuf, sbuf, ct))
         G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", %s, mpi_errno);" % (rbuf, rbuf, ct))
     elif RE.match(r'mpi_i?reduce(_init)?$', func['name'], re.IGNORECASE):
-        G.out.append("if (" + cond_intra + ") {")
-        G.out.append("    MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);")
-        G.out.append("} else {")
-        G.out.append("    MPIR_ERRTEST_INTER_ROOT(comm_ptr, root, mpi_errno);")
-        G.out.append("}")
-
         # exclude intercomm MPI_PROC_NULL
         G.out.append("if (" + cond_intra + " || root != MPI_PROC_NULL) {")
         G.out.append("INDENT")

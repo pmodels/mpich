@@ -6,9 +6,6 @@
 #ifndef MPIDI_SELF_H_INCLUDED
 #define MPIDI_SELF_H_INCLUDED
 
-#define MPIDI_is_self_comm(comm) \
-    (comm->remote_size == 1 && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-
 int MPIDI_Self_init(void);
 int MPIDI_Self_finalize(void);
 int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
