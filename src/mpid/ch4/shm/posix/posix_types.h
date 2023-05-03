@@ -60,14 +60,14 @@ typedef struct {
 
 extern MPIDI_POSIX_global_t MPIDI_POSIX_global;
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_rma_outstanding_req_enqueu(MPIR_Typerep_req typerep_req,
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_rma_outstanding_req_enqueu(MPIR_gpu_req yreq,
                                                                      MPIDI_POSIX_win_t * posix_win)
 {
     MPIDI_POSIX_rma_req_t *req;
     req = MPL_malloc(sizeof(MPIDI_POSIX_rma_req_t), MPL_MEM_RMA);
     MPIR_Assert(req);
 
-    req->typerep_req = typerep_req;
+    req->yreq = yreq;
     req->next = NULL;
     LL_APPEND(posix_win->outstanding_reqs_head, posix_win->outstanding_reqs_tail, req);
 }
@@ -80,9 +80,20 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_rma_outstanding_req_flushall(MPIDI_POS
     MPIDI_POSIX_rma_req_t *req, *req_tmp;
     /* No dependency between requests, thus can safely wait one by one. */
     LL_FOREACH_SAFE(posix_win->outstanding_reqs_head, req, req_tmp) {
-        int mpi_errno ATTRIBUTE((unused));
-        mpi_errno = MPIR_Typerep_wait(req->typerep_req);
-        MPIR_Assert(mpi_errno == MPI_SUCCESS);
+        int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
+
+        if (req->yreq.type == MPIR_TYPEREP_REQUEST) {
+            mpi_errno = MPIR_Typerep_wait(req->yreq.u.y_req);
+            MPIR_Assert(mpi_errno == MPI_SUCCESS);
+        } else if (req->yreq.type == MPIR_GPU_REQUEST) {
+            int completed = 0;
+            while (!completed) {
+                mpi_errno = MPL_gpu_test(&req->yreq.u.gpu_req, &completed);
+                MPIR_Assert(mpi_errno == MPI_SUCCESS);
+            }
+        } else {
+            MPIR_Assert(req->yreq.type == MPIR_NULL_REQUEST);
+        }
 
         LL_DELETE(posix_win->outstanding_reqs_head, posix_win->outstanding_reqs_tail, req);
         MPL_free(req);

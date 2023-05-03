@@ -85,6 +85,21 @@ cvars:
         read - use read protocol
         write - use write protocol if remote device is visible
 
+    - name        : MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE
+      category    : CH4
+      type        : enum
+      default     : auto
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        By default, select engine type automatically
+        yaksa - don't select, use yaksa
+        auto - select automatically
+        compute - use compute engine
+        copy_high_bandwidth - use high-bandwidth copy engine
+        copy_low_latency - use low-latency copy engine
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 

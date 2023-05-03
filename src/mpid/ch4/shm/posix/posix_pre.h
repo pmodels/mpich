@@ -131,7 +131,7 @@ do { \
 } while (0)
 
 typedef struct MPIDI_POSIX_rma_req {
-    MPIR_Typerep_req typerep_req;
+    MPIR_gpu_req yreq;
     struct MPIDI_POSIX_rma_req *next;
 } MPIDI_POSIX_rma_req_t;
 
