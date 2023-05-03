@@ -40,8 +40,44 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
     MPIDI_POSIX_SEND_VSIS(vci_src, vci_dst);
 
     MPIDI_POSIX_THREAD_CS_ENTER_VCI(vci_src);
-    mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                 vci_src, vci_dst, request, syncflag, errflag);
+    bool done = false;
+    if (*request == NULL && !syncflag && !MPIDI_POSIX_global.per_vci[vci_src].postponed_queue) {
+        /* try eager mode to avoid heavy request.
+         * THIS IS A HACK: code need match the am MPIDIG_SEND protocol and posix SHORT protocol
+         */
+        MPI_Aint data_sz;
+        MPIDI_Datatype_check_size(datatype, count, data_sz);
+        if ((sizeof(MPIDIG_hdr_t) + data_sz) <= MPIDI_POSIX_am_eager_limit()) {
+            /* try eager send, we can use lightweight request if successful */
+            MPIDI_POSIX_am_header_t msg_hdr;
+            msg_hdr.handler_id = MPIDIG_SEND;
+            msg_hdr.am_hdr_sz = sizeof(MPIDIG_hdr_t);
+            msg_hdr.am_type = MPIDI_POSIX_AM_TYPE__SHORT;
+
+            MPIDIG_hdr_t am_hdr;
+            am_hdr.src_rank = comm->rank;
+            am_hdr.tag = tag;
+            am_hdr.context_id = comm->context_id + context_offset;
+            am_hdr.error_bits = errflag;
+            am_hdr.sreq_ptr = NULL;
+            am_hdr.flags = MPIDIG_AM_SEND_FLAGS_NONE;
+            am_hdr.data_sz = data_sz;
+            am_hdr.rndv_hdr_sz = 0;
+
+            int grank = MPIDIU_rank_to_lpid(rank, comm);
+            MPI_Aint bytes_sent;
+            int rc = MPIDI_POSIX_eager_send(grank, &msg_hdr, &am_hdr, sizeof(am_hdr),
+                                            buf, count, datatype, 0, vci_src, vci_dst, &bytes_sent);
+            if (rc == MPIDI_POSIX_OK) {
+                done = true;
+                *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+            }
+        }
+    }
+    if (!done) {
+        mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                                     vci_src, vci_dst, request, syncflag, errflag);
+    }
     MPIDI_POSIX_THREAD_CS_EXIT_VCI(vci_src);
 
     return mpi_errno;
