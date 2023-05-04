@@ -28,10 +28,9 @@ int main(int argc, char *argv[])
 
     MTestArgList *head = MTestArgListCreate(argc, argv);
     nthreads = MTestArgListGetInt_with_default(head, "nthreads", 4);
+    MTestArgListDestroy(head);
 
-    int provided;
-    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-    assert(provided == MPI_THREAD_MULTIPLE);
+    MTest_Init(NULL, NULL);
 
     MPI_Comm comm;
     MPIX_Threadcomm_init(MPI_COMM_WORLD, nthreads, &comm);
