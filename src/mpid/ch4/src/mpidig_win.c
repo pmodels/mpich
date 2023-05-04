@@ -134,10 +134,12 @@ static void update_winattr_after_set_info(MPIR_Win * win)
     else
         MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_ACCU_SAME_OP_NO_OP);
 
-    if (MPIDIG_WIN(win, info_args).perf_preference & (1 << MPIDIG_RMA_MR_PREFERRED))
-        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_MR_PREFERRED;
-    else
+    if ((MPIDIG_WIN(win, info_args).perf_preference & (1 << MPIDIG_RMA_LAT_PREFERRED)) &&
+        !(MPIDIG_WIN(win, info_args).perf_preference & (1 << MPIDIG_RMA_MR_PREFERRED))) {
         MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_MR_PREFERRED);
+    } else {
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_MR_PREFERRED;
+    }
 }
 
 #define INFO_GET_BOOL(info, key, var) do { \
