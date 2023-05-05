@@ -311,9 +311,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
         int vci = MPIDI_WIN(win, am_vci);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
         mpi_errno = MPIDI_OFI_win_do_progress(win, vci);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -331,9 +329,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
         int vci = MPIDI_WIN(win, am_vci);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
         mpi_errno = MPIDI_OFI_win_do_progress(win, vci);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -352,9 +348,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank ATTRIBUTE((u
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
         int vci = MPIDI_WIN(win, am_vci);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
         mpi_errno = MPIDI_OFI_win_do_progress(win, vci);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -373,9 +367,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank ATTRIB
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
         int vci = MPIDI_WIN(win, am_vci);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
         mpi_errno = MPIDI_OFI_win_do_progress(win, vci);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

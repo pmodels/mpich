@@ -156,9 +156,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
     if (MPIDI_UCX_WIN(win).info_table && MPIDI_UCX_win_need_flush(win)) {
         ucs_status_t ucp_status;
         int vci = MPIDI_WIN(win, am_vci);
-        MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
         ucp_status = MPIDI_UCX_flush(vci);
-        MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
         MPIDI_UCX_CHK_STATUS(ucp_status);
         MPIDI_UCX_win_unset_sync(win);
     }
@@ -181,9 +179,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
         /* currently, UCP does not support local flush, so we have to call
          * a global flush. This is not good for performance - but OK for now */
         int vci = MPIDI_WIN(win, am_vci);
-        MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
         ucp_status = MPIDI_UCX_flush(vci);
-        MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
         MPIDI_UCX_CHK_STATUS(ucp_status);
 
         /* TODO: should set to FLUSH after replace with real local flush. */
@@ -211,9 +207,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
         int vci_target = MPIDI_WIN_TARGET_VCI(win, rank);
         ucp_ep_h ep = MPIDI_UCX_WIN_TO_EP(win, rank, vci, vci_target);
         /* only flush the endpoint */
-        MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
         ucp_status = ucp_ep_flush(ep);
-        MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
         MPIDI_UCX_CHK_STATUS(ucp_status);
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync = MPIDI_UCX_WIN_SYNC_UNSET;
     }
@@ -239,9 +233,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_
         ucp_ep_h ep = MPIDI_UCX_WIN_TO_EP(win, rank, vci, vci_target);
         /* currently, UCP does not support local flush, so we have to call
          * a global flush. This is not good for performance - but OK for now */
-        MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
         ucp_status = ucp_ep_flush(ep);
-        MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
         MPIDI_UCX_CHK_STATUS(ucp_status);
 
         /* TODO: should set to FLUSH after replace with real local flush. */

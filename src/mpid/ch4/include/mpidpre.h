@@ -501,7 +501,8 @@ typedef enum {
                                          * its internal optimization. */
     MPIDI_WINATTR_NM_DYNAMIC_MR = 32,   /* whether the memory region is registered dynamically. Valid only for
                                          * dynamic window. Set by netmod. */
-    MPIDI_WINATTR_MR_PREFERRED = 64,    /* message rate preferred flag. Default 0, set by user hint. */
+    MPIDI_WINATTR_MR_PREFERRED = 64,    /* message rate preferred flag. Default unless user set
+                                         * latency preference. */
     MPIDI_WINATTR_LAST_BIT
 } MPIDI_winattr_bit_t;
 
