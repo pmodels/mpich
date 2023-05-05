@@ -1,0 +1,16 @@
+# vim: set ft=c:
+
+MPIX_Threadcomm_init:
+    comm: COMMUNICATOR, [communicator]
+    num_threads: ARRAY_LENGTH_NNI, [number of participating threads]
+    newthreadcomm: COMMUNICATOR, direction=out, [new thread communicator]
+
+MPIX_Threadcomm_free:
+    threadcomm: COMMUNICATOR, direction=inout, [thread communicator]
+
+MPIX_Threadcomm_start:
+    threadcomm: COMMUNICATOR, [thread communicator]
+
+MPIX_Threadcomm_finish:
+    threadcomm: COMMUNICATOR, [thread communicator]
+

@@ -757,6 +757,8 @@ AC_DEFINE_UNQUOTED([POSIX_MUTEX_NAME],[$POSIX_MUTEX_NAME],[set to the choice of 
 
 # check for compiler-support for thread-local storage (MPL_TLS)
 PAC_CC_CHECK_TLS
+AC_SUBST(COMPILER_TLS)
+COMPILER_TLS="$pac_cv_tls"
 
 #######################################################################
 ## END OF THREADS CODE

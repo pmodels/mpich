@@ -299,6 +299,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->mapper_head = NULL;
     comm_p->mapper_tail = NULL;
 
+    comm_p->threadcomm = NULL;
     MPIR_stream_comm_init(comm_p);
 
     /* mutex is only used in VCI granularity. But the overhead of

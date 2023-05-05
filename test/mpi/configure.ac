@@ -164,6 +164,10 @@ AC_ARG_ENABLE(part,
         [AS_HELP_STRING([--enable-part],[Enable tests of partitioned communication of MPI-4 (default)])],,
         [enable_part=yes])
 
+AC_ARG_ENABLE(threadcomm,
+        [AS_HELP_STRING([--enable-threadcomm],[Enable tests of MPIX_Threadcomm (default)])],,
+        [enable_threadcomm=yes])
+
 AC_ARG_ENABLE(long-double-complex,
         [AS_HELP_STRING([--enable-long-double-complex],
                 [Enable tests involving MPI_LONG_DOUBLE_COMPLEX (default)])],,
@@ -451,6 +455,7 @@ if test "$MPI_IS_MPICH" = "yes" ; then
             enable_spawn=no
         elif [grep 'MPICH Device:[[:blank:]]*ch3' conftest.output > /dev/null] ; then
             enable_part=no
+            enable_threadcomm=no
         fi
 
         # enable_checkerrors
@@ -474,6 +479,10 @@ fi
 AM_CONDITIONAL([NOT_STRICTMPI], [test x$enable_strictmpi = xno])
 if test "$enable_strictmpi" = "yes" ; then
     AC_DEFINE([ENABLE_STRICTMPI], [1], [Define if configured with --enable-strictmpi])
+fi
+
+if test "$enable_threadcomm" != "no" ; then
+    AC_DEFINE(HAVE_THREADCOMM, 1, [Define if MPIX_Threadcomm is available])
 fi
 
 # First, determine whether we are/can support the language bindings
@@ -595,6 +604,11 @@ if test "$enable_part" != "yes" -o "$MPI_NO_PART" = "yes" ; then
     partdir="#"
 fi
 AC_SUBST(partdir)
+threadcommdir=threadcomm
+if test "$enable_threadcomm" != "yes" ; then
+    threadcommdir="#"
+fi
+AC_SUBST(threadcommdir)
 
 faultsdir=#
 if test "$enable_checkfaults" = "yes" ; then
@@ -1837,7 +1851,9 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/comm/Makefile \
           impls/mpich/comm/testlist \
           impls/mpich/threads/Makefile \
+          impls/mpich/threads/testlist \
           impls/mpich/threads/pt2pt/Makefile \
+          impls/mpich/threads/threadcomm/Makefile \
           impls/mpich/cuda/Makefile \
           impls/mpich/hip/Makefile \
           impls/mpich/misc/Makefile \

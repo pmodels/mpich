@@ -113,7 +113,7 @@ MPI_Comm_idup_with_info:
 MPI_Comm_rank:
     .desc: Determines the rank of the calling process in the communicator
     .skip: global_cs
-    .extra: ignore_revoked_comm
+    .extra: ignore_revoked_comm, threadcomm
 
 MPI_Comm_remote_group:
     .desc: Accesses the remote group associated with
@@ -146,7 +146,7 @@ MPI_Comm_size:
     .desc: Determines the size of the group associated with a communicator
     .skip: global_cs
     .docnotes: NULL
-    .extra: ignore_revoked_comm
+    .extra: ignore_revoked_comm, threadcomm
 
 MPI_Comm_split:
     .desc: Creates new communicators based on colors and keys
