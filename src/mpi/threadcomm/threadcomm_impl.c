@@ -148,23 +148,29 @@ int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
     MPIR_Assert(comm->threadcomm);
     MPIR_Threadcomm *threadcomm = comm->threadcomm;
 
-    MPIR_threadcomm_tls_t *p;
-    MPIR_THREADCOMM_TLS_ADD(threadcomm, p);
-
-    MPIR_Assert(p);
-    p->tid = MPL_atomic_fetch_add_int(&threadcomm->next_id, 1);
-
-    if (p->tid == 0) {
+    int tid = MPL_atomic_fetch_add_int(&threadcomm->next_id, 1);
+    if (tid == 0) {
         if (MPIR_threadcomm_was_thread_single) {
             MPIR_ThreadInfo.isThreaded = 1;
         }
     }
 
+    mpi_errno = thread_barrier(threadcomm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* memory allocation may depend on isThreaded, e.g. when memtrace
+     * is enabled, thus make sure it is after a thread_barrier.
+     */
+    MPIR_threadcomm_tls_t *p;
+    MPIR_THREADCOMM_TLS_ADD(threadcomm, p);
+
+    MPIR_Assert(p);
+    p->tid = tid;
+
     if (p->tid == threadcomm->num_threads - 1) {
         /* reset next_id to ensure next MPI_Threadcomm_start to work */
         MPL_atomic_store_int(&threadcomm->next_id, 0);
     }
-    mpi_errno = thread_barrier(threadcomm);
 
   fn_exit:
     return mpi_errno;
@@ -181,21 +187,26 @@ int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
     MPIR_threadcomm_tls_t *p = MPIR_threadcomm_get_tls(comm->threadcomm);
     MPIR_Assert(p);
 
-    mpi_errno = thread_barrier(threadcomm);
-    MPIR_ERR_CHECK(mpi_errno);
+    int tid = p->tid;
 
     if (MPIR_Process.attr_free && p->attributes) {
         mpi_errno = MPIR_Process.attr_free(comm->handle, &p->attributes);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (p->tid == 0) {
+    MPIR_THREADCOMM_TLS_DELETE(threadcomm);
+
+    mpi_errno = thread_barrier(threadcomm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* NOTE: make sure anything depend on isThreaded -- this includes
+     * malloc/free when memtrace is on -- is before the thread_barrier.
+     */
+    if (tid == 0) {
         if (MPIR_threadcomm_was_thread_single) {
             MPIR_ThreadInfo.isThreaded = 0;
         }
     }
-
-    MPIR_THREADCOMM_TLS_DELETE(threadcomm);
 
   fn_exit:
     return mpi_errno;
