@@ -54,6 +54,9 @@ typedef struct MPIR_threadcomm_tls_t {
 extern UT_icd MPIR_threadcomm_icd;
 extern MPL_TLS UT_array *MPIR_threadcomm_array;
 
+/* We can optimize if we are not using MPI_THREAD_MULTIPLE */
+extern bool MPIR_threadcomm_was_thread_single;
+
 #define MPIR_THREADCOMM_TLS_ADD(threadcomm, p) \
     do { \
         if (MPIR_threadcomm_array == NULL) { \

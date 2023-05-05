@@ -7,6 +7,7 @@
 
 #ifdef ENABLE_THREADCOMM
 
+bool MPIR_threadcomm_was_thread_single;
 UT_icd MPIR_threadcomm_icd = { sizeof(MPIR_threadcomm_tls_t), NULL, NULL, NULL };
 
 MPL_TLS UT_array *MPIR_threadcomm_array = NULL;
@@ -15,6 +16,9 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size = comm->local_size;
+
+    /* we will modify MPIR_ThreadInfo.isThreaded in MPIR_Threadcomm_start */
+    MPIR_threadcomm_was_thread_single = !MPIR_ThreadInfo.isThreaded;
 
     MPIR_Threadcomm *threadcomm;
     threadcomm = MPL_malloc(sizeof(MPIR_Threadcomm), MPL_MEM_OTHER);
@@ -128,6 +132,15 @@ static int thread_barrier(MPIR_Threadcomm * threadcomm)
     return MPI_SUCCESS;
 }
 
+/* NOTE: we are adding thread_barrier in both MPIX_Threadcomm_{start,finish}
+ *       to ensure global settings (e.g. isThreaded) are modified effectively.
+ */
+
+/* threadcomm need MPIR_ThreadInfo.isThreaded on to enable critical sections,
+ * we can turn it on or off at MPIX_Threadcomm_{start,finish}. This will work
+ * since outside the parallel region all MPI access are thread single/serialized.
+ */
+
 int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -141,9 +154,14 @@ int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
     MPIR_Assert(p);
     p->tid = MPL_atomic_fetch_add_int(&threadcomm->next_id, 1);
 
-    /* Need reset next_id and a barrier to ensure next MPI_Threadcomm_start to work.
-     * We can do this at either MPI_Threadcomm_start or MPI_Threadcomm_finish. */
+    if (p->tid == 0) {
+        if (MPIR_threadcomm_was_thread_single) {
+            MPIR_ThreadInfo.isThreaded = 1;
+        }
+    }
+
     if (p->tid == threadcomm->num_threads - 1) {
+        /* reset next_id to ensure next MPI_Threadcomm_start to work */
         MPL_atomic_store_int(&threadcomm->next_id, 0);
     }
     mpi_errno = thread_barrier(threadcomm);
@@ -163,9 +181,18 @@ int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
     MPIR_threadcomm_tls_t *p = MPIR_threadcomm_get_tls(comm->threadcomm);
     MPIR_Assert(p);
 
+    mpi_errno = thread_barrier(threadcomm);
+    MPIR_ERR_CHECK(mpi_errno);
+
     if (MPIR_Process.attr_free && p->attributes) {
         mpi_errno = MPIR_Process.attr_free(comm->handle, &p->attributes);
         MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (p->tid == 0) {
+        if (MPIR_threadcomm_was_thread_single) {
+            MPIR_ThreadInfo.isThreaded = 0;
+        }
     }
 
     MPIR_THREADCOMM_TLS_DELETE(threadcomm);
