@@ -101,9 +101,14 @@ int MPIR_Threadcomm_free_impl(MPIR_Comm * comm)
     goto fn_exit;
 }
 
-/* FIXME: this can be inefficient due to multiple threads spin on the same var.
- *        We should try the dissemination algorithm. */
-static int thread_barrier(MPIR_Threadcomm * threadcomm)
+/* MPIR_Threadcomm_{start,finish} require thread barrier to consistently
+ * modify global settings
+ */
+#define MPIR_THREACOMM_ACTION_NONE   0
+#define MPIR_THREACOMM_ACTION_START  1
+#define MPIR_THREACOMM_ACTION_FINISH 2
+
+static int thread_barrier(MPIR_Threadcomm * threadcomm, int action)
 {
     /* A thread barrier */
     int P = threadcomm->num_threads;
@@ -120,6 +125,21 @@ static int thread_barrier(MPIR_Threadcomm * threadcomm)
     if (arrive_id == P - 1) {
         /* the last one resets flags */
         MPL_atomic_store_int(&threadcomm->arrive_counter, 0);
+
+        /* This is the 1st thread to leave. Modify global settings here.
+         * It is critical that we sandwidch between setting
+         * arrive_counter and leave_counter.
+         */
+        if (action == MPIR_THREACOMM_ACTION_START) {
+            if (MPIR_threadcomm_was_thread_single) {
+                MPIR_ThreadInfo.isThreaded = 1;
+            }
+        } else if (action == MPIR_THREACOMM_ACTION_FINISH) {
+            if (MPIR_threadcomm_was_thread_single) {
+                MPIR_ThreadInfo.isThreaded = 0;
+            }
+        }
+
         MPL_atomic_store_int(&threadcomm->leave_counter, 1);
         MPL_atomic_store_int(&threadcomm->barrier_flag, 1);
     } else {
@@ -149,15 +169,11 @@ int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
     MPIR_Threadcomm *threadcomm = comm->threadcomm;
 
     int tid = MPL_atomic_fetch_add_int(&threadcomm->next_id, 1);
-    if (tid == 0) {
-        if (MPIR_threadcomm_was_thread_single) {
-            MPIR_ThreadInfo.isThreaded = 1;
-        }
-    }
 
-    mpi_errno = thread_barrier(threadcomm);
+    mpi_errno = thread_barrier(threadcomm, MPIR_THREACOMM_ACTION_START);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIR_Assert(MPIR_ThreadInfo.isThreaded);
     /* memory allocation may depend on isThreaded, e.g. when memtrace
      * is enabled, thus make sure it is after a thread_barrier.
      */
@@ -196,17 +212,10 @@ int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
 
     MPIR_THREADCOMM_TLS_DELETE(threadcomm);
 
-    mpi_errno = thread_barrier(threadcomm);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(MPIR_ThreadInfo.isThreaded);
 
-    /* NOTE: make sure anything depend on isThreaded -- this includes
-     * malloc/free when memtrace is on -- is before the thread_barrier.
-     */
-    if (tid == 0) {
-        if (MPIR_threadcomm_was_thread_single) {
-            MPIR_ThreadInfo.isThreaded = 0;
-        }
-    }
+    mpi_errno = thread_barrier(threadcomm, MPIR_THREACOMM_ACTION_FINISH);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -252,7 +261,7 @@ int MPIR_Threadcomm_dup_impl(MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
         /* bcast to all threads */
         threadcomm->bcast_value = newcomm;
     }
-    mpi_errno = thread_barrier(threadcomm);
+    mpi_errno = thread_barrier(threadcomm, MPIR_THREACOMM_ACTION_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     if (p->tid > 0) {
         newcomm = threadcomm->bcast_value;
