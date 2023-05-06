@@ -79,6 +79,9 @@ static struct send_hdr *threadcomm_match_unexp(int src_id, int tag, int attr,
                                                MPIR_threadcomm_tls_t * p);
 static void threadcomm_complete_unexp(struct send_hdr *hdr, MPIR_threadcomm_tls_t * p);
 
+static void threadcomm_load_cell(void *cell, struct send_hdr *hdr,
+                                 const void *data, MPI_Aint count, MPI_Datatype datatype);
+
 /* NOTE: it's possible to skip vci lock if we ensure each thread access a unique pool.
  *       This is currently difficult to manage due to we dub the inter-process messages.
  */
@@ -226,11 +229,17 @@ MPL_STATIC_INLINE_PREFIX int threadcomm_progress_recv(int *made_progress)
 {
     MPIR_threadcomm_tls_t *p = ut_type_array(MPIR_threadcomm_array, MPIR_threadcomm_tls_t *);
     for (int i = 0; i < utarray_len(MPIR_threadcomm_array); i++) {
-        struct send_hdr *hdr = NULL;
-        /* TODO: poll transport for incoming messages */
-        if (hdr) {
-            threadcomm_recv_event(hdr, &p[i]);
+#if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
+        int num_threads = p[i].threadcomm->num_threads;
+        for (int j = 0; j < num_threads; j++) {
+            MPIR_threadcomm_fbox_t *fbox = MPIR_THREADCOMM_MAILBOX(p[i].threadcomm, j, p[i].tid);
+            if (MPL_atomic_load_int(&fbox->u.data_ready)) {
+                *made_progress = 1;
+                threadcomm_recv_event((void *) fbox->cell, &p[i]);
+                MPL_atomic_store_int(&fbox->u.data_ready, 0);
+            }
         }
+#endif
     }
     return MPI_SUCCESS;
 }
@@ -241,7 +250,16 @@ static int threadcomm_eager_send(int src_id, int dst_id, struct send_hdr *hdr,
                                  const void *data, MPI_Aint count, MPI_Datatype datatype,
                                  MPIR_Threadcomm * threadcomm)
 {
-    MPIR_Assert(0);     /* TODO */
+#if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
+    MPIR_threadcomm_fbox_t *fbox = MPIR_THREADCOMM_MAILBOX(threadcomm, src_id, dst_id);
+
+    if (MPL_atomic_load_int(&fbox->u.data_ready)) {
+        return -1;
+    }
+
+    threadcomm_load_cell(fbox->cell, hdr, data, count, datatype);
+    MPL_atomic_store_int(&fbox->u.data_ready, 1);
+#endif
     return MPI_SUCCESS;
 }
 
@@ -396,6 +414,20 @@ static void threadcomm_complete_unexp(struct send_hdr *hdr, MPIR_threadcomm_tls_
 {
     struct unexp *unexp = MPL_container_of(hdr, struct unexp, hdr);
     MPL_free(unexp);
+}
+
+static void threadcomm_load_cell(void *cell, struct send_hdr *hdr,
+                                 const void *data, MPI_Aint count, MPI_Datatype datatype)
+{
+    memcpy(cell, hdr, sizeof(struct send_hdr));
+    if (count > 0) {
+        MPIR_Assert(hdr->type == MPIR_THREADCOMM_MSGTYPE_EAGER);
+        MPI_Aint actual_pack_bytes;
+        void *p = (char *) cell + sizeof(struct send_hdr);
+        MPIR_Typerep_pack(data, count, datatype, 0, p, hdr->u.data_sz, &actual_pack_bytes,
+                          MPIR_TYPEREP_FLAG_NONE);
+        MPIR_Assert(actual_pack_bytes == hdr->u.data_sz);
+    }
 }
 
 #endif /* THREADCOMM_PT2PT_H_INCLUDED */

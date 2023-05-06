@@ -56,7 +56,11 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     MPL_atomic_relaxed_store_int(&threadcomm->leave_counter, num_threads);
     MPL_atomic_relaxed_store_int(&threadcomm->barrier_flag, 0);
 
-    /* initialize transport */
+#if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
+    threadcomm->mailboxes = MPL_calloc(num_threads * num_threads, MPIR_THREADCOMM_FBOX_SIZE,
+                                       MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!threadcomm->mailboxes, mpi_errno, MPI_ERR_OTHER, "**nomem");
+#endif
 
     MPL_free(threads_table);
 
@@ -96,7 +100,9 @@ int MPIR_Threadcomm_free_impl(MPIR_Comm * comm)
 
     MPL_free(threadcomm->rank_offset_table);
 
-    /* free transport */
+#if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
+    MPL_free(threadcomm->mailboxes);
+#endif
 
     MPL_free(threadcomm);
 

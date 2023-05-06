@@ -12,8 +12,23 @@
 #define MPIR_THREADCOMM_USE_FBOX  1
 #define MPIR_THREADCOMM_USE_QUEUE 2
 
-/* TODO: add transport implementation */
-#define MPIR_THREADCOMM_TRANSPORT MPIR_THREADCOMM_USE_NONE
+#define MPIR_THREADCOMM_TRANSPORT MPIR_THREADCOMM_USE_FBOX
+
+#if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
+typedef struct MPIR_threadcomm_fbox_t {
+    union {
+        MPL_atomic_int_t data_ready;
+        void *dummy;            /* for alignment */
+    } u;
+    char cell[];
+} MPIR_threadcomm_fbox_t;
+
+#define MPIR_THREADCOMM_FBOX_SIZE   256
+#define MPIR_THREADCOMM_MAX_PAYLOAD (MPIR_THREADCOMM_FBOX_SIZE - sizeof(MPIR_threadcomm_fbox_t))
+#define MPIR_THREADCOMM_MAILBOX(threadcomm, src, dst) \
+    (MPIR_threadcomm_fbox_t *) (((char *) (threadcomm)->mailboxes) + ((src) + (threadcomm)->num_threads * (dst)) * MPIR_THREADCOMM_FBOX_SIZE)
+
+#endif /* MPIR_THREADCOMM_TRANSPORT */
 
 typedef struct MPIR_Threadcomm {
     MPIR_OBJECT_HEADER;
@@ -32,6 +47,11 @@ typedef struct MPIR_Threadcomm {
     MPL_atomic_int_t barrier_flag;
     /* bcast during comm_dup */
     void *bcast_value;
+
+#if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
+    MPIR_threadcomm_fbox_t *mailboxes;
+#endif                          /* MPIR_THREADCOMM_TRANSPORT */
+
 } MPIR_Threadcomm;
 
 #define MPIR_THREADCOMM_RANK_IS_INTERTHREAD(threadcomm, rank) \
