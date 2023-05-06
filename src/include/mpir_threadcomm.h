@@ -19,8 +19,6 @@ typedef struct MPIR_Threadcomm {
     int num_threads;            /* number of threads in this rank */
     int *rank_offset_table;     /* offset table for inter-process rank to
                                  * threadcomm rank conversion */
-    /* for thread_id assignment */
-    MPL_atomic_int_t next_id;
     /* thread barrier - two-counter algorithm */
     MPL_atomic_int_t arrive_counter;
     MPL_atomic_int_t leave_counter;

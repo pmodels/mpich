@@ -51,7 +51,6 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     threadcomm->num_threads = num_threads;
     threadcomm->rank_offset_table = rank_offset_table;
 
-    MPL_atomic_relaxed_store_int(&threadcomm->next_id, 0);
     MPL_atomic_relaxed_store_int(&threadcomm->arrive_counter, 0);
     MPL_atomic_relaxed_store_int(&threadcomm->leave_counter, num_threads);
     MPL_atomic_relaxed_store_int(&threadcomm->barrier_flag, 0);
@@ -108,6 +107,9 @@ int MPIR_Threadcomm_free_impl(MPIR_Comm * comm)
 #define MPIR_THREACOMM_ACTION_START  1
 #define MPIR_THREACOMM_ACTION_FINISH 2
 
+/* Returns arrive id.
+ * Do action after every threads arrive and before first thread leave.
+ */
 static int thread_barrier(MPIR_Threadcomm * threadcomm, int action)
 {
     /* A thread barrier */
@@ -149,7 +151,7 @@ static int thread_barrier(MPIR_Threadcomm * threadcomm, int action)
         MPL_atomic_fetch_add_int(&threadcomm->leave_counter, 1);
     }
 
-    return MPI_SUCCESS;
+    return arrive_id;
 }
 
 /* NOTE: we are adding thread_barrier in both MPIX_Threadcomm_{start,finish}
@@ -168,9 +170,7 @@ int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
     MPIR_Assert(comm->threadcomm);
     MPIR_Threadcomm *threadcomm = comm->threadcomm;
 
-    int tid = MPL_atomic_fetch_add_int(&threadcomm->next_id, 1);
-
-    mpi_errno = thread_barrier(threadcomm, MPIR_THREACOMM_ACTION_START);
+    int tid = thread_barrier(threadcomm, MPIR_THREACOMM_ACTION_START);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(MPIR_ThreadInfo.isThreaded);
@@ -182,11 +182,6 @@ int MPIR_Threadcomm_start_impl(MPIR_Comm * comm)
 
     MPIR_Assert(p);
     p->tid = tid;
-
-    if (p->tid == threadcomm->num_threads - 1) {
-        /* reset next_id to ensure next MPI_Threadcomm_start to work */
-        MPL_atomic_store_int(&threadcomm->next_id, 0);
-    }
 
   fn_exit:
     return mpi_errno;
@@ -214,8 +209,7 @@ int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
 
     MPIR_Assert(MPIR_ThreadInfo.isThreaded);
 
-    mpi_errno = thread_barrier(threadcomm, MPIR_THREACOMM_ACTION_FINISH);
-    MPIR_ERR_CHECK(mpi_errno);
+    thread_barrier(threadcomm, MPIR_THREACOMM_ACTION_FINISH);
 
   fn_exit:
     return mpi_errno;
@@ -261,8 +255,7 @@ int MPIR_Threadcomm_dup_impl(MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
         /* bcast to all threads */
         threadcomm->bcast_value = newcomm;
     }
-    mpi_errno = thread_barrier(threadcomm, MPIR_THREACOMM_ACTION_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
+    thread_barrier(threadcomm, MPIR_THREACOMM_ACTION_NONE);
     if (p->tid > 0) {
         newcomm = threadcomm->bcast_value;
     }
