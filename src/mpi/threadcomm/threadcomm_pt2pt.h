@@ -14,6 +14,9 @@ typedef enum {
     MPIR_THREADCOMM_MSGTYPE_SYNC,
 } MPIR_Threadcomm_msgtype_t;
 
+/* A special tag for pending ack messages */
+#define MPIR_THREACOMM_TAG_SYNC -1
+
 /* send packet, needed for both eager and ipc */
 struct send_hdr {
     MPIR_Threadcomm_msgtype_t type;
@@ -143,8 +146,8 @@ MPL_STATIC_INLINE_PREFIX
 
     int ret = threadcomm_eager_send(p->tid, dst_id, &hdr, NULL, 0, MPI_DATATYPE_NULL, threadcomm);
     if (ret != MPI_SUCCESS) {
-        /* TODO: enqueue request */
-        MPIR_Assert(0);
+        /* enqueue sreq */
+        DL_APPEND(p->pending_list, sreq);
     }
 
     *req = sreq;
@@ -190,7 +193,31 @@ MPL_STATIC_INLINE_PREFIX int threadcomm_progress_send(int *made_progress)
 {
     MPIR_threadcomm_tls_t *p = ut_type_array(MPIR_threadcomm_array, MPIR_threadcomm_tls_t *);
     for (int i = 0; i < utarray_len(MPIR_threadcomm_array); i++) {
-        /* TODO: try send postponed send requests */
+        MPIR_Request *curr, *tmp;
+        DL_FOREACH_SAFE(p[i].pending_list, curr, tmp) {
+            struct send_req *u = (struct send_req *) &curr->u;
+
+            struct send_hdr hdr;
+            if (u->tag == MPIR_THREACOMM_TAG_SYNC) {
+                hdr.type = MPIR_THREADCOMM_MSGTYPE_SYNC;
+                hdr.src_id = p[i].tid;
+                hdr.u.sreq = curr;
+            } else {
+                hdr.type = MPIR_THREADCOMM_MSGTYPE_IPC;
+                hdr.src_id = p[i].tid;
+                hdr.tag = u->tag;
+                hdr.attr = u->attr;
+                hdr.u.sreq = curr;
+            }
+
+            int ret = threadcomm_eager_send(p[i].tid, u->dst_id, &hdr,
+                                            NULL, 0, MPI_DATATYPE_NULL, p[i].threadcomm);
+            if (ret == MPI_SUCCESS) {
+                DL_DELETE(p[i].pending_list, curr);
+            } else {
+                break;
+            }
+        }
     }
     return MPI_SUCCESS;
 }
@@ -257,8 +284,10 @@ static void threadcomm_data_copy(struct send_hdr *hdr, void *buf, MPI_Aint count
         int ret = threadcomm_eager_send(p->tid, hdr->src_id, &tmp_hdr, NULL, 0, MPI_DATATYPE_NULL,
                                         p->threadcomm);
         if (ret != MPI_SUCCESS) {
-            /* TODO: enqueue sending the sync message */
-            MPIR_Assert(0);
+            struct send_req *u = (struct send_req *) &sreq->u;
+            u->tag = MPIR_THREACOMM_TAG_SYNC;
+            u->dst_id = hdr->src_id;
+            DL_APPEND(p->pending_list, sreq);
         }
     }
 }

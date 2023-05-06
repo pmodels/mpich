@@ -49,7 +49,7 @@ typedef struct MPIR_threadcomm_tls_t {
     MPIR_Threadcomm *threadcomm;
     int tid;
     MPIR_Attribute *attributes;
-    /* postponed send request */
+    MPIR_Request *pending_list;
     void *posted_list;
     void *unexp_list;
 } MPIR_threadcomm_tls_t;
