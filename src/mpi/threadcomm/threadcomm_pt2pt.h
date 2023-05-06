@@ -81,6 +81,10 @@ static void threadcomm_complete_unexp(struct send_hdr *hdr, MPIR_threadcomm_tls_
 
 static void threadcomm_load_cell(void *cell, struct send_hdr *hdr,
                                  const void *data, MPI_Aint count, MPI_Datatype datatype);
+#if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
+static void threadcomm_mpsc_enqueue(MPIR_threadcomm_queue_t * queue, MPIR_threadcomm_cell_t * cell);
+static MPIR_threadcomm_cell_t *threadcomm_mpsc_dequeue(MPIR_threadcomm_queue_t * queue);
+#endif
 
 /* NOTE: it's possible to skip vci lock if we ensure each thread access a unique pool.
  *       This is currently difficult to manage due to we dub the inter-process messages.
@@ -239,6 +243,15 @@ MPL_STATIC_INLINE_PREFIX int threadcomm_progress_recv(int *made_progress)
                 MPL_atomic_store_int(&fbox->u.data_ready, 0);
             }
         }
+
+#elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
+        MPIR_threadcomm_cell_t *cell =
+            threadcomm_mpsc_dequeue(&(p[i].threadcomm->queues[p[i].tid]));
+        if (cell) {
+            *made_progress = 1;
+            threadcomm_recv_event(cell->payload, &p[i]);
+            MPL_free(cell);
+        }
 #endif
     }
     return MPI_SUCCESS;
@@ -259,6 +272,20 @@ static int threadcomm_eager_send(int src_id, int dst_id, struct send_hdr *hdr,
 
     threadcomm_load_cell(fbox->cell, hdr, data, count, datatype);
     MPL_atomic_store_int(&fbox->u.data_ready, 1);
+
+#elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
+    MPI_Aint cell_sz = sizeof(MPIR_threadcomm_cell_t) + sizeof(struct send_hdr);
+    if (hdr->type == MPIR_THREADCOMM_MSGTYPE_EAGER) {
+        cell_sz += hdr->u.data_sz;
+    }
+    MPIR_threadcomm_cell_t *cell = MPL_malloc(cell_sz, MPL_MEM_OTHER);
+    if (!cell) {
+        return -1;
+    }
+
+    threadcomm_load_cell(cell->payload, hdr, data, count, datatype);
+    threadcomm_mpsc_enqueue(&threadcomm->queues[dst_id], cell);
+
 #endif
     return MPI_SUCCESS;
 }
@@ -429,5 +456,47 @@ static void threadcomm_load_cell(void *cell, struct send_hdr *hdr,
         MPIR_Assert(actual_pack_bytes == hdr->u.data_sz);
     }
 }
+
+#if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
+static void threadcomm_mpsc_enqueue(MPIR_threadcomm_queue_t * queue, MPIR_threadcomm_cell_t * cell)
+{
+    MPL_atomic_relaxed_store_ptr(&cell->next, NULL);
+
+    void *tail_ptr = MPL_atomic_swap_ptr(&queue->tail, cell);
+    if (tail_ptr == NULL) {
+        /* queue was empty */
+        MPL_atomic_store_ptr(&queue->head, cell);
+    } else {
+        MPL_atomic_store_ptr(&((MPIR_threadcomm_cell_t *) tail_ptr)->next, cell);
+    }
+}
+
+static MPIR_threadcomm_cell_t *threadcomm_mpsc_dequeue(MPIR_threadcomm_queue_t * queue)
+{
+    MPIR_threadcomm_cell_t *cell = MPL_atomic_load_ptr(&queue->head);
+    if (cell) {
+        void *next = MPL_atomic_load_ptr(&cell->next);
+        if (next != NULL) {
+            /* just dequeue the head */
+            MPL_atomic_store_ptr(&queue->head, next);
+        } else {
+            /* single element, tail == head,
+             * have to make sure no enqueuing is in progress */
+            MPL_atomic_store_ptr(&queue->head, NULL);
+            if (MPL_atomic_cas_ptr(&queue->tail, cell, NULL) == cell) {
+                /* no enqueuing in progress, we are done */
+            } else {
+                /* busy wait for the enqueuing to finish */
+                do {
+                    next = MPL_atomic_load_ptr(&cell->next);
+                } while (next == NULL);
+                /* then set the header */
+                MPL_atomic_store_ptr(&queue->head, next);
+            }
+        }
+    }
+    return cell;
+}
+#endif /* MPIR_THREADCOMM_TRANSPORT */
 
 #endif /* THREADCOMM_PT2PT_H_INCLUDED */

@@ -60,6 +60,9 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     threadcomm->mailboxes = MPL_calloc(num_threads * num_threads, MPIR_THREADCOMM_FBOX_SIZE,
                                        MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!threadcomm->mailboxes, mpi_errno, MPI_ERR_OTHER, "**nomem");
+#elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
+    threadcomm->queues = MPL_calloc(num_threads, sizeof(MPIR_threadcomm_queue_t), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!threadcomm->queues, mpi_errno, MPI_ERR_OTHER, "**nomem");
 #endif
 
     MPL_free(threads_table);
@@ -102,6 +105,8 @@ int MPIR_Threadcomm_free_impl(MPIR_Comm * comm)
 
 #if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
     MPL_free(threadcomm->mailboxes);
+#elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
+    MPL_free(threadcomm->queues);
 #endif
 
     MPL_free(threadcomm);

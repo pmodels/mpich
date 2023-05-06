@@ -12,7 +12,7 @@
 #define MPIR_THREADCOMM_USE_FBOX  1
 #define MPIR_THREADCOMM_USE_QUEUE 2
 
-#define MPIR_THREADCOMM_TRANSPORT MPIR_THREADCOMM_USE_FBOX
+#define MPIR_THREADCOMM_TRANSPORT MPIR_THREADCOMM_USE_QUEUE
 
 #if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
 typedef struct MPIR_threadcomm_fbox_t {
@@ -27,6 +27,21 @@ typedef struct MPIR_threadcomm_fbox_t {
 #define MPIR_THREADCOMM_MAX_PAYLOAD (MPIR_THREADCOMM_FBOX_SIZE - sizeof(MPIR_threadcomm_fbox_t))
 #define MPIR_THREADCOMM_MAILBOX(threadcomm, src, dst) \
     (MPIR_threadcomm_fbox_t *) (((char *) (threadcomm)->mailboxes) + ((src) + (threadcomm)->num_threads * (dst)) * MPIR_THREADCOMM_FBOX_SIZE)
+
+#elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
+typedef struct MPIR_threadcomm_cell_t {
+    MPL_atomic_ptr_t next;
+    char payload[];
+} MPIR_threadcomm_cell_t;
+
+typedef struct MPIR_threadcomm_queue_t {
+    MPL_atomic_ptr_t head;
+    MPL_atomic_ptr_t tail;
+    char dummy[MPL_CACHELINE_SIZE];
+} MPIR_threadcomm_queue_t;
+
+#define MPIR_THREADCOMM_CELL_SIZE  4096
+#define MPIR_THREADCOMM_MAX_PAYLOAD (MPIR_THREADCOMM_CELL_SIZE - sizeof(MPIR_threadcomm_cell_t))
 
 #endif /* MPIR_THREADCOMM_TRANSPORT */
 
@@ -50,6 +65,8 @@ typedef struct MPIR_Threadcomm {
 
 #if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
     MPIR_threadcomm_fbox_t *mailboxes;
+#elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
+    MPIR_threadcomm_queue_t *queues;
 #endif                          /* MPIR_THREADCOMM_TRANSPORT */
 
 } MPIR_Threadcomm;
