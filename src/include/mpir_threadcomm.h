@@ -50,8 +50,8 @@ typedef struct MPIR_threadcomm_tls_t {
     int tid;
     MPIR_Attribute *attributes;
     /* postponed send request */
-    /* posted receive queue */
-    /* unexpected message queue */
+    void *posted_list;
+    void *unexp_list;
 } MPIR_threadcomm_tls_t;
 
 /* TLS dynamic array to support multiple threadcomms */

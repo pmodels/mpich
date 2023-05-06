@@ -229,7 +229,6 @@ static void threadcomm_recv_event(struct send_hdr *hdr, MPIR_threadcomm_tls_t * 
     MPIR_Request *rreq = threadcomm_match_posted(hdr->src_id, hdr->tag, hdr->attr, p);
     if (rreq) {
         threadcomm_complete_posted(hdr, rreq, p);
-        threadcomm_set_status(hdr, &rreq->status, p);
     } else {
         threadcomm_enqueue_unexp(hdr, p);
     }
@@ -291,38 +290,83 @@ static void threadcomm_enqueue_posted(void *buf, MPI_Aint count, MPI_Datatype da
                                       int src_id, int tag, int attr,
                                       MPIR_Request * rreq, MPIR_threadcomm_tls_t * p)
 {
-    MPIR_Assert(0);     /* TODO */
-    return rreq;
+    MPL_COMPILE_TIME_ASSERT(sizeof(struct posted_req) <= MPIR_REQUEST_UNION_SIZE);
+
+    struct posted_req *u = (void *) &rreq->u;
+    u->buf = buf;
+    u->count = count;
+    u->datatype = datatype;
+    u->src_id = src_id;
+    u->tag = tag;
+    u->attr = attr;
+
+    MPIR_Request **list = (MPIR_Request **) & p->posted_list;
+    DL_APPEND(*list, rreq);
 }
 
 static MPIR_Request *threadcomm_match_posted(int src_id, int tag, int attr,
                                              MPIR_threadcomm_tls_t * p)
 {
-    MPIR_Assert(0);     /* TODO */
+    MPIR_Request **list = (MPIR_Request **) & p->posted_list;
+
+    MPIR_Request *curr, *tmp;
+    DL_FOREACH_SAFE(*list, curr, tmp) {
+        struct posted_req *u = (struct posted_req *) &curr->u;
+        if ((u->src_id == src_id || u->src_id == MPI_ANY_SOURCE) && u->tag == tag &&
+            MPIR_PT2PT_ATTR_CONTEXT_OFFSET(u->attr) == MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr)) {
+            DL_DELETE(*list, curr);
+            return curr;
+        }
+    }
     return NULL;
 }
 
 static void threadcomm_complete_posted(struct send_hdr *hdr, MPIR_Request * rreq,
                                        MPIR_threadcomm_tls_t * p)
 {
-    MPIR_Assert(0);     /* TODO */
+    struct posted_req *u = (struct posted_req *) &rreq->u;
+    /* NOTE: the order of the following statements are important. In IPC mode,
+     * set_status need access sreq, but data_copy may free sreq */
+    threadcomm_set_status(hdr, &rreq->status, p);
+    threadcomm_data_copy(hdr, u->buf, u->count, u->datatype, p);
+    MPIR_Request_complete(rreq);
 }
 
 static void threadcomm_enqueue_unexp(struct send_hdr *hdr, MPIR_threadcomm_tls_t * p)
 {
-    MPIR_Assert(0);     /* TODO */
+    MPI_Aint cell_sz = sizeof(struct send_hdr);
+    if (hdr->type == MPIR_THREADCOMM_MSGTYPE_EAGER) {
+        cell_sz += hdr->u.data_sz;
+    }
+    /* NOTE: malloc has a potential concern of multi-threading performance */
+    struct unexp *unexp = MPL_malloc(sizeof(struct unexp) + cell_sz, MPL_MEM_OTHER);
+    memcpy(&unexp->hdr, hdr, cell_sz);
+
+    struct unexp **list = (struct unexp **) &p->unexp_list;
+    DL_APPEND(*list, unexp);
 }
 
 static struct send_hdr *threadcomm_match_unexp(int src_id, int tag, int attr,
                                                MPIR_threadcomm_tls_t * p)
 {
-    MPIR_Assert(0);     /* TODO */
+    struct unexp **list = (struct unexp **) &p->unexp_list;
+
+    struct unexp *curr, *tmp;
+    DL_FOREACH_SAFE(*list, curr, tmp) {
+        struct send_hdr *hdr = &curr->hdr;
+        if ((hdr->src_id == src_id || src_id == MPI_ANY_SOURCE) && hdr->tag == tag &&
+            MPIR_PT2PT_ATTR_CONTEXT_OFFSET(hdr->attr) == MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr)) {
+            DL_DELETE(*list, curr);
+            return hdr;
+        }
+    }
     return NULL;
 }
 
 static void threadcomm_complete_unexp(struct send_hdr *hdr, MPIR_threadcomm_tls_t * p)
 {
-    MPIR_Assert(0);     /* TODO */
+    struct unexp *unexp = MPL_container_of(hdr, struct unexp, hdr);
+    MPL_free(unexp);
 }
 
 #endif /* THREADCOMM_PT2PT_H_INCLUDED */
