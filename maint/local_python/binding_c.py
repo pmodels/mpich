@@ -463,6 +463,7 @@ def check_func_directives(func):
 
     # cleanup internal states
     func.pop('_got_comm_size', None)
+    func.pop('_got_comm_rank', None)
     func.pop('_got_topo_size', None)
 
 def filter_c_parameters(func):
@@ -2277,7 +2278,8 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         dump_validate_op(op, dt, True)
         dump_validate_datatype(func, dt)
 
-        cond_a = cond_intra + " && comm_ptr->rank == root"
+        dump_validate_get_comm_rank(func)
+        cond_a = cond_intra + " && comm_rank == root"
         cond_b = cond_inter + " && root == MPI_ROOT"
         G.out.append("if ((" + cond_a + ") || (" + cond_b + ")) {")
         # test recvbuf
@@ -2307,13 +2309,14 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         (sct, rct) = (ct, ct)
         if RE.search(r'reduce_scatter(_init)?$', func['name'], re.IGNORECASE):
             dump_validate_get_comm_size(func)
+            dump_validate_get_comm_rank(func)
             G.out.append("int sum = 0;")
             dump_for_open('i', 'comm_size')
             G.out.append("MPIR_ERRTEST_COUNT(%s[i], mpi_errno);" % ct)
             G.out.append("sum += %s[i];" % ct)
             dump_for_close()
             sct = "sum"
-            rct = ct + "[comm_ptr->rank]"
+            rct = ct + "[comm_rank]"
         G.out.append("MPIR_ERRTEST_RECVBUF_INPLACE(%s, %s, mpi_errno);" % (rbuf, rct))
         G.out.append("if (" + cond_inter + ") {")
         G.out.append("    MPIR_ERRTEST_SENDBUF_INPLACE(%s, %s, mpi_errno);" % (sbuf, sct))
@@ -2345,15 +2348,16 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
     # -- whether the buffer need be checked (or ignored)
     check_buf = None
     if RE.search(r'_i?(gather|scatter)', func_name, re.IGNORECASE):
+        dump_validate_get_comm_rank(func)
         if inplace:
             cond_a = cond_intra + " && %s != MPI_IN_PLACE" % buf
             cond_b = cond_inter + " && root != MPI_ROOT && root != MPI_PROC_NULL"
         else:
-            cond_a = cond_intra + " && comm_ptr->rank == root"
+            cond_a = cond_intra + " && comm_rank == root"
             cond_b = cond_inter + " && root == MPI_ROOT"
         check_buf = "(%s) || (%s)" % (cond_a, cond_b)
         if inplace:
-            check_alias = cond_intra + " && comm_ptr->rank == root"
+            check_alias = cond_intra + " && comm_rank == root"
     elif inplace:
             check_buf = " %s != MPI_IN_PLACE" % buf
 
@@ -2408,17 +2412,18 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
             G.out.append("    MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);")
             G.out.append("}")
         elif RE.search(r'i?(allgather|gather|scatter)(v?)(_init)?$', func_name, re.IGNORECASE):
+            dump_validate_get_comm_rank(func)
             t1, t2 = RE.m.group(1, 2)
             (a, b) = ("send", "recv")
             if RE.match(r'scatter', t1, re.IGNORECASE):
                 (a, b) = ("recv", "send")
             cond = "sendtype == recvtype && sendcount == recvcount && sendcount != 0"
             if t2 == "v":
-                cond = "sendtype == recvtype && %scount != 0 && %scounts[comm_ptr->rank] !=0" % (a, b)
+                cond = "sendtype == recvtype && %scount != 0 && %scounts[comm_rank] !=0" % (a, b)
 
-            buf2 = "(char *) %sbuf + comm_ptr->rank * %scount * %stype_size" % (b, b, b)
+            buf2 = "(char *) %sbuf + comm_rank * %scount * %stype_size" % (b, b, b)
             if t2 == "v":
-                buf2 = "(char *) %sbuf + displs[comm_ptr->rank] * %stype_size" % (b, b)
+                buf2 = "(char *) %sbuf + displs[comm_rank] * %stype_size" % (b, b)
 
             G.out.append("if (%s) {" % cond)
             G.out.append("    MPI_Aint %stype_size;" % b)
@@ -2478,7 +2483,23 @@ def dump_validate_get_comm_size(func):
             G.out.append("} else {")
             G.out.append("    comm_size = comm_ptr->local_size;")
             G.out.append("}")
+        G.out.append("#ifdef ENABLE_THREADCOMM")
+        dump_if_open("comm_ptr->threadcomm")
+        G.out.append("comm_size = comm_ptr->threadcomm->rank_offset_table[comm_ptr->local_size - 1];")
+        dump_if_close()
+        G.out.append("#endif")
         func['_got_comm_size'] = 1
+
+def dump_validate_get_comm_rank(func):
+    if '_got_comm_rank' not in func:
+        G.out.append("int comm_rank;")
+        G.out.append("comm_rank = comm_ptr->rank;")
+        G.out.append("#ifdef ENABLE_THREADCOMM")
+        dump_if_open("comm_ptr->threadcomm")
+        G.out.append("comm_rank = MPIR_THREADCOMM_TID_TO_RANK(comm_ptr->threadcomm, MPIR_threadcomm_get_tid(comm_ptr->threadcomm));")
+        dump_if_close()
+        G.out.append("#endif")
+        func['_got_comm_rank'] = 1
 
 def dump_validate_get_topo_size(func):
     if '_got_topo_size' not in func:
