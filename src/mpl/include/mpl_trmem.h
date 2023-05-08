@@ -498,7 +498,7 @@ typedef union {
    does not alias any pointer prior to the call.
  */
 void MPL_trinit(void);
-void MPL_trconfig(int, int);
+void MPL_trconfig(int, int *);
 void *MPL_trmalloc(size_t, MPL_memory_class, int, const char[]);
 void MPL_trfree(void *, int, const char[]);
 int MPL_trvalid(const char[]);

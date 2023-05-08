@@ -8,4 +8,5 @@ include $(top_srcdir)/Makefile_threads.mtest
 EXTRA_DIST = testlist
 
 noinst_PROGRAMS = \
-    threadcomm
+    threadcomm \
+    threadcomm_attr

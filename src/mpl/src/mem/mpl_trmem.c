@@ -101,7 +101,12 @@ static volatile size_t TRMaxOverhead = 314572800;
 /* Used to limit allocation */
 static volatile size_t TRMaxMemAllow = 0;
 
-static int TR_is_threaded = 0;
+/* There are cases that the upper layer may enter/exit parallel regions,
+ * e.g. MPIX Threadcomm, use pointer allows upper layer to
+ * change the flag at runtime.
+ */
+static int TR_is_threaded_false = 0;
+static int *TR_is_threaded = &TR_is_threaded_false;
 
 static int is_configured = 0;
 static int classes_initialized = 0;
@@ -137,7 +142,7 @@ static MPL_thread_mutex_t memalloc_mutex;
 
 #define TR_THREAD_CS_ENTER                                              \
     do {                                                                \
-        if (TR_is_threaded) {                                           \
+        if (*TR_is_threaded) {                                           \
             int err_;                                                   \
             MPL_thread_mutex_lock(&memalloc_mutex, &err_, MPL_THREAD_PRIO_HIGH);\
             if (err_)                                                   \
@@ -147,7 +152,7 @@ static MPL_thread_mutex_t memalloc_mutex;
 
 #define TR_THREAD_CS_EXIT                                               \
     do {                                                                \
-        if (TR_is_threaded) {                                           \
+        if (*TR_is_threaded) {                                           \
             int err_;                                                   \
             MPL_thread_mutex_unlock(&memalloc_mutex, &err_);            \
             if (err_)                                                   \
@@ -211,22 +216,17 @@ void MPL_trinit(void)
     }
 }
 
-void MPL_trconfig(int rank, int need_thread_safety)
+void MPL_trconfig(int rank, int *p_isThreaded)
 {
     world_rank = rank;
 
     if (is_configured)
         return;
 
-    /* If the upper layer asked for thread safety and there's no
-     * threading package available, we need to return an error. */
-#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_NONE
-    if (need_thread_safety)
-        MPL_error_printf("No thread package to provide thread-safe memory allocation\n");
-#endif
-
+    /* If there is no threading package available, assume the upper
+     * layer cannot do multithreading as well */
 #if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE
-    if (need_thread_safety) {
+    if (p_isThreaded != NULL) {
         int err;
 
         MPL_thread_mutex_create(&memalloc_mutex, &err);
@@ -234,7 +234,7 @@ void MPL_trconfig(int rank, int need_thread_safety)
             MPL_error_printf("Error creating memalloc mutex\n");
         }
 
-        TR_is_threaded = 1;
+        TR_is_threaded = p_isThreaded;
     }
 #endif
 

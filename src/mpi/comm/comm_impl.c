@@ -58,6 +58,12 @@ int MPIR_Comm_test_inter_impl(MPIR_Comm * comm_ptr, int *flag)
     return MPI_SUCCESS;
 }
 
+int MPIR_Comm_test_threadcomm_impl(MPIR_Comm * comm_ptr, int *flag)
+{
+    *flag = (comm_ptr->threadcomm != NULL);
+    return MPI_SUCCESS;
+}
+
 /* used in MPIR_Comm_group_impl and MPIR_Comm_create_group_impl */
 static int comm_create_local_group(MPIR_Comm * comm_ptr)
 {

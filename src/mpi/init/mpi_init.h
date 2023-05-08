@@ -122,7 +122,7 @@ static inline void MPII_pre_init_memory_tracing(void)
 static inline void MPII_post_init_memory_tracing(void)
 {
 #ifdef USE_MEMORY_TRACING
-    MPL_trconfig(MPIR_Process.rank, MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
+    MPL_trconfig(MPIR_Process.rank, &MPIR_ThreadInfo.isThreaded);
 #endif
 }
 

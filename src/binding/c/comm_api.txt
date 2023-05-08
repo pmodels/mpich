@@ -23,6 +23,7 @@ MPI_Comm_create_group:
 MPI_Comm_dup:
     .desc: Duplicates an existing communicator
     .seealso: MPI_Comm_free, MPI_Keyval_create, MPI_Attr_put, MPI_Attr_delete, MPI_Comm_create_keyval, MPI_Comm_set_attr, MPI_Comm_delete_attr
+    .extra: threadcomm
 /*
     Notes:
       This routine is used to create a new communicator that has a new
@@ -60,7 +61,7 @@ MPI_Comm_dup_with_info:
 
 MPI_Comm_free:
     .desc: Marks the communicator object for deallocation
-    .extra: ignore_revoked_comm
+    .extra: ignore_revoked_comm, threadcomm
 /*
     Notes:
     This routine `frees` a communicator.  Because the communicator may still
@@ -181,6 +182,12 @@ MPI_Comm_split_type:
 
 MPI_Comm_test_inter:
     .desc: Tests to see if a comm is an inter-communicator
+    .skip: global_cs
+
+MPIX_Comm_test_threadcomm:
+    comm: COMMUNICATOR, [communicator]
+    flag: LOGICAL, direction=out, [true if comm is an inter-communicator]
+    .desc: Tests to see if a comm is a threadcomm
     .skip: global_cs
 
 MPI_Intercomm_create_from_groups:

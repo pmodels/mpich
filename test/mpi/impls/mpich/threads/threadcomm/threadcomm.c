@@ -6,19 +6,33 @@
 #include "mpitest.h"
 #include <assert.h>
 
+static int do_restart = 0;
+static int do_commdup = 0;
+
 static MTEST_THREAD_RETURN_TYPE test_thread(void *arg)
 {
     MPI_Comm comm = *(MPI_Comm *) arg;
-    MPIX_Threadcomm_start(comm);
 
-    int rank, size;
-    MPI_Comm_size(comm, &size);
-    MPI_Comm_rank(comm, &rank);
-    MTestPrintfMsg(1, "Rank %d / %d\n", rank, size);
+    for (int rep = 0; rep < 1 + do_restart; rep++) {
+        MPIX_Threadcomm_start(comm);
 
-    /* TODO: add message tests */
+        MPI_Comm use_comm = comm;
+        if (do_commdup) {
+            MPI_Comm_dup(comm, &use_comm);
+        }
 
-    MPIX_Threadcomm_finish(comm);
+        int rank, size;
+        MPI_Comm_size(use_comm, &size);
+        MPI_Comm_rank(use_comm, &rank);
+        MTestPrintfMsg(1, "Rank %d / %d\n", rank, size);
+
+        /* TODO: add message tests */
+
+        if (do_commdup) {
+            MPI_Comm_free(&use_comm);
+        }
+        MPIX_Threadcomm_finish(comm);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -28,10 +42,14 @@ int main(int argc, char *argv[])
 
     MTestArgList *head = MTestArgListCreate(argc, argv);
     nthreads = MTestArgListGetInt_with_default(head, "nthreads", 4);
+    do_restart = MTestArgListGetInt_with_default(head, "restart", 0);
+    do_commdup = MTestArgListGetInt_with_default(head, "commdup", 0);
+    MTestArgListDestroy(head);
 
-    int provided;
-    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-    assert(provided == MPI_THREAD_MULTIPLE);
+    MTest_Init(NULL, NULL);
+
+    MTestPrintfMsg(1, "Test Threadcomm: nthreads=%d, restart=%d, commdup=%d\n",
+                   nthreads, do_restart, do_commdup);
 
     MPI_Comm comm;
     MPIX_Threadcomm_init(MPI_COMM_WORLD, nthreads, &comm);
