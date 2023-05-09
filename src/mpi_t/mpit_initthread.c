@@ -81,10 +81,13 @@ int MPIR_T_env_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    const char *config_filename = "/etc/mpich.conf";
+    const char *config_filename = NULL;
+#ifdef USE_CONFIGFILE
+    config_filename = USE_CONFIGFILE;
     if (!read_config_files(config_filename)) {
         config_filename = NULL;
     }
+#endif
 
     if (!MPIR_T_env_initialized) {
         MPIR_T_env_initialized = TRUE;
