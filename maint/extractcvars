@@ -252,6 +252,10 @@ int ${fn_ns}_init(void)
     MPIR_T_cvar_value_t defaultval;
 
     int debug = 0;
+    rc = MPL_env2bool("MPICH_DEBUG_CVARS", &debug);
+    MPIR_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","MPICH_DEBUG_CVARS");
+    rc = MPL_env2bool("MPIR_PARAM_DEBUG_CVARS", &debug);
+    MPIR_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","MPIR_PARAM_DEBUG_CVARS");
     rc = MPL_env2bool("MPIR_CVAR_DEBUG_CVARS", &debug);
     MPIR_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","MPIR_CVAR_DEBUG_CVARS");
 
