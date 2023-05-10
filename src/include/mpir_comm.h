@@ -259,6 +259,8 @@ struct MPIR_Comm {
         } multiplex;
     } stream_comm;
 
+    MPIR_Request *persistent_requests;
+
     /* Other, device-specific information */
 #ifdef MPID_DEV_COMM_DECL
      MPID_DEV_COMM_DECL
@@ -373,6 +375,9 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
+
+int MPIR_Comm_save_inactive_request(MPIR_Comm * comm, MPIR_Request * request);
+int MPIR_Comm_free_inactive_requests(MPIR_Comm * comm);
 
 /* Comm hint registration.
  *

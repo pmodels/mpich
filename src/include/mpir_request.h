@@ -231,6 +231,7 @@ struct MPIR_Request {
 #endif                          /* HAVE_DEBUGGER_SUPPORT */
 
     struct MPIR_Request *next, *prev;
+    UT_hash_handle hh;
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_REQUEST_DECL
@@ -534,6 +535,9 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
         /* FIXME: We need a way to call these routines ONLY when the
          * related ref count has become zero. */
         if (req->comm != NULL) {
+            if (MPIR_Request_is_persistent(req)) {
+                HASH_DEL(req->comm->persistent_requests, req);
+            }
             MPIR_Comm_release(req->comm);
         }
 

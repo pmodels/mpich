@@ -239,6 +239,8 @@ int MPIR_Comm_disconnect_impl(MPIR_Comm * comm_ptr)
                 goto fn_fail;
             }
             /* --END ERROR HANDLING-- */
+
+            MPIR_Comm_free_inactive_requests(comm_ptr);
         }
         MPID_Progress_end(&progress_state);
     }

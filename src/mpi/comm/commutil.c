@@ -302,6 +302,8 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->threadcomm = NULL;
     MPIR_stream_comm_init(comm_p);
 
+    comm_p->persistent_requests = NULL;
+
     /* mutex is only used in VCI granularity. But the overhead of
      * creation is low, so we always create it. */
     {
@@ -1363,4 +1365,23 @@ int MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_bal
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Comm_save_inactive_request(MPIR_Comm * comm, MPIR_Request * request)
+{
+    HASH_ADD_INT(comm->persistent_requests, handle, request, MPL_MEM_COMM);
+
+    return MPI_SUCCESS;
+}
+
+int MPIR_Comm_free_inactive_requests(MPIR_Comm * comm)
+{
+    MPIR_Request *request, *tmp;
+    HASH_ITER(hh, comm->persistent_requests, request, tmp) {
+        if (!MPIR_Request_is_active(request)) {
+            MPIR_Request_free_impl(request);
+        }
+    }
+
+    return MPI_SUCCESS;
 }
