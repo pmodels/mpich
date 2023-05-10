@@ -219,6 +219,7 @@ struct MPIR_Request {
 #endif                          /* HAVE_DEBUGGER_SUPPORT */
 
     struct MPIR_Request *next, *prev;
+    UT_hash_handle hh;
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_REQUEST_DECL
