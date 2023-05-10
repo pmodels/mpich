@@ -48,3 +48,4 @@ idup_with_info 8
 comm_info 6
 comm_info2 1
 comm_create_group_idup 4
+inactive_reqs 1

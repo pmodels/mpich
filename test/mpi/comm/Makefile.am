@@ -44,4 +44,5 @@ noinst_PROGRAMS =     \
     comm_idup_comm2   \
     comm_create_group_idup \
     comm_info \
-    comm_info2
+    comm_info2 \
+    inactive_reqs

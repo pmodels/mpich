@@ -217,6 +217,7 @@
 /comm/icm
 /comm/icsplit
 /comm/idup_with_info
+/comm/inactive_reqs
 /comm/probe_intercomm
 /comm/testlist
 /confdb
