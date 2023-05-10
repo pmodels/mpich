@@ -1,4 +1,30 @@
 ===============================================================================
+                               Changes in 4.1.2
+===============================================================================
+
+# Update UCX module to includes fixes for building with GCC 13
+
+# Update libfabric module to 1.18.0 with additional fixes for building
+  with recent versions of LLVM/Clang
+
+# Fix compiler wrapper scripts to be compatible with CUDA memory hooks
+
+# Fix MPI_WAITALL_ENQUEUE to make a copy of the input request array
+
+# Fix potential deadlock when progressing RMA windows
+
+# Fix MPI_PARRIVED when the partitioned request is inactive
+
+# Fix potential bug when an attribute delete callback deletes another
+  attribute on the same object
+
+# Fix build issue in ROMIO Lustre driver
+
+# Report an error if collective tuning json file fails to open
+
+# Several fixes for testsuite programs and build configuration
+
+===============================================================================
                                Changes in 4.1.1
 ===============================================================================
 
