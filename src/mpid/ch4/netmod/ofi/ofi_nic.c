@@ -31,6 +31,50 @@ static bool is_nic_close(struct fi_info *info)
     return MPIR_hwtopo_is_dev_close_by_name(info->domain_attr->name);
 }
 
+/* Return true if the NIC is close to the group of the calling process */
+static bool is_nic_close_snc4(const MPIDI_OFI_nic_info_t * nic_info, int num_parents)
+{
+    int nic_socket_gid = MPIR_hwtopo_get_parent_socket(nic_info->parent);
+    int rank_socket_gid = MPIR_hwtopo_get_parent_socket(MPIR_hwtopo_get_first_pu_group());
+
+    /* In SNC4 mode, when there are 4 groups that have nics, it means that there are 4
+     * other adjacent groups with no nics. This leads to each set of 2 groups having 2 nics
+     * such that, the first group has no nics and the second group has 2 nics.
+     * The correct assignment strategy is such the 2 nics of the second group is considered
+     * close to the ranks on both the groups.*/
+    if (num_parents == 4) {
+        /* Check that the parent socket of the rank and the nic is the same */
+        if (nic_socket_gid == rank_socket_gid) {
+            int nic_group_lid = MPIR_hwtopo_get_lid(nic_info->parent);
+            int rank_group_lid = MPIR_hwtopo_get_lid(MPIR_hwtopo_get_first_pu_group());
+            if (nic_group_lid == rank_group_lid || nic_group_lid - rank_group_lid == 1) {
+                struct fi_info *info = (struct fi_info *) (nic_info->nic);
+                if (info->nic->bus_attr->bus_type == FI_BUS_PCI) {
+                    struct fi_pci_attr pci = info->nic->bus_attr->attr.pci;
+
+                    int nic_lid = MPIR_hwtopo_get_pci_network_lid(pci.domain_id,
+                                                                  pci.bus_id,
+                                                                  pci.device_id,
+                                                                  pci.function_id);
+
+                    /* Map 1st nic of the group to the previous group */
+                    if (nic_lid == 0 && nic_group_lid - rank_group_lid == 1)
+                        return 1;
+                    /* Map 2nd nic of the group to the current group */
+                    else if (nic_lid == 1 && nic_group_lid == rank_group_lid)
+                        return 1;
+                }
+            }
+        }
+    } else {
+        /* On using a different configuration than having 4 num_parents, simply
+         * compare parent socket of the nic and the rank */
+        if (nic_socket_gid == rank_socket_gid)
+            return 1;
+    }
+    return 0;
+}
+
 /* Comparison function for NIC names. Used in qsort() */
 static int compare_nic_names(const void *info1, const void *info2)
 {
@@ -174,6 +218,19 @@ static int setup_single_nic(void)
 }
 
 #ifdef HAVE_LIBFABRIC_NIC
+/* Comparison function for NICs in SPR SNC4 mode. This function is used in qsort(). */
+static int compare_nics_snc4(const void *nic1, const void *nic2)
+{
+    const MPIDI_OFI_nic_info_t *i1 = (const MPIDI_OFI_nic_info_t *) nic1;
+    const MPIDI_OFI_nic_info_t *i2 = (const MPIDI_OFI_nic_info_t *) nic2;
+
+    if (i1->close && !i2->close)
+        return -1;
+    else if (i2->close && !i1->close)
+        return 1;
+    return compare_nic_names(&(i1->nic), &(i2->nic));
+}
+
 /* TODO: Now that multiple NICs are detected, sort them based on preferred-ness,
  * closeness and count of other processes using the NIC. */
 static int setup_multi_nic(int nic_count)
@@ -199,24 +256,26 @@ static int setup_multi_nic(int nic_count)
         MPIDI_OFI_global.num_nics = MPIR_CVAR_CH4_OFI_MAX_NICS;
     }
 
-    /* Now go through every NIC and set initial information
-     * from current process's perspective */
-    for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
-        nics[i].nic = MPIDI_OFI_global.prov_use[i];
-        nics[i].id = i;
-        /* Determine NIC's "closeness" to current process */
-        nics[i].close = is_nic_close(nics[i].nic);
-        if (nics[i].close)
-            MPIDI_OFI_global.num_close_nics++;
-        /* Set the preference of all NICs to least preferable (lower is more preferable) */
-        nics[i].prefer = MPIDI_OFI_global.num_nics + 1;
-        nics[i].count = 0;
-        nics[i].num_close_ranks = 0;
-        /* Determine NIC's first normal parent topology
-         * item (e.g., typically the socket parent) */
-        nics[i].parent = get_nic_parent(nics[i].nic);
-        /* Expand list of close NIC-parent topology items or increment */
-        if (nics[i].close) {
+    int num_numa_nodes = MPIR_hwtopo_get_num_numa_nodes();
+    bool is_snc4_with_cxi_nics = false;
+
+    if ((num_numa_nodes == 8 || num_numa_nodes == 16))
+        if (MPIDI_OFI_global.num_nics > 1)
+            if (strstr(MPIDI_OFI_global.prov_use[0]->domain_attr->name, "cxi"))
+                is_snc4_with_cxi_nics = true;
+
+    /* Special case of nic assignment for SPR in SNC4 mode */
+    if (is_snc4_with_cxi_nics) {
+        for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
+            nics[i].nic = MPIDI_OFI_global.prov_use[i];
+            nics[i].id = i;
+            /* Set the preference of all NICs to least preferable (lower is more preferable) */
+            nics[i].prefer = MPIDI_OFI_global.num_nics + 1;
+            nics[i].count = 0;
+            nics[i].num_close_ranks = 0;
+
+            nics[i].parent = get_nic_parent(nics[i].nic);
+
             int found = 0;
             for (int j = 0; j < num_parents; ++j) {
                 if (parents[j] == nics[i].parent) {
@@ -227,6 +286,47 @@ static int setup_multi_nic(int nic_count)
             if (!found) {
                 parents[num_parents] = nics[i].parent;
                 num_parents++;
+            }
+        }
+        /* Use num_parents to determine nic closeness */
+        for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
+            nics[i].close = is_nic_close_snc4(&nics[i], num_parents);
+            if (nics[i].close)
+                MPIDI_OFI_global.num_close_nics++;
+        }
+
+    } else {
+        /* General case of nic assignment */
+
+        /* Now go through every NIC and set initial information
+         * from current process's perspective */
+        for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
+            nics[i].nic = MPIDI_OFI_global.prov_use[i];
+            nics[i].id = i;
+            /* Determine NIC's "closeness" to current process */
+            nics[i].close = is_nic_close(nics[i].nic);
+            if (nics[i].close)
+                MPIDI_OFI_global.num_close_nics++;
+            /* Set the preference of all NICs to least preferable (lower is more preferable) */
+            nics[i].prefer = MPIDI_OFI_global.num_nics + 1;
+            nics[i].count = 0;
+            nics[i].num_close_ranks = 0;
+            /* Determine NIC's first normal parent topology
+             * item (e.g., typically the socket parent) */
+            nics[i].parent = get_nic_parent(nics[i].nic);
+            /* Expand list of close NIC-parent topology items or increment */
+            if (nics[i].close) {
+                int found = 0;
+                for (int j = 0; j < num_parents; ++j) {
+                    if (parents[j] == nics[i].parent) {
+                        found = 1;
+                        break;
+                    }
+                }
+                if (!found) {
+                    parents[num_parents] = nics[i].parent;
+                    num_parents++;
+                }
             }
         }
     }
@@ -241,7 +341,13 @@ static int setup_multi_nic(int nic_count)
 
     /* Sort the NICs array based on closeness first. This way all the close
      * NICs are at the beginning of the array */
-    qsort(nics, MPIDI_OFI_global.num_nics, sizeof(nics[0]), compare_nics);
+    if (is_snc4_with_cxi_nics) {
+        /* Use a separate sorting function for snc4 nics in order to just compare
+         * closeness followed by nic name */
+        qsort(nics, MPIDI_OFI_global.num_nics, sizeof(nics[0]), compare_nics_snc4);
+    } else {
+        qsort(nics, MPIDI_OFI_global.num_nics, sizeof(nics[0]), compare_nics);
+    }
 
     /* Because we cannot communicate with the other local processes to avoid collisions with the
      * same NICs, just shift NICs that have multiple close NICs around according to their local
