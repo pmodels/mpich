@@ -893,8 +893,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     for (int nic = MPIDI_OFI_global.num_nics - 1; nic >= 0; nic--) {
         for (int vci = MPIDI_OFI_global.num_vcis - 1; vci >= 0; vci--) {
             if (MPIDI_global.is_initialized || (vci == 0 && nic == 0)) {
-                mpi_errno = destroy_vci_context(vci, nic);
-                MPIR_ERR_CHECK(mpi_errno);
+                /* If the user has not freed all MPI objects, ofi might not shut down cleanly.
+                 * We intentionally ignore errors to avoid crashing in finalize. Debug builds
+                 * will warn about unfreed objects/memory. */
+                (void) destroy_vci_context(vci, nic);
             }
         }
     }
