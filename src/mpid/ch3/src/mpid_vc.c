@@ -804,7 +804,11 @@ char MPIU_hostname[MAX_HOSTNAME_LEN] = "_UNKNOWN_"; /* '_' is an illegal char fo
 
 int MPID_Get_node_id(MPIR_Comm *comm, int rank, int *id_p)
 {
-    *id_p = comm->dev.vcrt->vcr_table[rank]->node_id;
+    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        *id_p = comm->dev.vcrt->vcr_table[rank]->node_id;
+    } else {
+        *id_p = comm->dev.local_vcrt->vcr_table[rank]->node_id;
+    }
     return MPI_SUCCESS;
 }
 
