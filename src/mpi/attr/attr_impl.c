@@ -405,20 +405,42 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
     goto fn_exit;
 }
 
+static void delete_attr(MPIR_Attribute ** attributes_list, MPIR_Attribute * attr)
+{
+    MPIR_Attribute *p, **old_p;
+
+    p = *attributes_list;
+    old_p = attributes_list;
+
+    while (p) {
+        if (p == attr) {
+            *old_p = p->next;
+
+            int in_use;
+            MPII_Keyval_release_ref(p->keyval, &in_use);
+            if (!in_use) {
+                MPIR_Handle_obj_free(&MPII_Keyval_mem, p->keyval);
+            }
+            MPID_Attr_free(p);
+            break;
+        }
+        old_p = &p->next;
+        p = p->next;
+    }
+}
+
 int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Attribute *p, **old_p;
+    MPIR_Attribute *p;
 
     /* Look for attribute.  They are ordered by keyval handle */
 
-    old_p = &comm_ptr->attributes;
     p = comm_ptr->attributes;
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             break;
         }
-        old_p = &p->next;
         p = p->next;
     }
 
@@ -427,8 +449,6 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
      * code */
 
     if (p) {
-        int in_use;
-
         /* Run the delete function, if any, and then free the
          * attribute storage.  Note that due to an ambiguity in the
          * standard, if the usr function returns something other than
@@ -440,14 +460,9 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
         if (mpi_errno)
             goto fn_fail;
 
-        /* We found the attribute.  Remove it from the list */
-        *old_p = p->next;
-        /* Decrement the use of the keyval */
-        MPII_Keyval_release_ref(p->keyval, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPII_Keyval_mem, p->keyval);
-        }
-        MPID_Attr_free(p);
+        /* NOTE: it's incorrect to remove p by its parent pointer because the delete function
+         *       may have invalidated the parent pointer, e.g. by removing the parent attribute */
+        delete_attr(&comm_ptr->attributes, p);
     }
 
   fn_exit:
@@ -578,17 +593,15 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
 int MPIR_Type_delete_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Attribute *p, **old_p;
+    MPIR_Attribute *p;
 
     /* Look for attribute.  They are ordered by keyval handle */
 
-    old_p = &type_ptr->attributes;
     p = type_ptr->attributes;
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             break;
         }
-        old_p = &p->next;
         p = p->next;
     }
 
@@ -597,8 +610,6 @@ int MPIR_Type_delete_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_pt
      * code */
 
     if (p) {
-        int in_use;
-
         /* Run the delete function, if any, and then free the
          * attribute storage.  Note that due to an ambiguity in the
          * standard, if the usr function returns something other than
@@ -610,14 +621,7 @@ int MPIR_Type_delete_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_pt
         if (mpi_errno)
             goto fn_fail;
 
-        /* We found the attribute.  Remove it from the list */
-        *old_p = p->next;
-        /* Decrement the use of the keyval */
-        MPII_Keyval_release_ref(p->keyval, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPII_Keyval_mem, p->keyval);
-        }
-        MPID_Attr_free(p);
+        delete_attr(&type_ptr->attributes, p);
     }
 
   fn_exit:
@@ -815,17 +819,15 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
 int MPIR_Win_delete_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Attribute *p, **old_p;
+    MPIR_Attribute *p;
 
     /* Look for attribute.  They are ordered by keyval handle */
 
-    old_p = &win_ptr->attributes;
     p = win_ptr->attributes;
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             break;
         }
-        old_p = &p->next;
         p = p->next;
     }
 
@@ -834,8 +836,6 @@ int MPIR_Win_delete_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr)
      * code */
 
     if (p) {
-        int in_use;
-
         /* Run the delete function, if any, and then free the
          * attribute storage.  Note that due to an ambiguity in the
          * standard, if the usr function returns something other than
@@ -847,14 +847,7 @@ int MPIR_Win_delete_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr)
         if (mpi_errno)
             goto fn_fail;
 
-        /* We found the attribute.  Remove it from the list */
-        *old_p = p->next;
-        /* Decrement the use of the keyval */
-        MPII_Keyval_release_ref(p->keyval, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPII_Keyval_mem, p->keyval);
-        }
-        MPID_Attr_free(p);
+        delete_attr(&win_ptr->attributes, p);
     }
 
   fn_exit:

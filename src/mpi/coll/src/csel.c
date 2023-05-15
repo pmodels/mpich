@@ -577,9 +577,14 @@ int MPIR_Csel_create_from_buf(const char *json,
 int MPIR_Csel_create_from_file(const char *json_file,
                                void *(*create_container) (struct json_object *), void **csel_)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_Assert(strcmp(json_file, ""));
 
     int fd = open(json_file, O_RDONLY);
+    MPIR_ERR_CHKANDJUMP1(fd == -1, mpi_errno, MPI_ERR_INTERN, "**opencolltuningfile",
+                         "**opencolltuningfile %s", json_file);
+
     struct stat st;
     stat(json_file, &st);
     char *json = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -587,7 +592,8 @@ int MPIR_Csel_create_from_file(const char *json_file,
 
     MPIR_Csel_create_from_buf(json, create_container, csel_);
 
-    return 0;
+  fn_fail:
+    return mpi_errno;
 }
 
 static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)

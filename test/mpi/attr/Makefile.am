@@ -16,6 +16,7 @@ noinst_PROGRAMS =      \
     attrerr            \
     attrerrcomm        \
     attrerrtype        \
+    attrdelete         \
     attrdeleteget      \
     attr2type          \
     attrorder          \

@@ -379,13 +379,13 @@ cvars:
         goto fn_fail;                                                             \
     }
 
-#define MPIR_ERRTEST_PARRIVEDREQ(reqp,err)                                                \
-    if ((reqp)->kind != MPIR_REQUEST_KIND__PART_RECV ||                                   \
-                    !MPIR_Part_request_is_active(reqp)) {                                 \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
-                                   MPI_ERR_REQUEST, "**requestinvalidparrived", 0); \
-        goto fn_fail;                                                             \
-    }
+#define MPIR_ERRTEST_PARRIVEDREQ(reqp, err)                                    \
+  if ((reqp)->kind != MPIR_REQUEST_KIND__PART_RECV) {                          \
+    err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__,    \
+                               __LINE__, MPI_ERR_REQUEST,                      \
+                               "**requestinvalidparrived", 0);                 \
+    goto fn_fail;                                                              \
+  }
 
 #define MPIR_ERRTEST_COMM_INTRA(comm_ptr, err)                          \
     if ((comm_ptr)->comm_kind != MPIR_COMM_KIND__INTRACOMM) {           \

@@ -33,11 +33,11 @@ typedef enum {
 struct MPII_Genutil_sched_t;
 
 typedef struct MPII_Genutil_vtx_t {
+    UT_array out_vtcs;
+
     int vtx_kind;
     int vtx_state;
     int vtx_id;
-
-    UT_array out_vtcs;
 
     int pending_dependencies;
     int num_dependencies;

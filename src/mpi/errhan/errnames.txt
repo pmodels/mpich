@@ -239,6 +239,9 @@ A memory object id was expected but a non-memory object id was passed instead
 **partitioninvalid %d: Invalid partition, value is %d 
 **partitioninvalid %d %d: Invalid partition range, values are %d %d
 
+**opencolltuningfile: Unable to open collective tuning file
+**opencolltuningfile %s: Unable to open collective tuning file %s.\nCheck the file or unset MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE to use the default settings.
+
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.
 #
