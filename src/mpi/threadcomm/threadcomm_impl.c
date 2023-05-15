@@ -61,6 +61,7 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     *comm_out = dup_comm;
     return mpi_errno;
   fn_fail:
+    dup_comm = NULL;
     goto fn_exit;
 }
 
@@ -197,8 +198,6 @@ int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
     MPIR_Assert(threadcomm);
     MPIR_threadcomm_tls_t *p = MPIR_threadcomm_get_tls(comm->threadcomm);
     MPIR_Assert(p);
-
-    int tid = p->tid;
 
     if (MPIR_Process.attr_free && p->attributes) {
         mpi_errno = MPIR_Process.attr_free(comm->handle, &p->attributes);
