@@ -67,10 +67,10 @@ extern bool MPIR_threadcomm_was_thread_single;
 
 #define internal_THREADCOMM_FIND_IDX(threadcomm, idx) \
     do { \
-        MPIR_threadcomm_tls_t *p = ut_type_array(MPIR_threadcomm_array, MPIR_threadcomm_tls_t *); \
+        MPIR_threadcomm_tls_t *_p = ut_type_array(MPIR_threadcomm_array, MPIR_threadcomm_tls_t *); \
         idx = -1; \
         for (int i = 0; i < utarray_len(MPIR_threadcomm_array); i++) { \
-            if (p[i].threadcomm == threadcomm) { \
+            if (_p[i].threadcomm == threadcomm) { \
                 idx = i; \
                 break; \
             } \
