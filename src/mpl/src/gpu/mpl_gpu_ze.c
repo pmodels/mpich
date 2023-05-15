@@ -22,13 +22,26 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include <sys/syscall.h>        /* Definition of SYS_* constants */
 #include "uthash.h"
 
+/* Latest Level-zero Specification:
+ * http://spec.oneapi.com/level-zero/latest/index.html
+ */
+ze_context_handle_t ze_context;
+ze_driver_handle_t ze_driver_handle;
+/* ze_devices_handle contains all devices and subdevices. Indices [0, device_count) are
+ * devices while the rest are subdevices. Keeping them all in the same array allows for easy
+ * comparison of device handle when a device id is passed from the upper layer. The only time it
+ * matters if we have a subdevice vs a device is when creating or mapping an ipc handle. In these
+ * situations, we use the subdevice_map to find the upper device id for indexing into
+ * shared_device_fds, since these are only opened on the upper devices. */
+ze_device_handle_t *ze_devices_handle = NULL;
+
 static int gpu_initialized = 0;
-static uint32_t device_count;
+static uint32_t device_count;   /* Counts all local devices, does not include subdevices */
+static uint32_t local_ze_device_count;  /* Counts all local devices and subdevices */
+static uint32_t global_ze_device_count; /* Counts all global devices and subdevices */
 static uint32_t max_dev_id;     /* Does not include subdevices */
 static uint32_t max_subdev_id;
 static char **device_list = NULL;
-#define MAX_GPU_STR_LEN 256
-static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
 
 /* Affinity mask contents */
 typedef struct {
@@ -39,6 +52,10 @@ typedef struct {
 
 static affinity_mask_t mask_contents;
 
+#define MAX_GPU_STR_LEN 256
+static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
+
+/* Mappings for translating between local and global device ids */
 static int *local_to_global_map;        /* [local_ze_device_count] */
 static int *global_to_local_map;        /* [global_ze_device_count] */
 
@@ -47,16 +64,9 @@ static int *subdevice_map = NULL;
 /* Keeps the subdevice count for all locally visible devices */
 static uint32_t *subdevice_count = NULL;
 
+/* For drmfd */
 static int shared_device_fd_count = 0;
 static int *shared_device_fds = NULL;
-
-/* pidfd */
-#ifndef __NR_pidfd_open
-#define __NR_pidfd_open 434     /* System call # on most architectures */
-#endif
-#ifndef __NR_pidfd_getfd
-#define __NR_pidfd_getfd 438    /* System call # on most architectures */
-#endif
 
 typedef struct {
     const void *ptr;
@@ -66,6 +76,14 @@ typedef struct {
 } MPL_ze_gem_hash_entry_t;
 
 static MPL_ze_gem_hash_entry_t *gem_hash = NULL;
+
+/* For pidfd */
+#ifndef __NR_pidfd_open
+#define __NR_pidfd_open 434     /* System call # on most architectures */
+#endif
+#ifndef __NR_pidfd_getfd
+#define __NR_pidfd_getfd 438    /* System call # on most architectures */
+#endif
 
 typedef struct {
     int fd;
@@ -80,32 +98,18 @@ typedef struct gpu_free_hook {
 
 pid_t mypid;
 
-/* Level-zero API v1.0:
- * http://spec.oneapi.com/level-zero/latest/index.html
- */
-ze_driver_handle_t ze_driver_handle;
-/* ze_devices_handle contains all devices and subdevices. Indices [0, device_count) are
- * devices while the rest are subdevices. Keeping them all in the same array allows for easy
- * comparison of device handle when a device id is passed from the upper layer. The only time it
- * matters if we have a subdevice vs a device is when with creating or mapping an ipc handle. In
- * situations, we use the subdevice_map to find the upper device id for indexing into
- * shared_device_fds, since these are only opened on the upper devices. */
-ze_device_handle_t *ze_devices_handle = NULL;
-ze_context_handle_t ze_context;
-uint32_t local_ze_device_count; /* This counts both devices and subdevices */
-uint32_t global_ze_device_count;        /* This counts both devices and subdevices */
+/* Backend-specific functions */
 static int gpu_ze_init_driver(void);
 static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
 static int close_handle(int dev_fd, int handle);
 static int parse_affinity_mask();
 static void get_max_dev_id(int *max_dev_id, int *max_subdev_id);
-
-static gpu_free_hook_s *free_hook_chain = NULL;
-
-static ze_result_t ZE_APICALL(*sys_zeMemFree) (ze_context_handle_t hContext, void *dptr) = NULL;
-
 static int gpu_mem_hook_init(void);
+
+/* For zeMemFree callbacks */
+static gpu_free_hook_s *free_hook_chain = NULL;
+static ze_result_t ZE_APICALL(*sys_zeMemFree) (ze_context_handle_t hContext, void *dptr) = NULL;
 
 #define ZE_ERR_CHECK(ret) \
     do { \
