@@ -199,8 +199,6 @@ int MPIR_Threadcomm_finish_impl(MPIR_Comm * comm)
     MPIR_threadcomm_tls_t *p = MPIR_threadcomm_get_tls(comm->threadcomm);
     MPIR_Assert(p);
 
-    int tid = p->tid;
-
     if (MPIR_Process.attr_free && p->attributes) {
         mpi_errno = MPIR_Process.attr_free(comm->handle, &p->attributes);
         MPIR_ERR_CHECK(mpi_errno);
