@@ -61,6 +61,7 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     *comm_out = dup_comm;
     return mpi_errno;
   fn_fail:
+    dup_comm = NULL;
     goto fn_exit;
 }
 
