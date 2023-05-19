@@ -676,6 +676,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_register_am_bufs(void)
             MPIR_gpu_register_host(MPIDI_OFI_global.per_vci[i].am_bufs,
                                    MPIDI_OFI_AM_BUFF_SZ * MPIDI_OFI_NUM_AM_BUFFERS);
         }
+        MPIDI_OFI_global.am_bufs_registered = true;
     }
 }
 
@@ -685,6 +686,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_unregister_am_bufs(void)
         for (int i = 0; i < MPIDI_OFI_global.num_vcis; i++) {
             MPIR_gpu_unregister_host(MPIDI_OFI_global.per_vci[i].am_bufs);
         }
+        MPIDI_OFI_global.am_bufs_registered = false;
     }
 }
 

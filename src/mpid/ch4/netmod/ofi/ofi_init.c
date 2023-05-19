@@ -1535,6 +1535,8 @@ int ofi_am_post_recv(int vci, int nic)
     /* Only nic 0 for now */
     MPIR_Assert(nic == 0);
 
+    MPIDI_OFI_global.am_bufs_registered = false;
+
     if (MPIDI_OFI_ENABLE_AM) {
         int ctx_idx = MPIDI_OFI_get_ctx_index(vci, nic);
         size_t optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
