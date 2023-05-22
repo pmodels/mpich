@@ -406,6 +406,18 @@ cvars:
         use multi-nic hashing depending on what is detected on the system (e.g., number of NICs
         available, number of processes sharing the NICs).
 
+    - name        : MPIR_CVAR_CH4_OFI_MULTIRECV_BUFFER_SIZE
+      category    : CH4
+      type        : int
+      default     : 2097152
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Controls the multirecv am buffer size. It is recommended to match this
+        to the hugepage size so that the buffer can be allocated at the page
+        boundary.
+
     - name        : MPIR_CVAR_OFI_USE_MIN_NICS
       category    : DEVELOPER
       type        : boolean

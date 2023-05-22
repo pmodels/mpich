@@ -29,7 +29,7 @@
 #define MPIDI_OFI_MAP_NOT_FOUND            ((void*)(-1UL))
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
 #define MPIDI_OFI_MAX_NUM_AM_BUFFERS       (8)
-#define MPIDI_OFI_AM_BUFF_SZ               (2 * 1024 * 1024)
+#define MPIDI_OFI_AM_BUFF_SZ               (MPIR_CVAR_CH4_OFI_MULTIRECV_BUFFER_SIZE)
 #define MPIDI_OFI_IOV_MAX                  (32)
 #define MPIDI_OFI_NUM_CQ_BUFFERED          (1024)
 #define MPIDI_OFI_STRIPE_CHUNK_SIZE        (2048)       /* First chunk sent through the preferred NIC during striping */
