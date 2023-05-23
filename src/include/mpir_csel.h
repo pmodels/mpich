@@ -6,7 +6,6 @@
 #ifndef MPIR_CSEL_H_INCLUDED
 #define MPIR_CSEL_H_INCLUDED
 
-#include "json.h"
 #include "coll_impl.h"
 
 typedef enum {
@@ -201,10 +200,12 @@ typedef struct {
     } u;
 } MPIR_Csel_coll_sig_s;
 
-int MPIR_Csel_create_from_file(const char *json_file,
-                               void *(*create_container) (struct json_object *), void **csel);
-int MPIR_Csel_create_from_buf(const char *json,
-                              void *(*create_container) (struct json_object *), void **csel);
+struct json_stream;             /* forward declare */
+typedef void *(*MPIR_CSEL_CNT_FN) (const char *key, struct json_stream * stream);
+
+int MPIR_Csel_create_from_file(const char *json_file, MPIR_CSEL_CNT_FN create_container,
+                               void **csel);
+int MPIR_Csel_create_from_buf(const char *json, MPIR_CSEL_CNT_FN create_container, void **csel);
 int MPIR_Csel_free(void *csel);
 int MPIR_Csel_prune(void *root_csel, MPIR_Comm * comm_ptr, void **comm_csel);
 void *MPIR_Csel_search(void *csel, MPIR_Csel_coll_sig_s coll_sig);

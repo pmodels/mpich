@@ -9,7 +9,7 @@
 #include <fcntl.h>      /* open */
 #include <sys/mman.h>   /* mmap */
 #include <sys/stat.h>
-#include <json.h>
+#include "csel_json.h"
 
 typedef enum {
     /* global operator types */
@@ -319,30 +319,28 @@ static void validate_tree(csel_node_s * node)
         validate_tree(node->failure);
 }
 
-static csel_node_s *parse_json_tree(struct json_object *obj,
-                                    void *(*create_container) (struct json_object *))
+static csel_node_s *parse_json_tree(struct json_stream *json_stream,
+                                    MPIR_CSEL_CNT_FN create_container)
 {
-    enum json_type type ATTRIBUTE((unused));
     csel_node_s *prevnode = NULL, *tmp, *node = NULL;
 
-    json_object_object_foreach(obj, key, val) {
-        type = json_object_get_type(val);
-        MPIR_Assert(type == json_type_object);
+    JSON_FOREACH_START(json_stream);
 
-        char *ckey = MPL_strdup_no_spaces(key, strlen(key));
-
+    char *ckey;
+    JSON_FOREACH(json_stream, ckey) {
         tmp = MPL_malloc(sizeof(csel_node_s), MPL_MEM_COLL);
 
         if (!strncmp(ckey, "composition=", strlen("composition=")) ||
             !strncmp(ckey, "algorithm=", strlen("algorithm="))) {
             tmp->type = CSEL_NODE_TYPE__CONTAINER;
-            tmp->u.cnt.container = create_container(obj);
+            tmp->u.cnt.container = create_container(ckey, json_stream);
             MPL_free(ckey);
-            return tmp;
+            node = tmp;
+            goto fn_exit;
         }
 
         /* this node must be an operator type */
-        tmp->success = parse_json_tree(json_object_object_get(obj, key), create_container);
+        tmp->success = parse_json_tree(json_stream, create_container);
         tmp->failure = NULL;
 
         if (node == NULL)
@@ -540,7 +538,7 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
             tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__SIZE;
         } else {
-            fprintf(stderr, "unknown key %s\n", key);
+            fprintf(stderr, "unknown key %s\n", ckey);
             fflush(stderr);
             MPIR_Assert(0);
         }
@@ -548,34 +546,32 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
         MPL_free(ckey);
     }
 
+  fn_exit:
+    JSON_FOREACH_WRAP(json_stream);
+
     return node;
 }
 
-int MPIR_Csel_create_from_buf(const char *json,
-                              void *(*create_container) (struct json_object *), void **csel_)
+int MPIR_Csel_create_from_buf(const char *json_str, MPIR_CSEL_CNT_FN create_container, void **csel_)
 {
-    csel_s *csel = NULL;
-    struct json_object *tree;
+    csel_s *csel;
+    struct json_stream json_stream;
+
+    JSON_STREAM_INIT(&json_stream, json_str);
 
     csel = (csel_s *) MPL_malloc(sizeof(csel_s), MPL_MEM_COLL);
     csel->type = CSEL_TYPE__ROOT;
-    tree = json_tokener_parse(json);
-    if (tree == NULL)
-        goto fn_exit;
-    csel->u.root.tree = parse_json_tree(tree, create_container);
+    csel->u.root.tree = parse_json_tree(&json_stream, create_container);
 
     if (csel->u.root.tree)
         validate_tree(csel->u.root.tree);
 
-    json_object_put(tree);
-
-  fn_exit:
     *csel_ = csel;
     return 0;
 }
 
-int MPIR_Csel_create_from_file(const char *json_file,
-                               void *(*create_container) (struct json_object *), void **csel_)
+int MPIR_Csel_create_from_file(const char *json_file, MPIR_CSEL_CNT_FN create_container,
+                               void **csel_)
 {
     int mpi_errno = MPI_SUCCESS;
 

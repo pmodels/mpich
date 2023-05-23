@@ -7,8 +7,9 @@
 #include "coll_impl.h"
 #include "csel_container.h"
 #include "mpl.h"
+#include "csel_json.h"
 
-void *MPII_Create_container(struct json_object *obj);
+void *MPII_Create_container(const char *ckey, struct json_stream *json_stream);
 
 static int get_container_id(const char *ckey)
 {
@@ -613,29 +614,26 @@ static void parse_container_param(const char *ckey, MPII_Csel_container_s * cnt)
     }
 }
 
-static void parse_container_params(struct json_object *obj, MPII_Csel_container_s * cnt)
+static void parse_container_params(struct json_stream *json_stream, MPII_Csel_container_s * cnt)
 {
-    MPIR_Assert(obj != NULL);
     char *ckey;
-    json_object_object_foreach(obj, key, val) {
-        ckey = MPL_strdup_no_spaces(key, strlen(key));
+
+    JSON_FOREACH_START(json_stream);
+    JSON_FOREACH(json_stream, ckey) {
         parse_container_param(ckey, cnt);
         MPL_free(ckey);
+        json_skip_object(json_stream);
     }
+    JSON_FOREACH_WRAP(json_stream);
 }
 
-void *MPII_Create_container(struct json_object *obj)
+void *MPII_Create_container(const char *ckey, struct json_stream *json_stream)
 {
     MPII_Csel_container_s *cnt = MPL_malloc(sizeof(MPII_Csel_container_s), MPL_MEM_COLL);
-
-    json_object_object_foreach(obj, key, val) {
-        char *ckey = MPL_strdup_no_spaces(key, strlen(key));
-        cnt->id = get_container_id(ckey);
-        MPL_free(ckey);
-    }
+    cnt->id = get_container_id(ckey);
 
     /* process algorithm parameters */
-    parse_container_params(json_object_object_get(obj, key), cnt);
+    parse_container_params(json_stream, cnt);
 
     return (void *) cnt;
 }

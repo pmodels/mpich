@@ -41,6 +41,7 @@ cvars:
 
 #include "utarray.h"
 #include <strings.h>    /* for strncasecmp */
+#include "csel_json.h"
 
 extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 
@@ -110,18 +111,15 @@ static int get_container_id(const char *ckey)
     }
 }
 
-static void *create_container(struct json_object *obj)
+static void *create_container(const char *ckey, struct json_stream *json_stream)
 {
     MPIDI_POSIX_csel_container_s *cnt =
         MPL_malloc(sizeof(MPIDI_POSIX_csel_container_s), MPL_MEM_COLL);
 
-    json_object_object_foreach(obj, key, val) {
-        char *ckey = MPL_strdup_no_spaces(key, strlen(key));
+    cnt->id = get_container_id(ckey);
 
-        cnt->id = get_container_id(ckey);
-
-        MPL_free(ckey);
-    }
+    /* no container parameters */
+    json_skip_object(json_stream);
 
     return cnt;
 }

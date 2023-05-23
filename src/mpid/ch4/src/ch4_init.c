@@ -14,6 +14,8 @@
 #include <signal.h>
 #endif
 
+#include "csel_json.h"
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -216,17 +218,13 @@ static int get_container_id(const char *ckey)
     }
 }
 
-static void *create_container(struct json_object *obj)
+static void *create_container(const char *ckey, struct json_stream *json_stream)
 {
     MPIDI_Csel_container_s *cnt = MPL_malloc(sizeof(MPIDI_Csel_container_s), MPL_MEM_COLL);
+    cnt->id = get_container_id(ckey);
 
-    json_object_object_foreach(obj, key, val) {
-        char *ckey = MPL_strdup_no_spaces(key, strlen(key));
-
-        cnt->id = get_container_id(ckey);
-
-        MPL_free(ckey);
-    }
+    /* no container parameters */
+    json_skip_object(json_stream);
 
     return (void *) cnt;
 }

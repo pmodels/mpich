@@ -5,6 +5,7 @@
 
 #include "mpiimpl.h"
 #include "coll_impl.h"
+#include "csel_json.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -66,7 +67,7 @@ MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 
 void *MPIR_Csel_root = NULL;
 
-extern void *MPII_Create_container(struct json_object *obj);
+extern void *MPII_Create_container(const char *ckey, struct json_stream *json_stream);
 
 int MPII_Coll_init(void)
 {
