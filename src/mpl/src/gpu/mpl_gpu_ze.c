@@ -25,6 +25,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 static int gpu_initialized = 0;
 static uint32_t device_count;
 static uint32_t max_dev_id;
+static uint32_t max_subdev_id;
 static char **device_list = NULL;
 #define MAX_GPU_STR_LEN 256
 static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
@@ -97,6 +98,7 @@ static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
 static int close_handle(int dev_fd, int handle);
 static int parse_affinity_mask();
+static void get_max_dev_id(int *max_dev_id, int *max_subdev_id);
 
 static gpu_free_hook_s *free_hook_chain = NULL;
 
@@ -248,12 +250,19 @@ int MPL_gpu_init(int debug_summary)
     MPL_gpu_info.enable_ipc = true;
     MPL_gpu_info.ipc_handle_type = MPL_GPU_IPC_HANDLE_SHAREABLE_FD;
 
-    max_dev_id = local_ze_device_count - 1;
+    max_dev_id = 0;
+    max_subdev_id = 0;
 
     if (local_ze_device_count <= 0) {
         gpu_initialized = 1;
         goto fn_exit;
     }
+
+    mpl_err = parse_affinity_mask();
+    if (mpl_err != MPL_SUCCESS)
+        goto fn_fail;
+
+    get_max_dev_id(&max_dev_id, &max_subdev_id);
 
     local_to_global_map = MPL_malloc(local_ze_device_count * sizeof(int), MPL_MEM_OTHER);
     if (local_to_global_map == NULL) {
@@ -572,6 +581,35 @@ static int parse_affinity_mask()
     return mpl_err;
   fn_fail:
     goto fn_exit;
+}
+
+/* Get the max dev_id and subdev_id based on the environment */
+static void get_max_dev_id(int *max_dev_id, int *max_subdev_id)
+{
+    /* This function assumes that parse_affinity_mask was previously called */
+    int mpl_err = MPL_SUCCESS;
+
+    *max_dev_id = *max_subdev_id = 0;
+
+    /* Values based on ZE_AFFINITY_MASK */
+    for (int i = 0; i < mask_contents.num_dev; ++i) {
+        if (mask_contents.dev_id[i] > *max_dev_id)
+            *max_dev_id = mask_contents.dev_id[i];
+        if (mask_contents.subdev_id[i] > *max_subdev_id)
+            *max_subdev_id = mask_contents.subdev_id[i];
+    }
+
+    /* If ZE_AFFINITY_MASK wasn't set */
+    if (mask_contents.num_dev == 0) {
+        *max_dev_id = device_count - 1;
+    }
+
+    /* Include subdevices that weren't detected in parse_affinity_mask */
+    for (int i = 0; i < device_count; ++i) {
+        if (subdevice_count[i] > 0 && (subdevice_count[i] - 1) > *max_subdev_id) {
+            *max_subdev_id = subdevice_count[i] - 1;
+        }
+    }
 }
 
 int MPL_gpu_finalize(void)
