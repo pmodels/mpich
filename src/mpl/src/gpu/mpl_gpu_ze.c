@@ -29,6 +29,15 @@ static char **device_list = NULL;
 #define MAX_GPU_STR_LEN 256
 static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
 
+/* Affinity mask contents */
+typedef struct {
+    int num_dev;
+    int *dev_id;
+    int *subdev_id;
+} affinity_mask_t;
+
+static affinity_mask_t mask_contents;
+
 static int *local_to_global_map;        /* [local_ze_device_count] */
 static int *global_to_local_map;        /* [max_dev_id + 1]   */
 
@@ -87,6 +96,7 @@ static int gpu_ze_init_driver(void);
 static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
 static int close_handle(int dev_fd, int handle);
+static int parse_affinity_mask();
 
 static gpu_free_hook_s *free_hook_chain = NULL;
 
@@ -491,6 +501,76 @@ static int gpu_ze_init_driver(void)
     /* If error code is already set, preserve it */
     if (ret_error == MPL_SUCCESS)
         ret_error = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+/* Parses ZE_AFFINITY_MASK to populate mask_contents with corresponding data */
+static int parse_affinity_mask()
+{
+    int i, curr_dev, num_dev, mpl_err = MPL_SUCCESS;
+
+    char *visible_devices = getenv("ZE_AFFINITY_MASK");
+    if (visible_devices) {
+        char *devices = MPL_strdup(visible_devices);
+        char *tmp = devices;
+        char *dev, *free_ptr = devices;
+
+        /* Count the number of devices */
+        for (i = 0; tmp[i]; ++i) {
+            if (tmp[i] == ',')
+                ++num_dev;
+        }
+        if (tmp[i - 1] != ',')
+            ++num_dev;
+
+        mask_contents.num_dev = num_dev;
+        mask_contents.dev_id = (int *) MPL_malloc(num_dev * sizeof(int), MPL_MEM_OTHER);
+        if (mask_contents.dev_id == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+        mask_contents.subdev_id = (int *) MPL_malloc(num_dev * sizeof(int), MPL_MEM_OTHER);
+        if (mask_contents.subdev_id == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+
+        tmp = strtok_r(devices, ",", &dev);
+        curr_dev = 0;
+
+        while (tmp != NULL) {
+            char *subdev;
+            char *subdevices = strtok_r(tmp, ".", &subdev);
+            int device = atoi(subdevices);
+            tmp = NULL;
+
+            mask_contents.dev_id[curr_dev] = device;
+
+            subdevices = strtok_r(tmp, ".", &subdev);
+            tmp = NULL;
+
+            if (subdevices != NULL) {
+                mask_contents.subdev_id[curr_dev] = atoi(subdevices);
+            } else {
+                mask_contents.subdev_id[curr_dev] = -1;
+            }
+
+            devices = NULL;
+            tmp = strtok_r(devices, ",", &dev);
+
+            ++curr_dev;
+        }
+
+        MPL_free(free_ptr);
+    } else {
+        mask_contents.num_dev = 0;
+        mask_contents.dev_id = NULL;
+        mask_contents.subdev_id = NULL;
+    }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
     goto fn_exit;
 }
 
