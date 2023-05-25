@@ -322,6 +322,22 @@ m4_include([subsys_include.m4])
 
 dnl ----------------------------------------------------------------------------
 dnl setup top-level argument handling
+
+AC_ARG_WITH(configfile,
+        AS_HELP_STRING([--with-configfile], [Set global config file. The default is /etc/mpich.conf.])
+,,with_configfile="/etc/mpich.conf")
+if test "$with_configfile" != "no" ; then
+    case "$with_configfile" in
+        "yes|default")
+            configfile="/etc/mpich.conf"
+            ;;
+        *)
+            configfile="$with_configfile"
+            ;;
+    esac
+    AC_DEFINE_UNQUOTED(USE_CONFIGFILE, ["$configfile"], [define to use global config file])
+fi
+
 AC_ARG_ENABLE(echo,
 	AS_HELP_STRING([--enable-echo], [Turn on strong echoing. The default is enable=no.]),
 	set -x)
