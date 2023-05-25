@@ -421,276 +421,204 @@ static int get_container_id(const char *ckey)
     }
 }
 
-static void parse_container_params(struct json_object *obj, MPII_Csel_container_s * cnt)
+static void parse_container_param(const char *ckey, MPII_Csel_container_s * cnt)
 {
-    MPIR_Assert(obj != NULL);
-    char *ckey;
-
     switch (cnt->id) {
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_tree:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
-                        cnt->u.ibcast.intra_tsp_tree.chunk_size =
-                            atoi(ckey + strlen("chunk_size="));
-                    else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.ibcast.intra_tsp_tree.tree_type = atoi(ckey + strlen("tree_type="));
-                    else if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.ibcast.intra_tsp_tree.k = atoi(ckey + strlen("k="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                    cnt->u.ibcast.intra_tsp_tree.chunk_size = atoi(ckey + strlen("chunk_size="));
+                else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
+                    cnt->u.ibcast.intra_tsp_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                else if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.ibcast.intra_tsp_tree.k = atoi(ckey + strlen("k="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_ring:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
-                        cnt->u.ibcast.intra_tsp_ring.chunk_size =
-                            atoi(ckey + strlen("chunk_size="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                    cnt->u.ibcast.intra_tsp_ring.chunk_size = atoi(ckey + strlen("chunk_size="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_tree:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.bcast.intra_tree.tree_type = atoi(ckey + strlen("tree_type="));
-                    else if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.bcast.intra_tree.k = atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
-                        cnt->u.bcast.intra_tree.k = atoi(ckey + strlen("k="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
+                    cnt->u.bcast.intra_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                else if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.bcast.intra_tree.k = atoi(ckey + strlen("k="));
+                else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
+                    cnt->u.bcast.intra_tree.k = atoi(ckey + strlen("k="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_intra_pipelined_tree:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.bcast.intra_pipelined_tree.tree_type =
-                            atoi(ckey + strlen("tree_type="));
-                    else if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.bcast.intra_pipelined_tree.k = atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
-                        cnt->u.bcast.intra_pipelined_tree.k = atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
-                        cnt->u.bcast.intra_pipelined_tree.chunk_size =
-                            atoi(ckey + strlen("chunk_size="));
-                    else if (!strncmp(ckey, "recv_pre_posted=", strlen("recv_pre_posted=")))
-                        cnt->u.bcast.intra_pipelined_tree.recv_pre_posted =
-                            atoi(ckey + strlen("recv_pre_posted="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
+                    cnt->u.bcast.intra_pipelined_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                else if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.bcast.intra_pipelined_tree.k = atoi(ckey + strlen("k="));
+                else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
+                    cnt->u.bcast.intra_pipelined_tree.k = atoi(ckey + strlen("k="));
+                else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                    cnt->u.bcast.intra_pipelined_tree.chunk_size =
+                        atoi(ckey + strlen("chunk_size="));
+                else if (!strncmp(ckey, "recv_pre_posted=", strlen("recv_pre_posted=")))
+                    cnt->u.bcast.intra_pipelined_tree.recv_pre_posted =
+                        atoi(ckey + strlen("recv_pre_posted="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_tsp_tree:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "buffer_per_child=", strlen("buffer_per_child=")))
-                        cnt->u.ireduce.intra_tsp_tree.buffer_per_child =
-                            atoi(ckey + strlen("buffer_per_child="));
-                    else if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.ireduce.intra_tsp_tree.k = atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.ireduce.intra_tsp_tree.tree_type = atoi(ckey + strlen("tree_type="));
-                    else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
-                        cnt->u.ireduce.intra_tsp_tree.chunk_size =
-                            atoi(ckey + strlen("chunk_size="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "buffer_per_child=", strlen("buffer_per_child=")))
+                    cnt->u.ireduce.intra_tsp_tree.buffer_per_child =
+                        atoi(ckey + strlen("buffer_per_child="));
+                else if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.ireduce.intra_tsp_tree.k = atoi(ckey + strlen("k="));
+                else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
+                    cnt->u.ireduce.intra_tsp_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                    cnt->u.ireduce.intra_tsp_tree.chunk_size = atoi(ckey + strlen("chunk_size="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_tsp_ring:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "buffer_per_child=", strlen("buffer_per_child=")))
-                        cnt->u.ireduce.intra_tsp_ring.buffer_per_child =
-                            atoi(ckey + strlen("buffer_per_child="));
-                    else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
-                        cnt->u.ireduce.intra_tsp_tree.chunk_size =
-                            atoi(ckey + strlen("chunk_size="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "buffer_per_child=", strlen("buffer_per_child=")))
+                    cnt->u.ireduce.intra_tsp_ring.buffer_per_child =
+                        atoi(ckey + strlen("buffer_per_child="));
+                else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                    cnt->u.ireduce.intra_tsp_tree.chunk_size = atoi(ckey + strlen("chunk_size="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_tree:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "buffer_per_child=", strlen("buffer_per_child=")))
-                        cnt->u.iallreduce.intra_tsp_tree.buffer_per_child =
-                            atoi(ckey + strlen("buffer_per_child="));
-                    else if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.iallreduce.intra_tsp_tree.k = atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.iallreduce.intra_tsp_tree.tree_type =
-                            atoi(ckey + strlen("tree_type="));
-                    else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
-                        cnt->u.iallreduce.intra_tsp_tree.chunk_size =
-                            atoi(ckey + strlen("chunk_size="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "buffer_per_child=", strlen("buffer_per_child=")))
+                    cnt->u.iallreduce.intra_tsp_tree.buffer_per_child =
+                        atoi(ckey + strlen("buffer_per_child="));
+                else if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.iallreduce.intra_tsp_tree.k = atoi(ckey + strlen("k="));
+                else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
+                    cnt->u.iallreduce.intra_tsp_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                    cnt->u.iallreduce.intra_tsp_tree.chunk_size =
+                        atoi(ckey + strlen("chunk_size="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_tree:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "buffer_per_child=", strlen("buffer_per_child=")))
-                        cnt->u.allreduce.intra_tree.buffer_per_child =
-                            atoi(ckey + strlen("buffer_per_child="));
-                    else if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.allreduce.intra_tree.k = atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.allreduce.intra_tree.tree_type = atoi(ckey + strlen("tree_type="));
-                    else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
-                        cnt->u.allreduce.intra_tree.chunk_size = atoi(ckey + strlen("chunk_size="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "buffer_per_child=", strlen("buffer_per_child=")))
+                    cnt->u.allreduce.intra_tree.buffer_per_child =
+                        atoi(ckey + strlen("buffer_per_child="));
+                else if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.allreduce.intra_tree.k = atoi(ckey + strlen("k="));
+                else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
+                    cnt->u.allreduce.intra_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
+                    cnt->u.allreduce.intra_tree.chunk_size = atoi(ckey + strlen("chunk_size="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_recexch:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.allreduce.intra_recexch.k = atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "single_phase_recv=", strlen("single_phase_recv=")))
-                        cnt->u.allreduce.intra_recexch.single_phase_recv =
-                            atoi(ckey + strlen("single_phase_recv="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.allreduce.intra_recexch.k = atoi(ckey + strlen("k="));
+                else if (!strncmp(ckey, "single_phase_recv=", strlen("single_phase_recv=")))
+                    cnt->u.allreduce.intra_recexch.single_phase_recv =
+                        atoi(ckey + strlen("single_phase_recv="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_k_reduce_scatter_allgather:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.allreduce.intra_k_reduce_scatter_allgather.k =
-                            atoi(ckey + strlen("k="));
-                    else if (!strncmp(ckey, "single_phase_recv=", strlen("single_phase_recv=")))
-                        cnt->u.allreduce.intra_k_reduce_scatter_allgather.single_phase_recv =
-                            atoi(ckey + strlen("single_phase_recv="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.allreduce.intra_k_reduce_scatter_allgather.k = atoi(ckey + strlen("k="));
+                else if (!strncmp(ckey, "single_phase_recv=", strlen("single_phase_recv=")))
+                    cnt->u.allreduce.intra_k_reduce_scatter_allgather.single_phase_recv =
+                        atoi(ckey + strlen("single_phase_recv="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_scatterv_recexch_allgatherv:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "scatterv_k=", strlen("scatterv_k=")))
-                        cnt->u.ibcast.intra_tsp_scatterv_recexch_allgatherv.scatterv_k =
-                            atoi(ckey + strlen("scatterv_k="));
-                    else if (!strncmp(ckey, "allgatherv_k=", strlen("allgatherv_k=")))
-                        cnt->u.ibcast.intra_tsp_scatterv_recexch_allgatherv.allgatherv_k =
-                            atoi(ckey + strlen("allgatherv_k="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "scatterv_k=", strlen("scatterv_k=")))
+                    cnt->u.ibcast.intra_tsp_scatterv_recexch_allgatherv.scatterv_k =
+                        atoi(ckey + strlen("scatterv_k="));
+                else if (!strncmp(ckey, "allgatherv_k=", strlen("allgatherv_k=")))
+                    cnt->u.ibcast.intra_tsp_scatterv_recexch_allgatherv.allgatherv_k =
+                        atoi(ckey + strlen("allgatherv_k="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_single_buffer:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.iallreduce.intra_tsp_recexch_single_buffer.k =
-                            atoi(ckey + strlen("k="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.iallreduce.intra_tsp_recexch_single_buffer.k = atoi(ckey + strlen("k="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_multiple_buffer:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.iallreduce.intra_tsp_recexch_multiple_buffer.k =
-                            atoi(ckey + strlen("k="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.iallreduce.intra_tsp_recexch_multiple_buffer.k =
+                        atoi(ckey + strlen("k="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_reduce_scatter_recexch_allgatherv:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.iallreduce.intra_tsp_recexch_reduce_scatter_recexch_allgatherv.k =
-                            atoi(ckey + strlen("k="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.iallreduce.intra_tsp_recexch_reduce_scatter_recexch_allgatherv.k =
+                        atoi(ckey + strlen("k="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_intra_k_brucks:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.allgather.intra_k_brucks.k = atoi(ckey + strlen("k="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.allgather.intra_k_brucks.k = atoi(ckey + strlen("k="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Alltoall_intra_k_brucks:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.alltoall.intra_k_brucks.k = atoi(ckey + strlen("k="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.alltoall.intra_k_brucks.k = atoi(ckey + strlen("k="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Barrier_intra_k_dissemination:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.barrier.intra_k_dissemination.k = atoi(ckey + strlen("k="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.barrier.intra_k_dissemination.k = atoi(ckey + strlen("k="));
             }
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Barrier_intra_recexch:
             {
-                json_object_object_foreach(obj, key, val) {
-                    ckey = MPL_strdup_no_spaces(key);
-                    if (!strncmp(ckey, "k=", strlen("k=")))
-                        cnt->u.barrier.intra_recexch.k = atoi(ckey + strlen("k="));
-                    MPL_free(ckey);
-                }
+                if (!strncmp(ckey, "k=", strlen("k=")))
+                    cnt->u.barrier.intra_recexch.k = atoi(ckey + strlen("k="));
             }
             break;
 
         default:
             /* Algorithm does not have parameters */
             break;
+    }
+}
+
+static void parse_container_params(struct json_object *obj, MPII_Csel_container_s * cnt)
+{
+    MPIR_Assert(obj != NULL);
+    char *ckey;
+    json_object_object_foreach(obj, key, val) {
+        ckey = MPL_strdup_no_spaces(key);
+        parse_container_param(ckey, cnt);
+        MPL_free(ckey);
     }
 }
 
