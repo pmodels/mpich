@@ -93,6 +93,23 @@ static int choose_posix_eager(void)
     goto fn_exit;
 }
 
+static int get_container_id(const char *ckey)
+{
+    if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_release_gather"))
+        return MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather;
+    else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_barrier_release_gather"))
+        return MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather;
+    else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_allreduce_release_gather"))
+        return MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather;
+    else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_reduce_release_gather"))
+        return MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather;
+    else {
+        fprintf(stderr, "unrecognized key %s\n", ckey);
+        MPIR_Assert(0);
+        return -1;
+    }
+}
+
 static void *create_container(struct json_object *obj)
 {
     MPIDI_POSIX_csel_container_s *cnt =
@@ -101,22 +118,7 @@ static void *create_container(struct json_object *obj)
     json_object_object_foreach(obj, key, val) {
         char *ckey = MPL_strdup_no_spaces(key);
 
-        if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather;
-        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_barrier_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather;
-        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_allreduce_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather;
-        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_reduce_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather;
-        else {
-            fprintf(stderr, "unrecognized key %s\n", key);
-            MPIR_Assert(0);
-        }
+        cnt->id = get_container_id(ckey);
 
         MPL_free(ckey);
     }
