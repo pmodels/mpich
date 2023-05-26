@@ -66,6 +66,8 @@ MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 
 void *MPIR_Csel_root = NULL;
 
+extern void *MPII_Create_container(struct json_object *obj);
+
 int MPII_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;

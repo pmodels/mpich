@@ -8,6 +8,8 @@
 #include "csel_container.h"
 #include "mpl.h"
 
+void *MPII_Create_container(struct json_object *obj);
+
 static int get_container_id(const char *ckey)
 {
     if (!strcmp(ckey, "algorithm=MPIR_Allgather_intra_brucks"))
