@@ -554,6 +554,8 @@ static csel_node_s *parse_json_tree(struct json_stream *json_stream,
 
 int MPIR_Csel_create_from_buf(const char *json_str, MPIR_CSEL_CNT_FN create_container, void **csel_)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     csel_s *csel;
     struct json_stream json_stream;
 
@@ -566,8 +568,11 @@ int MPIR_Csel_create_from_buf(const char *json_str, MPIR_CSEL_CNT_FN create_cont
     if (csel->u.root.tree)
         validate_tree(csel->u.root.tree);
 
+    /* TODO: we rely on assertions in both the json parsing and validate_tree.
+     *       Turn them into proper error handling.
+     */
     *csel_ = csel;
-    return 0;
+    return mpi_errno;
 }
 
 int MPIR_Csel_create_from_file(const char *json_file, MPIR_CSEL_CNT_FN create_container,
@@ -586,7 +591,7 @@ int MPIR_Csel_create_from_file(const char *json_file, MPIR_CSEL_CNT_FN create_co
     char *json = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
 
-    MPIR_Csel_create_from_buf(json, create_container, csel_);
+    mpi_errno = MPIR_Csel_create_from_buf(json, create_container, csel_);
 
   fn_fail:
     return mpi_errno;
