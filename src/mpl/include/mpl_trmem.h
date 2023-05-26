@@ -516,6 +516,6 @@ void *MPL_traligned_alloc(size_t alignment, size_t length, MPL_memory_class, int
 void MPL_trdump(FILE *, int);
 void MPL_trcategorydump(FILE * fp);
 
-char *MPL_strdup_no_spaces(const char *str);
+char *MPL_strdup_no_spaces(const char *str, int len);
 
 #endif /* MPL_TRMEM_H_INCLUDED */

@@ -221,7 +221,7 @@ static void *create_container(struct json_object *obj)
     MPIDI_Csel_container_s *cnt = MPL_malloc(sizeof(MPIDI_Csel_container_s), MPL_MEM_COLL);
 
     json_object_object_foreach(obj, key, val) {
-        char *ckey = MPL_strdup_no_spaces(key);
+        char *ckey = MPL_strdup_no_spaces(key, strlen(key));
 
         cnt->id = get_container_id(ckey);
 

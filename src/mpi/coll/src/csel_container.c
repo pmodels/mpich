@@ -618,7 +618,7 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
     MPIR_Assert(obj != NULL);
     char *ckey;
     json_object_object_foreach(obj, key, val) {
-        ckey = MPL_strdup_no_spaces(key);
+        ckey = MPL_strdup_no_spaces(key, strlen(key));
         parse_container_param(ckey, cnt);
         MPL_free(ckey);
     }
@@ -629,7 +629,7 @@ void *MPII_Create_container(struct json_object *obj)
     MPII_Csel_container_s *cnt = MPL_malloc(sizeof(MPII_Csel_container_s), MPL_MEM_COLL);
 
     json_object_object_foreach(obj, key, val) {
-        char *ckey = MPL_strdup_no_spaces(key);
+        char *ckey = MPL_strdup_no_spaces(key, strlen(key));
         cnt->id = get_container_id(ckey);
         MPL_free(ckey);
     }

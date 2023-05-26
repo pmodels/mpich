@@ -329,7 +329,7 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
         type = json_object_get_type(val);
         MPIR_Assert(type == json_type_object);
 
-        char *ckey = MPL_strdup_no_spaces(key);
+        char *ckey = MPL_strdup_no_spaces(key, strlen(key));
 
         tmp = MPL_malloc(sizeof(csel_node_s), MPL_MEM_COLL);
 
