@@ -6,6 +6,29 @@
 #ifndef CSEL_JSON_H_INCLUDED
 #define CSEL_JSON_H_INCLUDED
 
+#if 0   /* debugging */
+static int indent = 0;
+
+static void dump_indent(const char *s)
+{
+}
+
+#define CSEL_JSON_DEBUG_INDENT indent++;
+#define CSEL_JSON_DEBUG_DEDENT indent--;
+#define CSEL_JSON_DEBUG_DUMP(s) \
+    do { \
+        for (int _i = 0; _i < indent; _i++) { \
+            printf("  "); \
+        } \
+        printf("%.40s\n", s); \
+    } while (0)
+
+#else
+#define CSEL_JSON_DEBUG_INDENT
+#define CSEL_JSON_DEBUG_DEDENT
+#define CSEL_JSON_DEBUG_DUMP(s) do { } while (0)
+#endif /* debugging */
+
 struct json_stream {
     const char *json_str;
     int pos;
@@ -50,6 +73,7 @@ static inline bool json_next(struct json_stream *json_stream, char **key)
         const char *s_key = s;
         SKIP_OVER_CHAR(s, '"');
         *key = MPL_strdup_no_spaces(s_key, (s - s_key - 1));
+        CSEL_JSON_DEBUG_DUMP(*key);
         EXPECT_CHAR(s, ':');
 
         JSON_STREAM_UPDATE_POS(json_stream, s);
@@ -62,6 +86,7 @@ static inline bool json_next(struct json_stream *json_stream, char **key)
 
 #define JSON_FOREACH_START(json_stream) \
     do { \
+        CSEL_JSON_DEBUG_INDENT \
         const char *s; \
         JSON_STREAM_GET_S(json_stream, s); \
         EXPECT_CHAR(s, '{'); \
@@ -70,6 +95,7 @@ static inline bool json_next(struct json_stream *json_stream, char **key)
 
 #define JSON_FOREACH_WRAP(json_stream) \
     do { \
+        CSEL_JSON_DEBUG_DEDENT \
         if ((json_stream)->json_str[(json_stream)->pos] == '}') { \
             (json_stream)->pos++; \
         } \
