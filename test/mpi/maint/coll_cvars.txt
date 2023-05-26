@@ -57,6 +57,7 @@ tests:
             allred5 5
             allred6 4
             allred6 7
+            allred_float 10
         persistent:
             p_allred 7
     alltoall:
