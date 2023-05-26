@@ -58,7 +58,6 @@ do_subcfg_m4=yes
 do_hwloc=yes
 do_ofi=yes
 do_ucx=yes
-do_json=yes
 do_yaksa=yes
 do_test=yes
 do_hydra=yes
@@ -74,7 +73,6 @@ for arg in "$@" ; do
     if test $arg = "-quick"; then
         do_quick=yes
         do_hwloc=no
-        do_json=no
         do_ofi=no
         do_ucx=no
         do_yaksa=no
@@ -220,11 +218,6 @@ set_externals() {
         if [ "yes" = "$do_ofi" ] ; then
             check_submodule_presence modules/libfabric
             externals="${externals} modules/libfabric"
-        fi
-
-        if [ "yes" = "$do_json" ] ; then
-            check_submodule_presence "modules/json-c"
-            externals="${externals} modules/json-c"
         fi
 
         if [ "yes" = "$do_yaksa" ] ; then

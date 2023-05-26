@@ -7,10 +7,6 @@
 [submodule "modules/ucx"]
 	path = modules/ucx
 	url = https://github.com/pmodels/ucx
-[submodule "modules/json-c"]
-	path = modules/json-c
-	url = https://github.com/pmodels/json-c
-        branch = mpich/main
 [submodule "modules/yaksa"]
 	path = modules/yaksa
 	url = https://github.com/pmodels/yaksa

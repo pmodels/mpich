@@ -26,13 +26,6 @@ make
 make_it_lean
 popd
 
-pushd modules/json-c
-./autogen.sh
-./configure --enable-embedded --disable-werror
-make
-make_it_lean
-popd
-
 pushd modules/yaksa
 extra_option=
 if test -d "$CUDA_DIR" ; then

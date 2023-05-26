@@ -1072,26 +1072,6 @@ AC_SUBST([mpllib])
 m4_define([mpl_embedded_dir],[src/mpl])
 PAC_CONFIG_MPL
 
-# json-c
-
-jsonsrcdir=""
-AC_SUBST([jsonsrcdir])
-jsonlib=""
-AC_SUBST([jsonlib])
-
-jsonlib="modules/json-c/libjson-c.la"
-if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$jsonlib"; then
-    jsonsrcdir=""
-else
-    PAC_PUSH_ALL_FLAGS()
-    PAC_RESET_ALL_FLAGS()
-    PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--enable-embedded --disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
-    PAC_POP_ALL_FLAGS()
-    jsonsrcdir="${main_top_builddir}/modules/json-c"
-fi
-PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
-PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
-
 # ----------------------------------------------------------------------------
 # HWLOC / NETLOC
 # ----------------------------------------------------------------------------
