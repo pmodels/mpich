@@ -378,7 +378,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
     char *shm_addr;
     int my_leader_rank = -1, iter;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
-    int offset = 0, is_contig, i;
+    int offset = 0, i;
     MPI_Aint lb, true_extent, extent;
     int num_offsets = MPIR_CVAR_ALLREDUCE_LOCAL_COPY_OFFSETS;
     int local_copy_rank = MPIR_Comm_rank(comm_ptr->node_comm);
@@ -389,8 +389,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
     MPIR_Type_get_extent_impl(datatype, &lb, &extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
-
-    MPIR_Datatype_is_contig(datatype, &is_contig);
 
     if (sendbuf == MPI_IN_PLACE)
         sendbuf = recvbuf;
