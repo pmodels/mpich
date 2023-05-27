@@ -8,6 +8,21 @@
 #include "ofi_init.h"
 #include "mpir_hwtopo.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+cvars:
+    - name        : MPIR_CVAR_CH4_OFI_PREF_NIC
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Accept the NIC value from a user
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #ifdef HAVE_LIBFABRIC_NIC
 /* Return the parent object (typically socket) of the NIC */
 static MPIR_hwtopo_gid_t get_nic_parent(struct fi_info *info)
@@ -237,8 +252,13 @@ static int setup_multi_nic(int nic_count)
     int local_rank = MPIR_Process.local_rank;
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
     MPIR_CHKLMEM_DECL(1);
+    bool pref_nic_set = false;
 
     MPIDI_OFI_global.num_nics = nic_count;
+
+    if (MPIR_CVAR_CH4_OFI_PREF_NIC > -1 && MPIR_CVAR_CH4_OFI_PREF_NIC < MPIDI_OFI_global.num_nics) {
+        pref_nic_set = true;
+    }
 
     /* Initially sort the NICs by name. This way all intranode ranks have a consistent view. */
     qsort(MPIDI_OFI_global.prov_use, MPIDI_OFI_global.num_nics, sizeof(struct fi_info *),
@@ -261,7 +281,7 @@ static int setup_multi_nic(int nic_count)
                 is_snc4_with_cxi_nics = true;
 
     /* Special case of nic assignment for SPR in SNC4 mode */
-    if (is_snc4_with_cxi_nics) {
+    if (is_snc4_with_cxi_nics && !pref_nic_set) {
         for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
             nics[i].nic = MPIDI_OFI_global.prov_use[i];
             nics[i].id = i;
@@ -335,36 +355,49 @@ static int setup_multi_nic(int nic_count)
         MPIDI_OFI_global.num_close_nics = MPIDI_OFI_global.num_nics;
     }
 
-    /* Sort the NICs array based on closeness first. This way all the close
-     * NICs are at the beginning of the array */
-    if (is_snc4_with_cxi_nics) {
-        /* Use a separate sorting function for snc4 nics in order to just compare
-         * closeness followed by nic name */
-        qsort(nics, MPIDI_OFI_global.num_nics, sizeof(nics[0]), compare_nics_snc4);
+    if (pref_nic_set) {
+        /* When using this CVAR, the rank can only use 1 NIC. We do not reset num_close_nics again
+         * in case a NIC is down and it needs to use another NIC. */
+        MPIDI_OFI_nic_info_t *tmp_nic;
+        MPIR_CHKLMEM_MALLOC(tmp_nic, MPIDI_OFI_nic_info_t *, sizeof(MPIDI_OFI_nic_info_t),
+                            mpi_errno, "temporary nic info", MPL_MEM_ADDRESS);
+        int idx_to = 0;
+        int idx_from = MPIR_CVAR_CH4_OFI_PREF_NIC;
+        memcpy(tmp_nic, &nics[idx_from], sizeof(MPIDI_OFI_nic_info_t));
+        memcpy(&nics[idx_from], &nics[idx_to], sizeof(MPIDI_OFI_nic_info_t));
+        memcpy(&nics[idx_to], tmp_nic, sizeof(MPIDI_OFI_nic_info_t));
     } else {
-        qsort(nics, MPIDI_OFI_global.num_nics, sizeof(nics[0]), compare_nics);
-    }
+        /* Sort the NICs array based on closeness first. This way all the close
+         * NICs are at the beginning of the array */
+        if (is_snc4_with_cxi_nics) {
+            /* Use a separate sorting function for snc4 nics in order to just compare
+             * closeness followed by nic name */
+            qsort(nics, MPIDI_OFI_global.num_nics, sizeof(nics[0]), compare_nics_snc4);
+        } else {
+            qsort(nics, MPIDI_OFI_global.num_nics, sizeof(nics[0]), compare_nics);
+        }
 
-    /* Because we cannot communicate with the other local processes to avoid collisions with the
-     * same NICs, just shift NICs that have multiple close NICs around according to their local
-     * rank. This will likely give the same result as long as processes have been bound properly. */
-    int old_idx = (MPIDI_OFI_global.num_close_nics == 0) ? 0 :
-        local_rank % MPIDI_OFI_global.num_close_nics;
+        /* Because we cannot communicate with the other local processes to avoid collisions with the
+         * same NICs, just shift NICs that have multiple close NICs around according to their local
+         * rank. This will likely give the same result as long as processes have been bound properly. */
+        int old_idx = (MPIDI_OFI_global.num_close_nics == 0) ? 0 :
+            local_rank % MPIDI_OFI_global.num_close_nics;
 
-    if (old_idx != 0) {
-        MPIDI_OFI_nic_info_t *old_nics;
-        MPIR_CHKLMEM_MALLOC(old_nics, MPIDI_OFI_nic_info_t *, sizeof(MPIDI_OFI_nic_info_t) *
-                            MPIDI_OFI_global.num_nics, mpi_errno, "temporary nic info",
-                            MPL_MEM_ADDRESS);
-        memcpy(old_nics, nics, sizeof(MPIDI_OFI_nic_info_t) * MPIDI_OFI_global.num_nics);
+        if (old_idx != 0) {
+            MPIDI_OFI_nic_info_t *old_nics;
+            MPIR_CHKLMEM_MALLOC(old_nics, MPIDI_OFI_nic_info_t *, sizeof(MPIDI_OFI_nic_info_t) *
+                                MPIDI_OFI_global.num_nics, mpi_errno, "temporary nic info",
+                                MPL_MEM_ADDRESS);
+            memcpy(old_nics, nics, sizeof(MPIDI_OFI_nic_info_t) * MPIDI_OFI_global.num_nics);
 
-        /* Rotate the preferred NIC for each process starting at old_idx. */
-        for (int new_idx = 0; new_idx < MPIDI_OFI_global.num_close_nics; new_idx++) {
-            if (new_idx != old_idx)
-                memcpy(&nics[new_idx], &old_nics[old_idx], sizeof(MPIDI_OFI_nic_info_t));
+            /* Rotate the preferred NIC for each process starting at old_idx. */
+            for (int new_idx = 0; new_idx < MPIDI_OFI_global.num_close_nics; new_idx++) {
+                if (new_idx != old_idx)
+                    memcpy(&nics[new_idx], &old_nics[old_idx], sizeof(MPIDI_OFI_nic_info_t));
 
-            if (++old_idx >= MPIDI_OFI_global.num_close_nics)
-                old_idx = 0;
+                if (++old_idx >= MPIDI_OFI_global.num_close_nics)
+                    old_idx = 0;
+            }
         }
     }
 
