@@ -9,6 +9,9 @@
 #include "recexchalgo.h"
 #include "algo_common.h"
 
+static int find_myidx(int *nbrs, int k, int rank);
+static int do_reduce(void **bufs, void *recvbuf, int n, int idx,
+                     MPI_Aint count, MPI_Datatype datatype, MPI_Op op);
 
 int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                                  void *recvbuf,
@@ -34,6 +37,9 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     rank = comm->rank;
     nranks = comm->local_size;
     is_commutative = MPIR_Op_is_commutative(op);
+
+    bool is_float;
+    MPIR_Datatype_is_float(datatype, is_float);
 
     /* if there is only 1 rank, copy data from sendbuf
      * to recvbuf and exit */
@@ -187,7 +193,6 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
         }
 
         send_nreq = 0;
-        myidx = 0;
         /* send data to all the neighbors */
         for (i = 0; i < k - 1; i++) {
             nbr = step2_nbrs[phase][i];
@@ -195,42 +200,27 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                                    &send_reqs[send_nreq++], errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             if (rank > nbr) {
-                myidx = i + 1;
             }
         }
 
         mpi_errno = MPIC_Waitall(send_nreq, send_reqs, MPI_STATUSES_IGNORE);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
-        buf = myidx - 1;
         mpi_errno = MPIC_Waitall((k - 1), recv_reqs, MPI_STATUSES_IGNORE);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
-        for (i = myidx - 1; i >= 0 && count > 0; i--, buf--) {
-            mpi_errno = MPIR_Reduce_local(nbr_buffer[buf], recvbuf, count, datatype, op);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        if (is_commutative && !is_float) {
+            myidx = k - 1;
+        } else {
+            myidx = find_myidx(step2_nbrs[phase], k, rank);
         }
-
-        buf = myidx;
-        for (i = myidx; i < k - 1 && count > 0; i++, buf++) {
-            if (is_commutative) {
-                mpi_errno = MPIR_Reduce_local(nbr_buffer[buf], recvbuf, count, datatype, op);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-            } else {
-                mpi_errno = MPIR_Reduce_local(recvbuf, nbr_buffer[buf], count, datatype, op);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-
-                mpi_errno =
-                    MPIR_Localcopy(nbr_buffer[buf], count, datatype, recvbuf, count, datatype);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-            }
-        }
+        mpi_errno = do_reduce(nbr_buffer, recvbuf, k, myidx, count, datatype, op);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         if (single_phase_recv == false) {       /* post sends and do reduction for the 2nd phase */
             phase++;
             if (phase < step2_nphases) {
                 send_nreq = 0;
-                myidx = 0;
                 /* send data to all the neighbors */
                 for (i = 0; i < k - 1; i++) {
                     nbr = step2_nbrs[phase][i];
@@ -239,9 +229,6 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                         MPIC_Isend(recvbuf, count, datatype, nbr, MPIR_ALLREDUCE_TAG, comm,
                                    &send_reqs[send_nreq++], errflag);
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-                    if (rank > nbr) {
-                        myidx = i + 1;
-                    }
                 }
 
                 mpi_errno = MPIC_Waitall(send_nreq, send_reqs, MPI_STATUSES_IGNORE);
@@ -250,28 +237,13 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                 mpi_errno = MPIC_Waitall((k - 1), recv_reqs + (k - 1), MPI_STATUSES_IGNORE);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
-                buf = (k - 1) + myidx - 1;
-                for (i = myidx - 1; i >= 0 && count > 0; i--, buf--) {
-                    mpi_errno = MPIR_Reduce_local(nbr_buffer[buf], recvbuf, count, datatype, op);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                if (is_commutative && !is_float) {
+                    myidx = k - 1;
+                } else {
+                    myidx = find_myidx(step2_nbrs[phase], k, rank);
                 }
-
-                buf = (k - 1) + myidx;
-                for (i = myidx; i < k - 1 && count > 0; i++, buf++) {
-                    if (is_commutative) {
-                        mpi_errno =
-                            MPIR_Reduce_local(nbr_buffer[buf], recvbuf, count, datatype, op);
-                        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-                    } else {
-                        mpi_errno =
-                            MPIR_Reduce_local(recvbuf, nbr_buffer[buf], count, datatype, op);
-                        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-                        mpi_errno =
-                            MPIR_Localcopy(nbr_buffer[buf], count, datatype, recvbuf, count,
-                                           datatype);
-                        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-                    }
-                }
+                mpi_errno = do_reduce(nbr_buffer + k - 1, recvbuf, k, myidx, count, datatype, op);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             }
         }
     }
@@ -325,4 +297,44 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
   fn_fail:
     mpi_errno_ret = mpi_errno;
     goto fn_exit;
+}
+
+static int find_myidx(int *nbrs, int k, int rank)
+{
+    for (int i = 0; i < k - 1; i++) {
+        if (nbrs[i] > rank) {
+            return i;
+        }
+    }
+    return k - 1;
+}
+
+static int do_reduce(void **bufs, void *recvbuf, int k, int idx,
+                     MPI_Aint count, MPI_Datatype datatype, MPI_Op op)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    for (int i = 0; i < idx - 1; i++) {
+        mpi_errno = MPIR_Reduce_local(bufs[i], bufs[i + 1], count, datatype, op);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    if (idx > 0) {
+        mpi_errno = MPIR_Reduce_local(bufs[idx - 1], recvbuf, count, datatype, op);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    if (idx < k - 1) {
+        mpi_errno = MPIR_Reduce_local(recvbuf, bufs[idx], count, datatype, op);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        for (int i = idx; i < k - 2; i++) {
+            mpi_errno = MPIR_Reduce_local(bufs[i], bufs[i + 1], count, datatype, op);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+
+        mpi_errno = MPIR_Localcopy(bufs[k - 2], count, datatype, recvbuf, count, datatype);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_fail:
+    return mpi_errno;
 }
