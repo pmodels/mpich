@@ -196,6 +196,16 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
         basic_type_ = MPI_DATATYPE_NULL;                            \
  } while (0)
 
+#define MPIR_Datatype_is_float(a, is_float) do { \
+    MPI_Datatype basic_type; \
+    MPIR_Datatype_get_basic_type(a, basic_type); \
+    if (basic_type == MPI_FLOAT || basic_type == MPI_DOUBLE) { \
+        is_float = true; \
+    } else { \
+        is_float = false; \
+    } \
+} while (0)
+
 #define MPIR_Datatype_get_ptr(a,ptr)   MPIR_Getb_ptr(Datatype,DATATYPE,a,0x000000ff,ptr)
 
 /* Note: Probably there is some clever way to build all of these from a macro.
