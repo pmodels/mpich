@@ -171,12 +171,6 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
 
 
     /* step2 */
-    if (!is_commutative && in_step2 && count > 0) {
-        /* sort the neighbor list so that receives can be posted in order */
-        for (phase = 0; phase < step2_nphases; phase++)
-            qsort(step2_nbrs[phase], k - 1, sizeof(int), MPII_Algo_compare_int);
-    }
-
     /* step2 sends and reduces */
     for (phase = 0; phase < step2_nphases && in_step2; phase++) {
         buf = 0;
