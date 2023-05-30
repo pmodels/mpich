@@ -82,7 +82,7 @@ int MPIR_Cancel_impl(MPIR_Request * request_ptr)
                     mpi_errno = MPID_Cancel_send(request_ptr->u.persist.real_request);
                     MPIR_ERR_CHECK(mpi_errno);
                 } else {
-                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**requestpersistactive");
+                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**cancelinactive");
                 }
                 break;
             }
@@ -93,7 +93,7 @@ int MPIR_Cancel_impl(MPIR_Request * request_ptr)
                     mpi_errno = MPID_Cancel_recv(request_ptr->u.persist.real_request);
                     MPIR_ERR_CHECK(mpi_errno);
                 } else {
-                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**requestpersistactive");
+                    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_REQUEST, "**cancelinactive");
                 }
                 break;
             }

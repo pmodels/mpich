@@ -112,6 +112,7 @@ also the value at index %d
  deferred because of resource limits is not implemented
 **notgenreq:Attempt to complete a request with MPI_GREQUEST_COMPLETE that \
 was not started with MPI_GREQUEST_START
+**cancelinactive:Attempt to cancel an inactive persistent request
 **cancelunknown:Attempt to cancel an unknown type of request
 **permop:Cannot free permanent MPI_Op 
 **attrsentinal:Internal fields in an attribute have been overwritten; \
