@@ -72,7 +72,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     if (message) {
         recv_flags |= FI_CLAIM;
     }
-    MPIDI_OFI_CALL_RETURN(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg, recv_flags), ofi_err);
+    ofi_err = 0;
+    MPIDI_OFI_CALL_RETRY_RETURN(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg, recv_flags),
+                                vci_dst, ofi_err);
     if (ofi_err == -FI_ENOMSG) {
         *flag = 0;
         if (message)

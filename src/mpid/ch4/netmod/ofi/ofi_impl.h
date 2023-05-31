@@ -101,6 +101,24 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
     } while (1);                                            \
     } while (0)
 
+#define MPIDI_OFI_CALL_RETRY_RETURN(FUNC,vci_,ret) \
+    do { \
+        int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY; \
+        while (1) { \
+            ret = FUNC; \
+            if (likely(ret != -FI_EAGAIN)) { \
+                break; \
+            } \
+            if (_retry > 0) { \
+                _retry--; \
+                MPIR_ERR_CHKANDJUMP(_retry == 0, mpi_errno, MPIX_ERR_EAGAIN, "**eagain"); \
+            } \
+            MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_); \
+            mpi_errno = MPIDI_OFI_retry_progress(); \
+            MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_); \
+        } \
+    } while (0)
+
 /* per-vci macros - we'll transition into these macros once the locks are
  * moved down to ofi-layer */
 #define MPIDI_OFI_VCI_PROGRESS(vci_)                                    \
