@@ -94,11 +94,14 @@ int MPL_gpu_local_to_global_dev_id(int local_dev_id);
 
 int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr);
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len);
+int MPL_gpu_get_root_device(int dev_id);
 
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr));
-int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id);
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id);
 int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev);
 int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env);
+
+int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id);
 
 typedef void (*MPL_gpu_hostfn) (void *data);
 int MPL_gpu_launch_hostfn(MPL_gpu_stream_t stream, MPL_gpu_hostfn fn, void *data);

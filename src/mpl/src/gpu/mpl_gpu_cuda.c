@@ -33,7 +33,7 @@ static cudaError_t CUDARTAPI(*sys_cudaFree) (void *dptr);
 
 static int gpu_mem_hook_init();
 
-int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
+int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
     int ret = MPL_SUCCESS;
     if (!gpu_initialized) {
@@ -42,6 +42,7 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
 
     *dev_cnt = device_count;
     *dev_id = max_dev_id;
+    *subdevice_id = 0;
     return ret;
 }
 
@@ -85,6 +86,11 @@ int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env)
     }
     *env = affinity_env;
     return ret;
+}
+
+int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id)
+{
+    return MPL_SUCCESS;
 }
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
@@ -381,6 +387,11 @@ int MPL_gpu_local_to_global_dev_id(int local_dev_id)
 int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr)
 {
     return attr->device;
+}
+
+int MPL_gpu_get_root_device(int dev_id)
+{
+    return dev_id;
 }
 
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
