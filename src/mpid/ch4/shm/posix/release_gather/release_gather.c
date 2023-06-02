@@ -337,22 +337,30 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         if (topotree_fail[0] != 0) {
             if (topotree_fail[0] == 1)
                 MPIR_Treealgo_tree_free(&release_gather_info_ptr->bcast_tree);
-            mpi_errno =
-                MPIR_Treealgo_tree_create(rank, num_ranks,
-                                          RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_type),
-                                          RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_kval), 0,
-                                          &release_gather_info_ptr->bcast_tree);
+            MPIR_Treealgo_params_t tree_params = {
+                .rank = rank,
+                .nranks = num_ranks,
+                .k = RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_kval),
+                .tree_type = RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_type),
+                .root = 0
+            };
+            mpi_errno = MPIR_Treealgo_tree_create(comm_ptr, &tree_params,
+                                                  &release_gather_info_ptr->bcast_tree);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
         }
 
         if (topotree_fail[1] != 0) {
             if (topotree_fail[1] == 1)
                 MPIR_Treealgo_tree_free(&release_gather_info_ptr->reduce_tree);
-            mpi_errno =
-                MPIR_Treealgo_tree_create(rank, num_ranks,
-                                          RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type),
-                                          RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval), 0,
-                                          &release_gather_info_ptr->reduce_tree);
+            MPIR_Treealgo_params_t tree_params = {
+                .rank = rank,
+                .nranks = num_ranks,
+                .k = RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval),
+                .tree_type = RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type),
+                .root = 0
+            };
+            mpi_errno = MPIR_Treealgo_tree_create(comm_ptr, &tree_params,
+                                                  &release_gather_info_ptr->reduce_tree);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
         }

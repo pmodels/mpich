@@ -351,6 +351,7 @@ typedef struct MPIDIG_win_shared_info {
     MPIDI_GPU_ipc_handle_t ipc_handle;
 #endif
     int mapped_type;            /* 0: gpu ipc mapped 1: gpu host mmapped 2: xpmem */
+    int global_dev_id;          /* device ID if mapped_type is 0 */
 } MPIDIG_win_shared_info_t;
 
 #define MPIDIG_ACCU_ORDER_RAR (1)
@@ -508,7 +509,8 @@ typedef enum {
                                          * its internal optimization. */
     MPIDI_WINATTR_NM_DYNAMIC_MR = 32,   /* whether the memory region is registered dynamically. Valid only for
                                          * dynamic window. Set by netmod. */
-    MPIDI_WINATTR_MR_PREFERRED = 64,    /* message rate preferred flag. Default 0, set by user hint. */
+    MPIDI_WINATTR_MR_PREFERRED = 64,    /* message rate preferred flag. Default unless user set
+                                         * latency preference. */
     MPIDI_WINATTR_LAST_BIT
 } MPIDI_winattr_bit_t;
 

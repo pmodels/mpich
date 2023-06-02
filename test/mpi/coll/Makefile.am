@@ -152,7 +152,8 @@ noinst_PROGRAMS =      \
     bcast              \
     bcast_comm_world_only \
     coll_large	       \
-    ring_neighbor_alltoall
+    ring_neighbor_alltoall \
+    topo_tree_test
 
 allgatherv4_LDADD = $(LDADD) -lm
 

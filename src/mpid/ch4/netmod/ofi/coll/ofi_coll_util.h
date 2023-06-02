@@ -64,8 +64,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
 
     /* Build a knomial tree */
     my_tree->children = NULL;
-    mpi_errno =
-        MPIR_Treealgo_tree_create(myrank, nranks, tree_type, branching_factor, root, my_tree);
+    MPIR_Treealgo_params_t tree_params = {
+        .rank = myrank,
+        .nranks = nranks,
+        .k = branching_factor,
+        .tree_type = tree_type,
+        .root = 0
+    };
+    mpi_errno = MPIR_Treealgo_tree_create(comm_ptr, &tree_params, my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -380,8 +386,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
 
     /* Build a knomial tree */
     my_tree->children = NULL;
-    mpi_errno =
-        MPIR_Treealgo_tree_create(myrank, nranks, tree_type, branching_factor, root, my_tree);
+    MPIR_Treealgo_params_t tree_params = {
+        .rank = myrank,
+        .nranks = nranks,
+        .k = branching_factor,
+        .tree_type = tree_type,
+        .root = 0
+    };
+    mpi_errno = MPIR_Treealgo_tree_create(comm_ptr, &tree_params, my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

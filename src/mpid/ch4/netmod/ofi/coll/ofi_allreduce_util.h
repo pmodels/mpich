@@ -77,8 +77,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Iallreduce_tree_triggered_tagged(const vo
     if (tree_type == MPIR_TREE_TYPE_KNOMIAL_1 || tree_type == MPIR_TREE_TYPE_KNOMIAL_2) {
         /* Build a knomial tree */
         my_tree->children = NULL;
-        mpi_errno =
-            MPIR_Treealgo_tree_create(myrank, nranks, tree_type, branching_factor, 0, my_tree);
+        MPIR_Treealgo_params_t tree_params = {
+            .rank = myrank,
+            .nranks = nranks,
+            .k = branching_factor,
+            .tree_type = tree_type,
+            .root = 0
+        };
+        mpi_errno = MPIR_Treealgo_tree_create(comm_ptr, &tree_params, my_tree);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -298,8 +304,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Iallreduce_tree_triggered_rma(const void 
     if (tree_type == MPIR_TREE_TYPE_KNOMIAL_1 || tree_type == MPIR_TREE_TYPE_KNOMIAL_2) {
         /* Build a knomial tree */
         my_tree->children = NULL;
-        mpi_errno =
-            MPIR_Treealgo_tree_create(myrank, nranks, tree_type, branching_factor, 0, my_tree);
+        MPIR_Treealgo_params_t tree_params = {
+            .rank = myrank,
+            .nranks = nranks,
+            .k = branching_factor,
+            .tree_type = tree_type,
+            .root = 0
+        };
+        mpi_errno = MPIR_Treealgo_tree_create(comm_ptr, &tree_params, my_tree);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

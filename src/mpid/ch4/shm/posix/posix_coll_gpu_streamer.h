@@ -7,7 +7,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_BCAST_STREAMER_READ_MSG_SIZE_THRESHOLD
+    - name        : MPIR_CVAR_BCAST_STREAM_READ_MSG_SIZE_THRESHOLD
       category    : COLLECTIVE
       type        : int
       default     : 1024
@@ -15,18 +15,8 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Use gpu streamer read bcast only when the message size is more than this
+        Use gpu stream read bcast only when the message size is larger than this
         threshold.
-
-    - name        : MPIR_CVAR_ALLTOALL_KERNEL_LOCATION
-      category    : COLLECTIVE
-      type        : string
-      default     : none
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Compiled kernel location for the kernel read and kernel write alltoall
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -58,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_stream_read(void *buffer,
     /* fallback if datatype is not contigous or data size is not large enough or data has been
      * switched to CPU buffer in MPIDI_Bcast_intra_composition_*
      */
-    if (!dt_contig || data_sz <= MPIR_CVAR_BCAST_STREAMER_READ_MSG_SIZE_THRESHOLD ||
+    if (!dt_contig || data_sz <= MPIR_CVAR_BCAST_STREAM_READ_MSG_SIZE_THRESHOLD ||
         data_sz <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ) {
         goto fallback;
     }
@@ -213,150 +203,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_stream_read(const void
         }
     }
     if (errs > 0) {
-        goto fallback;
-    }
-
-    /* map ipc_handles to remote_bufs */
-    void **remote_bufs = NULL;
-    MPIR_CHKLMEM_MALLOC(remote_bufs, void **, sizeof(void *) * comm_size, mpi_errno, "Remote bufs",
-                        MPL_MEM_COLL);
-    int *rank_to_global_dev_id = NULL;
-    MPIR_CHKLMEM_MALLOC(rank_to_global_dev_id, int *,
-                        sizeof(int) * comm_size, mpi_errno, "Rank to global dev_id", MPL_MEM_COLL);
-    for (int i = 0; i < comm_size; i++) {
-        if (i != my_rank) {
-            int remote_dev =
-                MPIDI_GPU_ipc_get_map_dev(ipc_handles[i].gpu.global_dev_id, dev_id, sendtype);
-            mpi_errno =
-                MPIDI_GPU_ipc_handle_map(ipc_handles[i].gpu, remote_dev, &(remote_bufs[i]), false);
-            MPIR_ERR_CHECK(mpi_errno);
-        } else {
-            remote_bufs[i] = send_mem_addr;
-        }
-        rank_to_global_dev_id[i] = ipc_handles[i].gpu.global_dev_id;
-    }
-    mpi_errno =
-        MPIDI_GPU_ipc_alltoall_stream_read(remote_bufs, recv_mem_addr, sendcount, sendtype,
-                                           MPIR_Comm_size(comm_ptr), my_rank,
-                                           rank_to_global_dev_id);
-    MPIR_ERR_CHECK(mpi_errno);
-  fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
-  fn_fail:
-    goto fn_exit;
-  fallback:
-    /* Fall back to other algorithms as gpu streamer based alltoall cannot be used */
-    mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                   comm_ptr, errflag);
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
-    goto fn_exit;
-}
-
-static const char *get_supported_type_string(MPI_Datatype datatype)
-{
-    const char *p = 0;
-    if (datatype == MPI_CHAR)
-        p = "char";
-    else if (datatype == MPI_BYTE)
-        p = "uchar";
-    else if (datatype == MPI_SHORT)
-        p = "short";
-    else if (datatype == MPI_UNSIGNED_SHORT)
-        p = "ushort";
-    else if (datatype == MPI_INT)
-        p = "int";
-    else if (datatype == MPI_UNSIGNED)
-        p = "uint";
-    else if (datatype == MPI_LONG)
-        p = "long";
-    else if (datatype == MPI_UNSIGNED_LONG)
-        p = "ulong";
-    else if (datatype == MPI_FLOAT)
-        p = "float";
-    else if (datatype == MPI_DOUBLE)
-        p = "double";
-    else {
-        p = 0;
-    }
-
-    return p;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_kernel_read(const void *sendbuf,
-                                                                      MPI_Aint sendcount,
-                                                                      MPI_Datatype sendtype,
-                                                                      void *recvbuf,
-                                                                      MPI_Aint recvcount,
-                                                                      MPI_Datatype recvtype,
-                                                                      MPIR_Comm * comm_ptr,
-                                                                      MPIR_Errflag_t * errflag)
-{
-    MPIR_FUNC_ENTER;
-    MPIR_CHKLMEM_DECL(2);
-
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
-    const char *datatype_name = get_supported_type_string(sendtype);
-    /* fallback if sendtype and recvtype is different */
-    if (sendtype != recvtype || sendcount != recvcount || datatype_name == 0) {
-        goto fallback;
-    }
-    MPI_Aint true_lb;
-    MPIR_Datatype *dt_ptr;
-    bool dt_contig;
-    uintptr_t data_sz;
-    MPIDI_Datatype_get_info(sendcount, sendtype, dt_contig, data_sz, dt_ptr, true_lb);
-    /* fallback if data_sz is 0 or datatype is not contigous */
-    if (data_sz == 0 || (!dt_contig && data_sz > 0)) {
-        goto fallback;
-    }
-
-    void *send_mem_addr = MPIR_get_contig_ptr(sendbuf, true_lb);
-    void *recv_mem_addr = MPIR_get_contig_ptr(recvbuf, true_lb);
-    MPIDI_IPCI_ipc_attr_t ipc_attr;
-    memset(&ipc_attr, 0, sizeof(ipc_attr));
-    MPIR_GPU_query_pointer_attr(send_mem_addr, &ipc_attr.gpu_attr);
-
-    int my_rank = MPIR_Comm_rank(comm_ptr);
-    int comm_size = MPIR_Comm_size(comm_ptr);
-    /* TODO: for now, fallback if comm_size greater than 12 */
-    if (comm_size > 12) {
-        goto fallback;
-    }
-    /* set up ipc_handles */
-    MPIDI_IPCI_ipc_handle_t *ipc_handles = NULL;
-    MPIR_CHKLMEM_MALLOC(ipc_handles, MPIDI_IPCI_ipc_handle_t *,
-                        sizeof(MPIDI_IPCI_ipc_handle_t) * comm_size, mpi_errno, "IPC handles",
-                        MPL_MEM_COLL);
-    MPIDI_IPCI_ipc_handle_t my_ipc_handle;
-    memset(&my_ipc_handle, 0, sizeof(my_ipc_handle));
-    int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.gpu_attr);
-    /* CPU memory, registered host memory and USM fallback to P2P alltoall,
-     * GPU memory will use stream read alltoall
-     */
-    if (dev_id >= 0 && ipc_attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
-        mpi_errno = MPIDI_GPU_get_ipc_attr(send_mem_addr, my_rank, comm_ptr, &ipc_attr);
-        MPIR_ERR_CHECK(mpi_errno);
-        my_ipc_handle = ipc_attr.ipc_handle;
-    } else {
-        my_ipc_handle.gpu.global_dev_id = -1;
-    }
-    /* allgather is needed to exchange all the IPC handles */
-    mpi_errno =
-        MPIR_Allgather_impl(&my_ipc_handle, sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, ipc_handles,
-                            sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, comm_ptr, errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* check the ipc_handles to make sure all the buffers are on GPU */
-    int errs = 0;
-    for (int i = 0; i < comm_size; i++) {
-        if (ipc_handles[i].gpu.global_dev_id < 0) {
-            errs++;
-            break;
-        }
-    }
-    if (errs > 0) {
         MPL_free(ipc_handles);
         goto fallback;
     }
@@ -376,123 +222,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_kernel_read(const void
             remote_bufs[i] = send_mem_addr;
         }
     }
-    mpi_errno =
-        MPIDI_GPU_ipc_alltoall_kernel_read(remote_bufs, recv_mem_addr, sendcount, sendtype,
-                                           MPIR_Comm_size(comm_ptr), my_rank, dev_id, datatype_name,
-                                           MPIR_CVAR_ALLTOALL_KERNEL_LOCATION);
-    MPIR_ERR_CHECK(mpi_errno);
-  fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
-  fn_fail:
-    goto fn_exit;
-  fallback:
-    /* Fall back to other algorithms as gpu streamer based alltoall cannot be used */
-    mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                   comm_ptr, errflag);
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_kernel_write(const void *sendbuf,
-                                                                       MPI_Aint sendcount,
-                                                                       MPI_Datatype sendtype,
-                                                                       void *recvbuf,
-                                                                       MPI_Aint recvcount,
-                                                                       MPI_Datatype recvtype,
-                                                                       MPIR_Comm * comm_ptr,
-                                                                       MPIR_Errflag_t * errflag)
-{
-    MPIR_FUNC_ENTER;
-    MPIR_CHKLMEM_DECL(2);
-
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
-    const char *datatype_name = get_supported_type_string(sendtype);
-    /* fallback if sendtype and recvtype is different */
-    if (sendtype != recvtype || sendcount != recvcount || datatype_name == 0) {
-        goto fallback;
-    }
-    MPI_Aint true_lb;
-    MPIR_Datatype *dt_ptr;
-    bool dt_contig;
-    uintptr_t data_sz;
-    MPIDI_Datatype_get_info(sendcount, sendtype, dt_contig, data_sz, dt_ptr, true_lb);
-    /* fallback if data_sz is 0 or datatype is not contigous */
-    if (data_sz == 0 || (!dt_contig && data_sz > 0)) {
-        goto fallback;
-    }
-
-    void *send_mem_addr = MPIR_get_contig_ptr(sendbuf, true_lb);
-    void *recv_mem_addr = MPIR_get_contig_ptr(recvbuf, true_lb);
-    MPIDI_IPCI_ipc_attr_t ipc_attr;
-    memset(&ipc_attr, 0, sizeof(ipc_attr));
-    MPIR_GPU_query_pointer_attr(recv_mem_addr, &ipc_attr.gpu_attr);
-
-    int my_rank = MPIR_Comm_rank(comm_ptr);
-    int comm_size = MPIR_Comm_size(comm_ptr);
-    /* TODO: for now, fallback if comm_size greater than 12 */
-    if (comm_size > 12) {
-        goto fallback;
-    }
-
-    /* set up ipc_handles */
-    MPIDI_IPCI_ipc_handle_t *ipc_handles = NULL;
-    MPIR_CHKLMEM_MALLOC(ipc_handles, MPIDI_IPCI_ipc_handle_t *,
-                        sizeof(MPIDI_IPCI_ipc_handle_t) * comm_size, mpi_errno, "IPC handles",
-                        MPL_MEM_COLL);
-    MPIDI_IPCI_ipc_handle_t my_ipc_handle;
-    memset(&my_ipc_handle, 0, sizeof(my_ipc_handle));
-    int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.gpu_attr);
-    /* CPU memory, registered host memory and USM fallback to P2P alltoall,
-     * GPU memory will use stream read alltoall
-     */
-    if (dev_id >= 0 && ipc_attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
-        mpi_errno = MPIDI_GPU_get_ipc_attr(recv_mem_addr, my_rank, comm_ptr, &ipc_attr);
+    /* use imemcpy to copy the data concurrently */
+    MPL_gpu_request *reqs = NULL;
+    MPIR_CHKLMEM_MALLOC(reqs, MPL_gpu_request *, sizeof(MPL_gpu_request) * comm_size, mpi_errno,
+                        "Memcpy requests", MPL_MEM_COLL);
+    for (int i = 0; i < comm_size; i++) {
+        char *temp_recv = (char *) recv_mem_addr + i * data_sz;
+        char *temp_send = (char *) (remote_bufs[i]) + my_rank * data_sz;
+        /* get engine type */
+        MPL_gpu_engine_type_t engine_type =
+            MPIDI_IPCI_choose_engine(ipc_handles[i].gpu.global_dev_id,
+                                     my_ipc_handle.gpu.global_dev_id);
+        mpi_errno =
+            MPL_gpu_imemcpy((char *) MPIR_get_contig_ptr(temp_recv, true_lb),
+                            (char *) MPIR_get_contig_ptr(temp_send, true_lb),
+                            data_sz, dev_id, MPL_GPU_COPY_DIRECTION_NONE,
+                            engine_type, &reqs[i], true);
         MPIR_ERR_CHECK(mpi_errno);
-        my_ipc_handle = ipc_attr.ipc_handle;
-    } else {
-        my_ipc_handle.gpu.global_dev_id = -1;
     }
-    /* allgather is needed to exchange all the IPC handles */
-    mpi_errno =
-        MPIR_Allgather_impl(&my_ipc_handle, sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, ipc_handles,
-                            sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, comm_ptr, errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* check the ipc_handles to make sure all the buffers are on GPU */
-    int errs = 0;
+    /* wait for the imemcpy to finish */
     for (int i = 0; i < comm_size; i++) {
-        if (ipc_handles[i].gpu.global_dev_id < 0) {
-            errs++;
-            break;
-        }
-    }
-    if (errs > 0) {
-        MPL_free(ipc_handles);
-        goto fallback;
-    }
-
-    /* map ipc_handles to remote_bufs */
-    void **remote_bufs = NULL;
-    MPIR_CHKLMEM_MALLOC(remote_bufs, void **, sizeof(void *) * comm_size, mpi_errno, "Remote bufs",
-                        MPL_MEM_COLL);
-    for (int i = 0; i < comm_size; i++) {
-        if (i != my_rank) {
-            int remote_dev =
-                MPIDI_GPU_ipc_get_map_dev(ipc_handles[i].gpu.global_dev_id, dev_id, sendtype);
-            mpi_errno =
-                MPIDI_GPU_ipc_handle_map(ipc_handles[i].gpu, remote_dev, &(remote_bufs[i]), false);
+        int completed = 0;
+        while (!completed) {
+            mpi_errno = MPL_gpu_test(&reqs[i], &completed);
             MPIR_ERR_CHECK(mpi_errno);
-        } else {
-            remote_bufs[i] = recv_mem_addr;
         }
     }
-    mpi_errno =
-        MPIDI_GPU_ipc_alltoall_kernel_write(send_mem_addr, remote_bufs, sendcount, sendtype,
-                                            MPIR_Comm_size(comm_ptr), my_rank, dev_id,
-                                            datatype_name, MPIR_CVAR_ALLTOALL_KERNEL_LOCATION);
-    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
@@ -500,10 +256,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_kernel_write(const voi
   fn_fail:
     goto fn_exit;
   fallback:
-    /* Fall back to other algorithms as gpu streamer based alltoall cannot be used */
+    /* Fall back to other algorithms as gpu streamer based bcast cannot be used */
     mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
                                    comm_ptr, errflag);
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     goto fn_exit;
 }
+
 #endif /* POSIX_COLL_GPU_STREAMER_H_INCLUDED */

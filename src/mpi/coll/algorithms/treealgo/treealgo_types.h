@@ -16,4 +16,13 @@ typedef struct {
     UT_array *children;
 } MPIR_Treealgo_tree_t;
 
+typedef struct {
+    int rank;
+    int nranks;
+    int k;
+    int tree_type;
+    int subtree_type;
+    int root;
+} MPIR_Treealgo_params_t;
+
 #endif /* TREEALGO_TYPES_H_INCLUDED */

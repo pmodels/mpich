@@ -949,9 +949,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **gpu_ipc_event_pool_handle_create: gpu_ipc_event_pool_handle_create failed
 **gpu_ipc_event_pool_handle_open: gpu_ipc_event_pool_handle_open failed
 **gpu_ipc_event_pool_handle_close: gpu_ipc_event_pool_handle_close failed
-**gpu_alltoall_stream_read: gpu_alltoall_stream_read failed
-**gpu_alltoall_kernel_read: gpu_alltoall_kernel_read failed
-**gpu_alltoall_kernel_write: gpu_alltoall_kernel_write failed
 **gpu_init: gpu_init failed
 **gpu_finalize: gpu_finalize failed
 **gpu_get_global_dev_ids: gpu_get_global_dev_ids failed
@@ -990,6 +987,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **streamcomm_dstidx:The destination stream index exceeds the number of streams.
 **gpu_enqueue_noncontig:Non-contig datatype not supported due to missing TLS.
 
+## topology-aware collectives
+**read_file:Failed to read from file
+**read_file %s %s:Failed to read from file %s error: %s
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)

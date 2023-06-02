@@ -73,8 +73,14 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
         parent = (lrank == 0) ? -1 : (((lrank - 1) / branching_factor) + root) % comm_size;
         num_children = branching_factor;
     } else {
-        mpi_errno =
-            MPIR_Treealgo_tree_create(rank, comm_size, tree_type, branching_factor, root, &my_tree);
+        MPIR_Treealgo_params_t tree_params = {
+            .rank = rank,
+            .nranks = comm_size,
+            .k = branching_factor,
+            .tree_type = tree_type,
+            .root = root
+        };
+        mpi_errno = MPIR_Treealgo_tree_create(comm_ptr, &tree_params, &my_tree);
         MPIR_ERR_CHECK(mpi_errno);
         num_children = my_tree.num_children;
     }

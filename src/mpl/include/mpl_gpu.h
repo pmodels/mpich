@@ -88,6 +88,11 @@ static inline int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr
     return 0;
 }
 
+static inline int MPL_gpu_query_pointer_is_strict_dev(const void *ptr, MPL_pointer_attr_t * attr)
+{
+    return 0;
+}
+
 static inline int MPL_gpu_query_is_same_dev(int dev1, int dev2)
 {
     return dev1 == dev2;
@@ -97,13 +102,14 @@ static inline int MPL_gpu_query_is_same_dev(int dev1, int dev2)
 int MPL_gpu_query_support(MPL_gpu_type_t * type);
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
 int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr);
+int MPL_gpu_query_pointer_is_strict_dev(const void *ptr, MPL_pointer_attr_t * attr);
 int MPL_gpu_query_is_same_dev(int dev1, int dev2);
 
 int MPL_gpu_ipc_get_handle_type(MPL_gpu_ipc_handle_type_t * type);
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
-                              MPL_gpu_ipc_mem_handle_t * ipc_handle);
+                              MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle);
 int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr);
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr);
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id, void **ptr);
 int MPL_gpu_ipc_handle_unmap(void *ptr);
 
 int MPL_gpu_malloc_host(void **ptr, size_t size);
@@ -148,14 +154,5 @@ void MPL_gpu_enqueue_wait(MPL_gpu_event_t * var, MPL_gpu_stream_t stream);
 void MPL_gpu_event_init_count(MPL_gpu_event_t * var, int count);
 void MPL_gpu_event_complete(MPL_gpu_event_t * var);
 bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var);
-
-int MPL_gpu_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
-                                 int comm_size, int comm_rank, int *rank_to_global_dev_id);
-int MPL_gpu_alltoall_kernel_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
-                                 int comm_size, int comm_rank, int dev_id,
-                                 const char *datatype_name, const char *kernel_location);
-int MPL_gpu_alltoall_kernel_write(void *send_buf, void **remote_bufs, int count, size_t data_sz,
-                                  int comm_size, int comm_rank, int dev_id,
-                                  const char *datatype_name, const char *kernel_location);
 
 #endif /* ifndef MPL_GPU_H_INCLUDED */

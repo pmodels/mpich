@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
-MPICH DROP 49 - Release Notes
+MPICH DROP 51 - Release Notes
 -------------------------------------------------------------------------------
 
 CONTENTS:
@@ -19,15 +19,23 @@ This is an evaluation release of mpich provided by Intel Corporation.
 2. NEW FEATURES
 -------------------------------------------------------------------------------
 
-* Fixed AM path with GPU enabled.
-* Fixed RMA bugs with CXI provider.
-* Fixed bugs so the application can use USM host.
+Release 1
+  1. Added intra-node GPU Bcast and Alltoall
+  2. Fixed the leak check in parent communicator
+  3. Fixed bugs in Alltoallw
+  4. Generated new RPMs required by user
+  5. Added required support for Agama 549
+Release 2
+  1. Fixed bugs in event pool initialization
 
 -------------------------------------------------------------------------------
 2.1 DETAILS
 -------------------------------------------------------------------------------
 
-
+* Features merged from upstream mpich on Jan 9 2023
+  1. comm: only free comm_parent in finalize pmodels/mpich#6321
+  2. comm: set comm_parent to NULL upon freeing pmodels/mpich#6322
+  3. datatype: fix builtin_element_size at MPIR_Typerep_unflatten
 
 -------------------------------------------------------------------------------
 2.2 KNOWN ISSUES
@@ -38,6 +46,8 @@ This is an evaluation release of mpich provided by Intel Corporation.
 * Allowing compute engines as subdevices when defining ZE_AFFINITY_MASK is not
   currently supported. EngineInstancedSubDevices=0 is set in the modulefiles to
   ensure this feature is disabled.
+
+* MPI_Allreduce fails when message size is greater than 16 MB on GPU. 
 
 -------------------------------------------------------------------------------
 3. RPM PACKAGE DETAILS

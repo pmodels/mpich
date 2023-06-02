@@ -59,7 +59,14 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
 
     /* initialize the tree */
     my_tree.children = NULL;
-    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
+    MPIR_Treealgo_params_t tree_params = {
+        .rank = rank,
+        .nranks = size,
+        .k = k,
+        .tree_type = tree_type,
+        .root = root
+    };
+    mpi_errno = MPIR_Treealgo_tree_create(comm, &tree_params, &my_tree);
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 

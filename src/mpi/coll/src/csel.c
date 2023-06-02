@@ -29,6 +29,8 @@ typedef enum {
     CSEL_NODE_TYPE__OPERATOR__IS_NODE_CONSECUTIVE,
 
     CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE,
+    CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT,
+    CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY,
 
     /* collective selection operator */
     CSEL_NODE_TYPE__OPERATOR__COLLECTIVE,
@@ -44,6 +46,7 @@ typedef enum {
     CSEL_NODE_TYPE__OPERATOR__COUNT_LE,
     CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2,
     CSEL_NODE_TYPE__OPERATOR__COUNT_ANY,
+    CSEL_NODE_TYPE__OPERATOR__COUNT_LT_NUMLEADS,
 
     CSEL_NODE_TYPE__OPERATOR__IS_SBUF_INPLACE,
     CSEL_NODE_TYPE__OPERATOR__IS_BLOCK_REGULAR,
@@ -111,8 +114,14 @@ typedef struct csel_node {
             int val;
         } comm_avg_ppn_le;
         struct {
+            int val;
+        } comm_avg_ppn_lt;
+        struct {
             MPIR_Comm_hierarchy_kind_t val;
         } comm_hierarchy;
+        struct {
+            int val;
+        } is_multi_leader_available;
         struct {
             void *container;
         } cnt;
@@ -215,6 +224,9 @@ static void print_tree(csel_node_s * node)
         case CSEL_NODE_TYPE__OPERATOR__COUNT_ANY:
             nprintf("count is anything\n");
             break;
+        case CSEL_NODE_TYPE__OPERATOR__COUNT_LT_NUMLEADS:
+            nprintf("count < number of leaders \n");
+            break;
         case CSEL_NODE_TYPE__OPERATOR__IS_SBUF_INPLACE:
             nprintf("source buffer is MPI_IN_PLACE\n");
             break;
@@ -238,6 +250,12 @@ static void print_tree(csel_node_s * node)
             break;
         case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
             nprintf("communicator's avg ppn <= %d\n", node->u.comm_avg_ppn_le.val);
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
+            nprintf("communicator's avg ppn < %d\n", node->u.comm_avg_ppn_lt.val);
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY:
+            nprintf("communicator's avg ppn is anything \n");
             break;
         case CSEL_NODE_TYPE__OPERATOR__IS_COMMUTATIVE:
             if (node->u.is_commutative.val == true)
@@ -288,7 +306,9 @@ static void validate_tree(csel_node_s * node)
     if (node->type == CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_ANY ||
         node->type == CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_ANY ||
         node->type == CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_ANY ||
-        node->type == CSEL_NODE_TYPE__OPERATOR__COUNT_ANY) {
+        node->type == CSEL_NODE_TYPE__OPERATOR__COUNT_ANY ||
+        node->type == CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY) {
+
         /* for "ANY"-style operators, the failure path must be NULL */
         if (node->failure) {
             fprintf(stderr, "unexpected non-NULL failure path for coll %d\n", coll);
@@ -475,6 +495,8 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2;
         } else if (!strcmp(ckey, "count=any")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COUNT_ANY;
+        } else if (!strcmp(ckey, "count<numleads")) {
+            tmp->type = CSEL_NODE_TYPE__OPERATOR__COUNT_LT_NUMLEADS;
         } else if (!strcmp(ckey, "avg_msg_size=any")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_ANY;
         } else if (!strncmp(ckey, "avg_msg_size<=", strlen("avg_msg_size<="))) {
@@ -524,6 +546,11 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
         } else if (!strncmp(ckey, "comm_avg_ppn<=", strlen("comm_avg_ppn<="))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE;
             tmp->u.comm_avg_ppn_le.val = atoi(ckey + strlen("comm_avg_ppn<="));
+        } else if (!strncmp(ckey, "comm_avg_ppn<", strlen("comm_avg_ppn<"))) {
+            tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT;
+            tmp->u.comm_avg_ppn_le.val = atoi(ckey + strlen("comm_avg_ppn<"));
+        } else if (!strcmp(ckey, "comm_avg_ppn=any")) {
+            tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY;
         } else if (!strcmp(ckey, "comm_hierarchy=parent")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
             tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__PARENT;
@@ -664,6 +691,17 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                     node = node->success;
                 else
                     node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
+                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                    node = node->success;
+                else
+                    node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY:
+                node = node->success;
                 break;
 
             default:
@@ -965,6 +1003,30 @@ static inline MPI_Aint get_count(MPIR_Csel_coll_sig_s coll_info)
             break;
     }
     return count;
+}
+
+static inline int is_multi_leader_available(MPIR_Csel_coll_sig_s coll_info) ATTRIBUTE((unused));
+static inline int is_multi_leader_available(MPIR_Csel_coll_sig_s coll_info)
+{
+    int val = false;
+    switch (coll_info.coll_type) {
+        case MPIR_CSEL_COLL_TYPE__ALLREDUCE:
+            return MPIDI_COMM_ALLREDUCE(coll_info.comm_ptr, use_multi_leads);
+            break;
+
+        case MPIR_CSEL_COLL_TYPE__ALLTOALL:
+            return MPIDI_COMM_ALLTOALL(coll_info.comm_ptr, use_multi_leads);
+            break;
+
+        case MPIR_CSEL_COLL_TYPE__ALLGATHER:
+            return MPIDI_COMM_ALLGATHER(coll_info.comm_ptr, use_multi_leads);
+            break;
+
+        default:
+            MPIR_Assert(0);
+            break;
+    }
+    return val;
 }
 
 static inline MPI_Aint get_total_msgsize(MPIR_Csel_coll_sig_s coll_info)
@@ -1297,6 +1359,16 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 node = node->success;
                 break;
 
+            case CSEL_NODE_TYPE__OPERATOR__COUNT_LT_NUMLEADS:
+                if (coll_info.comm_ptr->node_comm &&
+                    get_count(coll_info) <
+                    MPL_round_closest_multiple(MPIR_Comm_size(coll_info.comm_ptr->node_comm),
+                                               MPIR_CVAR_NUM_MULTI_LEADS, 15))
+                    node = node->success;
+                else
+                    node = node->failure;
+                break;
+
             case CSEL_NODE_TYPE__OPERATOR__IS_COMMUTATIVE:
                 if (is_commutative(coll_info) == node->u.is_commutative.val)
                     node = node->success;
@@ -1338,6 +1410,17 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                     node = node->success;
                 else
                     node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
+                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                    node = node->success;
+                else
+                    node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY:
+                node = node->success;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:

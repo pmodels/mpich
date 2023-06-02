@@ -47,9 +47,9 @@ MPICH is now GPU-aware, that is, it supports MPI calls that pass pointers to buf
 **2.1. JSON file**
 
 MPICH comes with a default JSON tuning file. The file settings determine which algorithms a collective will use for a particular message and communicator size. There are 3 types/levels of JSON tuning files:
-1. Composition: It determines the algorithm to partition a communicator for hierarchical algorithms that take into account the ranks on the same node and on different nodes. This JSON file is used by setting `MPIR_CVAR_COLL_CH4_SELECTION_TUNING_JSON_FILE=/path/to/ch4_selection_tuning.json`.
+1. Composition: It determines the algorithm to partition a communicator for hierarchical algorithms that take into account the ranks on the same node and on different nodes. This JSON file is used by setting `MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE=/path/to/ch4_selection_tuning.json`.
 2. Coll: This file determines which algorithm used for inter or intra algorithms, depending on the composition. This JSON file can be used by setting `MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE=/path/to/coll_selection_tuning.json`. This file contains algorithm covered in the blocking collectives section (Section 2.3).
-3. Posix: This file determines algorithms to be used for intra node cases. This JSON file can be used by setting `MPIR_CVAR_COLL_POSIX_SELECTION_TUNING_JSON_FILE=/path/to/posix_selection_tuning.json`. The files contains algorithms covered in the intra node section (Section 2.6).
+3. Posix: This file determines algorithms to be used for intra node cases. This JSON file can be used by setting `MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE=/path/to/posix_selection_tuning.json`. The files contains algorithms covered in the intra node section (Section 2.6).
 
 These environment variables should be loaded when the user loads the MPICH module. It is possible for the user to submit their own tuning JSON files, but a detailed explanation of the content of the JSON files is beyond the scope of this documentation. As mentioned above, selecting specific algorithms with CVARs will override the algorithm selection specified in the JSON files.
 
@@ -217,6 +217,7 @@ To use the same algorithm for both, blocking and non-blocking versions of the co
 + ---------- + ---------------------------- + ---------------------------------- + ------------------- +
 ```
 
+MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ determines the size of the swap buffer used for GPU collective operations. Currently, it only supports MPI_Bcast and MPI_Allreduce. If the message size is smaller or equal to this swap buffer size, MPICH will transfer the data to the host and perform the collective operation there. If the message size exceeds this buffer size, MPICH will perform the collective operation directly on the GPU.
 
 **2.4. Non Blocking collective algorithms**
 
@@ -466,10 +467,8 @@ The persistent collectives API use the schedule created with DAG based scheduler
 MPICH uses the environment variable `MPIR_CVAR_<collname>_POSIX_INTRA_ALGORITHM` to indicate the algorithms that can be used for intra-node collectives. The possible options for this CVAR are:
 * `auto`: Auto selection by using the JSON file. This is the default value.
 * `mpir`  : Implements the algorithm specified for the blocking/non-blocking collectives in Section 2.3 and 2.4. With this option, the same algorithm and parameter values are used for both the intra-node and inter-node portion of the collective. Notice that with non-blocking collectives, only the algorithms using the linear scheduler are supported for intra-node collectives.
-* `release-gather`: Implements optimized intra-node collectives taking advantage of the shared memory in the node, as described in the paper by Jain et al. (https://dl.acm.org/doi/10.5555/3291656.3291695)
-
-
-When the CVAR is set to use release-gather algorithms, additional CVARS can be used to tune some of the parameter values utilized by these collectives, as shown in Table IV.
+* `release_gather`: Implements optimized intra-node collectives taking advantage of the shared memory in the node, as described in the paper by Jain et al. (https://dl.acm.org/doi/10.5555/3291656.3291695). When the CVAR is set to use release-gather algorithms, additional CVARS can be used to tune some of the parameter values utilized by these collectives, as shown in Table IV.
+* `stream_read`: Implements optimized intra-node collectives utilizing the XeLinks between the Intel GPUs. Currently, this algorithm only supports MPI_Bcast and MPI_Alltoall. When the CVAR is set to use stream-read algorithms, additional CVARS is available to tune performance, as shown in Table V.
 
 **Table IV: Algorithms available for release-gather collectives**
 
@@ -498,6 +497,17 @@ When the CVAR is set to use release-gather algorithms, additional CVARS can be u
 + ---------- + ----------------------------------------------- + ------------------------------------ +
 ```
 
+**Table V: Parameters available for stream-read GPU collectives**
+
+```
++ ========== + =============================================== + ==================================== +
+| Collective | Name of CVAR                                    |  Notes                               |
++ ========== + =============================================== + ==================================== +
+| BCAST      | MPIR_CVAR_BCAST_STREAM_READ_MSG_SIZE_THRESHOLD  | Invoke stream read bcast only when   |
+|            |                                                 | the messages are larger than this    |
+|            |                                                 | threshold. Default: 1024 B           |
++ ---------- + ----------------------------------------------- + ------------------------------------ +
+```
 
 **3. Multi-threading**
 
@@ -585,9 +595,9 @@ In general, if a rank wants messages sent with different communicators to go thr
 **6.3 MPI_T Performance Variables (PVARs) Support**
 
 Performance variables (PVARs) related to Multi-NIC usage have been added in MPICH and the appropriate instrumentation has
-been added to keep track of the number of bytes sent and received through each Network Interface Card (NIC). Notice that PVARS are currently only available through our debug build. The new PVARs to track the amount of bytes sent and received are shown Table V.
+been added to keep track of the number of bytes sent and received through each Network Interface Card (NIC). Notice that PVARS are currently only available through our debug build. The new PVARs to track the amount of bytes sent and received are shown Table VI.
 
-**Table V: PVARS to track bytes sent and received**
+**Table VI: PVARS to track bytes sent and received**
 
 ```
 + ================================ + ================ + ================= + ==== + ======= +
@@ -598,10 +608,10 @@ been added to keep track of the number of bytes sent and received through each N
 + -------------------------------- + ---------------- + ------------------------ + ------- +
 ```
 
-The new PVARs to track the amount of data sent using the striping optimization (when messages are sufficiently large) are shown in Table VI. Notice that with striping, an initial handshake and small data transfer is sent via fi_send whereas most of the data transfer takes place through fi_read call.
-Hence, the sum of the two PVARS in Table VI represent the total amount of data transferred through striping.
+The new PVARs to track the amount of data sent using the striping optimization (when messages are sufficiently large) are shown in Table VII. Notice that with striping, an initial handshake and small data transfer is sent via fi_send whereas most of the data transfer takes place through fi_read call.
+Hence, the sum of the two PVARS in Table VII represent the total amount of data transferred through striping.
 
-**Table VI: PVARS to track amount of data sent through striping**
+**Table VII: PVARS to track amount of data sent through striping**
 
 ```
 + ================================ + ================ + ================= + ==== + ======= +
@@ -612,9 +622,9 @@ Hence, the sum of the two PVARS in Table VI represent the total amount of data t
 + -------------------------------- + ---------------- + ------------------------ + ------- +
 ```
 
-The new PVARs to track number of bytes sent and received through RMA calls are shown in Table VII.
+The new PVARs to track number of bytes sent and received through RMA calls are shown in Table VIII.
 
-**Table VII: PVARS to track amount of data sent through RMA calls**
+**Table VIII: PVARS to track amount of data sent through RMA calls**
 
 ```
 + ================================ + ================ + ================= + ==== + ======= +
@@ -660,31 +670,58 @@ As of now, Intel GPUs do not support operations for all datatypes. For example, 
 
 MPICH now supports GPU-to-GPU Interprocess Communication (IPC) with builtin datatypes. This is enabled by default for message sizes above a given threshold. We have added an environment variable to allow the user to modify this threshold:
 
-* `MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD`: Specifies the data size threshold (in bytes) for which GPU IPC is used.
+* `MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD`: Specifies the data size threshold (in bytes) for which GPU IPC is used. Default is 1. Use -1 to disable IPC.
 
 * `MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE`: Selects an implementation for ZE shareable IPC handle, it can be `drmfd` (the default) which uses device fd-based shareable IPC handle, or `pidfd`, which uses an implementation based on pidfd_getfd syscall (only available after Linux kernel 5.6.0).
 
+* `MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE`: select engine type to do the IPC copying, can be 0|1|2|auto. Default is using main copy engine. "auto" mode will use main copy engine when two buffers are on the same root device, otherwise use link copy engine.
+
+* `MPIR_CVAR_CH4_IPC_GPU_READ_WRITE_PROTOCOL`:  choose read/write/auto protocol for IPC. Default is read. Auto will prefer write protocol when remote device is visible, otherwise fallback to read.
+
+MPI_Get and MPI_Put also supports the IPC. For contiguous datatypes, an option is added to bypass Yaksa:
+
+* `MPIR_CVAR_CH4_GPU_RMA_ENGINE_TYPE`: select engine type to do the IPC copying, can be 0|1|2|auto|yaksa. Default is "auto" which will use main copy engine when two buffers are on the same root device, otherwise use link copy engine. "yaksa" is to fallback to using Yaksa
+
 MPICH supports fast memory copying using mmap mechanism (bypassing kernel launching), which is optimized for very small messages:
 
-* `MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD`: set to 1 to enable IPC. Fast memory copy is used with IPC.
+* `MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD`: make sure this CVAR is set to 1 to enable IPC. Fast memory copy depends on IPC enabled.
 
-* `MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE`: set the message size threshold (in bytes) to use fast memory copying.
+* `MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE`: set the max message size (in bytes) to use fast memory copying.
 
 GPU pipeline uses host buffer and pipelining technique to send internode messages instead of GPU RDMA. To enable this mode, use the following two CVARs:
 
 * `MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE`: This CVAR enables GPU pipeline for inter-node pt2pt messages
 
-* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_SZ`: Specifies the chunk size (in bytes) for GPU pipeline data transfer.
+* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD`: The threshold to start using GPU pipelining. Default is 1MB.
+
+* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ`: Specifies the chunk size (in bytes) for GPU pipeline data transfer.
 
 * `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK`: Specifies the number of buffers for GPU pipeline data transfer in each block/chunk of the pool.
 
 * `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_MAX_NUM_BUFFERS`: Specifies the maximum total number of buffers MPICH buffer pool can allocate.
 
+* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_D2H_ENGINE_TYPE`: Specify engine type for copying from device to host (sender side), default 0
+
+* `MPIR_CVAR_CH4_OFI_GPU_PIPELINE_H2D_ENGINE_TYPE`: Specify engine type for copying from host to device (receiver side), default 0
+
 To enable GPU Direct RDMA support for pt2pt communication, use the following CVARs:
-* `MPIR_CVAR_CH4_OFI_ENABLE_HMEM`: This CVAR with a value of `1` enables inter-node GPU Direct RDMA communication.
-* `MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD`: This is the message size threshold for using GPU Direct RDMA. The default value of this CVAR is 256KB. Messages  >= 256KB will go through GPU Direct RDMA.
-* `MPIR_CVAR_CH4_OFI_ENABLE_GDR_HOST_REG`: This CVAR with a value of `0` disables memory registration for host to host communication when GPU RDMA is enabled.
+* `MPIR_CVAR_CH4_OFI_ENABLE_HMEM`: This CVAR with a value of `1` enables inter-node GPU Direct RDMA pt2pt communication.
+* `MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD`: This is the message size threshold for using GPU Direct RDMA. The default value of this CVAR is 0B. Messages  >= 0B will go through GPU Direct RDMA. The users can tune this threshold for different providers.
+
+The fallback path is used when GPU messages are copied to host buffer for communication:
+
+* `MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE`: can be -1|0|1|2. Default is 1, which is the main copy engine. -1 will use yaksa for copying
+
+* `MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE`:  can be -1|0|1|2. Default is 1, which is the main copy engine. -1 will use yaksa for copying
 
 In some circumstances, one may want to disable the GPU support:
 
 * `MPIR_CVAR_ENABLE_GPU`: The default value of this CVAR is 1. Set to 0 to disable GPU support including GPU initialization.
+
+Misc:
+
+* `MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST`:  to use immediate command lists, instead of normal command lists plus command queues
+
+* `MPIR_CVAR_GPU_DEBUG_INFO`: when enabled, print GPU hardware information
+
+* CVARs related to the intra-node GPU collectives are introduced in Section 2.6.

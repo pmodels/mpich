@@ -720,7 +720,11 @@ sub RunMPIProgram {
         %saveEnv = %ENV;
         foreach my $val (@{$test_opt->{envs}}) {
             if ($val =~ /([^=]+)=(.*)/) {
-                $ENV{$1} = $2;
+		if ($1 eq "MPIR_CVAR_TREE_DUMP_FILE_PREFIX") {
+                	$ENV{$1} = $2 . $$;
+		} else {
+                	$ENV{$1} = $2;
+		}
             }
             else {
                 print STDERR "Environment variable/value $val not in a=b form\n";

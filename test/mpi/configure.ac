@@ -1613,6 +1613,9 @@ AC_SUBST(MAKE)
 if test -z "$MPILIBNAME" ; then MPILIBNAME=mpich ; fi
 AC_SUBST(MPILIBNAME)
 
+treefile=`mktemp`
+AC_SUBST(treefile)
+
 # TODO: use variables such as has_f77 etc. instead of double use $f77dir etc.
 AM_CONDITIONAL([HAS_F77], [test $f77dir = f77])
 AM_CONDITIONAL([HAS_F90], [test $f90dir = f90])

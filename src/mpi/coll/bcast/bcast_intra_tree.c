@@ -15,7 +15,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
                           int root, MPIR_Comm * comm_ptr, int tree_type,
                           int branching_factor, int is_nb, MPIR_Errflag_t * errflag)
 {
-    int rank, comm_size, src, dst, *p, j, k, lrank, is_contig;
+    int rank, comm_size, src, dst, *p, j, k, lrank = -1, is_contig;
     int parent = -1, num_children = 0, num_req = 0, is_root = 0;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -73,12 +73,24 @@ int MPIR_Bcast_intra_tree(void *buffer,
         num_children = branching_factor;
     } else {
         /*construct the knomial tree */
+        MPIR_Treealgo_params_t tree_params = {
+            .rank = rank,
+            .nranks = comm_size,
+            .k = branching_factor,
+            .tree_type = tree_type,
+            .root = root
+        };
         my_tree.children = NULL;
-        mpi_errno =
-            MPIR_Treealgo_tree_create(rank, comm_size, tree_type, branching_factor, root, &my_tree);
+        mpi_errno = MPIR_Treealgo_tree_create(comm_ptr, &tree_params, &my_tree);
         MPIR_ERR_CHECK(mpi_errno);
         num_children = my_tree.num_children;
         parent = my_tree.parent;
+    }
+
+    if (MPIR_CVAR_BCAST_INTRA_TREE_SKIP_COMM) {
+        if (tree_type != MPIR_TREE_TYPE_KARY)
+            MPIR_Treealgo_tree_free(&my_tree);
+        goto fn_exit;
     }
 
     if (is_nb) {

@@ -1,3 +1,4 @@
+
 # memtype=all will iterate all memtype for even processes and set odd processes to device
 
 allred 4 arg=-counts=10,100 arg=-memtype=all
@@ -17,4 +18,4 @@ allred2 12 arg=-memtype=all env=MTEST_GPU_VISIBILITY_AFFINITY=CONTIGUOUS_MULTI_S
 # The dtp test will iterate over all typelist and counts, each time will repeat [repeat] times and select seed, testsize, memtypes accordingly
 # set MPITEST_VERBOSE=1 to the list of tests being run.
 
-bcast 4 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=100 arg=-testsizes=2,50 arg=-memtype=random timeLimit=600
+bcast 4 arg=-typelist=MPI_INT,MPI_INT:4+MPI_DOUBLE:8 arg=-counts=1,17,50,100,512,65530 arg=-seed=100 arg=-testsizes=2,50 arg=-memtype=random timeLimit=4000

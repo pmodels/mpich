@@ -145,10 +145,7 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
         MPIR_Datatype *dtp;
         MPIR_Datatype_get_ptr(datatype, dtp);
         is_contig = dtp->is_contig;
-        /* NOTE: dtp->element_size may not be set if dtp is from a flattened type */
-        if (dtp->basic_type != MPI_DATATYPE_NULL) {
-            element_size = MPIR_Datatype_get_basic_size(datatype);
-        }
+        element_size = dtp->builtin_element_size;
         inbuf_ptr = MPIR_get_contig_ptr(inbuf, dtp->true_lb);
         total_size = incount * dtp->size;
     }

@@ -232,6 +232,10 @@ struct MPIR_Comm {
         int **step2_nbrs[MAX_RADIX - 1];
         int nbrs_defined[MAX_RADIX - 1];
         void **recexch_allreduce_nbr_buffer;
+        int topo_aware_tree_root;
+        MPIR_Treealgo_tree_t *topo_aware_tree;
+        int topo_wave_tree_root;
+        MPIR_Treealgo_tree_t *topo_wave_tree;
     } coll;
 
     void *csel_comm;            /* collective selector handle */

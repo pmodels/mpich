@@ -53,6 +53,119 @@ cvars:
       description : >-
         Defines the location of tuning file.
 
+    - name        : MPIR_CVAR_TOPOLOGY_AWARE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the branching factor in topology aware tree
+
+    - name        : MPIR_CVAR_TOPO_REORDER_ENABLE
+      category    : COLLECTIVE
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls if the leaders are reordered based on the number of ranks in each group.
+
+    - name        : MPIR_CVAR_TOPO_HIERARCHY_DUMP_FILE_PREFIX
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the filename for dumping the hierarchy data structure.
+
+    - name        : MPIR_CVAR_NETWORK_TOPO_OVERHEAD
+      category    : COLLECTIVE
+      type        : int
+      default     : 200
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the size of the overhead.
+
+    - name        : MPIR_CVAR_NETWORK_TOPO_DIFF_GROUPS
+      category    : COLLECTIVE
+      type        : int
+      default     : 2800
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency between different groups.
+
+    - name        : MPIR_CVAR_NETWORK_TOPO_DIFF_SWITCHES
+      category    : COLLECTIVE
+      type        : int
+      default     : 1900
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency between different switches
+        in the same groups.
+
+    - name        : MPIR_CVAR_NETWORK_TOPO_SAME_SWITCHES
+      category    : COLLECTIVE
+      type        : int
+      default     : 1600
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency between the same switches
+        in the same groups.
+
+    - name        : MPIR_CVAR_COORDINATES_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of coordinates file.
+
+    - name        : MPIR_CVAR_ENABLE_YAKSA_REDUCTION
+      category    : COLLECTIVE
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar enables yaksa based reduction for local reduce.
+
+    - name        : MPIR_CVAR_TREE_DUMP_FILE_PREFIX
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the prefix for the set of filenames receive the collective dump of the generated tree in JSON format.
+        If not set, the tree will not be dumped.
+
+    - name        : MPIR_CVAR_TREE_DUMP_COORDINATES_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the filename for dumping the network coordinates.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -77,12 +190,24 @@ int MPII_Coll_init(void)
         MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
     else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "knomial_2"))
         MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "topology_aware"))
+        MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "topology_aware_k"))
+        MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "topology_wave"))
+        MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_TOPOLOGY_WAVE;
 
     /* Allreduce */
     if (0 == strcmp(MPIR_CVAR_ALLREDUCE_TREE_TYPE, "knomial_1"))
         MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
     else if (0 == strcmp(MPIR_CVAR_ALLREDUCE_TREE_TYPE, "knomial_2"))
         MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else if (0 == strcmp(MPIR_CVAR_ALLREDUCE_TREE_TYPE, "topology_aware"))
+        MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE;
+    else if (0 == strcmp(MPIR_CVAR_ALLREDUCE_TREE_TYPE, "topology_aware_k"))
+        MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
+    else if (0 == strcmp(MPIR_CVAR_ALLREDUCE_TREE_TYPE, "topology_wave"))
+        MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_TOPOLOGY_WAVE;
     else
         MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KARY;
 
@@ -91,6 +216,12 @@ int MPII_Coll_init(void)
         MPIR_Barrier_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
     else if (0 == strcmp(MPIR_CVAR_BARRIER_TREE_TYPE, "knomial_2"))
         MPIR_Barrier_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else if (0 == strcmp(MPIR_CVAR_BARRIER_TREE_TYPE, "topology_aware"))
+        MPIR_Barrier_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE;
+    else if (0 == strcmp(MPIR_CVAR_BARRIER_TREE_TYPE, "topology_aware_k"))
+        MPIR_Barrier_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
+    else if (0 == strcmp(MPIR_CVAR_BARRIER_TREE_TYPE, "topology_wave"))
+        MPIR_Barrier_tree_type = MPIR_TREE_TYPE_TOPOLOGY_WAVE;
     else
         MPIR_Barrier_tree_type = MPIR_TREE_TYPE_KARY;
 
@@ -101,6 +232,12 @@ int MPII_Coll_init(void)
         MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
     else if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "knomial_2"))
         MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "topology_aware"))
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "topology_aware_k"))
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "topology_wave"))
+        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_TOPOLOGY_WAVE;
     else
         MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 
@@ -111,6 +248,12 @@ int MPII_Coll_init(void)
         MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
     else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_2"))
         MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "topology_aware"))
+        MPIR_Bcast_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "topology_aware_k"))
+        MPIR_Bcast_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "topology_wave"))
+        MPIR_Bcast_tree_type = MPIR_TREE_TYPE_TOPOLOGY_WAVE;
     else
         MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
 
@@ -121,6 +264,12 @@ int MPII_Coll_init(void)
         MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "knomial_2"))
         MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "topology_aware"))
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "topology_aware_k"))
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "topology_wave"))
+        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_TOPOLOGY_WAVE;
     else
         MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 

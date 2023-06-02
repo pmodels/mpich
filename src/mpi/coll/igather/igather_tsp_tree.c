@@ -41,7 +41,14 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
         is_inplace = (sendbuf == MPI_IN_PLACE); /* For gather, MPI_IN_PLACE is significant only at root */
 
     tree_type = MPIR_TREE_TYPE_KNOMIAL_1;       /* currently only tree_type=MPIR_TREE_TYPE_KNOMIAL_1 is supported for gather */
-    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
+    MPIR_Treealgo_params_t tree_params = {
+        .rank = rank,
+        .nranks = size,
+        .k = k,
+        .tree_type = tree_type,
+        .root = root
+    };
+    mpi_errno = MPIR_Treealgo_tree_create(comm, &tree_params, &my_tree);
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
@@ -74,7 +81,8 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
 
     /* get tree information of the parent */
     if (my_tree.parent != -1) {
-        MPIR_Treealgo_tree_create(my_tree.parent, size, tree_type, k, root, &parents_tree);
+        tree_params.rank = my_tree.parent;
+        mpi_errno = MPIR_Treealgo_tree_create(comm, &tree_params, &parents_tree);
     } else {    /* initialize an empty children array */
         utarray_new(parents_tree.children, &ut_int_icd, MPL_MEM_COLL);
         parents_tree.num_children = 0;

@@ -209,7 +209,11 @@ static void *create_container(struct json_object *obj)
         else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_gamma"))
             cnt->id =
                 MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_gamma;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_alpha"))
+        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_delta")) {
+            cnt->u.allreduce.intra_composition_delta.num_multi_leads = MPIR_CVAR_NUM_MULTI_LEADS;
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_delta;
+        } else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_alpha"))
             cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_alpha;
         else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_beta"))
             cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_beta;

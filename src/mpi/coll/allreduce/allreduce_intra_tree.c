@@ -65,7 +65,14 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         }
     }
     /* initialize the tree */
-    mpi_errno = MPIR_Treealgo_tree_create(rank, comm_size, tree_type, k, root, &my_tree);
+    MPIR_Treealgo_params_t tree_params = {
+        .rank = rank,
+        .nranks = comm_size,
+        .k = k,
+        .tree_type = tree_type,
+        .root = root
+    };
+    mpi_errno = MPIR_Treealgo_tree_create(comm_ptr, &tree_params, &my_tree);
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 

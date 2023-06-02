@@ -86,6 +86,17 @@ int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
     return attr->type == MPL_GPU_POINTER_DEV;
 }
 
+int MPL_gpu_query_pointer_is_strict_dev(const void *ptr, MPL_pointer_attr_t * attr)
+{
+    MPL_pointer_attr_t a;
+
+    if (attr == NULL) {
+        MPL_gpu_query_pointer_attr(ptr, &a);
+        attr = &a;
+    }
+    return attr->type == MPL_GPU_POINTER_DEV;
+}
+
 int MPL_gpu_query_is_same_dev(int dev1, int dev2)
 {
     return dev1 == dev2;
@@ -112,7 +123,7 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, void **ptr)
 {
     int mpl_err = MPL_SUCCESS;
     hipError_t ret;
@@ -120,7 +131,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void
 
     hipGetDevice(&prev_devid);
     hipSetDevice(dev_id);
-    ret = hipIpcOpenMemHandle(ptr, ipc_handle, hipIpcMemLazyEnablePeerAccess);
+    ret = hipIpcOpenMemHandle(ptr, *ipc_handle, hipIpcMemLazyEnablePeerAccess);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
@@ -479,26 +490,6 @@ void MPL_gpu_event_complete(MPL_gpu_event_t * var)
 bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var)
 {
     return (*var) <= 0;
-}
-
-int MPL_gpu_alltoall_stream_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
-                                 int comm_size, int comm_rank, int *rank_to_dev_id)
-{
-    return MPL_ERR_GPU_INTERNAL;
-}
-
-int MPL_gpu_alltoall_kernel_read(void **remote_bufs, void *recv_buf, int count, size_t data_sz,
-                                 int comm_size, int comm_rank, int dev_id,
-                                 const char *datatype_name, const char *kernel_location)
-{
-    return MPL_ERR_GPU_INTERNAL;
-}
-
-int MPL_gpu_alltoall_kernel_write(void *send_buf, void **remote_bufs, int count, size_t data_sz,
-                                  int comm_size, int comm_rank, int dev_id,
-                                  const char *datatype_name, const char *kernel_location)
-{
-    return MPL_ERR_GPU_INTERNAL;
 }
 
 #endif /* MPL_HAVE_HIP */

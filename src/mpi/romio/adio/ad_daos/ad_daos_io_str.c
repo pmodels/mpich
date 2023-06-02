@@ -25,9 +25,6 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
                          MPI_Request * request, int rw_type, int *error_code);
 
 static MPIX_Grequest_class ADIOI_DAOS_greq_class = 0;
-int ADIOI_DAOS_aio_free_fn(void *extra_state);
-int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status * status);
-int ADIOI_DAOS_aio_wait_fn(int count, void **array_of_states, double timeout, MPI_Status * status);
 
 void ADIOI_DAOS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
                             MPI_Datatype datatype, int file_ptr_type,
