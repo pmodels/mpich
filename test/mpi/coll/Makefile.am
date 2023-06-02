@@ -24,6 +24,7 @@ noinst_PROGRAMS =      \
     allred5            \
     allred6            \
     allred_derived     \
+    allred_float       \
     allredmany         \
     alltoall1          \
     alltoallv          \
