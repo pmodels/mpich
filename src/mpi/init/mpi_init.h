@@ -28,13 +28,13 @@ cvars:
     - name        : MPIR_CVAR_DEBUG_SUMMARY
       category    : DEVELOPER
       alt-env     : MPIR_CVAR_MEM_CATEGORY_INFORMATION, MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG, MPIR_CVAR_CH4_UCX_CAPABILITY_DEBUG
-      type        : boolean
-      default     : false
+      type        : int
+      default     : 0
       class       : none
       verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If true, print internal summary of various debug information, such as memory allocation by category.
+        1: Print internal summary of various debug information, such as memory allocation by category.
         Each layer may print their own summary information. For example, ch4-ofi may print its provider
         capability settings.
 
