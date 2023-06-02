@@ -37,6 +37,7 @@ cvars:
         1: Print internal summary of various debug information, such as memory allocation by category.
         Each layer may print their own summary information. For example, ch4-ofi may print its provider
         capability settings.
+        2: Also print the preferred NIC for each rank
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
