@@ -9,9 +9,16 @@
 
 # Fix compiler wrapper scripts to be compatible with CUDA memory hooks
 
-# Fix MPI_WAITALL_ENQUEUE to make a copy of the input request array
+# Fix MPIX_WAITALL_ENQUEUE to make a copy of the input request array
+
+# Fix bug in MPI_ALLREDUCE that could result in ranks receiving
+  different floating point values
 
 # Fix potential deadlock when progressing RMA windows
+
+# Fix potential crash in MPI_REDUCE with non-zero root and MPI_IN_PLACE
+
+# Fix potential crash during probe with libfabric CXI provider
 
 # Fix MPI_PARRIVED when the partitioned request is inactive
 
@@ -19,6 +26,8 @@
   attribute on the same object
 
 # Fix build issue in ROMIO Lustre driver
+
+# Improve Fortran 2008 binding support detection during configure
 
 # Report an error if collective tuning json file fails to open
 
