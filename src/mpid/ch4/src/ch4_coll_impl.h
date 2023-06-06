@@ -630,7 +630,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
     MPI_Aint true_lb = 0;
     MPI_Aint true_extent = 0;
     MPI_Aint extent = 0;
-    const void *inter_sendbuf;
+    const void *intra_sendbuf, *inter_sendbuf;
     void *ori_recvbuf = recvbuf;
 
     MPIR_CHKLMEM_DECL(1);
@@ -648,14 +648,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
         recvbuf = (void *) ((char *) recvbuf - true_lb);
     }
 
+    /* non-zero root needs to send from recvbuf if using MPI_IN_PLACE  */
+    intra_sendbuf = (sendbuf == MPI_IN_PLACE && root != 0) ? recvbuf : sendbuf;
+
     /* intranode reduce on all nodes */
     if (comm->node_comm != NULL) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm,
-                                         errflag);
+        mpi_errno =
+            MPIDI_SHM_mpi_reduce(intra_sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm,
+                                 errflag);
 #else
-        mpi_errno = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm,
-                                        errflag);
+        mpi_errno =
+            MPIDI_NM_mpi_reduce(intra_sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm,
+                                errflag);
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
 
         if (mpi_errno) {

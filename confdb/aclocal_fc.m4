@@ -1092,6 +1092,7 @@ int foo_c(CFI_cdesc_t * a_desc, CFI_cdesc_t * b_desc)
 
 void test_assumed_rank_async_impl_c(CFI_cdesc_t * a_desc)
 {
+	CFI_is_contiguous(a_desc);
 	return;
 }
 ]])],[mv conftest.$OBJEXT conftest1.$OBJEXT],[f08_works=no])
