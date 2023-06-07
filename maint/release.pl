@@ -185,8 +185,8 @@ if ("$current_ver" ne "$version\n") {
     print("\tWARNING: maint/version does not match user version\n\n");
 }
 
-my $changes_ver = `git show ${branch}:CHANGES | grep "http://git.mpich.org/mpich.git/shortlog" | \
-                   sed -e '2,\$d' -e 's/.*\.\.//g'`;
+my $changes_ver = `git show ${branch}:CHANGES | grep -m 1 "Changes in" | \
+                   awk '{print \$3}'`;
 if ("$changes_ver" ne "$version\n") {
     print("\tWARNING: CHANGES/version does not match user version\n\n");
 }
