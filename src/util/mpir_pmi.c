@@ -111,10 +111,22 @@ static pmix_proc_t pmix_wcproc;
 
 static char *hwloc_topology_xmlfile;
 
+static void MPIR_pmi_finalize_on_exit(void)
+{
+#ifdef USE_PMI1_API
+    PMI_Finalize();
+#elif defined USE_PMI2_API
+    PMI2_Finalize();
+#elif defined USE_PMIX_API
+    PMIx_Finalize(NULL, 0);
+#endif
+}
+
 int MPIR_pmi_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
+    static bool pmi_connected = false;
 
     /* See if the user wants to override our default values */
     MPL_env2int("PMI_VERSION", &pmi_version);
@@ -212,6 +224,15 @@ int MPIR_pmi_init(void)
     world_id = 0;
 
 #endif
+    if (!pmi_connected) {
+        /* Register finalization of PM connection in exit handler */
+        mpi_errno = atexit(MPIR_pmi_finalize_on_exit);
+        MPIR_ERR_CHKANDJUMP1(mpi_errno != 0, mpi_errno, MPI_ERR_OTHER,
+                             "**atexit_pmi_finalize", "**atexit_pmi_finalize %d", mpi_errno);
+
+        pmi_connected = true;
+    }
+
     MPIR_Process.has_parent = has_parent;
     MPIR_Process.rank = rank;
     MPIR_Process.size = size;
@@ -234,14 +255,13 @@ int MPIR_pmi_init(void)
 
 void MPIR_pmi_finalize(void)
 {
+    /* Finalize of PM interface happens in exit handler,
+     * here: free allocated memory */
 #ifdef USE_PMI1_API
-    PMI_Finalize();
     MPL_free(pmi_kvs_name);
 #elif defined(USE_PMI2_API)
-    PMI2_Finalize();
     MPL_free(pmi_jobid);
 #elif defined(USE_PMIX_API)
-    PMIx_Finalize(NULL, 0);
     /* pmix_proc does not need free */
 #endif
 

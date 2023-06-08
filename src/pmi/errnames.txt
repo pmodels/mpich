@@ -107,3 +107,8 @@
 **pmix_resolve_nodes %d: PMIx_Resolve_nodes returned %d
 **pmix_resolve_peers: PMIx_Resolve_peers failed
 **pmix_resolve_peers %d: PMIx_Resolve_peers returned %d
+#
+# PMI finalize exit handler registration
+#
+**atexit_pmi_finalize: Registration of PMI finalize function in exit handler failed
+**atexit_pmi_finalize %d: Registration of PMI finalize function in exit handler failed with %d
