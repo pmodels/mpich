@@ -6,10 +6,6 @@
 #ifndef MPIR_CSEL_CONTAINER_H_INCLUDED
 #define MPIR_CSEL_CONTAINER_H_INCLUDED
 
-#include <json.h>
-
-void *MPII_Create_container(struct json_object *obj);
-
 typedef enum {
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_intra_brucks,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgather_intra_k_brucks,

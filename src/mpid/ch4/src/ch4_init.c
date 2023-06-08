@@ -14,6 +14,8 @@
 #include <signal.h>
 #endif
 
+#include "csel_json.h"
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -152,86 +154,77 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static void *create_container(struct json_object *obj)
+static int get_container_id(const char *ckey)
+{
+    if (!strcmp(ckey, "composition=MPIDI_Barrier_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Barrier_intra_composition_beta"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_beta;
+    else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_beta"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_beta;
+    else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_gamma"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma;
+    else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_beta"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_beta;
+    else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_gamma"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_gamma;
+    else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_beta"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_beta;
+    else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_gamma"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_gamma;
+    else if (!strcmp(ckey, "composition=MPIDI_Alltoall_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Alltoall_intra_composition_beta"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_beta;
+    else if (!strcmp(ckey, "composition=MPIDI_Alltoallv_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallv_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Alltoallw_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallw_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Allgather_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Allgather_intra_composition_beta"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta;
+    else if (!strcmp(ckey, "composition=MPIDI_Allgatherv_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgatherv_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Gather_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gather_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Gatherv_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gatherv_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Scatter_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatter_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Scatterv_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatterv_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Reduce_scatter_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Reduce_scatter_block_intra_composition_alpha"))
+        return
+            MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_block_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Scan_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_alpha;
+    else if (!strcmp(ckey, "composition=MPIDI_Scan_intra_composition_beta"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta;
+    else if (!strcmp(ckey, "composition=MPIDI_Exscan_intra_composition_alpha"))
+        return MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha;
+    else {
+        fprintf(stderr, "unrecognized key %s\n", ckey);
+        MPIR_Assert(0);
+        return -1;
+    }
+}
+
+static void *create_container(const char *ckey, struct json_stream *json_stream)
 {
     MPIDI_Csel_container_s *cnt = MPL_malloc(sizeof(MPIDI_Csel_container_s), MPL_MEM_COLL);
+    cnt->id = get_container_id(ckey);
 
-    json_object_object_foreach(obj, key, val) {
-        char *ckey = MPL_strdup_no_spaces(key);
-
-        if (!strcmp(ckey, "composition=MPIDI_Barrier_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Barrier_intra_composition_beta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_beta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_gamma"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma;
-        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_beta"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_gamma"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_gamma;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_beta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_gamma"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_gamma;
-        else if (!strcmp(ckey, "composition=MPIDI_Alltoall_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Alltoall_intra_composition_beta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Alltoallv_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallv_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Alltoallw_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallw_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Allgather_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Allgather_intra_composition_beta"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Allgatherv_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgatherv_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Gather_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gather_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Gatherv_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gatherv_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Scatter_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatter_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Scatterv_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatterv_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_scatter_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Reduce_scatter_block_intra_composition_alpha"))
-            cnt->id =
-                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_block_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Scan_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_alpha;
-        else if (!strcmp(ckey, "composition=MPIDI_Scan_intra_composition_beta"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta;
-        else if (!strcmp(ckey, "composition=MPIDI_Exscan_intra_composition_alpha"))
-            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha;
-        else {
-            fprintf(stderr, "unrecognized key %s\n", ckey);
-            MPIR_Assert(0);
-        }
-
-        MPL_free(ckey);
-    }
+    /* no container parameters */
+    json_skip_object(json_stream);
 
     return (void *) cnt;
 }

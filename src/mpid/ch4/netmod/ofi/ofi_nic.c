@@ -122,6 +122,7 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
     }
 
     if (nic_count == 0) {
+        MPIR_Assert(first_prov);
         /* If no NICs are detected, then force using first provider */
         MPIDI_OFI_global.prov_use[0] = fi_dupinfo(first_prov);
         MPIR_Assert(MPIDI_OFI_global.prov_use[0]);

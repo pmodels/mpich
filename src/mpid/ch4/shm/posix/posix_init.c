@@ -41,6 +41,7 @@ cvars:
 
 #include "utarray.h"
 #include <strings.h>    /* for strncasecmp */
+#include "csel_json.h"
 
 extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 
@@ -93,33 +94,32 @@ static int choose_posix_eager(void)
     goto fn_exit;
 }
 
-static void *create_container(struct json_object *obj)
+static int get_container_id(const char *ckey)
+{
+    if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_release_gather"))
+        return MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather;
+    else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_barrier_release_gather"))
+        return MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather;
+    else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_allreduce_release_gather"))
+        return MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather;
+    else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_reduce_release_gather"))
+        return MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather;
+    else {
+        fprintf(stderr, "unrecognized key %s\n", ckey);
+        MPIR_Assert(0);
+        return -1;
+    }
+}
+
+static void *create_container(const char *ckey, struct json_stream *json_stream)
 {
     MPIDI_POSIX_csel_container_s *cnt =
         MPL_malloc(sizeof(MPIDI_POSIX_csel_container_s), MPL_MEM_COLL);
 
-    json_object_object_foreach(obj, key, val) {
-        char *ckey = MPL_strdup_no_spaces(key);
+    cnt->id = get_container_id(ckey);
 
-        if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather;
-        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_barrier_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather;
-        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_allreduce_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather;
-        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_reduce_release_gather"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather;
-        else {
-            fprintf(stderr, "unrecognized key %s\n", key);
-            MPIR_Assert(0);
-        }
-
-        MPL_free(ckey);
-    }
+    /* no container parameters */
+    json_skip_object(json_stream);
 
     return cnt;
 }

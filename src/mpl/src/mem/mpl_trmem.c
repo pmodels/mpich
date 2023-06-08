@@ -980,12 +980,12 @@ void MPL_trcategorydump(FILE * fp)
 }
 
 
-char *MPL_strdup_no_spaces(const char *str)
+char *MPL_strdup_no_spaces(const char *str, int len)
 {
-    char *newstr = MPL_malloc(strlen(str) + 1, MPL_MEM_COLL);
+    char *newstr = MPL_malloc(len + 1, MPL_MEM_COLL);
 
     int j = 0;
-    for (int i = 0; i < strlen(str); i++) {
+    for (int i = 0; i < len; i++) {
         if (str[i] != ' ')
             newstr[j++] = str[i];
     }
