@@ -11,6 +11,7 @@ allred6 4
 allred6 7
 allred_derived 4
 allred_float 10
+reduce 3
 reduce 5
 reduce 10
 reduce_local 2
