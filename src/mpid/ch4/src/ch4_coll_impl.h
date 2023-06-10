@@ -579,6 +579,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
     void *ori_recvbuf = recvbuf;
 
     MPIR_CHKLMEM_DECL(1);
+    /* TODO: we can safe the last send/recv if --
+     *     1. if node_comm is the same size as original comm, fallback
+     *     2. if root is in node_roots_comm but not rank 0, reduce to root rather than 0
+     */
 
     /* Create a temporary buffer on local roots of all nodes,
      * except for root if it is also a local root */
