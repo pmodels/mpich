@@ -576,7 +576,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
     MPI_Aint true_lb = 0;
     MPI_Aint true_extent = 0;
     MPI_Aint extent = 0;
-    const void *inter_sendbuf;
     void *ori_recvbuf = recvbuf;
 
     MPIR_CHKLMEM_DECL(1);
@@ -611,19 +610,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
 
         MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
-
-        /* recvbuf becomes the sendbuf for internode reduce */
-        inter_sendbuf = recvbuf;
-    } else {
-        inter_sendbuf = (sendbuf == MPI_IN_PLACE) ? recvbuf : sendbuf;
     }
 
     /* internode reduce with rank 0 in node_roots_comm as the root */
     if (comm->node_roots_comm != NULL) {
-        coll_ret =
-            MPIDI_NM_mpi_reduce(comm->node_roots_comm->rank == 0 ? MPI_IN_PLACE : inter_sendbuf,
-                                recvbuf, count, datatype, op, 0, comm->node_roots_comm, errflag);
+        const void *inter_sendbuf;
+        if (!comm->node_comm && sendbuf != MPI_IN_PLACE) {
+            /* individual rank that has skipped node_comm stage, data is still in sendbuf */
+            inter_sendbuf = sendbuf;
+        } else if (comm->node_roots_comm->rank == 0) {
+            /* root use MPI_IN_PLACE, data in recvbuf */
+            inter_sendbuf = MPI_IN_PLACE;
+        } else {
+            inter_sendbuf = recvbuf;
+        }
 
+        coll_ret = MPIDI_NM_mpi_reduce(inter_sendbuf, recvbuf, count, datatype, op, 0,
+                                       comm->node_roots_comm, errflag);
         MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
     }
 
