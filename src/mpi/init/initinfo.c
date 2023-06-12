@@ -22,6 +22,8 @@ const char MPII_Version_F77[] = MPICH_COMPILER_F77;
 const char MPII_Version_FC[] = MPICH_COMPILER_FC;
 const char MPII_Version_custom[] = MPICH_CUSTOM_STRING;
 
+static char *get_feature_list(void);
+
 int MPIR_Get_library_version_impl(char *version, int *resultlen)
 {
     int printed_len;
@@ -34,10 +36,12 @@ int MPIR_Get_library_version_impl(char *version, int *resultlen)
                            "MPICH CC:           %s\n"
                            "MPICH CXX:          %s\n"
                            "MPICH F77:          %s\n"
-                           "MPICH FC:           %s\n",
+                           "MPICH FC:           %s\n"
+                           "MPICH features:     %s\n",
                            MPII_Version_string, MPII_Version_date, MPII_Version_ABI,
                            MPII_Version_device, MPII_Version_configure, MPII_Version_CC,
-                           MPII_Version_CXX, MPII_Version_F77, MPII_Version_FC);
+                           MPII_Version_CXX, MPII_Version_F77, MPII_Version_FC, get_feature_list());
+
     if (strlen(MPII_Version_custom) > 0)
         snprintf(version + printed_len, MPI_MAX_LIBRARY_VERSION_STRING - printed_len,
                  "MPICH Custom Information:\t%s\n", MPII_Version_custom);
@@ -46,3 +50,33 @@ int MPIR_Get_library_version_impl(char *version, int *resultlen)
 
     return MPI_SUCCESS;
 }
+
+#define STRBUF_MAX 1024
+#define ADD_FEATURE(FEATURE) \
+    do { \
+        if (count > 0) { \
+            strcpy(strbuf + count, ", "); \
+            count += 2; \
+        } \
+        int n = strlen(FEATURE); \
+        strcpy(strbuf + count, FEATURE); \
+        count += n; \
+        MPIR_Assert(count < STRBUF_MAX); \
+    } while (0)
+
+static char *get_feature_list(void)
+{
+    static char strbuf[STRBUF_MAX];
+    int count = 0;
+
+    strbuf[count] = '\0';
+
+#ifdef ENABLE_THREADCOMM
+    ADD_FEATURE("threadcomm");
+#endif
+
+    return strbuf;
+}
+
+#undef STRBUF_MAX
+#undef ADD_FEATURE
