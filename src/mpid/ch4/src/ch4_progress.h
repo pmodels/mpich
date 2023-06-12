@@ -264,9 +264,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Stream_progress(MPIR_Stream * stream_ptr)
     return mpi_errno;
 }
 
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+#define MPIDI_PROGRESS_YIELD() MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX)
+#else
+#define MPIDI_PROGRESS_YIELD() MPID_Thread_yield()
+#endif
+
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
 {
-    return MPID_Progress_test(state);
+    int mpi_errno = MPID_Progress_test(state);
+    MPIDI_PROGRESS_YIELD();
+    return mpi_errno;
 }
 
 #endif /* CH4_PROGRESS_H_INCLUDED */
