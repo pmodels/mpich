@@ -78,12 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     MPIR_Datatype_is_contig(datatype, &is_contig);
-
-    if (is_contig) {
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    } else {
-        MPIR_Pack_size(1, datatype, &type_size);
-    }
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (!is_contig || type_size >= MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE) {
         /* Convert to MPI_BYTE datatype */
@@ -178,7 +173,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     int i;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     MPI_Aint offset = 0;
-    int is_contig;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint lb, true_extent, extent, type_size;
 
@@ -216,13 +210,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
 
-    MPIR_Datatype_is_contig(datatype, &is_contig);
-
-    if (is_contig) {
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    } else {
-        MPIR_Pack_size(1, datatype, &type_size);
-    }
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (sendbuf == MPI_IN_PLACE) {
         sendbuf = recvbuf;
@@ -280,7 +268,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     int i;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     MPI_Aint offset = 0;
-    int is_contig;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint lb, true_extent, extent, type_size;
 
@@ -313,13 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
 
-    MPIR_Datatype_is_contig(datatype, &is_contig);
-
-    if (is_contig) {
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    } else {
-        MPIR_Pack_size(1, datatype, &type_size);
-    }
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (sendbuf == MPI_IN_PLACE) {
         sendbuf = recvbuf;
