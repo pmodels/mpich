@@ -44,7 +44,7 @@ int MPIR_Type_get_contents_impl(MPI_Datatype datatype, int max_integers, int max
 
     if (cp->nr_counts > 0) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         __func__, __LINE__, MPI_ERR_OTHER,
+                                         __func__, __LINE__, MPI_ERR_TYPE,
                                          "**need_get_contents_c", 0);
         return mpi_errno;
     }
@@ -146,7 +146,7 @@ int MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
 
     if (nr_counts > 0) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         __func__, __LINE__, MPI_ERR_OTHER,
+                                         __func__, __LINE__, MPI_ERR_TYPE,
                                          "**need_get_envelope_c", 0);
         return mpi_errno;
     }
