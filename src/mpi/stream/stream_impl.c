@@ -16,13 +16,13 @@ static int allocate_vci(int *vci, bool is_gpu_stream)
     if (is_gpu_stream) {
         int mpi_errno = MPI_SUCCESS;
         if (!gpu_stream_vci) {
-            mpi_errno = MPID_Allocate_vci(&gpu_stream_vci);
+            mpi_errno = MPID_Allocate_vci(&gpu_stream_vci, true);       /* shared */
         }
         gpu_stream_count++;
         *vci = gpu_stream_vci;
         return mpi_errno;
     } else {
-        return MPID_Allocate_vci(vci);
+        return MPID_Allocate_vci(vci, false);   /* not shared */
     }
 }
 
@@ -44,7 +44,8 @@ static int deallocate_vci(int vci)
 #else
 static int allocate_vci(int *vci, bool is_gpu_stream)
 {
-    return MPID_Allocate_vci(vci);
+    /* TODO: need make sure the gpu enqueue path is thread-safe */
+    return MPID_Allocate_vci(vci, false);
 }
 
 static int deallocate_vci(int *vci)

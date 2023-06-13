@@ -265,7 +265,7 @@ int MPID_InitCompleted( void )
     /* --END ERROR HANDLING-- */
 }
 
-int MPID_Allocate_vci(int *vci)
+int MPID_Allocate_vci(int *vci, bool is_shared)
 {
     int mpi_errno = MPI_SUCCESS;
     *vci = 0;
