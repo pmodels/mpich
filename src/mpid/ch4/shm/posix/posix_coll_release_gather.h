@@ -191,6 +191,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
         goto fn_exit;
     }
 
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Type_get_extent_impl(datatype, &lb, &extent);
+    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
+    extent = MPL_MAX(extent, true_extent);
+    if (MPL_MAX(type_size, extent) >=
+        MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS) {
+        goto fallback;
+    }
+
     MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
     if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
         MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
@@ -205,12 +214,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
                                                  MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE);
     MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno_ret,
                                    "release_gather reduce cannot create more shared memory. Falling back to pt2pt algorithms.\n");
-
-    MPIR_Type_get_extent_impl(datatype, &lb, &extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (sendbuf == MPI_IN_PLACE) {
         sendbuf = recvbuf;
@@ -281,6 +284,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
         goto fn_exit;
     }
 
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Type_get_extent_impl(datatype, &lb, &extent);
+    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
+    extent = MPL_MAX(extent, true_extent);
+    if (MPL_MAX(type_size, extent) >=
+        MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS) {
+        goto fallback;
+    }
+
     MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
     if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
         MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
@@ -295,12 +307,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
                                                  MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE);
     MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno_ret,
                                    "release_gather allreduce cannot create more shared memory. Falling back to pt2pt algorithms.\n");
-
-    MPIR_Type_get_extent_impl(datatype, &lb, &extent);
-    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
-    extent = MPL_MAX(extent, true_extent);
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (sendbuf == MPI_IN_PLACE) {
         sendbuf = recvbuf;
