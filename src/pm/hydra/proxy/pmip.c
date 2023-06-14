@@ -149,7 +149,6 @@ int main(int argc, char **argv)
     /* collect the singleton's exit_status */
     if (PMIP_pg_0()->is_singleton) {
         struct pmip_pg *pg_0 = PMIP_pg_0();
-        HYDU_ASSERT(pg_0, status);
 
         HYDU_ASSERT(pg_0->num_procs == 1, status);
         HYDU_ASSERT(pg_0->downstreams[0].pid == HYD_pmcd_pmip.singleton_pid, status);
@@ -157,32 +156,30 @@ int main(int argc, char **argv)
         if (pg_0->downstreams[0].exit_status == PMIP_EXIT_STATUS_UNSET) {
             pg_0->downstreams[0].exit_status = 0;
         }
-    } else {
-        /* Wait for the processes to finish */
-        int total_count = PMIP_get_total_process_count();
-        while (1) {
-            pid = waitpid(-1, &ret_status, 0);
 
-            /* Find the pid and mark it as complete. */
-            if (pid > 0) {
-                struct pmip_downstream *tmp = PMIP_find_downstream_by_pid(pid);
-                if (tmp) {
-                    if (tmp->exit_status == PMIP_EXIT_STATUS_UNSET) {
-                        tmp->exit_status = ret_status;
-                    }
-                    done++;
+        done++;
+    }
+
+    /* Wait for the processes to finish */
+    int total_count = PMIP_get_total_process_count();
+    while (done < total_count) {
+        pid = waitpid(-1, &ret_status, 0);
+
+        /* Find the pid and mark it as complete. */
+        if (pid > 0) {
+            struct pmip_downstream *tmp = PMIP_find_downstream_by_pid(pid);
+            if (tmp) {
+                if (tmp->exit_status == PMIP_EXIT_STATUS_UNSET) {
+                    tmp->exit_status = ret_status;
                 }
+                done++;
             }
-
-            /* If no more processes are pending, break out */
-            if (done == total_count)
-                break;
-
-            /* Check if there are any messages from the launcher */
-            status = HYDT_dmx_wait_for_event(0);
-            HYDU_IGNORE_TIMEOUT(status);
-            HYDU_ERR_POP(status, "demux engine error waiting for event\n");
         }
+
+        /* Check if there are any messages from the launcher */
+        status = HYDT_dmx_wait_for_event(0);
+        HYDU_IGNORE_TIMEOUT(status);
+        HYDU_ERR_POP(status, "demux engine error waiting for event\n");
     }
 
     status = PMIP_foreach_pg_do(pg_exit);
