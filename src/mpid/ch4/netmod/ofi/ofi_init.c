@@ -21,7 +21,7 @@ cvars:
     - name        : MPIR_CVAR_OFI_SKIP_IPV6
       category    : DEVELOPER
       type        : boolean
-      default     : true
+      default     : false
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
