@@ -33,6 +33,7 @@ typedef enum {
     Device,
     Compilers,
     Custom,
+    Features,
     ABI,
     CC,
     CXX,
@@ -94,6 +95,9 @@ int main(int argc, char *argv[])
         else if (strcmp(argv[i], "-custom") == 0 ||
                  strcmp(argv[i], "--custom") == 0 || strcmp(argv[i], "-u") == 0)
             flags[Custom] = 1;
+        else if (strcmp(argv[i], "-features") == 0 ||
+                 strcmp(argv[i], "--features") == 0 || strcmp(argv[i], "-f") == 0)
+            flags[Features] = 1;
         else {
             fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
             exit(1);
@@ -130,6 +134,7 @@ int main(int argc, char *argv[])
         MATCH("MPICH CXX:", CXX)
         MATCH("MPICH F77:", F77)
         MATCH("MPICH FC:", FC)
+        MATCH("MPICH features:", Features)
         else if (strncmp(s, "MPICH Custom Information:", 25) == 0) {
             strs[Custom] = s;
             /* grab the rest of the text */
@@ -166,6 +171,9 @@ int main(int argc, char *argv[])
         if (strs[FC]) {
             printf("%s\n", strs[FC]);
         }
+    }
+    if (flags[Features] && strs[Features]) {
+        printf("%s\n", strs[Features]);
     }
     if (flags[Custom] && strs[Custom]) {
         printf("%s\n", strs[Custom]);
