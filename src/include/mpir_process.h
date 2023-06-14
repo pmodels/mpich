@@ -17,16 +17,6 @@ typedef struct PreDefined_attrs {
     int wtime_is_global;        /* Wtime is global over processes in COMM_WORLD */
 } PreDefined_attrs;
 
-struct MPIR_Session {
-    MPIR_OBJECT_HEADER;
-    MPID_Thread_mutex_t mutex;
-    MPIR_Errhandler *errhandler;
-    int thread_level;
-};
-
-extern MPIR_Session MPIR_Session_direct[];
-extern MPIR_Object_alloc_t MPIR_Session_mem;
-
 typedef struct MPIR_Process_t {
     MPL_atomic_int_t mpich_state;       /* Need use atomics due to MPI_Initialized() etc.
                                          * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */

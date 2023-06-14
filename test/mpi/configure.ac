@@ -1696,6 +1696,7 @@ AC_OUTPUT(maint/testmerge \
           mpi_t/Makefile \
           rma/Makefile \
           rma/testlist \
+          session/Makefile \
           spawn/Makefile \
           spawn/testlist \
           topo/Makefile \
