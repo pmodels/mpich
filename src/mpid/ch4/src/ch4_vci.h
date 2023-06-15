@@ -42,7 +42,7 @@
 /* vci above implicit vci pool are always explciitly allocated by user. It is
  * always under serial execution context and we can skip thread synchronizations.
  */
-#define MPIDI_VCI_IS_EXPLICIT(vci) (vci >= MPIDI_global.n_vcis)
+#define MPIDI_VCI_IS_EXPLICIT(vci) (!MPIDI_global.share_reserved_vcis && (vci) >= MPIDI_global.n_vcis)
 
 /* VCI hashing function (fast path) */
 

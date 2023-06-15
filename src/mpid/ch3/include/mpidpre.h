@@ -532,7 +532,7 @@ int MPID_Init(int required, int *provided);
 
 int MPID_InitCompleted( void );
 
-int MPID_Allocate_vci(int *vci);
+int MPID_Allocate_vci(int *vci, bool is_shared);
 int MPID_Deallocate_vci(int vci);
 
 int MPID_Finalize(void);
