@@ -215,6 +215,7 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_nbc.h"
 #include "mpir_bsend.h"
 #include "mpir_process.h"
+#include "mpir_session.h"
 #include "mpir_typerep.h"
 #include "mpir_datatype.h"
 #include "mpir_threadcomm.h"

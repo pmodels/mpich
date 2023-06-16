@@ -455,6 +455,9 @@ if test "$MPI_IS_MPICH" = "yes" ; then
             enable_spawn=no
         elif [grep 'MPICH Device:[[:blank:]]*ch3' conftest.output > /dev/null] ; then
             enable_part=no
+        fi
+
+        if ! grep 'MPICH features:.*threadcomm' conftest.output > /dev/null ; then
             enable_threadcomm=no
         fi
 
@@ -1696,6 +1699,7 @@ AC_OUTPUT(maint/testmerge \
           mpi_t/Makefile \
           rma/Makefile \
           rma/testlist \
+          session/Makefile \
           spawn/Makefile \
           spawn/testlist \
           topo/Makefile \

@@ -115,18 +115,8 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPL_initlock_lock(&MPIR_init_lock);
 
     if (!is_world_model) {
-        *p_session_ptr = (MPIR_Session *) MPIR_Handle_obj_alloc(&MPIR_Session_mem);
-        MPIR_ERR_CHKHANDLEMEM(*p_session_ptr);
-
-        (*p_session_ptr)->errhandler = NULL;
-        /* FIXME: actually do something with session thread_level */
-        (*p_session_ptr)->thread_level = user_required;
-
-        {
-            int thr_err;
-            MPID_Thread_mutex_create(&(*p_session_ptr)->mutex, &thr_err);
-            MPIR_Assert(thr_err == 0);
-        }
+        mpi_errno = MPIR_Session_create(p_session_ptr, user_required);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     init_counter++;
@@ -376,16 +366,8 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPL_initlock_lock(&MPIR_init_lock);
 
     if (!is_world_model) {
-        /* handle any clean up on session */
-        int thr_err;
-        MPID_Thread_mutex_destroy(&session_ptr->mutex, &thr_err);
-        MPIR_Assert(thr_err == 0);
-
-        if (session_ptr->errhandler != NULL) {
-            MPIR_Errhandler_free_impl(session_ptr->errhandler);
-        }
-
-        MPIR_Handle_obj_free(&MPIR_Session_mem, session_ptr);
+        mpi_errno = MPIR_Session_release(session_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     init_counter--;

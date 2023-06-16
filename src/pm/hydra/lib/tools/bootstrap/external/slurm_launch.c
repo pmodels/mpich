@@ -138,10 +138,20 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
         HYDU_print_strlist(targs);
     }
 
+    /* let srun know it is being called by a launcher. It is proposed to work in later
+     * versions of Slurm, but harmless otherwise.
+     * We may add --external-launcher option if we know the Slurm version supports it.
+     */
+    struct HYD_env *env;
+    status = HYDU_env_create(&env, "SLURM_EXTERNAL_LAUNCHER", "1");
+    HYDU_ERR_POP(status, "unable to create SLURM_EXTERNAL_LAUNCHER environment\n");
+
     int pid;
-    status = HYDU_create_process(targs, NULL, NULL, &fd_stdout, &fd_stderr, &pid, -1);
+    status = HYDU_create_process(targs, env, NULL, &fd_stdout, &fd_stderr, &pid, -1);
     HYDU_ERR_POP(status, "create process returned error\n");
     HYDT_bscu_pid_list_push(NULL, pid);
+
+    HYDU_env_free_list(env);
 
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;

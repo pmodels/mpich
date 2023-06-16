@@ -467,6 +467,7 @@ int MPID_Init(int requested, int *provided)
     MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
     MPIDI_global.n_total_vcis = MPIDI_global.n_vcis + MPIR_CVAR_CH4_RESERVE_VCIS;
     MPIDI_global.n_reserved_vcis = 0;
+    MPIDI_global.share_reserved_vcis = false;
 
     MPIR_Assert(MPIDI_global.n_total_vcis <= MPIDI_CH4_MAX_VCIS);
     MPIR_Assert(MPIDI_global.n_total_vcis <= MPIR_REQUEST_NUM_POOLS);
@@ -577,7 +578,7 @@ int MPID_InitCompleted(void)
     goto fn_exit;
 }
 
-int MPID_Allocate_vci(int *vci)
+int MPID_Allocate_vci(int *vci, bool is_shared)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -599,6 +600,9 @@ int MPID_Allocate_vci(int *vci)
         }
     }
 #endif
+    if (is_shared) {
+        MPIDI_global.share_reserved_vcis = true;
+    }
     return mpi_errno;
 }
 

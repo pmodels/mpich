@@ -108,3 +108,4 @@
 **ofi_num_nics:OFI has a different number of nics available on different notes
 **ofi_num_nics %d %d:OFI has a different number of nics available on different notes (%d on this node and %d elsewhere)
 **ofid_mr_key:OFI MR key invalid
+**ofi_no_prov:No valid libfabric provider

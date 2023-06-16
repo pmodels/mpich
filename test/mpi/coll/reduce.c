@@ -81,9 +81,25 @@ static int test_reduce(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
                 MTestCopyContent(recvbuf_h, recvbuf, count * sizeof(int), memtype);
 
                 MPI_Reduce(sendbuf, recvbuf, count, MPI_INT, MPI_SUM, root, comm);
-                MTestCopyContent(recvbuf, recvbuf_h, count * sizeof(int), memtype);
 
                 if (rank == root) {
+                    MTestCopyContent(recvbuf, recvbuf_h, count * sizeof(int), memtype);
+                    check_buf(rank, size, count, &errs, recvbuf_h);
+                }
+
+                /* test again using MPI_IN_PLACE */
+                if (rank == root) {
+                    set_send_buf(count, recvbuf_h);
+                    MTestCopyContent(recvbuf_h, recvbuf, count * sizeof(int), memtype);
+                    MPI_Reduce(MPI_IN_PLACE, recvbuf, count, MPI_INT, MPI_SUM, root, comm);
+                } else {
+                    set_send_buf(count, sendbuf_h);
+                    MTestCopyContent(sendbuf_h, sendbuf, count * sizeof(int), memtype);
+                    MPI_Reduce(sendbuf, NULL, count, MPI_INT, MPI_SUM, root, comm);
+                }
+
+                if (rank == root) {
+                    MTestCopyContent(recvbuf, recvbuf_h, count * sizeof(int), memtype);
                     check_buf(rank, size, count, &errs, recvbuf_h);
                 }
             }
