@@ -42,7 +42,7 @@ struct HYD_pmcd_pmip_s {
 
 /* downstreams */
 struct pmip_downstream {
-    struct pmip_pg *pg;
+    int pg_idx;
 
     int out;
     int err;
@@ -74,6 +74,7 @@ struct cache_elem {
 };
 
 struct pmip_pg {
+    int idx;                    /* index in global dynamic array PMIP_pgs */
     int pgid;
     int proxy_id;
 
@@ -128,6 +129,7 @@ void PMIP_pg_init(void);
 void PMIP_pg_finalize(void);
 struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id);
 struct pmip_pg *PMIP_pg_0(void);
+struct pmip_pg *PMIP_pg_from_downstream(struct pmip_downstream *downstream);
 HYD_status PMIP_pg_alloc_downstreams(struct pmip_pg *pg, int num_procs);
 struct pmip_pg *PMIP_find_pg(int pgid, int proxy_id);
 

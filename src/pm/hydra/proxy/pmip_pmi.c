@@ -335,7 +335,8 @@ HYD_status fn_get_my_kvsname(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     HYDU_FUNC_ENTER();
 
     struct PMIU_cmd pmi_response;
-    pmi_errno = PMIU_msg_set_response_kvsname(pmi, &pmi_response, is_static, p->pg->kvsname);
+    pmi_errno = PMIU_msg_set_response_kvsname(pmi, &pmi_response, is_static,
+                                              PMIP_pg_from_downstream(p)->kvsname);
     HYDU_ASSERT(!pmi_errno, status);
 
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
@@ -357,7 +358,7 @@ HYD_status fn_get_usize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     int universe_size;
     if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_SYSTEM) {
-        universe_size = p->pg->global_core_map.global_count;
+        universe_size = PMIP_pg_from_downstream(p)->global_core_map.global_count;
     } else if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_INFINITE) {
         universe_size = -1;
     } else {
@@ -382,7 +383,7 @@ HYD_status fn_get_usize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 static const char *get_jobattr(struct pmip_downstream *p, const char *key)
 {
     if (strcmp(key, "PMI_process_mapping") == 0) {
-        return p->pg->pmi_process_mapping;
+        return PMIP_pg_from_downstream(p)->pmi_process_mapping;
     } else if (!strcmp(key, "PMI_hwloc_xmlfile")) {
         return HYD_pmip_get_hwloc_xmlfile();
     }
@@ -408,7 +409,7 @@ HYD_status fn_get(struct pmip_downstream * p, struct PMIU_cmd * pmi)
         }
     } else {
         struct cache_elem *elem = NULL;
-        HASH_FIND_STR(p->pg->hash_get, key, elem);
+        HASH_FIND_STR(PMIP_pg_from_downstream(p)->hash_get, key, elem);
         if (elem) {
             found = true;
             val = elem->val;
@@ -423,7 +424,7 @@ HYD_status fn_get(struct pmip_downstream * p, struct PMIU_cmd * pmi)
         HYDU_ERR_POP(status, "error sending PMI response\n");
     } else {
         /* if we can't find the key locally, ask upstream */
-        status = send_cmd_upstream(p->pg, pmi, p->pmi_fd);
+        status = send_cmd_upstream(PMIP_pg_from_downstream(p), pmi, p->pmi_fd);
     }
 
   fn_exit:
@@ -461,7 +462,7 @@ HYD_status fn_put(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     }
 
     /* add to the cache */
-    struct pmip_pg *pg = p->pg;
+    struct pmip_pg *pg = PMIP_pg_from_downstream(p);
     int i = pg->cache_put.keyval_len++;
     pg->cache_put.tokens[i].key = MPL_strdup(key);
     if (val) {
@@ -536,12 +537,13 @@ HYD_status fn_barrier_in(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     HYDU_FUNC_ENTER();
 
     barrier_count++;
-    if (barrier_count == p->pg->num_procs) {
+    if (barrier_count == PMIP_pg_from_downstream(p)->num_procs) {
         barrier_count = 0;
 
-        cache_put_flush(p->pg);
+        struct pmip_pg *pg = PMIP_pg_from_downstream(p);
+        cache_put_flush(pg);
 
-        status = send_cmd_upstream(p->pg, pmi, p->pmi_fd);
+        status = send_cmd_upstream(pg, pmi, p->pmi_fd);
         HYDU_ERR_POP(status, "error sending command upstream\n");
     }
 
@@ -580,7 +582,7 @@ HYD_status fn_finalize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     int pmi_errno;
     HYDU_FUNC_ENTER();
 
-    struct pmip_pg *pg = p->pg;
+    struct pmip_pg *pg = PMIP_pg_from_downstream(p);
 
     struct PMIU_cmd pmi_response;
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
@@ -633,7 +635,7 @@ HYD_status fn_info_putnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
         goto fn_exit;
     }
 
-    status = HYD_pmcd_pmi_add_kvs(key, val, p->pg->kvs, &ret);
+    status = HYD_pmcd_pmi_add_kvs(key, val, PMIP_pg_from_downstream(p)->kvs, &ret);
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
@@ -672,7 +674,7 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     /* FIXME: wrap it in e.g. HYD_pmcd_pmi_find_kvs */
     struct HYD_pmcd_pmi_kvs_pair *run;
-    for (run = p->pg->kvs->key_pair; run; run = run->next) {
+    for (run = PMIP_pg_from_downstream(p)->kvs->key_pair; run; run = run->next) {
         if (!strcmp(run->key, key)) {
             found = 1;
             break;

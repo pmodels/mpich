@@ -11,6 +11,10 @@
 
 #include "pmi_util.h"   /* from libpmi, for PMIU_verbose */
 
+/* NOTE: pg pointer can change on PMIP_new_pg since it is from a dynamic
+ *       array. It's ok here because we only use cur_pg during command
+ *       line parsing.
+ */
 static struct pmip_pg *cur_pg = NULL;
 
 void HYD_set_cur_pg(struct pmip_pg *pg)

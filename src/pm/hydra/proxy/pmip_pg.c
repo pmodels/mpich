@@ -50,9 +50,12 @@ void PMIP_pg_finalize(void)
 
 struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id)
 {
+    int idx = utarray_len(PMIP_pgs);
+
     utarray_extend_back(PMIP_pgs, MPL_MEM_OTHER);
     struct pmip_pg *pg = (void *) utarray_back(PMIP_pgs);
 
+    pg->idx = idx;
     pg->pgid = pgid;
     pg->proxy_id = proxy_id;
 
@@ -74,6 +77,11 @@ struct pmip_pg *PMIP_pg_0(void)
     } else {
         return NULL;
     }
+}
+
+struct pmip_pg *PMIP_pg_from_downstream(struct pmip_downstream *downstream)
+{
+    return (void *) utarray_eltptr(PMIP_pgs, downstream->pg_idx);
 }
 
 /* linear search.
@@ -101,7 +109,7 @@ HYD_status PMIP_pg_alloc_downstreams(struct pmip_pg * pg, int num_procs)
     HYDU_ASSERT(pg->downstreams, status);
 
     for (int i = 0; i < num_procs; i++) {
-        pg->downstreams[i].pg = pg;
+        pg->downstreams[i].pg_idx = pg->idx;
         pg->downstreams[i].pid = -1;
         pg->downstreams[i].exit_status = PMIP_EXIT_STATUS_UNSET;
         pg->downstreams[i].pmi_fd = HYD_FD_UNSET;
