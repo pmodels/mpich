@@ -606,12 +606,13 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
+struct HYD_arg_match_table HYD_pmip_args_match_table[] = {
     /* Proxy parameters */
     {"control-port", control_port_fn, NULL},
     {"proxy-id", proxy_id_fn, NULL},
     {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
+    {"topo-debug", topo_debug_fn, NULL},
     {"usize", usize_fn, NULL},
     {"pmi-port", pmi_port_fn, NULL},
     {"gpus-per-proc", gpus_per_proc_fn, NULL},
@@ -623,10 +624,13 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"launcher-exec", launcher_exec_fn, NULL},
     {"demux", demux_fn, NULL},
     {"iface", iface_fn, NULL},
-    {"auto-cleanup", auto_cleanup_fn, NULL},
     {"retries", retries_fn, NULL},
+    {"\0", NULL, NULL}
+};
 
+struct HYD_arg_match_table HYD_pmip_procinfo_match_table[] = {
     /* Executable parameters */
+    {"auto-cleanup", auto_cleanup_fn, NULL},
     {"pmi-kvsname", pmi_kvsname_fn, NULL},
     {"pmi-spawner-kvsname", pmi_spawner_kvsname_fn, NULL},
     {"pmi-process-mapping", pmi_process_mapping_fn, NULL},
@@ -634,7 +638,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"binding", binding_fn, NULL},
     {"mapping", mapping_fn, NULL},
     {"membind", membind_fn, NULL},
-    {"topo-debug", topo_debug_fn, NULL},
     {"global-inherited-env", global_env_fn, NULL},
     {"global-system-env", global_env_fn, NULL},
     {"global-user-env", global_env_fn, NULL},
@@ -652,7 +655,8 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"exec-local-env", exec_local_env_fn, NULL},
     {"exec-env-prop", exec_env_prop_fn, NULL},
     {"exec-wdir", exec_wdir_fn, NULL},
-    {"exec-args", exec_args_fn, NULL}
+    {"exec-args", exec_args_fn, NULL},
+    {"\0", NULL, NULL}
 };
 
 HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
@@ -666,7 +670,7 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
     argv++;
     do {
         /* Get the proxy arguments  */
-        status = HYDU_parse_array(&argv, HYD_pmcd_pmip_match_table);
+        status = HYDU_parse_array(&argv, HYD_pmip_args_match_table);
         HYDU_ERR_POP(status, "error parsing input array\n");
 
         /* No more arguments left */

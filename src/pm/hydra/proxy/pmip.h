@@ -118,7 +118,8 @@ struct pmip_pg {
 };
 
 extern struct HYD_pmcd_pmip_s HYD_pmcd_pmip;
-extern struct HYD_arg_match_table HYD_pmcd_pmip_match_table[];
+extern struct HYD_arg_match_table HYD_pmip_args_match_table[];
+extern struct HYD_arg_match_table HYD_pmip_procinfo_match_table[];
 
 void HYD_set_cur_pg(struct pmip_pg *pg);
 HYD_status HYD_pmcd_pmip_get_params(char **t_argv);

@@ -609,7 +609,7 @@ static HYD_status parse_exec_params(struct pmip_pg *pg, char **t_argv)
     init_pg_params(pg);
     do {
         /* Get the executable arguments  */
-        status = HYDU_parse_array(&argv, HYD_pmcd_pmip_match_table);
+        status = HYDU_parse_array(&argv, HYD_pmip_procinfo_match_table);
         HYDU_ERR_POP(status, "error parsing input array\n");
 
         /* No more arguments left */
