@@ -713,8 +713,7 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
         HYD_pmcd_pmip.local.retries = 0;
 
     HYDU_dbg_finalize();
-    snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d:%d",
-             HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
+    snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d", HYD_pmcd_pmip.local.id);
     status = HYDU_dbg_init((const char *) dbg_prefix);
     HYDU_ERR_POP(status, "unable to initialization debugging\n");
 

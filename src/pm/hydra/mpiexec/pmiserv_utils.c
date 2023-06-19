@@ -456,8 +456,14 @@ static HYD_status gen_kvsname(char kvsname[], int pgid)
     }
     rnd = rand();
 
+#if 0
+    /* shorter kvsname for debugging */
+    MPL_snprintf_nowarn(kvsname, PMI_MAXKVSLEN, "kvs%d", pgid);
+#else
     MPL_snprintf_nowarn(kvsname, PMI_MAXKVSLEN, "kvs_%d_%d_%d_%s", (int) getpid(), pgid,
                         rnd, hostname);
+#endif
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
