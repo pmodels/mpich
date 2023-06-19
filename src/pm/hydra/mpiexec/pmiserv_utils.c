@@ -444,14 +444,16 @@ static HYD_status gen_kvsname(char kvsname[], int pgid)
 
     char hostname[MAX_HOSTNAME_LEN - 40];       /* Remove space taken up by the integers and other
                                                  * characters below. */
-    unsigned int seed;
+    static unsigned int seed = 0;
     int rnd;
 
     if (gethostname(hostname, MAX_HOSTNAME_LEN - 40) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
-    seed = (unsigned int) time(NULL);
-    srand(seed);
+    if (!seed) {
+        seed = (unsigned int) time(NULL);
+        srand(seed);
+    }
     rnd = rand();
 
     MPL_snprintf_nowarn(kvsname, PMI_MAXKVSLEN, "kvs_%d_%d_%d_%s", (int) getpid(), pgid,
