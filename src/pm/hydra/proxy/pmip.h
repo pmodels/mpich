@@ -40,6 +40,7 @@ struct HYD_pmcd_pmip_s {
 
 /* downstreams */
 struct pmip_downstream {
+    int idx;
     int pg_idx;
 
     int out;

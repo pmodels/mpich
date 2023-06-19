@@ -129,6 +129,7 @@ HYD_status PMIP_pg_alloc_downstreams(struct pmip_pg * pg, int num_procs)
     HYDU_ASSERT(pg->downstreams, status);
 
     for (int i = 0; i < num_procs; i++) {
+        pg->downstreams[i].idx = i;
         pg->downstreams[i].pg_idx = pg->idx;
         pg->downstreams[i].pid = -1;
         pg->downstreams[i].exit_status = PMIP_EXIT_STATUS_UNSET;

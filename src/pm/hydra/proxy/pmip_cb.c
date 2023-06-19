@@ -159,7 +159,11 @@ static HYD_status handle_pmi_cmd(struct pmip_downstream *p, char *buf, int bufle
         HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
         if (HYD_pmcd_pmip.user_global.debug) {
-            HYDU_dump(stdout, "got pmi command\n    ");
+            int pgid = -1;
+            if (p->pg_idx != -1) {
+                pgid = PMIP_pg_from_downstream(p)->pgid;
+            }
+            HYDU_dump(stdout, "got pmi command from downstream %d-%d:\n    ", pgid, p->idx);
             HYD_pmcd_pmi_dump(&pmi);
         }
 
