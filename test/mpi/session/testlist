@@ -1,6 +1,6 @@
 session 4
 session_mult_init 4
 session_mult_init 4 arg=5
-session_re_init 4 mpiexecarg=-disable-auto-cleanup
+session_re_init 4
 session_psets 1
 session_self 1
