@@ -531,16 +531,15 @@ HYD_status fn_keyval_cache(struct pmip_pg *pg, struct PMIU_cmd *pmi)
 
 HYD_status fn_barrier_in(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 {
-    static int barrier_count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    barrier_count++;
-    if (barrier_count == PMIP_pg_from_downstream(p)->num_procs) {
-        barrier_count = 0;
+    struct pmip_pg *pg = PMIP_pg_from_downstream(p);
+    pg->barrier_count++;
+    if (pg->barrier_count == pg->num_procs) {
+        pg->barrier_count = 0;
 
-        struct pmip_pg *pg = PMIP_pg_from_downstream(p);
         cache_put_flush(pg);
 
         status = send_cmd_upstream(pg, pmi, p->pmi_fd);

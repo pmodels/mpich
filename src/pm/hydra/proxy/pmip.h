@@ -108,6 +108,9 @@ struct pmip_pg {
     struct cache_elem *hash_get;
     int num_elems;
 
+    /* for barrier_in */
+    int barrier_count;
+
     /* environment */
     char *iface_ip_env_name;
     char *hostname;
