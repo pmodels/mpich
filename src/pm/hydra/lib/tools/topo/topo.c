@@ -10,11 +10,11 @@
 #include "hwloc/topo_hwloc.h"
 #endif /* HAVE_HWLOC */
 
-struct HYDT_topo_info HYDT_topo_info = {.topolib = NULL,.debug = -1 };
+struct HYDT_topo_info HYDT_topo_info;
 
 static int ignore_binding = 0;
 
-HYD_status HYDT_topo_init(char *user_topolib)
+HYD_status HYDT_topo_init(char *user_topolib, int topo_debug)
 {
     const char *topolib = NULL;
     HYD_status status = HYD_SUCCESS;
@@ -32,6 +32,8 @@ HYD_status HYDT_topo_init(char *user_topolib)
     } else {
         HYDT_topo_info.topolib = NULL;
     }
+
+    HYDT_topo_info.debug = topo_debug;
 
     HYDU_FUNC_EXIT();
     return status;

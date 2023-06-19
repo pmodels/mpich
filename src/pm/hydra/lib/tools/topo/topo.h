@@ -34,13 +34,14 @@ extern struct HYDT_topo_info HYDT_topo_info;
 /**
  * \brief HYDT_topo_init - Initialize the topology library
  *
- * \param[in]  topolib   Topology library to use
+ * \param[in]  topolib        Topology library to use
+ * \param[in]  topo_debug     Enable debugging output
  *
  * This function initializes the topology library requested by the
  * user. It also queries for the support provided by the library and
  * stores it for future calls.
  */
-HYD_status HYDT_topo_init(char *topolib);
+HYD_status HYDT_topo_init(char *topolib, int topo_debug);
 
 /**
  * \brief HYDT_topo_set - Set the topology bindings

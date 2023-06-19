@@ -307,7 +307,8 @@ static HYD_status topolib_fn(char *arg, char ***argv)
 
 static HYD_status topo_debug_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, &HYDT_topo_info.debug, 1);
+    HYD_pmcd_pmip.user_global.topo_debug = 1;
+    return HYD_SUCCESS;
 }
 
 static HYD_status global_env_fn(char *arg, char ***argv)
@@ -688,19 +689,14 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
     if (HYD_pmcd_pmip.user_global.demux == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "demux engine not available\n");
 
-    if (HYD_pmcd_pmip.user_global.debug == -1)
-        HYD_pmcd_pmip.user_global.debug = 0;
-
-    if (HYDT_topo_info.debug == -1)
-        HYDT_topo_info.debug = 0;
-
     status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.rmk,
                             HYD_pmcd_pmip.user_global.launcher,
                             HYD_pmcd_pmip.user_global.launcher_exec,
                             0 /* disable x */ , HYD_pmcd_pmip.user_global.debug);
     HYDU_ERR_POP(status, "proxy unable to initialize bootstrap server\n");
 
-    status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib);
+    status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
+                            HYD_pmcd_pmip.user_global.topo_debug);
     HYDU_ERR_POP(status, "proxy unable to initialize topology library\n");
 
     if (HYD_pmcd_pmip.local.id == -1) {
