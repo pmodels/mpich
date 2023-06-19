@@ -574,14 +574,9 @@ static HYD_status handle_launch_procs(struct pmip_pg *pg)
     status = procinfo(pg);
     HYDU_ERR_POP(status, "error parsing process info\n");
 
-    /* FIXME: split topo initialization from applying bindings.
-     *        The topolib should be passed as proxy commandline args
-     *        and initialized in main.
-     */
-    status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
-                            HYD_pmcd_pmip.user_global.binding,
-                            HYD_pmcd_pmip.user_global.mapping, HYD_pmcd_pmip.user_global.membind);
-    HYDU_ERR_POP(status, "unable to initialize process topology\n");
+    status = HYDT_topo_set(HYD_pmcd_pmip.user_global.binding,
+                           HYD_pmcd_pmip.user_global.mapping, HYD_pmcd_pmip.user_global.membind);
+    HYDU_ERR_POP(status, "unable to set process topology\n");
 
     if (pg->is_singleton) {
         status = singleton_init(pg, HYD_pmcd_pmip.singleton_pid, HYD_pmcd_pmip.singleton_port);

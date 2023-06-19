@@ -89,6 +89,11 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
         HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_server_info.user_global.iface), status);
     }
 
+    if (HYD_server_info.user_global.topolib) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--topolib"), status);
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_server_info.user_global.topolib), status);
+    }
+
     HYD_STRING_STASH(*proxy_stash, MPL_strdup("--pgid"), status);
     HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(pgid), status);
 
@@ -296,11 +301,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         if (HYD_server_info.user_global.membind) {
             HYD_STRING_STASH(exec_stash, MPL_strdup("--membind"), status);
             HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.user_global.membind), status);
-        }
-
-        if (HYD_server_info.user_global.topolib) {
-            HYD_STRING_STASH(exec_stash, MPL_strdup("--topolib"), status);
-            HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.user_global.topolib), status);
         }
 
         status = add_env_to_exec_stash(&exec_stash, "--global-inherited-env",

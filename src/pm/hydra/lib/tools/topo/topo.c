@@ -14,10 +14,9 @@ struct HYDT_topo_info HYDT_topo_info = {.topolib = NULL,.debug = -1 };
 
 static int ignore_binding = 0;
 
-HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_mapping,
-                          char *user_membind)
+HYD_status HYDT_topo_init(char *user_topolib)
 {
-    const char *topolib = NULL, *binding = NULL, *mapping = NULL, *membind = NULL;
+    const char *topolib = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -33,6 +32,17 @@ HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_map
     } else {
         HYDT_topo_info.topolib = NULL;
     }
+
+    HYDU_FUNC_EXIT();
+    return status;
+}
+
+HYD_status HYDT_topo_set(char *user_binding, char *user_mapping, char *user_membind)
+{
+    const char *binding = NULL, *mapping = NULL, *membind = NULL;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
 
     if (user_binding)
         binding = user_binding;
@@ -56,12 +66,15 @@ HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_map
 
     /* Reaching here means that user specified some binding */
     setenv("HYDRA_USER_PROVIDED_BINDING", "1", 1);
-    /* Initialize the topology library requested by the user */
+
+    /* Apply the bindings requested by the user */
 #if defined HAVE_HWLOC
     if (!strcmp(HYDT_topo_info.topolib, "hwloc")) {
         status = HYDT_topo_hwloc_init(binding, mapping, membind);
         HYDU_ERR_POP(status, "unable to initialize hwloc\n");
     }
+#else
+    HYDU_ERR_POP(status, "dummy check to suppress label warnings.\n");
 #endif /* HAVE_HWLOC */
 
   fn_exit:

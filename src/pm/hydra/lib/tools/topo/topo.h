@@ -35,14 +35,23 @@ extern struct HYDT_topo_info HYDT_topo_info;
  * \brief HYDT_topo_init - Initialize the topology library
  *
  * \param[in]  topolib   Topology library to use
- * \param[in]  binding   Binding pattern to use
- * \param[in]  mapping   Mapping pattern to use
  *
  * This function initializes the topology library requested by the
  * user. It also queries for the support provided by the library and
  * stores it for future calls.
  */
-HYD_status HYDT_topo_init(char *topolib, char *binding, char *mapping, char *membind);
+HYD_status HYDT_topo_init(char *topolib);
+
+/**
+ * \brief HYDT_topo_set - Set the topology bindings
+ *
+ * \param[in]  binding   Binding pattern to use
+ * \param[in]  mapping   Mapping pattern to use
+ * \param[in]  membind   Memory binding pattern to use
+ *
+ * This function applies the topology bindings.
+ */
+HYD_status HYDT_topo_set(char *binding, char *mapping, char *membind);
 
 
 /**

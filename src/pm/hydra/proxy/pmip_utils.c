@@ -623,6 +623,7 @@ struct HYD_arg_match_table HYD_pmip_args_match_table[] = {
     {"launcher", launcher_fn, NULL},
     {"launcher-exec", launcher_exec_fn, NULL},
     {"demux", demux_fn, NULL},
+    {"topolib", topolib_fn, NULL},
     {"iface", iface_fn, NULL},
     {"retries", retries_fn, NULL},
     {"\0", NULL, NULL}
@@ -634,7 +635,6 @@ struct HYD_arg_match_table HYD_pmip_procinfo_match_table[] = {
     {"pmi-kvsname", pmi_kvsname_fn, NULL},
     {"pmi-spawner-kvsname", pmi_spawner_kvsname_fn, NULL},
     {"pmi-process-mapping", pmi_process_mapping_fn, NULL},
-    {"topolib", topolib_fn, NULL},
     {"binding", binding_fn, NULL},
     {"mapping", mapping_fn, NULL},
     {"membind", membind_fn, NULL},
@@ -699,6 +699,9 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
                             HYD_pmcd_pmip.user_global.launcher_exec,
                             0 /* disable x */ , HYD_pmcd_pmip.user_global.debug);
     HYDU_ERR_POP(status, "proxy unable to initialize bootstrap server\n");
+
+    status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib);
+    HYDU_ERR_POP(status, "proxy unable to initialize topology library\n");
 
     if (HYD_pmcd_pmip.local.id == -1) {
         /* We didn't get a proxy ID during launch; query the launcher
