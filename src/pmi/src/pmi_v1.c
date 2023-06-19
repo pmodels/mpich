@@ -364,6 +364,7 @@ PMI_API_PUBLIC int PMI_KVS_Get_my_name(char kvsname[], int length)
     pmi_errno = PMIU_msg_get_response_kvsname(&pmicmd, &tmp_kvsname);
 
     MPL_strncpy(kvsname, tmp_kvsname, length);
+    PMIU_Set_rank_kvsname(PMI_rank, tmp_kvsname);
 
   fn_exit:
     PMIU_cmd_free_buf(&pmicmd);
