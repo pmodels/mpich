@@ -676,7 +676,7 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     const char *val;
     int found;
-    HYD_pmcd_pmi_kvs_find(PMIP_pg_from_downstream(p)->kvs, key, &val, &found);
+    HYD_kvs_find(PMIP_pg_from_downstream(p)->kvs, key, &val, &found);
 
     if (!found && wait) {
         status = HYD_pmcd_pmi_v2_queue_req(p, pmi, key);

@@ -16,18 +16,18 @@
 #define PMI_MAXVALLEN    (1024) /* max length of value in keyval space */
 #define PMI_MAXKVSLEN    (256)  /* max length of various names */
 
-struct HYD_pmcd_pmi_kvs_pair {
+struct HYD_kvs_pair {
     char key[PMI_MAXKEYLEN];
     char val[PMI_MAXVALLEN];
-    struct HYD_pmcd_pmi_kvs_pair *next;
+    struct HYD_kvs_pair *next;
 };
 
-struct HYD_pmcd_pmi_kvs {
-    struct HYD_pmcd_pmi_kvs_pair *key_pair;
+struct HYD_kvs {
+    struct HYD_kvs_pair *key_pair;
     /* iter fields used for HYD_pmiserv_bcast_keyvals */
-    struct HYD_pmcd_pmi_kvs_pair *iter_end;
-    struct HYD_pmcd_pmi_kvs_pair *iter_begin;
-    struct HYD_pmcd_pmi_kvs_pair *iter_cur;
+    struct HYD_kvs_pair *iter_end;
+    struct HYD_kvs_pair *iter_begin;
+    struct HYD_kvs_pair *iter_cur;
     bool iter_new_only;
 };
 
@@ -38,16 +38,13 @@ struct HYD_pmcd_init_hdr {
     int proxy_id;
 };
 
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs);
-void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
-HYD_status HYD_pmcd_pmi_kvs_find(struct HYD_pmcd_pmi_kvs *kvs_list,
-                                 const char *key, const char **val, int *found);
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmcd_pmi_kvs *kvs,
-                                int *ret);
-void HYD_pmcd_pmi_kvs_iter_begin(struct HYD_pmcd_pmi_kvs *kvs_list, bool new_only);
-void HYD_pmcd_pmi_kvs_iter_end(struct HYD_pmcd_pmi_kvs *kvs_list);
-bool HYD_pmcd_pmi_kvs_iter_next(struct HYD_pmcd_pmi_kvs *kvs_list,
-                                const char **key, const char **val);
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_kvs **kvs);
+void HYD_pmcd_free_pmi_kvs_list(struct HYD_kvs *kvs_list);
+HYD_status HYD_kvs_find(struct HYD_kvs *kvs_list, const char *key, const char **val, int *found);
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_kvs *kvs, int *ret);
+void HYD_kvs_iter_begin(struct HYD_kvs *kvs_list, bool new_only);
+void HYD_kvs_iter_end(struct HYD_kvs *kvs_list);
+bool HYD_kvs_iter_next(struct HYD_kvs *kvs_list, const char **key, const char **val);
 
 /* ---- struct HYD_pmcd_hdr ---- */
 

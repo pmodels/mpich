@@ -42,9 +42,9 @@ HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy * proxy, int process_fd)
     int arg_count = 0, num_total = 0;
 
     const char *key, *val;
-    HYD_pmcd_pmi_kvs_iter_begin(pg_scratch->kvs, true);
+    HYD_kvs_iter_begin(pg_scratch->kvs, true);
     while (true) {
-        bool has_next = HYD_pmcd_pmi_kvs_iter_next(pg_scratch->kvs, &key, &val);
+        bool has_next = HYD_kvs_iter_next(pg_scratch->kvs, &key, &val);
         if (has_next) {
             if (arg_count == 0) {
                 PMIU_msg_set_query(&pmi, PMIU_WIRE_V1, PMIU_CMD_KVSCACHE, false /* not static */);
@@ -67,7 +67,7 @@ HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy * proxy, int process_fd)
             break;
         }
     }
-    HYD_pmcd_pmi_kvs_iter_end(pg_scratch->kvs);
+    HYD_kvs_iter_end(pg_scratch->kvs);
     if (num_total > 0) {
         PMIU_cmd_free_buf(&pmi);
     }

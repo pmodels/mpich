@@ -56,7 +56,7 @@ HYD_status HYD_pmiserv_kvs_get(struct HYD_proxy *proxy, int process_fd, int pgid
         found = 1;
         val = pg_scratch->dead_processes;
     } else {
-        HYD_pmcd_pmi_kvs_find(pg_scratch->kvs, key, &val, &found);
+        HYD_kvs_find(pg_scratch->kvs, key, &val, &found);
     }
 
     if (!found && sync) {

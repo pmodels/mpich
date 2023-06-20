@@ -85,12 +85,12 @@ HYD_status HYD_pmcd_pmi_send(int fd, struct PMIU_cmd *pmi, struct HYD_pmcd_hdr *
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs)
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_kvs **kvs)
 {
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC_OR_JUMP(*kvs, struct HYD_pmcd_pmi_kvs *, sizeof(struct HYD_pmcd_pmi_kvs), status);
+    HYDU_MALLOC_OR_JUMP(*kvs, struct HYD_kvs *, sizeof(struct HYD_kvs), status);
     (*kvs)->key_pair = NULL;
     (*kvs)->iter_end = NULL;
     (*kvs)->iter_cur = NULL;
@@ -104,9 +104,9 @@ HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs)
     goto fn_exit;
 }
 
-void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list)
+void HYD_pmcd_free_pmi_kvs_list(struct HYD_kvs *kvs_list)
 {
-    struct HYD_pmcd_pmi_kvs_pair *key_pair, *tmp;
+    struct HYD_kvs_pair *key_pair, *tmp;
 
     HYDU_FUNC_ENTER();
 
@@ -121,13 +121,12 @@ void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list)
     HYDU_FUNC_EXIT();
 }
 
-HYD_status HYD_pmcd_pmi_kvs_find(struct HYD_pmcd_pmi_kvs *kvs_list,
-                                 const char *key, const char **val, int *found)
+HYD_status HYD_kvs_find(struct HYD_kvs *kvs_list, const char *key, const char **val, int *found)
 {
     HYDU_FUNC_ENTER();
     *found = 0;
 
-    struct HYD_pmcd_pmi_kvs_pair *run;
+    struct HYD_kvs_pair *run;
     for (run = kvs_list->key_pair; run; run = run->next) {
         if (!strcmp(run->key, key)) {
             *val = run->val;
@@ -141,16 +140,14 @@ HYD_status HYD_pmcd_pmi_kvs_find(struct HYD_pmcd_pmi_kvs *kvs_list,
     return HYD_SUCCESS;
 }
 
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmcd_pmi_kvs * kvs,
-                                int *ret)
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_kvs * kvs, int *ret)
 {
-    struct HYD_pmcd_pmi_kvs_pair *key_pair;
+    struct HYD_kvs_pair *key_pair;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC_OR_JUMP(key_pair, struct HYD_pmcd_pmi_kvs_pair *,
-                        sizeof(struct HYD_pmcd_pmi_kvs_pair), status);
+    HYDU_MALLOC_OR_JUMP(key_pair, struct HYD_kvs_pair *, sizeof(struct HYD_kvs_pair), status);
     snprintf(key_pair->key, PMI_MAXKEYLEN, "%s", key);
     snprintf(key_pair->val, PMI_MAXVALLEN, "%s", val);
     key_pair->next = NULL;
@@ -163,7 +160,7 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmc
 #ifdef PMI_KEY_CHECK
         const char *dummy_val;
         int found;
-        HYD_pmcd_pmi_kvs_find(kvs, key, &val, &found);
+        HYD_kvs_find(kvs, key, &val, &found);
         if (found) {
             *ret = -1;
             goto fn_fail;
@@ -182,14 +179,14 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmc
     goto fn_exit;
 }
 
-void HYD_pmcd_pmi_kvs_iter_begin(struct HYD_pmcd_pmi_kvs *kvs_list, bool new_only)
+void HYD_kvs_iter_begin(struct HYD_kvs *kvs_list, bool new_only)
 {
     kvs_list->iter_begin = kvs_list->key_pair;
     kvs_list->iter_cur = kvs_list->iter_begin;
     kvs_list->iter_new_only = new_only;
 }
 
-void HYD_pmcd_pmi_kvs_iter_end(struct HYD_pmcd_pmi_kvs *kvs_list)
+void HYD_kvs_iter_end(struct HYD_kvs *kvs_list)
 {
     if (kvs_list->iter_new_only) {
         kvs_list->iter_end = kvs_list->iter_begin;
@@ -198,8 +195,7 @@ void HYD_pmcd_pmi_kvs_iter_end(struct HYD_pmcd_pmi_kvs *kvs_list)
     kvs_list->iter_new_only = false;
 }
 
-bool HYD_pmcd_pmi_kvs_iter_next(struct HYD_pmcd_pmi_kvs *kvs_list,
-                                const char **key, const char **val)
+bool HYD_kvs_iter_next(struct HYD_kvs *kvs_list, const char **key, const char **val)
 {
     if (kvs_list->iter_cur == NULL ||
         (kvs_list->iter_new_only && kvs_list->iter_cur == kvs_list->iter_end)) {
