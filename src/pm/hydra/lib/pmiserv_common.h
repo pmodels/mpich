@@ -24,7 +24,11 @@ struct HYD_pmcd_pmi_kvs_pair {
 
 struct HYD_pmcd_pmi_kvs {
     struct HYD_pmcd_pmi_kvs_pair *key_pair;
-    struct HYD_pmcd_pmi_kvs_pair *tail;
+    /* iter fields used for HYD_pmiserv_bcast_keyvals */
+    struct HYD_pmcd_pmi_kvs_pair *iter_end;
+    struct HYD_pmcd_pmi_kvs_pair *iter_begin;
+    struct HYD_pmcd_pmi_kvs_pair *iter_cur;
+    bool iter_new_only;
 };
 
 /* init header proxy send to server upon connection */
@@ -36,8 +40,14 @@ struct HYD_pmcd_init_hdr {
 
 HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs);
 void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
+HYD_status HYD_pmcd_pmi_kvs_find(struct HYD_pmcd_pmi_kvs *kvs_list,
+                                 const char *key, const char **val, int *found);
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_pmcd_pmi_kvs *kvs,
                                 int *ret);
+void HYD_pmcd_pmi_kvs_iter_begin(struct HYD_pmcd_pmi_kvs *kvs_list, bool new_only);
+void HYD_pmcd_pmi_kvs_iter_end(struct HYD_pmcd_pmi_kvs *kvs_list);
+bool HYD_pmcd_pmi_kvs_iter_next(struct HYD_pmcd_pmi_kvs *kvs_list,
+                                const char **key, const char **val);
 
 /* ---- struct HYD_pmcd_hdr ---- */
 
