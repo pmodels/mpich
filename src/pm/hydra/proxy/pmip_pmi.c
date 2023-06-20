@@ -234,7 +234,7 @@ HYD_status fn_init(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi)
+HYD_status fn_fullinit(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
@@ -245,21 +245,25 @@ HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi)
     HYDU_ASSERT(!pmi_errno, status);
 
     struct pmip_pg *pg;
-    pg = PMIP_pg_0();
+    pg = PMIP_pg_from_downstream(p);
     HYDU_ASSERT(pg, status);
 
-    /* locate and initialize the downstream */
-    struct pmip_downstream *p;
-    p = NULL;
-    for (int i = 0; i < pg->num_procs; i++) {
-        p = &pg->downstreams[i];
-        if (p->pmi_rank == id) {
-            p->pmi_fd = fd;
-            p->pmi_fd_active = 1;
-            break;
+    if (p->idx == -1) {
+        /* the input p is a pseudo downstream,
+         * find and initialize the real downstream
+         */
+        struct pmip_downstream *tmp = NULL;
+        for (int i = 0; i < pg->num_procs; i++) {
+            if (pg->downstreams[i].pmi_rank == id) {
+                tmp = &pg->downstreams[i];
+                tmp->pmi_fd = p->pmi_fd;
+                tmp->pmi_fd_active = 1;
+                break;
+            }
         }
+        HYDU_ASSERT(tmp, status);
+        p = tmp;
     }
-    HYDU_ASSERT(p, status);
 
     int size = pg->global_process_count;
     int rank = id;
@@ -271,7 +275,7 @@ HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi)
                                                pg->spawner_kvsname, debug);
     HYDU_ASSERT(!pmi_errno, status);
 
-    status = send_cmd_downstream(fd, &pmi_response);
+    status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
 
   fn_exit:
