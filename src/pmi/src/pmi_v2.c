@@ -267,6 +267,7 @@ PMI_API_PUBLIC int PMI2_Job_GetId(char jobid[], int jobid_size)
     PMIU_ERR_POP(pmi_errno);
 
     MPL_strncpy(jobid, jid, jobid_size);
+    PMIU_Set_rank_kvsname(PMI_rank, jid);
 
   fn_exit:
     PMIU_cmd_free_buf(&pmicmd);

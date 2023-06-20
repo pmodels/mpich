@@ -33,8 +33,6 @@ struct HYD_pmcd_pmip_s {
     struct {
         int id;
         int pgid;
-        char *iface_ip_env_name;
-        char *hostname;
 
         int retries;
     } local;
@@ -42,7 +40,8 @@ struct HYD_pmcd_pmip_s {
 
 /* downstreams */
 struct pmip_downstream {
-    struct pmip_pg *pg;
+    int idx;
+    int pg_idx;
 
     int out;
     int err;
@@ -74,6 +73,7 @@ struct cache_elem {
 };
 
 struct pmip_pg {
+    int idx;                    /* index in global dynamic array PMIP_pgs */
     int pgid;
     int proxy_id;
 
@@ -108,10 +108,18 @@ struct pmip_pg {
     struct cache_elem *cache_get;
     struct cache_elem *hash_get;
     int num_elems;
+
+    /* for barrier_in */
+    int barrier_count;
+
+    /* environment */
+    char *iface_ip_env_name;
+    char *hostname;
 };
 
 extern struct HYD_pmcd_pmip_s HYD_pmcd_pmip;
-extern struct HYD_arg_match_table HYD_pmcd_pmip_match_table[];
+extern struct HYD_arg_match_table HYD_pmip_args_match_table[];
+extern struct HYD_arg_match_table HYD_pmip_procinfo_match_table[];
 
 void HYD_set_cur_pg(struct pmip_pg *pg);
 HYD_status HYD_pmcd_pmip_get_params(char **t_argv);
@@ -128,6 +136,8 @@ void PMIP_pg_init(void);
 void PMIP_pg_finalize(void);
 struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id);
 struct pmip_pg *PMIP_pg_0(void);
+struct pmip_pg *PMIP_pg_from_downstream(struct pmip_downstream *downstream);
+HYD_status PMIP_foreach_pg_do(HYD_status(*callback) (struct pmip_pg * pg));
 HYD_status PMIP_pg_alloc_downstreams(struct pmip_pg *pg, int num_procs);
 struct pmip_pg *PMIP_find_pg(int pgid, int proxy_id);
 

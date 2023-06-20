@@ -21,7 +21,6 @@ struct HYD_pmcd_pmi_pg_scratch {
         int epoch;
     } *ecount;
 
-    int control_listen_fd;
     int pmi_listen_fd;
 
     char *dead_processes;

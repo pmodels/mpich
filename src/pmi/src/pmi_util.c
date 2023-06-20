@@ -71,6 +71,15 @@ void PMIU_SetServer(void)
     MPL_strncpy(PMIU_print_id, "server", PMIU_IDSIZE);
 }
 
+void PMIU_Set_rank_kvsname(int rank, const char *kvsname)
+{
+    if (strlen(kvsname) < PMIU_IDSIZE - 10) {
+        snprintf(PMIU_print_id, PMIU_IDSIZE, "%s-%d", kvsname, rank);
+    } else {
+        snprintf(PMIU_print_id, PMIU_IDSIZE, "cli-%d", rank);
+    }
+}
+
 /* Note that vfprintf is part of C89 */
 
 /* style: allow:fprintf:1 sig:0 */

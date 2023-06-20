@@ -467,23 +467,23 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
 
 HYD_status
 HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_range,
-                                    char **port_str,
+                                    char **port_str, int *listenfd,
                                     HYD_status(*callback) (int fd, HYD_event_t events,
                                                            void *userp), void *userp)
 {
-    int listenfd = -1;
     char *sport, *real_port_range, *ip = NULL;
     uint16_t port;
     HYD_status status = HYD_SUCCESS;
 
+    *listenfd = -1;
     /* Listen on a port in the port range */
     port = 0;
     real_port_range = port_range ? MPL_strdup(port_range) : NULL;
-    status = HYDU_sock_listen(&listenfd, real_port_range, &port);
+    status = HYDU_sock_listen(listenfd, real_port_range, &port);
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYDT_dmx_register_fd(1, &listenfd, HYD_POLLIN, userp, callback);
+    status = HYDT_dmx_register_fd(1, listenfd, HYD_POLLIN, userp, callback);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */
@@ -514,8 +514,10 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
     return status;
 
   fn_fail:
-    if (-1 != listenfd)
-        close(listenfd);
+    if (-1 != *listenfd) {
+        close(*listenfd);
+        *listenfd = -1;
+    }
     goto fn_exit;
 }
 

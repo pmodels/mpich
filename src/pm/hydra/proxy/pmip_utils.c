@@ -11,6 +11,10 @@
 
 #include "pmi_util.h"   /* from libpmi, for PMIU_verbose */
 
+/* NOTE: pg pointer can change on PMIP_new_pg since it is from a dynamic
+ *       array. It's ok here because we only use cur_pg during command
+ *       line parsing.
+ */
 static struct pmip_pg *cur_pg = NULL;
 
 void HYD_set_cur_pg(struct pmip_pg *pg)
@@ -303,7 +307,8 @@ static HYD_status topolib_fn(char *arg, char ***argv)
 
 static HYD_status topo_debug_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, &HYDT_topo_info.debug, 1);
+    HYD_pmcd_pmip.user_global.topo_debug = 1;
+    return HYD_SUCCESS;
 }
 
 static HYD_status global_env_fn(char *arg, char ***argv)
@@ -444,7 +449,7 @@ static HYD_status iface_ip_env_name_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.local.iface_ip_env_name, **argv);
+    status = HYDU_set_str(arg, &cur_pg->iface_ip_env_name, **argv);
 
     (*argv)++;
 
@@ -455,7 +460,7 @@ static HYD_status hostname_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.local.hostname, **argv);
+    status = HYDU_set_str(arg, &cur_pg->hostname, **argv);
 
     (*argv)++;
 
@@ -602,12 +607,13 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
+struct HYD_arg_match_table HYD_pmip_args_match_table[] = {
     /* Proxy parameters */
     {"control-port", control_port_fn, NULL},
     {"proxy-id", proxy_id_fn, NULL},
     {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
+    {"topo-debug", topo_debug_fn, NULL},
     {"usize", usize_fn, NULL},
     {"pmi-port", pmi_port_fn, NULL},
     {"gpus-per-proc", gpus_per_proc_fn, NULL},
@@ -618,19 +624,21 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"launcher", launcher_fn, NULL},
     {"launcher-exec", launcher_exec_fn, NULL},
     {"demux", demux_fn, NULL},
+    {"topolib", topolib_fn, NULL},
     {"iface", iface_fn, NULL},
-    {"auto-cleanup", auto_cleanup_fn, NULL},
     {"retries", retries_fn, NULL},
+    {"\0", NULL, NULL}
+};
 
+struct HYD_arg_match_table HYD_pmip_procinfo_match_table[] = {
     /* Executable parameters */
+    {"auto-cleanup", auto_cleanup_fn, NULL},
     {"pmi-kvsname", pmi_kvsname_fn, NULL},
     {"pmi-spawner-kvsname", pmi_spawner_kvsname_fn, NULL},
     {"pmi-process-mapping", pmi_process_mapping_fn, NULL},
-    {"topolib", topolib_fn, NULL},
     {"binding", binding_fn, NULL},
     {"mapping", mapping_fn, NULL},
     {"membind", membind_fn, NULL},
-    {"topo-debug", topo_debug_fn, NULL},
     {"global-inherited-env", global_env_fn, NULL},
     {"global-system-env", global_env_fn, NULL},
     {"global-user-env", global_env_fn, NULL},
@@ -648,7 +656,8 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"exec-local-env", exec_local_env_fn, NULL},
     {"exec-env-prop", exec_env_prop_fn, NULL},
     {"exec-wdir", exec_wdir_fn, NULL},
-    {"exec-args", exec_args_fn, NULL}
+    {"exec-args", exec_args_fn, NULL},
+    {"\0", NULL, NULL}
 };
 
 HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
@@ -662,7 +671,7 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
     argv++;
     do {
         /* Get the proxy arguments  */
-        status = HYDU_parse_array(&argv, HYD_pmcd_pmip_match_table);
+        status = HYDU_parse_array(&argv, HYD_pmip_args_match_table);
         HYDU_ERR_POP(status, "error parsing input array\n");
 
         /* No more arguments left */
@@ -680,17 +689,15 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
     if (HYD_pmcd_pmip.user_global.demux == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "demux engine not available\n");
 
-    if (HYD_pmcd_pmip.user_global.debug == -1)
-        HYD_pmcd_pmip.user_global.debug = 0;
-
-    if (HYDT_topo_info.debug == -1)
-        HYDT_topo_info.debug = 0;
-
     status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.rmk,
                             HYD_pmcd_pmip.user_global.launcher,
                             HYD_pmcd_pmip.user_global.launcher_exec,
                             0 /* disable x */ , HYD_pmcd_pmip.user_global.debug);
     HYDU_ERR_POP(status, "proxy unable to initialize bootstrap server\n");
+
+    status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
+                            HYD_pmcd_pmip.user_global.topo_debug);
+    HYDU_ERR_POP(status, "proxy unable to initialize topology library\n");
 
     if (HYD_pmcd_pmip.local.id == -1) {
         /* We didn't get a proxy ID during launch; query the launcher
@@ -709,8 +716,7 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
         HYD_pmcd_pmip.local.retries = 0;
 
     HYDU_dbg_finalize();
-    snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d:%d",
-             HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
+    snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d", HYD_pmcd_pmip.local.id);
     status = HYDU_dbg_init((const char *) dbg_prefix);
     HYDU_ERR_POP(status, "unable to initialization debugging\n");
 
