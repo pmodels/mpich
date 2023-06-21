@@ -68,3 +68,30 @@ struct HYD_pg *PMISERV_pg_by_id(int pgid)
         return NULL;
     }
 }
+
+/* -- proxy routines -- */
+
+HYD_status HYDU_proxy_list_to_host_list(struct HYD_proxy * proxy_list, int count,
+                                        struct HYD_host ** host_list)
+{
+    HYD_status status = HYD_SUCCESS;
+    HYDU_FUNC_ENTER();
+
+    struct HYD_host *hosts;
+    HYDU_MALLOC_OR_JUMP(hosts, struct HYD_host *, count * sizeof(struct HYD_host), status);
+
+    for (int i = 0; i < count; i++) {
+        hosts[i].hostname = proxy_list[i].node->hostname;
+        hosts[i].user = proxy_list[i].node->user;
+        hosts[i].core_count = proxy_list[i].node->core_count;
+    }
+
+    *host_list = hosts;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

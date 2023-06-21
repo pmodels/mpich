@@ -29,23 +29,27 @@ HYD_status HYDT_bscu_pid_list_grow(int add_count)
     goto fn_exit;
 }
 
-void HYDT_bscu_pid_list_push(struct HYD_proxy *proxy, int pid)
+void HYDT_bscu_pid_list_push(int pid, int pgid, int proxy_id)
 {
     int i = HYD_bscu_pid_count;
     assert(i < HYD_bscu_pid_size);
-    HYD_bscu_pid_list[i].proxy = proxy;
+    HYD_bscu_pid_list[i].pgid = pgid;
+    HYD_bscu_pid_list[i].proxy_id = proxy_id;
     HYD_bscu_pid_list[i].pid = pid;
     HYD_bscu_pid_count++;
 }
 
-struct HYD_proxy_pid *HYDT_bscu_pid_list_find(int pid)
+bool HYDT_bscu_pid_list_find(int pid, int *pgid, int *proxy_id)
 {
     for (int i = 0; i < HYD_bscu_pid_count; i++) {
         if (HYD_bscu_pid_list[i].pid == pid) {
-            return &HYD_bscu_pid_list[i];
+            *pgid = HYD_bscu_pid_list[i].pgid;
+            *proxy_id = HYD_bscu_pid_list[i].proxy_id;
+            HYD_bscu_pid_list[i].pid = -1;
+            return true;
         }
     }
-    return NULL;
+    return false;
 }
 
 HYD_status HYDT_bscu_wait_for_completion(int timeout)
@@ -99,12 +103,9 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
                  * did, return an error. */
                 pid = waitpid(-1, &ret, WNOHANG);
                 if (pid > 0) {
-                    struct HYD_proxy_pid *p;
-                    p = HYDT_bscu_pid_list_find(pid);
-                    if (p) {
-                        p->pid = -1;
-                    }
-
+                    /* find and remove the entry */
+                    int pg_id, proxy_id;
+                    HYDT_bscu_pid_list_find(pid, &pg_id, &proxy_id);
                     if (ret) {
                         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                             "one of the processes terminated badly; aborting\n");

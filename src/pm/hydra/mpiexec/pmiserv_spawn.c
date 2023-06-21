@@ -278,9 +278,15 @@ static HYD_status do_spawn(void)
                                                  pg->pgid);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-        status = HYDT_bsci_launch_procs(proxy_stash.strlist, filtered_proxy_list, rem_count,
+        struct HYD_host *hosts;
+        status = HYDU_proxy_list_to_host_list(filtered_proxy_list, rem_count, &hosts);
+        HYDU_ERR_POP(status, "unable to convert host list\n");
+
+        status = HYDT_bsci_launch_procs(pg->pgid, proxy_stash.strlist, hosts, rem_count,
                                         HYD_FALSE, NULL);
         HYDU_ERR_POP(status, "launcher cannot launch processes\n");
+
+        MPL_free(hosts);
     }
     MPL_free(filtered_proxy_list);
 

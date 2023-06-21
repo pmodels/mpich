@@ -94,13 +94,12 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
-                                         int use_rmk, int *control_fd)
+HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host *hosts,
+                                         int num_hosts, int use_rmk, int *control_fd)
 {
-    int idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
+    int idx, i, host_idx, fd, exec_idx, offset, len, rc, autofork;
     int *fd_list, *dummy;
     int sockpair[2];
-    struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *extra_arg_list = NULL, *extra_arg;
     char quoted_exec_string[HYD_TMP_STRLEN], *original_exec_string;
     struct HYD_env *env = NULL;
@@ -193,29 +192,25 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
 
     targs[idx] = NULL;
     for (i = 0; i < num_hosts; i++) {
-        proxy = proxy_list + i;
-
         MPL_free(targs[host_idx]);
-        if (proxy->node->user == NULL) {
-            targs[host_idx] = MPL_strdup(proxy->node->hostname);
+        if (hosts[i].user == NULL) {
+            targs[host_idx] = MPL_strdup(hosts[i].hostname);
         } else {
-            len = strlen(proxy->node->user) + strlen("@") + strlen(proxy->node->hostname) + 1;
-
+            len = strlen(hosts[i].user) + strlen("@") + strlen(hosts[i].hostname) + 1;
             HYDU_MALLOC_OR_JUMP(targs[host_idx], char *, len, status);
-            snprintf(targs[host_idx], len, "%s@%s", proxy->node->user, proxy->node->hostname);
+            snprintf(targs[host_idx], len, "%s@%s", hosts[i].user, hosts[i].hostname);
         }
 
         /* append proxy ID */
         MPL_free(targs[idx]);
-        targs[idx] = HYDU_int_to_str(proxy->proxy_id);
+        targs[idx] = HYDU_int_to_str(i);
         targs[idx + 1] = NULL;
-
-        lh = MPL_host_is_local(proxy->node->hostname);
 
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */
         if (autofork && (!strcmp(HYDT_bsci_info.launcher, "fork") ||
-                         !strcmp(HYDT_bsci_info.launcher, "manual") || lh)) {
+                         !strcmp(HYDT_bsci_info.launcher, "manual") ||
+                         MPL_host_is_local(hosts[i].hostname))) {
             offset = exec_idx;
 
             if (control_fd) {
@@ -229,11 +224,11 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
                 HYDU_ERR_POP(status, "unable to create env\n");
                 MPL_free(str);
 
-                control_fd[proxy->proxy_id] = sockpair[0];
+                control_fd[i] = sockpair[0];
 
                 /* make sure control_fd[i] is not shared by the
                  * processes spawned in the future */
-                status = HYDU_sock_cloexec(control_fd[proxy->proxy_id]);
+                status = HYDU_sock_cloexec(control_fd[i]);
                 HYDU_ERR_POP(status, "unable to set control socket to close on exec\n");
             }
         } else {
@@ -271,7 +266,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
          * slow down the cases where ssh is being used, and not the
          * cases where we fall back to fork. */
         if (!strcmp(HYDT_bsci_info.launcher, "ssh") && !offset) {
-            status = HYDTI_bscd_ssh_store_launch_time(proxy->node->hostname);
+            status = HYDTI_bscd_ssh_store_launch_time(hosts[i].hostname);
             HYDU_ERR_POP(status, "error storing launch time\n");
         }
 
@@ -280,7 +275,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
          * stdin socket is provided. */
         int pid;
         status = HYDU_create_process(targs + offset, env, dummy, &fd_stdout, &fd_stderr, &pid, -1);
-        HYDT_bscu_pid_list_push(proxy, pid);
+        HYDT_bscu_pid_list_push(pid, pgid, i);
         HYDU_ERR_POP(status, "create process returned error\n");
 
         /* Reset the exec string to the original value */

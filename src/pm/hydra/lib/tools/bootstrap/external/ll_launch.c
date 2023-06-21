@@ -11,8 +11,8 @@
 
 static int fd_stdout, fd_stderr;
 
-HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
-                                     int use_rmk, int *control_fd)
+HYD_status HYDT_bscd_ll_launch_procs(int pgid, char **args, struct HYD_host *hosts /*unused */ ,
+                                     int num_hosts, int use_rmk, int *control_fd)
 {
     int idx, i, total_procs;
     int *fd_list, exec_idx;
@@ -88,7 +88,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, 
     int pid;
     status = HYDU_create_process(targs, NULL, NULL, &fd_stdout, &fd_stderr, &pid, -1);
     HYDU_ERR_POP(status, "create process returned error\n");
-    HYDT_bscu_pid_list_push(NULL, pid);
+    HYDT_bscu_pid_list_push(pid, pgid, 0);
 
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;

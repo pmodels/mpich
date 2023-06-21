@@ -42,14 +42,17 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
             if (pid <= 0) {
                 break;
             }
-            struct HYD_proxy_pid *p;
-            p = HYDT_bscu_pid_list_find(pid);
-            if (p) {
-                p->pid = -1;
-                if (p->proxy) {
-                    if (p->proxy->control_fd == HYD_FD_UNSET) {
-                        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Launch proxy failed.\n");
-                    }
+            bool found;
+            int pgid, proxy_id;
+            found = HYDT_bscu_pid_list_find(pid, &pgid, &proxy_id);
+            if (found) {
+                struct HYD_pg *pg;
+                struct HYD_proxy *proxy;
+                pg = PMISERV_pg_by_id(pgid);
+                proxy = &pg->proxy_list[proxy_id];
+
+                if (proxy->control_fd == HYD_FD_UNSET) {
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Launch proxy failed.\n");
                 }
             }
         }
@@ -109,9 +112,15 @@ HYD_status HYD_pmci_launch_procs(void)
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
 
-    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, pg->proxy_count,
+    struct HYD_host *hosts;
+    status = HYDU_proxy_list_to_host_list(pg->proxy_list, pg->proxy_count, &hosts);
+    HYDU_ERR_POP(status, "unable to convert host list\n");
+
+    status = HYDT_bsci_launch_procs(0, proxy_stash.strlist, hosts, pg->proxy_count,
                                     HYD_TRUE, control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
+
+    MPL_free(hosts);
 
     for (i = 0; i < pg->proxy_count; i++) {
         if (control_fd[i] != HYD_FD_UNSET) {

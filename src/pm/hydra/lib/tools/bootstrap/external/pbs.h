@@ -19,8 +19,8 @@ struct HYDT_bscd_pbs_sys_s {
 
 extern struct HYDT_bscd_pbs_sys_s *HYDT_bscd_pbs_sys;
 
-HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
-                                      int use_rmk, int *control_fd);
+HYD_status HYDT_bscd_pbs_launch_procs(int pgid, char **args, struct HYD_host *hosts,
+                                      int num_hosts, int use_rmk, int *control_fd);
 HYD_status HYDT_bscd_pbs_query_env_inherit(const char *env_name, int *ret);
 HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout);
 HYD_status HYDT_bscd_pbs_launcher_finalize(void);

@@ -310,6 +310,13 @@ struct HYD_exec {
     struct HYD_exec *next;
 };
 
+/* Host information needed for launching proxies */
+struct HYD_host {
+    char *hostname;
+    char *user;
+    int core_count;
+};
+
 /* Information about the node itself */
 struct HYD_node {
     char *hostname;
@@ -524,6 +531,8 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
 /* others */
 int HYDU_dceil(int x, int y);
 HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD_node **node_list);
+HYD_status HYDU_proxy_list_to_host_list(struct HYD_proxy *proxy_list, int count,
+                                        struct HYD_host **host_list);
 void HYDU_delay(unsigned long delay);
 
 /* signals */

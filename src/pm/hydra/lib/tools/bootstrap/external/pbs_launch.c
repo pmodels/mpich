@@ -34,11 +34,10 @@ static HYD_status find_pbs_node_id(const char *hostname, int *node_id)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
-                                      int use_rmk, int *control_fd)
+HYD_status HYDT_bscd_pbs_launch_procs(int pgid, char **args, struct HYD_host *hosts,
+                                      int num_hosts, int use_rmk, int *control_fd)
 {
     int i, args_count, err, hostid;
-    struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
@@ -65,10 +64,9 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
      * spawning. */
     hostid = 0;
     for (i = 0; i < num_hosts; i++) {
-        proxy = proxy_list + i;
         if (pbs_node_list) {
-            status = find_pbs_node_id(proxy->node->hostname, &hostid);
-            HYDU_ERR_POP(status, "error finding PBS node ID for host %s\n", proxy->node->hostname);
+            status = find_pbs_node_id(hosts[i].hostname, &hostid);
+            HYDU_ERR_POP(status, "error finding PBS node ID for host %s\n", hosts[i].hostname);
         }
 
         targs[args_count] = HYDU_int_to_str(i);
@@ -95,7 +93,7 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
                             "tm_spawn() failed with TM error %d\n", err);
 
         if (!pbs_node_list)
-            hostid += proxy->node->core_count;
+            hostid += hosts[i].core_count;
     }
     HYDT_bscd_pbs_sys->spawn_count = i;
 
