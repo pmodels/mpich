@@ -250,8 +250,8 @@ static HYD_status do_spawn(void)
     status = HYDU_gen_rankmap(pg->pg_process_count, node_list, &pg->rankmap);
     HYDU_ERR_POP(status, "error create rankmap\n");
 
-    status = HYDU_create_proxy_list(pg->pg_process_count, exec_list, node_list,
-                                    pg->pgid, pg->rankmap, &pg->proxy_count, &pg->proxy_list);
+    status = PMISERV_create_proxy_list(pg->pg_process_count, exec_list, node_list,
+                                       pg->pgid, pg->rankmap, &pg->proxy_count, &pg->proxy_list);
     HYDU_ERR_POP(status, "error creating proxy list\n");
     HYDU_free_exec_list(exec_list);
 
@@ -279,7 +279,7 @@ static HYD_status do_spawn(void)
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
         struct HYD_host *hosts;
-        status = HYDU_proxy_list_to_host_list(filtered_proxy_list, rem_count, &hosts);
+        status = PMISERV_proxy_list_to_host_list(filtered_proxy_list, rem_count, &hosts);
         HYDU_ERR_POP(status, "unable to convert host list\n");
 
         status = HYDT_bsci_launch_procs(pg->pgid, proxy_stash.strlist, hosts, rem_count,

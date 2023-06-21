@@ -113,7 +113,7 @@ HYD_status HYD_pmci_launch_procs(void)
         control_fd[i] = HYD_FD_UNSET;
 
     struct HYD_host *hosts;
-    status = HYDU_proxy_list_to_host_list(pg->proxy_list, pg->proxy_count, &hosts);
+    status = PMISERV_proxy_list_to_host_list(pg->proxy_list, pg->proxy_count, &hosts);
     HYDU_ERR_POP(status, "unable to convert host list\n");
 
     status = HYDT_bsci_launch_procs(0, proxy_stash.strlist, hosts, pg->proxy_count,

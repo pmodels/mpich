@@ -38,6 +38,27 @@ struct HYD_pg {
     void *pg_scratch;
 };
 
+/* Proxy information */
+struct HYD_proxy {
+    struct HYD_node *node;
+    int pgid;
+
+    char **exec_launch_info;
+
+    int proxy_id;
+
+    int proxy_process_count;
+
+    /* Filler processes that we are adding on this proxy */
+    int filler_processes;
+
+    struct HYD_exec *exec_list;
+
+    int *pid;
+    int *exit_status;
+    int control_fd;
+};
+
 struct HYD_server_info_s {
     struct HYD_user_global user_global;
 
@@ -88,5 +109,15 @@ void PMISERV_proxy_finalize(void);
 int PMISERV_proxy_alloc(void);  /* return proxy_id */
 int PMISERV_proxy_max_id(void);
 struct HYD_proxy *PMISERV_proxy_by_id(int proxy_id);
+
+HYD_status PMISERV_create_proxy_list_singleton(struct HYD_node *node, int pgid,
+                                               int *proxy_count_p, struct HYD_proxy **proxy_list_p);
+HYD_status PMISERV_create_proxy_list(int count, struct HYD_exec *exec_list,
+                                     struct HYD_node *node_list, int pgid, int *rankmap,
+                                     int *proxy_count_p, struct HYD_proxy **proxy_list_p);
+void PMISERV_free_proxy_list(struct HYD_proxy *proxy_list, int count);
+
+HYD_status PMISERV_proxy_list_to_host_list(struct HYD_proxy *proxy_list, int count,
+                                           struct HYD_host **host_list);
 
 #endif /* HYDRA_SERVER_H_INCLUDED */

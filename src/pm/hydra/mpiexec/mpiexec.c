@@ -181,8 +181,8 @@ int main(int argc, char **argv)
         status = HYDU_gen_rankmap(1, HYD_server_info.node_list, &pg->rankmap);
         HYDU_ERR_POP(status, "error create rankmap\n");
 
-        status = HYDU_create_proxy_list_singleton(HYD_server_info.node_list, 0,
-                                                  &pg->proxy_count, &pg->proxy_list);
+        status = PMISERV_create_proxy_list_singleton(HYD_server_info.node_list, 0,
+                                                     &pg->proxy_count, &pg->proxy_list);
         HYDU_ERR_POP(status, "unable to create singleton proxy list\n");
     } else {
         /* If the number of processes is not given, we allocate all the
@@ -215,9 +215,9 @@ int main(int argc, char **argv)
             HYDU_ERR_POP(status, "error create rankmap\n");
         }
 
-        status = HYDU_create_proxy_list(pg->pg_process_count, HYD_uii_mpx_exec_list,
-                                        HYD_server_info.node_list, 0, pg->rankmap,
-                                        &pg->proxy_count, &pg->proxy_list);
+        status = PMISERV_create_proxy_list(pg->pg_process_count, HYD_uii_mpx_exec_list,
+                                           HYD_server_info.node_list, 0, pg->rankmap,
+                                           &pg->proxy_count, &pg->proxy_list);
         HYDU_ERR_POP(status, "unable to create proxy list\n");
     }
 

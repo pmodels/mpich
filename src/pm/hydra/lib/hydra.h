@@ -336,27 +336,6 @@ struct HYD_node {
     struct HYD_node *next;
 };
 
-/* Proxy information */
-struct HYD_proxy {
-    struct HYD_node *node;
-    int pgid;
-
-    char **exec_launch_info;
-
-    int proxy_id;
-
-    int proxy_process_count;
-
-    /* Filler processes that we are adding on this proxy */
-    int filler_processes;
-
-    struct HYD_exec *exec_list;
-
-    int *pid;
-    int *exit_status;
-    int control_fd;
-};
-
 /* Global user parameters */
 struct HYD_user_global {
     /* RMK */
@@ -481,14 +460,8 @@ void HYDU_init_global_env(struct HYD_env_global *global_env);
 void HYDU_finalize_global_env(struct HYD_env_global *global_env);
 HYD_status HYDU_alloc_node(struct HYD_node **node);
 void HYDU_free_node_list(struct HYD_node *node_list);
-void HYDU_free_proxy_list(struct HYD_proxy *proxy_list, int count);
 HYD_status HYDU_alloc_exec(struct HYD_exec **exec);
 void HYDU_free_exec_list(struct HYD_exec *exec_list);
-HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
-                                            int *proxy_count_p, struct HYD_proxy **proxy_list_p);
-HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  int pgid, int *rankmap,
-                                  int *proxy_count_p, struct HYD_proxy **proxy_list_p);
 HYD_status HYDU_correct_wdir(char **wdir);
 HYD_status HYDU_gen_rankmap(int process_count, struct HYD_node *node_list, int **rankmap);
 
@@ -531,8 +504,6 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
 /* others */
 int HYDU_dceil(int x, int y);
 HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD_node **node_list);
-HYD_status HYDU_proxy_list_to_host_list(struct HYD_proxy *proxy_list, int count,
-                                        struct HYD_host **host_list);
 void HYDU_delay(unsigned long delay);
 
 /* signals */
