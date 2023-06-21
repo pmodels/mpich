@@ -94,8 +94,42 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
+/* ---- tree launch ---- */
+static void tree_launch_init(int k, int myid, int num, int *id_start, int *id_end)
+{
+    if (k <= 0) {
+        /* flat launch */
+        *id_start = 0;
+        *id_end = num;
+    } else if (myid == -1) {
+        /* server only launch the first k proxies */
+        *id_start = 0;
+        *id_end = k;
+    } else {
+        /* level 1 - k   proxies
+         * level 2 - k^2 proxies
+         * level 3 - k^3 proxies
+         * ...
+         */
+        int n = 1;
+        int k_n = k;
+        int sum = k;
+        while (myid >= sum) {
+            n++;
+            k_n *= k;
+            sum += k_n;
+        }
+        *id_start = (myid - (sum - k_n)) * k + sum;
+        *id_end = *id_start + k;
+    }
+    if (*id_end > num) {
+        *id_end = num;
+    }
+}
+
 HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host *hosts,
-                                         int num_hosts, int use_rmk, int *control_fd)
+                                         int num_hosts, int use_rmk, int k, int myid,
+                                         int *control_fd)
 {
     int idx, i, host_idx, fd, exec_idx, offset, len, rc, autofork;
     int *fd_list, *dummy;
@@ -185,13 +219,21 @@ HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host 
     MPL_free(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
-    /* Check if the user disabled automatic forking */
-    rc = MPL_env2bool("HYDRA_LAUNCHER_AUTOFORK", &autofork);
-    if (rc == 0)
-        autofork = 1;
+    if (k == 0) {
+        /* Check if the user disabled automatic forking */
+        rc = MPL_env2bool("HYDRA_LAUNCHER_AUTOFORK", &autofork);
+        if (rc == 0)
+            autofork = 1;
+    } else {
+        /* disable fork if doing tree-launch */
+        autofork = 0;
+    }
+
+    int id_start, id_end;
+    tree_launch_init(k, myid, num_hosts, &id_start, &id_end);
 
     targs[idx] = NULL;
-    for (i = 0; i < num_hosts; i++) {
+    for (i = id_start; i < id_end; i++) {
         MPL_free(targs[host_idx]);
         if (hosts[i].user == NULL) {
             targs[host_idx] = MPL_strdup(hosts[i].hostname);

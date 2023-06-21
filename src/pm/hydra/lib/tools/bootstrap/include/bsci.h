@@ -51,7 +51,7 @@ struct HYDT_bsci_fns {
     /* Launcher functions */
     /** \brief Launch processes */
     HYD_status(*launch_procs) (int pgid, char **args, struct HYD_host * hosts,
-                               int num_hosts, int use_rmk, int *control_fd);
+                               int num_hosts, int use_rmk, int k, int myid, int *control_fd);
 
     /** \brief Finalize the bootstrap control device */
     HYD_status(*launcher_finalize) (void);
@@ -96,6 +96,8 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  * \param[in]   args            Arguments to be used for the launched processes
  * \param[in]   hosts           List of hosts to launch
  * \param[in]   use_rmk         Force not to use RMK if HYD_FALSE
+ * \param[in]   k               Flat-launch (k == 0) or tree-launch (k > 0)
+ * \param[in]   my_id           Launcher's proxy id; use -1 for server
  * \param[out]  control_fd      Control socket to communicate with the launched process
  *
  * This function appends a proxy ID to the end of the args list and
@@ -129,7 +131,7 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  * use RMK.  HYD_FALSE is passed in PMI spawn functions.
  */
 HYD_status HYDT_bsci_launch_procs(int pgid, char **args, struct HYD_host *hosts,
-                                  int num_hosts, int use_rmk, int *control_fd);
+                                  int num_hosts, int use_rmk, int k, int myid, int *control_fd);
 
 
 /**

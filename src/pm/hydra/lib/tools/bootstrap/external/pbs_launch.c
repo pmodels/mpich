@@ -34,8 +34,9 @@ static HYD_status find_pbs_node_id(const char *hostname, int *node_id)
     goto fn_exit;
 }
 
+/* NOTE: tree-launch not supported, params k, myid are ignored. */
 HYD_status HYDT_bscd_pbs_launch_procs(int pgid, char **args, struct HYD_host *hosts,
-                                      int num_hosts, int use_rmk, int *control_fd)
+                                      int num_hosts, int use_rmk, int k, int myid, int *control_fd)
 {
     int i, args_count, err, hostid;
     char *targs[HYD_NUM_TMP_STRINGS];

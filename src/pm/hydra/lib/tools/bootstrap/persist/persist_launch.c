@@ -59,8 +59,10 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
+/* NOTE: tree-launch not supported, params k, myid are ignored. */
 HYD_status HYDT_bscd_persist_launch_procs(int pgid, char **args, struct HYD_host *hosts,
-                                          int num_hosts, int use_rmk, int *control_fd)
+                                          int num_hosts, int use_rmk, int k, int myid,
+                                          int *control_fd)
 {
     int idx;
     HYD_status status = HYD_SUCCESS;

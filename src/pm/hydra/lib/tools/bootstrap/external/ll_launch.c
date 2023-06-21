@@ -11,8 +11,11 @@
 
 static int fd_stdout, fd_stderr;
 
+/* NOTE: only support launch over all nodes, param hosts is ignored.
+ *       tree-launch not supported, params k, myid are ignored.
+ */
 HYD_status HYDT_bscd_ll_launch_procs(int pgid, char **args, struct HYD_host *hosts /*unused */ ,
-                                     int num_hosts, int use_rmk, int *control_fd)
+                                     int num_hosts, int use_rmk, int k, int myid, int *control_fd)
 {
     int idx, i, total_procs;
     int *fd_list, exec_idx;

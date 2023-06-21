@@ -283,7 +283,7 @@ static HYD_status do_spawn(void)
         HYDU_ERR_POP(status, "unable to convert host list\n");
 
         status = HYDT_bsci_launch_procs(pg->pgid, proxy_stash.strlist, hosts, rem_count,
-                                        HYD_FALSE, NULL);
+                                        HYD_FALSE, 0, -1, NULL);
         HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
         MPL_free(hosts);
