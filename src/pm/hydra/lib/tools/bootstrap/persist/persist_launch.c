@@ -64,21 +64,30 @@ HYD_status HYDT_bscd_persist_launch_procs(int pgid, char **args, struct HYD_host
                                           int num_hosts, int use_rmk, int k, int myid,
                                           int *control_fd)
 {
-    int idx;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDT_bscd_persist_node_count = num_hosts;
 
-    for (idx = 0; args[idx]; idx++);
-    args[idx + 1] = NULL;
+    char *targs[HYD_NUM_TMP_STRINGS];
+    int idx = 0;
+    int id_idx;
+    for (int i = 0; args[i]; i++) {
+        targs[idx] = MPL_strdup(args[i]);
+    }
+    targs[idx++] = MPL_strdup("--proxy-id");
+    targs[idx++] = NULL;
+    id_idx = idx - 1;
+
+    targs[idx] = NULL;
 
     HYDU_MALLOC_OR_JUMP(HYDT_bscd_persist_control_fd, int *,
                         HYDT_bscd_persist_node_count * sizeof(int), status);
 
     for (int i = 0; i < num_hosts; i++) {
-        args[idx] = HYDU_int_to_str(i);
+        MPL_free(targs[id_idx]);
+        targs[id_idx] = HYDU_int_to_str(i);
 
         /* connect to hydserv on each node */
         status = HYDU_sock_connect(hosts[i].hostname, PERSIST_DEFAULT_PORT,
@@ -95,6 +104,7 @@ HYD_status HYDT_bscd_persist_launch_procs(int pgid, char **args, struct HYD_host
     }
 
   fn_exit:
+    HYDU_free_strlist(targs);
     HYDU_FUNC_EXIT();
     return status;
 

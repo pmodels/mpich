@@ -132,6 +132,7 @@ HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host 
                                          int *control_fd)
 {
     int idx, i, host_idx, fd, exec_idx, offset, len, rc, autofork;
+    int id_idx;
     int *fd_list, *dummy;
     int sockpair[2];
     char *targs[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *extra_arg_list = NULL, *extra_arg;
@@ -200,6 +201,12 @@ HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host 
     for (i = 0; args[i]; i++)
         targs[idx++] = MPL_strdup(args[i]);
 
+    targs[idx++] = MPL_strdup("--proxy-id");
+    id_idx = idx++;
+    targs[id_idx] = NULL;
+
+    targs[idx] = NULL;
+
     /* Store the original exec string */
     original_exec_string = targs[exec_idx];
 
@@ -232,7 +239,6 @@ HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host 
     int id_start, id_end;
     tree_launch_init(k, myid, num_hosts, &id_start, &id_end);
 
-    targs[idx] = NULL;
     for (i = id_start; i < id_end; i++) {
         MPL_free(targs[host_idx]);
         if (hosts[i].user == NULL) {
@@ -244,9 +250,8 @@ HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host 
         }
 
         /* append proxy ID */
-        MPL_free(targs[idx]);
-        targs[idx] = HYDU_int_to_str(i);
-        targs[idx + 1] = NULL;
+        MPL_free(targs[id_idx]);
+        targs[id_idx] = HYDU_int_to_str(i);
 
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */

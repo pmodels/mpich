@@ -84,8 +84,6 @@ HYD_status HYDT_bscd_ll_launch_procs(int pgid, char **args, struct HYD_host *hos
     MPL_free(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
-    /* append proxy ID as -1 */
-    targs[idx++] = HYDU_int_to_str(-1);
     targs[idx++] = NULL;
 
     int pid;
