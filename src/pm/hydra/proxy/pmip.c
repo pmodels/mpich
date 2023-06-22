@@ -96,6 +96,29 @@ int main(int argc, char **argv)
     status = HYDT_dmx_init(&HYD_pmcd_pmip.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
+    if (HYD_pmcd_pmip.k > 0) {
+        /* terminate the argv list where --proxy-id is */
+        int i_proxy_id = 0;
+        char *p_proxy_id = NULL;
+        for (int i = 0; argv[i]; i++) {
+            if (strcmp(argv[i], "--proxy-id") == 0) {
+                i_proxy_id = i;
+                p_proxy_id = argv[i];
+                argv[i] = NULL;
+            }
+        }
+
+        status = HYDT_bsci_launch_procs(HYD_pmcd_pmip.local.pgid, argv,
+                                        HYD_pmcd_pmip.hosts, HYD_pmcd_pmip.num_hosts,
+                                        HYD_FALSE, HYD_pmcd_pmip.k, HYD_pmcd_pmip.local.id, NULL);
+        HYDU_ERR_POP(status, "unable to launch further proxies\n");
+
+        /* restore the argv array */
+        if (p_proxy_id) {
+            argv[i_proxy_id] = p_proxy_id;
+        }
+    }
+
     /* See if HYDI_CONTROL_FD is set before trying to connect upstream */
     ret = MPL_env2int("HYDI_CONTROL_FD", &HYD_pmcd_pmip.upstream.control);
     if (ret < 0) {
