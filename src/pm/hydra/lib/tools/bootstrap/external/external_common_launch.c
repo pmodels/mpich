@@ -8,6 +8,7 @@
 #include "bscu.h"
 #include "topo.h"
 #include "common.h"
+#include <assert.h>
 
 static int fd_stdout, fd_stderr;
 
@@ -127,7 +128,41 @@ static void tree_launch_init(int k, int myid, int num, int *id_start, int *id_en
     }
 }
 
-HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host *hosts,
+static char *hosts_to_str(struct HYD_host *hosts, int num_hosts)
+{
+    /* TODO: compress the host list */
+    int len = 0;
+    for (int i = 0; i < num_hosts; i++) {
+        if (hosts[i].user) {
+            len += strlen(hosts[i].user) + strlen(hosts[i].hostname) + 1;
+        } else {
+            len += strlen(hosts[i].hostname);
+        }
+        len += 1;
+    }
+    char *buf = MPL_malloc(len, MPL_MEM_PM);
+    assert(buf);
+
+    char *s = buf;
+    for (int i = 0; i < num_hosts; i++) {
+        if (hosts[i].user) {
+            int n = strlen(hosts[i].user) + strlen(hosts[i].hostname) + 1;
+            snprintf(s, n, "%s@%s", hosts[i].user, hosts[i].hostname);
+            s += n;
+        } else {
+            int n = strlen(hosts[i].hostname);
+            strcpy(s, hosts[i].hostname);
+            s += n;
+        }
+        *s++ = ',';
+    }
+
+    s[-1] = '\0';
+
+    return buf;
+}
+
+HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host * hosts,
                                          int num_hosts, int use_rmk, int k, int myid,
                                          int *control_fd)
 {
@@ -204,6 +239,17 @@ HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host 
     targs[idx++] = MPL_strdup("--proxy-id");
     id_idx = idx++;
     targs[id_idx] = NULL;
+
+    /* additional args:
+     * -k k
+     * -hosts hosts
+     */
+    if (k > 0) {
+        targs[idx++] = MPL_strdup("--k");
+        targs[idx++] = HYDU_int_to_str(k);
+        targs[idx++] = MPL_strdup("--hosts");
+        targs[idx++] = hosts_to_str(hosts, num_hosts);
+    }
 
     targs[idx] = NULL;
 

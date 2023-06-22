@@ -25,6 +25,10 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.pgid = -1;
     HYD_pmcd_pmip.local.retries = -1;
 
+    HYD_pmcd_pmip.k = 0;
+    HYD_pmcd_pmip.num_hosts = 0;
+    HYD_pmcd_pmip.hosts = NULL;
+
     PMIP_pg_init();
 
     return status;
@@ -38,6 +42,11 @@ static void cleanup_params(void)
     /* Upstream */
     MPL_free(HYD_pmcd_pmip.upstream.server_name);
 
+    for (int i = 0; i < HYD_pmcd_pmip.num_hosts; i++) {
+        MPL_free(HYD_pmcd_pmip.hosts[i].hostname);
+        MPL_free(HYD_pmcd_pmip.hosts[i].user);
+    }
+    MPL_free(HYD_pmcd_pmip.hosts);
 
     PMIP_pg_finalize();
     HYDT_topo_finalize();

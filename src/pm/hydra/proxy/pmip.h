@@ -36,6 +36,10 @@ struct HYD_pmcd_pmip_s {
 
         int retries;
     } local;
+
+    int k;
+    int num_hosts;
+    struct HYD_host *hosts;
 };
 
 /* downstreams */
