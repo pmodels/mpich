@@ -53,6 +53,14 @@ int main(int argc, char **argv)
     status = HYD_uii_mpx_get_parameters(argv);
     HYDU_ERR_POP(status, "error parsing parameters\n");
 
+    /* Check if any exec argument is missing */
+    for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
+        if (exec->exec[0] == NULL) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
+                                "Missing executable. Try -h for usages.\n");
+        }
+    }
+
     /* The demux engine should be initialized before any sockets are
      * created, since it checks for STDIN's validity.  If STDIN was
      * closed and we opened a socket that got the same fd as STDIN,
