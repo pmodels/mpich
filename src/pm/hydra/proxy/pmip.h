@@ -33,6 +33,7 @@ struct HYD_pmcd_pmip_s {
     struct {
         int id;
         int pgid;
+        char *hostname;
 
         int retries;
     } local;
@@ -117,7 +118,6 @@ struct pmip_pg {
     int barrier_count;
 
     /* environment */
-    char *iface_ip_env_name;
     char *hostname;
 };
 

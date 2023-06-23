@@ -166,8 +166,8 @@ HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host 
                                          int num_hosts, int use_rmk, int k, int myid,
                                          int *control_fd)
 {
-    int idx, i, host_idx, fd, exec_idx, offset, len, rc, autofork;
-    int id_idx;
+    int idx, i, fd, offset, len, rc, autofork;
+    int id_idx, host_idx, host_idx_2, exec_idx;
     int *fd_list, *dummy;
     int sockpair[2];
     char *targs[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *extra_arg_list = NULL, *extra_arg;
@@ -240,6 +240,10 @@ HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host 
     id_idx = idx++;
     targs[id_idx] = NULL;
 
+    targs[idx++] = MPL_strdup("--hostname");
+    host_idx_2 = idx++;
+    targs[host_idx_2] = NULL;
+
     /* additional args:
      * -k k
      * -hosts hosts
@@ -294,6 +298,9 @@ HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host 
             HYDU_MALLOC_OR_JUMP(targs[host_idx], char *, len, status);
             snprintf(targs[host_idx], len, "%s@%s", hosts[i].user, hosts[i].hostname);
         }
+
+        MPL_free(targs[host_idx_2]);
+        targs[host_idx_2] = MPL_strdup(hosts[i].hostname);
 
         /* append proxy ID */
         MPL_free(targs[id_idx]);

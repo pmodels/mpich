@@ -237,14 +237,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         HYD_STRING_STASH(exec_stash, MPL_strdup("--version"), status);
         HYD_STRING_STASH(exec_stash, MPL_strdup(HYDRA_VERSION), status);
 
-        if (HYD_server_info.iface_ip_env_name) {
-            HYD_STRING_STASH(exec_stash, MPL_strdup("--iface-ip-env-name"), status);
-            HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.iface_ip_env_name), status);
-        }
-
-        HYD_STRING_STASH(exec_stash, MPL_strdup("--hostname"), status);
-        HYD_STRING_STASH(exec_stash, MPL_strdup(proxy->node->hostname), status);
-
         /* This map has three fields: filler cores on this node,
          * remaining cores on this node, total cores in the system */
         HYD_STRING_STASH(exec_stash, MPL_strdup("--global-core-map"), status);

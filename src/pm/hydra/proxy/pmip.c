@@ -23,6 +23,7 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.pgid = -1;
+    HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.retries = -1;
 
     HYD_pmcd_pmip.k = 0;
@@ -38,9 +39,8 @@ static void cleanup_params(void)
 {
     HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
 
-
-    /* Upstream */
     MPL_free(HYD_pmcd_pmip.upstream.server_name);
+    MPL_free(HYD_pmcd_pmip.local.hostname);
 
     for (int i = 0; i < HYD_pmcd_pmip.num_hosts; i++) {
         MPL_free(HYD_pmcd_pmip.hosts[i].hostname);

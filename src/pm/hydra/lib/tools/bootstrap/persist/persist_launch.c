@@ -72,10 +72,14 @@ HYD_status HYDT_bscd_persist_launch_procs(int pgid, char **args, struct HYD_host
 
     char *targs[HYD_NUM_TMP_STRINGS];
     int idx = 0;
-    int id_idx;
+    int id_idx, host_idx;
     for (int i = 0; args[i]; i++) {
         targs[idx] = MPL_strdup(args[i]);
     }
+    targs[idx++] = MPL_strdup("--hostname");
+    targs[idx++] = NULL;
+    host_idx = idx - 1;
+
     targs[idx++] = MPL_strdup("--proxy-id");
     targs[idx++] = NULL;
     id_idx = idx - 1;
@@ -88,6 +92,9 @@ HYD_status HYDT_bscd_persist_launch_procs(int pgid, char **args, struct HYD_host
     for (int i = 0; i < num_hosts; i++) {
         MPL_free(targs[id_idx]);
         targs[id_idx] = HYDU_int_to_str(i);
+
+        MPL_free(targs[host_idx]);
+        targs[host_idx] = MPL_strdup(hosts[i].hostname);
 
         /* connect to hydserv on each node */
         status = HYDU_sock_connect(hosts[i].hostname, PERSIST_DEFAULT_PORT,

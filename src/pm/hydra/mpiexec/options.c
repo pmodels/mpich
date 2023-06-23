@@ -93,7 +93,6 @@ static void help_help_fn(void)
     printf("\n");
     printf("  Other Hydra options:\n");
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
-    printf("    -disable-hostname-propagation    let MPICH auto-detect the hostname\n");
     printf("    -errfile-pattern                 direct stderr to file\n");
     printf("    -gpus-per-proc                   number of GPUs per process (default: auto)\n");
     printf("    -hybrid-hosts                    assume hosts do not share paths\n");
@@ -1284,34 +1283,6 @@ static HYD_status auto_cleanup_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void hostname_propagation_help_fn(void)
-{
-    printf("\n");
-    printf("-disable-hostname-propagation: Let MPICH auto-detect the hostname\n");
-    printf("-enable-hostname-propagation: Pass user hostnames to MPICH (default)\n\n");
-}
-
-static HYD_status hostname_propagation_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (HYD_ui_mpich_info.reading_config_file && HYD_ui_mpich_info.hostname_propagation != -1) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status =
-        HYDU_set_int(arg, &HYD_ui_mpich_info.hostname_propagation,
-                     strcmp(arg, "disable-hostname-propagation"));
-    HYDU_ERR_POP(status, "error setting hostname propagation\n");
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static void order_nodes_help_fn(void)
 {
     printf("\n");
@@ -1659,9 +1630,7 @@ struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     /* Other hydra options */
     {"debug", verbose_fn, verbose_help_fn},
     {"disable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
-    {"disable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"enable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
-    {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"g", gpus_per_proc_fn, gpus_per_proc_help_fn},
     {"gpus-per-proc", gpus_per_proc_fn, gpus_per_proc_help_fn},
     {"gpu-subdevs-per-proc", gpu_subdevs_per_proc_fn, gpu_subdevs_per_proc_help_fn},

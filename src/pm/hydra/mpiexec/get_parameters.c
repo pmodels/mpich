@@ -172,7 +172,6 @@ static void init_ui_mpich_info(void)
     HYD_ui_mpich_info.errfile_pattern = NULL;
     HYD_ui_mpich_info.config_file = NULL;
     HYD_ui_mpich_info.reading_config_file = 0;
-    HYD_ui_mpich_info.hostname_propagation = -1;
 }
 
 static HYD_status set_default_values(void)
@@ -227,12 +226,6 @@ static HYD_status check_environment(void)
         MPL_env2str("HYDRA_ENV", (const char **) &tmp))
         HYD_server_info.user_global.global_env.prop =
             !strcmp(tmp, "all") ? MPL_strdup("all") : MPL_strdup("none");
-
-    /* If hostname propagation is not set on the command-line, check
-     * for the environment variable */
-    if (HYD_ui_mpich_info.hostname_propagation == -1) {
-        ENV2BOOL("HYDRA_HOSTNAME_PROPAGATION", &HYD_ui_mpich_info.hostname_propagation);
-    }
 
     if (HYD_ui_mpich_info.timeout == -1) {
         MPL_env2int("MPIEXEC_TIMEOUT", &HYD_ui_mpich_info.timeout);
@@ -339,23 +332,6 @@ static HYD_status post_process(void)
             status = HYDU_correct_wdir(&exec->wdir);
             HYDU_ERR_POP(status, "unable to correct wdir\n");
         }
-    }
-
-    /* If an interface is provided, set that */
-    if (HYD_server_info.user_global.iface) {
-        if (HYD_ui_mpich_info.hostname_propagation == 1) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "cannot set iface and force hostname propagation");
-        }
-
-        HYDU_append_env_to_list("MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE",
-                                HYD_server_info.user_global.iface,
-                                &HYD_server_info.user_global.global_env.system);
-    } else {
-        /* If hostname propagation is requested (or not set), set the
-         * environment variable for doing that */
-        if (HYD_ui_mpich_info.hostname_propagation || HYD_ui_mpich_info.hostname_propagation == -1)
-            HYD_server_info.iface_ip_env_name = MPL_strdup("MPIR_CVAR_CH3_INTERFACE_HOSTNAME");
     }
 
   fn_exit:
