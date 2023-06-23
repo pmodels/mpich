@@ -104,19 +104,28 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
     HYD_STRING_STASH(*proxy_stash, MPL_strdup("--retries"), status);
     HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(retries), status);
 
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--usize"), status);
-    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.usize), status);
+    if (HYD_server_info.user_global.usize != HYD_USIZE_INFINITE) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--usize"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.usize), status);
+    }
 
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--pmi-port"), status);
-    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.pmi_port), status);
+    if (HYD_server_info.user_global.pmi_port > 0) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--pmi-port"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.pmi_port),
+                         status);
+    }
 
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--gpus-per-proc"), status);
-    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.gpus_per_proc),
-                     status);
+    if (HYD_server_info.user_global.gpus_per_proc != HYD_GPUS_PER_PROC_AUTO) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--gpus-per-proc"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.gpus_per_proc),
+                         status);
+    }
 
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--gpu-subdevs-per-proc"), status);
-    HYD_STRING_STASH(*proxy_stash,
-                     HYDU_int_to_str(HYD_server_info.user_global.gpu_subdevs_per_proc), status);
+    if (HYD_server_info.user_global.gpu_subdevs_per_proc != HYD_GPUS_PER_PROC_AUTO) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--gpu-subdevs-per-proc"), status);
+        HYD_STRING_STASH(*proxy_stash,
+                         HYDU_int_to_str(HYD_server_info.user_global.gpu_subdevs_per_proc), status);
+    }
 
     if (pgid == 0 && HYD_server_info.is_singleton) {
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--singleton-port"), status);

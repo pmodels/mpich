@@ -29,6 +29,32 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     HYDU_init_global_env(&user_global->global_env);
 }
 
+/* Check user_global settings after parsing parameters, set default if not set */
+HYD_status HYDU_check_user_global(struct HYD_user_global *user_global)
+{
+    if (user_global->auto_cleanup == -1)
+        user_global->auto_cleanup = 1;
+
+    /* Default universe size if the user did not specify anything is
+     * INFINITE */
+    if (user_global->usize == HYD_USIZE_UNSET)
+        user_global->usize = HYD_USIZE_INFINITE;
+
+    if (user_global->pmi_port == -1)
+        user_global->pmi_port = 0;
+
+    if (user_global->skip_launch_node == -1)
+        user_global->skip_launch_node = 0;
+
+    if (user_global->gpus_per_proc == HYD_GPUS_PER_PROC_UNSET)
+        user_global->gpus_per_proc = HYD_GPUS_PER_PROC_AUTO;
+
+    if (user_global->gpu_subdevs_per_proc == HYD_GPUS_PER_PROC_UNSET)
+        user_global->gpu_subdevs_per_proc = HYD_GPUS_PER_PROC_AUTO;
+
+    return HYD_SUCCESS;
+}
+
 void HYDU_finalize_user_global(struct HYD_user_global *user_global)
 {
     MPL_free(user_global->rmk);

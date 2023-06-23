@@ -714,6 +714,9 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
     if (HYD_pmcd_pmip.upstream.server_port == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "server port not available\n");
 
+    status = HYDU_check_user_global(&HYD_pmcd_pmip.user_global);
+    HYDU_ERR_POP(status, "User global parameter error\n");
+
     if (HYD_pmcd_pmip.user_global.demux == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "demux engine not available\n");
 

@@ -22,7 +22,7 @@
 
 static void init_ui_mpich_info(void);
 static HYD_status check_environment(void);
-static void set_default_values(void);
+static HYD_status set_default_values(void);
 static HYD_status process_config_token(char *token, int newline, void *data);
 static HYD_status parse_args(char **t_argv, int reading_config_file);
 static HYD_status post_process(void);
@@ -135,7 +135,8 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     status = check_environment();
     HYDU_ERR_POP(status, "checking environment variables\n");
 
-    set_default_values();
+    status = set_default_values();
+    HYDU_ERR_POP(status, "checking global parameters\n");
 
     if (HYD_server_info.user_global.debug) {
         PMIU_verbose = 1;
@@ -174,33 +175,19 @@ static void init_ui_mpich_info(void)
     HYD_ui_mpich_info.hostname_propagation = -1;
 }
 
-static void set_default_values(void)
+static HYD_status set_default_values(void)
 {
+    HYD_status status = HYD_SUCCESS;
+
     if (HYD_ui_mpich_info.print_all_exitcodes == -1)
         HYD_ui_mpich_info.print_all_exitcodes = 0;
 
     if (HYD_server_info.enable_profiling == -1)
         HYD_server_info.enable_profiling = 0;
 
-    if (HYD_server_info.user_global.auto_cleanup == -1)
-        HYD_server_info.user_global.auto_cleanup = 1;
+    status = HYDU_check_user_global(&HYD_server_info.user_global);
 
-    /* Default universe size if the user did not specify anything is
-     * INFINITE */
-    if (HYD_server_info.user_global.usize == HYD_USIZE_UNSET)
-        HYD_server_info.user_global.usize = HYD_USIZE_INFINITE;
-
-    if (HYD_server_info.user_global.pmi_port == -1)
-        HYD_server_info.user_global.pmi_port = 0;
-
-    if (HYD_server_info.user_global.skip_launch_node == -1)
-        HYD_server_info.user_global.skip_launch_node = 0;
-
-    if (HYD_server_info.user_global.gpus_per_proc == HYD_GPUS_PER_PROC_UNSET)
-        HYD_server_info.user_global.gpus_per_proc = HYD_GPUS_PER_PROC_AUTO;
-
-    if (HYD_server_info.user_global.gpu_subdevs_per_proc == HYD_GPUS_PER_PROC_UNSET)
-        HYD_server_info.user_global.gpu_subdevs_per_proc = HYD_GPUS_PER_PROC_AUTO;
+    return status;
 }
 
 /* In case a boolean environment value is unparsable (not 1|0|yes|no|true|false|on|off),

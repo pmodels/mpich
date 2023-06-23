@@ -456,6 +456,7 @@ struct HYD_user_global {
 /* alloc */
 void HYDU_init_user_global(struct HYD_user_global *user_global);
 void HYDU_finalize_user_global(struct HYD_user_global *user_global);
+HYD_status HYDU_check_user_global(struct HYD_user_global *user_global);
 void HYDU_init_global_env(struct HYD_env_global *global_env);
 void HYDU_finalize_global_env(struct HYD_env_global *global_env);
 HYD_status HYDU_alloc_node(struct HYD_node **node);
