@@ -344,6 +344,11 @@ typedef struct MPIDIG_win_shared_info {
     void *shm_base_addr;
     uint32_t disp_unit;
     int ipc_mapped_device;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_IPCI_type_t ipc_type;
+    MPIDI_GPU_ipc_handle_t ipc_handle;
+#endif
+    int mapped_type;            /* 0: gpu ipc mapped 1: gpu host mmapped 2: xpmem */
 } MPIDIG_win_shared_info_t;
 
 #define MPIDIG_ACCU_ORDER_RAR (1)

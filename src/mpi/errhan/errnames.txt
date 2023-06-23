@@ -958,6 +958,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **gpu_get_buffer_info: gpu_get_buffer_info failed
 **gpu_get_dev_count: gpu_get_dev_count failed
 **mpl_ze_init_device_fds: mpl_ze_init_device_fds failed
+**mpl_ze_mmap_device_ptr:  MPL_ze_mmap_device_pointer failed
+**mpl_gpu_fast_memcpy:  MPL_gpu_fast_memcpy failed
 
 ## GAVL tree related error messages
 **mpl_gavl_search: mpl_gavl_search failed

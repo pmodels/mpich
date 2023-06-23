@@ -57,7 +57,7 @@ static void ipc_handle_free_hook(void *dptr)
                 MPIR_Assert(mpl_err == MPL_SUCCESS);
             }
 
-            mpl_err = MPL_gpu_ipc_handle_destroy(pbase);
+            mpl_err = MPL_gpu_ipc_handle_destroy(pbase, &gpu_attr);
             MPIR_Assert(mpl_err == MPL_SUCCESS);
         }
     }

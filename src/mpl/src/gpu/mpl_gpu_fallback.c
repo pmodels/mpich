@@ -37,7 +37,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_handle_destroy(const void *ptr)
+int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
 {
     abort();
     return MPL_ERR_GPU_INTERNAL;
@@ -129,6 +129,12 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
 {
     return MPL_SUCCESS;
+}
+
+int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
+                        MPL_pointer_attr_t * dest_attr, size_t size)
+{
+    return MPL_ERR_GPU_INTERNAL;
 }
 
 int MPL_gpu_launch_hostfn(int stream, MPL_gpu_hostfn fn, void *data)

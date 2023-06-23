@@ -138,7 +138,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_destroy(const void *ptr)
+int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
 {
     return MPL_SUCCESS;
 }
@@ -440,6 +440,12 @@ hipError_t hipFree(void *dptr)
     gpu_free_hooks_cb(dptr);
     result = sys_hipFree(dptr);
     return result;
+}
+
+int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
+                        MPL_pointer_attr_t * dest_attr, size_t size)
+{
+    return MPL_ERR_GPU_INTERNAL;
 }
 
 /* ---- */

@@ -34,6 +34,18 @@ cvars:
         bytes), then enable GPU-based single copy protocol for intranode communication. The
         environment variable is valid only when then GPU IPC shmmod is enabled.
 
+    - name        : MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE
+      category    : CH4
+      type        : int
+      default     : 1024
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If a send message size is less than or equal to MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE (in
+        bytes), then enable GPU-basedfast memcpy. The environment variable is valid only when then
+        GPU IPC shmmod is enabled.
+
     - name        : MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE
       category    : CH4
       type        : enum
@@ -255,13 +267,14 @@ int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Da
     return map_to_dev_id;
 }
 
-int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **vaddr)
+int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void **vaddr,
+                             bool do_mmap)
 {
     int mpi_errno = MPI_SUCCESS;
 
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     MPIR_FUNC_ENTER;
 
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     void *pbase;
     int mpl_err = MPL_SUCCESS;
     MPIDI_GPUI_handle_obj_s *handle_obj = NULL;
@@ -284,11 +297,24 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void
         /* found in cache */
         *vaddr = (void *) (handle_obj->mapped_base_addr + handle.offset);
     } else {
-        mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, map_dev_id, &pbase);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                            "**gpu_ipc_handle_map");
+        if (do_mmap) {
+#ifdef MPL_HAVE_ZE
+            mpl_err =
+                MPL_ze_ipc_handle_mmap_host(handle.ipc_handle, 1, map_dev_id, handle.len, &pbase);
+            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                "**gpu_ipc_handle_map");
+            *vaddr = (void *) ((uintptr_t) pbase + handle.offset);
+#else
+            mpi_errno = MPI_ERR_OTHER;
+            goto fn_fail;
+#endif
+        } else {
+            mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, map_dev_id, &pbase);
+            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                "**gpu_ipc_handle_map");
 
-        *vaddr = (void *) ((uintptr_t) pbase + handle.offset);
+            *vaddr = (void *) ((uintptr_t) pbase + handle.offset);
+        }
 
         /* insert to cache */
         bool insert_successful = false;
@@ -304,28 +330,78 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void
         }
     }
 #undef MAPPED_TREE
-  fn_fail:
-#endif
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    return mpi_errno;
+#endif
 }
 
-int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle)
+int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle, int do_mmap)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    MPIR_FUNC_ENTER;
+
     if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled) {
         int mpl_err = MPL_SUCCESS;
         mpl_err = MPL_gpu_ipc_handle_unmap((void *) ((uintptr_t) vaddr - handle.offset));
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_unmap");
     }
-  fn_fail:
-#endif
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    return mpi_errno;
+#endif
+}
+
+/* src pointer is a GPU pointer with received IPC handle
+ * dest pointer is a local pointer
+ * contig type only */
+int MPIDI_GPU_ipc_fast_memcpy(MPIDI_IPCI_ipc_handle_t ipc_handle, void *dest_vaddr,
+                              MPI_Aint src_data_sz, MPI_Datatype datatype)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    int mpl_err = MPL_SUCCESS;
+    void *src_buf_host;
+    MPIDI_IPCI_ipc_attr_t ipc_attr;
+    MPI_Aint true_lb, true_extent;
+
+    MPIR_FUNC_ENTER;
+
+    /* find out local device id */
+    MPIR_GPU_query_pointer_attr(dest_vaddr, &ipc_attr.gpu_attr);
+    int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.gpu_attr);
+    int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_handle.gpu.global_dev_id, dev_id, datatype);
+
+    /* mmap remote buffer */
+    mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_handle.gpu, map_dev, &src_buf_host, 1);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+    dest_vaddr = (void *) ((char *) dest_vaddr + true_lb);
+
+    mpl_err = MPL_gpu_fast_memcpy(src_buf_host, NULL, dest_vaddr, &ipc_attr.gpu_attr, src_data_sz);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gpu_fast_memcpy");
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    return mpi_errno;
+#endif
 }

@@ -76,7 +76,7 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
 
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle);
 /* Used in ipc_handle_free_hook. Needed for fd-based ipc mechanism. */
-int MPL_gpu_ipc_handle_destroy(const void *ptr);
+int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr);
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int dev_id, void **ptr);
 int MPL_gpu_ipc_handle_unmap(void *ptr);
 
@@ -104,6 +104,9 @@ int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev);
 int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env);
 
 int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id);
+
+int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
+                        MPL_pointer_attr_t * dest_attr, size_t size);
 
 typedef void (*MPL_gpu_hostfn) (void *data);
 int MPL_gpu_launch_hostfn(MPL_gpu_stream_t stream, MPL_gpu_hostfn fn, void *data);
