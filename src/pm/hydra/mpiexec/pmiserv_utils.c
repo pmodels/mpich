@@ -89,6 +89,11 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
         HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_server_info.user_global.iface), status);
     }
 
+    if (HYD_server_info.user_global.topolib) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--topolib"), status);
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_server_info.user_global.topolib), status);
+    }
+
     HYD_STRING_STASH(*proxy_stash, MPL_strdup("--pgid"), status);
     HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(pgid), status);
 
@@ -298,11 +303,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
             HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.user_global.membind), status);
         }
 
-        if (HYD_server_info.user_global.topolib) {
-            HYD_STRING_STASH(exec_stash, MPL_strdup("--topolib"), status);
-            HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.user_global.topolib), status);
-        }
-
         status = add_env_to_exec_stash(&exec_stash, "--global-inherited-env",
                                        HYD_server_info.user_global.global_env.inherited);
         HYDU_ERR_POP(status, "error adding global inherited env\n");
@@ -393,7 +393,6 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
     pg_scratch->epoch = 0;
     pg_scratch->fence_count = 0;
 
-    pg_scratch->control_listen_fd = HYD_FD_UNSET;
     pg_scratch->pmi_listen_fd = HYD_FD_UNSET;
 
     pg_scratch->dead_processes = MPL_strdup("");
@@ -445,18 +444,26 @@ static HYD_status gen_kvsname(char kvsname[], int pgid)
 
     char hostname[MAX_HOSTNAME_LEN - 40];       /* Remove space taken up by the integers and other
                                                  * characters below. */
-    unsigned int seed;
+    static unsigned int seed = 0;
     int rnd;
 
     if (gethostname(hostname, MAX_HOSTNAME_LEN - 40) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
-    seed = (unsigned int) time(NULL);
-    srand(seed);
+    if (!seed) {
+        seed = (unsigned int) time(NULL);
+        srand(seed);
+    }
     rnd = rand();
 
+#if 0
+    /* shorter kvsname for debugging */
+    MPL_snprintf_nowarn(kvsname, PMI_MAXKVSLEN, "kvs%d", pgid);
+#else
     MPL_snprintf_nowarn(kvsname, PMI_MAXKVSLEN, "kvs_%d_%d_%d_%s", (int) getpid(), pgid,
                         rnd, hostname);
+#endif
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

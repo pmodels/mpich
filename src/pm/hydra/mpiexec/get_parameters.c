@@ -182,12 +182,6 @@ static void set_default_values(void)
     if (HYD_server_info.enable_profiling == -1)
         HYD_server_info.enable_profiling = 0;
 
-    if (HYD_server_info.user_global.debug == -1)
-        HYD_server_info.user_global.debug = 0;
-
-    if (HYD_server_info.user_global.topo_debug == -1)
-        HYD_server_info.user_global.topo_debug = 0;
-
     if (HYD_server_info.user_global.auto_cleanup == -1)
         HYD_server_info.user_global.auto_cleanup = 1;
 
@@ -223,10 +217,10 @@ static HYD_status check_environment(void)
     char *tmp;
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_server_info.user_global.debug == -1)
+    if (!HYD_server_info.user_global.debug)
         ENV2BOOL("HYDRA_DEBUG", &HYD_server_info.user_global.debug);
 
-    if (HYD_server_info.user_global.topo_debug == -1)
+    if (!HYD_server_info.user_global.topo_debug)
         ENV2BOOL("HYDRA_TOPO_DEBUG", &HYD_server_info.user_global.topo_debug);
 
     /* don't clobber existing iface values from the command line */

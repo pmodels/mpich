@@ -15,6 +15,8 @@ static void pg_destructor(void *_elt)
     MPL_free(pg->kvsname);
     MPL_free(pg->pmi_process_mapping);
     MPL_free(pg->downstreams);
+    MPL_free(pg->iface_ip_env_name);
+    MPL_free(pg->hostname);
     HYDU_free_exec_list(pg->exec_list);
     HYD_pmcd_free_pmi_kvs_list(pg->kvs);
 
@@ -50,9 +52,12 @@ void PMIP_pg_finalize(void)
 
 struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id)
 {
+    int idx = utarray_len(PMIP_pgs);
+
     utarray_extend_back(PMIP_pgs, MPL_MEM_OTHER);
     struct pmip_pg *pg = (void *) utarray_back(PMIP_pgs);
 
+    pg->idx = idx;
     pg->pgid = pgid;
     pg->proxy_id = proxy_id;
 
@@ -74,6 +79,29 @@ struct pmip_pg *PMIP_pg_0(void)
     } else {
         return NULL;
     }
+}
+
+struct pmip_pg *PMIP_pg_from_downstream(struct pmip_downstream *downstream)
+{
+    return (void *) utarray_eltptr(PMIP_pgs, downstream->pg_idx);
+}
+
+/* iterate each pg */
+HYD_status PMIP_foreach_pg_do(HYD_status(*callback) (struct pmip_pg * pg))
+{
+    HYD_status status = HYD_SUCCESS;
+
+    int n = utarray_len(PMIP_pgs);
+    struct pmip_pg *arr = ut_type_array(PMIP_pgs, struct pmip_pg *);
+    for (int i = 0; i < n; i++) {
+        status = callback(&arr[i]);
+        HYDU_ERR_POP(status, "foreach_pg_do failed at i = %d / %d", i, n);
+    }
+
+  fn_exit:
+    return status;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* linear search.
@@ -101,7 +129,8 @@ HYD_status PMIP_pg_alloc_downstreams(struct pmip_pg * pg, int num_procs)
     HYDU_ASSERT(pg->downstreams, status);
 
     for (int i = 0; i < num_procs; i++) {
-        pg->downstreams[i].pg = pg;
+        pg->downstreams[i].idx = i;
+        pg->downstreams[i].pg_idx = pg->idx;
         pg->downstreams[i].pid = -1;
         pg->downstreams[i].exit_status = PMIP_EXIT_STATUS_UNSET;
         pg->downstreams[i].pmi_fd = HYD_FD_UNSET;

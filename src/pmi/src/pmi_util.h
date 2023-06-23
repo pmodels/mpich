@@ -47,6 +47,7 @@
 
 /* prototypes for PMIU routines */
 void PMIU_Set_rank(int PMI_rank);
+void PMIU_Set_rank_kvsname(int rank, const char *kvsname);
 void PMIU_SetServer(void);
 void PMIU_printf(int print_flag, const char *fmt, ...);
 int PMIU_readline(int fd, char *buf, int max);

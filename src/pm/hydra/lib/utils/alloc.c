@@ -13,13 +13,11 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
 
     user_global->binding = NULL;
     user_global->topolib = NULL;
-    user_global->topo_debug = -1;
 
     user_global->demux = NULL;
     user_global->iface = NULL;
 
     user_global->enablex = -1;
-    user_global->debug = -1;
     user_global->usize = HYD_USIZE_UNSET;
 
     user_global->auto_cleanup = -1;
@@ -77,6 +75,8 @@ HYD_status HYDU_alloc_node(struct HYD_node **node)
     (*node)->core_count = 0;
     (*node)->active_processes = 0;
     (*node)->node_id = -1;
+    (*node)->control_fd = -1;
+    (*node)->control_fd_refcnt = 0;
     (*node)->user = NULL;
     (*node)->local_binding = NULL;
     (*node)->next = NULL;

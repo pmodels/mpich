@@ -1136,21 +1136,8 @@ static void verbose_help_fn(void)
 
 static HYD_status verbose_fn(char *arg, char ***argv)
 {
-    HYD_status status = HYD_SUCCESS;
-
-    if (HYD_ui_mpich_info.reading_config_file && HYD_server_info.user_global.debug != -1) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status = HYDU_set_int(arg, &HYD_server_info.user_global.debug, 1);
-    HYDU_ERR_POP(status, "error setting debug\n");
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+    HYD_server_info.user_global.debug = 1;
+    return HYD_SUCCESS;
 }
 
 static void info_help_fn(void)

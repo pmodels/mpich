@@ -16,7 +16,7 @@ struct HYD_pmcd_pmip_pmi_handle {
 };
 
 /* handlers for initialization via pmi port */
-HYD_status fn_fullinit(int fd, struct PMIU_cmd *pmi);
+HYD_status fn_fullinit(struct pmip_downstream *p, struct PMIU_cmd *pmi);
 
 /* handlers for client pmi commands */
 HYD_status fn_init(struct pmip_downstream *p, struct PMIU_cmd *pmi);

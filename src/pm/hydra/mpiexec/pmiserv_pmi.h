@@ -21,14 +21,13 @@ struct HYD_pmcd_pmi_pg_scratch {
         int epoch;
     } *ecount;
 
-    int control_listen_fd;
     int pmi_listen_fd;
 
     char *dead_processes;
     int dead_process_count;
 
     char kvsname[PMI_MAXKVSLEN];
-    struct HYD_pmcd_pmi_kvs *kvs;
+    struct HYD_kvs *kvs;
     int keyval_dist_count;      /* Number of keyvals distributed */
 };
 

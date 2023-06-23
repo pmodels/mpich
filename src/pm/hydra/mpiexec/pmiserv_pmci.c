@@ -75,7 +75,6 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_string_stash proxy_stash;
-    char *control_port = NULL;
     int node_count, i, *control_fd;
     HYD_status status = HYD_SUCCESS;
 
@@ -95,16 +94,10 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmiserv_epoch_init(pg);
     HYDU_ERR_POP(status, "unable to init epoch\n");
 
-    status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
-                                                 HYD_server_info.localhost,
-                                                 HYD_server_info.port_range, &control_port,
-                                                 HYD_pmcd_pmiserv_control_listen_cb,
-                                                 (void *) (size_t) 0);
+    status = HYD_control_listen();
     HYDU_ERR_POP(status, "unable to create PMI port\n");
-    if (HYD_server_info.user_global.debug)
-        HYDU_dump(stdout, "Got a control port string of %s\n", control_port);
 
-    status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, control_port, 0);
+    status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, HYD_server_info.control_port, 0);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
@@ -124,7 +117,7 @@ HYD_status HYD_pmci_launch_procs(void)
         if (control_fd[i] != HYD_FD_UNSET) {
             pg->proxy_list[i].control_fd = control_fd[i];
 
-            status = HYDT_dmx_register_fd(1, &control_fd[i], HYD_POLLIN, (void *) (size_t) 0,
+            status = HYDT_dmx_register_fd(1, &control_fd[i], HYD_POLLIN, NULL,
                                           HYD_pmcd_pmiserv_proxy_init_cb);
             HYDU_ERR_POP(status, "unable to register fd\n");
         }
@@ -133,7 +126,6 @@ HYD_status HYD_pmci_launch_procs(void)
     MPL_free(control_fd);
 
   fn_exit:
-    MPL_free(control_port);
     HYD_STRING_STASH_FREE(proxy_stash);
     HYDU_FUNC_EXIT();
     return status;
