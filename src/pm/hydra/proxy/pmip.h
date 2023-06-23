@@ -101,7 +101,7 @@ struct pmip_pg {
     struct HYD_exec *exec_list;
 
     /* This is for PMI-2 info-putnodeattr. Should it be per-node or per pg? */
-    struct HYD_pmcd_pmi_kvs *kvs;
+    struct HYD_kvs *kvs;
 
     /* PMI-1 caches server kvs locally */
     struct cache_put_elem cache_put;

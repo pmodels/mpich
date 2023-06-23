@@ -513,7 +513,8 @@ HYD_status fn_keyval_cache(struct pmip_pg *pg, struct PMIU_cmd *pmi)
     int i;
     for (i = 0; i < pg->num_elems; i++) {
         struct cache_elem *elem = pg->cache_get + i;
-        HASH_ADD_STR(pg->hash_get, key, elem, MPL_MEM_PM);
+        struct cache_elem *replaced;
+        HASH_REPLACE_STR(pg->hash_get, key, elem, replaced, MPL_MEM_PM);
     }
     for (; i < pg->num_elems + num_tokens; i++) {
         struct cache_elem *elem = pg->cache_get + i;
@@ -521,7 +522,8 @@ HYD_status fn_keyval_cache(struct pmip_pg *pg, struct PMIU_cmd *pmi)
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->key, HYD_INTERNAL_ERROR, "%s", "");
         elem->val = MPL_strdup(tokens[i - pg->num_elems].val);
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->val, HYD_INTERNAL_ERROR, "%s", "");
-        HASH_ADD_STR(pg->hash_get, key, elem, MPL_MEM_PM);
+        struct cache_elem *replaced;
+        HASH_REPLACE_STR(pg->hash_get, key, elem, replaced, MPL_MEM_PM);
     }
     pg->num_elems += num_tokens;
 
@@ -672,17 +674,9 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     /* if a predefined value is not found, we let the code fall back
      * to regular search and return an error to the client */
 
+    const char *val;
     int found;
-    found = 0;
-
-    /* FIXME: wrap it in e.g. HYD_pmcd_pmi_find_kvs */
-    struct HYD_pmcd_pmi_kvs_pair *run;
-    for (run = PMIP_pg_from_downstream(p)->kvs->key_pair; run; run = run->next) {
-        if (!strcmp(run->key, key)) {
-            found = 1;
-            break;
-        }
-    }
+    HYD_kvs_find(PMIP_pg_from_downstream(p)->kvs, key, &val, &found);
 
     if (!found && wait) {
         status = HYD_pmcd_pmi_v2_queue_req(p, pmi, key);
@@ -692,8 +686,7 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     struct PMIU_cmd pmi_response;
     if (found) {
-        pmi_errno =
-            PMIU_msg_set_response_getnodeattr(pmi, &pmi_response, is_static, run->val, true);
+        pmi_errno = PMIU_msg_set_response_getnodeattr(pmi, &pmi_response, is_static, val, true);
     } else {
         pmi_errno = PMIU_msg_set_response_fail(pmi, &pmi_response, is_static, 1, "not_found");
     }

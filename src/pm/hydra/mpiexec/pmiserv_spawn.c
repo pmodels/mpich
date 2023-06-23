@@ -17,8 +17,7 @@ static HYD_status allocate_spawn_pg(int spawner_pgid);
 static HYD_status fill_exec_params(struct HYD_exec *exec, const char *execname, int nprocs,
                                    int argcnt, const char **argv,
                                    int infonum, struct PMIU_token *infos);
-static HYD_status fill_preput_kvs(struct HYD_pmcd_pmi_kvs *kvs,
-                                  int preput_num, struct PMIU_token *infos);
+static HYD_status fill_preput_kvs(struct HYD_kvs *kvs, int preput_num, struct PMIU_token *infos);
 static HYD_status do_spawn(void);
 
 static char *get_exec_path(const char *execname, const char *path);
@@ -205,8 +204,7 @@ static HYD_status fill_exec_params(struct HYD_exec *exec, const char *execname, 
     goto fn_exit;
 }
 
-static HYD_status fill_preput_kvs(struct HYD_pmcd_pmi_kvs *kvs,
-                                  int preput_num, struct PMIU_token *infos)
+static HYD_status fill_preput_kvs(struct HYD_kvs *kvs, int preput_num, struct PMIU_token *infos)
 {
     HYD_status status = HYD_SUCCESS;
 

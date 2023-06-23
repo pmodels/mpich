@@ -105,6 +105,7 @@ static char *pmi_kvs_name;
 #elif defined USE_PMI2_API
 static char *pmi_jobid;
 #elif defined USE_PMIX_API
+static int pmix_init_count = 0;
 static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
 #endif
@@ -119,6 +120,7 @@ static void MPIR_pmi_finalize_on_exit(void)
     PMI2_Finalize();
 #elif defined USE_PMIX_API
     PMIx_Finalize(NULL, 0);
+    pmix_init_count = 0;
 #endif
 }
 
@@ -189,20 +191,26 @@ int MPIR_pmi_init(void)
 
     pmix_value_t *pvalue = NULL;
 
-    pmi_errno = PMIx_Init(&pmix_proc, NULL, 0);
-    if (pmi_errno == PMIX_ERR_UNREACH) {
-        /* no pmi server, assume we are a singleton */
-        rank = 0;
-        size = 1;
-        goto singleton_out;
+    /* Since we only call PMIx_Finalize once at `atexit` handler, we need prevent
+     * calling PMIx_Init multiple times. */
+    pmix_init_count++;
+    if (pmix_init_count == 1) {
+        pmi_errno = PMIx_Init(&pmix_proc, NULL, 0);
+        if (pmi_errno == PMIX_ERR_UNREACH) {
+            /* no pmi server, assume we are a singleton */
+            rank = 0;
+            size = 1;
+            goto singleton_out;
+        }
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_init", "**pmix_init %d", pmi_errno);
+
+        PMIX_PROC_CONSTRUCT(&pmix_wcproc);
+        MPL_strncpy(pmix_wcproc.nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
+        pmix_wcproc.rank = PMIX_RANK_WILDCARD;
     }
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                         "**pmix_init", "**pmix_init %d", pmi_errno);
 
     rank = pmix_proc.rank;
-    PMIX_PROC_CONSTRUCT(&pmix_wcproc);
-    MPL_strncpy(pmix_wcproc.nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
-    pmix_wcproc.rank = PMIX_RANK_WILDCARD;
 
     pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_JOB_SIZE, NULL, 0, &pvalue);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
