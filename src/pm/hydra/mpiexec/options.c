@@ -1139,6 +1139,12 @@ static HYD_status verbose_fn(char *arg, char ***argv)
     return HYD_SUCCESS;
 }
 
+static HYD_status vv_fn(char *arg, char ***argv)
+{
+    HYD_server_info.user_global.debug = 2;
+    return HYD_SUCCESS;
+}
+
 static void info_help_fn(void)
 {
     printf("\n");
@@ -1645,6 +1651,7 @@ struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     {"skip-launch-node", skip_launch_node_fn, skip_launch_node_help_fn},
     {"usize", usize_fn, usize_help_fn},
     {"v", verbose_fn, verbose_help_fn},
+    {"vv", vv_fn, verbose_help_fn},
     {"verbose", verbose_fn, verbose_help_fn},
     {"version", info_fn, info_help_fn},
 

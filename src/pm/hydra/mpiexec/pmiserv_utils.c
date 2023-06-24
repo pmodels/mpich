@@ -10,6 +10,7 @@
 #include "pmiserv_utils.h"
 
 static HYD_status gen_kvsname(char kvsname[], int pgid);
+static void debug_exec_args(int proxy_id, char **strlist);
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
                                            char *control_port, int pgid)
@@ -357,9 +358,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         }
 
         if (HYD_server_info.user_global.debug) {
-            HYDU_dump_noprefix(stdout, "Arguments being passed to proxy %d:\n", i);
-            HYDU_print_strlist(exec_stash.strlist);
-            HYDU_dump_noprefix(stdout, "\n");
+            debug_exec_args(i, exec_stash.strlist);
         }
 
         status = HYDU_strdup_list(exec_stash.strlist, &proxy->exec_launch_info);
@@ -436,6 +435,8 @@ HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
     return status;
 }
 
+/* ---- static util routines ---- */
+
 static HYD_status gen_kvsname(char kvsname[], int pgid)
 {
     HYD_status status = HYD_SUCCESS;
@@ -468,4 +469,22 @@ static HYD_status gen_kvsname(char kvsname[], int pgid)
     return status;
   fn_fail:
     goto fn_exit;
+}
+
+static void debug_exec_args(int proxy_id, char **strlist)
+{
+    HYDU_dump_noprefix(stdout, "Arguments being passed to proxy %d:\n", proxy_id);
+    for (int arg = 0; strlist[arg]; arg++) {
+        /* omit the lengthy env list unless -vv */
+        if (HYD_server_info.user_global.debug < 2 &&
+            strcmp(strlist[arg], "--global-inherited-env") == 0) {
+            HYDU_dump_noprefix(stdout, "%s %s [...] ", strlist[arg], strlist[arg + 1]);
+            int n = atoi(strlist[arg + 1]);
+            arg += n + 1;
+            continue;
+        } else {
+            HYDU_dump_noprefix(stdout, "%s ", strlist[arg]);
+        }
+    }
+    HYDU_dump_noprefix(stdout, "\n\n");
 }
