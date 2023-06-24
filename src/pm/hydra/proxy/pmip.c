@@ -84,6 +84,9 @@ int main(int argc, char **argv)
     status = HYDU_set_signal(SIGTSTP, signal_cb);
     HYDU_ERR_POP(status, "unable to set SIGTSTP\n");
 
+    status = HYDU_set_signal(SIGCHLD, signal_cb);
+    HYDU_ERR_POP(status, "unable to set SIGCHLD\n");
+
     status = HYDU_set_common_signals(signal_cb);
     HYDU_ERR_POP(status, "unable to set common signals\n");
 
@@ -223,6 +226,9 @@ int main(int argc, char **argv)
 
     status = HYDT_dmx_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
+
+    status = HYDT_bsci_wait_for_completion(0);
+    HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
 
     status = HYDT_bsci_finalize();
     HYDU_ERR_POP(status, "unable to finalize the bootstrap device\n");
