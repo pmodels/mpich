@@ -29,7 +29,6 @@ typedef enum MPIR_Comm_hierarchy_kind_t {
     MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS = 2,   /* is the subcomm for node roots */
     MPIR_COMM_HIERARCHY_KIND__NODE = 3, /* is the subcomm for a node */
     MPIR_COMM_HIERARCHY_KIND__MULTI_LEADS = 4,  /* is the multi_leaders_comm for a node */
-    MPIR_COMM_HIERARCHY_KIND__SIZE      /* cardinality of this enum */
 } MPIR_Comm_hierarchy_kind_t;
 
 typedef enum {
