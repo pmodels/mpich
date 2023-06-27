@@ -29,6 +29,8 @@ typedef enum {
     CSEL_NODE_TYPE__OPERATOR__IS_NODE_CONSECUTIVE,
 
     CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE,
+    CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT,
+    CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY,
 
     /* collective selection operator */
     CSEL_NODE_TYPE__OPERATOR__COLLECTIVE,
@@ -110,6 +112,9 @@ typedef struct csel_node {
         struct {
             int val;
         } comm_avg_ppn_le;
+        struct {
+            int val;
+        } comm_avg_ppn_lt;
         struct {
             MPIR_Comm_hierarchy_kind_t val;
         } comm_hierarchy;
@@ -239,6 +244,12 @@ static void print_tree(csel_node_s * node)
         case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
             nprintf("communicator's avg ppn <= %d\n", node->u.comm_avg_ppn_le.val);
             break;
+        case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
+            nprintf("communicator's avg ppn < %d\n", node->u.comm_avg_ppn_lt.val);
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY:
+            nprintf("communicator's avg ppn is anything \n");
+            break;
         case CSEL_NODE_TYPE__OPERATOR__IS_COMMUTATIVE:
             if (node->u.is_commutative.val == true)
                 nprintf("operation is commutative\n");
@@ -288,7 +299,9 @@ static void validate_tree(csel_node_s * node)
     if (node->type == CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_ANY ||
         node->type == CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_ANY ||
         node->type == CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_ANY ||
-        node->type == CSEL_NODE_TYPE__OPERATOR__COUNT_ANY) {
+        node->type == CSEL_NODE_TYPE__OPERATOR__COUNT_ANY ||
+        node->type == CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY) {
+
         /* for "ANY"-style operators, the failure path must be NULL */
         if (node->failure) {
             fprintf(stderr, "unexpected non-NULL failure path for coll %d\n", coll);
@@ -524,6 +537,11 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
         } else if (!strncmp(ckey, "comm_avg_ppn<=", strlen("comm_avg_ppn<="))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE;
             tmp->u.comm_avg_ppn_le.val = atoi(ckey + strlen("comm_avg_ppn<="));
+        } else if (!strncmp(ckey, "comm_avg_ppn<", strlen("comm_avg_ppn<"))) {
+            tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT;
+            tmp->u.comm_avg_ppn_le.val = atoi(ckey + strlen("comm_avg_ppn<"));
+        } else if (!strcmp(ckey, "comm_avg_ppn=any")) {
+            tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY;
         } else if (!strcmp(ckey, "comm_hierarchy=parent")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
             tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__PARENT;
@@ -670,6 +688,17 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                     node = node->success;
                 else
                     node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
+                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                    node = node->success;
+                else
+                    node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY:
+                node = node->success;
                 break;
 
             default:
@@ -1344,6 +1373,17 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                     node = node->success;
                 else
                     node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
+                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                    node = node->success;
+                else
+                    node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_ANY:
+                node = node->success;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:
