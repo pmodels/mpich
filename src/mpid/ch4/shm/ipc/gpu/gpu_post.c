@@ -224,7 +224,6 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
 
     recv_lrank = MPIDI_GPUI_global.local_ranks[MPIDIU_rank_to_lpid(rank, comm)];
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__GPU;
-    ipc_attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD;
 
     local_dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr->gpu_attr);
     int global_dev_id = MPL_gpu_local_to_global_dev_id(local_dev_id);
@@ -234,7 +233,7 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
 
     /* Don't create or search for an ipc handle if the buffer doesn't meet the threshold
      * requirement */
-    if (len < ipc_attr->threshold.send_lmt_sz && !MPIDI_IPCI_is_repeat_addr(pbase)) {
+    if (len < MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD && !MPIDI_IPCI_is_repeat_addr(pbase)) {
         ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
         goto fn_fail;
     }
@@ -276,7 +275,6 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
 #else
     /* Do not support IPC data transfer */
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
-    ipc_attr->threshold.send_lmt_sz = -1;
 #endif
 
     MPIR_FUNC_EXIT;

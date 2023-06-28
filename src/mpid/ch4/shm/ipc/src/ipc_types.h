@@ -25,9 +25,6 @@ typedef struct MPIDI_IPCI_ipc_attr {
     MPIDI_IPCI_type_t ipc_type;
     MPIDI_IPCI_ipc_handle_t ipc_handle;
     MPL_pointer_attr_t gpu_attr;
-    struct {
-        int send_lmt_sz;
-    } threshold;
 } MPIDI_IPCI_ipc_attr_t;
 
 /* ctrl packet header types */
