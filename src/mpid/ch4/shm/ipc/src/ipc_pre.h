@@ -12,6 +12,7 @@
 typedef enum MPIDI_IPCI_type {
     MPIDI_IPCI_TYPE__NONE,      /* avoid empty enum */
     MPIDI_IPCI_TYPE__XPMEM,
+    MPIDI_IPCI_TYPE__CMA,
     MPIDI_IPCI_TYPE__GPU
 } MPIDI_IPCI_type_t;
 
