@@ -13,9 +13,4 @@ typedef struct {
     uintptr_t data_sz;
 } MPIDI_XPMEM_ipc_handle_t;
 
-/* request extension definition */
-typedef struct {
-    int dummy;
-} MPIDI_XPMEM_am_request_t;
-
 #endif /* XPMEM_PRE_H_INCLUDED */
