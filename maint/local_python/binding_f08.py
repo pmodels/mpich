@@ -22,15 +22,17 @@ def get_f08_c_name(func, is_large):
     return name
 
 def get_f08ts_name(func, is_large):
-    name = func['name'] + "_f08ts"
     if is_large:
-        name += "_large"
+        name = func['name'] + "_c_f08ts"
+    else:
+        name = func['name'] + "_f08ts"
     return name
 
 def get_f08_name(func, is_large):
-    name = func['name'] + "_f08"
     if is_large:
-        name += "_large"
+        name = func['name'] + "_c_f08"
+    else:
+        name = func['name'] + "_f08"
     return name
 
 def dump_f08_wrappers_c(func, is_large):
