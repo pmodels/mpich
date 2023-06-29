@@ -18,6 +18,7 @@ typedef struct {
  */
 typedef union MPIDI_IPCI_ipc_handle {
     MPIDI_XPMEM_ipc_handle_t xpmem;
+    MPIDI_CMA_ipc_handle_t cma;
     MPIDI_GPU_ipc_handle_t gpu;
 } MPIDI_IPCI_ipc_handle_t;
 
@@ -25,6 +26,7 @@ typedef struct MPIDI_IPCI_ipc_attr {
     MPIDI_IPCI_type_t ipc_type;
     union {
         MPIDI_XPMEM_ipc_attr_t xpmem;
+        MPIDI_CMA_ipc_attr_t cma;
         MPIDI_GPU_ipc_attr_t gpu;
     } u;
 } MPIDI_IPCI_ipc_attr_t;

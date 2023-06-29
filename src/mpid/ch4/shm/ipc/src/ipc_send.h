@@ -91,6 +91,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
         do_ipc = (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE);
     }
 #endif
+#ifdef MPIDI_CH4_SHM_ENABLE_CMA
+    if (!do_ipc) {
+        mpi_errno = MPIDI_CMA_get_ipc_attr(buf, count, datatype, &ipc_attr);
+        MPIR_ERR_CHECK(mpi_errno);
+        do_ipc = (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE);
+    }
+#endif
 
     if (!do_ipc) {
         goto fn_exit;

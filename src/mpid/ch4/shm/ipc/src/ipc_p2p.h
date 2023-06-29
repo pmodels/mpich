@@ -11,6 +11,7 @@
 #include "ipc_pre.h"
 #include "ipc_types.h"
 #include "../xpmem/xpmem_post.h"
+#include "../cma/cma_post.h"
 #include "../gpu/gpu_post.h"
 
 /* Generic IPC protocols for P2P. */
@@ -63,6 +64,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
         case MPIDI_IPCI_TYPE__XPMEM:
             MPIDI_XPMEM_fill_ipc_handle(&ipc_attr, &(am_hdr.ipc_hdr.ipc_handle));
+            break;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_CMA
+        case MPIDI_IPCI_TYPE__CMA:
+            MPIDI_CMA_fill_ipc_handle(&ipc_attr, &(am_hdr.ipc_hdr.ipc_handle));
             break;
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
@@ -239,6 +245,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
                 MPIR_ERR_CHECK(mpi_errno);
                 /* skip unmap */
             }
+            break;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_CMA
+        case MPIDI_IPCI_TYPE__CMA:
+            mpi_errno = MPIDI_CMA_copy_data(ipc_hdr, rreq, src_data_sz);
+            MPIR_ERR_CHECK(mpi_errno);
             break;
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
