@@ -50,6 +50,11 @@ int MPIDI_IPC_init_world(void)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+#ifdef MPIDI_CH4_SHM_ENABLE_CMA
+    mpi_errno = MPIDI_CMA_init_world();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     if (MPIR_CVAR_ENABLE_GPU) {
         mpi_errno = MPIDI_GPU_init_world();
@@ -73,6 +78,11 @@ int MPIDI_IPC_mpi_finalize_hook(void)
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     mpi_errno = MPIDI_XPMEM_mpi_finalize_hook();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
+#ifdef MPIDI_CH4_SHM_ENABLE_CMA
+    mpi_errno = MPIDI_CMA_mpi_finalize_hook();
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
