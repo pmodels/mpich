@@ -95,7 +95,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request * req)
 {
     MPIR_FUNC_ENTER;
 
-    MPIDI_SHM_REQUEST(req, status) = 0;
     MPIDI_POSIX_am_request_init(req);
 
     MPIR_FUNC_EXIT;
