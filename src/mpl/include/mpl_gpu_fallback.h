@@ -9,6 +9,7 @@
 typedef int MPL_gpu_ipc_mem_handle_t;
 typedef int MPL_gpu_device_handle_t;
 typedef int MPL_gpu_device_attr;        /* dummy type */
+typedef int MPL_gpu_request;
 typedef int MPL_gpu_stream_t;
 
 typedef volatile int MPL_gpu_event_t;
