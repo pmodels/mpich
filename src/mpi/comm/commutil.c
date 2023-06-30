@@ -312,6 +312,9 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
         MPIR_Assert(thr_err == 0);
     }
 
+    /* Initialize the session_ptr to NULL; for non-session-related communicators it will remain NULL */
+    comm_p->session_ptr = NULL;
+
     /* Fields not set include context_id, remote and local size, and
      * kind, since different communicator construction routines need
      * different values */
@@ -365,6 +368,8 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     /* get sensible default values for most fields (usually zeros) */
     mpi_errno = MPII_Comm_init(localcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Comm_set_session_ptr(localcomm_ptr, intercomm_ptr->session_ptr);
 
     /* use the parent intercomm's recv ctx as the basis for our ctx */
     localcomm_ptr->recvcontext_id =
@@ -664,6 +669,8 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         comm->node_comm->local_size = num_local;
         comm->node_comm->remote_size = num_local;
 
+        MPIR_Comm_set_session_ptr(comm->node_comm, comm->session_ptr);
+
         /* Copy relevant hints to node_comm */
         propagate_hints_to_subcomm(comm, comm->node_comm);
 
@@ -688,6 +695,8 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
         comm->node_roots_comm->local_size = num_external;
         comm->node_roots_comm->remote_size = num_external;
+
+        MPIR_Comm_set_session_ptr(comm->node_roots_comm, comm->session_ptr);
 
         /* Copy relevant hints to node_roots_comm */
         propagate_hints_to_subcomm(comm, comm->node_roots_comm);
@@ -939,6 +948,8 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     newcomm_ptr->comm_kind = comm_ptr->comm_kind;
     newcomm_ptr->local_comm = 0;
 
+    MPIR_Comm_set_session_ptr(newcomm_ptr, comm_ptr->session_ptr);
+
     /* There are two cases here - size is the same as the old communicator,
      * or it is smaller.  If the size is the same, we can just add a reference.
      * Otherwise, we need to create a new network address mapping.  Note that this is the
@@ -1051,6 +1062,8 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** out
     newcomm_ptr->remote_size = comm_ptr->remote_size;
     newcomm_ptr->is_low_group = comm_ptr->is_low_group; /* only relevant for intercomms */
 
+    MPIR_Comm_set_session_ptr(newcomm_ptr, comm_ptr->session_ptr);
+
     /* Inherit the error handler (if any) */
     MPID_THREAD_CS_ENTER(VCI, comm_ptr->mutex);
     newcomm_ptr->errhandler = comm_ptr->errhandler;
@@ -1162,6 +1175,11 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
          * destroyed */
         mpi_errno = MPID_Comm_free_hook(comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
+
+        if (comm_ptr->session_ptr != NULL) {
+            /* Release session */
+            MPIR_Session_release(comm_ptr->session_ptr);
+        }
 
         if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm_ptr->local_comm)
             MPIR_Comm_release(comm_ptr->local_comm);
@@ -1374,4 +1392,13 @@ int MPIR_Comm_free_inactive_requests(MPIR_Comm * comm)
     MPID_THREAD_CS_EXIT(VCI, comm->mutex);
 
     return MPI_SUCCESS;
+}
+
+void MPIR_Comm_set_session_ptr(MPIR_Comm * comm_ptr, MPIR_Session * session_ptr)
+{
+    if (session_ptr != NULL) {
+        comm_ptr->session_ptr = session_ptr;
+        /* Add ref counter of session */
+        MPIR_Session_add_ref(session_ptr);
+    }
 }
