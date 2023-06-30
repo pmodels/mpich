@@ -2,6 +2,7 @@ mpi_t
 coll
 comm
 misc
+session
 @threadsdir@
 @cudadir@
 @hipdir@
