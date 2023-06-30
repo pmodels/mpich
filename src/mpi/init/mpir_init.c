@@ -392,6 +392,21 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPL_initlock_lock(&MPIR_init_lock);
 
     if (!is_world_model) {
+        int session_refs = MPIR_Object_get_ref(session_ptr);
+        if ((session_refs > 1) && session_ptr->strict_finalize) {
+            /* For strict_finalize, we return an error if there still exist
+             * other refs to the session (other than the self-ref).
+             * In addition, we call MPID_Progress_poke() to allow users to
+             * poll for success of the session finalize.
+             */
+            MPID_Progress_poke();
+            mpi_errno =
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                     MPI_ERR_PENDING, "**sessioninuse", "**sessioninuse %d",
+                                     session_refs - 1);
+            goto fn_fail;
+        }
+
         mpi_errno = MPIR_Session_release(session_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }

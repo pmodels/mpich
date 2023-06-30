@@ -32,6 +32,8 @@ int MPIR_Session_create(MPIR_Session ** p_session_ptr, int thread_level)
     (*p_session_ptr)->errhandler = NULL;
     /* FIXME: actually do something with session thread_level */
     (*p_session_ptr)->thread_level = thread_level;
+    /* disable strict finalize feature by default */
+    (*p_session_ptr)->strict_finalize = false;
 
     {
         int thr_err;
@@ -135,6 +137,51 @@ int MPIR_Session_get_thread_level_from_info(MPIR_Info * info_ptr, int *threadlev
   fn_exit:
     if (thread_level_s) {
         MPL_free(thread_level_s);
+    }
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Session_get_strict_finalize_from_info(MPIR_Info * info_ptr, bool * strict_finalize)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int buflen = 0;
+    char *strict_finalize_s = NULL;
+    int flag = 0;
+    const char key[] = "strict_finalize";
+
+    /* No info pointer, nothing todo here */
+    if (info_ptr == NULL) {
+        goto fn_exit;
+    }
+
+    /* Get the length of the strict finalize value */
+    mpi_errno = MPIR_Info_get_valuelen_impl(info_ptr, key, &buflen, &flag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (!flag) {
+        /* Key strict_finalize not found in info object */
+        goto fn_exit;
+    }
+
+    /* Get strict finalize value. No need to check flag afterwards
+     * because we would not be here if strict_finalize key was not in info object.
+     */
+    strict_finalize_s = MPL_malloc(buflen + 1, MPL_MEM_BUFFER);
+    mpi_errno = MPIR_Info_get_impl(info_ptr, key, buflen, strict_finalize_s, &flag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Set strict finalize value as output. */
+    if ((strcmp(strict_finalize_s, "1") == 0) || (strcmp(strict_finalize_s, "true") == 0)) {
+        *strict_finalize = true;
+    } else {
+        *strict_finalize = false;
+    }
+
+  fn_exit:
+    if (strict_finalize_s) {
+        MPL_free(strict_finalize_s);
     }
     return mpi_errno;
   fn_fail:

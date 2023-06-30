@@ -14,6 +14,7 @@ struct MPIR_Session {
     MPID_Thread_mutex_t mutex;
     MPIR_Errhandler *errhandler;
     int thread_level;
+    bool strict_finalize;
 };
 
 extern MPIR_Object_alloc_t MPIR_Session_mem;
@@ -34,6 +35,9 @@ int MPIR_Session_release(MPIR_Session * session_prt);
 
 /* thread level util */
 int MPIR_Session_get_thread_level_from_info(MPIR_Info * info_ptr, int *threadlevel);
+
+/* strict finalize util */
+int MPIR_Session_get_strict_finalize_from_info(MPIR_Info * info_ptr, bool * strict_finalize);
 
 /* API Implementations */
 
