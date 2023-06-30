@@ -13,7 +13,19 @@ typedef struct {
     ze_device_handle_t device;
 } ze_alloc_attr_t;
 
-typedef ze_ipc_mem_handle_t MPL_gpu_ipc_mem_handle_t;
+typedef struct {
+    int fds[2];
+    uint32_t nfds;
+    pid_t pid;
+    int dev_id;
+    uint64_t mem_id;
+} fd_pid_t;
+
+typedef struct _MPL_gpu_ipc_mem_handle_t {
+    ze_ipc_mem_handle_t ipc_handles[2];
+    fd_pid_t data;
+} MPL_gpu_ipc_mem_handle_t;
+
 typedef ze_device_handle_t MPL_gpu_device_handle_t;
 typedef ze_alloc_attr_t MPL_gpu_device_attr;
 
@@ -45,10 +57,10 @@ void MPL_ze_set_fds(int num_fds, int *fds);
 void MPL_ze_ipc_remove_cache_handle(void *dptr);
 int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, int local_dev_id,
                              int use_shared_fd, MPL_gpu_ipc_mem_handle_t * ipc_handle);
-int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, int is_shared_handle, int dev_id,
+int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int is_shared_handle, int dev_id,
                           int is_mmap, size_t size, void **ptr);
-int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t ipc_handle, int shared_handle, int dev_id,
-                                size_t size, void **ptr);
+int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * ipc_handle, int shared_handle,
+                                int dev_id, size_t size, void **ptr);
 int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
                                MPL_gpu_device_handle_t device, void **mmaped_ptr);
 int MPL_ze_mmap_handle_unmap(void *ptr, int dev_id);
