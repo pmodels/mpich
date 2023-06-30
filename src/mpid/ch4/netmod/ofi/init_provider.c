@@ -145,9 +145,10 @@ static int find_provider(struct fi_info **prov_out)
          * that support halfway between minimal and optimal, we need try-loop to systematically
          * relax settings. The following code does this for the providers that we have tested.
          */
-        MPIDI_OFI_init_hints(hints);
+        mpi_errno = MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = MPL_strdup(provname);
         hints->caps = prov->caps;
+
 
         /* Now we have the hints with best matched provider, get the new prov_list */
         struct fi_info *old_prov_list = prov_list;
@@ -173,7 +174,7 @@ static int find_provider(struct fi_info **prov_out)
                             MPIDI_OFI_SET_NUMBER != MPIDI_OFI_get_set_number(provname),
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
         /* Initialize hints based on configure time macros) */
-        MPIDI_OFI_init_hints(hints);
+        mpi_errno = MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = provname ? MPL_strdup(provname) : NULL;
 
         ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
@@ -204,6 +205,7 @@ static int find_provider(struct fi_info **prov_out)
 #endif
 
     MPIDI_OFI_set_auto_progress(prov_list);
+
     *prov_out = prov_list;
 
   fn_exit:

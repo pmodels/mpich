@@ -109,3 +109,9 @@
 **ofi_num_nics %d %d:OFI has a different number of nics available on different notes (%d on this node and %d elsewhere)
 **ofid_mr_key:OFI MR key invalid
 **ofi_no_prov:No valid libfabric provider
+**ofid_enable_trigger:OFI triggered ops enable failed
+**ofid_enable_trigger %s %d %s %s:OFI triggered ops enable failed (%s:%d:%s:%s)
+**ofid_cntr_open:OFI Counter open failed
+**ofid_cntr_open %s %d %s %s:OFI OFI Counter open failed (%s:%d:%s:%s)
+**ofid_issue_trigger:OFI triggered ops issue failed
+**ofid_issue_trigger %s %d %s %s:OFI triggered ops issue failed (%s:%d:%s:%s)
