@@ -76,11 +76,11 @@
 !
       subroutine mpi_recv_f08ts( rmsg, count, dtype, src, tag, comm, status, ierr )
        use :: mpi_f08, my_noname => mpi_recv_f08ts
-       type(*), dimension(..), intent(in) :: rmsg
+       type(*), dimension(..) :: rmsg
        integer, intent(in) :: count, src, tag
        type(MPI_Datatype), intent(in) :: dtype
        type(MPI_Comm), intent(in) :: comm
-       type(MPI_Status) :: status
+       type(MPI_Status), intent(out), target :: status
        integer, optional, intent(out) :: ierr
 
        common /myinfo/ calls, amount, rcalls, ramount
