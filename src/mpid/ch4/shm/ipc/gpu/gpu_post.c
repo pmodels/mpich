@@ -110,6 +110,101 @@ cvars:
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
 
+/* handle_track_tree caches local MPL_gpu_ipc_mem_handle_t */
+
+static void ipc_track_cache_free(void *handle_obj);
+int MPIDI_GPUI_create_ipc_track_trees(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int num_ranks = MPIR_Process.local_size;
+    int num_gdevs = MPIDI_GPUI_global.global_max_dev_id + 1;
+
+#define TREES MPIDI_GPUI_global.ipc_handle_track_trees
+    TREES = MPL_calloc(sizeof(MPL_gavl_tree_t *), num_ranks, MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!TREES, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    for (int i = 0; i < num_ranks; i++) {
+        TREES[i] = MPL_calloc(sizeof(MPL_gavl_tree_t), num_gdevs, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!TREES[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+        for (int j = 0; j < num_gdevs; j++) {
+            int mpl_err = MPL_gavl_tree_create(ipc_track_cache_free, &TREES[i][j]);
+            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                "**mpl_gavl_create");
+        }
+    }
+#undef TREES
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* handle_mapped_trees caches rempte mapped_base_addr */
+
+static void ipc_mapped_cache_free(void *handle_obj);
+int MPIDI_GPUI_create_ipc_mapped_trees(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int num_ranks = MPIR_Process.local_size;
+    int num_gdevs = MPIDI_GPUI_global.global_max_dev_id + 1;
+    int num_ldevs = MPIDI_GPUI_global.local_device_count;
+
+#define TREES MPIDI_GPUI_global.ipc_handle_mapped_trees
+    TREES = MPL_calloc(sizeof(MPL_gavl_tree_t **), num_ranks, MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!TREES, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    for (int i = 0; i < num_ranks; i++) {
+        TREES[i] = MPL_calloc(sizeof(MPL_gavl_tree_t *), num_gdevs, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP(!TREES[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+        for (int j = 0; j < num_gdevs; j++) {
+            TREES[i][j] = MPL_calloc(sizeof(MPL_gavl_tree_t), num_ldevs, MPL_MEM_OTHER);
+            MPIR_ERR_CHKANDJUMP(!TREES[i][j], mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+            for (int k = 0; k < num_ldevs; k++) {
+                int mpl_err = MPL_gavl_tree_create(ipc_mapped_cache_free, &TREES[i][j][k]);
+                MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                    "**mpl_gavl_create");
+            }
+        }
+    }
+#undef TREES
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static void ipc_mapped_cache_free(void *handle_obj)
+{
+    int mpl_err ATTRIBUTE((unused));
+
+    MPIR_FUNC_ENTER;
+
+    MPIDI_GPUI_handle_obj_s *handle_obj_ptr = (MPIDI_GPUI_handle_obj_s *) handle_obj;
+    mpl_err = MPL_gpu_ipc_handle_unmap((void *) handle_obj_ptr->mapped_base_addr);
+    MPIR_Assert(mpl_err == MPL_SUCCESS);
+    MPL_free(handle_obj);
+
+    MPIR_FUNC_EXIT;
+    return;
+}
+
+static void ipc_track_cache_free(void *handle_obj)
+{
+    MPIR_FUNC_ENTER;
+
+    MPL_free(handle_obj);
+
+    MPIR_FUNC_EXIT;
+    return;
+}
+
 static int ipc_handle_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
                                    void **handle_obj)
 {
