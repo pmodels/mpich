@@ -19,6 +19,8 @@ int MPIDI_GPU_mpi_finalize_hook(void);
 int MPIDI_GPU_ipc_handle_cache_insert(int rank, MPIR_Comm * comm, MPIDI_GPU_ipc_handle_t handle);
 int MPIDI_GPU_ipc_fast_memcpy(MPIDI_IPCI_ipc_handle_t ipc_handle, void *dest_vaddr,
                               MPI_Aint src_data_sz, MPI_Datatype datatype);
+int MPIDI_GPUI_create_ipc_track_trees(void);
+int MPIDI_GPUI_create_ipc_mapped_trees(void);
 
 typedef struct {
     int max_dev_id;
