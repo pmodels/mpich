@@ -31,8 +31,7 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count,
-                                                 MPI_Datatype datatype, uintptr_t data_sz,
-                                                 int is_contig,
+                                                 MPI_Datatype datatype,
                                                  int rank, int tag, MPIR_Comm * comm,
                                                  int context_offset, MPIDI_av_entry_t * addr,
                                                  MPIDI_IPCI_ipc_attr_t ipc_attr,
@@ -60,7 +59,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     MPIDIG_REQUEST(sreq, count) = count;
 
     am_hdr.ipc_hdr.ipc_type = ipc_attr.ipc_type;
-    am_hdr.ipc_hdr.ipc_handle = ipc_attr.ipc_handle;
+    switch (ipc_attr.ipc_type) {
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+        case MPIDI_IPCI_TYPE__XPMEM:
+            MPIDI_XPMEM_fill_ipc_handle(&ipc_attr, &(am_hdr.ipc_hdr.ipc_handle));
+            break;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+        case MPIDI_IPCI_TYPE__GPU:
+            MPIDI_GPU_fill_ipc_handle(&ipc_attr, &(am_hdr.ipc_hdr.ipc_handle));
+            break;
+#endif
+        default:
+            MPIR_Assert(0);
+            break;
+    }
+
+    int is_contig;
+    MPI_Aint data_sz;
+    MPIR_Datatype_is_contig(datatype, &is_contig);
+    MPIR_Datatype_get_size_macro(datatype, data_sz);
+    data_sz *= count;
+
     am_hdr.ipc_hdr.is_contig = is_contig;
 
     /* message matching info */

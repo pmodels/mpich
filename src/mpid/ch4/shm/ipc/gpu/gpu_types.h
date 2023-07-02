@@ -18,10 +18,6 @@ typedef struct {
     MPL_gavl_tree_t **ipc_handle_track_trees;
 } MPIDI_GPUI_global_t;
 
-typedef struct {
-    uintptr_t mapped_base_addr;
-} MPIDI_GPUI_handle_obj_s;
-
 extern MPIDI_GPUI_global_t MPIDI_GPUI_global;
 
 #endif /* GPU_TYPES_H_INCLUDED */
