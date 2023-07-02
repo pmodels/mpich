@@ -138,7 +138,6 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
             break;
 #endif
         default:
-            MPIR_Assert(0);
             break;
 #undef IPC_HANDLE
     }
@@ -197,7 +196,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                     shared_table[i].mapped_type = 2;
                     break;
 #endif
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
                 case MPIDI_IPCI_TYPE__GPU:
                     /* FIXME: remote win buffer should be mapped to each of their corresponding
                      * local GPU device. */
@@ -270,6 +269,7 @@ int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
         goto fn_exit;
 
     MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     for (int i = 0; i < shm_comm_ptr->local_size; i++) {
         if (i == shm_comm_ptr->rank)
             continue;
@@ -279,6 +279,7 @@ int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
+#endif
 
     MPL_free(MPIDIG_WIN(win, shared_table));
 
