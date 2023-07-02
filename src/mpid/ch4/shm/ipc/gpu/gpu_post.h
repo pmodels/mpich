@@ -18,6 +18,7 @@ int MPIDI_GPU_init_world(void);
 int MPIDI_GPU_mpi_finalize_hook(void);
 int MPIDI_GPU_ipc_fast_memcpy(MPIDI_IPCI_ipc_handle_t ipc_handle, void *dest_vaddr,
                               MPI_Aint src_data_sz, MPI_Datatype datatype);
+int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint src_data_sz);
 int MPIDI_GPUI_create_ipc_track_trees(void);
 int MPIDI_GPUI_create_ipc_mapped_trees(void);
 
@@ -25,8 +26,5 @@ typedef struct {
     int max_dev_id;
     int max_subdev_id;
 } MPIDI_GPU_device_info_t;
-
-int MPIDI_GPU_ipc_async_start(MPIR_Request * rreq, MPIR_gpu_req * req_p,
-                              void *src_buf, MPIDI_GPU_ipc_handle_t gpu_handle);
 
 #endif /* GPU_POST_H_INCLUDED */
