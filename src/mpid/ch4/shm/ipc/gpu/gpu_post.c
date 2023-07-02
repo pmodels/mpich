@@ -212,12 +212,9 @@ static int ipc_handle_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, 
 
     MPIR_FUNC_ENTER;
 
-    *handle_obj = NULL;
-    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic) {
-        int mpl_err = MPL_SUCCESS;
-        mpl_err = MPL_gavl_tree_search(gavl_tree, addr, len, handle_obj);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_search");
-    }
+    int mpl_err = MPL_SUCCESS;
+    mpl_err = MPL_gavl_tree_search(gavl_tree, addr, len, handle_obj);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_search");
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -227,19 +224,15 @@ static int ipc_handle_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, 
 }
 
 static int ipc_handle_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
-                                   const void *handle_obj, bool * insert_successful)
+                                   const void *handle_obj)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
-    *insert_successful = false;
-    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic) {
-        int mpl_err = MPL_SUCCESS;
-        mpl_err = MPL_gavl_tree_insert(gavl_tree, addr, len, handle_obj);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_insert");
-        *insert_successful = true;
-    }
+    int mpl_err;
+    mpl_err = MPL_gavl_tree_insert(gavl_tree, addr, len, handle_obj);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_insert");
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -277,25 +270,15 @@ int MPIDI_GPU_ipc_handle_cache_insert(int rank, MPIR_Comm * comm, MPIDI_GPU_ipc_
     MPIR_FUNC_ENTER;
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
-    if (handle.handle_status == MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED) {
-        bool insert_successful = false;
-        int recv_lrank = MPIDI_GPUI_global.local_ranks[MPIDIU_rank_to_lpid(rank, comm)];
+    int recv_lrank = MPIDI_GPUI_global.local_ranks[MPIDIU_rank_to_lpid(rank, comm)];
 
-        MPIDI_GPU_ipc_handle_t *handle_obj =
-            MPL_malloc(sizeof(MPIDI_GPU_ipc_handle_t), MPL_MEM_OTHER);
-        *handle_obj = handle;
-        handle_obj->handle_status = MPIDI_GPU_IPC_HANDLE_VALID;
+    MPIDI_GPU_ipc_handle_t *handle_obj = MPL_malloc(sizeof(MPIDI_GPU_ipc_handle_t), MPL_MEM_OTHER);
+    *handle_obj = handle;
 
-        mpi_errno = ipc_handle_cache_insert(MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank]
-                                            [handle.local_dev_id],
-                                            (void *) handle.remote_base_addr, handle.len,
-                                            handle_obj, &insert_successful);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        if (insert_successful == false) {
-            MPL_free(handle_obj);
-        }
-    }
+    mpi_errno = ipc_handle_cache_insert(MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank]
+                                        [handle.local_dev_id],
+                                        (void *) handle.remote_base_addr, handle.len, handle_obj);
+    MPIR_ERR_CHECK(mpi_errno);
   fn_fail:
 #endif
 
@@ -333,9 +316,14 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
         goto fn_fail;
     }
 
-    MPL_gavl_tree_t track_tree = MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank][local_dev_id];
-    mpi_errno = ipc_handle_cache_search(track_tree, pbase, len, (void **) &handle_obj);
-    MPIR_ERR_CHECK(mpi_errno);
+    bool need_cache;
+    need_cache = (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic);
+    if (need_cache) {
+        MPL_gavl_tree_t track_tree =
+            MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank][local_dev_id];
+        mpi_errno = ipc_handle_cache_search(track_tree, pbase, len, (void **) &handle_obj);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     if (handle_obj == NULL) {
         mpl_err =
@@ -343,6 +331,10 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
                                       &ipc_attr->ipc_handle.gpu.ipc_handle);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_create");
+        if (need_cache) {
+            mpi_errno = MPIDI_GPU_ipc_handle_cache_insert(rank, comm, ipc_attr->ipc_handle.gpu);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
         ipc_attr->ipc_handle.gpu.handle_status = MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED;
     } else {
         ipc_attr->ipc_handle.gpu.ipc_handle = handle_obj->ipc_handle;
@@ -362,10 +354,6 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
     ipc_attr->ipc_handle.gpu.global_dev_id = global_dev_id;
     ipc_attr->ipc_handle.gpu.local_dev_id = local_dev_id;
 
-    if (handle_obj == NULL) {
-        mpi_errno = MPIDI_GPU_ipc_handle_cache_insert(rank, comm, ipc_attr->ipc_handle.gpu);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
   fn_fail:
 #else
     /* Do not support IPC data transfer */
@@ -439,10 +427,14 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void
         }
     }
 
-    mpi_errno = ipc_handle_cache_search(MAPPED_TREE(map_dev_id),
-                                        (void *) handle.remote_base_addr, handle.len,
-                                        (void **) &handle_obj);
-    MPIR_ERR_CHECK(mpi_errno);
+    bool need_cache;
+    need_cache = (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic);
+    if (need_cache) {
+        mpi_errno = ipc_handle_cache_search(MAPPED_TREE(map_dev_id),
+                                            (void *) handle.remote_base_addr, handle.len,
+                                            (void **) &handle_obj);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     if (handle_obj) {
         /* found in cache */
@@ -467,17 +459,14 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void
             *vaddr = (void *) ((uintptr_t) pbase + handle.offset);
         }
 
-        /* insert to cache */
-        bool insert_successful = false;
-        handle_obj = MPL_malloc(sizeof(MPIDI_GPUI_handle_obj_s), MPL_MEM_OTHER);
-        MPIR_Assert(handle_obj != NULL);
-        handle_obj->mapped_base_addr = (uintptr_t) pbase;
-        mpi_errno = ipc_handle_cache_insert(MAPPED_TREE(map_dev_id),
-                                            (void *) handle.remote_base_addr, handle.len,
-                                            handle_obj, &insert_successful);
-        MPIR_ERR_CHECK(mpi_errno);
-        if (!insert_successful) {
-            MPL_free(handle_obj);
+        if (need_cache) {
+            handle_obj = MPL_malloc(sizeof(MPIDI_GPUI_handle_obj_s), MPL_MEM_OTHER);
+            MPIR_Assert(handle_obj != NULL);
+            handle_obj->mapped_base_addr = (uintptr_t) pbase;
+            mpi_errno = ipc_handle_cache_insert(MAPPED_TREE(map_dev_id),
+                                                (void *) handle.remote_base_addr, handle.len,
+                                                handle_obj);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 #undef MAPPED_TREE
