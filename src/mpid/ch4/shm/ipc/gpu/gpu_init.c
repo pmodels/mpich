@@ -7,31 +7,6 @@
 #include "gpu_post.h"
 #include "gpu_types.h"
 
-static void ipc_handle_cache_free(void *handle_obj)
-{
-    int mpl_err ATTRIBUTE((unused));
-
-    MPIR_FUNC_ENTER;
-
-    MPIDI_GPUI_handle_obj_s *handle_obj_ptr = (MPIDI_GPUI_handle_obj_s *) handle_obj;
-    mpl_err = MPL_gpu_ipc_handle_unmap((void *) handle_obj_ptr->mapped_base_addr);
-    MPIR_Assert(mpl_err == MPL_SUCCESS);
-    MPL_free(handle_obj);
-
-    MPIR_FUNC_EXIT;
-    return;
-}
-
-static void ipc_handle_status_free(void *handle_obj)
-{
-    MPIR_FUNC_ENTER;
-
-    MPL_free(handle_obj);
-
-    MPIR_FUNC_EXIT;
-    return;
-}
-
 static void ipc_handle_free_hook(void *dptr)
 {
     void *pbase;
@@ -124,55 +99,17 @@ int MPIDI_GPU_init_world(void)
         MPIDI_GPUI_global.local_ranks[MPIDI_GPUI_global.local_procs[i]] = i;
     }
 
-    MPIDI_GPUI_global.ipc_handle_mapped_trees =
-        (MPL_gavl_tree_t ***) MPL_calloc(MPIR_Process.local_size, sizeof(MPL_gavl_tree_t **),
-                                         MPL_MEM_OTHER);
-    MPIR_Assert(MPIDI_GPUI_global.ipc_handle_mapped_trees != NULL);
-
-    MPIDI_GPUI_global.ipc_handle_track_trees =
-        (MPL_gavl_tree_t **) MPL_calloc(MPIR_Process.local_size, sizeof(MPL_gavl_tree_t *),
-                                        MPL_MEM_OTHER);
-    MPIR_Assert(MPIDI_GPUI_global.ipc_handle_track_trees != NULL);
-
-    for (int i = 0; i < MPIR_Process.local_size; ++i) {
-        MPIDI_GPUI_global.ipc_handle_mapped_trees[i] =
-            (MPL_gavl_tree_t **) MPL_calloc(MPIDI_GPUI_global.global_max_dev_id + 1,
-                                            sizeof(MPL_gavl_tree_t *),
-                                            MPL_MEM_OTHER);
-        MPIR_Assert(MPIDI_GPUI_global.ipc_handle_mapped_trees[i]);
-
-        MPIDI_GPUI_global.ipc_handle_track_trees[i] =
-            (MPL_gavl_tree_t *) MPL_calloc(MPIDI_GPUI_global.global_max_dev_id + 1,
-                                           sizeof(MPL_gavl_tree_t),
-                                           MPL_MEM_OTHER);
-        MPIR_Assert(MPIDI_GPUI_global.ipc_handle_track_trees[i]);
-
-        for (int j = 0; j < (MPIDI_GPUI_global.global_max_dev_id + 1); ++j) {
-            MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j] =
-                (MPL_gavl_tree_t *) MPL_calloc(device_count, sizeof(MPL_gavl_tree_t), MPL_MEM_OTHER);
-            MPIR_Assert(MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]);
-
-            for (int k = 0; k < device_count; ++k) {
-                mpl_err =
-                    MPL_gavl_tree_create(ipc_handle_cache_free,
-                                         &MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j][k]);
-                MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                    "**mpl_gavl_create");
-            }
-
-            mpl_err =
-                MPL_gavl_tree_create(ipc_handle_status_free,
-                                     &MPIDI_GPUI_global.ipc_handle_track_trees[i][j]);
-            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                "**mpl_gavl_create");
-        }
-    }
-
     MPIDI_GPUI_global.local_device_count = device_count;
     MPL_gpu_free_hook_register(ipc_handle_free_hook);
 
     /* This hook is needed when using the drmfd shareable ipc handle implementation in ze backend */
     mpi_errno = MPIDI_FD_mpi_init_hook();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDI_GPUI_create_ipc_mapped_trees();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDI_GPUI_create_ipc_track_trees();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_GPUI_global.initialized = 1;
