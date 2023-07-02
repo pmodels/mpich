@@ -7,6 +7,7 @@
 
 #include "gpu_pre.h"
 
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
 int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                            int rank, MPIR_Comm * comm, MPIDI_IPCI_ipc_attr_t * ipc_attr);
 int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
@@ -28,5 +29,6 @@ typedef struct {
     int max_dev_id;
     int max_subdev_id;
 } MPIDI_GPU_device_info_t;
+#endif
 
 #endif /* GPU_POST_H_INCLUDED */

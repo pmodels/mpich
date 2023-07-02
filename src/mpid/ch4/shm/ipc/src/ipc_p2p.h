@@ -209,6 +209,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
 {
     int mpi_errno = MPI_SUCCESS;
     uintptr_t data_sz, recv_data_sz;
+    bool is_async_copy = false;
 
     MPIR_FUNC_ENTER;
 
@@ -225,23 +226,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
 
     /* attach remote buffer */
-    if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__XPMEM) {
-        void *src_buf = NULL;
-        /* map */
-        mpi_errno = MPIDI_XPMEM_ipc_handle_map(ipc_hdr->ipc_handle.xpmem, &src_buf);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* copy */
-        mpi_errno = MPIDI_IPCI_copy_data(ipc_hdr, rreq, src_buf, src_data_sz);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* skip unmap */
-    } else if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__GPU) {
-        mpi_errno = MPIDI_GPU_copy_data_async(ipc_hdr, rreq, src_data_sz);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
-    } else if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__NONE) {
-        /* no-op */
-    } else {
-        MPIR_Assert(0);
+    switch (ipc_hdr->ipc_type) {
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+        case MPIDI_IPCI_TYPE__XPMEM:
+            {
+                void *src_buf = NULL;
+                /* map */
+                mpi_errno = MPIDI_XPMEM_ipc_handle_map(ipc_hdr->ipc_handle.xpmem, &src_buf);
+                MPIR_ERR_CHECK(mpi_errno);
+                /* copy */
+                mpi_errno = MPIDI_IPCI_copy_data(ipc_hdr, rreq, src_buf, src_data_sz);
+                MPIR_ERR_CHECK(mpi_errno);
+                /* skip unmap */
+            }
+            break;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+        case MPIDI_IPCI_TYPE__GPU:
+            is_async_copy = true;
+            mpi_errno = MPIDI_GPU_copy_data_async(ipc_hdr, rreq, src_data_sz);
+            MPIR_ERR_CHECK(mpi_errno);
+            break;
+#endif
+        case MPIDI_IPCI_TYPE__NONE:
+            break;
+        default:
+            MPIR_Assert(0);
     }
 
     IPC_TRACE("handle_lmt_recv: handle matched rreq %p [source %d, tag %d, "
@@ -250,17 +260,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
               MPIDIG_REQUEST(rreq, u.recv.context_id), (char *) MPIDIG_REQUEST(rreq, buffer),
               recv_data_sz);
 
-  fn_cont:
-    mpi_errno = MPIDI_IPC_complete(rreq, ipc_hdr->ipc_type);
   fn_exit:
+    if (!is_async_copy) {
+        mpi_errno = MPIDI_IPC_complete(rreq, ipc_hdr->ipc_type);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     /* Need to send ack and complete the request so we don't block sender and receiver */
     if (!rreq->status.MPI_ERROR) {
+        is_async_copy = false;
         rreq->status.MPI_ERROR = mpi_errno;
     }
-    goto fn_cont;
+    goto fn_exit;
 }
 
 #endif /* IPC_P2P_H_INCLUDED */
