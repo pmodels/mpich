@@ -103,6 +103,9 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
     }
 #endif
 
+    /* suppress -Wunused-but-set-variable warnings */
+    ((void) done);
+
     /* Exchange shared memory region information */
     MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
 
@@ -138,7 +141,6 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
             break;
 #endif
         default:
-            MPIR_Assert(0);
             break;
 #undef IPC_HANDLE
     }
@@ -197,7 +199,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                     shared_table[i].mapped_type = 2;
                     break;
 #endif
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
                 case MPIDI_IPCI_TYPE__GPU:
                     /* FIXME: remote win buffer should be mapped to each of their corresponding
                      * local GPU device. */
@@ -269,18 +271,23 @@ int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
         !shm_comm_ptr || !MPIDIG_WIN(win, shared_table))
         goto fn_exit;
 
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
     for (int i = 0; i < shm_comm_ptr->local_size; i++) {
         if (i == shm_comm_ptr->rank)
             continue;
         if (shared_table[i].ipc_type == MPIDI_IPCI_TYPE__GPU) {
-            MPIDI_GPU_ipc_handle_unmap(shared_table[i].shm_base_addr, shared_table[i].ipc_handle,
-                                       shared_table[i].mapped_type);
+            mpi_errno = MPIDI_GPU_ipc_handle_unmap(shared_table[i].shm_base_addr,
+                                                   shared_table[i].ipc_handle,
+                                                   shared_table[i].mapped_type);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
+#endif
 
     MPL_free(MPIDIG_WIN(win, shared_table));
+    /* extra just to silence potential unused-label warnings */
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_EXIT;
