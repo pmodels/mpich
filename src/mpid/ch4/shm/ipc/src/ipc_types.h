@@ -13,9 +13,9 @@ typedef struct {
 } MPIDI_IPCI_global_t;
 
 /* memory handle definition
- * MPIDI_IPCI_ipc_handle_t: local memory handle
- * MPIDI_IPCI_ipc_attr_t: local memory attributes including available handle,
- *                        IPC type, and thresholds */
+ * MPIDI_IPCI_ipc_handle_t: memory handle send to remote processes
+ * MPIDI_IPCI_ipc_attr_t: local memory attributes used to prepare memory handle
+ */
 typedef union MPIDI_IPCI_ipc_handle {
     MPIDI_XPMEM_ipc_handle_t xpmem;
     MPIDI_GPU_ipc_handle_t gpu;
@@ -23,8 +23,10 @@ typedef union MPIDI_IPCI_ipc_handle {
 
 typedef struct MPIDI_IPCI_ipc_attr {
     MPIDI_IPCI_type_t ipc_type;
-    MPIDI_IPCI_ipc_handle_t ipc_handle;
-    MPL_pointer_attr_t gpu_attr;
+    union {
+        MPIDI_XPMEM_ipc_attr_t xpmem;
+        MPIDI_GPU_ipc_attr_t gpu;
+    } u;
 } MPIDI_IPCI_ipc_attr_t;
 
 /* ctrl packet header types */

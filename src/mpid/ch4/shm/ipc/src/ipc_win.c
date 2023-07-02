@@ -77,19 +77,31 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 
     /* Determine IPC type based on buffer type and submodule availability.
      * We always exchange in case any remote buffer can be shared by IPC. */
-    MPIR_GPU_query_pointer_attr(win->base, &ipc_attr.gpu_attr);
-
-    if (ipc_attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
-        mpi_errno = MPIDI_GPU_get_ipc_attr(win->base, shm_comm_ptr->rank, shm_comm_ptr, &ipc_attr);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        mpi_errno = MPIDI_XPMEM_get_ipc_attr(win->base, win->size, &ipc_attr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+    bool done = false;
 
     /* Disable local IPC for zero buffer */
-    if (win->size == 0)
+    if (win->size == 0) {
         ipc_attr.ipc_type = MPIDI_IPCI_TYPE__NONE;
+        done = true;
+    }
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    if (!done) {
+        /* FIXME: the rank should be remote rank for tracking caching, not local rank
+         *        Here we can skip the tracking, e.g. just use MPI_PROC_NULL
+         */
+        mpi_errno = MPIDI_GPU_get_ipc_attr(win->base, win->size, MPI_BYTE,
+                                           MPI_PROC_NULL, shm_comm_ptr, &ipc_attr);
+        MPIR_ERR_CHECK(mpi_errno);
+        done = (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE);
+    }
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+    if (!done) {
+        mpi_errno = MPIDI_XPMEM_get_ipc_attr(win->base, win->size, MPI_BYTE, &ipc_attr);
+        MPIR_ERR_CHECK(mpi_errno);
+        done = (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE);
+    }
+#endif
 
     /* Exchange shared memory region information */
     MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
@@ -112,7 +124,24 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
     ipc_shared_table[shm_comm_ptr->rank].size = win->size;
     ipc_shared_table[shm_comm_ptr->rank].disp_unit = win->disp_unit;
     ipc_shared_table[shm_comm_ptr->rank].ipc_type = ipc_attr.ipc_type;
-    ipc_shared_table[shm_comm_ptr->rank].ipc_handle = ipc_attr.ipc_handle;
+
+    switch (ipc_attr.ipc_type) {
+#define IPC_HANDLE ipc_shared_table[shm_comm_ptr->rank].ipc_handle
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+        case MPIDI_IPCI_TYPE__XPMEM:
+            MPIDI_XPMEM_fill_ipc_handle(&ipc_attr, &(IPC_HANDLE));
+            break;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+        case MPIDI_IPCI_TYPE__GPU:
+            MPIDI_GPU_fill_ipc_handle(&ipc_attr, &(IPC_HANDLE));
+            break;
+#endif
+        default:
+            MPIR_Assert(0);
+            break;
+#undef IPC_HANDLE
+    }
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE,
                                0,
@@ -159,6 +188,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         } else {
             /* attach remote buffer */
             switch (ipc_shared_table[i].ipc_type) {
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
                 case MPIDI_IPCI_TYPE__XPMEM:
                     mpi_errno =
                         MPIDI_XPMEM_ipc_handle_map(ipc_shared_table[i].ipc_handle.xpmem,
@@ -166,13 +196,15 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                     MPIR_ERR_CHECK(mpi_errno);
                     shared_table[i].mapped_type = 2;
                     break;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
                 case MPIDI_IPCI_TYPE__GPU:
                     /* FIXME: remote win buffer should be mapped to each of their corresponding
                      * local GPU device. */
                     {
                         MPIDI_GPU_ipc_handle_t handle = ipc_shared_table[i].ipc_handle.gpu;
                         shared_table[i].ipc_handle = handle;
-                        int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.gpu_attr);
+                        int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.u.gpu.gpu_attr);
                         int map_dev_id = MPIDI_GPU_ipc_get_map_dev(handle.global_dev_id, dev_id,
                                                                    MPI_BYTE);
                         int fast_copy = 0;
@@ -198,6 +230,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                         shared_table[i].ipc_mapped_device = map_dev_id;
                     }
                     break;
+#endif
                 case MPIDI_IPCI_TYPE__NONE:
                     /* no-op */
                     break;
