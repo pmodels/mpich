@@ -38,6 +38,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint count,
                                                       MPI_Datatype datatype,
                                                       MPIDI_IPCI_ipc_attr_t * ipc_attr)
@@ -46,7 +47,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint 
 
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
 
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     if (!MPIR_CVAR_CH4_XPMEM_ENABLE || buf == MPI_BOTTOM) {
         goto fn_exit;
     } else {
@@ -56,8 +56,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint 
         ipc_attr->u.xpmem.datatype = datatype;
     }
   fn_exit:
-#endif
-
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
@@ -65,7 +63,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint 
 MPL_STATIC_INLINE_PREFIX void MPIDI_XPMEM_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                                                           MPIDI_IPCI_ipc_handle_t * ipc_handle)
 {
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     ipc_handle->xpmem.src_lrank = MPIR_Process.local_rank;
 
     MPIR_Datatype *dt_ptr;
@@ -81,14 +78,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_XPMEM_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t 
         ipc_handle->xpmem.src_offset = ipc_attr->u.xpmem.buf;
         ipc_handle->xpmem.data_sz = data_sz;
     }
-#else
-    memset(ipc_handle, 0, sizeof(MPIDI_IPCI_ipc_handle_t));
-#endif
 }
 
 int MPIDI_XPMEM_init_local(void);
 int MPIDI_XPMEM_init_world(void);
 int MPIDI_XPMEM_mpi_finalize_hook(void);
 int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t mem_handle, void **vaddr);
+#endif
 
 #endif /* XPMEM_POST_H_INCLUDED */

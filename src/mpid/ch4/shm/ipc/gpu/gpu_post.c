@@ -234,8 +234,6 @@ static int ipc_mapped_cache_delete(MPL_gavl_tree_t gavl_tree, const void *addr, 
     goto fn_exit;
 }
 
-#endif
-
 int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                            int remote_rank, MPIR_Comm * comm, MPIDI_IPCI_ipc_attr_t * ipc_attr)
 {
@@ -246,7 +244,7 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     if (buf == MPI_BOTTOM) {
         goto fn_exit;
     }
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+
     MPIR_Datatype *dt_ptr;
     bool dt_contig;
     MPI_Aint true_lb;
@@ -314,7 +312,6 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     ipc_attr->u.gpu.vaddr = mem_addr;
     ipc_attr->u.gpu.bounds_base = bounds_base;
     ipc_attr->u.gpu.bounds_len = bounds_len;
-#endif
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -323,7 +320,6 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     goto fn_exit;
 }
 
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
 int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                               MPIDI_IPCI_ipc_handle_t * ipc_handle)
 {
@@ -384,7 +380,6 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
   fn_fail:
     goto fn_exit;
 }
-#endif
 
 int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Datatype datatype)
 {
@@ -392,7 +387,6 @@ int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Da
 
     MPIR_FUNC_ENTER;
 
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     int dt_contig;
     MPIDI_Datatype_check_contig(datatype, dt_contig);
 
@@ -410,7 +404,6 @@ int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Da
          * to map on. Assume at least device 0 is always available. */
         map_to_dev_id = 0;
     }
-#endif
 
     MPIR_FUNC_EXIT;
     return map_to_dev_id;
@@ -421,7 +414,6 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void
 {
     int mpi_errno = MPI_SUCCESS;
 
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     MPIR_FUNC_ENTER;
 
     bool need_cache;
@@ -477,16 +469,12 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-#else
-    return mpi_errno;
-#endif
 }
 
 int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle, int do_mmap)
 {
     int mpi_errno = MPI_SUCCESS;
 
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     MPIR_FUNC_ENTER;
 
     if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled) {
@@ -501,9 +489,6 @@ int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle, int d
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-#else
-    return mpi_errno;
-#endif
 }
 
 /* src pointer is a GPU pointer with received IPC handle
@@ -514,7 +499,6 @@ int MPIDI_GPU_ipc_fast_memcpy(MPIDI_IPCI_ipc_handle_t ipc_handle, void *dest_vad
 {
     int mpi_errno = MPI_SUCCESS;
 
-#ifdef MPIDI_CH4_SHM_ENABLE_GPU
     int mpl_err = MPL_SUCCESS;
     void *src_buf_host;
     MPL_pointer_attr_t gpu_attr;
@@ -542,9 +526,6 @@ int MPIDI_GPU_ipc_fast_memcpy(MPIDI_IPCI_ipc_handle_t ipc_handle, void *dest_vad
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-#else
-    return mpi_errno;
-#endif
 }
 
 int MPIDI_GPU_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq,
@@ -588,3 +569,4 @@ int MPIDI_GPU_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq,
   fn_fail:
     goto fn_exit;
 }
+#endif /* MPIDI_CH4_SHM_ENABLE_GPU */
