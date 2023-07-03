@@ -113,13 +113,9 @@ static int pmi_subversion = 1;
 static int pmi_max_key_size;
 static int pmi_max_val_size;
 
-#ifdef USE_PMI1_API
-static int pmi_max_kvs_name_length;
 static char *pmi_kvs_name;
-#elif defined USE_PMI2_API
-static char *pmi_jobid;
-#elif defined USE_PMIX_API
-static int pmix_init_count = 0;
+
+#if defined(ENABLE_PMIX)
 static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
 #endif
@@ -128,14 +124,26 @@ static char *hwloc_topology_xmlfile;
 
 static void MPIR_pmi_finalize_on_exit(void)
 {
-#ifdef USE_PMI1_API
-    PMI_Finalize();
-#elif defined USE_PMI2_API
-    PMI2_Finalize();
-#elif defined USE_PMIX_API
-    PMIx_Finalize(NULL, 0);
-    pmix_init_count = 0;
+    switch (MPIR_CVAR_PMI_VERSION) {
+#ifdef ENABLE_PMI1
+        case MPIR_CVAR_PMI_VERSION_1:
+            PMI_Finalize();
+            break;
 #endif
+#ifdef ENABLE_PMI2
+        case MPIR_CVAR_PMI_VERSION_2:
+            PMI2_Finalize();
+            break;
+#endif
+#ifdef ENABLE_PMI3
+        case MPIR_CVAR_PMI_VERSION_x:
+            PMIx_Finalize(NULL, 0);
+            break;
+#endif
+        default:
+            MPIR_Assert(0);
+            break;
+    };
 }
 
 static int check_MPIR_CVAR_PMI_VERSION(void)
@@ -148,7 +156,7 @@ static int check_MPIR_CVAR_PMI_VERSION(void)
 #elif defined(ENABLE_PMIX)
         MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_x;
 #else
-        return MPI_ERROR_INTERN;
+        return MPI_ERR_INTERN;
 #endif
     }
 #endif
@@ -156,49 +164,41 @@ static int check_MPIR_CVAR_PMI_VERSION(void)
     /* Error if user select PMI2 but it is disabled */
 #ifndef ENABLE_PMI2
     if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_2) {
-        return MPI_ERROR_INTERN;
+        return MPI_ERR_INTERN;
     }
 #endif
 
     /* Error if user select PMI2 but it is disabled */
 #ifndef ENABLE_PMIX
     if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
-        return MPI_ERROR_INTERN;
+        return MPI_ERR_INTERN;
     }
 #endif
 
     return MPI_SUCCESS;
 }
 
-int MPIR_pmi_init(void)
+/* -- MPIR_pmi_init -- */
+static int pmi1_init(int *has_parent, int *rank, int *size, int *appnum)
 {
+#ifdef ENABLE_PMI1
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
-    static bool pmi_connected = false;
 
-    mpi_errno = check_MPIR_CVAR_PMI_VERSION();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* See if the user wants to override our default values */
-    MPL_env2int("PMI_VERSION", &pmi_version);
-    MPL_env2int("PMI_SUBVERSION", &pmi_subversion);
-
-    int has_parent, rank, size, appnum;
-    unsigned world_id = 0;
-#ifdef USE_PMI1_API
-    pmi_errno = PMI_Init(&has_parent);
+    pmi_errno = PMI_Init(has_parent);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_init", "**pmi_init %d", pmi_errno);
-    pmi_errno = PMI_Get_rank(&rank);
+    pmi_errno = PMI_Get_rank(rank);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_get_rank", "**pmi_get_rank %d", pmi_errno);
-    pmi_errno = PMI_Get_size(&size);
+    pmi_errno = PMI_Get_size(size);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_get_size", "**pmi_get_size %d", pmi_errno);
-    pmi_errno = PMI_Get_appnum(&appnum);
+    pmi_errno = PMI_Get_appnum(appnum);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_get_appnum", "**pmi_get_appnum %d", pmi_errno);
 
+    int pmi_max_kvs_name_length;
     pmi_errno = PMI_KVS_Get_name_length_max(&pmi_max_kvs_name_length);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_kvs_get_name_length_max",
@@ -216,25 +216,48 @@ int MPIR_pmi_init(void)
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_kvs_get_value_length_max",
                          "**pmi_kvs_get_value_length_max %d", pmi_errno);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    return MPI_ERR_INTERN;
+#endif
+}
 
-    HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
+static int pmi2_init(int *has_parent, int *rank, int *size, int *appnum)
+{
+#ifdef ENABLE_PMI2
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
 
-#elif defined USE_PMI2_API
     pmi_max_key_size = PMI2_MAX_KEYLEN;
     pmi_max_val_size = PMI2_MAX_VALLEN;
 
-    pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);
+    pmi_errno = PMI2_Init(has_parent, size, rank, appnum);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_init", "**pmi_init %d", pmi_errno);
 
-    pmi_jobid = (char *) MPL_malloc(PMI2_MAX_VALLEN, MPL_MEM_OTHER);
-    pmi_errno = PMI2_Job_GetId(pmi_jobid, PMI2_MAX_VALLEN);
+    pmi_kvs_name = (char *) MPL_malloc(PMI2_MAX_VALLEN, MPL_MEM_OTHER);
+    pmi_errno = PMI2_Job_GetId(pmi_kvs_name, PMI2_MAX_VALLEN);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_job_getid", "**pmi_job_getid %d", pmi_errno);
 
-    HASH_FNV(pmi_jobid, strlen(pmi_jobid), world_id);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    return MPI_ERR_INTERN;
+#endif
+}
 
-#elif defined USE_PMIX_API
+static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
+{
+#ifdef ENABLE_PMI2
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
     pmi_max_key_size = PMIX_MAX_KEYLEN;
     pmi_max_val_size = 1024;    /* this is what PMI2_MAX_VALLEN currently set to */
 
@@ -242,13 +265,12 @@ int MPIR_pmi_init(void)
 
     /* Since we only call PMIx_Finalize once at `atexit` handler, we need prevent
      * calling PMIx_Init multiple times. */
+    static int pmix_init_count = 0;
     pmix_init_count++;
     if (pmix_init_count == 1) {
         pmi_errno = PMIx_Init(&pmix_proc, NULL, 0);
         if (pmi_errno == PMIX_ERR_UNREACH) {
             /* no pmi server, assume we are a singleton */
-            rank = 0;
-            size = 1;
             goto singleton_out;
         }
         MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -259,12 +281,12 @@ int MPIR_pmi_init(void)
         pmix_wcproc.rank = PMIX_RANK_WILDCARD;
     }
 
-    rank = pmix_proc.rank;
+    *rank = pmix_proc.rank;
 
     pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_JOB_SIZE, NULL, 0, &pvalue);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_get", "**pmix_get %d", pmi_errno);
-    size = pvalue->data.uint32;
+    *size = pvalue->data.uint32;
     PMIX_VALUE_RELEASE(pvalue);
 
     /* PMIX_JOBID seems to be more supported than PMIX_NSPACE */
@@ -272,15 +294,59 @@ int MPIR_pmi_init(void)
     pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_JOBID, NULL, 0, &pvalue);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_get", "**pmix_get %d", pmi_errno);
-    HASH_FNV(pvalue->data.string, strlen(pvalue->data.string), world_id);
+    pmi_kvs_name = MPL_strdup(pvalue->data.string);
     PMIX_VALUE_RELEASE(pvalue);
 
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
   singleton_out:
-    appnum = 0;
-    has_parent = 0;
-    world_id = 0;
-
+    *rank = 0;
+    *size = 1;
+    *appnum = 0;
+    *has_parent = 0;
+    goto fn_exit;
+#else
+    return MPI_ERR_INTERN;
 #endif
+}
+
+int MPIR_pmi_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    static bool pmi_connected = false;
+
+    mpi_errno = check_MPIR_CVAR_PMI_VERSION();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* See if the user wants to override our default values */
+    MPL_env2int("PMI_VERSION", &pmi_version);
+    MPL_env2int("PMI_SUBVERSION", &pmi_subversion);
+
+    int has_parent, rank, size, appnum;
+    switch (MPIR_CVAR_PMI_VERSION) {
+        case MPIR_CVAR_PMI_VERSION_1:
+            mpi_errno = pmi1_init(&has_parent, &rank, &size, &appnum);
+            break;
+        case MPIR_CVAR_PMI_VERSION_2:
+            mpi_errno = pmi2_init(&has_parent, &rank, &size, &appnum);
+            break;
+        case MPIR_CVAR_PMI_VERSION_x:
+            mpi_errno = pmix_init(&has_parent, &rank, &size, &appnum);
+            break;
+        default:
+            MPIR_Assert(0);
+            break;
+    };
+    MPIR_ERR_CHECK(mpi_errno);
+
+    unsigned world_id = 0;
+    if (pmi_kvs_name) {
+        HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
+    }
+
     if (!pmi_connected) {
         /* Register finalization of PM connection in exit handler */
         mpi_errno = atexit(MPIR_pmi_finalize_on_exit);
@@ -314,13 +380,7 @@ void MPIR_pmi_finalize(void)
 {
     /* Finalize of PM interface happens in exit handler,
      * here: free allocated memory */
-#ifdef USE_PMI1_API
     MPL_free(pmi_kvs_name);
-#elif defined(USE_PMI2_API)
-    MPL_free(pmi_jobid);
-#elif defined(USE_PMIX_API)
-    /* pmix_proc does not need free */
-#endif
 
     MPL_free(MPIR_Process.node_map);
     MPL_free(MPIR_Process.node_root_map);
@@ -365,13 +425,7 @@ int MPIR_pmi_max_val_size(void)
 
 const char *MPIR_pmi_job_id(void)
 {
-#ifdef USE_PMI1_API
     return (const char *) pmi_kvs_name;
-#elif defined USE_PMI2_API
-    return (const char *) pmi_jobid;
-#elif defined USE_PMIX_API
-    return (const char *) pmix_proc.nspace;
-#endif
 }
 
 /* wrapper functions */
@@ -424,7 +478,7 @@ int MPIR_pmi_kvs_get(int src, const char *key, char *val, int val_size)
     if (src < 0)
         src = PMI2_ID_NULL;
     int out_len;
-    pmi_errno = PMI2_KVS_Get(pmi_jobid, src, key, val, val_size, &out_len);
+    pmi_errno = PMI2_KVS_Get(pmi_kvs_name, src, key, val, val_size, &out_len);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_kvsget", "**pmi_kvsget %d", pmi_errno);
 #elif defined(USE_PMIX_API)
@@ -525,7 +579,7 @@ int MPIR_pmi_barrier(void)
                          "**pmi_kvsfence", "**pmi_kvsfence %d", pmi_errno);
     /* Get a non-existent key, it only returns after every process called fence */
     int out_len;
-    PMI2_KVS_Get(pmi_jobid, PMI2_ID_NULL, "-NONEXIST-KEY", NULL, 0, &out_len);
+    PMI2_KVS_Get(pmi_kvs_name, PMI2_ID_NULL, "-NONEXIST-KEY", NULL, 0, &out_len);
 #elif defined(USE_PMIX_API)
     pmix_info_t *info;
     PMIX_INFO_CREATE(info, 1);
