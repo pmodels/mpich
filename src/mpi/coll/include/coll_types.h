@@ -28,6 +28,12 @@ enum {
 
 /* enumerator for different recexch types */
 enum {
+    MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING = 0,
+    MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING
+};
+
+/* enumerator for different recexch types */
+enum {
     MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING = 0,
     MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING
 };

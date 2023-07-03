@@ -680,6 +680,8 @@ cvars:
         nb                 - Force nonblocking algorithm
         recursive_doubling - Force recursive doubling algorithm
         ring               - Force ring algorithm
+        recexch_doubling   - Force recexch distance doubling algorithm
+        recexch_halving    - Force recexch distance halving algorithm
 
     - name        : MPIR_CVAR_ALLGATHER_BRUCKS_KVAL
       category    : COLLECTIVE
@@ -690,6 +692,27 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         radix (k) value for generic transport brucks based allgather
+
+    - name        : MPIR_CVAR_ALLGATHER_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for recursive exchange based allgather
+
+    - name        : MPIR_CVAR_ALLGATHER_RECEXCH_SINGLE_PHASE_RECV
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This CVAR controls whether the recv is posted for one phase or two phases
+        in recexch algos. By default, we post the recvs for 2 phases.
 
     - name        : MPIR_CVAR_ALLGATHER_INTER_ALGORITHM
       category    : COLLECTIVE

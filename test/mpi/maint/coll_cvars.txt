@@ -187,6 +187,12 @@ algorithms:
                 .MPIR_CVAR_ALLGATHER_BRUCKS_KVAL=2,3,4
             recursive_doubling
             ring
+            recexch_doubling
+                .MPIR_CVAR_ALLGATHER_RECEXCH_KVAL=2,3,4
+                .MPIR_CVAR_ALLGATHER_RECEXCH_SINGLE_PHASE_RECV=0,1
+            recexch_halving
+                .MPIR_CVAR_ALLGATHER_RECEXCH_KVAL=2,3,4
+                .MPIR_CVAR_ALLGATHER_RECEXCH_SINGLE_PHASE_RECV=0,1
         intra-nonblocking:
             sched_ring
             sched_brucks

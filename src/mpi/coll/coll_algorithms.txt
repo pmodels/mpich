@@ -170,6 +170,14 @@ allgather-intra:
     recursive_doubling
         restrictions: power-of-two
     ring
+    recexch_doubling
+        func_name: recexch
+        extra_params: recexch_type=MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING, k, single_phase_recv
+        cvar_params: -, RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+    recexch_halving
+        func_name: recexch
+        extra_params: recexch_type=MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING, k, single_phase_recv
+        cvar_params: -, RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
 allgather-inter:
     local_gather_remote_bcast
 iallgather-intra:
