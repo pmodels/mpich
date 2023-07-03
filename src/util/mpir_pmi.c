@@ -16,6 +16,19 @@ categories:
       description : cvars that control behavior of nodemap
 
 cvars:
+    - name        : MPIR_CVAR_PMI_VERSION
+      category    : NODEMAP
+      type        : enum
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select runtime PMI version.
+        1        - PMI (default)
+        2        - PMI2
+        x        - PMIx
+
     - name        : MPIR_CVAR_NOLOCAL
       category    : NODEMAP
       alt-env     : MPIR_CVAR_NO_LOCAL
@@ -124,11 +137,46 @@ static void MPIR_pmi_finalize_on_exit(void)
 #endif
 }
 
+static int check_MPIR_CVAR_PMI_VERSION(void)
+{
+    /* Adjust MPIR_CVAR_PMI_VERSION if the default is disabled */
+#ifndef ENABLE_PMI1
+    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_1) {
+#if defined(ENABLE_PMI2)
+        MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_2;
+#elif defined(ENABLE_PMIX)
+        MPIR_CVAR_PMI_VERSION = MPIR_CVAR_PMI_VERSION_x;
+#else
+        return MPI_ERROR_INTERN;
+#endif
+    }
+#endif
+
+    /* Error if user select PMI2 but it is disabled */
+#ifndef ENABLE_PMI2
+    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_2) {
+        return MPI_ERROR_INTERN;
+    }
+#endif
+
+    /* Error if user select PMI2 but it is disabled */
+#ifndef ENABLE_PMIX
+    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
+        return MPI_ERROR_INTERN;
+    }
+#endif
+
+    return MPI_SUCCESS;
+}
+
 int MPIR_pmi_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
     static bool pmi_connected = false;
+
+    mpi_errno = check_MPIR_CVAR_PMI_VERSION();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* See if the user wants to override our default values */
     MPL_env2int("PMI_VERSION", &pmi_version);
