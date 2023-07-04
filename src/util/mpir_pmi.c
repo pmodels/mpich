@@ -412,12 +412,19 @@ int MPIR_pmi_kvs_get(int src, const char *key, char *val, int val_size)
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
 #elif defined(USE_PMI2_API)
-    if (src < 0)
-        src = PMI2_ID_NULL;
-    int out_len;
-    pmi_errno = PMI2_KVS_Get(pmi_jobid, src, key, val, val_size, &out_len);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                         "**pmi_kvsget", "**pmi_kvsget %d", pmi_errno);
+    if (strncmp(key, "PMI_", 4) == 0) {
+        int found;
+        pmi_errno = PMI2_Info_GetJobAttr(key, val, val_size, &found);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS || !found, mpi_errno, MPI_ERR_OTHER,
+                             "**pmi_kvsget", "**pmi_kvsget %d", pmi_errno);
+    } else {
+        if (src < 0)
+            src = PMI2_ID_NULL;
+        int out_len;
+        pmi_errno = PMI2_KVS_Get(pmi_jobid, src, key, val, val_size, &out_len);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmi_kvsget", "**pmi_kvsget %d", pmi_errno);
+    }
 #elif defined(USE_PMIX_API)
     pmix_value_t *pvalue;
     if (src < 0) {

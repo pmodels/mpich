@@ -24,21 +24,6 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_CH3_INTERFACE_HOSTNAME
-      category    : CH3
-      alt-env     : MPIR_CVAR_INTERFACE_HOSTNAME
-      type        : string
-      default     : NULL
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If non-NULL, this cvar specifies the IP address that
-        other processes should use when connecting to this process.
-        This cvar is mutually exclusive with the
-        MPIR_CVAR_CH3_NETWORK_IFACE cvar and it is an error to set them
-        both.
-
     - name        : MPIR_CVAR_CH3_PORT_RANGE
       category    : CH3
       alt-env     : MPIR_CVAR_PORTRANGE, MPIR_CVAR_PORT_RANGE
@@ -52,22 +37,6 @@ cvars:
         specify the range of TCP ports to be used by the process
         manager and the MPICH library. The format of this variable is
         <low>:<high>.  To specify any available port, use 0:0.
-
-    - name        : MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE
-      category    : NEMESIS
-      alt-env     : MPIR_CVAR_NETWORK_IFACE
-      type        : string
-      default     : NULL
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        If non-NULL, this cvar specifies which pseudo-ethernet
-        interface the tcp netmod should use (e.g., "eth1", "ib0").
-        Note, this is a Linux-specific cvar.
-        This cvar is mutually exclusive with the
-        MPIR_CVAR_CH3_INTERFACE_HOSTNAME cvar and it is an error to set
-        them both.
 
     - name        : MPIR_CVAR_NEMESIS_TCP_HOST_LOOKUP_RETRIES
       category    : NEMESIS
@@ -293,24 +262,24 @@ static int ckpt_restart(void)
 
 static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname, MPL_sockaddr_t * p_addr)
 {
-    const char *ifname_string;
+    const char *ifname_string = NULL;
     int mpi_errno = MPI_SUCCESS;
     int ifaddrFound = 0;
 
     MPIR_Assert(maxIfname);
     ifname[0] = '\0';
 
-    MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_INTERFACE_HOSTNAME &&
-                        MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE, mpi_errno, MPI_ERR_OTHER,
-                        "**ifname_and_hostname");
+    int err;
 
-    /* Check if user specified ethernet interface name, e.g., ib0, eth1 */
-    if (MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE) {
+    /* Check if user specified ethernet interface name, e.g., ib0, eth1 via mpirun -iface option */
+    char tmp_buf[MAX_HOST_DESCRIPTION_LEN];
+    err = MPIR_pmi_kvs_get(-1, "PMI_iface", tmp_buf, MAX_HOST_DESCRIPTION_LEN);
+    if (!err) {
         char s[100];
         int len;
-        int ret = MPL_get_sockaddr_iface(MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE, p_addr);
+        int ret = MPL_get_sockaddr_iface(tmp_buf, p_addr);
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**iface_notfound",
-                             "**iface_notfound %s", MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE);
+                             "**iface_notfound %s", tmp_buf);
 
         MPL_sockaddr_to_str(p_addr, s, 100);
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT, VERBOSE, (MPL_DBG_FDEST, "ifaddrFound: %s", s));
@@ -322,7 +291,10 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname, MPL_soc
     }
 
     /* Check for a host name supplied through an environment variable */
-    ifname_string = MPIR_CVAR_CH3_INTERFACE_HOSTNAME;
+    err = MPIR_pmi_kvs_get(-1, "PMI_hostname", tmp_buf, MAX_HOST_DESCRIPTION_LEN);
+    if (!err) {
+        ifname_string = tmp_buf;
+    }
     if (!ifname_string) {
         /* See if there is a per-process name for the interfaces (e.g.,
          * the process manager only delievers the same values for the

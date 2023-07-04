@@ -23,7 +23,12 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.pgid = -1;
+    HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.retries = -1;
+
+    HYD_pmcd_pmip.k = 0;
+    HYD_pmcd_pmip.num_hosts = 0;
+    HYD_pmcd_pmip.hosts = NULL;
 
     PMIP_pg_init();
 
@@ -34,10 +39,14 @@ static void cleanup_params(void)
 {
     HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
 
-
-    /* Upstream */
     MPL_free(HYD_pmcd_pmip.upstream.server_name);
+    MPL_free(HYD_pmcd_pmip.local.hostname);
 
+    for (int i = 0; i < HYD_pmcd_pmip.num_hosts; i++) {
+        MPL_free(HYD_pmcd_pmip.hosts[i].hostname);
+        MPL_free(HYD_pmcd_pmip.hosts[i].user);
+    }
+    MPL_free(HYD_pmcd_pmip.hosts);
 
     PMIP_pg_finalize();
     HYDT_topo_finalize();
@@ -75,6 +84,9 @@ int main(int argc, char **argv)
     status = HYDU_set_signal(SIGTSTP, signal_cb);
     HYDU_ERR_POP(status, "unable to set SIGTSTP\n");
 
+    status = HYDU_set_signal(SIGCHLD, signal_cb);
+    HYDU_ERR_POP(status, "unable to set SIGCHLD\n");
+
     status = HYDU_set_common_signals(signal_cb);
     HYDU_ERR_POP(status, "unable to set common signals\n");
 
@@ -86,6 +98,29 @@ int main(int argc, char **argv)
 
     status = HYDT_dmx_init(&HYD_pmcd_pmip.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
+
+    if (HYD_pmcd_pmip.k > 0) {
+        /* terminate the argv list where --proxy-id is */
+        int i_proxy_id = 0;
+        char *p_proxy_id = NULL;
+        for (int i = 0; argv[i]; i++) {
+            if (strcmp(argv[i], "--proxy-id") == 0) {
+                i_proxy_id = i;
+                p_proxy_id = argv[i];
+                argv[i] = NULL;
+            }
+        }
+
+        status = HYDT_bsci_launch_procs(HYD_pmcd_pmip.local.pgid, argv,
+                                        HYD_pmcd_pmip.hosts, HYD_pmcd_pmip.num_hosts,
+                                        HYD_FALSE, HYD_pmcd_pmip.k, HYD_pmcd_pmip.local.id, NULL);
+        HYDU_ERR_POP(status, "unable to launch further proxies\n");
+
+        /* restore the argv array */
+        if (p_proxy_id) {
+            argv[i_proxy_id] = p_proxy_id;
+        }
+    }
 
     /* See if HYDI_CONTROL_FD is set before trying to connect upstream */
     ret = MPL_env2int("HYDI_CONTROL_FD", &HYD_pmcd_pmip.upstream.control);
@@ -191,6 +226,9 @@ int main(int argc, char **argv)
 
     status = HYDT_dmx_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
+
+    status = HYDT_bsci_wait_for_completion(0);
+    HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
 
     status = HYDT_bsci_finalize();
     HYDU_ERR_POP(status, "unable to finalize the bootstrap device\n");

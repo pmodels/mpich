@@ -59,29 +59,45 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
-                                          int use_rmk, int *control_fd)
+/* NOTE: tree-launch not supported, params k, myid are ignored. */
+HYD_status HYDT_bscd_persist_launch_procs(int pgid, char **args, struct HYD_host *hosts,
+                                          int num_hosts, int use_rmk, int k, int myid,
+                                          int *control_fd)
 {
-    struct HYD_proxy *proxy;
-    int idx;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDT_bscd_persist_node_count = num_hosts;
 
-    for (idx = 0; args[idx]; idx++);
-    args[idx + 1] = NULL;
+    char *targs[HYD_NUM_TMP_STRINGS];
+    int idx = 0;
+    int id_idx, host_idx;
+    for (int i = 0; args[i]; i++) {
+        targs[idx] = MPL_strdup(args[i]);
+    }
+    targs[idx++] = MPL_strdup("--hostname");
+    targs[idx++] = NULL;
+    host_idx = idx - 1;
+
+    targs[idx++] = MPL_strdup("--proxy-id");
+    targs[idx++] = NULL;
+    id_idx = idx - 1;
+
+    targs[idx] = NULL;
 
     HYDU_MALLOC_OR_JUMP(HYDT_bscd_persist_control_fd, int *,
                         HYDT_bscd_persist_node_count * sizeof(int), status);
 
     for (int i = 0; i < num_hosts; i++) {
-        proxy = proxy_list + i;
-        args[idx] = HYDU_int_to_str(i);
+        MPL_free(targs[id_idx]);
+        targs[id_idx] = HYDU_int_to_str(i);
+
+        MPL_free(targs[host_idx]);
+        targs[host_idx] = MPL_strdup(hosts[i].hostname);
 
         /* connect to hydserv on each node */
-        status = HYDU_sock_connect(proxy->node->hostname, PERSIST_DEFAULT_PORT,
+        status = HYDU_sock_connect(hosts[i].hostname, PERSIST_DEFAULT_PORT,
                                    &HYDT_bscd_persist_control_fd[i], 0, HYD_CONNECT_DELAY);
         HYDU_ERR_POP(status, "unable to connect to the main server\n");
 
@@ -95,6 +111,7 @@ HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy *proxy_l
     }
 
   fn_exit:
+    HYDU_free_strlist(targs);
     HYDU_FUNC_EXIT();
     return status;
 

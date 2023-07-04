@@ -8,6 +8,7 @@
 #include "bscu.h"
 #include "topo.h"
 #include "common.h"
+#include <assert.h>
 
 static int fd_stdout, fd_stderr;
 
@@ -94,13 +95,81 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
-                                         int use_rmk, int *control_fd)
+/* ---- tree launch ---- */
+static void tree_launch_init(int k, int myid, int num, int *id_start, int *id_end)
 {
-    int idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
+    if (k <= 0) {
+        /* flat launch */
+        *id_start = 0;
+        *id_end = num;
+    } else if (myid == -1) {
+        /* server only launch the first k proxies */
+        *id_start = 0;
+        *id_end = k;
+    } else {
+        /* level 1 - k   proxies
+         * level 2 - k^2 proxies
+         * level 3 - k^3 proxies
+         * ...
+         */
+        int n = 1;
+        int k_n = k;
+        int sum = k;
+        while (myid >= sum) {
+            n++;
+            k_n *= k;
+            sum += k_n;
+        }
+        *id_start = (myid - (sum - k_n)) * k + sum;
+        *id_end = *id_start + k;
+    }
+    if (*id_end > num) {
+        *id_end = num;
+    }
+}
+
+static char *hosts_to_str(struct HYD_host *hosts, int num_hosts)
+{
+    /* TODO: compress the host list */
+    int len = 0;
+    for (int i = 0; i < num_hosts; i++) {
+        if (hosts[i].user) {
+            len += strlen(hosts[i].user) + strlen(hosts[i].hostname) + 1;
+        } else {
+            len += strlen(hosts[i].hostname);
+        }
+        len += 1;
+    }
+    char *buf = MPL_malloc(len, MPL_MEM_PM);
+    assert(buf);
+
+    char *s = buf;
+    for (int i = 0; i < num_hosts; i++) {
+        if (hosts[i].user) {
+            int n = strlen(hosts[i].user) + strlen(hosts[i].hostname) + 1;
+            snprintf(s, n, "%s@%s", hosts[i].user, hosts[i].hostname);
+            s += n;
+        } else {
+            int n = strlen(hosts[i].hostname);
+            strcpy(s, hosts[i].hostname);
+            s += n;
+        }
+        *s++ = ',';
+    }
+
+    s[-1] = '\0';
+
+    return buf;
+}
+
+HYD_status HYDT_bscd_common_launch_procs(int pgid, char **args, struct HYD_host * hosts,
+                                         int num_hosts, int use_rmk, int k, int myid,
+                                         int *control_fd)
+{
+    int idx, i, fd, offset, len, rc, autofork;
+    int id_idx, host_idx, host_idx_2, exec_idx;
     int *fd_list, *dummy;
     int sockpair[2];
-    struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *extra_arg_list = NULL, *extra_arg;
     char quoted_exec_string[HYD_TMP_STRLEN], *original_exec_string;
     struct HYD_env *env = NULL;
@@ -167,6 +236,27 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     for (i = 0; args[i]; i++)
         targs[idx++] = MPL_strdup(args[i]);
 
+    targs[idx++] = MPL_strdup("--proxy-id");
+    id_idx = idx++;
+    targs[id_idx] = NULL;
+
+    targs[idx++] = MPL_strdup("--hostname");
+    host_idx_2 = idx++;
+    targs[host_idx_2] = NULL;
+
+    /* additional args:
+     * -k k
+     * -hosts hosts
+     */
+    if (k > 0) {
+        targs[idx++] = MPL_strdup("--k");
+        targs[idx++] = HYDU_int_to_str(k);
+        targs[idx++] = MPL_strdup("--hosts");
+        targs[idx++] = hosts_to_str(hosts, num_hosts);
+    }
+
+    targs[idx] = NULL;
+
     /* Store the original exec string */
     original_exec_string = targs[exec_idx];
 
@@ -186,36 +276,41 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     MPL_free(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
-    /* Check if the user disabled automatic forking */
-    rc = MPL_env2bool("HYDRA_LAUNCHER_AUTOFORK", &autofork);
-    if (rc == 0)
-        autofork = 1;
+    if (k == 0) {
+        /* Check if the user disabled automatic forking */
+        rc = MPL_env2bool("HYDRA_LAUNCHER_AUTOFORK", &autofork);
+        if (rc == 0)
+            autofork = 1;
+    } else {
+        /* disable fork if doing tree-launch */
+        autofork = 0;
+    }
 
-    targs[idx] = NULL;
-    for (i = 0; i < num_hosts; i++) {
-        proxy = proxy_list + i;
+    int id_start, id_end;
+    tree_launch_init(k, myid, num_hosts, &id_start, &id_end);
 
+    for (i = id_start; i < id_end; i++) {
         MPL_free(targs[host_idx]);
-        if (proxy->node->user == NULL) {
-            targs[host_idx] = MPL_strdup(proxy->node->hostname);
+        if (hosts[i].user == NULL) {
+            targs[host_idx] = MPL_strdup(hosts[i].hostname);
         } else {
-            len = strlen(proxy->node->user) + strlen("@") + strlen(proxy->node->hostname) + 1;
-
+            len = strlen(hosts[i].user) + strlen("@") + strlen(hosts[i].hostname) + 1;
             HYDU_MALLOC_OR_JUMP(targs[host_idx], char *, len, status);
-            snprintf(targs[host_idx], len, "%s@%s", proxy->node->user, proxy->node->hostname);
+            snprintf(targs[host_idx], len, "%s@%s", hosts[i].user, hosts[i].hostname);
         }
 
-        /* append proxy ID */
-        MPL_free(targs[idx]);
-        targs[idx] = HYDU_int_to_str(proxy->proxy_id);
-        targs[idx + 1] = NULL;
+        MPL_free(targs[host_idx_2]);
+        targs[host_idx_2] = MPL_strdup(hosts[i].hostname);
 
-        lh = MPL_host_is_local(proxy->node->hostname);
+        /* append proxy ID */
+        MPL_free(targs[id_idx]);
+        targs[id_idx] = HYDU_int_to_str(i);
 
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */
         if (autofork && (!strcmp(HYDT_bsci_info.launcher, "fork") ||
-                         !strcmp(HYDT_bsci_info.launcher, "manual") || lh)) {
+                         !strcmp(HYDT_bsci_info.launcher, "manual") ||
+                         MPL_host_is_local(hosts[i].hostname))) {
             offset = exec_idx;
 
             if (control_fd) {
@@ -229,11 +324,11 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
                 HYDU_ERR_POP(status, "unable to create env\n");
                 MPL_free(str);
 
-                control_fd[proxy->proxy_id] = sockpair[0];
+                control_fd[i] = sockpair[0];
 
                 /* make sure control_fd[i] is not shared by the
                  * processes spawned in the future */
-                status = HYDU_sock_cloexec(control_fd[proxy->proxy_id]);
+                status = HYDU_sock_cloexec(control_fd[i]);
                 HYDU_ERR_POP(status, "unable to set control socket to close on exec\n");
             }
         } else {
@@ -271,7 +366,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
          * slow down the cases where ssh is being used, and not the
          * cases where we fall back to fork. */
         if (!strcmp(HYDT_bsci_info.launcher, "ssh") && !offset) {
-            status = HYDTI_bscd_ssh_store_launch_time(proxy->node->hostname);
+            status = HYDTI_bscd_ssh_store_launch_time(hosts[i].hostname);
             HYDU_ERR_POP(status, "error storing launch time\n");
         }
 
@@ -280,7 +375,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
          * stdin socket is provided. */
         int pid;
         status = HYDU_create_process(targs + offset, env, dummy, &fd_stdout, &fd_stderr, &pid, -1);
-        HYDT_bscu_pid_list_push(proxy, pid);
+        HYDT_bscu_pid_list_push(pid, pgid, i);
         HYDU_ERR_POP(status, "create process returned error\n");
 
         /* Reset the exec string to the original value */

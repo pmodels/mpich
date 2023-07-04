@@ -22,7 +22,7 @@
 
 static void init_ui_mpich_info(void);
 static HYD_status check_environment(void);
-static void set_default_values(void);
+static HYD_status set_default_values(void);
 static HYD_status process_config_token(char *token, int newline, void *data);
 static HYD_status parse_args(char **t_argv, int reading_config_file);
 static HYD_status post_process(void);
@@ -135,7 +135,8 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     status = check_environment();
     HYDU_ERR_POP(status, "checking environment variables\n");
 
-    set_default_values();
+    status = set_default_values();
+    HYDU_ERR_POP(status, "checking global parameters\n");
 
     if (HYD_server_info.user_global.debug) {
         PMIU_verbose = 1;
@@ -171,36 +172,21 @@ static void init_ui_mpich_info(void)
     HYD_ui_mpich_info.errfile_pattern = NULL;
     HYD_ui_mpich_info.config_file = NULL;
     HYD_ui_mpich_info.reading_config_file = 0;
-    HYD_ui_mpich_info.hostname_propagation = -1;
 }
 
-static void set_default_values(void)
+static HYD_status set_default_values(void)
 {
+    HYD_status status = HYD_SUCCESS;
+
     if (HYD_ui_mpich_info.print_all_exitcodes == -1)
         HYD_ui_mpich_info.print_all_exitcodes = 0;
 
     if (HYD_server_info.enable_profiling == -1)
         HYD_server_info.enable_profiling = 0;
 
-    if (HYD_server_info.user_global.auto_cleanup == -1)
-        HYD_server_info.user_global.auto_cleanup = 1;
+    status = HYDU_check_user_global(&HYD_server_info.user_global);
 
-    /* Default universe size if the user did not specify anything is
-     * INFINITE */
-    if (HYD_server_info.user_global.usize == HYD_USIZE_UNSET)
-        HYD_server_info.user_global.usize = HYD_USIZE_INFINITE;
-
-    if (HYD_server_info.user_global.pmi_port == -1)
-        HYD_server_info.user_global.pmi_port = 0;
-
-    if (HYD_server_info.user_global.skip_launch_node == -1)
-        HYD_server_info.user_global.skip_launch_node = 0;
-
-    if (HYD_server_info.user_global.gpus_per_proc == HYD_GPUS_PER_PROC_UNSET)
-        HYD_server_info.user_global.gpus_per_proc = HYD_GPUS_PER_PROC_AUTO;
-
-    if (HYD_server_info.user_global.gpu_subdevs_per_proc == HYD_GPUS_PER_PROC_UNSET)
-        HYD_server_info.user_global.gpu_subdevs_per_proc = HYD_GPUS_PER_PROC_AUTO;
+    return status;
 }
 
 /* In case a boolean environment value is unparsable (not 1|0|yes|no|true|false|on|off),
@@ -240,12 +226,6 @@ static HYD_status check_environment(void)
         MPL_env2str("HYDRA_ENV", (const char **) &tmp))
         HYD_server_info.user_global.global_env.prop =
             !strcmp(tmp, "all") ? MPL_strdup("all") : MPL_strdup("none");
-
-    /* If hostname propagation is not set on the command-line, check
-     * for the environment variable */
-    if (HYD_ui_mpich_info.hostname_propagation == -1) {
-        ENV2BOOL("HYDRA_HOSTNAME_PROPAGATION", &HYD_ui_mpich_info.hostname_propagation);
-    }
 
     if (HYD_ui_mpich_info.timeout == -1) {
         MPL_env2int("MPIEXEC_TIMEOUT", &HYD_ui_mpich_info.timeout);
@@ -352,23 +332,6 @@ static HYD_status post_process(void)
             status = HYDU_correct_wdir(&exec->wdir);
             HYDU_ERR_POP(status, "unable to correct wdir\n");
         }
-    }
-
-    /* If an interface is provided, set that */
-    if (HYD_server_info.user_global.iface) {
-        if (HYD_ui_mpich_info.hostname_propagation == 1) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "cannot set iface and force hostname propagation");
-        }
-
-        HYDU_append_env_to_list("MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE",
-                                HYD_server_info.user_global.iface,
-                                &HYD_server_info.user_global.global_env.system);
-    } else {
-        /* If hostname propagation is requested (or not set), set the
-         * environment variable for doing that */
-        if (HYD_ui_mpich_info.hostname_propagation || HYD_ui_mpich_info.hostname_propagation == -1)
-            HYD_server_info.iface_ip_env_name = MPL_strdup("MPIR_CVAR_CH3_INTERFACE_HOSTNAME");
     }
 
   fn_exit:

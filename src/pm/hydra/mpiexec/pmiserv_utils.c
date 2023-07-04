@@ -10,6 +10,7 @@
 #include "pmiserv_utils.h"
 
 static HYD_status gen_kvsname(char kvsname[], int pgid);
+static void debug_exec_args(int proxy_id, char **strlist);
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
                                            char *control_port, int pgid)
@@ -104,19 +105,28 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
     HYD_STRING_STASH(*proxy_stash, MPL_strdup("--retries"), status);
     HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(retries), status);
 
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--usize"), status);
-    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.usize), status);
+    if (HYD_server_info.user_global.usize != HYD_USIZE_INFINITE) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--usize"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.usize), status);
+    }
 
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--pmi-port"), status);
-    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.pmi_port), status);
+    if (HYD_server_info.user_global.pmi_port > 0) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--pmi-port"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.pmi_port),
+                         status);
+    }
 
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--gpus-per-proc"), status);
-    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.gpus_per_proc),
-                     status);
+    if (HYD_server_info.user_global.gpus_per_proc != HYD_GPUS_PER_PROC_AUTO) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--gpus-per-proc"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.gpus_per_proc),
+                         status);
+    }
 
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--gpu-subdevs-per-proc"), status);
-    HYD_STRING_STASH(*proxy_stash,
-                     HYDU_int_to_str(HYD_server_info.user_global.gpu_subdevs_per_proc), status);
+    if (HYD_server_info.user_global.gpu_subdevs_per_proc != HYD_GPUS_PER_PROC_AUTO) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--gpu-subdevs-per-proc"), status);
+        HYD_STRING_STASH(*proxy_stash,
+                         HYDU_int_to_str(HYD_server_info.user_global.gpu_subdevs_per_proc), status);
+    }
 
     if (pgid == 0 && HYD_server_info.is_singleton) {
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--singleton-port"), status);
@@ -125,8 +135,6 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--singleton-pid"), status);
         HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.singleton_pid), status);
     }
-
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--proxy-id"), status);
 
     if (HYD_server_info.user_global.debug) {
         HYDU_dump_noprefix(stdout, "\nProxy launch args: ");
@@ -229,14 +237,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
         HYD_STRING_STASH(exec_stash, MPL_strdup("--version"), status);
         HYD_STRING_STASH(exec_stash, MPL_strdup(HYDRA_VERSION), status);
-
-        if (HYD_server_info.iface_ip_env_name) {
-            HYD_STRING_STASH(exec_stash, MPL_strdup("--iface-ip-env-name"), status);
-            HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.iface_ip_env_name), status);
-        }
-
-        HYD_STRING_STASH(exec_stash, MPL_strdup("--hostname"), status);
-        HYD_STRING_STASH(exec_stash, MPL_strdup(proxy->node->hostname), status);
 
         /* This map has three fields: filler cores on this node,
          * remaining cores on this node, total cores in the system */
@@ -358,9 +358,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         }
 
         if (HYD_server_info.user_global.debug) {
-            HYDU_dump_noprefix(stdout, "Arguments being passed to proxy %d:\n", i);
-            HYDU_print_strlist(exec_stash.strlist);
-            HYDU_dump_noprefix(stdout, "\n");
+            debug_exec_args(i, exec_stash.strlist);
         }
 
         status = HYDU_strdup_list(exec_stash.strlist, &proxy->exec_launch_info);
@@ -437,6 +435,8 @@ HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
     return status;
 }
 
+/* ---- static util routines ---- */
+
 static HYD_status gen_kvsname(char kvsname[], int pgid)
 {
     HYD_status status = HYD_SUCCESS;
@@ -469,4 +469,22 @@ static HYD_status gen_kvsname(char kvsname[], int pgid)
     return status;
   fn_fail:
     goto fn_exit;
+}
+
+static void debug_exec_args(int proxy_id, char **strlist)
+{
+    HYDU_dump_noprefix(stdout, "Arguments being passed to proxy %d:\n", proxy_id);
+    for (int arg = 0; strlist[arg]; arg++) {
+        /* omit the lengthy env list unless -vv */
+        if (HYD_server_info.user_global.debug < 2 &&
+            strcmp(strlist[arg], "--global-inherited-env") == 0) {
+            HYDU_dump_noprefix(stdout, "%s %s [...] ", strlist[arg], strlist[arg + 1]);
+            int n = atoi(strlist[arg + 1]);
+            arg += n + 1;
+            continue;
+        } else {
+            HYDU_dump_noprefix(stdout, "%s ", strlist[arg]);
+        }
+    }
+    HYDU_dump_noprefix(stdout, "\n\n");
 }

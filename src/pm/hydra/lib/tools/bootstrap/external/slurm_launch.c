@@ -11,47 +11,33 @@
 
 static int fd_stdout, fd_stderr;
 
-static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, int num_hosts,
-                                         char **node_list_str)
+static HYD_status join_host_list(struct HYD_host *hosts, int count, char **str_out)
 {
-    int i;
-    char *tmp[HYD_NUM_TMP_STRINGS], *foo = NULL;
-    struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    i = 0;
-    for (int j = 0; j < num_hosts; j++) {
-        proxy = proxy_list + j;
-        tmp[i++] = MPL_strdup(proxy->node->hostname);
-
-        if (proxy->node->next)
-            tmp[i++] = MPL_strdup(",");
-
-        /* If we used up more than half of the array elements, merge
-         * what we have so far */
-        if (i > (HYD_NUM_TMP_STRINGS / 2)) {
-            tmp[i++] = NULL;
-            status = HYDU_str_alloc_and_join(tmp, &foo);
-            HYDU_ERR_POP(status, "error joining strings\n");
-
-            i = 0;
-            tmp[i++] = MPL_strdup(foo);
-            MPL_free(foo);
-        }
+    int len = 0;
+    for (int i = 0; i < count; i++) {
+        len += strlen(hosts[i].hostname);
     }
+    len += count;       /* ',' and '\0' */
 
-    tmp[i++] = NULL;
-    status = HYDU_str_alloc_and_join(tmp, &foo);
-    HYDU_ERR_POP(status, "error joining strings\n");
+    char *buf;
+    HYDU_MALLOC_OR_JUMP(buf, char *, len, status);
 
-    *node_list_str = foo;
-    foo = NULL;
+    char *s = buf;
+    for (int i = 0; i < count; i++) {
+        int n = strlen(hosts[i].hostname);
+        strcpy(s, hosts[i].hostname);
+        s += n;
+        *s++ = ',';
+    }
+    s[-1] = '\0';
+
+    *str_out = buf;
 
   fn_exit:
-    HYDU_free_strlist(tmp);
-    MPL_free(foo);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -59,8 +45,10 @@ static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, int num_h
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_list, int num_hosts,
-                                        int use_rmk, int *control_fd)
+/* NOTE: tree-launch not supported, params k, myid are ignored. */
+HYD_status HYDT_bscd_slurm_launch_procs(int pgid, char **args, struct HYD_host *hosts,
+                                        int num_hosts, int use_rmk, int k, int myid,
+                                        int *control_fd)
 {
     int idx, i;
     int *fd_list;
@@ -88,7 +76,7 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
     if (use_rmk == HYD_FALSE || strcmp(HYDT_bsci_info.rmk, "slurm")) {
         targs[idx++] = MPL_strdup("--nodelist");
 
-        status = proxy_list_to_node_str(proxy_list, num_hosts, &node_list_str);
+        status = join_host_list(hosts, num_hosts, &node_list_str);
         HYDU_ERR_POP(status, "unable to build a node list string\n");
 
         targs[idx++] = MPL_strdup(node_list_str);
@@ -129,8 +117,6 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
     MPL_free(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
-    /* append proxy ID as -1 */
-    targs[idx++] = HYDU_int_to_str(-1);
     targs[idx++] = NULL;
 
     if (HYDT_bsci_info.debug) {
@@ -149,7 +135,7 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
     int pid;
     status = HYDU_create_process(targs, env, NULL, &fd_stdout, &fd_stderr, &pid, -1);
     HYDU_ERR_POP(status, "create process returned error\n");
-    HYDT_bscu_pid_list_push(NULL, pid);
+    HYDT_bscu_pid_list_push(pid, pgid, 0);
 
     HYDU_env_free_list(env);
 

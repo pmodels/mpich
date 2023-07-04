@@ -15,7 +15,6 @@ static void pg_destructor(void *_elt)
     MPL_free(pg->kvsname);
     MPL_free(pg->pmi_process_mapping);
     MPL_free(pg->downstreams);
-    MPL_free(pg->iface_ip_env_name);
     MPL_free(pg->hostname);
     HYDU_free_exec_list(pg->exec_list);
     HYD_pmcd_free_pmi_kvs_list(pg->kvs);

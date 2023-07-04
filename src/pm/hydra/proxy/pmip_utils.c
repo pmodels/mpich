@@ -17,6 +17,8 @@
  */
 static struct pmip_pg *cur_pg = NULL;
 
+static HYD_status parse_hosts_list(char *arg, struct HYD_host **hosts_ptr, int *num_hosts);
+
 void HYD_set_cur_pg(struct pmip_pg *pg)
 {
     cur_pg = pg;
@@ -445,22 +447,11 @@ static HYD_status version_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static HYD_status iface_ip_env_name_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &cur_pg->iface_ip_env_name, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
 static HYD_status hostname_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_str(arg, &cur_pg->hostname, **argv);
+    status = HYDU_set_str(arg, &HYD_pmcd_pmip.local.hostname, **argv);
 
     (*argv)++;
 
@@ -607,6 +598,30 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static HYD_status k_fn(char *arg, char ***argv)
+{
+    HYD_pmcd_pmip.k = atoi(**argv);
+    (*argv)++;
+    return HYD_SUCCESS;
+}
+
+static HYD_status hosts_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = parse_hosts_list(**argv, &HYD_pmcd_pmip.hosts, &HYD_pmcd_pmip.num_hosts);
+    HYDU_ERR_POP(status, "error parsing hosts array\n");
+
+    (*argv)++;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 struct HYD_arg_match_table HYD_pmip_args_match_table[] = {
     /* Proxy parameters */
     {"control-port", control_port_fn, NULL},
@@ -626,7 +641,10 @@ struct HYD_arg_match_table HYD_pmip_args_match_table[] = {
     {"demux", demux_fn, NULL},
     {"topolib", topolib_fn, NULL},
     {"iface", iface_fn, NULL},
+    {"hostname", hostname_fn, NULL},
     {"retries", retries_fn, NULL},
+    {"k", k_fn, NULL},
+    {"hosts", hosts_fn, NULL},
     {"\0", NULL, NULL}
 };
 
@@ -647,8 +665,6 @@ struct HYD_arg_match_table HYD_pmip_procinfo_match_table[] = {
     {"pmi-id-map", pmi_id_map_fn, NULL},
     {"global-process-count", global_process_count_fn, NULL},
     {"version", version_fn, NULL},
-    {"iface-ip-env-name", iface_ip_env_name_fn, NULL},
-    {"hostname", hostname_fn, NULL},
     {"proxy-core-count", dummy1_fn, NULL},
     {"exec", exec_fn, NULL},
     {"exec-appnum", exec_appnum_fn, NULL},
@@ -685,6 +701,9 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
 
     if (HYD_pmcd_pmip.upstream.server_port == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "server port not available\n");
+
+    status = HYDU_check_user_global(&HYD_pmcd_pmip.user_global);
+    HYDU_ERR_POP(status, "User global parameter error\n");
 
     if (HYD_pmcd_pmip.user_global.demux == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "demux engine not available\n");
@@ -748,3 +767,78 @@ const char *HYD_pmip_get_hwloc_xmlfile(void)
     return NULL;
 }
 #endif
+
+static void add_host(struct HYD_host *host, char *s)
+{
+    int i_at = 0, i_end = 0;
+    int i = 0;
+    while (s[i] && s[i] != ',') {
+        if (s[i] == '@') {
+            i_at = i;
+        }
+        i++;
+    }
+    i_end = i;
+
+    if (i_at > 0) {
+        int n = i_at;
+        host->user = MPL_malloc(n + 1, MPL_MEM_PM);
+        strncpy(host->user, s, n);
+        host->user[n] = '\0';
+
+        n = i_end - i_at - 1;
+        host->hostname = MPL_malloc(n + 1, MPL_MEM_PM);
+        strncpy(host->hostname, s + i_at + 1, n);
+        host->hostname[n] = '\0';
+    } else {
+        host->user = NULL;
+
+        int n = i_end;
+        host->hostname = MPL_malloc(n + 1, MPL_MEM_PM);
+        strncpy(host->hostname, s, n);
+        host->hostname[n] = '\0';
+    }
+    host->core_count = 1;
+}
+
+static HYD_status parse_hosts_list(char *arg, struct HYD_host **hosts_ptr, int *num_hosts)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    int count = 0;
+    /* assume a comma-separated list */
+    char *s = arg;
+    for (; *s; s++) {
+        if (*s == ',') {
+            count++;
+        }
+    }
+    count++;
+
+    struct HYD_host *hosts;
+    HYDU_MALLOC_OR_JUMP(hosts, struct HYD_host *, count * sizeof(struct HYD_host), status);
+
+    int i = 0;
+    s = arg;
+    while (*s) {
+        add_host(hosts + i, s);
+
+        while (*s && *s != ',')
+            s++;
+
+        i++;
+
+        if (*s == ',') {
+            s++;
+        }
+    }
+
+    *hosts_ptr = hosts;
+    *num_hosts = i;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+  fn_fail:
+    goto fn_exit;
+}

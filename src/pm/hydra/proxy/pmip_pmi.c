@@ -390,6 +390,10 @@ static const char *get_jobattr(struct pmip_downstream *p, const char *key)
         return PMIP_pg_from_downstream(p)->pmi_process_mapping;
     } else if (!strcmp(key, "PMI_hwloc_xmlfile")) {
         return HYD_pmip_get_hwloc_xmlfile();
+    } else if (!strcmp(key, "PMI_hostname")) {
+        return HYD_pmcd_pmip.local.hostname;
+    } else if (!strcmp(key, "PMI_iface")) {
+        return HYD_pmcd_pmip.user_global.iface;
     }
     return NULL;
 }

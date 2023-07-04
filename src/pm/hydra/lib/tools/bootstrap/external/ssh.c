@@ -10,7 +10,7 @@
 
 struct HYDT_bscd_ssh_time *HYDT_bscd_ssh_time = NULL;
 
-static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
+static HYD_status create_element(const char *hostname, struct HYDT_bscd_ssh_time **e)
 {
     int i;
     struct HYDT_bscd_ssh_time *tmp;
@@ -42,7 +42,7 @@ static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
     goto fn_exit;
 }
 
-HYD_status HYDTI_bscd_ssh_store_launch_time(char *hostname)
+HYD_status HYDTI_bscd_ssh_store_launch_time(const char *hostname)
 {
     int i, oldest, time_left;
     struct timeval now;

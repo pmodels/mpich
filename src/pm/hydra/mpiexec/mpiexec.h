@@ -26,7 +26,6 @@ struct HYD_ui_mpich_info_s {
 
     char *config_file;
     int reading_config_file;
-    int hostname_propagation;
 };
 
 extern struct HYD_ui_mpich_info_s HYD_ui_mpich_info;

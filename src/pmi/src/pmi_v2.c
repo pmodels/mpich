@@ -519,6 +519,11 @@ PMI_API_PUBLIC int PMI2_Info_GetJobAttr(const char name[], char value[], int val
 {
     int pmi_errno = PMI2_SUCCESS;
 
+    if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
+        *flag = 0;
+        goto fn_exit;
+    }
+
     struct PMIU_cmd pmicmd;
     PMIU_msg_set_query_get(&pmicmd, USE_WIRE_VER, no_static, NULL, name);
 
@@ -539,6 +544,8 @@ PMI_API_PUBLIC int PMI2_Info_GetJobAttr(const char name[], char value[], int val
     }
 
     PMIU_cmd_free_buf(&pmicmd);
+
+  fn_exit:
     return pmi_errno;
 }
 
