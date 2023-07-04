@@ -55,7 +55,7 @@ int MPIR_pmi_set_threaded(int is_threaded);
 int MPIR_pmi_max_key_size(void);
 int MPIR_pmi_max_val_size(void);
 const char *MPIR_pmi_job_id(void);
-char *MPIR_pmi_get_hwloc_xmlfile(void);
+char *MPIR_pmi_get_jobattr(const char *key);    /* key must use "PMI_" prefix */
 
 /* PMI wrapper utilities */
 
@@ -97,7 +97,6 @@ int MPIR_pmi_unpublish(const char name[]);
 
 /* Other misc functions */
 int MPIR_pmi_get_universe_size(int *universe_size);
-char *MPIR_pmi_get_failed_procs(void);
 
 struct MPIR_Info;               /* forward declare (mpir_info.h) */
 int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],

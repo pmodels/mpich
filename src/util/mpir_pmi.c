@@ -314,46 +314,6 @@ int MPIR_pmi_max_val_size(void)
     return pmi_max_val_size;
 }
 
-char *MPIR_pmi_get_hwloc_xmlfile(void)
-{
-    char *valbuf = NULL;
-
-    /* try to get hwloc topology file */
-    if (hwloc_topology_xmlfile == NULL && MPIR_Process.local_size > 1) {
-        valbuf = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
-        if (!valbuf) {
-            goto fn_exit;
-        }
-#ifdef USE_PMI1_API
-        int pmi_errno = PMI_KVS_Get(pmi_kvs_name, "PMI_hwloc_xmlfile", valbuf, pmi_max_val_size);
-        if (pmi_errno != MPI_SUCCESS) {
-            goto fn_exit;
-        }
-
-        /* we either get "unavailable" or a valid filename */
-        if (strcmp(valbuf, "unavailable") != 0) {
-            hwloc_topology_xmlfile = MPL_strdup(valbuf);
-        }
-#elif defined USE_PMI2_API
-        int found;
-        int pmi_errno = PMI2_Info_GetJobAttr("PMI_hwloc_xmlfile", valbuf, pmi_max_val_size,
-                                             &found);
-        if (pmi_errno != MPI_SUCCESS) {
-            MPL_free(valbuf);
-            goto fn_exit;
-        }
-
-        if (found) {
-            hwloc_topology_xmlfile = MPL_strdup(valbuf);
-        }
-#endif
-    }
-
-  fn_exit:
-    MPL_free(valbuf);
-    return hwloc_topology_xmlfile;
-}
-
 const char *MPIR_pmi_job_id(void)
 {
 #ifdef USE_PMI1_API
@@ -439,6 +399,64 @@ int MPIR_pmi_kvs_get(int src, const char *key, char *val, int val_size)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+char *MPIR_pmi_get_jobattr(const char *key)
+{
+    char *valbuf = NULL;
+    valbuf = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
+    if (!valbuf) {
+        goto fn_exit;
+    }
+
+    /* try to get hwloc topology file */
+    int pmi_errno;
+#ifdef USE_PMI1_API
+    pmi_errno = PMI_KVS_Get(pmi_kvs_name, key, valbuf, pmi_max_val_size);
+    if (pmi_errno != PMI_SUCCESS) {
+        MPL_free(valbuf);
+        valbuf = NULL;
+        goto fn_exit;
+    }
+
+    /* we either get "unavailable" or a valid filename */
+    if (strcmp(valbuf, "unavailable") == 0) {
+        MPL_free(valbuf);
+        valbuf = NULL;
+        goto fn_exit;
+    }
+#elif defined USE_PMI2_API
+    if (strcmp(key, "PMI_dead_processes") == 0) {
+        int out_len;
+        pmi_errno = PMI2_KVS_Get(pmi_jobid, PMI2_ID_NULL, key, valbuf, pmi_max_val_size, &out_len);
+        if (pmi_errno != PMI2_SUCCESS || out_len == 0) {
+            MPL_free(valbuf);
+            valbuf = NULL;
+            goto fn_exit;
+        }
+    } else {
+        int found;
+        int pmi_errno = PMI2_Info_GetJobAttr(key, valbuf, pmi_max_val_size, &found);
+        if (pmi_errno != PMI2_SUCCESS || !found) {
+            MPL_free(valbuf);
+            valbuf = NULL;
+            goto fn_exit;
+        }
+    }
+
+#elif defined USE_PMIX_API
+    pmix_value_t *pvalue;
+    pmi_errno = PMIx_Get(NULL, key, NULL, 0, &pvalue);
+    if (pmi_errno != PMIX_SUCCESS) {
+        goto fn_exit;
+    }
+    strncpy(valbuf, pvalue->data.string, pmi_max_val_size);
+    PMIX_VALUE_RELEASE(pvalue);
+
+#endif
+
+  fn_exit:
+    return valbuf;
 }
 
 /* ---- utils functions ---- */
@@ -973,37 +991,6 @@ int MPIR_pmi_get_universe_size(int *universe_size)
     goto fn_exit;
 }
 
-char *MPIR_pmi_get_failed_procs(void)
-{
-    int pmi_errno;
-    char *failed_procs_string = NULL;
-
-    failed_procs_string = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
-    MPIR_Assert(failed_procs_string);
-#ifdef USE_PMI1_API
-    pmi_errno = PMI_KVS_Get(pmi_kvs_name, "PMI_dead_processes",
-                            failed_procs_string, pmi_max_val_size);
-    if (pmi_errno != PMI_SUCCESS)
-        goto fn_fail;
-#elif defined(USE_PMI2_API)
-    int out_len;
-    pmi_errno = PMI2_KVS_Get(pmi_jobid, PMI2_ID_NULL, "PMI_dead_processes",
-                             failed_procs_string, pmi_max_val_size, &out_len);
-    if (pmi_errno != PMI2_SUCCESS)
-        goto fn_fail;
-#elif defined(USE_PMIX_API)
-    goto fn_fail;
-#endif
-
-  fn_exit:
-    return failed_procs_string;
-  fn_fail:
-    /* FIXME: appropriate error messages here? */
-    MPL_free(failed_procs_string);
-    failed_procs_string = NULL;
-    goto fn_exit;
-}
-
 /* static functions only for MPIR_pmi_spawn_multiple */
 #if defined(USE_PMI1_API) || defined(USE_PMI2_API)
 static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, INFO_TYPE ** kv_ptr, int *nkeys_ptr);
@@ -1384,19 +1371,16 @@ static int build_nodemap_fallback(int *nodemap, int sz)
 static int build_nodemap_pmi1(int *nodemap, int sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pmi_errno;
     int did_map = 0;
     if (pmi_version == 1 && pmi_subversion == 1) {
-        char *process_mapping = MPL_malloc(pmi_max_val_size, MPL_MEM_ADDRESS);
-        pmi_errno = PMI_KVS_Get(pmi_kvs_name, "PMI_process_mapping",
-                                process_mapping, pmi_max_val_size);
-        if (pmi_errno == PMI_SUCCESS && strcmp(process_mapping, "") != 0) {
+        char *process_mapping = MPIR_pmi_get_jobattr("PMI_process_mapping");
+        if (process_mapping) {
             int mpl_err = MPL_rankmap_str_to_array(process_mapping, sz, nodemap);
             MPIR_ERR_CHKINTERNAL(mpl_err, mpi_errno,
                                  "unable to populate node ids from PMI_process_mapping");
             did_map = 1;
+            MPL_free(process_mapping);
         }
-        MPL_free(process_mapping);
     }
     if (!did_map) {
         mpi_errno = build_nodemap_fallback(nodemap, sz);
@@ -1413,15 +1397,9 @@ static int build_nodemap_pmi1(int *nodemap, int sz)
 static int build_nodemap_pmi2(int *nodemap, int sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pmi_errno;
-    char process_mapping[PMI2_MAX_VALLEN];
-    int found;
 
-    pmi_errno = PMI2_Info_GetJobAttr("PMI_process_mapping", process_mapping, PMI2_MAX_VALLEN,
-                                     &found);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                         "**pmi2_info_getjobattr", "**pmi2_info_getjobattr %d", pmi_errno);
-    MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
+    char *process_mapping = MPIR_pmi_get_jobattr("PMI_process_mapping");
+    MPIR_ERR_CHKINTERNAL(!process_mapping, mpi_errno, "PMI_process_mapping attribute not found");
 
     int mpl_err;
     mpl_err = MPL_rankmap_str_to_array(process_mapping, sz, nodemap);

@@ -471,7 +471,7 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
 
     MPIR_FUNC_ENTER;
 
-    MPIDI_failed_procs_string = MPIR_pmi_get_failed_procs();
+    MPIDI_failed_procs_string = MPIR_pmi_get_jobattr("PMI_dead_processes");
 
     if (*MPIDI_failed_procs_string == '\0') {
         /* there are no failed processes */
