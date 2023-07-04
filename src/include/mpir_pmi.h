@@ -8,27 +8,23 @@
 
 #include "mpichconf.h"
 
-#if !defined USE_PMI1_API && !defined USE_PMI2_API && !defined USE_PMIX_API
-#define USE_PMI1_API
-#endif
-
+#ifdef ENABLE_PMI1
 #if defined(USE_PMI1_SLURM)
 #include <slurm/pmi.h>
-
-#elif defined(USE_PMI2_SLURM)
-#include <slurm/pmi2.h>
-
-#elif defined(USE_PMI2_CRAY)
-#include <pmi2.h>
-
-#elif defined(USE_PMI1_API)
+#else
 #include <pmi.h>
+#endif
+#endif
 
-#elif defined(USE_PMI2_API)
+#ifdef ENABLE_PMI2
+#if defined(USE_PMI2_SLURM)
+#include <slurm/pmi2.h>
+#else
 #include <pmi2.h>
-#define PMI_keyval_t PMI2_keyval_t
+#endif
+#endif
 
-#elif defined(USE_PMIX_API)
+#ifdef ENABLE_PMIX
 #include <pmix.h>
 #endif
 
