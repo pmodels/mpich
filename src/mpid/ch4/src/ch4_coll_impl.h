@@ -83,17 +83,30 @@ cvars:
 
 #define MPIR_ALLREDUCE_SHM_PER_LEADER_MAX 4194304
 
+static void MPIDI_Coll_host_buffer_genq_free(void *sendbuf, void *recvbuf, MPI_Aint shift)
+{
+    if (sendbuf != NULL) {
+        sendbuf = (char *) sendbuf + shift;
+        MPIDU_genq_private_pool_free_cell(MPIDI_global.gpu_coll_pool, sendbuf);
+    }
+    if (recvbuf != NULL) {
+        recvbuf = (char *) recvbuf + shift;
+        MPIDU_genq_private_pool_free_cell(MPIDI_global.gpu_coll_pool, recvbuf);
+    }
+}
+
 static void MPIDI_Coll_host_buffer_genq_alloc(const void *sendbuf, const void *recvbuf,
                                               MPI_Aint count, MPI_Datatype datatype,
                                               void **host_sendbuf, void **host_recvbuf,
                                               MPL_pointer_attr_t send_attr,
                                               MPL_pointer_attr_t recv_attr, MPI_Aint shift)
 {
-    void *tmp_send, *tmp_recv;
+    void *tmp_send = NULL, *tmp_recv = NULL;
     if (sendbuf != MPI_IN_PLACE) {
-        /* FIXME: add a graceful fallback */
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &tmp_send);
-        MPIR_Assert(tmp_send);
+        if (tmp_send == NULL) {
+            goto fn_fail;
+        }
 
         tmp_send = (char *) tmp_send - shift;
         MPIR_gpu_host_swap_gpu(sendbuf, count, datatype, send_attr, tmp_send);
@@ -105,33 +118,31 @@ static void MPIDI_Coll_host_buffer_genq_alloc(const void *sendbuf, const void *r
     if (recvbuf == NULL) {
         *host_recvbuf = NULL;
     } else if (sendbuf == MPI_IN_PLACE) {
-        /* FIXME: add a graceful fallback */
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &tmp_recv);
-        MPIR_Assert(tmp_recv);
+        if (tmp_recv == NULL) {
+            goto fn_fail;
+        }
 
         tmp_recv = (char *) tmp_recv - shift;
         MPIR_gpu_host_swap_gpu(recvbuf, count, datatype, recv_attr, tmp_recv);
         *host_recvbuf = tmp_recv;
     } else {
-        /* FIXME: add a graceful fallback */
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &tmp_recv);
-        MPIR_Assert(tmp_recv);
+        if (tmp_recv == NULL) {
+            goto fn_fail;
+        }
 
         tmp_recv = (char *) tmp_recv - shift;
         *host_recvbuf = tmp_recv;
     }
-}
 
-static void MPIDI_Coll_host_buffer_genq_free(void *sendbuf, void *recvbuf, MPI_Aint shift)
-{
-    if (sendbuf != NULL) {
-        sendbuf = (char *) sendbuf + shift;
-        MPIDU_genq_private_pool_free_cell(MPIDI_global.gpu_coll_pool, sendbuf);
-    }
-    if (recvbuf != NULL) {
-        recvbuf = (char *) recvbuf + shift;
-        MPIDU_genq_private_pool_free_cell(MPIDI_global.gpu_coll_pool, recvbuf);
-    }
+  fn_exit:
+    return;
+  fn_fail:
+    MPIDI_Coll_host_buffer_genq_free(tmp_send, tmp_recv, shift);
+    *host_sendbuf = NULL;
+    *host_recvbuf = NULL;
+    goto fn_exit;
 }
 
 static void MPIDI_Coll_calculate_size_shift(MPI_Aint count, MPI_Datatype datatype, MPI_Aint * size,
@@ -258,14 +269,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
     MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
 
     if (attr.type == MPL_GPU_POINTER_DEV && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ) {
-        /* FIXME: add a graceful fallback */
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &host_buffer);
-        MPIR_Assert(host_buffer);
-
-        host_buffer = (char *) host_buffer - shift;
-
-        MPIR_gpu_host_swap_gpu(buffer, count, datatype, attr, host_buffer);
         if (host_buffer != NULL) {
+            host_buffer = (char *) host_buffer - shift;
+            MPIR_gpu_host_swap_gpu(buffer, count, datatype, attr, host_buffer);
             buffer = host_buffer;
         }
     }
@@ -316,14 +323,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, MP
     MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
 
     if (attr.type == MPL_GPU_POINTER_DEV && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ) {
-        /* FIXME: add a graceful fallback */
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &host_buffer);
-        MPIR_Assert(host_buffer);
-
-        host_buffer = (char *) host_buffer - shift;
-
-        MPIR_gpu_host_swap_gpu(buffer, count, datatype, attr, host_buffer);
         if (host_buffer != NULL) {
+            host_buffer = (char *) host_buffer - shift;
+            MPIR_gpu_host_swap_gpu(buffer, count, datatype, attr, host_buffer);
             buffer = host_buffer;
         }
     }
@@ -386,13 +389,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, M
     MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
 
     if (attr.type == MPL_GPU_POINTER_DEV && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ) {
-        /* FIXME: add a graceful fallback */
         MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &host_buffer);
-        MPIR_Assert(host_buffer);
-
-        host_buffer = (char *) host_buffer - shift;
-        MPIR_gpu_host_swap_gpu(buffer, count, datatype, attr, host_buffer);
         if (host_buffer != NULL) {
+            host_buffer = (char *) host_buffer - shift;
+            MPIR_gpu_host_swap_gpu(buffer, count, datatype, attr, host_buffer);
             buffer = host_buffer;
         }
     }
