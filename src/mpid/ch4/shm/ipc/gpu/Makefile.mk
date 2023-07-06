@@ -12,6 +12,4 @@ mpi_core_sources += src/mpid/ch4/shm/ipc/gpu/globals.c     \
                     src/mpid/ch4/shm/ipc/gpu/gpu_init.c
 
 noinst_HEADERS += src/mpid/ch4/shm/ipc/gpu/gpu_types.h
-else
-mpi_core_sources += src/mpid/ch4/shm/ipc/gpu/gpu_stub.c
 endif
