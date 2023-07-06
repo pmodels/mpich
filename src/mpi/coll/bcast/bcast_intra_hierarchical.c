@@ -54,7 +54,7 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
 
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
     (group_sizes[group_idx] < MPIR_CVAR_BCAST_MIN_PROCS)) {
-
+        // small msgs or small num procs
         MPIR_Bcast_intra_binomial_group(buffer,
                               count,
                               datatype,
