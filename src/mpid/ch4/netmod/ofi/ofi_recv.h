@@ -330,8 +330,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     MPIDI_OFI_RECV_VNIS(vci_src, vci_dst);
 
     /* For anysource recv, we may be called while holding the vci lock of shm request (to
-     * prevent shm progress). Therefore, recursive locking is allowed here */
-    MPIDI_OFI_THREAD_CS_ENTER_REC_VCI_OPTIONAL(vci_dst);
+     * prevent shm progress). */
+    int need_cs;
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    need_cs = true;
+#else
+    need_cs = (rank != MPI_ANY_SOURCE);
+#endif
+
+    if (need_cs) {
+        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_dst);
+    } else {
+#ifdef MPICH_DEBUG_MUTEX
+        MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI(vci_dst).lock);
+#endif
+    }
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
                                      vci_dst, request, 0, partner);
@@ -341,7 +354,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                        MPIDI_OFI_ON_HEAP, 0ULL);
         MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
     }
-    MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_dst);
+    if (need_cs) {
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_dst);
+    }
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
