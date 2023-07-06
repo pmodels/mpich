@@ -730,9 +730,12 @@ static int optional_bcast_barrier(MPIR_PMI_DOMAIN domain)
         /* PMI2 local uses Put/GetNodeAttr, no need for barrier */
         return MPI_SUCCESS;
     }
-#elif defined(USE_PMIx_API)
-    /* PMIx will block/wait, so barrier unnecessary */
-    return MPI_SUCCESS;
+#elif defined(USE_PMIX_API)
+    if (domain == MPIR_PMI_DOMAIN_LOCAL) {
+        return MPIR_pmi_barrier_local();
+    } else {
+        return MPIR_pmi_barrier();
+    }
 #endif
     return MPIR_pmi_barrier();
 }
