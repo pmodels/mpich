@@ -121,7 +121,7 @@ bool find_local_rank(int* group, int group_size, int rank, int* group_rank)
         int mid_rank = group[middle];
         
         if (mid_rank == rank) {    
-            *group_rank = middle;
+            if (group) *group_rank = middle;
              return 1;
         } else if (rank > mid_rank) {
             start = middle + 1;
@@ -131,10 +131,18 @@ bool find_local_rank(int* group, int group_size, int rank, int* group_rank)
         middle = (start + end) / 2;
     }
     
-    *group_rank = -1;
+    if (group) *group_rank = -1;
     return 0;
 }
-
+int find_group_idx(int** hierarchy, int hierarchy_size, int* group_sizes, int rank) 
+{
+    for (int i = 0; i < hierarchy_size; i++) {
+        if (find_local_rank(hierarchy[i], group_sizes[i], rank, NULL)) {
+            return i;
+        }
+    }
+    return -1;
+}
 int MPII_Scatter_for_bcast_group(void *buffer, MPI_Aint count, MPI_Datatype datatype,
                            int root, MPIR_Comm * comm_ptr, int* group, int group_size, MPI_Aint nbytes, void *tmp_buf,
                            int is_contig, MPIR_Errflag_t errflag) 

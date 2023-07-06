@@ -37,7 +37,10 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
 
     /* TODO: find_group_idx needs to be implemented */
 
-    group_idx = find_group_idx(hierarchy, hierarchy_size, rank);
+    group_idx = find_group_idx(hierarchy, hierarchy_size, group_sizes, rank);
+
+    MPIR_Assert(group_idx > 0);
+
     group = hierarchy[group_idx];
     group_root = group[0];
     group_size = group_sizes[group_idx];
