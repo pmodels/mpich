@@ -100,6 +100,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
     }
 #endif
 
+#ifdef ENABLE_THREADCOMM
+    MPIR_Threadcomm_progress(&made_progress);
+    if (made_progress) {
+        goto fn_exit;
+    }
+#endif
+
     if (state->flag & MPIDI_PROGRESS_HOOKS) {
         mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
         MPIR_ERR_CHECK(mpi_errno);
@@ -122,6 +129,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
     } else {
         for (int i = 0; i < state->vci_count; i++) {
             int vci = state->vci[i];
+            if (vci >= MPIDI_global.n_vcis) {
+                continue;
+            }
             MPIDI_PROGRESS(vci);
         }
     }
