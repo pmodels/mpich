@@ -73,7 +73,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather_group(void *buffer,
         }
     }
 
-    scatter_size = (nbytes + group_size - 1) / group_size;        /* ceiling division */
+    scatter_size = (nbytes + group_size - 1) / group_size;        
 
     //MPII_Scatter_for_bcast needs to be modified to work with groups
 
@@ -81,7 +81,6 @@ int MPIR_Bcast_intra_scatter_ring_allgather_group(void *buffer,
                                        nbytes, tmp_buf, is_contig, errflag);
     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
-    /* Calculate how much data we already have */
     curr_size = MPL_MIN(scatter_size,
                         nbytes - ((group_rank - group_root + group_size) % group_size) * scatter_size);
     if (curr_size < 0)
@@ -118,7 +117,6 @@ int MPIR_Bcast_intra_scatter_ring_allgather_group(void *buffer,
     }
 
 #ifdef HAVE_ERROR_CHECKING
-    /* check that we received as much as we expected */
     MPIR_ERR_COLL_CHECK_SIZE(curr_size, nbytes, errflag, mpi_errno_ret);
 #endif
 

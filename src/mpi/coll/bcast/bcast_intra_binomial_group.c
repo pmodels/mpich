@@ -6,50 +6,24 @@
 #include "mpiimpl.h"
 #include "bcast.h"
 
-/* This function is in the bcast_utils.c file */
-// bool find_local_rank(int* group, int group_size, int rank, int* group_rank) {
-//     /*
-//         A very simple binary search algorithm to find the group_rank
-//     */    
-//     int start = 0;
-//     int end = group_size;
-//     int middle = (start + end) / 2;
-
-//     while (start < end) {
-//         int mid_rank = group[middle];
-        
-//         if (mid_rank == rank) {    
-//             *group_rank = middle;
-//              return 1;
-//         } else if (rank > mid_rank) {
-//             start = middle + 1;
-//         } else {
-//             end = middle;
-//         }
-//         middle = (start + end) / 2;
-//     }
-    
-//     *group_rank = -1;
-//     return 0;
-// }
-
-
 int MPIR_Bcast_intra_binomial_group(void *buffer,
                               MPI_Aint count,
                               MPI_Datatype datatype,
                               int root, MPIR_Comm * comm_ptr, int* group, int group_size, MPIR_Errflag_t errflag)
 {
-    // printf("MADE IT HERE! \n");
     int rank, src, dst;
     int relative_rank, mask;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint nbytes = 0;
+#ifdef HAVE_ERROR_CHECKING
     MPI_Status *status_p;
     MPI_Status status;
     status_p = &status;
     MPI_Aint recvd_size;
+#else
     status_p = MPI_STATUS_IGNORE;
+#endif
     int is_contig;
     MPI_Aint type_size;
     void *tmp_buf = NULL; 
@@ -103,9 +77,10 @@ int MPIR_Bcast_intra_binomial_group(void *buffer,
                 mpi_errno = MPIC_Recv(buffer, count, datatype, group[src],
                                       MPIR_BCAST_TAG, comm_ptr, status_p);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-            
+#ifdef HAVE_ERROR_CHECKING            
             MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
             MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, errflag, mpi_errno_ret);
+#endif
 
             break;
         }

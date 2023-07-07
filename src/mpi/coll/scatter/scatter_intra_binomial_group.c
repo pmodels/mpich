@@ -39,9 +39,7 @@ int MPIR_Scatter_intra_binomial_group(const void *sendbuf, MPI_Aint sendcount, M
 
     MPI_Aint nbytes;
     if (rank == root) {
-        /* We separate the two cases (root and non-root) because
-         * in the event of recvbuf=MPI_IN_PLACE on the root,
-         * recvcount and recvtype are not valid */
+        
         MPI_Aint sendtype_size;
         MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
         nbytes = sendtype_size * sendcount;
@@ -53,17 +51,12 @@ int MPIR_Scatter_intra_binomial_group(const void *sendbuf, MPI_Aint sendcount, M
 
     curr_cnt = 0;
 
-    /* all even nodes other than root need a temporary buffer to
-     * receive data of max size (nbytes*comm_size)/2 */
+    
     if (relative_rank && !(relative_rank % 2)) {
         tmp_buf_size = (nbytes * comm_size) / 2;
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
     }
 
-    /* if the root is not rank 0, we reorder the sendbuf in order of
-     * relative ranks and copy it into a temporary buffer, so that
-     * all the sends from the root are contiguous and in the right
-     * order. */
     if (rank == root) {
         if (group_root != 0) {
             tmp_buf_size = nbytes * group_size;
@@ -91,8 +84,6 @@ int MPIR_Scatter_intra_binomial_group(const void *sendbuf, MPI_Aint sendcount, M
             curr_cnt = sendcount * group_size;
     }
 
-    /* root has all the data; others have zero so far */
-
     mask = 0x1;
     while (mask < group_size) {
         if (relative_rank & mask) {
@@ -100,9 +91,6 @@ int MPIR_Scatter_intra_binomial_group(const void *sendbuf, MPI_Aint sendcount, M
             if (src < 0)
                 src += group_size;
 
-            /* The leaf nodes receive directly into recvbuf because
-             * they don't have to forward data to anyone. Others
-             * receive data into a temporary buffer. */
             if (relative_rank % 2) {
                 mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype,
                                       group[src], MPIR_SCATTER_TAG, comm_ptr, &status);
@@ -114,19 +102,12 @@ int MPIR_Scatter_intra_binomial_group(const void *sendbuf, MPI_Aint sendcount, M
                 if (mpi_errno) {
                     curr_cnt = 0;
                 } else
-                    /* the recv size is larger than what may be sent in
-                     * some cases. query amount of data actually received */
                     MPIR_Get_count_impl(&status, MPI_BYTE, &curr_cnt);
             }
             break;
         }
         mask <<= 1;
     }
-
-    /* This process is responsible for all processes that have bits
-     * set from the LSB up to (but not including) mask.  Because of
-     * the "not including", we start by shifting mask back down
-     * one. */
 
     mask >>= 1;
     while (mask > 0) {
@@ -137,15 +118,15 @@ int MPIR_Scatter_intra_binomial_group(const void *sendbuf, MPI_Aint sendcount, M
 
             if ((rank == root) && (group_root == 0)) {
                 send_subtree_cnt = curr_cnt - sendcount * mask;
-                /* mask is also the size of this process's subtree */
+                
                 mpi_errno = MPIC_Send(((char *) sendbuf +
                                        extent * sendcount * mask),
                                       send_subtree_cnt,
                                       sendtype, group[dst], MPIR_SCATTER_TAG, comm_ptr, errflag);
             } else {
-                /* non-zero root and others */
+                
                 send_subtree_cnt = curr_cnt - nbytes * mask;
-                /* mask is also the size of this process's subtree */
+              
                 mpi_errno = MPIC_Send(((char *) tmp_buf + nbytes * mask),
                                       send_subtree_cnt,
                                       MPI_BYTE, group[dst], MPIR_SCATTER_TAG, comm_ptr, errflag);
@@ -157,12 +138,12 @@ int MPIR_Scatter_intra_binomial_group(const void *sendbuf, MPI_Aint sendcount, M
     }
 
     if ((rank == root) && (group_root == 0) && (recvbuf != MPI_IN_PLACE)) {
-        /* for root=0, put root's data in recvbuf if not MPI_IN_PLACE */
+
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype);
         MPIR_ERR_CHECK(mpi_errno);
+        
     } else if (!(relative_rank % 2) && (recvbuf != MPI_IN_PLACE)) {
-        /* for non-zero root and non-leaf nodes, copy from tmp_buf
-         * into recvbuf */
+        
         mpi_errno = MPIR_Localcopy(tmp_buf, nbytes, MPI_BYTE, recvbuf, recvcount, recvtype);
         MPIR_ERR_CHECK(mpi_errno);
     }
