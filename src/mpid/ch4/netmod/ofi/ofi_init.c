@@ -732,7 +732,27 @@ int MPIDI_OFI_init_world(void)
     goto fn_exit;
 }
 
+static int check_num_nics(void);
+static int setup_additional_vcis(void);
+
 int MPIDI_OFI_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* All processes must have the same number of NICs */
+    mpi_errno = check_num_nics();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = setup_additional_vcis();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int check_num_nics(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -774,6 +794,16 @@ int MPIDI_OFI_post_init(void)
     for (int nic = 1; nic < MPIDI_OFI_global.num_nics; nic++) {
         set_sep_counters(nic);
     }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int setup_additional_vcis(void)
+{
+    int mpi_errno = MPI_SUCCESS;
 
     for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
         for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
