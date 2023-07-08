@@ -677,18 +677,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* Create transport level communication contexts.                           */
     /* ------------------------------------------------------------------------ */
 
-    /* TODO: check provider capabilities, such as prov_use->domain_attr->{tx,rx}_ctx_cnt,
-     *       abort if we can't support the requested number of vcis.
-     */
-    int num_vcis = MPIDI_global.n_total_vcis;
-
-    /* Multiple vci without using domain require MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS */
-#ifndef MPIDI_OFI_VNI_USE_DOMAIN
-    MPIR_Assert(num_vcis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
-#endif
-
-    MPIDI_OFI_global.num_vcis = num_vcis;
-
     /* set rx_ctx_cnt and tx_ctx_cnt for nic 0 */
     set_sep_counters(0);
 
@@ -732,26 +720,47 @@ int MPIDI_OFI_init_world(void)
     goto fn_exit;
 }
 
-int MPIDI_OFI_init_vcis(int num_vcis, int *num_vcis_actual)
-{
-    int mpi_errno = MPI_SUCCESS;
-    *num_vcis_actual = num_vcis;
-    return mpi_errno;
-}
-
 static int check_num_nics(void);
 static int setup_additional_vcis(void);
 
-int MPIDI_OFI_post_init(void)
+int MPIDI_OFI_init_vcis(int num_vcis, int *num_vcis_actual)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    /* Multiple vci without using domain require MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS */
+#ifndef MPIDI_OFI_VNI_USE_DOMAIN
+    MPIR_Assert(num_vcis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
+#endif
+
+    MPIDI_OFI_global.num_vcis = num_vcis;
 
     /* All processes must have the same number of NICs */
     mpi_errno = check_num_nics();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* may update MPIDI_OFI_global.num_vcis */
     mpi_errno = setup_additional_vcis();
     MPIR_ERR_CHECK(mpi_errno);
+
+    *num_vcis_actual = MPIDI_OFI_global.num_vcis;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_OFI_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Since we allow different process to have different num_vcis, we always need run exchange. */
+    mpi_errno = MPIDI_OFI_addr_exchange_all_ctx();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    for (int vci = 1; vci < MPIDI_OFI_global.num_vcis; vci++) {
+        ofi_am_post_recv(vci, 0);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -817,17 +826,19 @@ static int setup_additional_vcis(void)
             /* vci 0 nic 0 already created */
             if (vci > 0 || nic > 0) {
                 mpi_errno = create_vci_context(vci, nic);
-                MPIR_ERR_CHECK(mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) {
+                    /* running out of vcis, reduce MPIDI_OFI_global.num_vcis */
+                    if (vci > 0) {
+                        MPIDI_OFI_global.num_vcis = vci;
+                        /* FIXME: destroy already created vci_context */
+                        mpi_errno = MPI_SUCCESS;
+                        goto fn_exit;
+                    } else {
+                        MPIR_ERR_CHECK(mpi_errno);
+                    }
+                }
             }
         }
-    }
-
-    if (MPIDI_OFI_global.num_vcis > 1 || MPIDI_OFI_global.num_nics > 1) {
-        mpi_errno = MPIDI_OFI_addr_exchange_all_ctx();
-    }
-
-    for (int vci = 1; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        ofi_am_post_recv(vci, 0);
     }
 
   fn_exit:
@@ -1230,6 +1241,7 @@ static int create_vci_context(int vci, int nic)
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
+    /* TODO: clean up on fail */
     goto fn_exit;
 }
 
