@@ -624,6 +624,43 @@ int MPID_InitCompleted(void)
     goto fn_exit;
 }
 
+/* This is called from MPIR_init_comm_world() -> MPID_Comm_commit_pre_hook() */
+int MPIDI_world_pre_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDU_Init_shm_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_init_world();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+    mpi_errno = MPIDI_NM_init_world();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* This is called from MPIR_init_comm_world() -> MPID_Comm_commit_post_hook() */
+int MPIDI_world_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDI_NM_post_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_global.is_initialized = 1;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPID_Allocate_vci(int *vci, bool is_shared)
 {
     int mpi_errno = MPI_SUCCESS;
