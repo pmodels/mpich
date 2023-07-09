@@ -40,6 +40,8 @@ Non Native API:
   mpi_finalize_hook : int
       NM : void
      SHM : void
+  init_vcis: int
+      NM : num_vcis, num_vcis_actual
   post_init : int
       NM : void
   progress : int
@@ -471,6 +473,8 @@ PARAM:
     message: MPIR_Request *
     message_p: MPIR_Request **
     newcomm_ptr: MPIR_Comm **
+    num_vcis: int
+    num_vcis_actual: int *
     op: MPI_Op
     op_p: MPIR_Op *
     origin_addr: const void *

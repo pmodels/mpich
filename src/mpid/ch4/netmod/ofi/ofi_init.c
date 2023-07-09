@@ -732,6 +732,13 @@ int MPIDI_OFI_init_world(void)
     goto fn_exit;
 }
 
+int MPIDI_OFI_init_vcis(int num_vcis, int *num_vcis_actual)
+{
+    int mpi_errno = MPI_SUCCESS;
+    *num_vcis_actual = num_vcis;
+    return mpi_errno;
+}
+
 static int check_num_nics(void);
 static int setup_additional_vcis(void);
 
