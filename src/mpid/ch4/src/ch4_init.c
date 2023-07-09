@@ -499,6 +499,12 @@ int MPID_Init(int requested, int *provided)
     MPIDI_global.n_reserved_vcis = 0;
     MPIDI_global.share_reserved_vcis = false;
 
+    MPIDI_global.all_num_vcis = MPL_malloc(sizeof(int) * MPIR_Process.size, MPL_MEM_OTHER);
+    MPIR_Assert(MPIDI_global.all_num_vcis);
+    for (int i = 0; i < MPIR_Process.size; i++) {
+        MPIDI_global.all_num_vcis[i] = MPIDI_global.n_vcis;
+    }
+
     MPIR_Assert(MPIDI_global.n_total_vcis <= MPIDI_CH4_MAX_VCIS);
     MPIR_Assert(MPIDI_global.n_total_vcis <= MPIR_REQUEST_NUM_POOLS);
 
@@ -733,6 +739,8 @@ int MPID_Finalize(void)
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
     }
+
+    MPL_free(MPIDI_global.all_num_vcis);
 
     memset(&MPIDI_global, 0, sizeof(MPIDI_global));
 
