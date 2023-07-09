@@ -650,6 +650,36 @@ int MPIDI_world_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    /* FIXME: currently ofi require each process to have the same number of nics,
+     *        thus need access to world_comm for collectives. We should remove
+     *        this restriction, then we can move MPIDI_NM_init_vcis to
+     *        MPIDI_world_pre_init.
+     */
+    int num_vcis_actual;
+    mpi_errno = MPIDI_NM_init_vcis(MPIDI_global.n_total_vcis, &num_vcis_actual);
+    MPIR_ERR_CHECK(mpi_errno);
+
+#if MPIDI_CH4_MAX_VCIS == 1
+    MPIR_Assert(num_vcis_actual == 1);
+#else
+    MPIR_Assert(num_vcis_actual > 0 && num_vcis_actual <= MPIDI_global.n_total_vcis);
+    int diff = MPIDI_global.n_total_vcis - num_vcis_actual;
+    /* we can shrink implicit vcis down to 1, then n_reserved_vcis down to 0 */
+    MPIDI_global.n_total_vcis -= diff;
+    if (MPIDI_global.n_vcis > diff + 1) {
+        MPIDI_global.n_vcis -= diff;
+    } else {
+        diff -= (MPIDI_global.n_vcis - 1);
+        MPIDI_global.n_vcis = 1;
+        MPIDI_global.n_reserved_vcis -= diff;
+    }
+
+    mpi_errno = MPIR_Allgather_fallback(&MPIDI_global.n_vcis, 1, MPI_INT,
+                                        MPIDI_global.all_num_vcis, 1, MPI_INT,
+                                        MPIR_Process.comm_world, MPIR_ERR_NONE);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
     mpi_errno = MPIDI_NM_post_init();
     MPIR_ERR_CHECK(mpi_errno);
 
