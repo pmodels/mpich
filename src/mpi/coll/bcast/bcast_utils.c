@@ -108,7 +108,9 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
 
     return mpi_errno_ret;
 }
-int MPII_Scatter_for_bcast_group(void *buffer, MPI_Aint count, MPI_Datatype datatype,
+int MPII_Scatter_for_bcast_group(void *buffer ATTRIBUTE((unused)), 
+                            MPI_Aint count ATTRIBUTE((unused)), 
+                            MPI_Datatype datatype ATTRIBUTE((unused)),
                            int root, MPIR_Comm * comm_ptr, int* group, int group_size, MPI_Aint nbytes, void *tmp_buf,
                            int is_contig, MPIR_Errflag_t errflag) 
 {
@@ -124,7 +126,7 @@ int MPII_Scatter_for_bcast_group(void *buffer, MPI_Aint count, MPI_Datatype data
     int group_rank, group_root;
     bool found_rank_in_group;
 
-    found_rank_in_group = find_local_rank(group, group_size, rank, group_rank);
+    found_rank_in_group = find_local_rank_linear(group, group_size, rank, &group_rank);
 
     
     relative_rank = (group_rank >= group_root) ? group_rank - group_root : group_rank - group_root + group_size;

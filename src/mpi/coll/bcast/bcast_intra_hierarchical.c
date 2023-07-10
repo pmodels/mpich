@@ -35,8 +35,10 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
     if (nbytes == 0)
         goto fn_exit;   /* nothing to do */
     
-    int* intranode_table, internode_table; 
-    int* node_group, local_group;
+    int* intranode_table;
+    int* internode_table; 
+    int* node_group;
+    int* local_group;
     int node_size, local_size;
     int rank, node_rank, local_rank;
 

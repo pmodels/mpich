@@ -35,6 +35,14 @@ int MPIR_Bcast_intra_binomial_group(void *buffer,
     
     bool found_rank_in_group = find_local_rank_linear(group, group_size, rank, &group_rank);
 
+    
+    
+    /* Uncomment the below code snippet for isolated testing */
+
+    // if (!found_rank_in_group) {
+    //     return mpi_errno_ret;
+    // }
+
     MPIR_Assert(found_rank_in_group);
     
     if (rank == root) {
