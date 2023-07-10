@@ -33,7 +33,7 @@ int MPIR_Bcast_intra_binomial_group(void *buffer,
     int group_rank; // local ranking of the process within the group
     int group_root; // the root of the group
     
-    bool found_rank_in_group = find_local_rank(group, group_size, rank, &group_rank);
+    bool found_rank_in_group = find_local_rank_linear(group, group_size, rank, &group_rank);
 
     MPIR_Assert(found_rank_in_group);
     

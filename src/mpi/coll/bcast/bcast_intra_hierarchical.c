@@ -48,66 +48,52 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
     /* Retrieves the internode group */
     MPIR_Find_external(comm_ptr, &node_size, &node_rank, &node_group, &internode_table);
 
+    /* If the root process is not an external process, we need to perform a send to the external process on the root's node */
+    if (intranode_table[root] > 0) {
+        if (rank == root) {
+            mpi_errno = MPIC_Send(buffer, count, datatype, local_group[0],
+                                    MPIR_BCAST_TAG, comm_ptr, errflag);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+
+        /* If I am an external process on the same node as root */
+        } else if (node_rank != -1) {
+            mpi_errno =
+                MPIC_Recv(buffer, count, datatype, root,
+                            MPIR_BCAST_TAG, comm_ptr, status_p);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+#ifdef HAVE_ERROR_CHECKING
+            /* check that we received as much as we expected */
+            MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
+            MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, errflag, mpi_errno_ret);
+#endif
+        }
+    }
+
+
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) 
         || (local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
         
-        /* If the root process is not an external process, we need to perform a send to the external process on the root's node */
-        if (intranode_table[root] > 0) {
-            if (rank == root) {
-                mpi_errno = MPIC_Send(buffer, count, datatype, local_group[0],
-                                      MPIR_BCAST_TAG, comm_ptr, errflag);
-                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-
-            /* If I am an external process on a node and root exists on the same node as me */
-            } else if (node_rank != -1 && intranode_table[root] > 0) {
-                mpi_errno =
-                    MPIC_Recv(buffer, count, datatype, root,
-                              MPIR_BCAST_TAG, comm_ptr, status_p);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-#ifdef HAVE_ERROR_CHECKING
-                /* check that we received as much as we expected */
-                MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
-                MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, errflag, mpi_errno_ret);
-#endif
-            }
-        }
-        
-
         /* Perform the internode broadcast */
         if (node_rank != -1) { // If node_rank is not -1 then this process must be an external process
-
-            mpi_errno = MPIR_Bcast_intra_binomial_group(buffer, count, datatype, root, comm_ptr, node_group, node_size, errflag);
+            mpi_errno = MPIR_Bcast_intra_binomial_group(buffer, count, datatype, node_group[MPIR_Get_internode_rank(comm_ptr, root)], comm_ptr, node_group, node_size, errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
-
-        // int MPIR_Bcast_intra_binomial_group(void *buffer,
-        //                       MPI_Aint count,
-        //                       MPI_Datatype datatype,
-        //                       int root, MPIR_Comm * comm_ptr, int* group, int group_size, MPIR_Errflag_t errflag)
-        /* Perform the intranode broadcast */
 
         mpi_errno = MPIR_Bcast_intra_binomial_group(buffer, count, datatype, local_group[0], comm_ptr, local_group, local_size, errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
     } else {
 
+        /* TODO: Need to add support for medium sized msgs and pof2 number of processes*/
+        if (node_rank != -1) {
+            mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather_group(buffer, count, datatype, node_group[MPIR_Get_internode_rank(comm_ptr, root)], comm_ptr, node_group, node_size, errflag);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        }
 
-
-
+        mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather_group(buffer, count, datatype, local_group[0], comm_ptr, local_group, local_size, errflag);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
     }
-
-    
-
-
-
-
-
-
-
-
-
-    
 
     fn_exit:
         return mpi_errno_ret;
