@@ -126,7 +126,7 @@ int MPII_Scatter_for_bcast_group(void *buffer ATTRIBUTE((unused)),
     int group_rank, group_root;
     bool found_rank_in_group;
 
-    found_rank_in_group = find_local_rank_linear(group, group_size, rank, &group_rank);
+    found_rank_in_group = find_local_rank_linear(group, group_size, rank, root, &group_rank, &group_root);
 
     
     relative_rank = (group_rank >= group_root) ? group_rank - group_root : group_rank - group_root + group_size;
@@ -190,41 +190,22 @@ int MPII_Scatter_for_bcast_group(void *buffer ATTRIBUTE((unused)),
     return mpi_errno_ret;
 }
 
-bool find_local_rank_linear(int* group, int group_size, int rank, int* group_rank) {
+bool find_local_rank_linear(int* group, int group_size, int rank, int root, int* group_rank, int* group_root) {
     /*
         linear search for the group_rank
     */
+    bool found_rank = 0;
+    bool found_root = 0;
+
     for (int i = 0; i < group_size; i++) {
         if (group[i] == rank) {
             *group_rank = i;
-            return 1; 
+            found_rank = 1; 
+        }
+        if (group[i] == root) {
+            *group_root = i;
+            found_root = 1;
         }
     }
-    return 0;
-}
-bool find_local_rank_binary(int* group, int group_size, int rank, int* group_rank) 
-{
-    /*
-        A very simple binary search algorithm to find the group_rank
-    */    
-    int start = 0;
-    int end = group_size;
-    int middle = (start + end) / 2;
-
-    while (start < end) {
-        int mid_rank = group[middle];
-        
-        if (mid_rank == rank) {    
-            if (group) *group_rank = middle;
-             return 1;
-        } else if (rank > mid_rank) {
-            start = middle + 1;
-        } else {
-            end = middle;
-        }
-        middle = (start + end) / 2;
-    }
-    
-    if (group) *group_rank = -1;
-    return 0;
+    return found_rank && found_root;
 }
