@@ -19,9 +19,9 @@
  * used to signal such.  More details can be found further down in the
  * code with the bitmasking logic */
 typedef enum {
-    MPIR_ERR_NONE = MPI_SUCCESS,
-    MPIR_ERR_PROC_FAILED = MPIX_ERR_PROC_FAILED,
-    MPIR_ERR_OTHER = MPI_ERR_OTHER
+    MPIR_ERR_NONE = 0,
+    MPIR_ERR_PROC_FAILED = 0x2,
+    MPIR_ERR_OTHER = 0x4
 } MPIR_Errflag_t;
 
 /*E
