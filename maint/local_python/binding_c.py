@@ -153,7 +153,7 @@ def dump_c_file(f, lines):
                     prev_empty = 1
             else:
                 # print the line with correct indentations
-                if indent > 0 and not RE.match(r'#(if|endif)', l):
+                if indent > 0 and not RE.match(r'#(if|else|endif)', l):
                     print("    " * indent, end='', file=Out)
                 print(l, file=Out)
                 prev_empty = 0
@@ -1208,13 +1208,15 @@ def dump_function_normal(func):
 
     # ----
     def dump_body_of_routine():
+        do_threadcomm = False
         if RE.search(r'threadcomm', func['extra'], re.IGNORECASE):
+            do_threadcomm = True
             G.out.append("#ifdef ENABLE_THREADCOMM")
             dump_if_open("comm_ptr->threadcomm")
             dump_body_threadcomm(func)
-            G.out.append("goto fn_exit;")
-            dump_if_close()
+            dump_else_open()
             G.out.append("#endif")
+            dump_else_close()
 
         if 'body' in func:
             if func['_is_large'] and func['_poly_impl'] == "separate":
@@ -1237,6 +1239,8 @@ def dump_function_normal(func):
         else:
             dump_body_impl(func, "mpir")
 
+        if do_threadcomm:
+            dump_if_close()
     # ----
     G.out.append("/* ... body of routine ... */")
 
@@ -2557,6 +2561,15 @@ def dump_else():
 def dump_if_close():
     G.out.append("DEDENT")
     G.out.append("}")
+
+# split "} else {", used along with "#ifdef-#else-#endif"
+def dump_else_open():
+    G.out.append("DEDENT")
+    G.out.append("} else")
+
+def dump_else_close():
+    G.out.append("{")
+    G.out.append("INDENT")
 
 def dump_for_open(idx, count):
     G.out.append("for (int %s = 0; %s < %s; %s++) {" % (idx, idx, count, idx))
