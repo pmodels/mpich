@@ -285,7 +285,11 @@ int MPIR_Threadcomm_dup_impl(MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 
     MPIR_Comm *newcomm = NULL;
     if (p->tid == 0) {
-        mpi_errno = MPIR_Threadcomm_init_impl(comm, num_threads, &newcomm);
+        MPIR_Comm tmp_comm;
+        memcpy(&tmp_comm, comm, sizeof(MPIR_Comm));
+        tmp_comm.threadcomm = NULL;
+
+        mpi_errno = MPIR_Threadcomm_init_impl(&tmp_comm, num_threads, &newcomm);
         newcomm->threadcomm->kind = MPIR_THREADCOMM_KIND__DERIVED;
         MPIR_ERR_CHECK(mpi_errno);
         /* bcast to all threads */
