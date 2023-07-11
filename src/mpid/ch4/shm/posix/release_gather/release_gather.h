@@ -131,7 +131,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 if ((int) recv_bytes != count) {
                     /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
                     errflag = MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, errflag, "**fail");
+                    MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
 #else

@@ -410,7 +410,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                             (void **) &(release_gather_info_ptr->flags_addr));
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
+            MPIR_ERR_ADD(mpi_errno_ret, MPI_ERR_OTHER);
         }
 
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno_ret, errflag, mpi_errno_ret);
@@ -441,7 +441,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             MPIDU_shm_alloc(comm_ptr, RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size),
                             (void **) &(RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr)));
         if (mpi_errno) {
-            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
+            MPIR_ERR_ADD(mpi_errno_ret, MPI_ERR_OTHER);
         }
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
     }
@@ -463,7 +463,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                             (void **) &(RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr)));
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
+            MPIR_ERR_ADD(mpi_errno_ret, MPI_ERR_OTHER);
         }
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno_ret, errflag, mpi_errno_ret);
         MPIR_ERR_CHECK(mpi_errno_ret);

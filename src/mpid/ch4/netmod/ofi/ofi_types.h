@@ -63,13 +63,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_idata_set_error_bits(uint64_t * data_fie
     }
 }
 
-/* Get the error flag from the OFI data field. */
+/* Get the mpi error code from the OFI data field. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 {
     if ((idata >> MPIDI_OFI_IDATA_SRC_BITS) & MPIDI_OFI_ERR_OTHER) {
-        return MPIR_ERR_OTHER;
+        return MPI_ERR_OTHER;
     } else if ((idata >> MPIDI_OFI_IDATA_SRC_BITS) & MPIDI_OFI_ERR_PROC_FAILED) {
-        return MPIR_ERR_PROC_FAILED;
+        return MPIX_ERR_PROC_FAILED;
     } else {
         return MPI_SUCCESS;
     }
