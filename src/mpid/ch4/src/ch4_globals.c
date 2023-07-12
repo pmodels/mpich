@@ -141,7 +141,7 @@ int MPIDI_check_for_failed_procs(void)
      * with the rank, then we need to create the failed group from
      * something bigger than comm_world. */
 
-    char *failed_procs_string = MPIR_pmi_get_failed_procs();
+    char *failed_procs_string = MPIR_pmi_get_jobattr("PMI_dead_processes");
 
     if (failed_procs_string) {
         MPL_free(failed_procs_string);

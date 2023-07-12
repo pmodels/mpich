@@ -1621,7 +1621,6 @@ AM_CONDITIONAL([PRIMARY_PM_GFORKER],[test "X$first_pm_name" = "Xgforker"])
 AM_CONDITIONAL([PRIMARY_PM_REMSHELL],[test "X$first_pm_name" = "Xremshell"])
 
 # ---- $with_pmilib ----
-
 pmisrcdir=""
 AC_SUBST([pmisrcdir])
 pmilib=""
@@ -1699,6 +1698,39 @@ case "$with_pmilib" in
     AC_MSG_ERROR([pmilib $with_pmilib not supported.])
     ;;
 esac
+
+
+# ---- define ENABLE_PMI[12X] ----
+enable_pmi1="no"
+enable_pmi2="no"
+enable_pmix="no"
+if test "$with_pmi" = "pmi2" ; then
+    enable_pmi2="yes"
+elif test "$with_pmi" = "pmix" ; then
+    enable_pmix="yes"
+elif test "$with_pmilib" = "mpich" -o "$with_pmilib" = "install"; then
+    # mpich's libpmi support both PMI1 and PMI2
+    enable_pmi1="yes"
+    enable_pmi2="yes"
+else
+    # detect
+    AC_CHECK_FUNC([PMI_Init], [enable_pmi1="yes"])
+    AC_CHECK_FUNC([PMI2_Init], [enable_pmi2="yes"])
+    AC_CHECK_FUNC([PMIx_Init], [enable_pmix="yes"])
+    if test "$enable_pmi1" != "yes" -a "$enable_pmi2" != "yes" -a "$enable_pmix" != "yes"; then
+        AC_MSG_ERROR([Neither PMI, nor PMI2, nor PMIx is enabled.])
+    fi
+fi
+
+if test "$enable_pmi1" = "yes"; then
+    AC_DEFINE([ENABLE_PMI1], 1, [Define to enable PMI1 protocol])
+fi
+if test "$enable_pmi2" = "yes"; then
+    AC_DEFINE([ENABLE_PMI2], 1, [Define to enable PMI2 protocol])
+fi
+if test "$enable_pmix" = "yes"; then
+    AC_DEFINE([ENABLE_PMIX], 1, [Define to enable PMIX protocol])
+fi
 
 # ---------------------------------------------------------------------------
 # Check for whether the compiler defines a symbol that contains the

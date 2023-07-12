@@ -8,27 +8,23 @@
 
 #include "mpichconf.h"
 
-#if !defined USE_PMI1_API && !defined USE_PMI2_API && !defined USE_PMIX_API
-#define USE_PMI1_API
-#endif
-
+#ifdef ENABLE_PMI1
 #if defined(USE_PMI1_SLURM)
 #include <slurm/pmi.h>
-
-#elif defined(USE_PMI2_SLURM)
-#include <slurm/pmi2.h>
-
-#elif defined(USE_PMI2_CRAY)
-#include <pmi2.h>
-
-#elif defined(USE_PMI1_API)
+#else
 #include <pmi.h>
+#endif
+#endif
 
-#elif defined(USE_PMI2_API)
+#ifdef ENABLE_PMI2
+#if defined(USE_PMI2_SLURM)
+#include <slurm/pmi2.h>
+#else
 #include <pmi2.h>
-#define PMI_keyval_t PMI2_keyval_t
+#endif
+#endif
 
-#elif defined(USE_PMIX_API)
+#ifdef ENABLE_PMIX
 #include <pmix.h>
 #endif
 
@@ -55,7 +51,7 @@ int MPIR_pmi_set_threaded(int is_threaded);
 int MPIR_pmi_max_key_size(void);
 int MPIR_pmi_max_val_size(void);
 const char *MPIR_pmi_job_id(void);
-char *MPIR_pmi_get_hwloc_xmlfile(void);
+char *MPIR_pmi_get_jobattr(const char *key);    /* key must use "PMI_" prefix */
 
 /* PMI wrapper utilities */
 
@@ -97,7 +93,6 @@ int MPIR_pmi_unpublish(const char name[]);
 
 /* Other misc functions */
 int MPIR_pmi_get_universe_size(int *universe_size);
-char *MPIR_pmi_get_failed_procs(void);
 
 struct MPIR_Info;               /* forward declare (mpir_info.h) */
 int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],

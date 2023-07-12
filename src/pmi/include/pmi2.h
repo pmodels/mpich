@@ -6,8 +6,10 @@
 #ifndef PMI2_H_INCLUDED
 #define PMI2_H_INCLUDED
 
+#ifndef PMI_VERSION
 #define PMI_VERSION    2
 #define PMI_SUBVERSION 0
+#endif
 
 #define PMI2_MAX_KEYLEN 64
 #define PMI2_MAX_VALLEN 1024

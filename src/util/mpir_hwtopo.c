@@ -200,7 +200,7 @@ int MPII_hwtopo_init(void)
 #ifdef HAVE_HWLOC
     bindset = hwloc_bitmap_alloc();
     hwloc_topology_init(&hwloc_topology);
-    char *xmlfile = MPIR_pmi_get_hwloc_xmlfile();
+    char *xmlfile = MPIR_pmi_get_jobattr("PMI_hwloc_xmlfile");
     if (xmlfile != NULL) {
         int rc;
         rc = hwloc_topology_set_xml(hwloc_topology, xmlfile);
