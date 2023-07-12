@@ -26,11 +26,9 @@ int MPIR_Scatter_intra_binomial_group(const void *sendbuf, MPI_Aint sendcount, M
     int group_rank, group_root;
     bool found_rank_in_group;
 
-    found_rank_in_group = find_local_rank(group, group_size, rank, &group_rank);
+    found_rank_in_group = find_local_rank_linear(group, group_size, rank, &group_rank, &group_root);
     
     MPIR_Assert(found_rank_in_group);
-
-    if (rank == root) group_root = group_rank;
 
     if (rank == root)
         MPIR_Datatype_get_extent_macro(sendtype, extent);
