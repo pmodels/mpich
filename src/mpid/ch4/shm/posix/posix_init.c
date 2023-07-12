@@ -227,6 +227,11 @@ int MPIDI_POSIX_init_world(void)
     goto fn_exit;
 }
 
+int MPIDI_POSIX_post_init(void)
+{
+    return MPI_SUCCESS;
+}
+
 int MPIDI_POSIX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
