@@ -15,6 +15,7 @@
 
 MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_stub_funcs = {
     MPIDI_POSIX_stub_init,
+    MPIDI_POSIX_stub_post_init,
     MPIDI_POSIX_stub_finalize,
 
     MPIDI_POSIX_eager_send,

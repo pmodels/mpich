@@ -236,6 +236,9 @@ int MPIDI_POSIX_post_init(void)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+    mpi_errno = MPIDI_POSIX_eager_post_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     return mpi_errno;
   fn_fail:

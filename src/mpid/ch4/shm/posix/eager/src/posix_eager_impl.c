@@ -14,6 +14,11 @@ int MPIDI_POSIX_eager_init(int rank, int size)
     return MPIDI_POSIX_eager_func->init(rank, size);
 }
 
+int MPIDI_POSIX_eager_post_init(void)
+{
+    return MPIDI_POSIX_eager_func->post_init();
+}
+
 int MPIDI_POSIX_eager_finalize(void)
 {
     return MPIDI_POSIX_eager_func->finalize();

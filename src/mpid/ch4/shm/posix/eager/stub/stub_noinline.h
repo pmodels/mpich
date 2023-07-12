@@ -9,10 +9,12 @@
 #include "stub_impl.h"
 
 int MPIDI_POSIX_stub_init(int rank, int size);
+int MPIDI_POSIX_stub_post_init(void);
 int MPIDI_POSIX_stub_finalize(void);
 
 #ifdef POSIX_EAGER_INLINE
 #define MPIDI_POSIX_eager_init MPIDI_POSIX_stub_init
+#define MPIDI_POSIX_eager_post_init MPIDI_POSIX_stub_post_init
 #define MPIDI_POSIX_eager_finalize MPIDI_POSIX_stub_finalize
 #endif
 
