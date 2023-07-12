@@ -680,6 +680,10 @@ int MPIDI_world_post_init(void)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_post_init();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     mpi_errno = MPIDI_NM_post_init();
     MPIR_ERR_CHECK(mpi_errno);
 
