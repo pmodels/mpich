@@ -3524,7 +3524,7 @@ PAC_SET_MPI_DATATYPE_ALIAS(MPI_C_COMPLEX, MPI_C_FLOAT_COMPLEX)
 # does not help, since only the latest type_tag definition is used. Type tags are defined in mpi.h,
 # therefore, they must be also be activated/deavtivated there
 PAC_PUSH_FLAG([CFLAGS])
-PAC_C_CHECK_COMPILER_OPTION([-Werror],[CFLAGS="$CFLAGS -Werror"])
+PAC_C_CHECK_COMPILER_OPTION([-Werror=type-safety],[CFLAGS="$CFLAGS -Werror=type-safety"])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     typedef int TEST_Datatype;
     #define TEST_INT ((TEST_Datatype)0x44)
