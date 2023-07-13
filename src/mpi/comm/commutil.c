@@ -1232,32 +1232,6 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
     goto fn_exit;
 }
 
-/* Release a reference to a communicator.  If there are no pending
-   references, delete the communicator and recover all storage and
-   context ids.  This version of the function always manipulates the reference
-   counts, even for predefined objects. */
-int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int in_use;
-
-    MPIR_FUNC_ENTER;
-
-    /* we want to short-circuit any optimization that avoids reference counting
-     * predefined communicators, such as MPI_COMM_WORLD or MPI_COMM_SELF. */
-    MPIR_Object_release_ref_always(comm_ptr, &in_use);
-    if (!in_use) {
-        mpi_errno = MPIR_Comm_delete_internal(comm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 /* This function collectively compares hint_str to see whether all processes are having
  * the same string. The result is set in output pointer info_args_are_equal.
  */

@@ -288,10 +288,11 @@ MPL_STATIC_INLINE_PREFIX MPIR_Stream *MPIR_stream_comm_get_local_stream(MPIR_Com
     }
 }
 
+/* We never skip reference counting for built-in comms */
 #define MPIR_Comm_add_ref(comm_p_) \
-    do { MPIR_Object_add_ref((comm_p_)); } while (0)
+    do { MPIR_Object_add_ref_always((comm_p_)); } while (0)
 #define MPIR_Comm_release_ref(comm_p_, inuse_) \
-    do { MPIR_Object_release_ref(comm_p_, inuse_); } while (0)
+    do { MPIR_Object_release_ref_always(comm_p_, inuse_); } while (0)
 
 
 /* Release a reference to a communicator.  If there are no pending
@@ -346,11 +347,6 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
     goto fn_exit;
 }
 
-
-/* MPIR_Comm_release_always is the same as MPIR_Comm_release except it uses
-   MPIR_Comm_release_ref_always instead.
-*/
-int MPIR_Comm_release_always(MPIR_Comm * comm_ptr);
 
 int MPIR_Comm_create(MPIR_Comm **);
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);

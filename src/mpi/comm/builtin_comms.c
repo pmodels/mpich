@@ -127,7 +127,10 @@ static int finalize_builtin_comm(MPIR_Comm * comm)
         comm->errhandler = NULL;
     }
 
-    mpi_errno = MPIR_Comm_release_always(comm);
+    /* TODO: check reference and progress, potentially with a TIMEOUT, until
+     *       reference clears.
+     */
+    mpi_errno = MPIR_Comm_release(comm);
 
   fn_exit:
     return mpi_errno;
