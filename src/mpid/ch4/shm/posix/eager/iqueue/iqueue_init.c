@@ -82,6 +82,9 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     MPIR_Assert((MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE & (MAX_ALIGNMENT - 1)) == 0);
     MPIR_Assert((sizeof(MPIDI_POSIX_eager_iqueue_cell_t) & (MAX_ALIGNMENT - 1)) == 0);
 
+    /* Init vci 0. Communication on vci 0 is enabled afterwards. */
+    MPIDI_POSIX_eager_iqueue_global.max_vcis = 1;
+
     mpi_errno = init_transport(0, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -99,8 +102,23 @@ int MPIDI_POSIX_iqueue_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    for (int vci_src = 0; vci_src < MPIDI_POSIX_global.num_vcis; vci_src++) {
-        for (int vci_dst = 0; vci_dst < MPIDI_POSIX_global.num_vcis; vci_dst++) {
+    /* gather max_vcis */
+    int max_vcis = 0;
+    max_vcis = 0;
+    MPIDU_Init_shm_put(&MPIDI_POSIX_global.num_vcis, sizeof(int));
+    MPIDU_Init_shm_barrier();
+    for (int i = 0; i < MPIDI_POSIX_global.num_local; i++) {
+        int num;
+        MPIDU_Init_shm_get(i, sizeof(int), &num);
+        if (max_vcis < num) {
+            max_vcis = num;
+        }
+    }
+
+    MPIDI_POSIX_eager_iqueue_global.max_vcis = max_vcis;
+
+    for (int vci_src = 0; vci_src < max_vcis; vci_src++) {
+        for (int vci_dst = 0; vci_dst < max_vcis; vci_dst++) {
             if (vci_src == 0 && vci_dst == 0) {
                 continue;
             }
@@ -125,8 +143,9 @@ int MPIDI_POSIX_iqueue_finalize(void)
 
     MPIR_FUNC_ENTER;
 
-    for (int vci_src = 0; vci_src < MPIDI_POSIX_global.num_vcis; vci_src++) {
-        for (int vci_dst = 0; vci_dst < MPIDI_POSIX_global.num_vcis; vci_dst++) {
+    int max_vcis = MPIDI_POSIX_eager_iqueue_global.max_vcis;
+    for (int vci_src = 0; vci_src < max_vcis; vci_src++) {
+        for (int vci_dst = 0; vci_dst < max_vcis; vci_dst++) {
             MPIDI_POSIX_eager_iqueue_transport_t *transport;
             transport = MPIDI_POSIX_eager_iqueue_get_transport(vci_src, vci_dst);
 

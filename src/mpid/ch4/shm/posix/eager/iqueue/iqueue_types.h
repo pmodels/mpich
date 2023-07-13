@@ -34,6 +34,7 @@ typedef struct MPIDI_POSIX_eager_iqueue_transport {
 } MPIDI_POSIX_eager_iqueue_transport_t;
 
 typedef struct MPIDI_POSIX_eager_iqueue_global {
+    int max_vcis;
     /* 2d array indexed with [src_vci][dst_vci] */
     MPIDI_POSIX_eager_iqueue_transport_t transports[MPIDI_CH4_MAX_VCIS][MPIDI_CH4_MAX_VCIS];
 } MPIDI_POSIX_eager_iqueue_global_t;
