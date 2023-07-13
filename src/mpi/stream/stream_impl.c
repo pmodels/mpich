@@ -112,7 +112,7 @@ int MPIR_Comm_copy_stream(MPIR_Comm * oldcomm, MPIR_Comm * newcomm)
         newcomm->stream_comm.single.vci_table = vci_table;
 
         if (stream_ptr) {
-            MPIR_Object_add_ref_always(stream_ptr);
+            MPIR_Object_add_ref(stream_ptr);
         }
     } else if (oldcomm->stream_comm_type == MPIR_STREAM_COMM_MULTIPLEX) {
         int size = oldcomm->local_size;
@@ -142,7 +142,7 @@ int MPIR_Comm_copy_stream(MPIR_Comm * oldcomm, MPIR_Comm * newcomm)
         for (int i = 0; i < num_streams; i++) {
             local_streams[i] = oldcomm->stream_comm.multiplex.local_streams[i];
             if (local_streams[i]) {
-                MPIR_Object_add_ref_always(local_streams[i]);
+                MPIR_Object_add_ref(local_streams[i]);
             }
         }
 
@@ -277,7 +277,7 @@ int MPIR_Stream_comm_create_impl(MPIR_Comm * comm_ptr, MPIR_Stream * stream_ptr,
     (*newcomm_ptr)->stream_comm.single.vci_table = vci_table;
 
     if (stream_ptr) {
-        MPIR_Object_add_ref_always(stream_ptr);
+        MPIR_Object_add_ref(stream_ptr);
     }
 
   fn_exit:
@@ -339,7 +339,7 @@ int MPIR_Stream_comm_create_multiplex_impl(MPIR_Comm * comm_ptr,
         MPIR_Stream *stream_ptr;
         MPIR_Stream_get_ptr(streams[i], stream_ptr);
         if (stream_ptr) {
-            MPIR_Object_add_ref_always(stream_ptr);
+            MPIR_Object_add_ref(stream_ptr);
         }
         local_streams[i] = stream_ptr;
         local_vcis[i] = stream_ptr ? stream_ptr->vci : 0;
