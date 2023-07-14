@@ -33,7 +33,7 @@ noinst_PROGRAMS =  \
     icsend         \
     icprobe        \
     rqstatus       \
-    rqfreeb        \
+    rqfree         \
     greq1          \
     scancel        \
     scancel2       \
