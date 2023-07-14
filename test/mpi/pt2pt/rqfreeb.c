@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+#define LARGE 10000
+int large_send_buf[LARGE];
+
 /* Test Ibsend and Request_free */
 int main(int argc, char *argv[])
 {
@@ -15,7 +18,7 @@ int main(int argc, char *argv[])
     int dest = 1, src = 0, tag = 1;
     int s1;
     char *buf, *bbuf;
-    int smsg[5], rmsg[5];
+    int smsg[5], rmsg[6];
     int errs = 0, rank, size;
     int bufsize, bsize;
 
@@ -81,13 +84,18 @@ int main(int argc, char *argv[])
         /* We can't guarantee that messages arrive until the detach */
         MPI_Buffer_detach(&bbuf, &bsize);
         free(buf);
+
+        /* Send a large message that may require handshake, e.g. RNDV in shm,
+         * and test receive using truncated buffer and free without waiting. */
+        MPI_Isend(large_send_buf, LARGE, MPI_INT, dest, tag + 5, comm, &r);
+        MPI_Wait(&r, MPI_STATUS_IGNORE);
     }
 
     if (rank == dest) {
-        MPI_Request r[5];
+        MPI_Request r[6];
         int i;
 
-        for (i = 0; i < 5; i++) {
+        for (i = 0; i < 6; i++) {
             MPI_Irecv(&rmsg[i], 1, MPI_INT, src, tag + i, comm, &r[i]);
         }
         if (rank != src)        /* Just in case rank == src */
@@ -107,6 +115,7 @@ int main(int argc, char *argv[])
          */
         MTestPrintfMsg(10, "About  free Irecv request\n");
         MPI_Request_free(&r[4]);
+        MPI_Request_free(&r[5]);
     }
 
     if (rank != dest && rank != src) {
