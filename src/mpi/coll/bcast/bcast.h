@@ -16,6 +16,9 @@ int MPII_Scatter_for_bcast_group(void *buffer, MPI_Aint count, MPI_Datatype data
                            int root, MPIR_Comm * comm_ptr, int* group, int group_size, MPI_Aint nbytes, void *tmp_buf,
                            int is_contig, MPIR_Errflag_t errflag);
 
-bool find_local_rank_linear(int* group, int group_size, int rank, int root, int* group_rank, int* group_root);                           
+bool find_local_rank_linear(int* group, int group_size, int rank, int root, int* group_rank, int* group_root);
+
+/* reorders the processe based on rank */
+bool reorder_processes();
 
 #endif /* BCAST_H_INCLUDED */

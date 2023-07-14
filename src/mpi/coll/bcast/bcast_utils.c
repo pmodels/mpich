@@ -209,3 +209,7 @@ bool find_local_rank_linear(int* group, int group_size, int rank, int root, int*
     }
     return found_rank && found_root;
 }
+
+bool reorder_processes() {
+    return 0;
+}

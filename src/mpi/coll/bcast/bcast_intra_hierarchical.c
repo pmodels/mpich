@@ -42,6 +42,12 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
     int node_size, local_size;
     int rank, node_rank, local_rank;
 
+    double external_process_weight = 1.0;
+    double internal_process_weight = 1.0;
+
+
+    /* TODO: calculate weights */
+
     rank = comm_ptr->rank;
 
     /* Retrieves the intranode group */
@@ -50,6 +56,7 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
     /* Retrieves the internode group */
     MPIR_Find_external(comm_ptr, &node_size, &node_rank, &node_group, &internode_table);
 
+
     /* If the root process is not an external process, we need to perform a send to the external process on the root's node */
     if (intranode_table[root] > 0) {
         if (rank == root) {
@@ -57,7 +64,7 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
                                     MPIR_BCAST_TAG, comm_ptr, errflag);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
-        /* If I am an external process on the same node as root */
+        /* If we are on an external process and on the same node as root */
         } else if (node_rank != -1) {
             mpi_errno =
                 MPIC_Recv(buffer, count, datatype, root,
