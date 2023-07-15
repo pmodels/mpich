@@ -85,6 +85,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     if (ucp_request) {
         if (req == NULL) {
             req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__SEND, vci_src, 2);
+            MPIR_ERR_CHKANDSTMT(!req, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+            req->comm = comm;
+            MPIR_Comm_add_ref(comm);
         } else {
             MPIR_Request_add_ref(req);
         }
