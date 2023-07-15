@@ -127,6 +127,8 @@ static int finalize_builtin_comm(MPIR_Comm * comm)
         comm->errhandler = NULL;
     }
 
+    MPIR_Comm_free_inactive_requests(comm);
+
     int ref_count = MPIR_Object_get_ref(comm);
     if (ref_count != 1) {
         MPL_internal_error_printf

@@ -1365,8 +1365,9 @@ int MPIR_Comm_free_inactive_requests(MPIR_Comm * comm)
     MPID_THREAD_CS_ENTER(VCI, comm->mutex);
     HASH_ITER(hh, comm->persistent_requests, request, tmp) {
         if (!MPIR_Request_is_active(request)) {
-            printf("WARNING: freeing inactive persistent request %x on communicator %x.\n",
-                   request->handle, comm->handle);
+            MPL_internal_error_printf
+                ("WARNING: freeing inactive persistent request %x on communicator %x.\n",
+                 request->handle, comm->handle);
             MPIR_Request_free_impl(request);
         }
     }
