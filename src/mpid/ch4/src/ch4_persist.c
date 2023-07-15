@@ -28,6 +28,7 @@ static int psend_init(MPIDI_ptype ptype,
 
     MPIR_Comm_add_ref(comm);
     sreq->comm = comm;
+    MPIR_Comm_save_inactive_request(comm, sreq);
 
     MPIDI_PREQUEST(sreq, p_type) = ptype;
     MPIDI_PREQUEST(sreq, buffer) = (void *) buf;
@@ -145,6 +146,7 @@ int MPID_Recv_init(void *buf,
     *request = rreq;
     rreq->comm = comm;
     MPIR_Comm_add_ref(comm);
+    MPIR_Comm_save_inactive_request(comm, rreq);
 
     MPIDI_PREQUEST(rreq, buffer) = (void *) buf;
     MPIDI_PREQUEST(rreq, count) = count;

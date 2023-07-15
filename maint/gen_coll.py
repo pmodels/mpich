@@ -439,6 +439,7 @@ def dump_mpir_impl_persistent(name):
     G.out.append("MPIR_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, \"**nomem\");")
     G.out.append("MPIR_Comm_add_ref(comm_ptr);")
     G.out.append("req->comm = comm_ptr;")
+    G.out.append("MPIR_Comm_save_inactive_request(comm_ptr, req);")
     G.out.append("req->u.persist_coll.sched_type = MPIR_SCHED_INVALID;")
     G.out.append("req->u.persist_coll.real_request = NULL;")
 
