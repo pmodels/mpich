@@ -282,6 +282,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
+    if (*request) {
+        MPID_Request_complete(*request);
+        MPIDI_CH4_REQUEST_FREE(*request);
+        *request = NULL;
+    }
     goto fn_exit;
 }
 
