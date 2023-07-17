@@ -275,13 +275,6 @@ AC_ARG_WITH(ch4-shmmods,
 ch4_shm="`echo $with_ch4_shmmods | sed -e 's/,/ /g'`"
 export ch4_shm
 
-# setup default direct communication routine
-if test "${with_ch4_shmmods}" = "auto" -a "${ch4_netmods}" = "ucx" ; then
-    # ucx can only choose direct netmod because it does not handle any_src
-    # receive when both nemod and shared memory are used.
-    with_ch4_shmmods=none
-fi
-
 if test "${with_ch4_shmmods}" = "none" -o "${with_ch4_shmmods}" = "no" ; then
     AC_DEFINE(MPIDI_CH4_DIRECT_NETMOD, 1, [CH4 Directly transfers data through the chosen netmode])
 else
