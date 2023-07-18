@@ -45,10 +45,21 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
     double external_process_weight = 1.0;
     double internal_process_weight = 1.0;
 
-
     /* TODO: calculate weights */
 
     rank = comm_ptr->rank;
+
+    /*
+    
+    Possible addition to the hierarchical algorithm. It seems as though for really small messages sizes, the flat binomial bcast outperforms the hierarchical
+    Bcast.
+    
+    if (nbytes < MPIR_CVAR_BCAST_SMP_MSG_SIZE_MIN) {
+        MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
+        goto fn_exit;
+    }
+
+    */
 
     /* Retrieves the intranode group */
     MPIR_Find_local(comm_ptr, &local_size, &local_rank, &local_group, &intranode_table);
