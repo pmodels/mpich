@@ -209,3 +209,15 @@ bool find_local_rank_linear(int* group, int group_size, int rank, int root, int*
     }
     return found_rank && found_root;
 }
+
+
+bool reorder_processes(int* ranks, double* process_weights, int size) [
+    if (!ranks || !processes) 
+        return 0;
+
+    
+
+
+    return 1;
+    
+]

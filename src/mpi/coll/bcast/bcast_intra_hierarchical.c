@@ -42,8 +42,13 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
     int node_size, local_size;
     int rank, node_rank, local_rank;
 
-    double external_process_weight = 1.0;
-    double internal_process_weight = 1.0;
+    double weight = 1.0;
+    
+    /* keeps track of other the weights of other processes */
+    
+    double* process_weights = NULL;
+
+    
 
     /* TODO: calculate weights */
 
