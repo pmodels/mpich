@@ -129,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
     } else {
         for (int i = 0; i < state->vci_count; i++) {
             int vci = state->vci[i];
-            if (vci >= MPIDI_global.n_vcis) {
+            if (vci >= MPIDI_global.n_total_vcis) {
                 continue;
             }
             MPIDI_PROGRESS(vci);
