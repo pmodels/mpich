@@ -147,6 +147,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_PSM2             6
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM2
+#define MPIDI_OFI_PROV_NAME                 "psm2"
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_PSM2
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_PSM2
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_PSM2
@@ -218,6 +219,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_PSM3             6
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM3
+#define MPIDI_OFI_PROV_NAME                 "psm3"
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_PSM3
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_PSM3
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_PSM3
@@ -289,6 +291,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_SOCKETS             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_SOCKETS
+#define MPIDI_OFI_PROV_NAME                 "sockets"
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_SOCKETS
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_SOCKETS
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_SOCKETS
@@ -360,6 +363,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_BGQ             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_BGQ
+#define MPIDI_OFI_PROV_NAME                 "bgq"
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_BGQ
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_BGQ
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_BGQ
@@ -439,6 +443,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_CXI                 5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_CXI
+#define MPIDI_OFI_PROV_NAME                     "cxi"
 #define MPIDI_OFI_SET_NUMBER                    MPIDI_OFI_SET_NUMBER_CXI
 #define MPIDI_OFI_ENABLE_DATA                   MPIDI_OFI_ENABLE_DATA_CXI
 #define MPIDI_OFI_ENABLE_AV_TABLE               MPIDI_OFI_ENABLE_AV_TABLE_CXI
@@ -514,6 +519,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_RXM                 6
 
 #ifdef MPIDI_CH4_OFI_USE_SET_RXM
+#define MPIDI_OFI_PROV_NAME                     "ofi_rxm"
 #define MPIDI_OFI_SET_NUMBER                    MPIDI_OFI_SET_NUMBER_RXM
 #define MPIDI_OFI_ENABLE_DATA                   MPIDI_OFI_ENABLE_DATA_RXM
 #define MPIDI_OFI_ENABLE_AV_TABLE               MPIDI_OFI_ENABLE_AV_TABLE_RXM
@@ -584,6 +590,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_VERBS_RXM             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_VERBS_RXM
+#define MPIDI_OFI_PROV_NAME                 "verbs;ofi_rxm"
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_VERBS_RXM
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_VERBS_RXM
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_VERBS_RXM
@@ -656,6 +663,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_GNI             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_GNI
+#define MPIDI_OFI_PROV_NAME                 "gni"
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_GNI
 #define MPIDI_OFI_ENABLE_DATA               MPIDI_OFI_ENABLE_DATA_GNI
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_ENABLE_AV_TABLE_GNI
@@ -778,6 +786,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_MINOR_VERSION_MINIMAL             FI_MINOR_VERSION
 
 #ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
+#define MPIDI_OFI_PROV_NAME                 "default"
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_DEFAULT
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     1
 
