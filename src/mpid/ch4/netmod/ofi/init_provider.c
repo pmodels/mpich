@@ -107,7 +107,6 @@ static int find_provider(struct fi_info **prov_out)
     int mpi_errno = MPI_SUCCESS;
     int ret;                    /* return from fi_getinfo() */
 
-    const char *provname = NULL;
     if (MPIR_CVAR_OFI_USE_PROVIDER != NULL) {
         fprintf(stderr, "MPIR_CVAR_OFI_USE_PROVIDER is no longer supported in CH4. Use FI_PROVIDER"
                 "instead\n");
@@ -132,6 +131,7 @@ static int find_provider(struct fi_info **prov_out)
 
         MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
 
+        const char *provname = NULL;
         provname = prov->fabric_attr->prov_name;
         /* Initialize MPIDI_OFI_global.settings */
         MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings, provname);
@@ -170,12 +170,9 @@ static int find_provider(struct fi_info **prov_out)
         MPIR_ERR_CHKANDJUMP(prov_list == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
     } else {
         /* Make sure that the user-specified provider matches the configure-specified provider. */
-        MPIR_ERR_CHKANDJUMP(provname != NULL &&
-                            MPIDI_OFI_SET_NUMBER != MPIDI_OFI_get_set_number(provname),
-                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
         /* Initialize hints based on configure time macros) */
         mpi_errno = MPIDI_OFI_init_hints(hints);
-        hints->fabric_attr->prov_name = provname ? MPL_strdup(provname) : NULL;
+        hints->fabric_attr->prov_name = MPL_strdup(MPIDI_OFI_PROV_NAME);
 
         ret = fi_getinfo(required_version, NULL, NULL, 0ULL, hints, &prov_list);
         MPIR_ERR_CHKANDJUMP(prov_list == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
