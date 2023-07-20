@@ -99,10 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_po
 MPL_STATIC_INLINE_PREFIX bool MPIR_GPU_query_pointer_is_dev(const void *ptr)
 {
     if (ENABLE_GPU && ptr != NULL) {
-        MPL_pointer_attr_t attr;
-        MPL_gpu_query_pointer_attr(ptr, &attr);
-
-        return attr.type == MPL_GPU_POINTER_DEV;
+        return MPL_gpu_query_pointer_is_dev(ptr, NULL);
     }
 
     return false;

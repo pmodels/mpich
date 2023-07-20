@@ -118,7 +118,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     if (ipc_attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
         mpi_errno = MPIDI_GPU_get_ipc_attr(mem_addr, rank, comm, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
-    } else {
+    } else if (!MPL_gpu_query_pointer_is_dev(buf, &ipc_attr.gpu_attr)) {
+        /* The result of MPL_gpu_query_pointer_is_dev is not necessarily equivalent to
+         * (gpu_attr.type == MPL_GPU_POINTER_DEV) depending on the backend. This explicit check
+         * ensures the pointer can be accepted by XPMEM and work as intended. */
         mpi_errno = MPIDI_XPMEM_get_ipc_attr(mem_addr, mem_size, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
     }
