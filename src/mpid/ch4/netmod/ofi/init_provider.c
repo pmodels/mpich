@@ -180,6 +180,12 @@ static int find_provider(struct fi_info **prov_out)
         int set_number = MPIDI_OFI_get_set_number(prov_list->fabric_attr->prov_name);
         MPIR_ERR_CHKANDJUMP(MPIDI_OFI_SET_NUMBER != set_number,
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+
+        /* Some settings should always use runtime settings, ref. ofi_capability_sets.h */
+#define UPDATE_SETTING_BY_SET_NUMBER(cap, CVAR) \
+    MPIDI_OFI_global.settings.cap = (CVAR != -1) ? CVAR : MPIDI_OFI_caps_list[MPIDI_OFI_SET_NUMBER].cap
+
+        UPDATE_SETTING_BY_SET_NUMBER(enable_hmem, MPIR_CVAR_CH4_OFI_ENABLE_HMEM);
     }
 
     /* last sanity check */
