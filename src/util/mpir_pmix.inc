@@ -267,7 +267,7 @@ static int pmix_get_binary(int src, const char *key, char *buf, int *p_size, int
 static int pmix_optional_bcast_barrier(MPIR_PMI_DOMAIN domain)
 {
     if (domain == MPIR_PMI_DOMAIN_LOCAL) {
-        pmix_barrier_local();
+        return pmix_barrier_local();
     } else {
         return pmix_barrier();
     }
