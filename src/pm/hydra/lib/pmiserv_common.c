@@ -160,10 +160,9 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_kvs
 #ifdef PMI_KEY_CHECK
         const char *dummy_val;
         int found;
-        HYD_kvs_find(kvs, key, &val, &found);
+        HYD_kvs_find(kvs, key, &dummy_val, &found);
         if (found) {
             *ret = -1;
-            goto fn_fail;
         }
 #endif
         key_pair->next = kvs->key_pair;
