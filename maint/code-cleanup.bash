@@ -102,7 +102,7 @@ if [ -z "$1" ]; then
     exit
 fi
 
-filetype_list="\.c$|\.h$|\.c\.in$|\.h\.in$|\.cpp$|\.cpp.in$"
+filetype_list="\.c$|\.h$|\.c\.in$|\.h\.in$|\.cpp$|\.cpp.in$|\.inc$"
 
 ignore_list="doc/"
 ignore_list="$ignore_list|src/mpid/ch3/doc"
