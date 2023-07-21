@@ -161,11 +161,10 @@ static int pmix_barrier_local(void)
     int pmi_errno;
 
     int local_size = MPIR_Process.local_size;
-    pmix_proc_t *procs = MPL_malloc(local_size * sizeof(pmix_proc_t), MPL_MEM_OTHER);
+    pmix_proc_t *procs = NULL;
+    PMIX_PROC_CREATE(procs, local_size);
     for (int i = 0; i < local_size; i++) {
-        PMIX_PROC_CONSTRUCT(&procs[i]);
-        strncpy(procs[i].nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
-        procs[i].rank = MPIR_Process.node_local_map[i];
+        PMIX_LOAD_PROCID(&(procs[i]), pmix_proc.nspace, MPIR_Process.node_local_map[i]);
     }
 
     pmix_info_t *info;
@@ -178,7 +177,7 @@ static int pmix_barrier_local(void)
                          "**pmix_fence %d", pmi_errno);
 
     PMIX_INFO_FREE(info, 1);
-    MPL_free(procs);
+    PMIX_PROC_FREE(procs, local_size);
 
   fn_exit:
     return mpi_errno;
