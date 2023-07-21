@@ -209,8 +209,8 @@ static HYD_status fill_preput_kvs(struct HYD_kvs *kvs, int preput_num, struct PM
     HYD_status status = HYD_SUCCESS;
 
     for (int i = 0; i < preput_num; i++) {
-        int ret;
-        status = HYD_pmcd_pmi_add_kvs(infos[i].key, infos[i].val, kvs, &ret);
+        status = HYD_pmcd_pmi_add_kvs(infos[i].key, infos[i].val, kvs,
+                                      HYD_server_info.user_global.debug);
         HYDU_ERR_POP(status, "unable to add key pair to kvs\n");
     }
 

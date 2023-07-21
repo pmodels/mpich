@@ -140,7 +140,7 @@ HYD_status HYD_kvs_find(struct HYD_kvs *kvs_list, const char *key, const char **
     return HYD_SUCCESS;
 }
 
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_kvs * kvs, int *ret)
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_kvs * kvs, int debug)
 {
     struct HYD_kvs_pair *key_pair;
     HYD_status status = HYD_SUCCESS;
@@ -152,19 +152,18 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_kvs
     snprintf(key_pair->val, PMI_MAXVALLEN, "%s", val);
     key_pair->next = NULL;
 
-    *ret = 0;
-
     if (kvs->key_pair == NULL) {
         kvs->key_pair = key_pair;
     } else {
-#ifdef PMI_KEY_CHECK
-        const char *dummy_val;
-        int found;
-        HYD_kvs_find(kvs, key, &dummy_val, &found);
-        if (found) {
-            *ret = -1;
+        if (debug) {
+            const char *orig_val;
+            int found;
+            HYD_kvs_find(kvs, key, &orig_val, &found);
+            if (found) {
+                HYDU_dump(stdout, "add to kvs: duplicate key %s - replacing value %s with %s.\n",
+                          key, orig_val, val);
+            }
         }
-#endif
         key_pair->next = kvs->key_pair;
         kvs->key_pair = key_pair;
     }
