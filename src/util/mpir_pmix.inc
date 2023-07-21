@@ -53,14 +53,15 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     PMIX_VALUE_RELEASE(pvalue);
 
   fn_exit:
+    /* FIXME: support spawn and appnum */
+    *has_parent = 0;
+    *appnum = 0;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
   singleton_out:
     *rank = 0;
     *size = 1;
-    *appnum = 0;
-    *has_parent = 0;
     pmi_kvs_name = MPL_strdup("0");
     goto fn_exit;
 }
