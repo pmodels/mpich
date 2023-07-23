@@ -36,8 +36,13 @@ typedef struct MPL_cmdlist_pool {
     struct MPL_cmdlist_pool *next, *prev;
 } MPL_cmdlist_pool_t;
 
-typedef struct {
+typedef struct MPL_ze_event {
     ze_event_handle_t event;
+    struct MPL_ze_event *next, *prev;
+} MPL_gpu_event;
+
+typedef struct {
+    MPL_gpu_event *gpu_event;
     MPL_cmdlist_pool_t *cmdList;
 } MPL_gpu_request;
 
@@ -52,8 +57,8 @@ typedef volatile int MPL_gpu_event_t;
 #define MPL_GPU_DEV_AFFINITY_ENV "ZE_AFFINITY_MASK"
 
 /* ZE specific function */
-int MPL_ze_init_device_fds(int *num_fds, int *device_fds);
-void MPL_ze_set_fds(int num_fds, int *fds);
+int MPL_ze_init_device_fds(int *num_fds, int *device_fds, int *bdfs);
+void MPL_ze_set_fds(int num_fds, int *fds, int *bdfs);
 void MPL_ze_ipc_remove_cache_handle(void *dptr);
 int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, int local_dev_id,
                              int use_shared_fd, MPL_gpu_ipc_mem_handle_t * ipc_handle);

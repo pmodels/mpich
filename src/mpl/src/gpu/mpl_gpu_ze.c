@@ -50,11 +50,20 @@ static uint32_t max_subdev_id;
 static char **device_list = NULL;
 static int *engine_conversion = NULL;
 
-#define MPL_ZE_EVENT_POOL_SIZE    16384
+#define MPL_ZE_EVENT_POOL_SIZE    (4096)
+
+typedef struct MPL_ze_event_pool {
+    ze_event_pool_handle_t pool;
+    struct MPL_ze_event_pool *next, *prev;
+} MPL_ze_event_pool;
+
+static MPL_ze_event_pool *ze_event_pools = NULL;
+static MPL_gpu_event *ze_events = NULL;
 
 typedef struct {
     ze_command_queue_handle_t *cmdQueues;
     MPL_cmdlist_pool_t *cmdList_pool;
+    ze_command_list_handle_t *cmdlists; /* immediate command lists */
     unsigned int numQueues, curQueue;
 } MPL_ze_engine_entry_t;
 
@@ -62,16 +71,16 @@ typedef struct {
     int dev_id;
     unsigned int numQueueGroups;
     MPL_ze_engine_entry_t *engines;
-    ze_event_handle_t prev_event;       /* for imemcopy */
-    MPL_cmdlist_pool_t *last_cmdList_entry;     /* for imemcopy */
+    MPL_gpu_event *prev_event[MPL_GPU_COPY_DIRECTION_TYPES];    /* for imemcpy */
+    MPL_cmdlist_pool_t *last_cmdList_entry[MPL_GPU_COPY_DIRECTION_TYPES];       /* for imemcopy */
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
     ze_pci_address_ext_t pci;
     int pci_avail;
+    int sys_device_index;
 #endif
 } MPL_ze_device_entry_t;
 
 static MPL_ze_device_entry_t *device_states;
-static ze_event_pool_handle_t eventPool;
 
 /* Affinity mask contents */
 typedef struct {
@@ -95,8 +104,13 @@ static int *subdevice_map = NULL;
 static uint32_t *subdevice_count = NULL;
 
 /* For drmfd */
-static int shared_device_fd_count = 0;
-static int *shared_device_fds = NULL;
+typedef struct _physical_device_state {
+    int fd;
+    int domain, bus, device, function;
+} physical_device_state;
+
+static int physical_device_count = 0;
+static physical_device_state *physical_device_states = NULL;
 
 typedef struct {
     const void *ptr;
@@ -183,6 +197,11 @@ static int parse_affinity_mask();
 static void get_max_dev_id(int *max_dev_id, int *max_subdev_id);
 static int gpu_mem_hook_init(void);
 static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
+static int MPL_event_pool_add_new_pool(void);
+static void MPL_event_pool_destroy(void);
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+static int search_physical_devices(ze_pci_address_ext_t pci);
+#endif
 
 /* For zeMemFree callbacks */
 static gpu_free_hook_s *free_hook_chain = NULL;
@@ -458,6 +477,13 @@ int MPL_gpu_init(int debug_summary)
         goto fn_exit;
     }
 
+    MPL_gpu_info.debug_summary = debug_summary;
+    MPL_gpu_info.enable_ipc = true;
+
+    if (MPL_gpu_info.debug_summary) {
+        printf("==== GPU Init (ZE) ====\n");
+    }
+
     mpl_err = gpu_ze_init_driver();
     if (mpl_err != MPL_SUCCESS)
         goto fn_fail;
@@ -534,7 +560,6 @@ int MPL_gpu_init(int debug_summary)
     gpu_initialized = 1;
 
     if (MPL_gpu_info.debug_summary) {
-        printf("==== GPU Init (ZE) ====\n");
         printf("device_count: %d\n", device_count);
         printf("subdevice_count: %d\n", local_ze_device_count - device_count);
         printf("=========================\n");
@@ -549,6 +574,16 @@ int MPL_gpu_init(int debug_summary)
 /* Get dev_id for shared_device_fds from regular dev_id */
 int MPL_gpu_get_root_device(int dev_id)
 {
+    return subdevice_map[dev_id];
+}
+
+/* Get dev_id for shared_device_fds from regular dev_id */
+static int get_physical_device(int dev_id)
+{
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+    if (device_states[dev_id].sys_device_index != -1)
+        return device_states[dev_id].sys_device_index;
+#endif
     return subdevice_map[dev_id];
 }
 
@@ -664,7 +699,7 @@ static int mmapFunction(int nfds, int *fds, size_t size, void **ptr)
         if (*ptr == (void *) -1) {
             mpl_err = MPL_ERR_GPU_INTERNAL;
             perror("mmap device to host");
-            printf("gdr_handle_open failed fd: %d\n", fds[0]);
+            printf("mmap failed fd: %d size: %ld\n", fds[0], size);
             goto fn_fail;
         }
     } else {
@@ -794,6 +829,9 @@ static int gpu_ze_init_driver(void)
     ret = zeDriverGet(&driver_count, NULL);
     ZE_ERR_CHECK(ret);
     if (driver_count == 0) {
+        if (MPL_gpu_info.debug_summary) {
+            printf("No Intel GPU library driver found.\n");
+        }
         goto fn_fail;
     }
 
@@ -888,6 +926,10 @@ static int gpu_ze_init_driver(void)
 
             dev_id += subdevice_count[d];
         }
+    } else {
+        if (MPL_gpu_info.debug_summary) {
+            printf("No Intel GPU device found.\n");
+        }
     }
 
     ze_context_desc_t contextDesc = {
@@ -906,8 +948,10 @@ static int gpu_ze_init_driver(void)
         unsigned int numQueueGroups = 0;
         MPL_ze_device_entry_t *device_state = device_states + d;
         device_state->dev_id = d;
-        device_state->prev_event = NULL;
-        device_state->last_cmdList_entry = NULL;
+        memset(device_state->prev_event, 0,
+               MPL_GPU_COPY_DIRECTION_TYPES * sizeof(ze_event_handle_t));
+        memset(device_state->last_cmdList_entry, 0,
+               MPL_GPU_COPY_DIRECTION_TYPES * sizeof(MPL_cmdlist_pool_t *));
         ret = zeDeviceGetCommandQueueGroupProperties(ze_devices_handle[d], &numQueueGroups, NULL);
         ZE_ERR_CHECK(ret);
         ze_command_queue_group_properties_t *queueProperties =
@@ -941,9 +985,16 @@ static int gpu_ze_init_driver(void)
                                                              MPL_MEM_OTHER);
                 memset(device_state->engines[i].cmdQueues, 0,
                        sizeof(ze_command_queue_handle_t) * device_state->engines[i].numQueues);
+                device_state->engines[i].cmdlists =
+                    (ze_command_list_handle_t *) MPL_malloc(sizeof(ze_command_list_handle_t) *
+                                                            device_state->engines[i].numQueues,
+                                                            MPL_MEM_OTHER);
+                memset(device_state->engines[i].cmdlists, 0,
+                       device_state->engines[i].numQueues * sizeof(ze_command_list_handle_t));
             }
         }
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
+        device_state->sys_device_index = -1;
         ze_pci_ext_properties_t pci_property = {
             .stype = ZE_STRUCTURE_TYPE_PCI_EXT_PROPERTIES,
             .pNext = NULL,
@@ -959,13 +1010,7 @@ static int gpu_ze_init_driver(void)
         MPL_free(queueProperties);
     }
 
-    ze_event_pool_desc_t pool_desc;
-    pool_desc.stype = ZE_STRUCTURE_TYPE_EVENT_POOL_DESC;
-    pool_desc.pNext = NULL;
-    pool_desc.flags = 0;
-    pool_desc.count = MPL_ZE_EVENT_POOL_SIZE;
-    ret = zeEventPoolCreate(ze_context, &pool_desc, 0, NULL, &eventPool);
-    ZE_ERR_CHECK(ret);
+    MPL_event_pool_add_new_pool();
 
     /* driver extension */
     ret =
@@ -979,6 +1024,47 @@ static int gpu_ze_init_driver(void)
                                             (void **) &zexMemOpenIpcHandles);
     if (ZE_RESULT_SUCCESS != ret)
         zexMemOpenIpcHandles = NULL;
+
+    if (MPL_gpu_info.debug_summary) {
+        for (d = 0; d < local_ze_device_count; ++d) {
+            MPL_ze_device_entry_t *device_state = device_states + d;
+            ze_device_properties_t device_properties;
+            memset(&device_properties, 0, sizeof(ze_device_properties_t));
+            device_properties.stype = ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES;
+            device_properties.pNext = NULL;
+            ret = zeDeviceGetProperties(ze_devices_handle[d], &device_properties);
+            fprintf(stderr, "==== Device %d ====\n", d);
+            if (d < device_count) {
+                fprintf(stderr, "\troot device: %d tiles\n", subdevice_count[d]);
+            }
+            fprintf(stderr, "  device name: %s\n", device_properties.name);
+            fprintf(stderr, "  deviceId: %d\n", device_properties.deviceId);
+            fprintf(stderr, "  subdeviceId: %d\n", device_properties.subdeviceId);
+            fprintf(stderr, "  coreClockRate: %d\n", device_properties.coreClockRate);
+            fprintf(stderr, "  maxMemAllocSize: %ld\n", device_properties.maxMemAllocSize);
+            fprintf(stderr, "  maxHardwareContexts: %d\n", device_properties.maxHardwareContexts);
+            fprintf(stderr, "  numThreadsPerEU: %d\n", device_properties.numThreadsPerEU);
+            char uuid_str[1024];
+            strcpy(uuid_str, "uuid: ");
+            for (int j = 0; j < ZE_MAX_DRIVER_UUID_SIZE; j++) {
+                char s[128];
+                sprintf(s, "%x ", device_properties.uuid.id[j]);
+                strcat(uuid_str, s);
+            }
+            fprintf(stderr, "  %s\n", uuid_str);
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+            if (device_state->pci_avail)
+                fprintf(stderr, "  BDF: domain:%x B:%x D:%x F:%x\n", device_state->pci.domain,
+                        device_state->pci.bus, device_state->pci.device,
+                        device_state->pci.function);
+#endif
+            fprintf(stderr, "  Command Queue (engine) types: %d \n", device_state->numQueueGroups);
+            for (i = 0; i < device_state->numQueueGroups; i++) {
+                fprintf(stderr, "    Engine: %d  numQueues: %d \n", i,
+                        device_state->engines[i].numQueues);
+            }
+        }
+    }
 
   fn_exit:
     MPL_free(all_drivers);
@@ -1146,11 +1232,11 @@ int MPL_gpu_finalize(void)
         MPL_free(entry);
     }
 
-    for (i = 0; i < shared_device_fd_count; ++i) {
-        close(shared_device_fds[i]);
+    for (i = 0; i < physical_device_count; ++i) {
+        close(physical_device_states[i].fd);
     }
 
-    MPL_free(shared_device_fds);
+    MPL_free(physical_device_states);
 
     gpu_free_hook_s *prev;
     while (free_hook_chain) {
@@ -1166,8 +1252,11 @@ int MPL_gpu_finalize(void)
             for (k = 0; k < engine->numQueues; k++) {
                 if (engine->cmdQueues[k])
                     zeCommandQueueDestroy(engine->cmdQueues[k]);
+                if (engine->cmdlists[k])
+                    zeCommandListDestroy(engine->cmdlists[k]);
             }
             MPL_free(engine->cmdQueues);
+            MPL_free(engine->cmdlists);
             MPL_cmdlist_pool_t *cmdlist, *t, *pool = engine->cmdList_pool;
             DL_FOREACH_SAFE(pool, cmdlist, t) {
                 zeCommandListDestroy(cmdlist->cmdList);
@@ -1180,7 +1269,7 @@ int MPL_gpu_finalize(void)
     MPL_free(device_states);
     MPL_free(engine_conversion);
 
-    zeEventPoolDestroy(eventPool);
+    MPL_event_pool_destroy();
 
     return MPL_SUCCESS;
 }
@@ -1195,6 +1284,100 @@ int MPL_gpu_local_to_global_dev_id(int local_dev_id)
 {
     assert(local_dev_id < local_ze_device_count);
     return local_to_global_map[local_dev_id];
+}
+
+static int MPL_event_pool_add_new_pool(void)
+{
+    int mpl_err = MPL_SUCCESS;
+    int ret;
+    ze_event_pool_handle_t event_pool;
+
+    ze_event_pool_desc_t pool_desc;
+    pool_desc.stype = ZE_STRUCTURE_TYPE_EVENT_POOL_DESC;
+    pool_desc.pNext = NULL;
+    pool_desc.flags = 0;
+    pool_desc.count = MPL_ZE_EVENT_POOL_SIZE;
+    ret = zeEventPoolCreate(ze_context, &pool_desc, 0, NULL, &event_pool);
+    ZE_ERR_CHECK(ret);
+
+    MPL_ze_event_pool *ep =
+        (MPL_ze_event_pool *) MPL_calloc(1, sizeof(MPL_ze_event_pool), MPL_MEM_OTHER);
+    if (ep == NULL) {
+        mpl_err = MPL_ERR_GPU_NOMEM;
+        goto fn_exit;
+    }
+    ep->pool = event_pool;
+    DL_APPEND(ze_event_pools, ep);
+
+    for (int i = 0; i < MPL_ZE_EVENT_POOL_SIZE; i++) {
+        ze_event_handle_t event = NULL;
+        ze_event_desc_t event_desc = {
+            .stype = ZE_STRUCTURE_TYPE_EVENT_DESC,
+            .pNext = NULL,
+            .index = i,
+            .signal = ZE_EVENT_SCOPE_FLAG_HOST,
+            .wait = ZE_EVENT_SCOPE_FLAG_HOST
+        };
+        ret = zeEventCreate(event_pool, &event_desc, &event);
+        ZE_ERR_CHECK(ret);
+        MPL_gpu_event *e = (MPL_gpu_event *) MPL_calloc(1, sizeof(MPL_gpu_event), MPL_MEM_OTHER);
+        if (e == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_exit;
+        }
+        e->event = event;
+        DL_APPEND(ze_events, e);
+    }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+static inline int MPL_event_pool_get_event(MPL_gpu_event ** event)
+{
+    int mpl_err = MPL_SUCCESS;
+    MPL_gpu_event *e = NULL;
+
+    if (ze_events == NULL) {
+        mpl_err = MPL_event_pool_add_new_pool();
+        if (mpl_err != MPL_SUCCESS) {
+            goto fn_fail;
+        }
+    }
+    assert(ze_events);
+    e = ze_events;
+    DL_DELETE(ze_events, e);
+    zeEventHostReset(e->event);
+    *event = e;
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+static inline void MPL_event_pool_push_event(MPL_gpu_event * gpu_event)
+{
+    DL_APPEND(ze_events, gpu_event);
+}
+
+static void MPL_event_pool_destroy(void)
+{
+    MPL_gpu_event *e, *e_tmp;
+    MPL_ze_event_pool *ep, *ep_tmp;
+
+    DL_FOREACH_SAFE(ze_events, e, e_tmp) {
+        zeEventDestroy(e->event);
+        MPL_free(e);
+    }
+    DL_FOREACH_SAFE(ze_event_pools, ep, ep_tmp) {
+        zeEventPoolDestroy(ep->pool);
+        MPL_free(ep);
+    }
 }
 
 /* given a local device pointer, create an IPC handle */
@@ -1297,7 +1480,7 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
     int dev_id;
     uint64_t mem_id;
 
-    if (shared_device_fds != NULL) {
+    if (physical_device_states != NULL) {
         MPL_ze_gem_hash_entry_t *entry = NULL;
         HASH_FIND_PTR(gem_hash, &ptr, entry);
         if (entry == NULL) {
@@ -1306,15 +1489,16 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
         }
 
         HASH_DEL(gem_hash, entry);
-        MPL_free(entry);
 
         /* close GEM handle */
         for (int i = 0; i < entry->nhandles; i++) {
-            status = close_handle(shared_device_fds[entry->dev_id], entry->handles[i]);
+            status = close_handle(physical_device_states[entry->dev_id].fd, entry->handles[i]);
             if (status) {
                 goto fn_fail;
             }
         }
+
+        MPL_free(entry);
     }
 
     if (likely(MPL_gpu_info.specialized_cache)) {
@@ -1640,7 +1824,8 @@ int MPL_gpu_query_is_same_dev(int global_dev1, int global_dev2)
         return 0;
 
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
-    if (MPL_gpu_get_root_device(local_dev1) == MPL_gpu_get_root_device(local_dev2))
+    if (get_physical_device(local_dev1) != -1 && get_physical_device(local_dev2) != -1 &&
+        get_physical_device(local_dev1) == get_physical_device(local_dev2))
         return 1;
 
     device_state1 = device_states + local_dev1;
@@ -1772,23 +1957,21 @@ static int create_cmdqueue(int dev, int engine)
     int mpl_err = MPL_SUCCESS;
     int ret;
 
-    ze_command_queue_desc_t cmdQueueDesc = {
-        .stype = ZE_STRUCTURE_TYPE_COMMAND_QUEUE_DESC,
-        .pNext = NULL,
-        .index = 0,
-        .flags = 0,
-        .ordinal = engine,
-        .mode = ZE_COMMAND_QUEUE_MODE_ASYNCHRONOUS,
-        .priority = ZE_COMMAND_QUEUE_PRIORITY_NORMAL,
-    };
-
     MPL_ze_device_entry_t *device_state = device_states + dev;
     assert(engine < device_state->numQueueGroups);
     MPL_ze_engine_entry_t *engine_state = device_state->engines + engine;
     assert(engine_state->numQueues);
 
     for (int i = 0; i < engine_state->numQueues; i++) {
-        cmdQueueDesc.index = i;
+        ze_command_queue_desc_t cmdQueueDesc = {
+            .stype = ZE_STRUCTURE_TYPE_COMMAND_QUEUE_DESC,
+            .pNext = NULL,
+            .index = i,
+            .flags = 0,
+            .ordinal = engine,
+            .mode = ZE_COMMAND_QUEUE_MODE_ASYNCHRONOUS,
+            .priority = ZE_COMMAND_QUEUE_PRIORITY_NORMAL,
+        };
         ret =
             zeCommandQueueCreate(ze_context, ze_devices_handle[dev], &cmdQueueDesc,
                                  &engine_state->cmdQueues[i]);
@@ -1814,9 +1997,10 @@ static int get_cmdlist(int dev, int engine, MPL_cmdlist_pool_t ** cl_entry)
     if (engine > device_states[dev].numQueueGroups - 1 ||
         device_states[dev].engines[engine].numQueues == 0) {
         /* certain type of engine may not be available on the subdevices */
-        dev = MPL_gpu_get_root_device(dev);
-        if (device_states[dev].engines[engine].numQueues == 0)
+        int parent_dev = MPL_gpu_get_root_device(dev);
+        if (parent_dev == dev || device_states[dev].engines[engine].numQueues == 0)
             goto fn_fail;
+        dev = parent_dev;
     }
     assert(dev < local_ze_device_count);
     device_state = device_states + dev;
@@ -1853,24 +2037,64 @@ static int get_cmdlist(int dev, int engine, MPL_cmdlist_pool_t ** cl_entry)
     goto fn_exit;
 }
 
-static inline int get_next_event(ze_event_handle_t * event)
+/* immediate command list utility functions */
+static inline int get_immediate_cmdlist(int *dev, MPL_gpu_copy_direction_t dir, int engine,
+                                        ze_command_list_handle_t * cl)
 {
-    static int pool_idx = 0;
     int mpl_err = MPL_SUCCESS;
-    int ret;
+    int ret, index;
+    MPL_ze_device_entry_t *device_state;
 
-    *event = NULL;
-    ze_event_desc_t event_desc = {
-        .stype = ZE_STRUCTURE_TYPE_EVENT_DESC,
-        .pNext = NULL,
-        .signal = ZE_EVENT_SCOPE_FLAG_HOST,
-        .wait = ZE_EVENT_SCOPE_FLAG_HOST
-    };
-    event_desc.index = pool_idx++;
-    if (pool_idx >= MPL_ZE_EVENT_POOL_SIZE)
-        pool_idx = 0;
-    ret = zeEventCreate(eventPool, &event_desc, event);
-    ZE_ERR_CHECK(ret);
+    if (engine > device_states[*dev].numQueueGroups - 1 ||
+        device_states[*dev].engines[engine].numQueues == 0) {
+        /* certain type of engine may not be available on the subdevices */
+        *dev = MPL_gpu_get_root_device(*dev);
+        if (device_states[*dev].engines[engine].numQueues == 0)
+            goto fn_fail;
+    }
+    assert(*dev < local_ze_device_count);
+    device_state = device_states + *dev;
+    assert(engine < device_state->numQueueGroups);
+    MPL_ze_engine_entry_t *engine_state = device_state->engines + engine;
+
+    if (dir == MPL_GPU_COPY_DIRECTION_NONE) {
+        if (MPL_gpu_info.roundrobin_cmdq) {
+            index = engine_state->curQueue;
+            /* move to next queue */
+            engine_state->curQueue++;
+            if (engine_state->curQueue == engine_state->numQueues)
+                engine_state->curQueue = 0;
+        } else {
+            index = 0;
+        }
+    } else {
+        if (MPL_gpu_info.roundrobin_cmdq)
+            index = dir % engine_state->numQueues;
+        else
+            index = 0;
+    }
+
+    if (!engine_state->cmdlists[index]) {
+        assert(engine_state->numQueues);
+
+        for (int i = 0; i < engine_state->numQueues; i++) {
+            ze_command_queue_desc_t cmdQueueDesc = {
+                .stype = ZE_STRUCTURE_TYPE_COMMAND_QUEUE_DESC,
+                .pNext = NULL,
+                .index = i,
+                .flags = 0,
+                .ordinal = engine,
+                .mode = ZE_COMMAND_QUEUE_MODE_ASYNCHRONOUS,
+                .priority = ZE_COMMAND_QUEUE_PRIORITY_NORMAL,
+            };
+            ret = zeCommandListCreateImmediate(ze_context, ze_devices_handle[*dev], &cmdQueueDesc,
+                                               &engine_state->cmdlists[i]);
+            ZE_ERR_CHECK(ret);
+        }
+    }
+    assert(engine_state->cmdlists[index]);
+
+    *cl = engine_state->cmdlists[index];
 
   fn_exit:
     return mpl_err;
@@ -1882,14 +2106,19 @@ static inline int get_next_event(ze_event_handle_t * event)
 /* no safety check in this function, call this function with safety protection.
    commit = false: append to command list only
    commit = true:  close the command list and submit to command queue
+   direction can be 0, 1:  for device to host   d2h h2d
+                    2, 3:  for device to device    local to remote, remote to local
+                    4:     no direction, can use random command list and queue
 */
-int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
-                    MPL_gpu_engine_type_t engine_type, MPL_gpu_request * req, bool commit)
+static int MPL_gpu_imemcpy_normal(void *dest_ptr, void *src_ptr, size_t size, int dev,
+                                  MPL_gpu_copy_direction_t dir, MPL_gpu_engine_type_t engine_type,
+                                  MPL_gpu_request * req, bool commit)
 {
-    MPL_ze_device_entry_t *device_state = NULL;
-    ze_event_handle_t event;
-    ze_command_list_handle_t cmdList = NULL;
     int mpl_err = MPL_SUCCESS;
+    MPL_ze_device_entry_t *device_state = NULL;
+    MPL_gpu_event *mpl_event;
+    ze_command_list_handle_t cmdList = NULL;
+    MPL_cmdlist_pool_t *cmdList_entry;
     int ret;
     int orig_dev = dev;
     int engine = engine_conversion[engine_type];
@@ -1897,60 +2126,144 @@ int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
     assert(dev >= 0 && dev < local_ze_device_count);
 
     if (dest_ptr && src_ptr) {
-        ret = get_next_event(&event);
+        MPL_gpu_event *pre_event = NULL;
+        int nevent = 0;
+        ret = MPL_event_pool_get_event(&mpl_event);
         ZE_ERR_CHECK(ret);
-        if (device_states[orig_dev].last_cmdList_entry == NULL) {
-            MPL_cmdlist_pool_t *cmdList_entry;
+        device_state = device_states + dev;
+        if (dir == MPL_GPU_COPY_DIRECTION_NONE) {
             ret = get_cmdlist(orig_dev, engine, &cmdList_entry);
             ZE_ERR_CHECK(ret);
-            device_states[orig_dev].last_cmdList_entry = cmdList_entry;
-            dev = cmdList_entry->dev;
+            cmdList = cmdList_entry->cmdList;
+        } else {
+            if (!device_states[orig_dev].last_cmdList_entry[dir]) {
+                ret = get_cmdlist(orig_dev, engine, &cmdList_entry);
+                ZE_ERR_CHECK(ret);
+                device_states[orig_dev].last_cmdList_entry[dir] = cmdList_entry;
+                dev = cmdList_entry->dev;
+                device_state = device_states + dev;
+            }
+            cmdList_entry = device_states[orig_dev].last_cmdList_entry[dir];
+            cmdList = cmdList_entry->cmdList;
+            if (device_state->prev_event[dir]) {
+                pre_event = device_state->prev_event[dir];
+                nevent = 1;
+            }
+            if (device_states[orig_dev].last_cmdList_entry[dir]->dev != dev)
+                goto fn_fail;
+            device_state->prev_event[dir] = mpl_event;
         }
-        cmdList = device_states[orig_dev].last_cmdList_entry->cmdList;
-        if (device_states[orig_dev].last_cmdList_entry->dev != dev)
-            goto fn_fail;
         assert(dev < local_ze_device_count);
-        device_state = device_states + dev;
         ret =
-            zeCommandListAppendMemoryCopy(cmdList, dest_ptr, src_ptr, size, event,
-                                          device_state->prev_event ? 1 : 0,
-                                          device_state->
-                                          prev_event ? &device_state->prev_event : NULL);
+            zeCommandListAppendMemoryCopy(cmdList, dest_ptr, src_ptr, size, mpl_event->event,
+                                          nevent, pre_event ? &pre_event->event : NULL);
         ZE_ERR_CHECK(ret);
-        req->event = event;
-        device_state->prev_event = event;
+        req->gpu_event = mpl_event;
     } else {
+        /* unlikely */
         device_state = device_states + dev;
-        assert(device_state->prev_event);
-        req->event = device_state->prev_event;
-        if (device_state->last_cmdList_entry)
-            cmdList = device_state->last_cmdList_entry->cmdList;
+        assert(device_state->prev_event[dir]);
+        req->gpu_event = device_state->prev_event[dir];
+        assert(dir < MPL_GPU_COPY_DIRECTION_TYPES);
+        cmdList_entry = device_states[orig_dev].last_cmdList_entry[dir];
+        assert(cmdList_entry);
+        cmdList = cmdList_entry->cmdList;
     }
     if (commit && cmdList) {
+        MPL_ze_engine_entry_t *engine_state = device_state->engines + engine;
         ret = zeCommandListClose(cmdList);
         ZE_ERR_CHECK(ret);
-        int q_index = device_state->engines[engine].curQueue;
-        assert(device_state->engines[engine].cmdQueues);
-        ze_command_queue_handle_t cmdq = device_state->engines[engine].cmdQueues[q_index];
+        int q_index;
+        if (dir == MPL_GPU_COPY_DIRECTION_NONE) {
+            if (MPL_gpu_info.roundrobin_cmdq) {
+                q_index = engine_state->curQueue;
+                /* move to next queue */
+                engine_state->curQueue++;
+                if (engine_state->curQueue == engine_state->numQueues)
+                    engine_state->curQueue = 0;
+            } else {
+                q_index = 0;
+            }
+        } else {
+            if (MPL_gpu_info.roundrobin_cmdq)
+                q_index = dir % engine_state->numQueues;
+            else
+                q_index = 0;
+        }
+        assert(engine_state->cmdQueues);
+        ze_command_queue_handle_t cmdq = engine_state->cmdQueues[q_index];
         if (cmdq == NULL) {
             mpl_err = create_cmdqueue(device_state->dev_id, engine);
             if (mpl_err != MPL_SUCCESS)
                 goto fn_fail;
-            cmdq = device_state->engines[engine].cmdQueues[q_index];
+            cmdq = engine_state->cmdQueues[q_index];
             assert(cmdq);
         }
         ret = zeCommandQueueExecuteCommandLists(cmdq, 1, &cmdList, NULL);
         ZE_ERR_CHECK(ret);
-        /* move to next queue */
-        device_state->engines[engine].curQueue++;
-        if (device_state->engines[engine].curQueue == device_state->engines[engine].numQueues)
-            device_state->engines[engine].curQueue = 0;
-        req->cmdList = device_states[orig_dev].last_cmdList_entry;
-        device_states[orig_dev].last_cmdList_entry = NULL;
+        req->cmdList = cmdList_entry;
+        if (dir != MPL_GPU_COPY_DIRECTION_NONE)
+            device_states[orig_dev].last_cmdList_entry[dir] = NULL;
     } else {
         /* continue building the command list till done */
         req->cmdList = NULL;
     }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+/* use immediate command list, commit is ignored */
+int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
+                    MPL_gpu_copy_direction_t dir, MPL_gpu_engine_type_t engine_type,
+                    MPL_gpu_request * req, bool commit)
+{
+    int mpl_err = MPL_SUCCESS;
+    int ret;
+    MPL_ze_device_entry_t *device_state = NULL;
+    MPL_gpu_event *mpl_event, *pre_event = NULL;
+    ze_command_list_handle_t cmdl;
+    int nevent = 0;
+    int engine = -1;
+
+    assert(dev >= 0 && dev < local_ze_device_count);
+    /* if engine type does not exist, e.g. link copy does not exist on ATS
+     * use the highest engine number */
+    assert(engine_type >= 0 && engine_type < MPL_GPU_ENGINE_TYPE_LAST);
+    engine = engine_conversion[engine_type];
+    if (engine >= device_states[dev].numQueueGroups) {
+        engine_type = device_states[dev].numQueueGroups - 1;
+        engine = engine_conversion[engine_type];
+    }
+
+    if (!MPL_gpu_info.use_immediate_cmdlist) {
+        return MPL_gpu_imemcpy_normal(dest_ptr, src_ptr, size, dev, dir, engine_type, req, commit);
+    }
+
+    assert(dest_ptr && src_ptr);
+
+    ret = MPL_event_pool_get_event(&mpl_event);
+    ZE_ERR_CHECK(ret);
+    ret = get_immediate_cmdlist(&dev, dir, engine, &cmdl);
+    ZE_ERR_CHECK(ret);
+    assert(cmdl);
+    device_state = device_states + dev;
+    if (dir != MPL_GPU_COPY_DIRECTION_NONE) {
+        if (device_state->prev_event[dir]) {
+            nevent = 1;
+            pre_event = device_state->prev_event[dir];
+        }
+        device_state->prev_event[dir] = mpl_event;
+    }
+    ret =
+        zeCommandListAppendMemoryCopy(cmdl, dest_ptr, src_ptr, size, mpl_event->event, nevent,
+                                      nevent ? &pre_event->event : NULL);
+    ZE_ERR_CHECK(ret);
+    req->cmdList = NULL;
+    req->gpu_event = mpl_event;
 
   fn_exit:
     return mpl_err;
@@ -1964,14 +2277,15 @@ int MPL_gpu_test(MPL_gpu_request * req, int *completed)
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
 
-    assert(req->event);
-    ret = zeEventQueryStatus(req->event);
+    assert(req->gpu_event->event);
+    ret = zeEventQueryStatus(req->gpu_event->event);
     if (ret == ZE_RESULT_SUCCESS) {
         *completed = 1;
         if (req->cmdList) {
             DL_APPEND(device_states[req->cmdList->dev].engines[req->cmdList->engine].cmdList_pool,
                       req->cmdList);
         }
+        MPL_event_pool_push_event(req->gpu_event);
     } else if (ret != ZE_RESULT_NOT_READY) {
         assert(0);
         goto fn_fail;
@@ -2079,7 +2393,27 @@ ze_result_t ZE_APICALL zeMemFree(ze_context_handle_t hContext, void *dptr)
 
 /* ZE-Specific Functions */
 
-int MPL_ze_init_device_fds(int *num_fds, int *device_fds)
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+static void queryBDF(char *pcipath, int *domain, int *b, int *d, int *f)
+{
+    char *endptr = NULL;
+    const char *device_suffix = "-render";
+
+    char *rdsPos = strstr(pcipath, device_suffix);
+    assert(rdsPos);
+
+    char *bdfstr = rdsPos - 12;
+
+    *domain = strtol(bdfstr, &endptr, 16);
+    bdfstr = endptr + 1;
+    *b = strtol(bdfstr, &endptr, 16);
+    bdfstr = endptr + 1;
+    *d = strtol(bdfstr, &endptr, 16);
+    bdfstr = endptr + 1;
+    *f = strtol(bdfstr, &endptr, 16);
+}
+
+static int get_bdfs(int nfds, int *bdfs)
 {
     const char *device_directory = "/dev/dri/by-path";
     const char *device_suffix = "-render";
@@ -2113,15 +2447,13 @@ int MPL_ze_init_device_fds(int *num_fds, int *device_fds)
         strcat(dev_name, "/");
         strcat(dev_name, ent->d_name);
 
-        /* Open the device */
-        if (device_fds) {
-            device_fds[n] = open(dev_name, O_RDWR);
-        }
-
-        n++;
+        int domain, b, d, f;
+        queryBDF(dev_name, &domain, &b, &d, &f);
+        bdfs[n++] = domain;
+        bdfs[n++] = b;
+        bdfs[n++] = d;
+        bdfs[n++] = f;
     }
-
-    *num_fds = n;
 
   fn_exit:
     return MPL_SUCCESS;
@@ -2129,10 +2461,138 @@ int MPL_ze_init_device_fds(int *num_fds, int *device_fds)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-void MPL_ze_set_fds(int num_fds, int *fds)
+static int search_physical_devices(ze_pci_address_ext_t pci)
 {
-    shared_device_fds = fds;
-    shared_device_fd_count = num_fds;
+    for (int i = 0; i < physical_device_count; i++) {
+        if (physical_device_states[i].domain == pci.domain &&
+            physical_device_states[i].bus == pci.bus &&
+            physical_device_states[i].device == pci.device &&
+            physical_device_states[i].function == pci.function)
+            return i;
+    }
+    return -1;
+}
+#endif
+
+static int compareBDFFn(const void *_a, const void *_b)
+{
+    int *a = (int *) _a;
+    int *b = (int *) _b;
+
+    if (a[0] != b[0])
+        return a[0] - b[0];
+
+    if (a[1] != b[1])
+        return a[1] - b[1];
+
+    if (a[2] != b[2])
+        return a[2] - b[2];
+
+    return a[3] - b[3];
+}
+
+static void sort_bdfs(int n, int *bdfs)
+{
+    qsort(bdfs, n, sizeof(int) * 4, compareBDFFn);
+}
+
+int MPL_ze_init_device_fds(int *num_fds, int *device_fds, int *bdfs)
+{
+    const char *device_directory = "/dev/dri/by-path";
+    const char *device_suffix = "-render";
+    struct dirent *ent = NULL;
+    int n = 0;
+
+#ifndef MPL_ENABLE_DRMFD
+    printf("Error> drmfd is not supported!");
+    goto fn_fail;
+#endif
+
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+    if (device_fds) {
+        get_bdfs(*num_fds, bdfs);
+        /* sort bdf */
+        sort_bdfs(*num_fds, bdfs);
+    }
+#endif
+
+    DIR *dir = opendir(device_directory);
+    if (dir == NULL) {
+        goto fn_fail;
+    }
+
+    /* Search for all devices in the device directory */
+    while ((ent = readdir(dir)) != NULL) {
+        char dev_name[128];
+
+        if (ent->d_name[0] == '.') {
+            continue;
+        }
+
+        /* They must contain the device suffix */
+        if (strstr(ent->d_name, device_suffix) == NULL) {
+            continue;
+        }
+
+        strcpy(dev_name, device_directory);
+        strcat(dev_name, "/");
+        strcat(dev_name, ent->d_name);
+
+        /* Open the device */
+        if (device_fds) {
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+            int domain, b, d, f;
+            queryBDF(dev_name, &domain, &b, &d, &f);
+            /* find in bdfs */
+            n = -1;
+            for (int i = 0; i < *num_fds; i++) {
+                if (domain == bdfs[i * 4] && b == bdfs[i * 4 + 1] && d == bdfs[i * 4 + 2] &&
+                    f == bdfs[i * 4 + 3])
+                    n = i;
+            }
+            assert(n != -1);
+#endif
+            device_fds[n] = open(dev_name, O_RDWR);
+        }
+
+        n++;
+    }
+
+    if (device_fds == NULL)
+        *num_fds = n;
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+void MPL_ze_set_fds(int num_fds, int *fds, int *bdfs)
+{
+    physical_device_count = num_fds;
+    physical_device_states =
+        (physical_device_state *) MPL_malloc(num_fds * sizeof(physical_device_state),
+                                             MPL_MEM_OTHER);
+    for (int i = 0; i < num_fds; i++) {
+        physical_device_states[i].fd = fds[i];
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+        physical_device_states[i].domain = bdfs[4 * i];
+        physical_device_states[i].bus = bdfs[4 * i + 1];
+        physical_device_states[i].device = bdfs[4 * i + 2];
+        physical_device_states[i].function = bdfs[4 * i + 3];
+#endif
+    }
+    MPL_free(fds);
+    MPL_free(bdfs);
+
+#ifdef ZE_PCI_PROPERTIES_EXT_NAME
+    /* update sys_device_index for each logical device */
+    for (int d = 0; d < local_ze_device_count; d++) {
+        MPL_ze_device_entry_t *device_state = device_states + d;
+        device_state->sys_device_index = search_physical_devices(device_state->pci);
+        assert(device_state->sys_device_index != -1);
+    }
+#endif
 }
 
 void MPL_ze_ipc_remove_cache_handle(void *dptr)
@@ -2203,13 +2663,14 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
     ZE_ERR_CHECK(ret);
 
     h.nfds = nfds;
-    if (shared_device_fds != NULL) {
+    if (physical_device_states != NULL) {
         if (use_shared_fd) {
-            int shared_dev_id = MPL_gpu_get_root_device(local_dev_id);
+            int shared_dev_id = get_physical_device(local_dev_id);
             for (int i = 0; i < nfds; i++) {
                 /* convert dma_buf fd to GEM handle */
                 memcpy(&fds[i], &ze_ipc_handle[i], sizeof(int));
-                status = fd_to_handle(shared_device_fds[shared_dev_id], fds[i], &handles[i]);
+                status =
+                    fd_to_handle(physical_device_states[shared_dev_id].fd, fds[i], &handles[i]);
                 if (status) {
                     goto fn_fail;
                 }
@@ -2280,10 +2741,10 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shar
     h = mpl_ipc_handle->data;
     nfds = h.nfds;
 
-    if (shared_device_fds != NULL) {
+    if (physical_device_states != NULL) {
         /* convert GEM handle to fd */
         for (int i = 0; i < nfds; i++) {
-            status = handle_to_fd(shared_device_fds[h.dev_id], h.fds[i], &fds[i]);
+            status = handle_to_fd(physical_device_states[h.dev_id].fd, h.fds[i], &fds[i]);
             if (status) {
                 goto fn_fail;
             }

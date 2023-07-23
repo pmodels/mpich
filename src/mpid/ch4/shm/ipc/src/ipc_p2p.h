@@ -217,7 +217,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
             mpi_errno =
                 MPIR_Localcopy_gpu(src_buf, src_data_sz, MPI_BYTE, NULL,
                                    MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                                   MPIDIG_REQUEST(rreq, datatype), &attr, engine, true);
+                                   MPIDIG_REQUEST(rreq, datatype), &attr,
+                                   MPL_GPU_COPY_DIRECTION_NONE, engine, true);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             /* TODO: get sender datatype and call MPIR_Typerep_op with mapped_device set to dev_id */
