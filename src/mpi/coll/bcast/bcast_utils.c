@@ -218,27 +218,27 @@ bool find_local_rank_linear(int* group, int group_size, int rank, int root, int*
  *  
  *  TODO: This function is temporary. Until we determine a better way to calculate the weights this function will be used. */
 
-bool retrieve_weights(MPIR_Comm * comm_ptr, struct Rank_Info* group, int group_size) {
+bool retrieve_weights(MPIR_Comm * comm_ptr, struct Rank_Info* ranks) {
     if (!group) return 0;
 
     int* intranode_table;
     int* internode_table; 
-    int* node_group;
+    int* external_group;
     int* local_group;
-    int node_count, node_size, comm_size;
-    int rank, node_rank, local_rank;
+    int external_size, local_size, comm_size;
+    int rank, external_rank, local_rank;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
     /* Retrieves the intranode group */
-    MPIR_Find_local(comm_ptr, &node_size, &local_rank, &local_group, &intranode_table);
+    MPIR_Find_local(comm_ptr, &local_size, &local_rank, &local_group, &intranode_table);
 
     /* Retrieves the internode group */
-    MPIR_Find_external(comm_ptr, &node_count, &node_rank, &node_group, &internode_table);
+    MPIR_Find_external(comm_ptr, &external_size, &external_rank, &external_group, &internode_table);
 
-    for (int i = 0; i < group_size; i++) {
-
+    for (int i = 0; i < comm_size; i++) {
+        
     }
 
     
@@ -251,6 +251,6 @@ bool retrieve_weights(MPIR_Comm * comm_ptr, struct Rank_Info* group, int group_s
  *  TODO: There are certainly more optimal ways to build the queue. 
  *  This function is temporary and will stay until a better method is developed */
 
-bool build_queue(MPIR_Comm * comm_ptr, struct Rank_Info* group, int group_size, int* queue) {
+bool build_queue(MPIR_Comm * comm_ptr, struct Rank_Info* ranks, int* queue) {
     if (!group) return 0;
 }
