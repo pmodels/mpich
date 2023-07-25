@@ -34,6 +34,7 @@ int MPIR_Bcast_intra_binomial_group(void *buffer,
     int group_root; // the root of the group
     
     bool found_rank_in_group = find_local_rank_linear(group, group_size, rank, root, &group_rank, &group_root);
+    if (!found_rank_in_group) goto fn_exit;
     
     /* Uncomment the below code snippet for isolated testing */
 

@@ -5,8 +5,6 @@
 
 #include "mpiimpl.h"
 
-
-
 int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype datatype, int root, 
                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag) 
 {
@@ -39,39 +37,35 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
     int* internode_table; 
     int* node_group;
     int* local_group;
-    int node_size, local_size;
+    int node_count, node_size, comm_size;
     int rank, node_rank, local_rank;
-
-    double weight = 1.0;
-    
-    /* keeps track of other the weights of other processes */
-    
-    double* process_weights = NULL;
-
-    
-
-    /* TODO: calculate weights */
-
-    rank = comm_ptr->rank;
-
     /*
     
+    Obviously, if the number of cluster nodes is less than 1, we should just use the flat Bcast. 
+    We might need a control variable for minimum number of nodes to use the hierarchical algorithm. Maybe something like MPIR_CVAR_BCAST_SMP_MIN_NODES
+
     Possible addition to the hierarchical algorithm. It seems as though for really small messages sizes, the flat binomial bcast outperforms the hierarchical
     Bcast.
     
+    if (node_count < MPIR_CVAR_BCAST_SMP_MIN_NODES) {
+        MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+        goto fn_exit;
+    }
+
     if (nbytes < MPIR_CVAR_BCAST_SMP_MSG_SIZE_MIN) {
         MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
         goto fn_exit;
     }
 
     */
+    rank = comm_ptr->rank;
+    comm_size = comm_ptr->local_size;
 
     /* Retrieves the intranode group */
-    MPIR_Find_local(comm_ptr, &local_size, &local_rank, &local_group, &intranode_table);
+    MPIR_Find_local(comm_ptr, &node_size, &local_rank, &local_group, &intranode_table);
 
     /* Retrieves the internode group */
-    MPIR_Find_external(comm_ptr, &node_size, &node_rank, &node_group, &internode_table);
-
+    MPIR_Find_external(comm_ptr, &node_count, &node_rank, &node_group, &internode_table);
 
     /* If the root process is not an external process, we need to perform a send to the external process on the root's node */
     if (intranode_table[root] > 0) {
@@ -96,31 +90,32 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
 
 
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) 
-        || (local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
+        || (node_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
         
         /* Perform the internode broadcast */
         if (node_rank != -1) { // If node_rank is not -1 then this process must be an external process
-            mpi_errno = MPIR_Bcast_intra_binomial_group(buffer, count, datatype, node_group[MPIR_Get_internode_rank(comm_ptr, root)], comm_ptr, node_group, node_size, errflag);
+            mpi_errno = MPIR_Bcast_intra_binomial_group(buffer, count, datatype, node_group[MPIR_Get_internode_rank(comm_ptr, root)], comm_ptr, node_group, node_count, errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
 
-        mpi_errno = MPIR_Bcast_intra_binomial_group(buffer, count, datatype, local_group[0], comm_ptr, local_group, local_size, errflag);
+        mpi_errno = MPIR_Bcast_intra_binomial_group(buffer, count, datatype, local_group[0], comm_ptr, local_group, node_size, errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
     } else {
 
         /* TODO: Need to add support for medium sized msgs and pof2 number of processes*/
         if (node_rank != -1) {
-            mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather_group(buffer, count, datatype, node_group[MPIR_Get_internode_rank(comm_ptr, root)], comm_ptr, node_group, node_size, errflag);
+            mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather_group(buffer, count, datatype, node_group[MPIR_Get_internode_rank(comm_ptr, root)], comm_ptr, node_group, node_count, errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
 
-        mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather_group(buffer, count, datatype, local_group[0], comm_ptr, local_group, local_size, errflag);
+        mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather_group(buffer, count, datatype, local_group[0], comm_ptr, local_group, node_size, errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
     }
 
     fn_exit:
+        MPIR_CHKLMEM_FREEALL();
         return mpi_errno_ret;
 
 }

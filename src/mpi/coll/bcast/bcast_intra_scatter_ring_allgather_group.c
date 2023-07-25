@@ -41,8 +41,10 @@ int MPIR_Bcast_intra_scatter_ring_allgather_group(void *buffer,
     
     rank = comm_ptr->rank;
     int group_rank, group_root;
+    
     bool found_rank_in_group = find_local_rank_linear(group, group_size, rank, root, &group_rank, &group_root);
-
+    if (!found_rank_in_group) go fn_exit;
+    
     /* Uncomment the below code snippet for isolated testing */
 
     // if (!found_rank_in_group) {

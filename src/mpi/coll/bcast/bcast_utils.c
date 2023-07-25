@@ -190,10 +190,12 @@ int MPII_Scatter_for_bcast_group(void *buffer ATTRIBUTE((unused)),
     return mpi_errno_ret;
 }
 
+/* A linear search function to find the local rank of a rank within a subgroup. 
+    This also retrieves the local rank of the root process for that group. Returns 0 on failure and 1 on success. */
 bool find_local_rank_linear(int* group, int group_size, int rank, int root, int* group_rank, int* group_root) {
-    /*
-        linear search for the group_rank
-    */
+    
+    if (!group) return 0;
+
     bool found_rank = 0;
     bool found_root = 0;
 
@@ -207,17 +209,48 @@ bool find_local_rank_linear(int* group, int group_size, int rank, int root, int*
             found_root = 1;
         }
     }
+
     return found_rank && found_root;
 }
 
 
-bool reorder_processes(int* ranks, double* process_weights, int size) [
-    if (!ranks || !processes) 
-        return 0;
+/*  Populates group with weight of each rank. Returns 0 on failure and 1 on success. 
+ *  
+ *  TODO: This function is temporary. Until we determine a better way to calculate the weights this function will be used. */
+
+bool retrieve_weights(MPIR_Comm * comm_ptr, struct Rank_Info* group, int group_size) {
+    if (!group) return 0;
+
+    int* intranode_table;
+    int* internode_table; 
+    int* node_group;
+    int* local_group;
+    int node_count, node_size, comm_size;
+    int rank, node_rank, local_rank;
+
+    comm_size = comm_ptr->local_size;
+    rank = comm_ptr->rank;
+
+    /* Retrieves the intranode group */
+    MPIR_Find_local(comm_ptr, &node_size, &local_rank, &local_group, &intranode_table);
+
+    /* Retrieves the internode group */
+    MPIR_Find_external(comm_ptr, &node_count, &node_rank, &node_group, &internode_table);
+
+    for (int i = 0; i < group_size; i++) {
+
+    }
 
     
-
-
     return 1;
-    
-]
+}
+
+/*  Populates queue with ranks in the order of highest priority. 
+ *  The higher the priority, the closer to index 0 a rank is. 
+ *   
+ *  TODO: There are certainly more optimal ways to build the queue. 
+ *  This function is temporary and will stay until a better method is developed */
+
+bool build_queue(MPIR_Comm * comm_ptr, struct Rank_Info* group, int group_size, int* queue) {
+    if (!group) return 0;
+}
