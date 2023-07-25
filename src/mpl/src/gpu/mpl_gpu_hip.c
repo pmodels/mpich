@@ -123,6 +123,22 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     goto fn_exit;
 }
 
+int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
+{
+    MPL_pointer_attr_t a;
+
+    if (attr == NULL) {
+        MPL_gpu_query_pointer_attr(ptr, &a);
+        attr = &a;
+    }
+    return attr->type == MPL_GPU_POINTER_DEV;
+}
+
+int MPL_gpu_query_is_same_dev(int dev1, int dev2)
+{
+    return dev1 == dev2;
+}
+
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
                               MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
@@ -450,7 +466,8 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
 }
 
 int MPL_gpu_imemcpy(void *dest_ptr, void *src_ptr, size_t size, int dev,
-                    MPL_gpu_engine_type_t engine_type, MPL_gpu_request * req, bool commit)
+                    MPL_gpu_copy_direction_t dir, MPL_gpu_engine_type_t engine_type,
+                    MPL_gpu_request * req, bool commit)
 {
     return MPL_ERR_GPU_INTERNAL;
 }

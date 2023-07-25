@@ -8,6 +8,43 @@
 
 #include "utarray.h"
 
+#define MPIR_THREADCOMM_USE_NONE  0
+#define MPIR_THREADCOMM_USE_FBOX  1
+#define MPIR_THREADCOMM_USE_QUEUE 2
+
+#define MPIR_THREADCOMM_TRANSPORT MPIR_THREADCOMM_USE_QUEUE
+
+#if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
+typedef struct MPIR_threadcomm_fbox_t {
+    union {
+        MPL_atomic_int_t data_ready;
+        void *dummy;            /* for alignment */
+    } u;
+    char cell[];
+} MPIR_threadcomm_fbox_t;
+
+#define MPIR_THREADCOMM_FBOX_SIZE   256
+#define MPIR_THREADCOMM_MAX_PAYLOAD (MPIR_THREADCOMM_FBOX_SIZE - sizeof(MPIR_threadcomm_fbox_t))
+#define MPIR_THREADCOMM_MAILBOX(threadcomm, src, dst) \
+    (MPIR_threadcomm_fbox_t *) (((char *) (threadcomm)->mailboxes) + ((src) + (threadcomm)->num_threads * (dst)) * MPIR_THREADCOMM_FBOX_SIZE)
+
+#elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
+typedef struct MPIR_threadcomm_cell_t {
+    MPL_atomic_ptr_t next;
+    char payload[];
+} MPIR_threadcomm_cell_t;
+
+typedef struct MPIR_threadcomm_queue_t {
+    MPL_atomic_ptr_t head;
+    MPL_atomic_ptr_t tail;
+    char dummy[MPL_CACHELINE_SIZE];
+} MPIR_threadcomm_queue_t;
+
+#define MPIR_THREADCOMM_CELL_SIZE  4096
+#define MPIR_THREADCOMM_MAX_PAYLOAD (MPIR_THREADCOMM_CELL_SIZE - sizeof(MPIR_threadcomm_cell_t))
+
+#endif /* MPIR_THREADCOMM_TRANSPORT */
+
 typedef struct MPIR_Threadcomm {
     MPIR_OBJECT_HEADER;
     MPIR_Comm *comm;
@@ -25,6 +62,15 @@ typedef struct MPIR_Threadcomm {
     MPL_atomic_int_t barrier_flag;
     /* bcast during comm_dup */
     void *bcast_value;
+
+#if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
+    MPIR_threadcomm_fbox_t *mailboxes;
+#elif MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_QUEUE
+    MPIR_threadcomm_queue_t *queues;
+    char *cell_slab;
+    MPIR_threadcomm_queue_t *pools;
+#endif                          /* MPIR_THREADCOMM_TRANSPORT */
+
 } MPIR_Threadcomm;
 
 #define MPIR_THREADCOMM_RANK_IS_INTERTHREAD(threadcomm, rank) \
@@ -37,15 +83,40 @@ typedef struct MPIR_Threadcomm {
 #define MPIR_THREADCOMM_TID_TO_RANK(threadcomm, tid) \
     (((threadcomm)->rank_offset_table[(threadcomm)->comm->rank] - (threadcomm)->num_threads) + tid)
 
+MPL_STATIC_INLINE_PREFIX
+    void MPIR_Threadcomm_adjust_status(MPIR_Threadcomm * threadcomm, MPI_Status * status)
+{
+#ifdef ENABLE_THREADCOMM
+    int tag = status->MPI_TAG;
+
+#define TID_MASK ((1 << (MPIR_TAG_THREADCOMM_TID_BITS)) - 1)
+#define TAG_MASK ((1 << (MPIR_TAG_THREADCOMM_USABLE_BITS)) - 1)
+    if (tag & MPIR_TAG_THREADCOMM_INTERPROCESS_BIT) {
+        int src = status->MPI_SOURCE;
+        int src_id =
+            (tag >> (MPIR_TAG_THREADCOMM_TID_BITS + MPIR_TAG_THREADCOMM_USABLE_BITS)) & TID_MASK;
+
+        status->MPI_TAG = tag & TAG_MASK;
+        if (src == 0) {
+            status->MPI_SOURCE = src_id;
+        } else {
+            status->MPI_SOURCE = threadcomm->rank_offset_table[src - 1] + src_id;
+        }
+    }
+#undef TID_MASK
+#undef TAG_MASK
+
+#endif /* ENABLE_THREADCOMM */
+}
+
 #ifdef ENABLE_THREADCOMM
 typedef struct MPIR_threadcomm_tls_t {
     MPIR_Threadcomm *threadcomm;
     int tid;
     MPIR_Attribute *attributes;
-    /* postponed send request */
-    MPIR_Request *pending_sreqs;
-    /* posted message queue */
-    /* unexpected message queue */
+    MPIR_Request *pending_list;
+    void *posted_list;
+    void *unexp_list;
 } MPIR_threadcomm_tls_t;
 
 /* TLS dynamic array to support multiple threadcomms */
@@ -107,6 +178,14 @@ MPL_STATIC_INLINE_PREFIX int MPIR_threadcomm_get_tid(MPIR_Threadcomm * threadcom
     MPIR_threadcomm_tls_t *p = MPIR_threadcomm_get_tls(threadcomm);
     return p->tid;
 }
+
+int MPIR_Threadcomm_isend_attr(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                               int rank, int tag, MPIR_Threadcomm * threadcomm, int attr,
+                               MPIR_Request ** req);
+int MPIR_Threadcomm_irecv_attr(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                               int rank, int tag, MPIR_Threadcomm * threadcomm, int attr,
+                               MPIR_Request ** req, bool has_status);
+int MPIR_Threadcomm_progress(int *made_progress);
 
 #endif /* ENABLE_THREADCOMM */
 

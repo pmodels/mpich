@@ -73,7 +73,7 @@ int MPIR_Comm_get_failed_impl(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_p
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    char *failed_procs_string = MPIR_pmi_get_failed_procs();
+    char *failed_procs_string = MPIR_pmi_get_jobattr("PMI_dead_processes");
 
     if (!failed_procs_string) {
         *failed_group_ptr = MPIR_Group_empty;

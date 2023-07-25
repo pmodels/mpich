@@ -130,6 +130,7 @@ typedef struct MPIR_Grequest_class {
 extern MPIR_Grequest_class MPIR_Grequest_class_direct[];
 extern MPIR_Object_alloc_t MPIR_Grequest_class_mem;
 
+#ifndef ENABLE_THREADCOMM
 #define MPIR_Request_extract_status(request_ptr_, status_)              \
     {                                                                   \
         if ((status_) != MPI_STATUS_IGNORE)                             \
@@ -146,6 +147,22 @@ extern MPIR_Object_alloc_t MPIR_Grequest_class_mem;
             (status_)->MPI_ERROR = error__;                             \
         }                                                               \
     }
+#else
+/* Same as above but with additional threadcomm tag reset */
+#define MPIR_Request_extract_status(request_ptr_, status_)              \
+    do {                                                                \
+        if ((status_) != MPI_STATUS_IGNORE) {                           \
+            int error__;                                                \
+            error__ = (status_)->MPI_ERROR;                             \
+            *(status_) = (request_ptr_)->status;                        \
+            (status_)->MPI_ERROR = error__;                             \
+                                                                        \
+            if ((request_ptr_)->comm && (request_ptr_)->comm->threadcomm) { \
+                MPIR_Threadcomm_adjust_status((request_ptr_)->comm->threadcomm, status_); \
+            } \
+        }                                                               \
+    } while (0)
+#endif
 
 #define MPIR_Request_is_complete(req_) (MPIR_cc_is_complete((req_)->cc_ptr))
 
@@ -171,6 +188,8 @@ enum MPIR_sched_type {
   (e.g., 'MPIR_Request_send_t') that extends the 'MPIR_Request'.
 
   S*/
+
+#define MPIR_REQUEST_UNION_SIZE  40
 struct MPIR_Request {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
 
@@ -222,6 +241,9 @@ struct MPIR_Request {
         struct {
             MPIR_Win *win;
         } rma;                  /* kind : MPIR_REQUEST_KIND__RMA */
+        /* Reserve space for local usages. For example, threadcomm, the actual struct
+         * is defined locally and is used via casting */
+        char dummy[MPIR_REQUEST_UNION_SIZE];
     } u;
 
 #if defined HAVE_DEBUGGER_SUPPORT

@@ -214,6 +214,7 @@ MPI_Iprobe:
 MPI_Irecv:
     .desc: Begins a nonblocking receive
     .earlyreturn: pt2pt_proc_null
+    .extra: threadcomm
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -253,6 +254,7 @@ MPI_Irsend:
 MPI_Isend:
     .desc: Begins a nonblocking send
     .earlyreturn: pt2pt_proc_null
+    .extra: threadcomm
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -338,6 +340,7 @@ MPI_Probe:
 MPI_Recv:
     .desc: Blocking receive for a message
     .earlyreturn: pt2pt_proc_null
+    .extra: threadcomm
 /*
     Notes:
     The 'count' argument indicates the maximum length of a message; the actual
@@ -427,6 +430,7 @@ MPI_Send:
     .desc: Performs a blocking send
     .seealso: MPI_Isend, MPI_Bsend
     .earlyreturn: pt2pt_proc_null
+    .extra: threadcomm
 /*
     Notes:
     This routine may block until the message is received by the destination

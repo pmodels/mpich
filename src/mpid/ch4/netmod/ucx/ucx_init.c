@@ -363,9 +363,6 @@ int MPIDI_UCX_mpi_finalize_hook(void)
         ucp_request_release(pending[i]);
     }
 
-    mpi_errno = MPIR_pmi_barrier();
-    MPIR_ERR_CHECK(mpi_errno);
-
     for (int i = 0; i < MPIDI_UCX_global.num_vcis; i++) {
         if (MPIDI_UCX_global.ctx[i].worker != NULL) {
             ucp_worker_release_address(MPIDI_UCX_global.ctx[i].worker,
