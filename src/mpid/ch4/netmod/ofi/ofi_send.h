@@ -270,6 +270,42 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
              * path below. Simply falling through. */
             mpi_errno = MPI_SUCCESS;    /* Reset error code */
         }
+
+        if (force_gpu_pack && MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE &&
+            data_sz >= MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD) {
+            /* Pipeline path */
+            uint32_t n_chunks = 0;
+            int chunk_size = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ;
+            if (dt_contig) {
+                /* Update correct number of chunks in immediate data. */
+                chunk_size = MPIDI_OFI_gpu_pipeline_chunk_size(data_sz);
+                n_chunks = data_sz / chunk_size;
+                if (data_sz % chunk_size)
+                    n_chunks++;
+                MPIDI_OFI_idata_set_gpuchunk_bits(&cq_data, n_chunks);
+            }
+
+            /* Update sender packed bit if necessary. */
+            uint64_t is_packed = datatype == MPI_PACKED ? 1 : 0;
+            MPIDI_OFI_idata_set_gpu_packed_bit(&cq_data, is_packed);
+
+            /* Save pipeline information. */
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.chunk_sz) = chunk_size;
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.cq_data) = cq_data;
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.remote_addr) =
+                MPIDI_OFI_av_to_phys(addr, receiver_nic, vci_remote);
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.vci_local) = vci_local;
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.ctx_idx) = ctx_idx;
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.match_bits) = match_bits;
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.data_sz) = data_sz;
+
+            MPIDI_OFI_gpu_pending_send_t *send_task =
+                MPIDI_OFI_create_send_task(sreq, (void *) buf, attr, data_sz, count, dt_contig);
+            DL_APPEND(MPIDI_OFI_global.gpu_send_queue, send_task);
+            MPIDI_OFI_gpu_progress_send();
+            goto fn_exit;
+        }
+
         /* Pack */
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_PACK;
 
