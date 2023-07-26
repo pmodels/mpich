@@ -1040,12 +1040,16 @@ fn_gen_binding_c
 # Create the bindings if necessary 
 if [ $do_f77 = "yes" ] ; then
     fn_f77
+else
+    touch src/binding/fortran/mpif_h/mpif.h.in
 fi
 if [ $do_f90 = "yes" ] ; then
     fn_f90
 fi
 if [ $do_f08 = "yes" ] ; then
     fn_f08
+else
+    touch src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90.in
 fi
 
 if [ $do_cxx = "yes" ] ; then
