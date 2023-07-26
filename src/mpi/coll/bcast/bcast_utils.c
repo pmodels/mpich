@@ -220,7 +220,7 @@ bool find_local_rank_linear(int* group, int group_size, int rank, int root, int*
 
 bool retrieve_weights(MPIR_Comm * comm_ptr, struct Rank_Info* ranks) {
     
-    if (!group) return 0;
+    if (!ranks) return 0;
 
     int* internode_table; 
     int* external_group;
@@ -236,6 +236,10 @@ bool retrieve_weights(MPIR_Comm * comm_ptr, struct Rank_Info* ranks) {
 
     for (int rank = 0; rank < comm_size; rank++) {
         ranks[rank].rank = rank;
+        
+        
+        
+        /* Loop obtains the number of processes on the node if the rank is external */
         int node_size = 0;
         for (int i = 0; i < remote_size; i++) {
             if (internode_table[i] == rank) {
@@ -245,11 +249,28 @@ bool retrieve_weights(MPIR_Comm * comm_ptr, struct Rank_Info* ranks) {
         if (node_size == 0) {
             ranks[rank].weight = 1.0;
         } else {
-            ranks[rank].weight = node_size;
+            ranks[rank].weight = node_size + 1.0;
         }
     }
     return 1;
 }
+
+/*
+ * Comparator function used to compare two Rank_Info structs for sorting purposes. */
+
+int compare_weights(const void * rank_a, const void * rank_b) {
+    struct Rank_Info * a = (struct Rank_Info * ) rank_a;
+    struct Rank_Info * b = (struct Rank_Info * ) rank_b;
+    if (a->weight > b->weight) {
+        return 1;
+    } else if (a->weight < b->weight) {
+        return -1;
+    } else {
+        return 0;
+    }
+    return 0;
+}
+
 
 /*  Populates queue with ranks in the order of highest priority. 
  *  The higher the priority, the closer to index 0 a rank is. 
@@ -258,6 +279,14 @@ bool retrieve_weights(MPIR_Comm * comm_ptr, struct Rank_Info* ranks) {
  *  This function is temporary and will stay until a better method is developed */
 
 bool build_queue(MPIR_Comm * comm_ptr, struct Rank_Info* ranks, int* queue) {
-    if (!group) return 0;
+    if (!ranks || !queue) return 0;
+    int comm_size = comm_ptr->local_size;
+
+    qsort(ranks, comm_size, sizeof(struct Rank_Info), compare_weights);
+    
+    for (int i = 0; i < comm_size; i++) [
+        queue[i] = ranks[i].rank;
+    ]
+    
     return 1;
 }

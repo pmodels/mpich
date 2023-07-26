@@ -27,6 +27,8 @@ bool find_local_rank_linear(int* group, int group_size, int rank, int root, int*
 
 bool retrieve_weights(MPIR_Comm * comm_ptr, struct Rank_Info* ranks);
 
+int compare_weights(const void * rank_a, const void * rank_b);
+
 bool build_queue(MPIR_Comm * comm_ptr, struct Rank_Info* ranks, int* queue);
 
 #endif /* BCAST_H_INCLUDED */
