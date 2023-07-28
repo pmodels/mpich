@@ -36,13 +36,9 @@
                     {
                         "algorithm=MPIR_Bcast_intra_binomial":{}
                     },
-                    "avg_msg_size<=524288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
-                    },
                     "avg_msg_size=any":
                     {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
+                        "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
                     }
                 },
                 "comm_hierarchy=any":
@@ -51,13 +47,9 @@
                     {
                         "algorithm=MPIR_Bcast_intra_binomial":{}
                     },
-                    "avg_msg_size<=524288":
-                    {
-                        "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
-                    },
                     "avg_msg_size=any":
                     {
-                        "algorithm=MPIR_Bcast_intra_scatter_ring_allgather":{}
+                        "algorithm=MPIR_Bcast_intra_scatter_recursive_doubling_allgather":{}
                     }
                 }
             },
