@@ -269,6 +269,12 @@ static int provider_preference(const char *prov_name)
         return -2;
     }
 
+    if (strcmp(prov_name, "shm") == 0) {
+        /* Obviously shm won't work for internode. User still can force shm by restricting
+         * the provider list, e.g. setting FI_PROVIDER=shm */
+        return -2;
+    }
+
     if (MPIR_Process.num_nodes == 1 && MPIR_CVAR_SINGLE_HOST_ENABLED &&
         strcmp(prov_name, "cxi") == 0) {
         return -100;
