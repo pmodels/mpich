@@ -258,6 +258,12 @@ static int provider_preference(const char *prov_name)
         return -2;
     }
 
+    if (strcmp(prov_name, "shm") == 0) {
+        /* Obviously shm won't work for internode. User still can force shm by restricting
+         * the provider list, e.g. setting FI_PROVIDER=shm */
+        return -2;
+    }
+
     return 0;
 }
 
