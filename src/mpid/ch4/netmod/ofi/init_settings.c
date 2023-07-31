@@ -215,6 +215,13 @@ int MPIDI_OFI_init_hints(struct fi_info *hints)
         /*     PROTOCOL         |  CONTEXT  |        SOURCE         |       TAG          */
         MPIDI_OFI_PROTOCOL_MASK | 0 | MPIDI_OFI_SOURCE_MASK | 0 /* With source bits */ :
         MPIDI_OFI_PROTOCOL_MASK | 0 | 0 | MPIDI_OFI_TAG_MASK /* No source bits */ ;
+
+#ifdef FI_HMEM
+    if (MPIDI_OFI_ENABLE_HMEM && MPIR_CVAR_ENABLE_GPU) {
+        hints->caps |= FI_HMEM;
+    }
+#endif
+
   fn_fail:
     return mpi_errno;
 }

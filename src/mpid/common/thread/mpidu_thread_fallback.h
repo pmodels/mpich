@@ -134,27 +134,6 @@ M*/
 /* ***************************************** */
 #if defined(MPICH_IS_THREADED)
 
-#define MPIDUI_THREAD_CS_ENTER_REC(mutex)                               \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int equal_ = 0;                                             \
-            MPL_thread_id_t self_, owner_;                              \
-            MPL_thread_self(&self_);                                    \
-            owner_ = mutex.owner;                                       \
-            MPL_thread_same(&self_, &owner_, &equal_);                  \
-            if (!equal_) {                                              \
-                int err_ = 0;                                           \
-                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
-                MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
-                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
-                MPIR_Assert(err_ == 0);                                 \
-                MPIR_Assert(mutex.count == 0);                          \
-                MPL_thread_self(&mutex.owner);                          \
-            }                                                           \
-            mutex.count++;                                              \
-        }                                                               \
-    } while (0)
-
 #define MPIDUI_THREAD_CS_ENTER(mutex)                                   \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
