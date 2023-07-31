@@ -452,6 +452,10 @@ PMI_API_PUBLIC int PMI_KVS_Get(const char kvsname[], const char key[], char valu
     struct PMIU_cmd pmicmd;
     PMIU_cmd_init_zero(&pmicmd);
 
+    /* singleton can skip PMI builtin keys */
+    if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM && strncmp(key, "PMI_", 4) == 0) {
+        return PMI_FAIL;
+    }
     /* Connect to the PM if we haven't already.  This is needed in case
      * we're doing an MPI_Comm_join or MPI_Comm_connect/accept from
      * the singleton init case.  This test is here because, in the way in
