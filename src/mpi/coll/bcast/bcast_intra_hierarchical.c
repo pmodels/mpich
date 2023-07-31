@@ -21,7 +21,7 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
     status_p = MPI_STATUS_IGNORE;
 #endif
 
-// It is probabaly necessary to have the parent communicator here
+/* Ensure that we are utilizing the parent communicator */
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
@@ -39,25 +39,27 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
     int* local_group;
     int external_size, local_size, comm_size;
     int rank, external_rank, local_rank;
+
     /*
-    
-    Obviously, if the number of cluster nodes is less than 1, we should just use the flat Bcast. 
-    We might need a control variable for minimum number of nodes to use the hierarchical algorithm. Maybe something like MPIR_CVAR_BCAST_SMP_MIN_NODES
+     * TODO: 
+     *
+     * Obviously, if the number of cluster nodes is less than 1, we should just use the flat Bcast. 
+     * We might need a control variable for minimum number of nodes to use the hierarchical algorithm. Maybe something like MPIR_CVAR_BCAST_SMP_MIN_NODES
+     *
+     * Possible addition to the hierarchical algorithm. It seems as though for really small msg sizes, the flat binomial bcast outperforms the hierarchical
+     * Bcast. Therefore, having some kind of control variable to make sure that the msg size is large enough could be beneficial in boosting performance. 
+     *
+     * if (external_size < MPIR_CVAR_BCAST_SMP_MIN_NODES) {
+     *   MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+     *   goto fn_exit;
+     * }
 
-    Possible addition to the hierarchical algorithm. It seems as though for really small messages sizes, the flat binomial bcast outperforms the hierarchical
-    Bcast.
-    
-    if (external_size < MPIR_CVAR_BCAST_SMP_MIN_NODES) {
-        MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
-        goto fn_exit;
-    }
-
-    if (nbytes < MPIR_CVAR_BCAST_SMP_MSG_SIZE_MIN) {
-        MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
-        goto fn_exit;
-    }
-
+     * if (nbytes < MPIR_CVAR_BCAST_SMP_MSG_SIZE_MIN) {
+     *   MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
+     *   goto fn_exit;
+     * }
     */
+
     rank = comm_ptr->rank;
     comm_size = comm_ptr->local_size;
 
@@ -92,13 +94,14 @@ int MPIR_Bcast_intra_hierarchical(void* buffer, MPI_Aint count, MPI_Datatype dat
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) 
         || (local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
         
-        /* Perform the internode broadcast */
-        if (external_rank != -1) { // If external_rank is not -1 then this process must be an external process
+        /* Perform the internode Bcast */
+        if (external_rank != -1) { /* If external_rank is not -1 then this process must be an external process */
             mpi_errno = MPIR_Bcast_intra_binomial_group(buffer, count, datatype, external_group[MPIR_Get_internode_rank(comm_ptr, root)], 
                                                         comm_ptr, external_group, external_size, errflag);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         }
 
+        /* Perform the intraniode Bcast */
         mpi_errno = MPIR_Bcast_intra_binomial_group(buffer, count, datatype, local_group[0], comm_ptr, local_group, local_size, errflag);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
