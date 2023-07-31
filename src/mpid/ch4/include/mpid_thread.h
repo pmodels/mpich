@@ -20,18 +20,6 @@ typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
 #define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD
 #define MPID_THREAD_ASSERT_IN_CS   MPIDU_THREAD_ASSERT_IN_CS
 
-/* In limited cases we need use recursive mutex. For example, during establishing anysource
- * receive, we need hold shm vci lock while setting up netmod request -- both may be the
- * same vci or different vci. Recursive locking allows us to proceed in both cases.
- * NOTE: use cautiously and comment on the reasoning of its usage.
- */
-
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-#define MPID_THREAD_CS_ENTER_REC_VCI(mutex)   MPIDUI_THREAD_CS_ENTER_REC(mutex)
-#else
-#define MPID_THREAD_CS_ENTER_REC_VCI(mutex)     /* NOOP */
-#endif
-
 #define MPID_Thread_init           MPIDU_Thread_init
 #define MPID_Thread_finalize       MPIDU_Thread_finalize
 #define MPID_Thread_mutex_create   MPIDU_Thread_mutex_create

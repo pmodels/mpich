@@ -169,13 +169,6 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
         }                                                       \
     } while (0)
 
-#define MPIDI_OFI_THREAD_CS_ENTER_REC_VCI_OPTIONAL(vci_)        \
-    do {                                                        \
-        if (!MPIDI_VCI_IS_EXPLICIT(vci_) && MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {      \
-            MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(vci_).lock);     \
-        }                                                       \
-    } while (0)
-
 #define MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_)         \
     do {                                                    \
         if (!MPIDI_VCI_IS_EXPLICIT(vci_) && MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {  \
