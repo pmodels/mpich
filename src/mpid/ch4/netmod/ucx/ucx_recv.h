@@ -213,12 +213,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     int vci_dst;
     MPIDI_UCX_RECV_VNIS(vci_dst);
 
-    MPIDI_UCX_THREAD_CS_ENTER_VCI(vci_dst);
+    int need_cs;
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    need_cs = true;
+#else
+    need_cs = (rank != MPI_ANY_SOURCE);
+#endif
+
+    if (need_cs) {
+        MPIDI_UCX_THREAD_CS_ENTER_VCI(vci_dst);
+    }
     mpi_errno =
         MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vci_dst,
                        request);
     MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
-    MPIDI_UCX_THREAD_CS_EXIT_VCI(vci_dst);
+    if (need_cs) {
+        MPIDI_UCX_THREAD_CS_EXIT_VCI(vci_dst);
+    }
 
     MPIR_FUNC_EXIT;
     return mpi_errno;

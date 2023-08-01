@@ -35,11 +35,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
 
     /* For anysource recv, we may be called while holding the vci lock of shm request (to
-     * prevent shm progress). Therefore, recursive locking is allowed here */
-    MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(0).lock);
+     * prevent shm progress). */
+    bool need_cs;
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    need_cs = true;
+#else
+    need_cs = (rank != MPI_ANY_SOURCE);
+#endif
+    if (need_cs) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    } else {
+#ifdef MPICH_DEBUG_MUTEX
+        MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI(0).lock);
+#endif
+    }
+
     mpi_errno = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, 0,
                                  request, 0, partner);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    if (need_cs) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
 
     return mpi_errno;
 }

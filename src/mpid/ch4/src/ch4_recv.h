@@ -165,7 +165,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_safe(MPIR_Request * rreq)
      * usage it's often used inside a critical section (e.g. progress and anysource
      * receive). Therefore, we allow recursive lock usage here.
      */
-    MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     mpi_errno = MPIDI_cancel_recv_unsafe(rreq);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_ERR_CHECK(mpi_errno);
