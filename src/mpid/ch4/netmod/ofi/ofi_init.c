@@ -1654,6 +1654,11 @@ static int update_global_limits(struct fi_info *prov)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_many_ranks");
     }
 
+    if (MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE && (prov->domain_attr->cq_data_size < 8 ||
+                                                  MPIDI_OFI_GPU_PIPELINE_SEND == 0)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_small_cqdata");
+    }
+
   fn_exit:
     return mpi_errno;
   fn_fail:

@@ -225,8 +225,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT;
             /* Only post first recv with pipeline chunk size. */
             char *host_buf = NULL;
-            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool,
-                                               (void **) &host_buf);
+            MPIDU_genq_private_pool_force_alloc_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool,
+                                                     (void **) &host_buf);
+            MPIR_ERR_CHKANDJUMP1(host_buf == NULL, mpi_errno,
+                                 MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                                 "Pipeline Init recv alloc");
 
             fi_addr_t remote_addr;
             if (MPI_ANY_SOURCE == rank)
@@ -268,13 +271,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             chunk_req->parent = rreq;
             chunk_req->buf = host_buf;
             int ret = 0;
-            if (!MPIDI_OFI_global.gpu_recv_queue && host_buf) {
-                ret = fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
-                               host_buf,
-                               MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ,
-                               NULL,
-                               remote_addr, match_bits, mask_bits, (void *) &chunk_req->context);
-            }
+            ret = fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
+                           host_buf,
+                           MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ,
+                           NULL, remote_addr, match_bits, mask_bits, (void *) &chunk_req->context);
             if (MPIDI_OFI_global.gpu_recv_queue || !host_buf || ret != 0) {
                 MPIDI_OFI_gpu_pending_recv_t *recv_task =
                     MPIDI_OFI_create_recv_task(chunk_req, 0, -1);

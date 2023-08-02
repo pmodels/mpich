@@ -299,10 +299,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             MPIDI_OFI_REQUEST(sreq, pipeline_info.match_bits) = match_bits;
             MPIDI_OFI_REQUEST(sreq, pipeline_info.data_sz) = data_sz;
 
+            /* send an empty message for tag matching */
+            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                                NULL,
+                                                0,
+                                                cq_data,
+                                                MPIDI_OFI_REQUEST(sreq, pipeline_info.remote_addr),
+                                                match_bits), vci_local, tinjectdata);
+            MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
+
             MPIDI_OFI_gpu_pending_send_t *send_task =
                 MPIDI_OFI_create_send_task(sreq, (void *) buf, attr, data_sz, count, dt_contig);
             DL_APPEND(MPIDI_OFI_global.gpu_send_queue, send_task);
             MPIDI_OFI_gpu_progress_send();
+
             goto fn_exit;
         }
 

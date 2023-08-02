@@ -144,21 +144,28 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
         uint32_t packed = MPIDI_OFI_idata_get_gpu_packed_bit(wc->data);
         uint32_t n_chunks = MPIDI_OFI_idata_get_gpuchunk_bits(wc->data);
         if (likely(packed == 0)) {
-            /* First chunk arrives. */
-            MPI_Aint actual_unpack_bytes;
-            MPIR_gpu_req yreq;
-            mpi_errno =
-                MPIR_Ilocalcopy_gpu(wc_buf, wc->len, MPI_BYTE, 0, NULL, recv_buf, recv_count,
-                                    datatype, 0, NULL, MPL_GPU_COPY_H2D, engine_type, 1, &yreq);
-            MPIR_ERR_CHECK(mpi_errno);
-            actual_unpack_bytes = wc->len;
-            task =
-                MPIDI_OFI_create_gpu_task(MPIDI_OFI_PIPELINE_RECV, wc_buf,
-                                          actual_unpack_bytes, rreq, yreq);
-            DL_APPEND(MPIDI_OFI_global.gpu_recv_task_queue[vci_local], task);
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.offset) += (size_t) actual_unpack_bytes;
+            if (wc->len > 0) {
+                /* First chunk arrives. */
+                MPI_Aint actual_unpack_bytes;
+                MPIR_gpu_req yreq;
+                mpi_errno =
+                    MPIR_Ilocalcopy_gpu(wc_buf, wc->len, MPI_BYTE, 0, NULL, recv_buf, recv_count,
+                                        datatype, 0, NULL, MPL_GPU_COPY_H2D, engine_type, 1, &yreq);
+                MPIR_ERR_CHECK(mpi_errno);
+                actual_unpack_bytes = wc->len;
+                task =
+                    MPIDI_OFI_create_gpu_task(MPIDI_OFI_PIPELINE_RECV, wc_buf,
+                                              actual_unpack_bytes, rreq, yreq);
+                DL_APPEND(MPIDI_OFI_global.gpu_recv_task_queue[vci_local], task);
+                MPIDI_OFI_REQUEST(rreq, pipeline_info.offset) += (size_t) actual_unpack_bytes;
+            } else {
+                /* free this chunk */
+                MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool, wc_buf);
+            }
             /* Post recv for remaining chunks. */
-            for (i = 1; i < n_chunks; i++) {
+            MPIR_cc_dec(rreq->cc_ptr);
+            MPIR_Assert(n_chunks > 0);
+            for (i = 0; i < n_chunks; i++) {
                 int c;
                 MPIR_cc_incr(rreq->cc_ptr, &c);
 
@@ -186,7 +193,8 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
                         (MPIDI_OFI_global.ctx
                          [MPIDI_OFI_REQUEST(rreq, pipeline_info.ctx_idx)].rx,
                          host_buf, chunk_sz, NULL, remote_addr,
-                         MPIDI_OFI_REQUEST(rreq, pipeline_info.match_bits),
+                         MPIDI_OFI_REQUEST(rreq,
+                                           pipeline_info.match_bits) | MPIDI_OFI_GPU_PIPELINE_SEND,
                          MPIDI_OFI_REQUEST(rreq, pipeline_info.mask_bits),
                          (void *) &chunk_req->context);
                 }
@@ -231,8 +239,10 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
                                                 i * MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ),
                                       MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ, NULL, remote_addr,
                                       MPIDI_OFI_REQUEST(rreq, pipeline_info.match_bits),
-                                      MPIDI_OFI_REQUEST(rreq, pipeline_info.mask_bits),
-                                      (void *) &chunk_req->context), vci_local, trecv);
+                                      MPIDI_OFI_REQUEST(rreq,
+                                                        pipeline_info.mask_bits) |
+                                      MPIDI_OFI_GPU_PIPELINE_SEND, (void *) &chunk_req->context),
+                                     vci_local, trecv);
             }
         }
     } else {

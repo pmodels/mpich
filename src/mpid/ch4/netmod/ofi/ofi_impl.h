@@ -993,7 +993,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_progress_recv(void)
         int ret = fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_REQUEST(rreq, pipeline_info.ctx_idx)].rx,
                            (void *) host_buf,
                            MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ, NULL, remote_addr,
-                           MPIDI_OFI_REQUEST(rreq, pipeline_info.match_bits),
+                           MPIDI_OFI_REQUEST(rreq,
+                                             pipeline_info.match_bits) |
+                           MPIDI_OFI_GPU_PIPELINE_SEND,
                            MPIDI_OFI_REQUEST(rreq, pipeline_info.mask_bits),
                            (void *) &chunk_req->context);
         if (ret == 0) {
@@ -1054,8 +1056,10 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
                                       task->buf, task->len, NULL /* desc */ ,
                                       MPIDI_OFI_REQUEST(request, pipeline_info.cq_data),
                                       MPIDI_OFI_REQUEST(request, pipeline_info.remote_addr),
-                                      MPIDI_OFI_REQUEST(request, pipeline_info.match_bits),
-                                      (void *) &chunk_req->context), vni, fi_tsenddata);
+                                      MPIDI_OFI_REQUEST(request,
+                                                        pipeline_info.match_bits) |
+                                      MPIDI_OFI_GPU_PIPELINE_SEND, (void *) &chunk_req->context),
+                                     vni, fi_tsenddata);
                 DL_DELETE(gpu_queue[vni], task);
                 MPL_free(task);
             } else {

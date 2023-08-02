@@ -236,6 +236,24 @@ int MPIDU_genq_private_pool_alloc_cell(MPIDU_genq_private_pool_t pool, void **ce
     goto fn_exit;
 }
 
+int MPIDU_genq_private_pool_force_alloc_cell(MPIDU_genq_private_pool_t pool, void **cell)
+{
+    int rc = MPI_SUCCESS;
+    private_pool_s *pool_obj = (private_pool_s *) pool;
+
+    MPIR_FUNC_ENTER;
+
+    if (!pool_obj->free_blocks_head) {
+        /* try allocate more blocks if no free cell found */
+        if (pool_obj->max_num_blocks > 0 && pool_obj->num_blocks >= pool_obj->max_num_blocks) {
+            pool_obj->max_num_blocks++;
+        }
+    }
+    rc = MPIDU_genq_private_pool_alloc_cell(pool, cell);
+    MPIR_FUNC_EXIT;
+    return rc;
+}
+
 int MPIDU_genq_private_pool_free_cell(MPIDU_genq_private_pool_t pool, void *cell)
 {
     int rc = MPI_SUCCESS;
