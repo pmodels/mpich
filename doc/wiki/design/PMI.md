@@ -7,8 +7,9 @@ including how to establish communications with each other.
 
 ## Configure PMI in MPICH
 
-### PMI versions - `--with-pmi={pmi1,pmi2,pmix}`
+### PMI versions - `--with-pmi={embedded,install,pmi1,<path>,pmi2,pmix}`
 
+#### General
 There are currently three varieties of PMI interfaces. PMI1, or just PMI, is
 the de-facto interface supported by most process managers and MPI
 implementations. It is still the current default interface for MPICH and
@@ -26,32 +27,33 @@ The Flux team maintains an excellent RFC for PMI1 (that also covers wire protoco
 
 PMIx is covered by the official [PMIx Standard](https://pmix.github.io/standard).
 
-MPICH can be configured to use any of the PMI interfaces. By default it will
-use PMI1, which is our most feature complete and stable implementation.
+#### Options
+Some libraries support both PMI1 and PMI2, such as MPICH's `libpmi`. Some
+support either PMI1 or PMI2 based on whether it is linked to `libpmi` or
+`libpmi2`. Currently, PMIx is only supported with `libpmix`.
 
-### PMI library - `--with-pmilib={mpich,install,slurm,cray,pmix}`
+With the option `embedded` (default) we use an embedded library that is shipped
+with MPICH and supports PMI1 and PMI2. The option `install` will use the same
+library from MPICH but will build `libpmi` separately and link to it.
+This is useful if swapping `libpmi` at runtime is desirable. PMI1 is our most
+feature complete and stable implementation.
 
-MPICH needs to be linked with an appropriate pmi library. The default option is
-`--with-pmilib=mpich`, with which, we use an embedded library that is shipped
-with MPICH. The option `install` will use the same library from MPICH but
-will build `libpmi` separately and link to it. This is useful if swapping
-libpmi at runtime is desirable. The option "slurm" will look for libpmi or
-libpmi2 from slurm, whose path can be separately specified via
-`--with-slurm=path` option. Similarly, the option "cray" looks for libpmi
-or libpmi2 from cray. The option "pmix" looks for libpmix.
+With `pmi1` or `<path>` users can select a custom PMI library for PMI1. Similarly,
+`pmi2` selects a custom PMI2 library (specify custom path via `--with-pmi2=...`).
 
-Some libraries support both PMI1 and PMI2, such as MPICH's libpmi. Some
-supports either PMI1 or PMI2 based on whether it is linked to libpmi or
-libpmi2. Currently, PMIx is only supported with libpmix.
+With `pmix`, users select a PMIx library (specify custom library path via `--with-pmix=...`).
+In development, we are adding basic PMIx support in MPICH's `libpmi`. Future
+versions MPICH may support PMIx without depending on `libpmix`.
 
-In development, we are adding basic PMIx support in MPICH's libpmi. Future
-versions MPICH may support PMIx without depending on libpmix.
+For now, it is possible to configure MPICH with its embedded `libpmi` for
+PMI1 and PMI2 support by setting `--with-pmi=embedded` or `--with-pmi=install` and to use an external
+PMIx library simultaneously via `--with-pmix=...` to enable PMIx support.
 
-### Legacy/Alias Options
+#### Legacy/Alias Options (deprecated)
 
-As a convenience and legacy option, user can use `--with-pmi={slurm,cray}`. It
-will pick the recommended PMI version according to vendor preference and link
-with the approrate Slurm or Cray libpmi.
+As convenience and legacy options, user can use
+`--with-pmi={slurm,slurm-pmi2,oldcray,oldcray-pmi2}`. It will pick the selected
+PMI version and link with the approrate Slurm or Cray `libpmi` or `libpmi2`.
 
 ## PMI usages in MPICH
 
