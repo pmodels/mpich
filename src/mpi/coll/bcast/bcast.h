@@ -8,10 +8,6 @@
 
 #include "mpiimpl.h"
 
-struct Rank_Info {
-    double weight;
-    int rank;
-};
 
 int MPII_Scatter_for_bcast(void *buffer, MPI_Aint count, MPI_Datatype datatype,
                            int root, MPIR_Comm * comm_ptr, MPI_Aint nbytes, void *tmp_buf,
