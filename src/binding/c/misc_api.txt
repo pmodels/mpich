@@ -95,7 +95,7 @@ MPI_Get_library_version:
 
 MPI_Pcontrol:
     .desc: Controls profiling
-    .skip: ThreadSafe, validate-PROFILE_LEVEL, validate-VARARGS
+    .skip: initcheck, ThreadSafe, validate-PROFILE_LEVEL, validate-VARARGS
     .impl: direct
 /*
     Notes:
