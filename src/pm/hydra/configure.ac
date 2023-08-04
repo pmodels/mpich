@@ -144,14 +144,14 @@ m4_define([pmi_embedded_dir],[modules/pmi])
 #       we need the "pmi/src" path for accessing internal headers such as pmi_wire.h
 if test "$FROM_MPICH" = "yes"; then
     pmi_includedir="-I$main_top_srcdir/src/pmi/src"
-    pmi_lib="$main_top_builddir/src/pmi/libpmi.la"
+    pmi_lib="$main_top_builddir/src/pmi/libpmiutil.la"
 else
     # TODO: option for --with-pmilib=xxx
     pmi_srcdir=pmi_embedded_dir
     pmi_includedir='-I$(top_srcdir)/pmi_embedded_dir/src'
     pmi_subdir_args="--enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS(pmi_embedded_dir, [$pmi_subdir_args])
-    pmi_lib='$(top_builddir)/pmi_embedded_dir/libpmi.la'
+    pmi_lib='$(top_builddir)/pmi_embedded_dir/libpmiutil.la'
 fi
 
 # Documentation
