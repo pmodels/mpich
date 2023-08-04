@@ -623,7 +623,7 @@ def process_func_parameters(func):
                 p['can_be_null'] = "MPI_INFO_NULL"
             elif kind == "REQUEST" and RE.match(r'mpix?_(wait|test|request_get_status|parrived)', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_REQUEST_NULL"
-            elif kind == "STREAM" and RE.match(r'mpix?_stream_comm_create', func_name, re.IGNORECASE):
+            elif kind == "STREAM" and RE.match(r'mpix?_stream_(comm_create|progress)', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPIX_STREAM_NULL"
         elif kind == "RANK" and name == "root":
             validation_list.insert(0, {'kind': "ROOT", 'name': name})
