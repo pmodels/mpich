@@ -777,7 +777,8 @@ static HYD_status launch_procs(struct pmip_pg *pg)
          */
         int listen_fd;
         status = HYDU_sock_create_and_listen_portstr(HYD_pmcd_pmip.user_global.iface,
-                                                     NULL, NULL, &pmi_port, &listen_fd,
+                                                     (char *) "localhost", NULL,
+                                                     &pmi_port, &listen_fd,
                                                      pmi_listen_cb, (void *) (intptr_t) pg->idx);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
 
