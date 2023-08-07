@@ -135,7 +135,6 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_Progress_poke();
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
         case MPIR_REQUEST_KIND__RECV:
