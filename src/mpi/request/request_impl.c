@@ -277,8 +277,10 @@ int MPIR_Test_state(MPIR_Request * request_ptr, int *flag, MPI_Status * status,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPID_Progress_test(state);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPID_Progress_test(state);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     return mpi_errno;
