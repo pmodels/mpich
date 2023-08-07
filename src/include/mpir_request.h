@@ -8,40 +8,6 @@
 
 #include "mpir_process.h"
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-categories :
-    - name : REQUEST
-      description : A category for requests management variables
-
-cvars:
-    - name        : MPIR_CVAR_REQUEST_POLL_FREQ
-      category    : REQUEST
-      type        : int
-      default     : 8
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        How frequent to poll during completion calls (wait/test) in terms
-        of number of processed requests before polling.
-
-    - name        : MPIR_CVAR_REQUEST_BATCH_SIZE
-      category    : REQUEST
-      type        : int
-      default     : 64
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        The number of requests to make completion as a batch
-        in MPI_Waitall and MPI_Testall implementation. A large number
-        is likely to cause more cache misses.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-
 /* NOTE-R1: MPIR_REQUEST_KIND__MPROBE signifies that this is a request created by
  * MPI_Mprobe or MPI_Improbe.  Since we use MPI_Request objects as our
  * MPI_Message objects, we use this separate kind in order to provide stronger
