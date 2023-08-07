@@ -933,169 +933,152 @@ sub get_resultTest {
     }
 }
 
-sub TestNormal {
-    my ($MPIOUT, $programname) = @_;
-    my $found_error = 0;
+sub check_result {
+    my $MPIOUT = shift;
+
     my $found_noerror = 0;
+    my $test_skipped = 0;
+    my $run_status = 0;
+    my $stray_output = 0;
+    my $warning_output = 0;
     my $inline = "";
     while (<$MPIOUT>) {
         print STDOUT $_ if $g_opt{verbose};
-        # Skip FORTRAN STOP
-        if (/FORTRAN STOP/) { next; }
         $inline .= $_;
+
         if (/^\s*No [Ee]rrors\s*$/ && $found_noerror == 0) {
             $found_noerror = 1;
+        }
+        elsif (/^\s*Test Skipped\s*$/) {
+            $test_skipped++;
+        }
+        elsif (/(FORTRAN STOP|requesting checkpoint|checkpoint completed)\s*$/) {
+            # skip
         }
         elsif (/^srun: error: .*: signal: Communication connection failure/) {
             # skip
         }
-        elsif (!/^\s*Test (Passed|Skipped)\s*$/ && !/requesting checkpoint\s*$/ && !/checkpoint completed\s*$/) {
-            print STDERR "Unexpected output in $programname: $_";
-            $found_error = 1;
-        }
-    }
-    if ($found_noerror == 0) {
-        if ($inline !~ /Test Skipped/) {
-            print STDERR "Program $programname exited without No Errors\n";
-            $found_error = 1;
+        else {
+            $stray_output++;
         }
     }
     my $rc = close ($MPIOUT);
-    if ($rc == 0) {
-        # Only generate a message if we think that the program
-        # passed the test.
-        if (!$found_error) {
-            my $run_status = $?;
-            my $signal_num = $run_status & 127;
-            if ($run_status > 255) { $run_status >>= 8; }
-            print STDERR "Program $programname exited with non-zero status $run_status\n";
-            if ($signal_num != 0) {
-                print STDERR "Program $programname exited with signal $signal_num\n";
-            }
-            $found_error = 1;
+    if (!$rc) {
+        $run_status = $?;
+    }
+
+    return ($found_noerror, $test_skipped, $run_status, $stray_output, $warning_output, $inline);
+}
+
+# ----
+sub expect_noerror {
+    my ($programname) = @_;
+    print STDERR "Program $programname exited without No Errors\n";
+}
+
+sub expect_clean_output {
+    my ($programname, $inline) = @_;
+    print STDERR "Unexpected output in $programname:\n";
+    my $cnt = 0;
+    while ($inline =~ /^(.*)$/mg) {
+        $cnt++;
+        if ($cnt > 10) {
+            print STDERR "    ... ...\n";
+            last;
         }
+        print STDERR "    $1\n";
+    }
+}
+
+sub expect_status_zero {
+    my ($programname, $run_status) = @_;
+    my $signal_num = $run_status & 127;
+    if ($run_status > 255) {
+        $run_status >>= 8;
+    }
+    print STDERR "Program $programname exited with non-zero status $run_status\n";
+    if ($signal_num != 0) {
+        print STDERR "Program $programname exited with signal $signal_num\n";
+    }
+}
+
+sub expect_status_nonzero {
+    my ($programname) = @_;
+    print STDERR "$g_opt{mpiexec} returned a zero status but the program $programname returned a nonzero status\n";
+}
+
+# ----
+sub TestNormal {
+    my ($MPIOUT, $programname) = @_;
+    my ($found_noerror, $test_skipped, $run_status, $stray_output, $warning_output, $inline) = check_result($MPIOUT);
+
+    my $found_error = 0;
+    if (!$found_noerror && !$test_skipped) {
+        expect_noerror($programname);
+        $found_error = 1;
+    }
+
+    if ($stray_output || $warning_output) {
+        expect_clean_output($programname, $inline);
+        $found_error = 1;
+    }
+
+    if (!$found_error && $run_status) {
+        expect_status_zero($programname, $run_status);
+        $found_error = 1;
     }
     return ($found_error, $inline);
 }
-# ----------------------------------------------------------------------------
-#
-# TestStatus is a special test that reports success *only* when the 
-# status return is NONZERO
+
 sub TestStatus {
-    my $MPIOUT = $_[0];
-    my $programname = $_[1];
-    my $found_error = 0;
+    my ($MPIOUT, $programname) = @_;
+    my ($found_noerror, $test_skipped, $run_status, $stray_output, $warning_output, $inline) = check_result($MPIOUT);
 
-    my $inline = "";
-    while (<$MPIOUT>) {
-        #print STDOUT $_ if $g_opt{verbose};
-        # Skip FORTRAN STOP
-        if (/FORTRAN STOP/) { next; }
-        $inline .= $_;
-        # ANY output is an error. We have the following output
-        # exception for the Hydra process manager.
-        if (/=*/) { last; }
-        if (! /^\s*$/) {
-            print STDERR "Unexpected output in $programname: $_";
-            if (!$found_error) {
-                $found_error = 1;
-            }
-        }
+    my $found_error = 0;
+    if ($stray_output || $warning_output) {
+        expect_clean_output($programname, $inline);
+        $found_error = 1;
     }
-    my $rc = close ($MPIOUT);
-    if ($rc == 0) {
-        my $run_status = $?;
-        my $signal_num = $run_status & 127;
-        if ($run_status > 255) { $run_status >>= 8; }
+
+    if (!$run_status) {
+        expect_status_nonzero($programname);
+        $found_error = 1;
     }
-    else {
-        # This test *requires* non-zero return codes
-        if (!$found_error) {
-            $found_error = 1;
-        }
-        $inline .= "$g_opt{mpiexec} returned a zero status but the program returned a nonzero status\n";
-    }
-    return ($found_error,$inline);
+    return ($found_error, $inline);
 }
-# ----------------------------------------------------------------------------
-#
-# TestStatusNoErrors is like TestStatus except that it also checks for " No Errors"
-# This is useful for fault tolerance tests where mpiexec returns a non-zero status
-# because of a failed process, but still outputs " No Errors" when the correct
-# behavior is detected.
+
 sub TestStatusNoErrors {
-    my $MPIOUT = $_[0];
-    my $programname = $_[1];
-    my $found_error = 0;
-    my $found_noerror = 0;
+    my ($MPIOUT, $programname) = @_;
+    my ($found_noerror, $test_skipped, $run_status, $stray_output, $warning_output, $inline) = check_result($MPIOUT);
 
-    my $inline = "";
-    while (<$MPIOUT>) {
-        print STDOUT $_ if $g_opt{verbose};
-        # Skip FORTRAN STOP
-        if (/FORTRAN STOP/) { next; }
-        $inline .= $_;
-        if (/^\s*No [Ee]rrors\s*$/ && $found_noerror == 0) {
-            $found_noerror = 1;
-        }
-        if (! /^\s*No [Ee]rrors\s*$/ && !/^\s*Test Passed\s*$/) {
-            print STDERR "Unexpected output in $programname: $_";
-            if (!$found_error) {
-                $found_error = 1;
-            }
-        }
+    my $found_error = 0;
+    if (!$found_noerror) {
+        expect_noerror($programname);
+        $found_error = 1;
     }
-    if ($found_noerror == 0) {
-        print STDERR "Program $programname exited without No Errors\n";
-        if (!$found_error) {
-            $found_error = 1;
-        }
+
+    if ($stray_output || $warning_output) {
+        expect_clean_output($programname, $inline);
+        $found_error = 1;
     }
-    my $rc = close ($MPIOUT);
-    if ($rc == 0) {
-        my $run_status = $?;
-        my $signal_num = $run_status & 127;
-        if ($run_status > 255) { $run_status >>= 8; }
+
+    if (!$run_status) {
+        expect_status_nonzero($programname);
+        $found_error = 1;
     }
-    else {
-        # This test *requires* non-zero return codes
-        if (!$found_error) {
-            $found_error = 1;
-        }
-        $inline .= "$g_opt{mpiexec} returned a zero status but the program required a non-zero status\n";
-    }
-    return ($found_error,$inline);
+    return ($found_error, $inline);
 }
-#
-# TestErrFatal is a special test that reports success *only* when the 
-# status return is NONZERO; it ignores error messages
-sub TestErrFatal {
-    my $MPIOUT = $_[0];
-    my $programname = $_[1];
-    my $found_error = 0;
 
-    my $inline = "";
-    while (<$MPIOUT>) {
-        #print STDOUT $_ if $g_opt{verbose};
-        # Skip FORTRAN STOP
-        if (/FORTRAN STOP/) { next; }
-        $inline .= $_;
-        # ALL output is allowed.
+sub TestErrFatal {
+    my ($MPIOUT, $programname) = @_;
+    my ($found_noerror, $test_skipped, $run_status, $stray_output, $warning_output, $inline) = check_result($MPIOUT);
+
+    my $found_error = 0;
+    if (!$run_status) {
+        expect_status_nonzero($programname);
+        $found_error = 1;
     }
-    my $rc = close ($MPIOUT);
-    if ($rc == 0) {
-        my $run_status = $?;
-        my $signal_num = $run_status & 127;
-        if ($run_status > 255) { $run_status >>= 8; }
-    }
-    else {
-        # This test *requires* non-zero return codes
-        if (!$found_error) {
-            $found_error = 1;
-        }
-        $inline .= "$g_opt{mpiexec} returned a zero status but the program returned a nonzero status\n";
-    }
-    return ($found_error,$inline);
+    return ($found_error, $inline);
 }
 
 # ----------------------------------------------------------------------------
