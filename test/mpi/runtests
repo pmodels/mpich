@@ -922,6 +922,8 @@ sub get_resultTest {
     my $resultTest = shift;
     if (!$resultTest) {
         return \&TestNormal;
+    } elsif ($resultTest eq "TestAllowWarnings") {
+        return \&TestAllowWarnings;
     } elsif ($resultTest eq "TestStatus") {
         return \&TestStatus;
     } elsif ($resultTest eq "TestStatusNoErrors") {
@@ -951,6 +953,9 @@ sub check_result {
         }
         elsif (/^\s*Test Skipped\s*$/) {
             $test_skipped++;
+        }
+        elsif (/^WARNING: /) {
+            $warning_output++;
         }
         elsif (/(FORTRAN STOP|requesting checkpoint|checkpoint completed)\s*$/) {
             # skip
@@ -1019,6 +1024,28 @@ sub TestNormal {
     }
 
     if ($stray_output || $warning_output) {
+        expect_clean_output($programname, $inline);
+        $found_error = 1;
+    }
+
+    if (!$found_error && $run_status) {
+        expect_status_zero($programname, $run_status);
+        $found_error = 1;
+    }
+    return ($found_error, $inline);
+}
+
+sub TestAllowWarnings {
+    my ($MPIOUT, $programname) = @_;
+    my ($found_noerror, $test_skipped, $run_status, $stray_output, $warning_output, $inline) = check_result($MPIOUT);
+
+    my $found_error = 0;
+    if (!$found_noerror && !$test_skipped) {
+        expect_noerror($programname);
+        $found_error = 1;
+    }
+
+    if ($stray_output) {
         expect_clean_output($programname, $inline);
         $found_error = 1;
     }
