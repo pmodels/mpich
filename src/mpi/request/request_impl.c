@@ -38,7 +38,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        How frequent to poll during completion calls (wait/test) in terms
+        How frequent to poll during MPI_{Waitany,Waitsome} in terms
         of number of processed requests before polling.
 
     - name        : MPIR_CVAR_REQUEST_BATCH_SIZE
