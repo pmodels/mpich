@@ -38,20 +38,20 @@
 
 \begin{document}
 \markright{MPICH Installer's Guide}
-\title{{\bf MPICH Installer's Guide}\thanks{This work was supported by the
-    Mathematical, Information, and Computational Sciences Division
-    subprogram of the Office of Advanced Scientific Computing Research,
-    SciDAC Program, Office of Science, U.S. Department of Energy, under
-    Contract DE-AC02-06CH11357.}\\
+\title{{\bf MPICH Installer's Guide}\thanks{This work was supported by the Mathematical,
+    Information, and Computational Sciences Division subprogram of the
+    Office of Advanced Scientific Computing Research, SciDAC Program,
+    the Exascale Computing Project (17-SC-20-SC), a collaborative effort of the
+    U.S.\ Department of Energy Office of Science and the National Nuclear Security
+    Administration, Office of Science, U.S. Department of Energy, under Contract
+    DE-AC02-06CH11357.}\\
   Version %MPICH_VERSION%\\
   Mathematics and Computer Science Division\\
   Argonne National Laboratory}
 
 \author{
-Abdelhalim Amer \and Pavan Balaji \and Wesley Bland \and William Gropp \and
-Yanfei Guo \and Rob Latham \and Huiwei Lu \and Lena Oden \and Antonio J. Pe\~na
-\and Ken Raffenetti \and Sangmin Seo \and Min Si \and Rajeev Thakur \and
-Junchao Zhang \and Xin Zhao
+William Gropp \and Ewing (Rusty) Lusk \and Rajeev Thakur \and Pavan Balaji
+\and Thomas Gillis \and Yanfei Guo \and Rob Latham \and Ken Raffenetti \and Hui Zhou
 }
 
 \maketitle
