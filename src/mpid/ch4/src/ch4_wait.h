@@ -30,6 +30,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** re
             continue;
         }
 
+        if (HANDLE_IS_BUILTIN(reqs[i]->handle) || MPIR_Request_is_complete(reqs[i])) {
+            continue;
+        }
+
         int vci = MPIDI_Request_get_vci(reqs[i]);
         int found = 0;
         for (int j = 0; j < idx; j++) {
