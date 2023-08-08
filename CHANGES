@@ -223,7 +223,7 @@
    transport functions.
 
  # Improvements to derived datatype testing (DTPools -
-   https://wiki.mpich.org/mpich/index.php/DTPools).
+   https://github.com/pmodels/mpich/blob/main/doc/wiki/design/DTPools.md).
 
  # Added new "non-catastrophic" error codes to expose internal
    resource exhaustion.
@@ -379,7 +379,7 @@
  # Blue Gene/Q implementation supports MPI-3. This release contains a
    functional and compliant Blue Gene/Q implementation of the MPI-3 standard.
    Instructions to build on Blue Gene/Q are on the mpich.org wiki:
-   http://wiki.mpich.org/mpich/index.php/BGQ
+   https://github.com/pmodels/mpich/blob/main/doc/wiki/source_code/BGQ.md
 
  # Fortran 2008 bindings (experimental). Build with --enable-fortran=all. Must have
    a Fortran 2008 + TS 29113 capable compiler.
@@ -462,7 +462,7 @@
 
  # Several improvements to the Hydra process binding code.  See the
    Hydra wiki page for more information:
-   http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager
+   https://github.com/pmodels/mpich/blob/main/doc/wiki/how_to/Using_the_Hydra_Process_Manager.md
 
  # MPICH now supports operations on very large datatypes (those that describe
    more than 32 bits of data).  This work also allows MPICH to fully support

@@ -5,4 +5,4 @@ ssh, rsh, fork), as well as natively integrate with resource
 management systems (such as slurm, pbs, sge).
 
 More information about using Hydra can be found here:
-http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager
+https://github.com/pmodels/mpich/blob/main/doc/wiki/how_to/Using_the_Hydra_Process_Manager.md

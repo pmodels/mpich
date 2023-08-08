@@ -13,7 +13,7 @@ runtime decisions at a finer granularity.
 Notice that performance of the application depends on how ranks are mapped to
 the cores of the processor. For information on how to specify process-core
 binding with mpirun, information is provided here:
-https://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager#Process-core_Binding.
+https://github.com/pmodels/mpich/blob/main/doc/wiki/how_to/Using_the_Hydra_Process_Manager.md#process-core-binding.
 
 This following section of this document provides information about threading
 optimizations (Section 1).

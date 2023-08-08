@@ -4,7 +4,7 @@ How to contribute to MPICH
 agreement. http://www.mpich.org/documentation/contributor-docs/
 
 2. Format your patches according to the MPICH coding
-standards. https://wiki.mpich.org/mpich/index.php/Coding_Standards
+standards. https://github.com/pmodels/mpich/blob/main/doc/wiki/source_code/Coding_Standards.md
 
 3. Use the git pre-commit hook included with MPICH
 (mpich_root/maint/hooks/pre-commit)
@@ -23,4 +23,4 @@ can be merged.
 
 More info on contributing to MPICH, including tips on how to use git,
 can be found here:
-https://wiki.mpich.org/mpich/index.php/Contributing_to_MPICH
+https://github.com/pmodels/mpich/blob/main/doc/wiki/source_code/Contributing_to_MPICH.md

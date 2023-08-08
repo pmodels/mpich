@@ -115,7 +115,8 @@ static void help_help_fn(void)
 
     printf("\n");
     printf("Please see the instructions provided at\n");
-    printf("http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager\n");
+    printf
+        ("https://github.com/pmodels/mpich/blob/main/doc/wiki/how_to/Using_the_Hydra_Process_Manager.md\n");
     printf("for further details\n\n");
 }
 

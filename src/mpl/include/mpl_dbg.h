@@ -12,7 +12,7 @@
 /*
  * Multilevel debugging and tracing macros.
  * The design is discussed at
- * http://wiki.mpich.org/mpich/index.php/Debug_Event_Logging
+ * https://github.com/pmodels/mpich/blob/main/doc/wiki/design/Debug_Event_Logging.md
  *
  * Basically, this provide a way to place debugging messages into
  * groups (called *classes*), with levels of detail, and arbitrary
