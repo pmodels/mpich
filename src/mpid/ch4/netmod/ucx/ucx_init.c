@@ -330,6 +330,12 @@ int MPIDI_UCX_mpi_finalize_hook(void)
     int n = MPIDI_UCX_global.num_vcis;
     pending = MPL_malloc(sizeof(ucs_status_ptr_t) * MPIR_Process.size * n * n, MPL_MEM_OTHER);
 
+    if (!MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
+        /* if some process are not present, the disconnect may timeout and give errors */
+        mpi_errno = MPIR_pmi_barrier();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     int p = 0;
     for (int i = 0; i < MPIR_Process.size; i++) {
         MPIDI_UCX_addr_t *av = &MPIDI_UCX_AV(&MPIDIU_get_av(0, i));
