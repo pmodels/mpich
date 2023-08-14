@@ -38,7 +38,7 @@ information on bug fixes and new releases.
 Note: this guide assumes you are building MPICH from one of the MPICH
 release tarballs. If you are starting from a git checkout, you will need
 a few additional steps. Please refer to the wiki page --
-https://wiki.mpich.org. 
+https://github.com/pmodels/mpich/blob/main/doc/wiki/Index.md.
 
 The following instructions take you through a sequence of steps to get
 the default configuration (ch3 device, nemesis channel (with TCP and
@@ -51,7 +51,7 @@ shared memory), Hydra process management) of MPICH up and running.
     - REQUIRED: Perl
 
     - REQUIRED: A C compiler (C99 support is required. See
-      https://wiki.mpich.org/mpich/index.php/Shifting_toward_C99)
+      https://github.com/pmodels/mpich/blob/main/doc/wiki/source_code/Shifting_Toward_C99.md)
 
     - OPTIONAL: A C++ compiler, if C++ applications are to be used
       (g++, etc.). If you do not require support for C++ applications,
@@ -228,7 +228,7 @@ shared memory), Hydra process management) of MPICH up and running.
     nothing is specified, ':1' is assumed.
 
     More details on interacting with Hydra can be found at
-    http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager
+    https://github.com/pmodels/mpich/blob/main/doc/wiki/how_to/Using_the_Hydra_Process_Manager.md
 
 If you have completed all of the above steps, you have successfully
 installed MPICH and run an MPI example.
@@ -246,8 +246,8 @@ environments as well as our partner institutes. If you have problems
 with the installation or usage of MPICH, please follow these steps:
 
 1. First see the Frequently Asked Questions (FAQ) page at
-http://wiki.mpich.org/mpich/index.php/Frequently_Asked_Questions to
-see if the problem you are facing has a simple solution. Many common
+https://github.com/pmodels/mpich/blob/main/doc/wiki/faq/Frequently_Asked_Questions.md
+to see if the problem you are facing has a simple solution. Many common
 problems and their solutions are listed here.
 
 2. If you cannot find an answer on the FAQ page, look through previous
@@ -564,7 +564,7 @@ hydra
 Hydra is the default process management framework that uses existing
 daemons on nodes (e.g., ssh, pbs, slurm, sge) to start MPI
 processes. More information on Hydra can be found at
-http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager
+https://github.com/pmodels/mpich/blob/main/doc/wiki/how_to/Using_the_Hydra_Process_Manager.md
 
 gforker
 -------
@@ -738,7 +738,7 @@ where <N> is the checkpoint number you want to restart from.
 
 These instructions can also be found on the MPICH wiki:
 
-  http://wiki.mpich.org/mpich/index.php/Checkpointing
+  https://github.com/pmodels/mpich/blob/main/doc/wiki/design/Checkpointing.md
 
 -------------------------------------------------------------------------
 
@@ -748,7 +748,7 @@ For MPICH developers who want to directly work on the primary version
 control system, there are a few additional steps involved (people
 using the release tarballs do not have to follow these steps). Details
 about these steps can be found here:
-http://wiki.mpich.org/mpich/index.php/Getting_And_Building_MPICH
+https://github.com/pmodels/mpich/blob/main/doc/wiki/source_code/Github.md
 
 -------------------------------------------------------------------------
 

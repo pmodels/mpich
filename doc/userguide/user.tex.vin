@@ -265,7 +265,7 @@ depict the number of processes you want to run on each node. If
 nothing is specified, ':1' is assumed.
 
 More details on interacting with Hydra can be found at
-\url{http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager}
+\url{https://github.com/pmodels/mpich/blob/main/doc/wiki/how_to/Using_the_Hydra_Process_Manager.md}
 
 
 \subsection{Extensions for All Process Management Environments}
@@ -282,7 +282,7 @@ For the time being we will document these separately.
 MPICH provides a number of process management systems. Hydra is the
 default process manager in MPICH. More details on Hydra and its
 extensions to mpiexec can be found at
-\url{http://wiki.mpich.org/mpich/index.php/Using\_the\_Hydra\_Process\_Manager}
+\url{https://github.com/pmodels/mpich/blob/main/doc/wiki/how_to/Using_the_Hydra_Process_Manager.md}
 
 
 \subsection{Extensions for the gforker Process Management Environment}
@@ -493,7 +493,7 @@ Hydra process manager.  Currently only the BLCR checkpointing library
 is supported.  BLCR needs to be installed separately.  Below we
 describe how to enable the feature in MPICH and how to use it.  This
 information can also be found on the MPICH Wiki:
-\url{http://wiki.mpich.org/mpich/index.php/Checkpointing}
+\url{https://github.com/pmodels/mpich/blob/main/doc/wiki/design/Checkpointing.md}
 
 \subsection{Configuring for checkpointing}
 \label{sec:conf-checkp}
@@ -601,7 +601,7 @@ To test a pre-installed MPI implementation:
 \section{Frequently Asked Questions}
 
 The frequently asked questions are maintained online
-here:\url{http://wiki.mpich.org/mpich/index.php/Frequently_Asked_Questions}
+here:\url{https://github.com/pmodels/mpich/blob/main/doc/wiki/faq/Frequently_Asked_Questions.md}
 
 \bibliographystyle{plain}
 \bibliography{user}

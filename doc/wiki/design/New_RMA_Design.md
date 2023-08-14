@@ -152,7 +152,7 @@ When a new element is needed, we first check if one is available in the
 corresponding **local** pool. If the **local** pool is empty, we try to
 find one in the **global** pool. If even the **global** pool is empty,
 we will call the **CLEANUP_WIN_AGGRESSIVE** function (see [Basic
-routines](https://wiki.mpich.org/mpich/index.php/New_RMA_Design#Basic_routines))
+routines](https://github.com/pmodels/mpich/blob/main/doc/wiki/design/New_RMA_Design.md#basic-routines))
 to free up existing elements. When we are done using an element, we
 first return it to the **local** pool. If the **local** pool is full, we
 return it to the **global** pool.
@@ -296,7 +296,7 @@ packets we are expecting from a particular target if the user calls a
 Note that there is a request pointer on window called **fence_req**
 which stores request of IBARRIER. For details on the memory barrier
 semantics, see [RMA + shared
-memory](https://wiki.mpich.org/mpich/index.php/New_RMA_Design#RMA_.2B_shared_memory).
+memory](https://github.com/pmodels/mpich/blob/main/doc/wiki/design/New_RMA_Design.md#rma--shared-memory).
 
 ```
 FENCE() {
