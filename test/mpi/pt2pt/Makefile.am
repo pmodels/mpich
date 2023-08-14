@@ -70,7 +70,8 @@ noinst_PROGRAMS =  \
     pt2pt_large \
     precv_anysrc \
     precv_anysrc_exp \
-    mprobe_self_free
+    mprobe_self_free \
+    pssend
 
 irecv_any_CPPFLAGS = -DTEST_NB $(AM_CPPFLAGS)
 irecv_any_SOURCES  = recv_any.c
