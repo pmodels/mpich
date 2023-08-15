@@ -15,7 +15,7 @@ comm_size_nullarg 1
 comm_split_nullarg 1
 comm_split_type_nullarg 1
 intercomm_create_nullarg 1
-subcomm_abort 4 mpiexecarg=-disable-auto-cleanup env=MPIR_CVAR_NO_COLLECTIVE_FINALIZE=1 strict=false resultTest=TestStatus
-subcomm_abort2 6 mpiexecarg=-disable-auto-cleanup env=MPIR_CVAR_NO_COLLECTIVE_FINALIZE=1 strict=false resultTest=TestStatus
-intercomm_abort 6 mpiexecarg=-disable-auto-cleanup strict=false resultTest=TestStatus
+subcomm_abort 4 mpiexecarg=-disable-auto-cleanup env=MPIR_CVAR_NO_COLLECTIVE_FINALIZE=1 strict=false resultTest=TestStatusNoErrors
+subcomm_abort2 6 mpiexecarg=-disable-auto-cleanup env=MPIR_CVAR_NO_COLLECTIVE_FINALIZE=1 strict=false resultTest=TestStatusNoErrors
+intercomm_abort 6 mpiexecarg=-disable-auto-cleanup strict=false resultTest=TestStatusNoErrors
 unmatched 2 strict=false
