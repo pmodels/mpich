@@ -31,7 +31,7 @@ icsend 4 arg=-randomize=1
 icprobe 4
 icprobe 4 arg=-randomize=1
 rqstatus 2
-rqfree 4
+rqfree 4 resultTest=TestAllowWarnings
 greq1 1
 probe_unexp 4
 probe_unexp 4 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
