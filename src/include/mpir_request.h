@@ -476,15 +476,12 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_null_recv(void)
 
 static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_safety)
 {
-    int inuse;
     int pool = MPIR_REQUEST_POOL(req);
 
     if (HANDLE_IS_BUILTIN(req->handle)) {
         /* do not free builtin request objects */
         return;
     }
-
-    MPIR_Request_release_ref(req, &inuse);
 
     if (need_safety) {
         MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
@@ -496,6 +493,8 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
      * this request */
     MPID_Request_free_hook(req);
 
+    int inuse;
+    MPIR_Request_release_ref(req, &inuse);
     if (inuse == 0) {
         MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "freeing request, handle=0x%08x", req->handle);
 
