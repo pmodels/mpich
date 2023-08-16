@@ -8,6 +8,10 @@
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
+categories :
+    - name : REQUEST
+      description : A category for requests management variables
+
 cvars:
     - name        : MPIR_CVAR_REQUEST_ERR_FATAL
       category    : REQUEST
@@ -25,6 +29,29 @@ cvars:
         case, which maybe more convenient for debugging. This cvar will also
         make nonblocking shched return error right away as it issues
         operations.
+
+    - name        : MPIR_CVAR_REQUEST_POLL_FREQ
+      category    : REQUEST
+      type        : int
+      default     : 8
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        How frequent to poll during MPI_{Waitany,Waitsome} in terms
+        of number of processed requests before polling.
+
+    - name        : MPIR_CVAR_REQUEST_BATCH_SIZE
+      category    : REQUEST
+      type        : int
+      default     : 64
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        The number of requests to make completion as a batch
+        in MPI_Waitall and MPI_Testall implementation. A large number
+        is likely to cause more cache misses.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -135,7 +162,6 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_Progress_poke();
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
         case MPIR_REQUEST_KIND__RECV:
@@ -278,8 +304,10 @@ int MPIR_Test_state(MPIR_Request * request_ptr, int *flag, MPI_Status * status,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPID_Progress_test(state);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPID_Progress_test(state);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -321,20 +349,14 @@ int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
                        MPI_Status array_of_statuses[], int requests_property,
                        MPID_Progress_state * state)
 {
-    int i;
     int mpi_errno = MPI_SUCCESS;
-    int n_completed = 0;
+    int n_completed;
+    int need_progress = 1;
 
-    mpi_errno = MPID_Progress_test(state);
-    MPIR_ERR_CHECK(mpi_errno);
-
+  fn_check_requests:
+    n_completed = 0;
     if (requests_property & MPIR_REQUESTS_PROPERTY__NO_GREQUESTS) {
-        for (i = 0; i < count; i++) {
-            if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-                mpi_errno = MPID_Progress_test(state);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-
+        for (int i = 0; i < count; i++) {
             if (request_ptrs[i] == NULL || MPIR_Request_is_complete(request_ptrs[i])) {
                 n_completed++;
             } else {
@@ -342,12 +364,7 @@ int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
             }
         }
     } else {
-        for (i = 0; i < count; i++) {
-            if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-                mpi_errno = MPID_Progress_test(state);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-
+        for (int i = 0; i < count; i++) {
             if (request_ptrs[i] != NULL) {
                 if (MPIR_Request_has_poll_fn(request_ptrs[i])) {
                     mpi_errno = MPIR_Grequest_poll(request_ptrs[i], &array_of_statuses[i]);
@@ -361,7 +378,21 @@ int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
             }
         }
     }
-    *flag = (n_completed == count) ? TRUE : FALSE;
+
+    if (n_completed == count) {
+        *flag = TRUE;
+        goto fn_exit;
+    }
+
+    if (need_progress > 0) {
+        mpi_errno = MPID_Progress_test(state);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        need_progress--;
+        goto fn_check_requests;
+    }
+
+    *flag = FALSE;
 
   fn_exit:
     return mpi_errno;
@@ -550,25 +581,16 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
 int MPIR_Testany_state(int count, MPIR_Request * request_ptrs[],
                        int *indx, int *flag, MPI_Status * status, MPID_Progress_state * state)
 {
-    int i;
-    int n_inactive = 0;
     int mpi_errno = MPI_SUCCESS;
+    int need_progress = 1;
+    int n_inactive;
 
-    mpi_errno = MPID_Progress_test(state);
-    /* --BEGIN ERROR HANDLING-- */
-    MPIR_ERR_CHECK(mpi_errno);
-    /* --END ERROR HANDLING-- */
-
-    for (i = 0; i < count; i++) {
-        if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-            mpi_errno = MPID_Progress_test(state);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-
+  fn_check_requests:
+    n_inactive = 0;
+    for (int i = 0; i < count; i++) {
         if (request_ptrs[i] != NULL && MPIR_Request_has_poll_fn(request_ptrs[i])) {
             mpi_errno = MPIR_Grequest_poll(request_ptrs[i], status);
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
+            MPIR_ERR_CHECK(mpi_errno);
         }
         if (!MPIR_Request_is_active(request_ptrs[i])) {
             n_inactive += 1;
@@ -582,7 +604,18 @@ int MPIR_Testany_state(int count, MPIR_Request * request_ptrs[],
     if (n_inactive == count) {
         *flag = TRUE;
         *indx = MPI_UNDEFINED;
+        goto fn_exit;
     }
+
+    if (need_progress > 0) {
+        mpi_errno = MPID_Progress_test(state);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        need_progress--;
+        goto fn_check_requests;
+    }
+
+    *flag = FALSE;
 
   fn_exit:
     return mpi_errno;
@@ -687,25 +720,16 @@ int MPIR_Testsome_state(int incount, MPIR_Request * request_ptrs[],
     int i;
     int n_inactive;
     int mpi_errno = MPI_SUCCESS;
+    int need_progress = 1;
 
-    mpi_errno = MPID_Progress_test(state);
-    /* --BEGIN ERROR HANDLING-- */
-    MPIR_ERR_CHECK(mpi_errno);
-    /* --END ERROR HANDLING-- */
-
+  fn_check_requests:
     n_inactive = 0;
     *outcount = 0;
 
     for (i = 0; i < incount; i++) {
-        if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-            mpi_errno = MPID_Progress_test(state);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-
         if (request_ptrs[i] != NULL && MPIR_Request_has_poll_fn(request_ptrs[i])) {
             mpi_errno = MPIR_Grequest_poll(request_ptrs[i], &array_of_statuses[i]);
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
+            MPIR_ERR_CHECK(mpi_errno);
         }
         if (!MPIR_Request_is_active(request_ptrs[i])) {
             n_inactive += 1;
@@ -715,8 +739,22 @@ int MPIR_Testsome_state(int incount, MPIR_Request * request_ptrs[],
         }
     }
 
-    if (n_inactive == incount)
+    if (n_inactive == incount) {
         *outcount = MPI_UNDEFINED;
+    }
+
+    if (*outcount) {
+        /* if "some" are completed, skip progress */
+        goto fn_exit;
+    }
+
+    if (need_progress > 0) {
+        mpi_errno = MPID_Progress_test(state);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        need_progress--;
+        goto fn_check_requests;
+    }
 
   fn_exit:
     return mpi_errno;
