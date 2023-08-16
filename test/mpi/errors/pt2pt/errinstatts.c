@@ -74,18 +74,27 @@ int main(int argc, char *argv[])
             s[i].MPI_ERROR = -1;
         }
 
-        /* WARNING: The following assumes that Testsome will complete both
-         * send/irecv pairs.  This is *not* guaranteed by the MPI standard. */
-        errval = MPI_Testsome(2, r, &outcount, indices, s);
-        MPI_Error_class(errval, &errclass);
-        if (errclass != MPI_ERR_IN_STATUS) {
+        /* Spin MPI_Testsome until both Irecvs completes. */
+        /* NOTE: MPI does not guarantee a sinngle MPI_Testsome complete both requests */
+        int got_err_in_status = 0;
+        int complete_count = 0;
+        while (complete_count < 2) {
+            errval = MPI_Testsome(2, r, &outcount, indices, s);
+            complete_count += outcount;
+            if (errval != MPI_SUCCESS) {
+                MPI_Error_class(errval, &errclass);
+                if (errclass == MPI_ERR_IN_STATUS) {
+                    got_err_in_status++;
+                }
+            }
+        }
+
+        if (got_err_in_status != 1) {
             errs++;
-            printf
-                ("Did not get ERR_IN_STATUS in Testsome (outcount = %d, should equal 2); class returned was %d\n",
-                 outcount, errclass);
-        } else if (outcount != 2) {
-            errs++;
-            printf("Test returned outcount = %d\n", outcount);
+            printf("Did not get ERR_IN_STATUS in Testsome; class returned was %d\n", errclass);
+        }
+        if (complete_count != 2) {
+            printf("complete_count = %d\n", complete_count);
         } else {
             /* Check for success */
             for (i = 0; i < outcount; i++) {
