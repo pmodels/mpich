@@ -6,6 +6,8 @@
 #ifndef MPIDIG_PART_CALLBACKS_H_INCLUDED
 #define MPIDIG_PART_CALLBACKS_H_INCLUDED
 
+#include "mpidimpl.h"
+
 int MPIDIG_part_send_data_origin_cb(MPIR_Request * req);
 
 int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,

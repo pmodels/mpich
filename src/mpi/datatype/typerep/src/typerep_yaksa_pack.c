@@ -298,6 +298,8 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
         outbuf_ptr = MPIR_get_contig_ptr(outbuf, dtp->true_lb);
         total_size = outcount * dtp->size;
     }
+    /* the offset + the size of the data to unpack cannot exceed the total size */
+    MPIR_Assert(total_size >= outoffset + insize);
 
     MPL_pointer_attr_t inattr, outattr;
 
@@ -309,6 +311,7 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
     }
 
     if (rel_addressing && is_contig && IS_HOST(inattr) && IS_HOST(outattr)) {
+        /* when continuous the offset + the number of bytes to unpack cannot exceed the total size of byte in the msg */
         *actual_unpack_bytes = MPL_MIN(total_size - outoffset, insize);
         /* We assume the amount we unpack is multiple of element_size */
         MPIR_Assert(element_size < 0 || *actual_unpack_bytes % element_size == 0);

@@ -35,8 +35,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int, int, MPIR_Comm *, int, int *,
                                          MPI_Status *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *, int,
                                         MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Irecv_parent(void *, MPI_Aint, MPI_Datatype, int, int,
+                                               MPIR_Comm *, int, MPIR_cc_t *,
+                                               MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *,
                                         int, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Isend_parent(const void *, MPI_Aint, MPI_Datatype, int, int,
+                                               MPIR_Comm *, int, MPIR_cc_t *,
+                                               MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *, MPI_Aint, MPI_Datatype, int, int,
                                          MPIR_Comm *, int,
                                          MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
@@ -70,7 +76,10 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request *) MPL_STA
 MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX void MPID_Part_request_free_hook(MPIR_Request *) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX void MPID_Part_send_request_free_hook(MPIR_Request *)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX void MPID_Part_recv_request_free_hook(MPIR_Request *)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *,
                                        int, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *,

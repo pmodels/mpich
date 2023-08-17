@@ -80,20 +80,25 @@ typedef struct MPIDIG_ssend_ack_msg_t {
 } MPIDIG_ssend_ack_msg_t;
 
 typedef struct MPIDIG_part_send_init_msg_t {
-    int src_rank;
+    bool do_tag;                /* use tag matching or not */
+    int send_npart;             /* the number of send partitions */
+    int send_ttl_dcount;        /* the total number of datatypes in the WHOLE buffer */
+    int src_rank;               /* rank of the send */
     int tag;
     MPIR_Context_id_t context_id;
-    MPIR_Request *sreq_ptr;
+    MPIR_Request *sreq_ptr;     /* pointer to the send request */
     MPI_Aint data_sz;           /* size of entire send data */
 } MPIDIG_part_send_init_msg_t;
 
 typedef struct MPIDIG_part_cts_msg_t {
+    int msg_part;               /* the number of partitions to use for the communication */
     MPIR_Request *sreq_ptr;
     MPIR_Request *rreq_ptr;
 } MPIDIG_part_cts_msg_t;
 
 typedef struct MPIDIG_part_send_data_msg_t {
-    MPIR_Request *rreq_ptr;
+    int imsg;                   /* the ID of the partitioned send */
+    MPIR_Request *rreq_ptr;     /* the pointer to the recv request */
 } MPIDIG_part_send_data_msg_t;
 
 typedef struct MPIDIG_win_cntrl_msg_t {

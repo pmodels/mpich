@@ -6,6 +6,7 @@
 #ifndef CH4_STARTALL_H_INCLUDED
 #define CH4_STARTALL_H_INCLUDED
 
+#include <stdio.h>
 #include "ch4_impl.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_part_start(MPIR_Request * request);
@@ -15,7 +16,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_start(MPIR_Request * preq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    /* nothing to do if the source/dest is MPI_PROC_NULL */
+    /* continue if the source/dest is MPI_PROC_NULL */
+    /* from https://github.com/raffenet/mpich/commit/9c5deba83a1a23892a54a0b16f9a493dcec690ac */
     if (MPIDI_PREQUEST(preq, rank) == MPI_PROC_NULL)
         goto fn_exit;
 

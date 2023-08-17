@@ -86,6 +86,7 @@ typedef struct MPIDIG_rreq_t {
 } MPIDIG_rreq_t;
 
 typedef struct MPIDIG_part_am_req_t {
+    MPIR_cc_t *cc_part_ptr;
     MPIR_Request *part_req_ptr;
 } MPIDIG_part_am_req_t;
 
@@ -190,6 +191,7 @@ typedef struct MPIDIG_req_t {
     void *rndv_hdr;
     void *buffer;
     MPI_Aint count;
+    MPI_Aint offset;            /* offset in byte to apply to the buffer */
     MPI_Datatype datatype;
     union {
         struct {
@@ -221,30 +223,49 @@ typedef struct MPIDI_prequest {
     MPI_Datatype datatype;
 } MPIDI_prequest_t;
 
-/* Structures for partitioned pt2pt request */
+/* info for MPIDIG SEND implementation, access with MPIDIG_PART_SREQUEST()*/
 typedef struct MPIDIG_part_sreq {
-    MPIR_cc_t ready_cntr;
+    MPIR_cc_t cc_send;          /* counter on the number of msgs actually sent */
+    MPIR_cc_t *cc_part;         /* ready counter per partition */
+    MPIR_cc_t *cc_msg;          /* ready counter per message, must be different than the partition one */
+    union {
+        MPIR_Request **tag_req_ptr;     /* TAG only: pointers to the children request */
+    };
 } MPIDIG_part_sreq_t;
 
+/* info for MPIDIG RECV implementation, access with MPIDIG_PART_RREQUEST()*/
 typedef struct MPIDIG_part_rreq {
-    MPI_Aint sdata_size;        /* size of entire send data */
+    MPI_Aint send_dsize;        /* size of entire send data */
+    MPIR_cc_t status_matched;   /* req has matched (=1) and if the first CTS has been issued (=2) */
+    union {
+        /* AM only data */
+        MPIR_cc_t *cc_part;
+        /* TAG only data */
+        MPIR_Request **tag_req_ptr;
+    };
 } MPIDIG_part_rreq_t;
 
+/* info for MPIDIG implementation, access with MPIDIG_PART_REQUEST()*/
 typedef struct MPIDIG_part_request {
-    MPIR_Request *peer_req_ptr;
+    int msg_part;               /* the number of messages actually sent */
+    int mode;                   /* indicate the transfer mode: (0 = AM, 1 = TAG, 2 = RMA) */
+    MPIR_Request *peer_req_ptr; /* needed by the RTS/CTS (using AM) + AM msgs */
+
+    /* send/recv dep info */
     union {
         MPIDIG_part_sreq_t send;
         MPIDIG_part_rreq_t recv;
     } u;
 } MPIDIG_part_request_t;
 
-typedef struct MPIDI_part_request {
-    MPIDIG_part_request_t am;
-
-    /* partitioned attributes */
+typedef struct MPIDI_part_request {     /* user attributes */
     void *buffer;
     MPI_Aint count;
     MPI_Datatype datatype;
+
+    /* MPIDIG related information */
+    MPIDIG_part_request_t part;
+
     union {
         struct {
             int dest;
@@ -257,6 +278,10 @@ typedef struct MPIDI_part_request {
     } u;
     union {
     MPIDI_NM_PART_DECL} netmod;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    union {
+    MPIDI_SHM_REQUEST_DECL} shm;
+#endif
 } MPIDI_part_request_t;
 
 /* message queue within "self"-comms, i.e. MPI_COMM_SELF and all communicators with size of 1. */
@@ -304,6 +329,7 @@ typedef struct MPIDI_Devreq_t {
 
         MPIDI_self_request_t self;
 
+        // TG: why having the netmod direct API here instead of in a sub-typed request?
         /* Used by the netmod direct apis */
         union {
         MPIDI_NM_REQUEST_DECL} netmod;
@@ -319,9 +345,13 @@ typedef struct MPIDI_Devreq_t {
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
 #define MPIDI_PREQUEST(req,field)       (((req)->dev.ch4.preq).field)
-#define MPIDI_PART_REQUEST(req,field)   (((req)->dev.ch4.part_req).field)
-#define MPIDIG_PART_REQUEST(req, field)   (((req)->dev.ch4.part_req).am.field)
-#define MPIDI_SELF_REQUEST(req, field)  (((req)->dev.ch4.self).field)
+#define MPIDI_SELF_REQUEST(req, field) (((req)->dev.ch4.self).field)
+#define MPIDI_PART_REQUEST(req, field) (((req)->dev.ch4.part_req).field)
+#define MPIDIG_PART_REQUEST(req, field) (((req)->dev.ch4.part_req).part.field)
+#define MPIDIG_PART_SREQUEST(req, field) (((req)->dev.ch4.part_req).part.u.send.field)
+#define MPIDIG_PART_RREQUEST(req, field) (((req)->dev.ch4.part_req).part.u.recv.field)
+#define MPIDIG_PART_DO_AM(req) (MPIDIG_PART_REQUEST(req, mode) == 0)
+#define MPIDIG_PART_DO_TAG(req) (MPIDIG_PART_REQUEST(req, mode) == 1)
 
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
 

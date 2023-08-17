@@ -303,6 +303,8 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     MPIR_stream_comm_init(comm_p);
 
     comm_p->persistent_requests = NULL;
+    /* initialize the number of partitioned communication to 0 */
+    MPIR_cc_set(&(comm_p->part_context_cc), 0);
 
     /* mutex is only used in VCI granularity. But the overhead of
      * creation is low, so we always create it. */

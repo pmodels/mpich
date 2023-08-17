@@ -57,7 +57,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
    required CH4 layer fields initialized.
 
    The net/shm mods can upcall to MPIDIG to create a request, or
-   they can iniitalize their own requests internally, but note
+   they can initialize their own requests internally, but note
    that all the fields from the upper layers must be initialized
    properly.
 
@@ -108,6 +108,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_Request_complete_fast(MPIR_Request * req)
     int incomplete;
     MPIR_cc_decr(req->cc_ptr, &incomplete);
     if (!incomplete) {
+        if (req->dev.completion_notification) {
+            MPIR_cc_dec(req->dev.completion_notification);
+        }
         MPIDI_CH4_REQUEST_FREE(req);
     }
 }
@@ -127,11 +130,65 @@ MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
     MPIR_FUNC_EXIT;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPID_Part_request_free_hook(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPID_Part_send_request_free_hook(MPIR_Request * req)
 {
     MPIR_FUNC_ENTER;
 
     MPIR_Datatype_release_if_not_builtin(MPIDI_PART_REQUEST(req, datatype));
+
+    /* TG: FIXME this function is in MPIDI and not MPIDIG */
+    MPIR_Assert(req->kind == MPIR_REQUEST_KIND__PART_SEND);
+    MPIR_cc_t *cc_part = MPIDIG_PART_SREQUEST(req, cc_part);
+    if (cc_part != NULL) {
+        MPL_free(cc_part);
+    }
+
+    /* release the counter per msg */
+    MPIR_cc_t *cc_msg = MPIDIG_PART_SREQUEST(req, cc_msg);
+    if (cc_msg) {
+        MPL_free(cc_msg);
+    }
+
+    /* if we do tag, release the request array and decrease the cc value */
+    const bool do_tag = MPIDIG_PART_DO_TAG(req);
+    if (do_tag) {
+        MPIR_Request **tag_req_ptr = MPIDIG_PART_SREQUEST(req, tag_req_ptr);
+        MPIR_Assert(tag_req_ptr != NULL);
+        const int msg_part = MPIDIG_PART_REQUEST(req, msg_part);
+        for (int i = 0; i < msg_part; ++i) {
+            if (tag_req_ptr[i]) {
+                MPIR_Request_free(tag_req_ptr[i]);
+            }
+        }
+        MPL_free(tag_req_ptr);
+        MPIR_cc_dec(&req->comm->part_context_cc);
+    }
+
+    MPIR_FUNC_EXIT;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPID_Part_recv_request_free_hook(MPIR_Request * req)
+{
+    MPIR_FUNC_ENTER;
+
+    MPIR_Datatype_release_if_not_builtin(MPIDI_PART_REQUEST(req, datatype));
+
+    /* TG: FIXME this function is in MPIDI and not MPIDIG */
+    MPIR_Assert(req->kind == MPIR_REQUEST_KIND__PART_RECV);
+    const bool do_tag = MPIDIG_PART_DO_TAG(req);
+    if (do_tag) {
+        MPIR_Request **tag_req_ptr = MPIDIG_PART_RREQUEST(req, tag_req_ptr);
+        const int msg_part = MPIDIG_PART_REQUEST(req, msg_part);
+        for (int i = 0; i < msg_part; ++i) {
+            if (tag_req_ptr[i]) {
+                MPIR_Request_free(tag_req_ptr[i]);
+            }
+        }
+        MPL_free(tag_req_ptr);
+    } else {
+        MPIR_cc_t *cc_part = MPIDIG_PART_RREQUEST(req, cc_part);
+        MPL_free(cc_part);
+    }
 
     MPIR_FUNC_EXIT;
 }

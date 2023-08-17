@@ -12,7 +12,7 @@
 MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                              int rank, int tag, MPIR_Comm * comm,
                                              int attr, MPIDI_av_entry_t * av,
-                                             MPIR_Request ** request)
+                                             MPIR_cc_t * parent_cc_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -30,13 +30,14 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
     MPIR_Assert(*request);
 #endif
 
-    mpi_errno = MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, request);
+    mpi_errno =
+        MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, parent_cc_ptr, request);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!MPIR_Request_is_complete(*request) && !MPIDIG_REQUEST_IN_PROGRESS(*request)) {
         MPIR_Request *nm_rreq = NULL;
         mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr,
-                                       av, &nm_rreq, *request);
+                                       av, parent_cc_ptr, &nm_rreq, *request);
         MPIR_ERR_CHECK(mpi_errno);
         (*request)->dev.anysrc_partner = nm_rreq;
 
@@ -98,24 +99,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv(void *buf,
                                          int rank,
                                          int tag,
                                          MPIR_Comm * comm,
-                                         int attr, MPIDI_av_entry_t * av, MPIR_Request ** req)
+                                         int attr, MPIDI_av_entry_t * av,
+                                         MPIR_cc_t * parent_cc_ptr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     *(req) = NULL;
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, av, req, NULL);
+    mpi_errno =
+        MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr, req,
+                           NULL);
 #else
     if (unlikely(rank == MPI_ANY_SOURCE)) {
-        mpi_errno = anysource_irecv(buf, count, datatype, rank, tag, comm, attr, av, req);
+        mpi_errno =
+            anysource_irecv(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr, req);
 
     } else {
         if (MPIDI_av_is_local(av))
-            mpi_errno = MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, req);
+            mpi_errno =
+                MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, parent_cc_ptr,
+                                    req);
         else
             mpi_errno =
-                MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, av, req, NULL);
+                MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr,
+                                   req, NULL);
     }
 #endif
     MPIR_ERR_CHECK(mpi_errno);
@@ -237,10 +245,40 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     MPIR_FUNC_ENTER;
 
     if (MPIR_is_self_comm(comm)) {
-        mpi_errno = MPIDI_Self_irecv(buf, count, datatype, rank, tag, comm, attr, request);
+        mpi_errno = MPIDI_Self_irecv(buf, count, datatype, rank, tag, comm, attr, NULL, request);
     } else {
         MPIDI_av_entry_t *av = (rank == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, rank));
-        mpi_errno = MPIDI_irecv(buf, count, datatype, rank, tag, comm, attr, av, request);
+        mpi_errno = MPIDI_irecv(buf, count, datatype, rank, tag, comm, attr, av, NULL, request);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPII_RECVQ_REMEMBER(*request, rank, tag, comm->recvcontext_id, buf, count);
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Irecv_parent(void *buf,
+                                               MPI_Aint count,
+                                               MPI_Datatype datatype,
+                                               int rank,
+                                               int tag,
+                                               MPIR_Comm * comm, int attr,
+                                               MPIR_cc_t * parent_cc_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    if (MPIDI_is_self_comm(comm)) {
+        mpi_errno =
+            MPIDI_Self_irecv(buf, count, datatype, rank, tag, comm, attr, parent_cc_ptr, request);
+    } else {
+        MPIDI_av_entry_t *av = (rank == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, rank));
+        mpi_errno =
+            MPIDI_irecv(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr, request);
     }
 
     MPIR_ERR_CHECK(mpi_errno);

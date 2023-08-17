@@ -59,7 +59,9 @@ mpi_core_sources += src/mpid/ch4/src/ch4_globals.c        \
 		    src/mpid/ch4/src/mpidig_part.c \
 		    src/mpid/ch4/src/mpidig_part_callbacks.c \
 		    src/mpid/ch4/src/mpidig_comm_abort.c \
-                    src/mpid/ch4/src/mpid_ch4_net_array.c
+                    src/mpid/ch4/src/mpid_ch4_net_array.c \
+		  src/mpid/ch4/src/mpidig_part_utils.c
+
 
 if BUILD_CH4_COLL_TUNING
 mpi_core_sources += src/mpid/ch4/src/ch4_coll_globals.c

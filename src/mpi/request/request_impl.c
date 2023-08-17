@@ -191,8 +191,10 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
             mpi_errno = MPIR_Grequest_free(request_ptr);
             break;
         case MPIR_REQUEST_KIND__PART_SEND:
+            MPID_Part_send_request_free_hook(request_ptr);
+            break;
         case MPIR_REQUEST_KIND__PART_RECV:
-            MPID_Part_request_free_hook(request_ptr);
+            MPID_Part_recv_request_free_hook(request_ptr);
             break;
         default:
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -859,6 +861,11 @@ int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progre
     while (!MPIR_Request_is_complete(request_ptr)) {
         mpi_errno = MPID_Progress_wait(state);
         MPIR_ERR_CHECK(mpi_errno);
+        // if partitioned communication, we need to obtain the VCI list
+        if (request_ptr->kind == MPIR_REQUEST_KIND__PART_RECV ||
+            request_ptr->kind == MPIR_REQUEST_KIND__PART_SEND) {
+            MPIDI_set_progress_vci(request_ptr, state);
+        }
 
         if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
             mpi_errno = MPIR_Request_handle_proc_failed(request_ptr);

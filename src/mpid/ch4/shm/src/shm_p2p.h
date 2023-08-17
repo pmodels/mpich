@@ -13,7 +13,8 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm * comm, int attr,
-                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
+                                                 MPIDI_av_entry_t * addr,
+                                                 MPIR_cc_t * parent_cc_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -24,10 +25,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
      *   always use MPIR_Localcopy to move the data and support GPU buffers efficiently
      *   with yaksa */
     if (rank == comm->rank || count == 0) {
-        mpi_errno =
-            MPIDI_POSIX_mpi_isend(buf, count, datatype, rank, tag, comm, attr, addr, request);
+        mpi_errno = MPIDI_POSIX_mpi_isend(buf, count, datatype, rank, tag, comm, attr, addr,
+                                          parent_cc_ptr, request);
     } else {
-        mpi_errno = MPIDI_IPC_mpi_isend(buf, count, datatype, rank, tag, comm, attr, addr, request);
+        mpi_errno = MPIDI_IPC_mpi_isend(buf, count, datatype, rank, tag, comm, attr, addr,
+                                        parent_cc_ptr, request);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -52,13 +54,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_send(MPIR_Request * sreq)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                                  int rank, int tag, MPIR_Comm * comm,
-                                                 int context_offset, MPIR_Request ** request)
+                                                 int context_offset,
+                                                 MPIR_cc_t * parent_cc_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     mpi_errno =
-        MPIDI_POSIX_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+        MPIDI_POSIX_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, parent_cc_ptr,
+                              request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

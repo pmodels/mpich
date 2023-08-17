@@ -30,12 +30,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
                                                   struct fi_cq_tagged_entry *wc /* unused */ ,
                                                   MPIR_Request * sreq, int event_id)
 {
-    int c;
     MPIR_FUNC_ENTER;
-
+    int c;
     MPIR_cc_decr(sreq->cc_ptr, &c);
 
     if (c == 0) {
+        if (sreq->dev.completion_notification) {
+            MPIR_cc_dec(sreq->dev.completion_notification);
+        }
         if ((event_id == MPIDI_OFI_EVENT_SEND_PACK) &&
             (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer))) {
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
