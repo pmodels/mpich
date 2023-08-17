@@ -228,8 +228,9 @@ int MPIR_Comm_disconnect_impl(MPIR_Comm * comm_ptr)
      */
     /* FIXME-MT should we be checking this? */
     if (MPIR_Object_get_ref(comm_ptr) > 1) {
-        MPID_Progress_state progress_state;
+        MPIR_Comm_free_inactive_requests(comm_ptr);
 
+        MPID_Progress_state progress_state;
         MPID_Progress_start(&progress_state);
         while (MPIR_Object_get_ref(comm_ptr) > 1) {
             mpi_errno = MPID_Progress_wait(&progress_state);

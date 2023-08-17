@@ -22,6 +22,7 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
 
     MPIR_Comm_add_ref(comm);
     req->comm = comm;
+    MPIR_Comm_save_inactive_request(comm, req);
 
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 

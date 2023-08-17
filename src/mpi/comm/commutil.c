@@ -302,6 +302,8 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->threadcomm = NULL;
     MPIR_stream_comm_init(comm_p);
 
+    comm_p->persistent_requests = NULL;
+
     /* mutex is only used in VCI granularity. But the overhead of
      * creation is low, so we always create it. */
     {
@@ -1232,32 +1234,6 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
     goto fn_exit;
 }
 
-/* Release a reference to a communicator.  If there are no pending
-   references, delete the communicator and recover all storage and
-   context ids.  This version of the function always manipulates the reference
-   counts, even for predefined objects. */
-int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int in_use;
-
-    MPIR_FUNC_ENTER;
-
-    /* we want to short-circuit any optimization that avoids reference counting
-     * predefined communicators, such as MPI_COMM_WORLD or MPI_COMM_SELF. */
-    MPIR_Object_release_ref_always(comm_ptr, &in_use);
-    if (!in_use) {
-        mpi_errno = MPIR_Comm_delete_internal(comm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 /* This function collectively compares hint_str to see whether all processes are having
  * the same string. The result is set in output pointer info_args_are_equal.
  */
@@ -1363,4 +1339,39 @@ int MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_bal
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Comm_save_inactive_request(MPIR_Comm * comm, MPIR_Request * request)
+{
+    MPID_THREAD_CS_ENTER(VCI, comm->mutex);
+    HASH_ADD_INT(comm->persistent_requests, handle, request, MPL_MEM_COMM);
+    MPID_THREAD_CS_EXIT(VCI, comm->mutex);
+
+    return MPI_SUCCESS;
+}
+
+int MPIR_Comm_delete_inactive_request(MPIR_Comm * comm, MPIR_Request * request)
+{
+    MPID_THREAD_CS_ENTER(VCI, comm->mutex);
+    HASH_DEL(comm->persistent_requests, request);
+    MPID_THREAD_CS_EXIT(VCI, comm->mutex);
+
+    return MPI_SUCCESS;
+}
+
+int MPIR_Comm_free_inactive_requests(MPIR_Comm * comm)
+{
+    MPIR_Request *request, *tmp;
+    MPID_THREAD_CS_ENTER(VCI, comm->mutex);
+    HASH_ITER(hh, comm->persistent_requests, request, tmp) {
+        if (!MPIR_Request_is_active(request)) {
+            MPL_internal_error_printf
+                ("WARNING: freeing inactive persistent request %x on communicator %x.\n",
+                 request->handle, comm->handle);
+            MPIR_Request_free_impl(request);
+        }
+    }
+    MPID_THREAD_CS_EXIT(VCI, comm->mutex);
+
+    return MPI_SUCCESS;
 }

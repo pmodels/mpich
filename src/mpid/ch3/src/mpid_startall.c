@@ -36,6 +36,7 @@
     (sreq_)->dev.user_count = count;					\
     (sreq_)->dev.datatype = datatype;					\
     (sreq_)->u.persist.real_request = NULL;                             \
+    MPIR_Comm_save_inactive_request(comm, sreq_);                       \
 }
 
 	
@@ -301,6 +302,7 @@ int MPID_Recv_init(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, 
     rreq->dev.user_count = count;
     rreq->dev.datatype = datatype;
     rreq->u.persist.real_request = NULL;
+    MPIR_Comm_save_inactive_request(comm, rreq);
     MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_RECV);
     if (!HANDLE_IS_BUILTIN(datatype))
     {
