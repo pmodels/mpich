@@ -38,6 +38,10 @@ parrived_wait 2 arg=-spart=8192 arg=-rpart=512 arg=-tot_count=4194304 arg=-itera
 
 parrived_pready_out_of_order 2 arg=-spart=16 arg=-rpart=32 arg=-tot_count=512 arg=-iteration=5
 
+parrived_strided 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-iteration=7 arg=-stride=2
+parrived_strided 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-iteration=7 arg=-stride=4
+parrived_strided 2 arg=-spart=8 arg=-rpart=8 arg=-tot_count=64 arg=-iteration=7 arg=-stride=8
+
 multipart 2
 nonblocking_pready 2
 no_start 2
