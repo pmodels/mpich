@@ -53,6 +53,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
                                                       MPI_Datatype datatype, int rank, int tag,
                                                       MPIR_Comm * comm, int attr,
                                                       MPIDI_av_entry_t * addr,
+                                                      MPIR_cc_t * parent_cc_ptr,
                                                       MPIR_Request ** request, bool * done)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -150,6 +151,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
         /* TODO: add flattening datatype protocol for noncontig send. Different
          * threshold may be required to tradeoff the flattening overhead.*/
     }
+
+    /* if the parent_cc_ptr exists */
+    if (parent_cc_ptr) {
+        if (MPIR_Request_is_complete(*request)) {
+            /* if the request is already completed, decrement the parent counter */
+            MPIR_cc_dec(parent_cc_ptr);
+        } else {
+            /* if the request is not done yet, assign the completion pointer to the parent one and it will be decremented later */
+            (*request)->dev.completion_notification = parent_cc_ptr;
+        }
+    }
   fn_exit:
     MPIDI_POSIX_THREAD_CS_EXIT_VCI(vci_src);
     MPIR_FUNC_EXIT;
@@ -161,19 +173,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm * comm, int attr,
-                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
+                                                 MPIDI_av_entry_t * addr,
+                                                 MPIR_cc_t * parent_cc_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     bool done = false;
     mpi_errno = MPIDI_IPCI_try_lmt_isend(buf, count, datatype, rank, tag, comm,
-                                         attr, addr, request, &done);
+                                         attr, addr, parent_cc_ptr, request, &done);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!done) {
         mpi_errno = MPIDI_POSIX_mpi_isend(buf, count, datatype, rank, tag, comm,
-                                          attr, addr, request);
+                                          attr, addr, parent_cc_ptr, request);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
