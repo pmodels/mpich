@@ -1271,6 +1271,9 @@ int MPL_gpu_finalize(void)
 
     MPL_event_pool_destroy();
 
+    MPL_free(mask_contents.dev_id);
+    MPL_free(mask_contents.subdev_id);
+
     return MPL_SUCCESS;
 }
 
