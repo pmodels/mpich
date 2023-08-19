@@ -147,6 +147,50 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_data(int *is_contig, int *is_gpu, 
     *is_gpu = p->is_device_buffer;
 }
 
+/* Some transport (e.g. ucx) can optimize a buffer transfer. Return buffer
+ * address and associated information.
+ */
+MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_buffer(void **p_data, MPI_Aint * p_data_sz,
+                                                     bool * is_contig, MPI_Aint * in_data_sz,
+                                                     MPIR_Request * rreq)
+{
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
+    /* transport may need handle the case when promised data size and posted
+     * buffer size mismatch */
+    *in_data_sz = p->in_data_sz;
+    if (p->recv_type == MPIDIG_RECV_DATATYPE) {
+        int dt_contig;
+        MPI_Aint data_sz;
+        MPIR_Datatype *dt_ptr;
+        MPI_Aint dt_true_lb;
+        MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype),
+                                dt_contig, data_sz, dt_ptr, dt_true_lb);
+        if (dt_contig) {
+            *p_data = (char *) MPIDIG_REQUEST(rreq, buffer) + dt_true_lb;
+        } else {
+            *p_data = (char *) MPIDIG_REQUEST(rreq, buffer);
+        }
+        *is_contig = dt_contig;
+        *p_data_sz = data_sz;
+    } else if (p->recv_type == MPIDIG_RECV_CONTIG) {
+        *is_contig = true;
+        *p_data = p->iov_one.iov_base;
+        *p_data_sz = p->iov_one.iov_len;
+    } else {
+        MPI_Aint data_sz = 0;
+        for (int i = 0; i < p->iov_num; i++) {
+            data_sz += p->iov_ptr[i].iov_len;
+        }
+        *is_contig = false;
+        *p_data = NULL;
+        *p_data_sz = data_sz;
+    }
+    /* process truncation error now */
+    if (*in_data_sz > *p_data_sz) {
+        rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(*p_data_sz, *in_data_sz);
+    }
+}
+
 /* Sometime the transport just need info to make algorithm choice */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_get_recv_iov_count(MPIR_Request * rreq)
 {
@@ -161,6 +205,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_get_recv_iov_count(MPIR_Request * rreq)
     } else {
         return p->iov_num;
     }
+}
+
+/* If the transport handles the data copy, call MPIDIG_recv_done to set status */
+MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_done(MPI_Aint got_data_sz, MPIR_Request * rreq)
+{
+    MPIR_STATUS_SET_COUNT(rreq->status, got_data_sz);
 }
 
 /* synchronous single-payload data transfer. This is the common case */
