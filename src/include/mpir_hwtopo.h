@@ -164,4 +164,9 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_first_pu_group(void);
  * Return the global id of the socket ancestor of the passed gid.
  */
 MPIR_hwtopo_gid_t MPIR_hwtopo_get_parent_socket(MPIR_hwtopo_gid_t gid);
+
+/*
+ * Return the local index of my nic in my first non io ancestor.
+ */
+int MPIR_hwtopo_get_pci_network_lid(int domain, int bus, int dev, int func);
 #endif /* MPIR_HWTOPO_H_INCLUDED */
