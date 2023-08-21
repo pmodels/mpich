@@ -679,3 +679,75 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_parent_socket(MPIR_hwtopo_gid_t gid)
 #endif
     return parent_gid;
 }
+
+#ifdef HAVE_HWLOC
+static MPIR_hwtopo_gid_t obj_to_gid(hwloc_obj_t obj)
+{
+    hwtopo_class_e class = get_type_class(obj->type);
+    return HWTOPO_GET_GID(class, obj->depth, obj->logical_index);
+}
+
+static int get_number_of_nics_below_me(hwloc_obj_t obj)
+{
+    int num = 0;
+
+    /* Found a network device, increment by 1 */
+    if (obj->attr && obj->attr->osdev.type == HWLOC_OBJ_OSDEV_NETWORK)
+        num++;
+
+    /* Find network devices among all my 'regular' children */
+    for (int i = 0; i < obj->arity; i++) {
+        num += get_number_of_nics_below_me(obj->children[i]);
+    }
+
+    /* Find network devices among all my io children */
+    hwloc_obj_t io_child = obj->io_first_child;
+    while (io_child) {
+        num += get_number_of_nics_below_me(io_child);
+        io_child = io_child->next_sibling;
+    }
+    return num;
+}
+#endif
+
+int MPIR_hwtopo_get_pci_network_lid(int domain, int bus, int dev, int func)
+{
+    int myIndex = 0;
+#ifdef HAVE_HWLOC
+    hwloc_obj_t my_io_device = hwloc_get_pcidev_by_busid(hwloc_topology, domain, bus, dev, func);
+    MPIR_Assert(my_io_device);
+    hwloc_obj_t my_first_non_io = hwloc_get_non_io_ancestor_obj(hwloc_topology, my_io_device);
+    MPIR_Assert(my_first_non_io);
+
+    MPIR_hwtopo_gid_t my_parent_gid = obj_to_gid(my_first_non_io);
+    hwloc_obj_t io_device = my_io_device;
+
+    /* Determine the number of network devices before me in my first non io ancestor. This
+     * can be used to determine my local network nic, which is used for nic mapping.
+     * First, look for network devices among my previous siblings. */
+    while (io_device->prev_sibling) {
+        MPIR_hwtopo_gid_t prev_sibling_parent_gid =
+            obj_to_gid(hwloc_get_non_io_ancestor_obj(hwloc_topology, io_device->prev_sibling));
+
+        if (my_parent_gid != prev_sibling_parent_gid)
+            break;
+
+        myIndex += get_number_of_nics_below_me(io_device->prev_sibling);
+        io_device = io_device->prev_sibling;
+    }
+
+    /* Next, look for network devices among my previous cousins */
+    io_device = my_io_device;
+    while (io_device->prev_cousin) {
+        MPIR_hwtopo_gid_t prev_cousin_parent_gid =
+            obj_to_gid(hwloc_get_non_io_ancestor_obj(hwloc_topology, io_device->prev_cousin));
+
+        if (my_parent_gid != prev_cousin_parent_gid)
+            break;
+
+        myIndex += get_number_of_nics_below_me(io_device->prev_cousin);
+        io_device = io_device->prev_cousin;
+    }
+#endif
+    return myIndex;
+}
