@@ -42,7 +42,8 @@
 # Import the mkpath command
 use strict;
 use File::Path;
-use File::Copy qw(move);
+# Use 'mv' instead of 'move' to preserve the source file's permission bits
+use File::Copy qw(mv);
 
 # Use high resolution timers
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -811,7 +812,7 @@ sub AddMPIProgram {
     # which they can be run; this avoids complex code to change directories
     # and ensure that the output goes "into the right place".
     $g_testCount++;
-    rename $programname, "$g_opt{batrundir}/$programname";
+    mv($programname, "$g_opt{batrundir}/$programname");
     print BATOUT "echo \"# $cmd\" > runtests.$g_testCount.out\n";
     # Some programs expect to run in the same directory as the executable
     print BATOUT "$cmd >> runtests.$g_testCount.out 2>&1\n";
@@ -1190,7 +1191,7 @@ sub CloseOutputs {
         }
         close $JUNITIN;
         close $JUNITOUTNEW;
-        move("$g_opt{junitfile}.new","$g_opt{junitfile}");
+        mv("$g_opt{junitfile}.new","$g_opt{junitfile}");
     }
 }
 
