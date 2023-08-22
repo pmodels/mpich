@@ -169,14 +169,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
             mpi_errno =
                 MPIR_Ilocalcopy_gpu(origin_addr, origin_count, origin_datatype, 0, &origin_attr,
                                     target_addr, target_count, target_datatype, 0, &target_attr,
-                                    MPL_GPU_COPY_D2D_OUTGOING, engine_type, 1, &yreq);
+                                    MPL_GPU_COPY_DIRECTION_NONE, engine_type, 1, &yreq);
             if (yreq.type != MPIR_NULL_REQUEST)
                 MPIDI_POSIX_rma_outstanding_req_enqueu(yreq, &win->dev.shm.posix);
         } else {
             mpi_errno =
                 MPIR_Localcopy_gpu(origin_addr, origin_count, origin_datatype, 0, &origin_attr,
                                    target_addr, target_count, target_datatype, 0, &target_attr,
-                                   MPL_GPU_COPY_D2D_OUTGOING, engine_type, 1);
+                                   MPL_GPU_COPY_DIRECTION_NONE, engine_type, 1);
         }
         goto fn_exit;
     }
@@ -261,14 +261,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
             mpi_errno = MPIR_Ilocalcopy_gpu(target_addr, target_count,
                                             target_datatype, 0, NULL, origin_addr,
                                             origin_count, origin_datatype, 0, NULL,
-                                            MPL_GPU_COPY_D2D_INCOMING, engine_type, 1, &yreq);
+                                            MPL_GPU_COPY_DIRECTION_NONE, engine_type, 1, &yreq);
             if (yreq.type != MPIR_NULL_REQUEST)
                 MPIDI_POSIX_rma_outstanding_req_enqueu(yreq, &win->dev.shm.posix);
         } else {
             mpi_errno = MPIR_Localcopy_gpu(target_addr, target_count,
                                            target_datatype, 0, NULL, origin_addr,
                                            origin_count, origin_datatype, 0, NULL,
-                                           MPL_GPU_COPY_D2D_INCOMING, engine_type, 1);
+                                           MPL_GPU_COPY_DIRECTION_NONE, engine_type, 1);
         }
         goto fn_exit;
     }
