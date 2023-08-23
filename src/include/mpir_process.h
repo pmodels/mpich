@@ -17,6 +17,10 @@ typedef struct PreDefined_attrs {
     int wtime_is_global;        /* Wtime is global over processes in COMM_WORLD */
 } PreDefined_attrs;
 
+struct node_name_to_id_hash {
+
+};
+
 typedef struct MPIR_Process_t {
     MPL_atomic_int_t mpich_state;       /* Need use atomics due to MPI_Initialized() etc.
                                          * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
@@ -32,6 +36,12 @@ typedef struct MPIR_Process_t {
     int *node_map;              /* int[size], maps rank to node_id */
     int *node_local_map;        /* int[local_size], maps local_id to rank of local proc */
     int *node_root_map;         /* int[num_nodes], maps node_id to the rank of node root */
+
+    /* Fields to support dynamic process node_id look-up. The utility code is in src/util/mpir_nodemap.c.
+     * The node_ids for dynamic processes are stored by MPID layer process layer, e.g. ch4 avtables.
+     */
+    int next_node_id;
+    UT_array *node_names;
 
     unsigned world_id;          /* this is a hash of pmi_kvs_name. One use is for
                                  * ofi netmod active message to synchronize seq number. */
