@@ -15,16 +15,9 @@ static int get_next_avtid(void);
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int avtid = 0, lpid = 0;
-
     MPIR_FUNC_ENTER;
 
-    MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
-    if (avtid != 0) {
-        *id_p = -1;
-    } else {
-        *id_p = MPIR_Process.node_map[lpid];
-    }
+    *id_p = MPIDIU_comm_rank_to_av(comm, rank)->node_id;
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -101,6 +94,9 @@ int MPIDIU_new_avt(int size, int *avtid)
     new_av_table = (MPIDI_av_table_t *) MPL_calloc(1, size * sizeof(MPIDI_av_entry_t)
                                                    + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
     new_av_table->size = size;
+    for (int i = 0; i < size; i++) {
+        new_av_table->table[i].node_id = -1;
+    }
     MPIDI_global.avt_mgr.av_tables[*avtid] = new_av_table;
 
     MPIR_cc_set(&MPIDI_global.avt_mgr.av_tables[*avtid]->ref_count, 0);
@@ -174,6 +170,7 @@ int MPIDIU_avt_init(void)
     for (int i = 0; i < size; i++) {
         MPIDI_global.avt_mgr.av_table0->table[i].is_local =
             (MPIR_Process.node_map[i] == MPIR_Process.node_map[rank]) ? 1 : 0;
+        MPIDI_global.avt_mgr.av_table0->table[i].node_id = MPIR_Process.node_map[i];
     }
 
     MPIDI_global.avt_mgr.av_tables[0] = MPIDI_global.avt_mgr.av_table0;
