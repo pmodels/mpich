@@ -100,5 +100,7 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
                             int num_preput_keyval, struct MPIR_PMI_KEYVAL *preput_keyvals,
                             int *pmi_errcodes);
 int MPIR_pmi_has_local_cliques(void);
+int MPIR_pmi_build_nodemap(int *nodemap, int sz);
+int MPIR_pmi_build_nodemap_fallback(int sz, int myrank, int *out_nodemap);
 
 #endif /* MPIR_PMI_H_INCLUDED */

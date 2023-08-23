@@ -74,4 +74,7 @@ typedef struct MPIR_Process_t {
 } MPIR_Process_t;
 extern MPIR_Process_t MPIR_Process;
 
+int MPIR_build_nodemap(int *nodemap, int sz, int *num_nodes);
+int MPIR_build_locality(void);
+
 #endif /* MPIR_PROCESS_H_INCLUDED */

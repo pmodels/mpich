@@ -5,15 +5,10 @@
 
 #include <mpir_pmi.h>
 #include <mpiimpl.h>
-#include "mpir_nodemap.h"
 #include "uthash.h"     /* for hash function */
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-categories:
-    - name        : NODEMAP
-      description : cvars that control behavior of nodemap
 
 cvars:
     - name        : MPIR_CVAR_PMI_VERSION
@@ -28,55 +23,6 @@ cvars:
         1        - PMI (default)
         2        - PMI2
         x        - PMIx
-
-    - name        : MPIR_CVAR_NOLOCAL
-      category    : NODEMAP
-      alt-env     : MPIR_CVAR_NO_LOCAL
-      type        : boolean
-      default     : false
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        If true, force all processes to operate as though all processes
-        are located on another node.  For example, this disables shared
-        memory communication hierarchical collectives.
-
-    - name        : MPIR_CVAR_ODD_EVEN_CLIQUES
-      category    : NODEMAP
-      alt-env     : MPIR_CVAR_EVEN_ODD_CLIQUES
-      type        : boolean
-      default     : false
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        If true, odd procs on a node are seen as local to each other, and even
-        procs on a node are seen as local to each other.  Used for debugging on
-        a single machine. Deprecated in favor of MPIR_CVAR_NUM_CLIQUES.
-
-    - name        : MPIR_CVAR_NUM_CLIQUES
-      category    : NODEMAP
-      type        : int
-      default     : 1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Specify the number of cliques that should be used to partition procs on
-        a local node. Procs with the same clique number are seen as local to
-        each other. Used for debugging on a single machine.
-
-    - name        : MPIR_CVAR_CLIQUES_BY_BLOCK
-      category    : NODEMAP
-      type        : boolean
-      default     : false
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Specify to divide processes into cliques by uniform blocks. The default
-        is to divide in round-robin fashion. Used for debugging on a single machine.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -103,9 +49,6 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, INFO_TYPE ** kv_ptr, int *nk
 static int get_info_kv_vectors(int count, MPIR_Info * info_ptrs[],
                                INFO_TYPE *** kv_vectors, int **kv_sizes);
 static void free_pmi_keyvals(INFO_TYPE ** kv, int size, int *counts);
-
-static int build_nodemap(int *nodemap, int sz, int *num_nodes);
-static int build_locality(void);
 
 static int pmi_version = 1;
 static int pmi_subversion = 1;
@@ -215,11 +158,11 @@ int MPIR_pmi_init(void)
 
     MPIR_Process.node_map = (int *) MPL_malloc(size * sizeof(int), MPL_MEM_ADDRESS);
 
-    mpi_errno = build_nodemap(MPIR_Process.node_map, size, &MPIR_Process.num_nodes);
+    mpi_errno = MPIR_build_nodemap(MPIR_Process.node_map, size, &MPIR_Process.num_nodes);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* allocate and populate MPIR_Process.node_local_map and MPIR_Process.node_root_map */
-    mpi_errno = build_locality();
+    mpi_errno = MPIR_build_locality();
 
   fn_exit:
     return mpi_errno;
@@ -316,6 +259,29 @@ char *MPIR_pmi_get_jobattr(const char *key)
 
   fn_exit:
     return valbuf;
+}
+
+int MPIR_pmi_build_nodemap(int *nodemap, int sz)
+{
+    int mpi_errno = MPI_SUCCESS;
+    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
+        mpi_errno = pmix_build_nodemap(nodemap, sz);
+    } else {
+        char *process_mapping = MPIR_pmi_get_jobattr("PMI_process_mapping");
+        if (process_mapping) {
+            int mpl_err = MPL_rankmap_str_to_array(process_mapping, sz, nodemap);
+            MPIR_ERR_CHKINTERNAL(mpl_err, mpi_errno,
+                                 "unable to populate node ids from PMI_process_mapping");
+            MPL_free(process_mapping);
+        } else {
+            /* build nodemap based on allgather hostnames */
+            mpi_errno = MPIR_pmi_build_nodemap_fallback(sz, MPIR_Process.rank, nodemap);
+        };
+    }
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* ---- utils functions ---- */
@@ -741,226 +707,6 @@ int MPIR_pmi_unpublish(const char name[])
 }
 
 /* ---- static functions ---- */
-
-/* The following static function declares are only for build_nodemap() */
-static int get_option_no_local(void);
-static int get_option_num_cliques(void);
-static int build_nodemap_nolocal(int *nodemap, int sz, int *num_nodes);
-static int build_nodemap_roundrobin(int num_cliques, int *nodemap, int sz, int *num_nodes);
-static int build_nodemap_byblock(int num_cliques, int *nodemap, int sz, int *num_nodes);
-
-static int pmi_build_nodemap(int *nodemap, int sz);
-
-/* TODO: if the process manager promises persistent node_id across multiple spawns,
- *       we can use the node id to check intranode processes across comm worlds.
- *       Currently we don't do this check and all dynamic processes are treated as
- *       inter-node. When we add the optimization, we should switch off the flag
- *       when appropriate environment variable from process manager is set.
- */
-static bool do_normalize_nodemap = true;
-
-static int build_nodemap(int *nodemap, int sz, int *num_nodes)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (sz == 1 || get_option_no_local()) {
-        mpi_errno = build_nodemap_nolocal(nodemap, sz, num_nodes);
-        goto fn_exit;
-    }
-    mpi_errno = pmi_build_nodemap(nodemap, sz);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (do_normalize_nodemap) {
-        /* node ids from process manager may not start from 0 or has gaps.
-         * Normalize it since most of the code assume a contiguous node id range */
-        struct nodeid_hash {
-            int old_id;
-            int new_id;
-            UT_hash_handle hh;
-        };
-
-        struct nodeid_hash *nodes = MPL_malloc(sz * sizeof(struct nodeid_hash), MPL_MEM_OTHER);
-        MPIR_Assert(nodes);
-
-        struct nodeid_hash *nodeid_hash = NULL;
-        int next_node_id = 0;
-        for (int i = 0; i < sz; i++) {
-            int old_id = nodemap[i];
-
-            struct nodeid_hash *s;
-            HASH_FIND_INT(nodeid_hash, &old_id, s);
-            if (s == NULL) {
-                nodemap[i] = next_node_id;
-                nodes[i].old_id = old_id;
-                nodes[i].new_id = next_node_id;
-                HASH_ADD_INT(nodeid_hash, old_id, &nodes[i], MPL_MEM_OTHER);
-                next_node_id++;
-            } else {
-                nodemap[i] = s->new_id;
-            }
-        }
-        *num_nodes = next_node_id;
-        HASH_CLEAR(hh, nodeid_hash);
-        MPL_free(nodes);
-    }
-
-    /* local cliques */
-    int num_cliques = get_option_num_cliques();
-    if (num_cliques > sz) {
-        num_cliques = sz;
-    }
-    if (*num_nodes == 1 && num_cliques > 1) {
-        if (MPIR_CVAR_CLIQUES_BY_BLOCK) {
-            mpi_errno = build_nodemap_byblock(num_cliques, nodemap, sz, num_nodes);
-        } else {
-            mpi_errno = build_nodemap_roundrobin(num_cliques, nodemap, sz, num_nodes);
-        }
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int get_option_no_local(void)
-{
-    /* Used for debugging only.  This disables communication over shared memory */
-#ifdef ENABLE_NO_LOCAL
-    return 1;
-#else
-    return MPIR_CVAR_NOLOCAL;
-#endif
-}
-
-static int get_option_num_cliques(void)
-{
-    /* Used for debugging on a single machine: split procs into num_cliques nodes.
-     * If ODD_EVEN_CLIQUES were enabled, split procs into 2 nodes.
-     */
-    if (MPIR_CVAR_NUM_CLIQUES > 1) {
-        return MPIR_CVAR_NUM_CLIQUES;
-    } else {
-        return MPIR_CVAR_ODD_EVEN_CLIQUES ? 2 : 1;
-    }
-}
-
-int MPIR_pmi_has_local_cliques(void)
-{
-    return (get_option_num_cliques() > 1);
-}
-
-/* one process per node */
-int build_nodemap_nolocal(int *nodemap, int sz, int *num_nodes)
-{
-    for (int i = 0; i < sz; ++i) {
-        nodemap[i] = i;
-    }
-    *num_nodes = sz;
-    return MPI_SUCCESS;
-}
-
-/* assign processes to num_cliques nodes in a round-robin fashion */
-static int build_nodemap_roundrobin(int num_cliques, int *nodemap, int sz, int *num_nodes)
-{
-    for (int i = 0; i < sz; ++i) {
-        nodemap[i] = i % num_cliques;
-    }
-    *num_nodes = (sz >= num_cliques) ? num_cliques : sz;
-    return MPI_SUCCESS;
-}
-
-/* assign processes to num_cliques nodes by uniform block */
-static int build_nodemap_byblock(int num_cliques, int *nodemap, int sz, int *num_nodes)
-{
-    int block_size = sz / num_cliques;
-    int remainder = sz % num_cliques;
-    /* The first `remainder` cliques have size `block_size + 1` */
-    int middle = (block_size + 1) * remainder;
-    for (int i = 0; i < sz; ++i) {
-        if (i < middle) {
-            nodemap[i] = i / (block_size + 1);
-        } else {
-            nodemap[i] = (i - remainder) / block_size;
-        }
-    }
-    *num_nodes = (sz >= num_cliques) ? num_cliques : sz;
-    return MPI_SUCCESS;
-}
-
-static int pmi_build_nodemap(int *nodemap, int sz)
-{
-    int mpi_errno = MPI_SUCCESS;
-    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
-        mpi_errno = pmix_build_nodemap(nodemap, sz);
-    } else {
-        char *process_mapping = MPIR_pmi_get_jobattr("PMI_process_mapping");
-        if (process_mapping) {
-            int mpl_err = MPL_rankmap_str_to_array(process_mapping, sz, nodemap);
-            MPIR_ERR_CHKINTERNAL(mpl_err, mpi_errno,
-                                 "unable to populate node ids from PMI_process_mapping");
-            MPL_free(process_mapping);
-        } else {
-            /* build nodemap based on allgather hostnames */
-            /* FIXME: migrate the function */
-            mpi_errno = MPIR_NODEMAP_build_nodemap_fallback(sz, MPIR_Process.rank, nodemap);
-        }
-    }
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* allocate and populate MPIR_Process.node_local_map and MPIR_Process.node_root_map */
-static int build_locality(void)
-{
-    int local_rank = -1;
-    int local_size = 0;
-    int *node_root_map, *node_local_map;
-
-    int rank = MPIR_Process.rank;
-    int size = MPIR_Process.size;
-    int *node_map = MPIR_Process.node_map;
-    int num_nodes = MPIR_Process.num_nodes;
-    int local_node_id = node_map[rank];
-
-    node_root_map = MPL_malloc(num_nodes * sizeof(int), MPL_MEM_ADDRESS);
-    for (int i = 0; i < num_nodes; i++) {
-        node_root_map[i] = -1;
-    }
-
-    for (int i = 0; i < size; i++) {
-        int node_id = node_map[i];
-        if (node_root_map[node_id] < 0) {
-            node_root_map[node_id] = i;
-        }
-        if (node_id == local_node_id) {
-            local_size++;
-        }
-    }
-
-    node_local_map = MPL_malloc(local_size * sizeof(int), MPL_MEM_ADDRESS);
-    int j = 0;
-    for (int i = 0; i < size; i++) {
-        int node_id = node_map[i];
-        if (node_id == local_node_id) {
-            node_local_map[j] = i;
-            if (i == rank) {
-                local_rank = j;
-            }
-            j++;
-        }
-    }
-
-    MPIR_Process.node_root_map = node_root_map;
-    MPIR_Process.node_local_map = node_local_map;
-    MPIR_Process.local_size = local_size;
-    MPIR_Process.local_rank = local_rank;
-
-    return MPI_SUCCESS;
-}
 
 /* similar to functions in mpl/src/str/mpl_argstr.c, but much simpler */
 static int hex(unsigned char c)
