@@ -392,4 +392,94 @@ int MPIR_pmi_build_nodemap_fallback(int sz, int myrank, int *out_nodemap)
     goto fn_exit;
 }
 
+/* nodeid utilities to support dynamic process node id */
+UT_icd hostname_icd = { MAX_HOSTNAME_LEN, NULL, NULL, NULL };
+
+/* Lookup node_id in MPIR_Process.node_hostnames, insert and return next_node_id if it's new hostname */
+int MPIR_nodeid_lookup(const char *hostname, int *node_id)
+{
+    if (MPIR_pmi_has_local_cliques()) {
+        *node_id = -1;
+        goto fn_exit;
+    }
+
+    int len = utarray_len(MPIR_Process.node_hostnames);
+    for (int i = 0; i < len; i++) {
+        char *s = utarray_eltptr(MPIR_Process.node_hostnames, i);
+        if (strcmp(hostname, s) == 0) {
+            *node_id = i;
+            goto fn_exit;
+        }
+    }
+
+    /* append as new entry */
+    utarray_extend_back(MPIR_Process.node_hostnames, MPL_MEM_OTHER);
+    char *buf = utarray_back(MPIR_Process.node_hostnames);
+    strcpy(buf, hostname);
+    *node_id = len;
+
+  fn_exit:
+    return MPI_SUCCESS;
+}
+
+
+/* Initialize MPIR_Process.node_hostnames after comm_world is initialized */
+int MPIR_nodeid_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_pmi_has_local_cliques()) {
+        goto fn_exit;
+    }
+
+    utarray_new(MPIR_Process.node_hostnames, &hostname_icd, MPL_MEM_OTHER);
+    utarray_resize(MPIR_Process.node_hostnames, MPIR_Process.num_nodes, MPL_MEM_OTHER);
+    char *allhostnames = (char *) utarray_eltptr(MPIR_Process.node_hostnames, 0);
+
+    if (MPIR_Process.local_rank == 0) {
+        MPIR_Comm *node_roots_comm = MPIR_Process.comm_world->node_roots_comm;
+        if (node_roots_comm == NULL) {
+            /* num_external == comm->remote_size */
+            node_roots_comm = MPIR_Process.comm_world;
+        }
+
+        char *my_hostname = allhostnames + MAX_HOSTNAME_LEN * node_roots_comm->rank;
+        int ret = gethostname(my_hostname, MAX_HOSTNAME_LEN);
+        char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
+        MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER,
+                             "**sock_gethost", "**sock_gethost %s %d",
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
+        my_hostname[MAX_HOSTNAME_LEN - 1] = '\0';
+
+        mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, MAX_HOSTNAME_LEN, MPI_CHAR,
+                                        allhostnames, MAX_HOSTNAME_LEN, MPI_CHAR,
+                                        node_roots_comm, MPIR_ERR_NONE);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    MPIR_Comm *node_comm = MPIR_Process.comm_world->node_comm;
+    if (node_comm) {
+        mpi_errno = MPIR_Bcast_impl(allhostnames, MAX_HOSTNAME_LEN * MPIR_Process.num_nodes,
+                                    MPI_CHAR, 0, node_comm, MPIR_ERR_NONE);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_nodeid_free(void)
+{
+    if (MPIR_pmi_has_local_cliques()) {
+        goto fn_exit;
+    }
+
+    utarray_free(MPIR_Process.node_hostnames);
+
+  fn_exit:
+    return MPI_SUCCESS;
+}
+
 #endif /* BUILD_NODEMAP_H_INCLUDED */
