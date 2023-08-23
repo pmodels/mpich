@@ -569,12 +569,12 @@ typedef struct {
 } MPIDI_gpid_t;
 
 typedef struct {
-    MPIR_OBJECT_HEADER;
+    MPIR_cc_t ref_count;
     MPIDI_lpid_t lpid[];
 } MPIDI_rank_map_lut_t;
 
 typedef struct {
-    MPIR_OBJECT_HEADER;
+    MPIR_cc_t ref_count;
     MPIDI_gpid_t gpid[];
 } MPIDI_rank_map_mlut_t;
 

@@ -34,6 +34,17 @@ int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size);
 int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut);
 int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size);
 int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut);
+#define MPIDIU_lut_add_ref(lut) \
+    do { \
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "inc ref to lut %p", lut)); \
+        MPIR_cc_inc(&(lut)->ref_count); \
+    } while (0)
+
+#define MPIDIU_mlut_add_ref(mlut) \
+    do { \
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "inc ref to mlut %p", mlut)); \
+        MPIR_cc_inc(&(mlut)->ref_count); \
+    } while (0)
 
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *idx,
                                                      int *avtid)

@@ -237,12 +237,12 @@ int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
-    MPIR_Object_set_ref(new_lut, 1);
+    MPIR_cc_set(&new_lut->ref_count, 1);
     *lut = new_lut;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
                     (MPL_DBG_FDEST, "alloc lut %p, size %lu, refcount=%d",
-                     new_lut, size * sizeof(MPIDI_lpid_t), MPIR_Object_get_ref(new_lut)));
+                     new_lut, size * sizeof(MPIDI_lpid_t), MPIR_cc_get(&new_lut->ref_count)));
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -257,7 +257,7 @@ int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Object_release_ref(lut, &in_use);
+    MPIR_cc_decr(&lut->ref_count, &in_use);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "dec ref to lut %p", lut));
     if (!in_use) {
         MPL_free(lut);
@@ -281,12 +281,12 @@ int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
-    MPIR_Object_set_ref(new_mlut, 1);
+    MPIR_cc_set(&new_mlut->ref_count, 1);
     *mlut = new_mlut;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
                     (MPL_DBG_FDEST, "alloc mlut %p, size %lu, refcount=%d",
-                     new_mlut, size * sizeof(MPIDI_gpid_t), MPIR_Object_get_ref(new_mlut)));
+                     new_mlut, size * sizeof(MPIDI_gpid_t), MPIR_cc_get(&new_mlut->ref_count)));
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -301,7 +301,7 @@ int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Object_release_ref(mlut, &in_use);
+    MPIR_cc_decr(&mlut->ref_count, &in_use);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "dec ref to mlut %p", mlut));
     if (!in_use) {
         MPL_free(mlut);
