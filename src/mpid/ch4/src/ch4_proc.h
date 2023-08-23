@@ -224,11 +224,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_is_local(int rank, MPIR_Comm * comm)
     int ret = 0;
     MPIR_FUNC_ENTER;
 
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     ret = MPIDIU_comm_rank_to_av(comm, rank)->is_local;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " is_local=%d, rank=%d", ret, rank));
-#endif
 
     MPIR_FUNC_EXIT;
     return ret;
@@ -239,11 +237,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
     int ret = 0;
     MPIR_FUNC_ENTER;
 
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     ret = av->is_local;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " is_local=%d, av=%p", ret, (void *) av));
-#endif
 
     MPIR_FUNC_EXIT;
     return ret;

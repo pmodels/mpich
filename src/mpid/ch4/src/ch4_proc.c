@@ -171,12 +171,10 @@ int MPIDIU_avt_init(void)
     MPIDI_global.avt_mgr.av_table0->size = size;
     MPIR_cc_set(&MPIDI_global.avt_mgr.av_table0->ref_count, 1);
 
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     for (int i = 0; i < size; i++) {
         MPIDI_global.avt_mgr.av_table0->table[i].is_local =
             (MPIR_Process.node_map[i] == MPIR_Process.node_map[rank]) ? 1 : 0;
     }
-#endif
 
     MPIDI_global.avt_mgr.av_tables[0] = MPIDI_global.avt_mgr.av_table0;
 

@@ -13,8 +13,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH4_NETMOD_STUBNM],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch4:stubnm])
-    AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])
-    AC_DEFINE(MPIDI_BUILD_CH4_LOCALITY_INFO, 1, [CH4 should build locality info])
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_STUBNM,...)
 ])dnl end _BODY
 

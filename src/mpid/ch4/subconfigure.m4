@@ -277,10 +277,6 @@ export ch4_shm
 
 if test "${with_ch4_shmmods}" = "none" -o "${with_ch4_shmmods}" = "no" ; then
     AC_DEFINE(MPIDI_CH4_DIRECT_NETMOD, 1, [CH4 Directly transfers data through the chosen netmode])
-else
-    # This variable can be set either when CH4 controls the data transfer routine
-    # or when the netmod doesn't want to implement its own locality information
-    AC_DEFINE(MPIDI_BUILD_CH4_LOCALITY_INFO, 1, [CH4 should build locality info])
 fi
 
 AC_ARG_ENABLE([ch4-am-only],

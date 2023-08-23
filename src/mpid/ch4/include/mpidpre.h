@@ -663,9 +663,7 @@ typedef struct {
 typedef struct MPIDI_av_entry {
     union {
     MPIDI_NM_ADDR_DECL} netmod;
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     MPIDI_locality_t is_local;
-#endif
 } MPIDI_av_entry_t;
 
 #define HAVE_DEV_COMM_HOOK
