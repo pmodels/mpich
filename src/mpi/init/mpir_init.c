@@ -327,6 +327,9 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     /**********************************************************************/
 
     if (is_world_model) {
+        mpi_errno = MPIR_nodeid_init();
+        MPIR_ERR_CHECK(mpi_errno);
+
         mpi_errno = MPID_InitCompleted();
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -451,6 +454,11 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     if (MPIR_CVAR_ENABLE_GPU) {
         int mpl_errno = MPL_gpu_finalize();
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_finalize");
+    }
+
+    if (is_world_model) {
+        mpi_errno = MPIR_nodeid_free();
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* All memory should be freed at this point */
