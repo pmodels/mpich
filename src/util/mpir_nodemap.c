@@ -223,7 +223,7 @@ static int get_option_num_cliques(void)
 
 int MPIR_pmi_has_local_cliques(void)
 {
-    return (get_option_num_cliques() > 1);
+    return (get_option_num_cliques() > 1) || get_option_no_local();
 }
 
 /* one process per node */
