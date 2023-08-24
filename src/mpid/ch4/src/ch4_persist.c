@@ -76,8 +76,7 @@ int MPID_Ssend_init(const void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIR_PT2PT_ATTR_SET_SYNCFLAG(attr);
-    mpi_errno = psend_init(MPIDI_PTYPE_SEND, buf, count, datatype, rank, tag, comm, attr, request);
+    mpi_errno = psend_init(MPIDI_PTYPE_SSEND, buf, count, datatype, rank, tag, comm, attr, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

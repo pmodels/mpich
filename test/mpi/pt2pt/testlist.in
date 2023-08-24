@@ -76,3 +76,4 @@ precv_anysrc 2 timeLimit=60 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
 precv_anysrc_exp 2 timeLimit=60
 pt2pt_large 2
 mprobe_self_free 1
+pssend 2
