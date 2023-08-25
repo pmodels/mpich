@@ -103,7 +103,7 @@ int MPIDIU_new_avt(int size, int *avtid)
     new_av_table->size = size;
     MPIDI_global.avt_mgr.av_tables[*avtid] = new_av_table;
 
-    MPIR_Object_set_ref(MPIDI_global.avt_mgr.av_tables[*avtid], 0);
+    MPIR_cc_set(&MPIDI_global.avt_mgr.av_tables[*avtid]->ref_count, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -130,7 +130,7 @@ int MPIDIU_avt_add_ref(int avtid)
     MPIR_FUNC_ENTER;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " incr avtid=%d", avtid));
-    MPIR_Object_add_ref(MPIDI_global.avt_mgr.av_tables[avtid]);
+    MPIR_cc_inc(&MPIDI_global.avt_mgr.av_tables[avtid]->ref_count);
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
@@ -143,7 +143,7 @@ int MPIDIU_avt_release_ref(int avtid)
     MPIR_FUNC_ENTER;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " decr avtid=%d", avtid));
-    MPIR_Object_release_ref(MPIDIU_get_av_table(avtid), &in_use);
+    MPIR_cc_decr(&MPIDI_global.avt_mgr.av_tables[avtid]->ref_count, &in_use);
     if (!in_use) {
         MPIDIU_free_avt(avtid);
     }
@@ -169,7 +169,7 @@ int MPIDIU_avt_init(void)
     MPIR_Assert(MPIDI_global.avt_mgr.av_table0);
 
     MPIDI_global.avt_mgr.av_table0->size = size;
-    MPIR_Object_set_ref(MPIDI_global.avt_mgr.av_table0, 1);
+    MPIR_cc_set(&MPIDI_global.avt_mgr.av_table0->ref_count, 1);
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     for (int i = 0; i < size; i++) {
