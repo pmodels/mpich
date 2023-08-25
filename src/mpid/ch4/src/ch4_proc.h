@@ -219,19 +219,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int
     return *idx;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_is_local(int rank, MPIR_Comm * comm)
-{
-    int ret = 0;
-    MPIR_FUNC_ENTER;
-
-    ret = MPIDIU_comm_rank_to_av(comm, rank)->is_local;
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                    (MPL_DBG_FDEST, " is_local=%d, rank=%d", ret, rank));
-
-    MPIR_FUNC_EXIT;
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret = 0;
@@ -272,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rank_is_local(int rank, MPIR_Comm * comm)
      * it will call back up to the MPIDIU function to get the infomration. */
     ret = MPIDI_NM_rank_is_local(rank, comm);
 #else
-    ret = MPIDIU_rank_is_local(rank, comm);
+    ret = MPIDIU_av_is_local(MPIDIU_comm_rank_to_av(comm, rank));
 #endif
 
     MPIR_FUNC_EXIT;
