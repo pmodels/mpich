@@ -162,6 +162,11 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
         int found = 0;
         size_t sz = 0;
 
+        char *hostname = curr_upid;
+        int hostname_len = strlen(hostname);
+        char *addrname = hostname + hostname_len + 1;
+        int addrname_len = remote_upid_size[i] - hostname_len - 1;
+
         for (k = 0; k < n_avts; k++) {
             if (MPIDIU_get_av_table(k) == NULL) {
                 continue;
@@ -171,8 +176,7 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
                 MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av,
                                                 MPIDI_OFI_TO_PHYS(k, j, nic), &tbladdr, &sz), 0,
                                    avlookup);
-                if (sz == remote_upid_size[i]
-                    && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
+                if (sz == addrname_len && !memcmp(tbladdr, addrname, addrname_len)) {
                     remote_gpids[i] = MPIDIU_GPID_CREATE(k, j);
                     found = 1;
                     break;
@@ -198,11 +202,20 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
         MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < n_new_procs; i++) {
+            char *hostname = new_upids[i];
+            char *addrname = hostname + strlen(hostname) + 1;
+
             fi_addr_t addr;
-            MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av, new_upids[i],
+            MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av, addrname,
                                             1, &addr, 0ULL, NULL), 0, avmap);
             MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[nic][0] = addr;
+
+            int node_id;
+            mpi_errno = MPIR_nodeid_lookup(hostname, &node_id);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIDIU_get_av(avtid, i).node_id = node_id;
+
             remote_gpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
         }
     }
@@ -218,7 +231,7 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
 {
     int mpi_errno = MPI_SUCCESS;
     int i, total_size = 0;
-    char *temp_buf = NULL, *curr_ptr = NULL;
+    char *temp_buf = NULL;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
 
@@ -229,13 +242,34 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     MPIR_CHKPMEM_MALLOC(temp_buf, char *, comm->local_size * MPIDI_OFI_global.addrnamelen,
                         mpi_errno, "temp_buf", MPL_MEM_BUFFER);
 
+    int buf_size = 0;
+    int idx = 0;
     for (i = 0; i < comm->local_size; i++) {
+        /* upid format: hostname + '\0' + addrname */
+        int hostname_len = 0;
+        char *hostname = (char *) "";
+        int node_id = MPIDIU_comm_rank_to_av(comm, i)->node_id;
+        if (MPIR_Process.node_hostnames && node_id >= 0) {
+            hostname = utarray_eltptr(MPIR_Process.node_hostnames, node_id);
+            hostname_len = strlen(hostname);
+        }
+        int upid_len = hostname_len + 1 + MPIDI_OFI_global.addrnamelen;
+        if (idx + upid_len > buf_size) {
+            buf_size += 1024;
+            temp_buf = MPL_realloc(temp_buf, buf_size, MPL_MEM_OTHER);
+            MPIR_Assert(temp_buf);
+        }
+
+        strcpy(temp_buf + idx, hostname);
+        idx += hostname_len + 1;
+
         size_t sz = MPIDI_OFI_global.addrnamelen;;
         MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, i));
         MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av, av->dest[nic][0],
-                                        &temp_buf[i * MPIDI_OFI_global.addrnamelen],
-                                        &sz), 0, avlookup);
-        (*local_upid_size)[i] = (int) sz;
+                                        temp_buf + idx, &sz), 0, avlookup);
+        idx += (int) sz;
+
+        (*local_upid_size)[i] = upid_len;
         total_size += (*local_upid_size)[i];
     }
 
