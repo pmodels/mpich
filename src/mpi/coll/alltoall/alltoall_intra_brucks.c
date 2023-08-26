@@ -37,8 +37,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     void *tmp_buf;
     MPIR_CHKLMEM_DECL(6);
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(sendbuf != MPI_IN_PLACE);

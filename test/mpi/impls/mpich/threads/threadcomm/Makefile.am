@@ -9,4 +9,5 @@ EXTRA_DIST = testlist
 
 noinst_PROGRAMS = \
     threadcomm \
-    threadcomm_attr
+    threadcomm_attr \
+    threadcomm_coll

@@ -26,6 +26,14 @@ def dump_mpi_c(func, is_large=False):
     # for poly functions, decide impl interface
     check_large_parameters(func)
 
+    # whether we need potentially swap the counts array argument
+    func["_need_coll_v_swap"] = False
+    func["_need_type_create_swap"] = False
+    if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
+        func["_need_coll_v_swap"] = True
+    elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
+        func["_need_type_create_swap"] = True
+
     process_func_parameters(func)
 
     G.mpi_declares.append(get_declare_function(func, is_large, "proto"))
@@ -145,7 +153,7 @@ def dump_c_file(f, lines):
                     prev_empty = 1
             else:
                 # print the line with correct indentations
-                if indent > 0 and not RE.match(r'#(if|endif)', l):
+                if indent > 0 and not RE.match(r'#(if|else|endif)', l):
                     print("    " * indent, end='', file=Out)
                 print(l, file=Out)
                 prev_empty = 0
@@ -455,6 +463,7 @@ def check_func_directives(func):
 
     # cleanup internal states
     func.pop('_got_comm_size', None)
+    func.pop('_got_comm_rank', None)
     func.pop('_got_topo_size', None)
 
 def filter_c_parameters(func):
@@ -1200,13 +1209,15 @@ def dump_function_normal(func):
 
     # ----
     def dump_body_of_routine():
+        do_threadcomm = False
         if RE.search(r'threadcomm', func['extra'], re.IGNORECASE):
+            do_threadcomm = True
             G.out.append("#ifdef ENABLE_THREADCOMM")
             dump_if_open("comm_ptr->threadcomm")
             dump_body_threadcomm(func)
-            G.out.append("goto fn_exit;")
-            dump_if_close()
+            dump_else_open()
             G.out.append("#endif")
+            dump_else_close()
 
         if 'body' in func:
             if func['_is_large'] and func['_poly_impl'] == "separate":
@@ -1229,6 +1240,8 @@ def dump_function_normal(func):
         else:
             dump_body_impl(func, "mpir")
 
+        if do_threadcomm:
+            dump_if_close()
     # ----
     G.out.append("/* ... body of routine ... */")
 
@@ -1325,9 +1338,9 @@ def dump_poly_pre_filter(func):
                 replace_impl_arg_list(func['_impl_arg_list'], p['name'], "&%s_c" % p['name'])
 
     def filter_array():
-        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
+        if func["_need_coll_v_swap"]:
             dump_coll_v_swap(func)
-        elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
+        elif func["_need_type_create_swap"]:
             dump_type_create_swap(func)
         else:
             if func['_poly_in_arrays']:
@@ -1368,9 +1381,9 @@ def dump_poly_post_filter(func):
                     G.out.append("*%s = %s;" % (p['name'], val))
 
     def filter_array(int_max):
-        if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
+        if func["_need_coll_v_swap"]:
             dump_coll_v_exit(func)
-        elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
+        elif func["_need_type_create_swap"]:
             dump_type_create_exit(func)
 
     # ----
@@ -1489,6 +1502,30 @@ def dump_coll_v_swap(func):
         dump_for_close()
 
     # -------------------------
+    def get_comm_size_n(intra_only):
+        G.out.append("int n;")
+        if intra_only:
+            G.out.append("n = comm_ptr->local_size;")
+        else:
+            cond = "(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)"
+            G.out.append("n = %s ? comm_ptr->remote_size : comm_ptr->local_size;" % cond)
+        G.out.append("#ifdef ENABLE_THREADCOMM")
+        dump_if_open("comm_ptr->threadcomm")
+        G.out.append("int intracomm_size = comm_ptr->local_size;")
+        G.out.append("n = comm_ptr->threadcomm->rank_offset_table[intracomm_size - 1];")
+        dump_if_close()
+        G.out.append("#endif")
+
+    def get_comm_rank_r():
+        G.out.append("int r;")
+        G.out.append("r = comm_ptr->rank;")
+        G.out.append("#ifdef ENABLE_THREADCOMM")
+        dump_if_open("comm_ptr->threadcomm")
+        G.out.append("r = MPIR_THREADCOMM_TID_TO_RANK(comm_ptr->threadcomm, MPIR_threadcomm_get_tid(comm_ptr->threadcomm));")
+        dump_if_close()
+        G.out.append("#endif")
+
+    # -------------------------
     if RE.match(r'mpi_i?neighbor_', func['name'], re.IGNORECASE):
         # neighborhood collectives
         G.out.append("int indegree, outdegree, weighted;")
@@ -1517,13 +1554,12 @@ def dump_coll_v_swap(func):
             replace_arg('recvcounts', 'tmp_array + outdegree')
     # classical collectives
     elif RE.match(r'(mpi_i?reduce_scatter(_init)?\b)', func['name'], re.IGNORECASE):
-        G.out.append("int n = comm_ptr->local_size;")
+        get_comm_size_n(True) # intracomm-only
         allocate_tmp_array("n")
         swap_one("n", "recvcounts")
         replace_arg('recvcounts', 'tmp_array')
     else:
-        cond = "(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)"
-        G.out.append("int n = %s ? comm_ptr->remote_size : comm_ptr->local_size;" % cond)
+        get_comm_size_n(False) # not intra-only
         if RE.search(r'alltoall[vw]', func['name'], re.IGNORECASE):
             allocate_tmp_array("n * 4")
             dump_if_open("sendbuf != MPI_IN_PLACE")
@@ -1549,12 +1585,13 @@ def dump_coll_v_swap(func):
             else: # gatherv
                 counts = "recvcounts"
             # only root need the v-array
+            get_comm_rank_r()
             cond_intra = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM"
             cond_inter = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM"
-            cond_a = cond_intra + " && comm_ptr->rank == root"
+            cond_a = cond_intra + " && r == root"
             cond_b = cond_inter + " && root == MPI_ROOT"
-
-            dump_if_open("(%s) || (%s)" % (cond_a, cond_b))
+            cond = "(%s) || (%s)" % (cond_a, cond_b)
+            dump_if_open(cond)
             swap_one("n", counts)
             swap_next("n", "n", "displs")
             dump_if_close()
@@ -2241,7 +2278,8 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         dump_validate_op(op, dt, True)
         dump_validate_datatype(func, dt)
 
-        cond_a = cond_intra + " && comm_ptr->rank == root"
+        dump_validate_get_comm_rank(func)
+        cond_a = cond_intra + " && comm_rank == root"
         cond_b = cond_inter + " && root == MPI_ROOT"
         G.out.append("if ((" + cond_a + ") || (" + cond_b + ")) {")
         # test recvbuf
@@ -2271,13 +2309,14 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         (sct, rct) = (ct, ct)
         if RE.search(r'reduce_scatter(_init)?$', func['name'], re.IGNORECASE):
             dump_validate_get_comm_size(func)
+            dump_validate_get_comm_rank(func)
             G.out.append("int sum = 0;")
             dump_for_open('i', 'comm_size')
             G.out.append("MPIR_ERRTEST_COUNT(%s[i], mpi_errno);" % ct)
             G.out.append("sum += %s[i];" % ct)
             dump_for_close()
             sct = "sum"
-            rct = ct + "[comm_ptr->rank]"
+            rct = ct + "[comm_rank]"
         G.out.append("MPIR_ERRTEST_RECVBUF_INPLACE(%s, %s, mpi_errno);" % (rbuf, rct))
         G.out.append("if (" + cond_inter + ") {")
         G.out.append("    MPIR_ERRTEST_SENDBUF_INPLACE(%s, %s, mpi_errno);" % (sbuf, sct))
@@ -2309,15 +2348,16 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
     # -- whether the buffer need be checked (or ignored)
     check_buf = None
     if RE.search(r'_i?(gather|scatter)', func_name, re.IGNORECASE):
+        dump_validate_get_comm_rank(func)
         if inplace:
             cond_a = cond_intra + " && %s != MPI_IN_PLACE" % buf
             cond_b = cond_inter + " && root != MPI_ROOT && root != MPI_PROC_NULL"
         else:
-            cond_a = cond_intra + " && comm_ptr->rank == root"
+            cond_a = cond_intra + " && comm_rank == root"
             cond_b = cond_inter + " && root == MPI_ROOT"
         check_buf = "(%s) || (%s)" % (cond_a, cond_b)
         if inplace:
-            check_alias = cond_intra + " && comm_ptr->rank == root"
+            check_alias = cond_intra + " && comm_rank == root"
     elif inplace:
             check_buf = " %s != MPI_IN_PLACE" % buf
 
@@ -2372,17 +2412,18 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
             G.out.append("    MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);")
             G.out.append("}")
         elif RE.search(r'i?(allgather|gather|scatter)(v?)(_init)?$', func_name, re.IGNORECASE):
+            dump_validate_get_comm_rank(func)
             t1, t2 = RE.m.group(1, 2)
             (a, b) = ("send", "recv")
             if RE.match(r'scatter', t1, re.IGNORECASE):
                 (a, b) = ("recv", "send")
             cond = "sendtype == recvtype && sendcount == recvcount && sendcount != 0"
             if t2 == "v":
-                cond = "sendtype == recvtype && %scount != 0 && %scounts[comm_ptr->rank] !=0" % (a, b)
+                cond = "sendtype == recvtype && %scount != 0 && %scounts[comm_rank] !=0" % (a, b)
 
-            buf2 = "(char *) %sbuf + comm_ptr->rank * %scount * %stype_size" % (b, b, b)
+            buf2 = "(char *) %sbuf + comm_rank * %scount * %stype_size" % (b, b, b)
             if t2 == "v":
-                buf2 = "(char *) %sbuf + displs[comm_ptr->rank] * %stype_size" % (b, b)
+                buf2 = "(char *) %sbuf + displs[comm_rank] * %stype_size" % (b, b)
 
             G.out.append("if (%s) {" % cond)
             G.out.append("    MPI_Aint %stype_size;" % b)
@@ -2442,7 +2483,23 @@ def dump_validate_get_comm_size(func):
             G.out.append("} else {")
             G.out.append("    comm_size = comm_ptr->local_size;")
             G.out.append("}")
+        G.out.append("#ifdef ENABLE_THREADCOMM")
+        dump_if_open("comm_ptr->threadcomm")
+        G.out.append("comm_size = comm_ptr->threadcomm->rank_offset_table[comm_ptr->local_size - 1];")
+        dump_if_close()
+        G.out.append("#endif")
         func['_got_comm_size'] = 1
+
+def dump_validate_get_comm_rank(func):
+    if '_got_comm_rank' not in func:
+        G.out.append("int comm_rank;")
+        G.out.append("comm_rank = comm_ptr->rank;")
+        G.out.append("#ifdef ENABLE_THREADCOMM")
+        dump_if_open("comm_ptr->threadcomm")
+        G.out.append("comm_rank = MPIR_THREADCOMM_TID_TO_RANK(comm_ptr->threadcomm, MPIR_threadcomm_get_tid(comm_ptr->threadcomm));")
+        dump_if_close()
+        G.out.append("#endif")
+        func['_got_comm_rank'] = 1
 
 def dump_validate_get_topo_size(func):
     if '_got_topo_size' not in func:
@@ -2525,6 +2582,15 @@ def dump_else():
 def dump_if_close():
     G.out.append("DEDENT")
     G.out.append("}")
+
+# split "} else {", used along with "#ifdef-#else-#endif"
+def dump_else_open():
+    G.out.append("DEDENT")
+    G.out.append("} else")
+
+def dump_else_close():
+    G.out.append("{")
+    G.out.append("INDENT")
 
 def dump_for_open(idx, count):
     G.out.append("for (int %s = 0; %s < %s; %s++) {" % (idx, idx, count, idx))

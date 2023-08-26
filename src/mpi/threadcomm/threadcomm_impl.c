@@ -56,6 +56,9 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     MPL_atomic_relaxed_store_int(&threadcomm->leave_counter, num_threads);
     MPL_atomic_relaxed_store_int(&threadcomm->barrier_flag, 0);
 
+    threadcomm->in_counters = MPL_calloc(num_threads * num_threads, MPL_CACHELINE_SIZE,
+                                         MPL_MEM_OTHER);
+
 #if MPIR_THREADCOMM_TRANSPORT == MPIR_THREADCOMM_USE_FBOX
     threadcomm->mailboxes = MPL_calloc(num_threads * num_threads, MPIR_THREADCOMM_FBOX_SIZE,
                                        MPL_MEM_OTHER);
@@ -114,6 +117,8 @@ int MPIR_Threadcomm_free_impl(MPIR_Comm * comm)
 
     mpi_errno = MPIR_Comm_free_impl(comm);
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPL_free(threadcomm->in_counters);
 
     MPL_free(threadcomm->rank_offset_table);
 
@@ -280,7 +285,11 @@ int MPIR_Threadcomm_dup_impl(MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 
     MPIR_Comm *newcomm = NULL;
     if (p->tid == 0) {
-        mpi_errno = MPIR_Threadcomm_init_impl(comm, num_threads, &newcomm);
+        MPIR_Comm tmp_comm;
+        memcpy(&tmp_comm, comm, sizeof(MPIR_Comm));
+        tmp_comm.threadcomm = NULL;
+
+        mpi_errno = MPIR_Threadcomm_init_impl(&tmp_comm, num_threads, &newcomm);
         newcomm->threadcomm->kind = MPIR_THREADCOMM_KIND__DERIVED;
         MPIR_ERR_CHECK(mpi_errno);
         /* bcast to all threads */
