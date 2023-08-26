@@ -41,7 +41,7 @@ struct HYD_pmcd_init_hdr {
 HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_kvs **kvs);
 void HYD_pmcd_free_pmi_kvs_list(struct HYD_kvs *kvs_list);
 HYD_status HYD_kvs_find(struct HYD_kvs *kvs_list, const char *key, const char **val, int *found);
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_kvs *kvs, int *ret);
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, const char *val, struct HYD_kvs *kvs, int debug);
 void HYD_kvs_iter_begin(struct HYD_kvs *kvs_list, bool new_only);
 void HYD_kvs_iter_end(struct HYD_kvs *kvs_list);
 bool HYD_kvs_iter_next(struct HYD_kvs *kvs_list, const char **key, const char **val);
