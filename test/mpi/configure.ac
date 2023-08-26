@@ -1437,7 +1437,7 @@ if test "$enable_cxx" = yes ; then
     AC_LANG_PUSH([C++])
     AC_LINK_IFELSE([
         AC_LANG_PROGRAM([#include "mpi.h"], [
-            MPI::Init(NULL, NULL);
+            MPI::Init();
             MPI::Finalize();
         ])
     ],[
