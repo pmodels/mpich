@@ -238,7 +238,7 @@ const char *MPIR_Handle_get_kind_str(int kind);
 #define MPIR_INFO_PREALLOC 8
 #endif
 
-#define MPIR_OP_N_BUILTIN 15
+#define MPIR_OP_N_BUILTIN 16
 #ifdef MPID_OP_PREALLOC
 #define MPIR_OP_PREALLOC MPID_OP_PREALLOC
 #else
