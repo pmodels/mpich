@@ -199,11 +199,7 @@ int MPID_Ssend_init(const void * buf, MPI_Aint count, MPI_Datatype datatype, int
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     MPIDI_Request_create_psreq(sreq, mpi_errno, goto fn_exit);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SSEND);
-    if (!HANDLE_IS_BUILTIN(datatype))
-    {
-	MPIR_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
-    MPIR_Datatype_ptr_add_ref(sreq->dev.datatype_ptr);
-    }
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
     *request = sreq;
 
   fn_exit:    
