@@ -1245,6 +1245,13 @@ def dump_function_normal(func):
     # ----
     G.out.append("/* ... body of routine ... */")
 
+    # hijack MPIX_EQUAL
+    if re.match(r'mpi_(all)?reduce$', func['name'], re.IGNORECASE):
+        dump_if_open("op == MPIX_EQUAL")
+        dump_body_reduce_equal(func)
+        G.out.append("goto fn_exit;")
+        dump_if_close()
+
     if func['_is_large'] and 'code-large_count' not in func:
         # BIG but internally is using MPI_Aint
         impl_args_save = copy.copy(func['_impl_arg_list'])
@@ -1682,6 +1689,17 @@ def dump_body_threadcomm(func):
         G.out.append("*newcomm = newcomm_ptr->handle;")
 
     push_threadcomm_impl_decl(func)
+
+def dump_body_reduce_equal(func):
+    impl = func['name']
+    impl = re.sub(r'^MPI_', 'MPIR_', impl)
+    impl += '_equal'
+
+    args = ", ".join(func['_impl_arg_list'])
+    args = re.sub(r'recvbuf, ', '', args)
+    args = re.sub(r'op, ', 'recvbuf, ', args)
+    dump_line_with_break("mpi_errno = %s(%s);" % (impl, args))
+    dump_error_check("")
 
 def dump_function_replace(func, repl_call):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
