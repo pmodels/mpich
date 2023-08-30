@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     }
 
     if (rank == 0) {
-        MPI_Ssend_init(NULL, 0, MPI_DATATYPE_NULL, 1, 0, MPI_COMM_WORLD, &req);
+        MPI_Ssend_init(NULL, 0, MPI_INT, 1, 0, MPI_COMM_WORLD, &req);
         MPI_Start(&req);
 
         /* ssend cannot be complete at this point */
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         MPI_Wait(&req, MPI_STATUS_IGNORE);
         MPI_Request_free(&req);
     } else if (rank == 1) {
-        MPI_Recv(NULL, 0, MPI_DATATYPE_NULL, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(NULL, 0, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     MTest_Finalize(errs);
