@@ -870,12 +870,19 @@ MY_Alltoallv(void *sbuf, int *scounts, MPI_Aint * sdisps, MPI_Datatype stype,
 
     void *sbuf_copy;
     void *rbuf_copy;
-    int scount_total = 0;
-    int rcount_total = 0;
+    size_t scount_total = 0;
+    size_t rcount_total = 0;
     for (i = 0; i < nranks; i++) {
-        sdisps_int[i] = scount_total;
+        if ((scount_total != (int) scount_total) || (rcount_total != (int) rcount_total)) {
+            FPRINTF(stderr,
+                    "Error in %s: integer overflow / scount_total(%zu) != (int)scount_total(%d)"
+                    " || rcount_total(%zu) != (int)rcount_total(%d)\n",
+                    __func__, scount_total, (int) scount_total, rcount_total, (int) rcount_total);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+        sdisps_int[i] = (int) scount_total;
+        rdisps_int[i] = (int) rcount_total;
         scount_total += scounts[i];
-        rdisps_int[i] = rcount_total;
         rcount_total += rcounts[i];
     }
     sbuf_copy = (void *) ADIOI_Malloc(scount_total * sizeof_stype);
