@@ -850,7 +850,7 @@ MY_Alltoallv(void *sbuf, int *scounts, MPI_Aint * sdisps, MPI_Datatype stype,
         }
     }
     for (i = 0; i < nranks && disps_are_small_enough; ++i) {
-        if (rdisps[i] != (int) sdisps[i]) {
+        if (rdisps[i] != (int) rdisps[i]) {
             disps_are_small_enough = 0;
         }
     }
