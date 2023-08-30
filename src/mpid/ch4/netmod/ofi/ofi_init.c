@@ -1410,8 +1410,9 @@ static int update_global_limits(struct fi_info *prov)
     MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
 
     /* Ensure that we aren't trying to shove too many bits into the match_bits.
-     * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
-    MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
+     * Currently, this needs to fit into a uint64_t. */
+    MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS +
+                MPIDI_OFI_PROTOCOL_BITS <= 64);
 
     /* if using extended context id, check that selected provider can support it */
     MPIR_Assert(MPIR_CONTEXT_ID_BITS <= MPIDI_OFI_CONTEXT_BITS);
