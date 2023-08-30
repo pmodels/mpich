@@ -53,14 +53,15 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     PMIX_VALUE_RELEASE(pvalue);
 
   fn_exit:
+    /* FIXME: support spawn and appnum */
+    *has_parent = 0;
+    *appnum = 0;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
   singleton_out:
     *rank = 0;
     *size = 1;
-    *appnum = 0;
-    *has_parent = 0;
     pmi_kvs_name = MPL_strdup("0");
     goto fn_exit;
 }
@@ -160,11 +161,10 @@ static int pmix_barrier_local(void)
     int pmi_errno;
 
     int local_size = MPIR_Process.local_size;
-    pmix_proc_t *procs = MPL_malloc(local_size * sizeof(pmix_proc_t), MPL_MEM_OTHER);
+    pmix_proc_t *procs = NULL;
+    PMIX_PROC_CREATE(procs, local_size);
     for (int i = 0; i < local_size; i++) {
-        PMIX_PROC_CONSTRUCT(&procs[i]);
-        strncpy(procs[i].nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
-        procs[i].rank = MPIR_Process.node_local_map[i];
+        PMIX_LOAD_PROCID(&(procs[i]), pmix_proc.nspace, MPIR_Process.node_local_map[i]);
     }
 
     pmix_info_t *info;
@@ -177,7 +177,7 @@ static int pmix_barrier_local(void)
                          "**pmix_fence %d", pmi_errno);
 
     PMIX_INFO_FREE(info, 1);
-    MPL_free(procs);
+    PMIX_PROC_FREE(procs, local_size);
 
   fn_exit:
     return mpi_errno;
@@ -267,7 +267,7 @@ static int pmix_get_binary(int src, const char *key, char *buf, int *p_size, int
 static int pmix_optional_bcast_barrier(MPIR_PMI_DOMAIN domain)
 {
     if (domain == MPIR_PMI_DOMAIN_LOCAL) {
-        pmix_barrier_local();
+        return pmix_barrier_local();
     } else {
         return pmix_barrier();
     }
