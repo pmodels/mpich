@@ -768,7 +768,7 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
         if (scounts[i] == 0)
             sdispls[i] = 0;
         else
-            sdispls[i] = (int)
+            sdispls[i] = (MPI_Aint)
                 (((uintptr_t) my_req[i].offsets -
                   (uintptr_t) sendBuf) / (uintptr_t) sizeof(ADIO_Offset));
 
@@ -777,7 +777,7 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
         if (rcounts[i] == 0)
             rdispls[i] = 0;
         else
-            rdispls[i] = (int)
+            rdispls[i] = (MPI_Aint)
                 (((uintptr_t) others_req[i].offsets -
                   (uintptr_t) recvBuf) / (uintptr_t) sizeof(ADIO_Offset));
     }
