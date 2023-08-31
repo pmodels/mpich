@@ -175,6 +175,7 @@ void MPIR_pmi_finalize(void)
     /* Finalize of PM interface happens in exit handler,
      * here: free allocated memory */
     MPL_free(pmi_kvs_name);
+    pmi_kvs_name = NULL;
 
     MPL_free(MPIR_Process.node_map);
     MPL_free(MPIR_Process.node_root_map);
