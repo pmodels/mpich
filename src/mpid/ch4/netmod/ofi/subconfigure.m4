@@ -7,7 +7,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
             AS_CASE([$net],[ofi],[build_ch4_netmod_ofi=yes])
 	    if test $net = "ofi" ; then
 	       AC_DEFINE(HAVE_CH4_NETMOD_OFI,1,[OFI netmod is built])
-           AC_DEFINE(MPIDI_BUILD_CH4_LOCALITY_INFO, 1, [CH4 should build locality info])
 	    fi
         done
 

@@ -184,7 +184,7 @@ typedef struct MPIDIG_acc_ack_msg_t {
 typedef MPIDIG_acc_ack_msg_t MPIDIG_get_acc_ack_msg_t;
 
 typedef struct {
-    MPIR_OBJECT_HEADER;
+    MPIR_cc_t ref_count;
     int size;
     MPIDI_av_entry_t table[];
 } MPIDI_av_table_t;

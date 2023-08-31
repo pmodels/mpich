@@ -33,6 +33,9 @@ typedef struct MPIR_Process_t {
     int *node_local_map;        /* int[local_size], maps local_id to rank of local proc */
     int *node_root_map;         /* int[num_nodes], maps node_id to the rank of node root */
 
+    /* A dynamic array of node hostnames to support dynamic process node ids */
+    UT_array *node_hostnames;
+
     unsigned world_id;          /* this is a hash of pmi_kvs_name. One use is for
                                  * ofi netmod active message to synchronize seq number. */
 
@@ -73,5 +76,12 @@ typedef struct MPIR_Process_t {
 #endif                          /* HAVE_CXX_BINDING */
 } MPIR_Process_t;
 extern MPIR_Process_t MPIR_Process;
+
+int MPIR_build_nodemap(int *nodemap, int sz, int *num_nodes);
+int MPIR_build_locality(void);
+
+int MPIR_nodeid_lookup(const char *hostname, int *node_id);
+int MPIR_nodeid_init(void);
+int MPIR_nodeid_free(void);
 
 #endif /* MPIR_PROCESS_H_INCLUDED */

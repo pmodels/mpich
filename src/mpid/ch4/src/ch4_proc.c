@@ -15,16 +15,9 @@ static int get_next_avtid(void);
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int avtid = 0, lpid = 0;
-
     MPIR_FUNC_ENTER;
 
-    MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
-    if (avtid != 0) {
-        *id_p = -1;
-    } else {
-        *id_p = MPIR_Process.node_map[lpid];
-    }
+    *id_p = MPIDIU_comm_rank_to_av(comm, rank)->node_id;
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -101,9 +94,12 @@ int MPIDIU_new_avt(int size, int *avtid)
     new_av_table = (MPIDI_av_table_t *) MPL_calloc(1, size * sizeof(MPIDI_av_entry_t)
                                                    + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
     new_av_table->size = size;
+    for (int i = 0; i < size; i++) {
+        new_av_table->table[i].node_id = -1;
+    }
     MPIDI_global.avt_mgr.av_tables[*avtid] = new_av_table;
 
-    MPIR_Object_set_ref(MPIDI_global.avt_mgr.av_tables[*avtid], 0);
+    MPIR_cc_set(&MPIDI_global.avt_mgr.av_tables[*avtid]->ref_count, 0);
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -130,7 +126,7 @@ int MPIDIU_avt_add_ref(int avtid)
     MPIR_FUNC_ENTER;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " incr avtid=%d", avtid));
-    MPIR_Object_add_ref(MPIDI_global.avt_mgr.av_tables[avtid]);
+    MPIR_cc_inc(&MPIDI_global.avt_mgr.av_tables[avtid]->ref_count);
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
@@ -143,7 +139,7 @@ int MPIDIU_avt_release_ref(int avtid)
     MPIR_FUNC_ENTER;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " decr avtid=%d", avtid));
-    MPIR_Object_release_ref(MPIDIU_get_av_table(avtid), &in_use);
+    MPIR_cc_decr(&MPIDI_global.avt_mgr.av_tables[avtid]->ref_count, &in_use);
     if (!in_use) {
         MPIDIU_free_avt(avtid);
     }
@@ -169,14 +165,13 @@ int MPIDIU_avt_init(void)
     MPIR_Assert(MPIDI_global.avt_mgr.av_table0);
 
     MPIDI_global.avt_mgr.av_table0->size = size;
-    MPIR_Object_set_ref(MPIDI_global.avt_mgr.av_table0, 1);
+    MPIR_cc_set(&MPIDI_global.avt_mgr.av_table0->ref_count, 1);
 
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     for (int i = 0; i < size; i++) {
         MPIDI_global.avt_mgr.av_table0->table[i].is_local =
             (MPIR_Process.node_map[i] == MPIR_Process.node_map[rank]) ? 1 : 0;
+        MPIDI_global.avt_mgr.av_table0->table[i].node_id = MPIR_Process.node_map[i];
     }
-#endif
 
     MPIDI_global.avt_mgr.av_tables[0] = MPIDI_global.avt_mgr.av_table0;
 
@@ -237,12 +232,12 @@ int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
-    MPIR_Object_set_ref(new_lut, 1);
+    MPIR_cc_set(&new_lut->ref_count, 1);
     *lut = new_lut;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
                     (MPL_DBG_FDEST, "alloc lut %p, size %lu, refcount=%d",
-                     new_lut, size * sizeof(MPIDI_lpid_t), MPIR_Object_get_ref(new_lut)));
+                     new_lut, size * sizeof(MPIDI_lpid_t), MPIR_cc_get(&new_lut->ref_count)));
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -257,7 +252,7 @@ int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Object_release_ref(lut, &in_use);
+    MPIR_cc_decr(&lut->ref_count, &in_use);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "dec ref to lut %p", lut));
     if (!in_use) {
         MPL_free(lut);
@@ -281,12 +276,12 @@ int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
-    MPIR_Object_set_ref(new_mlut, 1);
+    MPIR_cc_set(&new_mlut->ref_count, 1);
     *mlut = new_mlut;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
                     (MPL_DBG_FDEST, "alloc mlut %p, size %lu, refcount=%d",
-                     new_mlut, size * sizeof(MPIDI_gpid_t), MPIR_Object_get_ref(new_mlut)));
+                     new_mlut, size * sizeof(MPIDI_gpid_t), MPIR_cc_get(&new_mlut->ref_count)));
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -301,7 +296,7 @@ int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Object_release_ref(mlut, &in_use);
+    MPIR_cc_decr(&mlut->ref_count, &in_use);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "dec ref to mlut %p", mlut));
     if (!in_use) {
         MPL_free(mlut);

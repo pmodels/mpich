@@ -356,17 +356,12 @@ static void direct_of_src_rmap(MPIDI_rank_map_t * src, MPIDI_rank_map_t * dest,
         case MPIDI_RANK_MAP_LUT_INTRA:
             dest->irreg.lut.t = src->irreg.lut.t;
             dest->irreg.lut.lpid = src->irreg.lut.lpid;
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                            (MPL_DBG_FDEST, "\tref count %d",
-                             MPIR_Object_get_ref(src->irreg.lut.t)));
-            MPIR_Object_add_ref(src->irreg.lut.t);
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, "\tadd ref to src lut"));
+            MPIDIU_lut_add_ref(src->irreg.lut.t);
             break;
         case MPIDI_RANK_MAP_MLUT:
             dest->irreg.mlut.t = src->irreg.mlut.t;
             dest->irreg.mlut.gpid = src->irreg.mlut.gpid;
-            MPIR_Object_add_ref(src->irreg.mlut.t);
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, "\tadd ref to src mlut"));
+            MPIDIU_mlut_add_ref(src->irreg.mlut.t);
             break;
         case MPIDI_RANK_MAP_NONE:
             MPIR_Assert(0);
@@ -421,18 +416,13 @@ static void offset_of_src_rmap(MPIDI_rank_map_t * src, MPIDI_rank_map_t * dest,
             dest->mode = src->mode;
             dest->irreg.lut.t = src->irreg.lut.t;
             dest->irreg.lut.lpid = &src->irreg.lut.lpid[offset];
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                            (MPL_DBG_FDEST, "\tref count %d",
-                             MPIR_Object_get_ref(src->irreg.lut.t)));
-            MPIR_Object_add_ref(src->irreg.lut.t);
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, "\tadd ref to src lut"));
+            MPIDIU_lut_add_ref(src->irreg.lut.t);
             break;
         case MPIDI_RANK_MAP_MLUT:
             dest->mode = src->mode;
             dest->irreg.mlut.t = src->irreg.mlut.t;
             dest->irreg.mlut.gpid = &src->irreg.mlut.gpid[offset];
-            MPIR_Object_add_ref(src->irreg.mlut.t);
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, "\tadd ref to src mlut"));
+            MPIDIU_mlut_add_ref(src->irreg.mlut.t);
             break;
         case MPIDI_RANK_MAP_NONE:
             MPIR_Assert(0);
