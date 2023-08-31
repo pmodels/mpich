@@ -19,6 +19,9 @@ def main():
     abi_dir = "src/binding/abi"
     func_list = load_C_func_list(binding_dir)
 
+    io_func_list = [f for f in func_list if f['dir'] == 'io']
+    func_list = [f for f in func_list if f['dir'] != 'io']
+
     # -- Loading extra api prototypes (needed until other `buildiface` scripts are updated)
     G.mpi_declares = []
 
