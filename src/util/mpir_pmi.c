@@ -241,6 +241,21 @@ int MPIR_pmi_kvs_get(int src, const char *key, char *val, int val_size)
     return mpi_errno;
 }
 
+int MPIR_pmi_kvs_parent_get(const char *key, char *val, int val_size)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Process needs to have a parent to use this function */
+    if (!MPIR_Process.has_parent) {
+        return MPI_ERR_INTERN;
+    }
+
+    SWITCH_PMI(mpi_errno = pmi1_get_parent(key, val, val_size),
+               mpi_errno = pmi2_get_parent(key, val, val_size),
+               mpi_errno = pmix_get_parent(key, val, val_size));
+    return mpi_errno;
+}
+
 char *MPIR_pmi_get_jobattr(const char *key)
 {
     char *valbuf = NULL;

@@ -142,6 +142,22 @@ static int pmix_get(int src, const char *key, char *val, int val_size)
     goto fn_exit;
 }
 
+static int pmix_get_parent(const char *key, char *val, int val_size)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno = PMIX_SUCCESS;
+    pmix_value_t *pvalue;
+    pmi_errno = PMIx_Get(&pmix_parent, key, NULL, 0, &pvalue);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_get",
+                         "**pmix_get %s", PMIx_Error_string(pmi_errno));
+    MPL_strncpy(val, pvalue->data.string, val_size);
+    PMIX_VALUE_RELEASE(pvalue);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static bool pmix_get_jobattr(const char *key, char *valbuf)
 {
     pmix_value_t *pvalue;
@@ -408,6 +424,11 @@ static int pmix_put(const char *key, const char *val)
 }
 
 static int pmix_get(int src, const char *key, char *val, int val_size)
+{
+    return MPI_ERR_INTERN;
+}
+
+static int pmix_get_parent(const char *key, char *val, int val_size)
 {
     return MPI_ERR_INTERN;
 }

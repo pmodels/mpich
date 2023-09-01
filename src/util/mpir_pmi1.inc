@@ -89,6 +89,11 @@ static int pmi1_get(int src, const char *key, char *val, int val_size)
     goto fn_exit;
 }
 
+static int pmi1_get_parent(const char *key, char *val, int val_size)
+{
+    return pmi1_get(-1, key, val, val_size);
+}
+
 static bool pmi1_get_jobattr(const char *key, char *valbuf)
 {
     int pmi_errno = PMI_KVS_Get(pmi_kvs_name, key, valbuf, pmi_max_val_size);
@@ -258,6 +263,11 @@ static int pmi1_put(const char *key, const char *val)
 }
 
 static int pmi1_get(int src, const char *key, char *val, int val_size)
+{
+    return MPI_ERR_INTERN;
+}
+
+static int pmi1_get_parent(const char *key, char *val, int val_size)
 {
     return MPI_ERR_INTERN;
 }
