@@ -15,6 +15,10 @@ static int pmix_add_to_info(MPIR_Info * info_ptr, const char *key, const char *p
 static int mpi_to_pmix_keyvals(MPIR_Info * info_ptr, int ninfo, pmix_info_t ** pmix_info);
 static int pmix_build_job_info(MPIR_Info * info_ptr, pmix_info_t ** pmix_job_info,
                                size_t * njob_info, char **path);
+static int pmix_build_app_info(MPIR_Info * info_ptr, pmix_info_t ** pmix_app_info,
+                               size_t * napp_info);
+static int pmix_build_app_env(MPIR_Info * info_ptr, char ***env);
+static int pmix_build_app_cmd(char *path, char *command, char **app_cmd);
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -551,6 +555,115 @@ int pmix_build_job_info(MPIR_Info * info_ptr, pmix_info_t ** pmix_job_info, size
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static
+int pmix_build_app_info(MPIR_Info * info_ptr, pmix_info_t ** pmix_app_info, size_t * napp_info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Info *mpi_app_info = NULL;
+    size_t ninfo = 0;
+    int have_wdir = 0;
+
+    /* Create the PMIx app info structure */
+    mpi_errno = MPIR_Info_alloc(&mpi_app_info);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (info_ptr != NULL) {
+        /* host - standard key */
+        mpi_errno = pmix_add_to_info(info_ptr, "host", PMIX_HOST, mpi_app_info, NULL, &ninfo, NULL);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* wdir - standard key */
+        mpi_errno =
+            pmix_add_to_info(info_ptr, "wdir", PMIX_WDIR, mpi_app_info, &have_wdir, &ninfo, NULL);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* FIXME: mpi_initial_errhandler is currently not supported by MPICH.
+         * Once the support is available, we should parse the key here and
+         * treat it accordingly */
+
+        /* FIXME: There is currently no mapping of the standard keys `arch`
+         * and `file` to a PMIx key supported by PMIx_Spawn. Once this changes
+         * we should add the keys here */
+    }
+
+    /* If no info provided where to look for executable, assume current working dir */
+    if (!have_wdir) {
+        char cwd[MAXPATHLEN];
+        if (NULL == getcwd(cwd, MAXPATHLEN)) {
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**other");
+        }
+        mpi_errno = MPIR_Info_set_impl(mpi_app_info, PMIX_WDIR, cwd);
+        MPIR_ERR_CHECK(mpi_errno);
+        ninfo++;
+    }
+
+    if (ninfo > 0) {
+        mpi_errno = mpi_to_pmix_keyvals(mpi_app_info, ninfo, pmix_app_info);
+        *napp_info = ninfo;
+    } else {
+        *napp_info = 0;
+        *pmix_app_info = NULL;
+    }
+
+    mpi_errno = MPIR_Info_free_impl(mpi_app_info);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static
+int pmix_build_app_env(MPIR_Info * info_ptr, char ***env)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int key_found = 0;
+    char vals[MPI_MAX_INFO_VAL];
+
+    if (info_ptr == NULL) {
+        goto fn_exit;
+    }
+
+    /* env - (non-standard key)
+     * A list of environment variable settings split by `\n` (newline) to be provided
+     * to the newly spawned processes, for example:
+     * ENVVAR1=3
+     * ENVVAR2=myvalue */
+    mpi_errno = MPIR_Info_get_impl(info_ptr, "env", MPI_MAX_INFO_VAL, vals, &key_found);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* copy environment variables */
+    if (key_found) {
+        char **env_vals = NULL;
+        PMIX_ARGV_SPLIT(env_vals, vals, '\n');
+        PMIX_ARGV_COPY(*env, env_vals);
+        PMIX_ARGV_FREE(env_vals);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static
+int pmix_build_app_cmd(char *path, char *command, char **app_cmd)
+{
+    /* Either: User specified a path where to find the executable,
+     * we have to include this path in addition to command.
+     *
+     * Or: No path specified by user, use command */
+    if (path) {
+        int cmdlen = strlen(path) + strlen(command) + 1 + 1;    /* +1 for '/' and +1 for null terminator */
+        *app_cmd = MPL_malloc(cmdlen, MPL_MEM_OTHER);
+        snprintf(*app_cmd, cmdlen, "%s/%s", path, command);
+    } else {
+        *app_cmd = MPL_strdup(command);
+    }
+    return MPI_SUCCESS;
 }
 
 #else  /* ENABLE_PMIX */
