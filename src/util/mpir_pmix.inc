@@ -9,6 +9,8 @@ static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
 static pmix_proc_t pmix_parent;
 
+static void pmix_not_supported(const char *elem, char *error_str, int len);
+
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -401,7 +403,48 @@ static int pmix_unpublish(const char name[])
     goto fn_exit;
 }
 
-#else /* ENABLE_PMIX */
+static
+void pmix_not_supported(const char *elem, char *error_str, int len)
+{
+    int pmi_errno = PMIX_SUCCESS;
+    pmix_value_t *rm_name = NULL;
+    pmix_value_t *rm_version = NULL;
+    char *name = NULL;
+    char *version = NULL;
+
+    /* Try to get infos about PMIx Host (name and version) */
+    pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_RM_NAME, NULL, 0, &rm_name);
+    if (pmi_errno == PMIX_SUCCESS) {
+        name = MPL_strdup(rm_name->data.string);
+        PMIX_VALUE_RELEASE(rm_name);
+    }
+
+    pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_RM_VERSION, NULL, 0, &rm_version);
+    if (pmi_errno == PMIX_SUCCESS) {
+        version = MPL_strdup(rm_version->data.string);
+        PMIX_VALUE_RELEASE(rm_version);
+    }
+
+    /* Create a comprehensible error message based on the infos that
+     * could be obtained about the PMIx Host */
+    if (name && version) {
+        snprintf(error_str, len, "%s not supported by PMIx Host %s version %s",
+                     elem, name, version);
+    } else if (name) {
+        snprintf(error_str, len, "%s not supported by PMIx Host %s", elem, name);
+    } else {
+        snprintf(error_str, len, "%s not supported by PMIx Host", elem);
+    }
+
+    if (name) {
+        MPL_free(name);
+    }
+    if (version) {
+        MPL_free(version);
+    }
+}
+
+#else  /* ENABLE_PMIX */
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
