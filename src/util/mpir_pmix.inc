@@ -113,7 +113,7 @@ static int pmix_get(int src, const char *key, char *val, int val_size)
     }
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_get", "**pmix_get %d", pmi_errno);
-    strncpy(val, pvalue->data.string, val_size);
+    MPL_strncpy(val, pvalue->data.string, val_size);
     PMIX_VALUE_RELEASE(pvalue);
   fn_exit:
     return mpi_errno;
