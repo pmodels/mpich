@@ -1271,6 +1271,9 @@ int MPL_gpu_finalize(void)
 
     MPL_event_pool_destroy();
 
+    MPL_free(mask_contents.dev_id);
+    MPL_free(mask_contents.subdev_id);
+
     return MPL_SUCCESS;
 }
 
@@ -2650,13 +2653,16 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 
     mem_id = ptr_attr->prop.id;
 
+    nfds = 0;   /* must initialized to 0 */
     if (zexMemGetIpcHandles) {
-        nfds = 0;       /* must initialized to 0 */
         ret = zexMemGetIpcHandles(ze_context, ptr, &nfds, NULL);
         ZE_ERR_CHECK(ret);
-        assert(nfds <= 2);
-        ret = zexMemGetIpcHandles(ze_context, ptr, &nfds, ze_ipc_handle);
-    } else {
+        if (nfds) {
+            assert(nfds <= 2);
+            ret = zexMemGetIpcHandles(ze_context, ptr, &nfds, ze_ipc_handle);
+        }
+    }
+    if (!nfds) {
         ret = zeMemGetIpcHandle(ze_context, ptr, &ze_ipc_handle[0]);
         nfds = 1;
     }
@@ -2935,13 +2941,16 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     if (cache_entry && cache_entry->mapped_ptr) {
         base = cache_entry->mapped_ptr;
     } else {
+        nfds = 0;       /* must be initialized to 0 */
         if (zexMemGetIpcHandles) {
-            nfds = 0;   /* must be initialized to 0 */
             ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, NULL);
             ZE_ERR_CHECK(ret);
-            assert(nfds <= 2);
-            ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, ze_ipc_handle);
-        } else {
+            if (nfds) {
+                assert(nfds <= 2);
+                ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, ze_ipc_handle);
+            }
+        }
+        if (!nfds) {
             ret = zeMemGetIpcHandle(ze_context, pbase, &ze_ipc_handle[0]);
             nfds = 1;
         }

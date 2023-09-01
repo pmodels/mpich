@@ -153,14 +153,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_
 
 MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_IPCI_choose_engine(int dev1, int dev2)
 {
-    MPL_gpu_engine_type_t engine = MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
-    if (dev1 == -1 || dev2 == -1) {
+    if (MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE == MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE_auto) {
+        /* Use the high-bandwidth copy engine when either 1) one of the buffers is a host buffer, or
+         * 2) the copy is to the same device. Otherwise use the low-latency copy engine. */
+        if (dev1 == -1 || dev2 == -1) {
+            return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+        }
+
+        if (MPL_gpu_query_is_same_dev(dev1, dev2)) {
+            return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+        }
+
+        return MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
+    } else if (MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE == MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE_compute) {
+        return MPL_GPU_ENGINE_TYPE_COMPUTE;
+    } else if (MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE ==
+               MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE_copy_high_bandwidth) {
         return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
+    } else if (MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE ==
+               MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE_copy_low_latency) {
+        return MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
+    } else {
+        return MPL_GPU_ENGINE_TYPE_LAST;
     }
-    assert(dev1 != -1 && dev2 != -1);
-    if (MPL_gpu_query_is_same_dev(dev1, dev2))
-        engine = MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
-    return engine;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,

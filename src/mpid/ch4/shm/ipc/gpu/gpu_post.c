@@ -57,6 +57,34 @@ cvars:
         Variable to select implementation for ZE shareable IPC handle
         pidfd - use pidfd_getfd syscall to implement shareable IPC handle
         drmfd - force to use device fd-based shareable IPC handle
+
+    - name        : MPIR_CVAR_CH4_IPC_GPU_ENGINE_TYPE
+      category    : CH4
+      type        : enum
+      default     : auto
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        By default, select engine type automatically
+        auto - select automatically
+        compute - use compute engine
+        copy_high_bandwidth - use high-bandwidth copy engine
+        copy_low_latency - use low-latency copy engine
+
+    - name        : MPIR_CVAR_CH4_IPC_GPU_READ_WRITE_PROTOCOL
+      category    : CH4
+      type        : enum
+      default     : read
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        By default, use read protocol.
+        auto - select automatically
+        read - use read protocol
+        write - use write protocol if remote device is visible
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -247,15 +275,27 @@ int MPIDI_GPU_ipc_get_map_dev(int remote_global_dev_id, int local_dev_id, MPI_Da
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     int dt_contig;
-    MPIDI_Datatype_check_contig(datatype, dt_contig);
+    int remote_local_dev_id;
 
-    int remote_local_dev_id = MPL_gpu_global_to_local_dev_id(remote_global_dev_id);
-
-    /* TODO: more analyses on the non-contig cases */
-    if (remote_local_dev_id == -1 || !dt_contig) {
+    if (MPIR_CVAR_CH4_IPC_GPU_READ_WRITE_PROTOCOL == MPIR_CVAR_CH4_IPC_GPU_READ_WRITE_PROTOCOL_read) {
         map_to_dev_id = local_dev_id;
     } else {
-        map_to_dev_id = remote_local_dev_id;
+        remote_local_dev_id = MPL_gpu_global_to_local_dev_id(remote_global_dev_id);
+        if (MPIR_CVAR_CH4_IPC_GPU_READ_WRITE_PROTOCOL ==
+            MPIR_CVAR_CH4_IPC_GPU_READ_WRITE_PROTOCOL_write) {
+            map_to_dev_id = remote_local_dev_id;
+            if (map_to_dev_id < 0)
+                map_to_dev_id = local_dev_id;
+        } else {
+            /* auto select */
+            MPIDI_Datatype_check_contig(datatype, dt_contig);
+            /* TODO: more analyses on the non-contig cases */
+            if (remote_local_dev_id == -1 || !dt_contig) {
+                map_to_dev_id = local_dev_id;
+            } else {
+                map_to_dev_id = remote_local_dev_id;
+            }
+        }
     }
 
     if (map_to_dev_id < 0) {
