@@ -384,6 +384,7 @@ Makefile.am-stamp
 
 # /src/binding/
 /src/binding/c/c_binding.c
+/src/binding/c/io.c
 
 # /src/binding/cxx/
 /src/binding/cxx/Makefile.sm
