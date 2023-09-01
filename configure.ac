@@ -855,10 +855,6 @@ export device_name
 export device_args
 export devicedir
 
-if test "$device_name" = "ch4" ; then
-    AC_DEFINE([ENABLE_LOCAL_SESSION_INIT], 1, [Define to skip initializing builtin world comm during MPI_Session_init])
-fi
-
 # expand all of the prereq macros in the correct order
 m4_map([PAC_SUBCFG_DO_PREREQ], [PAC_SUBCFG_MODULE_LIST])
 

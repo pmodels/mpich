@@ -259,11 +259,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
-    bool need_init_builtin_comms = true;
-#ifdef ENABLE_LOCAL_SESSION_INIT
-    need_init_builtin_comms = is_world_model;
-#endif
-    if (need_init_builtin_comms) {
+    if (is_world_model) {
         mpi_errno = MPIR_init_comm_world();
         MPIR_ERR_CHECK(mpi_errno);
 
