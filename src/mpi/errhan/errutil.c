@@ -606,6 +606,86 @@ int MPIR_Err_return_group(struct MPIR_Group *group_ptr, const char fcname[], int
     }
 }
 
+/* This error routine is used by MPI_Comm_create_from_group */
+int MPIR_Err_return_comm_create_from_group(MPIR_Errhandler * errhandler_ptr, const char fcname[],
+                                           int errcode)
+{
+    const int error_class = ERROR_GET_CLASS(errcode);
+    checkValidErrcode(error_class, fcname, &errcode);
+    int errhandler_handle;
+
+    /* --BEGIN ERROR HANDLING-- */
+    if (!MPIR_Errutil_is_initialized()) {
+        /* we aren't initialized
+         * before error stack init */
+        MPIR_Handle_fatal_error(NULL, fcname, errcode);
+        return MPI_ERR_INTERN;
+    }
+    /* --END ERROR HANDLING-- */
+
+    /* Fallback to MPIR_Err_return_comm if no errhandler provided */
+    if (errhandler_ptr == NULL) {
+        return MPIR_Err_return_comm(NULL, fcname, errcode);
+    }
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, TERSE,
+                    (MPL_DBG_FDEST,
+                     "MPIR_Err_return_session_init(errhandler_ptr=%p, fcname=%s, errcode=%d)",
+                     errhandler_ptr, fcname, errcode));
+
+    MPIR_Assert(errhandler_ptr != NULL);
+    errhandler_handle = errhandler_ptr->handle;
+    MPI_Comm comm_null_handle = MPI_COMM_NULL;
+
+    /* --BEGIN ERROR HANDLING-- */
+    if (MPIR_Err_is_fatal(errcode) ||
+        errhandler_handle == MPI_ERRORS_ARE_FATAL || errhandler_handle == MPI_ERRORS_ABORT) {
+        /* Calls MPID_Abort */
+        MPIR_Handle_fatal_error(NULL, fcname, errcode);
+        /* never get here */
+    }
+    /* --END ERROR HANDLING-- */
+
+    /* Check for the special case of a user-provided error code */
+    errcode = checkForUserErrcode(errcode);
+    if (errhandler_handle != MPI_ERRORS_RETURN && errhandler_handle != MPIR_ERRORS_THROW_EXCEPTIONS) {
+        /* We pass a final 0 (for a null pointer) to these routines
+         * because MPICH-1 expected that */
+        switch (errhandler_ptr->language) {
+            case MPIR_LANG__C:
+                (*errhandler_ptr->errfn.C_Comm_Handler_function) (&comm_null_handle, &errcode, 0);
+                break;
+#ifdef HAVE_CXX_BINDING
+            case MPIR_LANG__CXX:
+                (*MPIR_Process.cxx_call_errfn) (0, &comm_null_handle, &errcode,
+                                                (void (*)(void)) *errhandler_ptr->
+                                                errfn.C_Comm_Handler_function);
+                /* The C++ code throws an exception if the error handler
+                 * returns something other than MPI_SUCCESS. There is no "return"
+                 * of an error code. */
+                errcode = MPI_SUCCESS;
+                break;
+#endif /* CXX_BINDING */
+#ifdef HAVE_FORTRAN_BINDING
+            case MPIR_LANG__FORTRAN90:
+            case MPIR_LANG__FORTRAN:
+                {
+                    /* If int and MPI_Fint aren't the same size, we need to
+                     * convert.  As this is not performance critical, we
+                     * do this even if MPI_Fint and int are the same size. */
+                    MPI_Fint ferr = errcode;
+                    MPI_Fint handle = (MPI_Fint) comm_null_handle;
+                    (*errhandler_ptr->errfn.F77_Handler_function) (&handle, &ferr);
+                }
+                break;
+#endif /* FORTRAN_BINDING */
+        }
+    }
+
+    return errcode;
+
+}
+
 /* ------------------------------------------------------------------------- */
 /* Group 3: Routines to handle error messages.  These are organized into
  * several subsections:
