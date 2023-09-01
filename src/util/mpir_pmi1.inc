@@ -154,7 +154,9 @@ static int pmi1_get_universe_size(int *universe_size)
     goto fn_exit;
 }
 
-static int pmi1_spawn(int count, char *commands[], char **argvs[], const int maxprocs[], MPIR_Info * info_ptrs[], int num_preput_keyval, struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
+static int pmi1_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
+                      MPIR_Info * info_ptrs[], int num_preput_keyval,
+                      struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -233,7 +235,7 @@ static int pmi1_unpublish(const char name[])
     goto fn_exit;
 }
 
-#else  /* ENABLE_PMI1 */
+#else /* ENABLE_PMI1 */
 
 static int pmi1_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -296,7 +298,9 @@ static int pmi1_get_universe_size(int *universe_size)
     return MPI_ERR_INTERN;
 }
 
-static int pmi1_spawn(int count, char *commands[], char **argvs[], const int maxprocs[], MPIR_Info * info_ptrs[], int num_preput_keyval, struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
+static int pmi1_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
+                      MPIR_Info * info_ptrs[], int num_preput_keyval,
+                      struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
 {
     return MPI_ERR_INTERN;
 }
