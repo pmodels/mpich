@@ -592,6 +592,20 @@ int MPIR_Err_return_session_init(MPIR_Errhandler * errhandler_ptr, const char fc
 
 }
 
+int MPIR_Err_return_group(struct MPIR_Group *group_ptr, const char fcname[], int errcode)
+{
+    if (group_ptr == NULL) {
+        /* If no group provided, fallback to MPIR_Err_return_comm */
+        return MPIR_Err_return_comm(NULL, fcname, errcode);
+    } else if (group_ptr->session_ptr == NULL) {
+        /* If group does not belong to session, fallback to MPIR_Err_return_comm */
+        return MPIR_Err_return_comm(NULL, fcname, errcode);
+    } else {
+        /* Group belongs to session, use MPIR_Err_return_session */
+        return MPIR_Err_return_session(group_ptr->session_ptr, fcname, errcode);
+    }
+}
+
 /* ------------------------------------------------------------------------- */
 /* Group 3: Routines to handle error messages.  These are organized into
  * several subsections:
