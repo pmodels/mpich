@@ -32,14 +32,24 @@ int main(int argc, char *argv[])
         /* basic sanity check */
         assert(num_repeat > 0 && num_repeat < 100);
     }
-
+#ifdef WITH_WORLD
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
     for (int i = 0; i < num_repeat; i++) {
+#ifdef WITH_WORLD
         library_foo_test();
+#else
+        rank = library_foo_test();
+#endif
+        if (errs > 0) {
+            break;
+        }
     }
+#ifdef WITH_WORLD
     MPI_Finalize();
+#endif
 #else
     int rank = library_foo_test();
 #ifdef RE_INIT
