@@ -7,3 +7,4 @@ session_re_init 4
 session_psets 1
 session_self 1
 session_bsend 2
+session_self 4
