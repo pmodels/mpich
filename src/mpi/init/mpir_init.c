@@ -432,6 +432,9 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     mpi_errno = MPIR_finalize_builtin_comms();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Free context id reserved for creating comm from group in sessions */
+    MPIR_Free_contextid(MPIR_COMM_TMP_SESSION_CTXID);
+
     /* Signal the debugger that we are about to exit. */
     MPIR_Debugger_set_aborting(NULL);
 
