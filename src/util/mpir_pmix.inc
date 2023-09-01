@@ -7,6 +7,7 @@
 
 static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
+static pmix_proc_t pmix_parent;
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -52,16 +53,36 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
         pmi_kvs_name = MPL_strdup(pmix_proc.nspace);
     }
 
+    PMIX_PROC_CONSTRUCT(&pmix_parent);
+    pmi_errno = PMIx_Get(&pmix_proc, PMIX_PARENT_ID, NULL, 0, &pvalue);
+    if (pmi_errno == PMIX_ERR_NOT_FOUND) {
+        *has_parent = 0; /* process not spawned */
+    } else if (pmi_errno == PMIX_SUCCESS) {
+        *has_parent = 1; /* spawned process */
+        PMIX_PROC_LOAD(&pmix_parent, pvalue->data.proc->nspace, pvalue->data.proc->rank);
+        PMIX_VALUE_RELEASE(pvalue);
+    } else {
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmix_get", "**pmix_get %s",
+                             PMIx_Error_string(pmi_errno));
+    }
+
+    /* Get the appnum */
+    pmi_errno = PMIx_Get(&pmix_proc, PMIX_APPNUM, NULL, 0, &pvalue);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_get", "**pmix_get %s", PMIx_Error_string(pmi_errno));
+    MPIR_Assert(pvalue->data.uint32 <= INT_MAX);        /* overflow check */
+    *appnum = (int) pvalue->data.uint32;
+    PMIX_VALUE_RELEASE(pvalue);
+
   fn_exit:
-    /* FIXME: support spawn and appnum */
-    *has_parent = 0;
-    *appnum = 0;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
   singleton_out:
     *rank = 0;
     *size = 1;
+    *has_parent = 0;
+    *appnum = 0;
     pmi_kvs_name = MPL_strdup("0");
     goto fn_exit;
 }

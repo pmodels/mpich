@@ -97,6 +97,7 @@
 **pmix_init %d:PMIX_Init returned %d
 **pmix_get:PMIx_Get failed
 **pmix_get %d:PMIx_Get returned %d
+**pmix_get %s:PMIx_Get returned %s
 **pmix_put:PMIx_Put failed
 **pmix_put %d:PMIx_Put returned %d
 **pmix_commit:PMIx_Commit failed
