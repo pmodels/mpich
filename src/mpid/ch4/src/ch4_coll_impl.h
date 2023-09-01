@@ -890,11 +890,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_beta(const void *s
                                                                    MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
-                              recvcount, recvtype, comm_ptr, errflag);
-    MPIR_ERR_CHECK(mpi_errno);
+    int node_comm_size = 0;
+    if (comm_ptr->node_comm != NULL) {
+        node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
+    }
+    int total_comm_size = MPIR_Comm_size(comm_ptr);
+    /* invokes MPIDI_SHM_mpi_alltoall when all the processes are on the same node */
+    if (comm_ptr->node_comm != NULL && node_comm_size == total_comm_size) {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno =
+            MPIDI_SHM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcount, recvtype, comm_ptr, errflag);
+#else
+        mpi_errno =
+            MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
+                                  recvcount, recvtype, comm_ptr, errflag);
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
+                                  recvcount, recvtype, comm_ptr, errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     return mpi_errno;
