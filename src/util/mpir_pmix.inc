@@ -19,6 +19,9 @@ static int pmix_build_app_info(MPIR_Info * info_ptr, pmix_info_t ** pmix_app_inf
                                size_t * napp_info);
 static int pmix_build_app_env(MPIR_Info * info_ptr, char ***env);
 static int pmix_build_app_cmd(char *path, char *command, char **app_cmd);
+static int pmix_prep_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
+                           MPIR_Info * info_ptrs[], pmix_app_t * apps, pmix_info_t ** job_info,
+                           size_t * njob_info);
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -664,6 +667,55 @@ int pmix_build_app_cmd(char *path, char *command, char **app_cmd)
         *app_cmd = MPL_strdup(command);
     }
     return MPI_SUCCESS;
+}
+
+static
+int pmix_prep_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
+                    MPIR_Info * info_ptrs[], pmix_app_t * apps, pmix_info_t ** job_info,
+                    size_t * njob_info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char *path = NULL;
+
+    for (int i = 0; i < count; i++) {
+        apps[i].cmd = NULL;
+
+        /* Save maxprocs */
+        apps[i].maxprocs = maxprocs[i];
+
+        /* Copy the argv */
+        if ((argvs != MPI_ARGVS_NULL) && (argvs[i] != MPI_ARGV_NULL) && (*argvs[i] != NULL)) {
+            PMIX_ARGV_COPY(apps[i].argv, argvs[i]);
+        }
+
+        if ((info_ptrs != NULL) && (info_ptrs[i] != NULL)) {
+            /* Build the job info based on the info provided to the first app */
+            if (i == 0) {
+                mpi_errno = pmix_build_job_info(info_ptrs[i], job_info, njob_info, &path);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+
+            /* Build app info */
+            mpi_errno = pmix_build_app_info(info_ptrs[i], &(apps[i].info), &(apps[i].ninfo));
+            MPIR_ERR_CHECK(mpi_errno);
+
+            /* Build app env */
+            mpi_errno = pmix_build_app_env(info_ptrs[i], &(apps[i].env));
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+
+        /* Build app cmd */
+        mpi_errno = pmix_build_app_cmd(path, commands[i], &(apps[i].cmd));
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    if (path) {
+        MPL_free(path);
+    }
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #else  /* ENABLE_PMIX */
