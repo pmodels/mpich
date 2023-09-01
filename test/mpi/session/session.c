@@ -43,12 +43,16 @@ int main(int argc, char *argv[])
 #else
     int rank = library_foo_test();
 #ifdef RE_INIT
+    if (errs > 0) {
+        goto fn_exit;
+    }
     library_foo_test();
 #endif
 #endif
     if (rank == 0 && errs == 0) {
         printf("No Errors\n");
     }
+  fn_exit:
     return MTestReturnValue(errs);
 }
 
