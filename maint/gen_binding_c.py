@@ -19,9 +19,6 @@ def main():
     abi_dir = "src/binding/abi"
     func_list = load_C_func_list(binding_dir)
 
-    io_func_list = [f for f in func_list if f['dir'] == 'io']
-    func_list = [f for f in func_list if f['dir'] != 'io']
-
     # -- Loading extra api prototypes (needed until other `buildiface` scripts are updated)
     G.mpi_declares = []
 
@@ -52,6 +49,10 @@ def main():
                 repl_func['_replaces'] = []
             repl_func['_replaces'].append(func)
 
+
+    # We generate io functions separately for now
+    io_func_list = [f for f in func_list if f['dir'] == 'io']
+    func_list = [f for f in func_list if f['dir'] != 'io']
 
     # -- Generating code --
     G.doc3_src_txt = []
@@ -144,9 +145,23 @@ def main():
         G.check_write_path(abi_file_path)
         dump_c_file(abi_file_path, G.out)
 
+    def dump_io_funcs():
+        G.out = []
+        G.out.append("#include \"mpiimpl.h\"")
+        G.out.append("#include \"mpir_io_impl.h\"")
+        G.out.append("")
+
+        for func in io_func_list:
+            G.err_codes = {}
+            manpage_out = []
+            dump_func(func, manpage_out)
+
+        dump_out(c_dir + "/io.c")
+
     # ----
     dump_c_binding()
     dump_c_binding_abi()
+    dump_io_funcs()
 
     if 'output-mansrc' in G.opts:
         f = c_dir + '/mansrc/' + 'poly_aliases.lst'
@@ -160,6 +175,7 @@ def main():
     G.check_write_path("src/include/mpi_proto.h")
     dump_Makefile_mk("%s/Makefile.mk" % c_dir)
     dump_mpir_impl_h("src/include/mpir_impl.h")
+    dump_mpir_io_impl_h("src/include/mpir_io_impl.h")
     dump_errnames_txt("%s/errnames.txt" % c_dir)
     dump_qmpi_register_h("src/mpi_t/qmpi_register.h")
     dump_mpi_proto_h("src/include/mpi_proto.h")
