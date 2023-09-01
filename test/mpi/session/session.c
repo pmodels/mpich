@@ -18,7 +18,7 @@
 int errs = 0;
 
 int library_foo_test(void);
-void library_foo_init(void);
+void library_foo_init(int *rank, int *size);
 void library_foo_finalize(void);
 
 int main(int argc, char *argv[])
@@ -85,15 +85,21 @@ int check_thread_level(char *value)
 
 int library_foo_test(void)
 {
-    int rank, size;
+    int rank, size, rc;
 
-    library_foo_init();
+    library_foo_init(&rank, &size);
 
-    MPI_Comm_size(lib_comm, &size);
-    MPI_Comm_rank(lib_comm, &rank);
+    if (errs > 0) {
+        rank = -1;
+        goto fn_exit;
+    }
 
     int sum;
-    MPI_Reduce(&rank, &sum, 1, MPI_INT, MPI_SUM, 0, lib_comm);
+    rc = MPI_Reduce(&rank, &sum, 1, MPI_INT, MPI_SUM, 0, lib_comm);
+    if (rc != MPI_SUCCESS) {
+        printf("Error on reduce\n");
+        errs++;
+    }
     if (rank == 0) {
         if (sum != (size - 1) * size / 2) {
             printf("MPI_Reduce: expect %d, got %d\n", (size - 1) * size / 2, sum);
@@ -101,15 +107,15 @@ int library_foo_test(void)
         }
     }
 
+  fn_exit:
     library_foo_finalize();
 
     return rank;
 }
 
-void library_foo_init(void)
+void library_foo_init(int *rank, int *size)
 {
     int rc, flag;
-    int ret = 0;
     const char pset_name[] = "mpi://WORLD";
     const char mt_key[] = "thread_level";
     const char mt_value[] = "MPI_THREAD_MULTIPLE";
@@ -159,6 +165,8 @@ void library_foo_init(void)
         errs++;
         goto fn_exit;
     }
+    MPI_Comm_size(lib_comm, size);
+    MPI_Comm_rank(lib_comm, rank);
 
     /* free group, library doesn’t need it. */
   fn_exit:
@@ -171,26 +179,27 @@ void library_foo_init(void)
     if (tinfo != MPI_INFO_NULL) {
         MPI_Info_free(&tinfo);
     }
-    if (ret != MPI_SUCCESS) {
-        MPI_Session_finalize(&lib_shandle);
-    }
 }
 
 void library_foo_finalize(void)
 {
     int rc;
 
-    rc = MPI_Comm_free(&lib_comm);
-    if (rc != MPI_SUCCESS) {
-        printf("MPI_Comm_free returned %d\n", rc);
-        errs++;
-        return;
+    if (lib_comm != MPI_COMM_NULL) {
+        rc = MPI_Comm_free(&lib_comm);
+        if (rc != MPI_SUCCESS) {
+            printf("MPI_Comm_free returned %d\n", rc);
+            errs++;
+            return;
+        }
     }
 
-    rc = MPI_Session_finalize(&lib_shandle);
-    if (rc != MPI_SUCCESS) {
-        printf("MPI_Session_finalize returned %d\n", rc);
-        errs++;
-        return;
+    if (lib_shandle != MPI_SESSION_NULL) {
+        rc = MPI_Session_finalize(&lib_shandle);
+        if (rc != MPI_SUCCESS) {
+            printf("MPI_Session_finalize returned %d\n", rc);
+            errs++;
+            return;
+        }
     }
 }
