@@ -29,6 +29,11 @@ int main(int argc, char *argv[])
     MPI_Session session = MPI_SESSION_NULL;
     MPI_Group group = MPI_GROUP_NULL;
     MPI_Comm comm = MPI_COMM_NULL;
+#ifdef WITH_WORLD
+    int provided;
+
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+#endif
 
     ret = MPI_Session_init(MPI_INFO_NULL, MPI_ERRORS_RETURN, &session);
     if (ret != MPI_SUCCESS) {
@@ -117,6 +122,8 @@ int main(int argc, char *argv[])
             printf("%d Errors\n", errs);
         }
     }
-
+#ifdef WITH_WORLD
+    MPI_Finalize();
+#endif
     return errs;
 }
