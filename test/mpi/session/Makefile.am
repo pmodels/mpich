@@ -16,7 +16,8 @@ noinst_PROGRAMS = \
     session_mult_init_with_world \
     session_re_init \
     session_psets \
-    session_self
+    session_self \
+    session_self_with_world
 
 session_mult_init_SOURCES = session.c
 session_mult_init_CPPFLAGS = -DMULT_INIT $(AM_CPPFLAGS)
@@ -24,3 +25,5 @@ session_mult_init_with_world_SOURCES = session.c
 session_mult_init_with_world_CPPFLAGS = -DMULT_INIT -DWITH_WORLD $(AM_CPPFLAGS)
 session_re_init_SOURCES = session.c
 session_re_init_CPPFLAGS = -DRE_INIT $(AM_CPPFLAGS)
+session_self_with_world_SOURCES = session_self.c
+session_self_with_world_CPPFLAGS = -DWITH_WORLD $(AM_CPPFLAGS)
