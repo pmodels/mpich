@@ -4,6 +4,8 @@ session_mult_init 4 arg=5
 session_mult_init_with_world 4
 session_mult_init_with_world 4 arg=5
 session_re_init 4
+session_mod_group 2
+session_mod_group 4
 session_psets 1
 session_psets 4
 session_self 1
