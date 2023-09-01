@@ -1727,6 +1727,9 @@ if test "$enable_pmi1" = "yes"; then
 fi
 if test "$enable_pmi2" = "yes"; then
     AC_DEFINE([ENABLE_PMI2], 1, [Define to enable PMI2 protocol])
+    AC_CHECK_MEMBER([PMI2_keyval_t.key], [], [
+        AC_DEFINE([MISSING_PMI2_KEYVAL_T], 1, [Define if PMI2_KEYVAL_T is missing])
+    ],[[#include "pmi2.h"]])
 fi
 if test "$enable_pmix" = "yes"; then
     AC_DEFINE([ENABLE_PMIX], 1, [Define to enable PMIX protocol])
