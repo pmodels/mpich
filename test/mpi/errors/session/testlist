@@ -1,3 +1,4 @@
 sessioninit 1
 getnthpset 1
 getpsetinfo 1
+comm_create_from_group 1
