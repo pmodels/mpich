@@ -13,6 +13,8 @@ static void pmix_not_supported(const char *elem, char *error_str, int len);
 static int pmix_add_to_info(MPIR_Info * info_ptr, const char *key, const char *pmix_key,
                             MPIR_Info * target_ptr, int *key_found, size_t * counter, char **value);
 static int mpi_to_pmix_keyvals(MPIR_Info * info_ptr, int ninfo, pmix_info_t ** pmix_info);
+static int pmix_build_job_info(MPIR_Info * info_ptr, pmix_info_t ** pmix_job_info,
+                               size_t * njob_info, char **path);
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -504,6 +506,47 @@ int mpi_to_pmix_keyvals(MPIR_Info * info_ptr, int ninfo, pmix_info_t ** pmix_inf
             PMIX_INFO_LOAD(&((*pmix_info)[k]), key, val, PMIX_STRING);
         }
     }
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static
+int pmix_build_job_info(MPIR_Info * info_ptr, pmix_info_t ** pmix_job_info, size_t * njob_info,
+                        char **path)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Info *mpi_job_info;
+    size_t ninfo = 0;
+
+    if (info_ptr == NULL) {
+        goto fn_exit;
+    }
+
+    mpi_errno = MPIR_Info_alloc(&mpi_job_info);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* path - standard key */
+    mpi_errno = pmix_add_to_info(info_ptr, "path", PMIX_PREFIX, mpi_job_info, NULL, &ninfo, path);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* FIXME: There is currently no mapping of the standard key `soft` to a
+     * PMIx key supported by PMIx_Spawn. Once PMIx_Spawn supports soft spawning
+     * we should add the key `soft` here. */
+
+    if (ninfo > 0) {
+        mpi_errno = mpi_to_pmix_keyvals(mpi_job_info, ninfo, pmix_job_info);
+        MPIR_ERR_CHECK(mpi_errno);
+        *njob_info = ninfo;
+    } else {
+        *njob_info = 0;
+        *pmix_job_info = NULL;
+    }
+
+    mpi_errno = MPIR_Info_free_impl(mpi_job_info);
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
