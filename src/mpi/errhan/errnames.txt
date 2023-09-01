@@ -959,6 +959,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **gpu_get_global_dev_ids: gpu_get_global_dev_ids failed
 **gpu_get_buffer_info: gpu_get_buffer_info failed
 **gpu_get_dev_count: gpu_get_dev_count failed
+**gpu_pipeline_packed: GPU pipelining does not support non-contiguous data types
 **mpl_ze_init_device_fds: mpl_ze_init_device_fds failed
 **mpl_ze_mmap_device_ptr:  MPL_ze_mmap_device_pointer failed
 **mpl_gpu_fast_memcpy:  MPL_gpu_fast_memcpy failed

@@ -288,6 +288,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             /* Update sender packed bit if necessary. */
             uint64_t is_packed = datatype == MPI_PACKED ? 1 : 0;
             MPIDI_OFI_idata_set_gpu_packed_bit(&cq_data, is_packed);
+            MPIR_ERR_CHKANDJUMP(is_packed, mpi_errno, MPI_ERR_OTHER, "**gpu_pipeline_packed");
 
             /* Save pipeline information. */
             MPIDI_OFI_REQUEST(sreq, pipeline_info.chunk_sz) = chunk_size;

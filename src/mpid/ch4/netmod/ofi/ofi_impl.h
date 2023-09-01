@@ -1063,55 +1063,8 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
                 DL_DELETE(gpu_queue[vni], task);
                 MPL_free(task);
             } else {
-                MPIR_Assert(task->type == MPIDI_OFI_PIPELINE_RECV ||
-                            task->type == MPIDI_OFI_PIPELINE_RECV_PACKED);
-                int c;
-                MPIR_cc_decr(request->cc_ptr, &c);
-                if (c == 0) {
-                    /* If synchronous, ack and complete when the ack is done */
-                    if (unlikely(MPIDI_OFI_REQUEST(request, pipeline_info.is_sync))) {
-                        uint64_t ss_bits =
-                            MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int
-                                                   (&MPIDI_OFI_REQUEST(request, util_id)),
-                                                   MPIR_Comm_rank(request->comm),
-                                                   request->status.MPI_TAG,
-                                                   MPIDI_OFI_SYNC_SEND_ACK);
-                        MPIR_Comm *comm = request->comm;
-                        int r = request->status.MPI_SOURCE;
-                        int vni_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, comm, r, comm->rank,
-                                                    request->status.MPI_TAG);
-                        int vni_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, r, comm->rank,
-                                                    request->status.MPI_TAG);
-                        int vci_local = vni_dst;
-                        int vci_remote = vni_src;
-                        int nic = 0;
-                        int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
-                        MPIDI_OFI_CALL_RETRY(fi_tinjectdata
-                                             (MPIDI_OFI_global.ctx[ctx_idx].tx, NULL /* buf */ ,
-                                              0 /* len */ ,
-                                              MPIR_Comm_rank(comm),
-                                              MPIDI_OFI_comm_to_phys(comm, r, nic,
-                                                                     vci_remote), ss_bits),
-                                             vci_local, tinjectdata);
-                    }
-
-                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(request, datatype));
-                    /* Set number of bytes in status. */
-                    MPIR_STATUS_SET_COUNT(request->status,
-                                          MPIDI_OFI_REQUEST(request, pipeline_info.offset));
-
-                    MPIR_Request_free(request);
-                }
-
-                /* For recv, now task can be deleted from DL. */
-                DL_DELETE(gpu_queue[vni], task);
-                /* Free host buffer, yaksa request and task. */
-                if (task->type == MPIDI_OFI_PIPELINE_RECV)
-                    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool,
-                                                      task->buf);
-                else
-                    MPIDI_OFI_gpu_free_pack_buffer(task->buf);
-                MPL_free(task);
+                MPID_Abort(NULL, MPI_ERR_OTHER, 1,
+                           "ERROR: packed data type not supported, aborting");
             }
         } else {
             goto fn_exit;
