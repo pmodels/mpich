@@ -13,6 +13,7 @@ EXTRA_DIST = testlist
 noinst_PROGRAMS = \
     session       \
     session_mult_init \
+    session_mult_init_with_world \
     session_re_init \
     session_psets \
     session_self \
@@ -20,5 +21,7 @@ noinst_PROGRAMS = \
 
 session_mult_init_SOURCES = session.c
 session_mult_init_CPPFLAGS = -DMULT_INIT $(AM_CPPFLAGS)
+session_mult_init_with_world_SOURCES = session.c
+session_mult_init_with_world_CPPFLAGS = -DMULT_INIT -DWITH_WORLD $(AM_CPPFLAGS)
 session_re_init_SOURCES = session.c
 session_re_init_CPPFLAGS = -DRE_INIT $(AM_CPPFLAGS)
