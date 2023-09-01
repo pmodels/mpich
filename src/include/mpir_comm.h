@@ -463,5 +463,9 @@ int MPIR_init_icomm_world(void);
 #endif
 int MPIR_finalize_builtin_comms(void);
 
+#define MPIR_COMM_TMP_SESSION_CTXID (3 << MPIR_CONTEXT_PREFIX_SHIFT)
+
 void MPIR_Comm_set_session_ptr(MPIR_Comm * comm_ptr, MPIR_Session * session_ptr);
+int MPIR_Comm_create_group_session(MPIR_Group * group_ptr, int tag, MPIR_Comm ** newcomm_ptr);
+
 #endif /* MPIR_COMM_H_INCLUDED */
