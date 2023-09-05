@@ -74,7 +74,8 @@ static bool pmi2_get_jobattr(const char *key, char *valbuf)
 {
     if (strcmp(key, "PMI_dead_processes") == 0) {
         int out_len;
-        int pmi_errno = PMI2_KVS_Get(pmi_kvs_name, PMI2_ID_NULL, key, valbuf, pmi_max_val_size, &out_len);
+        int pmi_errno =
+            PMI2_KVS_Get(pmi_kvs_name, PMI2_ID_NULL, key, valbuf, pmi_max_val_size, &out_len);
         if (pmi_errno != PMI2_SUCCESS || out_len == 0) {
             return false;
         }
@@ -181,7 +182,9 @@ static int pmi2_get_universe_size(int *universe_size)
     goto fn_exit;
 }
 
-static int pmi2_spawn(int count, char *commands[], char **argvs[], const int maxprocs[], MPIR_Info * info_ptrs[], int num_preput_keyval, struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
+static int pmi2_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
+                      MPIR_Info * info_ptrs[], int num_preput_keyval,
+                      struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -282,7 +285,7 @@ static int pmi2_unpublish(const char name[])
     goto fn_exit;
 }
 
-#else  /* ENABLE_PMI2 */
+#else /* ENABLE_PMI2 */
 
 static int pmi2_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -345,7 +348,9 @@ static int pmi2_get_universe_size(int *universe_size)
     return MPI_ERR_INTERN;
 }
 
-static int pmi2_spawn(int count, char *commands[], char **argvs[], const int maxprocs[], MPIR_Info * info_ptrs[], int num_preput_keyval, struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
+static int pmi2_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
+                      MPIR_Info * info_ptrs[], int num_preput_keyval,
+                      struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
 {
     return MPI_ERR_INTERN;
 }

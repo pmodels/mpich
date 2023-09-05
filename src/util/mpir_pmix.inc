@@ -34,6 +34,8 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
         PMIX_PROC_CONSTRUCT(&pmix_wcproc);
         MPL_strncpy(pmix_wcproc.nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
         pmix_wcproc.rank = PMIX_RANK_WILDCARD;
+
+        pmi_kvs_name = MPL_strdup(pmix_proc.nspace);
     }
 
     *rank = pmix_proc.rank;
@@ -42,14 +44,6 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_get", "**pmix_get %d", pmi_errno);
     *size = pvalue->data.uint32;
-    PMIX_VALUE_RELEASE(pvalue);
-
-    /* PMIX_JOBID seems to be more supported than PMIX_NSPACE */
-    /* TODO: fallback in case the key is not supported */
-    pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_JOBID, NULL, 0, &pvalue);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                         "**pmix_get", "**pmix_get %d", pmi_errno);
-    pmi_kvs_name = MPL_strdup(pvalue->data.string);
     PMIX_VALUE_RELEASE(pvalue);
 
   fn_exit:
@@ -291,7 +285,9 @@ static int pmix_get_universe_size(int *universe_size)
     goto fn_exit;
 }
 
-static int pmix_spawn(int count, char *commands[], char **argvs[], const int maxprocs[], MPIR_Info * info_ptrs[], int num_preput_keyval, struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
+static int pmix_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
+                      MPIR_Info * info_ptrs[], int num_preput_keyval,
+                      struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
 {
     /* not supported yet */
     return MPI_ERR_INTERN;
@@ -345,7 +341,7 @@ static int pmix_unpublish(const char name[])
     return MPI_SUCCESS;
 }
 
-#else  /* ENABLE_PMIX */
+#else /* ENABLE_PMIX */
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -418,7 +414,9 @@ static int pmix_get_universe_size(int *universe_size)
     return MPI_ERR_INTERN;
 }
 
-static int pmix_spawn(int count, char *commands[], char **argvs[], const int maxprocs[], MPIR_Info * info_ptrs[], int num_preput_keyval, struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
+static int pmix_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
+                      MPIR_Info * info_ptrs[], int num_preput_keyval,
+                      struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
 {
     return MPI_ERR_INTERN;
 }
@@ -478,4 +476,3 @@ static int pmix_build_nodemap(int *nodemap, int sz)
     goto fn_exit;
 #endif
 }
-
