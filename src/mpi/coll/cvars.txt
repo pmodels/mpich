@@ -221,10 +221,64 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Tree type for tree based ibcast
+        Tree type for tree based bcast
         kary      - kary tree type
         knomial_1 - knomial_1 tree type
         knomial_2 - knomial_2 tree type
+        topology_aware - topology_aware tree type
+        topology_aware_k - topology_aware tree type with branching factor k
+        topology_wave - topology_wave tree type
+
+    - name        : MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls if the leaders are reordered based on the number of ranks in each group.
+
+    - name        : MPIR_CVAR_BCAST_TOPO_OVERHEAD
+      category    : COLLECTIVE
+      type        : int
+      default     : 200
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the size of the overhead.
+
+    - name        : MPIR_CVAR_BCAST_TOPO_DIFF_GROUPS
+      category    : COLLECTIVE
+      type        : int
+      default     : 2800
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency between different groups.
+
+    - name        : MPIR_CVAR_BCAST_TOPO_DIFF_SWITCHES
+      category    : COLLECTIVE
+      type        : int
+      default     : 1900
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency between different switches
+        in the same groups.
+
+    - name        : MPIR_CVAR_BCAST_TOPO_SAME_SWITCHES
+      category    : COLLECTIVE
+      type        : int
+      default     : 1600
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency in the same switch.
 
     - name        : MPIR_CVAR_BCAST_IS_NON_BLOCKING
       category    : COLLECTIVE
@@ -1185,6 +1239,60 @@ cvars:
         kary      - kary tree
         knomial_1 - knomial_1 tree
         knomial_2 - knomial_2 tree
+        topology_aware - topology_aware tree type
+        topology_aware_k - topology_aware tree type with branching factor k
+        topology_wave - topology_wave tree type
+
+    - name        : MPIR_CVAR_IREDUCE_TOPO_REORDER_ENABLE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls if the leaders are reordered based on the number of ranks in each group.
+
+    - name        : MPIR_CVAR_IREDUCE_TOPO_OVERHEAD
+      category    : COLLECTIVE
+      type        : int
+      default     : 200
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the size of the overhead.
+
+    - name        : MPIR_CVAR_IREDUCE_TOPO_DIFF_GROUPS
+      category    : COLLECTIVE
+      type        : int
+      default     : 2800
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency between different groups.
+
+    - name        : MPIR_CVAR_IREDUCE_TOPO_DIFF_SWITCHES
+      category    : COLLECTIVE
+      type        : int
+      default     : 1900
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency between different switches
+        in the same groups.
+
+    - name        : MPIR_CVAR_IREDUCE_TOPO_SAME_SWITCHES
+      category    : COLLECTIVE
+      type        : int
+      default     : 1600
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency in the same switch.
 
     - name        : MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE
       category    : COLLECTIVE
@@ -1307,6 +1415,9 @@ cvars:
         kary      - kary tree type
         knomial_1 - knomial_1 tree type (tree grows starting from the left of the root)
         knomial_2 - knomial_2 tree type (tree grows starting from the right of the root)
+        topology_aware - topology_aware tree type
+        topology_aware_k - topology_aware tree type with branching factor k
+        topology_wave - topology_wave tree type
 
     - name        : MPIR_CVAR_ALLREDUCE_TREE_KVAL
       category    : COLLECTIVE
@@ -1317,6 +1428,57 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Indicates the branching factor for kary or knomial trees.
+
+    - name        : MPIR_CVAR_ALLREDUCE_TOPO_REORDER_ENABLE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls if the leaders are reordered based on the number of ranks in each group.
+
+    - name        : MPIR_CVAR_ALLREDUCE_TOPO_OVERHEAD
+      category    : COLLECTIVE
+      type        : int
+      default     : 200
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the size of the overhead.
+
+    - name        : MPIR_CVAR_ALLREDUCE_TOPO_DIFF_GROUPS
+      category    : COLLECTIVE
+      type        : int
+      default     : 2800
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency between different groups.
+
+    - name        : MPIR_CVAR_ALLREDUCE_TOPO_DIFF_SWITCHES
+      category    : COLLECTIVE
+      type        : int
+      default     : 1900
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency between different switches
+        in the same groups.
+
+    - name        : MPIR_CVAR_ALLREDUCE_TOPO_SAME_SWITCHES
+      category    : COLLECTIVE
+      type        : int
+      default     : 1600
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the latency in the same switch.
 
     - name        : MPIR_CVAR_ALLREDUCE_TREE_PIPELINE_CHUNK_SIZE
       category    : COLLECTIVE

@@ -18,6 +18,9 @@ typedef enum MPIR_Tree_type_t {
     MPIR_TREE_TYPE_KARY = 0,
     MPIR_TREE_TYPE_KNOMIAL_1,
     MPIR_TREE_TYPE_KNOMIAL_2,
+    MPIR_TREE_TYPE_TOPOLOGY_AWARE,
+    MPIR_TREE_TYPE_TOPOLOGY_AWARE_K,
+    MPIR_TREE_TYPE_TOPOLOGY_WAVE,
 } MPIR_Tree_type_t;
 
 /* enumerator for different recexch types */

@@ -53,6 +53,49 @@ cvars:
       description : >-
         Defines the location of tuning file.
 
+    - name        : MPIR_CVAR_HIERARCHY_DUMP
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, each rank will dump the hierarchy data structure to a file named "hierarchy[rank]" in the current folder.
+        If set to false, the hierarchy data structure will not be dumped.
+
+    - name        : MPIR_CVAR_COORDINATES_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of the input coordinates file.
+
+    - name        : MPIR_CVAR_COLL_TREE_DUMP
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, each rank will dump the tree to a file named "colltree[rank].json" in the current folder.
+        If set to false, the tree will not be dumped.
+
+    - name        : MPIR_CVAR_COORDINATES_DUMP
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, rank 0 will dump the network coordinates to a file named "coords" in the current folder.
+        If set to false, the network coordinates will not be dumped.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -65,55 +108,58 @@ MPIR_Tree_type_t MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 void *MPIR_Csel_root = NULL;
 
+static MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
+{
+    MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
+    if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "kary"))
+        tree_type = MPIR_TREE_TYPE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_1"))
+        tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_2"))
+        tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else
+        tree_type = MPIR_TREE_TYPE_KARY;
+    return tree_type;
+}
+
+static MPIR_Tree_type_t get_tree_type_from_string_with_topo(const char *tree_str)
+{
+    MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
+    if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "kary"))
+        tree_type = MPIR_TREE_TYPE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_1"))
+        tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_2"))
+        tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "topology_aware"))
+        tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "topology_aware_k"))
+        tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "topology_wave"))
+        tree_type = MPIR_TREE_TYPE_TOPOLOGY_WAVE;
+    else
+        tree_type = MPIR_TREE_TYPE_KARY;
+    return tree_type;
+}
+
 int MPII_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
     /* Iallreduce */
-    if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "kary"))
-        MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KARY;
-    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "knomial_1"))
-        MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_TREE_TYPE, "knomial_2"))
-        MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
+    MPIR_Iallreduce_tree_type = get_tree_type_from_string(MPIR_CVAR_IALLREDUCE_TREE_TYPE);
 
     /* Allreduce */
-    if (0 == strcmp(MPIR_CVAR_ALLREDUCE_TREE_TYPE, "knomial_1"))
-        MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(MPIR_CVAR_ALLREDUCE_TREE_TYPE, "knomial_2"))
-        MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
-    else
-        MPIR_Allreduce_tree_type = MPIR_TREE_TYPE_KARY;
+    MPIR_Allreduce_tree_type = get_tree_type_from_string_with_topo(MPIR_CVAR_ALLREDUCE_TREE_TYPE);
 
     /* Ibcast */
-    if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "kary"))
-        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
-    else if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "knomial_1"))
-        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(MPIR_CVAR_IBCAST_TREE_TYPE, "knomial_2"))
-        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
-    else
-        MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
+    MPIR_Ibcast_tree_type = get_tree_type_from_string(MPIR_CVAR_IBCAST_TREE_TYPE);
 
     /* Bcast */
-    if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "kary"))
-        MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_1"))
-        MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_2"))
-        MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
-    else
-        MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
+    MPIR_Bcast_tree_type = get_tree_type_from_string_with_topo(MPIR_CVAR_BCAST_TREE_TYPE);
 
     /* Ireduce */
-    if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "kary"))
-        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
-    else if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "knomial_1"))
-        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(MPIR_CVAR_IREDUCE_TREE_TYPE, "knomial_2"))
-        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
-    else
-        MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
+    MPIR_Ireduce_tree_type = get_tree_type_from_string_with_topo(MPIR_CVAR_IREDUCE_TREE_TYPE);
 
     /* register non blocking collectives progress hook */
     mpi_errno = MPIR_Progress_hook_register(MPIDU_Sched_progress, &MPIR_Nbc_progress_hook_id);
