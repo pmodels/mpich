@@ -84,13 +84,53 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
 
     switch (tree_type) {
         case MPIR_TREE_TYPE_TOPOLOGY_AWARE:
-            mpi_errno = MPII_Treeutil_tree_topology_aware_init(comm, k, root, enable_reorder, ct);
-            MPIR_ERR_CHECK(mpi_errno);
+            if (!comm->coll.topo_aware_tree || root != comm->coll.topo_aware_tree_root) {
+                if (comm->coll.topo_aware_tree) {
+                    MPIR_Treealgo_tree_free(comm->coll.topo_aware_tree);
+                } else {
+                    comm->coll.topo_aware_tree =
+                        (MPIR_Treealgo_tree_t *) MPL_malloc(sizeof(MPIR_Treealgo_tree_t),
+                                                            MPL_MEM_BUFFER);
+                }
+                mpi_errno =
+                    MPII_Treeutil_tree_topology_aware_init(comm, k, root, enable_reorder,
+                                                           comm->coll.topo_aware_tree);
+                MPIR_ERR_CHECK(mpi_errno);
+                *ct = *comm->coll.topo_aware_tree;
+                comm->coll.topo_aware_tree_root = root;
+            }
+            *ct = *comm->coll.topo_aware_tree;
+            utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
+            for (int i = 0; i < ct->num_children; i++) {
+                utarray_push_back(ct->children,
+                                  &ut_int_array(comm->coll.topo_aware_tree->children)[i],
+                                  MPL_MEM_COLL);
+            }
             break;
 
         case MPIR_TREE_TYPE_TOPOLOGY_AWARE_K:
-            mpi_errno = MPII_Treeutil_tree_topology_aware_k_init(comm, k, root, enable_reorder, ct);
-            MPIR_ERR_CHECK(mpi_errno);
+            if (!comm->coll.topo_aware_k_tree || root != comm->coll.topo_aware_k_tree_root) {
+                if (comm->coll.topo_aware_k_tree) {
+                    MPIR_Treealgo_tree_free(comm->coll.topo_aware_k_tree);
+                } else {
+                    comm->coll.topo_aware_k_tree =
+                        (MPIR_Treealgo_tree_t *) MPL_malloc(sizeof(MPIR_Treealgo_tree_t),
+                                                            MPL_MEM_BUFFER);
+                }
+                mpi_errno =
+                    MPII_Treeutil_tree_topology_aware_k_init(comm, k, root, enable_reorder,
+                                                             comm->coll.topo_aware_k_tree);
+                MPIR_ERR_CHECK(mpi_errno);
+                *ct = *comm->coll.topo_aware_k_tree;
+                comm->coll.topo_aware_k_tree_root = root;
+            }
+            *ct = *comm->coll.topo_aware_k_tree;
+            utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
+            for (int i = 0; i < ct->num_children; i++) {
+                utarray_push_back(ct->children,
+                                  &ut_int_array(comm->coll.topo_aware_k_tree->children)[i],
+                                  MPL_MEM_COLL);
+            }
             break;
 
         default:
@@ -120,11 +160,27 @@ int MPIR_Treealgo_tree_create_topo_wave(MPIR_Comm * comm, int k, int root,
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno =
-        MPII_Treeutil_tree_topology_wave_init(comm, k, root, enable_reorder, overhead,
-                                              lat_diff_groups, lat_diff_switches, lat_same_switches,
-                                              ct);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (!comm->coll.topo_wave_tree || root != comm->coll.topo_wave_tree_root) {
+        if (comm->coll.topo_wave_tree) {
+            MPIR_Treealgo_tree_free(comm->coll.topo_wave_tree);
+        } else {
+            comm->coll.topo_wave_tree =
+                (MPIR_Treealgo_tree_t *) MPL_malloc(sizeof(MPIR_Treealgo_tree_t), MPL_MEM_BUFFER);
+        }
+        mpi_errno = MPII_Treeutil_tree_topology_wave_init(comm, k, root, enable_reorder, overhead,
+                                                          lat_diff_groups, lat_diff_switches,
+                                                          lat_same_switches,
+                                                          comm->coll.topo_wave_tree);
+        MPIR_ERR_CHECK(mpi_errno);
+        *ct = *comm->coll.topo_wave_tree;
+        comm->coll.topo_wave_tree_root = root;
+    }
+    *ct = *comm->coll.topo_wave_tree;
+    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
+    for (int i = 0; i < ct->num_children; i++) {
+        utarray_push_back(ct->children,
+                          &ut_int_array(comm->coll.topo_wave_tree->children)[i], MPL_MEM_COLL);
+    }
 
     MPIR_FUNC_EXIT;
 
