@@ -35,64 +35,18 @@ Input Parameters:
 @*/
 int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
 {
-    ADIO_Fcntl_t *fcntl_struct;
-    int error_code = 0, mynod = 0;
-    ADIO_File adio_fh;
-    static char myname[] = "MPI_FILE_PREALLOCATE";
-    MPI_Offset tmp_sz, max_sz, min_sz;
-
+    int error_code;
     ROMIO_THREAD_CS_ENTER();
 
-    adio_fh = MPIO_File_resolve(fh);
-
-    /* --BEGIN ERROR HANDLING-- */
-    MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
-
-    if (size < 0) {
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, __LINE__, MPI_ERR_ARG, "**iobadsize", 0);
-        error_code = MPIO_Err_return_file(adio_fh, error_code);
-        goto fn_exit;
+    error_code = MPIR_File_preallocate_impl(fh, size);
+    if (error_code) {
+        goto fn_fail;
     }
-
-    tmp_sz = size;
-    MPI_Allreduce(&tmp_sz, &max_sz, 1, ADIO_OFFSET, MPI_MAX, adio_fh->comm);
-    MPI_Allreduce(&tmp_sz, &min_sz, 1, ADIO_OFFSET, MPI_MIN, adio_fh->comm);
-
-    if (max_sz != min_sz) {
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, __LINE__, MPI_ERR_ARG, "**notsame", 0);
-        error_code = MPIO_Err_return_file(adio_fh, error_code);
-        goto fn_exit;
-    }
-    /* --END ERROR HANDLING-- */
-
-    if (size == 0)
-        goto fn_exit;
-
-    ADIOI_TEST_DEFERRED(adio_fh, myname, &error_code);
-
-    MPI_Comm_rank(adio_fh->comm, &mynod);
-    if (!mynod) {
-        fcntl_struct = (ADIO_Fcntl_t *) ADIOI_Malloc(sizeof(ADIO_Fcntl_t));
-        fcntl_struct->diskspace = size;
-        ADIO_Fcntl(adio_fh, ADIO_FCNTL_SET_DISKSPACE, fcntl_struct, &error_code);
-        ADIOI_Free(fcntl_struct);
-        /* --BEGIN ERROR HANDLING-- */
-        if (error_code != MPI_SUCCESS)
-            error_code = MPIO_Err_return_file(adio_fh, error_code);
-        /* --END ERROR HANDLING-- */
-    }
-    MPI_Barrier(adio_fh->comm);
-
-
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
-
-    /* TODO: bcast result? */
-    if (!mynod)
-        return error_code;
-    else
-        return MPI_SUCCESS;
+    return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }

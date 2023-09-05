@@ -35,29 +35,17 @@ Input Parameters:
 int MPI_File_sync(MPI_File fh)
 {
     int error_code;
-    ADIO_File adio_fh;
-    static char myname[] = "MPI_FILE_SYNC";
     ROMIO_THREAD_CS_ENTER();
 
-    adio_fh = MPIO_File_resolve(fh);
-    /* --BEGIN ERROR HANDLING-- */
-    if ((adio_fh == NULL) || ((adio_fh)->cookie != ADIOI_FILE_COOKIE)) {
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, __LINE__, MPI_ERR_ARG, "**iobadfh", 0);
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-        goto fn_exit;
+    error_code = MPIR_File_sync_impl(fh);
+    if (error_code) {
+        goto fn_fail;
     }
-    MPIO_CHECK_WRITABLE(fh, myname, error_code);
-    /* --END ERROR HANDLING-- */
-
-    ADIO_Flush(adio_fh, &error_code);
-    /* --BEGIN ERROR HANDLING-- */
-    if (error_code != MPI_SUCCESS)
-        error_code = MPIO_Err_return_file(adio_fh, error_code);
-    /* --END ERROR HANDLING-- */
-
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }

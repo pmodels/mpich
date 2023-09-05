@@ -39,25 +39,17 @@ Output Parameters:
 int MPI_File_get_group(MPI_File fh, MPI_Group * group)
 {
     int error_code;
-    ADIO_File adio_fh;
-    static char myname[] = "MPI_FILE_GET_GROUP";
-
     ROMIO_THREAD_CS_ENTER();
 
-    adio_fh = MPIO_File_resolve(fh);
-
-    /* --BEGIN ERROR HANDLING-- */
-    MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
-    /* --END ERROR HANDLING-- */
-
-
-    /* note: this will return the group of processes that called open, but
-     * with deferred open this might not be the group of processes that
-     * actually opened the file from the file system's perspective
-     */
-    error_code = MPI_Comm_group(adio_fh->comm, group);
+    error_code = MPIR_File_get_group_impl(fh, group);
+    if (error_code) {
+        goto fn_fail;
+    }
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }

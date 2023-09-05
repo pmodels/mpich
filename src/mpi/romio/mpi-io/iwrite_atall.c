@@ -63,12 +63,19 @@ int MPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf
                            int count, MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code;
-    static char myname[] = "MPI_FILE_IWRITE_AT_ALL";
+    ROMIO_THREAD_CS_ENTER();
 
-    error_code = MPIOI_File_iwrite_all(fh, offset, ADIO_EXPLICIT_OFFSET,
-                                       buf, count, datatype, myname, request);
+    error_code = MPIR_File_iwrite_at_all_impl(fh, offset, buf, count, datatype, request);
+    if (error_code) {
+        goto fn_fail;
+    }
 
+  fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }
 
 /* large count function */
@@ -97,10 +104,17 @@ int MPI_File_iwrite_at_all_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *b
                              MPI_Count count, MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code;
-    static char myname[] = "MPI_FILE_IWRITE_AT_ALL";
+    ROMIO_THREAD_CS_ENTER();
 
-    error_code = MPIOI_File_iwrite_all(fh, offset, ADIO_EXPLICIT_OFFSET,
-                                       buf, count, datatype, myname, request);
+    error_code = MPIR_File_iwrite_at_all_impl(fh, offset, buf, count, datatype, request);
+    if (error_code) {
+        goto fn_fail;
+    }
 
+  fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }
