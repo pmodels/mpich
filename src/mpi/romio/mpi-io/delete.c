@@ -35,53 +35,19 @@ Input Parameters:
 @*/
 int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 {
-    int error_code, file_system, known_fstype;
-    char *tmp;
-    ADIOI_Fns *fsops;
-
-    MPL_UNREFERENCED_ARG(info);
+    int error_code;
 
     ROMIO_THREAD_CS_ENTER();
 
-    MPIR_MPIOInit(&error_code);
-    if (error_code != MPI_SUCCESS)
-        goto fn_exit;
-
-    /* resolve file system type from file name; this is a collective call */
-    known_fstype = ADIO_ResolveFileType(MPI_COMM_SELF, filename, &file_system, &fsops, &error_code);
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (error_code != MPI_SUCCESS) {
-        /* ADIO_ResolveFileType() will print as informative a message as it
-         * possibly can or call MPIR_Err_setmsg.  We just need to propagate
-         * the error up.  In the PRINT_ERR_MSG case MPI_Abort has already
-         * been called as well, so we probably didn't even make it this far.
-         */
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-        goto fn_exit;
+    error_code = MPIR_File_delete_impl(filename, info);
+    if (error_code) {
+        goto fn_fail;
     }
-    /* --END ERROR HANDLING-- */
-
-    if (known_fstype) {
-        /* filename contains a known file system type prefix, such as "ufs:".
-         * skip prefixes on file names if they have more than one character;
-         * single-character prefixes are assumed to be windows drive
-         * specifications (e.g. c:\foo) and are left alone.
-         */
-        tmp = strchr(filename, ':');
-        if (tmp > filename + 1)
-            filename = tmp + 1;
-    }
-
-    /* call the fs-specific delete function */
-    (fsops->ADIOI_xxx_Delete) (filename, &error_code);
-    /* --BEGIN ERROR HANDLING-- */
-    if (error_code != MPI_SUCCESS)
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-    /* --END ERROR HANDLING-- */
-
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+    goto fn_exit;
 }

@@ -37,18 +37,16 @@ Output Parameters:
 @*/
 int MPI_File_get_amode(MPI_File fh, int *amode)
 {
-    int error_code = MPI_SUCCESS;
-    static char myname[] = "MPI_FILE_GET_AMODE";
-    ADIO_File adio_fh;
+    int error_code;
 
-    adio_fh = MPIO_File_resolve(fh);
-
-    /* --BEGIN ERROR HANDLING-- */
-    MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
-    /* --END ERROR HANDLING-- */
-
-    *amode = adio_fh->orig_access_mode;
+    error_code = MPIR_File_get_amode_impl(fh, amode);
+    if (error_code) {
+        goto fn_fail;
+    }
 
   fn_exit:
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }
