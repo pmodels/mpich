@@ -49,6 +49,7 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, INFO_TYPE ** kv_ptr, int *nk
 static int get_info_kv_vectors(int count, MPIR_Info * info_ptrs[],
                                INFO_TYPE *** kv_vectors, int **kv_sizes);
 static void free_pmi_keyvals(INFO_TYPE ** kv, int size, int *counts);
+static int parse_coord_file(const char *file);
 
 static int pmi_version = 1;
 static int pmi_subversion = 1;
@@ -164,6 +165,27 @@ int MPIR_pmi_init(void)
     /* allocate and populate MPIR_Process.node_local_map and MPIR_Process.node_root_map */
     mpi_errno = MPIR_build_locality();
 
+    if (strcmp(MPIR_CVAR_COORDINATES_FILE, "")) {
+        mpi_errno = parse_coord_file(MPIR_CVAR_COORDINATES_FILE);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    /* rank 0 dumps coordinates for debugging */
+    if (rank == 0) {
+        if (MPIR_CVAR_COORDINATES_DUMP) {
+            FILE *outfile = fopen("coords", "w");
+            for (int i = 0; i < size; i++) {
+                fprintf(outfile, "%d:", i);
+                for (int j = 0; j < MPIR_Process.coords_dims; j++) {
+                    fprintf(outfile, " %d", MPIR_Process.coords[i * MPIR_Process.coords_dims +
+                                                                MPIR_Process.coords_dims - 1 - j]);
+                }
+                fprintf(outfile, "\n");
+            }
+            fclose(outfile);
+        }
+    }
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -183,6 +205,7 @@ void MPIR_pmi_finalize(void)
 
     MPL_free(hwloc_topology_xmlfile);
     hwloc_topology_xmlfile = NULL;
+    MPL_free(MPIR_Process.coords);
 }
 
 void MPIR_pmi_abort(int exit_code, const char *error_msg)
@@ -805,4 +828,77 @@ static void free_pmi_keyvals(INFO_TYPE ** kv, int size, int *counts)
         MPL_free(kv);
         MPL_free(counts);
     }
+}
+
+/* This function parse the coord file specified in MPIR_CVAR_COORDINATES_FILE.
+ * An example coord file would be:
+ * # rank: group id, switch id, port number (this line will be skipped)
+ * 0: 1 7 -1
+ * 1: 1 10 -1
+ * ....
+ */
+static int parse_coord_file(const char *filename)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, j, rank;
+    FILE *coords_file;
+
+    coords_file = fopen(filename, "r");
+    MPIR_ERR_CHKANDJUMP1(NULL == coords_file, mpi_errno, MPI_ERR_FILE,
+                         "**filenoexist", "**filenoexist %s", filename);
+
+    /* Skip the first line */
+    fscanf(coords_file, "%*[^\n]\n");
+    MPIR_Process.coords_dims = 0;
+    fscanf(coords_file, "%d:", &rank);
+    while (!feof(coords_file)) {
+        int temp = 0;
+        if (fscanf(coords_file, "%d", &temp) == 1)
+            ++MPIR_Process.coords_dims;
+        else
+            break;
+        if (fgetc(coords_file) == '\n')
+            break;
+    }
+
+    MPIR_Assert(MPIR_Process.coords_dims == 3);
+    rewind(coords_file);
+    /* Skip the first line */
+    fscanf(coords_file, "%*[^\n]\n");
+
+    if (MPIR_Process.coords == NULL) {
+        MPIR_Process.coords =
+            MPL_malloc(MPIR_Process.coords_dims * sizeof(int) * MPIR_Process.size, MPL_MEM_COLL);
+    }
+    memset(MPIR_Process.coords, -1, MPIR_Process.coords_dims * sizeof(int) * MPIR_Process.size);
+
+    for (i = 0; i < MPIR_Process.size; ++i) {
+        int fields_scanned = fscanf(coords_file, "%d:", &rank);
+        MPIR_ERR_CHKANDSTMT2(1 != fields_scanned, mpi_errno, MPI_ERR_FILE, goto fn_fail_read,
+                             "**read_file", "**read_file %s %s", filename, strerror(errno));
+        if (rank >= MPIR_Process.size) {
+            if (MPIR_Process.rank == 0)
+                fprintf(stderr, "Warning: rank=%d is outside commsize=%d\n",
+                        rank, MPIR_Process.size);
+            continue;
+        }
+        for (j = 0; j < MPIR_Process.coords_dims; ++j) {
+            /* MPIR_Process.coords stores the coords in this order: port number, switch_id, group_id */
+            fields_scanned =
+                fscanf(coords_file, "%d",
+                       &MPIR_Process.coords[rank * MPIR_Process.coords_dims +
+                                            MPIR_Process.coords_dims - 1 - j]);
+            MPIR_ERR_CHKANDSTMT2(1 != fields_scanned, mpi_errno, MPI_ERR_FILE, goto fn_fail_read,
+                                 "**read_file", "**read_file %s %s", filename, strerror(errno));
+        }
+    }
+    fclose(coords_file);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+  fn_fail_read:
+    fclose(coords_file);
+    goto fn_fail;
 }

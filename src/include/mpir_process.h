@@ -55,6 +55,12 @@ typedef struct MPIR_Process_t {
      * If this pointer is null, the default routine is used */
     int (*dimsCreate) (int, int, int *);
 
+    /* The topology aware routines:
+     * coords - array which stores network coordinate values.
+     * coords_dims - stores requested number of dimensions in the specified network.*/
+    int *coords;
+    int coords_dims;
+
     /* Attribute dup functions.  Here for lazy initialization */
     int (*attr_dup) (int, MPIR_Attribute *, MPIR_Attribute **);
     int (*attr_free) (int, MPIR_Attribute **);
