@@ -1472,6 +1472,7 @@ AC_ARG_WITH(pmi, [
                       pmi1 - use PMIv1 (default)
                       pmi2 - use PMI2
                       pmix - use PMIx
+                      [PATH] - use the libpmi.so specified in the path
 ],, with_pmi=pmi1)
 
 AC_ARG_WITH(pmilib, [
@@ -1500,12 +1501,6 @@ case "$with_pmi" in
     # deprecate
     with_pmi=pmi1
     with_pmilib=slurm
-    with_pm=no
-    ;;
-  oldcray)
-    # deprecate
-    with_pmi=pmi1
-    with_pmilib=oldcray
     with_pm=no
     ;;
   *)
@@ -1658,29 +1653,6 @@ case "$with_pmilib" in
                      PAC_PREPEND_FLAG([-lpmi2], [WRAPPER_LIBS])],
                     [AC_MSG_ERROR([could not find the Slurm libpmi2.  Configure aborted])])
         AC_DEFINE([USE_PMI2_SLURM], 1, [Define if using Slurm PMI 2])
-    fi
-    ;;
-  oldcray)
-    # deprecate
-    PAC_PREPEND_FLAG([$CRAY_PMI_INCLUDE_OPTS], [CPPFLAGS])
-    PAC_PREPEND_FLAG([$CRAY_PMI_POST_LINK_OPTS], [LDFLAGS])
-
-    AC_CHECK_HEADER([pmi.h], [], [AC_MSG_ERROR([could not find pmi.h.  Configure aborted])])
-    AC_CHECK_LIB([pmi], [PMI_Init], [craypmi_libpmi=yes], [craypmi_libpmi=no])
-
-    if test "X$craypmi_libpmi" = "Xyes"; then
-        PAC_APPEND_FLAG([-lpmi], [WRAPPER_LIBS])
-    else
-        AC_CHECK_LIB([pmi2], [PMI_Init], [craypmi_libpmi2=yes], [craypmi_libpmi2=no])
-        if test "X$craypmi_libpmi2" = "Xyes"; then
-            PAC_APPEND_FLAG([-lpmi2], [WRAPPER_LIBS])
-        else
-            AC_MSG_ERROR([could not find the cray libpmi.  Configure aborted])
-        fi
-    fi
-
-    if test "$with_pmi" = "pmi2" ; then
-        AC_DEFINE([USE_PMI2_CRAY], 1, [Define if using CRAY PMI 2])
     fi
     ;;
   bgq)
