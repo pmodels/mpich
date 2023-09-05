@@ -1524,17 +1524,6 @@ if test "$pac_have_pmix" = "yes" ; then
     with_pm=no
 fi
 
-# --- $with_pmi ----
-
-case "$with_pmi" in
-  pmi2)  
-    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
-    ;;
-  pmix)  
-    AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
-    ;;
-esac
-
 # --- $with_pm ----
 
 if test "$with_pm" = "none" ; then

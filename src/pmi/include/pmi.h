@@ -9,10 +9,6 @@
 #define PMI_VERSION    1
 #define PMI_SUBVERSION 1
 
-#ifdef USE_PMI2_API
-#error This header file defines the PMI v1 API, but PMI2 was selected
-#endif
-
 /* prototypes for the PMI interface in MPICH */
 
 #if defined(__cplusplus)
