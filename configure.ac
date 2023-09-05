@@ -1511,21 +1511,20 @@ case "$with_pmi" in
   *)
     # allow user to specify an external libpmi
     PAC_CHECK_HEADER_LIB_FATAL([pmi], [pmi.h], [pmi], [PMI_Init])
-    # assume using PMI-1
     with_pmi=pmi1
     with_pmilib=no
+    with_pm=no
     ;;
 esac
 
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmi2, pmi2.h, pmi2, PMI2_Init)
 if test "$pac_have_pmi2" = "yes" ; then
-    with_pmi=pmi2
     with_pmilib=no
+    with_pm=no
 fi
 
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
 if test "$pac_have_pmix" = "yes" ; then
-    with_pmi=pmix
     with_pmilib=no
     with_pm=no
 fi
@@ -1714,12 +1713,23 @@ elif test "$with_pmilib" = "mpich" -o "$with_pmilib" = "install"; then
     enable_pmi2="yes"
 else
     # detect
+    PAC_PUSH_FLAG([LIBS])
+    LIBS=$WRAPPER_LIBS
     AC_CHECK_FUNC([PMI_Init], [enable_pmi1="yes"])
     AC_CHECK_FUNC([PMI2_Init], [enable_pmi2="yes"])
     AC_CHECK_FUNC([PMIx_Init], [enable_pmix="yes"])
+    if test "$enable_pmi2" = "yes"; then
+        AC_CHECK_MEMBER([PMI2_keyval_t.key], [], [
+            AC_DEFINE([MISSING_PMI2_KEYVAL_T], 1, [Define if PMI2_KEYVAL_T is missing])
+        ],[[#include "pmi2.h"]])
+        AC_CHECK_FUNCS([PMI2_Set_threaded],[
+            AC_DEFINE([HAVE_PMI2_SET_THREADED], 1, [Define if PMI2_Set_threaded exist])
+        ])
+    fi
     if test "$enable_pmi1" != "yes" -a "$enable_pmi2" != "yes" -a "$enable_pmix" != "yes"; then
         AC_MSG_ERROR([Neither PMI, nor PMI2, nor PMIx is enabled.])
     fi
+    PAC_POP_FLAG([LIBS])
 fi
 
 if test "$enable_pmi1" = "yes"; then
@@ -1727,12 +1737,6 @@ if test "$enable_pmi1" = "yes"; then
 fi
 if test "$enable_pmi2" = "yes"; then
     AC_DEFINE([ENABLE_PMI2], 1, [Define to enable PMI2 protocol])
-    AC_CHECK_MEMBER([PMI2_keyval_t.key], [], [
-        AC_DEFINE([MISSING_PMI2_KEYVAL_T], 1, [Define if PMI2_KEYVAL_T is missing])
-    ],[[#include "pmi2.h"]])
-    AC_CHECK_FUNCS([PMI2_Set_threaded],[
-        AC_DEFINE([HAVE_PMI2_SET_THREADED], 1, [Define if PMI2_Set_threaded exist])
-    ])
 fi
 if test "$enable_pmix" = "yes"; then
     AC_DEFINE([ENABLE_PMIX], 1, [Define to enable PMIX protocol])
