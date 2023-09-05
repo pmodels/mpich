@@ -504,6 +504,9 @@ static const MPI_Datatype mpich_mpi_offset MPICH_ATTR_TYPE_TAG(MPI_Offset) = MPI
 #define MPI_MAX_PSET_NAME_LEN  256
 #define MPI_MAX_INFO_KEY       255
 #define MPI_MAX_INFO_VAL      1024
+#define MPI_MAX_DATAREP_STRING 128
+
+#define MPI_DISPLACEMENT_CURRENT ((MPI_Offset) -54278278)
 
 /* MPI-3 window flavors */
 typedef enum MPIR_Win_flavor {
@@ -621,6 +624,21 @@ enum MPIR_Combiner_enum {
 #define MPI_THREAD_FUNNELED 1
 #define MPI_THREAD_SERIALIZED 2
 #define MPI_THREAD_MULTIPLE 3
+
+/* MPI-IO constants */
+#define MPI_MODE_RDONLY              2  /* ADIO_RDONLY */
+#define MPI_MODE_RDWR                8  /* ADIO_RDWR  */
+#define MPI_MODE_WRONLY              4  /* ADIO_WRONLY  */
+#define MPI_MODE_CREATE              1  /* ADIO_CREATE */
+#define MPI_MODE_EXCL               64  /* ADIO_EXCL */
+#define MPI_MODE_DELETE_ON_CLOSE    16  /* ADIO_DELETE_ON_CLOSE */
+#define MPI_MODE_UNIQUE_OPEN        32  /* ADIO_UNIQUE_OPEN */
+#define MPI_MODE_APPEND            128  /* ADIO_APPEND */
+#define MPI_MODE_SEQUENTIAL        256  /* ADIO_SEQUENTIAL */
+
+#define MPI_SEEK_SET            600
+#define MPI_SEEK_CUR            602
+#define MPI_SEEK_END            604
 
 /* MPI's error classes */
 #define MPI_SUCCESS          0      /* Successful return code */
@@ -1026,8 +1044,6 @@ typedef struct MPIX_Iov {
 #ifndef BUILD_MPI_ABI
 /* We require that the C compiler support prototypes */
 #include <mpi_proto.h>
-
-@HAVE_ROMIO@
 
 /* The f2c and c2f APIs exist as real functions, but these macros allows
  * for backward MPICH ABI compatibility.
