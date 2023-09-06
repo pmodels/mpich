@@ -519,26 +519,31 @@ PMI_API_PUBLIC int PMI2_Info_GetJobAttr(const char name[], char value[], int val
 {
     int pmi_errno = PMI2_SUCCESS;
 
-    struct PMIU_cmd pmicmd;
-    PMIU_msg_set_query_get(&pmicmd, USE_WIRE_VER, no_static, NULL, name);
+    if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
+        struct PMIU_cmd pmicmd;
+        PMIU_msg_set_query_get(&pmicmd, USE_WIRE_VER, no_static, NULL, name);
 
-    pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
+        pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
 
-    bool found;
-    const char *tmp_val;
-    if (pmi_errno == PMIU_SUCCESS) {
-        pmi_errno = PMIU_msg_get_response_get(&pmicmd, &tmp_val, &found);
-    }
+        bool found;
+        const char *tmp_val;
+        if (pmi_errno == PMIU_SUCCESS) {
+            pmi_errno = PMIU_msg_get_response_get(&pmicmd, &tmp_val, &found);
+        }
 
-    if (!pmi_errno && found) {
-        MPL_strncpy(value, tmp_val, valuelen);
-        *flag = 1;
+        if (!pmi_errno && found) {
+            MPL_strncpy(value, tmp_val, valuelen);
+            *flag = 1;
+        } else {
+            *flag = 0;
+            pmi_errno = PMIU_SUCCESS;
+        }
+
+        PMIU_cmd_free_buf(&pmicmd);
     } else {
         *flag = 0;
-        pmi_errno = PMIU_SUCCESS;
     }
 
-    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
 }
 
