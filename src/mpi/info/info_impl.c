@@ -210,9 +210,6 @@ int MPIR_Info_create_env_impl(int argc, char **argv, MPIR_Info ** new_info_ptr)
     goto fn_exit;
 }
 
-static int hex_encode(char *str, const void *value, int len);
-static int hex_decode(const char *str, void *buf, int len);
-
 int MPIR_Info_set_hex_impl(MPIR_Info * info_ptr, const char *key, const void *value, int value_size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -220,7 +217,7 @@ int MPIR_Info_set_hex_impl(MPIR_Info * info_ptr, const char *key, const void *va
     char value_buf[1024];
     MPIR_Assertp(value_size * 2 + 1 < 1024);
 
-    hex_encode(value_buf, value, value_size);
+    MPL_hex_encode(value_size, value, value_buf);
 
     mpi_errno = MPIR_Info_set_impl(info_ptr, key, value_buf);
 
@@ -231,66 +228,11 @@ int MPIR_Info_decode_hex(const char *str, void *buf, int len)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int rc = hex_decode(str, buf, len);
+    int rc = MPL_hex_decode(len, str, buf);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**infohexinvalid");
 
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-/* ---- internal utility ---- */
-
-/* Simple hex encoding binary as hexadecimal string. For example,
- * a binary with 4 bytes, 0x12, 0x34, 0x56, 0x78, will be encoded
- * as ascii string "12345678". The encoded string will have string
- * length of exactly double the binary size plus a terminating "NUL".
- */
-
-static int hex_val(char c)
-{
-    /* translate a hex char [0-9a-fA-F] to its value (0-15) */
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    } else if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
-    } else if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
-    } else {
-        return -1;
-    }
-}
-
-static int hex_encode(char *str, const void *value, int len)
-{
-    /* assume the size of str is already validated */
-
-    const unsigned char *s = value;
-
-    for (int i = 0; i < len; i++) {
-        sprintf(str + i * 2, "%02x", s[i]);
-    }
-
-    return 0;
-}
-
-static int hex_decode(const char *str, void *buf, int len)
-{
-    int n = strlen(str);
-    if (n != len * 2) {
-        return 1;
-    }
-
-    unsigned char *s = buf;
-    for (int i = 0; i < len; i++) {
-        int a = hex_val(str[i * 2]);
-        int b = hex_val(str[i * 2 + 1]);
-        if (a < 0 || b < 0) {
-            return 1;
-        }
-        s[i] = (unsigned char) ((a << 4) + b);
-    }
-
-    return 0;
 }
