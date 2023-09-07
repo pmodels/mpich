@@ -126,6 +126,12 @@ ignore_list="$ignore_list|test/mpi/f77/spawn/type1aint.h.in"
 ignore_list="$ignore_list|src/include/mpi.h.in"
 ignore_list="$ignore_list|src/mpi/romio/include/mpio.h.in"
 ignore_list="$ignore_list|src/mpi/romio/adio/include/adioi_errmsg.h"
+ignore_list="$ignore_list|src/pmi/include/pmix.h"
+ignore_list="$ignore_list|src/pmi/include/pmix_abi_support.h"
+ignore_list="$ignore_list|src/pmi/include/pmix_abi_support_bottom.h"
+ignore_list="$ignore_list|src/pmi/include/pmix_fns.h"
+ignore_list="$ignore_list|src/pmi/include/pmix_macros.h"
+ignore_list="$ignore_list|src/pmi/include/pmix_types.h"
 
 filelist=""
 
