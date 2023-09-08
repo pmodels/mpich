@@ -1498,6 +1498,7 @@ case "$with_pmi" in
   default|pmi1|pmi2|pmix)
     ;;
   slurm)
+    with_pmi=pmi1
     with_pmilib=slurm
     with_pm=no
     ;;
@@ -1513,7 +1514,9 @@ PAC_CHECK_HEADER_LIB_EXPLICIT(pmi1, pmi.h, pmi, PMI_Init)
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmi2, pmi2.h, pmi2, PMI2_Init)
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
 
+pac_3rd_party_pmi=no
 if test "$pac_have_pmi" = "yes" -o "$pac_have_pmi1" = "yes" -o "$pac_have_pmi2" = "yes" -o "$pac_have_pmix" = "yes"; then
+    pac_3rd_party_pmi=yes
     if test "$with_pmilib" = "default" ; then
         with_pmilib=no
     fi
@@ -1625,6 +1628,12 @@ case "$with_pmilib" in
     if test "$with_pmilib" != "install" ; then
         pmi_subdir_args="--enable-embedded"
     fi
+    if test "$pac_have_pmi1" = "yes" -o "$pac_have_pmi2" = "yes" ; then
+        pmi_subdir_args="$pmi_subdir_args --disable-pmi1 --disable-pmi2"
+    fi
+    if test "$pac_have_pmix" = "yes" ; then
+        pmi_subdir_args="$pmi_subdir_args --disable-pmix"
+    fi
     PAC_CONFIG_SUBDIR_ARGS([src/pmi], [$pmi_subdir_args])
 
     PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
@@ -1672,14 +1681,19 @@ elif test "$with_pmi" = "pmi2" ; then
 elif test "$with_pmi" = "pmix" ; then
     enable_pmix="yes"
 elif test "$with_pmilib" = "default" -o "$with_pmilib" = "mpich" -o "$with_pmilib" = "install"; then
-    # mpich's libpmi support both PMI1 and PMI2
     enable_pmi1="yes"
     enable_pmi2="yes"
-    # HACK: also enable pmix if both --with-pmilib and --with-pmix options are given
-    if test "$pac_have_pmix" = "yes" ; then
-        enable_pmix="yes"
+    # mpich's libpmi support both PMI1 and PMI2 unless 3rd party pmi is loaded
+    if test "$pac_have_pmi1" = "yes" -o "$pac_have_pmi2" = "yes" ; then
+        enable_pmi1="no"
+        enable_pmi2="no"
     fi
-else
+    if test "$pac_have_pmix" = "yes" ; then
+        enable_pmix="no"
+    fi
+fi
+
+if test "$pac_3rd_party_pmi" = "yes" ; then
     # detect
     PAC_PUSH_FLAG([LIBS])
     LIBS=$WRAPPER_LIBS
@@ -1694,10 +1708,12 @@ else
             AC_DEFINE([HAVE_PMI2_SET_THREADED], 1, [Define if PMI2_Set_threaded exist])
         ])
     fi
-    if test "$enable_pmi1" != "yes" -a "$enable_pmi2" != "yes" -a "$enable_pmix" != "yes"; then
-        AC_MSG_ERROR([Neither PMI, nor PMI2, nor PMIx is enabled.])
-    fi
     PAC_POP_FLAG([LIBS])
+fi
+
+# sanity check
+if test "$enable_pmi1" != "yes" -a "$enable_pmi2" != "yes" -a "$enable_pmix" != "yes"; then
+    AC_MSG_ERROR([Neither PMI, nor PMI2, nor PMIx is enabled.])
 fi
 
 if test "$enable_pmi1" = "yes"; then
