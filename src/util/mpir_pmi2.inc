@@ -5,6 +5,10 @@
 
 #ifdef ENABLE_PMI2
 
+#ifdef MISSING_PMI2_KEYVAL_T
+typedef INFO_TYPE PMI2_keyval_t;
+#endif
+
 static int pmi2_init(int *has_parent, int *rank, int *size, int *appnum)
 {
     int mpi_errno = MPI_SUCCESS;

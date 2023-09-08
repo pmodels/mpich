@@ -197,7 +197,7 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
 int MPIR_pmi_set_threaded(int is_threaded)
 {
     if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_2) {
-#ifdef ENABLE_PMI2
+#ifdef HAVE_PMI2_SET_THREADED
         PMI2_Set_threaded(is_threaded);
 #endif
     }

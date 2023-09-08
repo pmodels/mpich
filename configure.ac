@@ -1469,16 +1469,17 @@ fi
 
 AC_ARG_WITH(pmi, [
   --with-pmi=name - Specify the pmi interface for MPICH.
-                      pmi1 - use PMIv1 (default)
+                      pmi1 - use PMIv1
                       pmi2 - use PMI2
                       pmix - use PMIx
-],, with_pmi=pmi1)
+                      [PATH] - use the libpmi.so specified in the path
+],, with_pmi=default)
 
 AC_ARG_WITH(pmilib, [
-  --with-pmilib=option -  [Deprecated] Specify the PMI library. Use --with-pmi=[PATH],
-                          or --with-pmi2=[PATH], or --with-pmix=[PATH] to specify
-                          PMI library path.
-],,with_pmilib=mpich)
+  --with-pmilib=option -  Specify whether to build and install libpmi.so.
+                            mpich   - embed into libmpi (default)
+                            install - build and install libpmi.so
+],,with_pmilib=default)
 
 AC_ARG_WITH(pm,
 	AS_HELP_STRING([--with-pm=name],
@@ -1494,52 +1495,32 @@ AC_ARG_WITH(pm,
 # --- check and normalize the options ----
 
 case "$with_pmi" in
-  pmi1|pmi2|pmix)
+  default|pmi1|pmi2|pmix)
     ;;
   slurm)
-    # deprecate
-    with_pmi=pmi1
     with_pmilib=slurm
     with_pm=no
     ;;
-  oldcray)
-    # deprecate
-    with_pmi=pmi1
-    with_pmilib=oldcray
-    with_pm=no
-    ;;
   *)
-    # allow user to specify an external libpmi
+    # HACK: same as --with-pmi1=[path]
     PAC_CHECK_HEADER_LIB_FATAL([pmi], [pmi.h], [pmi], [PMI_Init])
-    # assume using PMI-1
-    with_pmi=pmi1
-    with_pmilib=no
+    # restore $with_pmi
+    with_pmi=default
     ;;
 esac
 
+PAC_CHECK_HEADER_LIB_EXPLICIT(pmi1, pmi.h, pmi, PMI_Init)
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmi2, pmi2.h, pmi2, PMI2_Init)
-if test "$pac_have_pmi2" = "yes" ; then
-    with_pmi=pmi2
-    with_pmilib=no
-fi
-
 PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
-if test "$pac_have_pmix" = "yes" ; then
-    with_pmi=pmix
-    with_pmilib=no
-    with_pm=no
+
+if test "$pac_have_pmi" = "yes" -o "$pac_have_pmi1" = "yes" -o "$pac_have_pmi2" = "yes" -o "$pac_have_pmix" = "yes"; then
+    if test "$with_pmilib" = "default" ; then
+        with_pmilib=no
+    fi
+    if test "$with_pm" = "default" ; then
+        with_pm=no
+    fi
 fi
-
-# --- $with_pmi ----
-
-case "$with_pmi" in
-  pmi2)  
-    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
-    ;;
-  pmix)  
-    AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
-    ;;
-esac
 
 # --- $with_pm ----
 
@@ -1581,13 +1562,17 @@ for pm_name in $pm_names ; do
     case "$pm_name" in
       gforker)
         build_gforker=yes
-        if test "$with_pmi" != "pmi1" ; then
+        if test "$with_pmi" = "default" -o "$with_pmi" = "pmi1"; then
+            with_pmi=pmi1
+        else
             AC_MSG_ERROR([$pm_name requires PMI-v1, but $with_pmi was chosen.])
         fi
         ;;
       remshell)
         build_refshell=yes
-        if test "$with_pmi" != "pmi1" ; then
+        if test "$with_pmi" = "default" -o "$with_pmi" = "pmi1"; then
+            with_pmi=pmi1
+        else
             AC_MSG_ERROR([$pm_name requires PMI-v1, but $with_pmi was chosen.])
         fi
         ;;
@@ -1627,8 +1612,10 @@ pmilib=""
 AC_SUBST([pmilib])
 
 case "$with_pmilib" in
-  mpich|install)
-    if test "$with_pmi" != "pmi1" -a "$with_pmi" != "pmi2" ; then
+  no)
+    ;;
+  default|mpich|install)
+    if test "$with_pmi" = "pmix" ; then
         AC_MSG_ERROR([pmilib=$with_pmilib is incompatible with $with_pmi]);
     fi
     pmisrcdir="src/pmi"
@@ -1661,38 +1648,12 @@ case "$with_pmilib" in
         AC_DEFINE([USE_PMI2_SLURM], 1, [Define if using Slurm PMI 2])
     fi
     ;;
-  oldcray)
-    # deprecate
-    PAC_PREPEND_FLAG([$CRAY_PMI_INCLUDE_OPTS], [CPPFLAGS])
-    PAC_PREPEND_FLAG([$CRAY_PMI_POST_LINK_OPTS], [LDFLAGS])
-
-    AC_CHECK_HEADER([pmi.h], [], [AC_MSG_ERROR([could not find pmi.h.  Configure aborted])])
-    AC_CHECK_LIB([pmi], [PMI_Init], [craypmi_libpmi=yes], [craypmi_libpmi=no])
-
-    if test "X$craypmi_libpmi" = "Xyes"; then
-        PAC_APPEND_FLAG([-lpmi], [WRAPPER_LIBS])
-    else
-        AC_CHECK_LIB([pmi2], [PMI_Init], [craypmi_libpmi2=yes], [craypmi_libpmi2=no])
-        if test "X$craypmi_libpmi2" = "Xyes"; then
-            PAC_APPEND_FLAG([-lpmi2], [WRAPPER_LIBS])
-        else
-            AC_MSG_ERROR([could not find the cray libpmi.  Configure aborted])
-        fi
-    fi
-
-    if test "$with_pmi" = "pmi2" ; then
-        AC_DEFINE([USE_PMI2_CRAY], 1, [Define if using CRAY PMI 2])
-    fi
-    ;;
   bgq)
     # deprecate
     # This is a hack to include the pmi.h header. The OFI/BGQ provider
     # includes PMI functions, but no header file.
     PAC_PREPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
     AC_DEFINE([NO_PMI_SPAWN_MULTIPLE], 1, [The PMI library does not have PMI_Spawn_multiple.])
-    ;;
-  no)
-    # taken care of by --with-pmi=path, or --with-pmi2=path, or --with-pmix=path
     ;;
   *)
     AC_MSG_ERROR([pmilib $with_pmilib not supported.])
@@ -1704,22 +1665,39 @@ esac
 enable_pmi1="no"
 enable_pmi2="no"
 enable_pmix="no"
-if test "$with_pmi" = "pmi2" ; then
+if test "$with_pmi" = "pmi1" ; then
+    enable_pmi1="yes"
+elif test "$with_pmi" = "pmi2" ; then
     enable_pmi2="yes"
 elif test "$with_pmi" = "pmix" ; then
     enable_pmix="yes"
-elif test "$with_pmilib" = "mpich" -o "$with_pmilib" = "install"; then
+elif test "$with_pmilib" = "default" -o "$with_pmilib" = "mpich" -o "$with_pmilib" = "install"; then
     # mpich's libpmi support both PMI1 and PMI2
     enable_pmi1="yes"
     enable_pmi2="yes"
+    # HACK: also enable pmix if both --with-pmilib and --with-pmix options are given
+    if test "$pac_have_pmix" = "yes" ; then
+        enable_pmix="yes"
+    fi
 else
     # detect
+    PAC_PUSH_FLAG([LIBS])
+    LIBS=$WRAPPER_LIBS
     AC_CHECK_FUNC([PMI_Init], [enable_pmi1="yes"])
     AC_CHECK_FUNC([PMI2_Init], [enable_pmi2="yes"])
     AC_CHECK_FUNC([PMIx_Init], [enable_pmix="yes"])
+    if test "$enable_pmi2" = "yes"; then
+        AC_CHECK_MEMBER([PMI2_keyval_t.key], [], [
+            AC_DEFINE([MISSING_PMI2_KEYVAL_T], 1, [Define if PMI2_KEYVAL_T is missing])
+        ],[[#include "pmi2.h"]])
+        AC_CHECK_FUNCS([PMI2_Set_threaded],[
+            AC_DEFINE([HAVE_PMI2_SET_THREADED], 1, [Define if PMI2_Set_threaded exist])
+        ])
+    fi
     if test "$enable_pmi1" != "yes" -a "$enable_pmi2" != "yes" -a "$enable_pmix" != "yes"; then
         AC_MSG_ERROR([Neither PMI, nor PMI2, nor PMIx is enabled.])
     fi
+    PAC_POP_FLAG([LIBS])
 fi
 
 if test "$enable_pmi1" = "yes"; then
