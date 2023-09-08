@@ -342,9 +342,26 @@ static int pmix_lookup(const char name[], char port[])
 
 static int pmix_unpublish(const char name[])
 {
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno = PMIX_SUCCESS;
+    pmix_pdata_t *pdata;
     char *keys[2] = { (char *) name, NULL };
-    PMIx_Unpublish(keys, NULL, 0);
-    return MPI_SUCCESS;
+
+    /* Lookup the key that shall be unpublished to make sure it exists */
+    PMIX_PDATA_CREATE(pdata, 1);
+    MPL_strncpy(pdata[0].key, name, PMIX_MAX_KEYLEN);
+    pmi_errno = PMIx_Lookup(pdata, 1, NULL, 0);
+    PMIX_PDATA_FREE(pdata, 1);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_SERVICE, "**namepubnotunpub",
+                         "**namepubnotunpub %s", name);
+
+    pmi_errno = PMIx_Unpublish(keys, NULL, 0);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_SERVICE, "**namepubnotunpub",
+                         "**namepubnotunpub %s", name);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #else /* ENABLE_PMIX */
