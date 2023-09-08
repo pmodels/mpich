@@ -295,7 +295,7 @@ static int pmix_get_binary(int src, const char *key, char *buf, int *p_size, int
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
 
-    int bufsize = *p_size;
+    int bufsize ATTRIBUTE((unused)) = *p_size;
     pmix_value_t *pvalue;
     if (src < 0) {
         pmi_errno = PMIx_Get(NULL, key, NULL, 0, &pvalue);
