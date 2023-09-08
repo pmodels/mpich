@@ -16,6 +16,8 @@
  */
 /***************************************************************************/
 
+#ifndef DISABLE_PMI1
+
 #include "pmi_config.h"
 #include "mpl.h"
 
@@ -1092,3 +1094,5 @@ static int expect_pmi_cmd(const char *key)
   fn_fail:
     goto fn_exit;
 }
+
+#endif /* DISABLE_PMI1 */

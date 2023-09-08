@@ -3,6 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#ifndef DISABLE_PMI2
+
 #include "pmi_config.h"
 #include "mpl.h"
 
@@ -806,3 +808,5 @@ static int getPMIFD(void)
   fn_fail:
     goto fn_exit;
 }
+
+#endif /* DISABLE_PMI2 */
