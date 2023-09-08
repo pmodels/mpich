@@ -1611,6 +1611,8 @@ static const char *GetMPIOpString(MPI_Op o)
             return "MPI_REPLACE";
         case MPI_NO_OP:
             return "MPI_NO_OP";
+        case MPIX_EQUAL:
+            return "MPIX_EQUAL";
     }
     /* FIXME: default is not thread safe */
     snprintf(default_str, sizeof(default_str), "op=0x%x", o);

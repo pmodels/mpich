@@ -22,7 +22,8 @@ MPIR_op_function *MPIR_Op_table[] = {
     MPIR_MINLOC,
     MPIR_MAXLOC,
     MPIR_REPLACE,
-    MPIR_NO_OP
+    MPIR_NO_OP,
+    MPIR_EQUAL
 };
 
 MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
@@ -40,7 +41,8 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
     MPIR_MINLOC_check_dtype,
     MPIR_MAXLOC_check_dtype,
     MPIR_REPLACE_check_dtype,
-    MPIR_NO_OP_check_dtype
+    MPIR_NO_OP_check_dtype,
+    MPIR_EQUAL_check_dtype
 };
 
 typedef struct op_name {
@@ -62,7 +64,8 @@ static op_name_t mpi_ops[] = {
     {MPI_MINLOC, "minloc"},
     {MPI_MAXLOC, "maxloc"},
     {MPI_REPLACE, "replace"},
-    {MPI_NO_OP, "no_op"}
+    {MPI_NO_OP, "no_op"},
+    {MPIX_EQUAL, "equal"}
 };
 
 MPI_Datatype MPIR_Op_builtin_search_by_shortname(const char *short_name)
