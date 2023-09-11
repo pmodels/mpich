@@ -354,12 +354,8 @@ HYD_status fn_get_my_kvsname(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     goto fn_exit;
 }
 
-HYD_status fn_get_usize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
+static int get_universe_size(struct pmip_downstream *p)
 {
-    HYD_status status = HYD_SUCCESS;
-    int pmi_errno;
-    HYDU_FUNC_ENTER();
-
     int universe_size;
     if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_SYSTEM) {
         universe_size = PMIP_pg_from_downstream(p)->global_core_map.global_count;
@@ -368,6 +364,16 @@ HYD_status fn_get_usize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     } else {
         universe_size = HYD_pmcd_pmip.user_global.usize;
     }
+    return universe_size;
+}
+
+HYD_status fn_get_usize(struct pmip_downstream * p, struct PMIU_cmd * pmi)
+{
+    HYD_status status = HYD_SUCCESS;
+    int pmi_errno;
+    HYDU_FUNC_ENTER();
+
+    int universe_size = get_universe_size(p);
 
     struct PMIU_cmd pmi_response;
     pmi_errno = PMIU_msg_set_response_universe(pmi, &pmi_response, is_static, universe_size);
@@ -390,6 +396,11 @@ static const char *get_jobattr(struct pmip_downstream *p, const char *key)
         return PMIP_pg_from_downstream(p)->pmi_process_mapping;
     } else if (!strcmp(key, "PMI_hwloc_xmlfile")) {
         return HYD_pmip_get_hwloc_xmlfile();
+    } else if (!strcmp(key, "universeSize")) {
+        static char universe_str[64];
+        int universe_size = get_universe_size(p);
+        snprintf(universe_str, 64, "%d", universe_size);
+        return universe_str;
     }
     return NULL;
 }
@@ -406,7 +417,7 @@ HYD_status fn_get(struct pmip_downstream * p, struct PMIU_cmd * pmi)
 
     bool found = false;
     const char *val;
-    if (strncmp(key, "PMI_", 4) == 0) {
+    if (strncmp(key, "PMI_", 4) == 0 || strcmp(key, "universeSize") == 0) {
         val = get_jobattr(p, key);
         if (val) {
             found = true;
