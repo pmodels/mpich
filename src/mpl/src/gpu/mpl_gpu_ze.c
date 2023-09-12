@@ -1274,6 +1274,9 @@ int MPL_gpu_finalize(void)
     MPL_free(mask_contents.dev_id);
     MPL_free(mask_contents.subdev_id);
 
+    /* Reset initialization state */
+    gpu_initialized = 0;
+
     return MPL_SUCCESS;
 }
 
