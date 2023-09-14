@@ -516,15 +516,15 @@ static int fPMIKVSAddPair(PMIKVSpace * kvs, const char key[], const char val[])
     PMIKVPair *pair, *p, **pprev;
     int rc;
 
-    /* Find the location in which to insert the pair (if the
-     * same key already exists, that is an error) */
+    /* Find the location in which to insert the pair */
     p = kvs->pairs;
     pprev = &(kvs->pairs);
     while (p) {
         rc = strcmp(p->key, key);
         if (rc == 0) {
-            /* Duplicate.  Indicate an error */
-            return 1;
+            /* Duplicate.  Replace the old one. */
+            MPL_strncpy(p->val, val, sizeof(p->val));
+            return 0;
         }
         if (rc > 0) {
             /* We've found the location (after pprev, before p) */
