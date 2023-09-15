@@ -265,6 +265,8 @@ typedef struct MPIDI_CH4_Global_t {
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
 
+    MPIDU_genq_private_pool_t gpu_coll_pool;
+
     MPIR_Request *part_posted_list;
     MPIR_Request *part_unexp_list;
 
