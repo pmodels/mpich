@@ -49,8 +49,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_set_size_(MPI_Fint *, MPI_Offset *, M
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS

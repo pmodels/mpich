@@ -48,8 +48,6 @@ FORTRAN_API void FORT_CALL mpio_wait_(MPI_Fint * request, MPI_Status * status, M
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS

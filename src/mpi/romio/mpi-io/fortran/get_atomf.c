@@ -49,8 +49,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_get_atomicity_(MPI_Fint *, MPI_Fint *
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS

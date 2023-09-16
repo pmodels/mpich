@@ -53,8 +53,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_get_byte_offset_(MPI_Fint *, MPI_Offs
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS

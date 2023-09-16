@@ -56,8 +56,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_delete_(char *FORT_MIXED_LEN_DECL, MP
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS
