@@ -46,6 +46,12 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     *size = pvalue->data.uint32;
     PMIX_VALUE_RELEASE(pvalue);
 
+    /* sessions: pmi_kvs_name is freed during finalize, so we need to set it
+     * again in the reinitialization case */
+    if (pmi_kvs_name == NULL) {
+        pmi_kvs_name = MPL_strdup(pmix_proc.nspace);
+    }
+
   fn_exit:
     /* FIXME: support spawn and appnum */
     *has_parent = 0;
