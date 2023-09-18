@@ -97,6 +97,7 @@
 **pmix_init %d:PMIX_Init returned %d
 **pmix_get:PMIx_Get failed
 **pmix_get %d:PMIx_Get returned %d
+**pmix_get %s:PMIx_Get returned %s
 **pmix_put:PMIx_Put failed
 **pmix_put %d:PMIx_Put returned %d
 **pmix_commit:PMIx_Commit failed
@@ -107,6 +108,8 @@
 **pmix_resolve_nodes %d: PMIx_Resolve_nodes returned %d
 **pmix_resolve_peers: PMIx_Resolve_peers failed
 **pmix_resolve_peers %d: PMIx_Resolve_peers returned %d
+**pmix_spawn: PMIx_Spawn failed
+**pmix_spawn %s: PMIx_Spawn failed with error %s
 #
 # PMI finalize exit handler registration
 #

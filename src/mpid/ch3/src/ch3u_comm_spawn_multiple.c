@@ -136,7 +136,7 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
     char val[MPIDI_MAX_KVS_VALUE_LEN];
 
     if (parent_port_name == NULL) {
-        mpi_errno = MPIR_pmi_kvs_get(-1, PARENT_PORT_KVSKEY, val, sizeof(val));
+        mpi_errno = MPIR_pmi_kvs_parent_get(PARENT_PORT_KVSKEY, val, sizeof(val));
         MPIR_ERR_CHECK(mpi_errno);
 
 	parent_port_name = MPL_strdup(val);

@@ -601,7 +601,8 @@ int MPID_InitCompleted(void)
 
     if (MPIR_Process.has_parent) {
         char parent_port[MPI_MAX_PORT_NAME];
-        mpi_errno = MPIR_pmi_kvs_get(-1, MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
+        mpi_errno =
+            MPIR_pmi_kvs_parent_get(MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
         MPIR_ERR_CHECK(mpi_errno);
         MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world, &MPIR_Process.comm_parent);
         MPIR_Assert(MPIR_Process.comm_parent != NULL);

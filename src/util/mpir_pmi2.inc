@@ -74,6 +74,11 @@ static int pmi2_get(int src, const char *key, char *val, int val_size)
     goto fn_exit;
 }
 
+static int pmi2_get_parent(const char *key, char *val, int val_size)
+{
+    return pmi2_get(PMI2_ID_NULL, key, val, val_size);
+}
+
 static bool pmi2_get_jobattr(const char *key, char *valbuf)
 {
     if (strcmp(key, "PMI_dead_processes") == 0) {
@@ -312,6 +317,11 @@ static int pmi2_put(const char *key, const char *val)
 }
 
 static int pmi2_get(int src, const char *key, char *val, int val_size)
+{
+    return MPI_ERR_INTERN;
+}
+
+static int pmi2_get_parent(const char *key, char *val, int val_size)
 {
     return MPI_ERR_INTERN;
 }
