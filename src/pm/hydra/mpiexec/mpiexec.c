@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
     /* Check if any exec argument is missing */
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->exec[0] == NULL) {
+        if (exec->exec_len == 0) {
             HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
                                 "Missing executable. Try -h for usages.\n");
         }

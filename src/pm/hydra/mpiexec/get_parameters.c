@@ -329,11 +329,8 @@ static HYD_status parse_args(char **t_argv, int reading_config_file)
                 break;
             }
 
-            i = 0;
-            while (exec->exec[i] != NULL)
-                i++;
-            exec->exec[i] = MPL_strdup(*argv);
-            exec->exec[i + 1] = NULL;
+            status = HYDU_exec_add_arg(exec, *argv);
+            HYDU_ERR_POP(status, "unable to add exec arg\n");
         } while (++argv && *argv);
     } while (1);
 
