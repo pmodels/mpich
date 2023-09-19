@@ -7,6 +7,7 @@
 #include "hydra.h"
 #include "mpiexec.h"
 #include "uiu.h"
+#include "utarray.h"
 
 /* This file defines HYD_mpiexec_match_table, which includes all the
  * argument parsing routines and help messages for command line options.
@@ -327,9 +328,10 @@ static void hostlist_help_fn(void)
 
 static HYD_status hostlist_fn(char *arg, char ***argv)
 {
-    char *hostlist[HYD_NUM_TMP_STRINGS + 1];    /* +1 for null termination of list */
-    int count = 0;
     HYD_status status = HYD_SUCCESS;
+    char *tok;
+    static UT_icd str_icd = { sizeof(char *), NULL, NULL, NULL };
+    UT_array *hosts = NULL;
 
     if (HYD_ui_mpich_info.reading_config_file && HYD_server_info.node_list) {
         /* global variable already set; ignore */
@@ -339,24 +341,27 @@ static HYD_status hostlist_fn(char *arg, char ***argv)
     HYDU_ERR_CHKANDJUMP(status, HYD_server_info.node_list, HYD_INTERNAL_ERROR,
                         "duplicate host file or host list setting\n");
 
-    hostlist[count] = strtok(**argv, ",");
-    while ((count < HYD_NUM_TMP_STRINGS) && hostlist[count])
-        hostlist[++count] = strtok(NULL, ",");
+    utarray_new(hosts, &str_icd, MPL_MEM_OTHER);
+    tok = strtok(**argv, ",");
+    while (tok) {
+        utarray_push_back(hosts, &tok, MPL_MEM_OTHER);
+        tok = strtok(**argv, ",");
+    }
 
-    if (count >= HYD_NUM_TMP_STRINGS)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "too many hosts listed\n");
-
-    for (count = 0; hostlist[count]; count++) {
+    char **p = (char **) utarray_front(hosts);
+    while (p) {
         char *h, *procs = NULL;
         int np;
 
-        h = strtok(hostlist[count], ":");
+        h = strtok(*p, ":");
         procs = strtok(NULL, ":");
         np = procs ? atoi(procs) : 1;
 
         status = HYDU_add_to_node_list(h, np, &HYD_server_info.node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");
     }
+
+    utarray_free(hosts);
 
   fn_exit:
     (*argv)++;
