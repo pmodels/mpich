@@ -33,7 +33,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     size_t len;
     char **argv = t_argv;
     char *progname = *argv;
-    char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS], *conf_file;
+    char *post, *loc, *conf_file;
     const char *home, *env_file;
     HYD_status status = HYD_SUCCESS;
 
@@ -119,6 +119,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 
         /* Check if its absolute or relative */
         if (post[0] != '/') {   /* relative */
+            char *tmp[4];
             tmp[0] = HYDU_getcwd();
             tmp[1] = MPL_strdup("/");
             tmp[2] = MPL_strdup(post);

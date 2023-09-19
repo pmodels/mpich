@@ -9,7 +9,7 @@
 HYD_status HYDU_env_to_str(struct HYD_env *env, char **str)
 {
     int i;
-    char *tmp[HYD_NUM_TMP_STRINGS];
+    char *tmp[10];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -253,7 +253,7 @@ HYD_status HYDU_append_env_str_to_list(const char *str, struct HYD_env **env_lis
 
 HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite)
 {
-    char *tmp[HYD_NUM_TMP_STRINGS], *str;
+    char *tmp[10], *str;
     int i;
     HYD_status status = HYD_SUCCESS;
 

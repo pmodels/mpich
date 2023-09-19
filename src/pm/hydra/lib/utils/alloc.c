@@ -366,7 +366,6 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
 
 HYD_status HYDU_correct_wdir(char **wdir)
 {
-    char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -374,6 +373,7 @@ HYD_status HYDU_correct_wdir(char **wdir)
     if (*wdir == NULL) {
         *wdir = HYDU_getcwd();
     } else if (*wdir[0] != '/') {
+        char *tmp[4];
         tmp[0] = HYDU_getcwd();
         tmp[1] = MPL_strdup("/");
         tmp[2] = MPL_strdup(*wdir);
