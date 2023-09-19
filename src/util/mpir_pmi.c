@@ -317,10 +317,6 @@ int MPIR_pmi_barrier_local(void)
     return mpi_errno;
 }
 
-/* declare static functions used in bcast/allgather */
-static void encode(int size, const char *src, char *dest);
-static void decode(int size, const char *src, char *dest);
-
 /* is_local is a hint that we optimize for node local access when we can */
 static int optimized_put(const char *key, const char *val, int is_local)
 {
@@ -353,7 +349,7 @@ static int put_ex_segs(const char *key, const void *buf, int bufsize, int is_loc
      * (depends on pmi implementations, and may not be sufficient) */
     int segsize = (pmi_max_val_size - 2) / 2;
     if (bufsize < segsize) {
-        encode(bufsize, buf, val);
+        MPL_hex_encode(bufsize, buf, val);
         mpi_errno = optimized_put(key, val, is_local);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
@@ -371,7 +367,7 @@ static int put_ex_segs(const char *key, const void *buf, int bufsize, int is_loc
             if (i == num_segs - 1) {
                 n = bufsize - segsize * (num_segs - 1);
             }
-            encode(n, (char *) buf + i * segsize, val);
+            MPL_hex_encode(n, (char *) buf + i * segsize, val);
             mpi_errno = optimized_put(seg_key, val, is_local);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -410,12 +406,12 @@ static int get_ex_segs(int src, const char *key, void *buf, int *p_size, int is_
             } else {
                 MPIR_Assert(n <= segsize);
             }
-            decode(n, val, (char *) buf + i * segsize);
+            MPL_hex_decode(n, val, (char *) buf + i * segsize);
             got_size += n;
         }
     } else {
         int n = strlen(val) / 2;        /* 2-to-1 decode */
-        decode(n, val, (char *) buf);
+        MPL_hex_decode(n, val, (char *) buf);
         got_size = n;
     }
     MPIR_Assert(got_size <= bufsize);
@@ -723,39 +719,6 @@ int MPIR_pmi_unpublish(const char name[])
 }
 
 /* ---- static functions ---- */
-
-/* similar to functions in mpl/src/str/mpl_argstr.c, but much simpler */
-static int hex(unsigned char c)
-{
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    } else if (c >= 'a' && c <= 'f') {
-        return 10 + c - 'a';
-    } else if (c >= 'A' && c <= 'F') {
-        return 10 + c - 'A';
-    } else {
-        MPIR_Assert(0);
-        return -1;
-    }
-}
-
-static void encode(int size, const char *src, char *dest)
-{
-    for (int i = 0; i < size; i++) {
-        snprintf(dest, 3, "%02X", (unsigned char) *src);
-        src++;
-        dest += 2;
-    }
-}
-
-static void decode(int size, const char *src, char *dest)
-{
-    for (int i = 0; i < size; i++) {
-        *dest = (char) (hex(src[0]) << 4) + hex(src[1]);
-        src += 2;
-        dest++;
-    }
-}
 
 /* static functions used in MPIR_pmi_spawn_multiple */
 

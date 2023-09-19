@@ -295,7 +295,7 @@ static int pmix_get_binary(int src, const char *key, char *buf, int *p_size, int
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
 
-    int bufsize = *p_size;
+    int bufsize ATTRIBUTE((unused)) = *p_size;
     pmix_value_t *pvalue;
     if (src < 0) {
         pmi_errno = PMIx_Get(NULL, key, NULL, 0, &pvalue);
@@ -338,6 +338,10 @@ static int pmix_get_universe_size(int *universe_size)
     pmix_value_t *pvalue = NULL;
 
     pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_UNIV_SIZE, NULL, 0, &pvalue);
+    if (pmi_errno == PMIX_ERR_NOT_FOUND) {
+        *universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
+        goto fn_exit;
+    }
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_get", "**pmix_get %d", pmi_errno);
     *universe_size = pvalue->data.uint32;
