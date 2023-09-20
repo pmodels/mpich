@@ -869,11 +869,9 @@ int PMIU_cmd_read(int fd, struct PMIU_cmd *pmicmd)
     pmicmd->buf = NULL;
     while (pmicmd->buf == NULL) {
         char *recvbuf;
-        PMIU_CHK_MALLOC(recvbuf, char *, PMIU_MAXLINE, pmi_errno, PMIU_ERR_NOMEM, "recvbuf");
-
         int n;
-        n = PMIU_readline(fd, recvbuf, PMIU_MAXLINE);
-        PMIU_ERR_CHKANDJUMP(n <= 0, pmi_errno, PMIU_FAIL, "readline failed\n");
+        pmi_errno = PMIU_read_cmd(fd, &recvbuf, &n);
+        PMIU_ERR_POP(pmi_errno);
 
         if (recvbuf[n - 1] == '\n') {
             PMIU_printf(PMIU_verbose, "got pmi response: %s", recvbuf);

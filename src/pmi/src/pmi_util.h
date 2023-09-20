@@ -51,6 +51,7 @@ void PMIU_Set_rank_kvsname(int rank, const char *kvsname);
 void PMIU_SetServer(void);
 void PMIU_printf(int print_flag, const char *fmt, ...);
 int PMIU_readline(int fd, char *buf, int max);
+int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out);
 int PMIU_write(int fd, char *buf, int buflen);
 int PMIU_writeline(int fd, char *buf);
 int PMIU_parse_keyvals(char *st);
