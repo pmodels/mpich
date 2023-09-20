@@ -357,7 +357,7 @@ static int pmix_spawn(int count, char *commands[], char **argvs[], const int max
                       MPIR_Info * info_ptrs[], int num_preput_keyval,
                       struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
     pmix_app_t *apps = NULL;
     pmix_info_t *job_info = NULL;
