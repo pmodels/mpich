@@ -71,9 +71,9 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     PMIX_PROC_CONSTRUCT(&pmix_parent);
     pmi_errno = PMIx_Get(&pmix_proc, PMIX_PARENT_ID, NULL, 0, &pvalue);
     if (pmi_errno == PMIX_ERR_NOT_FOUND) {
-        *has_parent = 0; /* process not spawned */
+        *has_parent = 0;        /* process not spawned */
     } else if (pmi_errno == PMIX_SUCCESS) {
-        *has_parent = 1; /* spawned process */
+        *has_parent = 1;        /* spawned process */
         PMIX_PROC_LOAD(&pmix_parent, pvalue->data.proc->nspace, pvalue->data.proc->rank);
         PMIX_VALUE_RELEASE(pvalue);
     } else {
@@ -514,7 +514,7 @@ void pmix_not_supported(const char *elem, char *error_str, int len)
      * could be obtained about the PMIx Host */
     if (name && version) {
         snprintf(error_str, len, "%s not supported by PMIx Host %s version %s",
-                     elem, name, version);
+                 elem, name, version);
     } else if (name) {
         snprintf(error_str, len, "%s not supported by PMIx Host %s", elem, name);
     } else {
@@ -842,7 +842,7 @@ int pmix_fence_nspace_proc(char *nspace, pmix_proc_t proc)
     goto fn_exit;
 }
 
-#else  /* ENABLE_PMIX */
+#else /* ENABLE_PMIX */
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
