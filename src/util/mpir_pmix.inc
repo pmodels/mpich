@@ -956,6 +956,16 @@ static int pmix_build_nodemap(int *nodemap, int sz)
     pmix_proc_t *procs = NULL;
     size_t nprocs, node_id = 0;
 
+    pmix_value_t *pvalue;
+    pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_ANL_MAP, NULL, 0, &pvalue);
+    if (pmi_errno == PMIX_SUCCESS) {
+        int mpl_err = MPL_rankmap_str_to_array(pvalue->data.string, sz, nodemap);
+        MPIR_ERR_CHKINTERNAL(mpl_err, mpi_errno,
+                             "unable to populate node ids from PMI_process_mapping");
+        PMIX_VALUE_RELEASE(pvalue);
+        goto fn_exit;
+    }
+
     pmi_errno = PMIx_Resolve_nodes(pmix_proc.nspace, &nodelist);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_resolve_nodes", "**pmix_resolve_nodes %d", pmi_errno);
