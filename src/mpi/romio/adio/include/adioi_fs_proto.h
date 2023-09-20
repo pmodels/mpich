@@ -63,4 +63,9 @@ extern struct ADIOI_Fns_struct ADIO_QUOBYTEFS_operations;
 extern void ADIOI_QUOBYTEFS_CreateAdapter(const char *, int *);
 #endif
 
+#ifdef ROMIO_OCEANFS
+/* prototypes are in adio/ad_oceanfs/ad_oceanfs.h */
+extern struct ADIOI_Fns_struct ADIO_OCEANFS_operations;
+#endif
+
 #endif /* ADIOI_FS_PROTO_H_INCLUDED */
