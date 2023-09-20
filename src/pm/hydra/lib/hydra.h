@@ -298,7 +298,8 @@ struct HYD_env_global {
 
 /* Executable information */
 struct HYD_exec {
-    char *exec[HYD_NUM_TMP_STRINGS];
+    char **exec;
+    int exec_len, exec_size;
     char *wdir;
 
     int proc_count;
@@ -476,6 +477,7 @@ HYD_status HYDU_alloc_node(struct HYD_node **node);
 void HYDU_free_node_list(struct HYD_node *node_list);
 void HYDU_free_proxy_list(struct HYD_proxy *proxy_list, int count);
 HYD_status HYDU_alloc_exec(struct HYD_exec **exec);
+HYD_status HYDU_exec_add_arg(struct HYD_exec *exec, const char *arg);
 void HYDU_free_exec_list(struct HYD_exec *exec_list);
 HYD_status HYDU_create_proxy_list_singleton(struct HYD_node *node, int pgid,
                                             int *proxy_count_p, struct HYD_proxy **proxy_list_p);
