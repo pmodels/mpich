@@ -186,7 +186,17 @@ static int find_provider(struct fi_info **prov_out)
     MPIDI_OFI_global.settings.cap = (CVAR != -1) ? CVAR : MPIDI_OFI_caps_list[MPIDI_OFI_SET_NUMBER].cap
 
         UPDATE_SETTING_BY_SET_NUMBER(enable_hmem, MPIR_CVAR_CH4_OFI_ENABLE_HMEM);
+
     }
+
+#ifdef FI_MR_HMEM
+    if (MPIR_CVAR_CH4_OFI_ENABLE_HMEM) {
+        /* Save the FI_MR_HMEM setting from ofi to determine if registration is needed */
+        MPIDI_OFI_global.settings.enable_mr_hmem = (MPIR_CVAR_CH4_OFI_ENABLE_MR_HMEM != -1) ?
+            MPIR_CVAR_CH4_OFI_ENABLE_MR_HMEM : ((prov_list->domain_attr->mr_mode & FI_MR_HMEM) !=
+                                                0);
+    }
+#endif
 
     /* last sanity check */
 #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE) || (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL || defined(MPIDI_OFI_VNI_USE_DOMAIN))
