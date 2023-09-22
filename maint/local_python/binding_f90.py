@@ -92,8 +92,8 @@ def dump_f90_func(func):
     G.out.append("")
     if 'return' not in func:
         if not len(f_param_list) or not RE.match(r'ierr(or)?', f_param_list[-1]):
-            f_param_list.append('ierr')
-            decl_list.append("INTEGER :: ierr")
+            f_param_list.append('ierror')
+            decl_list.append("INTEGER :: ierror")
         dump_fortran_line("SUBROUTINE %s(%s)" % (func_name, ', '.join(f_param_list)))
     else:
         dump_fortran_line("FUNCTION %s(%s) result(res)" % (func_name, ', '.join(f_param_list)))
