@@ -11,6 +11,11 @@
 
 # Use the error handler bound to MPI_COMM_SELF as the default error handler.
 
+# Use ierror instead of ierr in "use mpi" Fortran interface. This affects
+  user code if they call with explicit keyword, e.g. call MPI_Init(ierr=arg).
+  "ierror" is the correct name specified in the MPI specification. We only
+  added subroutine interface in "mpi.mod" since 4.1.
+
 ===============================================================================
                                Changes in 4.1
 ===============================================================================
