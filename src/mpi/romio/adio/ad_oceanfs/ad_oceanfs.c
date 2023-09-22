@@ -7,7 +7,7 @@
 #include "adioi.h"
 
 struct ADIOI_Fns_struct ADIO_OCEANFS_operations = {
-    ADIOI_OCEANFS_Open,	/* Open */
+    ADIOI_OCEANFS_Open, /* Open */
     ADIOI_GEN_OpenColl, /* OpenColl */
     ADIOI_GEN_ReadContig,       /* ReadContig */
     ADIOI_GEN_WriteContig,      /* WriteContig */

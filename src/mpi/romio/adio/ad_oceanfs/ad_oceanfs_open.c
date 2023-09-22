@@ -118,7 +118,7 @@ void ADIOI_OCEANFS_Open(ADIO_File fd, int *error_code)
     static char myname[] = "ADIOI_OCEANFS_OPEN";
     int perm, amode, ret, rank;
     *error_code = MPI_SUCCESS;
- 
+
     /* setup file permissions */
     perm = ADIOI_OCEANFS_SetupFilePerm(fd);
     amode = ADIOI_OCEANFS_GetMode(fd);
