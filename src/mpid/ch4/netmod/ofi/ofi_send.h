@@ -160,7 +160,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                    int vci_dst, MPIR_Request ** request,
                                                    int dt_contig, size_t data_sz,
                                                    MPIR_Datatype * dt_ptr, MPI_Aint dt_true_lb,
-                                                   uint64_t type)
+                                                   uint64_t type, MPL_pointer_attr_t attr)
 {
     int mpi_errno = MPI_SUCCESS;
     char *send_buf;
@@ -170,6 +170,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     int vci_remote = vci_dst;
     int sender_nic, receiver_nic;
     int ctx_idx;
+    void *desc = NULL;
+    struct fid_mr *mr = NULL;
+    bool register_mem = false;
 
     MPIR_FUNC_ENTER;
 
@@ -226,16 +229,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
-    MPL_pointer_attr_t attr;
-    MPIR_GPU_query_pointer_attr(send_buf, &attr);
+
+    if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD &&
+        MPIDI_OFI_ENABLE_MR_HMEM && dt_contig && attr.type == MPL_GPU_POINTER_DEV) {
+        register_mem = true;
+    }
+
     if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
         MPIDI_OFI_register_am_bufs();
-        if (!MPIDI_OFI_ENABLE_HMEM) {
+        if (!MPIDI_OFI_ENABLE_HMEM || !dt_contig || (MPIDI_OFI_ENABLE_MR_HMEM && !register_mem)) {
             /* Force packing of GPU buffer in host memory */
             /* FIXME: at this point, GPU data takes host-buffer staging
              * path for the whole chunk. For large memory size, pipeline
              * transfer should be applied. */
             force_gpu_pack = true;
+        }
+    }
+
+    if (register_mem) {
+        MPIDI_OFI_register_memory(send_buf, data_sz, attr, ctx_idx, &mr);
+        if (mr != NULL) {
+            desc = fi_mr_desc(mr);
         }
     }
 
@@ -296,7 +310,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vci_remote);
-    if (data_sz <= MPIDI_OFI_global.max_buffered_send) {
+    if (data_sz <= MPIDI_OFI_global.max_buffered_send && !MPIDI_OFI_ENABLE_HMEM) {
         if (MPIDI_OFI_ENABLE_DATA) {
             MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                                 send_buf, data_sz, cq_data, dest_addr, match_bits),
@@ -311,13 +325,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     } else if (!is_huge_send) {
         if (MPIDI_OFI_ENABLE_DATA) {
             MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                              send_buf, data_sz, NULL, cq_data, dest_addr,
+                                              send_buf, data_sz, desc, cq_data, dest_addr,
                                               match_bits,
                                               (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
                                  vci_local, tsenddata);
         } else {
             MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                          send_buf, data_sz, NULL, dest_addr, match_bits,
+                                          send_buf, data_sz, desc, dest_addr, match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
                                  vci_local, tsend);
         }
@@ -433,6 +447,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     size_t data_sz;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
+    MPL_pointer_attr_t attr;
 
     MPIR_FUNC_ENTER;
 
@@ -440,12 +455,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     MPIDI_OFI_idata_set_error_bits(&cq_data, err_flag);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+    void *send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
+    MPIR_GPU_query_pointer_attr(send_buf, &attr);
 
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send))) {
         MPI_Aint actual_pack_bytes = 0;
-        void *send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
-        MPL_pointer_attr_t attr;
-        MPIR_GPU_query_pointer_attr(send_buf, &attr);
         if (attr.type == MPL_GPU_POINTER_DEV) {
             MPIDI_OFI_register_am_bufs();
             if (!MPIDI_OFI_ENABLE_HMEM) {
@@ -478,6 +492,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                 }
                 MPIR_Assert(actual_pack_bytes == data_sz);
                 send_buf = host_buf;
+            } else {
+                mpi_errno =
+                    MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
+                                          context_offset, addr, vci_src, vci_dst, request,
+                                          dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag, attr);
+                goto fn_exit;
             }
         }
         mpi_errno = MPIDI_OFI_send_lightweight(send_buf, data_sz, cq_data, dst_rank, tag, comm,
@@ -493,7 +513,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     } else {
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
                                           context_offset, addr, vci_src, vci_dst, request,
-                                          dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
+                                          dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag, attr);
     }
 
   fn_exit:

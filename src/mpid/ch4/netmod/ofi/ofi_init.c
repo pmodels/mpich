@@ -206,12 +206,12 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_HMEM
       category    : CH4_OFI
       type        : int
-      default     : -1
-      class       : none
+      default     : 0
+      class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If true, uses GPU RDMA support in the provider.
+        If true, uses GPU direct RDMA support in the provider.
 
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_HMEM
       category    : CH4_OFI
@@ -221,8 +221,27 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        Overrides the setting from the provider regarding registering buffers for GPU RDMA.
-        If set to -1, use the setting returned by the provider.
+        If true, need to register the buffer to use GPU direct RDMA.
+
+    - name        : MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD
+      category    : CH4_OFI
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        This is the threshold to start using GPU direct RDMA.
+
+    - name        : MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD
+      category    : CH4_OFI
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        The threshold to start using GPU RDMA.
 
     - name        : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS
       category    : CH4_OFI
@@ -926,6 +945,21 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             MPIDI_OFI_PROGRESS(vci);
         }
         MPIR_Assert(MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus == 0);
+    }
+
+    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM) {
+        MPIDI_GPU_RDMA_queue_t *queue_mr, *tmp;
+        DL_FOREACH_SAFE(MPIDI_OFI_global.gdr_mrs, queue_mr, tmp) {
+            if (queue_mr->mr) {
+                struct fid_mr *mr = (struct fid_mr *) queue_mr->mr;
+                if (mr != NULL) {
+                    MPIDI_OFI_CALL(fi_close(&mr->fid), mr_unreg);
+                }
+
+                DL_DELETE(MPIDI_OFI_global.gdr_mrs, queue_mr);
+                MPL_free(queue_mr);
+            }
+        }
     }
 
     /* Tearing down endpoints in reverse order they were created */
