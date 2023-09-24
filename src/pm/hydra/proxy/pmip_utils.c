@@ -594,9 +594,9 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Exec arg not convertible to integer\n");
     for (i = 0; i < count; i++) {
         (*argv)++;
-        exec->exec[i] = MPL_strdup(**argv);
+        status = HYDU_exec_add_arg(exec, **argv);
+        HYDU_ERR_POP(status, "unable to add exec arg\n");
     }
-    exec->exec[i] = NULL;
     (*argv)++;
 
   fn_exit:

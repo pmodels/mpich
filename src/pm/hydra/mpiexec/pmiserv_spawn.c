@@ -180,11 +180,16 @@ static HYD_status fill_exec_params(struct HYD_exec *exec, const char *execname, 
     status = HYDU_correct_wdir(&exec->wdir);
     HYDU_ERR_POP(status, "unable to correct wdir\n");
 
-    exec->exec[0] = get_exec_path(execname, path);
+    char *exec_path;
+    exec_path = get_exec_path(execname, path);
+    status = HYDU_exec_add_arg(exec, exec_path);
+    MPL_free(exec_path);
+    HYDU_ERR_POP(status, "unable to add exec arg\n");
+
     for (int i = 0; i < argcnt; i++) {
-        exec->exec[i + 1] = MPL_strdup(argv[i]);
+        status = HYDU_exec_add_arg(exec, argv[i]);
+        HYDU_ERR_POP(status, "unable to add exec arg\n");
     }
-    exec->exec[argcnt + 1] = NULL;
 
     exec->proc_count = nprocs;
 

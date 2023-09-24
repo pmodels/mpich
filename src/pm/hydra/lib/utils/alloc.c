@@ -155,7 +155,9 @@ HYD_status HYDU_alloc_exec(struct HYD_exec **exec)
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC_OR_JUMP(*exec, struct HYD_exec *, sizeof(struct HYD_exec), status);
-    (*exec)->exec[0] = NULL;
+    (*exec)->exec = NULL;
+    (*exec)->exec_len = 0;
+    (*exec)->exec_size = 0;
     (*exec)->wdir = NULL;
     (*exec)->proc_count = -1;
     (*exec)->env_prop = NULL;
@@ -171,6 +173,33 @@ HYD_status HYDU_alloc_exec(struct HYD_exec **exec)
     goto fn_exit;
 }
 
+HYD_status HYDU_exec_add_arg(struct HYD_exec *exec, const char *arg)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (exec->exec_size == 0) {
+        exec->exec_size = 10;
+        exec->exec = MPL_malloc(sizeof(char *) * exec->exec_size, MPL_MEM_OTHER);
+        if (!exec->exec) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Can't allocate exec\n");
+        }
+    } else if (exec->exec_len + 1 >= exec->exec_size) {
+        exec->exec_size = exec->exec_size * 2;
+        exec->exec = MPL_realloc(exec->exec, sizeof(char *) * exec->exec_size, MPL_MEM_OTHER);
+        if (!exec->exec) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Can't allocate exec\n");
+        }
+    }
+
+    exec->exec[exec->exec_len++] = MPL_strdup(arg);
+    exec->exec[exec->exec_len] = NULL;
+
+  fn_exit:
+    return status;
+  fn_fail:
+    goto fn_exit;
+}
+
 void HYDU_free_exec_list(struct HYD_exec *exec_list)
 {
     struct HYD_exec *exec, *run;
@@ -180,7 +209,13 @@ void HYDU_free_exec_list(struct HYD_exec *exec_list)
     exec = exec_list;
     while (exec) {
         run = exec->next;
-        HYDU_free_strlist(exec->exec);
+        if (exec->exec) {
+            HYDU_free_strlist(exec->exec);
+            MPL_free(exec->exec);
+            exec->exec = NULL;
+            exec->exec_len = 0;
+            exec->exec_size = 0;
+        }
 
         MPL_free(exec->wdir);
         MPL_free(exec->env_prop);
@@ -205,9 +240,10 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
         status = HYDU_alloc_exec(&proxy->exec_list);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
 
-        for (i = 0; exec->exec[i]; i++)
-            proxy->exec_list->exec[i] = MPL_strdup(exec->exec[i]);
-        proxy->exec_list->exec[i] = NULL;
+        for (i = 0; exec->exec[i]; i++) {
+            status = HYDU_exec_add_arg(proxy->exec_list, exec->exec[i]);
+            HYDU_ERR_POP(status, "unable to add exec arg\n");
+        }
 
         proxy->exec_list->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
         proxy->exec_list->proc_count = num_procs;
@@ -221,9 +257,10 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
 
         texec = texec->next;
 
-        for (i = 0; exec->exec[i]; i++)
-            texec->exec[i] = MPL_strdup(exec->exec[i]);
-        texec->exec[i] = NULL;
+        for (i = 0; exec->exec[i]; i++) {
+            status = HYDU_exec_add_arg(texec, exec->exec[i]);
+            HYDU_ERR_POP(status, "unable to add exec arg\n");
+        }
 
         texec->wdir = exec->wdir ? MPL_strdup(exec->wdir) : NULL;
         texec->proc_count = num_procs;
@@ -366,7 +403,6 @@ HYD_status HYDU_create_proxy_list(int count, struct HYD_exec *exec_list, struct 
 
 HYD_status HYDU_correct_wdir(char **wdir)
 {
-    char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -374,6 +410,7 @@ HYD_status HYDU_correct_wdir(char **wdir)
     if (*wdir == NULL) {
         *wdir = HYDU_getcwd();
     } else if (*wdir[0] != '/') {
+        char *tmp[4];
         tmp[0] = HYDU_getcwd();
         tmp[1] = MPL_strdup("/");
         tmp[2] = MPL_strdup(*wdir);
