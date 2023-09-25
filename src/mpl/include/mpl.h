@@ -32,6 +32,7 @@
 #include "mpl_gavl.h"
 #include "mpl_initlock.h"
 #include "mpl_misc.h"
+#include "mpl_hash.h"
 
 int MPL_rankmap_str_to_array(char *mapping, int sz, int *out_nodemap);
 int MPL_rankmap_array_to_str(int *nodemap, int sz, char **out_mapping_str);
