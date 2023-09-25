@@ -5,9 +5,7 @@ this interface is to provide parallel processes a standard way to communicate
 with the process manager in order to figure out the parallel job environment
 including how to establish communications with each other.
 
-## Configure PMI in MPICH
-
-### PMI versions - `--with-pmi={pmi1,pmi2,pmix}`
+## PMI versions
 
 There are currently three varieties of PMI interfaces. PMI1, or just PMI, is
 the de-facto interface supported by most process managers and MPI
@@ -28,30 +26,43 @@ PMIx is covered by the official [PMIx Standard](https://pmix.github.io/standard)
 
 MPICH can be configured to use any of the PMI interfaces. By default it will
 use PMI1, which is our most feature complete and stable implementation.
+If more than one PMI interfaces are enabled, user can use environment variable
+MPIR_CVAR_PMI_VERSION (with value "1", or "2", or "x") to select an interface
+to be used at runtime.
 
-### PMI library - `--with-pmilib={mpich,install,slurm,cray,pmix}`
+## Configure PMI in MPICH
 
-MPICH needs to be linked with an appropriate pmi library. The default option is
-`--with-pmilib=mpich`, with which, we use an embedded library that is shipped
-with MPICH. The option `install` will use the same library from MPICH but
-will build `libpmi` separately and link to it. This is useful if swapping
-libpmi at runtime is desirable. The option "slurm" will look for libpmi or
-libpmi2 from slurm, whose path can be separately specified via
-`--with-slurm=path` option. Similarly, the option "cray" looks for libpmi
-or libpmi2 from cray. The option "pmix" looks for libpmix.
+MPICH needs to be linked with an appropriate pmi library. The default is to
+use embedded builtin libpmi. To use an external pmi library, configure with
+`--with-pmi1=[path]` or `--with-pmi2=[path]`, or `--with-pmix=[path]`, to
+load externally installed `libpmi.so`, or `libpmi2.so`, or `libpmix.so`,
+respectively. We expect to find headers (e.g. `pmi.h`) in `path/include` and
+the library in `path/lib`.
 
-Some libraries support both PMI1 and PMI2, such as MPICH's libpmi. Some
-supports either PMI1 or PMI2 based on whether it is linked to libpmi or
-libpmi2. Currently, PMIx is only supported with libpmix.
+When external pmi library is linked, builtin libpmi will be disabled. In
+special cases when both an external pmi library and builtin libpmi need be
+linked, one can use `--with-pmilib=[mpich|install]` to force build the builtin
+libpmi. The "install" option will build the built-in libpmi as an external
+`libpmi.so`.
+
+Process manager, e.g. `hydra`, will also be disabled if external pmi library
+is used. Typically hydra will not be compatible with an external pmi library
+even with the same PMI interface. However, we can force build `hydra` with
+`--with-pm=hydra`.
+
+When multiple PMI interfaces are supported by the linked pmi library, if we
+want to force a specific interface, we can use the `--with-pmi` option. For
+example, `--with-pmi=pmi2` will force PMI-2 interface.
+
+As a special case, to build with a Slrum environment, use
+`--with-pmilib=slurm --with-slurm=[path]`. This is because Slurm installs its
+header file under `path/include/slurm/`, thus requires special handling.
+Slurm supports both PMI-v1 and PMI2 interfaces. We default to use PMI-v1.
+use `--with-pmilib=slurm --with-slurm=[path] --with-pmi=pmi2` to choose
+PMI2 instead.
 
 In development, we are adding basic PMIx support in MPICH's libpmi. Future
 versions MPICH may support PMIx without depending on libpmix.
-
-### Legacy/Alias Options
-
-As a convenience and legacy option, user can use `--with-pmi={slurm,cray}`. It
-will pick the recommended PMI version according to vendor preference and link
-with the approrate Slurm or Cray libpmi.
 
 ## PMI usages in MPICH
 
@@ -78,3 +89,7 @@ version agnostic beyond `mpir_pmi`.
 
      Process launcher may expose this variable so processes can avoid probing
      hardware independently.
+
+   * `PMI_dead_processes`
+
+     A list processes that have exited or are dead.
