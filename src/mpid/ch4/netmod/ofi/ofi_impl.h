@@ -774,6 +774,29 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_unregister_am_bufs(void)
     }
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_gpu_rma_register(const void *buffer, size_t size,
+                                                         MPL_pointer_attr_t * attr, MPIR_Win * win,
+                                                         void **desc)
+{
+    struct fid_mr *mr = NULL;
+    MPL_pointer_attr_t attr_tmp;
+
+    *desc = NULL;
+
+    int ctx_idx = MPIDI_OFI_get_ctx_index(MPIDI_WIN(win, am_vci), 0);
+    if (!attr) {
+        MPIR_GPU_query_pointer_attr(buffer, &attr_tmp);
+        attr = &attr_tmp;
+    }
+    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM &&
+        MPIR_GPU_query_pointer_is_strict_dev(buffer, attr)) {
+        MPIDI_OFI_register_memory_and_bind((char *) buffer, size, attr, ctx_idx, &mr);
+        if (mr != NULL) {
+            *desc = fi_mr_desc(mr);
+        }
+    }
+}
+
 #undef CQ_S_LIST
 #undef CQ_S_HEAD
 #undef CQ_S_TAIL

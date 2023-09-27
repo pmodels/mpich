@@ -183,10 +183,19 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
             len = (size_t) win->size;
         }
 
-        /* device buffers are not currently supported */
-        if (MPIR_GPU_query_pointer_is_dev(base))
-            rc = -1;
-        else {
+        if (MPIR_GPU_query_pointer_is_strict_dev(base, NULL)) {
+            if (MPIDI_OFI_ENABLE_HMEM) {
+                MPL_pointer_attr_t attr;
+                MPIR_GPU_query_pointer_attr(base, &attr);
+                mpi_errno =
+                    MPIDI_OFI_register_memory(base, len, &attr, ctx_idx, MPIDI_OFI_WIN(win).mr_key,
+                                              &MPIDI_OFI_WIN(win).mr);
+                if (mpi_errno != MPI_SUCCESS)
+                    rc = -1;
+            } else {
+                rc = -1;
+            }
+        } else {
             MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[ctx_idx].domain,       /* In:  Domain Object */
                                             base,       /* In:  Lower memory address */
                                             len,        /* In:  Length              */
@@ -196,6 +205,8 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
                                             0ULL,       /* In:  flags               */
                                             &MPIDI_OFI_WIN(win).mr,     /* Out: memregion object    */
                                             NULL), rc); /* In:  context             */
+        }
+        if (rc == 0) {
             mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], MPIDI_OFI_WIN(win).mr,
                                           MPIDI_OFI_WIN(win).ep, MPIDI_OFI_WIN(win).cmpl_cntr);
             MPIR_ERR_CHECK(mpi_errno);

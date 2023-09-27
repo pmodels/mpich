@@ -62,6 +62,11 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     struct fi_msg_rma msg;
     struct fi_rma_iov riov;
     struct iovec iov;
+    size_t origin_bytes;
+
+    /* used for GPU buffer registration */
+    MPIR_Datatype_get_size_macro(origin_datatype, origin_bytes);
+    origin_bytes *= origin_count;
 
     /* allocate target iovecs */
     struct iovec *target_iov;
@@ -88,6 +93,9 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
         flags = FI_DELIVERY_COMPLETE;
     }
 
+    void *desc = NULL;
+    MPIDI_OFI_gpu_rma_register(origin_addr, origin_bytes, NULL, win, &desc);
+
     int i = 0, j = 0;
     size_t msg_len;
     while (i < total_origin_iov_len && j < total_target_iov_len) {
@@ -104,7 +112,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
 
         int vci = MPIDI_WIN(win, am_vci);
         int nic = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);;
-        msg.desc = NULL;
+        msg.desc = desc;
         msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vci);
         msg.context = NULL;
         msg.data = 0;
