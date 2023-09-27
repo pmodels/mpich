@@ -66,7 +66,7 @@ struct cache_put_elem {
     int keyval_len;
 };
 
-struct cache_elem {
+struct pmip_kvs {
     char *key;
     char *val;
     UT_hash_handle hh;
@@ -105,8 +105,8 @@ struct pmip_pg {
 
     /* PMI-1 caches server kvs locally */
     struct cache_put_elem cache_put;
-    struct cache_elem *cache_get;
-    struct cache_elem *hash_get;
+    struct pmip_kvs *cache_get;
+    struct pmip_kvs *hash_get;
     int num_elems;
 
     /* for barrier_in */

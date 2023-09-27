@@ -423,7 +423,7 @@ HYD_status fn_get(struct pmip_downstream * p, struct PMIU_cmd * pmi)
             found = true;
         }
     } else {
-        struct cache_elem *elem = NULL;
+        struct pmip_kvs *elem = NULL;
         HASH_FIND_STR(PMIP_pg_from_downstream(p)->hash_get, key, elem);
         if (elem) {
             found = true;
@@ -518,22 +518,22 @@ HYD_status fn_keyval_cache(struct pmip_pg *pg, struct PMIU_cmd *pmi)
     /* allocate a larger space for the cached keyvals, copy over the
      * older keyvals and add the new ones in */
     HASH_CLEAR(hh, pg->hash_get);
-    HYDU_REALLOC_OR_JUMP(pg->cache_get, struct cache_elem *,
-                         (sizeof(struct cache_elem) * (pg->num_elems + num_tokens)), status);
+    HYDU_REALLOC_OR_JUMP(pg->cache_get, struct pmip_kvs *,
+                         (sizeof(struct pmip_kvs) * (pg->num_elems + num_tokens)), status);
 
     int i;
     for (i = 0; i < pg->num_elems; i++) {
-        struct cache_elem *elem = pg->cache_get + i;
-        struct cache_elem *replaced;
+        struct pmip_kvs *elem = pg->cache_get + i;
+        struct pmip_kvs *replaced;
         HASH_REPLACE_STR(pg->hash_get, key, elem, replaced, MPL_MEM_PM);
     }
     for (; i < pg->num_elems + num_tokens; i++) {
-        struct cache_elem *elem = pg->cache_get + i;
+        struct pmip_kvs *elem = pg->cache_get + i;
         elem->key = MPL_strdup(tokens[i - pg->num_elems].key);
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->key, HYD_INTERNAL_ERROR, "%s", "");
         elem->val = MPL_strdup(tokens[i - pg->num_elems].val);
         HYDU_ERR_CHKANDJUMP(status, NULL == elem->val, HYD_INTERNAL_ERROR, "%s", "");
-        struct cache_elem *replaced;
+        struct pmip_kvs *replaced;
         HASH_REPLACE_STR(pg->hash_get, key, elem, replaced, MPL_MEM_PM);
     }
     pg->num_elems += num_tokens;
