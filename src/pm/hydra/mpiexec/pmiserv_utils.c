@@ -404,8 +404,6 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
     status = HYD_pmcd_pmi_allocate_kvs(&pg_scratch->kvs);
     HYDU_ERR_POP(status, "unable to allocate kvs space\n");
 
-    pg_scratch->keyval_dist_count = 0;
-
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

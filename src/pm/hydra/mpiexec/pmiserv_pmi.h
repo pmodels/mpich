@@ -9,6 +9,7 @@
 #include "hydra.h"
 #include "demux.h"
 #include "pmiserv_common.h"
+#include "utarray.h"
 
 struct HYD_pmcd_pmi_pg_scratch {
     /* PMI-1's PMI_Barrier is blocking, thus a single barrier_count works */
@@ -28,7 +29,6 @@ struct HYD_pmcd_pmi_pg_scratch {
 
     char kvsname[PMI_MAXKVSLEN];
     struct HYD_kvs *kvs;
-    int keyval_dist_count;      /* Number of keyvals distributed */
 };
 
 HYD_status HYD_pmcd_pmi_finalize(void);
