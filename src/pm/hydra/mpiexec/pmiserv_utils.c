@@ -402,7 +402,9 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
     HYDU_ERR_POP(status, "error in generating kvsname\n");
 
     pg_scratch->kvs = NULL;
-    utarray_new(pg_scratch->kvs_batch, &ut_str_icd, MPL_MEM_OTHER);
+
+    static UT_icd my_icd = { sizeof(char *), NULL, NULL, NULL };
+    utarray_new(pg_scratch->kvs_batch, &my_icd, MPL_MEM_OTHER);
 
   fn_exit:
     HYDU_FUNC_EXIT();
