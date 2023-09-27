@@ -29,12 +29,16 @@ struct HYD_pmcd_pmi_pg_scratch {
 
     char kvsname[PMI_MAXKVSLEN];
     struct HYD_kvs *kvs;
+    /* an array of kvs entries (keys) that needs to be pushed to proxies at barrier_out */
+    UT_array *kvs_batch;
 };
 
 HYD_status HYD_pmcd_pmi_finalize(void);
 
 HYD_status HYD_pmiserv_pmi_reply(struct HYD_proxy *proxy, int process_fd, struct PMIU_cmd *pmi);
 
+HYD_status HYD_pmiserv_add_kvs(struct HYD_pmcd_pmi_pg_scratch *pg_scratch,
+                               const char *key, const char *val);
 HYD_status HYD_pmiserv_bcast_keyvals(struct HYD_proxy *proxy, int process_fd);
 HYD_status HYD_pmiserv_epoch_init(struct HYD_pg *pg);
 HYD_status HYD_pmiserv_epoch_free(struct HYD_pg *pg);
