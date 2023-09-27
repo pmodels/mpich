@@ -269,7 +269,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
 
         void *desc = NULL;
         if (MPIR_GPU_query_pointer_is_strict_dev(iov.iov_base, &attr))
-            MPIDI_OFI_gpu_rma_register(iov.iov_base, iov.iov_len, &attr, win, &desc);
+            MPIDI_OFI_gpu_rma_register(iov.iov_base, iov.iov_len, &attr, win, nic_target, &desc);
 
         msg.desc = desc;
         msg.addr = MPIDI_OFI_av_to_phys(addr, nic_target, vci_target);
@@ -445,7 +445,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(iov.iov_base, &attr);
         if (MPIR_GPU_query_pointer_is_strict_dev(iov.iov_base, &attr))
-            MPIDI_OFI_gpu_rma_register(iov.iov_base, iov.iov_len, NULL, win, &desc);
+            MPIDI_OFI_gpu_rma_register(iov.iov_base, iov.iov_len, NULL, win, nic_target, &desc);
 
         msg.desc = desc;
         msg.msg_iov = &iov;
@@ -669,11 +669,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
     targetv.key = target_mr.mr_key;
 
     void *desc = NULL;
-    MPIDI_OFI_gpu_rma_register(originv.addr, dt_size, NULL, win, &desc);
+    MPIDI_OFI_gpu_rma_register(originv.addr, dt_size, NULL, win, nic_target, &desc);
     void *compare_desc = NULL;
-    MPIDI_OFI_gpu_rma_register(comparev.addr, dt_size, NULL, win, &compare_desc);
+    MPIDI_OFI_gpu_rma_register(comparev.addr, dt_size, NULL, win, nic_target, &compare_desc);
     void *result_desc = NULL;
-    MPIDI_OFI_gpu_rma_register(resultv.addr, dt_size, NULL, win, &result_desc);
+    MPIDI_OFI_gpu_rma_register(resultv.addr, dt_size, NULL, win, nic_target, &result_desc);
 
     msg.msg_iov = &originv;
     msg.desc = desc;
@@ -798,7 +798,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
         targetv.key = target_mr.mr_key;
 
         void *desc = NULL;
-        MPIDI_OFI_gpu_rma_register(originv.addr, dt_size * basic_count, NULL, win, &desc);
+        MPIDI_OFI_gpu_rma_register(originv.addr, dt_size * basic_count, NULL, win, nic_target,
+                                   &desc);
 
         msg.msg_iov = &originv;
         msg.desc = desc;
@@ -940,9 +941,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         targetv.key = target_mr.mr_key;
 
         void *desc = NULL;
-        MPIDI_OFI_gpu_rma_register(originv.addr, dt_size * basic_count, NULL, win, &desc);
+        MPIDI_OFI_gpu_rma_register(originv.addr, dt_size * basic_count, NULL, win, nic_target,
+                                   &desc);
         void *result_desc = NULL;
-        MPIDI_OFI_gpu_rma_register(resultv.addr, dt_size * basic_count, NULL, win, &result_desc);
+        MPIDI_OFI_gpu_rma_register(resultv.addr, dt_size * basic_count, NULL, win, nic_target,
+                                   &result_desc);
 
         msg.msg_iov = &originv;
         msg.desc = desc;
@@ -1171,9 +1174,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     targetv.key = target_mr.mr_key;
 
     void *desc = NULL;
-    MPIDI_OFI_gpu_rma_register(originv.addr, dt_size, NULL, win, &desc);
+    MPIDI_OFI_gpu_rma_register(originv.addr, dt_size, NULL, win, nic_target, &desc);
     void *result_desc = NULL;
-    MPIDI_OFI_gpu_rma_register(resultv.addr, dt_size, NULL, win, &result_desc);
+    MPIDI_OFI_gpu_rma_register(resultv.addr, dt_size, NULL, win, nic_target, &result_desc);
 
     msg.msg_iov = &originv;
     msg.desc = desc;

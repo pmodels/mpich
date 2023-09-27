@@ -776,14 +776,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_unregister_am_bufs(void)
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_gpu_rma_register(const void *buffer, size_t size,
                                                          MPL_pointer_attr_t * attr, MPIR_Win * win,
-                                                         void **desc)
+                                                         int nic, void **desc)
 {
     struct fid_mr *mr = NULL;
     MPL_pointer_attr_t attr_tmp;
 
     *desc = NULL;
 
-    int ctx_idx = MPIDI_OFI_get_ctx_index(MPIDI_WIN(win, am_vci), 0);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(MPIDI_WIN(win, am_vci), nic);
     if (!attr) {
         MPIR_GPU_query_pointer_attr(buffer, &attr_tmp);
         attr = &attr_tmp;

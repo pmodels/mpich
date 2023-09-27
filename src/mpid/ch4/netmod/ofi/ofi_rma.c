@@ -94,7 +94,9 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     }
 
     void *desc = NULL;
-    MPIDI_OFI_gpu_rma_register(origin_addr, origin_bytes, NULL, win, &desc);
+    int nic = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);;
+
+    MPIDI_OFI_gpu_rma_register(origin_addr, origin_bytes, NULL, win, nic, &desc);
 
     int i = 0, j = 0;
     size_t msg_len;
@@ -111,7 +113,6 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
         msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
 
         int vci = MPIDI_WIN(win, am_vci);
-        int nic = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);;
         msg.desc = desc;
         msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vci);
         msg.context = NULL;
