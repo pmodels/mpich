@@ -9,7 +9,14 @@
 #include "hydra.h"
 #include "demux.h"
 #include "pmiserv_common.h"
+#include "uthash.h"
 #include "utarray.h"
+
+struct HYD_pmcd_kvs {
+    char *key;
+    char *val;
+    UT_hash_handle hh;
+};
 
 struct HYD_pmcd_pmi_pg_scratch {
     /* PMI-1's PMI_Barrier is blocking, thus a single barrier_count works */
@@ -28,7 +35,7 @@ struct HYD_pmcd_pmi_pg_scratch {
     int dead_process_count;
 
     char kvsname[PMI_MAXKVSLEN];
-    struct HYD_kvs *kvs;
+    struct HYD_pmcd_kvs *kvs;
     /* an array of kvs entries (keys) that needs to be pushed to proxies at barrier_out */
     UT_array *kvs_batch;
 };

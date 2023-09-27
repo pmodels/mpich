@@ -401,9 +401,7 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
     status = gen_kvsname(pg_scratch->kvsname, pg->pgid);
     HYDU_ERR_POP(status, "error in generating kvsname\n");
 
-    status = HYD_pmcd_pmi_allocate_kvs(&pg_scratch->kvs);
-    HYDU_ERR_POP(status, "unable to allocate kvs space\n");
-
+    pg_scratch->kvs = NULL;
     utarray_new(pg_scratch->kvs_batch, &ut_str_icd, MPL_MEM_OTHER);
 
   fn_exit:
@@ -427,7 +425,13 @@ HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
         HYD_pmiserv_epoch_free(pg);
         MPL_free(pg_scratch->dead_processes);
 
-        HYD_pmcd_free_pmi_kvs_list(pg_scratch->kvs);
+        struct HYD_pmcd_kvs *s, *tmp;
+        HASH_ITER(hh, pg_scratch->kvs, s, tmp) {
+            MPL_free(s->key);
+            MPL_free(s->val);
+            HASH_DEL(pg_scratch->kvs, s);
+            MPL_free(s);
+        }
 
         utarray_free(pg_scratch->kvs_batch);
 
