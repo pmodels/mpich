@@ -823,6 +823,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 
 /* Some setting should always use runtime setting */
 #define MPIDI_OFI_ENABLE_HMEM               MPIDI_OFI_global.settings.enable_hmem
-
+#define MPIDI_OFI_ENABLE_MR_HMEM            MPIDI_OFI_global.settings.enable_mr_hmem
 
 #endif /* OFI_CAPABILITY_SETS_H_INCLUDED */

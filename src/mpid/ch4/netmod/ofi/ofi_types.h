@@ -303,6 +303,7 @@ typedef struct {
     unsigned enable_pt2pt_nopack:1;
     unsigned enable_triggered:1;
     unsigned enable_hmem:1;
+    unsigned enable_mr_hmem:1;
     unsigned enable_data_auto_progress:1;
     unsigned enable_control_auto_progress:1;
     unsigned require_rdm:1;
@@ -332,6 +333,13 @@ typedef struct {
     MPIR_hwtopo_gid_t parent;   /* Parent topology item of NIC which has affinity mask.
                                  * This is typically the socket above the NIC */
 } MPIDI_OFI_nic_info_t;
+
+/* Queue for storing the memory registration handles */
+typedef struct MPIDI_GPU_RDMA_queue_t {
+    void *mr;
+    struct MPIDI_GPU_RDMA_queue_t *next;
+    struct MPIDI_GPU_RDMA_queue_t *prev;
+} MPIDI_GPU_RDMA_queue_t;
 
 /* Global state data */
 #define MPIDI_KVSAPPSTRLEN 1024
@@ -379,6 +387,9 @@ typedef struct {
     /* OFI atomics limitation of each pair of <dtype, op> returned by the
      * OFI provider at MPI initialization.*/
     MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDIG_ACCU_NUM_OP];
+
+    /* Registration list for GPU RDMA */
+    MPIDI_GPU_RDMA_queue_t *gdr_mrs;
 
     /* stores the maximum of last recently used optimized memory region key */
     uint64_t global_max_optimized_mr_key;

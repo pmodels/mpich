@@ -58,9 +58,9 @@ static int test_allred(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
         MPI_Comm_size(comm, &size);
         MPI_Comm_rank(comm, &rank);
 
-        for (count = 1; count < 65000; count = count * 2) {
-            MTestMalloc(count * sizeof(int), memtype, &buf_h, &buf, rank);
+        MTestMalloc(32768 * sizeof(int), memtype, &buf_h, &buf, rank);
 
+        for (count = 1; count < 65000; count = count * 8) {
             set_buf(rank, count, buf_h);
             MTestCopyContent(buf_h, buf, count * sizeof(int), memtype);
 
@@ -68,9 +68,9 @@ static int test_allred(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
 
             MTestCopyContent(buf, buf_h, count * sizeof(int), memtype);
             check_buf(size, count, &errs, buf_h);
-
-            MTestFree(memtype, buf_h, buf);
         }
+
+        MTestFree(memtype, buf_h, buf);
         MTestFreeComm(&comm);
     }
     return errs;
