@@ -682,10 +682,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(int vci, struct fi_cq_tagged
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t data_sz,
-                                                       MPL_pointer_attr_t attr, int ctx_idx,
-                                                       struct fid_mr **mr)
+                                                       MPL_pointer_attr_t * attr, int ctx_idx,
+                                                       uint64_t rkey, struct fid_mr **mr)
 {
-    struct fi_mr_attr mr_attr;
+    struct fi_mr_attr mr_attr = { 0 };
     struct iovec iov;
     int mpi_errno = MPI_SUCCESS;
 
@@ -696,20 +696,41 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t da
     mr_attr.mr_iov = &iov;
     mr_attr.iov_count = 1;
     mr_attr.access = FI_REMOTE_READ | FI_REMOTE_WRITE;
-    mr_attr.requested_key = 1;
+    mr_attr.requested_key = rkey;
+    mr_attr.offset = 0;
+    mr_attr.context = NULL;
 #ifdef MPL_HAVE_CUDA
-    mr_attr.iface = (attr.type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_CUDA;
+    mr_attr.iface = (attr->type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_CUDA;
     mr_attr.device.cuda =
-        (attr.type != MPL_GPU_POINTER_DEV) ? 0 : MPL_gpu_get_dev_id_from_attr(&attr);
+        (attr->type != MPL_GPU_POINTER_DEV) ? 0 : MPL_gpu_get_dev_id_from_attr(attr);
 #elif defined MPL_HAVE_ZE
-    mr_attr.iface = (attr.type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_ZE;
     /* OFI does not support tiles yet, need to pass the root device. */
+    mr_attr.iface = (attr->type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_ZE;
     mr_attr.device.ze =
-        (attr.type !=
-         MPL_GPU_POINTER_DEV) ? 0 : MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(&attr));
+        (attr->type !=
+         MPL_GPU_POINTER_DEV) ? 0 : MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(attr));
 #endif
     MPIDI_OFI_CALL(fi_mr_regattr
-                   (MPIDI_OFI_global.ctx[ctx_idx].domain, &mr_attr, 0, &(*mr)), mr_regattr);
+                   (MPIDI_OFI_global.ctx[ctx_idx].domain, &mr_attr, 0, mr), mr_regattr);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory_and_bind(char *send_buf, size_t data_sz,
+                                                                MPL_pointer_attr_t * attr,
+                                                                int ctx_idx, struct fid_mr **mr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    mpi_errno = MPIDI_OFI_register_memory(send_buf, data_sz, attr, ctx_idx, 0, mr);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (*mr != NULL) {
         mpi_errno = MPIDI_OFI_mr_bind(MPIDI_OFI_global.prov_use[0], *mr,
