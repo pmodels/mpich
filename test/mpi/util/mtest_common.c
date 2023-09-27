@@ -320,6 +320,11 @@ void MTestFreeStringList(char **strlist, int num)
 #include <assert.h>
 #ifdef HAVE_CUDA
 #include <cuda_runtime_api.h>
+#define CHECK_CUDAMALLOC(err)                                   \
+    if ((err) == cudaErrorMemoryAllocation) {                   \
+        fprintf(stderr, "CUDA memory allocation failed\n");     \
+        MPI_Abort(MPI_COMM_SELF, 1);                            \
+    }
 #endif
 #ifdef HAVE_HIP
 #include <hip/hip_runtime_api.h>
@@ -476,22 +481,22 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
             *hostbuf = *devicebuf;
 #ifdef HAVE_CUDA
     } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
-        cudaMallocHost(devicebuf, size);
+        CHECK_CUDAMALLOC(cudaMallocHost(devicebuf, size));
         if (is_calloc)
             memset(*devicebuf, 0, size);
         if (hostbuf)
             *hostbuf = *devicebuf;
     } else if (type == MTEST_MEM_TYPE__DEVICE) {
         cudaSetDevice(device_id % ndevices);
-        cudaMalloc(devicebuf, size);
+        CHECK_CUDAMALLOC(cudaMalloc(devicebuf, size));
         if (hostbuf) {
-            cudaMallocHost(hostbuf, size);
+            CHECK_CUDAMALLOC(cudaMallocHost(hostbuf, size));
             if (is_calloc)
                 memset(*hostbuf, 0, size);
         }
     } else if (type == MTEST_MEM_TYPE__SHARED) {
         cudaSetDevice(device_id % ndevices);
-        cudaMallocManaged(devicebuf, size, cudaMemAttachGlobal);
+        CHECK_CUDAMALLOC(cudaMallocManaged(devicebuf, size, cudaMemAttachGlobal));
         if (hostbuf)
             *hostbuf = *devicebuf;
 #endif
