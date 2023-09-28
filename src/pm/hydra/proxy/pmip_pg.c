@@ -18,7 +18,6 @@ static void pg_destructor(void *_elt)
     MPL_free(pg->iface_ip_env_name);
     MPL_free(pg->hostname);
     HYDU_free_exec_list(pg->exec_list);
-    HYD_pmcd_free_pmi_kvs_list(pg->kvs);
 
     struct pmip_kvs *s, *tmp;
     HASH_ITER(hh, pg->kvs, s, tmp) {
@@ -28,12 +27,7 @@ static void pg_destructor(void *_elt)
         MPL_free(s);
     }
 
-    HASH_CLEAR(hh, pg->hash_get);
-    for (int i = 0; i < pg->num_elems; i++) {
-        MPL_free((pg->cache_get + i)->key);
-        MPL_free((pg->cache_get + i)->val);
-    }
-    MPL_free(pg->cache_get);
+    utarray_free(pg->kvs_batch);
 }
 
 #define FIND_DOWNSTREAM(fd, field) do { \
@@ -75,6 +69,10 @@ struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id)
     }
 
     pg->kvs = NULL;
+
+    static UT_icd my_icd = { sizeof(char *), NULL, NULL, NULL };
+    utarray_new(pg->kvs_batch, &my_icd, MPL_MEM_OTHER);
+
     /* the rest of the fields have been zero-filled */
 
     return pg;

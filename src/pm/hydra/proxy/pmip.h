@@ -103,12 +103,9 @@ struct pmip_pg {
     struct HYD_exec *exec_list;
 
     struct pmip_kvs *kvs;
-
-    /* PMI-1 caches server kvs locally */
-    struct cache_put_elem cache_put;
-    struct pmip_kvs *cache_get;
-    struct pmip_kvs *hash_get;
-    int num_elems;
+    /* An array of kvs entries (keys) that needs to be pushed to
+     * server at barrier_in. */
+    UT_array *kvs_batch;
 
     /* for barrier_in */
     int barrier_count;
