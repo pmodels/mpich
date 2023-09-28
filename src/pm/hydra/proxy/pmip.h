@@ -8,6 +8,8 @@
 
 #include "hydra.h"
 #include "pmiserv_common.h"
+#include "uthash.h"
+#include "utarray.h"
 
 struct HYD_pmcd_pmip_map {
     int left;
@@ -100,8 +102,7 @@ struct pmip_pg {
     /* Process segmentation information for this proxy */
     struct HYD_exec *exec_list;
 
-    /* This is for PMI-2 info-putnodeattr. Should it be per-node or per pg? */
-    struct HYD_kvs *kvs;
+    struct pmip_kvs *kvs;
 
     /* PMI-1 caches server kvs locally */
     struct cache_put_elem cache_put;

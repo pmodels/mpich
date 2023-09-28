@@ -651,9 +651,19 @@ HYD_status fn_info_putnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
         goto fn_exit;
     }
 
-    status = HYD_pmcd_pmi_add_kvs(key, val, PMIP_pg_from_downstream(p)->kvs,
-                                  HYD_pmcd_pmip.user_global.debug);
-    HYDU_ERR_POP(status, "unable to put data into kvs\n");
+    struct pmip_kvs *s;
+    s = MPL_malloc(sizeof(*s), MPL_MEM_OTHER);
+    s->key = MPL_strdup(key);
+    s->val = MPL_strdup(val);
+
+    /* NOTE: uthash are all macros, very tricky to use:
+     *   1. avoid function call in params.
+     *   2. pg->kvs may change, thus cannot be local pointer variable.
+     *   3. use s->key not key since uthash stores it by ptr.
+     */
+    struct pmip_pg *pg;
+    pg = PMIP_pg_from_downstream(p);
+    HASH_ADD_KEYPTR(hh, pg->kvs, s->key, strlen(s->key), s, MPL_MEM_OTHER);
 
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
     HYDU_ASSERT(!pmi_errno, status);
@@ -676,6 +686,7 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
+    struct pmip_kvs *kvs = PMIP_pg_from_downstream(p)->kvs;
     HYDU_FUNC_ENTER();
 
     const char *key;
@@ -686,9 +697,16 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     /* if a predefined value is not found, we let the code fall back
      * to regular search and return an error to the client */
 
+    struct pmip_kvs *s;
     const char *val;
-    int found;
-    HYD_kvs_find(PMIP_pg_from_downstream(p)->kvs, key, &val, &found);
+    int found = 0;
+    HASH_FIND_STR(kvs, key, s);
+    HYDU_dump(stdout, "getnodeattr: kvs=%p, key=%s, s=%p\n", kvs, key, s);
+    if (s) {
+        val = s->val;
+        found = 1;
+    }
+
 
     if (!found && wait) {
         status = HYD_pmcd_pmi_v2_queue_req(p, pmi, key);

@@ -20,6 +20,14 @@ static void pg_destructor(void *_elt)
     HYDU_free_exec_list(pg->exec_list);
     HYD_pmcd_free_pmi_kvs_list(pg->kvs);
 
+    struct pmip_kvs *s, *tmp;
+    HASH_ITER(hh, pg->kvs, s, tmp) {
+        MPL_free(s->key);
+        MPL_free(s->val);
+        HASH_DEL(pg->kvs, s);
+        MPL_free(s);
+    }
+
     HASH_CLEAR(hh, pg->hash_get);
     for (int i = 0; i < pg->num_elems; i++) {
         MPL_free((pg->cache_get + i)->key);
@@ -66,7 +74,7 @@ struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id)
         pg->is_singleton = true;
     }
 
-    HYD_pmcd_pmi_allocate_kvs(&pg->kvs);
+    pg->kvs = NULL;
     /* the rest of the fields have been zero-filled */
 
     return pg;
