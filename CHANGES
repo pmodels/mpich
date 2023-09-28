@@ -19,6 +19,9 @@
 # Handle conversion functions, such as MPI_Comm_c2f, MPI_Comm_f2c, etc., are
   no longer macros. MPI-4.1 require these to be actual functions.
 
+# Yaksa updated to auto detect the GPU architecture and only build for
+  the detected arch. This applies to CUDA and HIP support.
+
 ===============================================================================
                                Changes in 4.1
 ===============================================================================
