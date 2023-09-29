@@ -220,7 +220,11 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_end(MPID_Progress_state * state)
 
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(MPID_Progress_state * state)
 {
-    if (state == NULL) {
+    if (!MPIR_Process.comm_world) {
+        /* skip progress if the world is not initialized (e.g. a session) */
+        /* TODO: update once we support partial world */
+        return MPI_SUCCESS;
+    } else if (state == NULL) {
         MPID_Progress_state progress_state;
 
         MPIDI_progress_state_init(&progress_state);
