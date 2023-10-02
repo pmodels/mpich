@@ -432,12 +432,25 @@ int MPIR_Err_return_session(struct MPIR_Session *session_ptr, const char fcname[
         MPIR_Handle_fatal_error(NULL, fcname, errcode);
         return MPI_ERR_INTERN;
     }
-    /* --END ERROR HANDLING-- */
 
-    /* Fallback to MPIR_Err_return_comm if no session or no errhandler provided */
-    if (session_ptr == NULL || session_ptr->errhandler == NULL) {
+    /* Fallback to MPIR_Err_return_comm in some cases - order of checks is important */
+
+    /* No session */
+    if (session_ptr == NULL) {
         return MPIR_Err_return_comm(NULL, fcname, errcode);
     }
+
+    /* Released session */
+    if (MPIR_Object_get_ref(session_ptr) <= 0) {
+        return MPIR_Err_return_comm(NULL, fcname, errcode);
+    }
+
+    /* No errhandler */
+    if (session_ptr->errhandler == NULL) {
+        return MPIR_Err_return_comm(NULL, fcname, errcode);
+    }
+
+    /* --END ERROR HANDLING-- */
 
     MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, TERSE,
                     (MPL_DBG_FDEST,

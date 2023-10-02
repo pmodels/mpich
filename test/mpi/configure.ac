@@ -1855,6 +1855,7 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/coll/Makefile \
           impls/mpich/comm/Makefile \
           impls/mpich/comm/testlist \
+          impls/mpich/session/Makefile \
           impls/mpich/threads/Makefile \
           impls/mpich/threads/testlist \
           impls/mpich/threads/pt2pt/Makefile \
