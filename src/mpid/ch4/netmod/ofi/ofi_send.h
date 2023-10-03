@@ -247,7 +247,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     if (register_mem) {
-        MPIDI_OFI_register_memory(send_buf, data_sz, attr, ctx_idx, &mr);
+        MPIDI_OFI_register_memory_and_bind(send_buf, data_sz, &attr, ctx_idx, &mr);
         if (mr != NULL) {
             desc = fi_mr_desc(mr);
         }
