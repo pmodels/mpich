@@ -29,6 +29,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
 
     MPIR_FUNC_ENTER;
 
+    if (typereq_req)
+        typereq_req->req = MPIR_TYPEREP_REQ_NULL;
+
     MPIR_Datatype_get_size_macro(sendtype, sendsize);
     MPIR_Datatype_get_size_macro(recvtype, recvsize);
 
@@ -199,7 +202,7 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
     MPIR_FUNC_ENTER;
 
     if (typerep_req)
-        *typerep_req = MPIR_TYPEREP_REQ_NULL;
+        typerep_req->req = MPIR_TYPEREP_REQ_NULL;
 
     MPIR_Datatype_get_size_macro(sendtype, sendsize);
     MPIR_Datatype_get_size_macro(recvtype, recvsize);
