@@ -450,6 +450,29 @@ int MPIR_Typerep_wait(MPIR_Typerep_req typerep_req)
     goto fn_exit;
 }
 
+int MPIR_Typerep_test(MPIR_Typerep_req typerep_req, int *completed)
+{
+    MPIR_FUNC_ENTER;
+    int mpi_errno = MPI_SUCCESS;
+    int rc;
+
+    if (typerep_req.req == MPIR_TYPEREP_REQ_NULL)
+        goto fn_exit;
+
+    rc = yaksa_request_test((yaksa_request_t) typerep_req.req, completed);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+
+    if (*completed) {
+        rc = MPII_yaksa_free_info(typerep_req.info);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+    }
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* MPIR_Typerep_op - accumulate source_buf onto target_buf with op.
  * Assume (we may relax and extend in the future)
  *   - source datatype is predefined (basic or pairtype)
