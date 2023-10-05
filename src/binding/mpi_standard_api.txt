@@ -1641,7 +1641,7 @@ MPI_Pready_range:
 MPI_Precv_init:
     buf: BUFFER, direction=IN, [initial address of recv buffer (choice)]
     partitions: PARTITION, direction=IN, [number of partitions]
-    count: XFER_NUM_ELEM_NNI, direction=IN, [number of elements send per partition]
+    count: POLYXFER_NUM_ELEM_NNI, direction=IN, [number of elements per partition]
     datatype: DATATYPE, direction=IN, [type of each element]
     dest: RANK, direction=IN, [rank of destination]
     tag: TAG, direction=IN, [message tag]
@@ -1656,7 +1656,7 @@ MPI_Probe:
 MPI_Psend_init:
     buf: BUFFER, constant=True, direction=IN, [initial address of send buffer (choice)]
     partitions: PARTITION, direction=IN, [number of partitions]
-    count: XFER_NUM_ELEM_NNI, direction=IN, [number of elements send per partition]
+    count: POLYXFER_NUM_ELEM_NNI, direction=IN, [number of elements per partition]
     datatype: DATATYPE, direction=IN, [type of each element]
     dest: RANK, direction=IN, [rank of destination]
     tag: TAG, direction=IN, [message tag]
