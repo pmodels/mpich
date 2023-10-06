@@ -56,7 +56,12 @@ HYD_status HYD_pmiserv_kvs_get(struct HYD_proxy *proxy, int process_fd, int pgid
         found = 1;
         val = pg_scratch->dead_processes;
     } else {
-        HYD_kvs_find(pg_scratch->kvs, key, &val, &found);
+        struct HYD_pmcd_kvs *s;
+        HASH_FIND_STR(pg_scratch->kvs, key, s);
+        if (s) {
+            found = 1;
+            val = s->val;
+        }
     }
 
     if (!found && sync) {
@@ -109,7 +114,7 @@ HYD_status HYD_pmiserv_kvs_put(struct HYD_proxy *proxy, int process_fd, int pgid
     pg = PMISERV_pg_by_id(proxy->pgid);
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
-    status = HYD_pmcd_pmi_add_kvs(key, val, pg_scratch->kvs, HYD_server_info.user_global.debug);
+    status = HYD_pmiserv_add_kvs(pg_scratch, key, val);
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
     struct PMIU_cmd pmi_response;
@@ -143,8 +148,7 @@ HYD_status HYD_pmiserv_kvs_mput(struct HYD_proxy *proxy, int process_fd, int pgi
 
     /* FIXME: leak of pmi's abstraction */
     for (int i = 0; i < pmi->num_tokens; i++) {
-        status = HYD_pmcd_pmi_add_kvs(pmi->tokens[i].key, pmi->tokens[i].val,
-                                      pg_scratch->kvs, HYD_server_info.user_global.debug);
+        status = HYD_pmiserv_add_kvs(pg_scratch, pmi->tokens[i].key, pmi->tokens[i].val);
         HYDU_ERR_POP(status, "unable to add key pair to kvs\n");
     }
 

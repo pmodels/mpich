@@ -167,16 +167,23 @@ static HYD_status cache_put_flush(struct pmip_pg *pg)
     HYD_status status = HYD_SUCCESS;
     HYDU_FUNC_ENTER();
 
-    if (pg->cache_put.keyval_len == 0)
+    if (utarray_len(pg->kvs_batch) == 0)
         goto fn_exit;
 
-    debug("flushing %d put command(s) out\n", pg->cache_put.keyval_len);
+    debug("flushing %d put command(s) out\n", utarray_len(pg->kvs_batch));
 
     struct PMIU_cmd pmi;
     PMIU_msg_set_query(&pmi, PMIU_WIRE_V1, PMIU_CMD_MPUT, false /* not static */);
     HYDU_ASSERT(pmi.num_tokens < MAX_PMI_ARGS, status);
-    for (int i = 0; i < pg->cache_put.keyval_len; i++) {
-        PMIU_cmd_add_str(&pmi, pg->cache_put.tokens[i].key, pg->cache_put.tokens[i].val);
+
+    const char **p = (const char **) utarray_front(pg->kvs_batch);
+    while (p) {
+        struct pmip_kvs *s;
+        HASH_FIND_STR(pg->kvs, *p, s);
+        HYDU_ASSERT(s, status);
+        PMIU_cmd_add_str(&pmi, s->key, s->val);
+
+        p = (const char **) utarray_next(pg->kvs_batch, p);
     }
 
     if (HYD_pmcd_pmip.user_global.debug) {
@@ -186,11 +193,7 @@ static HYD_status cache_put_flush(struct pmip_pg *pg)
     status = send_cmd_upstream(pg, &pmi, 0 /* dummy fd */);
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
-    for (int i = 0; i < pg->cache_put.keyval_len; i++) {
-        MPL_free((void *) pg->cache_put.tokens[i].key); /* cast away const qualifier */
-        MPL_free((void *) pg->cache_put.tokens[i].val); /* cast away const qualifier */
-    }
-    pg->cache_put.keyval_len = 0;
+    utarray_clear(pg->kvs_batch);
     PMIU_cmd_free_buf(&pmi);
 
   fn_exit:
@@ -423,11 +426,11 @@ HYD_status fn_get(struct pmip_downstream * p, struct PMIU_cmd * pmi)
             found = true;
         }
     } else {
-        struct cache_elem *elem = NULL;
-        HASH_FIND_STR(PMIP_pg_from_downstream(p)->hash_get, key, elem);
-        if (elem) {
+        struct pmip_kvs *s = NULL;
+        HASH_FIND_STR(PMIP_pg_from_downstream(p)->kvs, key, s);
+        if (s) {
             found = true;
-            val = elem->val;
+            val = s->val;
         }
     }
 
@@ -476,18 +479,26 @@ HYD_status fn_put(struct pmip_downstream *p, struct PMIU_cmd *pmi)
         goto fn_exit;
     }
 
-    /* add to the cache */
     struct pmip_pg *pg = PMIP_pg_from_downstream(p);
-    int i = pg->cache_put.keyval_len++;
-    pg->cache_put.tokens[i].key = MPL_strdup(key);
-    if (val) {
-        pg->cache_put.tokens[i].val = MPL_strdup(val);
+
+    struct pmip_kvs *s;
+    HASH_FIND_STR(pg->kvs, key, s);
+    if (s) {
+        /* key exist, replace the value */
+        MPL_free(s->val);
+        s->val = MPL_strdup(val);
     } else {
-        pg->cache_put.tokens[i].val = NULL;
+        s = MPL_malloc(sizeof(*s), MPL_MEM_OTHER);
+        s->key = MPL_strdup(key);
+        s->val = MPL_strdup(val);
+
+        HASH_ADD_KEYPTR(hh, pg->kvs, s->key, strlen(s->key), s, MPL_MEM_OTHER);
     }
+    utarray_push_back(pg->kvs_batch, &(s->key), MPL_MEM_OTHER);
+
     debug("cached command: %s=%s\n", key, val);
 
-    if (pg->cache_put.keyval_len >= CACHE_PUT_KEYVAL_MAXLEN) {
+    if (utarray_len(pg->kvs_batch) >= CACHE_PUT_KEYVAL_MAXLEN) {
         cache_put_flush(pg);
     }
 
@@ -515,38 +526,26 @@ HYD_status fn_keyval_cache(struct pmip_pg *pg, struct PMIU_cmd *pmi)
     const struct PMIU_token *tokens;
     PMIU_cmd_get_tokens(pmi, &num_tokens, &tokens);
 
-    /* allocate a larger space for the cached keyvals, copy over the
-     * older keyvals and add the new ones in */
-    HASH_CLEAR(hh, pg->hash_get);
-    HYDU_REALLOC_OR_JUMP(pg->cache_get, struct cache_elem *,
-                         (sizeof(struct cache_elem) * (pg->num_elems + num_tokens)), status);
-
-    int i;
-    for (i = 0; i < pg->num_elems; i++) {
-        struct cache_elem *elem = pg->cache_get + i;
-        struct cache_elem *replaced;
-        HASH_REPLACE_STR(pg->hash_get, key, elem, replaced, MPL_MEM_PM);
+    for (int i = 0; i < num_tokens; i++) {
+        struct pmip_kvs *s;
+        HASH_FIND_STR(pg->kvs, tokens[i].key, s);
+        if (s) {
+            /* key exist, replace the value */
+            MPL_free(s->val);
+            s->val = MPL_strdup(tokens[i].val);
+        } else {
+            s = MPL_malloc(sizeof(*s), MPL_MEM_OTHER);
+            s->key = MPL_strdup(tokens[i].key);
+            s->val = MPL_strdup(tokens[i].val);
+            HASH_ADD_KEYPTR(hh, pg->kvs, s->key, strlen(s->key), s, MPL_MEM_OTHER);
+        }
     }
-    for (; i < pg->num_elems + num_tokens; i++) {
-        struct cache_elem *elem = pg->cache_get + i;
-        elem->key = MPL_strdup(tokens[i - pg->num_elems].key);
-        HYDU_ERR_CHKANDJUMP(status, NULL == elem->key, HYD_INTERNAL_ERROR, "%s", "");
-        elem->val = MPL_strdup(tokens[i - pg->num_elems].val);
-        HYDU_ERR_CHKANDJUMP(status, NULL == elem->val, HYD_INTERNAL_ERROR, "%s", "");
-        struct cache_elem *replaced;
-        HASH_REPLACE_STR(pg->hash_get, key, elem, replaced, MPL_MEM_PM);
-    }
-    pg->num_elems += num_tokens;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
-HYD_status fn_barrier_in(struct pmip_downstream *p, struct PMIU_cmd *pmi)
+HYD_status fn_barrier_in(struct pmip_downstream * p, struct PMIU_cmd * pmi)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -651,9 +650,19 @@ HYD_status fn_info_putnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
         goto fn_exit;
     }
 
-    status = HYD_pmcd_pmi_add_kvs(key, val, PMIP_pg_from_downstream(p)->kvs,
-                                  HYD_pmcd_pmip.user_global.debug);
-    HYDU_ERR_POP(status, "unable to put data into kvs\n");
+    struct pmip_kvs *s;
+    s = MPL_malloc(sizeof(*s), MPL_MEM_OTHER);
+    s->key = MPL_strdup(key);
+    s->val = MPL_strdup(val);
+
+    /* NOTE: uthash are all macros, very tricky to use:
+     *   1. avoid function call in params.
+     *   2. pg->kvs may change, thus cannot be local pointer variable.
+     *   3. use s->key not key since uthash stores it by ptr.
+     */
+    struct pmip_pg *pg;
+    pg = PMIP_pg_from_downstream(p);
+    HASH_ADD_KEYPTR(hh, pg->kvs, s->key, strlen(s->key), s, MPL_MEM_OTHER);
 
     pmi_errno = PMIU_msg_set_response(pmi, &pmi_response, is_static);
     HYDU_ASSERT(!pmi_errno, status);
@@ -676,6 +685,7 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 {
     HYD_status status = HYD_SUCCESS;
     int pmi_errno;
+    struct pmip_kvs *kvs = PMIP_pg_from_downstream(p)->kvs;
     HYDU_FUNC_ENTER();
 
     const char *key;
@@ -686,9 +696,14 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     /* if a predefined value is not found, we let the code fall back
      * to regular search and return an error to the client */
 
+    struct pmip_kvs *s;
     const char *val;
-    int found;
-    HYD_kvs_find(PMIP_pg_from_downstream(p)->kvs, key, &val, &found);
+    int found = 0;
+    HASH_FIND_STR(kvs, key, s);
+    if (s) {
+        val = s->val;
+        found = 1;
+    }
 
     if (!found && wait) {
         status = HYD_pmcd_pmi_v2_queue_req(p, pmi, key);
