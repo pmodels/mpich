@@ -604,9 +604,29 @@ int MPIR_Process_bsend_finalize(void)
     return MPIR_Bsend_finalize(&(MPIR_Process.bsendbuffer));
 }
 
+int MPIR_Comm_attach_buffer_impl(MPIR_Comm * comm_ptr, void *buffer_addr, MPI_Aint size)
+{
+    return MPIR_Bsend_attach(&(comm_ptr->bsendbuffer), buffer_addr, size);
+}
+
+int MPIR_Comm_detach_buffer_impl(MPIR_Comm * comm_ptr, void *buffer_addr, MPI_Aint * size)
+{
+    return MPIR_Bsend_detach(&(comm_ptr->bsendbuffer), buffer_addr, size);
+}
+
 int MPIR_Comm_bsend_finalize(MPIR_Comm * comm_ptr)
 {
     return MPIR_Bsend_finalize(&(comm_ptr->bsendbuffer));
+}
+
+int MPIR_Session_attach_buffer_impl(MPIR_Session * session, void *buffer_addr, MPI_Aint size)
+{
+    return MPIR_Bsend_attach(&(session->bsendbuffer), buffer_addr, size);
+}
+
+int MPIR_Session_detach_buffer_impl(MPIR_Session * session, void *buffer_addr, MPI_Aint * size)
+{
+    return MPIR_Bsend_detach(&(session->bsendbuffer), buffer_addr, size);
 }
 
 int MPIR_Session_bsend_finalize(MPIR_Session * session)

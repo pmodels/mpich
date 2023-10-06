@@ -145,6 +145,16 @@ MPI_Buffer_detach:
         standard for more details.
 */
 
+MPI_Comm_attach_buffer:
+    .desc: Attaches a user-provided buffer for buffered send in the communicator
+    .skip: ThreadSafe
+    .seealso: MPI_Buffer_attach, MPI_Bsend
+
+MPI_Comm_detach_buffer:
+    .desc: Removes an existing buffer (for use in MPI_Bsend etc) in the communicator
+    .skip: ThreadSafe
+    .seealso: MPI_Comm_attach_buffer, MPI_Bsend
+
 MPI_Ibsend:
     .desc: Starts a nonblocking buffered send
     .earlyreturn: pt2pt_proc_null
@@ -465,6 +475,16 @@ MPI_Sendrecv_replace:
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 }
+
+MPI_Session_attach_buffer:
+    .desc: Attaches a user-provided buffer for buffered send in the session
+    .skip: ThreadSafe
+    .seealso: MPI_Buffer_attach, MPI_Bsend
+
+MPI_Session_detach_buffer:
+    .desc: Removes an existing buffer (for use in MPI_Bsend etc) in the session
+    .skip: ThreadSafe
+    .seealso: MPI_Session_attach_buffer, MPI_Bsend
 
 MPI_Ssend:
     .desc: Blocking synchronous send

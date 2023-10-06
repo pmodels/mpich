@@ -283,6 +283,14 @@ MPI_Comm_accept:
     root: RANK, [rank in comm of root node]
     comm: COMMUNICATOR, [intra-communicator over which call is collective]
     newcomm: COMMUNICATOR, direction=out, [inter-communicator with client as remote group]
+MPI_Comm_attach_buffer:
+    comm: COMMUNICATOR, direction=in, pointer=False
+    buffer: BUFFER, asynchronous=True, suppress=f08_intent, [initial buffer address]
+    size: POLYNUM_BYTES_NNI, [buffer size, in bytes]
+MPI_Comm_detach_buffer:
+    comm: COMMUNICATOR, direction=in, pointer=False
+    buffer_addr: C_BUFFER2, direction=out, [initial buffer address]
+    size: POLYNUM_BYTES, direction=out, [buffer size, in bytes]
 MPI_Comm_c2f:
     .return: F90_COMM
     comm: COMMUNICATOR, direction=in, pointer=False
@@ -1947,6 +1955,14 @@ MPI_Sendrecv_replace:
     recvtag: TAG, [receive message tag or MPI_ANY_TAG]
     comm: COMMUNICATOR
     status: STATUS, direction=out
+MPI_Session_attach_buffer:
+    session: SESSION, [session]
+    buffer: BUFFER, asynchronous=True, suppress=f08_intent, [initial buffer address]
+    size: POLYNUM_BYTES_NNI, [buffer size, in bytes]
+MPI_Session_detach_buffer:
+    session: SESSION, [session]
+    buffer_addr: C_BUFFER2, direction=out, [initial buffer address]
+    size: POLYNUM_BYTES, direction=out, [buffer size, in bytes]
 MPI_Session_c2f:
     .return: F90_SESSION
     session: SESSION, direction=in, pointer=False
