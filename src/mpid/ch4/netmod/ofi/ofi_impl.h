@@ -244,7 +244,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_pref_nic(MPIR_Comm * comm_ptr, int ra
  * Each nic will contain num_vcis vcis. Each corresponding to their respective vci index. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_ctx_index(int vci, int nic)
 {
-    return nic * MPIDI_OFI_global.num_vcis + vci;
+    return nic * MPIDI_CH4_MAX_VCIS + vci;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(int vci, int nic)

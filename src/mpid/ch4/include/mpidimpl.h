@@ -18,4 +18,7 @@
 #include "mpidpre.h"
 #include "mpidch4.h"
 
+int MPIDI_world_pre_init(void);
+int MPIDI_world_post_init(void);
+
 #endif /* MPIDIMPL_H_INCLUDED */

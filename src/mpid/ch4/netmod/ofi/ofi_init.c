@@ -508,7 +508,7 @@ static int create_vci_context(int vci, int nic);
 static int destroy_vci_context(int vci, int nic);
 static int ofi_pvar_init(void);
 
-static int ofi_am_init(void);
+static int ofi_am_init(int vci);
 static int ofi_am_post_recv(int vci, int nic);
 
 static void *host_alloc(uintptr_t size);
@@ -677,18 +677,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* Create transport level communication contexts.                           */
     /* ------------------------------------------------------------------------ */
 
-    /* TODO: check provider capabilities, such as prov_use->domain_attr->{tx,rx}_ctx_cnt,
-     *       abort if we can't support the requested number of vcis.
-     */
-    int num_vcis = MPIDI_global.n_total_vcis;
-
-    /* Multiple vci without using domain require MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS */
-#ifndef MPIDI_OFI_VNI_USE_DOMAIN
-    MPIR_Assert(num_vcis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
-#endif
-
-    MPIDI_OFI_global.num_vcis = num_vcis;
-
     /* set rx_ctx_cnt and tx_ctx_cnt for nic 0 */
     set_sep_counters(0);
 
@@ -703,7 +691,8 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* make sure ch4 pack buffer pool has sufficient cell size */
     MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
 
-    ofi_am_init();
+    MPIDI_OFI_global.num_vcis = 1;
+    ofi_am_init(0);
     ofi_am_post_recv(0, 0);
 
   fn_exit:
@@ -732,7 +721,56 @@ int MPIDI_OFI_init_world(void)
     goto fn_exit;
 }
 
+static int check_num_nics(void);
+static int setup_additional_vcis(void);
+
+int MPIDI_OFI_init_vcis(int num_vcis, int *num_vcis_actual)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Multiple vci without using domain require MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS */
+#ifndef MPIDI_OFI_VNI_USE_DOMAIN
+    MPIR_Assert(num_vcis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
+#endif
+
+    MPIDI_OFI_global.num_vcis = num_vcis;
+
+    /* All processes must have the same number of NICs */
+    mpi_errno = check_num_nics();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* may update MPIDI_OFI_global.num_vcis */
+    mpi_errno = setup_additional_vcis();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    *num_vcis_actual = MPIDI_OFI_global.num_vcis;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_OFI_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Since we allow different process to have different num_vcis, we always need run exchange. */
+    mpi_errno = MPIDI_OFI_addr_exchange_all_ctx();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    for (int vci = 1; vci < MPIDI_OFI_global.num_vcis; vci++) {
+        ofi_am_init(vci);
+        ofi_am_post_recv(vci, 0);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int check_num_nics(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -775,22 +813,34 @@ int MPIDI_OFI_post_init(void)
         set_sep_counters(nic);
     }
 
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int setup_additional_vcis(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
     for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
         for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
             /* vci 0 nic 0 already created */
             if (vci > 0 || nic > 0) {
                 mpi_errno = create_vci_context(vci, nic);
-                MPIR_ERR_CHECK(mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) {
+                    /* running out of vcis, reduce MPIDI_OFI_global.num_vcis */
+                    if (vci > 0) {
+                        MPIDI_OFI_global.num_vcis = vci;
+                        /* FIXME: destroy already created vci_context */
+                        mpi_errno = MPI_SUCCESS;
+                        goto fn_exit;
+                    } else {
+                        MPIR_ERR_CHECK(mpi_errno);
+                    }
+                }
             }
         }
-    }
-
-    if (MPIDI_OFI_global.num_vcis > 1 || MPIDI_OFI_global.num_nics > 1) {
-        mpi_errno = MPIDI_OFI_addr_exchange_all_ctx();
-    }
-
-    for (int vci = 1; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        ofi_am_post_recv(vci, 0);
     }
 
   fn_exit:
@@ -1193,6 +1243,7 @@ static int create_vci_context(int vci, int nic)
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
+    /* TODO: clean up on fail */
     goto fn_exit;
 }
 
@@ -1581,7 +1632,7 @@ static void dump_dynamic_settings(void)
 
 /* static functions for AM */
 
-int ofi_am_init(void)
+int ofi_am_init(int vci)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1593,33 +1644,34 @@ int ofi_am_init(void)
                                 < MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
         MPL_COMPILE_TIME_ASSERT(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE
                                 >= sizeof(MPIDI_OFI_am_send_pipeline_request_t));
-        for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-            mpi_errno = MPIDU_genq_private_pool_create(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
-                                                       MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
-                                                       0 /* unlimited */ ,
-                                                       host_alloc, host_free,
-                                                       &MPIDI_OFI_global.
-                                                       per_vci[vci].am_hdr_buf_pool);
-            MPIR_ERR_CHECK(mpi_errno);
 
-            MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_head = NULL;
-            MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_tail = NULL;
-            MPIDI_OFI_global.per_vci[vci].cq_buffered_static_head = 0;
-            MPIDI_OFI_global.per_vci[vci].cq_buffered_static_tail = 0;
+        mpi_errno = MPIDU_genq_private_pool_create(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
+                                                   MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
+                                                   0 /* unlimited */ ,
+                                                   host_alloc, host_free,
+                                                   &MPIDI_OFI_global.per_vci[vci].am_hdr_buf_pool);
+        MPIR_ERR_CHECK(mpi_errno);
 
-            MPIDIU_map_create(&MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker, MPL_MEM_BUFFER);
-            MPIDIU_map_create(&MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker, MPL_MEM_BUFFER);
-            MPIDI_OFI_global.per_vci[vci].am_unordered_msgs = NULL;
+        MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_head = NULL;
+        MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_tail = NULL;
+        MPIDI_OFI_global.per_vci[vci].cq_buffered_static_head = 0;
+        MPIDI_OFI_global.per_vci[vci].cq_buffered_static_tail = 0;
 
-            MPIDIU_map_create(&MPIDI_OFI_global.per_vci[vci].req_map, MPL_MEM_OTHER);
+        MPIDIU_map_create(&MPIDI_OFI_global.per_vci[vci].am_recv_seq_tracker, MPL_MEM_BUFFER);
+        MPIDIU_map_create(&MPIDI_OFI_global.per_vci[vci].am_send_seq_tracker, MPL_MEM_BUFFER);
+        MPIDI_OFI_global.per_vci[vci].am_unordered_msgs = NULL;
 
-            MPIDI_OFI_global.per_vci[vci].deferred_am_isend_q = NULL;
+        MPIDIU_map_create(&MPIDI_OFI_global.per_vci[vci].req_map, MPL_MEM_OTHER);
 
-            MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus = 0;
-            MPIDI_OFI_global.per_vci[vci].am_inflight_rma_send_mrs = 0;
+        MPIDI_OFI_global.per_vci[vci].deferred_am_isend_q = NULL;
+
+        MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus = 0;
+        MPIDI_OFI_global.per_vci[vci].am_inflight_rma_send_mrs = 0;
+
+        if (vci == 0) {
+            MPIDIG_am_reg_cb(MPIDI_OFI_INTERNAL_HANDLER_CONTROL, NULL, &MPIDI_OFI_control_handler);
+            MPIDIG_am_reg_cb(MPIDI_OFI_AM_RDMA_READ_ACK, NULL, &MPIDI_OFI_am_rdma_read_ack_handler);
         }
-        MPIDIG_am_reg_cb(MPIDI_OFI_INTERNAL_HANDLER_CONTROL, NULL, &MPIDI_OFI_control_handler);
-        MPIDIG_am_reg_cb(MPIDI_OFI_AM_RDMA_READ_ACK, NULL, &MPIDI_OFI_am_rdma_read_ack_handler);
     }
 
   fn_exit:

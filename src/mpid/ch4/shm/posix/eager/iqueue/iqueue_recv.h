@@ -19,7 +19,8 @@ MPIDI_POSIX_eager_recv_begin(int vci, MPIDI_POSIX_eager_recv_transaction_t * tra
     MPIR_FUNC_ENTER;
 
     /* TODO: measure the latency overhead due to multiple vci */
-    for (int vci_src = 0; vci_src < MPIDI_POSIX_global.num_vcis; vci_src++) {
+    int max_vcis = MPIDI_POSIX_eager_iqueue_global.max_vcis;
+    for (int vci_src = 0; vci_src < max_vcis; vci_src++) {
         transport = MPIDI_POSIX_eager_iqueue_get_transport(vci_src, vci);
 
         MPIDU_genq_shmem_queue_dequeue(transport->cell_pool, transport->my_terminal,

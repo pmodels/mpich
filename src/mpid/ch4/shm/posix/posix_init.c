@@ -124,11 +124,34 @@ static void *create_container(struct json_object *obj)
     return cnt;
 }
 
+static int init_vci(int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDU_genq_private_pool_create(MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE,
+                                               MPIDI_POSIX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
+                                               0 /* unlimited */ ,
+                                               host_alloc, host_free,
+                                               &MPIDI_POSIX_global.per_vci[vci].am_hdr_buf_pool);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_POSIX_global.per_vci[vci].postponed_queue = NULL;
+
+    MPIDI_POSIX_global.per_vci[vci].active_rreq =
+        MPL_calloc(MPIR_Process.local_size, sizeof(MPIR_Request *), MPL_MEM_SHM);
+    MPIR_ERR_CHKANDJUMP(!MPIDI_POSIX_global.per_vci[vci].active_rreq,
+                        mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, local_rank_0 = -1;
-    MPIR_CHKPMEM_DECL(MPIDI_CH4_MAX_VCIS);
 
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_POSIX_am_request_header_t)
                             < MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE);
@@ -150,38 +173,9 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 
     MPIDI_POSIX_global.local_rank_0 = local_rank_0;
 
-    MPIDI_POSIX_global.num_vcis = MPIDI_global.n_total_vcis;
-    /* This is used to track messages that the eager submodule was not ready to send. */
-    for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
-        mpi_errno = MPIDU_genq_private_pool_create(MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE,
-                                                   MPIDI_POSIX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
-                                                   0 /* unlimited */ ,
-                                                   host_alloc, host_free,
-                                                   &MPIDI_POSIX_global.
-                                                   per_vci[vci].am_hdr_buf_pool);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        MPIDI_POSIX_global.per_vci[vci].postponed_queue = NULL;
-
-        MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_global.per_vci[vci].active_rreq, MPIR_Request **,
-                            MPIR_Process.local_size * sizeof(MPIR_Request *), mpi_errno,
-                            "active recv req", MPL_MEM_SHM);
-
-        for (i = 0; i < MPIR_Process.local_size; i++) {
-            MPIDI_POSIX_global.per_vci[vci].active_rreq[i] = NULL;
-        }
-
-    }
-
     choose_posix_eager();
 
-    MPIR_CHKPMEM_COMMIT();
-
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    MPIR_CHKPMEM_REAP();
-    goto fn_exit;
 }
 
 static int posix_world_initialized;
@@ -211,6 +205,11 @@ int MPIDI_POSIX_init_world(void)
     int rank = MPIR_Process.rank;
     int size = MPIR_Process.size;
 
+    MPIDI_POSIX_global.num_vcis = 1;
+
+    mpi_errno = init_vci(0);
+    MPIR_ERR_CHECK(mpi_errno);
+
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -220,6 +219,25 @@ int MPIDI_POSIX_init_world(void)
     utarray_new(shm_mutex_free_list, &shm_mutex_icd, MPL_MEM_OTHER);
 
     posix_world_initialized = 1;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_POSIX_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_POSIX_global.num_vcis = MPIDI_global.n_total_vcis;
+    for (int i = 1; i < MPIDI_POSIX_global.num_vcis; i++) {
+        mpi_errno = init_vci(i);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    mpi_errno = MPIDI_POSIX_eager_post_init();
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -251,7 +269,7 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
         utarray_free(shm_mutex_free_list);
     }
 
-    for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
+    for (int vci = 0; vci < MPIDI_POSIX_global.num_vcis; vci++) {
         MPIDU_genq_private_pool_destroy(MPIDI_POSIX_global.per_vci[vci].am_hdr_buf_pool);
         MPL_free(MPIDI_POSIX_global.per_vci[vci].active_rreq);
     }

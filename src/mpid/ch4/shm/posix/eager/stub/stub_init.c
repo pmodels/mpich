@@ -14,6 +14,12 @@ int MPIDI_POSIX_stub_init(int rank, int size)
     return MPI_SUCCESS;
 }
 
+int MPIDI_POSIX_stub_post_init(void)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
 int MPIDI_POSIX_stub_finalize()
 {
     MPIR_Assert(0);

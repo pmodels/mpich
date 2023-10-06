@@ -499,6 +499,12 @@ int MPID_Init(int requested, int *provided)
     MPIDI_global.n_reserved_vcis = 0;
     MPIDI_global.share_reserved_vcis = false;
 
+    MPIDI_global.all_num_vcis = MPL_malloc(sizeof(int) * MPIR_Process.size, MPL_MEM_OTHER);
+    MPIR_Assert(MPIDI_global.all_num_vcis);
+    for (int i = 0; i < MPIR_Process.size; i++) {
+        MPIDI_global.all_num_vcis[i] = MPIDI_global.n_vcis;
+    }
+
     MPIR_Assert(MPIDI_global.n_total_vcis <= MPIDI_CH4_MAX_VCIS);
     MPIR_Assert(MPIDI_global.n_total_vcis <= MPIR_REQUEST_NUM_POOLS);
 
@@ -618,6 +624,77 @@ int MPID_InitCompleted(void)
     goto fn_exit;
 }
 
+/* This is called from MPIR_init_comm_world() -> MPID_Comm_commit_pre_hook() */
+int MPIDI_world_pre_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDU_Init_shm_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_init_world();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+    mpi_errno = MPIDI_NM_init_world();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* This is called from MPIR_init_comm_world() -> MPID_Comm_commit_post_hook() */
+int MPIDI_world_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* FIXME: currently ofi require each process to have the same number of nics,
+     *        thus need access to world_comm for collectives. We should remove
+     *        this restriction, then we can move MPIDI_NM_init_vcis to
+     *        MPIDI_world_pre_init.
+     */
+    int num_vcis_actual;
+    mpi_errno = MPIDI_NM_init_vcis(MPIDI_global.n_total_vcis, &num_vcis_actual);
+    MPIR_ERR_CHECK(mpi_errno);
+
+#if MPIDI_CH4_MAX_VCIS == 1
+    MPIR_Assert(num_vcis_actual == 1);
+#else
+    MPIR_Assert(num_vcis_actual > 0 && num_vcis_actual <= MPIDI_global.n_total_vcis);
+    int diff = MPIDI_global.n_total_vcis - num_vcis_actual;
+    /* we can shrink implicit vcis down to 1, then n_reserved_vcis down to 0 */
+    MPIDI_global.n_total_vcis -= diff;
+    if (MPIDI_global.n_vcis > diff + 1) {
+        MPIDI_global.n_vcis -= diff;
+    } else {
+        diff -= (MPIDI_global.n_vcis - 1);
+        MPIDI_global.n_vcis = 1;
+        MPIDI_global.n_reserved_vcis -= diff;
+    }
+
+    mpi_errno = MPIR_Allgather_fallback(&MPIDI_global.n_vcis, 1, MPI_INT,
+                                        MPIDI_global.all_num_vcis, 1, MPI_INT,
+                                        MPIR_Process.comm_world, MPIR_ERR_NONE);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_post_init();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+    mpi_errno = MPIDI_NM_post_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_global.is_initialized = 1;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPID_Allocate_vci(int *vci, bool is_shared)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -733,6 +810,8 @@ int MPID_Finalize(void)
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
     }
+
+    MPL_free(MPIDI_global.all_num_vcis);
 
     memset(&MPIDI_global, 0, sizeof(MPIDI_global));
 
