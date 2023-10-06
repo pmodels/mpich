@@ -131,14 +131,17 @@ static int MPIR_Bsend_detach(MPII_BsendBuffer ** bsendbuffer_p, void *bufferp, M
 {
     int mpi_errno = MPI_SUCCESS;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+
     if (*bsendbuffer_p == NULL) {
-        /* TODO: proper error handling */
-        MPIR_Assert(0);
+        *(void **) bufferp = NULL;
+        *size = 0;
+        goto fn_exit;
     }
+
     MPII_BsendBuffer *bsendbuffer;
     bsendbuffer = *bsendbuffer_p;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     if (bsendbuffer->active) {
         /* Loop through each active element and wait on it */
         MPII_Bsend_data_t *p = bsendbuffer->active;
@@ -152,7 +155,7 @@ static int MPIR_Bsend_detach(MPII_BsendBuffer ** bsendbuffer_p, void *bufferp, M
         }
     }
 
-/* Note that this works even when the buffer does not exist */
+    /* Note that this works even when the buffer does not exist */
     *(void **) bufferp = bsendbuffer->origbuffer;
     *size = (MPI_Aint) bsendbuffer->origbuffer_size;
     bsendbuffer->origbuffer = NULL;
@@ -178,10 +181,15 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     int mpi_errno = MPI_SUCCESS;
     MPII_Bsend_data_t *p = NULL;
     MPII_Bsend_msg_t *msg;
-    MPI_Aint packsize = 0;
     int pass;
 
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+
+    MPI_Aint packsize = 0;
+    if (dtype != MPI_PACKED)
+        MPIR_Pack_size(count, dtype, &packsize);
+    else
+        packsize = count;
 
     MPII_BsendBuffer *bsendbuffer;
     if (comm_ptr->bsendbuffer) {
@@ -191,9 +199,9 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     } else {
         bsendbuffer = MPIR_Process.bsendbuffer;
     }
-    if (!bsendbuffer) {
-        goto fn_nobuffer;
-    }
+    MPIR_ERR_CHKANDJUMP2(!bsendbuffer, mpi_errno, MPI_ERR_BUFFER, "**bufbsend",
+                         "**bufbsend %d %d", packsize, 0);
+
     /*
      * We may want to decide here whether we need to pack at all
      * or if we can just use (a MPIR_Memcpy) of the buffer.
@@ -204,11 +212,6 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
      * fragmentation */
     mpi_errno = MPIR_Bsend_check_active(bsendbuffer);
     MPIR_ERR_CHECK(mpi_errno);
-
-    if (dtype != MPI_PACKED)
-        MPIR_Pack_size(count, dtype, &packsize);
-    else
-        packsize = count;
 
     MPL_DBG_MSG_D(MPIR_DBG_BSEND, TYPICAL, "looking for buffer of size " MPI_AINT_FMT_DEC_SPEC,
                   packsize);
@@ -278,7 +281,6 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
         MPIR_Bsend_check_active(bsendbuffer);
     }
 
-  fn_nobuffer:
     if (!p) {
         /* Return error for no buffer space found */
         /* Generate a traceback of the allocated space, explaining why
