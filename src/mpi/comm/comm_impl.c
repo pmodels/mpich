@@ -750,7 +750,9 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
         }
         MPL_initlock_unlock(&lock);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
+        mpi_errno =
+            MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* Currently only self comm is allowed here */
         MPIR_Assert(is_self_group(group_ptr));
