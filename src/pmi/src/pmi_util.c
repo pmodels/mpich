@@ -210,6 +210,95 @@ int PMIU_readline(int fd, char *buf, int maxlen)
     return curlen - 1;
 }
 
+/* Read and return the next full PMI message in a buffer */
+/* NOTE: no race detection. We assume PMI is only called serailly */
+
+int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
+{
+    int pmi_errno = PMIU_SUCCESS;
+
+    int buflen = 0;
+    int bufsize = 0;
+    char *buf;
+    bufsize = MAX_READLINE;
+    PMIU_CHK_MALLOC(buf, char *, bufsize, pmi_errno, PMIU_ERR_NOMEM, "buf");
+
+    int wire_version = 0;
+    int pmi2_cmd_len = 0;
+    while (1) {
+        int n;
+        /* -- read more -- */
+        do {
+            if (bufsize - buflen - 1 < 100) {
+                bufsize += MAX_READLINE;
+                PMIU_REALLOC_ORJUMP(buf, bufsize, pmi_errno);
+            }
+            n = read(fd, buf + buflen, bufsize - buflen - 1);
+        } while (n == -1 && errno == EINTR);
+        if (n == 0) {
+            /* EOF */
+            break;
+        } else if (n < 0) {
+            PMIU_ERR_SETANDJUMP(pmi_errno, PMI_FAIL, "Error in PMIU_read_cmd.\n");
+        }
+
+        char *s = buf + buflen;
+        buflen += n;
+        if (wire_version == 0) {
+            /* -- check wire protocol -- */
+            if (buflen > 6) {
+                if (strncmp(buf, "cmd=", 4) == 0) {
+                    wire_version = 1;
+                } else {
+                    wire_version = 2;
+                    char len_str[7];
+                    memcpy(len_str, buf, 6);
+                    len_str[6] = '\0';
+                    pmi2_cmd_len = atoi(len_str);
+                    PMIU_Assert(pmi2_cmd_len > 10);
+                    if (bufsize < pmi2_cmd_len + 1) {
+                        bufsize = pmi2_cmd_len + 1;
+                        PMIU_REALLOC_ORJUMP(buf, bufsize, pmi_errno);
+                    }
+                }
+            }
+        }
+        /* -- check whether we have the full message -- */
+        int got_full_cmd = 0;
+        if (wire_version == 1) {
+            /* newline marks the end of a PMI-1 message */
+            /* Q: can we take shortcut and just check the end? */
+            for (int i = 0; i < n; i++) {
+                if (s[i] == '\n') {
+                    got_full_cmd = 1;
+                }
+            }
+        } else {
+            if (buflen >= pmi2_cmd_len) {
+                got_full_cmd = 1;
+            }
+        }
+        if (got_full_cmd) {
+            break;
+        }
+    }
+
+    if (buflen == 0) {
+        PMIU_Free(buf);
+        *buf_out = NULL;
+        *buflen_out = 0;
+    } else {
+        buf[buflen] = '\0';
+        *buf_out = buf;
+        *buflen_out = buflen;
+    }
+
+  fn_exit:
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int PMIU_write(int fd, char *buf, int buflen)
 {
     char *p = buf;

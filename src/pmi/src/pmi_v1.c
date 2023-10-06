@@ -151,16 +151,6 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
 #endif
 
     PMII_getmaxes(&PMI_kvsname_max, &PMI_keylen_max, &PMI_vallen_max);
-    /* we need construct a cmd like "cmd=put kvsname=%s key=%s value=%s\n",
-     * make sure it fits in PMIU_MAXLINE.
-     */
-    if (PMI_kvsname_max + PMI_keylen_max + PMI_vallen_max + 30 > PMIU_MAXLINE) {
-        if (PMI_keylen_max > 256) {
-            PMI_keylen_max = 256;
-        }
-        PMI_vallen_max = PMIU_MAXLINE - PMI_kvsname_max - PMI_keylen_max - 30;
-        assert(PMI_vallen_max > 256);
-    }
 
     /* FIXME: This is something that the PM should tell the process,
      * rather than deliver it through the environment */

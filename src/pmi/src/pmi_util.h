@@ -51,6 +51,7 @@ void PMIU_Set_rank_kvsname(int rank, const char *kvsname);
 void PMIU_SetServer(void);
 void PMIU_printf(int print_flag, const char *fmt, ...);
 int PMIU_readline(int fd, char *buf, int max);
+int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out);
 int PMIU_write(int fd, char *buf, int buflen);
 int PMIU_writeline(int fd, char *buf);
 int PMIU_parse_keyvals(char *st);
@@ -59,6 +60,7 @@ char *PMIU_getval(const char *keystr, char *valstr, int vallen);
 void PMIU_chgval(const char *keystr, char *valstr);
 
 #define PMIU_Malloc(size_) MPL_malloc(size_, MPL_MEM_PM)
+#define PMIU_Realloc(ptr_, size_) MPL_realloc(ptr_, size_, MPL_MEM_PM)
 #define PMIU_Free MPL_free
 #define PMIU_Strdup MPL_strdup
 #define PMIU_Strnapp MPL_strnapp
@@ -186,6 +188,8 @@ extern int PMIU_verbose;        /* Set this to true to print PMI debugging info 
         } \
     } while (0)
 
+#define PMIU_QUOTE(x) #x
+
 /* Provides a easy way to use realloc safely and avoid the temptation to use
  * realloc unsafely (direct ptr assignment).  Zero-size reallocs returning NULL
  * are handled and are not considered an error. */
@@ -193,8 +197,8 @@ extern int PMIU_verbose;        /* Set this to true to print PMI debugging info 
         void *realloc_tmp_ = PMIU_Realloc((ptr_), (size_));                                    \
         if ((size_) && !realloc_tmp_) {                                                         \
             PMIU_Free(ptr_);                                                                   \
-            PMIU_ERR_SETANDJUMP2(rc_,PMIU_CHKMEM_ISFATAL,                                     \
-                                  "**nomem2","**nomem2 %d %s",(size_),PMIU_QUOTE(ptr_));       \
+            PMIU_ERR_SETANDJUMP2(rc_,PMIU_FAIL,                                     \
+                                 "**nomem2 %d %s",(size_),PMIU_QUOTE(ptr_));       \
         }                                                                                       \
         (ptr_) = realloc_tmp_;                                                                  \
     } while (0)
@@ -202,8 +206,8 @@ extern int PMIU_verbose;        /* Set this to true to print PMI debugging info 
 #define PMIU_REALLOC_ORJUMP(ptr_,size_,rc_) do {                                               \
         void *realloc_tmp_ = PMIU_Realloc((ptr_), (size_));                                    \
         if (size_)                                                                              \
-            PMIU_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,PMIU_CHKMEM_ISFATAL,\                      \
-                                  "**nomem2","**nomem2 %d %s",(size_),PMIU_QUOTE(ptr_));       \
+            PMIU_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,PMIU_FAIL,                      \
+                                 "**nomem2 %d %s",(size_),PMIU_QUOTE(ptr_));       \
         (ptr_) = realloc_tmp_;                                                                  \
     } while (0)
 
