@@ -48,7 +48,7 @@ static void send_test(void *sbuf, int partitions, MPI_Count count, MPI_Datatype 
 {
     MPI_Request req = MPI_REQUEST_NULL;
 
-    MPI_Psend_init(sbuf, partitions, count, stype, dest, 0, comm, MPI_INFO_NULL, &req);
+    MPI_Psend_init_c(sbuf, partitions, count, stype, dest, 0, comm, MPI_INFO_NULL, &req);
     MPI_Start(&req);
 
     /* Set partition ready separately to test partial data transfer */
@@ -64,7 +64,7 @@ static void recv_test(void *rbuf, int partitions, MPI_Count count, MPI_Datatype 
 {
     MPI_Request req = MPI_REQUEST_NULL;
 
-    MPI_Precv_init(rbuf, partitions, count, rtype, source, 0, comm, MPI_INFO_NULL, &req);
+    MPI_Precv_init_c(rbuf, partitions, count, rtype, source, 0, comm, MPI_INFO_NULL, &req);
     MPI_Start(&req);
 
     MPI_Wait(&req, p_status);
