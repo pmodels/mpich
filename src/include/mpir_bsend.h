@@ -25,10 +25,8 @@
  *  BsendData_t - Describes a segment of the user buffer.  This data structure
  *                contains a BsendMsg_t for segments that contain a user
  *                message.  Each BsendData_t segment belongs to one of
- *                three lists: avail (unused and free), active (currently
- *                sending) and pending (contains a user message that has
- *                not begun sending because of some resource limit, such
- *                as no more MPID requests available).
+ *                two lists: avail (unused and free), and active (currently
+ *                sending).
  *  BsendBuffer - This global structure contains pointers to the user buffer
  *                and the three lists, along with the size of the user buffer.
  *

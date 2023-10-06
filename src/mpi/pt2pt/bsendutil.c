@@ -21,12 +21,10 @@
  *                corresponding MPII_Bsend_data_t entry
  *   MPIR_Bsend_free_segment - Free a buffer that is no longer needed,
  *                merging with adjacent segments
- *   MPIR_Bsend_check_active - Check for completion of any pending sends
+ *   MPIR_Bsend_check_active - Check for completion of any active sends
  *                for bsends (all bsends, both MPI_Ibsend and MPI_Bsend,
  *                are internally converted into Isends on the data
  *                in the Bsend buffer)
- *   MPIR_Bsend_retry_pending - Routine for future use to handle the
- *                case where an Isend cannot be initiated.
  *   MPIR_Bsend_find_buffer - Find a buffer in the bsend buffer large
  *                enough for the message.  However, does not acquire that
  *                buffer (see MPIR_Bsend_take_buffer)
@@ -61,10 +59,6 @@ static struct BsendBuffer {
                                  * by the user */
     MPII_Bsend_data_t *avail;   /* Pointer to the first available block
                                  * of space */
-    MPII_Bsend_data_t *pending; /* Pointer to the first message that
-                                 * could not be sent because of a
-                                 * resource limit (e.g., no requests
-                                 * available) */
     MPII_Bsend_data_t *active;  /* Pointer to the first active (sending)
                                  * message */
 } BsendBuffer = {
@@ -74,7 +68,6 @@ static int initialized = 0;     /* keep track of the first call to any
                                  * bsend routine */
 
 /* Forward references */
-static void MPIR_Bsend_retry_pending(void);
 static int MPIR_Bsend_check_active(void);
 static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(size_t);
 static void MPIR_Bsend_take_buffer(MPII_Bsend_data_t *, size_t);
@@ -139,7 +132,6 @@ int MPIR_Bsend_attach(void *buffer, MPI_Aint buffer_size)
         BsendBuffer.buffer_size -= offset;
     }
     BsendBuffer.avail = buffer;
-    BsendBuffer.pending = 0;
     BsendBuffer.active = 0;
 
     /* Set the first block */
@@ -154,7 +146,7 @@ int MPIR_Bsend_attach(void *buffer, MPI_Aint buffer_size)
 }
 
 /*
- * Detach a buffer.  This routine must wait until any pending bsends
+ * Detach a buffer.  This routine must wait until any active bsends
  * are complete.  Note that MPI specifies the type of the returned "size"
  * argument as an "int" (the definition predates that of ssize_t as a
  * standard type).
@@ -164,13 +156,6 @@ int MPIR_Bsend_detach(void *bufferp, MPI_Aint * size)
     int mpi_errno = MPI_SUCCESS;
 
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
-    if (BsendBuffer.pending) {
-        /* FIXME: Process pending bsend requests in detach */
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Bsend_detach", __LINE__, MPI_ERR_OTHER,
-                                         "**bsendpending", 0);
-        goto fn_fail;
-    }
     if (BsendBuffer.active) {
         /* Loop through each active element and wait on it */
         MPII_Bsend_data_t *p = BsendBuffer.active;
@@ -193,7 +178,6 @@ int MPIR_Bsend_detach(void *bufferp, MPI_Aint * size)
     BsendBuffer.buffer_size = 0;
     BsendBuffer.avail = 0;
     BsendBuffer.active = 0;
-    BsendBuffer.pending = 0;
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
@@ -235,8 +219,8 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
                   packsize);
     /*
      * Use two passes.  Each pass is the same; between the two passes,
-     * attempt to complete any active requests, and start any pending
-     * ones.  If the message can be initiated in the first pass,
+     * attempt to complete any active requests.
+     *  If the message can be initiated in the first pass,
      * do not perform the second pass.
      */
     for (pass = 0; pass < 2; pass++) {
@@ -272,9 +256,6 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
             mpi_errno = MPID_Isend(msg->msgbuf, msg->count, MPI_PACKED,
                                    dest, tag, comm_ptr, 0, &p->request);
             MPIR_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Bsend internal error: isend returned err");
-            /* If the error is "request not available", we should
-             * put this on the pending list.  This will depend on
-             * how we signal failure to send. */
 
             if (p->request) {
                 MPL_DBG_MSG_FMT(MPIR_DBG_BSEND, TYPICAL,
@@ -298,10 +279,8 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
         if (p || pass == 1)
             break;
         MPL_DBG_MSG(MPIR_DBG_BSEND, TYPICAL, "Could not find storage, checking active");
-        /* Try to complete some pending bsends */
+        /* Try to complete some active bsends */
         MPIR_Bsend_check_active();
-        /* Give priority to any pending operations */
-        MPIR_Bsend_retry_pending();
     }
 
     if (!p) {
@@ -456,22 +435,6 @@ static int MPIR_Bsend_check_active(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-/*
- * FIXME : For each pending item (that is, items that we couldn't even start
- * sending), try to get them going.
- */
-static void MPIR_Bsend_retry_pending(void)
-{
-    MPII_Bsend_data_t *pending = BsendBuffer.pending, *next_pending;
-
-    while (pending) {
-        next_pending = pending->next;
-        /* Retry sending this item */
-        /* FIXME: Unimplemented retry of pending bsend operations */
-        pending = next_pending;
-    }
 }
 
 /*
