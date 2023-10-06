@@ -322,35 +322,6 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
 }
 
 /*
- * The following routine looks up the segment used by request req
- * and frees it. The request is assumed to be completed. This routine
- * is called by only MPIR_Ibsend_cancel.
- */
-int MPIR_Bsend_free_req_seg(MPIR_Request * req)
-{
-    int mpi_errno = MPI_ERR_INTERN;
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
-
-    MPII_Bsend_data_t *active = BsendBuffer.active;
-
-    MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Checking active starting at %p", active);
-    while (active) {
-
-        if (active->request == req) {
-            MPIR_Bsend_free_segment(active);
-            mpi_errno = MPI_SUCCESS;
-        }
-
-        active = active->next;;
-
-        MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Next active is %p", active);
-    }
-
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
-    return mpi_errno;
-}
-
-/*
  * The following routines are used to manage the allocation of bsend segments
  * in the user buffer.  These routines handle, for example, merging segments
  * when an active segment that is adjacent to a free segment becomes free.

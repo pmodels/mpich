@@ -67,6 +67,5 @@ typedef struct MPII_Bsend_data {
 int MPIR_Bsend_attach(void *, MPI_Aint);
 int MPIR_Bsend_detach(void *, MPI_Aint *);
 int MPIR_Bsend_isend(const void *, int, MPI_Datatype, int, int, MPIR_Comm *, MPIR_Request **);
-int MPIR_Bsend_free_req_seg(MPIR_Request *);
 
 #endif /* MPII_BSEND_H_INCLUDED */
