@@ -279,6 +279,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->remote_group = NULL;
     comm_p->local_group = NULL;
     comm_p->topo_fns = NULL;
+    comm_p->bsendbuffer = NULL;
     comm_p->name[0] = '\0';
     comm_p->seq = 0;    /* default to 0, to be updated at Comm_commit */
     comm_p->tainted = 0;
@@ -1178,6 +1179,9 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         /* Notify the device that the communicator is about to be
          * destroyed */
         mpi_errno = MPID_Comm_free_hook(comm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPIR_Comm_bsend_finalize(comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (comm_ptr->session_ptr != NULL) {

@@ -30,6 +30,7 @@ int MPIR_Session_create(MPIR_Session ** p_session_ptr, int thread_level)
     MPIR_Object_set_ref(*p_session_ptr, 1);
 
     (*p_session_ptr)->errhandler = NULL;
+    (*p_session_ptr)->bsendbuffer = NULL;
     /* FIXME: actually do something with session thread_level */
     (*p_session_ptr)->thread_level = thread_level;
     /* disable strict finalize feature by default */
@@ -58,6 +59,8 @@ int MPIR_Session_release(MPIR_Session * session_ptr)
         /* Only if refcount is 0 do we actually free. */
 
         /* Handle any clean up on session */
+        mpi_errno = MPIR_Session_bsend_finalize(session_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
 
         int thr_err;
         MPID_Thread_mutex_destroy(&session_ptr->mutex, &thr_err);
@@ -73,7 +76,10 @@ int MPIR_Session_release(MPIR_Session * session_ptr)
         MPIR_Handle_obj_free(&MPIR_Session_mem, session_ptr);
     }
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static

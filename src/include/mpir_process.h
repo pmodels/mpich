@@ -52,6 +52,9 @@ typedef struct MPIR_Process_t {
     int tag_bits;               /* number of tag bits supported */
     char *memory_alloc_kinds;   /* memory kinds supported in the world model */
 
+    /* for MPI_Buffer_attach */
+    struct MPII_BsendBuffer *bsendbuffer;
+
     /* The topology routines dimsCreate is independent of any communicator.
      * If this pointer is null, the default routine is used */
     int (*dimsCreate) (int, int, int *);

@@ -13,6 +13,7 @@ struct MPIR_Session {
     MPIR_OBJECT_HEADER;
     MPID_Thread_mutex_t mutex;
     MPIR_Errhandler *errhandler;
+    struct MPII_BsendBuffer *bsendbuffer;       /* for MPI_Session_attach_buffer */
     int thread_level;
     bool strict_finalize;
     char *memory_alloc_kinds;

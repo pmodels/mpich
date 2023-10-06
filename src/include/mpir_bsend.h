@@ -10,7 +10,7 @@
  * Description of the Bsend data structures.
  *
  * Bsend is buffered send; a buffer, provided by the user, is used to store
- * both the user's message and information that my be needed to send that
+ * both the user's message and information that may be needed to send that
  * message.  In addition, space within that buffer must be allocated, so
  * additional information is required to manage that space allocation.
  * In the following, the term "segment" denotes a fragment of the user buffer
@@ -18,6 +18,8 @@
  * user message.
  *
  * The following datastructures are used:
+ *
+ *  BsendBuff_t - Describes an attached user buffer.
  *
  *  BsendMsg_t  - Describes a user message, including the values of tag
  *                and datatype (*could* be used in case the data is already
@@ -61,9 +63,39 @@ typedef struct MPII_Bsend_data {
                                  * shares double alignment */
 } MPII_Bsend_data_t;
 
+/* BsendBuffer is the structure that describes the overall Bsend buffer */
+/*
+ * We use separate buffer and origbuffer because we may need to align
+ * the buffer (we *could* always memcopy the header to an aligned region,
+ * but it is simpler to just align it internally.  This does increase the
+ * BSEND_OVERHEAD, but that is already relatively large.  We could instead
+ * make sure that the initial header was set at an aligned location (
+ * taking advantage of the "alignpad"), but this would require more changes.
+ */
+typedef struct MPII_BsendBuffer {
+    void *buffer;               /* Pointer to the beginning of the user-
+                                 * provided buffer */
+    MPI_Aint buffer_size;       /* Size of the user-provided buffer */
+    void *origbuffer;           /* Pointer to the buffer provided by
+                                 * the user */
+    MPI_Aint origbuffer_size;   /* Size of the buffer as provided
+                                 * by the user */
+    MPII_Bsend_data_t *avail;   /* Pointer to the first available block
+                                 * of space */
+    MPII_Bsend_data_t *pending; /* Pointer to the first message that
+                                 * could not be sent because of a
+                                 * resource limit (e.g., no requests
+                                 * available) */
+    MPII_Bsend_data_t *active;  /* Pointer to the first active (sending)
+                                 * message */
+} MPII_BsendBuffer;
+
 /* Function Prototypes for the bsend utility functions */
-int MPIR_Bsend_attach(void *, MPI_Aint);
-int MPIR_Bsend_detach(void *, MPI_Aint *);
+int MPIR_Process_bsend_finalize(void);
+int MPIR_Comm_bsend_finalize(struct MPIR_Comm *comm_ptr);
+int MPIR_Session_bsend_finalize(struct MPIR_Session *session);
+int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
+                     int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request);
 int MPIR_Bsend_isend(const void *, int, MPI_Datatype, int, int, MPIR_Comm *, MPIR_Request **);
 
 #endif /* MPII_BSEND_H_INCLUDED */

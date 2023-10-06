@@ -87,11 +87,6 @@ MPI_Buffer_attach:
     threads in a process, the user is responsible for ensuring that only
     one thread at a time calls this routine or 'MPI_Buffer_detach'.
 */
-{
-    mpi_errno = MPIR_Bsend_attach(buffer, size);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-}
 
 MPI_Buffer_detach:
     .desc: Removes an existing buffer (for use in MPI_Bsend etc)
