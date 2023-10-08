@@ -59,7 +59,7 @@ static int MPIR_Bsend_attach(MPII_BsendBuffer ** bsendbuffer_p, void *buffer, MP
     *bsendbuffer_p = MPL_calloc(1, sizeof(MPII_BsendBuffer), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!(*bsendbuffer_p), mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    if (0) {    /* MPI_BUFFER_AUTOMATIC */
+    if (buffer == MPI_BUFFER_AUTOMATIC) {
         (*bsendbuffer_p)->is_automatic = true;
         mpi_errno = bsend_attach_auto(&((*bsendbuffer_p)->u.automatic), buffer, buffer_size);
     } else {
@@ -192,28 +192,109 @@ static int MPIR_Bsend_finalize(MPII_BsendBuffer ** bsendbuffer_p)
 
 /* -- routines for automatic buffer -- */
 
+struct bsend_auto_elem {
+    void *buf;
+    MPIR_Request *req;
+    struct bsend_auto_elem *next;
+    struct bsend_auto_elem *prev;
+};
+
+static void bsend_auto_reap(struct MPII_BsendBuffer_auto *automatic);
+
 static int bsend_attach_auto(struct MPII_BsendBuffer_auto *automatic,
                              void *buffer, MPI_Aint buffer_size)
 {
+    automatic->user_size = buffer_size;
     return MPI_SUCCESS;
 }
 
 static int bsend_detach_auto(struct MPII_BsendBuffer_auto *automatic,
                              void *bufferp, MPI_Aint * size)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = bsend_flush_auto(automatic);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    *(void **) bufferp = MPI_BUFFER_AUTOMATIC;
+    *size = automatic->user_size;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int bsend_flush_auto(struct MPII_BsendBuffer_auto *automatic)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+
+    while (automatic->active_list) {
+        struct bsend_auto_elem *elt = automatic->active_list;
+        /* FIXME: need make sure to progress all vcis */
+        mpi_errno = MPID_Wait(elt->req, MPI_STATUS_IGNORE);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        bsend_auto_reap(automatic);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int bsend_isend_auto(struct MPII_BsendBuffer_auto *automatic, MPI_Aint packsize,
                             const void *buf, int count, MPI_Datatype dtype,
                             int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+
+    /* TODO: only check entries up to a thresh */
+    bsend_auto_reap(automatic);
+
+    struct bsend_auto_elem *elt;
+    elt = MPL_malloc(sizeof(struct bsend_auto_elem), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!elt, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    elt->buf = MPL_malloc(packsize, MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!elt->buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPI_Aint actual_pack_bytes;
+    mpi_errno = MPIR_Typerep_pack(buf, count, dtype, 0, elt->buf, packsize, &actual_pack_bytes,
+                                  MPIR_TYPEREP_FLAG_NONE);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(actual_pack_bytes == packsize);
+
+    mpi_errno = MPID_Isend(elt->buf, packsize, MPI_PACKED, dest, tag, comm_ptr, 0, &elt->req);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    struct bsend_auto_elem **head_p = (void *) &(automatic->active_list);
+    DL_APPEND(*head_p, elt);
+
+    if (request) {
+        MPIR_Request_add_ref(elt->req);
+        *request = elt->req;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static void bsend_auto_reap(struct MPII_BsendBuffer_auto *automatic)
+{
+    struct bsend_auto_elem *elt, *tmp;
+    struct bsend_auto_elem **head_p = (void *) &(automatic->active_list);
+    DL_FOREACH_SAFE(*head_p, elt, tmp) {
+        if (MPIR_Request_is_complete(elt->req)) {
+            MPL_free(elt->buf);
+            MPIR_Request_free(elt->req);
+        }
+        DL_DELETE(*head_p, elt);
+        MPL_free(elt);
+    }
 }
 
 /* -- routines for user supplied buffer -- */
@@ -558,6 +639,7 @@ static int MPIR_Bsend_progress(struct MPII_BsendBuffer_user *user)
         MPIR_Request *req = active->request;
         if (MPIR_Request_is_complete(req)) {
             MPIR_Bsend_free_segment(user, active);
+            /* FIXME: how can req be persistent? Is this a left-over */
             if (!MPIR_Request_is_persistent(req)) {
                 MPIR_Request_free(req);
             }

@@ -506,6 +506,7 @@ extern int * const MPI_WEIGHTS_EMPTY MPICH_API_PUBLIC;
 
 #define MPI_BOTTOM      (void *)0
 #define MPI_IN_PLACE  (void *) -1
+#define MPI_BUFFER_AUTOMATIC (void *)0
 
 #define MPI_UNDEFINED      (-32766)
 

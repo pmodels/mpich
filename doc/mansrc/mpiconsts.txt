@@ -271,6 +271,7 @@ datatypes for 'MPI_SUM', 'MPI_PROD', etc.  MPICH does allow these datatypes.
 . MPI_BOTTOM                     - May be used to indicate the bottom of the address space
 . MPI_IN_PLACE                   - Special location for buffer in some
   collective communication routines
+. MPI_BUFFER_AUTOMATIC           - Use automatic (unlimited) buffering in buffered send
 . MPI_VERSION                    - Numeric value of MPI version (e.g., 3)
 - MPI_SUBVERSION                 - Numeric value of MPI subversion (e.g., 1)
 
