@@ -283,15 +283,8 @@ typedef struct {
     int progress_counter;
 } MPIDI_OFI_win_t;
 
-/* Maximum number of network interfaces CH4 can support. */
-#define MPIDI_OFI_MAX_NICS 8
-
 typedef struct {
-#ifdef MPIDI_OFI_VNI_USE_DOMAIN
-    fi_addr_t dest[MPIDI_OFI_MAX_NICS][MPIDI_CH4_MAX_VCIS];     /* [nic][vci] */
-#else
-    fi_addr_t dest[MPIDI_OFI_MAX_NICS][1];
-#endif
+    fi_addr_t **dest;
 } MPIDI_OFI_addr_t;
 
 #endif /* OFI_PRE_H_INCLUDED */

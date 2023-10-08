@@ -30,7 +30,7 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
 void MPIDI_OFI_update_global_settings(struct fi_info *prov);
 
 /* Determine if NIC has already been included in others */
-bool MPIDI_OFI_nic_already_used(const struct fi_info *prov, struct fi_info **others, int nic_count);
+bool MPIDI_OFI_nic_already_used(const struct fi_info *prov, struct fi_info *others);
 
 int MPIDI_OFI_addr_exchange_root_ctx(void);
 int MPIDI_OFI_addr_exchange_all_ctx(void);

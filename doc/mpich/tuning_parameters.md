@@ -158,8 +158,7 @@ disabled, the application cannot use hashing on any communicator.
 `MPIR_CVAR_CH4_OFI_MAX_NICS`: This CVAR determines the number of physical NICs to use. The default 
 is -1 which means utilizing all available NICs. A value strictly less than -1 or equal to 0 will be 
 mapped to using one NIC which is the first provider in the list of providers returned by 
-`fi_getinfo()`. There is an upper bound for this value: the compile-time constant, 
-`MPIDI_OFI_MAX_NICS`.
+`fi_getinfo()`.
 
 `MPIR_CVAR_DEBUG_SUMMARY`: Prints out lots of debug information at initialization time to help find 
 problems with OFI provider selection.
@@ -212,8 +211,8 @@ The new PVARs to track the amount of bytes sent and received are shown Table V.
 + ================================ + ================ + ================= + ==== + ======= +
 | Variable Name                    | Class            | Handle            | Type | Storage |
 + ================================ + ================ + ================= + ==== + ======= +
-| nic_sent_bytes_count             | Counter (Array)  | Non-continuous    | SUM  | Static  |
-| nic_recvd_bytes_count            | Counter (Array)  | Non-continuous    | SUM  | Static  |
+| nic_sent_bytes_count             | Counter (Array)  | Non-continuous    | SUM  | Dynamic |
+| nic_recvd_bytes_count            | Counter (Array)  | Non-continuous    | SUM  | Dynamic |
 + -------------------------------- + ---------------- + ------------------------ + ------- +
 ```
 
@@ -228,8 +227,8 @@ Hence, the sum of the two PVARS in Table VI represent the total amount of data t
 + ================================ + ================ + ================= + ==== + ======= +
 | Variable Name                    | Class            | Handle            | Type | Storage |
 + ================================ + ================ + ================= + ==== + ======= +
-| striped_nic_sent_bytes_count     | Counter (Array)  | Non-continuous    | SUM  | Static  |
-| striped_nic_recvd_bytes_count    | Counter (Array)  | Non-continuous    | SUM  | Static  |
+| striped_nic_sent_bytes_count     | Counter (Array)  | Non-continuous    | SUM  | Dynamic |
+| striped_nic_recvd_bytes_count    | Counter (Array)  | Non-continuous    | SUM  | Dynamic |
 + -------------------------------- + ---------------- + ------------------------ + ------- +
 ```
 
@@ -241,8 +240,8 @@ The new PVARs to track number of bytes sent and received through RMA calls are s
 + ================================ + ================ + ================= + ==== + ======= +
 | Variable Name                    | Class            | Handle            | Type | Storage |
 + ================================ + ================ + ================= + ==== + ======= +
-| rma_pref_phy_nic_put_bytes_count | Counter (Array)  | Non-continuous    | SUM  | Static  |
-| rma_pref_phy_nic_get_bytes_count | Counter (Array)  | Non-continuous    | SUM  | Static  |
+| rma_pref_phy_nic_put_bytes_count | Counter (Array)  | Non-continuous    | SUM  | Dynamic |
+| rma_pref_phy_nic_get_bytes_count | Counter (Array)  | Non-continuous    | SUM  | Dynamic |
 + -------------------------------- + ---------------- + ------------------------ + ------- +
 ```
 

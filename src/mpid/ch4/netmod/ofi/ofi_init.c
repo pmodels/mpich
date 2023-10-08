@@ -506,7 +506,7 @@ static void dump_global_settings(void);
 static void dump_dynamic_settings(void);
 static int create_vci_context(int vci, int nic);
 static int destroy_vci_context(int vci, int nic);
-static int ofi_pvar_init(void);
+static int ofi_pvar_init(int num_nics);
 
 static int ofi_am_init(int vci);
 static int ofi_am_post_recv(int vci, int nic);
@@ -514,62 +514,94 @@ static int ofi_am_post_recv(int vci, int nic);
 static void *host_alloc(uintptr_t size);
 static void host_free(void *ptr);
 
-static int ofi_pvar_init(void)
+static int ofi_pvar_init(int num_nics)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
-                                              MPI_UNSIGNED_LONG_LONG,
-                                              nic_sent_bytes_count,
-                                              MPI_T_VERBOSITY_USER_DETAIL,
-                                              MPI_T_BIND_NO_OBJECT,
-                                              (MPIR_T_PVAR_FLAG_READONLY |
-                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
-                                              "number of bytes sent through a particular NIC");
+    assert(num_nics > 0);
 
-    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
-                                              MPI_UNSIGNED_LONG_LONG,
-                                              nic_recvd_bytes_count,
-                                              MPI_T_VERBOSITY_USER_DETAIL,
-                                              MPI_T_BIND_NO_OBJECT,
-                                              (MPIR_T_PVAR_FLAG_READONLY |
-                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
-                                              "number of bytes received through a particular NIC");
+    MPIR_T_PVAR_COUNTER_REGISTER_DYNAMIC(MULTINIC,
+                                         MPI_UNSIGNED_LONG_LONG,
+                                         nic_sent_bytes_count,
+                                         PVAR_COUNTER_nic_sent_bytes_count,
+                                         num_nics,
+                                         MPI_T_VERBOSITY_USER_DETAIL,
+                                         MPI_T_BIND_NO_OBJECT,
+                                         (MPIR_T_PVAR_FLAG_READONLY |
+                                          MPIR_T_PVAR_FLAG_SUM),
+                                         NULL,
+                                         NULL,
+                                         "CH4", "number of bytes sent through a particular NIC");
 
-    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
-                                              MPI_UNSIGNED_LONG_LONG,
-                                              striped_nic_sent_bytes_count,
-                                              MPI_T_VERBOSITY_USER_DETAIL,
-                                              MPI_T_BIND_NO_OBJECT,
-                                              (MPIR_T_PVAR_FLAG_READONLY |
-                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
-                                              "number of striped bytes sent through a particular NIC");
+    MPIR_T_PVAR_COUNTER_REGISTER_DYNAMIC(MULTINIC,
+                                         MPI_UNSIGNED_LONG_LONG,
+                                         nic_recvd_bytes_count,
+                                         PVAR_COUNTER_nic_recvd_bytes_count,
+                                         num_nics,
+                                         MPI_T_VERBOSITY_USER_DETAIL,
+                                         MPI_T_BIND_NO_OBJECT,
+                                         (MPIR_T_PVAR_FLAG_READONLY |
+                                          MPIR_T_PVAR_FLAG_SUM),
+                                         NULL,
+                                         NULL,
+                                         "CH4",
+                                         "number of bytes received through a particular NIC");
 
-    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
-                                              MPI_UNSIGNED_LONG_LONG,
-                                              striped_nic_recvd_bytes_count,
-                                              MPI_T_VERBOSITY_USER_DETAIL,
-                                              MPI_T_BIND_NO_OBJECT,
-                                              (MPIR_T_PVAR_FLAG_READONLY |
-                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
-                                              "number of striped bytes received through a particular NIC");
+    MPIR_T_PVAR_COUNTER_REGISTER_DYNAMIC(MULTINIC,
+                                         MPI_UNSIGNED_LONG_LONG,
+                                         striped_nic_sent_bytes_count,
+                                         PVAR_COUNTER_striped_nic_sent_bytes_count,
+                                         num_nics,
+                                         MPI_T_VERBOSITY_USER_DETAIL,
+                                         MPI_T_BIND_NO_OBJECT,
+                                         (MPIR_T_PVAR_FLAG_READONLY |
+                                          MPIR_T_PVAR_FLAG_SUM),
+                                         NULL,
+                                         NULL,
+                                         "CH4",
+                                         "number of striped bytes sent through a particular NIC");
 
-    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
-                                              MPI_UNSIGNED_LONG_LONG,
-                                              rma_pref_phy_nic_put_bytes_count,
-                                              MPI_T_VERBOSITY_USER_DETAIL,
-                                              MPI_T_BIND_NO_OBJECT,
-                                              (MPIR_T_PVAR_FLAG_READONLY |
-                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
-                                              "number of bytes sent through preferred physical NIC using RMA");
+    MPIR_T_PVAR_COUNTER_REGISTER_DYNAMIC(MULTINIC,
+                                         MPI_UNSIGNED_LONG_LONG,
+                                         striped_nic_recvd_bytes_count,
+                                         PVAR_COUNTER_striped_nic_recvd_bytes_count,
+                                         num_nics,
+                                         MPI_T_VERBOSITY_USER_DETAIL,
+                                         MPI_T_BIND_NO_OBJECT,
+                                         (MPIR_T_PVAR_FLAG_READONLY |
+                                          MPIR_T_PVAR_FLAG_SUM),
+                                         NULL,
+                                         NULL,
+                                         "CH4",
+                                         "number of striped bytes received through a particular NIC");
 
-    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
-                                              MPI_UNSIGNED_LONG_LONG,
-                                              rma_pref_phy_nic_get_bytes_count,
-                                              MPI_T_VERBOSITY_USER_DETAIL,
-                                              MPI_T_BIND_NO_OBJECT,
-                                              (MPIR_T_PVAR_FLAG_READONLY |
-                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
-                                              "number of bytes received through preferred physical NIC using RMA");
+    MPIR_T_PVAR_COUNTER_REGISTER_DYNAMIC(MULTINIC,
+                                         MPI_UNSIGNED_LONG_LONG,
+                                         rma_pref_phy_nic_put_bytes_count,
+                                         PVAR_COUNTER_rma_pref_phy_nic_put_bytes_count,
+                                         num_nics,
+                                         MPI_T_VERBOSITY_USER_DETAIL,
+                                         MPI_T_BIND_NO_OBJECT,
+                                         (MPIR_T_PVAR_FLAG_READONLY |
+                                          MPIR_T_PVAR_FLAG_SUM),
+                                         NULL,
+                                         NULL,
+                                         "CH4",
+                                         "number of bytes sent through preferred physical NIC using RMA");
+
+    MPIR_T_PVAR_COUNTER_REGISTER_DYNAMIC(MULTINIC,
+                                         MPI_UNSIGNED_LONG_LONG,
+                                         rma_pref_phy_nic_get_bytes_count,
+                                         PVAR_COUNTER_rma_pref_phy_nic_get_bytes_count,
+                                         num_nics,
+                                         MPI_T_VERBOSITY_USER_DETAIL,
+                                         MPI_T_BIND_NO_OBJECT,
+                                         (MPIR_T_PVAR_FLAG_READONLY |
+                                          MPIR_T_PVAR_FLAG_SUM),
+                                         NULL,
+                                         NULL,
+                                         "CH4",
+                                         "number of bytes received through preferred physical NIC using RMA");
+
     return mpi_errno;
 }
 
@@ -597,6 +629,49 @@ static void set_sep_counters(int nic)
         num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
         MPIDI_OFI_global.prov_use[nic]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
         MPIDI_OFI_global.prov_use[nic]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
+    }
+}
+
+int MPIDI_OFI_init_avt(MPIDI_av_table_t * table)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(MPIDI_OFI_global.num_nics > 0);
+    for (int i = 0; i < table->size; ++i) {
+        table->table[i].netmod.ofi.dest =
+            MPL_malloc(sizeof(fi_addr_t *) * MPIDI_OFI_global.num_nics, MPL_MEM_ADDRESS);
+        MPIR_ERR_CHKANDJUMP(!table->table[i].netmod.ofi.dest, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (int j = 0; j < MPIDI_OFI_global.num_nics; ++j) {
+            table->table[i].netmod.ofi.dest[j] =
+                MPL_malloc(sizeof(fi_addr_t *) * MPIDI_CH4_MAX_VCIS, MPL_MEM_ADDRESS);
+            MPIR_ERR_CHKANDJUMP(!table->table[i].netmod.ofi.dest[j], mpi_errno, MPI_ERR_OTHER,
+                                "**nomem");
+        }
+    }
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static void destroy_avt(MPIDI_av_table_t * table)
+{
+    for (int i = 0; i < table->size; ++i) {
+        if (table->table[i].netmod.ofi.dest) {
+            for (int j = 0; j < MPIDI_OFI_global.num_nics; ++j) {
+                if (table->table[i].netmod.ofi.dest[j]) {
+                    MPL_free(table->table[i].netmod.ofi.dest[j]);
+                }
+            }
+            MPL_free(table->table[i].netmod.ofi.dest);
+        }
+    }
+}
+
+static void destroy_global_avts(void)
+{
+    for (int i = 0; i < MPIDIU_get_n_avts(); ++i) {
+        destroy_avt(MPIDI_global.avt_mgr.av_tables[i]);
     }
 }
 
@@ -642,7 +717,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPIDI_OFI_global.num_comms_enabled_striping = 0;
     MPIDI_OFI_global.num_comms_enabled_hashing = 0;
 
-    mpi_errno = ofi_pvar_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* -------------------------------- */
@@ -658,8 +732,12 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_find_provider(&prov);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* init multi-nic and populates MPIDI_OFI_global.prov_use[] */
+    /* init multi-nic and populates MPIDI_OFI_global */
     mpi_errno = MPIDI_OFI_init_multi_nic(prov);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* init ofi address vectors in global av table0 */
+    mpi_errno = MPIDI_OFI_init_avt(MPIDI_global.avt_mgr.av_table0);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
@@ -668,6 +746,8 @@ int MPIDI_OFI_init_local(int *tag_bits)
     if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
         dump_global_settings();
     }
+
+    mpi_errno = ofi_pvar_init(MPIDI_OFI_global.num_nics);
 
     /* Finally open the fabric */
     MPIDI_OFI_CALL(fi_fabric(MPIDI_OFI_global.prov_use[0]->fabric_attr,
@@ -1030,6 +1110,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         fi_freeinfo(MPIDI_OFI_global.prov_use[i]);
     }
 
+    destroy_global_avts();
+
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
 
     if (MPIDI_OFI_ENABLE_AM) {
@@ -1054,6 +1136,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             MPIR_Assert(NULL == MPIDI_OFI_global.per_vci[vci].cq_buffered_dynamic_head);
         }
     }
+
+    MPL_free(MPIDI_OFI_global.ctx);
+    MPL_free(MPIDI_OFI_global.nic_info);
+    MPL_free(MPIDI_OFI_global.prov_use);
 
     int err;
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_UTIL_MUTEX, &err);
