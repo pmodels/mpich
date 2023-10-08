@@ -399,7 +399,7 @@ typedef struct {
     /* Process management and PMI globals */
     int pname_set;
     int pname_len;
-    char addrname[MPIDI_OFI_MAX_NICS][FI_NAME_MAX];
+    char addrname[FI_NAME_MAX];
     size_t addrnamelen;         /* OFI uses the same name length within a provider. */
     char pname[MPI_MAX_PROCESSOR_NAME];
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
