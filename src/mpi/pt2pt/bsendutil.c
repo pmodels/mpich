@@ -110,20 +110,20 @@ static int MPIR_Bsend_detach(MPII_BsendBuffer ** bsendbuffer_p, void *bufferp, M
     goto fn_exit;
 }
 
-static int MPIR_Bsend_flush(MPII_BsendBuffer ** bsendbuffer_p)
+static int MPIR_Bsend_flush(MPII_BsendBuffer * bsendbuffer)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
 
-    if (*bsendbuffer_p == NULL) {
+    if (bsendbuffer == NULL) {
         goto fn_exit;
     }
 
-    if ((*bsendbuffer_p)->is_automatic) {
-        mpi_errno = bsend_flush_auto(&((*bsendbuffer_p)->u.automatic));
+    if (bsendbuffer->is_automatic) {
+        mpi_errno = bsend_flush_auto(&(bsendbuffer->u.automatic));
     } else {
-        mpi_errno = bsend_flush_user(&((*bsendbuffer_p)->u.user));
+        mpi_errno = bsend_flush_user(&(bsendbuffer->u.user));
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -814,6 +814,11 @@ int MPIR_Buffer_detach_impl(void *buffer_addr, MPI_Aint * size)
     return MPIR_Bsend_detach(&(MPIR_Process.bsendbuffer), buffer_addr, size);
 }
 
+int MPIR_Buffer_flush_impl(void)
+{
+    return MPIR_Bsend_flush(MPIR_Process.bsendbuffer);
+}
+
 int MPIR_Process_bsend_finalize(void)
 {
     return MPIR_Bsend_finalize(&(MPIR_Process.bsendbuffer));
@@ -829,6 +834,11 @@ int MPIR_Comm_detach_buffer_impl(MPIR_Comm * comm_ptr, void *buffer_addr, MPI_Ai
     return MPIR_Bsend_detach(&(comm_ptr->bsendbuffer), buffer_addr, size);
 }
 
+int MPIR_Comm_flush_buffer_impl(MPIR_Comm * comm_ptr)
+{
+    return MPIR_Bsend_flush(comm_ptr->bsendbuffer);
+}
+
 int MPIR_Comm_bsend_finalize(MPIR_Comm * comm_ptr)
 {
     return MPIR_Bsend_finalize(&(comm_ptr->bsendbuffer));
@@ -842,6 +852,11 @@ int MPIR_Session_attach_buffer_impl(MPIR_Session * session, void *buffer_addr, M
 int MPIR_Session_detach_buffer_impl(MPIR_Session * session, void *buffer_addr, MPI_Aint * size)
 {
     return MPIR_Bsend_detach(&(session->bsendbuffer), buffer_addr, size);
+}
+
+int MPIR_Session_flush_buffer_impl(MPIR_Session * session)
+{
+    return MPIR_Bsend_flush(session->bsendbuffer);
 }
 
 int MPIR_Session_bsend_finalize(MPIR_Session * session)

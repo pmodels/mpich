@@ -202,6 +202,7 @@ MPI_Buffer_attach:
 MPI_Buffer_detach:
     buffer_addr: C_BUFFER2, direction=out, [initial buffer address]
     size: POLYNUM_BYTES, direction=out, [buffer size, in bytes]
+MPI_Buffer_flush:
 MPI_COMM_DUP_FN:
     oldcomm: COMMUNICATOR
     comm_keyval: KEYVAL
@@ -364,6 +365,8 @@ MPI_Comm_errhandler_function:
 MPI_Comm_f2c:
     .return: COMMUNICATOR
     comm: F90_COMM, direction=in, pointer=False
+MPI_Comm_flush_buffer:
+    comm: COMMUNICATOR, [communicator]
 MPI_Comm_free:
     comm: COMMUNICATOR, direction=inout, [communicator to be destroyed]
 MPI_Comm_free_keyval:
@@ -1982,6 +1985,8 @@ MPI_Session_f2c:
     session: F90_SESSION, direction=in, pointer=False
 MPI_Session_finalize:
     session: SESSION, direction=inout, [session to be finalized]
+MPI_Session_flush_buffer:
+    session: SESSION, [session]
 MPI_Session_get_errhandler:
     session: SESSION, [session]
     errhandler: ERRHANDLER, direction=out, [error handler currently associated with session]
