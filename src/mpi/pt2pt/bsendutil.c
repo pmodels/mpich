@@ -31,6 +31,7 @@ static int bsend_attach_auto(struct MPII_BsendBuffer_auto *automatic,
                              void *buffer, MPI_Aint buffer_size);
 static int bsend_detach_auto(struct MPII_BsendBuffer_auto *automatic,
                              void *bufferp, MPI_Aint * size);
+static int bsend_flush_auto(struct MPII_BsendBuffer_auto *automatic);
 static int bsend_isend_auto(struct MPII_BsendBuffer_auto *automatic, MPI_Aint packsize,
                             const void *buf, int count, MPI_Datatype dtype, int dest, int tag,
                             MPIR_Comm * comm_ptr, MPIR_Request ** request);
@@ -38,6 +39,7 @@ static int bsend_isend_auto(struct MPII_BsendBuffer_auto *automatic, MPI_Aint pa
 static int bsend_attach_user(struct MPII_BsendBuffer_user *user,
                              void *buffer, MPI_Aint buffer_size);
 static int bsend_detach_user(struct MPII_BsendBuffer_user *user, void *bufferp, MPI_Aint * size);
+static int bsend_flush_user(struct MPII_BsendBuffer_user *user);
 static int bsend_isend_user(struct MPII_BsendBuffer_user *user, MPI_Aint packsize,
                             const void *buf, int count, MPI_Datatype dtype,
                             int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request);
@@ -100,6 +102,30 @@ static int MPIR_Bsend_detach(MPII_BsendBuffer ** bsendbuffer_p, void *bufferp, M
 
     MPL_free(*bsendbuffer_p);
     *bsendbuffer_p = NULL;
+
+  fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int MPIR_Bsend_flush(MPII_BsendBuffer ** bsendbuffer_p)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+
+    if (*bsendbuffer_p == NULL) {
+        goto fn_exit;
+    }
+
+    if ((*bsendbuffer_p)->is_automatic) {
+        mpi_errno = bsend_flush_auto(&((*bsendbuffer_p)->u.automatic));
+    } else {
+        mpi_errno = bsend_flush_user(&((*bsendbuffer_p)->u.user));
+    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
@@ -174,6 +200,11 @@ static int bsend_attach_auto(struct MPII_BsendBuffer_auto *automatic,
 
 static int bsend_detach_auto(struct MPII_BsendBuffer_auto *automatic,
                              void *bufferp, MPI_Aint * size)
+{
+    return MPI_SUCCESS;
+}
+
+static int bsend_flush_auto(struct MPII_BsendBuffer_auto *automatic)
 {
     return MPI_SUCCESS;
 }
@@ -291,6 +322,24 @@ static int bsend_detach_user(struct MPII_BsendBuffer_user *user, void *bufferp, 
     user->buffer_size = 0;
     user->avail = 0;
     user->active = 0;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int bsend_flush_user(struct MPII_BsendBuffer_user *user)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    void *b;
+    MPI_Aint s;
+    mpi_errno = bsend_detach_user(user, &b, &s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = bsend_attach_user(user, b, s);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
