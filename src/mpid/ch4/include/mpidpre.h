@@ -667,6 +667,13 @@ typedef struct MPIDI_av_entry {
     int node_id;
 } MPIDI_av_entry_t;
 
+typedef struct MPIDI_av_table {
+    MPIR_cc_t ref_count;
+    int size;
+    MPIDI_av_entry_t table[];
+} MPIDI_av_table_t;
+
+
 #define HAVE_DEV_COMM_HOOK
 
 /*
