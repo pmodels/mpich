@@ -65,14 +65,19 @@ typedef struct MPII_Bsend_data {
 
 /* BsendBuffer is the structure that describes the overall Bsend buffer */
 /*
- * We use separate buffer and origbuffer because we may need to align
+ * It is a union depends on whether user attaches a buffer or uses automatic
+ * buffer.
+ *
+ * With user buffer, we use separate buffer and origbuffer because we may need to align
  * the buffer (we *could* always memcopy the header to an aligned region,
  * but it is simpler to just align it internally.  This does increase the
  * BSEND_OVERHEAD, but that is already relatively large.  We could instead
  * make sure that the initial header was set at an aligned location (
  * taking advantage of the "alignpad"), but this would require more changes.
+ *
+ * With automatic buffer, we simply maintain a list of active requests.
  */
-typedef struct MPII_BsendBuffer {
+struct MPII_BsendBuffer_user {
     void *buffer;               /* Pointer to the beginning of the user-
                                  * provided buffer */
     MPI_Aint buffer_size;       /* Size of the user-provided buffer */
@@ -88,6 +93,19 @@ typedef struct MPII_BsendBuffer {
                                  * available) */
     MPII_Bsend_data_t *active;  /* Pointer to the first active (sending)
                                  * message */
+};
+
+struct MPII_BsendBuffer_auto {
+    MPI_Aint user_size;         /* User provided size at attach, not used, but we need return at detach */
+    void *active_list;          /* Linked list of active elems, struct defined in bsendutil.c. */
+};
+
+typedef struct MPII_BsendBuffer {
+    int is_automatic;
+    union {
+        struct MPII_BsendBuffer_user user;
+        struct MPII_BsendBuffer_auto automatic;
+    } u;
 } MPII_BsendBuffer;
 
 /* Function Prototypes for the bsend utility functions */
