@@ -69,6 +69,63 @@ int MPIR_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
 }
 
 
+int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k, int root,
+                                         bool enable_reorder, MPIR_Treealgo_tree_t * ct)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    switch (tree_type) {
+        case MPIR_TREE_TYPE_TOPOLOGY_AWARE:
+            mpi_errno = MPII_Treeutil_tree_topology_aware_init(comm, k, root, enable_reorder, ct);
+            MPIR_ERR_CHECK(mpi_errno);
+            break;
+
+        case MPIR_TREE_TYPE_TOPOLOGY_AWARE_K:
+            mpi_errno = MPII_Treeutil_tree_topology_aware_k_init(comm, k, root, enable_reorder, ct);
+            MPIR_ERR_CHECK(mpi_errno);
+            break;
+
+        default:
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**treetype", "**treetype %d",
+                                 tree_type);
+    }
+
+    MPIR_FUNC_EXIT;
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+int MPIR_Treealgo_tree_create_topo_wave(MPIR_Comm * comm, int k, int root,
+                                        bool enable_reorder, int overhead, int lat_diff_groups,
+                                        int lat_diff_switches, int lat_same_switches,
+                                        MPIR_Treealgo_tree_t * ct)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    mpi_errno =
+        MPII_Treeutil_tree_topology_wave_init(comm, k, root, enable_reorder, overhead,
+                                              lat_diff_groups, lat_diff_switches, lat_same_switches,
+                                              ct);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_FUNC_EXIT;
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 void MPIR_Treealgo_tree_free(MPIR_Treealgo_tree_t * tree)
 {
     utarray_free(tree->children);

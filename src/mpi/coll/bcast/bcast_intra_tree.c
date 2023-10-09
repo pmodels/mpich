@@ -74,8 +74,24 @@ int MPIR_Bcast_intra_tree(void *buffer,
     } else {
         /*construct the knomial tree */
         my_tree.children = NULL;
-        mpi_errno =
-            MPIR_Treealgo_tree_create(rank, comm_size, tree_type, branching_factor, root, &my_tree);
+        if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE ||
+            tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K) {
+            mpi_errno =
+                MPIR_Treealgo_tree_create_topo_aware(comm_ptr, tree_type, branching_factor, root,
+                                                     MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE, &my_tree);
+        } else if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_WAVE) {
+            mpi_errno =
+                MPIR_Treealgo_tree_create_topo_wave(comm_ptr, branching_factor, root,
+                                                    MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE,
+                                                    MPIR_CVAR_BCAST_TOPO_OVERHEAD,
+                                                    MPIR_CVAR_BCAST_TOPO_DIFF_GROUPS,
+                                                    MPIR_CVAR_BCAST_TOPO_DIFF_SWITCHES,
+                                                    MPIR_CVAR_BCAST_TOPO_SAME_SWITCHES, &my_tree);
+        } else {
+            mpi_errno =
+                MPIR_Treealgo_tree_create(rank, comm_size, tree_type, branching_factor, root,
+                                          &my_tree);
+        }
         MPIR_ERR_CHECK(mpi_errno);
         num_children = my_tree.num_children;
         parent = my_tree.parent;

@@ -69,7 +69,20 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
 
     /* initialize the tree */
     my_tree.children = NULL;
-    mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, tree_root, &my_tree);
+    if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE || tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K) {
+        mpi_errno =
+            MPIR_Treealgo_tree_create_topo_aware(comm, tree_type, k, root,
+                                                 MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE, &my_tree);
+    } else if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_WAVE) {
+        mpi_errno =
+            MPIR_Treealgo_tree_create_topo_wave(comm, k, root, MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE,
+                                                MPIR_CVAR_BCAST_TOPO_OVERHEAD,
+                                                MPIR_CVAR_BCAST_TOPO_DIFF_GROUPS,
+                                                MPIR_CVAR_BCAST_TOPO_DIFF_SWITCHES,
+                                                MPIR_CVAR_BCAST_TOPO_SAME_SWITCHES, &my_tree);
+    } else {
+        mpi_errno = MPIR_Treealgo_tree_create(rank, size, tree_type, k, tree_root, &my_tree);
+    }
     MPIR_ERR_CHECK(mpi_errno);
     num_children = my_tree.num_children;
 
