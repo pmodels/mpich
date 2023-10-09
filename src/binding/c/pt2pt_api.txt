@@ -149,6 +149,10 @@ MPI_Buffer_flush:
     .desc: block until all messages currently in the globally shared buffer of the calling process have been transmitted
     .seealso: MPI_Comm_flush_buffer, MPI_Session_flush_buffer
 
+MPI_Buffer_iflush:
+    .desc: start a nonblocking flush in the globally shared buffer
+    .seealso: MPI_Buffer_flush
+
 MPI_Comm_attach_buffer:
     .desc: Attaches a user-provided buffer for buffered send in the communicator
     .skip: ThreadSafe
@@ -162,6 +166,10 @@ MPI_Comm_detach_buffer:
 MPI_Comm_flush_buffer:
     .desc: block until all messages currently in the communicator-specific buffer of the calling process have been transmitted
     .seealso: MPI_Buffer_flush, MPI_Session_flush_buffer
+
+MPI_Comm_iflush_buffer:
+    .desc: start a nonblocking flush in the communicator-specific buffer
+    .seealso: MPI_Comm_flush_buffer
 
 MPI_Ibsend:
     .desc: Starts a nonblocking buffered send
@@ -497,6 +505,10 @@ MPI_Session_detach_buffer:
 MPI_Session_flush_buffer:
     .desc: block until all messages currently in the session-specific buffer of the calling process have been transmitted
     .seealso: MPI_Buffer_flush, MPI_Comm_flush_buffer
+
+MPI_Session_iflush_buffer:
+    .desc: start a nonblocking flush in the session-specific buffer
+    .seealso: MPI_Session_flush_buffer
 
 MPI_Ssend:
     .desc: Blocking synchronous send

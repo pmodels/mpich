@@ -203,6 +203,8 @@ MPI_Buffer_detach:
     buffer_addr: C_BUFFER2, direction=out, [initial buffer address]
     size: POLYNUM_BYTES, direction=out, [buffer size, in bytes]
 MPI_Buffer_flush:
+MPI_Buffer_iflush:
+    request: REQUEST, direction=out
 MPI_COMM_DUP_FN:
     oldcomm: COMMUNICATOR
     comm_keyval: KEYVAL
@@ -400,6 +402,9 @@ MPI_Comm_idup_with_info:
     info: INFO, [info object]
     newcomm: COMMUNICATOR, direction=out, asynchronous=True, [copy of comm]
     request: REQUEST, direction=out, [communication request]
+MPI_Comm_iflush_buffer:
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out
 MPI_Comm_join:
     fd: FILE_DESCRIPTOR, suppress=lis_paren, [socket file descriptor]
     intercomm: COMMUNICATOR, direction=out, [new inter-communicator]
@@ -2007,6 +2012,9 @@ MPI_Session_get_pset_info:
     session: SESSION, [session]
     pset_name: STRING, constant=True, [name of process set]
     info: INFO, direction=OUT, [info object containing information about the given process set]
+MPI_Session_iflush_buffer:
+    session: SESSION, [session]
+    request: REQUEST, direction=out
 MPI_Session_init:
     info: INFO, [info object to specify thread support level and MPI implementation specific resources]
     errhandler: ERRHANDLER, [error handler to invoke in the event that an error is encountered during this function call]

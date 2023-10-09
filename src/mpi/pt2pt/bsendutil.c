@@ -35,6 +35,7 @@ static int bsend_flush_auto(struct MPII_BsendBuffer_auto *automatic);
 static int bsend_isend_auto(struct MPII_BsendBuffer_auto *automatic, MPI_Aint packsize,
                             const void *buf, int count, MPI_Datatype dtype, int dest, int tag,
                             MPIR_Comm * comm_ptr, MPIR_Request ** request);
+static bool bsend_poll_auto(struct MPII_BsendBuffer_auto *automatic);
 
 static int bsend_attach_user(struct MPII_BsendBuffer_user *user,
                              void *buffer, MPI_Aint buffer_size);
@@ -43,6 +44,7 @@ static int bsend_flush_user(struct MPII_BsendBuffer_user *user);
 static int bsend_isend_user(struct MPII_BsendBuffer_user *user, MPI_Aint packsize,
                             const void *buf, int count, MPI_Datatype dtype,
                             int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request);
+static bool bsend_poll_user(struct MPII_BsendBuffer_user *user);
 
 /*
  * Attach a buffer.  This checks for the error conditions and then
@@ -176,6 +178,18 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     goto fn_exit;
 }
 
+static bool MPIR_Bsend_poll(MPII_BsendBuffer * bsendbuffer)
+{
+    if (bsendbuffer == NULL) {
+        return true;
+    }
+    if (bsendbuffer->is_automatic) {
+        return bsend_poll_auto(&(bsendbuffer->u.automatic));
+    } else {
+        return bsend_poll_user(&(bsendbuffer->u.user));
+    }
+}
+
 static int MPIR_Bsend_finalize(MPII_BsendBuffer ** bsendbuffer_p)
 {
     if (*bsendbuffer_p) {
@@ -188,6 +202,87 @@ static int MPIR_Bsend_finalize(MPII_BsendBuffer ** bsendbuffer_p)
     }
 
     return MPI_SUCCESS;
+}
+
+/* Iflush as generalized request */
+struct flush_state {
+    MPII_BsendBuffer *bsendbuffer;
+    MPIR_Request *req;
+    bool is_cancelled;
+};
+
+static int query_fn(void *extra_state, MPI_Status * status)
+{
+    struct flush_state *state = extra_state;
+    if (state->is_cancelled) {
+        MPIR_STATUS_SET_CANCEL_BIT(*status, TRUE);
+    } else {
+        MPIR_STATUS_SET_CANCEL_BIT(*status, FALSE);
+    }
+    status->MPI_ERROR = MPI_SUCCESS;
+
+    return MPI_SUCCESS;
+}
+
+static int free_fn(void *extra_state)
+{
+    MPL_free(extra_state);
+    return MPI_SUCCESS;
+}
+
+static int cancel_fn(void *extra_state, int complete)
+{
+    struct flush_state *state = extra_state;
+    if (!complete) {
+        state->is_cancelled = true;
+    }
+    return MPI_SUCCESS;
+}
+
+static int poll_fn(void *extra_state, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct flush_state *state = extra_state;
+    if (MPIR_Bsend_poll(state->bsendbuffer)) {
+        MPIR_Request_complete(state->req);
+    }
+
+    return mpi_errno;
+}
+
+static int wait_fn(int count, void **array_of_states, double timeout, MPI_Status * status)
+{
+    /* just do a poll */
+    struct flush_state **states = (void *) array_of_states;
+    for (int i = 0; i < count; i++) {
+        MPIR_Bsend_flush(states[i]->bsendbuffer);
+        MPIR_Request_complete(states[i]->req);
+    }
+    return MPI_SUCCESS;
+}
+
+static int MPIR_Bsend_iflush(MPII_BsendBuffer * bsendbuffer, MPIR_Request ** req_p)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct flush_state *state = MPL_malloc(sizeof(struct flush_state), MPL_MEM_OTHER);
+    state->bsendbuffer = bsendbuffer;
+    state->is_cancelled = false;
+
+    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, state, req_p);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    (*req_p)->u.ureq.greq_fns->poll_fn = poll_fn;
+    (*req_p)->u.ureq.greq_fns->wait_fn = wait_fn;
+
+    /* store request pointer so we can complete the request */
+    state->req = *req_p;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* -- routines for automatic buffer -- */
@@ -297,6 +392,13 @@ static void bsend_auto_reap(struct MPII_BsendBuffer_auto *automatic)
     }
 }
 
+static bool bsend_poll_auto(struct MPII_BsendBuffer_auto *automatic)
+{
+    MPID_Progress_test(NULL);
+    bsend_auto_reap(automatic);
+    return (automatic->active_list == NULL);
+}
+
 /* -- routines for user supplied buffer -- */
 /*
  *   MPIR_Bsend_free_segment - Free a buffer that is no longer needed,
@@ -317,6 +419,7 @@ static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(struct MPII_BsendBuffer_user *u
 static void MPIR_Bsend_take_buffer(struct MPII_BsendBuffer_user *user,
                                    MPII_Bsend_data_t * p, size_t size);
 static void MPIR_Bsend_free_segment(struct MPII_BsendBuffer_user *user, MPII_Bsend_data_t * p);
+static int MPIR_Bsend_progress(struct MPII_BsendBuffer_user *user);
 #ifdef MPL_USE_DBG_LOGGING
 static void MPIR_Bsend_dump(struct MPII_BsendBuffer_user *user);
 #endif
@@ -526,6 +629,15 @@ static int bsend_isend_user(struct MPII_BsendBuffer_user *user, MPI_Aint packsiz
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static bool bsend_poll_user(struct MPII_BsendBuffer_user *user)
+{
+    if (user->active) {
+        MPID_Progress_test(NULL);
+        MPIR_Bsend_progress(user);
+    }
+    return (user->active == NULL);
 }
 
 /*
@@ -819,6 +931,11 @@ int MPIR_Buffer_flush_impl(void)
     return MPIR_Bsend_flush(MPIR_Process.bsendbuffer);
 }
 
+int MPIR_Buffer_iflush_impl(MPIR_Request ** req_p)
+{
+    return MPIR_Bsend_iflush(MPIR_Process.bsendbuffer, req_p);
+}
+
 int MPIR_Process_bsend_finalize(void)
 {
     return MPIR_Bsend_finalize(&(MPIR_Process.bsendbuffer));
@@ -839,6 +956,11 @@ int MPIR_Comm_flush_buffer_impl(MPIR_Comm * comm_ptr)
     return MPIR_Bsend_flush(comm_ptr->bsendbuffer);
 }
 
+int MPIR_Comm_iflush_buffer_impl(MPIR_Comm * comm_ptr, MPIR_Request ** req_p)
+{
+    return MPIR_Bsend_iflush(comm_ptr->bsendbuffer, req_p);
+}
+
 int MPIR_Comm_bsend_finalize(MPIR_Comm * comm_ptr)
 {
     return MPIR_Bsend_finalize(&(comm_ptr->bsendbuffer));
@@ -857,6 +979,11 @@ int MPIR_Session_detach_buffer_impl(MPIR_Session * session, void *buffer_addr, M
 int MPIR_Session_flush_buffer_impl(MPIR_Session * session)
 {
     return MPIR_Bsend_flush(session->bsendbuffer);
+}
+
+int MPIR_Session_iflush_buffer_impl(MPIR_Session * session, MPIR_Request ** req_p)
+{
+    return MPIR_Bsend_iflush(session->bsendbuffer, req_p);
 }
 
 int MPIR_Session_bsend_finalize(MPIR_Session * session)
