@@ -126,25 +126,8 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, MPI_Aint count,
 
         if (file_ptr_type == ADIO_INDIVIDUAL) {
             start_off = fd->fp_ind;     /* in bytes */
-            n_filetypes = -1;
-            flag = 0;
-            while (!flag) {
-                n_filetypes++;
-                for (f_index = 0; f_index < flat_file->count; f_index++) {
-                    if (disp + flat_file->indices[f_index] +
-                        n_filetypes * (ADIO_Offset) filetype_extent +
-                        flat_file->blocklens[f_index] >= start_off) {
-                        /* this block contains our starting position */
-
-                        st_index = f_index;
-                        fwr_size = disp + flat_file->indices[f_index] +
-                            n_filetypes * (ADIO_Offset) filetype_extent +
-                            flat_file->blocklens[f_index] - start_off;
-                        flag = 1;
-                        break;
-                    }
-                }
-            }
+            ADIOI_fptr_to_view_index(start_off, flat_file,
+                                     filetype_extent, disp, &n_filetypes, &st_index, &fwr_size, 1);
         } else {
             n_etypes_in_filetype = filetype_size / etype_size;
             n_filetypes = offset / n_etypes_in_filetype;
@@ -185,15 +168,10 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, MPI_Aint count,
             userbuf_off += fwr_size;
             end_offset = off + fwr_size - 1;
 
-            if (f_index < (flat_file->count - 1))
-                f_index++;
-            else {
-                f_index = 0;
-                n_filetypes++;
-            }
-
-            off = disp + flat_file->indices[f_index] + n_filetypes * (ADIO_Offset) filetype_extent;
-            fwr_size = MPL_MIN(flat_file->blocklens[f_index], bufsize - (unsigned) userbuf_off);
+            ADIOI_fptr_and_view_index_advance(&off, flat_file,
+                                              filetype_extent, disp,
+                                              &n_filetypes, &f_index, &fwr_size);
+            fwr_size = MPL_MIN(fwr_size, bufsize - (unsigned) userbuf_off);
         }
 
         /* End of calculations.  At this point the following values have
@@ -251,16 +229,11 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, MPI_Aint count,
                  * no more I/O needed. off is incremented by fwr_size.
                  */
                 else {
-                    if (f_index < (flat_file->count - 1))
-                        f_index++;
-                    else {
-                        f_index = 0;
-                        n_filetypes++;
-                    }
-                    off = disp + flat_file->indices[f_index] +
-                        n_filetypes * (ADIO_Offset) filetype_extent;
-                    fwr_size = MPL_MIN(flat_file->blocklens[f_index],
-                                       bufsize - (unsigned) userbuf_off);
+                    ADIOI_fptr_and_view_index_advance(&off, flat_file,
+                                                      filetype_extent, disp,
+                                                      &n_filetypes, &f_index, &fwr_size);
+
+                    fwr_size = MPL_MIN(fwr_size, bufsize - (unsigned) userbuf_off);
                 }
             }
         } else {
@@ -301,17 +274,10 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, MPI_Aint count,
 
                 if (size == fwr_size) {
                     /* reached end of contiguous block in file */
-                    if (f_index < (flat_file->count - 1))
-                        f_index++;
-                    else {
-                        f_index = 0;
-                        n_filetypes++;
-                    }
+                    ADIOI_fptr_and_view_index_advance(&off, flat_file,
+                                                      filetype_extent, disp,
+                                                      &n_filetypes, &f_index, &new_fwr_size);
 
-                    off = disp + flat_file->indices[f_index] +
-                        n_filetypes * (ADIO_Offset) filetype_extent;
-
-                    new_fwr_size = flat_file->blocklens[f_index];
                     if (size != bwr_size) {
                         i_offset += size;
                         new_bwr_size -= size;

@@ -1041,6 +1041,22 @@ void *ADIOI_IO_Thread_Func(void *vptr_args);
 #define PATH_MAX 65535
 #endif
 
+// Helper function for mapping fp_ind to a location within a view
+void
+ADIOI_fptr_to_view_index(ADIO_Offset fp, ADIOI_Flatlist_node * flat_filetype,
+                         MPI_Aint filetype_extent, ADIO_Offset file_view_disp,
+                         ADIO_Offset * filetype_index, int *chunk_index,
+                         ADIO_Offset * fwr_size, int prefer_non_zero_chunks);
+// Helper function for advancing the fp_ind file offset after filling
+// a chunk of a datatype, when ready to advance to the next chunk.
+void
+ADIOI_fptr_and_view_index_advance(ADIO_Offset * fp,
+                                  ADIOI_Flatlist_node * flat_filetype,
+                                  MPI_Aint filetype_extent,
+                                  ADIO_Offset file_view_disp,
+                                  ADIO_Offset * filetype_index,
+                                  int *chunk_index, ADIO_Offset * fwr_size);
+
 #if (HAVE_DECL_PWRITE == 0)
 #include <sys/types.h>
 #include <unistd.h>

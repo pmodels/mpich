@@ -165,32 +165,9 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
         disp = fd->disp;
 
         if (file_ptr_type == ADIO_INDIVIDUAL) {
-            /* Wei-keng reworked type processing to be a bit more efficient */
-            offset = fd->fp_ind - disp;
-            n_filetypes = (offset - flat_file->indices[0]) / filetype_extent;
-            offset -= (ADIO_Offset) n_filetypes *filetype_extent;
-            /* now offset is local to this extent */
-
-            /* find the block where offset is located, skip blocklens[i]==0 */
-            for (i = 0; i < flat_file->count; i++) {
-                ADIO_Offset dist;
-                if (flat_file->blocklens[i] == 0)
-                    continue;
-                dist = flat_file->indices[i] + flat_file->blocklens[i] - offset;
-                /* frd_size is from offset to the end of block i */
-                if (dist == 0) {
-                    i++;
-                    offset = flat_file->indices[i];
-                    frd_size = flat_file->blocklens[i];
-                    break;
-                }
-                if (dist > 0) {
-                    frd_size = dist;
-                    break;
-                }
-            }
-            st_index = i;       /* starting index in flat_file->indices[] */
-            offset += disp + (ADIO_Offset) n_filetypes *filetype_extent;
+            ADIOI_fptr_to_view_index(fd->fp_ind, flat_file,
+                                     filetype_extent, disp, &n_filetypes, &st_index, &frd_size, 1);
+            offset = fd->fp_ind;
         } else {
             n_etypes_in_filetype = filetype_size / etype_size;
             n_filetypes = offset / n_etypes_in_filetype;
