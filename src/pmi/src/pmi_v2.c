@@ -29,7 +29,6 @@ static bool cached_singinit_inuse;
 static char cached_singinit_key[PMI2_MAX_KEYLEN];
 static char cached_singinit_val[PMI2_MAX_VALLEN];
 
-static int getPMIFD(void);
 static int PMIi_InitIfSingleton(void);
 
 /* ------------------------------------------------------------------------- */
@@ -80,7 +79,8 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     }
 
     /* Get the fd for PMI commands; if none, we're a singleton */
-    pmi_errno = getPMIFD();
+    bool do_handshake ATTRIBUTE((unused));
+    pmi_errno = PMIU_get_pmi_fd(&PMI_fd, &do_handshake);
     PMIU_ERR_POP(pmi_errno);
 
     if (PMI_fd == -1) {
@@ -644,62 +644,6 @@ PMI_API_PUBLIC int PMI2_Nameserv_unpublish(const char service_name[],
     goto fn_exit;
 }
 
-/* stub for connecting to a specified host/port instead of using a
-   specified fd inherited from a parent process */
-static int PMII_Connect_to_pm(char *hostname, int portnum)
-{
-    int ret;
-    MPL_sockaddr_t addr;
-    int fd;
-    int optval = 1;
-    int q_wait = 1;
-
-    ret = MPL_get_sockaddr(hostname, &addr);
-    if (ret) {
-        PMIU_printf(1, "Unable to get host entry for %s\n", hostname);
-        return -1;
-    }
-
-    fd = MPL_socket();
-    if (fd < 0) {
-        PMIU_printf(1, "Unable to get AF_INET socket\n");
-        return -1;
-    }
-
-    if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &optval, sizeof(optval))) {
-        perror("Error calling setsockopt:");
-    }
-
-    ret = MPL_connect(fd, &addr, portnum);
-    /* We wait here for the connection to succeed */
-    if (ret) {
-        switch (errno) {
-            case ECONNREFUSED:
-                PMIU_printf(1, "connect failed with connection refused\n");
-                /* (close socket, get new socket, try again) */
-                if (q_wait)
-                    close(fd);
-                return -1;
-
-            case EINPROGRESS:  /*  (nonblocking) - select for writing. */
-                break;
-
-            case EISCONN:      /*  (already connected) */
-                break;
-
-            case ETIMEDOUT:    /* timed out */
-                PMIU_printf(1, "connect failed with timeout\n");
-                return -1;
-
-            default:
-                PMIU_printf(1, "connect failed with errno %d\n", errno);
-                return -1;
-        }
-    }
-
-    return fd;
-}
-
 /* ------------------------------------------------------------------------- */
 /*
  * Singleton Init.
@@ -752,61 +696,6 @@ static int PMII_Connect_to_pm(char *hostname, int portnum)
 static int PMIi_InitIfSingleton(void)
 {
     return 0;
-}
-
-/* Get the FD to use for PMI operations.  If a port is used, rather than
-   a pre-established FD (i.e., via pipe), this routine will handle the
-   initial handshake.
-*/
-static int getPMIFD(void)
-{
-    int pmi_errno = PMI2_SUCCESS;
-    char *p;
-
-    /* Set the default */
-    PMI_fd = -1;
-
-    p = getenv("PMI_FD");
-    if (p) {
-        PMI_fd = atoi(p);
-        goto fn_exit;
-    }
-
-    p = getenv("PMI_PORT");
-    if (p) {
-        int portnum;
-        char hostname[MAXHOSTNAME + 1];
-        char *pn, *ph;
-
-        /* Connect to the indicated port (in format hostname:portnumber)
-         * and get the fd for the socket */
-
-        /* Split p into host and port */
-        pn = p;
-        ph = hostname;
-        while (*pn && *pn != ':' && (ph - hostname) < MAXHOSTNAME) {
-            *ph++ = *pn++;
-        }
-        *ph = 0;
-
-        PMIU_ERR_CHKANDJUMP1(*pn != ':', pmi_errno, PMI2_ERR_OTHER, "**pmi2_port %s", p);
-
-        portnum = atoi(pn + 1);
-        /* FIXME: Check for valid integer after : */
-        /* This routine only gets the fd to use to talk to
-         * the process manager. The handshake below is used
-         * to setup the initial values */
-        PMI_fd = PMII_Connect_to_pm(hostname, portnum);
-        PMIU_ERR_CHKANDJUMP2(PMI_fd < 0, pmi_errno, PMI2_ERR_OTHER,
-                             "**connect_to_pm %s %d", hostname, portnum);
-    }
-
-    /* OK to return success for singleton init */
-
-  fn_exit:
-    return pmi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* DISABLE_PMI2 */

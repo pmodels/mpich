@@ -49,9 +49,6 @@ static int PMI_spawned = 0;
 /* Function prototypes for internal routines */
 static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max);
 static int PMII_Set_from_port(int id);
-static int PMII_Connect_to_pm(char *, int);
-
-static int getPMIFD(int *);
 
 #ifdef USE_PMI_PORT
 static int PMII_singinit(void);
@@ -74,7 +71,6 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
 {
     int pmi_errno = PMI_SUCCESS;
     char *p;
-    int notset = 1;
     int rc;
 
     PMI_initialized = PMI_UNINITIALIZED;
@@ -94,7 +90,8 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
     }
 
     /* Get the fd for PMI commands; if none, we're a singleton */
-    rc = getPMIFD(&notset);
+    bool do_handshake;
+    rc = PMIU_get_pmi_fd(&PMI_fd, &do_handshake);
     if (rc) {
         return rc;
     }
@@ -115,9 +112,21 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
         return PMI_SUCCESS;
     }
 
-    /* If size, rank, and debug are not set from a communication port,
-     * use the environment */
-    if (notset) {
+    if (do_handshake) {
+        p = getenv("PMI_ID");
+        if (p) {
+            int id = atoi(p);
+            /* PMII_Set_from_port sets up the values that are delivered
+             * by environment variables when a separate port is not used */
+            pmi_errno = PMII_Set_from_port(id);
+            if (pmi_errno) {
+                PMIU_printf(1, "PMI_PORT initialization failed\n");
+                return pmi_errno;
+            }
+        }
+    } else {
+        /* If size, rank, and debug are not set from a communication port,
+         * use the environment */
         if ((p = getenv("PMI_SIZE")))
             PMI_size = atoi(p);
         else
@@ -690,66 +699,6 @@ static int PMIi_InitIfSingleton(void)
 }
 
 #else
-/*
- * This code allows a program to contact a host/port for the PMI socket.
- */
-
-/* stub for connecting to a specified host/port instead of using a
-   specified fd inherited from a parent process */
-static int PMII_Connect_to_pm(char *hostname, int portnum)
-{
-    MPL_sockaddr_t addr;
-    int ret;
-    int fd;
-    int optval = 1;
-    int q_wait = 1;
-
-    ret = MPL_get_sockaddr(hostname, &addr);
-    if (ret) {
-        PMIU_printf(1, "Unable to get host entry for %s\n", hostname);
-        return PMI_FAIL;
-    }
-
-    fd = MPL_socket();
-    if (fd < 0) {
-        PMIU_printf(1, "Unable to get AF_INET socket\n");
-        return PMI_FAIL;
-    }
-
-    if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &optval, sizeof(optval))) {
-        perror("Error calling setsockopt:");
-    }
-
-    /* We wait here for the connection to succeed */
-    ret = MPL_connect(fd, &addr, portnum);
-    if (ret < 0) {
-        switch (errno) {
-            case ECONNREFUSED:
-                PMIU_printf(1, "connect failed with connection refused\n");
-                /* (close socket, get new socket, try again) */
-                if (q_wait)
-                    close(fd);
-                return PMI_FAIL;
-
-            case EINPROGRESS:  /*  (nonblocking) - select for writing. */
-                break;
-
-            case EISCONN:      /*  (already connected) */
-                break;
-
-            case ETIMEDOUT:    /* timed out */
-                PMIU_printf(1, "connect failed with timeout\n");
-                return PMI_FAIL;
-
-            default:
-                PMIU_printf(1, "connect failed with errno %d\n", errno);
-                return PMI_FAIL;
-        }
-    }
-
-    return fd;
-}
-
 static int PMII_Set_from_port(int id)
 {
     int pmi_errno = PMI_SUCCESS;
@@ -998,75 +947,6 @@ static int accept_one_connection(int list_sock)
 
 #endif
 /* end USE_PMI_PORT */
-
-/* Get the FD to use for PMI operations.  If a port is used, rather than
-   a pre-established FD (i.e., via pipe), this routine will handle the
-   initial handshake.
-*/
-static int getPMIFD(int *notset)
-{
-    char *p;
-
-    /* Set the default */
-    PMI_fd = -1;
-
-    p = getenv("PMI_FD");
-
-    if (p) {
-        PMI_fd = atoi(p);
-        return PMI_SUCCESS;
-    }
-#ifdef USE_PMI_PORT
-    p = getenv("PMI_PORT");
-    if (p) {
-        int portnum;
-        char hostname[MAXHOSTNAME + 1];
-        char *pn, *ph;
-        int id = 0;
-
-        /* Connect to the indicated port (in format hostname:portnumber)
-         * and get the fd for the socket */
-
-        /* Split p into host and port */
-        pn = p;
-        ph = hostname;
-        while (*pn && *pn != ':' && (ph - hostname) < MAXHOSTNAME) {
-            *ph++ = *pn++;
-        }
-        *ph = 0;
-
-        if (*pn == ':') {
-            portnum = atoi(pn + 1);
-            /* FIXME: Check for valid integer after : */
-            /* This routine only gets the fd to use to talk to
-             * the process manager. The handshake below is used
-             * to setup the initial values */
-            PMI_fd = PMII_Connect_to_pm(hostname, portnum);
-            if (PMI_fd < 0) {
-                PMIU_printf(1, "Unable to connect to %s on %d\n", hostname, portnum);
-                return PMI_FAIL;
-            }
-        } else {
-            PMIU_printf(1, "unable to decode hostport from %s\n", p);
-            return PMI_FAIL;
-        }
-
-        /* We should first handshake to get size, rank, debug. */
-        p = getenv("PMI_ID");
-        if (p) {
-            id = atoi(p);
-            /* PMII_Set_from_port sets up the values that are delivered
-             * by environment variables when a separate port is not used */
-            PMII_Set_from_port(id);
-            *notset = 0;
-        }
-        return PMI_SUCCESS;
-    }
-#endif
-
-    /* Singleton init case - its ok to return success with no fd set */
-    return PMI_SUCCESS;
-}
 
 static int expect_pmi_cmd(const char *key)
 {
