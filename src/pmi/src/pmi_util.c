@@ -29,6 +29,7 @@
 
 #include "pmi.h"
 #include "pmi_util.h"
+#include "utlist.h"
 
 #define MAXVALLEN 1024
 #define MAXKEYLEN   32
@@ -213,8 +214,14 @@ int PMIU_readline(int fd, char *buf, int maxlen)
 /* Read and return the next full PMI message in a buffer */
 /* NOTE: no race detection. We assume PMI is only called serailly */
 
-static char *last_read = NULL;
-static int last_read_len = 0;
+struct last_read {
+    int fd;
+    char *buf;
+    int len;
+    struct last_read *prev, *next;
+};
+
+struct last_read *last_read_list;
 
 int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
 {
@@ -227,25 +234,32 @@ int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
 
     /* NOTE: bufsize always need 1 extra to ensure '\0' termination */
     bufsize = MAX_READLINE;
-    if (bufsize < last_read_len + 1) {
-        bufsize = last_read_len + 1;
-    }
-
     PMIU_CHK_MALLOC(buf, char *, bufsize, pmi_errno, PMIU_ERR_NOMEM, "buf");
 
     int wire_version = 0;
     int pmi2_cmd_len = 0;
     while (1) {
-        int n;
+        int n = 0;
         /* -- read more -- */
-        if (last_read_len > 0) {
-            /* transfer from what is already read */
-            memcpy(buf + buflen, last_read, last_read_len);
-            n = last_read_len;
-            MPL_free(last_read);
-            last_read = NULL;
-            last_read_len = 0;
-        } else {
+        if (last_read_list) {
+            struct last_read *p;
+            DL_FOREACH(last_read_list, p) {
+                if (p->fd == fd) {
+                    if (bufsize - buflen - 1 < p->len) {
+                        bufsize += MAX_READLINE;
+                        PMIU_REALLOC_ORJUMP(buf, bufsize, pmi_errno);
+                    }
+                    /* transfer from what is already read */
+                    memcpy(buf + buflen, p->buf, p->len);
+                    n += p->len;
+                    DL_DELETE(last_read_list, p);
+                    MPL_free(p->buf);
+                    MPL_free(p);
+                    break;
+                }
+            }
+        }
+        if (n == 0) {
             do {
                 if (bufsize - buflen - 1 < 100) {
                     bufsize += MAX_READLINE;
@@ -295,7 +309,7 @@ int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
                 }
             }
         } else {
-            if (buflen >= pmi2_cmd_len) {
+            if (pmi2_cmd_len > 0 && buflen >= pmi2_cmd_len) {
                 cmd_len = pmi2_cmd_len;
                 got_full_cmd = 1;
             }
@@ -303,10 +317,15 @@ int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
         if (got_full_cmd) {
             /* save the remainder for next read if any */
             if (buflen > cmd_len) {
-                last_read_len = buflen - cmd_len;
-                last_read = MPL_malloc(last_read_len, MPL_MEM_OTHER);
-                PMIU_Assert(last_read);
-                memcpy(last_read, buf + cmd_len, last_read_len);
+                struct last_read *p;
+                p = MPL_malloc(sizeof(*p), MPL_MEM_OTHER);
+                PMIU_Assert(p);
+                p->fd = fd;
+                p->len = buflen - cmd_len;
+                p->buf = MPL_malloc(p->len, MPL_MEM_OTHER);
+                PMIU_Assert(p->buf);
+                memcpy(p->buf, buf + cmd_len, p->len);
+                DL_APPEND(last_read_list, p);
             }
             break;
         }
