@@ -254,7 +254,7 @@ int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
                     char len_str[7];
                     memcpy(len_str, buf, 6);
                     len_str[6] = '\0';
-                    pmi2_cmd_len = atoi(len_str);
+                    pmi2_cmd_len = atoi(len_str) + 6;
                     PMIU_Assert(pmi2_cmd_len > 10);
                     if (bufsize < pmi2_cmd_len + 1) {
                         bufsize = pmi2_cmd_len + 1;
