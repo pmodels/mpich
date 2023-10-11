@@ -51,7 +51,8 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                     else if (!strncmp(ckey, "k=", strlen("k=")))
                         cnt->u.bcast.intra_tree.k = atoi(ckey + strlen("k="));
                     else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
-                        cnt->u.bcast.intra_tree.k = atoi(ckey + strlen("k="));
+                        cnt->u.bcast.intra_tree.is_non_blocking =
+                            atoi(ckey + strlen("is_non_blocking="));
                     MPL_free(ckey);
                 }
             }
@@ -67,7 +68,8 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                     else if (!strncmp(ckey, "k=", strlen("k=")))
                         cnt->u.bcast.intra_pipelined_tree.k = atoi(ckey + strlen("k="));
                     else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
-                        cnt->u.bcast.intra_pipelined_tree.k = atoi(ckey + strlen("k="));
+                        cnt->u.bcast.intra_pipelined_tree.is_non_blocking =
+                            atoi(ckey + strlen("is_non_blocking="));
                     else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
                         cnt->u.bcast.intra_pipelined_tree.chunk_size =
                             atoi(ckey + strlen("chunk_size="));
