@@ -112,6 +112,7 @@ static int parse_v1(char *buf, struct PMIU_cmd *pmicmd)
     while (1) {
         char *key = NULL;
         char *val = NULL;
+        int last_char = 0;
 
         SKIP_SPACES(p);
         if (IS_EOL(*p)) {
@@ -136,8 +137,10 @@ static int parse_v1(char *buf, struct PMIU_cmd *pmicmd)
             }
             val = p;
             SKIP_VAL(p);
+            last_char = *p;
             TERMINATE_STR(p);   /* terminate value */
         } else {
+            last_char = *p;
             TERMINATE_STR(p);   /* terminate key */
         }
 
@@ -149,6 +152,10 @@ static int parse_v1(char *buf, struct PMIU_cmd *pmicmd)
             pmicmd->cmd = val;
         } else {
             PMIU_CMD_ADD_TOKEN(pmicmd, key, val);
+        }
+
+        if (IS_EOL(last_char)) {
+            break;
         }
     }
 

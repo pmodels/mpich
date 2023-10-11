@@ -213,14 +213,24 @@ int PMIU_readline(int fd, char *buf, int maxlen)
 /* Read and return the next full PMI message in a buffer */
 /* NOTE: no race detection. We assume PMI is only called serailly */
 
+static char *last_read = NULL;
+static int last_read_len = 0;
+
 int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
 {
     int pmi_errno = PMIU_SUCCESS;
 
+    int cmd_len = 0;
     int buflen = 0;
     int bufsize = 0;
     char *buf;
+
+    /* NOTE: bufsize always need 1 extra to ensure '\0' termination */
     bufsize = MAX_READLINE;
+    if (bufsize < last_read_len + 1) {
+        bufsize = last_read_len + 1;
+    }
+
     PMIU_CHK_MALLOC(buf, char *, bufsize, pmi_errno, PMIU_ERR_NOMEM, "buf");
 
     int wire_version = 0;
@@ -228,18 +238,27 @@ int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
     while (1) {
         int n;
         /* -- read more -- */
-        do {
-            if (bufsize - buflen - 1 < 100) {
-                bufsize += MAX_READLINE;
-                PMIU_REALLOC_ORJUMP(buf, bufsize, pmi_errno);
+        if (last_read_len > 0) {
+            /* transfer from what is already read */
+            memcpy(buf + buflen, last_read, last_read_len);
+            n = last_read_len;
+            MPL_free(last_read);
+            last_read = NULL;
+            last_read_len = 0;
+        } else {
+            do {
+                if (bufsize - buflen - 1 < 100) {
+                    bufsize += MAX_READLINE;
+                    PMIU_REALLOC_ORJUMP(buf, bufsize, pmi_errno);
+                }
+                n = read(fd, buf + buflen, bufsize - buflen - 1);
+            } while (n == -1 && errno == EINTR);
+            if (n == 0) {
+                /* EOF */
+                break;
+            } else if (n < 0) {
+                PMIU_ERR_SETANDJUMP(pmi_errno, PMI_FAIL, "Error in PMIU_read_cmd.\n");
             }
-            n = read(fd, buf + buflen, bufsize - buflen - 1);
-        } while (n == -1 && errno == EINTR);
-        if (n == 0) {
-            /* EOF */
-            break;
-        } else if (n < 0) {
-            PMIU_ERR_SETANDJUMP(pmi_errno, PMI_FAIL, "Error in PMIU_read_cmd.\n");
         }
 
         char *s = buf + buflen;
@@ -263,34 +282,44 @@ int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
                 }
             }
         }
+
         /* -- check whether we have the full message -- */
         int got_full_cmd = 0;
         if (wire_version == 1) {
             /* newline marks the end of a PMI-1 message */
-            /* Q: can we take shortcut and just check the end? */
             for (int i = 0; i < n; i++) {
                 if (s[i] == '\n') {
+                    cmd_len = (s - buf) + i + 1;
                     got_full_cmd = 1;
+                    break;
                 }
             }
         } else {
             if (buflen >= pmi2_cmd_len) {
+                cmd_len = pmi2_cmd_len;
                 got_full_cmd = 1;
             }
         }
         if (got_full_cmd) {
+            /* save the remainder for next read if any */
+            if (buflen > cmd_len) {
+                last_read_len = buflen - cmd_len;
+                last_read = MPL_malloc(last_read_len, MPL_MEM_OTHER);
+                PMIU_Assert(last_read);
+                memcpy(last_read, buf + cmd_len, last_read_len);
+            }
             break;
         }
     }
 
-    if (buflen == 0) {
+    if (cmd_len == 0) {
         PMIU_Free(buf);
         *buf_out = NULL;
         *buflen_out = 0;
     } else {
-        buf[buflen] = '\0';
+        buf[cmd_len] = '\0';
         *buf_out = buf;
-        *buflen_out = buflen;
+        *buflen_out = cmd_len + 1;
     }
 
   fn_exit:
