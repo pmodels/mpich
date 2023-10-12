@@ -348,6 +348,20 @@ int MPIR_Test_state(MPIR_Request * request_ptr, int *flag, MPI_Status * status,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+    if (MPIR_Request_is_complete(request_ptr)) {
+        *flag = TRUE;
+        mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
+    } else {
+        *flag = FALSE;
+        if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
+            MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+            if (status != MPI_STATUS_IGNORE) {
+                status->MPI_ERROR = mpi_errno;
+            }
+            goto fn_fail;
+        }
+    }
+
   fn_exit:
     return mpi_errno;
 
@@ -371,11 +385,6 @@ int MPIR_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
         mpi_errno = MPIR_Grequest_poll(request_ptr, status);
         MPIR_ERR_CHECK(mpi_errno);
     }
-
-    if (MPIR_Request_is_complete(request_ptr))
-        *flag = TRUE;
-    else
-        *flag = FALSE;
 
   fn_exit:
     return mpi_errno;
@@ -906,6 +915,9 @@ int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progre
             goto fn_fail;
         }
     }
+
+    mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

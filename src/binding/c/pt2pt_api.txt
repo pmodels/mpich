@@ -320,9 +320,7 @@ MPI_Mrecv:
         mpi_errno = MPID_Wait(rreq, status);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Request_completion_processing(rreq, status);
         MPIR_Request_free(rreq);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
     *message = MPI_MESSAGE_NULL;
@@ -360,12 +358,10 @@ MPI_Recv:
         goto fn_exit;
     }
 
-    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    mpi_errno = MPID_Wait(request_ptr, status);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    mpi_errno = request_ptr->status.MPI_ERROR;
-    MPIR_Request_extract_status(request_ptr, status);
     MPIR_Request_free(request_ptr);
 
     if (mpi_errno != MPI_SUCCESS)
@@ -405,11 +401,7 @@ MPI_Rsend:
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_free(request_ptr);
-
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
 }
 
 MPI_Rsend_init:
@@ -450,11 +442,7 @@ MPI_Send:
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_free(request_ptr);
-
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
 }
 
 MPI_Send_init:
@@ -509,11 +497,7 @@ MPI_Ssend:
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_free(request_ptr);
-
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
 }
 
 MPI_Ssend_init:

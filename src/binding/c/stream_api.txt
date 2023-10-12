@@ -69,10 +69,7 @@ MPIX_Stream_send:
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_free(request_ptr);
-
-    MPIR_ERR_CHECK(mpi_errno);
 }
 
 MPIX_Stream_isend:
@@ -137,11 +134,7 @@ MPIX_Stream_recv:
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = request_ptr->status.MPI_ERROR;
-    MPIR_Request_extract_status(request_ptr, status);
     MPIR_Request_free(request_ptr);
-
-    MPIR_ERR_CHECK(mpi_errno);
 }
 
 MPIX_Stream_irecv:
