@@ -5,6 +5,16 @@
 
 #ifdef ENABLE_PMIX
 
+/* PMIx_Info_load is only in OpenPMIx >= 5.0. Previous versions provide a macro. */
+#ifdef NEED_PMIX_INFO_LOAD
+#define PMIx_Info_load PMIX_INFO_LOAD
+#endif
+
+/* some clients return this deprecated error code from PMIx_Spawn */
+#ifndef PMIX_ERR_NOT_IMPLEMENTED
+#define PMIX_ERR_NOT_IMPLEMENTED -48
+#endif
+
 static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
 static pmix_proc_t pmix_parent;
@@ -199,7 +209,7 @@ static int pmix_barrier(void)
     pmix_info_t *info;
     PMIX_INFO_CREATE(info, 1);
     int flag = 1;
-    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
+    PMIx_Info_load(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
 
     /* use global wildcard proc set */
     pmi_errno = PMIx_Fence(&pmix_wcproc, 1, info, 1);
@@ -228,7 +238,7 @@ static int pmix_barrier_local(void)
     pmix_info_t *info;
     int flag = 1;
     PMIX_INFO_CREATE(info, 1);
-    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
+    PMIx_Info_load(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
 
     pmi_errno = PMIx_Fence(procs, local_size, info, 1);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_fence",
@@ -583,7 +593,7 @@ int mpi_to_pmix_keyvals(MPIR_Info * info_ptr, int ninfo, pmix_info_t ** pmix_inf
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIR_Info_get_impl(info_ptr, key, MPI_MAX_INFO_VAL, val, &flag);
             MPIR_ERR_CHECK(mpi_errno);
-            PMIX_INFO_LOAD(&((*pmix_info)[k]), key, val, PMIX_STRING);
+            PMIx_Info_load(&((*pmix_info)[k]), key, val, PMIX_STRING);
         }
     }
   fn_exit:
@@ -825,7 +835,7 @@ int pmix_fence_nspace_proc(char *nspace, pmix_proc_t proc)
 
     /* Fence */
     PMIX_INFO_CREATE(fence_info, 1);
-    PMIX_INFO_LOAD(fence_info, PMIX_COLLECT_DATA, &fence_collect_data, PMIX_BOOL);
+    PMIx_Info_load(fence_info, PMIX_COLLECT_DATA, &fence_collect_data, PMIX_BOOL);
     pmi_errno = PMIx_Fence(procs, nprocs + 1, fence_info, 1);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_fence", "**pmix_fence %d", pmi_errno);
