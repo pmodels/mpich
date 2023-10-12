@@ -952,8 +952,6 @@ int PMIU_cmd_send(int fd, struct PMIU_cmd *pmicmd)
  * return from this routine, the response is parsed into the pmicmd object.
  * It can be queried for attributes.
  */
-static int GetResponse_set_int(const char *key, int *val_out);
-
 int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd)
 {
     int pmi_errno = PMIU_SUCCESS;
@@ -985,39 +983,7 @@ int PMIU_cmd_get_response(int fd, struct PMIU_cmd *pmicmd)
         PMIU_ERR_SETANDJUMP2(pmi_errno, PMIU_FAIL, "server responded with rc=%d - %s\n", rc, msg);
     }
 
-    if (cmd_id == PMIU_CMD_FULLINIT && pmicmd->version == PMIU_WIRE_V1) {
-        /* weird 3 additional set commands */
-        pmi_errno = GetResponse_set_int("size", &PMI_size);
-        PMIU_ERR_POP(pmi_errno);
-        pmi_errno = GetResponse_set_int("rank", &PMI_rank);
-        PMIU_ERR_POP(pmi_errno);
-        pmi_errno = GetResponse_set_int("debug", &PMIU_verbose);
-        PMIU_ERR_POP(pmi_errno);
-    }
-
   fn_exit:
-    return pmi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int GetResponse_set_int(const char *key, int *val_out)
-{
-    int pmi_errno = PMIU_SUCCESS;
-
-    struct PMIU_cmd pmicmd;
-
-    pmi_errno = PMIU_cmd_read(PMI_fd, &pmicmd);
-    PMIU_ERR_POP(pmi_errno);
-
-    if (strcmp("set", pmicmd.cmd) != 0) {
-        PMIU_ERR_SETANDJUMP1(pmi_errno, PMIU_FAIL, "expecting cmd=set, got %s\n", pmicmd.cmd);
-    }
-
-    PMIU_CMD_GET_INTVAL(&pmicmd, key, *val_out);
-
-  fn_exit:
-    PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
     goto fn_exit;

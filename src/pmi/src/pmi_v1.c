@@ -65,7 +65,7 @@ static char cached_singinit_val[PMIU_MAXLINE];
 #define MAX_SINGINIT_KVSNAME 256
 static char singinit_kvsname[MAX_SINGINIT_KVSNAME];
 
-static int expect_pmi_cmd(const char *key);
+static int expect_pmi_cmd(const char *cmd, const char *key, int *val_out);
 
 PMI_API_PUBLIC int PMI_Init(int *spawned)
 {
@@ -154,7 +154,7 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
     if ((p = getenv("PMI_TOTALVIEW")))
         PMI_totalview = atoi(p);
     if (PMI_totalview) {
-        pmi_errno = expect_pmi_cmd("tv_ready");
+        pmi_errno = expect_pmi_cmd("tv_ready", NULL, NULL);
         PMIU_ERR_POP(pmi_errno);
     }
 #endif
@@ -709,6 +709,14 @@ static int PMII_Set_from_port(int id)
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
     PMIU_ERR_POP(pmi_errno);
 
+    /* weird 3 additional set commands */
+    pmi_errno = expect_pmi_cmd("set", "size", &PMI_size);
+    PMIU_ERR_POP(pmi_errno);
+    pmi_errno = expect_pmi_cmd("set", "rank", &PMI_rank);
+    PMIU_ERR_POP(pmi_errno);
+    pmi_errno = expect_pmi_cmd("set", "debug", &PMIU_verbose);
+    PMIU_ERR_POP(pmi_errno);
+
   fn_exit:
     PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
@@ -948,15 +956,19 @@ static int accept_one_connection(int list_sock)
 #endif
 /* end USE_PMI_PORT */
 
-static int expect_pmi_cmd(const char *key)
+static int expect_pmi_cmd(const char *cmd, const char *key, int *val_out)
 {
     int pmi_errno = PMI_SUCCESS;
 
     struct PMIU_cmd pmicmd;
     pmi_errno = PMIU_cmd_read(PMI_fd, &pmicmd);
     PMIU_ERR_POP(pmi_errno);
-    PMIU_ERR_CHKANDJUMP2(strcmp(pmicmd.cmd, key) != 0,
-                         pmi_errno, PMI_FAIL, "expecting cmd=%s, got %s\n", key, pmicmd.cmd);
+    PMIU_ERR_CHKANDJUMP2(strcmp(pmicmd.cmd, cmd) != 0,
+                         pmi_errno, PMI_FAIL, "expecting cmd=%s, got %s\n", cmd, pmicmd.cmd);
+
+    if (val_out != NULL) {
+        PMIU_CMD_GET_INTVAL(&pmicmd, key, *val_out);
+    }
 
   fn_exit:
     PMIU_cmd_free_buf(&pmicmd);
