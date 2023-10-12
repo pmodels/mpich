@@ -51,11 +51,13 @@ static int hex(unsigned char c)
 }
 
 /* encodes src data into hex characters */
-int MPL_hex_encode(int size, const char *src, char *dest)
+int MPL_hex_encode(int size, const void *src, char *dest)
 {
+    const char *srcp = src;
+
     for (int i = 0; i < size; i++) {
-        snprintf(dest, 3, "%02X", (unsigned char) *src);
-        src++;
+        snprintf(dest, 3, "%02X", (unsigned char) *srcp);
+        srcp++;
         dest += 2;
     }
 
@@ -63,20 +65,22 @@ int MPL_hex_encode(int size, const char *src, char *dest)
 }
 
 /* decodes hex encoded string into original src data */
-int MPL_hex_decode(int size, const char *src, char *dest)
+int MPL_hex_decode(int size, const char *src, void *dest)
 {
     int n = strlen(src);
     if (n != size * 2) {
         return 1;
     }
 
+    char *destp = dest;
+
     for (int i = 0; i < size; i++) {
         if (hex(src[0]) < 0 || hex(src[1]) < 0) {
             return 1;
         }
-        *dest = (char) (hex(src[0]) << 4) + hex(src[1]);
+        *destp = (char) (hex(src[0]) << 4) + hex(src[1]);
         src += 2;
-        dest++;
+        destp++;
     }
 
     return 0;

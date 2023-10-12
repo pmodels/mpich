@@ -5,6 +5,16 @@
 
 #ifdef ENABLE_PMIX
 
+/* PMIx_Info_load is only in OpenPMIx >= 5.0. Previous versions provide a macro. */
+#ifdef NEED_PMIX_INFO_LOAD
+#define PMIx_Info_load PMIX_INFO_LOAD
+#endif
+
+/* some clients return this deprecated error code from PMIx_Spawn */
+#ifndef PMIX_ERR_NOT_IMPLEMENTED
+#define PMIX_ERR_NOT_IMPLEMENTED -48
+#endif
+
 static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
 static pmix_proc_t pmix_parent;
@@ -71,9 +81,9 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     PMIX_PROC_CONSTRUCT(&pmix_parent);
     pmi_errno = PMIx_Get(&pmix_proc, PMIX_PARENT_ID, NULL, 0, &pvalue);
     if (pmi_errno == PMIX_ERR_NOT_FOUND) {
-        *has_parent = 0; /* process not spawned */
+        *has_parent = 0;        /* process not spawned */
     } else if (pmi_errno == PMIX_SUCCESS) {
-        *has_parent = 1; /* spawned process */
+        *has_parent = 1;        /* spawned process */
         PMIX_PROC_LOAD(&pmix_parent, pvalue->data.proc->nspace, pvalue->data.proc->rank);
         PMIX_VALUE_RELEASE(pvalue);
     } else {
@@ -199,7 +209,7 @@ static int pmix_barrier(void)
     pmix_info_t *info;
     PMIX_INFO_CREATE(info, 1);
     int flag = 1;
-    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
+    PMIx_Info_load(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
 
     /* use global wildcard proc set */
     pmi_errno = PMIx_Fence(&pmix_wcproc, 1, info, 1);
@@ -228,7 +238,7 @@ static int pmix_barrier_local(void)
     pmix_info_t *info;
     int flag = 1;
     PMIX_INFO_CREATE(info, 1);
-    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
+    PMIx_Info_load(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
 
     pmi_errno = PMIx_Fence(procs, local_size, info, 1);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_fence",
@@ -357,7 +367,7 @@ static int pmix_spawn(int count, char *commands[], char **argvs[], const int max
                       MPIR_Info * info_ptrs[], int num_preput_keyval,
                       struct MPIR_PMI_KEYVAL *preput_keyvals, int *pmi_errcodes)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
     pmix_app_t *apps = NULL;
     pmix_info_t *job_info = NULL;
@@ -514,7 +524,7 @@ void pmix_not_supported(const char *elem, char *error_str, int len)
      * could be obtained about the PMIx Host */
     if (name && version) {
         snprintf(error_str, len, "%s not supported by PMIx Host %s version %s",
-                     elem, name, version);
+                 elem, name, version);
     } else if (name) {
         snprintf(error_str, len, "%s not supported by PMIx Host %s", elem, name);
     } else {
@@ -583,7 +593,7 @@ int mpi_to_pmix_keyvals(MPIR_Info * info_ptr, int ninfo, pmix_info_t ** pmix_inf
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIR_Info_get_impl(info_ptr, key, MPI_MAX_INFO_VAL, val, &flag);
             MPIR_ERR_CHECK(mpi_errno);
-            PMIX_INFO_LOAD(&((*pmix_info)[k]), key, val, PMIX_STRING);
+            PMIx_Info_load(&((*pmix_info)[k]), key, val, PMIX_STRING);
         }
     }
   fn_exit:
@@ -825,7 +835,7 @@ int pmix_fence_nspace_proc(char *nspace, pmix_proc_t proc)
 
     /* Fence */
     PMIX_INFO_CREATE(fence_info, 1);
-    PMIX_INFO_LOAD(fence_info, PMIX_COLLECT_DATA, &fence_collect_data, PMIX_BOOL);
+    PMIx_Info_load(fence_info, PMIX_COLLECT_DATA, &fence_collect_data, PMIX_BOOL);
     pmi_errno = PMIx_Fence(procs, nprocs + 1, fence_info, 1);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_fence", "**pmix_fence %d", pmi_errno);
@@ -842,7 +852,7 @@ int pmix_fence_nspace_proc(char *nspace, pmix_proc_t proc)
     goto fn_exit;
 }
 
-#else  /* ENABLE_PMIX */
+#else /* ENABLE_PMIX */
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -955,6 +965,16 @@ static int pmix_build_nodemap(int *nodemap, int sz)
     char *nodelist = NULL, *node = NULL;
     pmix_proc_t *procs = NULL;
     size_t nprocs, node_id = 0;
+
+    pmix_value_t *pvalue;
+    pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_ANL_MAP, NULL, 0, &pvalue);
+    if (pmi_errno == PMIX_SUCCESS) {
+        int mpl_err = MPL_rankmap_str_to_array(pvalue->data.string, sz, nodemap);
+        MPIR_ERR_CHKINTERNAL(mpl_err, mpi_errno,
+                             "unable to populate node ids from PMI_process_mapping");
+        PMIX_VALUE_RELEASE(pvalue);
+        goto fn_exit;
+    }
 
     pmi_errno = PMIx_Resolve_nodes(pmix_proc.nspace, &nodelist);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,

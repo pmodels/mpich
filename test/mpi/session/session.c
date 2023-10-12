@@ -148,7 +148,9 @@ void library_foo_init(void)
 
     /* free group, library doesn’t need it. */
   fn_exit:
-    MPI_Group_free(&wgroup);
+    if (wgroup != MPI_GROUP_NULL) {
+        MPI_Group_free(&wgroup);
+    }
     if (sinfo != MPI_INFO_NULL) {
         MPI_Info_free(&sinfo);
     }

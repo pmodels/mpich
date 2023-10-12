@@ -1588,9 +1588,6 @@ for pm_name in $pm_names ; do
         fi
         ;;
       hydra)
-        if test "$with_pmi" = "pmix" ; then
-            AC_MSG_ERROR([$pm_name does not support $with_pmi.])
-        fi
         subsystems="$subsystems src/pm/hydra"
         ;;
       *)
@@ -1626,9 +1623,6 @@ case "$with_pmilib" in
   no)
     ;;
   default|mpich|install)
-    if test "$with_pmi" = "pmix" ; then
-        AC_MSG_ERROR([pmilib=$with_pmilib is incompatible with $with_pmi]);
-    fi
     pmisrcdir="src/pmi"
     pmilib="src/pmi/libpmi.la"
 
@@ -1691,11 +1685,13 @@ elif test "$with_pmi" = "pmix" ; then
 elif test "$with_pmilib" = "default" -o "$with_pmilib" = "mpich" -o "$with_pmilib" = "install"; then
     enable_pmi1="yes"
     enable_pmi2="yes"
+    enable_pmix="yes"
     # mpich's libpmi support both PMI1 and PMI2 unless 3rd party pmi is loaded
     if test "$pac_have_pmi1" = "yes" -o "$pac_have_pmi2" = "yes" ; then
         enable_pmi1="no"
         enable_pmi2="no"
     fi
+    # use PMIx client in libpmi unless an external library is configured
     if test "$pac_have_pmix" = "yes" ; then
         enable_pmix="no"
     fi
@@ -1708,6 +1704,7 @@ if test "$pac_3rd_party_pmi" = "yes" ; then
     AC_CHECK_FUNC([PMI_Init], [enable_pmi1="yes"])
     AC_CHECK_FUNC([PMI2_Init], [enable_pmi2="yes"])
     AC_CHECK_FUNC([PMIx_Init], [enable_pmix="yes"])
+    AC_CHECK_FUNC([PMIx_Info_load],[],[AC_DEFINE([NEED_PMIX_INFO_LOAD], 1, [Define if PMIX_INFO_LOAD macro is needed])])
     if test "$enable_pmi2" = "yes"; then
         AC_CHECK_MEMBER([PMI2_keyval_t.key], [], [
             AC_DEFINE([MISSING_PMI2_KEYVAL_T], 1, [Define if PMI2_KEYVAL_T is missing])

@@ -21,6 +21,12 @@ else
 include_HEADERS = \
     include/pmi.h \
     include/pmi2.h
+    include/pmix.h \
+    include/pmix_abi_support.h \
+    include/pmix_abi_support_bottom.h \
+    include/pmix_fns.h \
+    include/pmix_macros.h \
+    include/pmix_types.h
 
 lib_LTLIBRARIES = libpmi.la
 endif
@@ -32,4 +38,5 @@ libpmi_la_LIBADD = @mpl_lib@ libpmiutil.la
 
 libpmi_la_SOURCES = \
     src/pmi_v1.c \
-    src/pmi_v2.c
+    src/pmi_v2.c \
+    src/pmix.c
