@@ -58,6 +58,7 @@ int PMIU_parse_keyvals(char *st);
 void PMIU_dump_keyvals(void);
 char *PMIU_getval(const char *keystr, char *valstr, int vallen);
 void PMIU_chgval(const char *keystr, char *valstr);
+int PMIU_get_pmi_fd(int *pmi_fd, bool * do_handshake);
 
 #define PMIU_Malloc(size_) MPL_malloc(size_, MPL_MEM_PM)
 #define PMIU_Realloc(ptr_, size_) MPL_realloc(ptr_, size_, MPL_MEM_PM)
