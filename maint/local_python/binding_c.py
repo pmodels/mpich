@@ -555,9 +555,9 @@ def process_func_parameters(func):
                 if p['length']:
                     length = p['length']
                     if length == '*':
-                        if RE.match(r'MPI_(Test|Wait)all', func_name, re.IGNORECASE):
+                        if RE.match(r'MPI_(Test|Wait|Request_get_status_)all', func_name, re.IGNORECASE):
                             length = "count"
-                        elif RE.match(r'MPI_(Test|Wait)some', func_name, re.IGNORECASE):
+                        elif RE.match(r'MPI_(Test|Wait|Request_get_status_)some', func_name, re.IGNORECASE):
                             length = "incount"
                         else:
                             raise Exception("Unexpected")
@@ -580,7 +580,7 @@ def process_func_parameters(func):
             if kind == "REQUEST":
                 if RE.match(r'mpi_startall', func_name, re.IGNORECASE):
                     do_handle_ptr = 3
-                elif RE.match(r'mpix?_(wait|test)', func_name, re.IGNORECASE):
+                elif RE.match(r'mpix?_(wait|test|request_get_status)', func_name, re.IGNORECASE):
                     do_handle_ptr = 3
             elif kind == "RANK":
                 validation_list.append({'kind': "RANK-ARRAY", 'name': name})

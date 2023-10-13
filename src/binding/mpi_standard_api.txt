@@ -1779,6 +1779,23 @@ MPI_Request_get_status:
     request: REQUEST, [request]
     flag: LOGICAL, direction=out, [boolean flag, same as from MPI_TEST]
     status: STATUS, direction=out, [status object if flag is true]
+MPI_Request_get_status_all:
+    count: ARRAY_LENGTH_NNI, lists length
+    array_of_requests: REQUEST, direction=in, length=count, [array of requests]
+    flag: LOGICAL, direction=out
+    array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects]
+MPI_Request_get_status_any:
+    count: ARRAY_LENGTH_NNI, list length
+    array_of_requests: REQUEST, direction=in, length=count, [array of requests]
+    index: INDEX, direction=out, [index of operation that completed or MPI_UNDEFINED if none completed]
+    flag: LOGICAL, direction=out, [true if one of the operations is complete]
+    status: STATUS, direction=out
+MPI_Request_get_status_some:
+    incount: ARRAY_LENGTH_NNI, [length of array_of_requests]
+    array_of_requests: REQUEST, direction=in, length=incount, [array of requests]
+    outcount: ARRAY_LENGTH, direction=out, [number of completed requests]
+    array_of_indices: INDEX, direction=out, length=*, [array of indices of operations that completed]
+    array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects for operations that completed]
 MPI_Rget:
     origin_addr: BUFFER, direction=out, asynchronous=True, constant=False, [initial address of origin buffer]
     origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in origin buffer]

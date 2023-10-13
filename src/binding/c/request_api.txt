@@ -108,6 +108,40 @@ MPI_Request_get_status:
     }
 }
 
+MPI_Request_get_status_all:
+    .desc: Nondestructive test for the completion of all requests
+{
+    mpi_errno = MPIR_Testall(count, request_ptrs, flag, array_of_statuses);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
+
+MPI_Request_get_status_any:
+    .desc: Nondestructive test for the completion of any of the requests
+{
+    mpi_errno = MPIR_Testany(count, request_ptrs, indx, flag, status);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
+
+MPI_Request_get_status_some:
+    .desc: Nondestructive test for the completion of some of the requests
+{ -- error_check -- array_of_indices
+    if (incount > 0) {
+        MPIR_ERRTEST_ARGNULL(array_of_requests, "array_of_requests", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(array_of_indices, "array_of_indices", mpi_errno);
+    }
+}
+{
+    mpi_errno = MPIR_Testsome(incount, request_ptrs, outcount,
+                              array_of_indices, array_of_statuses);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
+
 MPI_Start:
     .desc: Initiates a communication with a persistent request handle
 {

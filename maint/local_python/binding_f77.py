@@ -621,9 +621,9 @@ def dump_f77_c_func(func):
                 if p['param_direction'] == 'out':
                     if p['length'] is None:
                         dump_status(p['name'], False, True)
-                    elif RE.match(r'mpix?_(wait|test)all', func['name'], re.IGNORECASE):
+                    elif RE.match(r'mpix?_(wait|test|request_get_status_)all', func['name'], re.IGNORECASE):
                         dump_statuses(p['name'], "(*count)", "(*count)", False, True)
-                    elif RE.match(r'mpix?_(wait|test)some', func['name'], re.IGNORECASE):
+                    elif RE.match(r'mpix?_(wait|test|request_get_status_)some', func['name'], re.IGNORECASE):
                         dump_statuses(p['name'], "(*incount)", "(*outcount)", False, True)
                     else:
                         raise Exception("Unhandled: %s - %s" % (func['name'], p['name']))
@@ -684,7 +684,7 @@ def dump_f77_c_func(func):
             elif p['kind'] == "INDEX":
                 # tricky, not all need to be 1-based
                 if p['length']:
-                    if re.match(r'MPI_(Test|Wait)some', func['name'], re.IGNORECASE):
+                    if re.match(r'MPI_(Test|Wait|Request_get_status_)some', func['name'], re.IGNORECASE):
                         dump_index_array_out(p['name'], '(*incount)', '(*outcount)')
                     elif re.match(r'MPI_Graph_get', func['name'], re.IGNORECASE):
                         dump_array_out(p['name'], 'int', '(*maxindex)')
