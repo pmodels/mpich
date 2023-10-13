@@ -317,7 +317,7 @@ MPI_Mrecv:
     /* rreq == NULL implies message = MPI_MESSAGE_NO_PROC.
      * I.e, status was set and no need to wait on rreq */
     if (rreq != NULL) {
-        mpi_errno = MPID_Wait(rreq, status);
+        mpi_errno = MPIR_Wait(rreq, status);
         MPIR_Request_free(rreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -357,7 +357,7 @@ MPI_Recv:
         goto fn_exit;
     }
 
-    mpi_errno = MPID_Wait(request_ptr, status);
+    mpi_errno = MPIR_Wait(request_ptr, status);
     MPIR_Request_free(request_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -393,7 +393,7 @@ MPI_Rsend:
 
     /* If a request was returned, then we need to block until the request
      * is complete */
-    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    mpi_errno = MPIR_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_Request_free(request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 }
@@ -433,7 +433,7 @@ MPI_Send:
         goto fn_exit;
     }
 
-    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    mpi_errno = MPIR_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_Request_free(request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 }
@@ -487,7 +487,7 @@ MPI_Ssend:
 
     /* If a request was returned, then we need to block until the request
      * is complete */
-    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    mpi_errno = MPIR_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_Request_free(request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 }

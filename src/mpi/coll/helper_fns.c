@@ -87,7 +87,7 @@ int MPIC_Wait(MPIR_Request * request_ptr)
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    mpi_errno = MPIR_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (request_ptr->kind == MPIR_REQUEST_KIND__RECV) {

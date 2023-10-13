@@ -41,10 +41,9 @@ static void send_enqueue_cb(void *data)
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
     MPIR_Assertp(request_ptr != NULL);
 
-    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
-    MPIR_Assertp(mpi_errno == MPI_SUCCESS);
-
+    mpi_errno = MPIR_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_Request_free(request_ptr);
+    MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
     if (p->host_buf) {
         MPIR_gpu_free_host(p->host_buf);
@@ -128,11 +127,9 @@ static void recv_enqueue_cb(void *data)
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
     MPIR_Assertp(request_ptr != NULL);
 
-    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
-    MPIR_Assertp(mpi_errno == MPI_SUCCESS);
-
-    MPIR_Request_extract_status(request_ptr, p->status);
+    mpi_errno = MPIR_Wait(request_ptr, p->status);
     MPIR_Request_free(request_ptr);
+    MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
     if (!p->host_buf) {
         /* we are done */
@@ -349,10 +346,9 @@ static void wait_enqueue_cb(void *data)
     if (enqueue_req->u.enqueue.is_send) {
         struct send_data *p = enqueue_req->u.enqueue.data;
 
-        mpi_errno = MPID_Wait(real_req, MPI_STATUS_IGNORE);
-        MPIR_Assertp(mpi_errno == MPI_SUCCESS);
-
+        mpi_errno = MPIR_Wait(real_req, MPI_STATUS_IGNORE);
         MPIR_Request_free(real_req);
+        MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
         if (p->host_buf) {
             MPIR_gpu_free_host(p->host_buf);
@@ -362,11 +358,9 @@ static void wait_enqueue_cb(void *data)
     } else {
         struct recv_data *p = enqueue_req->u.enqueue.data;
 
-        mpi_errno = MPID_Wait(real_req, MPI_STATUS_IGNORE);
-        MPIR_Assertp(mpi_errno == MPI_SUCCESS);
-
-        MPIR_Request_extract_status(real_req, p->status);
+        mpi_errno = MPIR_Wait(real_req, p->status);
         MPIR_Request_free(real_req);
+        MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
         if (!p->host_buf) {
             MPIR_Comm_release(p->comm_ptr);
