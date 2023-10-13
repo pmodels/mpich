@@ -101,6 +101,12 @@ MPI_Request_get_status:
         goto fn_exit;
     }
 }
+{
+    mpi_errno = MPIR_Test(request_ptr, flag, status);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
 
 MPI_Start:
     .desc: Initiates a communication with a persistent request handle
