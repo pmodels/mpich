@@ -221,15 +221,14 @@ MPI_Test:
 }
 {
     mpi_errno = MPIR_Test(request_ptr, flag, status);
-    if (mpi_errno)
-        goto fn_fail;
-
     if (*flag) {
         if (!MPIR_Request_is_persistent(request_ptr)) {
             MPIR_Request_free(request_ptr);
             *request = MPI_REQUEST_NULL;
         }
     }
+    if (mpi_errno)
+        goto fn_fail;
 }
 
 MPI_Testall:
@@ -255,9 +254,6 @@ MPI_Testall:
 */
 {
     mpi_errno = MPIR_Testall(count, request_ptrs, flag, array_of_statuses);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
     if (*flag) {
         for (int i = 0; i < count; i++) {
             if (mpi_errno && array_of_statuses != MPI_STATUSES_IGNORE
@@ -270,6 +266,8 @@ MPI_Testall:
             }
         }
     }
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 }
 
 MPI_Testany:
@@ -285,15 +283,14 @@ MPI_Testany:
 {
     /* Pass down request ptr to avoid redundant handle to ptr translation. */
     mpi_errno = MPIR_Testany(count, request_ptrs, indx, flag, status);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
     if (*indx != MPI_UNDEFINED) {
         if (request_ptrs[*indx] && !MPIR_Request_is_persistent(request_ptrs[*indx])) {
             MPIR_Request_free(request_ptrs[*indx]);
             array_of_requests[*indx] = MPI_REQUEST_NULL;
         }
     }
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 }
 
 MPI_Testsome:
@@ -316,9 +313,6 @@ MPI_Testsome:
     /* Pass down request ptr to avoid redundant handle to ptr translation. */
     mpi_errno = MPIR_Testsome(incount, request_ptrs, outcount,
                               array_of_indices, array_of_statuses);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
     for (int i = 0; i < *outcount; i++) {
         int idx = array_of_indices[i];
         if (request_ptrs[idx] && !MPIR_Request_is_persistent(request_ptrs[idx])) {
@@ -326,6 +320,8 @@ MPI_Testsome:
             array_of_requests[idx] = MPI_REQUEST_NULL;
         }
     }
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 }
 
 MPI_Wait:
@@ -368,9 +364,6 @@ MPI_Waitall:
 */
 {
     mpi_errno = MPIR_Waitall(count, request_ptrs, array_of_statuses);
-    if (mpi_errno)
-        goto fn_fail;
-
     for (int i = 0; i < count; i++) {
         if (mpi_errno && array_of_statuses != MPI_STATUSES_IGNORE
             && array_of_statuses[i].MPI_ERROR == MPI_ERR_PENDING) {
@@ -381,6 +374,8 @@ MPI_Waitall:
             array_of_requests[i] = MPI_REQUEST_NULL;
         }
     }
+    if (mpi_errno)
+        goto fn_fail;
 }
 
 MPI_Waitany:
@@ -398,15 +393,14 @@ MPI_Waitany:
 {
     /* Pass down request ptr to avoid redundant handle to ptr translation. */
     mpi_errno = MPIR_Waitany(count, request_ptrs, indx, status);
-    if (mpi_errno)
-        goto fn_fail;
-
     if (*indx != MPI_UNDEFINED) {
         if (request_ptrs[*indx] && !MPIR_Request_is_persistent(request_ptrs[*indx])) {
             MPIR_Request_free(request_ptrs[*indx]);
             array_of_requests[*indx] = MPI_REQUEST_NULL;
         }
     }
+    if (mpi_errno)
+        goto fn_fail;
 }
 
 MPI_Waitsome:
@@ -444,9 +438,6 @@ MPI_Waitsome:
     /* Pass down request ptr to avoid redundant handle to ptr translation. */
     mpi_errno = MPIR_Waitsome(incount, request_ptrs, outcount,
                               array_of_indices, array_of_statuses);
-    if (mpi_errno)
-        goto fn_fail;
-
     for (int i = 0; i < *outcount; i++) {
         int idx = array_of_indices[i];
         if (request_ptrs[idx] && !MPIR_Request_is_persistent(request_ptrs[idx])) {
@@ -454,4 +445,6 @@ MPI_Waitsome:
             array_of_requests[idx] = MPI_REQUEST_NULL;
         }
     }
+    if (mpi_errno)
+        goto fn_fail;
 }
