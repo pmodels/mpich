@@ -418,13 +418,13 @@ static void waitall_enqueue_cb(void *data)
 {
     struct waitall_data *p = data;
 
-    MPI_Request *reqs = MPL_malloc(p->count * sizeof(MPI_Request), MPL_MEM_OTHER);
+    MPIR_Request **reqs = MPL_malloc(p->count * sizeof(MPIR_Request), MPL_MEM_OTHER);
     MPIR_Assert(reqs);
 
     for (int i = 0; i < p->count; i++) {
         MPIR_Request *enqueue_req;
         MPIR_Request_get_ptr(p->array_of_requests[i], enqueue_req);
-        reqs[i] = enqueue_req->u.enqueue.real_request->handle;
+        reqs[i] = enqueue_req->u.enqueue.real_request;
     }
 
     MPIR_Waitall(p->count, reqs, p->array_of_statuses);

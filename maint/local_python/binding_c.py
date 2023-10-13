@@ -1858,13 +1858,8 @@ def dump_early_return_pt2pt_proc_null(func):
 def dump_handle_ptr_var(func, p):
     (kind, name) = (p['kind'], p['name'])
     if kind == "REQUEST" and p['length']:
-        if RE.match(r'mpix?_(test|wait)all', func['name'], re.IGNORECASE):
-            # FIXME:we do not convert pointers for MPI_Testall and MPI_Waitall
-            #       (for performance reasons). This probably this can be changed
-            pass
-        else:
-            G.out.append("MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];")
-            G.out.append("MPIR_Request **request_ptrs = request_ptr_array;")
+        G.out.append("MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];")
+        G.out.append("MPIR_Request **request_ptrs = request_ptr_array;")
     else:
         mpir = G.handle_mpir_types[kind]
         G.out.append("%s *%s_ptr ATTRIBUTE((unused)) = NULL;" % (mpir, name))
@@ -1932,26 +1927,22 @@ def dump_convert_handle(func, p):
         name = "*" + p['name']
 
     if kind == "REQUEST" and p['length']:
-        if RE.match(r'mpix?_(test|wait)all', func['name'], re.IGNORECASE):
-            # We do not convert pointers for MPI_Testall and MPI_Waitall
-            pass
-        else:
-            G.out.append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % p['length'])
-            G.out.append("    int nbytes = %s * sizeof(MPIR_Request *);" % p['length'])
-            G.out.append("    request_ptrs = (MPIR_Request **) MPL_malloc(nbytes, MPL_MEM_OBJECT);")
-            G.out.append("    if (request_ptrs == NULL) {")
-            G.out.append("        MPIR_CHKMEM_SETERR(mpi_errno, nbytes, \"request pointers\");")
-            G.out.append("        goto fn_fail;")
-            G.out.append("    }")
-            G.out.append("}")
-            func['code-clean_up'].append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % (p['length']))
-            func['code-clean_up'].append("    MPL_free(request_ptrs);")
-            func['code-clean_up'].append("}")
+        G.out.append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % p['length'])
+        G.out.append("    int nbytes = %s * sizeof(MPIR_Request *);" % p['length'])
+        G.out.append("    request_ptrs = (MPIR_Request **) MPL_malloc(nbytes, MPL_MEM_OBJECT);")
+        G.out.append("    if (request_ptrs == NULL) {")
+        G.out.append("        MPIR_CHKMEM_SETERR(mpi_errno, nbytes, \"request pointers\");")
+        G.out.append("        goto fn_fail;")
+        G.out.append("    }")
+        G.out.append("}")
+        func['code-clean_up'].append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % (p['length']))
+        func['code-clean_up'].append("    MPL_free(request_ptrs);")
+        func['code-clean_up'].append("}")
 
-            G.out.append("")
-            dump_for_open('i', p['length'])
-            G.out.append("MPIR_Request_get_ptr(%s[i], request_ptrs[i]);" % name)
-            dump_for_close()
+        G.out.append("")
+        dump_for_open('i', p['length'])
+        G.out.append("MPIR_Request_get_ptr(%s[i], request_ptrs[i]);" % name)
+        dump_for_close()
     else:
         mpir = G.handle_mpir_types[kind]
         if "can_be_null" in p:
