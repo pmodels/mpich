@@ -250,7 +250,7 @@ char **HYDU_str_to_strlist(char *str)
         if (len > 0) {
             char *s;
             HYDU_MALLOC_OR_JUMP(s, char *, len + 1, status);
-            MPL_strncpy(s, start, len);
+            MPL_strncpy(s, start, len + 1);
 
             strlist[argc] = s;
             argc++;
