@@ -655,7 +655,12 @@ static void complete_something_somehow(unsigned int rndnum, int numreqs, MPI_Req
 {
     int i, idx, flag;
 
+#if (MPI_VERSION == 4 && MPI_SUBVERSION >= 1) || MPI_VERSION > 4
+#define COMPLETION_CASES (12)
+#else
 #define COMPLETION_CASES (8)
+#endif
+
     switch (rand_range(rndnum, 0, COMPLETION_CASES)) {
         case 0:
             MPI_Waitall(numreqs, reqs, MPI_STATUSES_IGNORE);
@@ -721,14 +726,72 @@ static void complete_something_somehow(unsigned int rndnum, int numreqs, MPI_Req
             break;
 
         case 7:
-            /* select a new random index and wait on it */
+            /* select a new random index and test on it */
             rndnum = gen_prn(rndnum);
             idx = rand_range(rndnum, 0, numreqs);
             MPI_Test(&reqs[idx], &flag, MPI_STATUS_IGNORE);
             *outcount = (flag ? 1 : 0);
             indices[0] = idx;
             break;
+#if (MPI_VERSION == 4 && MPI_SUBVERSION >= 1) || MPI_VERSION > 4
+        case 8:
+            /* select a new random index and run MPI_Request_get_status on it */
+            rndnum = gen_prn(rndnum);
+            idx = rand_range(rndnum, 0, numreqs);
+            MPI_Request_get_status(reqs[idx], &flag, MPI_STATUS_IGNORE);
+            if (flag) {
+                if (reqs[idx] != MPI_REQUEST_NULL) {
+                    MPI_Request_free(&reqs[idx]);
+                }
+                *outcount = 1;
+                indices[0] = idx;
+            } else {
+                *outcount = 0;
+            }
+            break;
 
+        case 9:
+            MPI_Request_get_status_all(numreqs, reqs, &flag, MPI_STATUSES_IGNORE);
+            if (flag) {
+                *outcount = numreqs;
+                for (i = 0; i < numreqs; ++i) {
+                    if (reqs[i] != MPI_REQUEST_NULL) {
+                        MPI_Request_free(&reqs[i]);
+                    }
+                    indices[i] = i;
+                }
+            } else {
+                *outcount = 0;
+            }
+            break;
+
+        case 10:
+            MPI_Request_get_status_any(numreqs, reqs, &idx, &flag, MPI_STATUS_IGNORE);
+            if (idx == MPI_UNDEFINED) {
+                *outcount = 0;
+            } else {
+                *outcount = 1;
+                if (reqs[idx] != MPI_REQUEST_NULL) {
+                    MPI_Request_free(&reqs[idx]);
+                }
+                indices[0] = idx;
+            }
+            break;
+
+        case 11:
+            MPI_Request_get_status_some(numreqs, reqs, outcount, indices, MPI_STATUS_IGNORE);
+            if (*outcount == MPI_UNDEFINED) {
+                *outcount = 0;
+            } else {
+                for (i = 0; i < *outcount; i++) {
+                    if (reqs[indices[i]] != MPI_REQUEST_NULL) {
+                        MPI_Request_free(&reqs[indices[i]]);
+                    }
+                }
+            }
+            break;
+
+#endif
         default:
             assert(0);
             break;
