@@ -487,28 +487,21 @@ int MPIR_Testany_state(int count, MPIR_Request * request_ptrs[],
 {
     int mpi_errno = MPI_SUCCESS;
     int need_progress = 1;
-    int n_inactive;
 
   fn_check_requests:
-    n_inactive = 0;
     for (int i = 0; i < count; i++) {
-        if (request_ptrs[i] != NULL && MPIR_Request_has_poll_fn(request_ptrs[i])) {
+        if (!request_ptrs[i]) {
+            continue;
+        }
+        if (MPIR_Request_has_poll_fn(request_ptrs[i])) {
             mpi_errno = MPIR_Grequest_poll(request_ptrs[i], status);
             MPIR_ERR_CHECK(mpi_errno);
         }
-        if (!MPIR_Request_is_active(request_ptrs[i])) {
-            n_inactive += 1;
-        } else if (MPIR_Request_is_complete(request_ptrs[i])) {
+        if (MPIR_Request_is_complete(request_ptrs[i])) {
             *flag = TRUE;
             *indx = i;
             goto fn_exit;
         }
-    }
-
-    if (n_inactive == count) {
-        *flag = TRUE;
-        *indx = MPI_UNDEFINED;
-        goto fn_exit;
     }
 
     if (need_progress > 0) {
@@ -537,7 +530,6 @@ int MPIR_Testany(int count, MPIR_Request * request_ptrs[],
                  int *indx, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    int n_inactive = 0;
     int last_disabled_anysource = -1;
     int first_nonnull = count;
 
@@ -546,29 +538,28 @@ int MPIR_Testany(int count, MPIR_Request * request_ptrs[],
 
     for (int i = 0; i < count; i++) {
         if (request_ptrs[i]) {
+            if (!MPIR_Request_is_active(request_ptrs[i])) {
+                request_ptrs[i] = NULL;
+                continue;
+            }
+
+            if (first_nonnull == count) {
+                first_nonnull = i;
+            }
+
             if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                 last_disabled_anysource = i;
             }
 
             if (MPIR_Request_is_complete(request_ptrs[i])) {
-                if (MPIR_Request_is_active(request_ptrs[i])) {
-                    *indx = i;
-                    *flag = TRUE;
-                    break;
-                } else {
-                    request_ptrs[i] = NULL;
-                    n_inactive += 1;
-                }
-            } else {
-                if (first_nonnull == count)
-                    first_nonnull = i;
+                *indx = i;
+                *flag = TRUE;
+                break;
             }
-        } else {
-            n_inactive += 1;
         }
     }
 
-    if (n_inactive == count) {
+    if (first_nonnull == count) {
         *flag = TRUE;
         *indx = MPI_UNDEFINED;
         if (status != NULL)     /* could be null if count=0 */
@@ -618,29 +609,24 @@ int MPIR_Testsome_state(int incount, MPIR_Request * request_ptrs[],
                         MPID_Progress_state * state)
 {
     int i;
-    int n_inactive;
     int mpi_errno = MPI_SUCCESS;
     int need_progress = 1;
 
   fn_check_requests:
-    n_inactive = 0;
     *outcount = 0;
 
     for (i = 0; i < incount; i++) {
-        if (request_ptrs[i] != NULL && MPIR_Request_has_poll_fn(request_ptrs[i])) {
+        if (!request_ptrs[i]) {
+            continue;
+        }
+        if (MPIR_Request_has_poll_fn(request_ptrs[i])) {
             mpi_errno = MPIR_Grequest_poll(request_ptrs[i], &array_of_statuses[i]);
             MPIR_ERR_CHECK(mpi_errno);
         }
-        if (!MPIR_Request_is_active(request_ptrs[i])) {
-            n_inactive += 1;
-        } else if (MPIR_Request_is_complete(request_ptrs[i])) {
+        if (MPIR_Request_is_complete(request_ptrs[i])) {
             array_of_indices[*outcount] = i;
             *outcount += 1;
         }
-    }
-
-    if (n_inactive == incount) {
-        *outcount = MPI_UNDEFINED;
     }
 
     if (*outcount) {
@@ -679,7 +665,12 @@ int MPIR_Testsome(int incount, MPIR_Request * request_ptrs[],
     *outcount = 0;
     n_inactive = 0;
     for (int i = 0; i < incount; i++) {
-        if (request_ptrs[i]) {
+        if (!request_ptrs[i]) {
+            n_inactive += 1;
+        } else if (!MPIR_Request_is_active(request_ptrs[i])) {
+            request_ptrs[i] = NULL;
+            n_inactive += 1;
+        } else {
             if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                 proc_failure = TRUE;
                 int rc = MPI_SUCCESS;
@@ -687,8 +678,6 @@ int MPIR_Testsome(int incount, MPIR_Request * request_ptrs[],
                 if (array_of_statuses != MPI_STATUSES_IGNORE)
                     array_of_statuses[i].MPI_ERROR = rc;
             }
-        } else {
-            n_inactive += 1;
         }
     }
 
@@ -1012,9 +1001,6 @@ int MPIR_Waitany_state(int count, MPIR_Request * request_ptrs[], int *indx, MPI_
 
     PROGRESS_START;
     for (;;) {
-        int n_inactive = 0;
-        int found_nonnull_req = FALSE;
-
         for (int i = 0; i < count; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
                 mpi_errno = MPID_Progress_test(state);
@@ -1022,39 +1008,17 @@ int MPIR_Waitany_state(int count, MPIR_Request * request_ptrs[], int *indx, MPI_
             }
 
             if (request_ptrs[i] == NULL) {
-                ++n_inactive;
                 continue;
             }
-            /* we found at least one non-null request */
-            found_nonnull_req = TRUE;
 
             if (MPIR_Request_has_poll_fn(request_ptrs[i])) {
                 mpi_errno = MPIR_Grequest_poll(request_ptrs[i], status);
                 MPIR_ERR_CHECK(mpi_errno);
             }
             if (MPIR_Request_is_complete(request_ptrs[i])) {
-                if (MPIR_Request_is_active(request_ptrs[i])) {
-                    *indx = i;
-                    goto fn_exit;
-                } else {
-                    ++n_inactive;
-                    request_ptrs[i] = NULL;
-
-                    if (n_inactive == count) {
-                        *indx = MPI_UNDEFINED;
-                        /* status is set to empty by MPIR_Request_completion_processing */
-                        goto fn_exit;
-                    }
-                }
+                *indx = i;
+                goto fn_exit;
             }
-        }
-
-        if (!found_nonnull_req) {
-            /* all requests were NULL */
-            *indx = MPI_UNDEFINED;
-            if (status != NULL) /* could be null if count=0 */
-                MPIR_Status_set_empty(status);
-            goto fn_exit;
         }
 
         mpi_errno = MPID_Progress_test(state);
@@ -1098,6 +1062,15 @@ int MPIR_Waitany(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status
 
     for (int i = 0; i < count; i++) {
         if (request_ptrs[i]) {
+            if (!MPIR_Request_is_active(request_ptrs[i])) {
+                request_ptrs[i] = NULL;
+                continue;
+            }
+
+            if (first_nonnull == count) {
+                first_nonnull = i;
+            }
+
             if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                 last_disabled_anysource = i;
             }
@@ -1108,17 +1081,16 @@ int MPIR_Waitany(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status
              * request here, and we can poll from the first entry
              * which is not null. */
             if (MPIR_Request_is_complete(request_ptrs[i])) {
-                if (MPIR_Request_is_active(request_ptrs[i])) {
-                    *indx = i;
-                    break;
-                } else {
-                    request_ptrs[i] = NULL;
-                }
-            } else {
-                if (first_nonnull == count)
-                    first_nonnull = i;
+                *indx = i;
+                break;
             }
         }
+    }
+
+    if (first_nonnull == count) {
+        if (status != NULL)     /* could be null if count=0 */
+            MPIR_Status_set_empty(status);
+        goto fn_exit;
     }
 
     if (*indx == MPI_UNDEFINED) {
@@ -1131,11 +1103,8 @@ int MPIR_Waitany(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status
         mpi_errno = MPID_Waitany(count - first_nonnull, &request_ptrs[first_nonnull], indx, status);
         MPIR_ERR_CHECK(mpi_errno);
 
-        if (*indx != MPI_UNDEFINED) {
-            *indx += first_nonnull;
-        } else {
-            goto fn_exit;
-        }
+        MPIR_Assert(*indx != MPI_UNDEFINED);
+        *indx += first_nonnull;
     }
 
     mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status);
@@ -1165,8 +1134,6 @@ int MPIR_Waitsome_state(int incount, MPIR_Request * request_ptrs[],
     int n_active = 0;
     PROGRESS_START;
     for (;;) {
-        int n_inactive = 0;
-
         for (int i = 0; i < incount; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
                 mpi_errno = MPID_Progress_test(state);
@@ -1179,24 +1146,14 @@ int MPIR_Waitsome_state(int incount, MPIR_Request * request_ptrs[],
                     MPIR_ERR_CHECK(mpi_errno);
                 }
                 if (MPIR_Request_is_complete(request_ptrs[i])) {
-                    if (MPIR_Request_is_active(request_ptrs[i])) {
-                        array_of_indices[n_active] = i;
-                        n_active += 1;
-                    } else {
-                        request_ptrs[i] = NULL;
-                        n_inactive += 1;
-                    }
+                    array_of_indices[n_active] = i;
+                    n_active += 1;
                 }
-            } else {
-                n_inactive += 1;
             }
         }
 
         if (n_active > 0) {
             *outcount = n_active;
-            break;
-        } else if (n_inactive == incount) {
-            *outcount = MPI_UNDEFINED;
             break;
         }
 
@@ -1237,15 +1194,18 @@ int MPIR_Waitsome(int incount, MPIR_Request * request_ptrs[],
     *outcount = 0;
     n_inactive = 0;
     for (int i = 0; i < incount; i++) {
-        if (request_ptrs[i]) {
+        if (!request_ptrs[i]) {
+            n_inactive += 1;
+        } else if (!MPIR_Request_is_active(request_ptrs[i])) {
+            request_ptrs[i] = NULL;
+            n_inactive += 1;
+        } else {
             /* If one of the requests is an anysource on a communicator that's
              * disabled such communication, convert this operation to a testall
              * instead to prevent getting stuck in the progress engine. */
             if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                 disabled_anysource = TRUE;
             }
-        } else {
-            n_inactive += 1;
         }
     }
 
