@@ -53,12 +53,6 @@ int MPIR_Persist_coll_start(MPIR_Request * preq)
 
 void MPIR_Persist_coll_free_cb(MPIR_Request * request)
 {
-    /* If this is an active persistent request, we must also
-     * release the partner request. */
-    if (request->u.persist_coll.real_request != NULL) {
-        MPIR_Request_free(request->u.persist_coll.real_request);
-    }
-
     MPII_Coll_req_t *coll = &request->u.persist_coll.coll;
     if (coll->host_sendbuf) {
         MPIR_gpu_host_free(coll->host_sendbuf, coll->count, coll->datatype);

@@ -202,12 +202,7 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
     int mpi_errno = MPI_SUCCESS;
 
     switch (request_ptr->kind) {
-        case MPIR_REQUEST_KIND__SEND:
-        case MPIR_REQUEST_KIND__RECV:
-            break;
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
-            /* Tell the device that we are freeing a persistent request object */
-            MPID_Prequest_free_hook(request_ptr);
             /* If this is an active persistent request, we must also
              * release the partner request. */
             if (request_ptr->u.persist.real_request != NULL) {
@@ -215,8 +210,6 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
             }
             break;
         case MPIR_REQUEST_KIND__PREQUEST_RECV:
-            /* Tell the device that we are freeing a persistent request object */
-            MPID_Prequest_free_hook(request_ptr);
             /* If this is an active persistent request, we must also
              * release the partner request. */
             if (request_ptr->u.persist.real_request != NULL) {
@@ -224,29 +217,19 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
             }
             break;
         case MPIR_REQUEST_KIND__PREQUEST_COLL:
-            MPIR_Persist_coll_free_cb(request_ptr);
-            break;
-        case MPIR_REQUEST_KIND__GREQUEST:
-            mpi_errno = MPIR_Grequest_free(request_ptr);
-            break;
-        case MPIR_REQUEST_KIND__PART_SEND:
-        case MPIR_REQUEST_KIND__PART_RECV:
-            MPID_Part_request_free_hook(request_ptr);
+            /* If this is an active persistent request, we must also
+             * release the partner request. */
+            if (request_ptr->u.persist_coll.real_request != NULL) {
+                MPIR_Request_free(request_ptr->u.persist_coll.real_request);
+            }
             break;
         default:
-            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                             __func__, __LINE__, MPI_ERR_OTHER,
-                                             "**request_invalid_kind",
-                                             "**request_invalid_kind %d", request_ptr->kind);
-            goto fn_fail;
+            break;
     }
 
     MPIR_Request_free(request_ptr);
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* -- Test -- */
