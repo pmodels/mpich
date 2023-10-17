@@ -345,7 +345,7 @@ static HYD_status hostlist_fn(char *arg, char ***argv)
     tok = strtok(**argv, ",");
     while (tok) {
         utarray_push_back(hosts, &tok, MPL_MEM_OTHER);
-        tok = strtok(**argv, ",");
+        tok = strtok(NULL, ",");
     }
 
     char **p = (char **) utarray_front(hosts);
@@ -359,6 +359,8 @@ static HYD_status hostlist_fn(char *arg, char ***argv)
 
         status = HYDU_add_to_node_list(h, np, &HYD_server_info.node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");
+
+        p = (char **) utarray_next(hosts, p);
     }
 
     utarray_free(hosts);
