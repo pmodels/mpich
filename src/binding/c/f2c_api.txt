@@ -1,0 +1,161 @@
+# vim: set ft=c:
+
+MPI_Comm_c2f:
+    .desc: converts MPI_Comm to Fortran INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Fint) comm;
+}
+
+MPI_Comm_f2c:
+    .desc: converts Fortran INTEGER to MPI_Comm
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Comm) comm;
+}
+
+MPI_Errhandler_c2f:
+    .desc: converts MPI_Errhandler to Fortran INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Fint) errhandler;
+}
+
+MPI_Errhandler_f2c:
+    .desc: converts Fortran INTEGER to MPI_Errhandler
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Errhandler) errhandler;
+}
+
+MPI_Group_c2f:
+    .desc: converts MPI_Group to Fortran INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Fint) group;
+}
+
+MPI_Group_f2c:
+    .desc: converts Fortran INTEGER to MPI_Group
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Group) group;
+}
+
+MPI_Info_c2f:
+    .desc: converts MPI_Info to Fortran INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Fint) info;
+}
+
+MPI_Info_f2c:
+    .desc: converts Fortran INTEGER to MPI_Info
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Info) info;
+}
+
+MPI_Message_c2f:
+    .desc: converts MPI_Message to Fortran INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Fint) message;
+}
+
+MPI_Message_f2c:
+    .desc: converts Fortran INTEGER to MPI_Message
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Message) message;
+}
+
+MPI_Op_c2f:
+    .desc: converts MPI_Op to Fortran INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Fint) op;
+}
+
+MPI_Op_f2c:
+    .desc: converts Fortran INTEGER to MPI_Op
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Op) op;
+}
+
+MPI_Request_c2f:
+    .desc: converts MPI_Request to Fortran INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Fint) request;
+}
+
+MPI_Request_f2c:
+    .desc: converts Fortran INTEGER to MPI_Request
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Request) request;
+}
+
+MPI_Session_c2f:
+    .desc: converts MPI_Session to Fortran INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Fint) session;
+}
+
+MPI_Session_f2c:
+    .desc: converts Fortran INTEGER to MPI_Session
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Session) session;
+}
+
+MPI_Type_c2f:
+    .desc: converts MPI_Type to Fortran INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Fint) datatype;
+}
+
+MPI_Type_f2c:
+    .desc: converts Fortran INTEGER to MPI_Type
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Datatype) datatype;
+}
+
+MPI_Win_c2f:
+    .desc: converts MPI_Win to Fortran INTEGER
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Fint) win;
+}
+
+MPI_Win_f2c:
+    .desc: converts Fortran INTEGER to MPI_Win
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Win) win;
+}

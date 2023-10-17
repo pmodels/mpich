@@ -708,6 +708,9 @@ def process_func_parameters(func):
         elif RE.match(r'(ERROR_CLASS|ERROR_CODE|FILE|ATTRIBUTE_VAL|EXTRA_STATE|LOGICAL)', kind):
             # no validation for these kinds
             pass
+        elif RE.match(r'F90_(COMM|ERRHANDLER|FILE|GROUP|INFO|MESSAGE|OP|REQUEST|SESSION|DATATYPE|WIN)', kind):
+            # no validation for these kinds
+            pass
         elif RE.match(r'(POLY)?(DTYPE_STRIDE_BYTES|DISPLACEMENT_AINT_COUNT)$', kind):
             # e.g. stride in MPI_Type_vector, MPI_Type_create_resized
             pass

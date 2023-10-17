@@ -16,6 +16,9 @@
   "ierror" is the correct name specified in the MPI specification. We only
   added subroutine interface in "mpi.mod" since 4.1.
 
+# Handle conversion functions, such as MPI_Comm_c2f, MPI_Comm_f2c, etc., are
+  no longer macros. MPI-4.1 require these to be actual functions.
+
 ===============================================================================
                                Changes in 4.1
 ===============================================================================
