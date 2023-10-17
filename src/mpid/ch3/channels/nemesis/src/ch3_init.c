@@ -16,7 +16,7 @@ void *MPIDI_CH3_packet_buffer = NULL;
 int MPIDI_CH3I_my_rank = -1;
 MPIDI_PG_t *MPIDI_CH3I_my_pg = NULL;
 
-static int nemesis_initialized = 0;
+int MPIDI_nemesis_initialized = 0;
 
 static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
                       MPIR_Info *info_ptr, MPIR_Comm ** newcomm_ptr)
@@ -83,7 +83,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
     mpi_errno = MPID_nem_init (pg_rank, pg_p, has_parent);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
-    nemesis_initialized = 1;
+    MPIDI_nemesis_initialized = 1;
 
     MPIDI_CH3I_my_rank = pg_rank;
     MPIDI_CH3I_my_pg = pg_p;
@@ -160,7 +160,7 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
 	called before MPIDI_CH3_Init, and call MPIDI_CH3_VC_Init from
 	inside MPIDI_CH3_Init after initializing nemesis
     */
-    if (!nemesis_initialized)
+    if (!MPIDI_nemesis_initialized)
         goto fn_exit;
 
     /* no need to initialize vc to self */
@@ -218,7 +218,7 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
     MPIDI_VC_Init (vc, NULL, 0);
 
     /* init channel portion of vc */
-    MPIR_ERR_CHKINTERNAL(!nemesis_initialized, mpi_errno, "Nemesis not initialized");
+    MPIR_ERR_CHKINTERNAL(!MPIDI_nemesis_initialized, mpi_errno, "Nemesis not initialized");
     vc->ch.recv_active = NULL;
     MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
