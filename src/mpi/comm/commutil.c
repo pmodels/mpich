@@ -1383,6 +1383,13 @@ int MPIR_Comm_free_inactive_requests(MPIR_Comm * comm)
     MPID_THREAD_CS_ENTER(VCI, comm->mutex);
     HASH_ITER(hh, comm->persistent_requests, request, tmp) {
         if (!MPIR_Request_is_active(request)) {
+            HASH_DEL(comm->persistent_requests, request);
+            /* reset request->comm so it won't trigger MPIR_Comm_delete_inactive_request,
+             * which will recursively entering the lock. */
+            if (request->comm) {
+                MPIR_Comm_release(request->comm);
+                request->comm = NULL;
+            }
             MPL_internal_error_printf
                 ("WARNING: freeing inactive persistent request %x on communicator %x.\n",
                  request->handle, comm->handle);
