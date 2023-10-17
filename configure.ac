@@ -1428,6 +1428,7 @@ if test "$with_cross" != "no" ; then
 fi
 
 # This goes here because we need the top_srcdir
+HAVE_CXX_IO=0
 if test "$enable_romio" = "yes" ; then
    if test -d $use_top_srcdir/src/mpi/romio ; then
        AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
@@ -1448,15 +1449,18 @@ if test "$enable_romio" = "yes" ; then
        # -e
        if test ! -d lib ; then mkdir lib ; fi
        # tell mpi.h to include mpio.h
-       PAC_HAVE_ROMIO
+       HAVE_ROMIO='#include "mpio.h"'
+       # tell mpicxx.h that we have IO
+       HAVE_CXX_IO=1
        PAC_CONFIG_SUBDIR_ARGS([src/mpi/romio],[],[],[AC_MSG_ERROR([src/mpi/romio configure failed])])
    else
        AC_MSG_WARN([ROMIO src directory is not available])
    fi
 fi
+AC_SUBST(HAVE_ROMIO)
+AC_SUBST(HAVE_CXX_IO)
 
 AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
-
 #
 # FIXME: If an external device, don't necessarily complain (e.g.,
 # if the device is already built)
