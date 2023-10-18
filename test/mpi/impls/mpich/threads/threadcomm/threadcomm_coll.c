@@ -494,7 +494,8 @@ static void test_gatherv_c(MPI_Comm comm)
     MPI_Comm_rank(comm, &rank);
 
     int allranks[size];
-    MPI_Count counts[size], displs[size];
+    MPI_Count counts[size];
+    MPI_Aint displs[size];
 
     if (rank == root) {
         for (int i = 0; i < size; i++) {
@@ -551,7 +552,8 @@ static void test_scatterv_c(MPI_Comm comm)
     MPI_Comm_rank(comm, &rank);
 
     int data_out[size];
-    MPI_Count counts[size], displs[size];
+    MPI_Count counts[size];
+    MPI_Aint displs[size];
 
     if (rank == root) {
         for (int i = 0; i < size; i++) {
@@ -599,7 +601,8 @@ static void test_allgatherv_c(MPI_Comm comm)
     MPI_Comm_rank(comm, &rank);
 
     int allranks[size];
-    MPI_Count counts[size], displs[size];
+    MPI_Count counts[size];
+    MPI_Aint displs[size];
 
     for (int i = 0; i < size; i++) {
         counts[i] = 1;
@@ -643,7 +646,8 @@ static void test_alltoallv_c(MPI_Comm comm)
     MPI_Comm_rank(comm, &rank);
 
     int data_out[size], data_in[size];
-    MPI_Count counts[size], displs[size];
+    MPI_Count counts[size];
+    MPI_Aint displs[size];
     for (int i = 0; i < size; i++) {
         data_out[i] = i * 1000 + rank;
         data_in[i] = -1;
@@ -667,7 +671,8 @@ static void test_alltoallw_c(MPI_Comm comm)
     MPI_Comm_rank(comm, &rank);
 
     int data_out[size], data_in[size];
-    MPI_Count counts[size], displs[size];
+    MPI_Count counts[size];
+    MPI_Aint displs[size];
     MPI_Datatype types[size];
     for (int i = 0; i < size; i++) {
         data_out[i] = i * 1000 + rank;
