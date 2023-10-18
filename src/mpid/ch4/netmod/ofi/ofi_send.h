@@ -270,6 +270,53 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
              * path below. Simply falling through. */
             mpi_errno = MPI_SUCCESS;    /* Reset error code */
         }
+
+        if (force_gpu_pack && MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE &&
+            data_sz >= MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD) {
+            /* Pipeline path */
+            uint32_t n_chunks = 0;
+            int chunk_size = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ;
+            if (dt_contig) {
+                /* Update correct number of chunks in immediate data. */
+                chunk_size = MPIDI_OFI_gpu_pipeline_chunk_size(data_sz);
+                n_chunks = data_sz / chunk_size;
+                if (data_sz % chunk_size)
+                    n_chunks++;
+                MPIDI_OFI_idata_set_gpuchunk_bits(&cq_data, n_chunks);
+            }
+
+            /* Update sender packed bit if necessary. */
+            uint64_t is_packed = datatype == MPI_PACKED ? 1 : 0;
+            MPIDI_OFI_idata_set_gpu_packed_bit(&cq_data, is_packed);
+            MPIR_ERR_CHKANDJUMP(is_packed, mpi_errno, MPI_ERR_OTHER, "**gpu_pipeline_packed");
+
+            /* Save pipeline information. */
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.chunk_sz) = chunk_size;
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.cq_data) = cq_data;
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.remote_addr) =
+                MPIDI_OFI_av_to_phys(addr, receiver_nic, vci_remote);
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.vci_local) = vci_local;
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.ctx_idx) = ctx_idx;
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.match_bits) = match_bits;
+            MPIDI_OFI_REQUEST(sreq, pipeline_info.data_sz) = data_sz;
+
+            /* send an empty message for tag matching */
+            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                                NULL,
+                                                0,
+                                                cq_data,
+                                                MPIDI_OFI_REQUEST(sreq, pipeline_info.remote_addr),
+                                                match_bits), vci_local, tinjectdata);
+            MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
+
+            MPIDI_OFI_gpu_pending_send_t *send_task =
+                MPIDI_OFI_create_send_task(sreq, (void *) buf, attr, data_sz, count, dt_contig);
+            DL_APPEND(MPIDI_OFI_global.gpu_send_queue, send_task);
+            MPIDI_OFI_gpu_progress_send();
+
+            goto fn_exit;
+        }
+
         /* Pack */
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_PACK;
 
@@ -291,10 +338,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                 MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
             if (dt_contig && engine != MPL_GPU_ENGINE_TYPE_LAST &&
                 MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
-                mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, &attr,
+                mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
                                                MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
-                                               data_sz, MPI_BYTE, NULL, MPL_GPU_COPY_DIRECTION_NONE,
-                                               engine, true);
+                                               data_sz, MPI_BYTE, 0, NULL,
+                                               MPL_GPU_COPY_DIRECTION_NONE, engine, true);
                 MPIR_ERR_CHECK(mpi_errno);
             } else {
                 MPI_Aint actual_pack_bytes;
@@ -553,9 +600,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                         MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
                     if (dt_contig && engine != MPL_GPU_ENGINE_TYPE_LAST &&
                         MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
-                        mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, &attr, host_buf,
-                                                       data_sz, MPI_BYTE, NULL,
-                                                       MPL_GPU_COPY_DIRECTION_NONE, engine, true);
+                        mpi_errno =
+                            MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr, host_buf,
+                                               data_sz, MPI_BYTE, 0, NULL,
+                                               MPL_GPU_COPY_DIRECTION_NONE, engine, true);
                         MPIR_ERR_CHECK(mpi_errno);
                         actual_pack_bytes = data_sz;
                     } else {

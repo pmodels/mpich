@@ -35,6 +35,12 @@
 #define MPIDI_OFI_IDATA_SRC_BITS (30)
 /* The number of bits in the immediate data field allocated to the error propagation. */
 #define MPIDI_OFI_IDATA_ERROR_BITS (2)
+/* The number of bits in the immediate data field allocated to the source rank and error propagation. */
+#define MPIDI_OFI_IDATA_SRC_ERROR_BITS (MPIDI_OFI_IDATA_SRC_BITS + MPIDI_OFI_IDATA_ERROR_BITS)
+/* The number of bits in the immediate data field allocated to MPI_Packed datatype for GPU. */
+#define MPIDI_OFI_IDATA_GPU_PACKED_BITS (1)
+/* The offset of bits in the immediate data field allocated to number of message chunks. */
+#define MPIDI_OFI_IDATA_GPUCHUNK_OFFSET (MPIDI_OFI_IDATA_SRC_ERROR_BITS + MPIDI_OFI_IDATA_GPU_PACKED_BITS)
 /* Bit mask for MPIR_ERR_OTHER */
 #define MPIDI_OFI_ERR_OTHER (0x1ULL)
 /* Bit mask for MPIR_PROC_FAILED */
@@ -69,6 +75,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
     }
 }
 
+/* Set the gpu packed bit */
+static inline void MPIDI_OFI_idata_set_gpu_packed_bit(uint64_t * data_field, uint64_t is_packed)
+{
+    *data_field = (*data_field) | (is_packed << MPIDI_OFI_IDATA_SRC_ERROR_BITS);
+}
+
+/* Get the gpu packed bit from the OFI data field. */
+static inline uint32_t MPIDI_OFI_idata_get_gpu_packed_bit(uint64_t idata)
+{
+    return (idata >> MPIDI_OFI_IDATA_SRC_ERROR_BITS) & 0x1ULL;
+}
+
+/* Set gpu chunk bits */
+static inline void MPIDI_OFI_idata_set_gpuchunk_bits(uint64_t * data_field, uint64_t n_chunks)
+{
+    *data_field = (*data_field) | (n_chunks << MPIDI_OFI_IDATA_GPUCHUNK_OFFSET);
+}
+
+/* Get gpu chunks from the OFI data field. */
+static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
+{
+    return (idata >> MPIDI_OFI_IDATA_GPUCHUNK_OFFSET);
+}
 
 /* There are 4 protocol bits:
  * - MPIDI_DYNPROC_SEND
@@ -78,14 +107,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
  * The ssend ack and dynproc send bits need to be included in matching
  * to avoid matching with user messages. Because of this, we only mask
  * the ssend and huge bits. */
-#define MPIDI_OFI_PROTOCOL_BITS (4)
+#define MPIDI_OFI_PROTOCOL_BITS (5)
 #define MPIDI_OFI_PROTOCOL_MASK_BITS (2)
 
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS == MPIDI_OFI_ON
 #define MPIDI_OFI_SYNC_SEND_ACK      (1ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
 #define MPIDI_OFI_DYNPROC_SEND       (2ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
-#define MPIDI_OFI_SYNC_SEND          (4ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
-#define MPIDI_OFI_HUGE_SEND          (8ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
+#define MPIDI_OFI_GPU_PIPELINE_SEND  (4ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
+#define MPIDI_OFI_SYNC_SEND          (8ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
+#define MPIDI_OFI_HUGE_SEND          (16ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
 #define MPIDI_OFI_PROTOCOL_MASK      (((1ULL << MPIDI_OFI_PROTOCOL_MASK_BITS) - 1) << (MPIDI_OFI_PROTOCOL_BITS - MPIDI_OFI_PROTOCOL_MASK_BITS) << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
 #define MPIDI_OFI_CONTEXT_MASK       (((1ULL << MPIDI_OFI_CONTEXT_BITS) - 1) << (MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
 #define MPIDI_OFI_SOURCE_MASK        (((1ULL << MPIDI_OFI_SOURCE_BITS) - 1) << MPIDI_OFI_TAG_BITS)
@@ -135,6 +165,9 @@ enum {
     MPIDI_OFI_EVENT_ABORT,
     MPIDI_OFI_EVENT_SEND,
     MPIDI_OFI_EVENT_RECV,
+    MPIDI_OFI_EVENT_SEND_GPU_PIPELINE,
+    MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT,
+    MPIDI_OFI_EVENT_RECV_GPU_PIPELINE,
     MPIDI_OFI_EVENT_AM_SEND,
     MPIDI_OFI_EVENT_AM_SEND_RDMA,
     MPIDI_OFI_EVENT_AM_SEND_PIPELINE,
@@ -161,6 +194,16 @@ enum {
     MPIDI_OFI_PEEK_NOT_FOUND,
     MPIDI_OFI_PEEK_FOUND
 };
+
+typedef enum {
+    MPIDI_OFI_PIPELINE_SEND = 0,
+    MPIDI_OFI_PIPELINE_RECV,
+} MPIDI_OFI_pipeline_type_t;
+
+typedef enum {
+    MPIDI_OFI_PIPELINE_READY = 0,
+    MPIDI_OFI_PIPELINE_EXEC,
+} MPIDI_OFI_pipeline_status_t;
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
@@ -282,6 +325,43 @@ typedef struct {
     struct fid_cq *cq;
 } MPIDI_OFI_context_t;
 
+/* GPU pipelining */
+typedef struct {
+    char pad[MPIDI_REQUEST_HDR_SIZE];
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
+    int event_id;               /* fixed field, do not move */
+    MPIR_Request *parent;       /* Parent request           */
+    void *buf;
+} MPIDI_OFI_gpu_pipeline_request;
+
+typedef struct MPIDI_OFI_gpu_task {
+    MPIDI_OFI_pipeline_type_t type;
+    MPIDI_OFI_pipeline_status_t status;
+    void *buf;
+    size_t len;
+    MPIR_Request *request;
+    MPIR_gpu_req yreq;
+    struct MPIDI_OFI_gpu_task *next, *prev;
+} MPIDI_OFI_gpu_task_t;
+
+typedef struct MPIDI_OFI_gpu_pending_recv {
+    MPIDI_OFI_gpu_pipeline_request *req;
+    int idx;
+    uint32_t n_chunks;
+    struct MPIDI_OFI_gpu_pending_recv *next, *prev;
+} MPIDI_OFI_gpu_pending_recv_t;
+
+typedef struct MPIDI_OFI_gpu_pending_send {
+    MPIR_Request *sreq;
+    void *send_buf;
+    MPL_pointer_attr_t attr;
+    MPI_Aint offset;
+    uint32_t n_chunks;
+    MPI_Aint left_sz, count;
+    int dt_contig;
+    struct MPIDI_OFI_gpu_pending_send *next, *prev;
+} MPIDI_OFI_gpu_pending_send_t;
+
 typedef union {
     MPID_Thread_mutex_t m;
     char cacheline[MPL_CACHELINE_SIZE];
@@ -395,6 +475,14 @@ typedef struct {
     uint64_t global_max_optimized_mr_key;
     /* stores the maximum of last recently used regular memory region key */
     uint64_t global_max_regular_mr_key;
+
+    /* GPU pipeline */
+    MPIDU_genq_private_pool_t gpu_pipeline_send_pool;
+    MPIDU_genq_private_pool_t gpu_pipeline_recv_pool;
+    MPIDI_OFI_gpu_task_t *gpu_send_task_queue[MPIDI_CH4_MAX_VCIS];
+    MPIDI_OFI_gpu_task_t *gpu_recv_task_queue[MPIDI_CH4_MAX_VCIS];
+    MPIDI_OFI_gpu_pending_recv_t *gpu_recv_queue;
+    MPIDI_OFI_gpu_pending_send_t *gpu_send_queue;
 
     /* Process management and PMI globals */
     int pname_set;

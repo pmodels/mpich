@@ -13,6 +13,7 @@
 **ch4|cancelrndv:failure occurred while performing local cancellation of a rendezvous message
 **ch4|ch4_init:channel initialization failed
 **ch4|too_many_ranks:User requested number of ranks unsupported
+**ch4|too_small_cqdata: CQ data size is too small for enabling GPU pipelining
 **ch4|ctspkt:failure occurred while attempting to send CTS packet
 **ch4|eagermsg:failure occurred while attempting to send an eager message
 **ch4|loadrecviov:failure occurred while loading the receive I/O vector

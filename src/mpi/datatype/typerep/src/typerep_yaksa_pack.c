@@ -68,7 +68,7 @@ static int typerep_do_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
     int rc;
 
     if (typerep_req) {
-        *typerep_req = MPIR_TYPEREP_REQ_NULL;
+        typerep_req->req = MPIR_TYPEREP_REQ_NULL;
     }
 
     if (num_bytes == 0) {
@@ -86,18 +86,20 @@ static int typerep_do_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
 
         yaksa_info_t info = MPII_yaksa_get_info(&inattr, &outattr);
         if (typerep_req) {
+            typerep_req->info = info;
             rc = yaksa_ipack(inbuf, num_bytes, YAKSA_TYPE__BYTE, 0, outbuf, num_bytes,
                              &actual_pack_bytes, info, YAKSA_OP__REPLACE,
-                             (yaksa_request_t *) typerep_req);
+                             (yaksa_request_t *) & typerep_req->req);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+            MPIR_Assert(actual_pack_bytes == num_bytes);
         } else {
             rc = yaksa_pack(inbuf, num_bytes, YAKSA_TYPE__BYTE, 0, outbuf, num_bytes,
                             &actual_pack_bytes, info, YAKSA_OP__REPLACE);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+            MPIR_Assert(actual_pack_bytes == num_bytes);
+            rc = MPII_yaksa_free_info(info);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
         }
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
-        MPIR_Assert(actual_pack_bytes == num_bytes);
-
-        rc = MPII_yaksa_free_info(info);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
     }
 
   fn_exit:
@@ -120,7 +122,7 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
     int rc;
 
     if (typerep_req) {
-        *typerep_req = MPIR_TYPEREP_REQ_NULL;
+        typerep_req->req = MPIR_TYPEREP_REQ_NULL;
     }
 
     if (incount == 0) {
@@ -175,18 +177,19 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
 
     uintptr_t real_pack_bytes;
     if (typerep_req) {
+        typerep_req->info = info;
         rc = yaksa_ipack(inbuf, incount, type, inoffset, outbuf, max_pack_bytes,
                          &real_pack_bytes, info, YAKSA_OP__REPLACE,
-                         (yaksa_request_t *) typerep_req);
+                         (yaksa_request_t *) & typerep_req->req);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
     } else {
         rc = yaksa_pack(inbuf, incount, type, inoffset, outbuf, max_pack_bytes,
                         &real_pack_bytes, info, YAKSA_OP__REPLACE);
-    }
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
-
-    if (info) {
-        rc = MPII_yaksa_free_info(info);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+        if (info) {
+            rc = MPII_yaksa_free_info(info);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+        }
     }
 
     *actual_pack_bytes = (MPI_Aint) real_pack_bytes;
@@ -271,7 +274,7 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
     int rc;
 
     if (typerep_req) {
-        *typerep_req = MPIR_TYPEREP_REQ_NULL;
+        typerep_req->req = MPIR_TYPEREP_REQ_NULL;
     }
 
     if (insize == 0) {
@@ -323,18 +326,19 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
 
     uintptr_t real_unpack_bytes;
     if (typerep_req) {
+        typerep_req->info = info;
         rc = yaksa_iunpack(inbuf, real_insize, outbuf, outcount, type, outoffset,
                            &real_unpack_bytes, info, YAKSA_OP__REPLACE,
-                           (yaksa_request_t *) typerep_req);
+                           (yaksa_request_t *) & typerep_req->req);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
     } else {
         rc = yaksa_unpack(inbuf, real_insize, outbuf, outcount, type, outoffset, &real_unpack_bytes,
                           info, YAKSA_OP__REPLACE);
-    }
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
-
-    if (info) {
-        rc = MPII_yaksa_free_info(info);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+        if (info) {
+            rc = MPII_yaksa_free_info(info);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+        }
     }
 
     *actual_unpack_bytes = (MPI_Aint) real_unpack_bytes;
@@ -431,12 +435,37 @@ int MPIR_Typerep_wait(MPIR_Typerep_req typerep_req)
     int mpi_errno = MPI_SUCCESS;
     int rc;
 
-    if (typerep_req == MPIR_TYPEREP_REQ_NULL)
+    if (typerep_req.req == MPIR_TYPEREP_REQ_NULL)
         goto fn_exit;
 
-    rc = yaksa_request_wait((yaksa_request_t) typerep_req);
+    rc = yaksa_request_wait((yaksa_request_t) typerep_req.req);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
+    rc = MPII_yaksa_free_info(typerep_req.info);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Typerep_test(MPIR_Typerep_req typerep_req, int *completed)
+{
+    MPIR_FUNC_ENTER;
+    int mpi_errno = MPI_SUCCESS;
+    int rc;
+
+    if (typerep_req.req == MPIR_TYPEREP_REQ_NULL)
+        goto fn_exit;
+
+    rc = yaksa_request_test((yaksa_request_t) typerep_req.req, completed);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+
+    if (*completed) {
+        rc = MPII_yaksa_free_info(typerep_req.info);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+    }
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;

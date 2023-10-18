@@ -216,6 +216,21 @@ typedef struct {
         struct iovec iov;
         void *inject_buf;       /* Internal buffer for inject emulation */
     } util;
+    struct {
+        fi_addr_t remote_addr;
+        int ctx_idx;
+        int vci_local;
+        int chunk_sz;
+        bool is_sync;
+        uint64_t cq_data;
+        uint64_t match_bits;
+        uint64_t mask_bits;
+        size_t offset;
+        size_t data_sz;
+        char *pack_recv_buf;
+        void *usm_host_buf;     /* recv */
+        MPIR_Request *req;
+    } pipeline_info;            /* GPU pipeline */
 } MPIDI_OFI_request_t;
 
 typedef struct {
