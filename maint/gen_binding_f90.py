@@ -32,10 +32,6 @@ def main():
         if '_skip_fortran' in func:
             continue
         dump_f90_func(func)
-        # HACK: I don't understand why we add pmpi versions for only PMPI_W{time,tick}
-        if re.match(r'mpi_w(time|tick)', func['name'], re.IGNORECASE):
-            func['name'] = 'P' + func['name']
-            dump_f90_func(func)
     G.out.append("")
     G.out.append("END INTERFACE")
     dump_F_module_close("mpi_base")
