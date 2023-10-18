@@ -992,6 +992,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **streamcomm_dstidx:The destination stream index exceeds the number of streams.
 **gpu_enqueue_noncontig:Non-contig datatype not supported due to missing TLS.
 
+## topology-aware collectives
+**read_file:Failed to read from file
+**read_file %s %s:Failed to read from file %s error: %s
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)

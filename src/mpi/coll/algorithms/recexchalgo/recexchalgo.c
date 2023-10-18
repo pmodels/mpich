@@ -26,6 +26,13 @@ int MPII_Recexchalgo_comm_init(MPIR_Comm * comm)
     }
     comm->coll.recexch_allreduce_nbr_buffer = NULL;
 
+    comm->coll.topo_aware_tree_root = -1;
+    comm->coll.topo_aware_tree = NULL;
+    comm->coll.topo_aware_k_tree_root = -1;
+    comm->coll.topo_aware_k_tree = NULL;
+    comm->coll.topo_wave_tree_root = -1;
+    comm->coll.topo_wave_tree = NULL;
+
     return mpi_errno;
 }
 
@@ -51,6 +58,24 @@ int MPII_Recexchalgo_comm_cleanup(MPIR_Comm * comm)
         for (j = 0; j < 2 * (MAX_RADIX - 1); j++)
             MPL_free(comm->coll.recexch_allreduce_nbr_buffer[j]);
         MPL_free(comm->coll.recexch_allreduce_nbr_buffer);
+    }
+
+    if (comm->coll.topo_aware_tree) {
+        MPIR_Treealgo_tree_free(comm->coll.topo_aware_tree);
+        MPL_free(comm->coll.topo_aware_tree);
+        comm->coll.topo_aware_tree = NULL;
+    }
+
+    if (comm->coll.topo_aware_k_tree) {
+        MPIR_Treealgo_tree_free(comm->coll.topo_aware_k_tree);
+        MPL_free(comm->coll.topo_aware_k_tree);
+        comm->coll.topo_aware_k_tree = NULL;
+    }
+
+    if (comm->coll.topo_wave_tree) {
+        MPIR_Treealgo_tree_free(comm->coll.topo_wave_tree);
+        MPL_free(comm->coll.topo_wave_tree);
+        comm->coll.topo_wave_tree = NULL;
     }
 
     return mpi_errno;
