@@ -9,7 +9,7 @@ from local_python import RE
 
 import re
 
-def dump_f90_func(func):
+def dump_f90_func(func, is_cptr=False):
     f90_mapping = get_kind_map('F90', False)
 
     f_param_list = []
@@ -24,6 +24,8 @@ def dump_f90_func(func):
             continue
         f_param_list.append(p['name'])
         f_type = f90_mapping[p['kind']]
+        if p['kind'] == "C_BUFFER" and is_cptr:
+            f_type = "TYPE(C_PTR)"
         if re.match(r'<type>', f_type, re.IGNORECASE):
             # TODO: configure it
             if False:
@@ -89,7 +91,8 @@ def dump_f90_func(func):
         return
 
     func_name = get_function_name(func)
-    G.out.append("")
+    if is_cptr:
+        func_name = func_name + "_cptr"
     if 'return' not in func:
         if not len(f_param_list) or not RE.match(r'ierr(or)?', f_param_list[-1]):
             f_param_list.append('ierror')
@@ -102,6 +105,8 @@ def dump_f90_func(func):
     G.out.append("INDENT")
     if uses:
         dump_uses()
+    if is_cptr:
+        G.out.append("USE, INTRINSIC :: ISO_C_BINDING, ONLY : C_PTR");
     G.out.append("IMPLICIT NONE")
     if tkr_list:
         dump_ignore_tkr()
