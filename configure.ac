@@ -4199,6 +4199,7 @@ export pkgconfigdir
 
 if test "$enable_f90" = "yes" ; then
     PAC_FC_CHECK_IGNORE_TKR
+    PAC_FC_ISO_C_BINDING
     if test -z "$PYTHON" ; then
         if test -f src/binding/fortran/use_mpi/mpi_base.f90 ; then
             AC_MSG_NOTICE([Use pre-generated Fortran mpi binding. To prevent issues, install Python 3 and re-run configure.])
@@ -4211,6 +4212,9 @@ if test "$enable_f90" = "yes" ; then
         cmd_f90="$cmd_f90 -f-logical-size=$pac_cv_f77_sizeof_logical"
         if test "$pac_fc_ignore_tkr" != "no" ; then
             cmd_f90="$cmd_f90 -ignore-tkr=$pac_fc_ignore_tkr"
+        fi
+        if test "$pac_fc_iso_c_binding" = "no" ; then
+            cmd_f90="$cmd_f90 -iso-c-binding=no"
         fi
         AC_CONFIG_COMMANDS([gen_binding_f90], [$cmd_gen_binding_f90], [cmd_gen_binding_f90="$cmd_f90"])
     fi
