@@ -153,6 +153,10 @@ int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
         }
     }
 
+    char *memory_alloc_kinds;
+    MPIR_get_memory_kinds_from_comm(comm_ptr, &memory_alloc_kinds);
+    MPIR_Info_set_impl(info, "mpi_memory_alloc_kinds", memory_alloc_kinds);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -1407,5 +1411,14 @@ void MPIR_Comm_set_session_ptr(MPIR_Comm * comm_ptr, MPIR_Session * session_ptr)
         comm_ptr->session_ptr = session_ptr;
         /* Add ref counter of session */
         MPIR_Session_add_ref(session_ptr);
+    }
+}
+
+void MPIR_get_memory_kinds_from_comm(MPIR_Comm * comm_ptr, char **kinds)
+{
+    if (comm_ptr->session_ptr) {
+        *kinds = comm_ptr->session_ptr->memory_alloc_kinds;
+    } else {
+        *kinds = MPIR_Process.memory_alloc_kinds;
     }
 }

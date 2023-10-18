@@ -50,6 +50,7 @@ typedef struct MPIR_Process_t {
                                          * versions */
     PreDefined_attrs attrs;     /* Predefined attribute values */
     int tag_bits;               /* number of tag bits supported */
+    char *memory_alloc_kinds;   /* memory kinds supported in the world model */
 
     /* The topology routines dimsCreate is independent of any communicator.
      * If this pointer is null, the default routine is used */

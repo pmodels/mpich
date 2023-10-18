@@ -440,6 +440,13 @@ int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_used)
         mpi_errno = MPIR_Info_set_impl(*info_used, "same_disp_unit", "false");
     MPIR_ERR_CHECK(mpi_errno);
 
+    if (win->comm_ptr) {
+        char *memory_alloc_kinds;
+        MPIR_get_memory_kinds_from_comm(win->comm_ptr, &memory_alloc_kinds);
+        mpi_errno = MPIR_Info_set_impl(*info_used, "mpi_memory_alloc_kinds", memory_alloc_kinds);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;

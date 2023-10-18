@@ -34,6 +34,7 @@ int MPIR_Session_create(MPIR_Session ** p_session_ptr, int thread_level)
     (*p_session_ptr)->thread_level = thread_level;
     /* disable strict finalize feature by default */
     (*p_session_ptr)->strict_finalize = false;
+    (*p_session_ptr)->memory_alloc_kinds = NULL;
 
     {
         int thr_err;
@@ -66,6 +67,8 @@ int MPIR_Session_release(MPIR_Session * session_ptr)
         if (session_ptr->errhandler) {
             MPIR_Errhandler_free_impl(session_ptr->errhandler);
         }
+
+        MPL_free(session_ptr->memory_alloc_kinds);
 
         MPIR_Handle_obj_free(&MPIR_Session_mem, session_ptr);
     }
@@ -186,4 +189,36 @@ int MPIR_Session_get_strict_finalize_from_info(MPIR_Info * info_ptr, bool * stri
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Session_get_memory_kinds_from_info(MPIR_Info * info_ptr, char **out_kinds)
+{
+    int mpi_errno = MPI_SUCCESS;
+    const char key[] = "mpi_memory_alloc_kinds";
+    char *user_kinds = NULL;
+
+    *out_kinds = NULL;
+
+    if (info_ptr) {
+        int buflen = 0;
+        int flag;
+
+        mpi_errno = MPIR_Info_get_string_impl(info_ptr, key, &buflen, NULL, &flag);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (flag) {
+            user_kinds = MPL_malloc(buflen, MPL_MEM_OTHER);
+            mpi_errno = MPIR_Info_get_string_impl(info_ptr, key, &buflen, user_kinds, &flag);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    } else {
+        user_kinds = MPL_strdup(MPIR_Process.memory_alloc_kinds);
+    }
+
+    mpi_errno = MPIR_get_supported_memory_kinds(user_kinds, out_kinds);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_fail:
+    MPL_free(user_kinds);
+    return mpi_errno;
 }
