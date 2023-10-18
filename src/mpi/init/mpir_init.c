@@ -212,7 +212,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     mpi_errno = MPII_init_local_proc_attrs(&required);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPII_init_builtin_infos();
+    mpi_errno = MPII_init_builtin_infos(argc, argv);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPII_Coll_init();

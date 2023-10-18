@@ -62,11 +62,22 @@ int MPIR_Info_alloc(MPIR_Info ** info_p_p)
 
 /* Set up MPI_INFO_ENV.  This may be called before initialization and after
  * finalization by MPI_Info_create_env().  This routine must be thread-safe. */
-void MPIR_Info_setup_env(MPIR_Info * info_ptr)
+void MPIR_Info_setup_env(MPIR_Info * info_ptr, int argc, char **argv)
 {
     info_init(info_ptr);
     /* FIXME: Currently this info object is missing some data as
      * defined by the standard. */
+
+    if (argc > 0) {
+        MPIR_Info_push(info_ptr, "command", argv[0]);
+    }
+
+    if (argc > 1) {
+        /* space-separated arguments to command */
+        char *command_args = MPL_strjoin(&argv[1], argc - 1, ' ');
+        MPIR_Info_push(info_ptr, "argv", command_args);
+        MPL_free(command_args);
+    }
 }
 
 #define INFO_INITIAL_SIZE 10
