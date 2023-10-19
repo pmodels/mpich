@@ -692,6 +692,7 @@ int MPIR_Csel_prune(void *root_csel, MPIR_Comm * comm_ptr, void **comm_csel_)
     MPIR_Assert(comm_ptr);
 
     comm_csel = (csel_s *) MPL_malloc(sizeof(csel_s), MPL_MEM_COLL);
+    MPIR_Assert(comm_csel);
 
     comm_csel->type = CSEL_TYPE__PRUNED;
     for (int i = 0; i < MPIR_CSEL_COLL_TYPE__END; i++)
