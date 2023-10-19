@@ -506,7 +506,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        This is the threshold to start using GPU direct RDMA.
+        This is the threshold to start using GPU pipeline.
 
     - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ
       category    : CH4_OFI
