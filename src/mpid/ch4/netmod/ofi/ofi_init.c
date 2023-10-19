@@ -231,17 +231,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        This is the threshold to start using GPU direct RDMA.
-
-    - name        : MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD
-      category    : CH4_OFI
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        The threshold to start using GPU RDMA.
+        The threshold to start using GPU direct RDMA.
 
     - name        : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS
       category    : CH4_OFI
