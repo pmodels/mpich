@@ -26,22 +26,45 @@ def main():
     # mpi_base.f90
     G.out = []
     dump_F_module_open("mpi_base")
+    is_pmpi = False
     for func in func_list:
         check_func_directives(func)
         if '_skip_fortran' in func:
             continue
         G.out.append("INTERFACE %s" % func['name'])
         G.out.append("INDENT")
-        dump_f90_func(func)
+        dump_f90_func(func, is_pmpi)
         if re.match(r'mpi_alloc_mem', func['name'], re.IGNORECASE) and G.opts['iso-c-binding'] == "yes":
             # specific interface using "TYPE(C_PTR)"
-            dump_f90_func(func, True)
+            dump_f90_func(func, is_pmpi, True)
         G.out.append("DEDENT")
         G.out.append("END INTERFACE")
         G.out.append("")
     dump_F_module_close("mpi_base")
 
     f = "%s/mpi_base.f90" % f90_dir
+    dump_f90_file(f, G.out)
+
+    # pmpi_base.f90
+    G.out = []
+    dump_F_module_open("pmpi_base")
+    is_pmpi = True
+    for func in func_list:
+        check_func_directives(func)
+        if '_skip_fortran' in func:
+            continue
+        G.out.append("INTERFACE P%s" % func['name'])
+        G.out.append("INDENT")
+        dump_f90_func(func, is_pmpi)
+        if re.match(r'mpi_alloc_mem', func['name'], re.IGNORECASE) and G.opts['iso-c-binding'] == "yes":
+            # specific interface using "TYPE(C_PTR)"
+            dump_f90_func(func, is_pmpi, True)
+        G.out.append("DEDENT")
+        G.out.append("END INTERFACE")
+        G.out.append("")
+    dump_F_module_close("pmpi_base")
+
+    f = "%s/pmpi_base.f90" % f90_dir
     dump_f90_file(f, G.out)
 
     # mpi_constants.f90

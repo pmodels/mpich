@@ -9,7 +9,7 @@ from local_python import RE
 
 import re
 
-def dump_f90_func(func, is_cptr=False):
+def dump_f90_func(func, is_pmpi=False, is_cptr=False):
     f90_mapping = get_kind_map('F90', False)
 
     f_param_list = []
@@ -91,6 +91,8 @@ def dump_f90_func(func, is_cptr=False):
         return
 
     func_name = get_function_name(func)
+    if is_pmpi:
+        func_name = "P" + func_name
     if is_cptr:
         func_name = func_name + "_cptr"
     if 'return' not in func:
