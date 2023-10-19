@@ -497,6 +497,9 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, enable pipeline for GPU data transfer.
+        GPU pipeline does not support non-contiguous datatypes or mixed buffer types
+        (i.e. GPU send buffer, host recv buffer). If GPU pipeline is enabled, the unsupported
+        scenarios will cause undefined behavior if encountered.
 
     - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD
       category    : CH4_OFI
