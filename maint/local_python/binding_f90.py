@@ -54,6 +54,9 @@ def dump_f90_func(func, is_pmpi=False, is_cptr=False):
             elif isinstance(p['length'], list):
                 # assume [n, 3] as ranges in MPI_Group_range_excl
                 decl = "%s :: %s(%s, *)" % (f_type, p['name'], p['length'][1])
+            elif p['kind'] == 'STATUS':
+                uses['MPI_STATUS_SIZE'] = 1
+                decl = "INTEGER :: %s(MPI_STATUS_SIZE, *)" % (p['name'])
             elif p['length']:
                 decl = "%s :: %s(%s)" % (f_type, p['name'], p['length'])
             else:
