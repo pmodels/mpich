@@ -780,6 +780,10 @@ int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
+            mpi_errno = MPID_Comm_commit_post_hook(MPIDI_COMM(comm, multi_leads_comm));
+            if (mpi_errno)
+                MPIR_ERR_CHECK(mpi_errno);
+
             MPIR_Comm_map_free(MPIDI_COMM(comm, multi_leads_comm));
         }
     }
