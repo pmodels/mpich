@@ -102,11 +102,8 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 		/* The data is still being transferred across the net.  
 		   We'll leave it to the progress engine to handle once the
 		   entire message has arrived. */
-		if (!HANDLE_IS_BUILTIN(datatype))
-		{
-		    MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
-            MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
-		}
+
+                MPIR_Datatype_add_ref_if_not_builtin(datatype);
 	    }
 	}
 	else if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_RNDV_MSG)
@@ -155,11 +152,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 	   of the actions that are taken when a request is freed. 
 	   (specifically, the datatype and comm both have their refs
 	   decremented, and are freed if the refs are zero) */
-	if (!HANDLE_IS_BUILTIN(datatype))
-	{
-	    MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
-        MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
-	}
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
 	rreq->dev.recv_pending_count = 1;
 	/* We must wait until here to exit the msgqueue critical section

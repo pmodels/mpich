@@ -1257,7 +1257,7 @@ typedef int MPI_File;\
     # Hack to ifdef out the file routines
     if ($class eq "file") {
 	# Define the file type only if supported.
-	print $OUTFD "#ifdef HAVE_ROMIO\n";
+	print $OUTFD "#if \@HAVE_CXX_IO\@\n";
     }
 
     foreach $mpilevel (@mpilevels) {
@@ -1347,7 +1347,7 @@ typedef int MPI_File;\
     # Only define these typedefs when MPI-IO is available (this is the same
     # test as used for the rest of the I/O routines );
 print $OUTFD "\
-#ifdef HAVE_ROMIO
+#if \@HAVE_CXX_IO\@
 typedef int Datarep_extent_function( const Datatype&, Aint&, void *);
 typedef int Datarep_conversion_function( void *, Datatype &, int, void *,
                 Offset, void * );
@@ -2003,7 +2003,11 @@ extern Datatype TWOINTEGER;
     }
 
     print $OUTFD "// Include these only if MPI-IO is available\n";
-    print $OUTFD "#ifdef HAVE_ROMIO\n";
+    if ($giveValue) {
+        print $OUTFD "#ifdef HAVE_ROMIO\n";
+    } else {
+        print $OUTFD "#if \@HAVE_CXX_IO\@\n";
+    }
 
     # Other file constants
     foreach $int (MAX_DATAREP_STRING) {
