@@ -394,6 +394,9 @@ const char *mpit_bindingToStr(int binding)
         case MPI_T_BIND_MPI_INFO:
             p = "MPI_INFO";
             break;
+        case MPI_T_BIND_MPI_SESSION:
+            p = "MPI_SESSION";
+            break;
         default:
             p = "Unknown object binding";
     }

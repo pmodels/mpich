@@ -859,7 +859,8 @@ typedef enum MPIR_T_bind_t {
     MPI_T_BIND_MPI_REQUEST,
     MPI_T_BIND_MPI_WIN,
     MPI_T_BIND_MPI_MESSAGE,
-    MPI_T_BIND_MPI_INFO
+    MPI_T_BIND_MPI_INFO,
+    MPI_T_BIND_MPI_SESSION
 } MPIR_T_bind_t;
 
 typedef enum MPIR_T_scope_t {
