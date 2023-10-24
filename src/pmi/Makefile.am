@@ -20,7 +20,7 @@ noinst_LTLIBRARIES += libpmi.la
 else
 include_HEADERS = \
     include/pmi.h \
-    include/pmi2.h
+    include/pmi2.h \
     include/pmix.h \
     include/pmix_abi_support.h \
     include/pmix_abi_support_bottom.h \
