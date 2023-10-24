@@ -384,6 +384,7 @@ Special value for error codes array:
 .    MPI_T_BIND_MPI_WIN             - MPI windows for one-sided communication
 .    MPI_T_BIND_MPI_MESSAGE         - MPI message object
 .    MPI_T_BIND_MPI_INFO            - MPI info object
+.    MPI_T_BIND_MPI_SESSION         - MPI session object
 .    MPI_T_SCOPE_CONSTANT           -read-only, value is constant
 .    MPI_T_SCOPE_READONLY           - read-only, cannot be written, but can
  change
