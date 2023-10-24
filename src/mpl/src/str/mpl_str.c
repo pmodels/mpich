@@ -305,3 +305,39 @@ int MPL_stricmp(const char *s1, const char *s2)
         return 1;
     }
 }
+
+/*@ MPL_strjoin - Join an array of strings with a separator
+
++ strs - Array of strings
+. num  - Number of strings in the array
+- sep  - Character separator
+
+Return:
+  Joined string.
+
+Module:
+  Utility
+@*/
+char *MPL_strjoin(char *strs[], int num, char sep)
+{
+    if (num <= 0) {
+        return MPL_strdup("");
+    }
+
+    int len = 0;
+    for (int i = 0; i < num; i++) {
+        len += strlen(strs[i]);
+    }
+
+    char *outstr = MPL_malloc(len + num, MPL_MEM_OTHER);
+    char *p = outstr;
+    for (int i = 0; i < num; i++) {
+        strcpy(p, strs[i]);
+        if (i < num - 1) {
+            p += strlen(strs[i]);
+            *p++ = sep;
+        }
+    }
+
+    return outstr;
+}
