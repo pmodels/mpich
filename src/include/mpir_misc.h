@@ -125,4 +125,6 @@ int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
      : (MPI_Aint) (val))
 #endif
 
+int MPIR_get_supported_memory_kinds(char *requested_kinds, char **out_kinds);
+
 #endif /* MPIR_MISC_H_INCLUDED */
