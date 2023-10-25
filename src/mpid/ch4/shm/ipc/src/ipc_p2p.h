@@ -260,6 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
               recv_data_sz);
 
     MPIDI_IPC_ack_t am_hdr;
+  fn_cont:
     am_hdr.ipc_type = ipc_hdr->ipc_type;
     am_hdr.req_ptr = sreq_ptr;
 
@@ -271,11 +272,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
-  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
-    goto fn_exit;
+    /* Need to send ack and complete the request so we don't block sender and receiver */
+    if (!rreq->status.MPI_ERROR) {
+        rreq->status.MPI_ERROR = mpi_errno;
+    }
+    goto fn_cont;
 }
 
 #endif /* IPC_P2P_H_INCLUDED */
