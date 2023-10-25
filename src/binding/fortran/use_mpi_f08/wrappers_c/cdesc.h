@@ -40,5 +40,6 @@ void *MPIR_F08_get_MPI_ARGVS_NULL(void);
 void *MPIR_F08_get_MPI_ERRCODES_IGNORE(void);
 void *MPIR_F08_get_MPI_UNWEIGHTED(void);
 void *MPIR_F08_get_MPI_WEIGHTS_EMPTY(void);
+void *MPIR_F08_get_MPI_BUFFER_AUTOMATIC(void);
 
 #endif /* CDESC_H_INCLUDED */
