@@ -93,11 +93,6 @@ int MPII_Treeutil_tree_kary_init_topo_aware(int rank, int nranks, int k0, int k1
     utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
     ct->num_children = 0;
 
-    MPIR_Assert(nranks >= 0);
-
-    if (nranks == 0)
-        goto fn_exit;
-
     lrank = (rank + (nranks - root)) % nranks;
 
     ct->parent = (lrank == 0) ? -1 : (((lrank + k1 - k0 - 1) / k1) + root) % nranks;
@@ -291,7 +286,8 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
             for (i = k - 1; i >= 1; i--) {
                 child = MPL_setdigit(k, lrank, j, i);
                 if (child < nranks)
-                    tree_add_child(ct, (child + root) % nranks);
+                    mpi_errno = tree_add_child(ct, (child + root) % nranks);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
@@ -757,8 +753,9 @@ int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, 
                 /* rank level - build a tree on the ranks */
                 /* Do an allgather to know the current num_children on each rank */
                 MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-                MPIR_Allgather_impl(&(ct->num_children), 1, MPI_INT, num_childrens, 1, MPI_INT,
-                                    comm, errflag);
+                mpi_errno =
+                    MPIR_Allgather_impl(&(ct->num_children), 1, MPI_INT, num_childrens, 1, MPI_INT,
+                                        comm, errflag);
                 if (mpi_errno) {
                     goto fn_fail;
                 }
@@ -1064,6 +1061,7 @@ static int init_root_switch(const UT_array * hierarchy, heap_vector * minHeaps, 
             for (int sw_idx = 0; sw_idx < utarray_len(&gr_level->child_idxs); sw_idx++) {
                 int sw_child_idx = tree_ut_int_elt(&gr_level->child_idxs, sw_idx);
                 sw_level = tree_ut_hierarchy_eltptr(&hierarchy[0], sw_child_idx);
+                MPIR_Assert(sw_level != NULL);
                 if (sw_level->has_root) {
                     *root_gr_sorted_idx = wr_level->root_sorted_idx;
                     *root_sw_sorted_idx = gr_level->root_sorted_idx;
@@ -1214,7 +1212,8 @@ int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int k, int root, boo
     /* free memory */
     for (dim = 0; dim <= MPIR_Process.coords_dims - 1; ++dim)
         utarray_done(&hierarchy[dim]);
-    utarray_free(unv_set);
+    if (unv_set != NULL)
+        utarray_free(unv_set);
     for (int i = 0; i < minHeaps.total; i++)
         deleteMinHeap(&minHeaps.heap[i]);
     heap_vector_free(&minHeaps);
