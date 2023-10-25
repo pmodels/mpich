@@ -16,7 +16,7 @@
 #endif
 
 #define MPI_VERSION    4
-#define MPI_SUBVERSION 0
+#define MPI_SUBVERSION 1
 #define MPICH_NAME     4
 #define MPICH         1
 #define MPICH_HAS_C2F  1

@@ -499,6 +499,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_null_recv(void)
     return get_builtin_req(HANDLE_INDEX(MPIR_REQUEST_NULL_RECV), MPIR_REQUEST_KIND__RECV);
 }
 
+int MPIR_Grequest_free(MPIR_Request * request_ptr);
 static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_safety)
 {
     int pool = MPIR_REQUEST_POOL(req);
@@ -541,6 +542,33 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
         }
 #endif
 
+        switch (req->kind) {
+            case MPIR_REQUEST_KIND__SEND:
+                MPII_SENDQ_FORGET(req);
+                break;
+            case MPIR_REQUEST_KIND__RECV:
+                MPII_RECVQ_FORGET(req);
+                break;
+            case MPIR_REQUEST_KIND__PREQUEST_SEND:
+            case MPIR_REQUEST_KIND__PREQUEST_RECV:
+                MPID_Prequest_free_hook(req);
+                break;
+            case MPIR_REQUEST_KIND__PREQUEST_COLL:
+                MPIR_Persist_coll_free_cb(req);
+                break;
+            case MPIR_REQUEST_KIND__PART_SEND:
+            case MPIR_REQUEST_KIND__PART_RECV:
+                MPID_Part_request_free_hook(req);
+                break;
+            case MPIR_REQUEST_KIND__GREQUEST:
+                /* FIXME: error return? */
+                MPIR_Grequest_free(req);
+                MPL_free(req->u.ureq.greq_fns);
+                break;
+            default:
+                break;
+        }
+
         /* FIXME: We need a better way to handle these so that we do
          * not always need to initialize these fields and check them
          * when we destroy a request */
@@ -551,16 +579,6 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
                 MPIR_Comm_delete_inactive_request(req->comm, req);
             }
             MPIR_Comm_release(req->comm);
-        }
-
-        if (req->kind == MPIR_REQUEST_KIND__GREQUEST) {
-            MPL_free(req->u.ureq.greq_fns);
-        }
-
-        if (req->kind == MPIR_REQUEST_KIND__SEND) {
-            MPII_SENDQ_FORGET(req);
-        } else if (req->kind == MPIR_REQUEST_KIND__RECV) {
-            MPII_RECVQ_FORGET(req);
         }
 
         MPID_Request_destroy_hook(req);
@@ -728,17 +746,16 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
 
 int MPIR_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status);
-int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
+int MPIR_Testall(int count, MPIR_Request * request_ptrs[], int *flag,
                  MPI_Status array_of_statuses[]);
-int MPIR_Testany(int count, MPI_Request array_of_requests[], MPIR_Request * request_ptrs[],
+int MPIR_Testany(int count, MPIR_Request * request_ptrs[],
                  int *indx, int *flag, MPI_Status * status);
-int MPIR_Testsome(int incount, MPI_Request array_of_requests[], MPIR_Request * request_ptrs[],
+int MPIR_Testsome(int incount, MPIR_Request * request_ptrs[],
                   int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
 int MPIR_Wait(MPIR_Request * request_ptr, MPI_Status * status);
-int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[]);
-int MPIR_Waitany(int count, MPI_Request array_of_requests[], MPIR_Request * request_ptrs[],
-                 int *indx, MPI_Status * status);
-int MPIR_Waitsome(int incount, MPI_Request array_of_requests[], MPIR_Request * request_ptrs[],
+int MPIR_Waitall(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[]);
+int MPIR_Waitany(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status * status);
+int MPIR_Waitsome(int incount, MPIR_Request * request_ptrs[],
                   int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
 int MPIR_Parrived(MPIR_Request * request_ptr, int partition, int *flag);
 

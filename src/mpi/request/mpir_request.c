@@ -59,7 +59,6 @@ void MPII_init_request(void)
 int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rc;
 
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
@@ -200,11 +199,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
             {
                 mpi_errno = MPIR_Grequest_query(request_ptr);
                 MPIR_Request_extract_status(request_ptr, status);
-                rc = MPIR_Grequest_free(request_ptr);
-                if (mpi_errno == MPI_SUCCESS) {
-                    mpi_errno = rc;
-                }
-
                 break;
             }
 

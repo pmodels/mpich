@@ -87,7 +87,7 @@ int MPIC_Wait(MPIR_Request * request_ptr)
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    mpi_errno = MPIR_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (request_ptr->kind == MPIR_REQUEST_KIND__RECV) {
@@ -550,11 +550,9 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPI_Request request_ptr_array[MPIC_REQUEST_PTR_ARRAY_SIZE];
-    MPI_Request *request_ptrs = request_ptr_array;
     MPI_Status status_static_array[MPIC_REQUEST_PTR_ARRAY_SIZE];
     MPI_Status *status_array = statuses;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_ENTER;
 
@@ -563,8 +561,6 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
     }
 
     if (numreq > MPIC_REQUEST_PTR_ARRAY_SIZE) {
-        MPIR_CHKLMEM_MALLOC(request_ptrs, MPI_Request *, numreq * sizeof(MPI_Request), mpi_errno,
-                            "request pointers", MPL_MEM_BUFFER);
         if (statuses == MPI_STATUSES_IGNORE) {
             MPIR_CHKLMEM_MALLOC(status_array, MPI_Status *, numreq * sizeof(MPI_Status), mpi_errno,
                                 "status objects", MPL_MEM_BUFFER);
@@ -577,18 +573,16 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
          * tag fields here. */
         status_array[i].MPI_TAG = 0;
         status_array[i].MPI_SOURCE = MPI_PROC_NULL;
-
-        /* Convert the MPIR_Request objects to MPI_Request objects */
-        request_ptrs[i] = requests[i]->handle;
     }
 
-    mpi_errno = MPIR_Waitall(numreq, request_ptrs, status_array);
+    mpi_errno = MPIR_Waitall(numreq, requests, status_array);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* The errflag value here is for all requests, not just a single one.  If
      * in the future, this function is used for multiple collectives at a
      * single time, we may have to change that. */
     for (i = 0; i < numreq; ++i) {
+        MPIR_Request_free(requests[i]);
         mpi_errno = MPIR_Process_status(&status_array[i]);
         MPIR_ERR_CHECK(mpi_errno);
     }

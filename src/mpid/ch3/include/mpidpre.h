@@ -829,6 +829,8 @@ int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, uint64_t *lpid_ptr, bool is
 void MPID_Request_create_hook(MPIR_Request *);
 void MPID_Request_free_hook(MPIR_Request *);
 void MPID_Request_destroy_hook(MPIR_Request *);
+#define MPID_Prequest_free_hook(req_) do {} while(0)
+#define MPID_Part_request_free_hook(req_) do {} while(0)
 int MPID_Request_complete(MPIR_Request *);
 
 void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info *info );

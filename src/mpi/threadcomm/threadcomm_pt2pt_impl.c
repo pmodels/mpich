@@ -126,11 +126,12 @@ int MPIR_Threadcomm_send_impl(const void *buf, MPI_Aint count, MPI_Datatype data
             int made_progress;
             MPIR_Threadcomm_progress(&made_progress);
         }
+        MPIR_Request_free(sreq);
     } else {
-        mpi_errno = MPID_Wait(sreq, MPI_STATUS_IGNORE);
+        mpi_errno = MPIR_Wait(sreq, MPI_STATUS_IGNORE);
+        MPIR_Request_free(sreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
-    MPIR_Request_free(sreq);
 
   fn_exit:
     return mpi_errno;
@@ -158,15 +159,15 @@ int MPIR_Threadcomm_recv_impl(void *buf, MPI_Aint count, MPI_Datatype datatype,
             int made_progress;
             MPIR_Threadcomm_progress(&made_progress);
         }
+        if (has_status) {
+            MPIR_Request_extract_status(rreq, status);
+        }
+        MPIR_Request_free(rreq);
     } else {
-        mpi_errno = MPID_Wait(rreq, MPI_STATUS_IGNORE);
+        mpi_errno = MPIR_Wait(rreq, status);
+        MPIR_Request_free(rreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
-    mpi_errno = rreq->status.MPI_ERROR;
-    if (has_status) {
-        MPIR_Request_extract_status(rreq, status);
-    }
-    MPIR_Request_free(rreq);
 
   fn_exit:
     return mpi_errno;

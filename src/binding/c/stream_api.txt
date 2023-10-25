@@ -66,12 +66,8 @@ MPIX_Stream_send:
         goto fn_exit;
     }
 
-    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = request_ptr->status.MPI_ERROR;
+    mpi_errno = MPIR_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_Request_free(request_ptr);
-
     MPIR_ERR_CHECK(mpi_errno);
 }
 
@@ -134,13 +130,8 @@ MPIX_Stream_recv:
         goto fn_exit;
     }
 
-    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = request_ptr->status.MPI_ERROR;
-    MPIR_Request_extract_status(request_ptr, status);
+    mpi_errno = MPIR_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_Request_free(request_ptr);
-
     MPIR_ERR_CHECK(mpi_errno);
 }
 
