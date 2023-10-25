@@ -12,6 +12,7 @@ if BUILD_F77_BINDING
 
 mpi_f77_sources += \
 	src/binding/fortran/mpif_h/fortran_binding.c \
+	src/binding/fortran/mpif_h/fortran_binding_cptr.c \
 	src/binding/fortran/mpif_h/fdebug.c \
 	src/binding/fortran/mpif_h/setbot.c \
 	src/binding/fortran/mpif_h/setbotf.f

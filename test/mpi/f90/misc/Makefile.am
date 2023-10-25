@@ -9,5 +9,7 @@ EXTRA_DIST = testlist
 
 EXTRA_DIST += testlist.ap
 
-noinst_PROGRAMS = sizeof2
+noinst_PROGRAMS = sizeof2 \
+		  alloc_mem
 sizeof2_SOURCES = sizeof2.f90
+alloc_mem_SOURCES = alloc_mem.f90

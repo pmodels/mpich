@@ -1070,7 +1070,6 @@ if test "$pac_ccompile_ok" = "yes" ; then
 fi
 ])
 
-
 AC_DEFUN([PAC_FC_2008_SUPPORT],[
 AC_MSG_CHECKING([for Fortran 2008 support])
 
@@ -1266,5 +1265,24 @@ AC_DEFUN([PAC_FC_CHECK_IGNORE_TKR],[
         fi
     done
     AC_MSG_RESULT([$pac_fc_ignore_tkr])
+    AC_LANG_POP(Fortran)
+])
+
+dnl
+dnl PAC_FC_ISO_C_BINDING check whether ISO_C_BINDING is supported.
+dnl set pac_fc_iso_c_binding to yes if it's supported, otherwise, no.
+dnl
+AC_DEFUN([PAC_FC_ISO_C_BINDING],[
+    AC_LANG_PUSH(Fortran)
+    AC_MSG_CHECKING([Whether Fortran compiler supports ISO_C_BINDING])
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+        program main
+            USE, INTRINSIC :: ISO_C_BINDING, ONLY : C_PTR, C_LOC
+            type(c_ptr) :: ptr
+            integer, target :: a
+            ptr = c_loc(a)
+        end
+    ])],[pac_fc_iso_c_binding=yes],[pac_fc_iso_c_binding=no])
+    AC_MSG_RESULT([$pac_fc_iso_c_binding])
     AC_LANG_POP(Fortran)
 ])
