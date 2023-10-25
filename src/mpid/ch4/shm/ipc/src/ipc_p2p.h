@@ -130,6 +130,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_
                                         MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes,
                                         MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
+        if (actual_unpack_bytes < src_data_sz) {
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
+        }
         MPIR_Assert(actual_unpack_bytes == src_data_sz);
     } else {
         void *flattened_type = ipc_hdr + 1;
