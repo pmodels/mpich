@@ -83,3 +83,7 @@ MPIX_ERR_REVOKED     **revoked
 MPIX_ERR_EAGAIN      **eagain
 MPIX_ERR_NOREQ       **nomemreq
 MPIX_ERR_TIMEOUT     **timeout
+MPI_ERR_SESSION      **session
+MPI_ERR_PROC_ABORTED **proc_aborted
+MPI_ERR_VALUE_TOO_LARGE **valuetoolarge
+MPI_ERR_ERRHANDLER   **errhandler

@@ -522,6 +522,10 @@ Special value for error codes array:
 .   MPI_ERR_RMA_SHARED        - Memory cannot be shared (e.g., some process in
  the group of the specified communicator cannot expose shared memory)
 .   MPI_ERR_RMA_FLAVOR        - Passed window has the wrong flavor for the
+.   MPI_ERR_SESSION           - Invalid session argument
+.   MPI_ERR_PROC_ABORTED      - Trying to communicate with aborted processes
+.   MPI_ERR_VALUE_TOO_LARGE   - Value is too large to store
+.   MPI_ERR_ERRHANDLER        - Invalid error handler argument
  called function
 -   MPI_ERR_LASTCODE          - Last error code -- always at end
 

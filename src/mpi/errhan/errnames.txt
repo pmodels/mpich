@@ -488,6 +488,7 @@ unexpected messages queued.
 **badcase:INTERNAL ERROR: unexpected value in case statement
 **badcase %d:INTERNAL ERROR: unexpected value in case statement (value=%d)
 **node_root_rank:Unable to get the node root rank
+**proc_aborted:Process was aborted
 **proc_failed:Process failed
 **failure_pending:Request pending due to failure
 **revoked:Communication object revoked
@@ -899,6 +900,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **procnamefailed:Failed to get processor name
 
 **notsuppmultithread:this functionality is not supported when the thread level is greater than MPI_THREAD_SINGLE
+**valuetoolarge:Value is too large to store
 
 #
 # mpi functions
