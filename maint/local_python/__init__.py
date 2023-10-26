@@ -82,7 +82,7 @@ class MPI_API_Global:
         'COMMUNICATOR': "MPI_ERR_COMM",
         'GROUP': "MPI_ERR_GROUP",
         'DATATYPE': "MPI_ERR_TYPE",
-        'ERRHANDLER': "MPI_ERR_ARG",
+        'ERRHANDLER': "MPI_ERR_ERRHANDLER",
         'OPERATION': "MPI_ERR_OP",
         'INFO': "MPI_ERR_INFO",
         'WINDOW': "MPI_ERR_WIN",

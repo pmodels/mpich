@@ -693,9 +693,11 @@ enum MPIR_Combiner_enum {
 #define MPI_T_ERR_NOT_SUPPORTED    78  /* Requested functionality not supported */
 #define MPI_T_ERR_NOT_ACCESSIBLE   79  /* Requested functionality not accessible */
 
+#define MPI_ERR_ERRHANDLER         80  /* Invalid errhandler handle */
+
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a
 					   predefined error class */
-#define MPICH_ERR_LAST_CLASS 79     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 80     /* It is also helpful to know the
 				       last valid class */
 
 #define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
