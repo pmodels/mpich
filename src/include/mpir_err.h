@@ -692,11 +692,11 @@ cvars:
 
 #define MPIR_ERRTEST_ERRHANDLER(errhandler_,err_)                       \
     if (errhandler_ == MPI_ERRHANDLER_NULL) {                           \
-        MPIR_ERR_SETANDSTMT(err_,MPI_ERR_ARG,goto fn_fail,"**errhandlernull"); \
+        MPIR_ERR_SETANDSTMT(err_,MPI_ERR_ERRHANDLER,goto fn_fail,"**errhandlernull"); \
     }                                                                   \
     else {                                                              \
         MPIR_ERRTEST_VALID_HANDLE(errhandler_,MPIR_ERRHANDLER,          \
-                                  err_,MPI_ERR_ARG,"**errhandler");     \
+                                  err_,MPI_ERR_ERRHANDLER,"**errhandler");     \
     }
 
 #define MPIR_ERRTEST_INFO(info_, err_)                                  \

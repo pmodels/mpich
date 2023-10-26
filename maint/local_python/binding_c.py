@@ -1885,7 +1885,7 @@ def dump_validate_handle(func, p):
         G.err_codes['MPI_ERR_WIN'] = 1
         G.out.append("MPIR_ERRTEST_WIN(%s, mpi_errno);" % name)
     elif kind == "ERRHANDLER":
-        G.err_codes['MPI_ERR_ARG'] = 1
+        G.err_codes['MPI_ERR_ERRHANDLER'] = 1
         G.out.append("MPIR_ERRTEST_ERRHANDLER(%s, mpi_errno);" % name)
     elif kind == "REQUEST":
         G.err_codes['MPI_ERR_REQUEST'] = 1
