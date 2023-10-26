@@ -227,7 +227,7 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
             break;
     }
 
-    MPIR_Request_free(request_ptr);
+    mpi_errno = MPIR_Request_free_return(request_ptr);
 
     return mpi_errno;
 }

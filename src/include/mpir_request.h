@@ -500,7 +500,8 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_null_recv(void)
 }
 
 int MPIR_Grequest_free(MPIR_Request * request_ptr);
-static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_safety)
+static inline void MPIR_Request_free_with_safety(MPIR_Request * req,
+                                                 int need_safety, int *errno_out)
 {
     int pool = MPIR_REQUEST_POOL(req);
 
@@ -542,6 +543,7 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
         }
 #endif
 
+        int mpi_errno;          /* for Grequest free_fn return */
         switch (req->kind) {
             case MPIR_REQUEST_KIND__SEND:
                 MPII_SENDQ_FORGET(req);
@@ -561,9 +563,11 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
                 MPID_Part_request_free_hook(req);
                 break;
             case MPIR_REQUEST_KIND__GREQUEST:
-                /* FIXME: error return? */
-                MPIR_Grequest_free(req);
+                mpi_errno = MPIR_Grequest_free(req);
                 MPL_free(req->u.ureq.greq_fns);
+                if (errno_out) {
+                    *errno_out = mpi_errno;
+                }
                 break;
             default:
                 break;
@@ -595,18 +599,26 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
 
 MPL_STATIC_INLINE_PREFIX void MPIR_Request_free_safe(MPIR_Request * req)
 {
-    MPIR_Request_free_with_safety(req, 1);
+    MPIR_Request_free_with_safety(req, 1, NULL);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIR_Request_free_unsafe(MPIR_Request * req)
 {
-    MPIR_Request_free_with_safety(req, 0);
+    MPIR_Request_free_with_safety(req, 0, NULL);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIR_Request_free(MPIR_Request * req)
 {
     /* The default is to assume we need safety unless it's global thread granularity */
-    MPIR_Request_free_with_safety(req, 1);
+    MPIR_Request_free_with_safety(req, 1, NULL);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Request_free_return(MPIR_Request * req)
+{
+    /* Same as MPIR_Request_free, bur return mpi_errno. It is relevant for Grequest free_fn */
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Request_free_with_safety(req, 1, &mpi_errno);
+    return mpi_errno;
 }
 
 /* Requests that are not created inside device (general requests, nonblocking collective
