@@ -79,8 +79,9 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     /* Set the number of tag bits. The device may override this value. */
     MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;
 
-    /* FIXME: we should support requested kinds via mpiexec */
-    MPIR_get_supported_memory_kinds(NULL, &MPIR_Process.memory_alloc_kinds);
+    char *requested_kinds = MPIR_pmi_get_jobattr("PMI_mpi_memory_alloc_kinds");
+    MPIR_get_supported_memory_kinds(requested_kinds, &MPIR_Process.memory_alloc_kinds);
+    MPL_free(requested_kinds);
 
     return mpi_errno;
 }
