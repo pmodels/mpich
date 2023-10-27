@@ -412,7 +412,7 @@ static void waitall_enqueue_cb(void *data)
 {
     struct waitall_data *p = data;
 
-    MPIR_Request **reqs = MPL_malloc(p->count * sizeof(MPIR_Request), MPL_MEM_OTHER);
+    MPIR_Request **reqs = MPL_malloc(p->count * sizeof(MPIR_Request *), MPL_MEM_OTHER);
     MPIR_Assert(reqs);
 
     for (int i = 0; i < p->count; i++) {
