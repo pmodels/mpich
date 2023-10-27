@@ -231,17 +231,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        This is the threshold to start using GPU direct RDMA.
-
-    - name        : MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD
-      category    : CH4_OFI
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        The threshold to start using GPU RDMA.
+        The threshold to start using GPU direct RDMA.
 
     - name        : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS
       category    : CH4_OFI
@@ -507,6 +497,9 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, enable pipeline for GPU data transfer.
+        GPU pipeline does not support non-contiguous datatypes or mixed buffer types
+        (i.e. GPU send buffer, host recv buffer). If GPU pipeline is enabled, the unsupported
+        scenarios will cause undefined behavior if encountered.
 
     - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD
       category    : CH4_OFI
@@ -516,7 +509,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        This is the threshold to start using GPU direct RDMA.
+        This is the threshold to start using GPU pipeline.
 
     - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ
       category    : CH4_OFI
