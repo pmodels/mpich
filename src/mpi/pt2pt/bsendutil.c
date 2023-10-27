@@ -751,10 +751,7 @@ static int MPIR_Bsend_progress(struct MPII_BsendBuffer_user *user)
         MPIR_Request *req = active->request;
         if (MPIR_Request_is_complete(req)) {
             MPIR_Bsend_free_segment(user, active);
-            /* FIXME: how can req be persistent? Is this a left-over */
-            if (!MPIR_Request_is_persistent(req)) {
-                MPIR_Request_free(req);
-            }
+            MPIR_Request_free(req);
         }
         active = next_active;
     }
