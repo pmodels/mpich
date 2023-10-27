@@ -404,6 +404,8 @@ static const char *get_jobattr(struct pmip_downstream *p, const char *key)
         int universe_size = get_universe_size(p);
         snprintf(universe_str, 64, "%d", universe_size);
         return universe_str;
+    } else if (!strcmp(key, "PMI_mpi_memory_alloc_kinds")) {
+        return HYD_pmcd_pmip.user_global.memory_alloc_kinds;
     }
     return NULL;
 }

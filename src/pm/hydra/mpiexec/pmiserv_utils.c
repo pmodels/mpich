@@ -118,6 +118,12 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
     HYD_STRING_STASH(*proxy_stash,
                      HYDU_int_to_str(HYD_server_info.user_global.gpu_subdevs_per_proc), status);
 
+    if (HYD_server_info.user_global.memory_alloc_kinds != NULL) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--memory-alloc-kinds"), status);
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_server_info.user_global.memory_alloc_kinds),
+                         status);
+    }
+
     if (pgid == 0 && HYD_server_info.is_singleton) {
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--singleton-port"), status);
         HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.singleton_port), status);

@@ -373,6 +373,9 @@ struct HYD_user_global {
     /* Network interface */
     char *iface;
 
+    /* requested memory allocation kinds */
+    char *memory_alloc_kinds;
+
     /* Other random parameters */
     int enablex;
     int debug;
