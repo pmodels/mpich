@@ -6,6 +6,7 @@
 #include "adio.h"
 #include "adio_extern.h"
 #include "adio_cb_config_list.h"
+#include "hint_fns.h"
 
 #include "mpio.h"
 static int is_aggregator(int rank, ADIO_File fd);
@@ -127,6 +128,19 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
             goto fn_exit;
     }
     ADIOI_Info_set(fd->info, "romio_filesystem_type", fd->fns->fsname);
+
+    /* The dup'ed comm should report the default memory allocation kinds
+     * (if any), since hints are not inherited during MPI_Comm_dup. We
+     * just ignore any assertion hints for now. */
+    MPI_Info comm_info;
+    char *memory_kinds = NULL;
+    MPI_Comm_get_info(comm, &comm_info);
+    ADIOI_Info_check_and_install_str(fd, comm_info, "mpi_memory_alloc_kinds", &memory_kinds,
+                                     myname, error_code);
+    if (memory_kinds) {
+        ADIOI_Free(memory_kinds);
+    }
+    MPI_Info_free(&comm_info);
 
     /* Instead of repeatedly allocating this buffer in collective read/write,
      * allocating up-front might make memory management on small platforms
