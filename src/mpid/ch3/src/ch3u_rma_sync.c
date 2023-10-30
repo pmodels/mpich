@@ -729,6 +729,12 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
             }
         }
         /* --END ERROR HANDLING-- */
+
+        for (i = 0; i < post_grp_size; i++) {
+            if (req[i]) {
+                MPIR_Request_free(req[i]);
+            }
+        }
     }
 
   fn_exit:
@@ -856,6 +862,10 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
                 }
             }
             /* --END ERROR HANDLING-- */
+
+            for (i = 0; i < intra_cnt; i++) {
+                MPIR_Request_free(intra_start_req[i]);
+            }
         }
     }
 
