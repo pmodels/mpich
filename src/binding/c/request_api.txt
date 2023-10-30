@@ -266,9 +266,20 @@ MPI_Testall:
             if (request_ptrs[i] && !MPIR_Request_is_persistent(request_ptrs[i])) {
                 int rc = MPIR_Request_free_return(request_ptrs[i]);
                 array_of_requests[i] = MPI_REQUEST_NULL;
-                if (rc && array_of_statuses != MPI_STATUSES_IGNORE) {
-                    array_of_statuses[i].MPI_ERROR = rc;
-                    mpi_errno = MPI_ERR_IN_STATUS;
+                if (rc) {
+                    if (array_of_statuses == MPI_STATUSES_IGNORE) {
+                        mpi_errno = MPI_ERR_IN_STATUS;
+                    } else if (mpi_errno == MPI_ERR_IN_STATUS) {
+                        array_of_statuses[i].MPI_ERROR = rc;
+                    } else {
+                        MPIR_Assert(mpi_errno == MPI_SUCCESS);
+                        /* init all statuses' MPI_ERROR fields first */
+                        for (int j = 0; j < count; j++) {
+                            array_of_statuses[j].MPI_ERROR = MPI_SUCCESS;
+                        }
+                        mpi_errno = MPI_ERR_IN_STATUS;
+                        array_of_statuses[i].MPI_ERROR = rc;
+                    }
                 }
             }
         }
@@ -328,9 +339,20 @@ MPI_Testsome:
         if (request_ptrs[idx] && !MPIR_Request_is_persistent(request_ptrs[idx])) {
             int rc = MPIR_Request_free_return(request_ptrs[idx]);
             array_of_requests[idx] = MPI_REQUEST_NULL;
-            if (rc && array_of_statuses != MPI_STATUSES_IGNORE) {
-                array_of_statuses[i].MPI_ERROR = rc;
-                mpi_errno = MPI_ERR_IN_STATUS;
+            if (rc) {
+                if (array_of_statuses == MPI_STATUSES_IGNORE) {
+                    mpi_errno = MPI_ERR_IN_STATUS;
+                } else if (mpi_errno == MPI_ERR_IN_STATUS) {
+                    array_of_statuses[i].MPI_ERROR = rc;
+                } else {
+                    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+                    /* init all statuses' MPI_ERROR fields first */
+                    for (int j = 0; j < *outcount; j++) {
+                        array_of_statuses[j].MPI_ERROR = MPI_SUCCESS;
+                    }
+                    mpi_errno = MPI_ERR_IN_STATUS;
+                    array_of_statuses[i].MPI_ERROR = rc;
+                }
             }
         }
     }
@@ -389,9 +411,20 @@ MPI_Waitall:
         if (request_ptrs[i] && !MPIR_Request_is_persistent(request_ptrs[i])) {
             int rc = MPIR_Request_free_return(request_ptrs[i]);
             array_of_requests[i] = MPI_REQUEST_NULL;
-            if (rc && array_of_statuses != MPI_STATUSES_IGNORE) {
-                array_of_statuses[i].MPI_ERROR = rc;
-                mpi_errno = MPI_ERR_IN_STATUS;
+            if (rc) {
+                if (array_of_statuses == MPI_STATUSES_IGNORE) {
+                    mpi_errno = MPI_ERR_IN_STATUS;
+                } else if (mpi_errno == MPI_ERR_IN_STATUS) {
+                    array_of_statuses[i].MPI_ERROR = rc;
+                } else {
+                    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+                    /* init all statuses' MPI_ERROR fields first */
+                    for (int j = 0; j < count; j++) {
+                        array_of_statuses[j].MPI_ERROR = MPI_SUCCESS;
+                    }
+                    mpi_errno = MPI_ERR_IN_STATUS;
+                    array_of_statuses[i].MPI_ERROR = rc;
+                }
             }
         }
     }
@@ -467,9 +500,20 @@ MPI_Waitsome:
         if (request_ptrs[idx] && !MPIR_Request_is_persistent(request_ptrs[idx])) {
             int rc = MPIR_Request_free_return(request_ptrs[idx]);
             array_of_requests[idx] = MPI_REQUEST_NULL;
-            if (rc && array_of_statuses != MPI_STATUSES_IGNORE) {
-                array_of_statuses[i].MPI_ERROR = rc;
-                mpi_errno = MPI_ERR_IN_STATUS;
+            if (rc) {
+                if (array_of_statuses == MPI_STATUSES_IGNORE) {
+                    mpi_errno = MPI_ERR_IN_STATUS;
+                } else if (mpi_errno == MPI_ERR_IN_STATUS) {
+                    array_of_statuses[i].MPI_ERROR = rc;
+                } else {
+                    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+                    /* init all statuses' MPI_ERROR fields first */
+                    for (int j = 0; j < *outcount; j++) {
+                        array_of_statuses[j].MPI_ERROR = MPI_SUCCESS;
+                    }
+                    mpi_errno = MPI_ERR_IN_STATUS;
+                    array_of_statuses[i].MPI_ERROR = rc;
+                }
             }
         }
     }
