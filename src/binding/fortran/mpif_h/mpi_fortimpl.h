@@ -382,4 +382,7 @@ typedef void (FORT_CALL F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *,
 
 void MPII_Keyval_set_f90_proxy(int keyval);
 
+extern FORT_DLL_SPEC void FORT_CALL mpi_alloc_mem_cptr_(MPI_Aint * size, MPI_Fint * info,
+                                                        void **baseptr, MPI_Fint * ierr);
+
 #endif /* MPI_FORTIMPL_H_INCLUDED */

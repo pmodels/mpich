@@ -2140,6 +2140,7 @@ MPIMODNAME=mpi
 MPICONSTMODNAME=mpi_constants
 MPISIZEOFMODNAME=mpi_sizeofs
 MPIBASEMODNAME=mpi_base
+PMPIBASEMODNAME=pmpi_base
 
 # F08 binding stuff
 MPI_F08_LINK_CONSTANTS_NAME=mpi_f08_link_constants
@@ -2200,6 +2201,7 @@ if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
         MPICONSTMODNAME=MPI_CONSTANTS
 	MPISIZEOFMODNAME=MPI_SIZEOFS
 	MPIBASEMODNAME=MPI_BASE
+	PMPIBASEMODNAME=PMPI_BASE
         MPI_F08_NAME=MPI_F08
         MPI_F08_LINK_CONSTANTS_NAME=MPI_F08_LINK_CONSTANTS
         MPI_F08_CALLBACKS_NAME=MPI_F08_CALLBACKS
@@ -2216,6 +2218,7 @@ if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
         MPICONSTMODNAME=mpi_constants
 	MPISIZEOFMODNAME=mpi_sizeofs
 	MPIBASEMODNAME=mpi_base
+	PMPIBASEMODNAME=pmpi_base
         MPI_F08_NAME=mpi_f08
         MPI_F08_LINK_CONSTANTS_NAME=mpi_f08_link_constants
         MPI_F08_CALLBACKS_NAME=mpi_f08_callbacks
@@ -2232,6 +2235,7 @@ if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
     AC_SUBST(MPICONSTMODNAME)
     AC_SUBST(MPISIZEOFMODNAME)
     AC_SUBST(MPIBASEMODNAME)
+    AC_SUBST(PMPIBASEMODNAME)
 
     AC_SUBST(MPI_F08_NAME)
     AC_SUBST(MPI_F08_LINK_CONSTANTS_NAME)

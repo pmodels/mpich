@@ -8,6 +8,7 @@ MPIMOD           = @MPIMODNAME@
 MPICONSTMOD      = @MPICONSTMODNAME@
 MPISIZEOFMOD     = @MPISIZEOFMODNAME@
 MPIBASEMOD       = @MPIBASEMODNAME@
+PMPIBASEMOD       = @PMPIBASEMODNAME@
 FC_COMPILE_MODS  = $(LTFCCOMPILE)
 
 # ensure that the buildiface script ends up in the release tarball
@@ -225,7 +226,7 @@ src/binding/fortran/use_mpi/pmpi_base.$(MOD)-stamp: src/binding/fortran/use_mpi/
 	   fi )
 	@mv src/binding/fortran/use_mpi/pmpi_base-tmp src/binding/fortran/use_mpi/pmpi_base.$(MOD)-stamp
 
-src/binding/fortran/use_mpi/pmpi_base.lo src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD): src/binding/fortran/use_mpi/pmpi_base.$(MOD)-stamp
+src/binding/fortran/use_mpi/pmpi_base.lo src/binding/fortran/use_mpi/$(PMPIBASEMOD).$(MOD): src/binding/fortran/use_mpi/pmpi_base.$(MOD)-stamp
 ## Recover from the removal of $@
 	@if test -f $@; then :; else \
 	  trap 'rm -rf src/binding/fortran/use_mpi/pmpi_base-lock src/binding/fortran/use_mpi/pmpi_base.$(MOD)-stamp' 1 2 13 15; \
@@ -243,14 +244,15 @@ src/binding/fortran/use_mpi/pmpi_base.lo src/binding/fortran/use_mpi/$(MPIBASEMO
 	  fi; \
 	fi
 
-CLEANFILES += src/binding/fortran/use_mpi/pmpi_base.$(MOD)-stamp src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD) src/binding/fortran/use_mpi/pmpi_base.lo src/binding/fortran/use_mpi/pmpi_base-tmp
+CLEANFILES += src/binding/fortran/use_mpi/pmpi_base.$(MOD)-stamp src/binding/fortran/use_mpi/$(PMPIBASEMOD).$(MOD) src/binding/fortran/use_mpi/pmpi_base.lo src/binding/fortran/use_mpi/pmpi_base-tmp
 
 
 mpi_fc_modules += \
     src/binding/fortran/use_mpi/$(MPIMOD).$(MOD) \
     src/binding/fortran/use_mpi/$(MPISIZEOFMOD).$(MOD) \
     src/binding/fortran/use_mpi/$(MPICONSTMOD).$(MOD) \
-    src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD)
+    src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD) \
+    src/binding/fortran/use_mpi/$(PMPIBASEMOD).$(MOD)
 
 # We need a free-format version of mpif.h with no external commands,
 # including no wtime/wtick (removing MPI_WTICK also removes MPI_WTIME,

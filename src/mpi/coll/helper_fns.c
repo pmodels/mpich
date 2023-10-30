@@ -567,14 +567,6 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
         }
     }
 
-    for (i = 0; i < numreq; ++i) {
-        /* The MPI_TAG field is not set for send operations, so if we want
-         * to check for the error bit in the tag below, we should initialize all
-         * tag fields here. */
-        status_array[i].MPI_TAG = 0;
-        status_array[i].MPI_SOURCE = MPI_PROC_NULL;
-    }
-
     mpi_errno = MPIR_Waitall(numreq, requests, status_array);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -582,9 +574,11 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
      * in the future, this function is used for multiple collectives at a
      * single time, we may have to change that. */
     for (i = 0; i < numreq; ++i) {
+        if (requests[i]->kind == MPIR_REQUEST_KIND__RECV) {
+            mpi_errno = MPIR_Process_status(&status_array[i]);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
         MPIR_Request_free(requests[i]);
-        mpi_errno = MPIR_Process_status(&status_array[i]);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
