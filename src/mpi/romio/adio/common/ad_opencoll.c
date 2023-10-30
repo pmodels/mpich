@@ -117,6 +117,9 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
              * lower-level file system driver (e.g. 'bluegene') collected it
              * (not all do)*/
             stats_type = make_stats_type(fd);
+            /* in this branch the non-aggregators are returning early.
+             * MPI_Bcast here matches the MPI_Bcast from the aggregators after
+             * they open the file and find out striping information */
             MPI_Bcast(MPI_BOTTOM, 1, stats_type, fd->hints->ranklist[0], fd->comm);
             ADIOI_Assert(fd->blksize > 0);
             /* some file systems (e.g. lustre) will inform the user via the
