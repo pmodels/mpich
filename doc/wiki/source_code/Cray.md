@@ -4,19 +4,33 @@ This page describes how to build mpich from the
 [main](https://github.com/pmodels/mpich/tree/main)
 branch of the MPICH git [repository](https://github.com/pmodels/mpich).
 
+## General
+
+Building on the Cray is like other systems: you'll need fairly
+up-to-date Autotools (autoconf \>= 2.67, automake \>= 1.15, libtool \>=
+2.4.4). On Argonne's theta machine, you can find these in
+`~robl/soft/cray/autotools`.  On Polaris, these seem to be new enough already.
+
+## Slingshot
+
+On Cray systems the vendor-supplied libfabric should be used to get slingshot support
+
+
+### Configure options
+
+You can leave off the 'cuda' options if you are e.g. testing only I/O or building.
+The Cray environment doesn't provide convenience environment variables for the 'libfabric' path, so you'll have to update that by hand when necessary
+
+    --with-cuda=/soft/compilers/cudatoolkit/cuda-11.4.4 --with-cuda-sm=80 --with-pmi=pmi2 --with-pmi2=${CRAY_PMI_PREFIX} --with-pm=no --with-libfabric=/opt/cray/libfabric/1.11.0.4.125
+
+## GNI
+
 This build will not perform as well as the vendor's optimized MPI. The
 libfabric 'gni' provider was LANL + Intel + Cray open source reference
 implementation. It was never particularly optimized and won't perform
 well on KNL. However, building the open source MPICH provides a way to
 do before/after testing of optimizations. Just remember to compare MPICH
 to MPICH and not MPICH to MPT.
-
-## Cray build instructions
-
-Building on the Cray is like other systems: you'll need fairly
-up-to-date Autotools (autoconf \>= 2.67, automake \>= 1.15, libtool \>=
-2.4.4). On Argonne's theta machine, you can find these in
-`~robl/soft/cray/autotools`
 
 ### Configure Options
 
@@ -35,24 +49,12 @@ All in one place so you can cut and paste:
 configure --with-device=ch4:ofi:gni --with-file-system=lustre --with-pm=no --with-pmi=cray --enable-ugni-static
 ```
 
+
+
 ### Build notes
 
-  - libfabric will use standard atomic types if detected, but the Intel
-    compilers do not export all the types needed. You will need
-
-<https://github.com/ofiwg/libfabric/pull/3984/> until we update
-libfabric to something newer than 1.6.0
-
-  - In fact, there are atomic types all over the place, and libfabric's
-    gni provider doesn't have a fallback like the above general patch.
-    For now load `PrgEnv-gnu` into your environment. That should bring
-    in a fairly recent gcc (gcc-7.3 as of this writing)
-
-  - Libfabric-1.7.1 and older will fail to find some gni header files
-    and might tell you \`WARNING: GNI provider requires CLE 5.2.UP04 or
-    higher. Disabling gni provider.\`. Upgrade to libfabric-1.7.2 or
-    newer, or cherry-pick
-    <https://github.com/pmodels/libfabric/commit/192d52ce53e8>
+Despite requesting pmi2 at configure time, I had to explicitly request it at
+run-time with `export MPIR_CVAR_PMI_VERSION=2`
 
 Since we used `PrgEnv-gnu` to build MPICH, you will need to make sure
 `PrgEnv-gnu` is in your environment. For me, my submitted jobs kept
