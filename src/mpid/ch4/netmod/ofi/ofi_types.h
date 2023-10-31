@@ -119,7 +119,7 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 #define MPIDI_OFI_TAG_BITS_a     31
 /* without CQ data */
 #define MPIDI_OFI_CONTEXT_BITS_b 16
-#define MPIDI_OFI_SOURCE_BITS_b  24
+#define MPIDI_OFI_SOURCE_BITS_b  23
 #define MPIDI_OFI_TAG_BITS_b     20
 
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS == MPIDI_OFI_ON
