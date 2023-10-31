@@ -139,9 +139,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_HMEM_PSM2               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_PSM2            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_PSM2 (0)
-#define MPIDI_OFI_CONTEXT_BITS_PSM2              (20)
-#define MPIDI_OFI_SOURCE_BITS_PSM2               (0)
-#define MPIDI_OFI_TAG_BITS_PSM2                  (31)
+#define MPIDI_OFI_CONTEXT_BITS_PSM2              MPIDI_OFI_CONTEXT_BITS_a
+#define MPIDI_OFI_SOURCE_BITS_PSM2               MPIDI_OFI_SOURCE_BITS_a
+#define MPIDI_OFI_TAG_BITS_PSM2                  MPIDI_OFI_TAG_BITS_a
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_PSM2      MPIDI_OFI_ON
 #define MPIDI_OFI_MAJOR_VERSION_PSM2             1
 #define MPIDI_OFI_MINOR_VERSION_PSM2             6
@@ -211,9 +211,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_HMEM_PSM3               MPIDI_OFI_ON
 #define MPIDI_OFI_NUM_AM_BUFFERS_PSM3            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_PSM3 (0)
-#define MPIDI_OFI_CONTEXT_BITS_PSM3              (20)
-#define MPIDI_OFI_SOURCE_BITS_PSM3               (0)
-#define MPIDI_OFI_TAG_BITS_PSM3                  (31)
+#define MPIDI_OFI_CONTEXT_BITS_PSM3              MPIDI_OFI_CONTEXT_BITS_a
+#define MPIDI_OFI_SOURCE_BITS_PSM3               MPIDI_OFI_SOURCE_BITS_a
+#define MPIDI_OFI_TAG_BITS_PSM3                  MPIDI_OFI_TAG_BITS_a
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_PSM3      MPIDI_OFI_ON
 #define MPIDI_OFI_MAJOR_VERSION_PSM3             1
 #define MPIDI_OFI_MINOR_VERSION_PSM3             6
@@ -283,9 +283,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_HMEM_SOCKETS               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_SOCKETS            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_SOCKETS  (0)
-#define MPIDI_OFI_CONTEXT_BITS_SOCKETS              (20)
-#define MPIDI_OFI_SOURCE_BITS_SOCKETS               (0)
-#define MPIDI_OFI_TAG_BITS_SOCKETS                  (31)
+#define MPIDI_OFI_CONTEXT_BITS_SOCKETS              MPIDI_OFI_CONTEXT_BITS_a
+#define MPIDI_OFI_SOURCE_BITS_SOCKETS               MPIDI_OFI_SOURCE_BITS_a
+#define MPIDI_OFI_TAG_BITS_SOCKETS                  MPIDI_OFI_TAG_BITS_a
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_SOCKETS      MPIDI_OFI_ON
 #define MPIDI_OFI_MAJOR_VERSION_SOCKETS             1
 #define MPIDI_OFI_MINOR_VERSION_SOCKETS             5
@@ -355,9 +355,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_HMEM_BGQ               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_BGQ            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_BGQ  (0)
-#define MPIDI_OFI_CONTEXT_BITS_BGQ              (20)
-#define MPIDI_OFI_SOURCE_BITS_BGQ               (0)
-#define MPIDI_OFI_TAG_BITS_BGQ                  (31)
+#define MPIDI_OFI_CONTEXT_BITS_BGQ              MPIDI_OFI_CONTEXT_BITS_a
+#define MPIDI_OFI_SOURCE_BITS_BGQ               MPIDI_OFI_SOURCE_BITS_a
+#define MPIDI_OFI_TAG_BITS_BGQ                  MPIDI_OFI_TAG_BITS_a
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_BGQ      MPIDI_OFI_ON
 #define MPIDI_OFI_MAJOR_VERSION_BGQ             1
 #define MPIDI_OFI_MINOR_VERSION_BGQ             5
@@ -431,6 +431,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
                                                          * RMA support is fixed. */
 #define MPIDI_OFI_CONTEXT_BITS_CXI                  (20)
 #define MPIDI_OFI_SOURCE_BITS_CXI                   (0)
+/* FIXME: What is the actual bit space? We need make sure to account for
+ * MPIDI_OFI_PROTOCOL_BITS. */
 #define MPIDI_OFI_TAG_BITS_CXI                      (20)        /* The CXI provider has a smaller tag space
                                                                  * than other providers so the number of
                                                                  * tag bits exposed to the user is
@@ -511,9 +513,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_HMEM_RXM                  MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_RXM               MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_RXM (0)
-#define MPIDI_OFI_CONTEXT_BITS_RXM                 (20)
-#define MPIDI_OFI_SOURCE_BITS_RXM                  (0)
-#define MPIDI_OFI_TAG_BITS_RXM                     (31)
+#define MPIDI_OFI_CONTEXT_BITS_RXM                 MPIDI_OFI_CONTEXT_BITS_a
+#define MPIDI_OFI_SOURCE_BITS_RXM                  MPIDI_OFI_SOURCE_BITS_a
+#define MPIDI_OFI_TAG_BITS_RXM                     MPIDI_OFI_TAG_BITS_a
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_RXM         MPIDI_OFI_ON
 #define MPIDI_OFI_MAJOR_VERSION_RXM                 1
 #define MPIDI_OFI_MINOR_VERSION_RXM                 6
@@ -582,9 +584,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_HMEM_VERBS_RXM               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_VERBS_RXM            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_VERBS_RXM  (0)
-#define MPIDI_OFI_CONTEXT_BITS_VERBS_RXM              (20)
-#define MPIDI_OFI_SOURCE_BITS_VERBS_RXM               (0)
-#define MPIDI_OFI_TAG_BITS_VERBS_RXM                  (31)
+#define MPIDI_OFI_CONTEXT_BITS_VERBS_RXM              MPIDI_OFI_CONTEXT_BITS_a
+#define MPIDI_OFI_SOURCE_BITS_VERBS_RXM               MPIDI_OFI_SOURCE_BITS_a
+#define MPIDI_OFI_TAG_BITS_VERBS_RXM                  MPIDI_OFI_TAG_BITS_a
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_VERBS_RXM      MPIDI_OFI_ON
 #define MPIDI_OFI_MAJOR_VERSION_VERBS_RXM             1
 #define MPIDI_OFI_MINOR_VERSION_VERBS_RXM             5
@@ -655,9 +657,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_HMEM_GNI               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_GNI            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_GNI (0)
-#define MPIDI_OFI_CONTEXT_BITS_GNI              (16)
-#define MPIDI_OFI_SOURCE_BITS_GNI               (24)
-#define MPIDI_OFI_TAG_BITS_GNI                  (20)
+#define MPIDI_OFI_CONTEXT_BITS_GNI              MPIDI_OFI_CONTEXT_BITS_b
+#define MPIDI_OFI_SOURCE_BITS_GNI               MPIDI_OFI_SOURCE_BITS_b
+#define MPIDI_OFI_TAG_BITS_GNI                  MPIDI_OFI_TAG_BITS_b
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_GNI      MPIDI_OFI_ON
 #define MPIDI_OFI_MAJOR_VERSION_GNI             1
 #define MPIDI_OFI_MINOR_VERSION_GNI             5
@@ -735,9 +737,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_SOURCE_MASK_DEFAULT               (0x0000000000000000ULL)     /* We require support for immediate data
                                                                                  * so this field is zeroed */
 #define MPIDI_OFI_TAG_MASK_DEFAULT                  (0x000000007FFFFFFFULL)
-#define MPIDI_OFI_CONTEXT_BITS_DEFAULT              (20)
-#define MPIDI_OFI_SOURCE_BITS_DEFAULT               (0)
-#define MPIDI_OFI_TAG_BITS_DEFAULT                  (31)
+#define MPIDI_OFI_CONTEXT_BITS_DEFAULT              MPIDI_OFI_CONTEXT_BITS_a
+#define MPIDI_OFI_SOURCE_BITS_DEFAULT               MPIDI_OFI_SOURCE_BITS_a
+#define MPIDI_OFI_TAG_BITS_DEFAULT                  MPIDI_OFI_TAG_BITS_a
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_DEFAULT      MPIDI_OFI_ON
 #define MPIDI_OFI_SYNC_SEND_ACK_DEFAULT             (0x0010000000000000ULL)
 #define MPIDI_OFI_DYNPROC_SEND_DEFAULT              (0x0020000000000000ULL)
@@ -775,9 +777,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_SOURCE_MASK_MINIMAL               (0x00000FFFFFF00000ULL)     /* assume that provider does not support immediate data
                                                                                  * so this field needs to be available */
 #define MPIDI_OFI_TAG_MASK_MINIMAL                  (0x00000000000FFFFFULL)
-#define MPIDI_OFI_CONTEXT_BITS_MINIMAL              (16)
-#define MPIDI_OFI_SOURCE_BITS_MINIMAL               (24)
-#define MPIDI_OFI_TAG_BITS_MINIMAL                  (20)
+#define MPIDI_OFI_CONTEXT_BITS_MINIMAL              MPIDI_OFI_CONTEXT_BITS_b
+#define MPIDI_OFI_SOURCE_BITS_MINIMAL               MPIDI_OFI_SOURCE_BITS_b
+#define MPIDI_OFI_TAG_BITS_MINIMAL                  MPIDI_OFI_SOURCE_BITS_b
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_MINIMAL      MPIDI_OFI_ON
 #define MPIDI_OFI_SYNC_SEND_MINIMAL                 (0x1000000000000000ULL)
 #define MPIDI_OFI_DYNPROC_SEND_MINIMAL              (0x2000000000000000ULL)

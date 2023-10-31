@@ -110,6 +110,18 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 #define MPIDI_OFI_PROTOCOL_BITS (5)
 #define MPIDI_OFI_PROTOCOL_MASK_BITS (2)
 
+/* Define constants for default bits allocation. The actual bits are defined in
+ * ofi_capability_sets.h, which may use these defaults or define its own.
+ */
+/* with CQ data */
+#define MPIDI_OFI_CONTEXT_BITS_a 20
+#define MPIDI_OFI_SOURCE_BITS_a  0
+#define MPIDI_OFI_TAG_BITS_a     31
+/* without CQ data */
+#define MPIDI_OFI_CONTEXT_BITS_b 16
+#define MPIDI_OFI_SOURCE_BITS_b  24
+#define MPIDI_OFI_TAG_BITS_b     20
+
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS == MPIDI_OFI_ON
 #define MPIDI_OFI_SYNC_SEND_ACK      (1ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
 #define MPIDI_OFI_DYNPROC_SEND       (2ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
