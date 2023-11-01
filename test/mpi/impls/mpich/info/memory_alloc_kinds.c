@@ -21,16 +21,27 @@ int main(int argc, char *argv[])
 
     MPI_Info_get(MPI_INFO_ENV, key, MPI_MAX_INFO_VAL, value, &flag);
     if (flag) {
-        /* MPICH will return the default kinds plus any user requests
-         * that are also supported. As of MPI-4.1, that only includes the
-         * mpi kind with restrictors. */
-        errs += check_value(value, "mpi,system,mpi:alloc_mem");
-    } else {
-        /* MPICH supports this key since MPICH 4.2.0 */
+        /* It was discussed in the October 2023 MPI Forum meeting that
+         * if a value for mpi_memory_alloc_kinds is returned from
+         * MPI_INFO_ENV, it should be the requested value. This is
+         * consistent with the other keys defined in MPI_INFO_ENV. Like
+         * those keys, returning a value for mpi_memory_alloc_kind is
+         * optional, and MPICH does not support it at this time. */
         errs++;
     }
 
-    /* test if session gets the same default */
+    /* test if MPI_COMM_WORLD gets the right value */
+    MPI_Info cinfo;
+    MPI_Comm_get_info(MPI_COMM_WORLD, &cinfo);
+    MPI_Info_get(cinfo, key, MPI_MAX_INFO_VAL, value, &flag);
+    MPI_Info_free(&cinfo);
+    if (flag) {
+        errs += check_value(value, "mpi,system,mpi:alloc_mem");
+    } else {
+        errs++;
+    }
+
+    /* test if session gets the right value */
     MPI_Info sinfo;
     MPI_Session session;
     MPI_Session_init(MPI_INFO_NULL, MPI_ERRORS_ARE_FATAL, &session);

@@ -67,10 +67,6 @@ void MPIR_Info_setup_env(MPIR_Info * info_ptr)
     info_init(info_ptr);
     /* FIXME: Currently this info object is missing some data as
      * defined by the standard. */
-
-    if (MPIR_Process.memory_alloc_kinds != NULL) {
-        MPIR_Info_push(info_ptr, "mpi_memory_alloc_kinds", MPIR_Process.memory_alloc_kinds);
-    }
 }
 
 #define INFO_INITIAL_SIZE 10
