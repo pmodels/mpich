@@ -60,6 +60,7 @@ static MPI_Datatype make_stats_type(ADIO_File fd)
 
 void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
 {
+    char value[MPI_MAX_INFO_VAL + 1];
     int orig_amode_excl, orig_amode_wronly;
     MPI_Comm tmp_comm;
     MPI_Datatype stats_type;    /* deferred open: some processes might not
@@ -105,7 +106,6 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
     /* if we are doing deferred open, non-aggregators should return now */
     if (fd->hints->deferred_open) {
         if (!(fd->is_agg)) {
-            char value[MPI_MAX_INFO_VAL + 1];
             /* we might have turned off EXCL for the aggregators.
              * restore access_mode that non-aggregators get the right
              * value from get_amode */
@@ -117,6 +117,9 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
              * lower-level file system driver (e.g. 'bluegene') collected it
              * (not all do)*/
             stats_type = make_stats_type(fd);
+            /* in this branch the non-aggregators are returning early.
+             * MPI_Bcast here matches the MPI_Bcast from the aggregators after
+             * they open the file and find out striping information */
             MPI_Bcast(MPI_BOTTOM, 1, stats_type, fd->hints->ranklist[0], fd->comm);
             ADIOI_Assert(fd->blksize > 0);
             /* some file systems (e.g. lustre) will inform the user via the
@@ -130,7 +133,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
             ADIOI_Info_set(fd->info, "striping_factor", value);
 
             snprintf(value, sizeof(value), "%d", fd->hints->start_iodevice);
-            ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
+            ADIOI_Info_set(fd->info, "start_iodevice", value);
 
             *error_code = MPI_SUCCESS;
             MPI_Type_free(&stats_type);
@@ -174,6 +177,16 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
     /* file domain code will get terribly confused in a hard-to-debug way if
      * gpfs blocksize not sensible */
     ADIOI_Assert(fd->blksize > 0);
+
+    /* set file striping hints */
+    snprintf(value, sizeof(value), "%d", fd->hints->striping_unit);
+    ADIOI_Info_set(fd->info, "striping_unit", value);
+
+    snprintf(value, sizeof(value), "%d", fd->hints->striping_factor);
+    ADIOI_Info_set(fd->info, "striping_factor", value);
+
+    snprintf(value, sizeof(value), "%d", fd->hints->start_iodevice);
+    ADIOI_Info_set(fd->info, "start_iodevice", value);
 
     /* for deferred open: this process has opened the file (because if we are
      * not an aggregaor and we are doing deferred open, we returned earlier)*/

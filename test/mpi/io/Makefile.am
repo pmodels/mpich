@@ -29,7 +29,8 @@ noinst_PROGRAMS = \
     simple_collective \
     external32_derived_dtype \
     tst_fileview \
-    zero_count
+    zero_count \
+    striped_hints
 
 
 if BUILD_MPIX_TESTS

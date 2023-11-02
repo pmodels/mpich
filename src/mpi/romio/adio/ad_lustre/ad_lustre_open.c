@@ -15,7 +15,7 @@ int ADIOI_LUSTRE_request_only_lock_ioctl(ADIO_File fd); /* in ad_lustre_lock.c *
 
 void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 {
-    int perm, old_mask, amode, amode_direct;
+    int perm, old_mask, amode, amode_direct, root;
     int lumlen, myrank, flag, set_layout = 0, err;
     struct lov_user_md *lum = NULL;
     char *value;
@@ -66,7 +66,7 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
         if (flag)
             str_factor = atoll(value);
 
-        ADIOI_Info_get(fd->info, "romio_lustre_start_iodevice", MPI_MAX_INFO_VAL, value, &flag);
+        ADIOI_Info_get(fd->info, "start_iodevice", MPI_MAX_INFO_VAL, value, &flag);
         if (flag)
             start_iodev = atoll(value);
     }
@@ -83,13 +83,15 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
     if (fd->fd_sys == -1)
         goto fn_exit;
 
+    root = (fd->hints->ranklist == NULL) ? 0 : fd->hints->ranklist[0];
+
     /* we can only set these hints on new files */
     /* It was strange and buggy to open the file in the hint path.  Instead,
      * we'll apply the file tunings at open time */
     if ((amode & O_CREAT) && set_layout) {
         /* if user has specified striping info, first aggregator tries to set
          * it */
-        if (myrank == fd->hints->ranklist[0] || fd->comm == MPI_COMM_SELF) {
+        if (myrank == root || fd->comm == MPI_COMM_SELF) {
             lum->lmm_magic = LOV_USER_MAGIC;
             lum->lmm_pattern = 0;
             /* crude check for overflow of lustre internal datatypes.
@@ -124,21 +126,17 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
      * lov_user_md struct changes in future */
     memset(lum, 0, lumlen);
     lum->lmm_magic = LOV_USER_MAGIC;
-    err = ioctl(fd->fd_sys, LL_IOC_LOV_GETSTRIPE, (void *) lum);
-    if (!err) {
-
-        fd->hints->striping_unit = lum->lmm_stripe_size;
-        snprintf(value, value_sz, "%d", lum->lmm_stripe_size);
-        ADIOI_Info_set(fd->info, "striping_unit", value);
-
-        fd->hints->striping_factor = lum->lmm_stripe_count;
-        snprintf(value, value_sz, "%d", lum->lmm_stripe_count);
-        ADIOI_Info_set(fd->info, "striping_factor", value);
-
-        fd->hints->start_iodevice = lum->lmm_stripe_offset;
-        snprintf(value, value_sz, "%d", lum->lmm_stripe_offset);
-        ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
-
+    if (myrank == root || fd->comm == MPI_COMM_SELF) {
+        /* only one rank needs to consult the file for striping information.
+         * In fact, only the i/o aggregators are in this path: we'll distribute
+         * stripe information to all processes in ad_opencoll.c and save them
+         * as hints in the generic hint processing code */
+        err = ioctl(fd->fd_sys, LL_IOC_LOV_GETSTRIPE, (void *) lum);
+        if (!err) {
+            fd->hints->striping_unit = lum->lmm_stripe_size;
+            fd->hints->striping_factor = lum->lmm_stripe_count;
+            fd->hints->start_iodevice = lum->lmm_stripe_offset;
+        }
     }
 
     if (fd->access_mode & ADIO_APPEND)

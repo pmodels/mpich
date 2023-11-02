@@ -257,10 +257,16 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         ADIOI_Info_check_and_install_int(fd, users_info, "romio_min_fdomain_size",
                                          &(fd->hints->min_fdomain_size), myname, error_code);
 
-        /* Now we use striping unit in common code so we should
+        /* Now we use striping information in common code so we should
          * process hints for it. */
         ADIOI_Info_check_and_install_int(fd, users_info, "striping_unit",
                                          &(fd->hints->striping_unit), myname, error_code);
+
+        ADIOI_Info_check_and_install_int(fd, users_info, "striping_factor",
+                                         &(fd->hints->striping_factor), myname, error_code);
+
+        ADIOI_Info_check_and_install_int(fd, users_info, "start_iodevice",
+                                         &(fd->hints->start_iodevice), myname, error_code);
 
         ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_synchronized_flush",
                                              &(fd->hints->synchronizing_flush), myname, error_code);
