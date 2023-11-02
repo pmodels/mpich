@@ -966,6 +966,8 @@ MPI_Get_elements_x:
     status: STATUS, constant=True, [return status of receive operation]
     datatype: DATATYPE, [datatype used by receive operation]
     count: NUM_BYTES, direction=out, [number of received basic elements]
+MPI_Get_hw_resource_info:
+    hw_info: INFO, direction=out, [info object created]
 MPI_Get_library_version:
     version: STRING, length=MPI_MAX_LIBRARY_VERSION_STRING, direction=OUT, [version number]
     resultlen: STRING_LENGTH, direction=out, [Length (in printable characters) of the result returned in version]
