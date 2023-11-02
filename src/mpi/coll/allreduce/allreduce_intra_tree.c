@@ -68,15 +68,15 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
     if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE || tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K) {
         mpi_errno =
             MPIR_Treealgo_tree_create_topo_aware(comm_ptr, tree_type, k, root,
-                                                 MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE, &my_tree);
+                                                 MPIR_CVAR_ALLREDUCE_TOPO_REORDER_ENABLE, &my_tree);
     } else if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_WAVE) {
         mpi_errno =
             MPIR_Treealgo_tree_create_topo_wave(comm_ptr, k, root,
-                                                MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE,
-                                                MPIR_CVAR_BCAST_TOPO_OVERHEAD,
-                                                MPIR_CVAR_BCAST_TOPO_DIFF_GROUPS,
-                                                MPIR_CVAR_BCAST_TOPO_DIFF_SWITCHES,
-                                                MPIR_CVAR_BCAST_TOPO_SAME_SWITCHES, &my_tree);
+                                                MPIR_CVAR_ALLREDUCE_TOPO_REORDER_ENABLE,
+                                                MPIR_CVAR_ALLREDUCE_TOPO_OVERHEAD,
+                                                MPIR_CVAR_ALLREDUCE_TOPO_DIFF_GROUPS,
+                                                MPIR_CVAR_ALLREDUCE_TOPO_DIFF_SWITCHES,
+                                                MPIR_CVAR_ALLREDUCE_TOPO_SAME_SWITCHES, &my_tree);
     } else {
         mpi_errno = MPIR_Treealgo_tree_create(rank, comm_size, tree_type, k, root, &my_tree);
     }
