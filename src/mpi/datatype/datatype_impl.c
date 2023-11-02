@@ -263,6 +263,34 @@ int MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb,
     return MPI_SUCCESS;
 }
 
+int MPIR_Type_get_value_index_impl(MPI_Datatype value_type, MPI_Datatype index_type,
+                                   MPI_Datatype * pair_type)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (index_type == MPI_INT) {
+        if (value_type == MPI_FLOAT) {
+            *pair_type = MPI_FLOAT_INT;
+        } else if (value_type == MPI_DOUBLE) {
+            *pair_type = MPI_DOUBLE_INT;
+        } else if (value_type == MPI_LONG) {
+            *pair_type = MPI_LONG_INT;
+        } else if (value_type == MPI_SHORT) {
+            *pair_type = MPI_SHORT_INT;
+        } else if (value_type == MPI_INT) {
+            *pair_type = MPI_2INT;
+        } else if (value_type == MPI_LONG_DOUBLE) {
+            *pair_type = MPI_LONG_DOUBLE_INT;
+        } else {
+            *pair_type = MPI_DATATYPE_NULL;
+        }
+    } else {
+        *pair_type = MPI_DATATYPE_NULL;
+    }
+
+    return mpi_errno;
+}
+
 int MPIR_Type_size_impl(MPI_Datatype datatype, MPI_Aint * size)
 {
     int mpi_errno = MPI_SUCCESS;
