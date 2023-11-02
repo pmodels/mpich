@@ -2038,6 +2038,24 @@ MPI_Status_f2c:
 MPI_Status_f2f08:
     f_status: F90_STATUS, pointer=True, constant=True, [status object declared as array]
     f08_status: F08_STATUS, direction=out, [status object declared as named type]
+MPI_Status_get_error:
+    status: STATUS, direction=in, [status from which to retrieve source rank]
+    error: ERROR_CODE, direction=out, [error set in the MPI_ERROR field]
+MPI_Status_get_source:
+    status: STATUS, direction=in, [status from which to retrieve source rank]
+    source: RANK, direction=out, [rank set in the MPI_SOURCE field]
+MPI_Status_get_tag:
+    status: STATUS, direction=in, [status from which to retrieve source rank]
+    tag: TAG, direction=out, [tag set in the MPI_TAG field]
+MPI_Status_set_error:
+    status: STATUS, direction=inout, [status with which to associate error]
+    error: ERROR_CODE, direction=in, [error to set in the MPI_ERROR field]
+MPI_Status_set_source:
+    status: STATUS, direction=inout, [status with which to associate tag]
+    source: RANK, direction=in, [rank to set in the MPI_SOURCE field]
+MPI_Status_set_tag:
+    status: STATUS, direction=inout, [status with which to associate source rank]
+    tag: TAG, direction=in, [tag to set in the MPI_TAG field]
 MPI_Status_set_cancelled:
     status: STATUS, direction=inout, [status with which to associate cancel flag]
     flag: LOGICAL, direction=in, [if true, indicates request was cancelled]
