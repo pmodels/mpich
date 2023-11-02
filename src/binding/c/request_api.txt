@@ -207,43 +207,55 @@ MPI_Status_f2c:
 MPI_Status_get_error:
     .desc: Get MPI_ERROR field from the status
     .skip: initcheck, global_cs
+    .impl: direct
 {
     *error = status->MPI_ERROR;
+    return MPI_SUCCESS;
 }
 
 MPI_Status_get_source:
     .desc: Get MPI_SOURCE field from the status
     .skip: initcheck, global_cs
+    .impl: direct
 {
     *source = status->MPI_SOURCE;
+    return MPI_SUCCESS;
 }
 
 MPI_Status_get_tag:
     .desc: Get MPI_TAG field from the status
     .skip: initcheck, global_cs
+    .impl: direct
 {
     *tag = status->MPI_TAG;
+    return MPI_SUCCESS;
 }
 
 MPI_Status_set_error:
     .desc: Set MPI_ERROR field in the status
     .skip: initcheck, global_cs, validate-error
+    .impl: direct
 {
     status->MPI_ERROR = error;
+    return MPI_SUCCESS;
 }
 
 MPI_Status_set_source:
     .desc: Set MPI_SOURCE field in the status
     .skip: initcheck, global_cs, validate-source
+    .impl: direct
 {
     status->MPI_SOURCE = source;
+    return MPI_SUCCESS;
 }
 
 MPI_Status_set_tag:
     .desc: Set MPI_TAG field in the status
     .skip: initcheck, global_cs, validate-tag
+    .impl: direct
 {
     status->MPI_TAG = tag;
+    return MPI_SUCCESS;
 }
 
 
