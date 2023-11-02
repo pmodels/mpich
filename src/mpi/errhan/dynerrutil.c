@@ -193,13 +193,13 @@ int MPIR_Add_error_string_impl(int code, const char *msg_string)
 }
 
 /*
-  MPIR_Delete_error_string_impl - Delete the string associated with an error code or class
+  MPIR_Remove_error_string_impl - Delete the string associated with an error code or class
 
   Notes:
-  This is used to implement 'MPI_Delete_error_string'; it may also be used by a
+  This is used to implement 'MPI_Remove_error_string'; it may also be used by a
   device to delete device-specific error strings.
 */
-int MPIR_Delete_error_string_impl(int code)
+int MPIR_Remove_error_string_impl(int code)
 {
     int mpi_errno = MPI_SUCCESS;
     int errcode = (int) (((unsigned int) code & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT);
@@ -292,10 +292,10 @@ int MPIR_Add_error_class_impl(int *errorclass)
 }
 
 /*
-  MPIR_Delete_error_class_impl - Delete an error class
+  MPIR_Remove_error_class_impl - Delete an error class
 
   Notes:
-  This is used to implement 'MPI_Delete_error_class'; it may also be used by a
+  This is used to implement 'MPI_Remove_error_class'; it may also be used by a
   device to delete device-specific error classes.
 
   Predefined classes are handled directly; this routine is not used to
@@ -304,7 +304,7 @@ int MPIR_Add_error_class_impl(int *errorclass)
 
   This routine should be run within a SINGLE_CS in the multithreaded case.
 */
-int MPIR_Delete_error_class_impl(int user_errclass)
+int MPIR_Remove_error_class_impl(int user_errclass)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -376,13 +376,13 @@ int MPIR_Add_error_code_impl(int class, int *code)
 }
 
 /*
-  MPIR_Delete_error_code_impl - Delete an error code
+  MPIR_Remove_error_code_impl - Delete an error code
 
   Notes:
-  This is used to implement 'MPI_Delete_error_code'; it may also be used by a
+  This is used to implement 'MPI_Remove_error_code'; it may also be used by a
   device to delete device-specific error codes.
 */
-int MPIR_Delete_error_code_impl(int code)
+int MPIR_Remove_error_code_impl(int code)
 {
     int mpi_errno = MPI_SUCCESS;
     int errcode = (int) (((unsigned int) code & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT);

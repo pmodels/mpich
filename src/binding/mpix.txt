@@ -16,7 +16,3 @@
 # side effects to run the script multiple times.
 
 # MPI functions
-
-MPI_Delete_error_class
-MPI_Delete_error_code
-MPI_Delete_error_string

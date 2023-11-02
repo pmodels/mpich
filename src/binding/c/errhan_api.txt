@@ -1,9 +1,5 @@
 # vim: set ft=c:
 
-# Note: MPIX_Delete_error_{code,class,string} are MPI 4.1 APIs, so we are using MPIX_
-#       prefixes and supplying the parameter information since they are not in the
-#       official standards yet
-
 MPI_Add_error_class:
     .desc: Add an MPI error class to the known classes
 
@@ -21,25 +17,6 @@ MPI_Add_error_string:
     specify it that way.
 
     According to the MPI-2 standard, it is erroneous to call 'MPI_Add_error_string'
-    for an error code or class with a value less than or equal
-    to 'MPI_ERR_LASTCODE'.  Thus, you cannot replace the predefined error messages
-    with this routine.
-*/
-
-MPI_Delete_error_class:
-    errorclass: ERROR_CLASS, [value of the error class to be remoed]
-    .desc: Delete an MPI error class from the known classes
-
-MPI_Delete_error_code:
-    errorcode: ERROR_CODE, [value of the error code to be remoed]
-    .desc: Delete an MPI error code
-
-MPI_Delete_error_string:
-    errorcode: ERROR_CODE, [value of the error code whose string is to be remoed]
-    .desc: Delete the error string associated with an MPI error code or class
-/*
-    Notes:
-    According to the MPI 4.1 standard, it is erroneous to call 'MPI_Delete_error_string'
     for an error code or class with a value less than or equal
     to 'MPI_ERR_LASTCODE'.  Thus, you cannot replace the predefined error messages
     with this routine.
@@ -146,6 +123,22 @@ MPI_File_set_errhandler:
         goto fn_fail;
     }
 }
+
+MPI_Remove_error_class:
+    .desc: Remove an MPI error class from the known classes
+
+MPI_Remove_error_code:
+    .desc: Remove an MPI error code
+
+MPI_Remove_error_string:
+    .desc: Remove the error string associated with an MPI error code or class
+/*
+    Notes:
+    According to the MPI 4.1 standard, it is erroneous to call 'MPI_Remove_error_string'
+    for an error code or class with a value less than or equal
+    to 'MPI_ERR_LASTCODE'.  Thus, you cannot replace the predefined error messages
+    with this routine.
+*/
 
 MPI_Win_call_errhandler:
     .desc: Call the error handler installed on a window

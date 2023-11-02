@@ -1767,6 +1767,12 @@ MPI_Register_datarep:
     write_conversion_fn: POLYFUNCTION, func_type=MPI_Datarep_conversion_function, [function invoked to convert from native representation to file representation]
     dtype_file_extent_fn: FUNCTION, func_type=MPI_Datarep_extent_function, [function invoked to get the extent of a datatype as represented in the file]
     extra_state: EXTRA_STATE, [extra state]
+MPI_Remove_error_class:
+    errorclass: ERROR_CLASS, [value of the error class to be removed]
+MPI_Remove_error_code:
+    errorcode: ERROR_CODE, [value of the error code to be removed]
+MPI_Remove_error_string:
+    errorcode: ERROR_CODE, [value of the error code whose string is to be removed]
 MPI_Request_c2f:
     .return: F90_REQUEST
     request: REQUEST, direction=in, pointer=False
