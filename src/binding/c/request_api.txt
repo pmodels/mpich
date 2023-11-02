@@ -164,6 +164,7 @@ MPI_Startall:
 
 MPI_Status_c2f:
     .desc: Convert MPI_Status object to MPI_Fint array
+    .skip: initcheck, global_cs
 {
     if (c_status == MPI_STATUS_IGNORE || c_status == MPI_STATUSES_IGNORE) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -184,6 +185,7 @@ MPI_Status_c2f:
 
 MPI_Status_f2c:
     .desc: Convert MPI_Status object from MPI_Fint array
+    .skip: initcheck, global_cs
 {
     if (f_status == MPI_F_STATUS_IGNORE) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -202,8 +204,52 @@ MPI_Status_f2c:
 #endif
 }
 
+MPI_Status_get_error:
+    .desc: Get MPI_ERROR field from the status
+    .skip: initcheck, global_cs
+{
+    *error = status->MPI_ERROR;
+}
+
+MPI_Status_get_source:
+    .desc: Get MPI_SOURCE field from the status
+    .skip: initcheck, global_cs
+{
+    *source = status->MPI_SOURCE;
+}
+
+MPI_Status_get_tag:
+    .desc: Get MPI_TAG field from the status
+    .skip: initcheck, global_cs
+{
+    *tag = status->MPI_TAG;
+}
+
+MPI_Status_set_error:
+    .desc: Set MPI_ERROR field in the status
+    .skip: initcheck, global_cs, validate-error
+{
+    status->MPI_ERROR = error;
+}
+
+MPI_Status_set_source:
+    .desc: Set MPI_SOURCE field in the status
+    .skip: initcheck, global_cs, validate-source
+{
+    status->MPI_SOURCE = source;
+}
+
+MPI_Status_set_tag:
+    .desc: Set MPI_TAG field in the status
+    .skip: initcheck, global_cs, validate-tag
+{
+    status->MPI_TAG = tag;
+}
+
+
 MPI_Status_set_cancelled:
     .desc: Sets the cancelled state associated with a request
+    .skip: initcheck, global_cs
 
 MPI_Test_cancelled:
     .desc: Tests to see if a request was cancelled
