@@ -214,6 +214,17 @@ hints:
         to be matched in the order in which they were performed by the
         receivers.
 
+    - name        : mpi_assert_strict_persistent_collective_ordering
+      functions   : MPI_Comm_dup_with_info, MPI_Comm_idup_with_info, MPI_Comm_set_info
+      type        : boolean
+      default     : false
+      description : >-
+      If set to true, then the implementation may assume that all the persistent
+      collective operations are started in the same order across all MPI processes
+      in the group of the communicator. It is required that if this assertion is made
+      on one member of the communicator's group, then it must be made on all members
+      of that communicator's group with the same value.
+
 === END_INFO_HINT_BLOCK ===
 */
 
@@ -227,6 +238,9 @@ void MPIR_Comm_hint_init(void)
                             NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
     MPIR_Comm_register_hint(MPIR_COMM_HINT_ALLOW_OVERTAKING, "mpi_assert_allow_overtaking",
                             NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_STRICT_PCOLL_ORDERING,
+                            "mpi_assert_strict_persistent_collective_ordering", NULL,
+                            MPIR_COMM_HINT_TYPE_BOOL, 0, 0);
     /* Used by ch4:ofi, but needs to be initialized early to get the default value. */
     MPIR_Comm_register_hint(MPIR_COMM_HINT_ENABLE_MULTI_NIC_STRIPING, "enable_multi_nic_striping",
                             NULL, MPIR_COMM_HINT_TYPE_BOOL, 0, -1);
