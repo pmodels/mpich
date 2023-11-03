@@ -430,8 +430,12 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
 
 int MPIR_Type_get_name_impl(MPIR_Datatype * datatype_ptr, char *type_name, int *resultlen)
 {
-    /* Include the null in MPI_MAX_OBJECT_NAME */
-    MPL_strncpy(type_name, datatype_ptr->name, MPI_MAX_OBJECT_NAME);
+    if (datatype_ptr == NULL) {
+        MPL_strncpy(type_name, "MPI_DATATYPE_NULL", MPI_MAX_OBJECT_NAME);
+    } else {
+        /* Include the null in MPI_MAX_OBJECT_NAME */
+        MPL_strncpy(type_name, datatype_ptr->name, MPI_MAX_OBJECT_NAME);
+    }
     *resultlen = (int) strlen(type_name);
 
     return MPI_SUCCESS;
