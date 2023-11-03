@@ -1288,16 +1288,19 @@ int MPII_collect_info_key(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, const char
     MPIR_ERR_CHECK(mpi_errno);
 
     if (is_equal && hint_str_size > 0) {
-        mpi_errno = MPIR_Allreduce_equal(&hint_str, hint_str_size, MPI_CHAR, &is_equal, comm_ptr);
+        mpi_errno = MPIR_Allreduce_equal(hint_str, hint_str_size, MPI_CHAR, &is_equal, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_ERR_CHKANDJUMP1(!is_equal, mpi_errno, MPI_ERR_OTHER, "**infonoteq", "**infonoteq %s", key);
 
-  fn_exit:
     *value_ptr = hint_str;
-    return mpi_errno;
+
+  fn_exit:
+    return MPI_SUCCESS;
   fn_fail:
+    /* inconsistent info keys are ignored */
+    *value_ptr = NULL;
     goto fn_exit;
 }
 
