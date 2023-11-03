@@ -576,9 +576,10 @@ enum MPIR_Combiner_enum {
 #define MPI_COMM_TYPE_SHARED    1
 #define MPI_COMM_TYPE_HW_GUIDED 2
 #define MPI_COMM_TYPE_HW_UNGUIDED 3
+#define MPI_COMM_TYPE_RESOURCE_GUIDED 4
 
 /* MPICH-specific types */
-#define MPIX_COMM_TYPE_NEIGHBORHOOD 4
+#define MPIX_COMM_TYPE_NEIGHBORHOOD 5
 
 /* For supported thread levels */
 #define MPI_THREAD_SINGLE 0

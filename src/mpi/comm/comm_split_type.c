@@ -11,7 +11,9 @@ static const char *SHMEM_INFO_KEY = "shmem_topo";
 static int split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr);
 static int node_split(MPIR_Comm * comm_ptr, int key, const char *hint_str,
                       MPIR_Comm ** newcomm_ptr);
-static int split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
+static int split_type_pset_name(MPIR_Comm * comm_ptr, int key, const char *pset_name,
+                                MPIR_Comm ** newcomm_ptr);
+static int split_type_hw_guided(MPIR_Comm * comm_ptr, int key, const char *resource_type,
                                 MPIR_Comm ** newcomm_ptr);
 static int split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
                                   MPIR_Comm ** newcomm_ptr);
@@ -40,11 +42,41 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
         mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (split_type == MPI_COMM_TYPE_HW_GUIDED) {
-        mpi_errno = split_type_hw_guided(comm_ptr, key, info_ptr, newcomm_ptr);
+        const char *resource_type;
+        mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, "mpi_hw_resource_type",
+                                          &resource_type);
         MPIR_ERR_CHECK(mpi_errno);
+
+        if (resource_type) {
+            mpi_errno = split_type_hw_guided(comm_ptr, key, resource_type, newcomm_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            *newcomm_ptr = NULL;
+            goto fn_exit;
+        }
     } else if (split_type == MPI_COMM_TYPE_HW_UNGUIDED) {
         mpi_errno = split_type_hw_unguided(comm_ptr, key, info_ptr, newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
+    } else if (split_type == MPI_COMM_TYPE_RESOURCE_GUIDED) {
+        /* similar to MPI_COMM_TYPE_HW_GUIDED, but may also use process set name to split */
+        /* first make sure we have consistent info keys */
+        const char *resource_type = NULL;
+        const char *pset_name = NULL;
+        mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, "mpi_hw_resource_type",
+                                          &resource_type);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, "mpi_pset_name", &pset_name);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (resource_type) {
+            mpi_errno = split_type_hw_guided(comm_ptr, key, resource_type, newcomm_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else if (pset_name) {
+            mpi_errno = split_type_pset_name(comm_ptr, key, pset_name, newcomm_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            *newcomm_ptr = NULL;
+            goto fn_exit;
+        }
     } else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
         mpi_errno =
             MPIR_Comm_split_type_neighborhood(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
@@ -100,26 +132,27 @@ int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcom
     goto fn_exit;
 }
 
-static int split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
+static int split_type_pset_name(MPIR_Comm * comm_ptr, int key, const char *pset_name,
+                                MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* TODO: add implementation */
+    *newcomm_ptr = NULL;
+
+    return mpi_errno;
+}
+
+static int split_type_hw_guided(MPIR_Comm * comm_ptr, int key, const char *resource_type,
                                 MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *node_comm = NULL;
-    const char *resource_type;
-
-    mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, "mpi_hw_resource_type", &resource_type);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (resource_type == NULL) {
-        /* return MPI_COMM_NULL if info key is missing */
-        *newcomm_ptr = NULL;
-        goto fn_exit;
-    }
 
     if (strcmp(resource_type, "mpi_shared_memory") == 0) {
         /* resource_type value "mpi_shared_memory" is equivalent to split_type
          * MPI_COMM_TYPE_SHARED */
-        mpi_errno = MPIR_Comm_split_type_impl(comm_ptr, MPI_COMM_TYPE_SHARED, key, info_ptr,
+        mpi_errno = MPIR_Comm_split_type_impl(comm_ptr, MPI_COMM_TYPE_SHARED, key, NULL,
                                               newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
