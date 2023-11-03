@@ -57,7 +57,7 @@ MPI_Bsend_init:
 
 MPI_Buffer_attach:
     .desc: Attaches a user-provided buffer for sending
-    .skip: ThreadSafe, validate-BUFFER
+    .skip: ThreadSafe
     .seealso: MPI_Buffer_detach, MPI_Bsend
 /*
     Notes:
