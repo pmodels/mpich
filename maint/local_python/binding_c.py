@@ -2048,7 +2048,7 @@ def dump_validate_handle_ptr(func, p):
             G.out.append("MPIR_ERRTEST_PARRIVEDREQ(%s, mpi_errno);" % ptr_name)
 
         if kind == "WINDOW" and RE.match(r'mpi_win_shared_query', func_name, re.IGNORECASE):
-            G.out.append("MPIR_ERRTEST_WIN_FLAVOR(win_ptr, MPI_WIN_FLAVOR_SHARED, mpi_errno);")
+            G.out.append("MPIR_ERRTEST_WIN_NOT_DYNAMIC(win_ptr, mpi_errno);")
 
         if G.handle_error_codes[kind]:
             G.err_codes[G.handle_error_codes[kind]] = 1

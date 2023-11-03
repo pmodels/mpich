@@ -473,6 +473,15 @@ cvars:
         }                                                       \
     } while (0)
 
+#define MPIR_ERRTEST_WIN_NOT_DYNAMIC(win_, err_)                \
+    do {                                                        \
+        if ((win_)->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {  \
+            MPIR_ERR_SETANDSTMT1((err_), MPI_ERR_RMA_FLAVOR,    \
+                                 goto fn_fail, "**winflavor",   \
+                                 "**winflavor %s", "!MPI_WIN_FLAVOR_DYNAMIC");   \
+        }                                                       \
+    } while (0)
+
 #define MPIR_ERRTEST_WIN_SIZE(size_, err_)                      \
     do {                                                        \
         if (size_ < 0) {                                        \
