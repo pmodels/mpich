@@ -125,6 +125,9 @@ static mpi_names_t mpi_names[] = {
     /* added in MPI 3 */
     {MPI_COUNT, "MPI_COUNT"},
 #endif
+#if MTEST_HAVE_MIN_MPI_VERSION(4,1)
+    {MPI_DATATYPE_NULL, "MPI_DATATYPE_NULL"},
+#endif
     {0, (char *) 0},    /* Sentinel used to indicate the last element */
 };
 
