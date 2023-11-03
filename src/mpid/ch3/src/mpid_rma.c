@@ -272,6 +272,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
         (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         (*win_ptr)->info_args.alloc_shm = TRUE;
     }
+    (*win_ptr)->info_args.accumulate_granularity = 0;
 
     /* Set info_args on window based on info provided by user */
     mpi_errno = MPID_Win_set_info((*win_ptr), info);
