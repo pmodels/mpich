@@ -305,6 +305,9 @@ MPI_Type_get_true_extent_x:
     .desc: Get the true lower bound and extent as MPI_Count values for a datatype
     .skip: global_cs
 
+MPI_Type_get_value_index:
+    .desc: returns a handle to a predefined datatype suitable for the use with MPI_MINLOC and MPI_MAXLOC if such a predefined type exists
+
 MPI_Type_size:
     .desc: Return the number of bytes occupied by entries in the datatype
     .skip: global_cs

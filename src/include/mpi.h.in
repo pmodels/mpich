@@ -552,7 +552,8 @@ enum MPIR_Combiner_enum {
     MPI_COMBINER_F90_COMPLEX      = 16,
     MPI_COMBINER_F90_INTEGER      = 17,
     MPI_COMBINER_RESIZED          = 18,
-    MPI_COMBINER_HINDEXED_BLOCK   = 19
+    MPI_COMBINER_HINDEXED_BLOCK   = 19,
+    MPI_COMBINER_VALUE_INDEX      = 20
 };
 
 /* for subarray and darray constructors */

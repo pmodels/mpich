@@ -2475,6 +2475,10 @@ MPI_Type_get_true_extent_x:
     datatype: DATATYPE, [datatype to get information on]
     true_lb: XFER_NUM_ELEM, direction=out, [true lower bound of datatype]
     true_extent: XFER_NUM_ELEM, direction=out, [true size of datatype]
+MPI_Type_get_value_index:
+    value_type: DATATYPE, [datatype of the value in pair]
+    index_type: DATATYPE, [datatype of the index in pair]
+    pair_type: DATATYPE, direction=out, [datatype of the value-index pair]
 MPI_Type_indexed:
     count: POLYDTYPE_NUM_ELEM_NNI, [number of blocks -- also number of entries in array_of_displacements and array_of_blocklengths]
     array_of_blocklengths: POLYDTYPE_NUM_ELEM_NNI, length=count, constant=True, [number of elements per block]
