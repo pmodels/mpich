@@ -377,6 +377,7 @@ typedef struct MPIDIG_win_info_args_t {
     int accumulate_ordering;
     int alloc_shared_noncontig;
     MPIDIG_win_info_accumulate_ops accumulate_ops;
+    int accumulate_granularity;
 
     /* hints to tradeoff atomicity support */
     uint32_t which_accumulate_ops;      /* Arbitrary combination of {1<<max|1<<min|1<<sum|...}

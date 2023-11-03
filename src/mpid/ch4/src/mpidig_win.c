@@ -245,6 +245,16 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
         parse_info_perf_preference_str(val, &MPIDIG_WIN(win, info_args).perf_preference);
     }
 
+    val = MPIR_Info_lookup(info, "mpi_accumulate_granularity");
+    if (val) {
+        int value = atoi(val);
+        if (value > 0) {
+            MPIDIG_WIN(win, info_args).accumulate_granularity = value;
+        } else {
+            MPIDIG_WIN(win, info_args).accumulate_granularity = 0;
+        }
+    }
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -322,6 +332,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
     MPIDIG_WIN(win, info_args).coll_attach = false;
     MPIDIG_WIN(win, info_args).optimized_mr = false;
+    MPIDIG_WIN(win, info_args).accumulate_granularity = 0;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = win_set_info(win, info, TRUE /* is_init */);
