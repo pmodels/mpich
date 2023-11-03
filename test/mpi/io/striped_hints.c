@@ -1,8 +1,7 @@
-
-#include <mpi.h>
+#include <mpitest.h>
 #include <stdio.h>
 
-#define CHECK(fn) {int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, NULL); }
+#define CHECK(errcode, fn) if (errcode != MPI_SUCCESS) handle_error(errcode, fn)
 
 static void handle_error(int errcode, char *str)
 {
@@ -16,20 +15,26 @@ static void handle_error(int errcode, char *str)
 
 int main(int argc, char *argv[])
 {
+    int errs = 0;
+    int rc;
     int my_rank;
     MPI_Info info;
     MPI_Info info_used;
     MPI_File fh;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     MPI_Info_create(&info);
     MPI_Info_set(info, "romio_no_indep_rw", "true");
 
-    CHECK(MPI_File_open(MPI_COMM_WORLD, argv[1], MPI_MODE_CREATE | MPI_MODE_WRONLY, info, &fh));
-    CHECK(MPI_File_get_info(fh, &info_used));
+    rc = MPI_File_open(MPI_COMM_WORLD, (char *) "test.txt", MPI_MODE_CREATE | MPI_MODE_WRONLY, info,
+                       &fh);
+    CHECK(rc, "MPI_File_open");
+
+    rc = MPI_File_get_info(fh, &info_used);
+    CHECK(rc, "MPI_File_get_info");
 
     if (info_used != MPI_INFO_NULL) {
         int i, nkeys;
@@ -50,12 +55,15 @@ int main(int argc, char *argv[])
         MPI_Info_free(&info_used);
     }
 
-    CHECK(MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, "native", info));
+    rc = MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, "native", info);
+    CHECK(rc, "MPI_File_set_view");
 
-    CHECK(MPI_File_close(&fh));
+    rc = MPI_File_close(&fh);
+    CHECK(rc, "MPI_File_close");
+
     MPI_Info_free(&info);
 
-    MPI_Finalize();
+    MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }
