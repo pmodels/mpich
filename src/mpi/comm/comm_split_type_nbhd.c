@@ -18,30 +18,10 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
 static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
                                             int dimension, MPIR_Comm ** newcomm_ptr);
 
-int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hintval,
-                                      MPIR_Comm ** newcomm_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    if (!strncmp(hintval, ("switch_level:"), strlen("switch_level:"))
-        && *(hintval + strlen("switch_level:")) != '\0') {
-        int switch_level = atoi(hintval + strlen("switch_level:"));
-        mpi_errno = network_split_switch_level(comm_ptr, key, switch_level, newcomm_ptr);
-    } else if (!strncmp(hintval, ("subcomm_min_size:"), strlen("subcomm_min_size:"))
-               && *(hintval + strlen("subcomm_min_size:")) != '\0') {
-        int subcomm_min_size = atoi(hintval + strlen("subcomm_min_size:"));
-        mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
-    } else if (!strncmp(hintval, ("min_mem_size:"), strlen("min_mem_size:"))
-               && *(hintval + strlen("min_mem_size:")) != '\0') {
-        long min_mem_size = atol(hintval + strlen("min_mem_size:"));
-        /* Split by minimum memory size per subcommunicator in bytes */
-        mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
-    } else if (!strncmp(hintval, ("torus_dimension:"), strlen("torus_dimension:"))
-               && *(hintval + strlen("torus_dimension:")) != '\0') {
-        int dimension = atol(hintval + strlen("torus_dimension:"));
-        mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
-    }
-    return mpi_errno;
-}
+static int split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
+                                      MPIR_Comm ** newcomm_ptr);
+static int split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hintval,
+                                   MPIR_Comm ** newcomm_ptr);
 
 int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
                                       MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
@@ -56,26 +36,27 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
     MPIR_ERR_CHECK(mpi_errno);
 
     if (dirname) {
-        MPIR_Comm_split_type_nbhd_common_dir(comm_ptr, key, dirname, newcomm_ptr);
+        mpi_errno = split_type_nbhd_common_dir(comm_ptr, key, dirname, newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         const char *network_topo;
         mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, NETWORK_INFO_KEY, &network_topo);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (network_topo) {
-            MPIR_Comm_split_type_network_topo(comm_ptr, key, network_topo, newcomm_ptr);
+            mpi_errno = split_type_network_topo(comm_ptr, key, network_topo, newcomm_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
   fn_exit:
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
-                                         MPIR_Comm ** newcomm_ptr)
+static int split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
+                                      MPIR_Comm ** newcomm_ptr)
 {
 #ifndef HAVE_ROMIO
     *newcomm_ptr = NULL;
@@ -100,6 +81,31 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
   fn_fail:
     goto fn_exit;
 #endif
+}
+
+static int split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hintval,
+                                   MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    if (!strncmp(hintval, ("switch_level:"), strlen("switch_level:"))
+        && *(hintval + strlen("switch_level:")) != '\0') {
+        int switch_level = atoi(hintval + strlen("switch_level:"));
+        mpi_errno = network_split_switch_level(comm_ptr, key, switch_level, newcomm_ptr);
+    } else if (!strncmp(hintval, ("subcomm_min_size:"), strlen("subcomm_min_size:"))
+               && *(hintval + strlen("subcomm_min_size:")) != '\0') {
+        int subcomm_min_size = atoi(hintval + strlen("subcomm_min_size:"));
+        mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
+    } else if (!strncmp(hintval, ("min_mem_size:"), strlen("min_mem_size:"))
+               && *(hintval + strlen("min_mem_size:")) != '\0') {
+        long min_mem_size = atol(hintval + strlen("min_mem_size:"));
+        /* Split by minimum memory size per subcommunicator in bytes */
+        mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
+    } else if (!strncmp(hintval, ("torus_dimension:"), strlen("torus_dimension:"))
+               && *(hintval + strlen("torus_dimension:")) != '\0') {
+        int dimension = atol(hintval + strlen("torus_dimension:"));
+        mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
+    }
+    return mpi_errno;
 }
 
 static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
