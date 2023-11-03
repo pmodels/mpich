@@ -52,6 +52,7 @@ static const char *(user_code_msgs[ERROR_MAX_NCODE]) = {
 struct intcnt {
     int val;
 
+    int ref_count;
     struct intcnt *next;
     struct intcnt *prev;
 
@@ -173,6 +174,7 @@ int MPIR_Add_error_string_impl(int code, const char *msg_string)
         if (s) {
             MPL_free((void *) (user_code_msgs[errcode]));
             user_code_msgs[errcode] = (const char *) str;
+            s->ref_count++;
         } else {
             /* FIXME : Unallocated error code? */
             MPL_free(str);
@@ -183,6 +185,7 @@ int MPIR_Add_error_string_impl(int code, const char *msg_string)
         if (s) {
             MPL_free((void *) (user_class_msgs[errclass]));
             user_class_msgs[errclass] = (const char *) str;
+            s->ref_count++;
         } else {
             /* FIXME : Unallocated error code? */
             MPL_free(str);
@@ -214,6 +217,7 @@ int MPIR_Remove_error_string_impl(int code)
         if (s) {
             MPL_free((void *) (user_code_msgs[errcode]));
             user_code_msgs[errcode] = NULL;
+            s->ref_count--;
         } else {
             mpi_errno = MPI_ERR_OTHER;
             goto fn_fail;
@@ -224,6 +228,7 @@ int MPIR_Remove_error_string_impl(int code)
         if (s) {
             MPL_free((void *) (user_class_msgs[errclass]));
             user_class_msgs[errclass] = NULL;
+            s->ref_count--;
         } else {
             mpi_errno = MPI_ERR_OTHER;
             goto fn_fail;
@@ -261,11 +266,13 @@ int MPIR_Add_error_class_impl(int *errorclass)
     struct intcnt *s;
     if (err_class.free) {
         s = err_class.free;
+        s->ref_count = 0;
         DL_DELETE(err_class.free, s);
         HASH_ADD_INT(err_class.used, val, s, MPL_MEM_BUFFER);
     } else {
         s = (struct intcnt *) MPL_malloc(sizeof(struct intcnt), MPL_MEM_BUFFER);
         s->val = err_class.next++;
+        s->ref_count = 0;
         HASH_ADD_INT(err_class.used, val, s, MPL_MEM_BUFFER);
     }
     new_class = s->val;
@@ -316,6 +323,8 @@ int MPIR_Remove_error_class_impl(int user_errclass)
     HASH_FIND_INT(err_class.used, &errclass, s);
 
     MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**predeferrclass");
+    MPIR_ERR_CHKANDJUMP2(s->ref_count != 0, mpi_errno, MPI_ERR_OTHER, "**errclassref",
+                         "**errclassref %x %d", user_errclass, s->ref_count);
 
     HASH_DEL(err_class.used, s);
     DL_APPEND(err_class.free, s);
@@ -346,14 +355,25 @@ int MPIR_Add_error_code_impl(int class, int *code)
     if (not_initialized)
         MPIR_Init_err_dyncodes();
 
-    /* Get the new code */
     struct intcnt *s;
+
+    if (class & ERROR_DYN_MASK) {
+        /* increment ref_count for dynamic error class */
+        int errclass = class & ~ERROR_DYN_MASK;
+        HASH_FIND_INT(err_class.used, &errclass, s);
+        MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrclass");
+        s->ref_count++;
+    }
+
+    /* Get the new code */
     if (err_code.free) {
         s = err_code.free;
+        s->ref_count = 0;
         DL_DELETE(err_code.free, s);
         HASH_ADD_INT(err_code.used, val, s, MPL_MEM_BUFFER);
     } else {
         s = (struct intcnt *) MPL_malloc(sizeof(struct intcnt), MPL_MEM_BUFFER);
+        s->ref_count = 0;
         s->val = err_code.next++;
         HASH_ADD_INT(err_code.used, val, s, MPL_MEM_BUFFER);
     }
@@ -386,14 +406,26 @@ int MPIR_Remove_error_code_impl(int code)
 {
     int mpi_errno = MPI_SUCCESS;
     int errcode = (int) (((unsigned int) code & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT);
+    int class = code & ERROR_CLASS_MASK;
 
     if (not_initialized)
         MPIR_Init_err_dyncodes();
 
     struct intcnt *s;
+
+    if (class & ERROR_DYN_MASK) {
+        /* increment ref_count for dynamic error class */
+        int errclass = class & ~ERROR_DYN_MASK;
+        HASH_FIND_INT(err_class.used, &errclass, s);
+        MPIR_Assert(s);
+        s->ref_count--;
+    }
+
     HASH_FIND_INT(err_code.used, &errcode, s);
 
     MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**predeferrcode");
+    MPIR_ERR_CHKANDJUMP2(s->ref_count != 0, mpi_errno, MPI_ERR_OTHER, "**errcoderef",
+                         "**errcoderef %x %d", code, s->ref_count);
 
     HASH_DEL(err_code.used, s);
     DL_APPEND(err_code.free, s);

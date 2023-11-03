@@ -53,8 +53,13 @@
 **keyval:Invalid keyval
 **noerrclasses:No more user-defined error classes
 **predeferrclass:Predefined error class given
+**invaliderrclass:Invalid error class given
+**errclassref:Error class still in use
+**errclassref %x %d:Error class %x still in use (ref_count = %d)
 **noerrcodes:No more user-defined error codes
 **predeferrcode:Predefined error code given
+**errcoderef:Error code still in use
+**errcoderef %x %d:Error code %x still in use (ref_count = %d)
 **rankdup:Duplicate ranks in rank array 
 **rankdup %d %d %d:Duplicate ranks in rank array at index %d, has value %d which is \
 also the value at index %d
