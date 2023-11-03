@@ -271,6 +271,15 @@ MPI_Win_create:
         operation or 'MPI_NO_OP'. This can eliminate the need to protect access for
         certain operation types where the hardware can guarantee atomicity. The default
         is same_op_no_op.
+
+    . mpi_accumulate_granularity - Controls the desired synchronization granularity
+        for accumulate ops. It sets the size of memory range in bytes for which the
+        MPI library should acquire a synchronization primitive to ensure the atomicity
+        of updates. The default is 0 which let the MPI library decides the granularity.
+        When the info hint is set to a positive value, the actual range of synchroniation
+        is round-up to the next size that fits the Datatype used in the accumulate
+        operation (see MPI standard 4.1). All processes in the group of a windows must
+        set to the same value.
 */
 
 MPI_Win_create_dynamic:
