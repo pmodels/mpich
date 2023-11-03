@@ -111,11 +111,11 @@ void *MPIR_Csel_root = NULL;
 static MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
 {
     MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
-    if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "kary"))
+    if (0 == strcmp(tree_str, "kary"))
         tree_type = MPIR_TREE_TYPE_KARY;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_1"))
+    else if (0 == strcmp(tree_str, "knomial_1"))
         tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_2"))
+    else if (0 == strcmp(tree_str, "knomial_2"))
         tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
     else
         tree_type = MPIR_TREE_TYPE_KARY;
@@ -125,17 +125,17 @@ static MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
 static MPIR_Tree_type_t get_tree_type_from_string_with_topo(const char *tree_str)
 {
     MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
-    if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "kary"))
+    if (0 == strcmp(tree_str, "kary"))
         tree_type = MPIR_TREE_TYPE_KARY;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_1"))
+    else if (0 == strcmp(tree_str, "knomial_1"))
         tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "knomial_2"))
+    else if (0 == strcmp(tree_str, "knomial_2"))
         tree_type = MPIR_TREE_TYPE_KNOMIAL_2;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "topology_aware"))
+    else if (0 == strcmp(tree_str, "topology_aware"))
         tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "topology_aware_k"))
+    else if (0 == strcmp(tree_str, "topology_aware_k"))
         tree_type = MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_TREE_TYPE, "topology_wave"))
+    else if (0 == strcmp(tree_str, "topology_wave"))
         tree_type = MPIR_TREE_TYPE_TOPOLOGY_WAVE;
     else
         tree_type = MPIR_TREE_TYPE_KARY;
