@@ -5,6 +5,7 @@ comm_info_hint 1 arg=-hint=mpi_assert_no_any_source arg=-value=true
 comm_info_hint 1 arg=-hint=mpi_assert_no_any_tag arg=-value=true
 comm_info_hint 1 arg=-hint=mpi_assert_allow_overtaking arg=-value=true
 comm_info_hint 1 arg=-hint=mpi_assert_exact_length arg=-value=true
+comm_info_hint 1 arg=-hint=mpi_assert_strict_persistent_collective_ordering arg=-value=true
 comm_info_hint 1 arg=-hint=multi_nic_pref_nic arg=-value=0
 @ch4_ofi_tests@comm_info_hint 1 arg=-hint=eagain arg=-value=true
 comm_dup 1
