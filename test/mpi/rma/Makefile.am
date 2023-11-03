@@ -90,6 +90,7 @@ noinst_PROGRAMS =          \
     win_shared_zerobyte    \
     win_shared_create_allocshm    \
     win_shared_create_no_allocshm \
+    win_shared_query       \
     win_zero               \
     win_large_shm          \
     win_dynamic_acc        \
