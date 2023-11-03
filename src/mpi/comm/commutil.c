@@ -1266,15 +1266,27 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 /* TODO: it is certainly not ideal that we have to run 4 Allreduce to do this check.
  * Once we have an OP_EQUAL operator, a single Allreduce would suffice.
  */
-int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info_args_are_equal)
+int MPII_collect_info_key(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, const char *key,
+                          const char **value_ptr)
 {
-    int hint_str_size = strlen(hint_str);
+    const char *hint_str = NULL;
+    if (info_ptr) {
+        hint_str = MPIR_Info_lookup(info_ptr, key);
+    }
+
+    /* TODO: convert to use MPIR_Allreduce_equal */
+    int hint_str_size;
     int hint_str_size_max;
     int hint_str_equal;
     int hint_str_equal_global = 0;
     char *hint_str_global = NULL;
     int mpi_errno = MPI_SUCCESS;
 
+    if (!hint_str) {
+        hint_str_size = 0;
+    } else {
+        hint_str_size = strlen(hint_str);
+    }
     /* Find the maximum hint_str size.  Each process locally compares
      * its hint_str size to the global max, and makes sure that this
      * comparison is successful on all processes. */
@@ -1290,9 +1302,12 @@ int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info
                        comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (!hint_str_equal_global)
-        goto fn_exit;
+    MPIR_ERR_CHKANDJUMP1(!hint_str_equal_global, mpi_errno, MPI_ERR_OTHER, "**infonoteq",
+                         "**infonoteq %s", key);
 
+    if (hint_str_size == 0) {
+        goto fn_exit;
+    }
 
     /* Now that the sizes of the hint_strs match, check to make sure
      * the actual hint_strs themselves are the equal */
@@ -1310,12 +1325,13 @@ int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info
                        comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIR_ERR_CHKANDJUMP1(!hint_str_equal_global, mpi_errno, MPI_ERR_OTHER, "**infonoteq",
+                         "**infonoteq %s", key);
+
   fn_exit:
+    *value_ptr = hint_str;
     MPL_free(hint_str_global);
-
-    *info_args_are_equal = hint_str_equal_global;
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }

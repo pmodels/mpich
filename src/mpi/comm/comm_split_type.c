@@ -100,28 +100,12 @@ int MPIR_Comm_split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * in
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *node_comm = NULL;
-    const char *resource_type = NULL;
+    const char *resource_type;
 
-    if (info_ptr != NULL) {
-        resource_type = MPIR_Info_lookup(info_ptr, "mpi_hw_resource_type");
-    }
-
-    if (!resource_type) {
-        /* we need compare the info hints regardless since it is collective */
-        resource_type = "";
-    }
-
-    /* Check all processes are using the same hints, return NULL if not.
-     * Note: since it is a collective checking, we need call this function
-     * even when info_ptr is NULL or the key is missing. */
-    int is_equal = 0;
-    mpi_errno = MPII_compare_info_hint(resource_type, comm_ptr, &is_equal);
+    mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, "mpi_hw_resource_type", &resource_type);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_ERR_CHKANDJUMP1(!is_equal, mpi_errno, MPI_ERR_OTHER, "**infonoteq",
-                         "**infonoteq %s", "mpi_hw_resource_type");
-
-    if (resource_type[0] == '\0') {
+    if (resource_type == NULL) {
         /* return MPI_COMM_NULL if info key is missing */
         *newcomm_ptr = NULL;
         goto fn_exit;
@@ -250,51 +234,31 @@ int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** new
 int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int key,
                                    MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
-    MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
-    int flag = 0;
-    char hint_str[MPI_MAX_INFO_VAL + 1];
-    int info_args_are_equal;
     *newcomm_ptr = NULL;
 
+    MPIR_Comm *comm_ptr;
     mpi_errno = MPIR_Comm_split_type_by_node(user_comm_ptr, key, &comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (info_ptr) {
-        MPIR_Info_get_impl(info_ptr, SHMEM_INFO_KEY, MPI_MAX_INFO_VAL, hint_str, &flag);
-    }
+    const char *shmem_topo;
+    mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, SHMEM_INFO_KEY, &shmem_topo);
 
-    if (!flag) {
-        hint_str[0] = '\0';
-    }
-
-    /* make sure all processes are using the same hint_str */
-    mpi_errno = MPII_compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* if all processes do not have the same hint_str, skip
+    /* if all processes do not have the same shmem_topo info or missing the info, skip
      * topology-aware comm split */
-    if (!info_args_are_equal)
-        goto use_node_comm;
-
-    /* if no info key is given, skip topology-aware comm split */
-    if (!info_ptr)
+    if (mpi_errno || !shmem_topo)
         goto use_node_comm;
 
     /* if hw topology is not initialized, skip topology-aware comm split */
     if (!MPIR_hwtopo_is_initialized())
         goto use_node_comm;
 
-    if (flag) {
-        mpi_errno = node_split(comm_ptr, key, hint_str, newcomm_ptr);
+    mpi_errno = node_split(comm_ptr, key, shmem_topo, newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Comm_free_impl(comm_ptr);
 
-        MPIR_Comm_free_impl(comm_ptr);
-
-        goto fn_exit;
-    }
+    goto fn_exit;
 
   use_node_comm:
     *newcomm_ptr = comm_ptr;

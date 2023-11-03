@@ -47,47 +47,23 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
                                       MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
 
-    int flag = 0;
-    char hintval[MPI_MAX_INFO_VAL + 1];
     int mpi_errno = MPI_SUCCESS;
-    int info_args_are_equal;
 
     *newcomm_ptr = NULL;
 
-    if (info_ptr) {
-        MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hintval, &flag);
-    }
-    if (!flag) {
-        hintval[0] = '\0';
-    }
-
-    *newcomm_ptr = NULL;
-    /* check whether all processes are using the same dirname */
-    mpi_errno = MPII_compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
-
+    const char *dirname;
+    mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, "nbhd_common_dirname", &dirname);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (info_args_are_equal && flag) {
-        MPIR_Comm_split_type_nbhd_common_dir(comm_ptr, key, hintval, newcomm_ptr);
+    if (dirname) {
+        MPIR_Comm_split_type_nbhd_common_dir(comm_ptr, key, dirname, newcomm_ptr);
     } else {
-        /* Check if the info hint is a network topology hint */
-        if (info_ptr) {
-            MPIR_Info_get_impl(info_ptr, NETWORK_INFO_KEY, MPI_MAX_INFO_VAL, hintval, &flag);
-        }
-
-        if (!flag) {
-            hintval[0] = '\0';
-        }
-
-        /* check whether all processes are using the same hint */
-        mpi_errno = MPII_compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
-
+        const char *network_topo;
+        mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, NETWORK_INFO_KEY, &network_topo);
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* if all processes have the same hintval, perform
-         * topology-aware comm split */
-        if (info_args_are_equal) {
-            MPIR_Comm_split_type_network_topo(comm_ptr, key, hintval, newcomm_ptr);
+        if (network_topo) {
+            MPIR_Comm_split_type_network_topo(comm_ptr, key, network_topo, newcomm_ptr);
         }
     }
 
