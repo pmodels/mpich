@@ -189,6 +189,9 @@ MPI_Dist_graph_neighbors_count:
     .desc: Provides adjacency information for a distributed graph topology
     .extra: ignore_revoked_comm
 
+MPI_Get_hw_resource_info:
+    .desc: returns an info object containing information pertaining to the hardware platform on which the calling MPI process is executing at the moment of the call.
+
 MPI_Graph_get:
     .desc: Retrieves graph topology information associated with a communicator
     .skip: global_cs
