@@ -65,9 +65,8 @@ int MPIR_Info_alloc(MPIR_Info ** info_p_p)
 void MPIR_Info_setup_env(MPIR_Info * info_ptr)
 {
     info_init(info_ptr);
-    /* FIXME: Currently this info object is left empty, we need to add data to
-     * this as defined by the standard. */
-    (void) info_ptr;
+    /* FIXME: Currently this info object is missing some data as
+     * defined by the standard. */
 }
 
 #define INFO_INITIAL_SIZE 10

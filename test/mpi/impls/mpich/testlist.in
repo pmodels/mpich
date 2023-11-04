@@ -3,6 +3,7 @@ coll
 comm
 misc
 session
+info
 @threadsdir@
 @cudadir@
 @hipdir@

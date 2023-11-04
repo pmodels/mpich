@@ -65,6 +65,15 @@ static void help_help_fn(void)
     printf("\n");
     printf("\n");
 
+    printf("MPI specific options (treated as global):\n");
+
+    printf("\n");
+    printf("  MPI settings:\n");
+    printf("    -memory-alloc-kinds              request support for memory allocation kinds\n");
+
+    printf("\n");
+    printf("\n");
+
     printf("Hydra specific options (treated as global):\n");
 
     printf("\n");
@@ -803,6 +812,27 @@ static HYD_status np_fn(char *arg, char ***argv)
     ASSERT_ARGV;
     status = HYDU_set_int(arg, &exec->proc_count, atoi(**argv));
     HYDU_ERR_POP(status, "error getting executable process count\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static void memory_alloc_kinds_help_fn(void)
+{
+    printf("\n");
+    printf("-memory-alloc-kinds: Request support from MPI for memory allocation kinds\n\n");
+}
+
+static HYD_status memory_alloc_kinds_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.memory_alloc_kinds, **argv);
+    HYDU_ERR_POP(status, "error setting memory alloc kinds\n");
 
   fn_exit:
     (*argv)++;
@@ -1640,6 +1670,9 @@ struct HYD_arg_match_table HYD_mpiexec_match_table[] = {
     /* Other local options */
     {"n", np_fn, np_help_fn},
     {"np", np_fn, np_help_fn},
+
+    /* MPI specific options */
+    {"memory-alloc-kinds", memory_alloc_kinds_fn, memory_alloc_kinds_help_fn},
 
     /* Hydra specific options */
 

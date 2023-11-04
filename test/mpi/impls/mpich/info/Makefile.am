@@ -3,6 +3,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-mpi_core_sources += \
-    src/mpi/misc/utils.c \
-    src/mpi/misc/memory_alloc_kinds.c
+include $(top_srcdir)/Makefile_single.mtest
+
+noinst_PROGRAMS = \
+    memory_alloc_kinds

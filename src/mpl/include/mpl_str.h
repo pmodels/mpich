@@ -43,6 +43,8 @@ void MPL_create_pathname(char *dest_filename, const char *dirname,
 
 int MPL_stricmp(const char *a, const char *b);
 
+char *MPL_strjoin(char *strs[], int num, char sep);
+
 /* *INDENT-ON* */
 #if defined(__cplusplus)
 }

@@ -226,6 +226,18 @@ static HYD_status retries_fn(char *arg, char ***argv)
     return status;
 }
 
+static HYD_status memory_alloc_kinds_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.memory_alloc_kinds, **argv);
+
+    (*argv)++;
+
+    return status;
+}
+
+
 static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -627,6 +639,7 @@ struct HYD_arg_match_table HYD_pmip_args_match_table[] = {
     {"topolib", topolib_fn, NULL},
     {"iface", iface_fn, NULL},
     {"retries", retries_fn, NULL},
+    {"memory-alloc-kinds", memory_alloc_kinds_fn, NULL},
     {"\0", NULL, NULL}
 };
 

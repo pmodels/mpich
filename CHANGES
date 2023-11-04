@@ -22,6 +22,15 @@
 # Yaksa updated to auto detect the GPU architecture and only build for
   the detected arch. This applies to CUDA and HIP support.
 
+# Support for "mpi_memory_alloc_kinds" info key. Memory allocation kind
+  requests can be made via argument to mpiexec, or as info during
+  session creation. Kinds supported are "mpi" (with standard defined
+  restrictors) and "system". Queries for supported kinds can be made on
+  MPI objects such as sessions, comms, windows, or files. MPI 4.1 states
+  that supported kinds can also be found in MPI_INFO_ENV, but it was
+  decided at the October 2023 meeting that this was a mistake and will
+  be removed in an erratum.
+
 ===============================================================================
                                Changes in 4.1
 ===============================================================================

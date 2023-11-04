@@ -1864,5 +1864,6 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/hip/Makefile \
           impls/mpich/misc/Makefile \
           impls/mpich/ulfm/Makefile \
+          impls/mpich/info/Makefile \
           )
 
