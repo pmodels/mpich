@@ -87,11 +87,6 @@ MPI_Buffer_attach:
     threads in a process, the user is responsible for ensuring that only
     one thread at a time calls this routine or 'MPI_Buffer_detach'.
 */
-{
-    mpi_errno = MPIR_Bsend_attach(buffer, size);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-}
 
 MPI_Buffer_detach:
     .desc: Removes an existing buffer (for use in MPI_Bsend etc)
@@ -149,6 +144,32 @@ MPI_Buffer_detach:
         really the address of a void pointer.  See the rationale in the
         standard for more details.
 */
+
+MPI_Buffer_flush:
+    .desc: block until all messages currently in the globally shared buffer of the calling process have been transmitted
+    .seealso: MPI_Comm_flush_buffer, MPI_Session_flush_buffer
+
+MPI_Buffer_iflush:
+    .desc: start a nonblocking flush in the globally shared buffer
+    .seealso: MPI_Buffer_flush
+
+MPI_Comm_attach_buffer:
+    .desc: Attaches a user-provided buffer for buffered send in the communicator
+    .skip: ThreadSafe
+    .seealso: MPI_Buffer_attach, MPI_Bsend
+
+MPI_Comm_detach_buffer:
+    .desc: Removes an existing buffer (for use in MPI_Bsend etc) in the communicator
+    .skip: ThreadSafe
+    .seealso: MPI_Comm_attach_buffer, MPI_Bsend
+
+MPI_Comm_flush_buffer:
+    .desc: block until all messages currently in the communicator-specific buffer of the calling process have been transmitted
+    .seealso: MPI_Buffer_flush, MPI_Session_flush_buffer
+
+MPI_Comm_iflush_buffer:
+    .desc: start a nonblocking flush in the communicator-specific buffer
+    .seealso: MPI_Comm_flush_buffer
 
 MPI_Ibsend:
     .desc: Starts a nonblocking buffered send
@@ -470,6 +491,24 @@ MPI_Sendrecv_replace:
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 }
+
+MPI_Session_attach_buffer:
+    .desc: Attaches a user-provided buffer for buffered send in the session
+    .skip: ThreadSafe
+    .seealso: MPI_Buffer_attach, MPI_Bsend
+
+MPI_Session_detach_buffer:
+    .desc: Removes an existing buffer (for use in MPI_Bsend etc) in the session
+    .skip: ThreadSafe
+    .seealso: MPI_Session_attach_buffer, MPI_Bsend
+
+MPI_Session_flush_buffer:
+    .desc: block until all messages currently in the session-specific buffer of the calling process have been transmitted
+    .seealso: MPI_Buffer_flush, MPI_Comm_flush_buffer
+
+MPI_Session_iflush_buffer:
+    .desc: start a nonblocking flush in the session-specific buffer
+    .seealso: MPI_Session_flush_buffer
 
 MPI_Ssend:
     .desc: Blocking synchronous send

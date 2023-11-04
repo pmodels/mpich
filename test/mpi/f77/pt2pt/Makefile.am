@@ -22,6 +22,7 @@ noinst_PROGRAMS = sendf \
                   sendrecvf \
                   sendrecvreplf \
                   statusesf greqf \
+		  bsendf \
                   mprobef
 
 sendf_SOURCES = sendf.f utilsf.f
@@ -36,6 +37,7 @@ pssendf_SOURCES = pssendf.f utilsf.f
 sendrecvf_SOURCES = sendrecvf.f utilsf.f
 sendrecvreplf_SOURCES = sendrecvreplf.f utilsf.f
 greqf_SOURCES = greqf.f dummyf.f
+bsendf_SOURCES = bsendf.f
 
 ## attr1aints.h will be distributed because it's listed in AC_CONFIG_FILES/AC_OUTPUT
 

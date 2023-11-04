@@ -140,3 +140,8 @@ void *MPIR_F08_get_MPI_WEIGHTS_EMPTY(void)
 {
     return (void *) MPI_WEIGHTS_EMPTY;
 }
+
+void *MPIR_F08_get_MPI_BUFFER_AUTOMATIC(void)
+{
+    return (void *) MPI_BUFFER_AUTOMATIC;
+}

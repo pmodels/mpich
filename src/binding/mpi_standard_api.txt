@@ -202,6 +202,9 @@ MPI_Buffer_attach:
 MPI_Buffer_detach:
     buffer_addr: C_BUFFER2, direction=out, [initial buffer address]
     size: POLYNUM_BYTES, direction=out, [buffer size, in bytes]
+MPI_Buffer_flush:
+MPI_Buffer_iflush:
+    request: REQUEST, direction=out
 MPI_COMM_DUP_FN:
     oldcomm: COMMUNICATOR
     comm_keyval: KEYVAL
@@ -283,6 +286,14 @@ MPI_Comm_accept:
     root: RANK, [rank in comm of root node]
     comm: COMMUNICATOR, [intra-communicator over which call is collective]
     newcomm: COMMUNICATOR, direction=out, [inter-communicator with client as remote group]
+MPI_Comm_attach_buffer:
+    comm: COMMUNICATOR, direction=in, pointer=False
+    buffer: BUFFER, asynchronous=True, suppress=f08_intent, [initial buffer address]
+    size: POLYNUM_BYTES_NNI, [buffer size, in bytes]
+MPI_Comm_detach_buffer:
+    comm: COMMUNICATOR, direction=in, pointer=False
+    buffer_addr: C_BUFFER2, direction=out, [initial buffer address]
+    size: POLYNUM_BYTES, direction=out, [buffer size, in bytes]
 MPI_Comm_c2f:
     .return: F90_COMM
     comm: COMMUNICATOR, direction=in, pointer=False
@@ -356,6 +367,8 @@ MPI_Comm_errhandler_function:
 MPI_Comm_f2c:
     .return: COMMUNICATOR
     comm: F90_COMM, direction=in, pointer=False
+MPI_Comm_flush_buffer:
+    comm: COMMUNICATOR, [communicator]
 MPI_Comm_free:
     comm: COMMUNICATOR, direction=inout, [communicator to be destroyed]
 MPI_Comm_free_keyval:
@@ -389,6 +402,9 @@ MPI_Comm_idup_with_info:
     info: INFO, [info object]
     newcomm: COMMUNICATOR, direction=out, asynchronous=True, [copy of comm]
     request: REQUEST, direction=out, [communication request]
+MPI_Comm_iflush_buffer:
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out
 MPI_Comm_join:
     fd: FILE_DESCRIPTOR, suppress=lis_paren, [socket file descriptor]
     intercomm: COMMUNICATOR, direction=out, [new inter-communicator]
@@ -1947,6 +1963,14 @@ MPI_Sendrecv_replace:
     recvtag: TAG, [receive message tag or MPI_ANY_TAG]
     comm: COMMUNICATOR
     status: STATUS, direction=out
+MPI_Session_attach_buffer:
+    session: SESSION, [session]
+    buffer: BUFFER, asynchronous=True, suppress=f08_intent, [initial buffer address]
+    size: POLYNUM_BYTES_NNI, [buffer size, in bytes]
+MPI_Session_detach_buffer:
+    session: SESSION, [session]
+    buffer_addr: C_BUFFER2, direction=out, [initial buffer address]
+    size: POLYNUM_BYTES, direction=out, [buffer size, in bytes]
 MPI_Session_c2f:
     .return: F90_SESSION
     session: SESSION, direction=in, pointer=False
@@ -1966,6 +1990,8 @@ MPI_Session_f2c:
     session: F90_SESSION, direction=in, pointer=False
 MPI_Session_finalize:
     session: SESSION, direction=inout, [session to be finalized]
+MPI_Session_flush_buffer:
+    session: SESSION, [session]
 MPI_Session_get_errhandler:
     session: SESSION, [session]
     errhandler: ERRHANDLER, direction=out, [error handler currently associated with session]
@@ -1986,6 +2012,9 @@ MPI_Session_get_pset_info:
     session: SESSION, [session]
     pset_name: STRING, constant=True, [name of process set]
     info: INFO, direction=OUT, [info object containing information about the given process set]
+MPI_Session_iflush_buffer:
+    session: SESSION, [session]
+    request: REQUEST, direction=out
 MPI_Session_init:
     info: INFO, [info object to specify thread support level and MPI implementation specific resources]
     errhandler: ERRHANDLER, [error handler to invoke in the event that an error is encountered during this function call]

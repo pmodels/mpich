@@ -200,6 +200,8 @@ struct MPIR_Comm {
                                          * communicators */
     struct MPII_Topo_ops *topo_fns;     /* Pointer to a table of functions
                                          * implementting the topology routines */
+    struct MPII_BsendBuffer *bsendbuffer;       /* for MPI_Comm_attach_buffer */
+
     int next_sched_tag;         /* used by the NBC schedule code to allocate tags */
 
     int revoked;                /* Flag to track whether the communicator

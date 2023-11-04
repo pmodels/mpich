@@ -18,7 +18,7 @@
    we need to include the elements of the Fortran character "dope vector".
 */
 FORT_DLL_SPEC void FORT_CALL mpirinitc_(void *si, void *ssi,
-                                        void *bt, void *ip,
+                                        void *bt, void *ip, void *c_ba,
                                         void *uw, void *ecsi,
                                         void *an FORT_MIXED_LEN(d1),
                                         void *asn FORT_MIXED_LEN(d1),
@@ -31,6 +31,7 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc_(void *si, void *ssi,
 int MPIR_F_NeedInit = 1;
 void *MPIR_F_MPI_BOTTOM = 0;
 void *MPIR_F_MPI_IN_PLACE = 0;
+void *MPIR_F_MPI_BUFFER_AUTOMATIC = 0;
 void *MPIR_F_MPI_UNWEIGHTED = 0;
 /* MPI_F_STATUS_IGNORE etc must be declared within mpi.h (MPI-2 standard
    requires this) */
@@ -44,7 +45,7 @@ void *MPI_F_ARGVS_NULL = 0;
 void *MPIR_F_MPI_WEIGHTS_EMPTY = 0;
 
 FORT_DLL_SPEC void FORT_CALL mpirinitc_(void *si, void *ssi,
-                                        void *bt, void *ip,
+                                        void *bt, void *ip, void *c_ba,
                                         void *uw, void *ecsi,
                                         void *an FORT_MIXED_LEN(d1),
                                         void *asn FORT_MIXED_LEN(d1),
@@ -54,6 +55,7 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc_(void *si, void *ssi,
     MPI_F_STATUSES_IGNORE = (MPI_Fint *) ssi;
     MPIR_F_MPI_BOTTOM = bt;
     MPIR_F_MPI_IN_PLACE = ip;
+    MPIR_F_MPI_BUFFER_AUTOMATIC = c_ba;
     MPIR_F_MPI_UNWEIGHTED = uw;
     MPI_F_ERRCODES_IGNORE = (MPI_Fint *) ecsi;
     MPI_F_ARGV_NULL = an;

@@ -53,6 +53,14 @@ integer, dimension(1), target :: MPI_ERRCODES_IGNORE
 integer, dimension(1), target :: MPI_UNWEIGHTED
 integer, dimension(1), target :: MPI_WEIGHTS_EMPTY
 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+!  MPI_BUFFER_AUTOMATIC
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+integer, dimension(1), target :: MPI_BUFFER_AUTOMATIC
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !  MPI_IN_PLACE
@@ -115,6 +123,13 @@ END FUNCTION
 
 FUNCTION MPIR_F08_get_MPI_WEIGHTS_EMPTY_c() &
     bind (C, name="MPIR_F08_get_MPI_WEIGHTS_EMPTY") result(p)
+    USE, intrinsic :: iso_c_binding, ONLY : c_ptr
+    IMPLICIT NONE
+    TYPE(c_ptr) :: p
+END FUNCTION
+
+FUNCTION MPIR_F08_get_MPI_BUFFER_AUTOMATIC_c() &
+    bind (C, name="MPIR_F08_get_MPI_BUFFER_AUTOMATIC") result(p)
     USE, intrinsic :: iso_c_binding, ONLY : c_ptr
     IMPLICIT NONE
     TYPE(c_ptr) :: p

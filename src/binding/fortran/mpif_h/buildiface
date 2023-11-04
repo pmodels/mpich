@@ -352,6 +352,7 @@ if ($write_mpif) {
     # Finally, the special symbols
     print MPIFFD "       INTEGER MPI_BOTTOM, MPI_IN_PLACE, MPI_UNWEIGHTED(1)\n";
     print MPIFFD "       INTEGER MPI_WEIGHTS_EMPTY(1)\n";
+    print MPIFFD "       INTEGER MPI_BUFFER_AUTOMATIC(1)\n";
 
     # And the external names.  This are necessary to
     # ensure that these are passed as routines, not implicitly-defined
@@ -417,6 +418,9 @@ if ($write_mpif) {
        SAVE /MPIFCMB5/
        SAVE /MPIFCMB9/
 
+       COMMON /MPIFCMBa/ MPI_BUFFER_AUTOMATIC
+       SAVE /MPIFCMBa/
+
        COMMON /MPIPRIV1/ MPI_BOTTOM, MPI_IN_PLACE, MPI_STATUS_IGNORE
 
        COMMON /MPIPRIV2/ MPI_STATUSES_IGNORE, MPI_ERRCODES_IGNORE
@@ -424,6 +428,7 @@ if ($write_mpif) {
 
        COMMON /MPIPRIVC/ MPI_ARGVS_NULL, MPI_ARGV_NULL
        SAVE   /MPIPRIVC/\n";
+
 
     close( MPIFFD );
     &ReplaceIfDifferent( "mpif.h.in", "mpif.h.in.new" );

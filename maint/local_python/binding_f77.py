@@ -93,6 +93,17 @@ def dump_f77_c_func(func):
         code_list_common.append("}")
         code_list_common.append("")
 
+    # MPI_Buffer_attach and family
+    def dump_buf_attach(buf):
+        # void *
+        c_param_list.append("void *%s" % buf)
+        c_arg_list_A.append(buf)
+        c_arg_list_B.append(buf)
+        code_list_common.append("if (%s == MPIR_F_MPI_BUFFER_AUTOMATIC) {" % buf)
+        code_list_common.append("    %s = MPI_BUFFER_AUTOMATIC;" % buf)
+        code_list_common.append("}")
+        code_list_common.append("")
+
     # MPI_Status
     def dump_status(v, is_in, is_out):
         c_param_list.append("MPI_Fint *%s" % v)
@@ -591,7 +602,10 @@ def dump_f77_c_func(func):
                 pass;
 
             elif p['kind'] == "BUFFER":
-                dump_buf(p['name'], False)
+                if re.match(r'MPI_Buffer_attach|MPI_\w+_buffer_attach', func['name'], re.IGNORECASE):
+                    dump_buf_attach(p['name'])
+                else:
+                    dump_buf(p['name'], False)
 
             elif p['kind'] == "STRING":
                 if p['param_direction'] == 'out':

@@ -432,6 +432,9 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     mpi_errno = MPIR_finalize_builtin_comms();
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIR_Process_bsend_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Signal the debugger that we are about to exit. */
     MPIR_Debugger_set_aborting(NULL);
 

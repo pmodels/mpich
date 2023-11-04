@@ -1,6 +1,8 @@
 ===============================================================================
                                Changes in 4.2
 ===============================================================================
+# Complete support MPI 4.1 specification
+
 # CH4 shm is enabled by default with ucx netmod.
 
 # Use --with-{pmi,pmi2,pmix]=[path] to configure external PMI library.
@@ -30,6 +32,12 @@
   that supported kinds can also be found in MPI_INFO_ENV, but it was
   decided at the October 2023 meeting that this was a mistake and will
   be removed in an erratum.
+
+# New functions added in MPI-4.1: MPI_Comm_attach_buffer, MPI_Session_attach_buffer,
+  MPI_Comm_detach_buffer, MPI_Session_detach_buffer,
+  MPI_Buffer_flush, MPI_Comm_flush_buffer, MPI_Session_flush_buffer,
+  MPI_Buffer_iflush, MPI_Comm_iflush_buffer, and MPI_Session_iflush_buffer.
+  Also added constant MPI_BUFFER_AUTOMATIC to allow automatic buffers.
 
 ===============================================================================
                                Changes in 4.1

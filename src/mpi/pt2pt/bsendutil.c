@@ -19,86 +19,417 @@
  *   MPIR_Bsend_isend  - Essentially performs an MPI_Ibsend.  Returns
  *                an MPIR_Request that is also stored internally in the
  *                corresponding MPII_Bsend_data_t entry
- *   MPIR_Bsend_free_segment - Free a buffer that is no longer needed,
- *                merging with adjacent segments
- *   MPIR_Bsend_check_active - Check for completion of any pending sends
- *                for bsends (all bsends, both MPI_Ibsend and MPI_Bsend,
- *                are internally converted into Isends on the data
- *                in the Bsend buffer)
- *   MPIR_Bsend_retry_pending - Routine for future use to handle the
- *                case where an Isend cannot be initiated.
- *   MPIR_Bsend_find_buffer - Find a buffer in the bsend buffer large
- *                enough for the message.  However, does not acquire that
- *                buffer (see MPIR_Bsend_take_buffer)
- *   MPIR_Bsend_take_buffer - Find and acquire a buffer for a message
- *   MPIR_Bsend_finalize - Finalize handler when Bsend routines are used
- *   MPIR_Bsend_dump - Debugging routine to print the contents of the control
- *                information in the bsend buffer (the MPII_Bsend_data_t entries)
+ *   MPIR_Bsend_finalize - Finalize bsendbuffer
+ *
+ * Utilities for user buffer:
  */
-
-#ifdef MPL_USE_DBG_LOGGING
-static void MPIR_Bsend_dump(void);
-#endif
 
 #define BSENDDATA_HEADER_TRUE_SIZE (sizeof(MPII_Bsend_data_t) - sizeof(double))
 
-/* BsendBuffer is the structure that describes the overall Bsend buffer */
-/*
- * We use separate buffer and origbuffer because we may need to align
- * the buffer (we *could* always memcopy the header to an aligned region,
- * but it is simpler to just align it internally.  This does increase the
- * BSEND_OVERHEAD, but that is already relatively large.  We could instead
- * make sure that the initial header was set at an aligned location (
- * taking advantage of the "alignpad"), but this would require more changes.
- */
-static struct BsendBuffer {
-    void *buffer;               /* Pointer to the beginning of the user-
-                                 * provided buffer */
-    MPI_Aint buffer_size;       /* Size of the user-provided buffer */
-    void *origbuffer;           /* Pointer to the buffer provided by
-                                 * the user */
-    MPI_Aint origbuffer_size;   /* Size of the buffer as provided
-                                 * by the user */
-    MPII_Bsend_data_t *avail;   /* Pointer to the first available block
-                                 * of space */
-    MPII_Bsend_data_t *pending; /* Pointer to the first message that
-                                 * could not be sent because of a
-                                 * resource limit (e.g., no requests
-                                 * available) */
-    MPII_Bsend_data_t *active;  /* Pointer to the first active (sending)
-                                 * message */
-} BsendBuffer = {
-0, 0, 0, 0, 0, 0, 0};
-
-static int initialized = 0;     /* keep track of the first call to any
-                                 * bsend routine */
-
 /* Forward references */
-static void MPIR_Bsend_retry_pending(void);
-static int MPIR_Bsend_check_active(void);
-static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(size_t);
-static void MPIR_Bsend_take_buffer(MPII_Bsend_data_t *, size_t);
-static int MPIR_Bsend_finalize(void *);
-static void MPIR_Bsend_free_segment(MPII_Bsend_data_t *);
+static int bsend_attach_auto(struct MPII_BsendBuffer_auto *automatic,
+                             void *buffer, MPI_Aint buffer_size);
+static int bsend_detach_auto(struct MPII_BsendBuffer_auto *automatic,
+                             void *bufferp, MPI_Aint * size);
+static int bsend_flush_auto(struct MPII_BsendBuffer_auto *automatic);
+static int bsend_isend_auto(struct MPII_BsendBuffer_auto *automatic, MPI_Aint packsize,
+                            const void *buf, int count, MPI_Datatype dtype, int dest, int tag,
+                            MPIR_Comm * comm_ptr, MPIR_Request ** request);
+static bool bsend_poll_auto(struct MPII_BsendBuffer_auto *automatic);
+
+static int bsend_attach_user(struct MPII_BsendBuffer_user *user,
+                             void *buffer, MPI_Aint buffer_size);
+static int bsend_detach_user(struct MPII_BsendBuffer_user *user, void *bufferp, MPI_Aint * size);
+static int bsend_flush_user(struct MPII_BsendBuffer_user *user);
+static int bsend_isend_user(struct MPII_BsendBuffer_user *user, MPI_Aint packsize,
+                            const void *buf, int count, MPI_Datatype dtype,
+                            int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request);
+static bool bsend_poll_user(struct MPII_BsendBuffer_user *user);
 
 /*
  * Attach a buffer.  This checks for the error conditions and then
  * initialized the avail buffer.
  */
-int MPIR_Bsend_attach(void *buffer, MPI_Aint buffer_size)
+static int MPIR_Bsend_attach(MPII_BsendBuffer ** bsendbuffer_p, void *buffer, MPI_Aint buffer_size)
 {
-    MPII_Bsend_data_t *p;
-    size_t offset, align_sz;
+    int mpi_errno = MPI_SUCCESS;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+
+    MPIR_ERR_CHKANDJUMP((*bsendbuffer_p) != NULL, mpi_errno, MPI_ERR_OTHER, "**bufexists");
+
+    *bsendbuffer_p = MPL_calloc(1, sizeof(MPII_BsendBuffer), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!(*bsendbuffer_p), mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    if (buffer == MPI_BUFFER_AUTOMATIC) {
+        (*bsendbuffer_p)->is_automatic = true;
+        mpi_errno = bsend_attach_auto(&((*bsendbuffer_p)->u.automatic), buffer, buffer_size);
+    } else {
+        (*bsendbuffer_p)->is_automatic = false;
+        mpi_errno = bsend_attach_user(&((*bsendbuffer_p)->u.user), buffer, buffer_size);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/*
+ * Detach a buffer.  This routine must wait until any active bsends
+ * are complete.  Note that MPI specifies the type of the returned "size"
+ * argument as an "int" (the definition predates that of ssize_t as a
+ * standard type).
+ */
+static int MPIR_Bsend_detach(MPII_BsendBuffer ** bsendbuffer_p, void *bufferp, MPI_Aint * size)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+
+    if (*bsendbuffer_p == NULL) {
+        *(void **) bufferp = NULL;
+        *size = 0;
+        goto fn_exit;
+    }
+
+    if ((*bsendbuffer_p)->is_automatic) {
+        mpi_errno = bsend_detach_auto(&((*bsendbuffer_p)->u.automatic), bufferp, size);
+    } else {
+        mpi_errno = bsend_detach_user(&((*bsendbuffer_p)->u.user), bufferp, size);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPL_free(*bsendbuffer_p);
+    *bsendbuffer_p = NULL;
+
+  fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int MPIR_Bsend_flush(MPII_BsendBuffer * bsendbuffer)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+
+    if (bsendbuffer == NULL) {
+        goto fn_exit;
+    }
+
+    if (bsendbuffer->is_automatic) {
+        mpi_errno = bsend_flush_auto(&(bsendbuffer->u.automatic));
+    } else {
+        mpi_errno = bsend_flush_user(&(bsendbuffer->u.user));
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/*
+ * Initiate an ibsend.  We'll used this for Bsend as well.
+ */
+int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
+                     int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+
+    MPI_Aint packsize = 0;
+    if (dtype != MPI_PACKED)
+        MPIR_Pack_size(count, dtype, &packsize);
+    else
+        packsize = count;
+
+    MPII_BsendBuffer *bsendbuffer;
+    if (comm_ptr->bsendbuffer) {
+        bsendbuffer = comm_ptr->bsendbuffer;
+    } else if (comm_ptr->session_ptr && comm_ptr->session_ptr->bsendbuffer) {
+        bsendbuffer = comm_ptr->session_ptr->bsendbuffer;
+    } else {
+        bsendbuffer = MPIR_Process.bsendbuffer;
+    }
+    MPIR_ERR_CHKANDJUMP2(!bsendbuffer, mpi_errno, MPI_ERR_BUFFER, "**bufbsend",
+                         "**bufbsend %d %d", packsize, 0);
+
+    if (bsendbuffer->is_automatic) {
+        mpi_errno = bsend_isend_auto(&(bsendbuffer->u.automatic), packsize,
+                                     buf, count, dtype, dest, tag, comm_ptr, request);
+    } else {
+        mpi_errno = bsend_isend_user(&(bsendbuffer->u.user), packsize,
+                                     buf, count, dtype, dest, tag, comm_ptr, request);
+    }
+
+  fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static bool MPIR_Bsend_poll(MPII_BsendBuffer * bsendbuffer)
+{
+    if (bsendbuffer == NULL) {
+        return true;
+    }
+    if (bsendbuffer->is_automatic) {
+        return bsend_poll_auto(&(bsendbuffer->u.automatic));
+    } else {
+        return bsend_poll_user(&(bsendbuffer->u.user));
+    }
+}
+
+static int MPIR_Bsend_finalize(MPII_BsendBuffer ** bsendbuffer_p)
+{
+    if (*bsendbuffer_p) {
+        /* No lock since this is inside MPI_Finalize */
+        void *b;
+        MPI_Aint s;
+
+        /* Use detach to complete any communication */
+        MPIR_Bsend_detach(bsendbuffer_p, &b, &s);
+    }
+
+    return MPI_SUCCESS;
+}
+
+/* Iflush as generalized request */
+struct flush_state {
+    MPII_BsendBuffer *bsendbuffer;
+    MPIR_Request *req;
+    bool is_cancelled;
+};
+
+static int query_fn(void *extra_state, MPI_Status * status)
+{
+    struct flush_state *state = extra_state;
+    if (state->is_cancelled) {
+        MPIR_STATUS_SET_CANCEL_BIT(*status, TRUE);
+    } else {
+        MPIR_STATUS_SET_CANCEL_BIT(*status, FALSE);
+    }
+    status->MPI_ERROR = MPI_SUCCESS;
+
+    return MPI_SUCCESS;
+}
+
+static int free_fn(void *extra_state)
+{
+    MPL_free(extra_state);
+    return MPI_SUCCESS;
+}
+
+static int cancel_fn(void *extra_state, int complete)
+{
+    struct flush_state *state = extra_state;
+    if (!complete) {
+        state->is_cancelled = true;
+    }
+    return MPI_SUCCESS;
+}
+
+static int poll_fn(void *extra_state, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct flush_state *state = extra_state;
+    if (MPIR_Bsend_poll(state->bsendbuffer)) {
+        MPIR_Request_complete(state->req);
+    }
+
+    return mpi_errno;
+}
+
+static int wait_fn(int count, void **array_of_states, double timeout, MPI_Status * status)
+{
+    /* just do a poll */
+    struct flush_state **states = (void *) array_of_states;
+    for (int i = 0; i < count; i++) {
+        MPIR_Bsend_flush(states[i]->bsendbuffer);
+        MPIR_Request_complete(states[i]->req);
+    }
+    return MPI_SUCCESS;
+}
+
+static int MPIR_Bsend_iflush(MPII_BsendBuffer * bsendbuffer, MPIR_Request ** req_p)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct flush_state *state = MPL_malloc(sizeof(struct flush_state), MPL_MEM_OTHER);
+    state->bsendbuffer = bsendbuffer;
+    state->is_cancelled = false;
+
+    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, state, req_p);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    (*req_p)->u.ureq.greq_fns->poll_fn = poll_fn;
+    (*req_p)->u.ureq.greq_fns->wait_fn = wait_fn;
+
+    /* store request pointer so we can complete the request */
+    state->req = *req_p;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* -- routines for automatic buffer -- */
+
+struct bsend_auto_elem {
+    void *buf;
+    MPIR_Request *req;
+    struct bsend_auto_elem *next;
+    struct bsend_auto_elem *prev;
+};
+
+static void bsend_auto_reap(struct MPII_BsendBuffer_auto *automatic);
+
+static int bsend_attach_auto(struct MPII_BsendBuffer_auto *automatic,
+                             void *buffer, MPI_Aint buffer_size)
+{
+    automatic->user_size = buffer_size;
+    return MPI_SUCCESS;
+}
+
+static int bsend_detach_auto(struct MPII_BsendBuffer_auto *automatic,
+                             void *bufferp, MPI_Aint * size)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = bsend_flush_auto(automatic);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    *(void **) bufferp = MPI_BUFFER_AUTOMATIC;
+    *size = automatic->user_size;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int bsend_flush_auto(struct MPII_BsendBuffer_auto *automatic)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    while (automatic->active_list) {
+        struct bsend_auto_elem *elt = automatic->active_list;
+        /* FIXME: need make sure to progress all vcis */
+        mpi_errno = MPID_Wait(elt->req, MPI_STATUS_IGNORE);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        bsend_auto_reap(automatic);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int bsend_isend_auto(struct MPII_BsendBuffer_auto *automatic, MPI_Aint packsize,
+                            const void *buf, int count, MPI_Datatype dtype,
+                            int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* TODO: only check entries up to a thresh */
+    bsend_auto_reap(automatic);
+
+    struct bsend_auto_elem *elt;
+    elt = MPL_malloc(sizeof(struct bsend_auto_elem), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!elt, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    elt->buf = MPL_malloc(packsize, MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!elt->buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPI_Aint actual_pack_bytes;
+    mpi_errno = MPIR_Typerep_pack(buf, count, dtype, 0, elt->buf, packsize, &actual_pack_bytes,
+                                  MPIR_TYPEREP_FLAG_NONE);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(actual_pack_bytes == packsize);
+
+    mpi_errno = MPID_Isend(elt->buf, packsize, MPI_PACKED, dest, tag, comm_ptr, 0, &elt->req);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    struct bsend_auto_elem **head_p = (void *) &(automatic->active_list);
+    DL_APPEND(*head_p, elt);
+
+    if (request) {
+        MPIR_Request_add_ref(elt->req);
+        *request = elt->req;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static void bsend_auto_reap(struct MPII_BsendBuffer_auto *automatic)
+{
+    struct bsend_auto_elem *elt, *tmp;
+    struct bsend_auto_elem **head_p = (void *) &(automatic->active_list);
+    DL_FOREACH_SAFE(*head_p, elt, tmp) {
+        if (MPIR_Request_is_complete(elt->req)) {
+            MPL_free(elt->buf);
+            MPIR_Request_free(elt->req);
+        }
+        DL_DELETE(*head_p, elt);
+        MPL_free(elt);
+    }
+}
+
+static bool bsend_poll_auto(struct MPII_BsendBuffer_auto *automatic)
+{
+    MPID_Progress_test(NULL);
+    bsend_auto_reap(automatic);
+    return (automatic->active_list == NULL);
+}
+
+/* -- routines for user supplied buffer -- */
+/*
+ *   MPIR_Bsend_free_segment - Free a buffer that is no longer needed,
+ *                merging with adjacent segments
+ *   MPIR_Bsend_check_active - Check for completion of any active sends
+ *                for bsends (all bsends, both MPI_Ibsend and MPI_Bsend,
+ *                are internally converted into Isends on the data
+ *                in the Bsend buffer)
+ *   MPIR_Bsend_find_buffer - Find a buffer in the bsend buffer large
+ *                enough for the message.  However, does not acquire that
+ *                buffer (see mPIR_Bsend_take_buffer)
+ *   MPIR_Bsend_take_buffer - Find and acquire a buffer for a message
+ *   MPIR_Bsend_dump - Debugging routine to print the contents of the control
+ *                information in the bsend buffer (the MPII_Bsend_data_t entries)
+ */
+static int MPIR_Bsend_check_active(struct MPII_BsendBuffer_user *user);
+static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(struct MPII_BsendBuffer_user *user, size_t size);
+static void MPIR_Bsend_take_buffer(struct MPII_BsendBuffer_user *user,
+                                   MPII_Bsend_data_t * p, size_t size);
+static void MPIR_Bsend_free_segment(struct MPII_BsendBuffer_user *user, MPII_Bsend_data_t * p);
+static int MPIR_Bsend_progress(struct MPII_BsendBuffer_user *user);
+#ifdef MPL_USE_DBG_LOGGING
+static void MPIR_Bsend_dump(struct MPII_BsendBuffer_user *user);
+#endif
+
+static int bsend_attach_user(struct MPII_BsendBuffer_user *user, void *buffer, MPI_Aint buffer_size)
+{
 #ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            if (BsendBuffer.buffer) {
-                return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                            "MPIR_Bsend_attach", __LINE__, MPI_ERR_BUFFER,
-                                            "**bufexists", 0);
-            }
             if (buffer_size < MPI_BSEND_OVERHEAD) {
                 /* MPI_ERR_OTHER is another valid choice for this error,
                  * but the Intel test wants MPI_ERR_BUFFER, and it seems
@@ -115,65 +446,46 @@ int MPIR_Bsend_attach(void *buffer, MPI_Aint buffer_size)
     }
 #endif /* HAVE_ERROR_CHECKING */
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
-    if (!initialized) {
-        initialized = 1;
-        MPIR_Add_finalize(MPIR_Bsend_finalize, (void *) 0, 10);
-    }
 
-    BsendBuffer.origbuffer = buffer;
-    BsendBuffer.origbuffer_size = buffer_size;
-    BsendBuffer.buffer = buffer;
-    BsendBuffer.buffer_size = buffer_size;
+    user->origbuffer = buffer;
+    user->origbuffer_size = buffer_size;
+    user->buffer = buffer;
+    user->buffer_size = buffer_size;
 
     /* Make sure that the buffer that we use is aligned to align_sz.  Some other
      * code assumes pointer-alignment, and some code assumes double alignment.
      * Further, GCC 4.5.1 generates bad code on 32-bit platforms when this is
      * only 4-byte aligned (see #1149). */
+    size_t offset, align_sz;
     align_sz = MPL_MAX(sizeof(void *), sizeof(double));
     offset = ((size_t) buffer) % align_sz;
     if (offset) {
         offset = align_sz - offset;
         buffer = (char *) buffer + offset;
-        BsendBuffer.buffer = buffer;
-        BsendBuffer.buffer_size -= offset;
+        user->buffer = buffer;
+        user->buffer_size -= offset;
     }
-    BsendBuffer.avail = buffer;
-    BsendBuffer.pending = 0;
-    BsendBuffer.active = 0;
+    user->avail = buffer;
+    user->active = 0;
 
     /* Set the first block */
+    MPII_Bsend_data_t *p;
     p = (MPII_Bsend_data_t *) buffer;
     p->size = buffer_size - BSENDDATA_HEADER_TRUE_SIZE;
     p->total_size = buffer_size;
     p->next = p->prev = NULL;
     p->msg.msgbuf = (char *) p + BSENDDATA_HEADER_TRUE_SIZE;
 
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     return MPI_SUCCESS;
 }
 
-/*
- * Detach a buffer.  This routine must wait until any pending bsends
- * are complete.  Note that MPI specifies the type of the returned "size"
- * argument as an "int" (the definition predates that of ssize_t as a
- * standard type).
- */
-int MPIR_Bsend_detach(void *bufferp, MPI_Aint * size)
+static int bsend_detach_user(struct MPII_BsendBuffer_user *user, void *bufferp, MPI_Aint * size)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
-    if (BsendBuffer.pending) {
-        /* FIXME: Process pending bsend requests in detach */
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         "MPIR_Bsend_detach", __LINE__, MPI_ERR_OTHER,
-                                         "**bsendpending", 0);
-        goto fn_fail;
-    }
-    if (BsendBuffer.active) {
+    if (user->active) {
         /* Loop through each active element and wait on it */
-        MPII_Bsend_data_t *p = BsendBuffer.active;
+        MPII_Bsend_data_t *p = user->active;
 
         while (p) {
             MPIR_Request *r = p->request;
@@ -184,37 +496,47 @@ int MPIR_Bsend_detach(void *bufferp, MPI_Aint * size)
         }
     }
 
-/* Note that this works even when the buffer does not exist */
-    *(void **) bufferp = BsendBuffer.origbuffer;
-    *size = (MPI_Aint) BsendBuffer.origbuffer_size;
-    BsendBuffer.origbuffer = NULL;
-    BsendBuffer.origbuffer_size = 0;
-    BsendBuffer.buffer = 0;
-    BsendBuffer.buffer_size = 0;
-    BsendBuffer.avail = 0;
-    BsendBuffer.active = 0;
-    BsendBuffer.pending = 0;
+    /* Note that this works even when the buffer does not exist */
+    *(void **) bufferp = user->origbuffer;
+    *size = (MPI_Aint) user->origbuffer_size;
+
+    user->origbuffer = NULL;
+    user->origbuffer_size = 0;
+    user->buffer = 0;
+    user->buffer_size = 0;
+    user->avail = 0;
+    user->active = 0;
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-/*
- * Initiate an ibsend.  We'll used this for Bsend as well.
- */
-int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
-                     int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request)
+static int bsend_flush_user(struct MPII_BsendBuffer_user *user)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPII_Bsend_data_t *p;
-    MPII_Bsend_msg_t *msg;
-    MPI_Aint packsize;
-    int pass;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+    void *b;
+    MPI_Aint s;
+    mpi_errno = bsend_detach_user(user, &b, &s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = bsend_attach_user(user, b, s);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int bsend_isend_user(struct MPII_BsendBuffer_user *user, MPI_Aint packsize,
+                            const void *buf, int count, MPI_Datatype dtype,
+                            int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPII_Bsend_data_t *p = NULL;
     /*
      * We may want to decide here whether we need to pack at all
      * or if we can just use (a MPIR_Memcpy) of the buffer.
@@ -223,31 +545,25 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
 
     /* We check the active buffer first.  This helps avoid storage
      * fragmentation */
-    mpi_errno = MPIR_Bsend_check_active();
+    mpi_errno = MPIR_Bsend_check_active(user);
     MPIR_ERR_CHECK(mpi_errno);
-
-    if (dtype != MPI_PACKED)
-        MPIR_Pack_size(count, dtype, &packsize);
-    else
-        packsize = count;
 
     MPL_DBG_MSG_D(MPIR_DBG_BSEND, TYPICAL, "looking for buffer of size " MPI_AINT_FMT_DEC_SPEC,
                   packsize);
     /*
      * Use two passes.  Each pass is the same; between the two passes,
-     * attempt to complete any active requests, and start any pending
-     * ones.  If the message can be initiated in the first pass,
+     * attempt to complete any active requests.
+     *  If the message can be initiated in the first pass,
      * do not perform the second pass.
      */
-    for (pass = 0; pass < 2; pass++) {
-
-        p = MPIR_Bsend_find_buffer(packsize);
+    for (int pass = 0; pass < 2; pass++) {
+        p = MPIR_Bsend_find_buffer(user, packsize);
         if (p) {
             MPL_DBG_MSG_FMT(MPIR_DBG_BSEND, TYPICAL, (MPL_DBG_FDEST,
                                                       "found buffer of size " MPI_AINT_FMT_DEC_SPEC
                                                       " with address %p", packsize, p));
             /* Found a segment */
-
+            MPII_Bsend_msg_t *msg;
             msg = &p->msg;
 
             /* Pack the data into the buffer */
@@ -272,9 +588,6 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
             mpi_errno = MPID_Isend(msg->msgbuf, msg->count, MPI_PACKED,
                                    dest, tag, comm_ptr, 0, &p->request);
             MPIR_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Bsend internal error: isend returned err");
-            /* If the error is "request not available", we should
-             * put this on the pending list.  This will depend on
-             * how we signal failure to send. */
 
             if (p->request) {
                 MPL_DBG_MSG_FMT(MPIR_DBG_BSEND, TYPICAL,
@@ -283,7 +596,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
                  * data has already been sent.  The original code
                  * to do this was commented out and probably did not match
                  * the current request internals */
-                MPIR_Bsend_take_buffer(p, p->msg.count);
+                MPIR_Bsend_take_buffer(user, p, p->msg.count);
                 if (request) {
                     /* Add 1 ref_count for MPI_Wait/Test */
                     MPIR_Request_add_ref(p->request);
@@ -299,9 +612,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
             break;
         MPL_DBG_MSG(MPIR_DBG_BSEND, TYPICAL, "Could not find storage, checking active");
         /* Try to complete some pending bsends */
-        MPIR_Bsend_check_active();
-        /* Give priority to any pending operations */
-        MPIR_Bsend_retry_pending();
+        MPIR_Bsend_check_active(user);
     }
 
     if (!p) {
@@ -309,45 +620,24 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
         /* Generate a traceback of the allocated space, explaining why
          * packsize could not be found */
         MPL_DBG_MSG(MPIR_DBG_BSEND, TYPICAL, "Could not find space; dumping arena");
-        MPL_DBG_STMT(MPIR_DBG_BSEND, TYPICAL, MPIR_Bsend_dump());
+        MPL_DBG_STMT(MPIR_DBG_BSEND, TYPICAL, MPIR_Bsend_dump(user));
         MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_BUFFER, "**bufbsend", "**bufbsend %d %d", packsize,
-                             BsendBuffer.buffer_size);
+                             user->buffer_size);
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-/*
- * The following routine looks up the segment used by request req
- * and frees it. The request is assumed to be completed. This routine
- * is called by only MPIR_Ibsend_cancel.
- */
-int MPIR_Bsend_free_req_seg(MPIR_Request * req)
+static bool bsend_poll_user(struct MPII_BsendBuffer_user *user)
 {
-    int mpi_errno = MPI_ERR_INTERN;
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
-
-    MPII_Bsend_data_t *active = BsendBuffer.active;
-
-    MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Checking active starting at %p", active);
-    while (active) {
-
-        if (active->request == req) {
-            MPIR_Bsend_free_segment(active);
-            mpi_errno = MPI_SUCCESS;
-        }
-
-        active = active->next;;
-
-        MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Next active is %p", active);
+    if (user->active) {
+        MPID_Progress_test(NULL);
+        MPIR_Bsend_progress(user);
     }
-
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
-    return mpi_errno;
+    return (user->active == NULL);
 }
 
 /*
@@ -360,9 +650,9 @@ int MPIR_Bsend_free_req_seg(MPIR_Request * req)
 /* Add block p to the free list. Merge into adjacent blocks.  Used only
    within the check_active */
 
-static void MPIR_Bsend_free_segment(MPII_Bsend_data_t * p)
+static void MPIR_Bsend_free_segment(struct MPII_BsendBuffer_user *user, MPII_Bsend_data_t * p)
 {
-    MPII_Bsend_data_t *prev = p->prev, *avail = BsendBuffer.avail, *avail_prev;
+    MPII_Bsend_data_t *prev = p->prev, *avail = user->avail, *avail_prev;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_BSEND, TYPICAL, (MPL_DBG_FDEST,
                                               "Freeing bsend segment at %p of size %llu, next at %p",
@@ -372,7 +662,7 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t * p)
     MPL_DBG_MSG_D(MPIR_DBG_BSEND, TYPICAL,
                   "At the beginning of free_segment with size %llu:",
                   (unsigned long long) p->total_size);
-    MPL_DBG_STMT(MPIR_DBG_BSEND, TYPICAL, MPIR_Bsend_dump());
+    MPL_DBG_STMT(MPIR_DBG_BSEND, TYPICAL, MPIR_Bsend_dump(user));
 
     /* Remove the segment from the active list */
     if (prev) {
@@ -381,14 +671,14 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t * p)
     } else {
         /* p was at the head of the active list */
         MPL_DBG_MSG(MPIR_DBG_BSEND, TYPICAL, "free segment is head of active list");
-        BsendBuffer.active = p->next;
+        user->active = p->next;
         /* The next test sets the prev pointer to null */
     }
     if (p->next) {
         p->next->prev = prev;
     }
 
-    MPL_DBG_STMT(MPIR_DBG_BSEND, VERBOSE, MPIR_Bsend_dump());
+    MPL_DBG_STMT(MPIR_DBG_BSEND, VERBOSE, MPIR_Bsend_dump(user));
 
     /* Merge into the avail list */
     /* Find avail_prev, avail, such that p is between them.
@@ -432,12 +722,12 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t * p)
         }
     } else {
         /* p is the new head of the list */
-        BsendBuffer.avail = p;
+        user->avail = p;
         p->prev = 0;
     }
 
     MPL_DBG_MSG(MPIR_DBG_BSEND, TYPICAL, "At the end of free_segment:");
-    MPL_DBG_STMT(MPIR_DBG_BSEND, TYPICAL, MPIR_Bsend_dump());
+    MPL_DBG_STMT(MPIR_DBG_BSEND, TYPICAL, MPIR_Bsend_dump(user));
 }
 
 /*
@@ -451,19 +741,17 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t * p)
 
 /* TODO: make it as a progress_hook. The critical section need be made more granular.
  * Or, does it matter? */
-static int MPIR_Bsend_progress(void)
+static int MPIR_Bsend_progress(struct MPII_BsendBuffer_user *user)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPII_Bsend_data_t *active = BsendBuffer.active;
+    MPII_Bsend_data_t *active = user->active;
     while (active) {
         MPII_Bsend_data_t *next_active = active->next;
         MPIR_Request *req = active->request;
         if (MPIR_Request_is_complete(req)) {
-            MPIR_Bsend_free_segment(active);
-            if (!MPIR_Request_is_persistent(req)) {
-                MPIR_Request_free(req);
-            }
+            MPIR_Bsend_free_segment(user, active);
+            MPIR_Request_free(req);
         }
         active = next_active;
     }
@@ -471,14 +759,14 @@ static int MPIR_Bsend_progress(void)
     return mpi_errno;
 }
 
-static int MPIR_Bsend_check_active(void)
+static int MPIR_Bsend_check_active(struct MPII_BsendBuffer_user *user)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (BsendBuffer.active) {
+    if (user->active) {
         mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Bsend_progress();
+        MPIR_Bsend_progress(user);
     }
 
   fn_exit:
@@ -488,28 +776,12 @@ static int MPIR_Bsend_check_active(void)
 }
 
 /*
- * FIXME : For each pending item (that is, items that we couldn't even start
- * sending), try to get them going.
- */
-static void MPIR_Bsend_retry_pending(void)
-{
-    MPII_Bsend_data_t *pending = BsendBuffer.pending, *next_pending;
-
-    while (pending) {
-        next_pending = pending->next;
-        /* Retry sending this item */
-        /* FIXME: Unimplemented retry of pending bsend operations */
-        pending = next_pending;
-    }
-}
-
-/*
  * Find a slot in the avail buffer that can hold size bytes.  Does *not*
  * remove the slot from the avail buffer (see MPIR_Bsend_take_buffer)
  */
-static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(size_t size)
+static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(struct MPII_BsendBuffer_user *user, size_t size)
 {
-    MPII_Bsend_data_t *p = BsendBuffer.avail;
+    MPII_Bsend_data_t *p = user->avail;
 
     while (p) {
         if (p->size >= size) {
@@ -529,7 +801,8 @@ static MPII_Bsend_data_t *MPIR_Bsend_find_buffer(size_t size)
  * If there isn't enough left of p, remove the entire segment from
  * the avail list.
  */
-static void MPIR_Bsend_take_buffer(MPII_Bsend_data_t * p, size_t size)
+static void MPIR_Bsend_take_buffer(struct MPII_BsendBuffer_user *user,
+                                   MPII_Bsend_data_t * p, size_t size)
 {
     MPII_Bsend_data_t *prev;
     size_t alloc_size;
@@ -581,50 +854,35 @@ static void MPIR_Bsend_take_buffer(MPII_Bsend_data_t * p, size_t size)
     if (prev) {
         prev->next = p->next;
     } else {
-        BsendBuffer.avail = p->next;
+        user->avail = p->next;
     }
 
     if (p->next) {
         p->next->prev = p->prev;
     }
 
-    if (BsendBuffer.active) {
-        BsendBuffer.active->prev = p;
+    if (user->active) {
+        user->active->prev = p;
     }
-    p->next = BsendBuffer.active;
+    p->next = user->active;
     p->prev = 0;
-    BsendBuffer.active = p;
+    user->active = p;
 
     MPL_DBG_MSG_P(MPIR_DBG_BSEND, VERBOSE, "segment %p now head of active", p);
     MPL_DBG_MSG(MPIR_DBG_BSEND, TYPICAL, "At end of take buffer");
-    MPL_DBG_STMT(MPIR_DBG_BSEND, TYPICAL, MPIR_Bsend_dump());
-}
-
-static int MPIR_Bsend_finalize(void *p ATTRIBUTE((unused)))
-{
-    /* No lock since this is inside MPI_Finalize */
-    void *b;
-    MPI_Aint s;
-
-    MPL_UNREFERENCED_ARG(p);
-
-    if (BsendBuffer.buffer) {
-        /* Use detach to complete any communication */
-        MPIR_Bsend_detach(&b, &s);
-    }
-    return 0;
+    MPL_DBG_STMT(MPIR_DBG_BSEND, TYPICAL, MPIR_Bsend_dump(user));
 }
 
 /*
  * These routines are defined only if debug logging is enabled
  */
 #ifdef MPL_USE_DBG_LOGGING
-static void MPIR_Bsend_dump(void)
+static void MPIR_Bsend_dump(struct MPII_BsendBuffer_user *user)
 {
-    MPII_Bsend_data_t *a = BsendBuffer.avail;
+    MPII_Bsend_data_t *a = user->avail;
 
     MPL_DBG_MSG_D(MPIR_DBG_BSEND, TYPICAL, "Total size is %llu",
-                  (unsigned long long) BsendBuffer.buffer_size);
+                  (unsigned long long) user->buffer_size);
     MPL_DBG_MSG(MPIR_DBG_BSEND, TYPICAL, "Avail list is:");
     while (a) {
         MPL_DBG_MSG_FMT(MPIR_DBG_BSEND, TYPICAL, (MPL_DBG_FDEST, "[%p] totalsize = %llu(%llx)",
@@ -638,7 +896,7 @@ static void MPIR_Bsend_dump(void)
     }
 
     MPL_DBG_MSG(MPIR_DBG_BSEND, TYPICAL, "Active list is:");
-    a = BsendBuffer.active;
+    a = user->active;
     while (a) {
         MPL_DBG_MSG_FMT(MPIR_DBG_BSEND, TYPICAL, (MPL_DBG_FDEST, "[%p] totalsize = %llu(%llx)",
                                                   a, (unsigned long long) a->total_size,
@@ -653,7 +911,79 @@ static void MPIR_Bsend_dump(void)
 }
 #endif
 
+/* -- Exposed wrapper functions -- */
+
+int MPIR_Buffer_attach_impl(void *buffer, MPI_Aint size)
+{
+    return MPIR_Bsend_attach(&(MPIR_Process.bsendbuffer), buffer, size);
+}
+
 int MPIR_Buffer_detach_impl(void *buffer_addr, MPI_Aint * size)
 {
-    return MPIR_Bsend_detach(buffer_addr, size);
+    return MPIR_Bsend_detach(&(MPIR_Process.bsendbuffer), buffer_addr, size);
+}
+
+int MPIR_Buffer_flush_impl(void)
+{
+    return MPIR_Bsend_flush(MPIR_Process.bsendbuffer);
+}
+
+int MPIR_Buffer_iflush_impl(MPIR_Request ** req_p)
+{
+    return MPIR_Bsend_iflush(MPIR_Process.bsendbuffer, req_p);
+}
+
+int MPIR_Process_bsend_finalize(void)
+{
+    return MPIR_Bsend_finalize(&(MPIR_Process.bsendbuffer));
+}
+
+int MPIR_Comm_attach_buffer_impl(MPIR_Comm * comm_ptr, void *buffer_addr, MPI_Aint size)
+{
+    return MPIR_Bsend_attach(&(comm_ptr->bsendbuffer), buffer_addr, size);
+}
+
+int MPIR_Comm_detach_buffer_impl(MPIR_Comm * comm_ptr, void *buffer_addr, MPI_Aint * size)
+{
+    return MPIR_Bsend_detach(&(comm_ptr->bsendbuffer), buffer_addr, size);
+}
+
+int MPIR_Comm_flush_buffer_impl(MPIR_Comm * comm_ptr)
+{
+    return MPIR_Bsend_flush(comm_ptr->bsendbuffer);
+}
+
+int MPIR_Comm_iflush_buffer_impl(MPIR_Comm * comm_ptr, MPIR_Request ** req_p)
+{
+    return MPIR_Bsend_iflush(comm_ptr->bsendbuffer, req_p);
+}
+
+int MPIR_Comm_bsend_finalize(MPIR_Comm * comm_ptr)
+{
+    return MPIR_Bsend_finalize(&(comm_ptr->bsendbuffer));
+}
+
+int MPIR_Session_attach_buffer_impl(MPIR_Session * session, void *buffer_addr, MPI_Aint size)
+{
+    return MPIR_Bsend_attach(&(session->bsendbuffer), buffer_addr, size);
+}
+
+int MPIR_Session_detach_buffer_impl(MPIR_Session * session, void *buffer_addr, MPI_Aint * size)
+{
+    return MPIR_Bsend_detach(&(session->bsendbuffer), buffer_addr, size);
+}
+
+int MPIR_Session_flush_buffer_impl(MPIR_Session * session)
+{
+    return MPIR_Bsend_flush(session->bsendbuffer);
+}
+
+int MPIR_Session_iflush_buffer_impl(MPIR_Session * session, MPIR_Request ** req_p)
+{
+    return MPIR_Bsend_iflush(session->bsendbuffer, req_p);
+}
+
+int MPIR_Session_bsend_finalize(MPIR_Session * session)
+{
+    return MPIR_Bsend_finalize(&(session->bsendbuffer));
 }
