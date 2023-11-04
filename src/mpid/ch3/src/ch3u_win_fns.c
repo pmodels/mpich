@@ -228,9 +228,21 @@ int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * 
 
     MPIR_FUNC_ENTER;
 
-    *(void **) baseptr = win_ptr->base;
-    *size = win_ptr->size;
-    *disp_unit = win_ptr->disp_unit;
+    /* We don't really support shared memory, only return local process' info
+     * if the window size is 1 or it is querying its own rank */
+    if (target_rank == MPI_PROC_NULL && win_ptr->comm_ptr->local_size == 1) {
+        *(void **) baseptr = win_ptr->base;
+        *size = win_ptr->size;
+        *disp_unit = win_ptr->disp_unit;
+    } else if (target_rank == win_ptr->comm_ptr->rank) {
+        *(void **) baseptr = win_ptr->base;
+        *size = win_ptr->size;
+        *disp_unit = win_ptr->disp_unit;
+    } else {
+        *(void **) baseptr = NULL;
+        *size = 0;
+        *disp_unit = 0;
+    }
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
