@@ -160,6 +160,14 @@ int main(int argc, char **argv)
     errors += check_win_info_get(win, "alloc_shared_noncontig", "false");
     MPI_Comm_free(&shm_comm);
 
+    /* Test#9: setting/getting "mpi_accumulate_granularity" */
+    /*   #9.1: "mpi_accumulate_granularity" must default to "0" */
+    errors += check_win_info_get(win, "mpi_accumulate_granularity", "0");
+
+    /*   #9.2: setting "mpi_accumulate_granularity" to "8" */
+    win_info_set(win, "mpi_accumulate_granularity", "8");
+    errors += check_win_info_get(win, "mpi_accumulate_granularity", "8");
+
     MPI_Win_free(&win);
 
     MTest_Finalize(errors);

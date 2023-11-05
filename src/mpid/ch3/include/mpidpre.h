@@ -293,6 +293,7 @@ struct MPIDI_Win_info_args {
     int same_disp_unit;
     int alloc_shared_noncontig;
     int alloc_shm;
+    int accumulate_granularity;
 };
 
 struct MPIDI_RMA_op;            /* forward decl from mpidrma.h */

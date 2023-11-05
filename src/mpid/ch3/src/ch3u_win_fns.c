@@ -354,6 +354,20 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
             if (!strncmp(info_value, "false", sizeof("false")))
                 win->info_args.same_disp_unit = FALSE;
         }
+
+        /********************************************************/
+        /*******  check for info mpi_accumualte_granularity *****/
+        /********************************************************/
+        info_flag = 0;
+        MPIR_Info_get_impl(info, "mpi_acumulate_granularity", MPI_MAX_INFO_VAL, info_value, &info_flag);
+        if (info_flag) {
+            int value = atoi(info_value);
+            if (value > 0) {
+                win->info_args.accumulate_granularity = value;
+            } else {
+                win->info_args.accumulate_granularity = 0;
+            }
+        }
     }
 
 
