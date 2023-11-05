@@ -23,6 +23,13 @@ def main():
     func_list.extend(get_type_create_f90_func_list())
     func_list.extend(get_f77_dummy_func_list())
 
+    def has_cptr(func):
+        if G.opts['iso-c-binding'] == "yes":
+            for p in func['parameters']:
+                if p['kind'] == 'C_BUFFER':
+                    return True
+        return False
+
     # mpi_base.f90
     G.out = []
     dump_F_module_open("mpi_base")
@@ -34,7 +41,7 @@ def main():
         G.out.append("INTERFACE %s" % func['name'])
         G.out.append("INDENT")
         dump_f90_func(func, is_pmpi)
-        if re.match(r'mpi_alloc_mem', func['name'], re.IGNORECASE) and G.opts['iso-c-binding'] == "yes":
+        if has_cptr(func):
             # specific interface using "TYPE(C_PTR)"
             dump_f90_func(func, is_pmpi, True)
         G.out.append("DEDENT")

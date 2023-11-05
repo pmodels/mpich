@@ -9,7 +9,7 @@ from local_python import RE
 
 import re
 
-def dump_f77_c_func(func):
+def dump_f77_c_func(func, is_cptr=False):
     func_name = get_function_name(func)
     f_mapping = get_kind_map('F90')
     c_mapping = get_kind_map('C')
@@ -714,6 +714,8 @@ def dump_f77_c_func(func):
                     dump_index_in(p['name'])
             elif re.match(r'FUNCTION|FUNCTION_SMALL|POLYFUNCTION', p['kind']):
                 dump_function(p['name'], p['func_type'])
+            elif is_cptr and p['kind'] == 'C_BUFFER' and p['param_direction'] == 'out':
+                dump_scalar_out(p['name'], "void *", "void *")
             elif re.match(r'EXTRA_STATE|C_BUFFER2|C_BUFFER', p['kind']):
                 if p['param_direction'] == 'out':
                     dump_scalar_out(p['name'], "MPI_Aint", "void *")
@@ -882,7 +884,11 @@ def dump_f77_c_func(func):
     if c_param_list_end:
         param_str += ' ' + ' '.join(c_param_list_end)
 
-    use_name = dump_profiling(func_name, param_str, return_type)
+
+    if is_cptr:
+        use_name = func_name.lower() + '_cptr_'
+    else:
+        use_name = dump_profiling(func_name, param_str, return_type)
     G.out.append("")
     dump_mpi_decl_begin(use_name, param_str, return_type)
 

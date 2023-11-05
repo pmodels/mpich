@@ -35,11 +35,19 @@ def main():
     func_list = [f for f in func_list if '_skip_fortran' not in f]
 
     # fortran_binding.c
+    def has_cptr(func):
+        for p in func['parameters']:
+            if p['kind'] == 'C_BUFFER':
+                return True
+        return False
+
     G.out = []
     G.profile_out = []
     for func in func_list:
         G.out.append("")
         dump_f77_c_func(func)
+        if has_cptr(func):
+            dump_f77_c_func(func, True)
 
     f = "%s/fortran_binding.c" % f77_dir
     dump_f77_c_file(f, G.out)
