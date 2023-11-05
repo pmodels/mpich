@@ -52,6 +52,8 @@
 #define ERROR_SPECIFIC_SEQ_SIZE   16
 #define ERROR_SPECIFIC_SEQ_SHIFT  26
 #define ERROR_FATAL_MASK          0x00000080
+/* reuse the fatal mask for dynamic code with dynamic class */
+#define ERROR_DYN_CLASS           0x00000080
 #define ERROR_GET_CLASS(mpi_errno_) MPIR_ERR_GET_CLASS(mpi_errno_)
 
 /* These must correspond to the masks defined above */

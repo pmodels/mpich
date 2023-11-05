@@ -146,7 +146,7 @@ int MPIR_Add_error_string_impl(int code, const char *msg_string)
     errcode = (code & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT;
 
     /* --BEGIN ERROR HANDLING-- */
-    if (code & ~(ERROR_CLASS_MASK | ERROR_DYN_MASK | ERROR_GENERIC_MASK)) {
+    if (code & ~(ERROR_CLASS_MASK | ERROR_DYN_MASK | ERROR_GENERIC_MASK | ERROR_DYN_CLASS)) {
         /* Check for invalid error code */
         return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                     __func__, __LINE__,
@@ -384,6 +384,9 @@ int MPIR_Add_error_code_impl(int class, int *code)
 
     /* Create the full error code */
     new_code = class | (new_code << ERROR_GENERIC_SHIFT);
+    if (class & ERROR_DYN_MASK) {
+        new_code |= ERROR_DYN_CLASS;
+    }
 
     /* FIXME: For robustness, we should make sure that the associated string
      * is initialized to null */
@@ -413,7 +416,7 @@ int MPIR_Remove_error_code_impl(int code)
 
     struct intcnt *s;
 
-    if (class & ERROR_DYN_MASK) {
+    if (code & ERROR_DYN_CLASS) {
         /* increment ref_count for dynamic error class */
         int errclass = class & ~ERROR_DYN_MASK;
         HASH_FIND_INT(err_class.used, &errclass, s);
@@ -464,7 +467,7 @@ static const char *get_dynerr_string(int code)
     errclass = code & ERROR_CLASS_MASK;
     errcode = (code & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT;
 
-    if (code & ~(ERROR_CLASS_MASK | ERROR_DYN_MASK | ERROR_GENERIC_MASK)) {
+    if (code & ~(ERROR_CLASS_MASK | ERROR_DYN_MASK | ERROR_GENERIC_MASK | ERROR_DYN_CLASS)) {
         /* Check for invalid error code */
         return 0;
     }
