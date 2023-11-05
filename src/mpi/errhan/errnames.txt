@@ -58,6 +58,7 @@
 **errclassref %x %d:Error class %x still in use (ref_count = %d)
 **noerrcodes:No more user-defined error codes
 **predeferrcode:Predefined error code given
+**invaliderrcode:Invalid error code given
 **errcoderef:Error code still in use
 **errcoderef %x %d:Error code %x still in use (ref_count = %d)
 **rankdup:Duplicate ranks in rank array 

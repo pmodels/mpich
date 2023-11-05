@@ -214,25 +214,19 @@ int MPIR_Remove_error_string_impl(int code)
     if (errcode) {
         struct intcnt *s;
         HASH_FIND_INT(err_code.used, &errcode, s);
-        if (s) {
-            MPL_free((void *) (user_code_msgs[errcode]));
-            user_code_msgs[errcode] = NULL;
-            s->ref_count--;
-        } else {
-            mpi_errno = MPI_ERR_OTHER;
-            goto fn_fail;
-        }
+        MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrcode");
+
+        MPL_free((void *) (user_code_msgs[errcode]));
+        user_code_msgs[errcode] = NULL;
+        s->ref_count--;
     } else {
         struct intcnt *s;
         HASH_FIND_INT(err_class.used, &errclass, s);
-        if (s) {
-            MPL_free((void *) (user_class_msgs[errclass]));
-            user_class_msgs[errclass] = NULL;
-            s->ref_count--;
-        } else {
-            mpi_errno = MPI_ERR_OTHER;
-            goto fn_fail;
-        }
+        MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrcode");
+
+        MPL_free((void *) (user_class_msgs[errclass]));
+        user_class_msgs[errclass] = NULL;
+        s->ref_count--;
     }
 
   fn_exit:
@@ -318,11 +312,14 @@ int MPIR_Remove_error_class_impl(int user_errclass)
     if (not_initialized)
         MPIR_Init_err_dyncodes();
 
+    MPIR_ERR_CHKANDJUMP(!(user_errclass & ERROR_DYN_MASK),
+                        mpi_errno, MPI_ERR_OTHER, "**predeferrclass");
+
     int errclass = user_errclass & ~ERROR_DYN_MASK;
     struct intcnt *s;
     HASH_FIND_INT(err_class.used, &errclass, s);
 
-    MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**predeferrclass");
+    MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrclass");
     MPIR_ERR_CHKANDJUMP2(s->ref_count != 0, mpi_errno, MPI_ERR_OTHER, "**errclassref",
                          "**errclassref %x %d", user_errclass, s->ref_count);
 
@@ -414,6 +411,8 @@ int MPIR_Remove_error_code_impl(int code)
     if (not_initialized)
         MPIR_Init_err_dyncodes();
 
+    MPIR_ERR_CHKANDJUMP(!(code & ERROR_DYN_MASK), mpi_errno, MPI_ERR_OTHER, "**predeferrcode");
+
     struct intcnt *s;
 
     if (code & ERROR_DYN_CLASS) {
@@ -426,7 +425,7 @@ int MPIR_Remove_error_code_impl(int code)
 
     HASH_FIND_INT(err_code.used, &errcode, s);
 
-    MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**predeferrcode");
+    MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrcode");
     MPIR_ERR_CHKANDJUMP2(s->ref_count != 0, mpi_errno, MPI_ERR_OTHER, "**errcoderef",
                          "**errcoderef %x %d", code, s->ref_count);
 
