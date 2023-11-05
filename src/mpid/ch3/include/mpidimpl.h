@@ -1024,7 +1024,7 @@ typedef struct {
     int (*create)(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
     int (*allocate)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
     int (*allocate_shared)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
-    int (*allocate_shm)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*allocate_shm)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **, int must);
     int (*create_dynamic)(MPIR_Info *, MPIR_Comm *, MPIR_Win **);
     int (*detect_shm)(MPIR_Win **);
     int (*gather_info)(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
@@ -1066,6 +1066,8 @@ int MPIDI_CH3U_Win_create(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
                          MPIR_Win **);
 int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info *info,
                            MPIR_Comm *comm, void *baseptr, MPIR_Win **win);
+int MPIDI_CH3U_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info *info,
+                                   MPIR_Comm *comm, void *baseptr, MPIR_Win **win);
 int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info *info,
                                    MPIR_Comm *comm_ptr, void *baseptr, MPIR_Win **win_ptr);
 int MPIDI_CH3U_Win_create_dynamic(MPIR_Info *info, MPIR_Comm *comm, MPIR_Win **win);

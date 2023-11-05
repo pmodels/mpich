@@ -17,7 +17,7 @@ int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
 
     win_fns->create = MPIDI_CH3U_Win_create;
     win_fns->allocate = MPIDI_CH3U_Win_allocate;
-    win_fns->allocate_shared = MPIDI_CH3U_Win_allocate;
+    win_fns->allocate_shared = MPIDI_CH3U_Win_allocate_shared;
     win_fns->create_dynamic = MPIDI_CH3U_Win_create_dynamic;
     win_fns->gather_info = MPIDI_CH3U_Win_gather_info;
     win_fns->shared_query = MPIDI_CH3U_Win_shared_query;
@@ -167,8 +167,8 @@ int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
 
     if ((*win_ptr)->info_args.alloc_shm == TRUE) {
         if (MPIDI_CH3U_Win_fns.allocate_shm != NULL) {
-            mpi_errno =
-                MPIDI_CH3U_Win_fns.allocate_shm(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
+            mpi_errno = MPIDI_CH3U_Win_fns.allocate_shm(size, disp_unit, info, comm_ptr,
+                                                        baseptr, win_ptr, 0);
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
         }
@@ -176,6 +176,36 @@ int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
 
     mpi_errno = MPIDI_CH3U_Win_allocate_no_shm(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_CH3U_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info,
+                                   MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
+
+    if ((*win_ptr)->info_args.alloc_shm == TRUE) {
+        if (MPIDI_CH3U_Win_fns.allocate_shm != NULL) {
+            mpi_errno = MPIDI_CH3U_Win_fns.allocate_shm(size, disp_unit, info, comm_ptr,
+                                                        baseptr, win_ptr, 1);
+            MPIR_ERR_CHECK(mpi_errno);
+            goto fn_exit;
+        }
+    }
+
+    if (comm_ptr->local_size == 1) {
+        mpi_errno = MPIDI_CH3U_Win_allocate_no_shm(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winallocnotshared");
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;

@@ -19,7 +19,8 @@ static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, 
                                MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
 
 static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info * info,
-                                       MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr);
+                                       MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr,
+                                       int must);
 
 static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr);
 
@@ -419,7 +420,8 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
 }
 
 static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info * info,
-                                       MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr)
+                                       MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr,
+                                       int must)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpl_err = 0;
@@ -432,6 +434,15 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_ENTER;
+
+    if (must && (*win_ptr)->comm_ptr->local_size > 1) {
+        /* this is MPI_Win_allocate_shared, return error if not all processes
+         * are on the same shared memory domain */
+        if ((*win_ptr)->comm_ptr->node_comm == NULL ||
+            (*win_ptr)->comm_ptr->node_comm->local_size < (*win_ptr)->comm_ptr->local_size) {
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winallocnotshared");
+        }
+    }
 
     if ((*win_ptr)->comm_ptr->node_comm == NULL) {
         mpi_errno =
