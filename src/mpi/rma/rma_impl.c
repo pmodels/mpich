@@ -7,7 +7,11 @@
 
 int MPIR_Win_get_name_impl(MPIR_Win * win_ptr, char *win_name, int *resultlen)
 {
-    MPL_strncpy(win_name, win_ptr->name, MPI_MAX_OBJECT_NAME);
+    if (win_ptr == NULL) {
+        MPL_strncpy(win_name, "MPI_WIN_NULL", MPI_MAX_OBJECT_NAME);
+    } else {
+        MPL_strncpy(win_name, win_ptr->name, MPI_MAX_OBJECT_NAME);
+    }
     *resultlen = (int) strlen(win_name);
 
     return MPI_SUCCESS;

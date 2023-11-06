@@ -851,7 +851,11 @@ int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
 int MPIR_Comm_get_name_impl(MPIR_Comm * comm_ptr, char *comm_name, int *resultlen)
 {
     /* The user must allocate a large enough section of memory */
-    MPL_strncpy(comm_name, comm_ptr->name, MPI_MAX_OBJECT_NAME);
+    if (comm_ptr == NULL) {
+        MPL_strncpy(comm_name, "MPI_COMM_NULL", MPI_MAX_OBJECT_NAME);
+    } else {
+        MPL_strncpy(comm_name, comm_ptr->name, MPI_MAX_OBJECT_NAME);
+    }
     *resultlen = (int) strlen(comm_name);
     return MPI_SUCCESS;
 }

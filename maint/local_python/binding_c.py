@@ -598,7 +598,10 @@ def process_func_parameters(func):
                 # FIXME
                 pass
         elif kind == "DATATYPE":
-            if RE.match(r'mpi_type_(get|set|delete)_attr|mpi_type_(set_name|get_name|lb|ub|extent)', func_name, re.IGNORECASE):
+            if RE.match(r'mpi_type_(get|set|delete)_attr|mpi_type_(set_name|lb|ub|extent)', func_name, re.IGNORECASE):
+                do_handle_ptr = 1
+            elif RE.match(r'mpi_type_get_name', func_name, re.IGNORECASE):
+                p['can_be_null'] = "MPI_DATATYPE_NULL"
                 do_handle_ptr = 1
             else:
                 if is_pointer_type(p):
@@ -636,6 +639,10 @@ def process_func_parameters(func):
                 p['can_be_null'] = "MPI_REQUEST_NULL"
             elif kind == "STREAM" and RE.match(r'mpix?_stream_(comm_create|progress)', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPIX_STREAM_NULL"
+            elif kind == "COMMUNICATOR" and RE.match(r'mpi_comm_get_name', func_name, re.IGNORECASE):
+                p['can_be_null'] = "MPI_COMM_NULL"
+            elif kind == "WINDOW" and RE.match(r'mpi_win_get_name', func_name, re.IGNORECASE):
+                p['can_be_null'] = "MPI_WIN_NULL"
         elif kind == "RANK" and name == "root":
             validation_list.insert(0, {'kind': "ROOT", 'name': name})
         elif RE.match(r'(COUNT|TAG)$', kind):
@@ -1875,6 +1882,10 @@ def dump_validate_handle(func, p):
         if name == 'peer_comm':
             # intercomm_create only checks peer_comm if it is local_leader
             pass
+        elif 'can_be_null' in p:
+            dump_if_open("%s != MPI_COMM_NULL" % name) 
+            G.out.append("MPIR_ERRTEST_COMM(%s, mpi_errno);" % name)
+            dump_if_close()
         else:
             G.err_codes['MPI_ERR_COMM'] = 1
             G.out.append("MPIR_ERRTEST_COMM(%s, mpi_errno);" % name)
@@ -1883,7 +1894,12 @@ def dump_validate_handle(func, p):
         G.out.append("MPIR_ERRTEST_GROUP(%s, mpi_errno);" % name)
     elif kind == "WINDOW":
         G.err_codes['MPI_ERR_WIN'] = 1
-        G.out.append("MPIR_ERRTEST_WIN(%s, mpi_errno);" % name)
+        if 'can_be_null' in p:
+            dump_if_open("%s != MPI_WIN_NULL" % name) 
+            G.out.append("MPIR_ERRTEST_WIN(%s, mpi_errno);" % name)
+            dump_if_close()
+        else:
+            G.out.append("MPIR_ERRTEST_WIN(%s, mpi_errno);" % name)
     elif kind == "ERRHANDLER":
         G.err_codes['MPI_ERR_ERRHANDLER'] = 1
         G.out.append("MPIR_ERRTEST_ERRHANDLER(%s, mpi_errno);" % name)
@@ -1909,7 +1925,12 @@ def dump_validate_handle(func, p):
         G.out.append("MPIR_ERRTEST_REQUEST(%s, mpi_errno);" % name)
     elif kind == "DATATYPE":
         G.err_codes['MPI_ERR_TYPE'] = 1
-        G.out.append("MPIR_ERRTEST_DATATYPE(%s, \"%s\", mpi_errno);" % (name, name))
+        if 'can_be_null' in p:
+            dump_if_open("%s != MPI_DATATYPE_NULL" % name) 
+            G.out.append("MPIR_ERRTEST_DATATYPE(%s, \"%s\", mpi_errno);" % (name, name))
+            dump_if_close()
+        else:
+            G.out.append("MPIR_ERRTEST_DATATYPE(%s, \"%s\", mpi_errno);" % (name, name))
     elif kind == "OP":
         G.err_codes['MPI_ERR_OP'] = 1
         G.out.append("MPIR_ERRTEST_OP(%s, mpi_errno);" % name)
@@ -1997,8 +2018,12 @@ def dump_validate_handle_ptr(func, p):
         pass
     elif kind == "COMMUNICATOR":
         G.err_codes['MPI_ERR_COMM'] = 1
+        if "can_be_null" in p:
+            dump_if_open("%s != %s" % (name, p['can_be_null']))
         G.out.append("MPIR_Comm_valid_ptr(%s, mpi_errno, %s);" % (ptr_name, func['_comm_valid_ptr_flag']))
         dump_error_check("")
+        if "can_be_null" in p:
+            dump_if_close()
 
         if '_errtest_comm_intra' in func:
             G.out.append("MPIR_ERRTEST_COMM_INTRA(%s, mpi_errno);" % ptr_name)
