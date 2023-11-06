@@ -380,7 +380,7 @@ int MPIR_Add_error_code_impl(int class, int *code)
     MPIR_ERR_CHKANDJUMP(new_code >= ERROR_MAX_NCODE, mpi_errno, MPI_ERR_OTHER, "**noerrcodes");
 
     /* Create the full error code */
-    new_code = class | (new_code << ERROR_GENERIC_SHIFT);
+    new_code = class | (new_code << ERROR_GENERIC_SHIFT) | ERROR_DYN_MASK;
     if (class & ERROR_DYN_MASK) {
         new_code |= ERROR_DYN_CLASS;
     }
