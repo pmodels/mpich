@@ -8,8 +8,15 @@
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
 
+static int split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr);
 static int node_split(MPIR_Comm * comm_ptr, int key, const char *hint_str,
                       MPIR_Comm ** newcomm_ptr);
+static int split_type_pset_name(MPIR_Comm * comm_ptr, int key, const char *pset_name,
+                                MPIR_Comm ** newcomm_ptr);
+static int split_type_hw_guided(MPIR_Comm * comm_ptr, int key, const char *resource_type,
+                                MPIR_Comm ** newcomm_ptr);
+static int split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
+                                  MPIR_Comm ** newcomm_ptr);
 
 int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
                          MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
@@ -29,17 +36,47 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
 
     if (split_type == MPI_COMM_TYPE_SHARED) {
         /* NOTE: MPIR_Comm_split_impl will typically call device layer function.
-         * Currently ch4 calls MPIR_Comm_split_type_by_node, which checks
+         * Currently ch4 calls MPIR_Comm_split_type_node_topo, which checks
          * the "shmem_topo" infohints. Thus doesn't run the fallback code here.
          * On the otherhand, ch3:sock will directly execute code here. */
         mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (split_type == MPI_COMM_TYPE_HW_GUIDED) {
-        mpi_errno = MPIR_Comm_split_type_hw_guided(comm_ptr, key, info_ptr, newcomm_ptr);
+        const char *resource_type;
+        mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, "mpi_hw_resource_type",
+                                          &resource_type);
         MPIR_ERR_CHECK(mpi_errno);
+
+        if (resource_type) {
+            mpi_errno = split_type_hw_guided(comm_ptr, key, resource_type, newcomm_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            *newcomm_ptr = NULL;
+            goto fn_exit;
+        }
     } else if (split_type == MPI_COMM_TYPE_HW_UNGUIDED) {
-        mpi_errno = MPIR_Comm_split_type_hw_unguided(comm_ptr, key, info_ptr, newcomm_ptr);
+        mpi_errno = split_type_hw_unguided(comm_ptr, key, info_ptr, newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
+    } else if (split_type == MPI_COMM_TYPE_RESOURCE_GUIDED) {
+        /* similar to MPI_COMM_TYPE_HW_GUIDED, but may also use process set name to split */
+        /* first make sure we have consistent info keys */
+        const char *resource_type = NULL;
+        const char *pset_name = NULL;
+        mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, "mpi_hw_resource_type",
+                                          &resource_type);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, "mpi_pset_name", &pset_name);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (resource_type) {
+            mpi_errno = split_type_hw_guided(comm_ptr, key, resource_type, newcomm_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else if (pset_name) {
+            mpi_errno = split_type_pset_name(comm_ptr, key, pset_name, newcomm_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            *newcomm_ptr = NULL;
+            goto fn_exit;
+        }
     } else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
         mpi_errno =
             MPIR_Comm_split_type_neighborhood(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
@@ -95,49 +132,34 @@ int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcom
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
-                                   MPIR_Comm ** newcomm_ptr)
+static int split_type_pset_name(MPIR_Comm * comm_ptr, int key, const char *pset_name,
+                                MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* TODO: add implementation */
+    *newcomm_ptr = NULL;
+
+    return mpi_errno;
+}
+
+static int split_type_hw_guided(MPIR_Comm * comm_ptr, int key, const char *resource_type,
+                                MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *node_comm = NULL;
-    const char *resource_type = NULL;
-
-    if (info_ptr != NULL) {
-        resource_type = MPIR_Info_lookup(info_ptr, "mpi_hw_resource_type");
-    }
-
-    if (!resource_type) {
-        /* we need compare the info hints regardless since it is collective */
-        resource_type = "";
-    }
-
-    /* Check all processes are using the same hints, return NULL if not.
-     * Note: since it is a collective checking, we need call this function
-     * even when info_ptr is NULL or the key is missing. */
-    int is_equal = 0;
-    mpi_errno = MPII_compare_info_hint(resource_type, comm_ptr, &is_equal);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_ERR_CHKANDJUMP1(!is_equal, mpi_errno, MPI_ERR_OTHER, "**infonoteq",
-                         "**infonoteq %s", "mpi_hw_resource_type");
-
-    if (resource_type[0] == '\0') {
-        /* return MPI_COMM_NULL if info key is missing */
-        *newcomm_ptr = NULL;
-        goto fn_exit;
-    }
 
     if (strcmp(resource_type, "mpi_shared_memory") == 0) {
         /* resource_type value "mpi_shared_memory" is equivalent to split_type
          * MPI_COMM_TYPE_SHARED */
-        mpi_errno = MPIR_Comm_split_type_impl(comm_ptr, MPI_COMM_TYPE_SHARED, key, info_ptr,
+        mpi_errno = MPIR_Comm_split_type_impl(comm_ptr, MPI_COMM_TYPE_SHARED, key, NULL,
                                               newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
     /* now we should proceed */
-    mpi_errno = MPIR_Comm_split_type_by_node(comm_ptr, key, &node_comm);
+    mpi_errno = split_type_by_node(comm_ptr, key, &node_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!MPIR_hwtopo_is_initialized()) {
@@ -167,8 +189,8 @@ int MPIR_Comm_split_type_hw_guided(MPIR_Comm * comm_ptr, int key, MPIR_Info * in
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
-                                     MPIR_Comm ** newcomm_ptr)
+static int split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * info_ptr,
+                                  MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *subcomm = NULL;
@@ -182,7 +204,7 @@ int MPIR_Comm_split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * 
     /* TODO: Once we added network topology, we should try network topology first before
      * try splitting at node level.
      */
-    mpi_errno = MPIR_Comm_split_type_by_node(comm_ptr, key, &subcomm);
+    mpi_errno = split_type_by_node(comm_ptr, key, &subcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_Comm_size(subcomm) < orig_size) {
@@ -229,7 +251,7 @@ int MPIR_Comm_split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * 
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
+static int split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int color;
@@ -250,51 +272,31 @@ int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** new
 int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int key,
                                    MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
-    MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
-    int flag = 0;
-    char hint_str[MPI_MAX_INFO_VAL + 1];
-    int info_args_are_equal;
     *newcomm_ptr = NULL;
 
-    mpi_errno = MPIR_Comm_split_type_by_node(user_comm_ptr, key, &comm_ptr);
+    MPIR_Comm *comm_ptr;
+    mpi_errno = split_type_by_node(user_comm_ptr, key, &comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (info_ptr) {
-        MPIR_Info_get_impl(info_ptr, SHMEM_INFO_KEY, MPI_MAX_INFO_VAL, hint_str, &flag);
-    }
+    const char *shmem_topo;
+    mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, SHMEM_INFO_KEY, &shmem_topo);
 
-    if (!flag) {
-        hint_str[0] = '\0';
-    }
-
-    /* make sure all processes are using the same hint_str */
-    mpi_errno = MPII_compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* if all processes do not have the same hint_str, skip
+    /* if all processes do not have the same shmem_topo info or missing the info, skip
      * topology-aware comm split */
-    if (!info_args_are_equal)
-        goto use_node_comm;
-
-    /* if no info key is given, skip topology-aware comm split */
-    if (!info_ptr)
+    if (mpi_errno || !shmem_topo)
         goto use_node_comm;
 
     /* if hw topology is not initialized, skip topology-aware comm split */
     if (!MPIR_hwtopo_is_initialized())
         goto use_node_comm;
 
-    if (flag) {
-        mpi_errno = node_split(comm_ptr, key, hint_str, newcomm_ptr);
+    mpi_errno = node_split(comm_ptr, key, shmem_topo, newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Comm_free_impl(comm_ptr);
 
-        MPIR_Comm_free_impl(comm_ptr);
-
-        goto fn_exit;
-    }
+    goto fn_exit;
 
   use_node_comm:
     *newcomm_ptr = comm_ptr;

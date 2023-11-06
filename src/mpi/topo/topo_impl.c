@@ -681,3 +681,19 @@ int MPIR_Topo_test_impl(MPIR_Comm * comm_ptr, int *status)
     }
     return MPI_SUCCESS;
 }
+
+int MPIR_Get_hw_resource_info_impl(MPIR_Info ** hw_info_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Info *info_ptr = NULL;
+    mpi_errno = MPIR_Info_alloc(&info_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    *hw_info_ptr = info_ptr;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}

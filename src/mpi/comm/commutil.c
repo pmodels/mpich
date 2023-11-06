@@ -1260,63 +1260,47 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
     goto fn_exit;
 }
 
-/* This function collectively compares hint_str to see whether all processes are having
- * the same string. The result is set in output pointer info_args_are_equal.
+/* This function retrieves info key and collectively compares hint_str to see
+ * hether all processes are having the same string.
  */
-/* TODO: it is certainly not ideal that we have to run 4 Allreduce to do this check.
- * Once we have an OP_EQUAL operator, a single Allreduce would suffice.
- */
-int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info_args_are_equal)
+int MPII_collect_info_key(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, const char *key,
+                          const char **value_ptr)
 {
-    int hint_str_size = strlen(hint_str);
-    int hint_str_size_max;
-    int hint_str_equal;
-    int hint_str_equal_global = 0;
-    char *hint_str_global = NULL;
     int mpi_errno = MPI_SUCCESS;
 
-    /* Find the maximum hint_str size.  Each process locally compares
-     * its hint_str size to the global max, and makes sure that this
-     * comparison is successful on all processes. */
-    mpi_errno =
-        MPIR_Allreduce(&hint_str_size, &hint_str_size_max, 1, MPI_INT, MPI_MAX, comm_ptr,
-                       MPIR_ERR_NONE);
+    const char *hint_str = NULL;
+    if (info_ptr) {
+        hint_str = MPIR_Info_lookup(info_ptr, key);
+    }
+
+    int hint_str_size;
+    if (!hint_str) {
+        hint_str_size = 0;
+    } else {
+        hint_str_size = strlen(hint_str);
+        if (hint_str_size == 0) {
+            hint_str = NULL;
+        }
+    }
+
+    int is_equal;
+    mpi_errno = MPIR_Allreduce_equal(&hint_str_size, 1, MPI_INT, &is_equal, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    hint_str_equal = (hint_str_size == hint_str_size_max);
+    if (is_equal && hint_str_size > 0) {
+        mpi_errno = MPIR_Allreduce_equal(hint_str, hint_str_size, MPI_CHAR, &is_equal, comm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
-    mpi_errno =
-        MPIR_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
-                       comm_ptr, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_ERR_CHKANDJUMP1(!is_equal, mpi_errno, MPI_ERR_OTHER, "**infonoteq", "**infonoteq %s", key);
 
-    if (!hint_str_equal_global)
-        goto fn_exit;
-
-
-    /* Now that the sizes of the hint_strs match, check to make sure
-     * the actual hint_strs themselves are the equal */
-    hint_str_global = (char *) MPL_malloc(strlen(hint_str), MPL_MEM_OTHER);
-
-    mpi_errno =
-        MPIR_Allreduce(hint_str, hint_str_global, strlen(hint_str), MPI_CHAR,
-                       MPI_MAX, comm_ptr, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    hint_str_equal = !memcmp(hint_str, hint_str_global, strlen(hint_str));
-
-    mpi_errno =
-        MPIR_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
-                       comm_ptr, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
+    *value_ptr = hint_str;
 
   fn_exit:
-    MPL_free(hint_str_global);
-
-    *info_args_are_equal = hint_str_equal_global;
-    return mpi_errno;
-
+    return MPI_SUCCESS;
   fn_fail:
+    /* inconsistent info keys are ignored */
+    *value_ptr = NULL;
     goto fn_exit;
 }
 
