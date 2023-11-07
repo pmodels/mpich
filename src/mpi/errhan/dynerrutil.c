@@ -415,14 +415,6 @@ int MPIR_Remove_error_code_impl(int code)
 
     struct intcnt *s;
 
-    if (code & ERROR_DYN_CLASS) {
-        /* increment ref_count for dynamic error class */
-        int errclass = class & ~ERROR_DYN_MASK;
-        HASH_FIND_INT(err_class.used, &errclass, s);
-        MPIR_Assert(s);
-        s->ref_count--;
-    }
-
     HASH_FIND_INT(err_code.used, &errcode, s);
 
     MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrcode");
@@ -432,6 +424,13 @@ int MPIR_Remove_error_code_impl(int code)
     HASH_DEL(err_code.used, s);
     DL_APPEND(err_code.free, s);
     MPL_free((char *) user_code_msgs[s->val]);
+
+    if (code & ERROR_DYN_CLASS) {
+        /* decrement ref_count for dynamic error class */
+        HASH_FIND_INT(err_class.used, &class, s);
+        MPIR_Assert(s);
+        s->ref_count--;
+    }
 
   fn_exit:
     return mpi_errno;
