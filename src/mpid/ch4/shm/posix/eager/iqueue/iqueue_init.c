@@ -114,6 +114,7 @@ int MPIDI_POSIX_iqueue_post_init(void)
             max_vcis = num;
         }
     }
+    MPIDU_Init_shm_barrier();
 
     MPIDI_POSIX_eager_iqueue_global.max_vcis = max_vcis;
 

@@ -130,6 +130,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_
                                         MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes,
                                         MPIR_TYPEREP_FLAG_NONE);
         MPIR_ERR_CHECK(mpi_errno);
+        if (actual_unpack_bytes < src_data_sz) {
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
+        }
         MPIR_Assert(actual_unpack_bytes == src_data_sz);
     } else {
         void *flattened_type = ipc_hdr + 1;
@@ -257,6 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
               recv_data_sz);
 
     MPIDI_IPC_ack_t am_hdr;
+  fn_cont:
     am_hdr.ipc_type = ipc_hdr->ipc_type;
     am_hdr.req_ptr = sreq_ptr;
 
@@ -268,11 +272,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
-  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
-    goto fn_exit;
+    /* Need to send ack and complete the request so we don't block sender and receiver */
+    if (!rreq->status.MPI_ERROR) {
+        rreq->status.MPI_ERROR = mpi_errno;
+    }
+    goto fn_cont;
 }
 
 #endif /* IPC_P2P_H_INCLUDED */
