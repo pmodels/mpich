@@ -292,9 +292,13 @@ int MPIR_Errhandler_free_impl(MPIR_Errhandler * errhan_ptr)
 
 int MPIR_Error_class_impl(int errorcode, int *errorclass)
 {
-    /* We include the dynamic bit because this is needed to fully
-     * describe the dynamic error classes */
-    *errorclass = errorcode & (ERROR_CLASS_MASK | ERROR_DYN_MASK);
+    /* NOTE: MPIR_ERR_GET_CLASS is for internal use and only applies
+     *       to non-dynamic error code */
+    *errorclass = errorcode & (ERROR_CLASS_MASK);
+    if ((errorcode & ERROR_DYN_MASK) && (errorcode & ERROR_DYN_CLASS)) {
+        /* dynamic error code with dynamic error class */
+        *errorclass = *errorclass | (ERROR_DYN_MASK | ERROR_DYN_CLASS);
+    }
 
     return MPI_SUCCESS;
 }

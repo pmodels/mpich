@@ -278,7 +278,8 @@ int MPIR_Add_error_class_impl(int *errorclass)
      * a string.  */
     user_class_msgs[new_class] = 0;
 
-    new_class |= ERROR_DYN_MASK;
+    /* set both ERROR_DYN_MASK and ERROR_DYN_CLASS so it behaves as a dynamic error code */
+    new_class |= (ERROR_DYN_MASK | ERROR_DYN_CLASS);
 
     if (new_class > MPIR_Process.attrs.lastusedcode) {
         MPIR_Process.attrs.lastusedcode = new_class;
@@ -315,7 +316,7 @@ int MPIR_Remove_error_class_impl(int user_errclass)
     MPIR_ERR_CHKANDJUMP(!(user_errclass & ERROR_DYN_MASK),
                         mpi_errno, MPI_ERR_OTHER, "**predeferrclass");
 
-    int errclass = user_errclass & ~ERROR_DYN_MASK;
+    int errclass = user_errclass & ~(ERROR_DYN_MASK | ERROR_DYN_CLASS);
     struct intcnt *s;
     HASH_FIND_INT(err_class.used, &errclass, s);
 
@@ -356,7 +357,7 @@ int MPIR_Add_error_code_impl(int class, int *code)
 
     if (class & ERROR_DYN_MASK) {
         /* increment ref_count for dynamic error class */
-        int errclass = class & ~ERROR_DYN_MASK;
+        int errclass = class & ~(ERROR_DYN_MASK | ERROR_DYN_CLASS);
         HASH_FIND_INT(err_class.used, &errclass, s);
         MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrclass");
         s->ref_count++;
