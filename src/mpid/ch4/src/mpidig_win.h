@@ -556,7 +556,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_win_shared_query_part(MPIR_Win * win, int ra
         *size = win->size;
         *disp_unit = win->disp_unit;
         *((void **) baseptr) = win->base;
-    } else if (rank == MPI_PROC_NULL || !MPIDI_rank_is_local(rank, win->comm_ptr)) {
+    } else if (rank == MPI_PROC_NULL || !MPIDI_rank_is_local(rank, win->comm_ptr) ||
+               MPIDIG_WIN(win, shared_table) == NULL) {
         *size = 0;
         *disp_unit = 0;
         *((void **) baseptr) = NULL;
