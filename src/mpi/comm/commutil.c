@@ -1283,6 +1283,15 @@ int MPII_collect_info_key(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, const char
         }
     }
 
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        /* just ensure consistency on the local group */
+        /* TODO: check consistency between local and remote processes */
+        if (!comm_ptr->local_comm) {
+            MPII_Setup_intercomm_localcomm(comm_ptr);
+        }
+        comm_ptr = comm_ptr->local_comm;
+    }
+
     int is_equal;
     mpi_errno = MPIR_Allreduce_equal(&hint_str_size, 1, MPI_INT, &is_equal, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);

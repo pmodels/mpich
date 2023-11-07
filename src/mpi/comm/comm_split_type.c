@@ -162,6 +162,11 @@ static int split_type_hw_guided(MPIR_Comm * comm_ptr, int key, const char *resou
     mpi_errno = split_type_by_node(comm_ptr, key, &node_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    if (comm_ptr == NULL) {
+        /* it is possible with intercomm split */
+        goto fn_exit;
+    }
+
     if (!MPIR_hwtopo_is_initialized()) {
         /* if hwtopo is not available, return MPI_COMM_NULL */
         *newcomm_ptr = NULL;
@@ -206,6 +211,11 @@ static int split_type_hw_unguided(MPIR_Comm * comm_ptr, int key, MPIR_Info * inf
      */
     mpi_errno = split_type_by_node(comm_ptr, key, &subcomm);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (comm_ptr == NULL) {
+        /* it is possible with intercomm split */
+        goto fn_exit;
+    }
 
     if (MPIR_Comm_size(subcomm) < orig_size) {
         resource_type = "node";
@@ -278,6 +288,11 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int key,
     MPIR_Comm *comm_ptr;
     mpi_errno = split_type_by_node(user_comm_ptr, key, &comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (comm_ptr == NULL) {
+        /* it is possible with intercomm split */
+        goto fn_exit;
+    }
 
     const char *shmem_topo;
     mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, SHMEM_INFO_KEY, &shmem_topo);
