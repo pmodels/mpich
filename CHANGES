@@ -3,6 +3,15 @@
 ===============================================================================
 # Complete support MPI 4.1 specification
 
+# Experimental thread communicator feature (e.g. MPIX_Threadcomm_init).
+  See paper "Frustrated With MPI+Threads? Try MPIxThreads!",
+  https://doi.org/10.1145/3615318.3615320.
+
+# Experimental datatype functions MPIX_Type_iov_len and MPIX_Type_Iov
+
+# Experimental op MPIX_EQUAL for MPI_Reduce and MPI_Allreduce (intra
+  communicator only)
+
 # Use --with-{pmi,pmi2,pmix]=[path] to configure external PMI library.
   Convenience options for Slurm and cray deprecated. Use --with-pmi=oldcray
   for older Cray environment.
@@ -22,6 +31,28 @@
 # Yaksa updated to auto detect the GPU architecture and only build for
   the detected arch. This applies to CUDA and HIP support.
 
+# MPI_Win_shared_query can be used on windows created by MPI_Win_create,
+  MPI_Win_allocate, in addition to windows created by MPI_Win_allocate_shared.
+  MPI_Win_allocate will create shared memory whenever feasible, including between
+  spawned processes on the same node.
+
+# Fortran mpi.mod support Type(c_ptr) buffer output for MPI_Alloc_mem,
+  MPI_Win_allocate, and MPI_Win_allocate_shared.
+
+# New functions added in MPI-4.1: MPI_Remove_error_string, MPI_Remove_error_code,
+  and MPI_Remove_error_class
+
+# New functions added in MPI-4.1: MPI_Request_get_status_all,
+  MPI_Request_get_status_any, and MPI_Request_get_status_some.
+
+# New function added in MPI-4.1: MPI_Type_get_value_index.
+
+# New functions added in MPI-4.1: MPI_Comm_attach_buffer, MPI_Session_attach_buffer,
+  MPI_Comm_detach_buffer, MPI_Session_detach_buffer,
+  MPI_Buffer_flush, MPI_Comm_flush_buffer, MPI_Session_flush_buffer,
+  MPI_Buffer_iflush, MPI_Comm_iflush_buffer, and MPI_Session_iflush_buffer.
+  Also added constant MPI_BUFFER_AUTOMATIC to allow automatic buffers.
+
 # Support for "mpi_memory_alloc_kinds" info key. Memory allocation kind
   requests can be made via argument to mpiexec, or as info during
   session creation. Kinds supported are "mpi" (with standard defined
@@ -31,11 +62,6 @@
   decided at the October 2023 meeting that this was a mistake and will
   be removed in an erratum.
 
-# New functions added in MPI-4.1: MPI_Comm_attach_buffer, MPI_Session_attach_buffer,
-  MPI_Comm_detach_buffer, MPI_Session_detach_buffer,
-  MPI_Buffer_flush, MPI_Comm_flush_buffer, MPI_Session_flush_buffer,
-  MPI_Buffer_iflush, MPI_Comm_iflush_buffer, and MPI_Session_iflush_buffer.
-  Also added constant MPI_BUFFER_AUTOMATIC to allow automatic buffers.
 
 ===============================================================================
                                Changes in 4.1
