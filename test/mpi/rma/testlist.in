@@ -78,6 +78,9 @@ win_shared_create_allocshm 4
 win_shared_create_no_allocshm 4
 win_shared_noncontig 4
 win_shared_noncontig_put 4
+win_shared_query 4 arg=-flavor=create
+win_shared_query 4 arg=-flavor=allocate
+win_shared_query 4 arg=-flavor=allocate_shared
 win_zero 4
 @largetest@win_large_shm 4
 @largetest@win_large_shm 3

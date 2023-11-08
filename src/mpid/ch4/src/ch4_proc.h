@@ -52,6 +52,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
     MPIR_FUNC_ENTER;
 
     *avtid = 0;
+    *idx = 0;
 
     switch (MPIDI_COMM(comm, map).mode) {
         case MPIDI_RANK_MAP_DIRECT:

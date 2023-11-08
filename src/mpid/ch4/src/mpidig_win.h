@@ -534,6 +534,56 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDIG_win_shared_query_self(MPIR_Win * win, int rank, MPI_Aint * size,
+                                                          int *disp_unit, void *baseptr)
+{
+    if (rank == win->comm_ptr->rank) {
+        *size = win->size;
+        *disp_unit = win->disp_unit;
+        *((void **) baseptr) = win->base;
+    } else {
+        *size = 0;
+        *disp_unit = 0;
+        *((void **) baseptr) = NULL;
+    }
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDIG_win_shared_query_part(MPIR_Win * win, int rank, MPI_Aint * size,
+                                                          int *disp_unit, void *baseptr)
+{
+    if (rank == win->comm_ptr->rank) {
+        *size = win->size;
+        *disp_unit = win->disp_unit;
+        *((void **) baseptr) = win->base;
+    } else if (rank == MPI_PROC_NULL || !MPIDI_rank_is_local(rank, win->comm_ptr) ||
+               MPIDIG_WIN(win, shared_table) == NULL) {
+        *size = 0;
+        *disp_unit = 0;
+        *((void **) baseptr) = NULL;
+    } else {
+        int shm_rank = -1;
+        /* find shm_rank in node_comm. Q: can we rely on comm_ptr->intranode_table? */
+        int avtid, idx;
+        MPIDIU_comm_rank_to_pid(win->comm_ptr, rank, &idx, &avtid);
+        for (int i = 0; i < win->comm_ptr->node_comm->local_size; i++) {
+            int tmp_avtid, tmp_idx;
+            MPIDIU_comm_rank_to_pid(win->comm_ptr->node_comm, i, &tmp_idx, &tmp_avtid);
+            if (tmp_avtid == avtid && tmp_idx == idx) {
+                shm_rank = i;
+                break;
+            }
+        }
+        MPIR_Assert(shm_rank >= 0);
+
+        MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
+        *size = shared_table[shm_rank].size;
+        *disp_unit = shared_table[shm_rank].disp_unit;
+        *(void **) baseptr = shared_table[shm_rank].shm_base_addr;
+    }
+    return MPI_SUCCESS;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size,
                                                          int *disp_unit, void *baseptr)
 {
@@ -542,6 +592,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int ran
     MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
 
     MPIR_FUNC_ENTER;
+
+    bool whole_shared = false;
+    if (win->comm_ptr->node_comm == NULL) {
+        whole_shared = (win->comm_ptr->local_size == 1);
+    } else {
+        whole_shared = (win->comm_ptr->local_size == win->comm_ptr->node_comm->local_size);
+    }
+
+    if (!whole_shared) {
+        if (win->comm_ptr->node_comm == NULL) {
+            mpi_errno = MPIDIG_win_shared_query_self(win, rank, size, disp_unit, baseptr);
+        } else {
+            mpi_errno = MPIDIG_win_shared_query_part(win, rank, size, disp_unit, baseptr);
+        }
+        goto fn_exit;
+    }
 
     /* When only single process exists on the node or shared memory allocation fails,
      * should only query MPI_PROC_NULL or local process. Thus, return local window's info. */
