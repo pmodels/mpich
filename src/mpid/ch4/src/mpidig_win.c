@@ -504,9 +504,6 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_ENTER;
 
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
     win = *win_ptr;
     *base_ptr = NULL;
 
@@ -939,6 +936,13 @@ int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * inf
     MPIR_Win *win = NULL;
     MPIR_FUNC_ENTER;
 
+    /* return error if not all processes are on the same shared memory domain */
+    if (comm_ptr->local_size > 1 &&
+        (comm_ptr->node_comm == NULL || comm_ptr->node_comm->local_size < comm_ptr->local_size)) {
+        *win_ptr = NULL;
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winallocnotshared");
+    }
+
     mpi_errno = win_init(size, disp_unit, win_ptr, info_ptr, comm_ptr, MPI_WIN_FLAVOR_SHARED,
                          MPI_WIN_UNIFIED);
     MPIR_ERR_CHECK(mpi_errno);
@@ -964,7 +968,7 @@ int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * inf
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
-    if (win_ptr)
+    if (win_ptr && *win_ptr)
         win_finalize(win_ptr);
     goto fn_exit;
 }

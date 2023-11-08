@@ -779,6 +779,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **shmhost %s %s:process not on the same host (%s != %s)
 **shmsize:Shared memory subsystem unable to allocate a block of the requested size
 **shmsize %d:Shared memory subsystem unable to allocate a block of the requested size, %d bytes
+**winallocnotshared:processes are not in the same shared memory domain
 
 
 #
