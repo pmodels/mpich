@@ -131,11 +131,13 @@ static int finalize_builtin_comm(MPIR_Comm * comm)
 
     int ref_count = MPIR_Object_get_ref(comm);
     if (ref_count != 1) {
-        MPL_internal_error_printf
-            ("WARNING: Builtin communicator %x has pending %d references, polling progress until all references clears.\n",
-             comm->handle, ref_count - 1);
-        while (MPIR_Object_get_ref(comm) > 1) {
-            MPID_Stream_progress(NULL);
+        MPL_internal_error_printf("WARNING: Builtin communicator %x has pending %d references.\n",
+                                  comm->handle, ref_count - 1);
+        if (MPIR_CVAR_FINALIZE_WAIT) {
+            MPL_internal_error_printf("WARNING: polling progress until all references clears.\n");
+            while (MPIR_Object_get_ref(comm) > 1) {
+                MPID_Stream_progress(NULL);
+            }
         }
     }
     mpi_errno = MPIR_Comm_release(comm);
