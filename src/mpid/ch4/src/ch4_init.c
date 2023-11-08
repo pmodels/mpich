@@ -1067,6 +1067,12 @@ int MPID_Get_node_id(MPIR_Comm * comm, int rank, int *id_p)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        if (!comm->local_comm) {
+            MPII_Setup_intercomm_localcomm(comm);
+        }
+        comm = comm->local_comm;
+    }
     MPIDIU_get_node_id(comm, rank, id_p);
 
     MPIR_FUNC_EXIT;
