@@ -52,6 +52,7 @@ static const char *(user_code_msgs[ERROR_MAX_NCODE]) = {
 struct intcnt {
     int val;
 
+    int ref_count;
     struct intcnt *next;
     struct intcnt *prev;
 
@@ -145,7 +146,7 @@ int MPIR_Add_error_string_impl(int code, const char *msg_string)
     errcode = (code & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT;
 
     /* --BEGIN ERROR HANDLING-- */
-    if (code & ~(ERROR_CLASS_MASK | ERROR_DYN_MASK | ERROR_GENERIC_MASK)) {
+    if (code & ~(ERROR_CLASS_MASK | ERROR_DYN_MASK | ERROR_GENERIC_MASK | ERROR_DYN_CLASS)) {
         /* Check for invalid error code */
         return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                     __func__, __LINE__,
@@ -173,6 +174,7 @@ int MPIR_Add_error_string_impl(int code, const char *msg_string)
         if (s) {
             MPL_free((void *) (user_code_msgs[errcode]));
             user_code_msgs[errcode] = (const char *) str;
+            s->ref_count++;
         } else {
             /* FIXME : Unallocated error code? */
             MPL_free(str);
@@ -183,6 +185,7 @@ int MPIR_Add_error_string_impl(int code, const char *msg_string)
         if (s) {
             MPL_free((void *) (user_class_msgs[errclass]));
             user_class_msgs[errclass] = (const char *) str;
+            s->ref_count++;
         } else {
             /* FIXME : Unallocated error code? */
             MPL_free(str);
@@ -211,23 +214,19 @@ int MPIR_Remove_error_string_impl(int code)
     if (errcode) {
         struct intcnt *s;
         HASH_FIND_INT(err_code.used, &errcode, s);
-        if (s) {
-            MPL_free((void *) (user_code_msgs[errcode]));
-            user_code_msgs[errcode] = NULL;
-        } else {
-            mpi_errno = MPI_ERR_OTHER;
-            goto fn_fail;
-        }
+        MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrcode");
+
+        MPL_free((void *) (user_code_msgs[errcode]));
+        user_code_msgs[errcode] = NULL;
+        s->ref_count--;
     } else {
         struct intcnt *s;
         HASH_FIND_INT(err_class.used, &errclass, s);
-        if (s) {
-            MPL_free((void *) (user_class_msgs[errclass]));
-            user_class_msgs[errclass] = NULL;
-        } else {
-            mpi_errno = MPI_ERR_OTHER;
-            goto fn_fail;
-        }
+        MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrcode");
+
+        MPL_free((void *) (user_class_msgs[errclass]));
+        user_class_msgs[errclass] = NULL;
+        s->ref_count--;
     }
 
   fn_exit:
@@ -261,11 +260,13 @@ int MPIR_Add_error_class_impl(int *errorclass)
     struct intcnt *s;
     if (err_class.free) {
         s = err_class.free;
+        s->ref_count = 0;
         DL_DELETE(err_class.free, s);
         HASH_ADD_INT(err_class.used, val, s, MPL_MEM_BUFFER);
     } else {
         s = (struct intcnt *) MPL_malloc(sizeof(struct intcnt), MPL_MEM_BUFFER);
         s->val = err_class.next++;
+        s->ref_count = 0;
         HASH_ADD_INT(err_class.used, val, s, MPL_MEM_BUFFER);
     }
     new_class = s->val;
@@ -277,7 +278,8 @@ int MPIR_Add_error_class_impl(int *errorclass)
      * a string.  */
     user_class_msgs[new_class] = 0;
 
-    new_class |= ERROR_DYN_MASK;
+    /* set both ERROR_DYN_MASK and ERROR_DYN_CLASS so it behaves as a dynamic error code */
+    new_class |= (ERROR_DYN_MASK | ERROR_DYN_CLASS);
 
     if (new_class > MPIR_Process.attrs.lastusedcode) {
         MPIR_Process.attrs.lastusedcode = new_class;
@@ -311,11 +313,16 @@ int MPIR_Remove_error_class_impl(int user_errclass)
     if (not_initialized)
         MPIR_Init_err_dyncodes();
 
-    int errclass = user_errclass & ~ERROR_DYN_MASK;
+    MPIR_ERR_CHKANDJUMP(!(user_errclass & ERROR_DYN_MASK),
+                        mpi_errno, MPI_ERR_OTHER, "**predeferrclass");
+
+    int errclass = user_errclass & ~(ERROR_DYN_MASK | ERROR_DYN_CLASS);
     struct intcnt *s;
     HASH_FIND_INT(err_class.used, &errclass, s);
 
-    MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**predeferrclass");
+    MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrclass");
+    MPIR_ERR_CHKANDJUMP2(s->ref_count != 0, mpi_errno, MPI_ERR_OTHER, "**errclassref",
+                         "**errclassref %x %d", user_errclass, s->ref_count);
 
     HASH_DEL(err_class.used, s);
     DL_APPEND(err_class.free, s);
@@ -346,14 +353,25 @@ int MPIR_Add_error_code_impl(int class, int *code)
     if (not_initialized)
         MPIR_Init_err_dyncodes();
 
-    /* Get the new code */
     struct intcnt *s;
+
+    if (class & ERROR_DYN_MASK) {
+        /* increment ref_count for dynamic error class */
+        int errclass = class & ~(ERROR_DYN_MASK | ERROR_DYN_CLASS);
+        HASH_FIND_INT(err_class.used, &errclass, s);
+        MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrclass");
+        s->ref_count++;
+    }
+
+    /* Get the new code */
     if (err_code.free) {
         s = err_code.free;
+        s->ref_count = 0;
         DL_DELETE(err_code.free, s);
         HASH_ADD_INT(err_code.used, val, s, MPL_MEM_BUFFER);
     } else {
         s = (struct intcnt *) MPL_malloc(sizeof(struct intcnt), MPL_MEM_BUFFER);
+        s->ref_count = 0;
         s->val = err_code.next++;
         HASH_ADD_INT(err_code.used, val, s, MPL_MEM_BUFFER);
     }
@@ -363,7 +381,10 @@ int MPIR_Add_error_code_impl(int class, int *code)
     MPIR_ERR_CHKANDJUMP(new_code >= ERROR_MAX_NCODE, mpi_errno, MPI_ERR_OTHER, "**noerrcodes");
 
     /* Create the full error code */
-    new_code = class | (new_code << ERROR_GENERIC_SHIFT);
+    new_code = class | (new_code << ERROR_GENERIC_SHIFT) | ERROR_DYN_MASK;
+    if (class & ERROR_DYN_MASK) {
+        new_code |= ERROR_DYN_CLASS;
+    }
 
     /* FIXME: For robustness, we should make sure that the associated string
      * is initialized to null */
@@ -386,18 +407,31 @@ int MPIR_Remove_error_code_impl(int code)
 {
     int mpi_errno = MPI_SUCCESS;
     int errcode = (int) (((unsigned int) code & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT);
+    int class = code & ERROR_CLASS_MASK;
 
     if (not_initialized)
         MPIR_Init_err_dyncodes();
 
+    MPIR_ERR_CHKANDJUMP(!(code & ERROR_DYN_MASK), mpi_errno, MPI_ERR_OTHER, "**predeferrcode");
+
     struct intcnt *s;
+
     HASH_FIND_INT(err_code.used, &errcode, s);
 
-    MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**predeferrcode");
+    MPIR_ERR_CHKANDJUMP(s == NULL, mpi_errno, MPI_ERR_OTHER, "**invaliderrcode");
+    MPIR_ERR_CHKANDJUMP2(s->ref_count != 0, mpi_errno, MPI_ERR_OTHER, "**errcoderef",
+                         "**errcoderef %x %d", code, s->ref_count);
 
     HASH_DEL(err_code.used, s);
     DL_APPEND(err_code.free, s);
     MPL_free((char *) user_code_msgs[s->val]);
+
+    if (code & ERROR_DYN_CLASS) {
+        /* decrement ref_count for dynamic error class */
+        HASH_FIND_INT(err_class.used, &class, s);
+        MPIR_Assert(s);
+        s->ref_count--;
+    }
 
   fn_exit:
     return mpi_errno;
@@ -432,7 +466,7 @@ static const char *get_dynerr_string(int code)
     errclass = code & ERROR_CLASS_MASK;
     errcode = (code & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT;
 
-    if (code & ~(ERROR_CLASS_MASK | ERROR_DYN_MASK | ERROR_GENERIC_MASK)) {
+    if (code & ~(ERROR_CLASS_MASK | ERROR_DYN_MASK | ERROR_GENERIC_MASK | ERROR_DYN_CLASS)) {
         /* Check for invalid error code */
         return 0;
     }

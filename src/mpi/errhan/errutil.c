@@ -218,7 +218,11 @@ int MPIR_Errutil_is_initialized(void)
 /* Return true if the error code indicates a fatal error */
 int MPIR_Err_is_fatal(int errcode)
 {
-    return (errcode & ERROR_FATAL_MASK) ? TRUE : FALSE;
+    if (errcode & ERROR_DYN_MASK) {
+        return FALSE;
+    } else {
+        return (errcode & ERROR_FATAL_MASK) ? TRUE : FALSE;
+    }
 }
 
 /*
