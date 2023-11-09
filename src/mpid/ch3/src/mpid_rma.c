@@ -171,9 +171,6 @@ int MPID_Win_allocate_shared(MPI_Aint size, MPI_Aint disp_unit, MPIR_Info * info
 
     mpi_errno =
         MPIDI_CH3U_Win_fns.allocate_shared(size, my_disp_unit, info, comm_ptr, base_ptr, win_ptr);
-    if (mpi_errno) {
-        MPID_Win_free(win_ptr);
-    }
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
