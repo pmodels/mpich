@@ -6,8 +6,6 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 
-static const char *SHMEM_INFO_KEY = "shmem_topo";
-
 static int split_type_by_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr);
 static int node_split(MPIR_Comm * comm_ptr, int key, const char *hint_str,
                       MPIR_Comm ** newcomm_ptr);
@@ -36,8 +34,8 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
 
     if (split_type == MPI_COMM_TYPE_SHARED) {
         /* NOTE: MPIR_Comm_split_impl will typically call device layer function.
-         * Currently ch4 calls MPIR_Comm_split_type_node_topo, which checks
-         * the "shmem_topo" infohints. Thus doesn't run the fallback code here.
+         * Currently ch4 calls MPIR_Comm_split_type_node_topo, thus doesn't run
+         * the fallback code here.
          * On the otherhand, ch3:sock will directly execute code here. */
         mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
@@ -289,31 +287,6 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int key,
     mpi_errno = split_type_by_node(user_comm_ptr, key, &comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (comm_ptr == NULL) {
-        /* it is possible with intercomm split */
-        goto fn_exit;
-    }
-
-    const char *shmem_topo;
-    mpi_errno = MPII_collect_info_key(comm_ptr, info_ptr, SHMEM_INFO_KEY, &shmem_topo);
-
-    /* if all processes do not have the same shmem_topo info or missing the info, skip
-     * topology-aware comm split */
-    if (mpi_errno || !shmem_topo)
-        goto use_node_comm;
-
-    /* if hw topology is not initialized, skip topology-aware comm split */
-    if (!MPIR_hwtopo_is_initialized())
-        goto use_node_comm;
-
-    mpi_errno = node_split(comm_ptr, key, shmem_topo, newcomm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Comm_free_impl(comm_ptr);
-
-    goto fn_exit;
-
-  use_node_comm:
     *newcomm_ptr = comm_ptr;
 
   fn_exit:

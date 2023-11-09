@@ -134,40 +134,23 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    /* test for topology hints: pass a valid info value, but do not
-     * expect that the MPI implementation will respect it.  */
-    for (i = 0; split_topo[i]; i++) {
-        MPI_Info_create(&info);
-        MPI_Info_set(info, "shmem_topo", split_topo[i]);
-        MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
-        if (comm != MPI_COMM_NULL) {
-            int newsize;
-            MPI_Comm_size(comm, &newsize);
-            if (newsize > size) {
-                printf("MPI_COMM_TYPE_SHARED (shmem_topo): comm size (%d) > node size (%d)\n",
-                       newsize, size);
-                errs++;
-            }
-            MPI_Comm_free(&comm);
-        }
-        MPI_Info_free(&info);
-    }
-
+#if MTEST_HAVE_MIN_MPI_VERSION(4,1)
     /* test for topology hints: pass different info values from
      * different processes, the hint must be ignored then. */
     MPI_Info_create(&info);
     if (rank % 2 == 0) {
-        MPI_Info_set(info, "shmem_topo", split_topo[0]);
+        MPI_Info_set(info, "mpi_hw_resource_type", split_topo[0]);
     } else {
-        MPI_Info_set(info, "shmem_topo", split_topo[1]);
+        MPI_Info_set(info, "mpi_hw_resource_type", split_topo[1]);
     }
-    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_RESOURCE_GUIDED, 0, info, &comm);
     if (comm != MPI_COMM_NULL) {
         int newsize;
         MPI_Comm_size(comm, &newsize);
         if (newsize > size) {
-            printf("MPI_COMM_TYPE_SHARED (shmem_topo): comm size (%d) > node size (%d)\n",
-                   newsize, size);
+            printf
+                ("MPI_COMM_TYPE_RESOURCE_GUIDED (mpi_hw_resource_type): comm size (%d) > node size (%d)\n",
+                 newsize, size);
             errs++;
         }
         MPI_Comm_free(&comm);
@@ -179,16 +162,17 @@ int main(int argc, char *argv[])
      * not others. */
     if (rank % 2 == 0) {
         MPI_Info_create(&info);
-        MPI_Info_set(info, "shmem_topo", split_topo[0]);
+        MPI_Info_set(info, "mpi_hw_resource_type", split_topo[0]);
     } else
         info = MPI_INFO_NULL;
-    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_RESOURCE_GUIDED, 0, info, &comm);
     if (comm != MPI_COMM_NULL) {
         int newsize;
         MPI_Comm_size(comm, &newsize);
         if (newsize > size) {
-            printf("MPI_COMM_TYPE_SHARED (shmem_topo): comm size (%d) > node size (%d)\n",
-                   newsize, size);
+            printf
+                ("MPI_COMM_TYPE_RESOURCE_GUIDED (mpi_hw_resource_type): comm size (%d) > node size (%d)\n",
+                 newsize, size);
             errs++;
         }
         MPI_Comm_free(&comm);
@@ -200,24 +184,15 @@ int main(int argc, char *argv[])
     /* test for topology hints: pass an invalid info value and make
      * sure the behavior is as if no info key was passed.  */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "shmem_topo", "__garbage_value__");
-    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
-    if (comm == MPI_COMM_NULL) {
-        printf("MPI_COMM_TYPE_SHARED (shmem_topo): invalid info value result in MPI_COMM_NULL\n");
+    MPI_Info_set(info, "mpi_hw_resource_type", "__garbage_value__");
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_RESOURCE_GUIDED, 0, info, &comm);
+    if (comm != MPI_COMM_NULL) {
+        printf
+            ("MPI_COMM_TYPE_RESOURCE_GUIDED (mpi_hw_resource_type): invalid info value didn't result in MPI_COMM_NULL\n");
         errs++;
-    } else {
-        int newsize;
-
-        MPI_Comm_size(comm, &newsize);
-        if (newsize != size) {
-            printf("MPI_COMM_TYPE_SHARED (shmem_topo): comm size (%d) != node size (%d)\n",
-                   size, size);
-            errs++;
-        }
-        MPI_Comm_free(&comm);
     }
     MPI_Info_free(&info);
-
+#endif
 
 #if defined(MPIX_COMM_TYPE_NEIGHBORHOOD) && defined(HAVE_MPI_IO)
     /* the MPICH-specific MPIX_COMM_TYPE_NEIGHBORHOOD */
