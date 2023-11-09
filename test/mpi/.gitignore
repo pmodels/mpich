@@ -118,6 +118,7 @@
 /coll/neighb_alltoall
 /coll/neighb_alltoallv
 /coll/neighb_alltoallw
+/coll/neighb_alltoallw2
 /coll/nonblocking
 /coll/nonblocking2
 /coll/nonblocking3
@@ -1652,3 +1653,5 @@
 /topo/topodup
 /topo/topotest
 /impls/mpich/threads/pt2pt/sendrecv_vci_hint
+/impls/mpich/threads/testlist
+/impls/mpich/misc/testlist.dtp
