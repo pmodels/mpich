@@ -3,8 +3,6 @@
 ===============================================================================
 # Complete support MPI 4.1 specification
 
-# CH4 shm is enabled by default with ucx netmod.
-
 # Use --with-{pmi,pmi2,pmix]=[path] to configure external PMI library.
   Convenience options for Slurm and cray deprecated. Use --with-pmi=oldcray
   for older Cray environment.
