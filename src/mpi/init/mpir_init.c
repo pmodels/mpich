@@ -79,6 +79,19 @@ cvars:
         in leaking memory or losing messages due to pre-mature exiting. The
         default is false, which may invoke collective behaviors at finalize.
 
+    - name        : MPIR_CVAR_FINALIZE_WAIT
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, poll progress at MPI_Finalize until reference count on
+        MPI_COMM_WORLD and MPI_COMM_SELF reaches zero. This may be necessary
+        to prevent remote processes hanging if it has pending communication
+        protocols, e.g. a rendezvous send.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
