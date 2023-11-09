@@ -41,15 +41,16 @@ C
          do i = 1, N
             buf(i) = i
          end do
-         call MPI_Bsend(buf, N, MPI_REAL, 1, tag, comm, ierr)
+         call MPI_Bsend(buf, N, MPI_INTEGER, 1, tag, comm, ierr)
       else if (rank .eq. 1)  then
          do i = 1, N
             buf(i) = 0.0
          end do
-         call MPI_Recv(buf, N, MPI_REAL, 0, tag, comm,
+         call MPI_Recv(buf, N, MPI_INTEGER, 0, tag, comm,
      .                 MPI_STATUS_IGNORE, ierr)
          do i = 1, N
             if (buf(i) .ne. i) then
+                print *, i, buf(i)
                 errs = errs + 1
             end if
          end do
