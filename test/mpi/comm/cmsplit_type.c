@@ -116,6 +116,24 @@ int main(int argc, char *argv[])
     }
 #endif
 
+#if MTEST_HAVE_MIN_MPI_VERSION(4,1)
+    /* Check to see if MPI_COMM_TYPE_HW_GUIDED works correctly */
+    for (i = 0; split_topo[i]; i++) {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "mpi_hw_resource_type", split_topo[i]);
+        int ret;
+        ret = MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_RESOURCE_GUIDED, 0, info, &comm);
+        /* result will depend on platform and process bindings, just check returns */
+        if (ret != MPI_SUCCESS) {
+            printf("MPI_COMM_TYPE_HW_GUIDED (%s) failed\n", split_topo[i]);
+            errs++;
+        } else if (comm != MPI_COMM_NULL) {
+            MPI_Comm_free(&comm);
+        }
+        MPI_Info_free(&info);
+    }
+#endif
+
     /* test for topology hints: pass a valid info value, but do not
      * expect that the MPI implementation will respect it.  */
     for (i = 0; split_topo[i]; i++) {
