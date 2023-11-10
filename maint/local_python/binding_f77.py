@@ -885,10 +885,7 @@ def dump_f77_c_func(func, is_cptr=False):
         param_str += ' ' + ' '.join(c_param_list_end)
 
 
-    if is_cptr:
-        use_name = func_name.lower() + '_cptr_'
-    else:
-        use_name = dump_profiling(func_name, param_str, return_type)
+    use_name = dump_profiling(func_name, param_str, return_type, is_cptr)
     G.out.append("")
     dump_mpi_decl_begin(use_name, param_str, return_type)
 
@@ -956,7 +953,9 @@ def dump_f77_c_file(f, lines):
                 print(l, file=Out)
 
 #---------------------------------------- 
-def dump_profiling(name, param_str, return_type):
+def dump_profiling(name, param_str, return_type, is_cptr):
+    if is_cptr:
+        name = name + '_cptr'
     pname = "P" + name
     defines = ["F77_NAME_UPPER", "F77_NAME_LOWER", "F77_NAME_LOWER_USCORE", "F77_NAME_LOWER_2USCORE"]
     names = [name.upper(), name.lower(), name.lower() + "_", name.lower() + "__"]
