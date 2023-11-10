@@ -4,13 +4,20 @@ MPIX_Threadcomm_init:
     comm: COMMUNICATOR, [communicator]
     num_threads: ARRAY_LENGTH_NNI, [number of participating threads]
     newthreadcomm: COMMUNICATOR, direction=out, [new thread communicator]
+    .desc: initialize a thread communicator (outside thread parallel regions)
+    .seealso: MPIX_Threadcomm_start, MPIX_Threadcomm_finish, MPIX_Threadcomm_free
 
 MPIX_Threadcomm_free:
     threadcomm: COMMUNICATOR, direction=inout, [thread communicator]
+    .desc: free a thread communicator (outside thread parallel regions)
+    .seealso: MPIX_Threadcomm_init, MPIX_Threadcomm_start, MPIX_Threadcomm_finish
 
 MPIX_Threadcomm_start:
     threadcomm: COMMUNICATOR, [thread communicator]
+    .desc: start/activiate a thread communicator (inside thread parallel regions)
+    .seealso: MPIX_Threadcomm_init, MPIX_Threadcomm_finish, MPIX_Threadcomm_free
 
 MPIX_Threadcomm_finish:
     threadcomm: COMMUNICATOR, [thread communicator]
-
+    .desc: finish/deactiviate a thread communicator (inside thread parallel regions)
+    .seealso: MPIX_Threadcomm_init, MPIX_Threadcomm_start, MPIX_Threadcomm_free
