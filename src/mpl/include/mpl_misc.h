@@ -23,7 +23,8 @@ int mkstemp(char *template);
 int MPL_mkstemp(char *template);
 #endif
 
-int MPL_hex_encode(int size, const void *src, char *dest);
-int MPL_hex_decode(int size, const char *src, void *dest);
+int MPL_hex_encode(const void *src, int src_size, char *dest, int dest_size, int *encoded_size);
+int MPL_hex_decode(const char *src, void *dest, int dest_size, int *decoded_size);
+int MPL_hex_decode_len(const char *src);
 
 #endif /* MPL_MISC_H_INCLUDED */
