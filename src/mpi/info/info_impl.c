@@ -199,7 +199,7 @@ int MPIR_Info_create_env_impl(int argc, char **argv, MPIR_Info ** new_info_ptr)
     mpi_errno = MPIR_Info_alloc(&info_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     /* Set up the info value. */
-    MPIR_Info_setup_env(info_ptr);
+    MPIR_Info_setup_env(info_ptr, argc, argv);
 
     *new_info_ptr = info_ptr;
 

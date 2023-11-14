@@ -99,7 +99,7 @@ extern MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN];
 extern MPIR_Info MPIR_Info_direct[];
 
 int MPIR_Info_alloc(MPIR_Info ** info_p_p);
-void MPIR_Info_setup_env(MPIR_Info * info_ptr);
+void MPIR_Info_setup_env(MPIR_Info * info_ptr, int argc, char **argv);
 int MPIR_Info_push(MPIR_Info * info_ptr, const char *key, const char *val);
 const char *MPIR_Info_lookup(MPIR_Info * info_ptr, const char *key);
 
