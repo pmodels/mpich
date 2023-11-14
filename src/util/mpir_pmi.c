@@ -400,7 +400,9 @@ static int put_ex_segs(const char *key, const void *buf, int bufsize, int is_loc
      * (depends on pmi implementations, and may not be sufficient) */
     int segsize = (pmi_max_val_size - 2) / 2;
     if (bufsize < segsize) {
-        MPL_hex_encode(bufsize, buf, val);
+        int len;
+        int rc = MPL_hex_encode(buf, bufsize, val, pmi_max_val_size, &len);
+        MPIR_Assertp(rc == MPL_SUCCESS);
         mpi_errno = optimized_put(key, val, is_local);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
@@ -418,7 +420,9 @@ static int put_ex_segs(const char *key, const void *buf, int bufsize, int is_loc
             if (i == num_segs - 1) {
                 n = bufsize - segsize * (num_segs - 1);
             }
-            MPL_hex_encode(n, (char *) buf + i * segsize, val);
+            int len;
+            int rc = MPL_hex_encode((char *) buf + i * segsize, n, val, pmi_max_val_size, &len);
+            MPIR_Assertp(rc == MPL_SUCCESS);
             mpi_errno = optimized_put(seg_key, val, is_local);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -440,6 +444,8 @@ static int get_ex_segs(int src, const char *key, void *buf, int *p_size, int is_
     int segsize = (pmi_max_val_size - 1) / 2;
 
     int got_size;
+    int rc;
+    int len_out;
 
     mpi_errno = optimized_get(src, key, val, pmi_max_val_size, is_local);
     MPIR_ERR_CHECK(mpi_errno);
@@ -451,19 +457,13 @@ static int get_ex_segs(int src, const char *key, void *buf, int *p_size, int is_
             sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
             mpi_errno = optimized_get(src, seg_key, val, pmi_max_val_size, is_local);
             MPIR_ERR_CHECK(mpi_errno);
-            int n = strlen(val) / 2;    /* 2-to-1 decode */
-            if (i < num_segs - 1) {
-                MPIR_Assert(n == segsize);
-            } else {
-                MPIR_Assert(n <= segsize);
-            }
-            MPL_hex_decode(n, val, (char *) buf + i * segsize);
-            got_size += n;
+            rc = MPL_hex_decode(val, (char *) buf + i * segsize, bufsize - i * segsize, &len_out);
+            MPIR_Assertp(rc == MPL_SUCCESS);
+            got_size += len_out;
         }
     } else {
-        int n = strlen(val) / 2;        /* 2-to-1 decode */
-        MPL_hex_decode(n, val, (char *) buf);
-        got_size = n;
+        rc = MPL_hex_decode(val, (char *) buf, bufsize, &len_out);
+        got_size = len_out;
     }
     MPIR_Assert(got_size <= bufsize);
     if (got_size < bufsize) {

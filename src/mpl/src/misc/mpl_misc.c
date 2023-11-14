@@ -51,37 +51,54 @@ static int hex(unsigned char c)
 }
 
 /* encodes src data into hex characters */
-int MPL_hex_encode(int size, const void *src, char *dest)
+int MPL_hex_encode(const void *src, int src_size, char *dest, int dest_size, int *encoded_size)
 {
+    if (dest_size < src_size * 2 + 1) {
+        return MPL_ERR_FAIL;
+    }
+
     const char *srcp = src;
 
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < src_size; i++) {
         snprintf(dest, 3, "%02X", (unsigned char) *srcp);
         srcp++;
         dest += 2;
     }
+    *dest = '\0';
 
-    return 0;
+    *encoded_size = src_size * 2 + 1;
+    return MPL_SUCCESS;
 }
 
-/* decodes hex encoded string into original src data */
-int MPL_hex_decode(int size, const char *src, void *dest)
+/* return the size of the binary encoded in the src string */
+int MPL_hex_decode_len(const char *src)
 {
-    int n = strlen(src);
-    if (n != size * 2) {
-        return 1;
+    int n = 0;
+    while (isxdigit(src[0]) && isxdigit(src[1])) {
+        src += 2;
+        n++;
     }
 
+    return n;
+}
+
+/* decodes hex encoded string in src into original binary data in dest */
+int MPL_hex_decode(const char *src, void *dest, int dest_size, int *decoded_size)
+{
     char *destp = dest;
 
-    for (int i = 0; i < size; i++) {
-        if (hex(src[0]) < 0 || hex(src[1]) < 0) {
-            return 1;
-        }
+    int n = 0;
+    while (isxdigit(src[0]) && isxdigit(src[1])) {
         *destp = (char) (hex(src[0]) << 4) + hex(src[1]);
         src += 2;
         destp++;
+
+        n++;
+        if (n >= dest_size) {
+            return MPL_ERR_FAIL;
+        }
     }
 
-    return 0;
+    *decoded_size = n;
+    return MPL_SUCCESS;
 }

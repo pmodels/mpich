@@ -477,17 +477,27 @@ static char *value_to_wire(pmix_value_t * val)
         }
     }
 
-    encoded_value = MPL_malloc(sizeof(*val) * 2 + len * 2 + 1, MPL_MEM_OTHER);
+    int size = sizeof(*val) * 2 + 1 /* delim */  + len * 2 + 1 /* nul */ ;
+    encoded_value = MPL_malloc(size, MPL_MEM_OTHER);
     if (encoded_value == NULL) {
         return encoded_value;
     }
 
     /* Always encode the whole pmix_value_t struct, which contains the
      * type information and any value stored directly in the data member. */
-    MPL_hex_encode(sizeof(*val), val, encoded_value);
+    int rc;
+    int len_out;
+    rc = MPL_hex_encode(val, sizeof(*val), encoded_value, size, &len_out);
+    PMIU_Assert(rc == MPL_SUCCESS);
+
     if (data != NULL) {
+        /* Add deliminator '#' */
+        encoded_value[len_out] = '#';
+        encoded_value += (len_out + 1);
+        size -= (len_out + 1);
         /* Add indirect data after the encoded pmix_value_t */
-        MPL_hex_encode(len, data, encoded_value + sizeof(*val) * 2);
+        rc = MPL_hex_encode(data, len, encoded_value, size, &len_out);
+        PMIU_Assert(rc == MPL_SUCCESS);
     }
 
     return encoded_value;
@@ -495,37 +505,39 @@ static char *value_to_wire(pmix_value_t * val)
 
 static pmix_value_t *wire_to_value(const char *value)
 {
-    /* decode the whole buffer at once */
-    char *tmp_val = MPL_malloc(strlen(value) / 2, MPL_MEM_OTHER);
-    int rc = MPL_hex_decode(strlen(value) / 2, value, tmp_val);
-    if (rc) {
-        return NULL;
-    }
+    int rc;
+    int len_out;
 
     pmix_value_t *decoded_value = MPL_direct_malloc(sizeof(pmix_value_t));
+    rc = MPL_hex_decode(value, decoded_value, sizeof(pmix_value_t), &len_out);
+    PMIU_Assert(rc == MPL_SUCCESS);
+
     pmix_data_type_t type;
-
-    /* reconstruct the pmix_value_t for the user */
-    memcpy(decoded_value, tmp_val, sizeof(*decoded_value));
     type = decoded_value->type;
-
     if (is_indirect_type(type)) {
-        /* copy any indirect data in the appropriate location */
-        void *indirect_data = tmp_val + sizeof(*decoded_value);
+        const char *s = value;
+        while (*s && *s != '#') {
+            s++;
+        }
+        PMIU_Assert(*s == '#');
+        s++;
+
         if (type == PMIX_STRING) {
-            char *str = MPL_direct_strdup(indirect_data);
-            decoded_value->data.string = str;
+            int size = MPL_hex_decode_len(s);
+            decoded_value->data.string = MPL_direct_malloc(size);
+            rc = MPL_hex_decode(s, decoded_value->data.string, size, &len_out);
+            PMIU_Assert(rc == MPL_SUCCESS && len_out == size);
         } else if (type == PMIX_BYTE_OBJECT) {
-            void *bytes = MPL_direct_malloc(decoded_value->data.bo.size);
-            memcpy(bytes, indirect_data, decoded_value->data.bo.size);
-            decoded_value->data.bo.bytes = bytes;
+            int size = decoded_value->data.bo.size;
+            decoded_value->data.bo.bytes = MPL_direct_malloc(size);
+            rc = MPL_hex_decode(s, decoded_value->data.bo.bytes, size, &len_out);
+            PMIU_Assert(rc == MPL_SUCCESS && len_out == size);
         } else {
             /* TODO: handle other indirect types */
-            assert(0);
+            PMIU_Assert(0);
         }
     }
 
-    MPL_free(tmp_val);
     return decoded_value;
 }
 
