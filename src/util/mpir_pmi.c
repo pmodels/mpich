@@ -467,7 +467,8 @@ static int get_ex_segs(int src, const char *key, void *buf, int *p_size, int is_
     }
     MPIR_Assert(got_size <= bufsize);
     if (got_size < bufsize) {
-        ((char *) buf)[got_size] = '\0';
+        /* fill the remaining buffer 0 */
+        memset((char *) buf + got_size, 0, bufsize - got_size);
     }
 
     *p_size = got_size;
