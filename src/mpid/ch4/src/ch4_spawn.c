@@ -4,6 +4,9 @@
  */
 
 #include "mpidimpl.h"
+#include "mpidu_bc.h"
+
+#define MPIDI_DYNPROC_NAME_MAX MPID_MAX_BC_SIZE
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -127,7 +130,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
 static void free_port_name_tag(int tag);
 static int get_port_name_tag(int *port_name_tag);
 static int get_tag_from_port(const char *port_name, int *port_name_tag);
-static int get_conn_name_from_port(const char *port_name, char *connname, int *len);
+static int get_conn_name_from_port(const char *port_name, char *connname, int maxlen, int *len);
 
 #define PORT_MASK_BIT(j) (1u << ((8 * sizeof(int)) - j - 1))
 static int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
@@ -202,13 +205,12 @@ static int get_tag_from_port(const char *port_name, int *port_name_tag)
     goto fn_exit;
 }
 
-static int get_conn_name_from_port(const char *port_name, char *connname, int *len)
+static int get_conn_name_from_port(const char *port_name, char *connname, int maxlen, int *len)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
-    int maxlen = MPI_MAX_PORT_NAME;
     int outlen;
     int err;
     err = MPL_str_get_binary_arg(port_name, CONNENTR_TAG_KEY, connname, maxlen, &outlen);
@@ -278,8 +280,6 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag, int ti
 static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int root,
                                     MPIR_Comm * comm_ptr, int timeout, bool is_sender,
                                     MPIR_Comm ** newcomm);
-
-#define MPIDI_DYNPROC_NAME_MAX MPI_MAX_PORT_NAME
 
 struct dynproc_conn_hdr {
     MPIR_Context_id_t context_id;
@@ -379,7 +379,8 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
         int len;
         if (is_sender) {
             addrname = remote_addrname;
-            mpi_errno = get_conn_name_from_port(port_name, remote_addrname, &len);
+            mpi_errno = get_conn_name_from_port(port_name, remote_addrname, MPIDI_DYNPROC_NAME_MAX,
+                                                &len);
             if (mpi_errno)
                 goto bcast_tag_and_errno;
         } else {
