@@ -50,23 +50,59 @@ static int hex(unsigned char c)
     }
 }
 
+static char to_hex(unsigned char num)
+{
+    if (num < 10) {
+        return '0' + num;
+    } else {
+        return 'A' + num - 10;
+    }
+}
+
 /* encodes src data into hex characters */
+
 int MPL_hex_encode(const void *src, int src_size, char *dest, int dest_size, int *encoded_size)
 {
-    if (dest_size < src_size * 2 + 1) {
-        return MPL_ERR_FAIL;
-    }
+    const unsigned char *srcp = src;
+    *encoded_size = 0;
+    int i = 0;
+    while (i < src_size) {
+        if (srcp[i] == 0 && i + 1 < src_size && srcp[i] == srcp[i + 1]) {
+            /* two or more consecutive 0's, encode into [#] */
+            int cnt = 0;
+            for (int j = i; j < src_size; j++) {
+                if (srcp[j] == 0) {
+                    cnt++;
+                } else {
+                    break;
+                }
+            }
+            int ret = snprintf(dest, dest_size, "[%d]", cnt);
+            if (ret < 0) {
+                return MPL_ERR_FAIL;
+            }
+            dest += ret;
+            dest_size -= ret;
+            *encoded_size += ret;
 
-    const char *srcp = src;
+            i += cnt;
+        } else {
+            /* 2 hex digits */
+            if (dest_size < 3) {
+                return MPL_ERR_FAIL;
+            }
+            dest[0] = to_hex(srcp[i] >> 4);
+            dest[1] = to_hex(srcp[i] & 0xf);
 
-    for (int i = 0; i < src_size; i++) {
-        snprintf(dest, 3, "%02X", (unsigned char) *srcp);
-        srcp++;
-        dest += 2;
+            dest += 2;
+            dest_size -= 2;
+            *encoded_size += 2;
+
+            i++;
+        }
     }
     *dest = '\0';
 
-    *encoded_size = src_size * 2 + 1;
     return MPL_SUCCESS;
 }
 
@@ -74,9 +110,29 @@ int MPL_hex_encode(const void *src, int src_size, char *dest, int dest_size, int
 int MPL_hex_decode_len(const char *src)
 {
     int n = 0;
-    while (isxdigit(src[0]) && isxdigit(src[1])) {
-        src += 2;
-        n++;
+    while (true) {
+        if (src[0] == '[') {
+            /* [cnt] for consecutive 0's */
+            src++;
+            int cnt = atoi(src);
+            n += cnt;
+
+            while (isdigit(*src)) {
+                src++;
+            }
+            if (*src == ']') {
+                src++;
+            } else {
+                /* error */
+                return 0;
+            }
+        } else if (isxdigit(src[0]) && isxdigit(src[1])) {
+            /* 2 hex digits for a single byte */
+            n++;
+            src += 2;
+        } else {
+            break;
+        }
     }
 
     return n;
@@ -85,17 +141,46 @@ int MPL_hex_decode_len(const char *src)
 /* decodes hex encoded string in src into original binary data in dest */
 int MPL_hex_decode(const char *src, void *dest, int dest_size, int *decoded_size)
 {
-    char *destp = dest;
+    unsigned char *destp = dest;
 
     int n = 0;
-    while (isxdigit(src[0]) && isxdigit(src[1])) {
-        *destp = (char) (hex(src[0]) << 4) + hex(src[1]);
-        src += 2;
-        destp++;
+    while (true) {
+        if (src[0] == '[') {
+            /* [cnt] for consecutive 0's */
+            src++;
+            int cnt = atoi(src);
+            n += cnt;
+            if (n > dest_size) {
+                return MPL_ERR_FAIL;
+            }
+            if (dest_size >= cnt) {
+                for (int i = 0; i < cnt; i++) {
+                    destp[i] = 0;
+                }
+            }
+            destp += cnt;
 
-        n++;
-        if (n >= dest_size) {
-            return MPL_ERR_FAIL;
+            while (isdigit(*src)) {
+                src++;
+            }
+            if (*src == ']') {
+                src++;
+            } else {
+                /* error */
+                return 0;
+            }
+        } else if (isxdigit(src[0]) && isxdigit(src[1])) {
+            /* 2 hex digits for a single byte */
+            *destp = (char) (hex(src[0]) << 4) + hex(src[1]);
+            src += 2;
+            destp++;
+
+            n++;
+            if (n > dest_size) {
+                return MPL_ERR_FAIL;
+            }
+        } else {
+            break;
         }
     }
 
