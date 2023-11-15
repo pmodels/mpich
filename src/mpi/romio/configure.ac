@@ -153,6 +153,8 @@ else
     # just set mpl_includedir and source mpl/localdefs if any.
     pac_skip_mpl_lib=yes
     PAC_CONFIG_MPL
+    # enable MPICH extensions
+    AC_DEFINE(MPICH_ENABLE_EXTENSION, 1, [define to enable MPICH mpix extensions])
 fi
 
 CFLAGS=${CFLAGS:-""}

@@ -441,6 +441,9 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[return 1 + MPICH;])],
 AC_MSG_RESULT($MPI_IS_MPICH)
 
 if test "$MPI_IS_MPICH" = "yes" ; then
+    if test "$enable_strictmpi" = "no" then
+        AC_DEFINE(MPICH_ENABLE_EXTENSION, 1, [define to enable mpich mpix features])
+    fi
     # try mpichversion
     AC_PATH_PROG(MPICHVERSION, mpichversion, [], [$PATH:$with_mpi/bin])
     if test -n "$MPICHVERSION" ; then

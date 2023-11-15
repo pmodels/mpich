@@ -238,7 +238,7 @@ int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
 
     int len;
     int err;
-    len = MPI_MAX_PORT_NAME;    /* FIXME: currently at 256, probably too short for ucx */
+    len = MPI_MAX_PORT_NAME;
     err = MPL_str_add_int_arg(&port_name, &len, PORT_NAME_TAG_KEY, tag);
     MPIR_ERR_CHKANDJUMP(err, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
     err = MPL_str_add_binary_arg(&port_name, &len, CONNENTR_TAG_KEY, addrname, addrname_size[0]);

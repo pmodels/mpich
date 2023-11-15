@@ -264,14 +264,23 @@ def need_skip_qmpi(func_name):
         return True
 
 def dump_mpi_proto_h(f):
-    def dump_line(s, tail, Out):
+    def check_mpix(l):
+        if re.match(r'int MPIX_', l):
+            return True
+        else:
+            return False
+    def dump_line(s, tail, Out, is_mpix):
+        if is_mpix:
+            print("#ifdef MPICH_ENABLE_EXTENSION", file=Out)
         tlist = split_line_with_break(s, tail, 100)
         for l in tlist:
             print(l, file=Out)
-    def dump_proto_line(l, Out):
+        if is_mpix:
+            print("#endif", file=Out)
+    def dump_proto_line(l, Out, is_mpix=False):
         if RE.match(r'(.*?\))\s+(MPICH.*)', l):
             s, tail = RE.m.group(1,2)
-            dump_line(s, tail + ';', Out)
+            dump_line(s, tail + ';', Out, is_mpix)
 
     # -- sort the prototypes into groups --
     list_a = []  # prototypes the fortran needs
@@ -297,25 +306,25 @@ def dump_mpi_proto_h(f):
         # -- mpi prototypes --
         print("/* Begin Prototypes */", file=Out)
         for l in list_a:
-            dump_proto_line(l, Out)
+            dump_proto_line(l, Out, check_mpix(l))
         print("/* End Prototypes */", file=Out)
         print("", file=Out)
 
         # -- tool prototypes --
         for l in list_b:
-            dump_proto_line(l, Out)
+            dump_proto_line(l, Out, check_mpix(l))
         print("", file=Out)
 
         # -- large prototypes --
         for l in list_c:
-            dump_proto_line(l, Out)
+            dump_proto_line(l, Out, check_mpix(l))
         print("", file=Out)
 
         # -- PMPI prototypes --
         for l in G.mpi_declares:
             if re.match(r'int MPI_DUP_FN', l):
                 continue
-            dump_proto_line(re.sub(' MPI', ' PMPI', l, 1), Out)
+            dump_proto_line(re.sub(' MPI', ' PMPI', l, 1), Out, check_mpix(l))
         print("", file=Out)
 
         # -- QMPI function enum --
@@ -326,28 +335,30 @@ def dump_mpi_proto_h(f):
             func_name = m.group(1);
             if need_skip_qmpi(func_name):
                 continue
-            print("    " + func_name.upper() + "_T,", file=Out)
+            dump_line("    " + func_name.upper() + "_T,", '', Out, check_mpix(l))
         print("    MPI_LAST_FUNC_T", file=Out)
         print("};", file=Out)
         print("", file=Out)
 
         # -- QMPI prototypes --
         for func_decl in G.mpi_declares:
+            is_mpix = check_mpix(func_decl)
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
             if need_skip_qmpi(m.group(1)):
                 continue
             func_decl = get_qmpi_decl_from_func_decl(func_decl, 'proto')
-            dump_proto_line(func_decl, Out)
+            dump_proto_line(func_decl, Out, is_mpix)
 
         print("", file=Out)
 
         # -- QMPI function typedefs --
         for func_decl in G.mpi_declares:
+            is_mpix = check_mpix(func_decl)
             m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
             if need_skip_qmpi(m.group(1)):
                 continue
             func_decl = get_qmpi_typedef_from_func_decl(func_decl)
-            dump_line(func_decl, '', Out)
+            dump_line(func_decl, '', Out, is_mpix)
         print("", file=Out)
 
         print("#endif /* MPI_PROTO_H_INCLUDED */", file=Out)

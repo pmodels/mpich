@@ -208,6 +208,8 @@ AH_TOP([/*
 #define MPICHCONF_H_INCLUDED
 ])
 
+AC_DEFINE(MPICH_ENABLE_EXTENSION, 1, [define to expose mpix in mpi.h])
+
 # We use an #include strategy here because all of the alternative strategies for
 # quashing these variables have various drawbacks.  The alternatives are listed
 # here to avoid rediscovery of these problems by someone else in the future:

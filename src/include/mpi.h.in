@@ -9,6 +9,12 @@
 
 /* user include file for MPI programs */
 
+/* NOTE: some of the features are not visible by default.
+ *       Define MPICH_ENABLE_EXTENSION to enable them.
+ *       *  increased MPI_MAX_PORT_NAME to accommodate certain architecture.
+ *       *  MPIX features
+ */
+
 #if defined(HAVE_VISIBILITY)
 #define MPICH_API_PUBLIC __attribute__((visibility ("default")))
 #else
@@ -135,7 +141,9 @@ extern "C" {
 #define MPI_ERRHANDLER_NULL ((MPI_Errhandler)0x14000000)
 #define MPI_MESSAGE_NULL   ((MPI_Message)0x2c000000)
 #define MPI_MESSAGE_NO_PROC ((MPI_Message)0x6c000000)
+#ifdef MPICH_ENABLE_EXTENSION
 #define MPIX_STREAM_NULL   ((MPIX_Stream)0x3c000000)
+#endif
 
 typedef int MPI_Datatype;
 #define MPI_CHAR           ((MPI_Datatype)@MPI_CHAR@)
@@ -217,7 +225,9 @@ typedef int MPI_Datatype;
 #define MPI_C_DOUBLE_COMPLEX       ((MPI_Datatype)@MPI_C_DOUBLE_COMPLEX@)
 #define MPI_C_LONG_DOUBLE_COMPLEX  ((MPI_Datatype)@MPI_C_LONG_DOUBLE_COMPLEX@)
 /* other extension types */
+#ifdef MPICH_ENABLE_EXTENSION
 #define MPIX_C_FLOAT16             ((MPI_Datatype)@MPIX_C_FLOAT16@)
+#endif
 
 /* address/offset types */
 #define MPI_AINT          ((MPI_Datatype)@MPI_AINT_DATATYPE@)
@@ -272,7 +282,9 @@ typedef int MPI_Op;
 #define MPI_MAXLOC  (MPI_Op)(0x5800000c)
 #define MPI_REPLACE (MPI_Op)(0x5800000d)
 #define MPI_NO_OP   (MPI_Op)(0x5800000e)
+#ifdef MPICH_ENABLE_EXTENSION
 #define MPIX_EQUAL  (MPI_Op)(0x5800000f)
+#endif
 
 /* MPI errhandler objects */
 typedef int MPI_Errhandler;
@@ -294,11 +306,13 @@ typedef int MPI_Request;
 /* MPI message objects for Mprobe and related functions */
 typedef int MPI_Message;
 
+#ifdef MPICH_ENABLE_EXTENSION
 /* Generalized requests extensions */
 typedef int MPIX_Grequest_class;
 
 /* MPI stream objects */
 typedef int MPIX_Stream;
+#endif
 
 /* for info */
 typedef int MPI_Info;
@@ -469,7 +483,11 @@ extern MPI_F08_status *MPI_F08_STATUSES_IGNORE;
 #define MPI_MAX_PROCESSOR_NAME @MPI_MAX_PROCESSOR_NAME@
 #define MPI_MAX_LIBRARY_VERSION_STRING @MPI_MAX_LIBRARY_VERSION_STRING@
 #define MPI_MAX_ERROR_STRING   @MPI_MAX_ERROR_STRING@
+#ifdef MPICH_ENABLE_EXTENSION
+#define MPI_MAX_PORT_NAME      1024
+#else
 #define MPI_MAX_PORT_NAME      256
+#endif
 #define MPI_MAX_OBJECT_NAME    128
 #define MPI_MAX_STRINGTAG_LEN  256
 #define MPI_MAX_PSET_NAME_LEN  256
@@ -579,7 +597,9 @@ enum MPIR_Combiner_enum {
 #define MPI_COMM_TYPE_RESOURCE_GUIDED 4
 
 /* MPICH-specific types */
+#ifdef MPICH_ENABLE_EXTENSION
 #define MPIX_COMM_TYPE_NEIGHBORHOOD 5
+#endif
 
 /* For supported thread levels */
 #define MPI_THREAD_SINGLE 0
@@ -703,6 +723,7 @@ enum MPIR_Combiner_enum {
 #define MPICH_ERR_LAST_CLASS 80     /* It is also helpful to know the
 				       last valid class */
 
+#ifdef MPICH_ENABLE_EXTENSION
 #define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
                                   * already using some of the values in this
                                   * range. All MPIX error codes will be
@@ -718,13 +739,16 @@ enum MPIR_Combiner_enum {
 #define MPIX_ERR_TIMEOUT              MPICH_ERR_FIRST_MPIX+7 /* Operation timed out */
 
 #define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+7
+#endif  /* MPICH_ENABLE_EXTENSION */
 
 /* End of MPI's error classes */
 
 /* GPU extensions */
+#ifdef MPICH_ENABLE_EXTENSION
 #define MPIX_GPU_SUPPORT_CUDA  (0)
 #define MPIX_GPU_SUPPORT_ZE    (1)
 #define MPIX_GPU_SUPPORT_HIP   (2)
+#endif
 
 /* feature advertisement */
 #define MPIIMPL_ADVERTISES_FEATURES 1
@@ -772,8 +796,10 @@ typedef void (MPI_User_function_c) ( void *, void *, MPI_Count *, MPI_Datatype *
 typedef int (MPI_Grequest_cancel_function)(void *, int);
 typedef int (MPI_Grequest_free_function)(void *);
 typedef int (MPI_Grequest_query_function)(void *, MPI_Status *);
+#ifdef MPICH_ENABLE_EXTENSION
 typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);
 typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
+#endif
 
 /* Function type defs */
 typedef int (MPI_Datarep_conversion_function)(void *, MPI_Datatype, int,
@@ -943,11 +969,13 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUB
 */
 /* --Insert Additional Definitions Here-- */
 
+#ifdef MPICH_ENABLE_EXTENSION
 /* same as struct iovec, provided to avoid header dependency */
 typedef struct MPIX_Iov {
     void *iov_base;
     MPI_Aint iov_len;
 } MPIX_Iov;
+#endif
 
 /*
  * Normally, we provide prototypes for all MPI routines.  In a few weird
