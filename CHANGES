@@ -1,4 +1,12 @@
 ===============================================================================
+                               Changes in 4.3
+===============================================================================
+# MPIX extensions are now guarded in mpi.h. Define MPICH_ENABLE_EXTENSION before
+  including mpi.h to enable MPIX extensions. Enable extension will also define
+  MPI_MAX_PORT_NAME to 1024, a larger value than defined in the current MPICH ABI.
+
+
+===============================================================================
                                Changes in 4.2
 ===============================================================================
 # Complete support MPI 4.1 specification
