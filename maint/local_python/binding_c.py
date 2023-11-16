@@ -458,8 +458,9 @@ def check_func_directives(func):
             G.err_codes[a] = 1
 
     # additional exit_routines (clean up)
-    if 'code-clean_up' not in func:
-        func['code-clean_up'] = []
+    func['_clean_up'] = []
+    if 'code-clean_up' in func:
+        func['_clean_up'].extend(func['code-clean_up'])
 
     # cleanup internal states
     func.pop('_got_comm_size', None)
@@ -1298,9 +1299,8 @@ def dump_function_normal(func):
     # ----
     G.out.append("")
     G.out.append("fn_exit:")
-    for l in func['code-clean_up']:
+    for l in func['_clean_up']:
         G.out.append(l)
-    func['code-clean_up'] = []
     G.out.append("MPIR_FUNC_TERSE_EXIT;")
 
     if not '_skip_global_cs' in func:
@@ -1956,9 +1956,9 @@ def dump_convert_handle(func, p):
         G.out.append("        goto fn_fail;")
         G.out.append("    }")
         G.out.append("}")
-        func['code-clean_up'].append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % (p['length']))
-        func['code-clean_up'].append("    MPL_free(request_ptrs);")
-        func['code-clean_up'].append("}")
+        func['_clean_up'].append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % (p['length']))
+        func['_clean_up'].append("    MPL_free(request_ptrs);")
+        func['_clean_up'].append("}")
 
         G.out.append("")
         dump_for_open('i', p['length'])
