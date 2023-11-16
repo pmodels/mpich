@@ -406,10 +406,6 @@ sub LoadTests {
 
             if ($#args >= 1) { $np = $args[1]; }
 
-            if ($g_opt{mpitest_singleton} and $np != 1) {
-                # skip multiple process tests if we need test singleton init
-                next;
-            }
             # Process the key=value arguments
             for (my $i=2; $i <= $#args; $i++) {
                 if ($args[$i] =~ /([^=]+)=(.*)/) {
@@ -434,6 +430,11 @@ sub LoadTests {
                         print STDERR "Unrecognized key $key in $listfileSource\n";
                     }
                 }
+            }
+
+            if ($g_opt{mpitest_singleton} and ($np != 1 or @{$test_opt->{mpiexecargs}})) {
+                # skip if we need test singleton init and the test require multiple processes or mpiexec argument
+                next;
             }
 
             if ($g_opt{has_gpu_test}) {
