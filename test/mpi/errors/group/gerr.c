@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
     /* Create some valid input data except for the group handle */
     ranks[0] = 0;
-    rc = MPI_Group_incl(MPI_COMM_WORLD, 1, ranks, &ng);
+    rc = MPI_Group_incl((MPI_Group) MPI_COMM_WORLD, 1, ranks, &ng);
     if (rc == MPI_SUCCESS) {
         errs++;
         printf("Did not detect invalid handle (comm) in group_incl\n");
