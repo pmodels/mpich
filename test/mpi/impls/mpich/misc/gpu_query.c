@@ -3,14 +3,15 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
+#include "mpitest.h"
 #include <stdio.h>
 
 int main(int argc, char **argv)
 {
     int errors = 0;
     int cuda_support, ze_support, hip_support;
-    MPI_Init(NULL, NULL);
+
+    MTest_Init(&argc, &argv);
 
     MPIX_GPU_query_support(MPIX_GPU_SUPPORT_CUDA, &cuda_support);
     MPIX_GPU_query_support(MPIX_GPU_SUPPORT_ZE, &ze_support);
@@ -47,11 +48,7 @@ int main(int argc, char **argv)
     }
 #endif
 
-    if (errors == 0) {
-        printf("No Errors\n");
-    }
-
-    MPI_Finalize();
+    MTest_Finalize(errors);
 
     return 0;
 }

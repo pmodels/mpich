@@ -3,9 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+#include <stdio.h>
 #include "stdlib.h"
 #include "dtpools.h"
 #include <assert.h>
