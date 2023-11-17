@@ -10,6 +10,8 @@ class G:
     abi_h_lines = []
     abi_datatypes = {}
     abi_ops = {}
+    op_mask = 0x1f;
+    datatype_mask = 0x1ff;
 
 class RE:
     m = None
@@ -47,10 +49,11 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 out.append("    int reserved[%d];" % (n - 2))
             elif RE.match(r'#define\s+(MPI_\w+)\s+\((MPI_\w+)\)\s*(0x\S+)', line):
                 (name, T, val) = RE.m.group(1,2,3)
-                idx = int(val, 0) & 0xff
                 if T == "MPI_Datatype":
+                    idx = int(val, 0) & G.datatype_mask
                     G.abi_datatypes[idx] = name
                 elif T == "MPI_Op":
+                    idx = int(val, 0) & G.op_mask
                     G.abi_ops[idx] = name
 
                 if T == "MPI_File":
@@ -59,6 +62,9 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 else:
                     # replace param prefix
                     out.append(re.sub(r'\bMPI_', 'ABI_', line.rstrip()))
+            elif RE.match(r'#define MPI_(LONG_LONG|C_COMPLEX)', line):
+                # datatype aliases
+                out.append(re.sub(r'\bMPI_', 'ABI_', line.rstrip()))
             elif RE.match(r'^typedef struct \w+\s*\*\s*(MPI_T_\w+);', line):
                 # rename to internal mpi_t struct type
                 T = RE.m.group(1)
@@ -89,10 +95,6 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
             print(line, file=Out)
         print("", file=Out)
         
-        print("#define ABI_MAX_DATATYPE_BUILTINS %d" % len(G.abi_datatypes), file=Out)
-        print("#define ABI_MAX_OP_BUILTINS %d" % len(G.abi_ops), file=Out)
-        print("", file=Out)
-
         print("#endif /* MPI_ABI_INTERNAL_H_INCLUDED */", file=Out)
 
 def dump_romio_abi_internal_h(romio_abi_internal_h):
