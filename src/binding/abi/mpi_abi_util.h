@@ -6,6 +6,11 @@
 
 #define ABI_IS_BUILTIN(h)  ((intptr_t)(h) < 0x1000)
 
+#define ABI_DATATYPE_BUILTIN_MASK 0x1ff
+#define ABI_OP_BUILTIN_MASK 0x1f
+#define ABI_MAX_DATATYPE_BUILTINS 512
+#define ABI_MAX_OP_BUILTINS 32
+
 /* only datatype and op have many builtins to deserve a table lookup */
 extern MPI_Datatype abi_datatype_builtins[];
 extern MPI_Op abi_op_builtins[];
@@ -46,7 +51,7 @@ static inline MPI_Datatype ABI_Datatype_to_mpi(ABI_Datatype in)
 {
     if (ABI_IS_BUILTIN(in)) {
         /* TODO: error check */
-        return abi_datatype_builtins[(intptr_t) in & 0xff];
+        return abi_datatype_builtins[(intptr_t) in & ABI_DATATYPE_BUILTIN_MASK];
     }
     return ((MPIR_Datatype *) in)->handle;
 }
@@ -59,7 +64,7 @@ static inline ABI_Datatype ABI_Datatype_from_mpi(MPI_Datatype in)
     if (HANDLE_IS_BUILTIN(in)) {
         for (int i = 0; i < ABI_MAX_DATATYPE_BUILTINS; i++) {
             if (abi_datatype_builtins[i] == in) {
-                return (ABI_Datatype) (intptr_t) (0x300 + i);
+                return (ABI_Datatype) ((intptr_t) ABI_DATATYPE_NULL + i);
             }
         }
     }
@@ -172,7 +177,7 @@ static inline MPI_Op ABI_Op_to_mpi(ABI_Op in)
 {
     if (ABI_IS_BUILTIN(in)) {
         /* TODO: error check */
-        return abi_op_builtins[(intptr_t) in & 0xff];
+        return abi_op_builtins[(intptr_t) in & ABI_OP_BUILTIN_MASK];
     }
     return ((MPIR_Op *) in)->handle;
 }
@@ -185,7 +190,7 @@ static inline ABI_Op ABI_Op_from_mpi(MPI_Op in)
     if (HANDLE_IS_BUILTIN(in)) {
         for (int i = 0; i < ABI_MAX_OP_BUILTINS; i++) {
             if (abi_op_builtins[i] == in) {
-                return (ABI_Op) (intptr_t) (0x600 + i);
+                return (ABI_Op) ((intptr_t) ABI_OP_NULL + i);
             }
         }
     }
