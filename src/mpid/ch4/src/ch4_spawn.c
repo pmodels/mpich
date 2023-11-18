@@ -36,7 +36,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
 
     MPIR_FUNC_ENTER;
 
-    char port_name[MPI_MAX_PORT_NAME];
+    char port_name[MPID_MAX_PORT_NAME];
     memset(port_name, 0, sizeof(port_name));
 
     int total_num_processes = 0;
@@ -53,7 +53,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
 
         /* NOTE: we can't do ERR JUMP here, or the later BCAST won't work */
 
-        mpi_errno = MPID_Open_port(NULL, port_name);
+        mpi_errno = MPID_Open_port(NULL, port_name, MPID_MAX_PORT_NAME);
         if (mpi_errno == MPI_SUCCESS) {
             struct MPIR_PMI_KEYVAL preput_keyval_vector;
             preput_keyval_vector.key = MPIDI_PARENT_PORT_KVSKEY;
@@ -224,7 +224,7 @@ static int get_conn_name_from_port(const char *port_name, char *connname, int ma
     goto fn_exit;
 }
 
-int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
+int MPID_Open_port(MPIR_Info * info_ptr, char *port_name, int len)
 {
     int mpi_errno;
     char *addrname = NULL;
@@ -238,9 +238,7 @@ int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
     mpi_errno = MPIDI_NM_get_local_upids(MPIR_Process.comm_self, &addrname_size, &addrname);
     MPIR_ERR_CHECK(mpi_errno);
 
-    int len;
     int err;
-    len = MPI_MAX_PORT_NAME;    /* FIXME: currently at 256, probably too short for ucx */
     err = MPL_str_add_int_arg(&port_name, &len, PORT_NAME_TAG_KEY, tag);
     MPIR_ERR_CHKANDJUMP(err, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
     err = MPL_str_add_binary_arg(&port_name, &len, CONNENTR_TAG_KEY, addrname, addrname_size[0]);
