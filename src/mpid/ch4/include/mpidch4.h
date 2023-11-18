@@ -44,7 +44,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *, MPI_Aint, MPI_Datatype, MPIR_Req
                                         MPI_Status *, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *, MPI_Aint, MPI_Datatype, MPIR_Request *,
                                          MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
-int MPID_Open_port(MPIR_Info *, char *);
+int MPID_Open_port(MPIR_Info * info, char *port, int len);
 int MPID_Close_port(const char *);
 int MPID_Comm_accept(const char *, MPIR_Info *, int, MPIR_Comm *, MPIR_Comm **);
 int MPID_Comm_connect(const char *, MPIR_Info *, int, MPIR_Comm *, MPIR_Comm **);

@@ -47,7 +47,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 
 	/* Open a port for the spawned processes to connect to */
 	/* FIXME: info may be needed for port name */
-        mpi_errno = MPID_Open_port(NULL, port_name);
+        mpi_errno = MPID_Open_port(NULL, port_name, MPI_MAX_PORT_NAME);
 	/* --BEGIN ERROR HANDLING-- */
         MPIR_ERR_CHECK(mpi_errno);
 	/* --END ERROR HANDLING-- */

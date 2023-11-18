@@ -26,6 +26,7 @@ static MPIDI_PortFns portFns = { 0, 0, 0, 0 };
 
    Input Arguments:
 .  MPI_Info info - info
+.  int len - length of the port_name buffer
 
    Output Arguments:
 .  char *port_name - port name
@@ -36,11 +37,13 @@ static MPIDI_PortFns portFns = { 0, 0, 0, 0 };
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPID_Open_port(MPIR_Info *info_ptr, char *port_name)
+int MPID_Open_port(MPIR_Info *info_ptr, char *port_name, int len)
 {
     int mpi_errno=MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+
+    MPIR_Assert(len >= MPI_MAX_PORT_NAME);
 
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */

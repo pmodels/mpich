@@ -14,6 +14,8 @@
 #include <signal.h>
 #endif
 
+#include "mpidu_bc.h"   /* MPID_MAX_PORT_NAME */
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -606,9 +608,10 @@ int MPID_InitCompleted(void)
     MPIR_FUNC_ENTER;
 
     if (MPIR_Process.has_parent) {
-        char parent_port[MPI_MAX_PORT_NAME];
+        MPIR_Assert(MPID_MAX_PORT_NAME > MPI_MAX_PORT_NAME);
+        char parent_port[MPID_MAX_PORT_NAME];
         mpi_errno =
-            MPIR_pmi_kvs_parent_get(MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
+            MPIR_pmi_kvs_parent_get(MPIDI_PARENT_PORT_KVSKEY, parent_port, MPID_MAX_PORT_NAME);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world,
                                       &MPIR_Process.comm_parent);
