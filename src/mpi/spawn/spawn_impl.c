@@ -195,7 +195,15 @@ int MPIR_Comm_spawn_multiple_impl(int count, char *array_of_commands[], char **a
 
 int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name)
 {
-    return MPID_Open_port(info_ptr, port_name, MPI_MAX_PORT_NAME);
+    int port_name_size = MPI_MAX_PORT_NAME;
+    if (info_ptr) {
+        const char *val;
+        val = MPIR_Info_lookup(info_ptr, "port_name_size");
+        if (val) {
+            port_name_size = atoi(val);
+        }
+    }
+    return MPID_Open_port(info_ptr, port_name, port_name_size);
 }
 
 int MPIR_Close_port_impl(const char *port_name)
