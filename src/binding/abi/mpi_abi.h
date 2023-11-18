@@ -4,16 +4,17 @@
 #define MPI_VERSION 5
 #define MPI_SUBVERSION 0
 
-#define MPI_MAX_PROCESSOR_NAME         128
-#define MPI_MAX_LIBRARY_VERSION_STRING 8192
-#define MPI_MAX_ERROR_STRING           512
-#define MPI_MAX_DATAREP_STRING         128
-#define MPI_MAX_PORT_NAME              1024
-#define MPI_MAX_OBJECT_NAME            128
-#define MPI_MAX_STRINGTAG_LEN          256
-#define MPI_MAX_PSET_NAME_LEN          256
-#define MPI_MAX_INFO_KEY               255
-#define MPI_MAX_INFO_VAL               1024
+// String size constants
+#define MPI_MAX_DATAREP_STRING               128 // MPICH=OMPI=128 (MPICH has it in `mpio.h`)
+#define MPI_MAX_ERROR_STRING                 512 // MPICH was bigger
+#define MPI_MAX_INFO_KEY                     255 // MPICH was bigger
+#define MPI_MAX_INFO_VAL                    1024 // MPICH was bigger
+#define MPI_MAX_LIBRARY_VERSION_STRING      8192 // MPICH was bigger
+#define MPI_MAX_OBJECT_NAME                  128 // MPICH was bigger
+#define MPI_MAX_PORT_NAME                   1024 // OMPI was bigger
+#define MPI_MAX_PROCESSOR_NAME               256 // OMPI was bigger
+#define MPI_MAX_STRINGTAG_LEN               1024 // OMPI was bigger (v5.0+)
+#define MPI_MAX_PSET_NAME_LEN                512 // OMPI was bigger (v5.0+)
 
 #include <stdint.h>
 
@@ -55,127 +56,106 @@ typedef struct MPI_Status {
 extern MPI_Fint * MPI_F_STATUS_IGNORE;
 extern MPI_Fint * MPI_F_STATUSES_IGNORE;
 
-/* constants */
-#define MPI_BOTTOM     (void *)0
-#define MPI_IN_PLACE   (void *)1
-#define MPI_BUFFER_AUTOMATIC (void *)2
-#define MPI_PROC_NULL  -1
-#define MPI_ANY_SOURCE -2
-#define MPI_ROOT       -3
-#define MPI_ANY_TAG    -1
-#define MPI_UNDEFINED  -1
-#define MPI_BSEND_OVERHEAD 96  /* FIXME */
+// Buffer Address Constants
+#define MPI_BOTTOM           ((void *)0)
+#define MPI_IN_PLACE         ((void *)1)
+#define MPI_BUFFER_AUTOMATIC ((void *)2)
 
-#define MPI_STATUS_IGNORE   (MPI_Status *)0
-#define MPI_STATUSES_IGNORE (MPI_Status *)0
-#define MPI_ERRCODES_IGNORE (int *)0
-#define MPI_UNWEIGHTED      (int *)1
-#define MPI_WEIGHTS_EMPTY   (int *)2
-#define MPI_ARGV_NULL       (char **)0
-#define MPI_ARGVS_NULL      (char ***)0
+// Other constants
+#define MPI_BSEND_OVERHEAD                   512 // MPICH=96, OMPI=128
 
-/* error codes */
+// Constants Specifying Empty or Ignored Input
+#define MPI_ARGV_NULL       ((char**)0)
+#define MPI_ARGVS_NULL      ((char***)0)
+#define MPI_ERRCODES_IGNORE ((int*)0)
+#define MPI_STATUS_IGNORE   ((MPI_Status*)0)
+#define MPI_STATUSES_IGNORE ((MPI_Status*)0)
+#define MPI_UNWEIGHTED      ((int*)2)
+#define MPI_WEIGHTS_EMPTY   ((int*)3)
+
+// Error classes
 enum {
-    MPI_SUCCESS = 0,
-    MPI_ERR_BUFFER,
-    MPI_ERR_COUNT,
-    MPI_ERR_TYPE,
-    MPI_ERR_TAG,
-    MPI_ERR_COMM,
-    MPI_ERR_RANK,
-    MPI_ERR_REQUEST,
-    MPI_ERR_ROOT,
-    MPI_ERR_GROUP,
-    MPI_ERR_OP,
-    MPI_ERR_TOPOLOGY,
-    MPI_ERR_DIMS,
-    MPI_ERR_ARG,
-    MPI_ERR_UNKNOWN,
-    MPI_ERR_TRUNCATE,
-    MPI_ERR_OTHER,
-    MPI_ERR_INTERN,
-    MPI_ERR_PENDING,
-    MPI_ERR_IN_STATUS,
-    MPI_ERR_ACCESS,
-    MPI_ERR_AMODE,
-    MPI_ERR_ASSERT,
-    MPI_ERR_BAD_FILE,
-    MPI_ERR_BASE,
-    MPI_ERR_CONVERSION,
-    MPI_ERR_DISP,
-    MPI_ERR_DUP_DATAREP,
-    MPI_ERR_ERRHANDLER,
-    MPI_ERR_FILE_EXISTS,
-    MPI_ERR_FILE_IN_USE,
-    MPI_ERR_FILE,
-    MPI_ERR_INFO_KEY,
-    MPI_ERR_INFO_NOKEY,
-    MPI_ERR_INFO_VALUE,
-    MPI_ERR_INFO,
-    MPI_ERR_IO,
-    MPI_ERR_KEYVAL,
-    MPI_ERR_LOCKTYPE,
-    MPI_ERR_NAME,
-    MPI_ERR_NO_MEM,
-    MPI_ERR_NOT_SAME,
-    MPI_ERR_NO_SPACE,
-    MPI_ERR_NO_SUCH_FILE,
-    MPI_ERR_PORT,
-    MPI_ERR_PROC_ABORTED,
-    MPI_ERR_QUOTA,
-    MPI_ERR_READ_ONLY,
-    MPI_ERR_RMA_ATTACH,
-    MPI_ERR_RMA_CONFLICT,
-    MPI_ERR_RMA_RANGE,
-    MPI_ERR_RMA_SHARED,
-    MPI_ERR_RMA_SYNC,
-    MPI_ERR_RMA_FLAVOR,
-    MPI_ERR_SERVICE,
-    MPI_ERR_SESSION,
-    MPI_ERR_SIZE,
-    MPI_ERR_SPAWN,
-    MPI_ERR_UNSUPPORTED_DATAREP,
-    MPI_ERR_UNSUPPORTED_OPERATION,
-    MPI_ERR_VALUE_TOO_LARGE,
-    MPI_ERR_WIN,
-    MPI_T_ERR_CANNOT_INIT,
-    MPI_T_ERR_NOT_ACCESSIBLE,
-    MPI_T_ERR_NOT_INITIALIZED,
-    MPI_T_ERR_NOT_SUPPORTED,
-    MPI_T_ERR_MEMORY,
-    MPI_T_ERR_INVALID,
-    MPI_T_ERR_INVALID_INDEX,
-    MPI_T_ERR_INVALID_ITEM,
-    MPI_T_ERR_INVALID_SESSION,
-    MPI_T_ERR_INVALID_HANDLE,
-    MPI_T_ERR_INVALID_NAME,
-    MPI_T_ERR_OUT_OF_HANDLES,
-    MPI_T_ERR_OUT_OF_SESSIONS,
-    MPI_T_ERR_CVAR_SET_NOT_NOW,
-    MPI_T_ERR_CVAR_SET_NEVER,
-    MPI_T_ERR_PVAR_NO_WRITE,
-    MPI_T_ERR_PVAR_NO_STARTSTOP,
-    MPI_T_ERR_PVAR_NO_ATOMIC,
-    MPI_ERR_LASTCODE
-};
-
-enum {
-    MPI_LOCK_EXCLUSIVE,
-    MPI_LOCK_SHARED
-};
-
-enum {
-    MPI_COMM_TYPE_SHARED,
-    MPI_COMM_TYPE_HW_UNGUIDED,
-    MPI_COMM_TYPE_HW_GUIDED,
-    MPI_COMM_TYPE_RESOURCE_GUIDED
-};
-
-enum {
-    MPI_IDENT,
-    MPI_CONGRUENT,
-    MPI_SIMILAR,
-    MPI_UNEQUAL
+    MPI_SUCCESS                         = 0,
+    MPI_ERR_BUFFER                      = 1,
+    MPI_ERR_COUNT                       = 2,
+    MPI_ERR_TYPE                        = 3,
+    MPI_ERR_TAG                         = 4,
+    MPI_ERR_COMM                        = 5,
+    MPI_ERR_RANK                        = 6,
+    MPI_ERR_REQUEST                     = 7,
+    MPI_ERR_ROOT                        = 8,
+    MPI_ERR_GROUP                       = 9,
+    MPI_ERR_OP                          = 10,
+    MPI_ERR_TOPOLOGY                    = 11,
+    MPI_ERR_DIMS                        = 12,
+    MPI_ERR_ARG                         = 13,
+    MPI_ERR_UNKNOWN                     = 14,
+    MPI_ERR_TRUNCATE                    = 15,
+    MPI_ERR_OTHER                       = 16,
+    MPI_ERR_INTERN                      = 17,
+    MPI_ERR_PENDING                     = 18,
+    MPI_ERR_IN_STATUS                   = 19,
+    MPI_ERR_ACCESS                      = 20,
+    MPI_ERR_AMODE                       = 21,
+    MPI_ERR_ASSERT                      = 22,
+    MPI_ERR_BAD_FILE                    = 23,
+    MPI_ERR_BASE                        = 24,
+    MPI_ERR_CONVERSION                  = 25,
+    MPI_ERR_DISP                        = 26,
+    MPI_ERR_DUP_DATAREP                 = 27,
+    MPI_ERR_FILE_EXISTS                 = 28,
+    MPI_ERR_FILE_IN_USE                 = 29,
+    MPI_ERR_FILE                        = 30,
+    MPI_ERR_INFO_KEY                    = 31,
+    MPI_ERR_INFO_NOKEY                  = 32,
+    MPI_ERR_INFO_VALUE                  = 33,
+    MPI_ERR_INFO                        = 34,
+    MPI_ERR_IO                          = 35,
+    MPI_ERR_KEYVAL                      = 36,
+    MPI_ERR_LOCKTYPE                    = 37,
+    MPI_ERR_NAME                        = 38,
+    MPI_ERR_NO_MEM                      = 39,
+    MPI_ERR_NOT_SAME                    = 40,
+    MPI_ERR_NO_SPACE                    = 41,
+    MPI_ERR_NO_SUCH_FILE                = 42,
+    MPI_ERR_PORT                        = 43,
+    MPI_ERR_PROC_ABORTED                = 44,
+    MPI_ERR_QUOTA                       = 45,
+    MPI_ERR_READ_ONLY                   = 46,
+    MPI_ERR_RMA_ATTACH                  = 47,
+    MPI_ERR_RMA_CONFLICT                = 48,
+    MPI_ERR_RMA_RANGE                   = 49,
+    MPI_ERR_RMA_SHARED                  = 50,
+    MPI_ERR_RMA_SYNC                    = 51,
+    MPI_ERR_RMA_FLAVOR                  = 52,
+    MPI_ERR_SERVICE                     = 53,
+    MPI_ERR_SESSION                     = 54,
+    MPI_ERR_SIZE                        = 55,
+    MPI_ERR_SPAWN                       = 56,
+    MPI_ERR_UNSUPPORTED_DATAREP         = 57,
+    MPI_ERR_UNSUPPORTED_OPERATION       = 58,
+    MPI_ERR_VALUE_TOO_LARGE             = 59,
+    MPI_ERR_WIN                         = 60,
+    MPI_ERR_ERRHANDLER                  = 61,
+    MPI_T_ERR_CANNOT_INIT               = 1000,
+    MPI_T_ERR_NOT_ACCESSIBLE            = 1001,
+    MPI_T_ERR_NOT_INITIALIZED           = 1002,
+    MPI_T_ERR_NOT_SUPPORTED             = 1003,
+    MPI_T_ERR_MEMORY                    = 1004,
+    MPI_T_ERR_INVALID                   = 1005,
+    MPI_T_ERR_INVALID_INDEX             = 1006,
+    MPI_T_ERR_INVALID_ITEM              = 1007,
+    MPI_T_ERR_INVALID_SESSION           = 1008,
+    MPI_T_ERR_INVALID_HANDLE            = 1009,
+    MPI_T_ERR_INVALID_NAME              = 1010,
+    MPI_T_ERR_OUT_OF_HANDLES            = 1011,
+    MPI_T_ERR_OUT_OF_SESSIONS           = 1012,
+    MPI_T_ERR_CVAR_SET_NOT_NOW          = 1013,
+    MPI_T_ERR_CVAR_SET_NEVER            = 1014,
+    MPI_T_ERR_PVAR_NO_WRITE             = 1015,
+    MPI_T_ERR_PVAR_NO_STARTSTOP         = 1016,
+    MPI_T_ERR_PVAR_NO_ATOMIC            = 1017,
+    MPI_ERR_LASTCODE                    = 0x3fff // half of the minimum required value of INT_MAX
 };
 
 enum {
@@ -184,107 +164,133 @@ enum {
     MPI_DIST_GRAPH
 };
 
+// Mode Constants
+// must be powers-of-2 to support OR-ing
 enum {
-    MPI_KEYVAL_INVALID,
-    MPI_TAG_UB,
-    MPI_IO,
-    MPI_HOST,
-    MPI_WTIME_IS_GLOBAL,
-    MPI_APPNUM,
-    MPI_LASTUSEDCODE,
-    MPI_UNIVERSE_SIZE,
-    MPI_WIN_BASE,
-    MPI_WIN_DISP_UNIT,
-    MPI_WIN_SIZE,
-    MPI_WIN_CREATE_FLAVOR,
-    MPI_WIN_MODEL
+    // Files
+    MPI_MODE_APPEND             = 1,
+    MPI_MODE_CREATE             = 2,
+    MPI_MODE_DELETE_ON_CLOSE    = 4,
+    MPI_MODE_EXCL               = 8,
+    MPI_MODE_RDONLY             = 16,
+    MPI_MODE_RDWR               = 32,
+    MPI_MODE_SEQUENTIAL         = 64,
+    MPI_MODE_UNIQUE_OPEN        = 128,
+    MPI_MODE_WRONLY             = 256,
+    // Windows
+    MPI_MODE_NOCHECK            = 1024,
+    MPI_MODE_NOPRECEDE          = 2048,
+    MPI_MODE_NOPUT              = 4096,
+    MPI_MODE_NOSTORE            = 8192,
+    MPI_MODE_NOSUCCEED          = 16384
 };
 
 enum {
-    MPI_WIN_FLAVOR_CREATE,
-    MPI_WIN_FLAVOR_ALLOCATE,
-    MPI_WIN_FLAVOR_DYNAMIC,
-    MPI_WIN_FLAVOR_SHARED
+    // rank sentinels - must be negative
+    MPI_ANY_SOURCE      = -1,
+    MPI_PROC_NULL       = -2,
+    MPI_ROOT            = -3,
+
+    // tag sentinels - should be negative
+    MPI_ANY_TAG         = -101,
+
+    // These apply to MPI_COMM_WORLD
+    MPI_TAG_UB          = -201,
+    MPI_IO              = -202,
+    MPI_HOST            = -203,
+    MPI_WTIME_IS_GLOBAL = -204,
+    MPI_APPNUM          = -205,
+    MPI_LASTUSEDCODE    = -206,
+    MPI_UNIVERSE_SIZE   = -207,
+
+    // Predefined Attribute Keys
+    // These apply to Windows
+    MPI_WIN_BASE            = -301,
+    MPI_WIN_DISP_UNIT       = -302,
+    MPI_WIN_SIZE            = -303,
+    MPI_WIN_CREATE_FLAVOR   = -304,
+    MPI_WIN_MODEL           = -305,
+
+    // attribute constant - must be negative
+    MPI_KEYVAL_INVALID  = -401,
+
+    // special displacement for sequential access file - should be negative
+    MPI_DISPLACEMENT_CURRENT = -501,
+
+    // multi-purpose sentinel - must be negative
+    MPI_UNDEFINED       = -601,
+
+    //Results of communicator and group comparisons
+    MPI_IDENT       = -701,
+    MPI_CONGRUENT   = -702,
+    MPI_SIMILAR     = -703,
+    MPI_UNEQUAL     = -704,
+
+    // Environmental inquiry keys and Predefined Attribute Keys
+    // Threads Constants
+    // These values are monotonic; i.e., SINGLE < FUNNELED < SERIALIZED < MULTIPLE.
+    MPI_THREAD_MULTIPLE     = -801,
+    MPI_THREAD_SERIALIZED   = -802,
+    MPI_THREAD_FUNNELED     = -803,
+    MPI_THREAD_SINGLE       = -804,
+
+    // RMA lock constants - arbitrary values
+    MPI_LOCK_EXCLUSIVE  = -901,
+    MPI_LOCK_SHARED     = -902,
+
+    // Communicator split type constants - arbitrary values
+    MPI_COMM_TYPE_SHARED          = -1001,
+    MPI_COMM_TYPE_HW_UNGUIDED     = -1002,
+    MPI_COMM_TYPE_HW_GUIDED       = -1003,
+    MPI_COMM_TYPE_RESOURCE_GUIDED = -1004,
+
+    // MPI Window Create Flavors
+    MPI_WIN_FLAVOR_ALLOCATE = -1101,
+    MPI_WIN_FLAVOR_CREATE   = -1102,
+    MPI_WIN_FLAVOR_DYNAMIC  = -1103,
+    MPI_WIN_FLAVOR_SHARED   = -1104,
+
+    // MPI Window Models
+    MPI_WIN_SEPARATE    = -1201,
+    MPI_WIN_UNIFIED     = -1202,
+
+    // Datatype Decoding Constants
+    MPI_COMBINER_NAMED              = -1301,
+    MPI_COMBINER_DUP                = -1302,
+    MPI_COMBINER_CONTIGUOUS         = -1303,
+    MPI_COMBINER_VECTOR             = -1304,
+    MPI_COMBINER_HVECTOR            = -1305,
+    MPI_COMBINER_INDEXED            = -1306,
+    MPI_COMBINER_HINDEXED           = -1307,
+    MPI_COMBINER_INDEXED_BLOCK      = -1308,
+    MPI_COMBINER_HINDEXED_BLOCK     = -1309,
+    MPI_COMBINER_STRUCT             = -1310,
+    MPI_COMBINER_SUBARRAY           = -1311,
+    MPI_COMBINER_DARRAY             = -1312,
+    MPI_COMBINER_F90_REAL           = -1313,
+    MPI_COMBINER_F90_COMPLEX        = -1314,
+    MPI_COMBINER_F90_INTEGER        = -1315,
+    MPI_COMBINER_RESIZED            = -1316,
+    MPI_COMBINER_VALUE_INDEX        = -1317,
+
+    // File Operation Constants (?)
+    MPI_DISTRIBUTE_BLOCK        = -1401,
+    MPI_DISTRIBUTE_CYCLIC       = -1402,
+    MPI_DISTRIBUTE_DFLT_DARG    = -1403,
+    MPI_DISTRIBUTE_NONE         = -1404,
+
+    MPI_ORDER_C                 = -1501,
+    MPI_ORDER_FORTRAN           = -1502,
+
+    MPI_SEEK_CUR                = -1601,
+    MPI_SEEK_END                = -1602,
+    MPI_SEEK_SET                = -1603,
+
+    // F90 Datatype Matching Constants
+    MPI_TYPECLASS_REAL          = -1701,
+    MPI_TYPECLASS_COMPLEX       = -1702,
+    MPI_TYPECLASS_INTEGER       = -1703
 };
-
-enum {
-    MPI_WIN_SEPARATE,
-    MPI_WIN_UNIFIED
-};
-
-enum {
-    MPI_MODE_NOCHECK = 1,
-    MPI_MODE_NOPRECEDE = 2,
-    MPI_MODE_NOPUT = 4,
-    MPI_MODE_NOSTORE = 8,
-    MPI_MODE_NOSUCCEED = 16
-};
-
-enum {
-    MPI_MODE_APPEND = 1,
-    MPI_MODE_CREATE = 2,
-    MPI_MODE_DELETE_ON_CLOSE = 4,
-    MPI_MODE_EXCL = 8,
-    MPI_MODE_RDONLY = 16,
-    MPI_MODE_RDWR = 32,
-    MPI_MODE_SEQUENTIAL = 64,
-    MPI_MODE_UNIQUE_OPEN = 128,
-    MPI_MODE_WRONLY = 256
-};
-
-enum {
-    MPI_COMBINER_CONTIGUOUS,
-    MPI_COMBINER_DARRAY,
-    MPI_COMBINER_DUP,
-    MPI_COMBINER_F90_COMPLEX,
-    MPI_COMBINER_F90_INTEGER,
-    MPI_COMBINER_F90_REAL,
-    MPI_COMBINER_HINDEXED,
-    MPI_COMBINER_HVECTOR,
-    MPI_COMBINER_INDEXED_BLOCK,
-    MPI_COMBINER_HINDEXED_BLOCK,
-    MPI_COMBINER_INDEXED,
-    MPI_COMBINER_NAMED,
-    MPI_COMBINER_RESIZED,
-    MPI_COMBINER_STRUCT,
-    MPI_COMBINER_SUBARRAY,
-    MPI_COMBINER_VALUE_INDEX,
-    MPI_COMBINER_VECTOR
-};
-
-enum {
-    MPI_THREAD_FUNNELED,
-    MPI_THREAD_MULTIPLE,
-    MPI_THREAD_SERIALIZED,
-    MPI_THREAD_SINGLE
-};
-
-enum {
-    MPI_DISTRIBUTE_BLOCK,
-    MPI_DISTRIBUTE_CYCLIC,
-    MPI_DISTRIBUTE_NONE
-};
-
-#define MPI_DISTRIBUTE_DFLT_DARG -1
-#define MPI_DISPLACEMENT_CURRENT -1
-
-enum {
-    MPI_ORDER_C,
-    MPI_ORDER_FORTRAN
-};
-
-enum {
-    MPI_SEEK_CUR,
-    MPI_SEEK_END,
-    MPI_SEEK_SET
-};
-
-enum {
-    MPI_TYPECLASS_COMPLEX,
-    MPI_TYPECLASS_INTEGER,
-    MPI_TYPECLASS_REAL
-};
-
 
 #define MPI_OP_NULL          (MPI_Op)0x020
 #define MPI_SUM              (MPI_Op)0x021
@@ -407,18 +413,18 @@ typedef int MPI_Win_copy_attr_function(MPI_Win oldwin, int win_keyval, void *ext
 typedef int MPI_Win_delete_attr_function(MPI_Win win, int win_keyval, void *attribute_val, void *extra_state);
 typedef void MPI_Win_errhandler_function(MPI_Win *win, int *error_code, ...);
 
-#define MPI_DUP_FN         ((MPI_Copy_function *)1)
-#define MPI_NULL_COPY_FN   ((MPI_Copy_function *)0)
-#define MPI_NULL_DELETE_FN ((MPI_Delete_function *)0)
-#define MPI_COMM_DUP_FN         ((MPI_Comm_copy_attr_function *)1)
-#define MPI_COMM_NULL_COPY_FN   ((MPI_Comm_copy_attr_function *)0)
-#define MPI_COMM_NULL_DELETE_FN ((MPI_Comm_delete_attr_function *)0)
-#define MPI_TYPE_DUP_FN         ((MPI_Type_copy_attr_function *)1)
-#define MPI_TYPE_NULL_COPY_FN   ((MPI_Type_copy_attr_function *)0)
-#define MPI_TYPE_NULL_DELETE_FN ((MPI_Type_delete_attr_function *)0)
-#define MPI_WIN_DUP_FN         ((MPI_Win_copy_attr_function *)1)
-#define MPI_WIN_NULL_COPY_FN   ((MPI_Win_copy_attr_function *)0)
-#define MPI_WIN_NULL_DELETE_FN ((MPI_Win_delete_attr_function *)0)
+#define MPI_NULL_COPY_FN        ((MPI_Copy_function*)0x0)
+#define MPI_DUP_FN              ((MPI_Copy_function*)0x1)
+#define MPI_NULL_DELETE_FN      ((MPI_Delete_function*)0x0)
+#define MPI_COMM_NULL_COPY_FN   ((MPI_Comm_copy_attr_function*)0x0)
+#define MPI_COMM_DUP_FN         ((MPI_Comm_copy_attr_function*)0x1)
+#define MPI_COMM_NULL_DELETE_FN ((MPI_Comm_delete_attr_function*)0x0)
+#define MPI_TYPE_NULL_COPY_FN   ((MPI_Type_copy_attr_function*)0x0)
+#define MPI_TYPE_DUP_FN         ((MPI_Type_copy_attr_function*)0x1)
+#define MPI_TYPE_NULL_DELETE_FN ((MPI_Type_delete_attr_function*)0x0)
+#define MPI_WIN_NULL_COPY_FN    ((MPI_Win_copy_attr_function*)0x0)
+#define MPI_WIN_DUP_FN          ((MPI_Win_copy_attr_function*)0x1)
+#define MPI_WIN_NULL_DELETE_FN  ((MPI_Win_delete_attr_function*)0x0)
 #define MPI_CONVERSION_FN_NULL   ((MPI_Datarep_conversion_function *)0)
 #define MPI_CONVERSION_FN_NULL_C ((MPI_Datarep_conversion_function_c *)0)
 
