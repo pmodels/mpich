@@ -18,6 +18,24 @@
 
 #define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
 
+#ifdef MTEST_LARGE_PORT_NAME
+#define PORT_SIZE 4096
+
+#define INIT_PORT_INFO(info) \
+    do { \
+        MPI_Info_create(&(info)); \
+        MPI_Info_set(info, "port_name_size", "4096"); \
+    } while (0)
+
+#define FREE_PORT_INFO(info) MPI_Info_free(&(info))
+
+#else
+#define PORT_SIZE MPI_MAX_PORT_NAME
+#define INIT_PORT_INFO(info) do {info = MPI_INFO_NULL;} while (0)
+#define FREE_PORT_INFO(info) do { } while (0)
+
+#endif /* MTEST_LARGE_PORT_NAME */
+
 void check_error(int, const char *);
 void check_error(int error, const char *fcname)
 {
@@ -43,7 +61,8 @@ int main(int argc, char *argv[])
     char *argv1[2] = { (char *) "connector", NULL };
     char *argv2[2] = { (char *) "acceptor", NULL };
     MPI_Comm comm_connector, comm_acceptor, comm_parent, comm;
-    char port[MPI_MAX_PORT_NAME] = { 0 };
+    char port[PORT_SIZE] = { 0 };
+    MPI_Info port_info;
     MPI_Status status;
     MPI_Info spawn_path = MPI_INFO_NULL;
     int i, num_loops = 100;
@@ -100,11 +119,11 @@ int main(int argc, char *argv[])
 
             if (rank == 0) {
                 IF_VERBOSE(("recv port.\n"));
-                error = MPI_Recv(port, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, comm_acceptor, &status);
+                error = MPI_Recv(port, PORT_SIZE, MPI_CHAR, 0, 0, comm_acceptor, &status);
                 check_error(error, "MPI_Recv");
 
                 IF_VERBOSE(("send port.\n"));
-                error = MPI_Send(port, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, comm_connector);
+                error = MPI_Send(port, PORT_SIZE, MPI_CHAR, 0, 0, comm_connector);
                 check_error(error, "MPI_Send");
             }
 
@@ -136,12 +155,14 @@ int main(int argc, char *argv[])
             }
             if (rank == 0) {
                 IF_VERBOSE(("open_port.\n"));
-                error = MPI_Open_port(MPI_INFO_NULL, port);
+                INIT_PORT_INFO(port_info);
+                error = MPI_Open_port(port_info, port);
                 check_error(error, "MPI_Open_port");
+                FREE_PORT_INFO(port_info);
 
                 IF_VERBOSE(("0: opened port: <%s>\n", port));
                 IF_VERBOSE(("send.\n"));
-                error = MPI_Send(port, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, comm_parent);
+                error = MPI_Send(port, PORT_SIZE, MPI_CHAR, 0, 0, comm_parent);
                 check_error(error, "MPI_Send");
             }
 
@@ -191,7 +212,7 @@ int main(int argc, char *argv[])
 
             if (rank == 0) {
                 IF_VERBOSE(("recv.\n"));
-                error = MPI_Recv(port, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, comm_parent, &status);
+                error = MPI_Recv(port, PORT_SIZE, MPI_CHAR, 0, 0, comm_parent, &status);
                 check_error(error, "MPI_Recv");
                 IF_VERBOSE(("1: received port: <%s>\n", port));
             }

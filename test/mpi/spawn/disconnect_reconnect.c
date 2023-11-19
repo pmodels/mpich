@@ -20,6 +20,24 @@
 static char MTEST_Descrip[] = "A simple test of Comm_connect/accept/disconnect";
 */
 
+#ifdef MTEST_LARGE_PORT_NAME
+#define PORT_SIZE 4096
+
+#define INIT_PORT_INFO(info) \
+    do { \
+        MPI_Info_create(&(info)); \
+        MPI_Info_set(info, "port_name_size", "4096"); \
+    } while (0)
+
+#define FREE_PORT_INFO(info) MPI_Info_free(&(info))
+
+#else
+#define PORT_SIZE MPI_MAX_PORT_NAME
+#define INIT_PORT_INFO(info) do {info = MPI_INFO_NULL;} while (0)
+#define FREE_PORT_INFO(info) do { } while (0)
+
+#endif /* MTEST_LARGE_PORT_NAME */
+
 int main(int argc, char *argv[])
 {
     int errs = 0;
@@ -27,7 +45,8 @@ int main(int argc, char *argv[])
     int np = 3;
     MPI_Comm parentcomm, intercomm;
     MPI_Status status;
-    char port[MPI_MAX_PORT_NAME] = { 0 };
+    char port[PORT_SIZE] = { 0 };
+    MPI_Info port_info;
     int verbose = 0;
     int do_messages = 1;
     char *env;
@@ -83,9 +102,11 @@ int main(int argc, char *argv[])
                 fflush(stdout);
             }
             if (rank == 0 && num_loops > 0) {
-                MPI_Open_port(MPI_INFO_NULL, port);
+                INIT_PORT_INFO(port_info);
+                MPI_Open_port(port_info, port);
+                FREE_PORT_INFO(port_info);
                 IF_VERBOSE(("[%d] port = %s\n", rank, port));
-                MPI_Send(port, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, intercomm);
+                MPI_Send(port, PORT_SIZE, MPI_CHAR, 0, 0, intercomm);
             }
             IF_VERBOSE(("[%d] disconnecting child communicator\n", rank));
             MPI_Comm_disconnect(&intercomm);
@@ -130,13 +151,13 @@ int main(int argc, char *argv[])
 
             if (rank == 0 && num_loops > 0) {
                 IF_VERBOSE(("[%d] receiving port\n", rank));
-                MPI_Recv(port, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, intercomm, &status);
+                MPI_Recv(port, PORT_SIZE, MPI_CHAR, 0, 0, intercomm, &status);
             }
 
             IF_VERBOSE(("[%d] disconnecting communicator\n", rank));
             MPI_Comm_disconnect(&intercomm);
             for (i = 0; i < num_loops; i++) {
-                IF_VERBOSE(("[%d] connecting to port (loop %d)\n", rank, i));
+                IF_VERBOSE(("[%d] connecting to port (loop %d <port:%s>)\n", rank, i, port));
                 MPI_Comm_connect(port, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &intercomm);
                 if (do_messages) {
                     IF_VERBOSE(("[%d] receiving int from parent process 0\n", rank));

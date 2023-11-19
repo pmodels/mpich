@@ -9,6 +9,24 @@
 #include <string.h>
 #include "mpitest.h"
 
+#ifdef MTEST_LARGE_PORT_NAME
+#define PORT_SIZE 4096
+
+#define INIT_PORT_INFO(info) \
+    do { \
+        MPI_Info_create(&(info)); \
+        MPI_Info_set(info, "port_name_size", "4096"); \
+    } while (0)
+
+#define FREE_PORT_INFO(info) MPI_Info_free(&(info))
+
+#else
+#define PORT_SIZE MPI_MAX_PORT_NAME
+#define INIT_PORT_INFO(info) do {info = MPI_INFO_NULL;} while (0)
+#define FREE_PORT_INFO(info) do { } while (0)
+
+#endif /* MTEST_LARGE_PORT_NAME */
+
 void check_error(int, const char *);
 void check_error(int error, const char *fcname)
 {
@@ -26,12 +44,11 @@ int main(int argc, char *argv[])
 {
     int error;
     int rank, size;
-    char port[MPI_MAX_PORT_NAME];
+    char port[PORT_SIZE];
+    MPI_Info port_info;
     MPI_Status status;
     MPI_Comm comm;
     int verbose = 0;
-
-    MTEST_VG_MEM_INIT(port, MPI_MAX_PORT_NAME * sizeof(char));
 
     if (getenv("MPITEST_VERBOSE")) {
         verbose = 1;
@@ -73,8 +90,10 @@ int main(int argc, char *argv[])
             printf("open_port.\n");
             fflush(stdout);
         }
-        error = MPI_Open_port(MPI_INFO_NULL, port);
+        INIT_PORT_INFO(port_info);
+        error = MPI_Open_port(port_info, port);
         check_error(error, "MPI_Open_port");
+        FREE_PORT_INFO(port_info);
 
         if (verbose) {
             printf("0: opened port: <%s>\n", port);
@@ -84,7 +103,7 @@ int main(int argc, char *argv[])
             printf("send.\n");
             fflush(stdout);
         }
-        error = MPI_Send(port, MPI_MAX_PORT_NAME, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+        error = MPI_Send(port, PORT_SIZE, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
         check_error(error, "MPI_Send");
 
         if (verbose) {
@@ -112,7 +131,7 @@ int main(int argc, char *argv[])
             printf("recv.\n");
             fflush(stdout);
         }
-        error = MPI_Recv(port, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
+        error = MPI_Recv(port, PORT_SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
         check_error(error, "MPI_Recv");
 
         if (verbose) {
