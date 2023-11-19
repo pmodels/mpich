@@ -247,6 +247,12 @@ AC_ARG_ENABLE(gpu-tests-only,
                 [Run only GPU tests])],,
         [enable_gpu_tests_only=no])
 
+AC_ARG_ENABLE(large-port-name,
+        [AS_HELP_STRING([--enable-large-port-name],
+                [Use larger port name size in MPI_Open_port via info hints.])],
+        [AC_DEFINE(MTEST_LARGE_PORT_NAME, 1, [define to use larger port name size in MPI_Open_port via info hints])],
+        [enable_large_port_name=no])
+
 # DTPools test generation
 AC_ARG_WITH(dtpools-datatypes,
     [AS_HELP_STRING([--with-dtpools-datatypes=typelist],

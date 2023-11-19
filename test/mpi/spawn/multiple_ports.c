@@ -21,19 +21,38 @@
  * the connection from process 1.
  */
 
+#ifdef MTEST_LARGE_PORT_NAME
+#define PORT_SIZE 4096
+
+#define INIT_PORT_INFO(info) \
+    do { \
+        MPI_Info_create(&(info)); \
+        MPI_Info_set(info, "port_name_size", "4096"); \
+    } while (0)
+
+#define FREE_PORT_INFO(info) MPI_Info_free(&(info))
+
+#else
+#define PORT_SIZE MPI_MAX_PORT_NAME
+#define INIT_PORT_INFO(info) do {info = MPI_INFO_NULL;} while (0)
+#define FREE_PORT_INFO(info) do { } while (0)
+
+#endif /* MTEST_LARGE_PORT_NAME */
+
 int main(int argc, char *argv[])
 {
     int num_errors = 0, total_num_errors = 0;
     int rank, size;
-    char port1[MPI_MAX_PORT_NAME];
-    char port2[MPI_MAX_PORT_NAME];
+    char port1[PORT_SIZE];
+    char port2[PORT_SIZE];
+    MPI_Info port_info;
     MPI_Status status;
     MPI_Comm comm1, comm2;
     int verbose = 0;
     int data = 0;
 
-    MTEST_VG_MEM_INIT(port1, MPI_MAX_PORT_NAME * sizeof(char));
-    MTEST_VG_MEM_INIT(port2, MPI_MAX_PORT_NAME * sizeof(char));
+    MTEST_VG_MEM_INIT(port1, PORT_SIZE * sizeof(char));
+    MTEST_VG_MEM_INIT(port2, PORT_SIZE * sizeof(char));
 
     if (getenv("MPITEST_VERBOSE")) {
         verbose = 1;
@@ -51,14 +70,16 @@ int main(int argc, char *argv[])
 
     if (rank == 0) {
         IF_VERBOSE(("0: opening ports.\n"));
-        MPI_Open_port(MPI_INFO_NULL, port1);
-        MPI_Open_port(MPI_INFO_NULL, port2);
+        INIT_PORT_INFO(port_info);
+        MPI_Open_port(port_info, port1);
+        MPI_Open_port(port_info, port2);
+        FREE_PORT_INFO(port_info);
 
         IF_VERBOSE(("0: opened port1: <%s>\n", port1));
         IF_VERBOSE(("0: opened port2: <%s>\n", port2));
         IF_VERBOSE(("0: sending ports.\n"));
-        MPI_Send(port1, MPI_MAX_PORT_NAME, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
-        MPI_Send(port2, MPI_MAX_PORT_NAME, MPI_CHAR, 2, 0, MPI_COMM_WORLD);
+        MPI_Send(port1, PORT_SIZE, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+        MPI_Send(port2, PORT_SIZE, MPI_CHAR, 2, 0, MPI_COMM_WORLD);
 
         IF_VERBOSE(("0: accepting port2.\n"));
         MPI_Comm_accept(port2, MPI_INFO_NULL, 0, MPI_COMM_SELF, &comm2);
@@ -82,7 +103,7 @@ int main(int argc, char *argv[])
         MPI_Comm_disconnect(&comm2);
     } else if (rank == 1) {
         IF_VERBOSE(("1: receiving port.\n"));
-        MPI_Recv(port1, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(port1, PORT_SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
 
         IF_VERBOSE(("1: received port1: <%s>\n", port1));
         IF_VERBOSE(("1: connecting.\n"));
@@ -99,7 +120,7 @@ int main(int argc, char *argv[])
         MPI_Comm_disconnect(&comm1);
     } else if (rank == 2) {
         IF_VERBOSE(("2: receiving port.\n"));
-        MPI_Recv(port2, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(port2, PORT_SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
 
         IF_VERBOSE(("2: received port2: <%s>\n", port2));
         /* make sure process 1 has time to do the connect before this process

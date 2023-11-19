@@ -21,6 +21,24 @@
 #include <mpi.h>
 #include "mpitest.h"
 
+#ifdef MTEST_LARGE_PORT_NAME
+#define PORT_SIZE 4096
+
+#define INIT_PORT_INFO(info) \
+    do { \
+        MPI_Info_create(&(info)); \
+        MPI_Info_set(info, "port_name_size", "4096"); \
+    } while (0)
+
+#define FREE_PORT_INFO(info) MPI_Info_free(&(info))
+
+#else
+#define PORT_SIZE MPI_MAX_PORT_NAME
+#define INIT_PORT_INFO(info) do {info = MPI_INFO_NULL;} while (0)
+#define FREE_PORT_INFO(info) do { } while (0)
+
+#endif /* MTEST_LARGE_PORT_NAME */
+
 const int verbose = 0;
 
 void PGroup_create(int count, int members[], MPI_Comm * group);
@@ -28,6 +46,7 @@ void PGroup_create(int count, int members[], MPI_Comm * group)
 {
     int i, me, nproc, is_member;
     char *port;
+    MPI_Info port_info;
     MPI_Comm pgroup;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &me);
@@ -53,7 +72,7 @@ void PGroup_create(int count, int members[], MPI_Comm * group)
         return;
     }
 
-    port = malloc(MPI_MAX_PORT_NAME);
+    port = malloc(PORT_SIZE);
 
     /* NOTE: Assume members list is identical and sorted on all processes */
 
@@ -63,12 +82,14 @@ void PGroup_create(int count, int members[], MPI_Comm * group)
 
         pgroup = MPI_COMM_SELF;
 
-        MPI_Open_port(MPI_INFO_NULL, port);
+        INIT_PORT_INFO(port_info);
+        MPI_Open_port(port_info, port);
+        FREE_PORT_INFO(port_info);
 
         for (i = 1; i < count; i++) {
             MPI_Comm pgroup_old = pgroup;
 
-            MPI_Send(port, MPI_MAX_PORT_NAME, MPI_CHAR, members[i], 0, MPI_COMM_WORLD);
+            MPI_Send(port, PORT_SIZE, MPI_CHAR, members[i], 0, MPI_COMM_WORLD);
             MPI_Comm_accept(port, MPI_INFO_NULL, 0, pgroup, &pgroup_new);
             MPI_Intercomm_merge(pgroup_new, 0 /* LOW */ , &pgroup);
 
@@ -87,7 +108,7 @@ void PGroup_create(int count, int members[], MPI_Comm * group)
 
         for (i = 0; i < count; i++) {
             if (members[i] == me) {
-                MPI_Recv(port, MPI_MAX_PORT_NAME, MPI_CHAR, members[0], 0, MPI_COMM_WORLD,
+                MPI_Recv(port, PORT_SIZE, MPI_CHAR, members[0], 0, MPI_COMM_WORLD,
                          MPI_STATUS_IGNORE);
                 MPI_Comm_connect(port, MPI_INFO_NULL, 0, MPI_COMM_SELF, &pgroup_new);
                 MPI_Intercomm_merge(pgroup_new, 1 /* HIGH */ , &pgroup);
