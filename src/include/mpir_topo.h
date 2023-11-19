@@ -72,8 +72,8 @@ int MPIR_Topo_canon_nhb_count(MPIR_Comm * comm_ptr, int *indegree, int *outdegre
  * works for any topology type by canonicalizing according to the rules in
  * Section 7.6 of the MPI-3.0 standard. */
 int MPIR_Topo_canon_nhb(MPIR_Comm * comm_ptr,
-                        int indegree, int sources[], int inweights[],
-                        int outdegree, int dests[], int outweights[]);
+                        int indegree, int sources[], int *inweights,
+                        int outdegree, int dests[], int *outweights);
 
 #define MAX_CART_DIM 16
 
