@@ -223,13 +223,13 @@ cvars:
     }
 
 #ifdef ENABLE_THREADCOMM
-#define MPIR_ERRTEST_RANK_internal(min,comm_ptr,rank,err) \
+#define MPIR_ERRTEST_RANK(comm_ptr,rank,err) \
     do { \
         int comm_size = (comm_ptr)->remote_size; \
         if (comm_ptr->threadcomm) { \
             comm_size = comm_ptr->threadcomm->rank_offset_table[comm_size - 1]; \
         } \
-        if ((rank) < (min) || (rank) >= comm_size) { \
+        if ((rank) < 0 || (rank) >= comm_size) { \
             err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                     MPI_ERR_RANK, "**rank", "**rank %d %d", rank, \
                                     comm_size); \
@@ -237,10 +237,10 @@ cvars:
         } \
     } while (0)
 #else
-#define MPIR_ERRTEST_RANK_internal(min,comm_ptr,rank,err) \
+#define MPIR_ERRTEST_RANK(comm_ptr,rank,err) \
     do { \
         int comm_size = (comm_ptr)->remote_size; \
-        if ((rank) < (min) || (rank) >= comm_size) { \
+        if ((rank) < 0 || (rank) >= comm_size) { \
             err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                     MPI_ERR_RANK, "**rank", "**rank %d %d", rank, \
                                     comm_size); \
@@ -249,14 +249,19 @@ cvars:
     } while (0)
 #endif
 
-#define MPIR_ERRTEST_RANK(comm_ptr,rank,err) \
-    MPIR_ERRTEST_RANK_internal(0, comm_ptr, rank, err)
-
 #define MPIR_ERRTEST_SEND_RANK(comm_ptr,rank,err) \
-    MPIR_ERRTEST_RANK_internal(MPI_PROC_NULL, comm_ptr, rank, err)
+    do { \
+        if (rank != MPI_PROC_NULL) { \
+            MPIR_ERRTEST_RANK(comm_ptr, rank, err); \
+        } \
+    } while (0)
 
 #define MPIR_ERRTEST_RECV_RANK(comm_ptr,rank,err) \
-    MPIR_ERRTEST_RANK_internal(MPI_ANY_SOURCE, comm_ptr, rank, err)
+    do { \
+        if (rank != MPI_PROC_NULL && rank != MPI_ANY_SOURCE) { \
+            MPIR_ERRTEST_RANK(comm_ptr, rank, err); \
+        } \
+    } while (0)
 
 #define MPIR_ERRTEST_COUNT(count,err)                           \
     if ((count) < 0) {                                          \
