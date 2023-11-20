@@ -8,6 +8,25 @@
 
 #include "ucx_impl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_UCX_DT_RECV
+      category    : CH4_UCX
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select method for receiving noncontiguous data
+        true                - Use UCX datatype with pack/unpack callbacks
+        false               - MPICH will decide to pack/unpack at completion or use IOVs
+                              based on the datatype
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
                                                      const ucp_tag_recv_info_t * info,
                                                      void *user_data)
@@ -29,6 +48,24 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
         rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
         rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
         MPIR_STATUS_SET_COUNT(rreq->status, count);
+
+        if (MPIDI_UCX_REQ(rreq).s.type == MPIDI_UCX_RECV_UNPACK) {
+            void *pack_buf = MPIDI_UCX_REQ(rreq).s.u.pack.pack_buf;
+            void *user_buf = MPIDI_UCX_REQ(rreq).s.u.pack.user_buf;
+            MPI_Aint user_count = MPIDI_UCX_REQ(rreq).s.u.pack.count;
+            MPI_Datatype datatype = MPIDI_UCX_REQ(rreq).s.u.pack.datatype;
+            MPI_Aint actual_unpack_bytes;
+
+            MPIR_Typerep_unpack(pack_buf, info->length, user_buf, user_count, datatype,
+                                0, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
+            if (actual_unpack_bytes < info->length) {
+                rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+            }
+            MPIR_Datatype_release_if_not_builtin(datatype);
+            MPL_free(MPIDI_UCX_REQ(rreq).s.u.pack.pack_buf);
+        } else if (MPIDI_UCX_REQ(rreq).s.type == MPIDI_UCX_RECV_IOV) {
+            MPL_free(MPIDI_UCX_REQ(rreq).s.u.iov.iov);
+        }
     }
 
     MPIDI_Request_complete_fast(rreq);
@@ -108,12 +145,44 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     if (dt_contig) {
         recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
         recv_count = data_sz;
+        MPIDI_UCX_REQ(req).s.type = MPIDI_UCX_RECV_CONTIG;
     } else {
-        recv_buf = buf;
-        recv_count = count;
-        param.op_attr_mask |= UCP_OP_ATTR_FIELD_DATATYPE;
-        param.datatype = dt_ptr->dev.netmod.ucx.ucp_datatype;
-        MPIR_Datatype_ptr_add_ref(dt_ptr);
+        if (MPIR_CVAR_UCX_DT_RECV) {
+            recv_buf = buf;
+            recv_count = count;
+            param.op_attr_mask |= UCP_OP_ATTR_FIELD_DATATYPE;
+            param.datatype = dt_ptr->dev.netmod.ucx.ucp_datatype;
+            MPIR_Datatype_ptr_add_ref(dt_ptr);
+            MPIDI_UCX_REQ(req).s.type = MPIDI_UCX_RECV_UCX_DT;
+        } else {
+            MPI_Aint density;
+            MPIR_Datatype_get_density(datatype, density);
+
+            if (density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+                MPI_Aint iov_len, actual_iov_len;
+                MPIR_Typerep_get_iov_len(count, datatype, &iov_len);
+                ucp_dt_iov_t *iov = MPL_malloc(sizeof(ucp_dt_iov_t) * iov_len, MPL_MEM_BUFFER);
+                MPIR_Typerep_to_iov_offset(buf, count, datatype, 0, (struct iovec *) iov,
+                                           iov_len, &actual_iov_len);
+                MPIR_Assert(iov_len == actual_iov_len);
+
+                recv_buf = iov;
+                recv_count = iov_len;
+                param.op_attr_mask |= UCP_OP_ATTR_FIELD_DATATYPE;
+                param.datatype = ucp_dt_make_iov();
+                MPIDI_UCX_REQ(req).s.u.iov.iov = iov;
+                MPIDI_UCX_REQ(req).s.type = MPIDI_UCX_RECV_IOV;
+            } else {
+                MPIDI_UCX_REQ(req).s.u.pack.datatype = datatype;
+                MPIR_Datatype_add_ref_if_not_builtin(datatype);
+                MPIDI_UCX_REQ(req).s.u.pack.user_buf = buf;
+                MPIDI_UCX_REQ(req).s.u.pack.count = count;
+                MPIDI_UCX_REQ(req).s.u.pack.pack_buf = MPL_malloc(data_sz, MPL_MEM_BUFFER);
+                recv_buf = MPIDI_UCX_REQ(req).s.u.pack.pack_buf;
+                recv_count = data_sz;
+                MPIDI_UCX_REQ(req).s.type = MPIDI_UCX_RECV_UNPACK;
+            }
+        }
     }
 
     ucp_request =
@@ -122,7 +191,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
                                                      ucp_tag, tag_mask, &param);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
-    MPIDI_UCX_REQ(req).ucp_request = ucp_request;
+    MPIDI_UCX_REQ(req).s.ucp_request = ucp_request;
     *request = req;
 
   fn_exit:
@@ -186,7 +255,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                          &param);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
-    MPIDI_UCX_REQ(message).ucp_request = ucp_request;
+    MPIDI_UCX_REQ(message).s.ucp_request = ucp_request;
 
   fn_exit:
     MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
@@ -230,7 +299,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
 
     if (!MPIR_Request_is_complete(rreq)) {
         int vci = MPIDI_Request_get_vci(rreq);
-        ucp_request_cancel(MPIDI_UCX_global.ctx[vci].worker, MPIDI_UCX_REQ(rreq).ucp_request);
+        ucp_request_cancel(MPIDI_UCX_global.ctx[vci].worker, MPIDI_UCX_REQ(rreq).s.ucp_request);
     }
 
     MPIR_FUNC_EXIT;
