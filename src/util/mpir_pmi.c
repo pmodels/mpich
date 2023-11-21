@@ -114,9 +114,17 @@ static int check_MPIR_CVAR_PMI_VERSION(void)
     return MPI_SUCCESS;
 }
 
+/* When user call MPIR_pmi_finalize, we will postpone the actual PMI_Finalize
+ * and set finalize_pending flag instead. The exit hook will call PMI_Finalize
+ * when the finalize_pending flag is set. This is to prevent an abnormal exit
+ * to show up as a normal exit.
+ */
+static int finalize_pending = 0;
 static void MPIR_pmi_finalize_on_exit(void)
 {
-    SWITCH_PMI(pmi1_exit(), pmi2_exit(), pmix_exit());
+    if (finalize_pending > 0) {
+        SWITCH_PMI(pmi1_exit(), pmi2_exit(), pmix_exit());
+    }
 }
 
 int MPIR_pmi_init(void)
@@ -124,6 +132,9 @@ int MPIR_pmi_init(void)
     int mpi_errno = MPI_SUCCESS;
     static bool pmi_connected = false;
 
+    if (finalize_pending > 0) {
+        finalize_pending--;
+    }
     mpi_errno = check_MPIR_CVAR_PMI_VERSION();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -206,6 +217,9 @@ void MPIR_pmi_finalize(void)
     MPL_free(hwloc_topology_xmlfile);
     hwloc_topology_xmlfile = NULL;
     MPL_free(MPIR_Process.coords);
+
+    /* delay PMI_Finalize to the exit hook */
+    finalize_pending++;
 }
 
 void MPIR_pmi_abort(int exit_code, const char *error_msg)
