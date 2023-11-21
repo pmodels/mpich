@@ -117,6 +117,12 @@ static int MPIR_fd_recv(int fd, void *buffer, int length)
     goto fn_exit;
 }
 
+#if MPI_MAX_PORT_NAME < 1024
+#define PORT_SIZE 1024
+#else
+#define PORT_SIZE MPI_MAX_PORT_NAME
+#endif
+
 int MPIR_Comm_join_impl(int fd, MPIR_Comm ** p_intercomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -126,20 +132,20 @@ int MPIR_Comm_join_impl(int fd, MPIR_Comm ** p_intercomm_ptr)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKLMEM_MALLOC(local_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "local port name",
+    MPIR_CHKLMEM_MALLOC(local_port, char *, PORT_SIZE, mpi_errno, "local port name",
                         MPL_MEM_DYNAMIC);
-    MPIR_CHKLMEM_MALLOC(remote_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "remote port name",
+    MPIR_CHKLMEM_MALLOC(remote_port, char *, PORT_SIZE, mpi_errno, "remote port name",
                         MPL_MEM_DYNAMIC);
 
-    MPL_VG_MEM_INIT(local_port, MPI_MAX_PORT_NAME * sizeof(char));
+    MPL_VG_MEM_INIT(local_port, PORT_SIZE * sizeof(char));
 
-    mpi_errno = MPIR_Open_port_impl(NULL, local_port);
+    mpi_errno = MPID_Open_port(NULL, local_port, PORT_SIZE);
     MPIR_ERR_CHKANDJUMP((mpi_errno != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**openportfailed");
 
-    mpi_errno = MPIR_fd_send(fd, local_port, MPI_MAX_PORT_NAME);
+    mpi_errno = MPIR_fd_send(fd, local_port, PORT_SIZE);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_fd_recv(fd, remote_port, MPI_MAX_PORT_NAME);
+    mpi_errno = MPIR_fd_recv(fd, remote_port, PORT_SIZE);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_ERR_CHKANDJUMP2((strcmp(local_port, remote_port) == 0), mpi_errno, MPI_ERR_INTERN,
@@ -195,7 +201,15 @@ int MPIR_Comm_spawn_multiple_impl(int count, char *array_of_commands[], char **a
 
 int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name)
 {
-    return MPID_Open_port(info_ptr, port_name);
+    int port_name_size = MPI_MAX_PORT_NAME;
+    if (info_ptr) {
+        const char *val;
+        val = MPIR_Info_lookup(info_ptr, "port_name_size");
+        if (val) {
+            port_name_size = atoi(val);
+        }
+    }
+    return MPID_Open_port(info_ptr, port_name, port_name_size);
 }
 
 int MPIR_Close_port_impl(const char *port_name)

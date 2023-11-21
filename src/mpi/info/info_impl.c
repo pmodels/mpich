@@ -215,9 +215,11 @@ int MPIR_Info_set_hex_impl(MPIR_Info * info_ptr, const char *key, const void *va
     int mpi_errno = MPI_SUCCESS;
 
     char value_buf[1024];
-    MPIR_Assertp(value_size * 2 + 1 < 1024);
 
-    MPL_hex_encode(value_size, value, value_buf);
+    int rc;
+    int len_out;
+    rc = MPL_hex_encode(value, value_size, value_buf, 1024, &len_out);
+    MPIR_Assertp(rc == MPL_SUCCESS);
 
     mpi_errno = MPIR_Info_set_impl(info_ptr, key, value_buf);
 
@@ -228,8 +230,9 @@ int MPIR_Info_decode_hex(const char *str, void *buf, int len)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int rc = MPL_hex_decode(len, str, buf);
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**infohexinvalid");
+    int len_out;
+    int rc = MPL_hex_decode(str, buf, len, &len_out);
+    MPIR_ERR_CHKANDJUMP(rc || len_out != len, mpi_errno, MPI_ERR_OTHER, "**infohexinvalid");
 
   fn_exit:
     return mpi_errno;

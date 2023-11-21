@@ -540,7 +540,7 @@ int MPID_Finalize(void);
 
 int MPID_Abort( MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
 
-int MPID_Open_port(MPIR_Info *, char *);
+int MPID_Open_port(MPIR_Info *, char *, int);
 int MPID_Close_port(const char *);
 
 int MPID_Comm_accept(const char *, MPIR_Info *, int, MPIR_Comm *, MPIR_Comm **);

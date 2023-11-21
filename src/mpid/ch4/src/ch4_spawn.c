@@ -4,6 +4,9 @@
  */
 
 #include "mpidimpl.h"
+#include "mpidu_bc.h"
+
+#define MPIDI_DYNPROC_NAME_MAX MPID_MAX_BC_SIZE
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -33,7 +36,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
 
     MPIR_FUNC_ENTER;
 
-    char port_name[MPI_MAX_PORT_NAME];
+    char port_name[MPID_MAX_PORT_NAME];
     memset(port_name, 0, sizeof(port_name));
 
     int total_num_processes = 0;
@@ -50,7 +53,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
 
         /* NOTE: we can't do ERR JUMP here, or the later BCAST won't work */
 
-        mpi_errno = MPID_Open_port(NULL, port_name);
+        mpi_errno = MPID_Open_port(NULL, port_name, MPID_MAX_PORT_NAME);
         if (mpi_errno == MPI_SUCCESS) {
             struct MPIR_PMI_KEYVAL preput_keyval_vector;
             preput_keyval_vector.key = MPIDI_PARENT_PORT_KVSKEY;
@@ -127,7 +130,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
 static void free_port_name_tag(int tag);
 static int get_port_name_tag(int *port_name_tag);
 static int get_tag_from_port(const char *port_name, int *port_name_tag);
-static int get_conn_name_from_port(const char *port_name, char *connname, int *len);
+static int get_conn_name_from_port(const char *port_name, char *connname, int maxlen, int *len);
 
 #define PORT_MASK_BIT(j) (1u << ((8 * sizeof(int)) - j - 1))
 static int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
@@ -202,13 +205,12 @@ static int get_tag_from_port(const char *port_name, int *port_name_tag)
     goto fn_exit;
 }
 
-static int get_conn_name_from_port(const char *port_name, char *connname, int *len)
+static int get_conn_name_from_port(const char *port_name, char *connname, int maxlen, int *len)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
-    int maxlen = MPI_MAX_PORT_NAME;
     int outlen;
     int err;
     err = MPL_str_get_binary_arg(port_name, CONNENTR_TAG_KEY, connname, maxlen, &outlen);
@@ -222,7 +224,7 @@ static int get_conn_name_from_port(const char *port_name, char *connname, int *l
     goto fn_exit;
 }
 
-int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
+int MPID_Open_port(MPIR_Info * info_ptr, char *port_name, int len)
 {
     int mpi_errno;
     char *addrname = NULL;
@@ -236,9 +238,7 @@ int MPID_Open_port(MPIR_Info * info_ptr, char *port_name)
     mpi_errno = MPIDI_NM_get_local_upids(MPIR_Process.comm_self, &addrname_size, &addrname);
     MPIR_ERR_CHECK(mpi_errno);
 
-    int len;
     int err;
-    len = MPI_MAX_PORT_NAME;    /* FIXME: currently at 256, probably too short for ucx */
     err = MPL_str_add_int_arg(&port_name, &len, PORT_NAME_TAG_KEY, tag);
     MPIR_ERR_CHKANDJUMP(err, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
     err = MPL_str_add_binary_arg(&port_name, &len, CONNENTR_TAG_KEY, addrname, addrname_size[0]);
@@ -278,8 +278,6 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag, int ti
 static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int root,
                                     MPIR_Comm * comm_ptr, int timeout, bool is_sender,
                                     MPIR_Comm ** newcomm);
-
-#define MPIDI_DYNPROC_NAME_MAX MPI_MAX_PORT_NAME
 
 struct dynproc_conn_hdr {
     MPIR_Context_id_t context_id;
@@ -379,7 +377,8 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
         int len;
         if (is_sender) {
             addrname = remote_addrname;
-            mpi_errno = get_conn_name_from_port(port_name, remote_addrname, &len);
+            mpi_errno = get_conn_name_from_port(port_name, remote_addrname, MPIDI_DYNPROC_NAME_MAX,
+                                                &len);
             if (mpi_errno)
                 goto bcast_tag_and_errno;
         } else {

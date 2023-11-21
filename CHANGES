@@ -1,4 +1,12 @@
 ===============================================================================
+                               Changes in 4.3
+===============================================================================
+# ch4:ucx now supports dynamic processes. MPI_Comm_spawn{_multiple} will work.
+  MPI_Open_port will fail due to ucx port name exceeds current MPI_MAX_PORT_NAME
+  of 256. One can work around by use an info hint "port_name_size" and use a
+  larger port name buffer.
+
+===============================================================================
                                Changes in 4.2
 ===============================================================================
 # Complete support MPI 4.1 specification

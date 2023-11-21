@@ -14,7 +14,7 @@
 # changing this by playing with diversions, but then we would probably be
 # playing with autotools-fire.
 
-m4_define([MPICH_VERSION_m4],[4.2.0b1])dnl
+m4_define([MPICH_VERSION_m4],[4.3.0a1])dnl
 m4_define([MPICH_RELEASE_DATE_m4],[unreleased development copy])dnl
 
 # For libtool ABI versioning rules see:

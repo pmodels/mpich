@@ -34,6 +34,24 @@
 static char MTEST_Descrip[] = "A simple test of Comm_connect/accept/disconnect";
 */
 
+#ifdef MTEST_LARGE_PORT_NAME
+#define PORT_SIZE 4096
+
+#define INIT_PORT_INFO(info) \
+    do { \
+        MPI_Info_create(&(info)); \
+        MPI_Info_set(info, "port_name_size", "4096"); \
+    } while (0)
+
+#define FREE_PORT_INFO(info) MPI_Info_free(&(info))
+
+#else
+#define PORT_SIZE MPI_MAX_PORT_NAME
+#define INIT_PORT_INFO(info) do {info = MPI_INFO_NULL;} while (0)
+#define FREE_PORT_INFO(info) do { } while (0)
+
+#endif /* MTEST_LARGE_PORT_NAME */
+
 /*
  * Reverse the order of the ranks in a communicator
  *
@@ -82,7 +100,8 @@ int main(int argc, char *argv[])
     int np = 4;
     MPI_Comm parentcomm, intercomm, intracomm, comm;
     MPI_Status status;
-    char port[MPI_MAX_PORT_NAME] = { 0 };
+    char port[PORT_SIZE] = { 0 };
+    MPI_Info port_info;
     int even_odd;
     int verbose = 0;
     int do_messages = 1;
@@ -140,13 +159,15 @@ int main(int argc, char *argv[])
         /* Open a port on rank zero of the even communicator */
         /* rank 0 on intracomm == rank 0 on even communicator */
         if (rank == 0) {
-            MPI_Open_port(MPI_INFO_NULL, port);
+            INIT_PORT_INFO(port_info);
+            MPI_Open_port(port_info, port);
+            FREE_PORT_INFO(port_info);
             IF_VERBOSE(("port = %s\n", port));
         }
         /* Broadcast the port to everyone.  This makes the logic easier than
          * trying to figure out which process in the odd communicator to send it
          * to */
-        MPI_Bcast(port, MPI_MAX_PORT_NAME, MPI_CHAR, 0, intracomm);
+        MPI_Bcast(port, PORT_SIZE, MPI_CHAR, 0, intracomm);
 
         IF_VERBOSE(("disconnecting parent/child communicator\n"));
         MPI_Comm_disconnect(&intercomm);

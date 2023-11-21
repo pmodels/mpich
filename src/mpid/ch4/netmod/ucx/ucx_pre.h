@@ -10,6 +10,9 @@
 
 #define MPIDI_UCX_KVSAPPSTRLEN 4096
 
+/* need define MPIDI_BUILD_CH4_UPID_HASH to support dynamic process */
+#define MPIDI_BUILD_CH4_UPID_HASH
+
 typedef struct {
     int dummy;
 } MPIDI_UCX_Global_t;
@@ -81,6 +84,7 @@ typedef struct {
 } MPIDI_UCX_win_t;
 
 typedef struct {
+
     ucp_ep_h dest[MPIDI_CH4_MAX_VCIS][MPIDI_CH4_MAX_VCIS];
 } MPIDI_UCX_addr_t;
 
