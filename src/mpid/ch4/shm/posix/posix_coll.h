@@ -214,7 +214,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast(void *buffer, MPI_Aint count,
             goto fallback;
 
         case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_auto:
-            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm), coll_sig);
+            if (MPIR_CVAR_COLL_HYBRID_MEMORY) {
+                cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm), coll_sig);
+            }
+            else {
+                /* In no hybird case, local memory type can be used to select algorithm */
+                MPL_pointer_attr_t pointer_attr;
+                MPIR_GPU_query_pointer_attr(buffer, &pointer_attr);
+                if (pointer_attr.type == MPL_GPU_POINTER_DEV) {
+                    cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm_gpu), coll_sig);
+                }
+                else {
+                    cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm), coll_sig);
+                }
+            }
             if (cnt == NULL)
                 goto fallback;
 
@@ -223,6 +236,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast(void *buffer, MPI_Aint count,
                     mpi_errno =
                         MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm,
                                                              errflag);
+                    break;
+                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read:
+                    mpi_errno =
+                        MPIDI_POSIX_mpi_bcast_gpu_ipc_read(buffer, count, datatype, root, comm,
+                                                           errflag);
                     break;
                 case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_impl:
                     goto fallback;
