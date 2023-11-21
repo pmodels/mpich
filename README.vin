@@ -1,8 +1,8 @@
 			MPICH Release %VERSION%
 
 MPICH is a high-performance and widely portable implementation of the
-MPI-4.0 standard from the Argonne National Laboratory.  This release
-has all MPI 4.0 functions and features required by the standard with
+MPI-4.1 standard from the Argonne National Laboratory.  This release
+has all MPI 4.1 functions and features required by the standard with
 the exception of support for user-defined data representations for I/O.
 
 This README file should contain enough information to get you started
