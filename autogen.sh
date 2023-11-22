@@ -521,6 +521,14 @@ fn_json_gen() {
     echo "done"
 }
 
+fn_mydef() {
+    echo_n "preprocessing MyDef files... "
+    export PERL5LIB=$SRCROOTDIR/modules/mydef_boot/lib/perl5
+    export MYDEFLIB=$SRCROOTDIR/modules/mydef_boot/lib/MyDef
+    export MYDEF_PAGE=$SRCROOTDIR/modules/mydef_boot/bin/mydef_page
+    # (cd src/env && $MYDEF_PAGE mpicc.def)
+}
+
 # internal
 _patch_libtool() {
     _file=$1
@@ -1073,6 +1081,8 @@ fn_maint_configure
 if test "$do_getcvars" = "yes" ; then
     fn_getcvars
 fi
+
+fn_mydef
 
 ########################################################################
 ## Running autotools on non-simplemake directories
