@@ -19,6 +19,7 @@ noinst_PROGRAMS =  \
     parrived                       \
     parrived_wait                  \
     parrived_pready_out_of_order   \
+	parrived_strided 			   \
     pingping                       \
     multipart                      \
     nonblocking_pready             \
@@ -42,3 +43,6 @@ parrived_wait_SOURCES  = parrived.c
 
 parrived_pready_out_of_order_CPPFLAGS = -DTEST_PREADY_OUT_OF_ORDER $(AM_CPPFLAGS)
 parrived_pready_out_of_order_SOURCES  = parrived.c
+
+parrived_strided_CPPFLAGS = -DTEST_STRIDED $(AM_CPPFLAGS)
+parrived_strided_SOURCES  = parrived.c

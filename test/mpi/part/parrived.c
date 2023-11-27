@@ -19,7 +19,7 @@
  * Extended from Example 4.4 in the MPI 4.0 standard.*/
 
 /* Input parameters */
-static int spart = 0, rpart = 0, iteration = 0;
+static int spart = 0, rpart = 0, iteration = 0, stride = 2;
 static MPI_Count tot_count = 0;
 /* Internal variables */
 static double *buf = NULL;
@@ -46,7 +46,11 @@ static int check_recv_partition(int rp, int iter)
     int errs = 0;
     for (int i = 0; i < rcount; i++) {
         int index = rp * rcount + i;
+#ifdef TEST_STRIDED
+        double exp_val = (i % stride) ? 0.0 : VAL(index, iter);
+#else
         double exp_val = VAL(index, iter);
+#endif
         if (buf[index] != exp_val) {
             if (errs < 10) {
                 fprintf(stderr,
@@ -66,6 +70,9 @@ int main(int argc, char *argv[])
     int rank, size;
     MPI_Request req = MPI_REQUEST_NULL;
     MPI_Datatype send_type;
+#ifdef TEST_STRIDED
+    MPI_Datatype recv_type;
+#endif
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -82,6 +89,7 @@ int main(int argc, char *argv[])
     rpart = MTestArgListGetInt_with_default(head, "rpart", 8);
     tot_count = MTestArgListGetLong_with_default(head, "tot_count", 64);
     iteration = MTestArgListGetInt_with_default(head, "iteration", 5);
+    stride = MTestArgListGetInt_with_default(head, "stride", 2);
     MTestArgListDestroy(head);
 
     /* Send buffer size and receive buffer size must be identical */
@@ -95,8 +103,31 @@ int main(int argc, char *argv[])
     }
 
     buf = calloc(tot_count, sizeof(double));
+#ifdef TEST_STRIDED
+    if (scount % stride != 0 || rcount % stride != 0) {
+        fprintf(stderr, "the send and recv counts must be even");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+    /* select one double out of 2 */
+    MPI_Datatype tmp_send, tmp_recv;
+    MPI_Type_vector(scount / stride, 1, stride, MPI_DOUBLE, &tmp_send);
+    MPI_Type_vector(rcount / stride, 1, stride, MPI_DOUBLE, &tmp_recv);
+
+    /* need to resize the datatype to take the last empty double into account */
+    const int send_extent = scount * sizeof(double);
+    const int recv_extent = rcount * sizeof(double);
+    MPI_Type_create_resized(tmp_send, 0, send_extent, &send_type);
+    MPI_Type_create_resized(tmp_recv, 0, recv_extent, &recv_type);
+
+    /* commit all that */
+    MPI_Type_commit(&send_type);
+    MPI_Type_commit(&recv_type);
+    MPI_Type_free(&tmp_send);
+    MPI_Type_free(&tmp_recv);
+#else
     MPI_Type_contiguous(scount, MPI_DOUBLE, &send_type);
     MPI_Type_commit(&send_type);
+#endif
 
     if (rank == 0) {
         MPI_Psend_init(buf, spart, 1, send_type, 1, 0, MPI_COMM_WORLD, MPI_INFO_NULL, &req);
@@ -135,7 +166,11 @@ int main(int argc, char *argv[])
 
         MPI_Request_free(&req);
     } else if (rank == 1) {
+#ifdef TEST_STRIDED
+        MPI_Precv_init(buf, rpart, 1, recv_type, 0, 0, MPI_COMM_WORLD, MPI_INFO_NULL, &req);
+#else
         MPI_Precv_init(buf, rpart, rcount, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_INFO_NULL, &req);
+#endif
 
         for (int iter = 0; iter < iteration; iter++) {
             reset_buf();
@@ -189,6 +224,9 @@ int main(int argc, char *argv[])
     }
 
     MPI_Type_free(&send_type);
+#ifdef TEST_STRIDED
+    MPI_Type_free(&recv_type);
+#endif
     free(buf);
 
     MTest_Finalize(errs);
