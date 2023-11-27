@@ -104,6 +104,16 @@ cvars:
       description : >-
         Defines the location of tuning file.
 
+    - name        : MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE_GPU
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file for GPU.
+
     - name        : MPIR_CVAR_CH4_IOV_DENSITY_MIN
       category    : CH4
       type        : int
@@ -199,6 +209,8 @@ static void *create_container(struct json_object *obj)
             cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_beta;
         else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_gamma"))
             cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma;
+        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_delta"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_delta;
         else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_alpha"))
             cnt->id =
                 MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_alpha;
@@ -488,6 +500,7 @@ int MPID_Init(int requested, int *provided)
 
     MPIDIU_map_create((void **) &(MPIDI_global.win_map), MPL_MEM_RMA);
     MPIDI_global.csel_root = NULL;
+    MPIDI_global.csel_root_gpu = NULL;
 
     /* Initialize multiple VCIs */
     /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
@@ -568,6 +581,16 @@ int MPID_Init(int requested, int *provided)
     } else {
         mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE,
                                                create_container, &MPIDI_global.csel_root);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Initialize collective selection for gpu */
+    if (!strcmp(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE_GPU, "")) {
+        mpi_errno = MPIR_Csel_create_from_buf(MPIDI_coll_generic_json,
+                                              create_container, &MPIDI_global.csel_root_gpu);
+    } else {
+        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE_GPU,
+                                               create_container, &MPIDI_global.csel_root_gpu);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -780,6 +803,11 @@ int MPID_Finalize(void)
 
     if (MPIDI_global.csel_root) {
         mpi_errno = MPIR_Csel_free(MPIDI_global.csel_root);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (MPIDI_global.csel_root_gpu) {
+        mpi_errno = MPIR_Csel_free(MPIDI_global.csel_root_gpu);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
