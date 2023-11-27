@@ -197,8 +197,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
 
     const MPIDI_Csel_container_s *cnt = NULL;
 
-    cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
-
+    if (MPIR_CVAR_COLL_HYBRID_MEMORY) {
+        cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
+    }
+    else {
+        /* In no hybird case, local memory type can be used to select algorithm */
+        MPL_pointer_attr_t pointer_attr;
+        MPIR_GPU_query_pointer_attr(buffer, &pointer_attr);
+        if (pointer_attr.type == MPL_GPU_POINTER_DEV) {
+            cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm_gpu), coll_sig);
+        }
+        else {
+            cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
+        }
+    }
     if (cnt == NULL) {
         mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
         MPIR_ERR_CHECK(mpi_errno);
@@ -217,6 +229,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma:
             mpi_errno =
                 MPIDI_Bcast_intra_composition_gamma(buffer, count, datatype, root, comm, errflag);
+            break;
+        case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_delta:
+            mpi_errno =
+                MPIDI_Bcast_intra_composition_delta(buffer, count, datatype, root, comm, errflag);
             break;
         default:
             MPIR_Assert(0);

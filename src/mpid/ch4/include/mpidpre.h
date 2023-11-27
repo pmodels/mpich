@@ -646,6 +646,7 @@ typedef struct MPIDI_Devcomm_t {
         int shm_size_per_lead;
 
         void *csel_comm;        /* collective selection handle */
+        void *csel_comm_gpu;    /* collective selection handle for gpu*/
     } ch4;
 } MPIDI_Devcomm_t;
 
