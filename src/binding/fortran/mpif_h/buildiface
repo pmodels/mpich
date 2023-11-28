@@ -153,7 +153,7 @@ if ($write_mpif) {
         }
     }
     # Predefined error handlers
-    foreach $key (ERRORS_ARE_FATAL, ERRORS_RETURN) {
+    foreach $key ('ERRORS_ARE_FATAL', 'ERRORS_RETURN', 'ERRORS_ABORT') {
         &print_mpif_int( "MPI_$key" );
     }
     # Compare operations
@@ -170,7 +170,7 @@ if ($write_mpif) {
         &print_mpif_int( "MPI_$key" );
     }
     # Objects
-    foreach $key ('COMM_WORLD', 'COMM_SELF', 'GROUP_EMPTY', 'COMM_NULL', 'WIN_NULL', 'FILE_NULL', 'GROUP_NULL', 'OP_NULL', 'DATATYPE_NULL', 'REQUEST_NULL', 'ERRHANDLER_NULL', 'INFO_NULL', 'INFO_ENV' ) {
+    foreach $key ('COMM_WORLD', 'COMM_SELF', 'GROUP_EMPTY', 'COMM_NULL', 'WIN_NULL', 'FILE_NULL', 'GROUP_NULL', 'OP_NULL', 'DATATYPE_NULL', 'REQUEST_NULL', 'ERRHANDLER_NULL', 'SESSION_NULL', 'INFO_NULL', 'INFO_ENV' ) {
         &print_mpif_int( "MPI_$key" );
     }
     # Attributes
@@ -295,7 +295,7 @@ if ($write_mpif) {
     foreach $key (NAMED, DUP, CONTIGUOUS, VECTOR, HVECTOR_INTEGER, HVECTOR,
                   INDEXED, HINDEXED_INTEGER, HINDEXED, INDEXED_BLOCK,
                   STRUCT_INTEGER, STRUCT, SUBARRAY, DARRAY, F90_REAL,
-                  F90_COMPLEX, F90_INTEGER, RESIZED, HINDEXED_BLOCK) {
+                  F90_COMPLEX, F90_INTEGER, RESIZED, HINDEXED_BLOCK, VALUE_INDEX) {
         &print_mpif_int( "MPI_COMBINER_$key" );
     }
     # Typeclasses
@@ -309,7 +309,7 @@ if ($write_mpif) {
     }
 
     # comm_split_types
-    foreach $type (SHARED) {
+    foreach $type (SHARED, HW_GUIDED, HW_UNGUIDED, RESOURCE_GUIDED) {
         &print_mpif_int( "MPI_COMM_TYPE_$type" );
     }
     &print_mpif_int( "MPI_MESSAGE_NULL" );
