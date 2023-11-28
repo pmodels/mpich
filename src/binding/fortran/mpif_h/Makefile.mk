@@ -20,6 +20,13 @@ mpi_f77_sources += \
 # target-specific variable?
 AM_CPPFLAGS += -I${main_top_srcdir}/src/binding/fortran/mpif_h
 
+if BUILD_PROFILING_LIB
+noinst_LTLIBRARIES += libf77_pmpi.la
+libf77_pmpi_la_SOURCES = src/binding/fortran/mpif_h/fortran_binding.c
+libf77_pmpi_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI
+
+mpi_f77_convenience_libs += libf77_pmpi.la
+endif BUILD_PROFILING_LIB
 
 noinst_HEADERS += \
 	src/binding/fortran/mpif_h/fortran_profile.h \
