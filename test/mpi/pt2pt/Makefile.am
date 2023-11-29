@@ -46,6 +46,7 @@ noinst_PROGRAMS =  \
     waitany_null   \
     probe_unexp    \
     probenull      \
+    recvnull       \
     inactivereq    \
     waittestnull   \
     sendall        \
