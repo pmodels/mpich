@@ -409,9 +409,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
     is_commutative = MPIR_Op_is_commutative(op);
 
     /* FIXME: this fallback check assumes device algorithms are limited by release gather shm cell size */
-    MPI_Aint dt_size;
+    MPI_Aint dt_size, lb, extent, true_extent;
     MPIR_Datatype_get_size_macro(datatype, dt_size);
-    if (dt_size >=
+    MPIR_Type_get_extent_impl(datatype, &lb, &extent);
+    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
+    extent = MPL_MAX(extent, true_extent);
+    if (MPL_MAX(dt_size, extent) >=
         MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS) {
         goto fallback;
     }
@@ -1263,9 +1266,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
     MPIR_FUNC_ENTER;
 
     /* FIXME: this fallback check assumes device algorithms are limited by release gather shm cell size */
-    MPI_Aint dt_size;
+    MPI_Aint dt_size, lb, extent, true_extent;
     MPIR_Datatype_get_size_macro(datatype, dt_size);
-    if (dt_size >=
+    MPIR_Type_get_extent_impl(datatype, &lb, &extent);
+    MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
+    extent = MPL_MAX(extent, true_extent);
+    if (MPL_MAX(dt_size, extent) >=
         MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE / MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS) {
         goto fallback;
     }

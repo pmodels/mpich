@@ -22,15 +22,17 @@ def get_f08_c_name(func, is_large):
     return name
 
 def get_f08ts_name(func, is_large):
-    name = func['name'] + "_f08ts"
     if is_large:
-        name += "_large"
+        name = func['name'] + "_c_f08ts"
+    else:
+        name = func['name'] + "_f08ts"
     return name
 
 def get_f08_name(func, is_large):
-    name = func['name'] + "_f08"
     if is_large:
-        name += "_large"
+        name = func['name'] + "_c_f08"
+    else:
+        name = func['name'] + "_f08"
     return name
 
 def dump_f08_wrappers_c(func, is_large):
@@ -1073,12 +1075,13 @@ def dump_mpi_f08_types():
             G.out.append("END SUBROUTINE")
 
         # e.g. MPI_Status_f082f
-        def dump_convert_2(in_type, out_type):
+        def dump_convert_2(in_type, out_type, prefix):
             G.out.append("")
+            mpi_name = "%s_Status_%s2%s" % (prefix, in_type, out_type)
             in_name = "%s_status" % in_type
             out_name = "%s_status" % out_type
 
-            G.out.append("SUBROUTINE MPI_Status_%s2%s(%s, %s, ierror)" % (in_type, out_type, in_name, out_name))
+            G.out.append("SUBROUTINE %s(%s, %s, ierror)" % (mpi_name, in_name, out_name))
             G.out.append("INDENT")
             dump_convert(in_type, in_name, out_type, out_name, "ierror")
             G.out.append("DEDENT")
@@ -1101,8 +1104,6 @@ def dump_mpi_f08_types():
             G.out.append("END FUNCTION %s" % mpi_name)
 
         # ----
-        dump_convert_2("f08", "f")
-        dump_convert_2("f", "f08")
         dump_convert_assign("f08", "c")
         dump_convert_assign("c", "f08")
         dump_convert_assign("f", "c")
@@ -1110,6 +1111,8 @@ def dump_mpi_f08_types():
         for prefix in ["MPI", "PMPI"]:
             dump_convert_mpi("f08", "c", prefix)
             dump_convert_mpi("c", "f08", prefix)
+            dump_convert_2("f08", "f", prefix)
+            dump_convert_2("f", "f08", prefix)
 
     def dump_handle_types():
         for a in G.handle_list:

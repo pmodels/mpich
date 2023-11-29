@@ -609,6 +609,11 @@ AC_ARG_WITH(name-publisher,
 AC_ARG_ENABLE(nolocal, AS_HELP_STRING([--enable-nolocal], [enables nolocal mode where shared-memory communication is disabled]),
     AC_DEFINE(ENABLE_NO_LOCAL, 1, [Define to disable shared-memory communication]))
 
+# options passed to sub configures
+AC_ARG_WITH([cuda], [AS_HELP_STRING([--with-cuda=[[PATH]]],PAC_WITH_LIB_HELP_STRING(cuda))])
+AC_ARG_WITH([hip], [AS_HELP_STRING([--with-hip=[[PATH]]],PAC_WITH_LIB_HELP_STRING(hip))])
+AC_ARG_WITH([ze], [AS_HELP_STRING([--with-ze=[[PATH]]],PAC_WITH_LIB_HELP_STRING(ze))])
+
 AC_CANONICAL_TARGET
 
 # Find a C compiler.
@@ -3532,7 +3537,7 @@ PAC_SET_MPI_DATATYPE_ALIAS(MPI_C_COMPLEX, MPI_C_FLOAT_COMPLEX)
 # does not help, since only the latest type_tag definition is used. Type tags are defined in mpi.h,
 # therefore, they must be also be activated/deavtivated there
 PAC_PUSH_FLAG([CFLAGS])
-PAC_C_CHECK_COMPILER_OPTION([-Werror],[CFLAGS="$CFLAGS -Werror"])
+PAC_C_CHECK_COMPILER_OPTION([-Werror=type-safety],[CFLAGS="$CFLAGS -Werror=type-safety"])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     typedef int TEST_Datatype;
     #define TEST_INT ((TEST_Datatype)0x44)
@@ -4219,11 +4224,6 @@ AC_CONFIG_FILES([Makefile \
 	  mpich-doxygen \
           src/include/mpir_ext.h \
           src/binding/cxx/mpicxx.h \
-	  src/binding/fortran/mpif_h/mpif.h \
-	  src/binding/fortran/mpif_h/setbotf.f \
-	  src/binding/fortran/mpif_h/setbot.c \
-	  src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90 \
-	  src/binding/fortran/use_mpi_f08/mpi_c_interface_types.f90 \
 	  src/packaging/pkgconfig/mpich.pc \
 	  src/packaging/envmods/mpich.module \
           src/env/mpixxx_opts.conf \
@@ -4239,6 +4239,15 @@ AC_CONFIG_FILES([Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
           test/commands/cmdtests])
+if test "$enable_f77" = "yes" ; then
+    AC_CONFIG_FILES([src/binding/fortran/mpif_h/mpif.h \
+                     src/binding/fortran/mpif_h/setbotf.f \
+                     src/binding/fortran/mpif_h/setbot.c])
+fi
+if test "$enable_f08" = "yes" ; then
+    AC_CONFIG_FILES([src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90 \
+                     src/binding/fortran/use_mpi_f08/mpi_c_interface_types.f90])
+fi
 AC_OUTPUT
 
 echo '*****************************************************'

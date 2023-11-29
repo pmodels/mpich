@@ -210,6 +210,7 @@ int MPII_hwtopo_init(void)
              * file is really the underlying system. */
             hwloc_topology_set_flags(hwloc_topology, HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM);
         }
+        MPL_free(xmlfile);
     }
 
     hwloc_topology_set_io_types_filter(hwloc_topology, HWLOC_TYPE_FILTER_KEEP_ALL);

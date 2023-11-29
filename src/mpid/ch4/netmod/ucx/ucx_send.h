@@ -89,7 +89,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
             MPIR_Request_add_ref(req);
         }
         ucp_request->req = req;
-        MPIDI_UCX_REQ(req).ucp_request = ucp_request;
+        MPIDI_UCX_REQ(req).s.ucp_request = ucp_request;
     } else if (req != NULL) {
         MPIR_cc_set(&req->cc, 0);
     } else if (have_request) {
@@ -157,7 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
     if (!MPIR_Request_is_complete(sreq)) {
         int vci = MPIDI_Request_get_vci(sreq);
         MPIDI_UCX_THREAD_CS_ENTER_VCI(vci);
-        ucp_request_cancel(MPIDI_UCX_global.ctx[vci].worker, MPIDI_UCX_REQ(sreq).ucp_request);
+        ucp_request_cancel(MPIDI_UCX_global.ctx[vci].worker, MPIDI_UCX_REQ(sreq).s.ucp_request);
         MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
     }
 
