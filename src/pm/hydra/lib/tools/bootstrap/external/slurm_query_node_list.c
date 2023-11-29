@@ -26,7 +26,7 @@ static struct HYD_node *global_node_list = NULL;
 #if defined(HAVE_SLURM)
 static HYD_status list_to_nodes(char *str)
 {
-    hostlist_t hostlist;
+    hostlist_t *hostlist;
     char *host;
     int k = 0;
     HYD_status status = HYD_SUCCESS;
