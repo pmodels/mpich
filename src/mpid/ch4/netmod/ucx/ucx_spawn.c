@@ -25,10 +25,13 @@ int MPIDI_UCX_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     int mpi_errno = MPI_SUCCESS;
 
     uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
+    int vci = 0;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
     int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
     int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(&MPIDIU_get_av(avtid, lpid), 0, 0);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(&MPIDIU_get_av(avtid, lpid), vci, vci);
 
     bool done = false;
     ucp_request_param_t param = {
@@ -57,7 +60,7 @@ int MPIDI_UCX_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
             mpi_errno = MPI_ERR_PORT;
             goto fn_exit;
         }
-        ucp_worker_progress(MPIDI_UCX_global.ctx[0].worker);
+        ucp_worker_progress(MPIDI_UCX_global.ctx[vci].worker);
     }
 
     if (status != UCS_OK) {
@@ -65,6 +68,7 @@ int MPIDI_UCX_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     }
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     return mpi_errno;
 }
 
@@ -74,6 +78,9 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
 
     uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
     uint64_t tag_mask = 0xffffffffffffffff;
+    int vci = 0;
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
     bool done = false;
     ucp_request_param_t param = {
@@ -83,7 +90,8 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
     };
 
     ucs_status_ptr_t status;
-    status = ucp_tag_recv_nbx(MPIDI_UCX_global.ctx[0].worker, buf, size, ucx_tag, tag_mask, &param);
+    status =
+        ucp_tag_recv_nbx(MPIDI_UCX_global.ctx[vci].worker, buf, size, ucx_tag, tag_mask, &param);
     if (status == UCS_OK) {
         done = true;
     } else if (UCS_PTR_IS_ERR(status)) {
@@ -101,7 +109,7 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
             mpi_errno = MPI_ERR_PORT;
             goto fn_exit;
         }
-        ucp_worker_progress(MPIDI_UCX_global.ctx[0].worker);
+        ucp_worker_progress(MPIDI_UCX_global.ctx[vci].worker);
     }
 
     if (status != UCS_OK) {
@@ -109,6 +117,7 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
     }
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     return mpi_errno;
 }
 
@@ -146,6 +155,7 @@ int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
     int n_new_procs = 0;
     int *new_avt_procs;
     char **new_upids;
+    int vci = 0;
     MPIR_CHKLMEM_DECL(2);
 
     MPIR_CHKLMEM_MALLOC(new_avt_procs, int *, sizeof(int) * size, mpi_errno, "new_avt_procs",
@@ -178,7 +188,7 @@ int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
             ucs_status_t ucx_status;
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
             ep_params.address = (ucp_address_t *) new_upids[i];
-            ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
+            ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[vci].worker, &ep_params,
                                        &MPIDI_UCX_AV(&MPIDIU_get_av(avtid, i)).dest[0][0]);
             MPIDI_UCX_CHK_STATUS(ucx_status);
             MPIDIU_upidhash_add(new_upids[i], remote_upid_size[new_avt_procs[i]], avtid, i);
