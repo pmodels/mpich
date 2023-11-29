@@ -19,6 +19,13 @@ static void init_builtin_request(MPIR_Request * req, int handle, MPIR_Request_ki
     req->cc_ptr = &req->cc;
     req->status.MPI_ERROR = MPI_SUCCESS;
     MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
+    if (kind == MPIR_REQUEST_KIND__RECV) {
+        /* precompleted recv request is returned when source is MPI_PROC_NULL,
+         * or when we are certain status won't be needed. Thus, initialize the
+         * status for MPI_PROC_NULL. */
+        req->status.MPI_SOURCE = MPI_PROC_NULL;
+        req->status.MPI_TAG = MPI_ANY_TAG;
+    }
     req->comm = NULL;
 }
 
