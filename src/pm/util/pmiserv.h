@@ -11,7 +11,7 @@
  * pmi server package
  */
 
-#define MAX_READLINE 1024
+#define MAX_READLINE 4096
 /*
    The basic item is the PMIProcess, which contains the fd used to
    communicate with the PMI client code, a pointer to the PMI Group
@@ -58,7 +58,7 @@ typedef struct PMIGroup {
  * sockets and for sockets+shared memory can exceed 128 characters.
  */
 #define MAXKEYLEN    64 /* max length of key in keyval space */
-#define MAXVALLEN   256 /* max length of value in keyval space */
+#define MAXVALLEN  4096 /* max length of value in keyval space */
 #define MAXNAMELEN  256 /* max length of various names */
 #define MAXKVSNAME  MAXNAMELEN  /* max length of a kvsname */
 typedef struct PMIKVPair {
