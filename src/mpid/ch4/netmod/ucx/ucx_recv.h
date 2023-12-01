@@ -158,7 +158,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
             MPI_Aint density;
             MPIR_Datatype_get_density(datatype, density);
 
-            if (density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+            if (UCP_VERSION(UCP_API_MAJOR, UCP_API_MINOR) >= UCP_VERSION(1, 16) &&
+                density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
                 MPI_Aint iov_len, actual_iov_len;
                 MPIR_Typerep_get_iov_len(count, datatype, &iov_len);
                 ucp_dt_iov_t *iov = MPL_malloc(sizeof(ucp_dt_iov_t) * iov_len, MPL_MEM_BUFFER);
