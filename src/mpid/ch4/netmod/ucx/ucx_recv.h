@@ -27,6 +27,8 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+#define MPIDI_UCX_ENABLE_IOV (UCP_VERSION(UCP_API_MAJOR, UCP_API_MINOR) >= UCP_VERSION(1, 16))
+
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
                                                      const ucp_tag_recv_info_t * info,
                                                      void *user_data)
@@ -158,7 +160,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
             MPI_Aint density;
             MPIR_Datatype_get_density(datatype, density);
 
-            if (density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+            if (MPIDI_UCX_ENABLE_IOV && density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
                 MPI_Aint iov_len, actual_iov_len;
                 MPIR_Typerep_get_iov_len(count, datatype, &iov_len);
                 ucp_dt_iov_t *iov = MPL_malloc(sizeof(ucp_dt_iov_t) * iov_len, MPL_MEM_BUFFER);
