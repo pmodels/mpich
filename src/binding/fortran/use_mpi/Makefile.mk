@@ -68,7 +68,7 @@ mpi_fc_sources += \
 # We need the MPI constants in a separate module for some of the
 # interface definitions (the ones that need MPI_ADDRESS_KIND or
 # MPI_OFFSET_KIND)
-src/binding/fortran/use_mpi/mpi.$(MOD)-stamp: src/binding/fortran/use_mpi/$(MPICONSTMOD).$(MOD) src/binding/fortran/use_mpi/$(MPISIZEOFMOD).$(MOD) src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD) $(srcdir)/src/binding/fortran/use_mpi/mpi.f90 src/binding/fortran/use_mpi/mpifnoext.h
+src/binding/fortran/use_mpi/mpi.$(MOD)-stamp: src/binding/fortran/use_mpi/$(MPICONSTMOD).$(MOD) src/binding/fortran/use_mpi/$(MPISIZEOFMOD).$(MOD) src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD) src/binding/fortran/use_mpi/$(PMPIBASEMOD).$(MOD) $(srcdir)/src/binding/fortran/use_mpi/mpi.f90 src/binding/fortran/use_mpi/mpifnoext.h
 	@rm -f src/binding/fortran/use_mpi/mpi-tmp
 	@touch src/binding/fortran/use_mpi/mpi-tmp
 	@( cd src/binding/fortran/use_mpi && \
