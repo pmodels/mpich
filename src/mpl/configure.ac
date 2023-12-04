@@ -806,15 +806,7 @@ case $with_proc_mutex_package in
     AC_CHECK_FUNCS(pthread_mutexattr_setpshared)
 
     AC_CHECK_FUNCS(pthread_setaffinity_np)
-
-    #
-    # Check for the Linux functions for controlling processor affinity.
-    #
-    # LINUX: sched_setaffinity
-    # AIX:   bindprocessor
-    # OSX (Leopard): thread_policy_set
-    AC_CHECK_FUNCS([sched_setaffinity sched_getaffinity bindprocessor thread_policy_set])
-    if test "$ac_cv_func_sched_setaffinity" = "yes" ; then
+    if test "$ac_cv_func_pthread_setaffinity_np" = "yes" ; then
         # Test for the cpu process set type
         AC_CACHE_CHECK([whether cpu_set_t available],pac_cv_have_cpu_set_t,[
             AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sched.h>]],[[cpu_set_t t;]])],
@@ -835,13 +827,7 @@ case $with_proc_mutex_package in
 	    if test "$pac_cv_cpu_set_defined" = "yes" ; then
 	        AC_DEFINE(HAVE_CPU_SET_MACROS,1,[Define if CPU_SET and CPU_ZERO defined])
             fi
-        # FIXME: Some versions of sched_setaffinity return ENOSYS (!),
-	    # so we should test for the unfriendly and useless behavior
         fi
-    fi
-
-    if test "$ac_cv_func_pthread_setaffinity_np" = "yes" ; then
-      AC_DEFINE(HAVE_PTHREAD_SETAFFINITY_NP,1, [Define if pthread_setaffinity_np is available.])
     fi
 
     AC_MSG_NOTICE([POSIX will be used for interprocess mutex package.])
