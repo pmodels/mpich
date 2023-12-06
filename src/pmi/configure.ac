@@ -98,15 +98,6 @@ if test "$enable_embedded" = "yes" ; then
 fi
 PAC_CONFIG_MPL
 
-# check "mpi.h" for MPI_MAX_PORT_NAME
-if test "$FROM_MPICH" = "yes" ; then
-    PAC_APPEND_FLAG([-I${main_top_srcdir}/src/include], [CPPFLAGS])
-    PAC_APPEND_FLAG([-I${main_top_builddir}/src/include], [CPPFLAGS])
-    AC_DEFINE([HAVE_MPI_H], 1, [define if we have mpi.h])
-else
-    AC_CHECK_HEADER([mpi.h])
-fi
-
 if test "$enable_error_checking" != "no" ; then
     AC_DEFINE([HAVE_ERROR_CHECKING], 1, [Define to enable error checking])
 fi

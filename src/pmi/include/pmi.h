@@ -9,6 +9,8 @@
 #define PMI_VERSION    1
 #define PMI_SUBVERSION 1
 
+#define PMI_MAX_PORT_NAME 1024
+
 /* prototypes for the PMI interface in MPICH */
 
 #if defined(__cplusplus)
