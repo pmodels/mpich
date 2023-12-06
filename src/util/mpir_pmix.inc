@@ -515,7 +515,7 @@ static int pmix_publish(const char name[], const char port[])
     goto fn_exit;
 }
 
-static int pmix_lookup(const char name[], char port[])
+static int pmix_lookup(const char name[], char port[], int port_len)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -524,7 +524,7 @@ static int pmix_lookup(const char name[], char port[])
     MPL_strncpy(pdata[0].key, name, PMIX_MAX_KEYLEN);
     pmi_errno = PMIx_Lookup(pdata, 1, NULL, 0);
     if (pmi_errno == PMIX_SUCCESS) {
-        MPL_strncpy(port, pdata[0].value.data.string, MPI_MAX_PORT_NAME);
+        MPL_strncpy(port, pdata[0].value.data.string, port_len);
     }
     PMIX_PDATA_FREE(pdata, 1);
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_NAME, "**namepubnotfound",
@@ -1009,7 +1009,7 @@ static int pmix_publish(const char name[], const char port[])
     return MPI_ERR_INTERN;
 }
 
-static int pmix_lookup(const char name[], char port[])
+static int pmix_lookup(const char name[], char port[], int port_len)
 {
     return MPI_ERR_INTERN;
 }

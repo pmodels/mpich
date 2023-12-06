@@ -754,11 +754,12 @@ int MPIR_pmi_publish(const char name[], const char port[])
     return mpi_errno;
 }
 
-int MPIR_pmi_lookup(const char name[], char port[])
+int MPIR_pmi_lookup(const char name[], char port[], int port_len)
 {
     int mpi_errno = MPI_SUCCESS;
-    SWITCH_PMI(mpi_errno = pmi1_lookup(name, port),
-               mpi_errno = pmi2_lookup(name, port), mpi_errno = pmix_lookup(name, port));
+    SWITCH_PMI(mpi_errno = pmi1_lookup(name, port, port_len),
+               mpi_errno = pmi2_lookup(name, port, port_len),
+               mpi_errno = pmix_lookup(name, port, port_len));
     return mpi_errno;
 }
 

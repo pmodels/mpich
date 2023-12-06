@@ -91,7 +91,7 @@ int MPIR_pmi_bcast_local(char *val, int val_size);
 
 /* name service functions */
 int MPIR_pmi_publish(const char name[], const char port[]);
-int MPIR_pmi_lookup(const char name[], char port[]);
+int MPIR_pmi_lookup(const char name[], char port[], int portlen);
 int MPIR_pmi_unpublish(const char name[]);
 
 /* Other misc functions */

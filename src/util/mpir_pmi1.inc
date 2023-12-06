@@ -213,15 +213,36 @@ static int pmi1_publish(const char name[], const char port[])
     goto fn_exit;
 }
 
-static int pmi1_lookup(const char name[], char port[])
+static int pmi1_lookup(const char name[], char port[], int port_len)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
-    pmi_errno = PMI_Lookup_name(name, port);
+#ifdef PMI_MAX_PORT_NAME
+    int maxlen = PMI_MAX_PORT_NAME;
+#else
+    int maxlen = MPI_MAX_PORT_NAME;
+#endif
+    char *tmpbuf = NULL;
+
+    if (port_len >= maxlen) {
+        pmi_errno = PMI_Lookup_name(name, port);
+    } else {
+        /* allocate a temporary buffer for safety */
+        tmpbuf = MPL_malloc(maxlen, MPL_MEM_OTHER);
+        pmi_errno = PMI_Lookup_name(name, tmpbuf);
+        if (pmi_errno == PMI_SUCCESS) {
+            int mpl_err = MPL_strncpy(port, tmpbuf, port_len);
+            MPIR_ERR_CHKANDJUMP1(mpl_err, mpi_errno, MPI_ERR_NAME, "**namepubtrunc",
+                                 "**namepubtrunc %s", name);
+        }
+    }
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_NAME, "**namepubnotfound",
                          "**namepubnotfound %s", name);
 
   fn_exit:
+    if (tmpbuf) {
+        MPL_free(tmpbuf);
+    }
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -320,7 +341,7 @@ static int pmi1_publish(const char name[], const char port[])
     return MPI_ERR_INTERN;
 }
 
-static int pmi1_lookup(const char name[], char port[])
+static int pmi1_lookup(const char name[], char port[], int port_len)
 {
     return MPI_ERR_INTERN;
 }
