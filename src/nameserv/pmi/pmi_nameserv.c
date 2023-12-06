@@ -41,10 +41,16 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
 int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                    const char service_name[], char port[])
 {
-    MPL_UNREFERENCED_ARG(info_ptr);
     MPL_UNREFERENCED_ARG(handle);
 
-    return MPIR_pmi_lookup(service_name, port);
+    int port_name_size = MPI_MAX_PORT_NAME;
+    if (info_ptr) {
+        const char *val = MPIR_Info_lookup(info_ptr, "port_name_size");
+        if (val) {
+            port_name_size = atoi(val);
+        }
+    }
+    return MPIR_pmi_lookup(service_name, port, port_name_size);
 }
 
 int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const char service_name[])

@@ -167,6 +167,8 @@ be in the range 0 to %d
 **namepubnotfound %s:Lookup failed for service name %s
 **namepubnotunpub:Failed to unpublish service name
 **namepubnotunpub %s:Failed to unpublish service name %s
+**namepubtrunc:Lookup returned port_name is truncated
+**namepubtrunc %s:Lookup for service name %s is truncated
 **sendbuf_inplace:sendbuf cannot be MPI_IN_PLACE
 **recvbuf_inplace:recvbuf cannot be MPI_IN_PLACE
 **buf_inplace:buffer cannot be MPI_IN_PLACE
