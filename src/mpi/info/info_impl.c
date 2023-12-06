@@ -15,7 +15,7 @@ static int info_find_key(MPIR_Info * info_ptr, const char *key)
     return -1;
 }
 
-const char *MPIR_Info_lookup(MPIR_Info * info_ptr, const char *key)
+const char *MPIR_Info_lookup(const MPIR_Info * info_ptr, const char *key)
 {
     if (!info_ptr) {
         return NULL;
