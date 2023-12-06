@@ -12,6 +12,7 @@ EXTRA_DIST = testlist
 ## correctly
 noinst_PROGRAMS =         \
     namepub               \
+    namepub_conn          \
     spawn1                \
     spawninfo1            \
     spawnminfo1           \
