@@ -255,16 +255,13 @@ mpi_fc_modules += \
     src/binding/fortran/use_mpi/$(PMPIBASEMOD).$(MOD)
 
 # We need a free-format version of mpif.h with no external commands,
-# including no wtime/wtick (removing MPI_WTICK also removes MPI_WTIME,
-# but leave MPI_WTIME_IS_GLOBAL).
-# Also allow REAL*8 or DOUBLE PRECISION for the MPI_WTIME/MPI_WTICK
-# declarations
+# including declarations such as `REAL*8 MPI_WTIME, PMPI_WTIME`.
+# Filtering on `PMPI_` covers those lines.
+# NOTE: do not use extended regex to allow posix sed.
 src/binding/fortran/use_mpi/mpifnoext.h: src/binding/fortran/mpif_h/mpif.h
 	rm -f $@
 	sed -e 's/^C/\!/g' -e '/EXTERNAL/d' \
-	-e '/REAL\*8/d' \
-	-e '/DOUBLE PRECISION/d' \
-	-e '/MPI_WTICK/d' src/binding/fortran/mpif_h/mpif.h > $@
+	-e '/PMPI_/d' src/binding/fortran/mpif_h/mpif.h > $@
 
 CLEANFILES += src/binding/fortran/use_mpi/mpifnoext.h
 
