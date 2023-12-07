@@ -146,6 +146,16 @@ class MPI_API_Global:
         ""
     ]
 
+    copyright_f77 = [
+        "C      ",
+        "C      Copyright (C) by Argonne National Laboratory",
+        "C          See COPYRIGHT in top-level directory",
+        "C      ",
+        "C      ",
+        "C      -- THIS FILE IS AUTO-GENERATED -- ",
+        "C      ",
+    ]
+
     copyright_f90 = [
         "!",
         "! Copyright (C) by Argonne National Laboratory",
