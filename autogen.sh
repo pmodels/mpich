@@ -488,9 +488,9 @@ fn_f90() {
 
 fn_f08() {
     echo_n "Building Fortran 08 interface... "
-    # Top-level files
-    ( cd src/binding/fortran/use_mpi_f08 && chmod a+x ./buildiface && ./buildiface )
     # in configure: $PYTHON maint/gen_binding_f08.py [options]
+    # However, autoconf will check whether required file exists, touch to make it happy
+    touch src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90.in
     echo "done"
 }
 
