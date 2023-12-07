@@ -1624,3 +1624,98 @@ def function_has_real_POLY_parameters(func):
         if p['kind'] in G.real_poly_kinds:
             return True
     return False
+
+#------------------------------------------
+def dump_compile_constants_f90(f):
+    print("  --> [%s]" % f)
+    with open(f, "w") as Out:
+        for l in G.copyright_f90:
+            print(l, file=Out)
+        print("module mpi_f08_compile_constants", file=Out)
+        print("use,intrinsic :: iso_c_binding, only: c_int", file=Out)
+        print("use :: mpi_f08_types", file=Out)
+        print("use :: mpi_c_interface_types, only: c_Aint, c_Count, c_Offset", file=Out)
+        for a in ['c_int', 'c_Aint', 'c_Count', 'c_Offset']:
+            print("private :: %s" % a, file=Out)
+
+        print("integer, parameter :: %-32s = %s" % ('MPI_INTEGER_KIND', 'c_int'), file=Out)
+        print("integer, parameter :: %-32s = %s" % ('MPI_ADDRESS_KIND', 'c_Aint'), file=Out)
+        print("integer, parameter :: %-32s = %s" % ('MPI_OFFSET_KIND', 'c_Offset'), file=Out)
+        print("integer, parameter :: %-32s = %s" % ('MPI_COUNT_KIND', 'c_Count'), file=Out)
+
+        # -- all integer constants
+        for name in G.mpih_defines:
+            val = G.mpih_defines[name]
+            T = "integer"
+            if re.match(r'MPI_[TF]_', name):
+                continue
+            elif re.match(r'MPI_\w+_FN', name):
+                continue
+            elif re.match(r'MPI_\w+_FMT_(DEC|HEX)_SPEC', name):
+                continue
+            elif re.match(r'MPI_(UNWEIGHTED|WEIGHTS_EMPTY|BUFFER_AUTOMATIC|BOTTOM|IN_PLACE|STATUS_IGNORE|STATUSES_IGNORE|ERRCODES_IGNORE|ARGVS_NULL|ARGV_NULL)', name):
+                continue
+            elif RE.match(r'(MPI_\w+)\(', str(val)):
+                T = "type(%s)" % RE.m.group(1)
+            elif re.match(r'MPI_DISPLACEMENT_CURRENT', name):
+                T = 'integer(kind=MPI_OFFSET_KIND)'
+
+            if val == "DATATYPE":
+                if re.match(r'MPI_(AINT|COUNT|OFFSET)', name):
+                    print("type(MPI_Datatype), parameter   :: %-19s = MPI_Datatype(@F08_MPI_%s_DATATYPE@)" % (name, name[4:]), file=Out)
+                elif name.startswith("MPI_CXX_"):
+                    print("type(MPI_Datatype), parameter   :: %-19s = MPI_Datatype(@F08_MPIR_CXX_%s@)" % (name, name[8:]), file=Out)
+                else:
+                    print("type(MPI_Datatype), parameter   :: %-19s = MPI_Datatype(@F08_%s@)" % (name, name), file=Out)
+            else:
+                print("%s, parameter :: %-32s = %s" % (T, name, val), file=Out)
+        # -- Fortran08 capability
+        for a in ['MPI_SUBARRAYS_SUPPORTED', 'MPI_ASYNC_PROTECTS_NONBLOCKING']:
+            print("logical, parameter :: %-32s = %s" % (a, '.true.'), file=Out)
+
+        print("end module mpi_f08_compile_constants", file=Out)
+
+def load_mpi_h_in(f):
+    # load constants into G.mpih_defines
+    with open(f, "r") as In:
+        for line in In:
+            # trim trailing comments
+            line = re.sub(r'\s+\/\*.*', '', line)
+            if RE.match(r'#define\s+(MPI_\w+)\s+(.+)', line):
+                # direct macros
+                (name, val) = RE.m.group(1, 2)
+                if re.match(r'MPI_FILE_NULL', name):
+                    val = "MPI_File(0)"
+                elif re.match(r'MPI_(LONG_LONG|C_COMPLEX)', name):
+                    # datatype aliases
+                    val = "DATATYPE"
+                elif re.match(r'\(?\(MPI_Datatype\)\@(MPIR?_\w+)\@\)?', val):
+                    val = "DATATYPE"
+                elif RE.match(r'\(+(MPI_\w+)\)\(?0x([0-9a-fA-F]+)', val):
+                    # handle constants
+                    T = RE.m.group(1)
+                    val = int(RE.m.group(2), 16)
+                    val = "%s(%d) ! 0x%08x" % (T, val, val)
+
+                elif RE.match(r'0x([0-9a-fA-F]+)', val):
+                    # direct hex constants (KEYVAL constants)
+                    val = int(RE.m.group(1), 16)
+                    if RE.match(r'MPI_(TAG_UB|HOST|IO|WTIME_IS_GLOBAL|UNIVERSE_SIZE|LASTUSEDCODE|APPNUM|WIN_(BASE|SIZE|DISP_UNIT|CREATE_FLAVOR|MODEL))', name):
+                        # KEYVAL, Fortran value is C-value + 1
+                        val = val + 1
+                        val = str(val) + (" ! 0x%08x" % val)
+                elif RE.match(r'MPI_MAX_', name):
+                    # Fortran string buffer limit need be 1-less
+                    if re.match(r'@\w+@', val):
+                        val += "-1"
+                    else:
+                        val = int(val) - 1
+                elif RE.match(r'\(([-\d]+)\)', val):
+                    # take off the extra parentheses
+                    val = RE.m.group(1)
+
+                G.mpih_defines[name] = val
+            elif RE.match(r'\s+(MPI_\w+)\s*=\s*(\d+)', line):
+                # enum values
+                (name, val) = RE.m.group(1, 2)
+                G.mpih_defines[name] = val
