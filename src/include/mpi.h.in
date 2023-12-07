@@ -494,7 +494,11 @@ typedef enum MPIR_Win_model {
 #define MPI_BSEND_OVERHEAD @BSEND_OVERHEAD@
 
 /* Topology types */
-typedef enum MPIR_Topo_type { MPI_GRAPH=1, MPI_CART=2, MPI_DIST_GRAPH=3 } MPIR_Topo_type;
+typedef enum MPIR_Topo_type {
+    MPI_GRAPH = 1,
+    MPI_CART = 2,
+    MPI_DIST_GRAPH = 3
+} MPIR_Topo_type;
 
 extern int * const MPI_UNWEIGHTED MPICH_API_PUBLIC;
 extern int * const MPI_WEIGHTS_EMPTY MPICH_API_PUBLIC;
