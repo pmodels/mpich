@@ -465,7 +465,6 @@ fn_romio_glue() {
 fn_f77() {
     set_PYTHON
     echo_n "Building Fortran 77 interface... "
-    ( cd src/binding/fortran/mpif_h && chmod a+x ./buildiface && ./buildiface )
     $PYTHON maint/gen_binding_f77.py
     echo "done"
 }
