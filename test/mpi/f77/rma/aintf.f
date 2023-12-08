@@ -19,9 +19,6 @@ C See https://svn.mpi-forum.org/trac/mpi-forum-web/ticket/349
       integer :: win
       integer :: intsize
 
-      integer(kind=MPI_ADDRESS_KIND), external :: MPI_Aint_add !F77ONLY
-      integer(kind=MPI_ADDRESS_KIND), external :: MPI_Aint_diff !F77ONLY
-
       errs = 0
       call mtest_init(ierr);
       call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
