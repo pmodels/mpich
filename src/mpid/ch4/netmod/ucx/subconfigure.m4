@@ -47,7 +47,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
             else
                 ucx_opt_flags=""
             fi
-            PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --enable-embedded --with-java=no $ucx_opt_flags],[],[AC_MSG_ERROR(ucx configure failed)])
+            PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --enable-embedded --with-java=no --with-go=no $ucx_opt_flags],[],[AC_MSG_ERROR(ucx configure failed)])
             PAC_POP_ALL_FLAGS()
             ucxdir="modules/ucx"
         fi

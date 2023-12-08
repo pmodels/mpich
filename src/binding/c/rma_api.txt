@@ -51,6 +51,16 @@ MPI_Accumulate:
     .seealso: MPI_Raccumulate
     .impl: mpid
     .earlyreturn: pt2pt_proc_null
+{ -- error_check --
+    MPI_Datatype origin_elem, target_elem;
+    MPIR_Datatype_get_basic_type(origin_datatype, origin_elem);
+    MPIR_Datatype_get_basic_type(target_datatype, target_elem);
+    if ((origin_count > 0 && origin_elem != MPI_DATATYPE_NULL) ||
+        (target_count > 0 && target_elem != MPI_DATATYPE_NULL)) {
+        MPIR_ERR_CHKANDJUMP(origin_elem != target_elem, mpi_errno, MPI_ERR_TYPE,
+                            "**dtypemismatch");
+    }
+}
 
 MPI_Compare_and_swap:
     .desc: Perform one-sided atomic compare-and-swap.
