@@ -11,13 +11,6 @@ MPIBASEMOD       = @MPIBASEMODNAME@
 PMPIBASEMOD       = @PMPIBASEMODNAME@
 FC_COMPILE_MODS  = $(LTFCCOMPILE)
 
-# ensure that the buildiface script ends up in the release tarball
-EXTRA_DIST += src/binding/fortran/use_mpi/buildiface
-
-# additional perl files that are "require"d by use_mpi/buildiface and
-# mpif_h/buildiface, respectively
-EXTRA_DIST += src/binding/fortran/use_mpi/binding.sub src/binding/fortran/use_mpi/cf90tdefs
-
 # variables for custom "silent-rules" for F90 modules
 mod_verbose = $(mod_verbose_$(V))
 mod_verbose_ = $(mod_verbose_$(AM_DEFAULT_VERBOSITY))
