@@ -3979,14 +3979,6 @@ if test "$enable_f77" = yes ; then
     fi
 fi
 
-# ----------------------------------------------------------------------------
-
-dnl FIXME XXX DJG does this need to actually be conditional on something?
-dnl previously it was conditional on the successful execution of
-dnl "src/binding/fortran/use_mpi/configure" but that would only fail if FC couldn't be
-dnl determined or a bad VPATH build env was detected
-AC_DEFINE(HAVE_FC_TYPE_ROUTINES,1,[Define if Fortran 90 type routines available])
-
 # -----------------------------------------------------------------------------
 # Get the value of MPI_MAX_PROCESSOR_NAME
 if test -z "$MPID_MAX_PROCESSOR_NAME" ; then
@@ -4024,8 +4016,7 @@ AC_SUBST(MPIU_DLL_SPEC_DEF)
 
 AM_CONDITIONAL([BUILD_CXX_BINDING],[test "$enable_cxx" = "yes"])
 AM_CONDITIONAL([BUILD_F77_BINDING],[test "$enable_f77" = "yes"])
-dnl FIXME DJG this has been moved to the f90 bindings subconfigure.m4 for now
-dnl AM_CONDITIONAL([BUILD_FC_BINDING],[test "$enable_f90" = "yes"])
+AM_CONDITIONAL([BUILD_FC_BINDING],[test "$enable_f90" = "yes"])
 # MPI_SRCDIR gives the test/mpi configure the location of the source
 # files for an MPI implementation
 if test -n "$ac_abs_srcdir" ; then
@@ -4183,6 +4174,50 @@ if test "X$enable_shared" = "Xyes" ; then
     )
 fi
 
+if test "$enable_f90" = "yes"; then
+    # Determine the precision and range of the standard Fortran types.  This
+    # isn't quite enough for a full implementation of the Type_create_f90_xxx
+    # routines, but will handle most programs.  We can extend this by trying to
+    # find (through selected_real_kind and selected_int_kind) types with larger or
+    # smaller precisions and/or ranges than the basic types.
+    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of reals],
+                            [real aa],
+                            [precision(aa), ",", range(aa)],
+                            [FC_REAL_MODEL],
+                            [$CROSS_F90_REAL_MODEL])
+    #
+    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of double precision],
+                            [double precision aa],
+                            [precision(aa), ",", range(aa)],
+                            [FC_DOUBLE_MODEL],
+                            [$CROSS_F90_DOUBLE_MODEL])
+    #
+    PAC_FC_SIMPLE_NUMBER_MODEL([the range of integer],
+                            [integer aa],
+                            [range(aa)],
+                            [FC_INTEGER_MODEL],
+                            [$CROSS_F90_INTEGER_MODEL])
+
+    # Try to find the available integer kinds by using selected_int_kind
+    # This produces a table of range,kind
+    PAC_FC_AVAIL_INTEGER_MODELS([FC_ALL_INTEGER_MODELS],
+                                [$CROSS_F90_ALL_INTEGER_MODELS])
+    #
+    PAC_FC_INTEGER_MODEL_MAP([FC_INTEGER_MODEL_MAP],
+                            [$CROSS_F90_INTEGER_MODEL_MAP])
+else
+    FC_REAL_MODEL="6, 37"
+    FC_DOUBLE_MODEL="15, 307"
+    FC_INTEGER_MODEL="4"
+    FC_INTEGER_MODEL_MAP="{ 9, 4, 4 },"
+    FC_ALL_INTEGER_MODELS="9, 4,"
+fi
+AC_SUBST(FC_REAL_MODEL)
+AC_SUBST(FC_DOUBLE_MODEL)
+AC_SUBST(FC_INTEGER_MODEL)
+AC_SUBST(FC_ALL_INTEGER_MODELS)
+AC_SUBST(FC_INTEGER_MODEL_MAP)    
+
 if test "$enable_f08" = "yes"; then
     AS_CASE([$MPI_AINT],
         [short],       [F08_C_AINT="c_short"],
@@ -4297,6 +4332,7 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpifort.bash \
           src/env/parkill \
           src/include/mpi.h \
+          src/mpi/datatype/mpif90model.h \
           doc/installguide/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \

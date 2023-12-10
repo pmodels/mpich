@@ -26,7 +26,6 @@ def main():
         # FIXME: until romio interface is generated
         func_list.extend(get_mpiio_func_list())
     func_list.extend(get_f77_dummy_func_list())
-    func_list.extend(get_type_create_f90_func_list())
     func_list.append(G.FUNCS['mpi_f_sync_reg'])
 
     # preprocess
