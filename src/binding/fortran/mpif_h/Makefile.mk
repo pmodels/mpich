@@ -3,26 +3,33 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-mpi_f77_sources += src/binding/fortran/mpif_h/attr_proxy.c
+f77_cppflags = $(AM_CPPFLAGS) -I${main_top_srcdir}/src/binding/fortran/mpif_h
 
 if BUILD_F77_BINDING
 
-mpi_f77_sources += \
+mpifort_convenience_libs += lib/libf77_mpi.la
+noinst_LTLIBRARIES += lib/libf77_mpi.la
+
+lib_libf77_mpi_la_SOURCES = \
 	src/binding/fortran/mpif_h/fortran_binding.c \
+	src/binding/fortran/mpif_h/attr_proxy.c \
 	src/binding/fortran/mpif_h/fdebug.c \
 	src/binding/fortran/mpif_h/setbot.c \
 	src/binding/fortran/mpif_h/setbotf.f
 
-# FIXME does AM_CPPFLAGS need to be included elsewhere somehow in the
-# target-specific variable?
-AM_CPPFLAGS += -I${main_top_srcdir}/src/binding/fortran/mpif_h
+lib_libf77_mpi_la_CPPFLAGS = $(f77_cppflags)
 
 if BUILD_PROFILING_LIB
-noinst_LTLIBRARIES += libf77_pmpi.la
-libf77_pmpi_la_SOURCES = src/binding/fortran/mpif_h/fortran_binding.c
-libf77_pmpi_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI
+mpifort_convenience_libs += lib/libf77_pmpi.la
+noinst_LTLIBRARIES += lib/libf77_pmpi.la
 
-mpi_f77_convenience_libs += libf77_pmpi.la
+lib_libf77_pmpi_la_SOURCES = src/binding/fortran/mpif_h/fortran_binding.c
+
+# build "pmpi_xxx_" f77 public functions
+lib_libf77_pmpi_la_CPPFLAGS = $(f77_cppflags) -DF77_USE_PMPI
+
+# build "mpi_xxx_" f77 public functions
+lib_libf77_mpi_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
 endif BUILD_PROFILING_LIB
 
 noinst_HEADERS += \

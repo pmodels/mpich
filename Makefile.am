@@ -101,17 +101,6 @@ endif BUILD_F77_BINDING
 ## mpi_abi_sources: similar to mpi_sources, but used to compile
 ## lib@MPIABILIBNAME@.
 ##
-## mpi_f77_sources: these files are added to lib@MPIFCLIBNAME@. With
-## weak symbols support, these files provide both "mpi_" and "pmpi_"
-## public functions for the F77 bindings. When BUILD_PROFILING_LIB,
-## these files are compiled with -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
-## and only provides "mpi_" public F77 functions. Additional "pmpi_"
-## functions are supplied in a convenience library added via _LIBADD.
-##
-## mpi_fc_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these
-## files provide the "mpi_" public functions for the F90+ bindings and
-## end up in lib@MPIFCLIBNAME@.
-##
 ## mpi_cxx_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these
 ## files provide the "MPI" public functions for the C++ bindings and
 ## end up in lib@MPICXXLIBNAME@.
@@ -120,12 +109,10 @@ endif BUILD_F77_BINDING
 ## that are used by all bindings.
 mpi_sources =
 mpi_abi_sources =
-mpi_f77_sources =
-mpi_fc_sources =
 mpi_fc_modules =
 mpi_cxx_sources =
 mpi_core_sources =
-mpi_f77_convenience_libs =
+mpifort_convenience_libs =
 
 lib_LTLIBRARIES =
 
@@ -134,8 +121,6 @@ include maint/Makefile.mk
 include src/Makefile.mk
 
 if BUILD_PROFILING_LIB
-# dropping mpi_fc_sources and mpi_cxx_sources from libmpmpi since they
-# don't contribute any PMPI symbols.
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_core_sources)
 lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
@@ -213,17 +198,12 @@ endif BUILD_ABI_LIB
 
 if BUILD_F77_BINDING
 lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
-lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
-if BUILD_PROFILING_LIB
-lib_lib@MPIFCLIBNAME@_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
-endif BUILD_PROFILING_LIB
-lib_lib@MPIFCLIBNAME@_la_SOURCES = $(mpi_f77_sources)
+lib_lib@MPIFCLIBNAME@_la_SOURCES =
 if BUILD_FC_BINDING
 modinc_HEADERS = $(mpi_fc_modules)
-lib_lib@MPIFCLIBNAME@_la_SOURCES += $(mpi_fc_sources)
 endif BUILD_FC_BINDING
 lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
-lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(mpi_f77_convenience_libs)
+lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(mpifort_convenience_libs)
 endif BUILD_F77_BINDING
 
 if BUILD_CXX_BINDING
