@@ -7,7 +7,10 @@ if BUILD_F08_BINDING
 
 AM_FCFLAGS += @FCINCFLAG@src/binding/fortran/use_mpi_f08
 
-mpi_fc_sources += \
+mpifort_convenience_libs += lib/libf08_mpi.la
+noinst_LTLIBRARIES += lib/libf08_mpi.la
+
+lib_libf08_mpi_la_SOURCES = \
 	src/binding/fortran/use_mpi_f08/pmpi_f08.f90 \
 	src/binding/fortran/use_mpi_f08/mpi_f08.f90 \
 	src/binding/fortran/use_mpi_f08/mpi_f08_callbacks.f90 \
@@ -18,7 +21,18 @@ mpi_fc_sources += \
 	src/binding/fortran/use_mpi_f08/mpi_c_interface_cdesc.f90 \
 	src/binding/fortran/use_mpi_f08/mpi_c_interface_glue.f90 \
 	src/binding/fortran/use_mpi_f08/mpi_c_interface_nobuf.f90 \
-	src/binding/fortran/use_mpi_f08/mpi_c_interface_types.f90
+	src/binding/fortran/use_mpi_f08/mpi_c_interface_types.f90 \
+	src/binding/fortran/use_mpi_f08/wrappers_f/f08ts.f90 \
+	src/binding/fortran/use_mpi_f08/wrappers_f/pf08ts.f90 \
+	src/binding/fortran/use_mpi_f08/wrappers_c/f08_cdesc.c \
+	src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.c \
+	src/binding/fortran/use_mpi_f08/wrappers_c/comm_spawn_c.c \
+	src/binding/fortran/use_mpi_f08/wrappers_c/comm_spawn_multiple_c.c \
+	src/binding/fortran/use_mpi_f08/wrappers_c/utils.c
+
+lib_libf08_mpi_la_CPPFLAGS = $(AM_CPPFLAGS) -I${main_top_srcdir}/src/binding/fortran/use_mpi_f08/wrappers_c -Isrc/binding/fortran/use_mpi_f08/wrappers_c
+
+noinst_HEADERS += src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.h
 
 mpi_fc_modules += \
   src/binding/fortran/use_mpi_f08/$(PMPI_F08_NAME).$(MOD) \
@@ -48,10 +62,6 @@ f08_module_files = \
 
 BUILT_SOURCES += $(f08_module_files)
 CLEANFILES += $(f08_module_files)
-
-mpi_fc_sources += \
-	src/binding/fortran/use_mpi_f08/wrappers_f/f08ts.f90 \
-	src/binding/fortran/use_mpi_f08/wrappers_f/pf08ts.f90
 
 F08_COMPILE_MODS = $(LTFCCOMPILE)
 F08_COMPILE_MODS += $(FCMODOUTFLAG)src/binding/fortran/use_mpi_f08
@@ -319,7 +329,5 @@ CLEANFILES += src/binding/fortran/use_mpi_f08/$(MPI_C_INTERFACE_NAME).$(MOD) \
     src/binding/fortran/use_mpi_f08/mpi_c_interface.lo \
     src/binding/fortran/use_mpi_f08/mpi_c_interface.stamp \
     src/binding/fortran/use_mpi_f08/mpi_c_interface.tmp
-
-include $(top_srcdir)/src/binding/fortran/use_mpi_f08/wrappers_c/Makefile.mk
 
 endif BUILD_F08_BINDING

@@ -31,7 +31,10 @@ noinst_HEADERS +=                     \
 # the current directory
 FC_COMPILE_MODS += $(FCMODOUTFLAG)src/binding/fortran/use_mpi
 
-mpi_fc_sources += \
+mpifort_convenience_libs += lib/libf90_mpi.la
+noinst_LTLIBRARIES += lib/libf90_mpi.la
+
+lib_libf90_mpi_la_SOURCES = \
     src/binding/fortran/use_mpi/mpi.f90 \
     src/binding/fortran/use_mpi/mpi_constants.f90 \
     src/binding/fortran/use_mpi/mpi_sizeofs.f90 \
