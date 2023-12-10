@@ -310,14 +310,6 @@ def get_mpiio_func_list():
     ]
     return [G.FUNCS[a.lower()] for a in io_func_name_list]
 
-def get_type_create_f90_func_list():
-    type_func_name_list = [
-        "MPI_Type_create_f90_integer",
-        "MPI_Type_create_f90_real",
-        "MPI_Type_create_f90_complex",
-    ]
-    return [G.FUNCS[a.lower()] for a in type_func_name_list]
-
 def get_f77_dummy_func_list():
     dummy_func_name_list = [
         "MPI_DUP_FN",

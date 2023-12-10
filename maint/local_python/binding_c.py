@@ -731,7 +731,7 @@ def process_func_parameters(func):
                 pass
             else:
                 validation_list.append({'kind': "ARGNULL", 'name': name})
-        elif RE.match(r'(ERROR_CLASS|ERROR_CODE|FILE|ATTRIBUTE_VAL|EXTRA_STATE|LOGICAL)', kind):
+        elif RE.match(r'(ERROR_CLASS|ERROR_CODE|FILE|ATTRIBUTE_VAL|EXTRA_STATE|LOGICAL|MATH)', kind):
             # no validation for these kinds
             pass
         elif RE.match(r'F90_(COMM|ERRHANDLER|FILE|GROUP|INFO|MESSAGE|OP|REQUEST|SESSION|DATATYPE|WIN)', kind):
