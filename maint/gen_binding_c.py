@@ -26,8 +26,6 @@ def main():
     extras.append("MPI_DUP_FN")
     for a in ['f082c', 'c2f08', 'f082f', 'f2f08']:
         extras.append("MPI_Status_%s" % a)
-    for a in ['integer', 'real', 'complex']:
-        extras.append("MPI_Type_create_f90_%s" % a)
     # now generate the prototypes
     for a in extras:
         func = G.FUNCS[a.lower()]

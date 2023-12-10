@@ -30,24 +30,9 @@ if BUILD_FC_BINDING
 # in a VPATH build)
 AM_FCFLAGS += @FCINCFLAG@src/binding/fortran/use_mpi
 
-# C source that implements both the C and the Fortran bindings for the type
-# creation routines.  These go into libmpi.la and will be built a second time
-# for inclusion in libpmpi.la on platforms that do not support weak symbols.
-# If shared libraries are enabled then the compilation space doubles again.
-mpi_sources += \
-    src/binding/fortran/use_mpi/create_f90_int.c \
-    src/binding/fortran/use_mpi/create_f90_real.c \
-    src/binding/fortran/use_mpi/create_f90_complex.c
-
-# utility code that has no PMPI equivalent
-mpi_core_sources += src/binding/fortran/use_mpi/create_f90_util.c
 AM_CPPFLAGS += -Isrc/binding/fortran/use_mpi
 noinst_HEADERS +=                     \
-    src/binding/fortran/use_mpi/create_f90_util.h \
     src/binding/fortran/use_mpi/mpifnoext.h
-
-nodist_noinst_HEADERS += \
-    src/binding/fortran/use_mpi/mpif90model.h
 
 # cause any .$(MOD) files to be output in the f90 bindings directory instead of
 # the current directory
