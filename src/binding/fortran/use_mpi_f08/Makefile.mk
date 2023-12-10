@@ -3,9 +3,6 @@
 #     See COPYRIGHT in top-level directory
 #
 
-# ensure that the buildiface script ends up in the release tarball
-EXTRA_DIST += src/binding/fortran/use_mpi_f08/buildiface
-
 if BUILD_F08_BINDING
 
 AM_FCFLAGS += @FCINCFLAG@src/binding/fortran/use_mpi_f08

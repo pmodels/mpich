@@ -3,9 +3,6 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-# ensure that the buildiface script ends up in the release tarball
-EXTRA_DIST += src/binding/fortran/mpif_h/buildiface
-
 mpi_f77_sources += src/binding/fortran/mpif_h/attr_proxy.c
 
 if BUILD_F77_BINDING
