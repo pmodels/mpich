@@ -571,6 +571,7 @@ void MPIE_ProcessInit(void)
     pUniv.nLive = 0;
     pUniv.OnNone = 0;
     pUniv.fromSingleton = 0;
+    pUniv.memory_alloc_kinds = MPL_strdup("");
 }
 
 /*
