@@ -48,6 +48,6 @@ src_pm_util_libmpiexec_la_SOURCES = \
     src/pm/util/rm.c               \
     src/pm/util/pmiport.c          \
     src/pm/util/dbgiface.c         \
-    src/pm/util/simple_pmiutil2.c
+    src/pm/util/simple_pmiutil.c
 
 endif BUILD_PM_UTIL
