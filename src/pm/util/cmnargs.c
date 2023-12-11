@@ -207,6 +207,7 @@ int MPIE_Args(int argc, char *argv[], ProcessUniverse * mypUniv,
                  supports the ch3 channel.  In the future, we'll allow
                  implementations of the ADI to provide some hooks for their
                  specific mpiexec.
+    -memory-alloc-kinds=spec - request support for memory allocation kinds.
 */
         else if (strcmp(argv[i], "-usize") == 0) {
             mypUniv->size = getInt(i + 1, argc, argv);
@@ -233,6 +234,8 @@ int MPIE_Args(int argc, char *argv[], ProcessUniverse * mypUniv,
             char envstring[256];
             snprintf(envstring, sizeof(envstring), "MPICH_CH3CHANNEL=%s", channame);
             MPIE_Putenv(mypUniv->worlds, envstring);
+        } else if (strncmp(argv[i], "-memory-alloc-kinds=", 20) == 0) {
+            mypUniv->memory_alloc_kinds = MPL_strdup(argv[i] + 20);
         }
 /* End of the MPICH mpiexec common extensions */
 

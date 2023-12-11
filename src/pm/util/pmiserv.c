@@ -710,9 +710,14 @@ static int fPMI_Handle_get(PMIProcess * pentry)
     PMIU_getval("kvsname", kvsname, MAXKVSNAME);
     DBG_PRINTFCOND(pmidebug, ("Get: Finding kvs %s\n", kvsname));
 
+    PMIU_getval("key", key, PMIU_MAXLINE);
+    if (strcmp(key, "PMI_mpi_memory_alloc_kinds") == 0) {
+        MPL_strncpy(value, pUniv.memory_alloc_kinds, PMIU_MAXLINE);
+        goto fn_found;
+    }
+
     kvs = fPMIKVSFindSpace(kvsname);
     if (kvs) {
-        PMIU_getval("key", key, PMIU_MAXLINE);
         /* Here we could intercept internal keys, e.g.,
          * pmiPrivate keys. */
         rc = fPMIKVSFindKey(kvs, key, value, sizeof(value));
@@ -729,6 +734,8 @@ static int fPMI_Handle_get(PMIProcess * pentry)
         MPL_strncpy(value, "unknown", PMIU_MAXLINE);
         snprintf(message, PMIU_MAXLINE, "kvs_%s_not_found", kvsname);
     }
+
+  fn_found:
     snprintf(outbuf, PMIU_MAXLINE, "cmd=get_result rc=%d msg=%s value=%s\n", rc, message, value);
     PMIWriteLine(pentry->fd, outbuf);
     DBG_PRINTFCOND(pmidebug, ("%s", outbuf));
