@@ -36,6 +36,9 @@
 /* ??? */
 #include "simple_pmiutil.h"
 
+/* turning off a nonsensical warning on snprintf */
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+
 /* isascii is an extension, so define it if it isn't defined */
 #ifndef isascii
 #define isascii(c) (((c)&~0x7f)==0)

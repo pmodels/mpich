@@ -41,6 +41,9 @@
 #define isascii(c) (((c)&~0x7f)==0)
 #endif
 
+/* turning off a nonsensical warning on snprintf */
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+
 /* ----------------------------------------------------------------------- */
 /* Determine the hosts                                                     */
 /*                                                                         */
