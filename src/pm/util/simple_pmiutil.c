@@ -25,7 +25,7 @@
 #include <unistd.h>
 #endif
 #include <errno.h>
-#include "simple_pmiutil2.h"
+#include "simple_pmiutil.h"
 
 #include "mpl.h"
 

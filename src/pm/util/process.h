@@ -146,6 +146,7 @@ typedef struct ProcessUniverse {
     char *portKey;              /* Option key for confirming the
                                  * singleton init port */
     pid_t singletonPID;         /* PID of singleton inti process */
+    char *memory_alloc_kinds;   /* User requested memory alloc kinds */
 } ProcessUniverse;
 
 /* There is only one universe */

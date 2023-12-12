@@ -7,7 +7,7 @@
 #define SIMPLE_PMIUTIL_H_INCLUDED
 
 /* maximum sizes for arrays */
-#define PMIU_MAXLINE 1024
+#define PMIU_MAXLINE 4096
 #define PMIU_IDSIZE    32
 
 /* we don't have access to MPIR_Assert and friends here in the PMI code */
