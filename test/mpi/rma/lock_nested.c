@@ -3,24 +3,25 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include <string.h>
+
+#ifdef MULTI_TESTS
+#define run rma_lock_nested
+int run(const char *arg);
+#endif
 
 #define BUFSIZE 4
 
 /* This program tests nested lock. Process 0 locks the other processes
  * one by one, then unlock each of them.*/
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank = 0, nprocs = 0, dst = 0;
     int winbuf[BUFSIZE];
     MPI_Win win = MPI_WIN_NULL;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -42,6 +43,5 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Win_free(&win);
 
-    MTest_Finalize(0);
     return 0;
 }

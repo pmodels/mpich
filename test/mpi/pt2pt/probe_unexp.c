@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_probe_unexp
+int run(const char *arg);
+#endif
 
 #define MAX_BUF_SIZE_LG 22
 #define NUM_MSGS_PER_BUF_SIZE 5
@@ -18,7 +21,7 @@ char buf[1 << MAX_BUF_SIZE_LG];
  * message finally arrives (see req #375).
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Comm comm;
     int p_size;
@@ -26,8 +29,6 @@ int main(int argc, char **argv)
     int msg_size_lg;
     int errs = 0;
     int mpi_errno;
-
-    MTest_Init(&argc, &argv);
 
     while (MTestGetIntracommGeneral(&comm, 2, 1)) {
         if (comm == MPI_COMM_NULL) {
@@ -146,6 +147,5 @@ int main(int argc, char **argv)
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

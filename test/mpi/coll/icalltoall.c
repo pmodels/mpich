@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpicolltest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_icalltoall
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm alltoall test";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int *sendbuf = 0, *recvbuf = 0;
@@ -21,7 +23,13 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Datatype datatype;
 
-    MTest_Init(&argc, &argv);
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
 
     datatype = MPI_INT;
     while (MTestGetIntercomm(&comm, &leftGroup, 4)) {
@@ -42,7 +50,8 @@ int main(int argc, char *argv[])
                         sendbuf[idx++] = i + rrank;
                     }
                 }
-                err = MTest_Alltoall(sendbuf, count, datatype, NULL, 0, datatype, comm);
+                err =
+                    MTest_Alltoall(is_blocking, sendbuf, count, datatype, NULL, 0, datatype, comm);
                 if (err) {
                     errs++;
                     MTestPrintError(err);
@@ -54,7 +63,8 @@ int main(int argc, char *argv[])
                 MPI_Comm_size(comm, &size);
 
                 /* In the right group */
-                err = MTest_Alltoall(NULL, 0, datatype, recvbuf, count, datatype, comm);
+                err =
+                    MTest_Alltoall(is_blocking, NULL, 0, datatype, recvbuf, count, datatype, comm);
                 if (err) {
                     errs++;
                     MTestPrintError(err);
@@ -77,6 +87,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

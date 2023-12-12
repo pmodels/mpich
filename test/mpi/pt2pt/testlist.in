@@ -70,7 +70,7 @@ huge_ssend 2
 multi_psend_derived 2
 dtype_send 2
 recv_any 2
-irecv_any 2
+recv_any 2 arg=-nb
 large_tag 2
 precv_anysrc 2 timeLimit=60
 precv_anysrc 2 timeLimit=60 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true

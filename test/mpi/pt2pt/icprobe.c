@@ -3,25 +3,26 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_icprobe
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Simple test of intercommunicator send and receive";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int leftGroup, buf, rank, remote_size, i;
     MPI_Comm comm;
     MPI_Status status;
 
-    MTest_Init(&argc, &argv);
-
     int do_randomize;
-    MTestArgList *head = MTestArgListCreate(argc, argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
     do_randomize = MTestArgListGetInt_with_default(head, "randomize", 0);
     MTestArgListDestroy(head);
 
@@ -74,6 +75,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

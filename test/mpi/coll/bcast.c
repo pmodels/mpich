@@ -4,16 +4,20 @@
  */
 
 #include "mpitest.h"
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "dtpools.h"
 #include "mtest_dtp.h"
 #include <assert.h>
 
+#ifdef MULTI_TESTS
+#define run coll_bcast
+int run(const char *arg);
+#endif
+
 /*
 static char MTEST_Descrip[] = "Test of broadcast with various roots and datatypes";
 */
+
+static int comm_world_only = 0;
 
 static int bcast_dtp(int seed, int testsize, int count, const char *basic_type,
                      mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
@@ -55,12 +59,10 @@ static int bcast_dtp(int seed, int testsize, int count, const char *basic_type,
      * Use subsets of these for tests that do not involve combinations
      * of communicators, datatypes, and counts of datatypes */
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
-#if defined BCAST_COMM_WORLD_ONLY
-        if (comm != MPI_COMM_WORLD) {
+        if (comm_world_only && comm != MPI_COMM_WORLD) {
             MTestFreeComm(&comm);
             continue;
         }
-#endif /* BCAST_COMM_WORLD_ONLY */
 
         if (comm == MPI_COMM_NULL)
             continue;
@@ -104,21 +106,22 @@ static int bcast_dtp(int seed, int testsize, int count, const char *basic_type,
 }
 
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    comm_world_only = MTestArgListGetInt_with_default(head, "comm_world_only", 0);
+    MTestArgListDestroy(head);
 
     struct dtp_args dtp_args;
-    dtp_args_init(&dtp_args, MTEST_DTP_COLL, argc, argv);
+    dtp_args_init_arg(&dtp_args, MTEST_DTP_COLL, arg);
     while (dtp_args_get_next(&dtp_args)) {
         errs += bcast_dtp(dtp_args.seed, dtp_args.testsize,
                           dtp_args.count, dtp_args.basic_type,
                           dtp_args.u.coll.oddmem, dtp_args.u.coll.evenmem);
     }
     dtp_args_finalize(&dtp_args);
-    MTest_Finalize(errs);
 
-    return MTestReturnValue(errs);
+    return errs;
 }

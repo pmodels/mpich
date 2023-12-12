@@ -8,15 +8,18 @@
  * The purpose of this test is to check if the ordering of ACCs
  * is guaranteed. */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdint.h>
 #include "mpitest.h"
+#include <stdint.h>
+
+#ifdef MULTI_TESTS
+#define run rma_large_small_acc
+int run(const char *arg);
+#endif
 
 #define LOOP 5
 #define DATA_COUNT 8192
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nprocs;
     MPI_Win win;
@@ -24,7 +27,6 @@ int main(int argc, char *argv[])
     uint64_t small_orig_buf_1 = 2, small_orig_buf_2[2] = { 3, 3 };
     int i, j, errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -77,7 +79,5 @@ int main(int argc, char *argv[])
         MPI_Win_free(&win);
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

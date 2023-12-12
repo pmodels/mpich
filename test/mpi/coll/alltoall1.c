@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
-#include <stdlib.h>
 #include "mpicolltest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_alltoall1
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size;
@@ -24,7 +26,13 @@ int main(int argc, char *argv[])
     int i, j;
     MPI_Datatype sendtype, recvtype;
 
-    MTest_Init(&argc, &argv);
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -64,7 +72,8 @@ int main(int argc, char *argv[])
                 }
             }
 
-            MTest_Alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+            MTest_Alltoall(is_blocking, sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                           comm);
 
             p = recvbuf;
             for (j = 0; j < size; j++) {
@@ -116,6 +125,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

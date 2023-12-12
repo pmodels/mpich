@@ -3,18 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include "mpi.h"
 #include "mpitest.h"
+#include <assert.h>
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run pt2pt_issendselfcancel
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     MPI_Request req;
     MPI_Status status;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Issend(NULL, 0, MPI_BYTE, 0, 123, MPI_COMM_SELF, &req);
 
@@ -30,8 +30,6 @@ int main(int argc, char **argv)
     MPI_Irecv(NULL, 0, MPI_BYTE, 0, 123, MPI_COMM_SELF, &req);
     MPI_Cancel(&req);
     MPI_Wait(&req, &status);
-
-    MTest_Finalize(0);
 
     return 0;
 }

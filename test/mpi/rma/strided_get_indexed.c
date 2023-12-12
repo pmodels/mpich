@@ -14,19 +14,21 @@
  * specified using an MPI indexed type.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
-#include <mpi.h>
 #include "mpitest.h"
 #include "squelch.h"
+
+#ifdef MULTI_TESTS
+#define run rma_strided_get_indexed
+int run(const char *arg);
+#endif
 
 #define XDIM 8
 #define YDIM 1024
 #define SUB_XDIM 8
 #define SUB_YDIM 256
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, j, rank, nranks, peer, bufsize, errors;
     double *win_buf, *loc_buf;
@@ -35,8 +37,6 @@ int main(int argc, char **argv)
     int idx_rem[SUB_YDIM];
     int blk_len[SUB_YDIM];
     MPI_Datatype loc_type, rem_type;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nranks);
@@ -127,6 +127,5 @@ int main(int argc, char **argv)
     MPI_Free_mem(win_buf);
     MPI_Free_mem(loc_buf);
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

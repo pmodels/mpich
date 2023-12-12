@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_longuser
+int run(const char *arg);
+#endif
 
 /*
  * User-defined operation on a long value (tests proper handling of
@@ -21,13 +23,12 @@ static void add(double *invec, double *inoutvec, int *len, MPI_Datatype * dtype)
     }
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     MPI_Op op;
     int i, rank, size, bufsize, errcnt = 0;
     double *inbuf, *outbuf, value;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Op_create((MPI_User_function *) add, 1, &op);
@@ -63,6 +64,5 @@ int main(int argc, char **argv)
     }
 
     MPI_Op_free(&op);
-    MTest_Finalize(errcnt);
-    return MTestReturnValue(errcnt);
+    return errcnt;
 }

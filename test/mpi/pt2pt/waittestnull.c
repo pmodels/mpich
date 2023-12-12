@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_waittestnull
+int run(const char *arg);
+#endif
 
 /*
  * This program checks that the various MPI_Test and MPI_Wait routines
@@ -13,15 +16,13 @@
  * lists of requests.
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Status status, *status_array = 0;
     int count = 0, flag, idx, rc, errlen, *indices = 0, outcnt;
     MPI_Request *reqs = 0;
     char errmsg[MPI_MAX_ERROR_STRING];
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
@@ -73,6 +74,7 @@ int main(int argc, char **argv)
         errs++;
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+
+    return errs;
 }

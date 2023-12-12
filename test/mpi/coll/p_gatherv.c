@@ -3,13 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_p_gatherv
+int run(const char *arg);
+#endif
 
 #define MAX_PROCESSES 10
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, size, i, j, iter;
     int table[MAX_PROCESSES][MAX_PROCESSES];
@@ -21,7 +24,6 @@ int main(int argc, char **argv)
     MPI_Request *reqs;
     MPI_Info info;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -109,6 +111,5 @@ int main(int argc, char **argv)
     free(reqs);
     MPI_Info_free(&info);
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

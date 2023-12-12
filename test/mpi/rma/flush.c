@@ -3,20 +3,22 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_flush
+int run(const char *arg);
+#endif
 
 #define ITER 100
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nproc, i;
     int errors = 0, all_errors = 0;
     int *buf;
     MPI_Win window;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
@@ -80,7 +82,5 @@ int main(int argc, char *argv[])
     if (buf)
         MPI_Free_mem(buf);
 
-    MTest_Finalize(errors);
-
-    return MTestReturnValue(all_errors);
+    return all_errors;
 }

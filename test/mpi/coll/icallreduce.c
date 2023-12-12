@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpicolltest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_icallreduce
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm allreduce test";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int *sendbuf = 0, *recvbuf = 0;
@@ -21,7 +23,13 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Datatype datatype;
 
-    MTest_Init(&argc, &argv);
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
 
     datatype = MPI_INT;
     /* Get an intercommunicator */
@@ -48,7 +56,7 @@ int main(int argc, char *argv[])
             }
             for (i = 0; i < count; i++)
                 recvbuf[i] = 0;
-            err = MTest_Allreduce(sendbuf, recvbuf, count, datatype, MPI_SUM, comm);
+            err = MTest_Allreduce(is_blocking, sendbuf, recvbuf, count, datatype, MPI_SUM, comm);
             if (err) {
                 errs++;
                 MTestPrintError(err);
@@ -80,6 +88,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

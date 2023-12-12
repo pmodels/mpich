@@ -3,12 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run pt2pt_isendirecv
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int errs = 0;
     int elems = 20;
@@ -16,8 +18,6 @@ int main(int argc, char *argv[])
     float *in_buf, *out_buf;
     MPI_Comm comm;
     MPI_Request *reqs;
-
-    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
     MPI_Comm_rank(comm, &rank);
@@ -41,6 +41,6 @@ int main(int argc, char *argv[])
     free(reqs);
     free(in_buf);
     free(out_buf);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

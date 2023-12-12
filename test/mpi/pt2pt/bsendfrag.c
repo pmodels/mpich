@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_bsendfrag
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test bsend message handling where \
@@ -21,16 +23,14 @@ different messages are received in different orders";
  */
 
 #define MSG_SIZE 17000
-int b1[MSG_SIZE], b2[MSG_SIZE], b3[MSG_SIZE], b4[MSG_SIZE];
+static int b1[MSG_SIZE], b2[MSG_SIZE], b3[MSG_SIZE], b4[MSG_SIZE];
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int src, dest, size, rank, i;
     MPI_Comm comm;
     MPI_Status status;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
         MPI_Barrier(comm);
     }
 
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

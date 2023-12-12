@@ -20,12 +20,12 @@ attr/fkeyvaltype::1::1:1024::0
 impls/mpich/misc/type_iov::1 512 17 1018::1:1024:1024:0
 coll/bcast::1 512::4:16:1024:0
 coll/bcast::262144:timeLimit=420 mem=1.2:4:16::0
-coll/bcast_comm_world_only::1 512::10:16:1024:0
-coll/bcast_comm_world_only::262144:timeLimit=360 mem=1.9:10:16::0
+coll/bcast::1 512:arg=-comm_world_only:10:16:1024:0
+coll/bcast::262144:arg=-comm_world_only timeLimit=360 mem=1.9:10:16::0
 cxx/attr/fkeyvaltypex::1::1:1024::0
 cxx/datatype/packsizex::1::1:1024::0
 pt2pt/pingping::1 512 262144 17 1018 65530::2:8:32:0
-pt2pt/pingping_barrier::1::2:8:32:0
+pt2pt/pingping::1:arg=-barrier:2:8:32:0
 pt2pt/sendrecv1::1 512 17 1018 65530::2:32:1024:0
 pt2pt/sendrecv1::262144::2:20::0
 pt2pt/sendself::1 512 262144 17 1018 65530::1:32:1024:0
@@ -36,25 +36,25 @@ rma/accpscw1::1 512 17 1018::4:16:1024:0
 rma/accpscw1::65530 262144:mem=1.7:4:16::0
 rma/epochtest::1 512 17 1018::4:16:1024:0
 rma/epochtest::65530 262144:timeLimit=300 mem=5:4:16::0
-rma/getfence1::1 512 17 1018::2:16:1024:0
-rma/getfence1::65530 262144:mem=2:2:16::0
-rma/getfence1::16000000:timeLimit=1800 mem=3:2:4::0
-rma/lock_contention_dt::1 512 17 1018::4:16:1024:1
-rma/lock_contention_dt::65530 262144:timeLimit=600 mem=2.1:4:16::1
-rma/lock_dt::1 512 262144 17 1018 65530::2:16:1024:1
-rma/lock_dt_flush::1 512 262144 17 1018 65530::2:16:1024:1
-rma/lock_dt_flushlocal::1 512 262144 17 1018 65530::2:16:1024:1
-rma/lockall_dt::1 512 17 1018::4:16:1024:1
-rma/lockall_dt::65530 262144:timeLimit=600 mem=1.1:4:16::1
-rma/lockall_dt_flush::1 512 262144 17 1018::4:16:1024:1
-rma/lockall_dt_flush::65530:timeLimit=600:4:16::1
-rma/lockall_dt_flushall::1 512 262144 17 1018::4:16:1024:1
-rma/lockall_dt_flushall::65530:timeLimit=600:4:16::1
-rma/lockall_dt_flushlocal::1 512 17 1018::4:16:1024:1
-rma/lockall_dt_flushlocal::65530 262144:timeLimit=600 mem=5:4:16::1
-rma/lockall_dt_flushlocalall::1 512 17 1018::4:16:1024:1
-rma/lockall_dt_flushlocalall::65530 262144:timeLimit=600 mem=3:4:16::1
-rma/putfence1::1 512 262144 17 1018 65530::2:16:1024:0
-rma/putfence1::16000000:timeLimit=1800 mem=2:2:4::0
+rma/fence::1 512 17 1018:arg=-get:2:16:1024:0
+rma/fence::65530 262144:arg=-get mem=2:2:16::0
+rma/fence::16000000:arg=-get timeLimit=1800 mem=3:2:4::0
+rma/lock_x_dt::1 512 17 1018:arg=-contention:4:16:1024:1
+rma/lock_x_dt::65530 262144:arg=-contention timeLimit=600 mem=2.1:4:16::1
+rma/lock_x_dt::1 512 262144 17 1018 65530::2:16:1024:1
+rma/lock_x_dt::1 512 262144 17 1018 65530:arg=-flush:2:16:1024:1
+rma/lock_x_dt::1 512 262144 17 1018 65530:arg=-flushlocal:2:16:1024:1
+rma/lock_x_dt::1 512 17 1018:arg=-lockall:4:16:1024:1
+rma/lock_x_dt::65530 262144:arg=-lockall timeLimit=600 mem=1.1:4:16::1
+rma/lock_x_dt::1 512 262144 17 1018:arg=-lockall arg=-flush:4:16:1024:1
+rma/lock_x_dt::65530:arg=-lockall arg=-flush timeLimit=600:4:16::1
+rma/lock_x_dt::1 512 262144 17 1018:arg=-lockall arg=-flushall:4:16:1024:1
+rma/lock_x_dt::65530:arg=-lockall arg=-flushall timeLimit=600:4:16::1
+rma/lock_x_dt::1 512 17 1018:arg=-lockall arg=-flushlocal:4:16:1024:1
+rma/lock_x_dt::65530 262144:arg=-lockall arg=-flushlocal timeLimit=600 mem=5:4:16::1
+rma/lock_x_dt::1 512 17 1018:arg=-lockall arg=-flushlocalall:4:16:1024:1
+rma/lock_x_dt::65530 262144:arg=-lockall arg=-flushlocalall timeLimit=600 mem=3:4:16::1
+rma/fence::1 512 262144 17 1018 65530:arg=-put:2:16:1024:0
+rma/fence::16000000:arg=-put timeLimit=1800 mem=2:2:4::0
 rma/putpscw1::1 512 17 1018::4:16:1024:0
 rma/putpscw1::65530 262144:mem=4:4:16::0

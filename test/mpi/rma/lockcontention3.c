@@ -3,12 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "mpitest.h"
 #include <assert.h>
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run rma_lockcontention3
+int run(const char *arg);
+#endif
 
 #define LAST_TEST 14
 #define RMA_SIZE  2048
@@ -46,21 +48,21 @@
  */
 
 /* Define a datatype to be used with */
-int stride = 11;
-int veccount = 7;
-MPI_Datatype vectype;
+static int stride = 11;
+static int veccount = 7;
+static MPI_Datatype vectype;
 /* Define long RMA ops size */
-int longcount = 512;
-int medcount = 127;
-int mednum = 4;
+static int longcount = 512;
+static int medcount = 127;
+static int mednum = 4;
 
-void RMATest(int i, MPI_Win win, int primary, int *srcbuf, int srcbufsize, int *getbuf,
-             int getbufsize);
-int RMACheck(int i, int *buf, MPI_Aint bufsize);
-int RMACheckGet(int i, MPI_Win win, int *getbuf, MPI_Aint getsize);
-void RMATestInit(int i, int *buf, MPI_Aint bufsize);
+static void RMATest(int i, MPI_Win win, int primary, int *srcbuf, int srcbufsize, int *getbuf,
+                    int getbufsize);
+static int RMACheck(int i, int *buf, MPI_Aint bufsize);
+static int RMACheckGet(int i, MPI_Win win, int *getbuf, MPI_Aint getsize);
+static void RMATestInit(int i, int *buf, MPI_Aint bufsize);
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Win win;
@@ -69,8 +71,6 @@ int main(int argc, char *argv[])
     int primary, partner, next, wrank, wsize, i;
     int ntest = LAST_TEST;
     int *srcbuf;
-
-    MTest_Init(&argc, &argv);
 
     /* Determine who is responsible for each part of the test */
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
@@ -91,18 +91,9 @@ int main(int argc, char *argv[])
             next++;
     }
 
-    /* Determine the last test to run (by default, run them all) */
-    for (i = 1; i < argc; i++) {
-        if (strcmp("-ntest", argv[i]) == 0) {
-            i++;
-            if (i < argc) {
-                ntest = atoi(argv[i]);
-            } else {
-                fprintf(stderr, "Missing value for -ntest\n");
-                MPI_Abort(MPI_COMM_WORLD, 1);
-            }
-        }
-    }
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    ntest = MTestArgListGetInt_with_default(head, "ntest", LAST_TEST);
+    MTestArgListDestroy(head);
 
     MPI_Type_vector(veccount, 1, stride, MPI_INT, &vectype);
     MPI_Type_commit(&vectype);
@@ -163,16 +154,15 @@ int main(int argc, char *argv[])
     MPI_Win_free(&win);
     MPI_Type_free(&vectype);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 /* Perform the tests.
  *
  * The srcbuf must be passed in because the buffer must remain valid
  * until the subsequent unlock call. */
-void RMATest(int i, MPI_Win win, int primary, int *srcbuf, int srcbufsize, int *getbuf,
-             int getbufsize)
+static void RMATest(int i, MPI_Win win, int primary, int *srcbuf, int srcbufsize, int *getbuf,
+                    int getbufsize)
 {
     int j, k;
     int *source = srcbuf;
@@ -285,7 +275,7 @@ void RMATest(int i, MPI_Win win, int primary, int *srcbuf, int srcbufsize, int *
     }
 }
 
-int RMACheck(int i, int *buf, MPI_Aint bufsize)
+static int RMACheck(int i, int *buf, MPI_Aint bufsize)
 {
     int j, k;
     int errs = 0;
@@ -386,7 +376,7 @@ int RMACheck(int i, int *buf, MPI_Aint bufsize)
     return errs;
 }
 
-int RMACheckGet(int i, MPI_Win win, int *getbuf, MPI_Aint getsize)
+static int RMACheckGet(int i, MPI_Win win, int *getbuf, MPI_Aint getsize)
 {
     int errs = 0;
     int j, k;
@@ -459,7 +449,7 @@ int RMACheckGet(int i, MPI_Win win, int *getbuf, MPI_Aint getsize)
 }
 
 
-void RMATestInit(int i, int *buf, MPI_Aint bufsize)
+static void RMATestInit(int i, int *buf, MPI_Aint bufsize)
 {
     int j;
     for (j = 0; j < bufsize; j++) {

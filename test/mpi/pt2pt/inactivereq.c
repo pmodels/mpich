@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_inactivereq
+int run(const char *arg);
+#endif
 
 /* This test program checks that the point-to-point completion routines
    can be applied to an inactive persistent request, as required by the
@@ -97,7 +99,7 @@ static void test_proc_null(void)
     MPI_Request_free(&r);
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Request r;
     MPI_Status s;
@@ -108,8 +110,6 @@ int main(int argc, char *argv[])
     int tag = 27;
     int dest = 0;
     int rank, size;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -200,6 +200,5 @@ int main(int argc, char *argv[])
     test_proc_null();
 
   fn_exit:
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

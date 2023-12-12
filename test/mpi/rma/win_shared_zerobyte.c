@@ -3,15 +3,17 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include <assert.h>
 
-const int verbose = 0;
+#ifdef MULTI_TESTS
+#define run rma_win_shared_zerobyte
+int run(const char *arg);
+#endif
 
-int main(int argc, char **argv)
+static const int verbose = 0;
+
+int run(const char *arg)
 {
     int i, rank, nproc;
     int shm_rank, shm_nproc, last_shm_rank_w;
@@ -23,7 +25,6 @@ int main(int argc, char **argv)
     MPI_Comm shm_comm;
     int ELEM_PER_PROC = 0;
 
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -108,10 +109,9 @@ int main(int argc, char **argv)
 
     MPI_Comm_free(&shm_comm);
 
-    MTest_Finalize(errors);
 
     if (bases)
         free(bases);
 
-    return MTestReturnValue(errors);
+    return errors;
 }

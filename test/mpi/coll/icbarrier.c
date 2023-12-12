@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpicolltest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_icbarrier
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm barrier test";
@@ -17,13 +19,19 @@ static char MTEST_Descrip[] = "Simple intercomm barrier test";
    It does not check for the semantics of a intercomm barrier (all processes
    in the local group can exit when (but not before) all processes in the
    remote group enter the barrier */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int leftGroup;
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
 
     /* Get an intercommunicator */
     while (MTestGetIntercomm(&comm, &leftGroup, 4)) {
@@ -34,14 +42,14 @@ int main(int argc, char *argv[])
          * change the error handler to errors return */
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
         if (leftGroup) {
-            err = MTest_Barrier(comm);
+            err = MTest_Barrier(is_blocking, comm);
             if (err) {
                 errs++;
                 MTestPrintError(err);
             }
         } else {
             /* In the right group */
-            err = MTest_Barrier(comm);
+            err = MTest_Barrier(is_blocking, comm);
             if (err) {
                 errs++;
                 MTestPrintError(err);
@@ -50,6 +58,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

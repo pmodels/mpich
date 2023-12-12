@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include "mpicolltest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_icalltoallw
+int run(const char *arg);
+#endif
 
 /*
   This program tests MPI_Alltoallw by having processor i send different
@@ -23,7 +25,7 @@
   that use point-to-point operations
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
 
     MPI_Comm comm;
@@ -34,7 +36,14 @@ int main(int argc, char **argv)
     MPI_Datatype *sendtypes, *recvtypes;
     int leftGroup;
 
-    MTest_Init(&argc, &argv);
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     errs = 0;
 
     while (MTestGetIntercomm(&comm, &leftGroup, 4)) {
@@ -79,7 +88,7 @@ int main(int argc, char **argv)
             rdispls[i] = i * rank * sizeof(int);
             recvtypes[i] = MPI_INT;
         }
-        MTest_Alltoallw(sbuf, sendcounts, sdispls, sendtypes,
+        MTest_Alltoallw(is_blocking, sbuf, sendcounts, sdispls, sendtypes,
                         rbuf, recvcounts, rdispls, recvtypes, comm);
 
         /* Check rbuf */
@@ -105,6 +114,5 @@ int main(int argc, char **argv)
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

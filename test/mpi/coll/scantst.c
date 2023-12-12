@@ -3,14 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
 
-void addem(int *, int *, int *, MPI_Datatype *);
-void assoc(int *, int *, int *, MPI_Datatype *);
+#ifdef MULTI_TESTS
+#define run coll_scantst
+int run(const char *arg);
+#endif
 
-void addem(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
+static void addem(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
 {
     int i;
     for (i = 0; i < *len; i++)
@@ -26,7 +26,7 @@ void addem(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
     Note that the computation is in process rank (in the communicator)
     order, independent of the root.
  */
-void assoc(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
+static void assoc(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
 {
     int i;
     for (i = 0; i < *len; i++) {
@@ -40,7 +40,7 @@ void assoc(int *invec, int *inoutvec, int *len, MPI_Datatype * dtype)
     }
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, size, i;
     int data;
@@ -50,7 +50,6 @@ int main(int argc, char **argv)
     MPI_Op op_assoc, op_addem;
     MPI_Comm comm = MPI_COMM_WORLD;
 
-    MTest_Init(&argc, &argv);
     MPI_Op_create((MPI_User_function *) assoc, 0, &op_assoc);
     MPI_Op_create((MPI_User_function *) addem, 1, &op_addem);
 
@@ -100,8 +99,6 @@ int main(int argc, char **argv)
 
     MPI_Op_free(&op_assoc);
     MPI_Op_free(&op_addem);
-
-    MTest_Finalize(errors);
 
     return errors;
 }

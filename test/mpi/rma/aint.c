@@ -9,11 +9,16 @@
  * See https://svn.mpi-forum.org/trac/mpi-forum-web/ticket/349
  */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run rma_aint
+int run(const char *arg);
+#endif
+
+static int do_collattach = 0;
+
+int run(const char *arg)
 {
     int rank, nproc;
     int errs = 0;
@@ -24,7 +29,9 @@ int main(int argc, char **argv)
     MPI_Aint disp, offset = 0;  /* suppress warnings */
     MPI_Win win;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    do_collattach = MTestArgListGetInt_with_default(head, "collattach", 0);
+    MTestArgListDestroy(head);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -48,17 +55,17 @@ int main(int argc, char **argv)
     MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, bases, 1, MPI_AINT, MPI_COMM_WORLD);
 
     MPI_Info info = MPI_INFO_NULL;
-#ifdef USE_INFO_COLL_ATTACH
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "coll_attach", "true");
-#endif
+    if (do_collattach) {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "coll_attach", "true");
+    }
 
     MPI_Win_create_dynamic(info, MPI_COMM_WORLD, &win);
     MPI_Win_attach(win, array, sizeof(int) * 1024);
 
-#ifdef USE_INFO_COLL_ATTACH
-    MPI_Info_free(&info);
-#endif
+    if (info != MPI_INFO_NULL) {
+        MPI_Info_free(&info);
+    }
 
     /* Do MPI_Aint addressing arithmetic */
     if (rank == 0) {
@@ -82,6 +89,5 @@ int main(int argc, char **argv)
     MPI_Win_detach(win, array);
     MPI_Win_free(&win);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,16 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_bsendpending
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test the handling of BSend operations when a detach occurs before the bsend data has been sent.";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size, source, dest;
@@ -22,8 +24,6 @@ int main(int argc, char *argv[])
     unsigned char *msg1, *msg2, *msg3;
     MPI_Comm comm;
     MPI_Status status1, status2, status3;
-
-    MTest_Init(&argc, &argv);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -134,6 +134,5 @@ int main(int argc, char *argv[])
     }
     free(msg1);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

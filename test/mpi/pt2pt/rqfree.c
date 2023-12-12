@@ -3,16 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run pt2pt_rqfreeb
+int run(const char *arg);
+#endif
+
 #define LARGE 10000
-int large_send_buf[LARGE];
+static int large_send_buf[LARGE];
 
 /* Test Ibsend and Request_free */
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Comm comm = MPI_COMM_WORLD;
     int dest = 1, src = 0, tag = 1;
@@ -22,7 +24,6 @@ int main(int argc, char *argv[])
     int errs = 0, rank, size;
     int bufsize, bsize;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (src >= size || dest >= size) {
@@ -122,9 +123,5 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
-
-    MTest_Finalize(errs);
-
-
-    return MTestReturnValue(errs);
+    return errs;
 }

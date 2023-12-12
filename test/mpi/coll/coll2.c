@@ -3,21 +3,31 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
 #include "mpicolltest.h"
 
+#ifdef MULTI_TESTS
+#define run coll_coll2
+int run(const char *arg);
+#endif
+
 #define MAX_PROCESSES 10
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, size, i, j;
     int table[MAX_PROCESSES][MAX_PROCESSES];
     int errors = 0;
     int participants;
 
-    MTest_Init(&argc, &argv);
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -49,7 +59,7 @@ int main(int argc, char **argv)
         /* inefficient allgather */
         for (i = 0; i < participants; i++) {
             void *sendbuf = (i == rank ? MPI_IN_PLACE : &table[begin_row][0]);
-            MTest_Gather(sendbuf, send_count, MPI_INT,
+            MTest_Gather(is_blocking, sendbuf, send_count, MPI_INT,
                          &table[0][0], recv_count, MPI_INT, i, MPI_COMM_WORLD);
         }
 
@@ -62,6 +72,5 @@ int main(int argc, char **argv)
         }
     }
 
-    MTest_Finalize(errors);
-    return MTestReturnValue(errors);
+    return errors;
 }

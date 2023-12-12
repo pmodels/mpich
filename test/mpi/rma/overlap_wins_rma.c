@@ -3,11 +3,14 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include <string.h>
+#include "rma_test_op.h"
+
+#ifdef MULTI_TESTS
+#define run rma_overlap_wins_rma
+int run(const char *arg);
+#endif
 
 /* This test checks the remote completion of flush with RMA write-like operations
  * (PUT, ACC, GET_ACC, FOP, CAS) concurrently issued from different origin processes
@@ -25,26 +28,25 @@
 #define BUF_CNT 2
 
 #if defined(TEST_CAS)
-#define MPI_DATATYPE MPI_INT
 #define DATATYPE int
-#define DATATYPE_FORMAT "%d"
 #else
-#define MPI_DATATYPE MPI_DOUBLE
 #define DATATYPE double
-#define DATATYPE_FORMAT "%.1f"
 #endif
 
-DATATYPE local_buf[BUF_CNT], result_buf[BUF_CNT], compare_buf[BUF_CNT];
-DATATYPE exp_target_val = 0.0;
+static MPI_Datatype mpi_type = MPI_DATATYPE_NULL;
+static int type_size = 0;
 
-const int verbose = 0;
+static void *local_buf, *result_buf, *compare_buf;
+static int exp_target_val = 0;
 
-int rank = -1, nprocs = 0;
-int norigins, target;
-MPI_Win *wins;
-int win_size = 0, win_cnt = 0;
+static const int verbose = 0;
 
-DATATYPE *winbuf = NULL, *my_base = NULL;
+static int rank = -1, nprocs = 0;
+static int norigins, target;
+static MPI_Win *wins;
+static int win_size = 0, win_cnt = 0;
+
+static void *winbuf = NULL, *my_base = NULL;
 
 #define verbose_print(str,...) {                        \
             if (verbose) {                               \
@@ -57,79 +59,67 @@ DATATYPE *winbuf = NULL, *my_base = NULL;
             fflush(stderr);                         \
         }
 
-/* Define operation name for error message */
-#ifdef TEST_PUT
-const char *rma_name = "Put";
-#elif defined(TEST_ACC)
-const char *rma_name = "Accumulate";
-#elif defined(TEST_GACC)
-const char *rma_name = "Get_accumulate";
-#elif defined(TEST_FOP)
-const char *rma_name = "Fetch_and_op";
-#elif defined(TEST_CAS)
-const char *rma_name = "Compare_and_swap";
-#else
-const char *rma_name = "None";
-#endif
-
 /* Issue functions for different RMA operations */
-#ifdef TEST_PUT
-static inline void issue_rma_op(DATATYPE * origin_addr, DATATYPE * result_addr /* NULL */ ,
-                                DATATYPE * compare_addr /* NULL */ , int dst, MPI_Aint target_disp,
+static inline void issue_rma_op(void *origin_addr, void *result_addr /* NULL */ ,
+                                void *compare_addr /* NULL */ , int dst, MPI_Aint target_disp,
                                 MPI_Win win)
 {
-    MPI_Put(origin_addr, 1, MPI_DATATYPE, dst, target_disp, 1, MPI_DATATYPE, win);
+    switch (test_op) {
+        case TEST_OP_PUT:
+            MPI_Put(origin_addr, 1, mpi_type, dst, target_disp, 1, mpi_type, win);
+            break;
+        case TEST_OP_ACC:
+            MPI_Accumulate(origin_addr, 1, mpi_type, dst, target_disp, 1, mpi_type, MPI_SUM, win);
+            break;
+        case TEST_OP_GACC:
+            MPI_Get_accumulate(origin_addr, 1, mpi_type, result_addr, 1, mpi_type, dst, target_disp,
+                               1, mpi_type, MPI_SUM, win);
+            break;
+        case TEST_OP_FOP:
+            MPI_Fetch_and_op(origin_addr, result_addr, mpi_type, dst, target_disp, MPI_SUM, win);
+            break;
+        case TEST_OP_CAS:
+            MPI_Compare_and_swap(origin_addr, compare_addr, result_addr, mpi_type, dst, target_disp,
+                                 win);
+            break;
+    };
 }
-#elif defined(TEST_ACC)
-static inline void issue_rma_op(DATATYPE * origin_addr, DATATYPE * result_addr /* NULL */ ,
-                                DATATYPE * compare_addr /* NULL */ , int dst, MPI_Aint target_disp,
-                                MPI_Win win)
+
+static void set_value(void *p, int value)
 {
-    MPI_Accumulate(origin_addr, 1, MPI_DATATYPE, dst, target_disp, 1, MPI_DATATYPE, MPI_SUM, win);
+    if (mpi_type == MPI_INT) {
+        *(int *) p = (int) value;
+    } else if (mpi_type == MPI_DOUBLE) {
+        *(double *) p = (double) value;
+    }
 }
-#elif defined(TEST_GACC)
-static inline void issue_rma_op(DATATYPE * origin_addr, DATATYPE * result_addr,
-                                DATATYPE * compare_addr /* NULL */ , int dst, MPI_Aint target_disp,
-                                MPI_Win win)
-{
-    MPI_Get_accumulate(origin_addr, 1, MPI_DATATYPE, result_addr, 1, MPI_DATATYPE, dst, target_disp,
-                       1, MPI_DATATYPE, MPI_SUM, win);
-}
-#elif defined(TEST_FOP)
-static inline void issue_rma_op(DATATYPE * origin_addr, DATATYPE * result_addr,
-                                DATATYPE * compare_addr /* NULL */ , int dst, MPI_Aint target_disp,
-                                MPI_Win win)
-{
-    MPI_Fetch_and_op(origin_addr, result_addr, MPI_DATATYPE, dst, target_disp, MPI_SUM, win);
-}
-#elif defined(TEST_CAS)
-static inline void issue_rma_op(DATATYPE * origin_addr, DATATYPE * result_addr,
-                                DATATYPE * compare_addr, int dst, MPI_Aint target_disp, MPI_Win win)
-{
-    MPI_Compare_and_swap(origin_addr, compare_addr, result_addr, MPI_DATATYPE, dst, target_disp,
-                         win);
-}
-#else
-#define issue_rma_op(loc_addr, result_addr, compare_addr, dst, target_disp, win)
-#endif
 
 static inline void set_iteration_data(int x)
 {
     int i;
 
-#if defined(TEST_CAS)
-    for (i = 0; i < BUF_CNT; i++)
-        compare_buf[i] = local_buf[i];  /* always equal, thus swap happens */
-#endif
+    if (test_op == TEST_OP_CAS) {
+        memcpy(compare_buf, local_buf, BUF_CNT * type_size);
+    }
 
     for (i = 0; i < BUF_CNT; i++) {
-        local_buf[i] = rank + i + x;
+        int val = rank + i + x;
+        set_value((char *) local_buf + i * type_size, val);
 
-#if defined(TEST_CAS) || defined(TEST_PUT)
-        exp_target_val = local_buf[i];  /* swap */
-#else
-        exp_target_val += local_buf[i]; /* sum */
-#endif
+        if (test_op == TEST_OP_CAS || test_op == TEST_OP_PUT) {
+            exp_target_val = val;       /* swap */
+        } else {
+            exp_target_val += val;      /* sum */
+        }
+    }
+}
+
+static void print_value(void *p)
+{
+    if (mpi_type == MPI_INT) {
+        printf("%d ", *(int *) p);
+    } else if (mpi_type == MPI_DOUBLE) {
+        printf("%lf ", *(double *) p);
     }
 }
 
@@ -138,13 +128,15 @@ static void print_origin_data(void)
     int i;
 
     printf("[%d] local_buf: ", rank);
-    for (i = 0; i < BUF_CNT; i++)
-        printf(DATATYPE_FORMAT " ", local_buf[i]);
+    for (i = 0; i < BUF_CNT; i++) {
+        print_value((char *) local_buf + i * type_size);
+    }
     printf("\n");
 
     printf("[%d] result_buf: ", rank);
-    for (i = 0; i < BUF_CNT; i++)
-        printf(DATATYPE_FORMAT " ", result_buf[i]);
+    for (i = 0; i < BUF_CNT; i++) {
+        print_value((char *) result_buf + i * type_size);
+    }
     printf("\n");
 }
 
@@ -152,8 +144,9 @@ static void print_target_data(void)
 {
     int i;
     printf("[%d] winbuf: ", rank);
-    for (i = 0; i < win_cnt; i++)
-        printf(DATATYPE_FORMAT " ", winbuf[i]);
+    for (i = 0; i < win_cnt; i++) {
+        print_value((char *) winbuf + i * type_size);
+    }
     printf("\n");
     fflush(stdout);
 }
@@ -164,7 +157,6 @@ static int run_test(void)
     int i, x;
     int dst = 0, target_disp = 0;
     MPI_Win win = MPI_WIN_NULL;
-    DATATYPE target_val = 0.0;
 
     /* 1. Specify working window and displacement.
      *  - Target:  no RMA issued, always check results on wins[0].
@@ -178,9 +170,9 @@ static int run_test(void)
     dst = target;
 
     /* 2. Every one resets local data */
-    memset(local_buf, 0, sizeof(local_buf));
-    memset(result_buf, 0, sizeof(result_buf));
-    memset(compare_buf, 0, sizeof(compare_buf));
+    local_buf = calloc(BUF_CNT, type_size);
+    result_buf = calloc(BUF_CNT, type_size);
+    compare_buf = calloc(BUF_CNT, type_size);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -189,14 +181,21 @@ static int run_test(void)
         /* 3. Origins issue RMA to target over its working window */
         MPI_Win_lock(MPI_LOCK_SHARED, dst, 0, win);
         verbose_print("[%d] RMA start, test %s (dst=%d, target_disp=%d, win 0x%x) - flush\n",
-                      rank, rma_name, dst, target_disp, win);
+                      rank, get_rma_name(), dst, target_disp, win);
 
         for (x = 0; x < ITER; x++) {
             /* update local buffers and expected value in every iteration */
             set_iteration_data(x);
 
-            for (i = 0; i < BUF_CNT; i++)
-                issue_rma_op(&local_buf[i], &result_buf[i], &compare_buf[i], dst, target_disp, win);
+            char *p_local = local_buf;
+            char *p_result = result_buf;
+            char *p_compare = compare_buf;
+            for (i = 0; i < BUF_CNT; i++) {
+                issue_rma_op(p_local, p_result, p_compare, dst, target_disp, win);
+                p_local += type_size;
+                p_result += type_size;
+                p_compare += type_size;
+            }
             MPI_Win_flush(dst, win);
 
             if (verbose)
@@ -204,12 +203,19 @@ static int run_test(void)
         }
 
         /* 4. Check correctness of final target value */
-        MPI_Get(&target_val, 1, MPI_DATATYPE, dst, target_disp, 1, MPI_DATATYPE, win);
-        MPI_Win_flush(dst, win);
-        if (target_val != exp_target_val) {
-            error_print("rank %d (iter %d) - check %s, got target_val = "
-                        DATATYPE_FORMAT ", expected " DATATYPE_FORMAT "\n", rank, x,
-                        rma_name, target_val, exp_target_val);
+        int int_target_val = 0;
+        if (mpi_type == MPI_INT) {
+            MPI_Get(&int_target_val, 1, mpi_type, dst, target_disp, 1, mpi_type, win);
+            MPI_Win_flush(dst, win);
+        } else if (mpi_type == MPI_DOUBLE) {
+            double target_val;
+            MPI_Get(&target_val, 1, mpi_type, dst, target_disp, 1, mpi_type, win);
+            MPI_Win_flush(dst, win);
+            int_target_val = (int) target_val;
+        }
+        if (int_target_val != exp_target_val) {
+            error_print("rank %d (iter %d) - check %s, got target_val = %d, expected %d\n",
+                        rank, x, get_rma_name(), int_target_val, exp_target_val);
             errors++;
         }
 
@@ -225,6 +231,9 @@ static int run_test(void)
         MPI_Win_unlock(rank, win);
     }
 
+    free(local_buf);
+    free(result_buf);
+    free(compare_buf);
     return errors;
 }
 
@@ -254,11 +263,23 @@ static void destroy_windows(void)
     free(winbuf);
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
-    int errors = 0, all_errors = 0;
+    int errors = 0;
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    parse_test_op(head);
+    MTestArgListDestroy(head);
+
+    assert_test_op();
+    if (test_op == TEST_OP_CAS) {
+        mpi_type = MPI_INT;
+        type_size = sizeof(int);
+    } else {
+        mpi_type = MPI_DOUBLE;
+        type_size = sizeof(double);
+    }
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -290,7 +311,6 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     destroy_windows();
-    MTest_Finalize(errors);
 
-    return MTestReturnValue(all_errors);
+    return errors;
 }

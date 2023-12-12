@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include "mpicolltest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_icallgather
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm allgather test";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int *rbuf = 0, *sbuf = 0;
@@ -21,7 +23,13 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Datatype datatype;
 
-    MTest_Init(&argc, &argv);
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
 
     datatype = MPI_INT;
     /* Get an intercommunicator */
@@ -49,7 +57,7 @@ int main(int argc, char *argv[])
                 for (i = 0; i < count; i++)
                     sbuf[i] = -(i + rank * count);
             }
-            err = MTest_Allgather(sbuf, count, datatype, rbuf, count, datatype, comm);
+            err = MTest_Allgather(is_blocking, sbuf, count, datatype, rbuf, count, datatype, comm);
             if (err) {
                 errs++;
                 MTestPrintError(err);
@@ -72,7 +80,7 @@ int main(int argc, char *argv[])
             for (i = 0; i < count * rsize; i++)
                 rbuf[i] = -1;
             if (leftGroup) {
-                err = MTest_Allgather(sbuf, 0, datatype, rbuf, count, datatype, comm);
+                err = MTest_Allgather(is_blocking, sbuf, 0, datatype, rbuf, count, datatype, comm);
                 if (err) {
                     errs++;
                     MTestPrintError(err);
@@ -83,7 +91,7 @@ int main(int argc, char *argv[])
                     }
                 }
             } else {
-                err = MTest_Allgather(sbuf, count, datatype, rbuf, 0, datatype, comm);
+                err = MTest_Allgather(is_blocking, sbuf, count, datatype, rbuf, 0, datatype, comm);
                 if (err) {
                     errs++;
                     MTestPrintError(err);
@@ -100,6 +108,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

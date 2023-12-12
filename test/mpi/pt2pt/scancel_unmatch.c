@@ -3,24 +3,24 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_scancel_unmatch
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test message reception ordering issues
 after cancelling a send";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
 
     int a, b, flag = 0, errs = 0;
     MPI_Request requests[2];
     MPI_Status statuses[2];
-
-    MTest_Init(&argc, &argv);
 
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -50,6 +50,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,13 +3,15 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 #include <string.h>     /* For memset */
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run pt2pt_cancelrecv
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     MPI_Request r[3];
     MPI_Status s[3];
@@ -17,8 +19,6 @@ int main(int argc, char *argv[])
     int rank, size, src, dest, flag, errs = 0;
     int n0, n1, n2;
     MPI_Comm comm;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (size < 2) {
@@ -127,7 +127,5 @@ int main(int argc, char *argv[])
         MPI_Barrier(comm);
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

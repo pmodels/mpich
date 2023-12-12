@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_recv_any
+int run(const char *arg);
+#endif
 
 #define BUFSIZE 4
 #define ITER 10
@@ -20,17 +22,19 @@
         MPI_Abort(MPI_COMM_WORLD, 1);                           \
     } while (0);
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
+    int test_nb = 0;
     int rank = 0, nprocs = 0;
     int i = 0, x = 0, dst = 0, src = 0, tag = 0;
     MPI_Status stat;
-#ifdef TEST_NB
     MPI_Request req;
-#endif
     int sbuf[BUFSIZE], rbuf[BUFSIZE];
 
-    MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    test_nb = MTestArgListGetInt_with_default(head, "nb", 0);
+    MTestArgListDestroy(head);
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -45,14 +49,14 @@ int main(int argc, char *argv[])
     for (x = 0; x < ITER; x++) {
         tag = x;
         if (rank == dst) {
-#ifdef TEST_NB
-            MPI_Irecv(rbuf, sizeof(int) * BUFSIZE, MPI_CHAR, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD,
-                      &req);
-            MPI_Wait(&req, &stat);
-#else
-            MPI_Recv(rbuf, sizeof(int) * BUFSIZE, MPI_CHAR,
-                     MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &stat);
-#endif
+            if (test_nb) {
+                MPI_Irecv(rbuf, sizeof(int) * BUFSIZE, MPI_CHAR, MPI_ANY_SOURCE, tag,
+                          MPI_COMM_WORLD, &req);
+                MPI_Wait(&req, &stat);
+            } else {
+                MPI_Recv(rbuf, sizeof(int) * BUFSIZE, MPI_CHAR,
+                         MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &stat);
+            }
             if (stat.MPI_SOURCE != src) {
                 ERR_REPORT_EXIT("[%d] Error: iter %d, stat.MPI_SOURCE=%d, expected %d\n",
                                 rank, x, stat.MPI_SOURCE, src);
@@ -69,6 +73,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    MTest_Finalize(0);
     return 0;
 }

@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_fetchandadd
+int run(const char *arg);
+#endif
 
 /* Fetch and add example from Using MPI-2 (the non-scalable version,
    Fig. 6.12). */
@@ -15,23 +17,22 @@
 #define NTIMES 20       /* no of times each process calls the counter
                          * routine */
 
-int localvalue = 0;             /* contribution of this process to the counter. We
+static int localvalue = 0;      /* contribution of this process to the counter. We
                                  * define it as a global variable because attribute
                                  * caching on the window is not enabled yet. */
 
-void Get_nextval(MPI_Win win, int *val_array, MPI_Datatype get_type,
-                 int rank, int nprocs, int *value);
+static void Get_nextval(MPI_Win win, int *val_array, MPI_Datatype get_type,
+                        int rank, int nprocs, int *value);
 
-int compar(const void *a, const void *b);
+static int compar(const void *a, const void *b);
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nprocs, i, blens[2], disps[2], *counter_mem, *val_array, *results, *counter_vals;
     MPI_Datatype get_type;
     MPI_Win win;
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -92,13 +93,12 @@ int main(int argc, char *argv[])
         free(counter_vals);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 
-void Get_nextval(MPI_Win win, int *val_array, MPI_Datatype get_type,
-                 int rank, int nprocs, int *value)
+static void Get_nextval(MPI_Win win, int *val_array, MPI_Datatype get_type,
+                        int rank, int nprocs, int *value)
 {
     int one = 1, i;
 
@@ -115,7 +115,7 @@ void Get_nextval(MPI_Win win, int *val_array, MPI_Datatype get_type,
     localvalue++;
 }
 
-int compar(const void *a, const void *b)
+static int compar(const void *a, const void *b)
 {
     return (*((int *) a) - *((int *) b));
 }

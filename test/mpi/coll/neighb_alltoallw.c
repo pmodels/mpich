@@ -3,12 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "mpitest.h"
 #include <string.h>
 
-#include <mpi.h>
-#include "mpitest.h"
+#ifdef MULTI_TESTS
+#define run coll_neighb_alltoallw
+int run(const char *arg);
+#endif
 
 #if !defined(USE_STRICT_MPI) && defined(MPICH)
 #define TEST_NEIGHB_COLL 1
@@ -25,7 +26,7 @@
         }                                                                         \
     } while (0)
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int wrank, wsize;
@@ -40,7 +41,6 @@ int main(int argc, char *argv[])
     MPI_Datatype sendtypes[2] = { MPI_INT, MPI_INT };
     MPI_Datatype recvtypes[2] = { MPI_INT, MPI_INT };
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
 
@@ -69,7 +69,5 @@ int main(int argc, char *argv[])
     MPI_Comm_free(&cart);
 #endif /* defined(TEST_NEIGHB_COLL) */
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -12,11 +12,13 @@
  * appends N new elements to the list when the tail reaches process p-1.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include <assert.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_linked_list_bench_lock_all
+int run(const char *arg);
+#endif
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -76,7 +78,7 @@ static MPI_Aint alloc_elem(int value, MPI_Win win)
     return disp;
 }
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int procid, nproc, i, j, my_nelem;
     int pollint = 0;
@@ -84,8 +86,6 @@ int main(int argc, char **argv)
     MPI_Win llist_win;
     llist_ptr_t head_ptr, tail_ptr;
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &procid);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -263,6 +263,5 @@ int main(int argc, char **argv)
     for (; my_elems_count > 0; my_elems_count--)
         MPI_Free_mem(my_elems[my_elems_count - 1]);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

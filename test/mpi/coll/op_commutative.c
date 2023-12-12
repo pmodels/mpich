@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_op_commutative
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "A simple test of MPI_Op_create/commute/free";
@@ -46,13 +48,11 @@ static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype * dataty
 }
 
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Op c_uop = MPI_OP_NULL;
     MPI_Op nc_uop = MPI_OP_NULL;
     int is_commutative = 0;
-
-    MTest_Init(&argc, &argv);
 
     /* make sure that user-define ops work too */
     MPI_Op_create(&user_op, 1 /*commute */ , &c_uop);
@@ -99,6 +99,5 @@ int main(int argc, char *argv[])
     MPI_Op_free(&nc_uop);
     MPI_Op_free(&c_uop);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

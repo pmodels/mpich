@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_rmanull
+int run(const char *arg);
+#endif
 
 /* Test the given operation within a Fence epoch */
 #define TEST_FENCE_OP(op_name_, fcn_call_)                              \
@@ -92,7 +94,7 @@
 static char MTEST_Descrip[] = "Test the MPI_PROC_NULL is a valid target";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0, err;
     int rank, size;
@@ -102,8 +104,6 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Win win;
     MPI_Request req;
-
-    MTest_Init(&argc, &argv);
 
     bufsize = 256 * sizeof(int);
     buf = (int *) malloc(bufsize);
@@ -211,6 +211,6 @@ int main(int argc, char *argv[])
     free(result);
     free(buf);
     free(rmabuf);
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+
+    return errs;
 }

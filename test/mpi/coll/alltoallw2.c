@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
+
+#ifdef MULTI_TESTS
+#define run coll_alltoallw2
+int run(const char *arg);
+#endif
 
 /*
   This program tests MPI_Alltoallw by having processor i send different
@@ -23,15 +25,11 @@
   that use point-to-point operations
  */
 
-static int test_noinplace(MPI_Comm comm);
-static int test_inplace(MPI_Comm comm, bool sametype);
-
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
     while (MTestGetIntracommGeneral(&comm, 2, 1)) {
         if (comm == MPI_COMM_NULL)
             continue;
@@ -45,8 +43,7 @@ int main(int argc, char **argv)
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 static int test_noinplace(MPI_Comm comm)

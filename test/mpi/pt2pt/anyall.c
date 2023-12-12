@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_anyall
+int run(const char *arg);
+#endif
 
 #define MAX_MSGS 30
 
@@ -14,7 +16,7 @@
 static char MTEST_Descrip[] = "One implementation delivered incorrect data when an MPI receive uses both ANY_SOURCE and ANY_TAG";
 */
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int wrank, wsize, sender, receiver, i, j, idx, count;
     int errs = 0;
@@ -22,8 +24,6 @@ int main(int argc, char *argv[])
     int buf[MAX_MSGS][MAX_MSGS];
     MPI_Comm comm;
     MPI_Status status;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
@@ -77,7 +77,5 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

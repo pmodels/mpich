@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_fetchandadd_tree
+int run(const char *arg);
+#endif
 
 /* This is the tree-based scalable version of the fetch-and-add
    example from Using MPI-2, pg 206-207. The code in the book (Fig
@@ -16,16 +18,16 @@
 #define NTIMES 20       /* no of times each process calls the counter
                          * routine */
 
-int localvalue = 0;             /* contribution of this process to the counter. We
+static int localvalue = 0;      /* contribution of this process to the counter. We
                                  * define it as a global variable because attribute
                                  * caching on the window is not enabled yet. */
 
-void Get_nextval_tree(MPI_Win win, int *get_array, MPI_Datatype get_type,
-                      MPI_Datatype acc_type, int nlevels, int *value);
+static void Get_nextval_tree(MPI_Win win, int *get_array, MPI_Datatype get_type,
+                             MPI_Datatype acc_type, int nlevels, int *value);
 
-int compar(const void *a, const void *b);
+static int compar(const void *a, const void *b);
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int rank, nprocs, i, *counter_mem, *get_array, *get_idx, *acc_idx,
         mask, nlevels, level, idx, tmp_rank, pof2;
@@ -33,7 +35,6 @@ int main(int argc, char *argv[])
     MPI_Win win;
     int errs = 0, *results, *counter_vals;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -137,13 +138,12 @@ int main(int argc, char *argv[])
         free(counter_vals);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }
 
 
-void Get_nextval_tree(MPI_Win win, int *get_array, MPI_Datatype get_type,
-                      MPI_Datatype acc_type, int nlevels, int *value)
+static void Get_nextval_tree(MPI_Win win, int *get_array, MPI_Datatype get_type,
+                             MPI_Datatype acc_type, int nlevels, int *value)
 {
     int *one, i;
 
@@ -165,7 +165,7 @@ void Get_nextval_tree(MPI_Win win, int *get_array, MPI_Datatype get_type,
     free(one);
 }
 
-int compar(const void *a, const void *b)
+static int compar(const void *a, const void *b)
 {
     return (*((int *) a) - *((int *) b));
 }

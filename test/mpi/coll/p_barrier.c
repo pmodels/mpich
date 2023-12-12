@@ -4,17 +4,19 @@
  */
 
 #include "mpitest.h"
-#include <mpi.h>
-#include <stdio.h>
 #include <unistd.h>
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run coll_p_barrier
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     MPI_Request req;
     MPI_Info info;
     int rank, i;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Info_create(&info);
     MPI_Barrier_init(MPI_COMM_WORLD, info, &req);
@@ -25,6 +27,5 @@ int main(int argc, char *argv[])
     MPI_Request_free(&req);
     MPI_Info_free(&info);
 
-    MTest_Finalize(0);
     return 0;
 }

@@ -27,6 +27,16 @@ extern char *strdup(const char *);
 extern int usleep(useconds_t);
 #endif
 
+#ifndef MULTI_TESTS
+int run(const char *arg);
+#endif
+
+typedef int (*run_fn) (const char *arg);
+struct mpitest {
+    const char *name;
+    run_fn run;
+};
+
 /*
  * Init and finalize test
  */

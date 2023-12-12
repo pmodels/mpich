@@ -3,15 +3,17 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <mpi.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_large_message
+int run(const char *arg);
+#endif
 
 /* tests send/recv of a message > 2GB. count=270M, type=long long
    run with 3 processes to exercise both shared memory and TCP in Nemesis tests*/
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int i, size, rank;
     int cnt = 270000000;
@@ -20,19 +22,17 @@ int main(int argc, char *argv[])
     long long *cols;
     int errs = 0;
 
-
-    MTest_Init(&argc, &argv);
-
 /* need large memory */
     if (sizeof(void *) < 8) {
-        MTest_Finalize(errs);
-        return MTestReturnValue(errs);
+        return errs;
     }
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (size != 3) {
-        fprintf(stderr, "[%d] usage: mpiexec -n 3 %s\n", rank, argv[0]);
+        if (rank == 0) {
+            fprintf(stderr, "This test require 3 processes.\n");
+        }
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
@@ -40,8 +40,7 @@ int main(int argc, char *argv[])
     if (cols == NULL) {
         printf("malloc of >2GB array failed\n");
         errs++;
-        MTest_Finalize(errs);
-        return MTestReturnValue(errs);
+        return errs;
     }
 
     if (rank == 0) {
@@ -70,6 +69,5 @@ int main(int argc, char *argv[])
     }
     free(cols);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

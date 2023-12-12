@@ -6,12 +6,14 @@
 /* test MPI_WIN_ALLOCATE and MPI_WIN_ALLOCATE_SHARED when allocating
    SHM memory with size of 1GB per process */
 
-#include "mpi.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run rma_win_large_shm
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int my_rank, shared_rank;
     void *mybase = NULL;
@@ -20,8 +22,6 @@ int main(int argc, char **argv)
     MPI_Comm shared_comm;
     int i;
     int shm_win_size = 1024 * 1024 * 1024 * sizeof(char);       /* 1GB */
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -87,8 +87,6 @@ int main(int argc, char **argv)
         if (i == 0)
             MPI_Info_free(&win_info);
     }
-
-    MTest_Finalize(0);
 
     return 0;
 }

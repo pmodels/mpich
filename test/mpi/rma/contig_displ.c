@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run rma_contig_displ
+int run(const char *arg);
+#endif
 
 /* Run with 1 process.
 
@@ -17,14 +20,12 @@
    displacement and got the first integer instead of the second.
 */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int rank, nprocs, mpi_err, *array;
     int getval, disp, errs = 0;
     MPI_Win win;
     MPI_Datatype type;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -89,13 +90,11 @@ int main(int argc, char **argv)
         MPI_Type_free(&type);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 
   err_return:
     printf("MPI function error returned an error\n");
     MTestPrintError(mpi_err);
     errs++;
-    MTest_Finalize(errs);
-    return 1;
+    return errs;
 }

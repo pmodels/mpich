@@ -18,17 +18,19 @@
  *  semantics correctly reusing the buffer would race with outstanding rgets.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <memory.h>
-#include <mpi.h>
 #include "mpitest.h"
+#include <memory.h>
+
+#ifdef MULTI_TESTS
+#define run rma_rget_unlock
+int run(const char *arg);
+#endif
 
 #define N_ELMS (128)
 #define BLOCKSIZE (1)
 #define N_BLOCKS (N_ELMS/BLOCKSIZE)
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     MPI_Win win;
     int i;
@@ -36,8 +38,6 @@ int main(int argc, char *argv[])
     int rank, size, trg;
     MPI_Request *reqs;
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -76,7 +76,5 @@ int main(int argc, char *argv[])
     free(lbuf);
     free(rbuf);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -3,18 +3,20 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_p_order
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test that persistent collectives can be started out of matching order";
 */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int errs = 0;
-
-    MTest_Init(&argc, &argv);
 
     int size, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -48,6 +50,5 @@ int main(int argc, char **argv)
     MPI_Request_free(&requests[0]);
     MPI_Request_free(&requests[1]);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

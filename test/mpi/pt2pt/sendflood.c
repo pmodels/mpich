@@ -3,11 +3,13 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include "mpi.h"
 #include "mpitest.h"
+#include <string.h>
+
+#ifdef MULTI_TESTS
+#define run pt2pt_sendflood
+int run(const char *arg);
+#endif
 
 /*
  * Run this test with 8 processes.  This test was submitted by xxx
@@ -26,28 +28,19 @@
 static int verbose = 0;
 static int loopProgress = 0;
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int nProc, rank;
     int i, j, status;
     FILE *pf = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nProc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    for (i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0)
-            verbose = 1;
-        else if (strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--progress") == 0)
-            loopProgress = 1;
-        else {
-            if (rank == 0) {
-                fprintf(stderr, "%s: [ -v | --verbose ] [ -p | --progress ]\n", argv[0]);
-                fflush(stderr);
-            }
-        }
-    }
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    verbose = MTestArgListGetInt_with_default(head, "verbose", 0);
+    loopProgress = MTestArgListGetInt_with_default(head, "progress", 0);
+    MTestArgListDestroy(head);
 
     if (verbose) {
         char buf[128];
@@ -139,7 +132,6 @@ int main(int argc, char *argv[])
     if (verbose) {
         fclose(pf);
     }
-    MTest_Finalize(0);
 
     return 0;
 }

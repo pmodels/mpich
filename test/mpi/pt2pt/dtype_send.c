@@ -3,14 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run pt2pt_dtype_send
+int run(const char *arg);
+#endif
 
 #define NUM_LOOPS  (128)
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int i, rank, size;
     MPI_Request *req;
@@ -19,7 +21,6 @@ int main(int argc, char **argv)
     int count = 2;
     int *displs;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -87,8 +88,6 @@ int main(int argc, char **argv)
     MPI_Waitall(NUM_LOOPS, req, MPI_STATUSES_IGNORE);
 
     MPI_Barrier(MPI_COMM_WORLD);
-
-    MTest_Finalize(0);
 
     free(displs);
     free(req);

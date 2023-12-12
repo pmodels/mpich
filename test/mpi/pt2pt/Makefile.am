@@ -4,6 +4,7 @@
 ##
 
 include $(top_srcdir)/Makefile_single.mtest
+include Makefile_mpitests.mk
 
 EXTRA_DIST = testlist
 
@@ -62,10 +63,8 @@ noinst_PROGRAMS =  \
     multi_psend_derived  \
     dtype_send		 \
     recv_any		\
-    irecv_any   \
     large_tag \
     pingping  \
-    pingping_barrier  \
     sendrecv1 \
     sendself \
     pt2pt_large \
@@ -74,18 +73,3 @@ noinst_PROGRAMS =  \
     mprobe_self_free \
     pssend \
     pipeline
-
-irecv_any_CPPFLAGS = -DTEST_NB $(AM_CPPFLAGS)
-irecv_any_SOURCES  = recv_any.c
-
-pingping_CPPFLAGS = $(AM_CPPFLAGS)
-pingping_SOURCES = pingping.c
-
-pingping_barrier_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_BARRIER
-pingping_barrier_SOURCES = pingping.c
-
-sendrecv1_CPPFLAGS = $(AM_CPPFLAGS)
-sendrecv1_SOURCES = sendrecv1.c
-
-sendself_CPPFLAGS = $(AM_CPPFLAGS)
-sendself_SOURCES = sendself.c
