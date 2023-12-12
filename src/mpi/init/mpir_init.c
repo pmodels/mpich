@@ -8,6 +8,7 @@
 #include "datatype.h"
 #include "mpi_init.h"
 #include <strings.h>
+#include "mpir_async_things.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -221,6 +222,9 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Datatype_init_predefined();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Async_things_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_CVAR_DEBUG_HOLD) {
@@ -439,6 +443,9 @@ int MPII_Finalize(MPIR_Session * session_ptr)
 #endif
 
     mpi_errno = MPII_Coll_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Async_things_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Call the low-priority (post Finalize) callbacks */

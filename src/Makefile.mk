@@ -3,7 +3,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-AM_CPPFLAGS += -I$(top_srcdir)/src/include
+AM_CPPFLAGS += -I$(top_srcdir)/src/include -I$(top_srcdir)/src/util
 
 include $(top_srcdir)/src/mpi/Makefile.mk
 include $(top_srcdir)/src/util/Makefile.mk

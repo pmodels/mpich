@@ -14,4 +14,5 @@ mpi_core_sources +=   \
     src/util/mpir_netloc.c     \
     src/util/mpir_hwtopo.c     \
     src/util/mpir_nettopo.c    \
+    src/util/mpir_async_things.c \
     src/util/mpir_progress_hook.c
