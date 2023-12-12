@@ -201,6 +201,9 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
         mpi_errno = MPIDIU_new_avt(n_new_procs, &avtid);
         MPIR_ERR_CHECK(mpi_errno);
 
+        /* init ofi address vectors in global av table */
+        mpi_errno = MPIDI_OFI_init_avt(MPIDI_global.avt_mgr.av_tables[avtid]);
+
         for (i = 0; i < n_new_procs; i++) {
             char *hostname = new_upids[i];
             char *addrname = hostname + strlen(hostname) + 1;

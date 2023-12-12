@@ -58,19 +58,17 @@ static int compare_nics(const void *nic1, const void *nic2)
 }
 
 /* Determine if NIC has already been included in others */
-bool MPIDI_OFI_nic_already_used(const struct fi_info * prov, struct fi_info ** others,
-                                int nic_count)
+bool MPIDI_OFI_nic_already_used(const struct fi_info * prov, struct fi_info * others)
 {
-    for (int i = 0; i < nic_count; ++i) {
-        if (prov->nic->bus_attr->bus_type == FI_BUS_PCI &&
-            others[i]->nic->bus_attr->bus_type == FI_BUS_PCI) {
+    for (struct fi_info * p = others; p; p = p->next) {
+        if (prov->nic->bus_attr->bus_type == FI_BUS_PCI && p->nic->bus_attr->bus_type == FI_BUS_PCI) {
             struct fi_pci_attr pci = prov->nic->bus_attr->attr.pci;
-            struct fi_pci_attr others_pci = others[i]->nic->bus_attr->attr.pci;
+            struct fi_pci_attr others_pci = p->nic->bus_attr->attr.pci;
             if (pci.domain_id == others_pci.domain_id && pci.bus_id == others_pci.bus_id &&
                 pci.device_id == others_pci.device_id && pci.function_id == others_pci.function_id)
                 return true;
         } else {
-            if (strcmp(prov->domain_attr->name, others[i]->domain_attr->name) == 0)
+            if (strcmp(prov->domain_attr->name, p->domain_attr->name) == 0)
                 return true;
         }
     }
@@ -80,66 +78,81 @@ bool MPIDI_OFI_nic_already_used(const struct fi_info * prov, struct fi_info ** o
 
 /* Setup the multi-NIC data structures to use the fi_info structure given in prov */
 static int setup_single_nic(void);
-static int setup_multi_nic(int nic_count);
+static int setup_multi_nic(size_t nic_count);
 
 int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
 {
     int mpi_errno = MPI_SUCCESS;
     int nic_count = 0;
-    int max_nics = MPIR_CVAR_CH4_OFI_MAX_NICS;
-
-    if (MPIR_CVAR_CH4_OFI_MAX_NICS == 0 || MPIR_CVAR_CH4_OFI_MAX_NICS <= -2) {
-        /* Invalid values for the CVAR will default to single nic */
-        max_nics = 1;
-    }
 
     /* Count the number of NICs */
-    struct fi_info *first_prov = NULL;
-    for (struct fi_info * p = prov; p; p = p->next) {
+    struct fi_info *first_prov = NULL, *prev_prov = NULL, *cur_prov = NULL;
+    for (cur_prov = prov; cur_prov; cur_prov = cur_prov->next) {
         /* additional filtering */
-        if (MPIR_CVAR_OFI_SKIP_IPV6 && p->addr_format == FI_SOCKADDR_IN6) {
+        if (MPIR_CVAR_OFI_SKIP_IPV6 && cur_prov->addr_format == FI_SOCKADDR_IN6) {
             continue;
         }
-        if (!MPIDI_OFI_nic_is_up(p)) {
+        if (!MPIDI_OFI_nic_is_up(cur_prov)) {
             continue;
-        }
-        if (!first_prov) {
-            first_prov = p;
         }
 #ifdef HAVE_LIBFABRIC_NIC
         /* check the nic */
-        struct fid_nic *nic = p->nic;
+        struct fid_nic *nic = cur_prov->nic;
         if (nic && nic->bus_attr->bus_type == FI_BUS_PCI &&
-            !MPIDI_OFI_nic_already_used(p, MPIDI_OFI_global.prov_use, nic_count)) {
-            MPIDI_OFI_global.prov_use[nic_count] = fi_dupinfo(p);
-            MPIR_Assert(MPIDI_OFI_global.prov_use[nic_count]);
-            nic_count++;
-            if (nic_count == max_nics) {
-                break;
+            !MPIDI_OFI_nic_already_used(cur_prov, first_prov)) {
+            if (prev_prov) {
+                prev_prov->next = fi_dupinfo(cur_prov);
+                prev_prov = prev_prov->next;
+            } else {
+                first_prov = fi_dupinfo(cur_prov);
+                prev_prov = first_prov;
             }
+            prev_prov->next = NULL;
+            ++nic_count;
         }
-#endif
+#else
+        /* Always pick the first provider if NIC info is not available */
+        if (!first_prov) {
+            first_prov = fi_dupinfo(cur_prov);
+            first_prov->next = NULL;
+            ++nic_count;
+            break;
+        }
+#endif /* HAVE_LIBFABRIC_NIC */
     }
 
-    if (nic_count == 0) {
-        MPIR_ERR_CHKANDJUMP(!first_prov, mpi_errno, MPI_ERR_OTHER, "**ofi_no_prov");
-        /* If no NICs are detected, then force using first provider */
-        MPIDI_OFI_global.prov_use[0] = fi_dupinfo(first_prov);
-        MPIR_Assert(MPIDI_OFI_global.prov_use[0]);
+    MPIR_ERR_CHKANDJUMP(!first_prov, mpi_errno, MPI_ERR_OTHER, "**ofi_no_prov");
+
+    MPIDI_OFI_global.prov_use = MPL_malloc(sizeof(uintptr_t) * nic_count, MPL_MEM_OTHER);
+    MPIDI_OFI_global.nic_info = MPL_malloc(sizeof(MPIDI_OFI_nic_info_t) * nic_count, MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!MPIDI_OFI_global.prov_use ||
+                        !MPIDI_OFI_global.nic_info, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    cur_prov = first_prov;
+    for (int i = 0; i < nic_count; ++i) {
+        MPIR_Assert(cur_prov);
+        MPIDI_OFI_global.prov_use[i] = cur_prov;
+        cur_prov = cur_prov->next;
+        MPIDI_OFI_global.prov_use[i]->next = NULL;
+    }
+    MPIR_Assert(!cur_prov);
+
+    if (nic_count < 2) {
         mpi_errno = setup_single_nic();
         MPIR_ERR_CHECK(mpi_errno);
     }
 #ifdef HAVE_LIBFABRIC_NIC
-    else if (nic_count >= 1) {
+    else {
         mpi_errno = setup_multi_nic(nic_count);
         MPIR_ERR_CHECK(mpi_errno);
     }
 #endif
-    else {
-        mpi_errno = setup_single_nic();
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+
     MPIR_Assert(MPIDI_OFI_global.num_nics > 0);
+
+    MPIDI_OFI_global.ctx = MPL_calloc(MPIDI_OFI_global.num_nics * MPIDI_CH4_MAX_VCIS,
+                                      sizeof(MPIDI_OFI_context_t), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!MPIDI_OFI_global.ctx, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
   fn_exit:
     return mpi_errno;
@@ -172,20 +185,19 @@ static int setup_single_nic(void)
 #ifdef HAVE_LIBFABRIC_NIC
 /* TODO: Now that multiple NICs are detected, sort them based on preferred-ness,
  * closeness and count of other processes using the NIC. */
-static int setup_multi_nic(int nic_count)
+static int setup_multi_nic(size_t nic_count)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_hwtopo_gid_t parents[MPIDI_OFI_MAX_NICS] = { 0 };
+    MPIR_hwtopo_gid_t *parents = NULL;
     int num_parents = 0;
     int local_rank = MPIR_Process.local_rank;
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
-    MPIR_CHKLMEM_DECL(1);
-
-    MPIDI_OFI_global.num_nics = nic_count;
+    MPIR_CHKLMEM_DECL(2);
 
     /* Initially sort the NICs by name. This way all intranode ranks have a consistent view. */
-    qsort(MPIDI_OFI_global.prov_use, MPIDI_OFI_global.num_nics, sizeof(struct fi_info *),
-          compare_nic_names);
+    qsort(MPIDI_OFI_global.prov_use, nic_count, sizeof(struct fi_info *), compare_nic_names);
+
+    MPIDI_OFI_global.num_nics = nic_count;
 
     /* Limit the number of physical NICs depending on the CVAR */
     if (MPIR_CVAR_CH4_OFI_MAX_NICS > 0 && MPIDI_OFI_global.num_nics > MPIR_CVAR_CH4_OFI_MAX_NICS) {
@@ -195,6 +207,9 @@ static int setup_multi_nic(int nic_count)
         MPIDI_OFI_global.num_nics = MPIR_CVAR_CH4_OFI_MAX_NICS;
     }
 
+    MPIR_CHKLMEM_MALLOC(parents, MPIR_hwtopo_gid_t *,
+                        sizeof(MPIR_hwtopo_gid_t) * MPIDI_OFI_global.num_nics,
+                        mpi_errno, "temporary nic hwtopo object", MPL_MEM_ADDRESS);
     /* Now go through every NIC and set initial information
      * from current process's perspective */
     for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {

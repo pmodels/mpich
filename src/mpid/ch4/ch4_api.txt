@@ -31,6 +31,8 @@
 #
 
 Non Native API:
+  init_avt: int
+      NM : table
   init_local: int
       NM : tag_bits
      SHM : tag_bits
@@ -520,6 +522,7 @@ PARAM:
     src_vci: int
     sreq: MPIR_Request *
     status: MPI_Status *
+    table: MPIDI_av_table_t *
     tag: int
     tag_bits: int *
     target: int

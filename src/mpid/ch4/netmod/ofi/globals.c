@@ -7,16 +7,12 @@
 #include "ofi_impl.h"
 MPIDI_OFI_global_t MPIDI_OFI_global;
 
-unsigned long long PVAR_COUNTER_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS] ATTRIBUTE((unused));
-unsigned long long PVAR_COUNTER_nic_recvd_bytes_count[MPIDI_OFI_MAX_NICS] ATTRIBUTE((unused));
-unsigned long long PVAR_COUNTER_striped_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS]
-ATTRIBUTE((unused));
-unsigned long long PVAR_COUNTER_striped_nic_recvd_bytes_count[MPIDI_OFI_MAX_NICS]
-ATTRIBUTE((unused));
-unsigned long long PVAR_COUNTER_rma_pref_phy_nic_put_bytes_count[MPIDI_OFI_MAX_NICS]
-ATTRIBUTE((unused));
-unsigned long long PVAR_COUNTER_rma_pref_phy_nic_get_bytes_count[MPIDI_OFI_MAX_NICS]
-ATTRIBUTE((unused));
+unsigned long long *PVAR_COUNTER_nic_sent_bytes_count = NULL;
+unsigned long long *PVAR_COUNTER_nic_recvd_bytes_count = NULL;
+unsigned long long *PVAR_COUNTER_striped_nic_sent_bytes_count = NULL;
+unsigned long long *PVAR_COUNTER_striped_nic_recvd_bytes_count = NULL;
+unsigned long long *PVAR_COUNTER_rma_pref_phy_nic_put_bytes_count = NULL;
+unsigned long long *PVAR_COUNTER_rma_pref_phy_nic_get_bytes_count = NULL;
 
 MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
 /* Initialize a runtime version of all of the capability sets defined in
