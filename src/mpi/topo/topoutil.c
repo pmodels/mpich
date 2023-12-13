@@ -5,18 +5,25 @@
 
 #include "mpiimpl.h"
 
+#ifndef BUILD_MPI_ABI
 static int unweighted_dummy = 0x46618;
 static int weights_empty_dummy = 0x022284;
 /* cannot ==NULL, would be ambiguous */
 int *const MPI_UNWEIGHTED = &unweighted_dummy;
 int *const MPI_WEIGHTS_EMPTY = &weights_empty_dummy;
+#endif
 
 /* Keyval for topology information */
 static int MPIR_Topology_keyval = MPI_KEYVAL_INVALID;
 
 /* Local functions */
+#ifndef BUILD_MPI_ABI
 static int MPIR_Topology_copy_fn(MPI_Comm, int, void *, void *, void *, int *);
 static int MPIR_Topology_delete_fn(MPI_Comm, int, void *, void *);
+#else
+static int MPIR_Topology_copy_fn(ABI_Comm, int, void *, void *, void *, int *);
+static int MPIR_Topology_delete_fn(ABI_Comm, int, void *, void *);
+#endif
 static int MPIR_Topology_finalize(void *);
 
 /*
@@ -117,19 +124,12 @@ static int *MPIR_Copy_array(int n, const int a[], int *err)
    of enough integers for all fields (including the ones in the structure)
    and freeing the single object later.
 */
-static int MPIR_Topology_copy_fn(MPI_Comm comm ATTRIBUTE((unused)),
-                                 int keyval ATTRIBUTE((unused)),
-                                 void *extra_data ATTRIBUTE((unused)),
-                                 void *attr_in, void *attr_out, int *flag)
+static int MPIR_Topology_copy_internal(void *attr_in, void *attr_out, int *flag)
 {
     MPIR_Topology *old_topology = (MPIR_Topology *) attr_in;
     MPIR_Topology *copy_topology = NULL;
     MPIR_CHKPMEM_DECL(5);
     int mpi_errno = 0;
-
-    MPL_UNREFERENCED_ARG(comm);
-    MPL_UNREFERENCED_ARG(keyval);
-    MPL_UNREFERENCED_ARG(extra_data);
 
     *flag = 0;
     *(void **) attr_out = NULL;
@@ -197,9 +197,7 @@ static int MPIR_Topology_copy_fn(MPI_Comm comm ATTRIBUTE((unused)),
     /* --END ERROR HANDLING-- */
 }
 
-static int MPIR_Topology_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
-                                   int keyval ATTRIBUTE((unused)),
-                                   void *attr_val, void *extra_data ATTRIBUTE((unused)))
+static int MPIR_Topology_delete_internal(void *attr_val)
 {
     MPIR_Topology *topology = (MPIR_Topology *) attr_val;
 
@@ -233,6 +231,49 @@ static int MPIR_Topology_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
     return MPI_SUCCESS;
 }
 
+#ifndef BUILD_MPI_ABI
+static int MPIR_Topology_copy_fn(MPI_Comm comm ATTRIBUTE((unused)),
+                                 int keyval ATTRIBUTE((unused)),
+                                 void *extra_data ATTRIBUTE((unused)),
+                                 void *attr_in, void *attr_out, int *flag)
+{
+    MPL_UNREFERENCED_ARG(comm);
+    MPL_UNREFERENCED_ARG(keyval);
+    MPL_UNREFERENCED_ARG(extra_data);
+    return MPIR_Topology_copy_internal(attr_in, attr_out, flag);
+}
+
+static int MPIR_Topology_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
+                                   int keyval ATTRIBUTE((unused)),
+                                   void *attr_val, void *extra_data ATTRIBUTE((unused)))
+{
+    MPL_UNREFERENCED_ARG(comm);
+    MPL_UNREFERENCED_ARG(keyval);
+    MPL_UNREFERENCED_ARG(extra_data);
+    return MPIR_Topology_delete_internal(attr_val);
+}
+#else
+static int MPIR_Topology_copy_fn(ABI_Comm comm ATTRIBUTE((unused)),
+                                 int keyval ATTRIBUTE((unused)),
+                                 void *extra_data ATTRIBUTE((unused)),
+                                 void *attr_in, void *attr_out, int *flag)
+{
+    MPL_UNREFERENCED_ARG(comm);
+    MPL_UNREFERENCED_ARG(keyval);
+    MPL_UNREFERENCED_ARG(extra_data);
+    return MPIR_Topology_copy_internal(attr_in, attr_out, flag);
+}
+
+static int MPIR_Topology_delete_fn(ABI_Comm comm ATTRIBUTE((unused)),
+                                   int keyval ATTRIBUTE((unused)),
+                                   void *attr_val, void *extra_data ATTRIBUTE((unused)))
+{
+    MPL_UNREFERENCED_ARG(comm);
+    MPL_UNREFERENCED_ARG(keyval);
+    MPL_UNREFERENCED_ARG(extra_data);
+    return MPIR_Topology_delete_internal(attr_val);
+}
+#endif
 
 /* the next two routines implement the following behavior (quoted from Section
  * 7.6 of the MPI-3.0 standard):

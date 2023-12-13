@@ -5,6 +5,14 @@
 
 #include "mpiimpl.h"
 
+static int attr_dup_fn(void *attr_in, void *attr_out, int *flag)
+{
+    /* Set attr_out, the flag and return success */
+    (*(void **) attr_out) = attr_in;
+    (*flag) = 1;
+    return (MPI_SUCCESS);
+}
+
 /*D
 
 MPI_DUP_FN - A function to simple-mindedly copy attributes
@@ -20,8 +28,25 @@ int MPIR_Dup_fn(MPI_Comm comm ATTRIBUTE((unused)),
     MPL_UNREFERENCED_ARG(keyval);
     MPL_UNREFERENCED_ARG(extra_state);
 
-    /* Set attr_out, the flag and return success */
-    (*(void **) attr_out) = attr_in;
-    (*flag) = 1;
-    return (MPI_SUCCESS);
+    return attr_dup_fn(attr_in, attr_out, flag);
 }
+
+#ifdef BUILD_MPI_ABI
+int MPIR_Comm_dup_fn(ABI_Comm comm, int keyval, void *extra_state,
+                     void *attr_in, void *attr_out, int *flag)
+{
+    return attr_dup_fn(attr_in, attr_out, flag);
+}
+
+int MPIR_Type_dup_fn(ABI_Datatype datatype, int keyval, void *extra_state,
+                     void *attr_in, void *attr_out, int *flag)
+{
+    return attr_dup_fn(attr_in, attr_out, flag);
+}
+
+int MPIR_Win_dup_fn(ABI_Win win, int keyval, void *extra_state,
+                    void *attr_in, void *attr_out, int *flag)
+{
+    return attr_dup_fn(attr_in, attr_out, flag);
+}
+#endif

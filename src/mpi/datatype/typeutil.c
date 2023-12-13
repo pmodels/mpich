@@ -350,21 +350,6 @@ int MPIR_Datatype_commit_pairtypes(void)
     return MPI_SUCCESS;
 }
 
-/* This will eventually be removed once ROMIO knows more about MPICH */
-void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag)
-{
-    if (HANDLE_IS_BUILTIN(datatype))
-        *flag = 1;
-    else {
-        MPIR_Datatype *dt_ptr;
-        MPIR_Datatype_get_ptr(datatype, dt_ptr);
-        if (!dt_ptr->is_committed) {
-            MPIR_Type_commit_impl(&datatype);
-        }
-        MPIR_Datatype_is_contig(datatype, flag);
-    }
-}
-
 /* If an attribute is added to a predefined type, we free the attributes
    in Finalize */
 static int datatype_attr_finalize_cb(void *dummy ATTRIBUTE((unused)))

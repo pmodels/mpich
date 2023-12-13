@@ -462,6 +462,10 @@ fn_romio_glue() {
     echo "done"
 }
 
+fn_abi() {
+    ($PYTHON maint/gen_abi.py)
+}
+
 fn_f77() {
     set_PYTHON
     echo_n "Building Fortran 77 interface... "
@@ -1037,6 +1041,8 @@ fn_gen_binding_c
 ########################################################################
 
 # Create the bindings if necessary 
+fn_abi
+
 if [ $do_f77 = "yes" ] ; then
     fn_f77
 else

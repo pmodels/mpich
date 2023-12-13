@@ -16,7 +16,6 @@
  */
 
 #include "adio.h"
-#include "mpi.h"
 #include "adio_cb_config_list.h"
 #include <stdio.h>
 #include <string.h>

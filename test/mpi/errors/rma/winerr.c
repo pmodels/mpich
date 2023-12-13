@@ -26,7 +26,7 @@ void weh(MPI_Win * win, int *err, ...)
     }
     if (*win != mywin) {
         errs++;
-        printf("Unexpected window (got %x expected %x)\n", (int) *win, (int) mywin);
+        printf("Unexpected window\n");
     }
     calls++;
     return;

@@ -98,6 +98,9 @@ endif BUILD_F77_BINDING
 ## lib@PMPILIBNAME@ (which is the same as lib@MPILIBNAME@ on systems
 ## that support weak symbols).
 ##
+## mpi_abi_sources: similar to mpi_sources, but used to compile
+## lib@MPIABILIBNAME@.
+##
 ## mpi_f77_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these
 ## files provide the "mpi_" public functions for the F77 bindings and
 ## end up in lib@MPIFCLIBNAME@.
@@ -113,6 +116,7 @@ endif BUILD_F77_BINDING
 ## mpi_core_sources: These files are internal non-public functions
 ## that are used by all bindings.
 mpi_sources =
+mpi_abi_sources =
 mpi_f77_sources =
 mpi_fc_sources =
 mpi_fc_modules =
@@ -144,6 +148,12 @@ lib_lib@MPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI
 lib_lib@MPILIBNAME@_la_LIBADD = lib/lib@PMPILIBNAME@.la $(mpi_convenience_libs)
 
+if BUILD_ROMIO
+    # libpromio contains the PMPI symbols (unlike libpmpi, which contains MPI
+    # symbols) and should be added to libpmpi
+    lib_lib@PMPILIBNAME@_la_LIBADD += src/mpi/romio/libpromio.la
+    lib_lib@MPILIBNAME@_la_LIBADD += src/mpi/romio/libromio.la
+endif
 else !BUILD_PROFILING_LIB
 
 lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
@@ -152,7 +162,51 @@ lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
 lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
 lib_lib@MPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
 EXTRA_lib_lib@MPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
+
+if BUILD_ROMIO
+    lib_lib@MPILIBNAME@_la_LIBADD += src/mpi/romio/libromio.la
+endif
 endif !BUILD_PROFILING_LIB
+
+if BUILD_ABI_LIB
+abi_cppflags = -DBUILD_MPI_ABI -I$(srcdir)/src/binding/abi
+if BUILD_PROFILING_LIB
+# dropping mpi_fc_sources and mpi_cxx_sources from libmpmpi since they
+# don't contribute any PMPI symbols.
+lib_LTLIBRARIES += lib/lib@PMPIABILIBNAME@.la
+lib_lib@PMPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_f77_sources) $(mpi_core_sources)
+lib_lib@PMPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@PMPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI $(abi_cppflags)
+lib_lib@PMPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs)
+EXTRA_lib_lib@PMPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs)
+
+# lib@MPIABILIBNAME@.la might depend on lib@PMPIABILIBNAME@.la.  We add them
+# in that order to lib_LTLIBRARIES so libtool doesn't get
+# confused. (see https://bugzilla.redhat.com/show_bug.cgi?id=91110)
+lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
+lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources)
+lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI $(abi_cppflags)
+lib_lib@MPIABILIBNAME@_la_LIBADD = lib/lib@PMPIABILIBNAME@.la $(mpi_convenience_libs)
+
+if BUILD_ROMIO
+    lib_lib@PMPIABILIBNAME@_la_LIBADD += src/mpi/romio/libpromio_abi.la
+    lib_lib@MPIABILIBNAME@_la_LIBADD += src/mpi/romio/libromio_abi.la
+endif
+else !BUILD_PROFILING_LIB
+
+lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
+lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_core_sources)
+lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) $(abi_cppflags)
+lib_lib@MPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
+EXTRA_lib_lib@MPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
+
+if BUILD_ROMIO
+    lib_lib@MPIABILIBNAME@_la_LIBADD += src/mpi/romio/libromio_abi.la
+endif
+endif !BUILD_PROFILING_LIB
+endif BUILD_ABI_LIB
 
 if BUILD_F77_BINDING
 lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
@@ -209,6 +263,7 @@ install-exec-hook:
 	    . lib/lib@MPILIBNAME@.la ; \
 	fi ; \
 	for e in ${DESTDIR}${bindir}/@MPICC_NAME@ ${DESTDIR}${bindir}/@MPICXX_NAME@ \
+	        ${DESTDIR}${bindir}/@MPICC_ABI_NAME@ \
 		${DESTDIR}${bindir}/@MPIF77_NAME@ ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; do \
 		if test -e $${e} ; then \
 			sed -e 's|__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${prefix}|g' \

@@ -4,6 +4,9 @@
  */
 
 #include "mpiimpl.h"
+#ifdef BUILD_MPI_ABI
+#include "mpi_abi_util.h"
+#endif
 /*
  * Keyvals.  These are handled just like the other opaque objects in MPICH
  * The predefined keyvals (and their associated attributes) are handled
@@ -297,8 +300,12 @@ MPII_Attr_copy_c_proxy(MPI_Comm_copy_attr_function * user_function,
     } else {
         attrib_val = attrib;
     }
-
+#ifndef BUILD_MPI_ABI
     ret = user_function(handle, keyval, extra_state, attrib_val, attrib_copy, flag);
+#else
+    ret = user_function(ABI_Handle_from_mpi(handle), keyval, extra_state, attrib_val,
+                        attrib_copy, flag);
+#endif
 
     return ret;
 }
@@ -317,8 +324,11 @@ MPII_Attr_delete_c_proxy(MPI_Comm_delete_attr_function * user_function,
         attrib_val = &attrib;
     else
         attrib_val = attrib;
-
+#ifndef BUILD_MPI_ABI
     ret = user_function(handle, keyval, attrib_val, extra_state);
+#else
+    ret = user_function(ABI_Handle_from_mpi(handle), keyval, attrib_val, extra_state);
+#endif
 
     return ret;
 }

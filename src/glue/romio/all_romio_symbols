@@ -72,6 +72,7 @@ print OUTFD <<EOT;
  */
 
 #include "mpiimpl.h"
+#include "mpir_ext.h"
 
 #include <stdio.h>
 

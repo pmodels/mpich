@@ -210,6 +210,11 @@ known_filesystems="m4_join([ ],known_filesystems_m4)"
 
 #
 # Defaults
+AC_ARG_ENABLE(mpi-abi,
+        AS_HELP_STRING([--enable-mpi-abi], [Enable building libmpi_abi.so]),,
+        enable_mpi_abi=no)
+AM_CONDITIONAL([BUILD_ABI_LIB], [test "$enable_mpi_abi" = "yes"])
+
 AC_ARG_ENABLE(aio,[
 --enable-aio - Request use of asynchronous I/O routines (default)],
 [

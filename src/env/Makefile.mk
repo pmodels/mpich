@@ -7,6 +7,10 @@ bin_SCRIPTS +=           \
     src/env/mpicc        \
     src/env/parkill
 
+if BUILD_ABI_LIB
+    bin_SCRIPTS += src/env/mpicc_abi
+endif
+
 bin_PROGRAMS += src/env/mpichversion \
     src/env/mpivars
 
@@ -31,12 +35,16 @@ endif INSTALL_MPICXX
 if BUILD_BASH_SCRIPTS
 src/env/mpicc: $(top_builddir)/src/env/mpicc.bash
 	cp -p $? $@
+src/env/mpicc_abi: $(top_builddir)/src/env/mpicc_abi.bash
+	cp -p $? $@
 src/env/mpicxx: $(top_builddir)/src/env/mpicxx.bash
 	cp -p $? $@
 src/env/mpifort: $(top_builddir)/src/env/mpifort.bash
 	cp -p $? $@
 else !BUILD_BASH_SCRIPTS
 src/env/mpicc: $(top_builddir)/src/env/mpicc.sh
+	cp -p $? $@
+src/env/mpicc_abi: $(top_builddir)/src/env/mpicc_abi.sh
 	cp -p $? $@
 src/env/mpicxx: $(top_builddir)/src/env/mpicxx.sh
 	cp -p $? $@
