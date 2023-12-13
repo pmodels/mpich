@@ -98,11 +98,11 @@ int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn
     keyval_ptr->was_freed = 0;
     keyval_ptr->kind = MPIR_DATATYPE;
     keyval_ptr->extra_state = extra_state;
-    /* add (void *) cast since we are assigning MPI_Type_copy_attr_function to
+    /* Cast since we are assigning MPI_Type_copy_attr_function to
      * MPI_Comm_copy_attr_function */
-    keyval_ptr->copyfn.user_function = (void *) type_copy_attr_fn;
+    keyval_ptr->copyfn.user_function = (MPI_Comm_copy_attr_function *) type_copy_attr_fn;
     keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
-    keyval_ptr->delfn.user_function = (void *) type_delete_attr_fn;
+    keyval_ptr->delfn.user_function = (MPI_Comm_delete_attr_function *) type_delete_attr_fn;
     keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
 
     /* Tell finalize to check for attributes on permanent types */
@@ -139,11 +139,11 @@ int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
     keyval_ptr->was_freed = 0;
     keyval_ptr->kind = MPIR_WIN;
     keyval_ptr->extra_state = extra_state;
-    /* add (void *) cast since we are assigning MPI_Win_copy_attr_function to
+    /* Cast since we are assigning MPI_Win_copy_attr_function to
      * MPI_Comm_copy_attr_function */
-    keyval_ptr->copyfn.user_function = (void *) win_copy_attr_fn;
+    keyval_ptr->copyfn.user_function = (MPI_Comm_copy_attr_function *) win_copy_attr_fn;
     keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
-    keyval_ptr->delfn.user_function = (void *) win_delete_attr_fn;
+    keyval_ptr->delfn.user_function = (MPI_Comm_delete_attr_function *) win_delete_attr_fn;
     keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
 
     MPIR_OBJ_PUBLISH_HANDLE(*win_keyval, keyval_ptr->handle);
