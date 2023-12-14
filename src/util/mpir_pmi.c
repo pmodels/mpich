@@ -4,6 +4,7 @@
  */
 
 #include <mpir_pmi.h>
+#include <mpir_pset.h>
 #include <mpiimpl.h>
 #include "uthash.h"     /* for hash function */
 
@@ -205,6 +206,8 @@ int MPIR_pmi_init(void)
 
 void MPIR_pmi_finalize(void)
 {
+    SWITCH_PMI(break, break, pmix_deregister_event_handlers());
+
     /* Finalize of PM interface happens in exit handler,
      * here: free allocated memory */
     MPL_free(pmi_kvs_name);

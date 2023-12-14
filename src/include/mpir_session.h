@@ -8,6 +8,9 @@
 
 #include "mpiimpl.h"
 
+#define MPIR_SESSION_WORLD_PSET_NAME "mpi://WORLD"
+#define MPIR_SESSION_SELF_PSET_NAME "mpi://SELF"
+
 /* Session structure */
 struct MPIR_Session {
     MPIR_OBJECT_HEADER;
@@ -58,4 +61,4 @@ int MPIR_Session_get_pset_info_impl(MPIR_Session * session_ptr, const char *pset
 int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_ptr,
                            MPIR_Session ** session_ptr);
 
-#endif /* MPIR_SESSSION_H_INCLUDED */
+#endif /* MPIR_SESSION_H_INCLUDED */

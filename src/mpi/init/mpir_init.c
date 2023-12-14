@@ -7,6 +7,7 @@
 #include "mpir_info.h"
 #include "datatype.h"
 #include "mpi_init.h"
+#include "mpir_pset.h"
 #include <strings.h>
 
 /*
@@ -189,6 +190,8 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPIR_Typerep_init();
     MPII_thread_mutex_create();
     MPII_init_request();
+    mpi_errno = MPIR_Pset_init();
+    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_pmi_init();
     MPIR_ERR_CHECK(mpi_errno);
     MPII_hwtopo_init();
@@ -460,6 +463,8 @@ int MPII_Finalize(MPIR_Session * session_ptr)
 
     mpi_errno = MPII_Coll_finalize();
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Pset_free();
 
     /* Call the low-priority (post Finalize) callbacks */
     MPII_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO);
