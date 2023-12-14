@@ -207,7 +207,14 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     } else {
         /* The first line is the name, the second is the
          * process that published. We just read the name */
-        if (!fgets(port, MPI_MAX_PORT_NAME, fp)) {
+        int port_name_size = MPI_MAX_PORT_NAME;
+        if (info_ptr) {
+            const char *val = MPIR_Info_lookup(info_ptr, "port_name_size");
+            if (val) {
+                port_name_size = atoi(val);
+            }
+        }
+        if (!fgets(port, port_name_size, fp)) {
             /* --BEGIN ERROR HANDLING-- */
             port[0] = 0;
             MPIR_ERR_SET1(mpi_errno, MPI_ERR_NAME,

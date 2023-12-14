@@ -6,6 +6,11 @@
   of 256. One can work around by use an info hint "port_name_size" and use a
   larger port name buffer.
 
+# PMI-1 defines PMI_MAX_PORT_NAME, which may be different from MPI_MAX_PORT_NAME.
+  This is used by "PMI_Lookup_name". Consequently, MPI_Lookup_name accepts info
+  hint "port_name_size" that may be larger than MPI_MAX_PORT_NAME. If the port
+  name does not fit in "port_name_size", it will return a trunction error.
+
 ===============================================================================
                                Changes in 4.2
 ===============================================================================

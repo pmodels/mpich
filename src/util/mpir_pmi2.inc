@@ -261,13 +261,13 @@ static int pmi2_publish(const char name[], const char port[])
     goto fn_exit;
 }
 
-static int pmi2_lookup(const char name[], char port[])
+static int pmi2_lookup(const char name[], char port[], int port_len)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
     /* release the global CS for PMI calls */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    pmi_errno = PMI2_Nameserv_lookup(name, NULL, port, MPI_MAX_PORT_NAME);
+    pmi_errno = PMI2_Nameserv_lookup(name, NULL, port, port_len);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_NAME, "**namepubnotfound",
                          "**namepubnotfound %s", name);
@@ -374,7 +374,7 @@ static int pmi2_publish(const char name[], const char port[])
     return MPI_ERR_INTERN;
 }
 
-static int pmi2_lookup(const char name[], char port[])
+static int pmi2_lookup(const char name[], char port[], int port_len)
 {
     return MPI_ERR_INTERN;
 }

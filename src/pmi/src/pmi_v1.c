@@ -27,12 +27,6 @@
 #include "pmi_msg.h"
 #include "pmi_common.h"
 
-#ifdef HAVE_MPI_H
-#include "mpi.h"        /* to get MPI_MAX_PORT_NAME */
-#else
-#define MPI_MAX_PORT_NAME 256
-#endif
-
 #include <sys/socket.h>
 
 #define USE_WIRE_VER  PMIU_WIRE_V1
@@ -551,7 +545,7 @@ PMI_API_PUBLIC int PMI_Lookup_name(const char service_name[], char port[])
         const char *tmp_port;
         PMIU_msg_get_response_lookup(&pmicmd, &tmp_port);
 
-        MPL_strncpy(port, tmp_port, MPI_MAX_PORT_NAME);
+        MPL_strncpy(port, tmp_port, PMI_MAX_PORT_NAME);
 
     } else {
         PMIU_ERR_SETANDJUMP(pmi_errno, PMI_FAIL, "PMI_Lookup_name called before init\n");
