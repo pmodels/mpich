@@ -61,17 +61,22 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
         match_req = (MPIR_Request *) MPIDIG_REQUEST(rreq, req->rreq.match_req);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        int is_cancelled;
-        mpi_errno = MPIDI_anysrc_try_cancel_partner(match_req, &is_cancelled);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* `is_cancelled` is assumed to be always true.
-         * In typical config, anysrc partners won't occur if matching unexpected
-         * message already exist.
-         * In workq setup, since we will always progress shm first, when unexpected
-         * message match, the NM partner wouldn't have progressed yet, so the cancel
-         * should always succeed.
+        /* we have a match_req when ch4 pre-allocates an rreq before MPIDIG_do_irecv.
+         * Potentially the pre-allocates request is an any-source receive.
          */
-        MPIR_Assert(is_cancelled);
+        if (match_req) {
+            int is_cancelled;
+            mpi_errno = MPIDI_anysrc_try_cancel_partner(match_req, &is_cancelled);
+            MPIR_ERR_CHECK(mpi_errno);
+            /* `is_cancelled` is assumed to be always true.
+             * In typical config, anysrc partners won't occur if matching unexpected
+             * message already exist.
+             * In workq setup, since we will always progress shm first, when unexpected
+             * message match, the NM partner wouldn't have progressed yet, so the cancel
+             * should always succeed.
+             */
+            MPIR_Assert(is_cancelled);
+        }
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
