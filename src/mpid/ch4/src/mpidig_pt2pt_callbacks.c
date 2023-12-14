@@ -83,6 +83,9 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     /* If we didn't match the request, unmark the busy bit and skip the data movement below. */
     if (!match_req) {
         MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_BUSY;
+        if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_MATCHED) {
+            MPID_Request_complete(rreq);
+        }
         goto fn_exit;
     }
 
