@@ -60,11 +60,11 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_MATCHED) {
         match_req = (MPIR_Request *) MPIDIG_REQUEST(rreq, req->rreq.match_req);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
         /* we have a match_req when ch4 pre-allocates an rreq before MPIDIG_do_irecv.
          * Potentially the pre-allocates request is an any-source receive.
          */
         if (match_req) {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
             int is_cancelled;
             mpi_errno = MPIDI_anysrc_try_cancel_partner(match_req, &is_cancelled);
             MPIR_ERR_CHECK(mpi_errno);
@@ -76,32 +76,28 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
              * should always succeed.
              */
             MPIR_Assert(is_cancelled);
-        }
+            MPIDI_anysrc_free_partner(match_req);
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
-    }
 
-    /* If we didn't match the request, unmark the busy bit and skip the data movement below. */
-    if (!match_req) {
-        MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_BUSY;
-        if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_MATCHED) {
+            /* transfer rreq to match_req, release rreq, complete match_req */
+            mpi_errno = MPIDIG_handle_unexpected(MPIDIG_REQUEST(match_req, buffer),
+                                                 MPIDIG_REQUEST(match_req, count),
+                                                 MPIDIG_REQUEST(match_req, datatype), rreq);
+            MPIR_ERR_CHECK(mpi_errno);
+
+            MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(match_req, datatype));
+            MPIR_Object_release_ref(rreq, &in_use);
+            /* MPID_Request_complete(rreq); */
+            MPID_Request_complete(match_req);
+        } else {
+            /* no match_req, just complete rreq */
             MPID_Request_complete(rreq);
         }
-        goto fn_exit;
+    } else {
+        /* If we didn't match the request, simply unmark the busy bit as data is ready. */
+        MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_BUSY;
     }
 
-    mpi_errno = MPIDIG_handle_unexpected(MPIDIG_REQUEST(match_req, buffer),
-                                         MPIDIG_REQUEST(match_req, count),
-                                         MPIDIG_REQUEST(match_req, datatype), rreq);
-    MPIR_ERR_CHECK(mpi_errno);
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_anysrc_free_partner(match_req);
-#endif
-
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(match_req, datatype));
-    MPIR_Object_release_ref(rreq, &in_use);
-    /* MPID_Request_complete(rreq); */
-    MPID_Request_complete(match_req);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
