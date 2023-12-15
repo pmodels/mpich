@@ -54,11 +54,13 @@ def main():
     f = "%s/fortran_profile.h" % f77_dir
     dump_f77_c_file(f, G.profile_out)
 
-    G.mpih_defines = {}
-    load_mpi_h_in("src/include/mpi.h.in")
-    load_mpi_h_in("src/mpi/romio/include/mpio.h.in")
-    f = "%s/mpif.h.in" % f77_dir
-    dump_mpif_h(f)
+    # .in files has to be generated in the source tree
+    if G.is_autogen():
+        G.mpih_defines = {}
+        load_mpi_h_in("src/include/mpi.h.in")
+        load_mpi_h_in("src/mpi/romio/include/mpio.h.in")
+        f = "%s/mpif.h.in" % f77_dir
+        dump_mpif_h(f)
 
 # ---------------------------------------------------------
 if __name__ == "__main__":
