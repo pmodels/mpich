@@ -64,21 +64,6 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
          * Potentially the pre-allocates request is an any-source receive.
          */
         if (match_req) {
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-            int is_cancelled;
-            mpi_errno = MPIDI_anysrc_try_cancel_partner(match_req, &is_cancelled);
-            MPIR_ERR_CHECK(mpi_errno);
-            /* `is_cancelled` is assumed to be always true.
-             * In typical config, anysrc partners won't occur if matching unexpected
-             * message already exist.
-             * In workq setup, since we will always progress shm first, when unexpected
-             * message match, the NM partner wouldn't have progressed yet, so the cancel
-             * should always succeed.
-             */
-            MPIR_Assert(is_cancelled);
-            MPIDI_anysrc_free_partner(match_req);
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
-
             /* transfer rreq to match_req, release rreq, complete match_req */
             mpi_errno = MPIDIG_handle_unexpected(MPIDIG_REQUEST(match_req, buffer),
                                                  MPIDIG_REQUEST(match_req, count),
@@ -126,10 +111,6 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
 
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, u.recv.source);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_anysrc_free_partner(rreq);
-#endif
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
     if ((MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_RTS) &&
@@ -398,6 +379,10 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
             mpi_errno = MPIDIG_reply_ssend(rreq);
             MPIR_ERR_CHECK(mpi_errno);
         }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_anysrc_free_partner(rreq);
+#endif
+
         MPIDIG_recv_type_init(hdr->data_sz, rreq);
 
         if (msg_mode == MSG_MODE_EAGER) {
