@@ -41,3 +41,25 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
+
+int MPIDI_IPC_complete(MPIR_Request * rreq, int ipc_type)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_IPC_ack_t am_hdr;
+    am_hdr.ipc_type = ipc_type;
+    am_hdr.req_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
+
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
+    CH4_CALL(am_send_hdr(MPIDIG_REQUEST(rreq, u.recv.source), rreq->comm, MPIDI_IPC_ACK,
+                         &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
