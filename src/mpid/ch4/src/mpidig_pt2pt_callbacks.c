@@ -127,10 +127,6 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, u.recv.source);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
 
-    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_PEER_SSEND) {
-        mpi_errno = MPIDIG_reply_ssend(rreq);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_anysrc_free_partner(rreq);
 #endif
@@ -398,6 +394,10 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         set_matched_rreq_fields(rreq, hdr->src_rank, hdr->tag, hdr->context_id,
                                 hdr->error_bits, is_local);
         set_rreq_common(rreq, hdr);
+        if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_PEER_SSEND) {
+            mpi_errno = MPIDIG_reply_ssend(rreq);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
         MPIDIG_recv_type_init(hdr->data_sz, rreq);
 
         if (msg_mode == MSG_MODE_EAGER) {
