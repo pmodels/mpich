@@ -158,12 +158,14 @@ def main():
     f = "%s/mpi_f08_types.f90" % f08_dir
     dump_f90_file(f, G.out)
 
-    # mpi_f08_compile_constants.f90.in
-    G.mpih_defines = {}
-    load_mpi_h_in("src/include/mpi.h.in")
-    load_mpi_h_in("src/mpi/romio/include/mpio.h.in")
-    f = "%s/mpi_f08_compile_constants.f90.in" % f08_dir
-    dump_compile_constants_f90(f)
+    # .in files has to be generated in the source tree
+    if G.is_autogen():
+        # mpi_f08_compile_constants.f90.in
+        G.mpih_defines = {}
+        load_mpi_h_in("src/include/mpi.h.in")
+        load_mpi_h_in("src/mpi/romio/include/mpio.h.in")
+        f = "%s/mpi_f08_compile_constants.f90.in" % f08_dir
+        dump_compile_constants_f90(f)
 
 # ---------------------------------------------------------
 if __name__ == "__main__":

@@ -8,6 +8,9 @@ import re
 import sys
 
 def get_srcdir():
+    if os.path.exists("maint/local_python/__init__.py"):
+        return "."
+
     m = re.match(r'(.*)\/maint\/local_python', __file__)
     if m:
         return m.group(1)
@@ -29,6 +32,9 @@ class RE:
 # Global data used across modules
 class MPI_API_Global:
     srcdir = get_srcdir()
+
+    def is_autogen():
+        return MPI_API_Global.srcdir == "."
 
     def get_srcdir_path(path):
         # assume path is a relative path from top srcdir
