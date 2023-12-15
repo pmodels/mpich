@@ -10,6 +10,7 @@ sendrecv3 2
 sendrecv3 2 arg=-isendrecv
 sendflood 8
 sendall 4
+send_tests 3
 anyall 2
 eagerdt 2
 bottom 2
