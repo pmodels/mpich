@@ -228,6 +228,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
              * Record the passed `*request` to `match_req` so that we can complete it
              * later when `unexp_req` completes.
              * See MPIDI_recv_target_cmpl_cb for actual completion handler. */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            MPIR_Request *match_req = *request;
+            int is_cancelled;
+            mpi_errno = MPIDI_anysrc_try_cancel_partner(match_req, &is_cancelled);
+            MPIR_ERR_CHECK(mpi_errno);
+            /* since we will always progress shm first, when unexpected
+             * message match, the NM partner wouldn't have progressed yet, so the cancel
+             * should always succeed. */
+            MPIR_Assert(is_cancelled);
+            MPIDI_anysrc_free_partner(match_req);
+#endif
             MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
             MPIDIG_REQUEST(*request, req->remote_vci) = MPIDIG_REQUEST(unexp_req, req->remote_vci);
         }
