@@ -210,9 +210,11 @@ typedef int MPI_Datatype;
 #define MPI_CHARACTER         ((MPI_Datatype)@MPI_CHARACTER@)
 
 /* Size-specific types (see MPI-2, 10.2.5) */
+#define MPI_REAL2             ((MPI_Datatype)@MPI_REAL2@)
 #define MPI_REAL4             ((MPI_Datatype)@MPI_REAL4@)
 #define MPI_REAL8             ((MPI_Datatype)@MPI_REAL8@)
 #define MPI_REAL16            ((MPI_Datatype)@MPI_REAL16@)
+#define MPI_COMPLEX4          ((MPI_Datatype)@MPI_COMPLEX4@)
 #define MPI_COMPLEX8          ((MPI_Datatype)@MPI_COMPLEX8@)
 #define MPI_COMPLEX16         ((MPI_Datatype)@MPI_COMPLEX16@)
 #define MPI_COMPLEX32         ((MPI_Datatype)@MPI_COMPLEX32@)
