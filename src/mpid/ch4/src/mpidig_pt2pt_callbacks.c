@@ -117,11 +117,11 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
         MPIDIG_REQUEST(rreq, req->rreq.match_req) != NULL) {
         /* This block is executed only when the receive is enqueued (handoff) &&
          * receive was matched with an unexpected long RTS message.
-         * `rreq` is the unexpected message received and `sigreq` is the message
+         * `rreq` is the unexpected message received and `match_req` is the message
          * that came from CH4 (e.g. MPIDI_recv_safe) */
-        MPIR_Request *sigreq = MPIDIG_REQUEST(rreq, req->rreq.match_req);
-        sigreq->status = rreq->status;
-        MPID_Request_complete(sigreq);
+        MPIR_Request *match_req = MPIDIG_REQUEST(rreq, req->rreq.match_req);
+        match_req->status = rreq->status;
+        MPID_Request_complete(match_req);
         /* Free the unexpected request on behalf of the user */
         MPIDI_CH4_REQUEST_FREE(rreq);
     }
