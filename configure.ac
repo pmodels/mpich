@@ -3046,6 +3046,10 @@ if test "$enable_f77" = yes ; then
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*16 i])],
         pac_cv_fort_integer16=yes,
         pac_cv_fort_integer16=no)])
+    AC_CACHE_CHECK([whether real*2 is supported],pac_cv_fort_real2,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*2 a])],
+        pac_cv_fort_real2=yes,
+        pac_cv_fort_real2=no)])
     AC_CACHE_CHECK([whether real*4 is supported],pac_cv_fort_real4,[
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*4 a])],
         pac_cv_fort_real4=yes,
@@ -3260,6 +3264,7 @@ else
     pac_cv_f77_sizeof_integer4=0
     pac_cv_f77_sizeof_integer8=0
     pac_cv_f77_sizeof_integer16=0
+    pac_cv_f77_sizeof_real2=0
     pac_cv_f77_sizeof_real4=0
     pac_cv_f77_sizeof_real8=0
     pac_cv_f77_sizeof_real16=0
@@ -3558,7 +3563,7 @@ PAC_SET_MPI_TYPE(22, MPI_DOUBLE_COMPLEX, $pac_cv_f77_sizeof_double_precision, 2)
 PAC_SET_MPI_TYPE(23, MPI_2DOUBLE_PRECISION, $pac_cv_f77_sizeof_double_precision, 2)
 PAC_SET_MPI_TYPE(24, MPI_2COMPLEX, $pac_cv_f77_sizeof_real, 4)
 PAC_SET_MPI_TYPE(25, MPI_2DOUBLE_COMPLEX, $pac_cv_f77_sizeof_double_precision, 4)
-
+PAC_SET_MPI_TYPE(26, MPI_REAL2, $pac_cv_f77_sizeof_real2)
 PAC_SET_MPI_TYPE(27, MPI_REAL4, $pac_cv_f77_sizeof_real4)
 PAC_SET_MPI_TYPE(28, MPI_COMPLEX8, $pac_cv_f77_sizeof_real4, 2)
 PAC_SET_MPI_TYPE(29, MPI_REAL8, $pac_cv_f77_sizeof_real8)
@@ -3566,7 +3571,7 @@ PAC_SET_MPI_TYPE(2a, MPI_COMPLEX16, $pac_cv_f77_sizeof_real8, 2)
 PAC_SET_MPI_TYPE(2b, MPI_REAL16, $pac_cv_f77_sizeof_real16)
 PAC_SET_MPI_TYPE(2c, MPI_COMPLEX32, $pac_cv_f77_sizeof_real16, 2)
 PAC_SET_MPI_TYPE(2d, MPI_INTEGER1, $pac_cv_f77_sizeof_integer1)
-
+PAC_SET_MPI_TYPE(2e, MPI_COMPLEX4, $pac_cv_f77_sizeof_real2, 2)
 PAC_SET_MPI_TYPE(2f, MPI_INTEGER2, $pac_cv_f77_sizeof_integer2)
 PAC_SET_MPI_TYPE(30, MPI_INTEGER4, $pac_cv_f77_sizeof_integer4)
 PAC_SET_MPI_TYPE(31, MPI_INTEGER8, $pac_cv_f77_sizeof_integer8)
