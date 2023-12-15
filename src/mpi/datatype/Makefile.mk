@@ -22,4 +22,5 @@ mpi_core_sources +=                              \
     src/mpi/datatype/type_create_darray.c        \
     src/mpi/datatype/type_create_subarray.c      \
     src/mpi/datatype/type_create_pairtype.c      \
+    src/mpi/datatype/create_f90.c                \
     src/mpi/datatype/type_debug.c

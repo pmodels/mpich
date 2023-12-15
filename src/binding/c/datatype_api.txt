@@ -7,6 +7,33 @@ MPI_Address:
     .skip: global_cs
     .replace: removed with MPI_Get_address
 
+MPI_Type_create_f90_integer:
+    .desc: Return a predefined type that matches the specified range
+/*
+    Notes:
+    If there is no corresponding type for the specified range, the call is
+    erroneous.  This implementation sets 'newtype' to 'MPI_DATATYPE_NULL' and
+    returns an error of class 'MPI_ERR_ARG'.
+*/
+
+MPI_Type_create_f90_real:
+    .desc: Return a predefined type that matches the specified range
+/*
+    Notes:
+    If there is no corresponding type for the specified range, the call is
+    erroneous.  This implementation sets 'newtype' to 'MPI_DATATYPE_NULL' and
+    returns an error of class 'MPI_ERR_ARG'.
+*/
+
+MPI_Type_create_f90_complex:
+    .desc: Return a predefined type that matches the specified range
+/*
+    Notes:
+    If there is no corresponding type for the specified range, the call is
+    erroneous.  This implementation sets 'newtype' to 'MPI_DATATYPE_NULL' and
+    returns an error of class 'MPI_ERR_ARG'.
+*/
+
 MPI_Get_address:
     .desc: Get the address of a location in memory
     .skip: Fortran, global_cs

@@ -11,13 +11,6 @@ MPIBASEMOD       = @MPIBASEMODNAME@
 PMPIBASEMOD       = @PMPIBASEMODNAME@
 FC_COMPILE_MODS  = $(LTFCCOMPILE)
 
-# ensure that the buildiface script ends up in the release tarball
-EXTRA_DIST += src/binding/fortran/use_mpi/buildiface
-
-# additional perl files that are "require"d by use_mpi/buildiface and
-# mpif_h/buildiface, respectively
-EXTRA_DIST += src/binding/fortran/use_mpi/binding.sub src/binding/fortran/use_mpi/cf90tdefs
-
 # variables for custom "silent-rules" for F90 modules
 mod_verbose = $(mod_verbose_$(V))
 mod_verbose_ = $(mod_verbose_$(AM_DEFAULT_VERBOSITY))
@@ -30,30 +23,18 @@ if BUILD_FC_BINDING
 # in a VPATH build)
 AM_FCFLAGS += @FCINCFLAG@src/binding/fortran/use_mpi
 
-# C source that implements both the C and the Fortran bindings for the type
-# creation routines.  These go into libmpi.la and will be built a second time
-# for inclusion in libpmpi.la on platforms that do not support weak symbols.
-# If shared libraries are enabled then the compilation space doubles again.
-mpi_sources += \
-    src/binding/fortran/use_mpi/create_f90_int.c \
-    src/binding/fortran/use_mpi/create_f90_real.c \
-    src/binding/fortran/use_mpi/create_f90_complex.c
-
-# utility code that has no PMPI equivalent
-mpi_core_sources += src/binding/fortran/use_mpi/create_f90_util.c
 AM_CPPFLAGS += -Isrc/binding/fortran/use_mpi
 noinst_HEADERS +=                     \
-    src/binding/fortran/use_mpi/create_f90_util.h \
     src/binding/fortran/use_mpi/mpifnoext.h
-
-nodist_noinst_HEADERS += \
-    src/binding/fortran/use_mpi/mpif90model.h
 
 # cause any .$(MOD) files to be output in the f90 bindings directory instead of
 # the current directory
 FC_COMPILE_MODS += $(FCMODOUTFLAG)src/binding/fortran/use_mpi
 
-mpi_fc_sources += \
+mpifort_convenience_libs += lib/libf90_mpi.la
+noinst_LTLIBRARIES += lib/libf90_mpi.la
+
+lib_libf90_mpi_la_SOURCES = \
     src/binding/fortran/use_mpi/mpi.f90 \
     src/binding/fortran/use_mpi/mpi_constants.f90 \
     src/binding/fortran/use_mpi/mpi_sizeofs.f90 \
