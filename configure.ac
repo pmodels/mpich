@@ -4272,7 +4272,7 @@ AC_CONFIG_FILES([Makefile \
 	  src/env/mpifort.bash \
           src/env/parkill \
           src/include/mpi.h \
-          src/mpi/datatype/mpif90model.h \
+          src/include/mpif90model.h \
           doc/installguide/Makefile \
           doc/refman/Makefile \
           doc/userguide/Makefile \
