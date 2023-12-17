@@ -5,7 +5,6 @@
 
 #include "mpidimpl.h"
 #include "mpidch4r.h"
-#include "datatype.h"
 #include "mpidu_init_shm.h"
 #include "stream_workq.h"
 

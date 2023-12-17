@@ -5,7 +5,6 @@
 
 #include "mpiimpl.h"
 #include "dataloop_internal.h"
-#include "datatype.h"
 #include "mpir_typerep.h"
 #include "typerep_util.h"
 #include "veccpy.h"

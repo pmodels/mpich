@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "datatype.h"
 
 int MPIR_Get_address_impl(const void *location, MPI_Aint * address)
 {
