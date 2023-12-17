@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "datatype.h"
 
 static void MPIR_Type_get_envelope(MPI_Datatype datatype, MPI_Aint * num_integers,
                                    MPI_Aint * num_addresses, MPI_Aint * num_large_counts,

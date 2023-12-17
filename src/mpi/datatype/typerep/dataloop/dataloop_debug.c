@@ -7,7 +7,6 @@
 #include "dataloop_internal.h"
 #include <stdlib.h>
 #include <limits.h>
-#include "datatype.h"
 
 #define NR_TYPE_CUTOFF 6        /* Number of types to display before truncating
                                  * output. 6 picked as arbitrary cutoff */

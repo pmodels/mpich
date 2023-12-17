@@ -146,6 +146,13 @@ extern MPI_Datatype MPIR_Datatype_index_to_predefined[MPIR_DATATYPE_N_PREDEFINED
 
 void MPIR_Datatype_free(MPIR_Datatype * ptr);
 void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flattened_sz);
+int MPIR_Datatype_commit_pairtypes(void);
+int MPIR_Datatype_init_predefined(void);
+int MPIR_Datatype_builtintype_alignment(MPI_Datatype type);
+
+/* internal debugging functions */
+void MPII_Datatype_printf(MPI_Datatype type, int depth, MPI_Aint displacement, int blocklength,
+                          int header);
 
 #define MPIR_Datatype_ptr_add_ref(datatype_ptr) MPIR_Object_add_ref((datatype_ptr))
 

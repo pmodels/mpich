@@ -5,7 +5,6 @@
 
 #include "mpiimpl.h"
 #include "mpir_info.h"
-#include "datatype.h"
 #include "mpi_init.h"
 #include <strings.h>
 #include "mpir_async_things.h"
