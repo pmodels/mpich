@@ -1,0 +1,3 @@
+module: c
+CC: mpicc
+run: mpirun -n 2
