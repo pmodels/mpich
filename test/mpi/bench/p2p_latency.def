@@ -1,0 +1,18 @@
+include: macros/bench_frame.def
+include: macros/bench_p2p.def
+
+page: p2p_latency, bench_frame
+    MULTIPLICITY: 2
+    data: buf, size, MPI_CHAR
+
+    bench_p2p(comm, 0, 1, buf, 0)
+    $for int size = 1; size < MAX_BUFSIZE; size *= 2
+        bench_p2p(comm, 0, 1, buf, size)
+
+    subcode: send_side
+        MPI_Send($(data), dst, TAG, comm);
+        MPI_Recv($(data), dst, TAG, comm, MPI_STATUS_IGNORE);
+
+    subcode: recv_side
+        MPI_Recv($(data), src, TAG, comm, MPI_STATUS_IGNORE);
+        MPI_Send($(data), src, TAG, comm);
