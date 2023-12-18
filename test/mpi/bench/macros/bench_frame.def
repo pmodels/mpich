@@ -1,0 +1,77 @@
+subcode: bench_frame
+    $include stdio
+    $include stdlib
+    $include mpi
+
+    $global grank, gsize: int
+
+    $function main
+        int errs = 0;
+
+        MPI_Init(NULL, NULL);
+
+        MPI_Comm_rank(MPI_COMM_WORLD, &grank);
+        MPI_Comm_size(MPI_COMM_WORLD, &gsize);
+
+        MPI_Comm comm = MPI_COMM_WORLD;
+        char *buf = malloc($(MAX_MSG));
+        $call main
+
+        MPI_Finalize();
+
+        return errs
+
+macros:
+    data: buf, size, MPI_CHAR
+    MAX_MSG: 5000000
+
+#---------------------------------------- 
+subcode: _autoload
+    $register_prefix(comm) MPI_Comm
+
+subcode: foreach_size
+    $for int size = 0; size < $(MAX_MSG); size = (size==0)?1:size*2
+        $(set:MSG_SIZE=size)
+        BLOCK
+
+subcode: measure(iter)
+    tf_start = MPI_Wtime()
+    $for 0:$(iter)
+        BLOCK
+    tf_dur = MPI_Wtime() - tf_start
+
+subcode: run_stat(N, var)
+    $my double sum1=0, double sum2=0
+    $for 0:$(N)
+        BLOCK
+        sum1 += $(var)
+        sum2 += $(var) * $(var)
+    sum1 /= $(N)
+    sum2 /= $(N)
+    sum2 = sqrt(sum2 - sum1 * sum1)
+
+subcode: warm_up(iter, dur)
+    $(set:MIN_ITER=(int) ($(iter) * 0.001 / $(dur)))
+    $(iter) = 2
+    $my double last_dur = 1.0
+    $my int num_best = 0
+    $while num_best < 10
+        BLOCK
+        $if $(iter) < $(MIN_ITER)
+            $(iter) = $(MIN_ITER)
+            num_best = 0
+            continue
+        # check that t_dur is no longer monotonically decreasing
+        $if $(dur) > last_dur
+            num_best++
+        last_dur = $(dur)
+
+subcode: report_latency(N)
+    tf_latency = sum1 / ($(N)) * 1e6
+    tf_sigma = sum2 / ($(N)) * 1e6
+    $(if:MSG_SIZE)
+        tf_bw = $(MSG_SIZE) / tf_latency
+        printf("  %10d %10.3f %6.3f  %10.3f\n", $(MSG_SIZE), tf_latency, tf_sigma, tf_bw)
+    $(else)
+        printf("       %10.3f %6.3f\n", tf_latency, tf_sigma)
+

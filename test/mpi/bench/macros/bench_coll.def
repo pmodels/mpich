@@ -1,0 +1,44 @@
+subcode: bench_coll
+    int rank;
+    MPI_Comm_rank(comm, &rank)
+
+    $my int iter
+    $if grank == 0
+        &call warm_up, iter, tf_dur
+            MPI_Bcast(&iter, 1, MPI_INT, 0, comm)
+            &call measure_coll, iter
+                BLOCK
+        &call run_stat, 20, tf_latency
+            MPI_Bcast(&iter, 1, MPI_INT, 0, comm)
+            &call measure_coll, iter
+                BLOCK
+            tf_latency = tf_dur / iter
+        iter = 0
+        MPI_Bcast(&iter, 1, MPI_INT, 0, comm)
+        $call report_latency, 1
+    $else
+        $while 1
+            MPI_Bcast(&iter, 1, MPI_INT, 0, comm)
+            $if iter > 0
+                $for i=0:iter
+                    BLOCK
+                MPI_Barrier(comm)
+            $else
+                break
+
+subcode: measure_coll(iter)
+    tf_start = MPI_Wtime()
+    $for 0:$(iter)
+        BLOCK
+    # The latency of a single barrier (divide by iter) should be well within the measurement noise
+    MPI_Barrier(comm)
+    tf_dur = MPI_Wtime() - tf_start
+
+#---------------------------------------- 
+fncode: global_time: double
+    $global double time_offset = 0.0
+    return MPI_Wtime() + time_offset
+
+fncode: sync_clocks(comm)
+
+fncode: sync_clock_offset(comm, src, dst)

@@ -1,0 +1,42 @@
+include: macros/bench_frame.def
+include: macros/bench_coll.def
+
+module: c
+# run: bench_barrier
+macros:
+    use_double: 1
+
+subcode: _autoload
+    $register_name(buf) void *
+    $register_name(size) int
+    $register_name(batch_size) int
+
+page: bench_barrier, bench_frame
+    CC: mpicc
+    run: mpirun -n 8
+
+    bench_barrier(comm)
+    bench_ibarrier(comm)
+    bench_bcast(comm)
+
+fncode: bench_barrier(comm)
+    $if grank == 0
+        printf("# MPI_Barrier (np = %d):  avg-latency  sigma\n", gsize)
+    &call bench_coll
+        MPI_Barrier(comm)
+
+fncode: bench_ibarrier(comm)
+    $if grank == 0
+        printf("# MPI_Ibarrier (np = %d):  avg-latency  sigma\n", gsize)
+    &call bench_coll
+        $local MPI_Request req
+        MPI_Ibarrier(comm, &req)
+        MPI_Wait(&req, MPI_STATUS_IGNORE)
+
+fncode: bench_bcast(comm)
+    $if grank == 0
+        printf("# MPI_Bcast (np = %d):  msgsize avg-latency  sigma  bw(MB/s)\n", gsize)
+    void *buf = malloc($(MAX_MSG));
+    &call foreach_size
+        &call bench_coll
+            MPI_Bcast($(data), 0, comm)
