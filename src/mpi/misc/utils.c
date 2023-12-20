@@ -218,8 +218,8 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
         copy_sz = rdata_sz;
 
     /* This case is specific for contig datatypes */
-    MPIR_Datatype_iscontig(sendtype, &sendtype_iscontig);
-    MPIR_Datatype_iscontig(recvtype, &recvtype_iscontig);
+    MPIR_Datatype_is_contig(sendtype, &sendtype_iscontig);
+    MPIR_Datatype_is_contig(recvtype, &recvtype_iscontig);
 
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_true_lb, &true_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &true_extent);
