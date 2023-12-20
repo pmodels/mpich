@@ -17,8 +17,6 @@
 char *MPIDI_DBG_parent_str = "?";
 #endif
 
-#include "datatype.h"
-
 static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p);
 static int pg_compare_ids(void * id1, void * id2);
 static int pg_destroy(MPIDI_PG_t * pg );

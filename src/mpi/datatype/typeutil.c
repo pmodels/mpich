@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "datatype.h"
 
 /* This is the utility file for datatypes that contains the basic datatype
    items and storage management.  It also contains a temporary routine

@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "datatype.h"
 
 #define COPY_BUFFER_SZ 16384
 

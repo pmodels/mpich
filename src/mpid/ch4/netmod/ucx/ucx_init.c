@@ -8,6 +8,16 @@
 #include "mpidu_bc.h"
 #include <ucp/api/ucp.h>
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories :
+    - name : CH4_UCX
+      description : A category for CH4 OFI netmod variables
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 static void request_init_callback(void *request);
 
 static void request_init_callback(void *request)

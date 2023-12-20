@@ -48,7 +48,7 @@ $rootSrcDir = "";
     "Make completed",
     "echo", "cat",
     "NVCC", "CC", "CCLD", "AR", "RANLIB", "LIBTOOL", "MV",
-    "MOD", "GEN", "F77", "FC", "CXXLD", "CXX", "FCLD",
+    "MOD", "GEN", "F77", "FC", "CXXLD", "CXX", "FCLD", "F77LD",
     "CP", "LN", # "terse" make versions
     "\\(?cd",
     "\\(\\s*cd",
