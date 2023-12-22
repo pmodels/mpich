@@ -404,8 +404,8 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdevid)
                 }
             } else {
                 int idx = global_dev_count + device * global_subdev_count;
-                for (int i = 0; i < global_subdev_count; ++i) {
-                    global_to_local_map[idx + i] = 1;
+                for (int j = 0; j < global_subdev_count; ++j) {
+                    global_to_local_map[idx + j] = 1;
                 }
             }
         }
