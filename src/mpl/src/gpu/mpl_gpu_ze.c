@@ -404,8 +404,8 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdevid)
                 }
             } else {
                 int idx = global_dev_count + device * global_subdev_count;
-                for (int i = 0; i < global_subdev_count; ++i) {
-                    global_to_local_map[idx + i] = 1;
+                for (int j = 0; j < global_subdev_count; ++j) {
+                    global_to_local_map[idx + j] = 1;
                 }
             }
         }
@@ -1106,7 +1106,7 @@ static int gpu_ze_init_driver(void)
 /* Parses ZE_AFFINITY_MASK to populate mask_contents with corresponding data */
 static int parse_affinity_mask()
 {
-    int i, curr_dev, num_dev, mpl_err = MPL_SUCCESS;
+    int i, curr_dev, num_dev = 0, mpl_err = MPL_SUCCESS;
 
     char *visible_devices = getenv("ZE_AFFINITY_MASK");
     if (visible_devices) {
