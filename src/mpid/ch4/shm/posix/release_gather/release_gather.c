@@ -197,7 +197,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
      * reduce buffer (divided into multiple cells) per rank. */
 
     if (RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {
-        RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 1;
         /* CVARs may get updated. Turn them into per-comm settings */
         RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_type) =
             get_tree_type(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE);
