@@ -62,15 +62,27 @@ typedef enum {
     MPIDI_PTYPE_SSEND
 } MPIDI_ptype;
 
+/* pt2pt active message status:
+ *     BUSY           - unexpected eager message. Clear once data copied into temp buffer.
+ *     PEER_SSEND     - message from ssend, needs reply upon matching.
+ *     UNEXPECTED     - unexpected message, using temp buffer. Clear once matched with recv buffer.
+ *     UNEXP_DQUED    - unexpected message after mprobe, i.e. an MPI_Message.
+ *     UNEXP_CLAIMED  - unexpected eager message mrecv'ed while it is BUSY.
+ *     RCV_NON_CONTIG - mpidig_recv_utils has used an iov array that needs free.
+ *     MATCHED        - unexpected message matched with recv, potentially with a pre-allocated match_req.
+ *     RTS            - unexpected message is RNDV or TRANSPORT_RNDV
+ *     IN_PROGRESS    - request (from irecv) is matched, thus can't be cancelled.
+ */
 #define MPIDIG_REQ_BUSY           (0x1)
 #define MPIDIG_REQ_PEER_SSEND     (0x1 << 1)
+/* unexpected message, temp buffer */
 #define MPIDIG_REQ_UNEXPECTED     (0x1 << 2)
 #define MPIDIG_REQ_UNEXP_DQUED    (0x1 << 3)
 #define MPIDIG_REQ_UNEXP_CLAIMED  (0x1 << 4)
 #define MPIDIG_REQ_RCV_NON_CONTIG (0x1 << 5)
-#define MPIDIG_REQ_MATCHED (0x1 << 6)
-#define MPIDIG_REQ_RTS (0x1 << 7)
-#define MPIDIG_REQ_IN_PROGRESS (0x1 << 8)
+#define MPIDIG_REQ_MATCHED        (0x1 << 6)
+#define MPIDIG_REQ_RTS            (0x1 << 7)
+#define MPIDIG_REQ_IN_PROGRESS    (0x1 << 8)
 
 #define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
 #define MPIDI_MAX_KVS_VALUE_LEN  4096

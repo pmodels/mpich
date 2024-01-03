@@ -60,40 +60,29 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_MATCHED) {
         match_req = (MPIR_Request *) MPIDIG_REQUEST(rreq, req->rreq.match_req);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        int is_cancelled;
-        mpi_errno = MPIDI_anysrc_try_cancel_partner(match_req, &is_cancelled);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* `is_cancelled` is assumed to be always true.
-         * In typical config, anysrc partners won't occur if matching unexpected
-         * message already exist.
-         * In workq setup, since we will always progress shm first, when unexpected
-         * message match, the NM partner wouldn't have progressed yet, so the cancel
-         * should always succeed.
+        /* we have a match_req when ch4 pre-allocates an rreq before MPIDIG_do_irecv.
+         * Potentially the pre-allocates request is an any-source receive.
          */
-        MPIR_Assert(is_cancelled);
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
-    }
+        if (match_req) {
+            /* transfer rreq to match_req, release rreq, complete match_req */
+            mpi_errno = MPIDIG_handle_unexpected(MPIDIG_REQUEST(match_req, buffer),
+                                                 MPIDIG_REQUEST(match_req, count),
+                                                 MPIDIG_REQUEST(match_req, datatype), rreq);
+            MPIR_ERR_CHECK(mpi_errno);
 
-    /* If we didn't match the request, unmark the busy bit and skip the data movement below. */
-    if (!match_req) {
+            MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(match_req, datatype));
+            MPIR_Object_release_ref(rreq, &in_use);
+            /* MPID_Request_complete(rreq); */
+            MPID_Request_complete(match_req);
+        } else {
+            /* no match_req, just complete rreq */
+            MPID_Request_complete(rreq);
+        }
+    } else {
+        /* If we didn't match the request, simply unmark the busy bit as data is ready. */
         MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_BUSY;
-        goto fn_exit;
     }
 
-    mpi_errno = MPIDIG_handle_unexpected(MPIDIG_REQUEST(match_req, buffer),
-                                         MPIDIG_REQUEST(match_req, count),
-                                         MPIDIG_REQUEST(match_req, datatype), rreq);
-    MPIR_ERR_CHECK(mpi_errno);
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_anysrc_free_partner(match_req);
-#endif
-
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(match_req, datatype));
-    MPIR_Object_release_ref(rreq, &in_use);
-    /* MPID_Request_complete(rreq); */
-    MPID_Request_complete(match_req);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -123,24 +112,16 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, u.recv.source);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
 
-    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_PEER_SSEND) {
-        mpi_errno = MPIDIG_reply_ssend(rreq);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIDI_anysrc_free_partner(rreq);
-#endif
-
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
     if ((MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_RTS) &&
         MPIDIG_REQUEST(rreq, req->rreq.match_req) != NULL) {
         /* This block is executed only when the receive is enqueued (handoff) &&
          * receive was matched with an unexpected long RTS message.
-         * `rreq` is the unexpected message received and `sigreq` is the message
+         * `rreq` is the unexpected message received and `match_req` is the message
          * that came from CH4 (e.g. MPIDI_recv_safe) */
-        MPIR_Request *sigreq = MPIDIG_REQUEST(rreq, req->rreq.match_req);
-        sigreq->status = rreq->status;
-        MPID_Request_complete(sigreq);
+        MPIR_Request *match_req = MPIDIG_REQUEST(rreq, req->rreq.match_req);
+        match_req->status = rreq->status;
+        MPID_Request_complete(match_req);
         /* Free the unexpected request on behalf of the user */
         MPIDI_CH4_REQUEST_FREE(rreq);
     }
@@ -394,6 +375,14 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         set_matched_rreq_fields(rreq, hdr->src_rank, hdr->tag, hdr->context_id,
                                 hdr->error_bits, is_local);
         set_rreq_common(rreq, hdr);
+        if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_PEER_SSEND) {
+            mpi_errno = MPIDIG_reply_ssend(rreq);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_anysrc_free_partner(rreq);
+#endif
+
         MPIDIG_recv_type_init(hdr->data_sz, rreq);
 
         if (msg_mode == MSG_MODE_EAGER) {
