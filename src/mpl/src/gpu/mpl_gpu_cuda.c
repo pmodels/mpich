@@ -508,9 +508,8 @@ __attribute__ ((visibility("default")))
 CUresult CUDAAPI cuMemFree(CUdeviceptr dptr)
 {
     CUresult result;
-    if (!gpu_initialized) {
-        int ret = MPL_gpu_init(0);
-        assert(ret == 0);
+    if (!sys_cuMemFree) {
+        gpu_mem_hook_init();
     }
 
     gpu_free_hooks_cb((void *) dptr);
@@ -524,9 +523,8 @@ __attribute__ ((visibility("default")))
 cudaError_t CUDARTAPI cudaFree(void *dptr)
 {
     cudaError_t result;
-    if (!gpu_initialized) {
-        int ret = MPL_gpu_init(0);
-        assert(ret == 0);
+    if (!sys_cudaFree) {
+        gpu_mem_hook_init();
     }
 
     gpu_free_hooks_cb(dptr);
