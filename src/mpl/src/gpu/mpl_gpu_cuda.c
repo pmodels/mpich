@@ -32,6 +32,7 @@ static CUresult CUDAAPI(*sys_cuMemFree) (CUdeviceptr dptr);
 static cudaError_t CUDARTAPI(*sys_cudaFree) (void *dptr);
 
 static int gpu_mem_hook_init();
+static MPL_initlock_t free_hook_mutex = MPL_INITLOCK_INITIALIZER;
 
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
@@ -359,7 +360,9 @@ int MPL_gpu_init(int debug_summary)
      * in cuda, such as cudaFree and cuMemFree, to track user behaviors on
      * the memory buffer and invalidate cached handle/buffer respectively
      * for result correctness. */
+    MPL_initlock_lock(&free_hook_mutex);
     gpu_mem_hook_init();
+    MPL_initlock_unlock(&free_hook_mutex);
     gpu_initialized = 1;
 
     if (MPL_gpu_info.debug_summary) {
@@ -388,11 +391,13 @@ int MPL_gpu_finalize(void)
     MPL_free(global_to_local_map);
 
     gpu_free_hook_s *prev;
+    MPL_initlock_lock(&free_hook_mutex);
     while (free_hook_chain) {
         prev = free_hook_chain;
         free_hook_chain = free_hook_chain->next;
         MPL_free(prev);
     }
+    MPL_initlock_unlock(&free_hook_mutex);
 
     /* Reset initialization state */
     gpu_initialized = 0;
@@ -483,6 +488,7 @@ static int gpu_mem_hook_init()
     assert(sys_cuMemFree);
     sys_cudaFree = (void *) dlsym(libcudart_handle, "cudaFree");
     assert(sys_cudaFree);
+
     return MPL_SUCCESS;
 }
 
@@ -492,12 +498,15 @@ int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
     assert(hook_obj);
     hook_obj->free_hook = free_hook;
     hook_obj->next = NULL;
+
+    MPL_initlock_lock(&free_hook_mutex);
     if (!free_hook_chain)
         free_hook_chain = hook_obj;
     else {
         hook_obj->next = free_hook_chain;
         free_hook_chain = hook_obj;
     }
+    MPL_initlock_unlock(&free_hook_mutex);
 
     return MPL_SUCCESS;
 }
@@ -508,13 +517,15 @@ __attribute__ ((visibility("default")))
 CUresult CUDAAPI cuMemFree(CUdeviceptr dptr)
 {
     CUresult result;
-    if (!gpu_initialized) {
-        int ret = MPL_gpu_init(0);
-        assert(ret == 0);
+    MPL_initlock_lock(&free_hook_mutex);
+    if (!sys_cuMemFree) {
+        gpu_mem_hook_init();
     }
 
     gpu_free_hooks_cb((void *) dptr);
     result = sys_cuMemFree(dptr);
+
+    MPL_initlock_unlock(&free_hook_mutex);
     return (result);
 }
 
@@ -524,13 +535,15 @@ __attribute__ ((visibility("default")))
 cudaError_t CUDARTAPI cudaFree(void *dptr)
 {
     cudaError_t result;
-    if (!gpu_initialized) {
-        int ret = MPL_gpu_init(0);
-        assert(ret == 0);
+    MPL_initlock_lock(&free_hook_mutex);
+    if (!sys_cudaFree) {
+        gpu_mem_hook_init();
     }
 
     gpu_free_hooks_cb(dptr);
     result = sys_cudaFree(dptr);
+
+    MPL_initlock_unlock(&free_hook_mutex);
     return result;
 }
 
