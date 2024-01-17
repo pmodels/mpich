@@ -150,6 +150,7 @@ Makefile.am-stamp
 /src/binding/abi/mpi_abi_internal.h
 /src/binding/abi/mpi_abi_util.c
 /src/binding/abi/c_binding_abi.c
+/src/mpi/romio/include/romio_abi_internal.h
 
 # script-generated f90 test files
 
