@@ -306,4 +306,38 @@ static inline int ABI_KEYVAL_to_mpi(int keyval)
     }
 }
 
+static inline int ABI_KEYVAL_from_mpi(int keyval)
+{
+    switch (keyval) {
+        case MPI_KEYVAL_INVALID:
+            return ABI_KEYVAL_INVALID;
+        case MPI_TAG_UB:
+            return ABI_TAG_UB;
+        case MPI_HOST:
+            return ABI_HOST;
+        case MPI_IO:
+            return ABI_IO;
+        case MPI_WTIME_IS_GLOBAL:
+            return ABI_WTIME_IS_GLOBAL;
+        case MPI_UNIVERSE_SIZE:
+            return ABI_UNIVERSE_SIZE;
+        case MPI_LASTUSEDCODE:
+            return ABI_LASTUSEDCODE;
+        case MPI_APPNUM:
+            return ABI_APPNUM;
+        case MPI_WIN_BASE:
+            return ABI_WIN_BASE;
+        case MPI_WIN_SIZE:
+            return ABI_WIN_SIZE;
+        case MPI_WIN_DISP_UNIT:
+            return ABI_WIN_DISP_UNIT;
+        case MPI_WIN_CREATE_FLAVOR:
+            return ABI_WIN_CREATE_FLAVOR;
+        case MPI_WIN_MODEL:
+            return ABI_WIN_MODEL;
+        default:
+            return keyval;
+    }
+}
+
 #endif /* MPI_ABI_UTIL_H_INCLUDED */
