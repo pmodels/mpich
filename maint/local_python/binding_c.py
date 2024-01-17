@@ -2062,7 +2062,7 @@ def get_fn_fail_create_code(func):
 # -- early returns ----
 def check_early_returns(func):
     if 'earlyreturn' in func:
-        early_returns = func['earlyreturn'].split(',\s*')
+        early_returns = re.split(r',\s*', func['earlyreturn'])
         for kind in early_returns:
             if RE.search(r'pt2pt_proc_null', kind, re.IGNORECASE):
                 dump_early_return_pt2pt_proc_null(func)
