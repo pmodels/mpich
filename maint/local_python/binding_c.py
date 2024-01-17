@@ -1051,6 +1051,16 @@ def dump_abi_wrappers(func, is_large):
             process_handle(p)
         elif p['kind'] == 'KEYVAL' and p['param_direction'] == 'in':
             pre_filters.append("int %s = ABI_KEYVAL_to_mpi(%s_abi);" % (name, name))
+        elif p['kind'] == 'KEYVAL' and p['param_direction'] == 'inout':
+            pre_filters.append("int %s_i;" % (name))
+            pre_filters.append("int *%s = NULL;" % (name))
+            pre_filters.append("if (%s_abi != NULL) {" % (name))
+            pre_filters.append("    %s_i = ABI_KEYVAL_to_mpi(*%s_abi);" % (name, name))
+            pre_filters.append("    %s = &%s_i;" % (name, name))
+            pre_filters.append("}")
+            post_filters.append("if (%s_abi != NULL) {" % (name))
+            post_filters.append("    *%s_abi = ABI_KEYVAL_from_mpi(%s_i);" % (name, name))
+            post_filters.append("}")
         else:
             skip_abi_swap = True
 
