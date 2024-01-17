@@ -17,6 +17,32 @@ extern MPI_Op abi_op_builtins[];
 
 void ABI_init_builtins(void);
 
+static inline void ABI_Comm_neighbors_count(ABI_Comm in, int *indegree, int *outdegree)
+{
+  int ival;
+  int topo = MPI_UNDEFINED;
+  if (in != ABI_COMM_NULL) {
+    PMPI_Topo_test(in, &topo);
+  }
+  switch (topo) {
+  case MPI_CART:
+    PMPI_Cartdim_get(in, &ival);
+    *indegree = *outdegree = 2 * ival;
+    break;
+  case MPI_GRAPH:
+    PMPI_Comm_rank(in, &ival);
+    PMPI_Graph_neighbors_count(in, ival, &ival);
+    *indegree = *outdegree = ival;
+    break;
+  case MPI_DIST_GRAPH:
+    PMPI_Dist_graph_neighbors_count(in, indegree, outdegree, &ival);
+    break;
+  default:
+    *indegree = *outdegree = 0;
+    break;
+  }
+}
+
 static inline MPI_Comm ABI_Comm_to_mpi(ABI_Comm in)
 {
     if (ABI_IS_BUILTIN(in)) {
