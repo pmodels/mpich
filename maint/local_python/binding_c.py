@@ -902,8 +902,8 @@ def dump_abi_wrappers(func, is_large):
         array_type = "Datatype"
         is_neighbor_alltoallw = True
         # array_size set per parameters
-        pre_filters.append("int indegree, outdegree, weighted;")
-        pre_filters.append("PMPI_Dist_graph_neighbors_count(comm_abi, &indegree, &outdegree, &weighted);")
+        pre_filters.append("int indegree, outdegree;")
+        pre_filters.append("ABI_Comm_neighbors_count(comm_abi, &indegree, &outdegree);")
     elif re.match(r'mpi_type_(create_struct|struct)', func['name'], re.IGNORECASE):
         array_type = "Datatype"
         array_size = "count"
