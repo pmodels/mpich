@@ -61,7 +61,7 @@ static inline ABI_Datatype ABI_Datatype_from_mpi(MPI_Datatype in)
     if (in == MPI_DATATYPE_NULL) {
         return ABI_DATATYPE_NULL;
     }
-    if (HANDLE_IS_BUILTIN(in)) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(in)) {
         for (int i = 0; i < ABI_MAX_DATATYPE_BUILTINS; i++) {
             if (abi_datatype_builtins[i] == in) {
                 return (ABI_Datatype) ((intptr_t) ABI_DATATYPE_NULL + i);
