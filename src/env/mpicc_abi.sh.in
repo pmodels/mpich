@@ -69,7 +69,7 @@ Show=eval
 # (e.g., "cc -64" becomes "cc--64", that file is sources, allowing other
 # changes to the compilation environment.  See the variables used by the 
 # script (defined above)
-# Added MPICH_CC_OLD, MPICH_CC can be used to prefix CC with external utility, 
+# Added MPICH_CC_OLD, MPICH_CC can be used to prefix CC with external utility,
 # e.g. setenv MPICH_CC 'eval linkcache $MPICH_CC_OLD'
 if [ -n "$MPICH_CC" ] ; then
     MPICH_CC_OLD="$CC"
