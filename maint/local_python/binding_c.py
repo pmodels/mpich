@@ -1006,29 +1006,26 @@ def dump_abi_wrappers(func, is_large):
                 print("Function %s - array param %s" % (func['name'], p['name']))
         else:
             if p['param_direction'] == 'out':
-                pre_filters.append("MPI_%s %s_i;" % (T, name))
-                pre_filters.append("MPI_%s *%s = &%s_i;" % (T, name, name))
                 # pass NULL thru for error-checking
-                pre_filters.append("if (%s_abi == NULL) {" % name)
-                pre_filters.append("    %s = NULL;" % name)
-                pre_filters.append("}")
-                if RE.match(r'MPI_T_cvar_get_info', func['name']):
-                    post_filters.append("if (%s_abi) {" % name)
-                    post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
-                    post_filters.append("}")
-                else:
-                    # FIXME: which cases should we leave the output handle untouched?
-                    if T == 'Comm':
-                        post_filters.append("if (%s_abi) {" % name)
-                    else:
-                        post_filters.append("if (ret == MPI_SUCCESS) {")
-                    post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
-                    post_filters.append("}")
-            elif p['param_direction'] == 'inout' or func['name'] == "MPI_Cancel":
                 pre_filters.append("MPI_%s %s_i;" % (T, name))
-                pre_filters.append("%s_i = ABI_%s_to_mpi(*%s_abi);" % (name, T, name))
-                pre_filters.append("MPI_%s *%s = &%s_i;" % (T, name, name))
-                post_filters.append("*%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
+                pre_filters.append("MPI_%s *%s = NULL;" % (T, name))
+                pre_filters.append("if (%s_abi != NULL) {" % name)
+                pre_filters.append("    %s = &%s_i;" % (name, name))
+                pre_filters.append("}")
+                post_filters.append("if (ret == MPI_SUCCESS && %s_abi != NULL) {" % name)
+                post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
+                post_filters.append("}")
+            elif p['param_direction'] == 'inout' or func['name'] == "MPI_Cancel":
+                # pass NULL thru for error-checking
+                pre_filters.append("MPI_%s %s_i;" % (T, name))
+                pre_filters.append("MPI_%s *%s = NULL;" % (T, name))
+                pre_filters.append("if (%s_abi != NULL) {" % name)
+                pre_filters.append("    %s_i = ABI_%s_to_mpi(*%s_abi);" % (name, T, name))
+                pre_filters.append("    %s = &%s_i;" % (name, name))
+                pre_filters.append("}")
+                post_filters.append("if (%s_abi != NULL) {" % name)
+                post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
+                post_filters.append("}")
             elif is_alltoallw and name == "comm":
                 # already done
                 pass
