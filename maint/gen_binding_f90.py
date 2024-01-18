@@ -15,6 +15,7 @@ def main():
 
     binding_dir = G.get_srcdir_path("src/binding")
     f90_dir = "src/binding/fortran/use_mpi"
+    G.check_write_path("%s/" % f90_dir)
     func_list = load_C_func_list(binding_dir, True) # suppress noise
     if "no-mpiio" in G.opts:
         func_list = [f for f in func_list if not f['name'].startswith('MPI_File_')]

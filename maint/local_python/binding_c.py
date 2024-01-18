@@ -894,16 +894,18 @@ def dump_abi_wrappers(func, is_large):
         array_size = "comm_size"
         is_alltoallw = True
         pre_filters.append("MPI_Comm comm = ABI_Comm_to_mpi(comm_abi);")
-        pre_filters.append("MPIR_Comm *comm_ptr;")
-        pre_filters.append("MPIR_Comm_get_ptr(comm, comm_ptr);")
-        pre_filters.append("int comm_size;")
-        pre_filters.append("comm_size = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) ? comm_ptr->remote_size : comm_ptr->local_size;")
+        pre_filters.append("int comm_size = 0;")
+        pre_filters.append("if (comm != MPI_COMM_NULL) {")
+        pre_filters.append("    MPIR_Comm *comm_ptr;")
+        pre_filters.append("    MPIR_Comm_get_ptr(comm, comm_ptr);")
+        pre_filters.append("    comm_size = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) ? comm_ptr->remote_size : comm_ptr->local_size;")
+        pre_filters.append("}")
     elif re.match(r'mpi_i?neighbor_alltoallw(_init)?', func['name'], re.IGNORECASE):
         array_type = "Datatype"
         is_neighbor_alltoallw = True
         # array_size set per parameters
-        pre_filters.append("int indegree, outdegree, weighted;")
-        pre_filters.append("PMPI_Dist_graph_neighbors_count(comm_abi, &indegree, &outdegree, &weighted);")
+        pre_filters.append("int indegree, outdegree;")
+        pre_filters.append("ABI_Comm_neighbors_count(comm_abi, &indegree, &outdegree);")
     elif re.match(r'mpi_type_(create_struct|struct)', func['name'], re.IGNORECASE):
         array_type = "Datatype"
         array_size = "count"
@@ -951,18 +953,16 @@ def dump_abi_wrappers(func, is_large):
                 post_filters.append("}")
             elif array_size:
                 # assume input only
-                pre_filters.append("MPI_%s *%s;" % (array_type, name))
+                pre_filters.append("MPI_%s *%s = NULL;" % (array_type, name))
                 if is_alltoallw:
                     if name == "sendtypes":
-                        pre_filters.append("if (sendbuf == MPI_IN_PLACE) {")
-                        pre_filters.append("    sendtypes = NULL;")
-                        pre_filters.append("} else {")
+                        pre_filters.append("if (sendbuf != MPI_IN_PLACE && sendtypes_abi != NULL) {")
                         pre_filters.append("INDENT")
                     elif name == "recvtypes":
                         # if sendtypes == recvtypes, imitate to facilitate ALIAS check
-                        pre_filters.append("if (recvtypes_abi == sendtypes_abi) {")
+                        pre_filters.append("if (recvtypes_abi == sendtypes_abi && sendbuf != MPI_IN_PLACE) {")
                         pre_filters.append("    recvtypes = sendtypes;")
-                        pre_filters.append("} else {")
+                        pre_filters.append("} else if (recvtypes_abi != NULL) {")
                         pre_filters.append("INDENT")
                 pre_filters.append("%s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
                 if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
@@ -1006,29 +1006,26 @@ def dump_abi_wrappers(func, is_large):
                 print("Function %s - array param %s" % (func['name'], p['name']))
         else:
             if p['param_direction'] == 'out':
-                pre_filters.append("MPI_%s %s_i;" % (T, name))
-                pre_filters.append("MPI_%s *%s = &%s_i;" % (T, name, name))
                 # pass NULL thru for error-checking
-                pre_filters.append("if (%s_abi == NULL) {" % name)
-                pre_filters.append("    %s = NULL;" % name)
-                pre_filters.append("}")
-                if RE.match(r'MPI_T_cvar_get_info', func['name']):
-                    post_filters.append("if (%s_abi) {" % name)
-                    post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
-                    post_filters.append("}")
-                else:
-                    # FIXME: which cases should we leave the output handle untouched?
-                    if T == 'Comm':
-                        post_filters.append("if (%s_abi) {" % name)
-                    else:
-                        post_filters.append("if (ret == MPI_SUCCESS) {")
-                    post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
-                    post_filters.append("}")
-            elif p['param_direction'] == 'inout' or func['name'] == "MPI_Cancel":
                 pre_filters.append("MPI_%s %s_i;" % (T, name))
-                pre_filters.append("%s_i = ABI_%s_to_mpi(*%s_abi);" % (name, T, name))
-                pre_filters.append("MPI_%s *%s = &%s_i;" % (T, name, name))
-                post_filters.append("*%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
+                pre_filters.append("MPI_%s *%s = NULL;" % (T, name))
+                pre_filters.append("if (%s_abi != NULL) {" % name)
+                pre_filters.append("    %s = &%s_i;" % (name, name))
+                pre_filters.append("}")
+                post_filters.append("if (ret == MPI_SUCCESS && %s_abi != NULL) {" % name)
+                post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
+                post_filters.append("}")
+            elif p['param_direction'] == 'inout' or func['name'] == "MPI_Cancel":
+                # pass NULL thru for error-checking
+                pre_filters.append("MPI_%s %s_i;" % (T, name))
+                pre_filters.append("MPI_%s *%s = NULL;" % (T, name))
+                pre_filters.append("if (%s_abi != NULL) {" % name)
+                pre_filters.append("    %s_i = ABI_%s_to_mpi(*%s_abi);" % (name, T, name))
+                pre_filters.append("    %s = &%s_i;" % (name, name))
+                pre_filters.append("}")
+                post_filters.append("if (%s_abi != NULL) {" % name)
+                post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
+                post_filters.append("}")
             elif is_alltoallw and name == "comm":
                 # already done
                 pass
@@ -1051,6 +1048,16 @@ def dump_abi_wrappers(func, is_large):
             process_handle(p)
         elif p['kind'] == 'KEYVAL' and p['param_direction'] == 'in':
             pre_filters.append("int %s = ABI_KEYVAL_to_mpi(%s_abi);" % (name, name))
+        elif p['kind'] == 'KEYVAL' and p['param_direction'] == 'inout':
+            pre_filters.append("int %s_i;" % (name))
+            pre_filters.append("int *%s = NULL;" % (name))
+            pre_filters.append("if (%s_abi != NULL) {" % (name))
+            pre_filters.append("    %s_i = ABI_KEYVAL_to_mpi(*%s_abi);" % (name, name))
+            pre_filters.append("    %s = &%s_i;" % (name, name))
+            pre_filters.append("}")
+            post_filters.append("if (%s_abi != NULL) {" % (name))
+            post_filters.append("    *%s_abi = ABI_KEYVAL_from_mpi(%s_i);" % (name, name))
+            post_filters.append("}")
         else:
             skip_abi_swap = True
 
@@ -2062,7 +2069,7 @@ def get_fn_fail_create_code(func):
 # -- early returns ----
 def check_early_returns(func):
     if 'earlyreturn' in func:
-        early_returns = func['earlyreturn'].split(',\s*')
+        early_returns = re.split(r',\s*', func['earlyreturn'])
         for kind in early_returns:
             if RE.search(r'pt2pt_proc_null', kind, re.IGNORECASE):
                 dump_early_return_pt2pt_proc_null(func)

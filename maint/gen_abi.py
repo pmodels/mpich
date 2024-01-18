@@ -75,6 +75,9 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 T=re.sub(re_Handle, r'ABI_\1', T)
                 param=re.sub(re_Handle, r'ABI_\1', param)
                 out.append("%s %s(%s) MPICH_API_PUBLIC;" % (T, name, param))
+            elif RE.match(r'^extern\s+(\w+\s*\**)\s+(MPI_\w+);', line):
+                (T, name) = RE.m.group(1,2)
+                out.append("extern %s %s MPICH_API_PUBLIC;" % (T, name))
             else:
                 # replace param prefix
                 out.append(re.sub(re_Handle, r'ABI_\1', line.rstrip()))
@@ -108,7 +111,7 @@ def dump_romio_abi_internal_h(romio_abi_internal_h):
             elif RE.match(r'(int|double|MPI_\w+) (P?MPI\w+)\((.*)\);', line):
                 # prototypes, rename param prefix, add MPICH_API_PUBLIC
                 (T, name, param) = RE.m.group(1,2,3)
-                if RE.match(r'P?MPI_File_\w+', name):
+                if RE.match(r'P?MPI_(File_\w+|Register_datarep\w*)', name):
                     out.append("%s %s(%s) ROMIO_API_PUBLIC;" % (T, name, param))
                 else:
                     out.append("%s %s(%s);" % (T, name, param))

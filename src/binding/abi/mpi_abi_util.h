@@ -17,6 +17,32 @@ extern MPI_Op abi_op_builtins[];
 
 void ABI_init_builtins(void);
 
+static inline void ABI_Comm_neighbors_count(ABI_Comm in, int *indegree, int *outdegree)
+{
+  int ival;
+  int topo = MPI_UNDEFINED;
+  if (in != ABI_COMM_NULL) {
+    PMPI_Topo_test(in, &topo);
+  }
+  switch (topo) {
+  case MPI_CART:
+    PMPI_Cartdim_get(in, &ival);
+    *indegree = *outdegree = 2 * ival;
+    break;
+  case MPI_GRAPH:
+    PMPI_Comm_rank(in, &ival);
+    PMPI_Graph_neighbors_count(in, ival, &ival);
+    *indegree = *outdegree = ival;
+    break;
+  case MPI_DIST_GRAPH:
+    PMPI_Dist_graph_neighbors_count(in, indegree, outdegree, &ival);
+    break;
+  default:
+    *indegree = *outdegree = 0;
+    break;
+  }
+}
+
 static inline MPI_Comm ABI_Comm_to_mpi(ABI_Comm in)
 {
     if (ABI_IS_BUILTIN(in)) {
@@ -61,7 +87,7 @@ static inline ABI_Datatype ABI_Datatype_from_mpi(MPI_Datatype in)
     if (in == MPI_DATATYPE_NULL) {
         return ABI_DATATYPE_NULL;
     }
-    if (HANDLE_IS_BUILTIN(in)) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(in)) {
         for (int i = 0; i < ABI_MAX_DATATYPE_BUILTINS; i++) {
             if (abi_datatype_builtins[i] == in) {
                 return (ABI_Datatype) ((intptr_t) ABI_DATATYPE_NULL + i);
@@ -301,6 +327,40 @@ static inline int ABI_KEYVAL_to_mpi(int keyval)
             return MPI_WIN_CREATE_FLAVOR;
         case ABI_WIN_MODEL:
             return MPI_WIN_MODEL;
+        default:
+            return keyval;
+    }
+}
+
+static inline int ABI_KEYVAL_from_mpi(int keyval)
+{
+    switch (keyval) {
+        case MPI_KEYVAL_INVALID:
+            return ABI_KEYVAL_INVALID;
+        case MPI_TAG_UB:
+            return ABI_TAG_UB;
+        case MPI_HOST:
+            return ABI_HOST;
+        case MPI_IO:
+            return ABI_IO;
+        case MPI_WTIME_IS_GLOBAL:
+            return ABI_WTIME_IS_GLOBAL;
+        case MPI_UNIVERSE_SIZE:
+            return ABI_UNIVERSE_SIZE;
+        case MPI_LASTUSEDCODE:
+            return ABI_LASTUSEDCODE;
+        case MPI_APPNUM:
+            return ABI_APPNUM;
+        case MPI_WIN_BASE:
+            return ABI_WIN_BASE;
+        case MPI_WIN_SIZE:
+            return ABI_WIN_SIZE;
+        case MPI_WIN_DISP_UNIT:
+            return ABI_WIN_DISP_UNIT;
+        case MPI_WIN_CREATE_FLAVOR:
+            return ABI_WIN_CREATE_FLAVOR;
+        case MPI_WIN_MODEL:
+            return ABI_WIN_MODEL;
         default:
             return keyval;
     }
