@@ -894,10 +894,12 @@ def dump_abi_wrappers(func, is_large):
         array_size = "comm_size"
         is_alltoallw = True
         pre_filters.append("MPI_Comm comm = ABI_Comm_to_mpi(comm_abi);")
-        pre_filters.append("MPIR_Comm *comm_ptr;")
-        pre_filters.append("MPIR_Comm_get_ptr(comm, comm_ptr);")
-        pre_filters.append("int comm_size;")
-        pre_filters.append("comm_size = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) ? comm_ptr->remote_size : comm_ptr->local_size;")
+        pre_filters.append("int comm_size = 0;")
+        pre_filters.append("if (comm != MPI_COMM_NULL) {")
+        pre_filters.append("    MPIR_Comm *comm_ptr;")
+        pre_filters.append("    MPIR_Comm_get_ptr(comm, comm_ptr);")
+        pre_filters.append("    comm_size = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) ? comm_ptr->remote_size : comm_ptr->local_size;")
+        pre_filters.append("}")
     elif re.match(r'mpi_i?neighbor_alltoallw(_init)?', func['name'], re.IGNORECASE):
         array_type = "Datatype"
         is_neighbor_alltoallw = True
@@ -951,18 +953,16 @@ def dump_abi_wrappers(func, is_large):
                 post_filters.append("}")
             elif array_size:
                 # assume input only
-                pre_filters.append("MPI_%s *%s;" % (array_type, name))
+                pre_filters.append("MPI_%s *%s = NULL;" % (array_type, name))
                 if is_alltoallw:
                     if name == "sendtypes":
-                        pre_filters.append("if (sendbuf == MPI_IN_PLACE) {")
-                        pre_filters.append("    sendtypes = NULL;")
-                        pre_filters.append("} else {")
+                        pre_filters.append("if (sendbuf != MPI_IN_PLACE && sendtypes_abi != NULL) {")
                         pre_filters.append("INDENT")
                     elif name == "recvtypes":
                         # if sendtypes == recvtypes, imitate to facilitate ALIAS check
-                        pre_filters.append("if (recvtypes_abi == sendtypes_abi) {")
+                        pre_filters.append("if (recvtypes_abi == sendtypes_abi && sendbuf != MPI_IN_PLACE) {")
                         pre_filters.append("    recvtypes = sendtypes;")
-                        pre_filters.append("} else {")
+                        pre_filters.append("} else if (recvtypes_abi != NULL) {")
                         pre_filters.append("INDENT")
                 pre_filters.append("%s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
                 if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
