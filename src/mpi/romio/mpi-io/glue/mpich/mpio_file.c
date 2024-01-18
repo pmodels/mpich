@@ -62,7 +62,7 @@ MPI_Fint MPIO_File_c2f(MPI_File fh)
 #else
     int i;
 
-    if ((fh == NULL) || (fh->cookie != ADIOI_FILE_COOKIE))
+    if ((fh == MPI_FILE_NULL) || (fh->cookie != ADIOI_FILE_COOKIE))
         return (MPI_Fint) 0;
 
     if (fh->fortran_handle != -1)
