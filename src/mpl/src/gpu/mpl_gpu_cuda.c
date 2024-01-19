@@ -309,7 +309,14 @@ int MPL_gpu_init(int debug_summary)
     }
 
     cudaError_t ret = cudaGetDeviceCount(&device_count);
-    CUDA_ERR_CHECK(ret);
+    if (ret == cudaErrorNoDevice) {
+        /* call cudaGetLastError() to consume the error */
+        ret = cudaGetLastError();
+        assert(ret == cudaErrorNoDevice);
+        device_count = 0;
+    } else {
+        CUDA_ERR_CHECK(ret);
+    }
 
     if (device_count <= 0) {
         gpu_initialized = 1;
