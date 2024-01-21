@@ -33,6 +33,7 @@ def load_mpi_abi_h(mpi_abi_h):
         G.abi_h_lines = In.readlines()
 
 def dump_mpi_abi_internal_h(mpi_abi_internal_h):
+    define_constants = {}
     def gen_mpi_abi_internal_h(out):
         re_Handle = r'\bMPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|KEYVAL_INVALID|TAG_UB|IO|HOST|WTIME_IS_GLOBAL|APPNUM|LASTUSEDCODE|UNIVERSE_SIZE|WIN_BASE|WIN_DISP_UNIT|WIN_SIZE|WIN_CREATE_FLAVOR|WIN_MODEL)\b'
         for line in G.abi_h_lines:
@@ -78,6 +79,10 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
             elif RE.match(r'^extern\s+(\w+\s*\**)\s+(MPI_\w+);', line):
                 (T, name) = RE.m.group(1,2)
                 out.append("extern %s %s MPICH_API_PUBLIC;" % (T, name))
+            elif RE.match(r'\s*(MPI_THREAD_\w+)\s*=\s*(\d+)', line):
+                # These constants need to be converted from enum-constants into macro-constants
+                define_constants[RE.m.group(1)] = RE.m.group(2)
+                pass
             else:
                 # replace param prefix
                 out.append(re.sub(re_Handle, r'ABI_\1', line.rstrip()))
@@ -93,6 +98,8 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
         print("#define MPI_ABI_INTERNAL_H_INCLUDED", file=Out)
         print("", file=Out)
 
+        for k in define_constants:
+            print("#define %s %s" % (k, define_constants[k]), file=Out)
         print("", file=Out)
         for line in output_lines:
             print(line, file=Out)
