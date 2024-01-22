@@ -246,18 +246,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
             src_count = ipc_hdr->count;
             src_dt = src_dt_ptr->handle;
         }
+        MPIR_gpu_req yreq;
         MPL_gpu_engine_type_t engine =
             MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
-        mpi_errno = MPIR_Localcopy_gpu(src_buf, src_count, src_dt, 0, NULL,
-                                       MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                                       MPIDIG_REQUEST(rreq, datatype), 0, &attr,
-                                       MPL_GPU_COPY_DIRECTION_NONE, engine, true);
+        mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_dt, 0, NULL,
+                                        MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                                        MPIDIG_REQUEST(rreq, datatype), 0, &attr,
+                                        MPL_GPU_COPY_DIRECTION_NONE, engine, true, &yreq);
         MPIR_ERR_CHECK(mpi_errno);
         if (src_dt_ptr) {
             MPIR_Datatype_free(src_dt_ptr);
         }
 
-        mpi_errno = MPIDI_GPU_ipc_async_start(rreq, NULL, src_buf, ipc_hdr->ipc_handle.gpu);
+        mpi_errno = MPIDI_GPU_ipc_async_start(rreq, &yreq, src_buf, ipc_hdr->ipc_handle.gpu);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     } else if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__NONE) {
