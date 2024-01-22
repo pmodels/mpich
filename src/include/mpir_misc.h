@@ -49,6 +49,9 @@ extern MPL_initlock_t MPIR_init_lock;
 
 #include "typerep_pre.h"        /* needed for MPIR_Typerep_req */
 
+/* FIXME: bad names. Not gpu-specific, confusing with MPIR_Request.
+ *        It's a general async handle.
+ */
 typedef enum {
     MPIR_NULL_REQUEST = 0,
     MPIR_TYPEREP_REQUEST,
