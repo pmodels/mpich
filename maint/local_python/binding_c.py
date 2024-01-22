@@ -1007,12 +1007,12 @@ def dump_abi_wrappers(func, is_large):
         else:
             if p['param_direction'] == 'out':
                 # pass NULL thru for error-checking
-                pre_filters.append("MPI_%s %s_i;" % (T, name))
+                pre_filters.append("MPI_%s %s_i = MPI_%s_NULL;" % (T, name, T.upper()))
                 pre_filters.append("MPI_%s *%s = NULL;" % (T, name))
                 pre_filters.append("if (%s_abi != NULL) {" % name)
                 pre_filters.append("    %s = &%s_i;" % (name, name))
                 pre_filters.append("}")
-                post_filters.append("if (ret == MPI_SUCCESS && %s_abi != NULL) {" % name)
+                post_filters.append("if (%s_abi != NULL) {" % name)
                 post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
                 post_filters.append("}")
             elif p['param_direction'] == 'inout' or func['name'] == "MPI_Cancel":
