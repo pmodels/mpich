@@ -880,6 +880,7 @@ def dump_abi_wrappers(func, is_large):
 
     mapping = get_kind_map('C', is_large)
     param_list = []
+    already_done = set()
     assertion_types = {}
     pre_filters = []
     post_filters = []
@@ -891,15 +892,9 @@ def dump_abi_wrappers(func, is_large):
     is_neighbor_alltoallw = False
     if re.match(r'mpi_i?alltoallw(_init)?', func['name'], re.IGNORECASE):
         array_type = "Datatype"
-        array_size = "comm_size"
+        array_size = "peer_size"
         is_alltoallw = True
-        pre_filters.append("MPI_Comm comm = ABI_Comm_to_mpi(comm_abi);")
-        pre_filters.append("int comm_size = 0;")
-        pre_filters.append("if (comm != MPI_COMM_NULL) {")
-        pre_filters.append("    MPIR_Comm *comm_ptr;")
-        pre_filters.append("    MPIR_Comm_get_ptr(comm, comm_ptr);")
-        pre_filters.append("    comm_size = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) ? comm_ptr->remote_size : comm_ptr->local_size;")
-        pre_filters.append("}")
+        pre_filters.append("int peer_size = ABI_Comm_peer_size(comm_abi);")
     elif re.match(r'mpi_i?neighbor_alltoallw(_init)?', func['name'], re.IGNORECASE):
         array_type = "Datatype"
         is_neighbor_alltoallw = True
@@ -916,9 +911,19 @@ def dump_abi_wrappers(func, is_large):
         # special treatment below because it is optional
         array_type = "Datatype"
         array_size = "(*num_elements)"
+    elif re.match(r'mpi_comm_spawn$', func['name'], re.IGNORECASE):
+        pre_filters.append("MPI_Info info = MPI_INFO_NULL;")
+        pre_filters.append("if (ABI_Comm_rank(comm_abi) == root) {")
+        pre_filters.append("    info = ABI_Info_to_mpi(info_abi);")
+        pre_filters.append("}")
+        already_done.add("info")
     elif re.match(r'mpi_comm_spawn_multiple', func['name'], re.IGNORECASE):
         array_type = "Info"
-        array_size = "count"
+        array_size = "count_info"
+        pre_filters.append("int count_info = 0;")
+        pre_filters.append("if (ABI_Comm_rank(comm_abi) == root) {")
+        pre_filters.append("    count_info = count;")
+        pre_filters.append("}")
     elif re.match(r'mpi_((wait|test|request_get_status_)(all|any)|startall)', func['name'], re.IGNORECASE):
         array_type = "Request"
         array_size = "count"
@@ -930,6 +935,8 @@ def dump_abi_wrappers(func, is_large):
     def process_handle(p):
         nonlocal array_size
         name = p['name']
+        if name in already_done:
+            return
         T = re.sub(r'MPI_', '', mapping[p['kind']])
         # translate to internal parameters
         if p['length']:
@@ -943,7 +950,7 @@ def dump_abi_wrappers(func, is_large):
             if re.match(r'mpi_t_event_get_info', func['name'], re.IGNORECASE):
                 # array_of_datatypes[]
                 pre_filters.append("MPI_%s *%s = NULL;" % (array_type, name))
-                pre_filters.append("if (num_elements) {")
+                pre_filters.append("if (num_elements && %s > 0) {" % array_size)
                 pre_filters.append("    %s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
                 pre_filters.append("}")
                 post_filters.append("if (num_elements) {")
@@ -964,7 +971,9 @@ def dump_abi_wrappers(func, is_large):
                         pre_filters.append("    recvtypes = sendtypes;")
                         pre_filters.append("} else if (recvtypes_abi != NULL) {")
                         pre_filters.append("INDENT")
-                pre_filters.append("%s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
+                pre_filters.append("if (%s > 0) {" % array_size)
+                pre_filters.append("    %s = MPL_malloc(sizeof(MPI_%s) * %s, MPL_MEM_OTHER);" % (name, array_type, array_size))
+                pre_filters.append("}")
                 if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
                     pre_filters.append("for (int i = 0; i < %s; i++) {" % array_size)
                     pre_filters.append("    %s[i] = ABI_%s_to_mpi(%s_abi[i]);" % (name, array_type, name))
@@ -1026,9 +1035,6 @@ def dump_abi_wrappers(func, is_large):
                 post_filters.append("if (%s_abi != NULL) {" % name)
                 post_filters.append("    *%s_abi = ABI_%s_from_mpi(%s_i);" % (name, T, name));
                 post_filters.append("}")
-            elif is_alltoallw and name == "comm":
-                # already done
-                pass
             else:
                 pre_filters.append("MPI_%s %s = ABI_%s_to_mpi(%s_abi);" % (T, name, T, name))
 

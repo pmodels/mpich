@@ -17,10 +17,35 @@ extern MPI_Op abi_op_builtins[];
 
 void ABI_init_builtins(void);
 
+static inline int ABI_Comm_rank(ABI_Comm in)
+{
+  int rank = MPI_PROC_NULL;
+  if (in != ABI_COMM_NULL) {
+    PMPI_Comm_rank(in, &rank);
+  }
+  return rank;
+}
+
+static inline int ABI_Comm_peer_size(ABI_Comm in)
+{
+  int size = 0;
+  int flag = 0;
+  if (in != ABI_COMM_NULL) {
+    PMPI_Comm_test_inter(in, &flag);
+    if (flag) {
+      PMPI_Comm_remote_size(in, &size);
+    } else {
+      PMPI_Comm_size(in, &size);
+    }
+  }
+  return size;
+}
+
 static inline void ABI_Comm_neighbors_count(ABI_Comm in, int *indegree, int *outdegree)
 {
-  int ival;
+  int ival = 0;
   int topo = MPI_UNDEFINED;
+  int rank = MPI_UNDEFINED;
   if (in != ABI_COMM_NULL) {
     PMPI_Topo_test(in, &topo);
   }
@@ -30,8 +55,8 @@ static inline void ABI_Comm_neighbors_count(ABI_Comm in, int *indegree, int *out
     *indegree = *outdegree = 2 * ival;
     break;
   case MPI_GRAPH:
-    PMPI_Comm_rank(in, &ival);
-    PMPI_Graph_neighbors_count(in, ival, &ival);
+    PMPI_Comm_rank(in, &rank);
+    PMPI_Graph_neighbors_count(in, rank, &ival);
     *indegree = *outdegree = ival;
     break;
   case MPI_DIST_GRAPH:
