@@ -196,12 +196,23 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
      * resulting context id (by passing ignore_id==TRUE). */
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
      * calling routine already holds the single critical section */
-    mpi_errno = MPIR_Get_contextid_sparse(local_comm_ptr, &new_context_id, !in_newcomm);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Assert(new_context_id != 0);
 
-    /* In the intercomm case, we need to exchange the context ids */
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIR_Get_contextid_sparse(local_comm_ptr, &new_context_id, !in_newcomm);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(new_context_id != 0);
+    } else {
+        /* In the intercomm case, we need to exchange the context ids */
+        /* We'll ask original root to do the exchange then bcast the result.
+         * However, root may not "in_newcomm" (i.e. color is MPI_UNDEFINED).
+         * For simplicity (and assuming non-critical), we always allocate new_context_id
+         * on root and release it afterwards.
+         */
+        int ignore_id = (comm_ptr->rank == 0) ? 0 : !in_newcomm;
+        mpi_errno = MPIR_Get_contextid_sparse(local_comm_ptr, &new_context_id, ignore_id);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(new_context_id != 0);
+
         if (comm_ptr->rank == 0) {
             mpi_errno = MPIC_Sendrecv(&new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
                                       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
@@ -211,6 +222,10 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
                 MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr,
                            MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
+
+            if (!in_newcomm) {
+                MPIR_Free_contextid(new_context_id);
+            }
         } else {
             /* Broadcast to the other members of the local group */
             mpi_errno =
