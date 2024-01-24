@@ -35,7 +35,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint recvtype_extent;
-    int total_count;
+    MPI_Aint total_count;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -81,7 +81,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     if (!chunk_count)
         chunk_count = max;
 
-    int soffset, roffset;
+    MPI_Aint soffset, roffset;
     int sidx, ridx;
     sidx = rank;
     ridx = left;
