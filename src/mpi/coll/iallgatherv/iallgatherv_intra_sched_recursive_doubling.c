@@ -13,8 +13,8 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, i, j, k;
-    int mask, dst, position, offset, my_tree_root, dst_tree_root;
-    MPI_Aint recvtype_extent, recvtype_sz;
+    int mask, dst, my_tree_root, dst_tree_root;
+    MPI_Aint recvtype_extent, recvtype_sz, position, offset;
     void *tmp_buf = NULL;
 
     comm_size = comm_ptr->local_size;
