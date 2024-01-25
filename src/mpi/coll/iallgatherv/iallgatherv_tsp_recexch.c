@@ -123,7 +123,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int phase, i, j, count, nbr, offset, rank_for_offset;
-    int x, vtx_id;
+    MPI_Aint x;
+    int vtx_id;
     int *recv_id = *recv_id_;
     int nrecvs = 0;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
@@ -206,7 +207,8 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int 
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
-    int total_count = 0, i, vtx_id;
+    MPI_Aint total_count = 0;
+    int i, vtx_id;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
