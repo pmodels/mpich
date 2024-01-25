@@ -80,11 +80,11 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code
             tmp_comm = fd->comm;
             fd->comm = MPI_COMM_SELF;
             (*(fd->fns->ADIOI_xxx_Open)) (fd, error_code);
-            fd->comm = tmp_comm;
-            MPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
+            MPI_Bcast(error_code, 1, MPI_INT, fd->hints->ranklist[0], tmp_comm);
             /* if no error, close the file and reopen normally below */
             if (*error_code == MPI_SUCCESS)
                 (*(fd->fns->ADIOI_xxx_Close)) (fd, error_code);
+            fd->comm = tmp_comm;
 
             fd->access_mode = access_mode;      /* back to original */
         } else
