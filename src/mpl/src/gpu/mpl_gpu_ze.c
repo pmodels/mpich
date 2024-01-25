@@ -2395,9 +2395,6 @@ static void gpu_free_hooks_cb(void *dptr)
 
 MPL_STATIC_INLINE_PREFIX int gpu_mem_hook_init(void)
 {
-    if (sys_zeMemFree)
-        return MPL_SUCCESS;
-
     void *libze_handle = dlopen("libze_loader.so", RTLD_LAZY | RTLD_GLOBAL);
     assert(libze_handle);
 
@@ -2464,8 +2461,10 @@ __attribute__ ((visibility("default")))
 ze_result_t ZE_APICALL zeMemFree(ze_context_handle_t hContext, void *dptr)
 {
     ze_result_t result;
-    /* in case when MPI_Init was skipped */
-    gpu_mem_hook_init();
+    if (!sys_zeMemFree) {
+        gpu_mem_hook_init();
+    }
+
     gpu_free_hooks_cb(dptr);
     result = sys_zeMemFree(hContext, dptr);
     return (result);
