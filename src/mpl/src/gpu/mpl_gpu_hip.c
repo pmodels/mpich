@@ -468,6 +468,10 @@ int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
 hipError_t hipFree(void *dptr)
 {
     hipError_t result;
+    if (!sys_hipFree) {
+        gpu_mem_hook_init();
+    }
+
     gpu_free_hooks_cb(dptr);
     result = sys_hipFree(dptr);
     return result;
