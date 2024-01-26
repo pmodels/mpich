@@ -1274,6 +1274,7 @@ int MPL_gpu_finalize(void)
         free_hook_chain = free_hook_chain->next;
         MPL_free(prev);
     }
+    free_hook_chain = NULL;
     MPL_initlock_unlock(&free_hook_mutex);
 
     for (i = 0; i < local_ze_device_count; i++) {
