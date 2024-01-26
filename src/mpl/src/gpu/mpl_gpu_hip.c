@@ -31,6 +31,7 @@ static gpu_free_hook_s *free_hook_chain = NULL;
 static hipError_t(*sys_hipFree) (void *dptr);
 
 static int gpu_mem_hook_init();
+static MPL_initlock_t free_hook_mutex = MPL_INITLOCK_INITIALIZER;
 
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
@@ -374,11 +375,13 @@ int MPL_gpu_finalize(void)
     MPL_free(global_to_local_map);
 
     gpu_free_hook_s *prev;
+    MPL_initlock_lock(&free_hook_mutex);
     while (free_hook_chain) {
         prev = free_hook_chain;
         free_hook_chain = free_hook_chain->next;
         MPL_free(prev);
     }
+    MPL_initlock_unlock(&free_hook_mutex);
 
     /* Reset initialization state */
     gpu_initialized = 0;
@@ -455,12 +458,15 @@ int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
     assert(hook_obj);
     hook_obj->free_hook = free_hook;
     hook_obj->next = NULL;
+
+    MPL_initlock_lock(&free_hook_mutex);
     if (!free_hook_chain)
         free_hook_chain = hook_obj;
     else {
         hook_obj->next = free_hook_chain;
         free_hook_chain = hook_obj;
     }
+    MPL_initlock_unlock(&free_hook_mutex);
 
     return MPL_SUCCESS;
 }
@@ -468,12 +474,16 @@ int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
 hipError_t hipFree(void *dptr)
 {
     hipError_t result;
+    MPL_initlock_lock(&free_hook_mutex);
+
     if (!sys_hipFree) {
         gpu_mem_hook_init();
     }
 
     gpu_free_hooks_cb(dptr);
     result = sys_hipFree(dptr);
+
+    MPL_initlock_lock(&free_hook_mutex);
     return result;
 }
 
