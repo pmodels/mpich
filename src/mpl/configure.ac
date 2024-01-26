@@ -1194,6 +1194,7 @@ fi
 
 if test "X${pac_have_hip}" = "Xyes" ; then
     AC_DEFINE([HAVE_HIP],[1],[Define if HIP is available])
+    AC_CHECK_LIB(dl, dlopen, [], AC_MSG_ERROR([dlopen not found.  MPL HIP support requires libdl.]))
     have_gpu="yes"
     GPU_SUPPORT="HIP"
 fi
