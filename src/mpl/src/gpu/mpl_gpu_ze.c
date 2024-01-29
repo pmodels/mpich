@@ -178,6 +178,7 @@ typedef struct gpu_free_hook {
     void (*free_hook) (void *dptr);
     struct gpu_free_hook *next;
 } gpu_free_hook_s;
+static MPL_initlock_t free_hook_mutex = MPL_INITLOCK_INITIALIZER;
 
 pid_t mypid;
 
@@ -565,7 +566,9 @@ int MPL_gpu_init(int debug_summary)
 
     mypid = getpid();
 
+    MPL_initlock_lock(&free_hook_mutex);
     gpu_mem_hook_init();
+    MPL_initlock_unlock(&free_hook_mutex);
     gpu_initialized = 1;
 
     if (MPL_gpu_info.debug_summary) {
@@ -1265,11 +1268,14 @@ int MPL_gpu_finalize(void)
     MPL_free(physical_device_states);
 
     gpu_free_hook_s *prev;
+    MPL_initlock_lock(&free_hook_mutex);
     while (free_hook_chain) {
         prev = free_hook_chain;
         free_hook_chain = free_hook_chain->next;
         MPL_free(prev);
     }
+    free_hook_chain = NULL;
+    MPL_initlock_unlock(&free_hook_mutex);
 
     for (i = 0; i < local_ze_device_count; i++) {
         MPL_ze_device_entry_t *device_state = device_states + i;
@@ -2395,9 +2401,6 @@ static void gpu_free_hooks_cb(void *dptr)
 
 MPL_STATIC_INLINE_PREFIX int gpu_mem_hook_init(void)
 {
-    if (sys_zeMemFree)
-        return MPL_SUCCESS;
-
     void *libze_handle = dlopen("libze_loader.so", RTLD_LAZY | RTLD_GLOBAL);
     assert(libze_handle);
 
@@ -2413,12 +2416,15 @@ int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
     assert(hook_obj);
     hook_obj->free_hook = free_hook;
     hook_obj->next = NULL;
+
+    MPL_initlock_lock(&free_hook_mutex);
     if (!free_hook_chain)
         free_hook_chain = hook_obj;
     else {
         hook_obj->next = free_hook_chain;
         free_hook_chain = hook_obj;
     }
+    MPL_initlock_unlock(&free_hook_mutex);
 
     return MPL_SUCCESS;
 }
@@ -2464,10 +2470,15 @@ __attribute__ ((visibility("default")))
 ze_result_t ZE_APICALL zeMemFree(ze_context_handle_t hContext, void *dptr)
 {
     ze_result_t result;
-    /* in case when MPI_Init was skipped */
-    gpu_mem_hook_init();
+    MPL_initlock_lock(&free_hook_mutex);
+    if (!sys_zeMemFree) {
+        gpu_mem_hook_init();
+    }
+
     gpu_free_hooks_cb(dptr);
     result = sys_zeMemFree(hContext, dptr);
+
+    MPL_initlock_unlock(&free_hook_mutex);
     return (result);
 }
 

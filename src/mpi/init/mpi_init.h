@@ -67,6 +67,9 @@ int MPII_finalize_async(void);
 void MPII_Call_finalize_callbacks(int min_prio, int max_prio);
 void MPII_dump_debug_summary(void);
 
+int MPII_init_gpu(void);
+int MPII_finalize_gpu(void);
+
 /* MPI_Init[_thread]/MPI_Finalize only can be used in "world" model where it only
  * can be initialized and finalized once, while we can have multiple sessions.
  * Following inline functions are used to track the world model state in functions
