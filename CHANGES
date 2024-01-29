@@ -62,7 +62,7 @@
   decided at the October 2023 meeting that this was a mistake and will
   be removed in an erratum.
 
-# Fix potential crash in CUDA memory hooks
+# Fix potential crash in GPU memory hooks
 
 
 ===============================================================================
