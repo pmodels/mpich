@@ -827,6 +827,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_free_pack_buffer(void *ptr)
     }
 }
 
+int MPIDI_OFI_gpu_pipeline_recv_copy(MPIR_Request * rreq, void *buf, MPI_Aint chunk_sz,
+                                     void *recv_buf, MPI_Aint count, MPI_Datatype datatype);
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_pipeline_chunk_size(size_t data_sz)
 {
     int chunk_size = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ;
@@ -1063,52 +1066,7 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
                 DL_DELETE(gpu_queue[vni], task);
                 MPL_free(task);
             } else {
-                MPIR_Assert(task->type == MPIDI_OFI_PIPELINE_RECV);
-                int c;
-                MPIR_cc_decr(request->cc_ptr, &c);
-                if (c == 0) {
-                    /* If synchronous, ack and complete when the ack is done */
-                    if (unlikely(MPIDI_OFI_REQUEST(request, pipeline_info.is_sync))) {
-                        MPIR_Comm *comm = request->comm;
-                        uint64_t ss_bits =
-                            MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int
-                                                   (&MPIDI_OFI_REQUEST(request, util_id)),
-                                                   MPIR_Comm_rank(comm), request->status.MPI_TAG,
-                                                   MPIDI_OFI_SYNC_SEND_ACK);
-                        int r = request->status.MPI_SOURCE;
-                        int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, comm, r, comm->rank,
-                                                    request->status.MPI_TAG);
-                        int vci_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, r, comm->rank,
-                                                    request->status.MPI_TAG);
-                        int vci_local = vci_dst;
-                        int vci_remote = vci_src;
-                        int nic = 0;
-                        int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
-                        fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(comm, r, nic, vci_remote);
-                        MPIDI_OFI_CALL_RETRY(fi_tinjectdata
-                                             (MPIDI_OFI_global.ctx[ctx_idx].tx, NULL /* buf */ ,
-                                              0 /* len */ ,
-                                              MPIR_Comm_rank(comm), dest_addr, ss_bits),
-                                             vci_local, tinjectdata);
-                    }
-
-                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(request, datatype));
-                    /* Set number of bytes in status. */
-                    MPIR_STATUS_SET_COUNT(request->status,
-                                          MPIDI_OFI_REQUEST(request, pipeline_info.offset));
-
-                    MPIR_Request_free(request);
-                }
-
-                /* For recv, now task can be deleted from DL. */
-                DL_DELETE(gpu_queue[vni], task);
-                /* Free host buffer, yaksa request and task. */
-                if (task->type == MPIDI_OFI_PIPELINE_RECV)
-                    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool,
-                                                      task->buf);
-                else
-                    MPIDI_OFI_gpu_free_pack_buffer(task->buf);
-                MPL_free(task);
+                MPIR_Assert(0);
             }
         } else {
             goto fn_exit;
