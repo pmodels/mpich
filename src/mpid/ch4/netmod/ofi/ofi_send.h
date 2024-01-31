@@ -309,10 +309,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                 match_bits), vci_local, tinjectdata);
             MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
 
-            MPIDI_OFI_gpu_pending_send_t *send_task =
-                MPIDI_OFI_create_send_task(sreq, (void *) buf, attr, data_sz, count, dt_contig);
-            DL_APPEND(MPIDI_OFI_global.gpu_send_queue, send_task);
-            MPIDI_OFI_gpu_progress_send();
+            MPIDI_OFI_gpu_pipeline_send(sreq, buf, count, datatype, attr, data_sz);
 
             goto fn_exit;
         }

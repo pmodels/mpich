@@ -827,8 +827,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_free_pack_buffer(void *ptr)
     }
 }
 
-int MPIDI_OFI_gpu_pipeline_send_copy(MPIR_Request * sreq, MPIR_async_req * areq,
-                                     void *buf, MPI_Aint size);
+int MPIDI_OFI_gpu_pipeline_send(MPIR_Request * sreq, const void *send_buf,
+                                MPI_Aint count, MPI_Datatype datatype,
+                                MPL_pointer_attr_t attr, MPI_Aint data_sz);
 int MPIDI_OFI_gpu_pipeline_recv_copy(MPIR_Request * rreq, void *buf, MPI_Aint chunk_sz,
                                      void *recv_buf, MPI_Aint count, MPI_Datatype datatype);
 
@@ -874,98 +875,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_pending_recv_t
     task->prev = NULL;
     task->next = NULL;
     return task;
-}
-
-MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_pending_send_t *MPIDI_OFI_create_send_task(MPIR_Request *
-                                                                                  req,
-                                                                                  void *send_buf,
-                                                                                  MPL_pointer_attr_t
-                                                                                  attr,
-                                                                                  MPI_Aint left_sz,
-                                                                                  MPI_Aint count,
-                                                                                  int dt_contig)
-{
-    MPIDI_OFI_gpu_pending_send_t *task =
-        (MPIDI_OFI_gpu_pending_send_t *) MPL_malloc(sizeof(MPIDI_OFI_gpu_pending_send_t),
-                                                    MPL_MEM_OTHER);
-    MPIR_Assert(task);
-    task->sreq = req;
-    task->attr = attr;
-    task->send_buf = send_buf;
-    task->offset = 0;
-    task->n_chunks = 0;
-    task->left_sz = left_sz;
-    task->count = count;
-    task->dt_contig = dt_contig;
-    task->prev = NULL;
-    task->next = NULL;
-    return task;
-}
-
-static int MPIDI_OFI_gpu_progress_send(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int engine_type = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_D2H_ENGINE_TYPE;
-
-    while (MPIDI_OFI_global.gpu_send_queue) {
-        char *host_buf = NULL;
-        MPI_Aint chunk_sz;
-        int vci_local = -1;
-
-        MPIDI_OFI_gpu_pending_send_t *send_task = MPIDI_OFI_global.gpu_send_queue;
-        MPI_Datatype datatype = MPIDI_OFI_REQUEST(send_task->sreq, datatype);
-        int block_sz = MPIDI_OFI_REQUEST(send_task->sreq, pipeline_info.chunk_sz);
-        while (send_task->left_sz > 0) {
-            chunk_sz = send_task->left_sz > block_sz ? block_sz : send_task->left_sz;
-            host_buf = NULL;
-            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_send_pool,
-                                               (void **) &host_buf);
-            if (host_buf == NULL) {
-                goto fn_exit;
-            }
-            MPI_Aint actual_pack_bytes;
-            MPIR_async_req async_req;
-            int commit = send_task->left_sz <= chunk_sz ? 1 : 0;
-            if (!commit &&
-                !MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST &&
-                send_task->n_chunks % MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK ==
-                MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK - 1)
-                commit = 1;
-            mpi_errno =
-                MPIR_Ilocalcopy_gpu((char *) send_task->send_buf, send_task->count, datatype,
-                                    send_task->offset, &send_task->attr, host_buf, chunk_sz,
-                                    MPI_BYTE, 0, NULL, MPL_GPU_COPY_D2H, engine_type,
-                                    commit, &async_req);
-            MPIR_ERR_CHECK(mpi_errno);
-
-            actual_pack_bytes = chunk_sz;
-            send_task->offset += (size_t) actual_pack_bytes;
-            send_task->left_sz -= (size_t) actual_pack_bytes;
-            send_task->n_chunks++;
-            /* Increase request completion cnt, cc is 1 more than necessary
-             * to prevent parent request being freed prematurally. */
-            MPIR_cc_inc(send_task->sreq->cc_ptr);
-
-            mpi_errno = MPIDI_OFI_gpu_pipeline_send_copy(send_task->sreq, &yreq,
-                                                         host_buf, chunk_sz);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-        /* all done, decrease cc by 1 to allow parent request to be freed
-         * when complete */
-        MPIR_cc_dec(send_task->sreq->cc_ptr);
-        /* Update correct number of chunks in immediate data. */
-        MPIDI_OFI_idata_set_gpuchunk_bits(&MPIDI_OFI_REQUEST
-                                          (send_task->sreq, pipeline_info.cq_data),
-                                          send_task->n_chunks);
-        DL_DELETE(MPIDI_OFI_global.gpu_send_queue, send_task);
-        MPL_free(send_task);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    mpi_errno = MPI_ERR_OTHER;
-    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_progress_recv(void)
@@ -1016,8 +925,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_progress(int vni)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIDI_OFI_gpu_progress_send();
-    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIDI_OFI_gpu_progress_recv();
     MPIR_ERR_CHECK(mpi_errno);
 
