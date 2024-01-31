@@ -465,21 +465,7 @@ static int gpu_ipc_async_poll(MPIR_Async_thing * thing)
     int is_done = 0;
 
     struct gpu_ipc_async *p = MPIR_Async_thing_get_state(thing);
-    switch (p->async_req.type) {
-        case MPIR_NULL_REQUEST:
-            /* a dummy, immediately complete */
-            is_done = 1;
-            break;
-        case MPIR_TYPEREP_REQUEST:
-            MPIR_Typerep_test(p->async_req.u.y_req, &is_done);
-            break;
-        case MPIR_GPU_REQUEST:
-            err = MPL_gpu_test(&p->async_req.u.gpu_req, &is_done);
-            MPIR_Assertp(err == MPL_SUCCESS);
-            break;
-        default:
-            MPIR_Assert(0);
-    }
+    MPIR_async_test(&(p->async_req), &is_done);
 
     if (is_done) {
         int vci = MPIDIG_REQUEST(p->rreq, req->local_vci);
