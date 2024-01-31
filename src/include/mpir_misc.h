@@ -63,6 +63,26 @@ typedef struct {
     MPIR_request_type_t type;
 } MPIR_async_req;
 
+MPL_STATIC_INLINE_PREFIX void MPIR_async_test(MPIR_async_req * areq, int *is_done)
+{
+    int err;
+    switch (areq->type) {
+        case MPIR_NULL_REQUEST:
+            /* a dummy, immediately complete */
+            *is_done = 1;
+            break;
+        case MPIR_TYPEREP_REQUEST:
+            MPIR_Typerep_test(areq->u.y_req, is_done);
+            break;
+        case MPIR_GPU_REQUEST:
+            err = MPL_gpu_test(&areq->u.gpu_req, is_done);
+            MPIR_Assertp(err == MPL_SUCCESS);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+}
+
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
 int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
