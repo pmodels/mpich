@@ -7,6 +7,89 @@
 #include "mpir_async_things.h"
 
 /* ------------------------------------
+ * send_alloc: allocate send chunks and start copy, may postpone as async
+ */
+struct send_alloc {
+    MPIR_Request *sreq;
+    const void *send_buf;
+    MPI_Aint count;
+    MPI_Datatype datatype;
+    MPL_pointer_attr_t attr;
+    MPI_Aint offset, left_sz;
+    int n_chunks;
+};
+
+static int send_alloc_poll(MPIR_Async_thing * thing);
+
+int MPIDI_OFI_gpu_pipeline_send(MPIR_Request * sreq, const void *send_buf,
+                                MPI_Aint count, MPI_Datatype datatype,
+                                MPL_pointer_attr_t attr, MPI_Aint data_sz)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct send_alloc *p;
+    p = MPL_malloc(sizeof(*p), MPL_MEM_OTHER);
+    MPIR_Assert(p);
+
+    p->sreq = sreq;
+    p->send_buf = send_buf;
+    p->count = count;
+    p->datatype = datatype;
+    p->attr = attr;
+    p->left_sz = data_sz;
+    p->offset = 0;
+    p->n_chunks = 0;
+
+    mpi_errno = MPIR_Async_things_add(send_alloc_poll, p);
+
+    return mpi_errno;
+}
+
+static int send_alloc_poll(MPIR_Async_thing * thing)
+{
+    int num_new_chunks = 0;
+    struct send_alloc *p = MPIR_Async_thing_get_state(thing);
+
+    while (p->left_sz > 0) {
+        void *host_buf;
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_send_pool, &host_buf);
+        if (host_buf == NULL) {
+            return (num_new_chunks == 0) ? MPIR_ASYNC_THING_NOPROGRESS : MPIR_ASYNC_THING_UPDATED;
+        }
+        MPIR_async_req async_req;
+        MPI_Aint chunk_sz = MPL_MIN(p->left_sz, MPIDI_OFI_REQUEST(p->sreq, pipeline_info.chunk_sz));
+        MPL_gpu_engine_type_t engine_type =
+            MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
+        int commit = p->left_sz <= chunk_sz ? 1 : 0;
+        if (!commit &&
+            !MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST &&
+            p->n_chunks % MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK ==
+            MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK - 1)
+            commit = 1;
+        int mpi_errno;
+        mpi_errno = MPIR_Ilocalcopy_gpu(p->send_buf, p->count, p->datatype,
+                                        p->offset, &p->attr, host_buf, chunk_sz,
+                                        MPI_BYTE, 0, NULL, MPL_GPU_COPY_D2H, engine_type,
+                                        commit, &async_req);
+        MPIR_Assertp(mpi_errno == MPI_SUCCESS);
+
+        p->offset += (size_t) chunk_sz;
+        p->left_sz -= (size_t) chunk_sz;
+        p->n_chunks++;
+        /* Increase request completion cnt, cc is 1 more than necessary
+         * to prevent parent request being freed prematurally. */
+        MPIR_cc_inc(p->sreq->cc_ptr);
+
+        spawn_pipeline_send(thing, p->sreq, &async_req, host_buf, chunk_sz);
+
+        num_new_chunks++;
+    }
+    /* all done */
+    MPL_free(p);
+    return MPIR_ASYNC_THING_DONE;
+};
+
+/* ------------------------------------
  * send_copy: async copy before sending the chunk data
  */
 struct send_copy {
@@ -21,11 +104,10 @@ struct send_copy {
 static int send_copy_poll(MPIR_Async_thing * thing);
 static void send_copy_complete(MPIR_Request * sreq, const void *buf, MPI_Aint chunk_sz);
 
-int MPIDI_OFI_gpu_pipeline_send_copy(MPIR_Request * sreq, MPIR_async_req * areq,
-                                     const void *buf, MPI_Aint chunk_sz)
+static void spawn_send_copy(MPIR_Async_thing * thing,
+                            MPIR_Request * sreq, MPIR_async_req * areq,
+                            const void *buf, MPI_Aint chunk_sz)
 {
-    int mpi_errno = MPI_SUCCESS;
-
     struct send_copy *p;
     p = MPL_malloc(sizeof(*p), MPL_MEM_OTHER);
     MPIR_Assert(p);
@@ -35,9 +117,7 @@ int MPIDI_OFI_gpu_pipeline_send_copy(MPIR_Request * sreq, MPIR_async_req * areq,
     p->buf = buf;
     p->chunk_sz = chunk_sz;
 
-    mpi_errno = MPIR_Async_things_add(send_copy_complete, p);
-
-    return mpi_errno;
+    MPIR_Async_thing_spawn(thing, send_copy_poll, p);
 }
 
 static int send_copy_poll(MPIR_Async_thing * thing)
