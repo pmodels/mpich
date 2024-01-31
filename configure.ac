@@ -565,7 +565,7 @@ AC_ARG_ENABLE(multi-aliases,
 		enable_multi_aliases=yes)
 
 AC_ARG_WITH([wrapper-dl-type],
-            [AS_HELP_STRING([--enable-wrapper-dl-type],
+            [AS_HELP_STRING([--with-wrapper-dl-type],
                             [Dynamic loading model for alternate MPI
                              libraries, used when programs are linked
                              by mpicc compiler wrappers.  This only
