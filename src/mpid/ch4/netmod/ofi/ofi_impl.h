@@ -902,8 +902,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_pending_send_t *MPIDI_OFI_create_send_tas
     return task;
 }
 
-static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int vni);
-
 static int MPIDI_OFI_gpu_progress_send(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -961,10 +959,6 @@ static int MPIDI_OFI_gpu_progress_send(void)
                                           send_task->n_chunks);
         DL_DELETE(MPIDI_OFI_global.gpu_send_queue, send_task);
         MPL_free(send_task);
-
-        if (vci_local != -1)
-            MPIDI_OFI_gpu_progress_task(MPIDI_OFI_global.gpu_send_task_queue, vci_local);
-
     }
 
   fn_exit:
@@ -1018,58 +1012,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_progress_recv(void)
     goto fn_exit;
 }
 
-static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int vni)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_gpu_task_t *task = NULL;
-    MPIDI_OFI_gpu_task_t *tmp;
-
-    DL_FOREACH_SAFE(gpu_queue[vni], task, tmp) {
-        if (task->status == MPIDI_OFI_PIPELINE_EXEC) {
-            /* Avoid the deadlock of re-launching an executing OFI task. */
-            goto fn_exit;
-        }
-
-        MPIR_async_req *areq = &task->async_req;
-        int completed = 0;
-        if (areq->type == MPIR_GPU_REQUEST) {
-            mpi_errno = MPL_gpu_test(&areq->u.gpu_req, &completed);
-            MPIR_ERR_CHECK(mpi_errno);
-        } else if (areq->type == MPIR_TYPEREP_REQUEST) {
-            MPIR_Typerep_test(areq->u.y_req, &completed);
-        } else {
-            completed = 1;
-        }
-        if (completed == 1) {
-            /* GPU transfer completes. */
-            task->status = MPIDI_OFI_PIPELINE_EXEC;
-            MPIR_Request *request = task->request;
-
-            if (task->type == MPIDI_OFI_PIPELINE_SEND) {
-                MPIR_Assert(0);
-            } else {
-                MPIR_Assert(0);
-            }
-        } else {
-            goto fn_exit;
-        }
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    mpi_errno = MPI_ERR_OTHER;
-    goto fn_exit;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_progress(int vni)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIDI_OFI_gpu_progress_task(MPIDI_OFI_global.gpu_recv_task_queue, vni);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIDI_OFI_gpu_progress_task(MPIDI_OFI_global.gpu_send_task_queue, vni);
-    MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIDI_OFI_gpu_progress_send();
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIDI_OFI_gpu_progress_recv();
