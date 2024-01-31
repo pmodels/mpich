@@ -500,7 +500,12 @@ int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         do_localcopy(sendbuf, sendcount, sendtype, sendoffset, recvbuf, recvcount, recvtype,
                      recvoffset, LOCALCOPY_NONBLOCKING, &req->u.y_req);
     MPIR_ERR_CHECK(mpi_errno);
-    req->type = MPIR_TYPEREP_REQUEST;
+
+    if (req->u.y_req.req == MPIR_TYPEREP_REQ_NULL) {
+        req->type = MPIR_NULL_REQUEST;
+    } else {
+        req->type = MPIR_TYPEREP_REQUEST;
+    }
 #endif
 
   fn_exit:
