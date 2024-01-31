@@ -7,6 +7,88 @@
 #include "mpir_async_things.h"
 
 /* ------------------------------------
+ * send_copy: async copy before sending the chunk data
+ */
+struct send_copy {
+    MPIR_Request *sreq;
+    /* async handle */
+    MPIR_async_req async_req;
+    /* for sending data */
+    const void *buf;
+    MPI_Aint chunk_sz;
+};
+
+static int send_copy_poll(MPIR_Async_thing * thing);
+static void send_copy_complete(MPIR_Request * sreq, const void *buf, MPI_Aint chunk_sz);
+
+int MPIDI_OFI_gpu_pipeline_send_copy(MPIR_Request * sreq, MPIR_async_req * areq,
+                                     const void *buf, MPI_Aint chunk_sz)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct send_copy *p;
+    p = MPL_malloc(sizeof(*p), MPL_MEM_OTHER);
+    MPIR_Assert(p);
+
+    p->sreq = sreq;
+    p->async_req = *areq;
+    p->buf = buf;
+    p->chunk_sz = chunk_sz;
+
+    mpi_errno = MPIR_Async_things_add(send_copy_complete, p);
+
+    return mpi_errno;
+}
+
+static int send_copy_poll(MPIR_Async_thing * thing)
+{
+    int is_done = 0;
+
+    struct send_copy *p = MPIR_Async_thing_get_state(thing);
+    MPIR_async_test(&(p->async_req), &is_done);
+
+    if (is_done) {
+        /* finished copy, go ahead send the data */
+        send_copy_complete(p->sreq, p->buf, p->chunk_sz);
+        MPL_free(p);
+        return MPIR_ASYNC_THING_DONE;
+    }
+
+    return MPIR_ASYNC_THING_NOPROGRESS;
+}
+
+static void send_copy_complete(MPIR_Request * sreq, const void *buf, MPI_Aint chunk_sz)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int vci_local = MPIDI_OFI_REQUEST(sreq, pipeline_info.vci_local);
+
+    MPIDI_OFI_gpu_pipeline_request *chunk_req = (MPIDI_OFI_gpu_pipeline_request *)
+        MPL_malloc(sizeof(MPIDI_OFI_gpu_pipeline_request), MPL_MEM_BUFFER);
+    MPIR_Assertp(chunk_req);
+
+    chunk_req->parent = sreq;
+    chunk_req->event_id = MPIDI_OFI_EVENT_SEND_GPU_PIPELINE;
+    chunk_req->buf = (void *) buf;
+
+    int ctx_idx = MPIDI_OFI_REQUEST(sreq, pipeline_info.ctx_idx);
+    fi_addr_t remote_addr = MPIDI_OFI_REQUEST(sreq, pipeline_info.remote_addr);
+    uint64_t cq_data = MPIDI_OFI_REQUEST(sreq, pipeline_info.cq_data);
+    uint64_t match_bits = MPIDI_OFI_REQUEST(sreq, pipeline_info.match_bits);
+    match_bits |= MPIDI_OFI_GPU_PIPELINE_SEND;
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_local).lock);
+    MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                      buf, chunk_sz, NULL /* desc */ ,
+                                      cq_data, remote_addr, match_bits,
+                                      (void *) &chunk_req->context), vci_local, fi_tsenddata);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_local).lock);
+    /* both send buffer and chunk_req will be freed in pipeline_send_event */
+
+    return;
+  fn_fail:
+    MPIR_Assert(0);
+}
+
+/* ------------------------------------
  * recv_copy: async copy from host_buf to user buffer in recv event
  */
 struct recv_copy {
@@ -47,7 +129,10 @@ int MPIDI_OFI_gpu_pipeline_recv_copy(MPIR_Request * rreq, void *buf, MPI_Aint ch
 
     mpi_errno = MPIR_Async_things_add(recv_copy_poll, p);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int recv_copy_poll(MPIR_Async_thing * thing)
