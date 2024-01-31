@@ -28,4 +28,7 @@ typedef struct {
 #define MPIR_TYPEREP_HANDLE_NULL NULL
 #endif
 
+int MPIR_Typerep_wait(MPIR_Typerep_req typerep_req);
+int MPIR_Typerep_test(MPIR_Typerep_req typerep_req, int *completed);
+
 #endif /* TYPEREP_PRE_H_INCLUDED */
