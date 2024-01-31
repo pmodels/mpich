@@ -491,8 +491,6 @@ typedef struct {
     /* GPU pipeline */
     MPIDU_genq_private_pool_t gpu_pipeline_send_pool;
     MPIDU_genq_private_pool_t gpu_pipeline_recv_pool;
-    MPIDI_OFI_gpu_task_t *gpu_send_task_queue[MPIDI_CH4_MAX_VCIS];
-    MPIDI_OFI_gpu_task_t *gpu_recv_task_queue[MPIDI_CH4_MAX_VCIS];
     MPIDI_OFI_gpu_pending_recv_t *gpu_recv_queue;
     MPIDI_OFI_gpu_pending_send_t *gpu_send_queue;
 
