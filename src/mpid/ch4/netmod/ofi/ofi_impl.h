@@ -830,6 +830,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_free_pack_buffer(void *ptr)
 int MPIDI_OFI_gpu_pipeline_send(MPIR_Request * sreq, const void *send_buf,
                                 MPI_Aint count, MPI_Datatype datatype,
                                 MPL_pointer_attr_t attr, MPI_Aint data_sz);
+int MPIDI_OFI_gpu_pipeline_recv(MPIR_Request * rreq, int idx, int n_chunks);
 int MPIDI_OFI_gpu_pipeline_recv_copy(MPIR_Request * rreq, void *buf, MPI_Aint chunk_sz,
                                      void *recv_buf, MPI_Aint count, MPI_Datatype datatype);
 
@@ -840,98 +841,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_pipeline_chunk_size(size_t data_sz)
         chunk_size = data_sz;
     }
     return chunk_size;
-}
-
-MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_task_t *MPIDI_OFI_create_gpu_task(MPIDI_OFI_pipeline_type_t
-                                                                         type, void *buf,
-                                                                         size_t len,
-                                                                         MPIR_Request * request,
-                                                                         MPIR_async_req async_req)
-{
-    MPIDI_OFI_gpu_task_t *task =
-        (MPIDI_OFI_gpu_task_t *) MPL_malloc(sizeof(MPIDI_OFI_gpu_task_t), MPL_MEM_OTHER);
-    MPIR_Assert(task != NULL);
-    task->type = type;
-    task->status = MPIDI_OFI_PIPELINE_READY;
-    task->buf = buf;
-    task->len = len;
-    task->request = request;
-    task->areq = async_req;
-    task->prev = NULL;
-    task->next = NULL;
-    return task;
-}
-
-MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_pending_recv_t
-    * MPIDI_OFI_create_recv_task(MPIDI_OFI_gpu_pipeline_request * req, int idx, int n_chunks)
-{
-    MPIDI_OFI_gpu_pending_recv_t *task =
-        (MPIDI_OFI_gpu_pending_recv_t *) MPL_malloc(sizeof(MPIDI_OFI_gpu_pending_recv_t),
-                                                    MPL_MEM_OTHER);
-    MPIR_Assert(task);
-    task->req = req;
-    task->idx = idx;
-    task->n_chunks = n_chunks;
-    task->prev = NULL;
-    task->next = NULL;
-    return task;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_progress_recv(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    while (MPIDI_OFI_global.gpu_recv_queue) {
-        MPIDI_OFI_gpu_pending_recv_t *recv_task = MPIDI_OFI_global.gpu_recv_queue;
-        MPIDI_OFI_gpu_pipeline_request *chunk_req = recv_task->req;
-        MPIR_Request *rreq = chunk_req->parent;
-        void *host_buf = chunk_req->buf;
-        if (!host_buf) {
-            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool,
-                                               (void **) &host_buf);
-            if (!host_buf) {
-                break;
-            }
-            chunk_req->buf = host_buf;
-        }
-        fi_addr_t remote_addr = MPIDI_OFI_REQUEST(rreq, pipeline_info.remote_addr);
-
-        int ret = fi_trecv(MPIDI_OFI_global.ctx[MPIDI_OFI_REQUEST(rreq, pipeline_info.ctx_idx)].rx,
-                           (void *) host_buf,
-                           MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ, NULL, remote_addr,
-                           MPIDI_OFI_REQUEST(rreq,
-                                             pipeline_info.match_bits) |
-                           MPIDI_OFI_GPU_PIPELINE_SEND,
-                           MPIDI_OFI_REQUEST(rreq, pipeline_info.mask_bits),
-                           (void *) &chunk_req->context);
-        if (ret == 0) {
-            DL_DELETE(MPIDI_OFI_global.gpu_recv_queue, recv_task);
-            MPL_free(recv_task);
-        } else if (ret == -FI_EAGAIN || ret == -FI_ENOMEM) {
-            break;
-        } else {
-            goto fn_fail;
-        }
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    mpi_errno = MPI_ERR_OTHER;
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_progress(int vni)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIDI_OFI_gpu_progress_recv();
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* OFI_IMPL_H_INCLUDED */

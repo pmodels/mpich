@@ -491,7 +491,6 @@ typedef struct {
     /* GPU pipeline */
     MPIDU_genq_private_pool_t gpu_pipeline_send_pool;
     MPIDU_genq_private_pool_t gpu_pipeline_recv_pool;
-    MPIDI_OFI_gpu_pending_recv_t *gpu_recv_queue;
 
     /* Process management and PMI globals */
     int pname_set;
