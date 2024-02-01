@@ -734,7 +734,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
                                            host_free_registered,
                                            &MPIDI_OFI_global.gpu_pipeline_recv_pool);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_OFI_global.gpu_recv_queue = NULL;
     }
 
     /* Initialize RMA keys allocator */

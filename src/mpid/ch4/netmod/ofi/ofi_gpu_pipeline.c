@@ -20,6 +20,8 @@ struct send_alloc {
 };
 
 static int send_alloc_poll(MPIR_Async_thing * thing);
+static void spawn_send_copy(MPIR_Async_thing * thing, MPIR_Request * sreq, MPIR_async_req * areq,
+                            const void *buf, MPI_Aint chunk_sz);
 
 int MPIDI_OFI_gpu_pipeline_send(MPIR_Request * sreq, const void *send_buf,
                                 MPI_Aint count, MPI_Datatype datatype,
@@ -80,7 +82,7 @@ static int send_alloc_poll(MPIR_Async_thing * thing)
          * to prevent parent request being freed prematurally. */
         MPIR_cc_inc(p->sreq->cc_ptr);
 
-        spawn_pipeline_send(thing, p->sreq, &async_req, host_buf, chunk_sz);
+        spawn_send_copy(thing, p->sreq, &async_req, host_buf, chunk_sz);
 
         num_new_chunks++;
     }
@@ -167,6 +169,87 @@ static void send_copy_complete(MPIR_Request * sreq, const void *buf, MPI_Aint ch
   fn_fail:
     MPIR_Assert(0);
 }
+
+/* ------------------------------------
+ * recv_alloc: allocate recv chunk buffer and post fi_trecv
+ */
+struct recv_alloc {
+    MPIR_Request *rreq;
+    MPIDI_OFI_gpu_pipeline_request *chunk_req;
+    int idx;
+    int n_chunks;
+};
+
+static int recv_alloc_poll(MPIR_Async_thing * thing);
+
+int MPIDI_OFI_gpu_pipeline_recv(MPIR_Request * rreq, int idx, int n_chunks)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct recv_alloc *p;
+    p = MPL_malloc(sizeof(*p), MPL_MEM_OTHER);
+    MPIR_Assert(p);
+
+    p->rreq = rreq;
+    p->idx = idx;
+    p->n_chunks = n_chunks;
+
+    mpi_errno = MPIR_Async_things_add(recv_alloc_poll, p);
+
+    return mpi_errno;
+}
+
+static int recv_alloc_poll(MPIR_Async_thing * thing)
+{
+    struct recv_alloc *p = MPIR_Async_thing_get_state(thing);
+    MPIR_Request *rreq = p->rreq;
+
+    if (MPIR_cc_get(rreq->cc) > 1) {
+        return MPIR_ASYNC_THING_NOPROGRESS;
+    }
+
+    void *host_buf;
+    MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool, &host_buf);
+    if (!host_buf) {
+        return MPIR_ASYNC_THING_NOPROGRESS;
+    }
+
+    fi_addr_t remote_addr = MPIDI_OFI_REQUEST(rreq, pipeline_info.remote_addr);
+    int ctx_idx = MPIDI_OFI_REQUEST(rreq, pipeline_info.ctx_idx);
+    int vci = MPIDI_Request_get_vci(rreq);
+    uint64_t match_bits = MPIDI_OFI_REQUEST(rreq, pipeline_info.match_bits);
+    uint64_t mask_bits = MPIDI_OFI_REQUEST(rreq, pipeline_info.mask_bits);
+
+    MPIDI_OFI_gpu_pipeline_request *chunk_req;
+    chunk_req = MPL_malloc(sizeof(*chunk_req), MPL_MEM_BUFFER);
+    MPIR_Assert(chunk_req);
+
+    chunk_req->parent = rreq;
+    chunk_req->buf = host_buf;
+    if (p->n_chunks == -1) {
+        chunk_req->event_id = MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT;
+    } else {
+        match_bits |= MPIDI_OFI_GPU_PIPELINE_SEND;
+        chunk_req->event_id = MPIDI_OFI_EVENT_RECV_GPU_PIPELINE;
+    }
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    int ret = fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
+                       host_buf, MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ, NULL, remote_addr,
+                       match_bits, mask_bits, (void *) &chunk_req->context);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    if (ret == 0) {
+        MPL_free(p);
+        /* chunk_req and host_buf will be freed in recv_events */
+        return MPIR_ASYNC_THING_DONE;
+    }
+    if (ret != -FI_EAGAIN && ret != -FI_ENOMEM) {
+        /* unexpected error */
+        MPIR_Assert(0);
+    }
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool, host_buf);
+    MPL_free(chunk_req);
+    return MPIR_ASYNC_THING_NOPROGRESS;
+};
 
 /* ------------------------------------
  * recv_copy: async copy from host_buf to user buffer in recv event
