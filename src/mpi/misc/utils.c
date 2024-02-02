@@ -103,6 +103,10 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
          * Use blocking version for nonblocking kind, since it is less worth of
          * optimization.
          */
+        if (localcopy_kind == LOCALCOPY_NONBLOCKING && extra_param) {
+            MPIR_Typerep_req *typerep_req = extra_param;
+            typerep_req->req = MPIR_TYPEREP_REQ_NULL;
+        }
 
         /* non-contig to non-contig stream enqueue is not supported. */
         MPIR_Assert(localcopy_kind != LOCALCOPY_STREAM);
@@ -302,7 +306,11 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             do_localcopy(sendbuf, sendcount, sendtype, sendoffset, recvbuf, recvcount, recvtype,
                          recvoffset, LOCALCOPY_NONBLOCKING, &gpu_req->u.y_req);
         MPIR_ERR_CHECK(mpi_errno);
-        gpu_req->type = MPIR_TYPEREP_REQUEST;
+        if (gpu_req->u.y_req.req == MPIR_TYPEREP_REQ_NULL) {
+            gpu_req->type = MPIR_NULL_REQUEST;
+        } else {
+            gpu_req->type = MPIR_TYPEREP_REQUEST;
+        }
     } else {
         mpi_errno =
             do_localcopy(sendbuf, sendcount, sendtype, sendoffset, recvbuf, recvcount, recvtype,
