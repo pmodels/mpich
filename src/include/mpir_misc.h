@@ -49,9 +49,6 @@ extern MPL_initlock_t MPIR_init_lock;
 
 #include "typerep_pre.h"        /* needed for MPIR_Typerep_req */
 
-/* FIXME: bad names. Not gpu-specific, confusing with MPIR_Request.
- *        It's a general async handle.
- */
 typedef enum {
     MPIR_NULL_REQUEST = 0,
     MPIR_TYPEREP_REQUEST,
@@ -64,7 +61,7 @@ typedef struct {
         MPL_gpu_request gpu_req;
     } u;
     MPIR_request_type_t type;
-} MPIR_gpu_req;
+} MPIR_async_req;
 
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
@@ -82,7 +79,7 @@ int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
                         MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
                         MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
                         MPL_pointer_attr_t * recvattr, MPL_gpu_copy_direction_t dir,
-                        MPL_gpu_engine_type_t enginetype, bool commit, MPIR_gpu_req * req);
+                        MPL_gpu_engine_type_t enginetype, bool commit, MPIR_async_req * req);
 
 /* Contiguous datatype calculates buffer address with `(char *) buf + dt_true_lb`.
  * However, dt_true_lb is treated as ptrdiff_t (signed), and when buf is MPI_BOTTOM

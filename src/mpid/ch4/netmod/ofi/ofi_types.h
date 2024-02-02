@@ -352,7 +352,7 @@ typedef struct MPIDI_OFI_gpu_task {
     void *buf;
     size_t len;
     MPIR_Request *request;
-    MPIR_gpu_req yreq;
+    MPIR_async_req async_req;
     struct MPIDI_OFI_gpu_task *next, *prev;
 } MPIDI_OFI_gpu_task_t;
 
