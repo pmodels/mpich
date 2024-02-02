@@ -420,12 +420,12 @@ pmix_status_t PMIx_Spawn(const pmix_info_t job_info[], size_t ninfo,
 /* convert predefined keys/attributes to the server format */
 static const char *attribute_from_key(const char *key)
 {
-    if (!strcmp(key, "PMI_hwloc_xmlfile")) {
-        return key;
-    } else if (!strcmp(key, PMIX_UNIV_SIZE)) {
+    if (!strcmp(key, PMIX_UNIV_SIZE)) {
         return "universeSize";
     } else if (!strcmp(key, PMIX_ANL_MAP)) {
         return "PMI_process_mapping";
+    } else if (!strncmp(key, "PMI_", 4) || !strncmp(key, "pmix.", 5)) {
+        return key;
     }
 
     return NULL;
