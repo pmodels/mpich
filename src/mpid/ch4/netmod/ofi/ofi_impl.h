@@ -595,7 +595,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm
     return nic_idx;
 }
 
-/* cq bufferring routines --
+/* cq buffering routines --
  * in particular, when we encounter EAGAIN error during progress, such as during
  * active message handling, recursively calling progress may result in unpredictable
  * behaviors (e.g. stack overflow). Thus we need use the cq buffering to avoid
@@ -840,7 +840,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_task_t *MPIDI_OFI_create_gpu_task(MPIDI_O
                                                                          type, void *buf,
                                                                          size_t len,
                                                                          MPIR_Request * request,
-                                                                         MPIR_gpu_req yreq)
+                                                                         MPIR_async_req async_req)
 {
     MPIDI_OFI_gpu_task_t *task =
         (MPIDI_OFI_gpu_task_t *) MPL_malloc(sizeof(MPIDI_OFI_gpu_task_t), MPL_MEM_OTHER);
@@ -850,7 +850,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_task_t *MPIDI_OFI_create_gpu_task(MPIDI_O
     task->buf = buf;
     task->len = len;
     task->request = request;
-    task->yreq = yreq;
+    task->areq = async_req;
     task->prev = NULL;
     task->next = NULL;
     return task;
@@ -922,7 +922,7 @@ static int MPIDI_OFI_gpu_progress_send(void)
                 goto fn_exit;
             }
             MPI_Aint actual_pack_bytes;
-            MPIR_gpu_req yreq;
+            MPIR_async_req async_req;
             int commit = send_task->left_sz <= chunk_sz ? 1 : 0;
             if (!commit &&
                 !MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST &&
@@ -933,12 +933,12 @@ static int MPIDI_OFI_gpu_progress_send(void)
                 MPIR_Ilocalcopy_gpu((char *) send_task->send_buf, send_task->count, datatype,
                                     send_task->offset, &send_task->attr, host_buf, chunk_sz,
                                     MPI_BYTE, 0, NULL, MPL_GPU_COPY_D2H, engine_type,
-                                    commit, &yreq);
+                                    commit, &async_req);
             MPIR_ERR_CHECK(mpi_errno);
             actual_pack_bytes = chunk_sz;
             task =
                 MPIDI_OFI_create_gpu_task(MPIDI_OFI_PIPELINE_SEND, host_buf, actual_pack_bytes,
-                                          send_task->sreq, yreq);
+                                          send_task->sreq, async_req);
             send_task->offset += (size_t) actual_pack_bytes;
             send_task->left_sz -= (size_t) actual_pack_bytes;
             vci_local = MPIDI_OFI_REQUEST(send_task->sreq, pipeline_info.vci_local);
@@ -1027,13 +1027,13 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
             goto fn_exit;
         }
 
-        MPIR_gpu_req *yreq = &task->yreq;
+        MPIR_async_req *areq = &task->async_req;
         int completed = 0;
-        if (yreq->type == MPIR_GPU_REQUEST) {
-            mpi_errno = MPL_gpu_test(&yreq->u.gpu_req, &completed);
+        if (areq->type == MPIR_GPU_REQUEST) {
+            mpi_errno = MPL_gpu_test(&areq->u.gpu_req, &completed);
             MPIR_ERR_CHECK(mpi_errno);
-        } else if (yreq->type == MPIR_TYPEREP_REQUEST) {
-            MPIR_Typerep_test(yreq->u.y_req, &completed);
+        } else if (areq->type == MPIR_TYPEREP_REQUEST) {
+            MPIR_Typerep_test(areq->u.y_req, &completed);
         } else {
             completed = 1;
         }
