@@ -493,10 +493,10 @@ static char *value_to_wire(pmix_value_t * val)
     if (data != NULL) {
         /* Add deliminator '#' */
         encoded_value[len_out] = '#';
-        encoded_value += (len_out + 1);
+        char *encoded_data = encoded_value + (len_out + 1);
         size -= (len_out + 1);
         /* Add indirect data after the encoded pmix_value_t */
-        rc = MPL_hex_encode(data, len, encoded_value, size, &len_out);
+        rc = MPL_hex_encode(data, len, encoded_data, size, &len_out);
         PMIU_Assert(rc == MPL_SUCCESS);
     }
 
