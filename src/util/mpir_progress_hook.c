@@ -6,7 +6,7 @@
 #include "mpiimpl.h"
 #include "mpl.h"
 
-#define MAX_PROGRESS_HOOKS 4
+#define MAX_PROGRESS_HOOKS 100
 
 typedef int (*progress_func_ptr_t) (int *made_progress);
 typedef struct progress_hook_slot {

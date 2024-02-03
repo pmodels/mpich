@@ -25,6 +25,7 @@
  * and perform direct data transfer.
  */
 
+int MPIDI_IPC_complete(MPIR_Request * rreq, int ipc_type);
 int MPIDI_IPC_rndv_cb(MPIR_Request * rreq);
 int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req);
@@ -189,7 +190,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
     int mpi_errno = MPI_SUCCESS;
     void *src_buf = NULL;
     uintptr_t data_sz, recv_data_sz;
-    bool dt_contig;
 
     MPIR_FUNC_ENTER;
 
@@ -222,31 +222,45 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
 #endif
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
-        MPIDI_Datatype_check_contig(MPIDIG_REQUEST(rreq, datatype), dt_contig);
         int dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
         int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id,
                                                 MPIDIG_REQUEST(rreq, datatype));
         mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_hdr->ipc_handle.gpu, map_dev, &src_buf, do_mmap);
         MPIR_ERR_CHECK(mpi_errno);
+
         /* copy */
-        if (ipc_hdr->is_contig && dt_contig) {
-            MPL_gpu_engine_type_t engine =
-                MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
-            mpi_errno =
-                MPIR_Localcopy_gpu(src_buf, src_data_sz, MPI_BYTE, 0, NULL,
-                                   MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                                   MPIDIG_REQUEST(rreq, datatype), 0, &attr,
-                                   MPL_GPU_COPY_DIRECTION_NONE, engine, true);
-            MPIR_ERR_CHECK(mpi_errno);
+        MPI_Aint src_count;
+        MPI_Datatype src_dt;
+        MPIR_Datatype *src_dt_ptr = NULL;
+        if (ipc_hdr->is_contig) {
+            src_count = src_data_sz;
+            src_dt = MPI_BYTE;
         } else {
             /* TODO: get sender datatype and call MPIR_Typerep_op with mapped_device set to dev_id */
-            mpi_errno = MPIDI_IPCI_copy_data(ipc_hdr, rreq, src_buf, src_data_sz);
+            void *flattened_type = ipc_hdr + 1;
+            src_dt_ptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
+            MPIR_Assert(src_dt_ptr);
+            mpi_errno = MPIR_Typerep_unflatten(src_dt_ptr, flattened_type);
             MPIR_ERR_CHECK(mpi_errno);
+
+            src_count = ipc_hdr->count;
+            src_dt = src_dt_ptr->handle;
+        }
+        MPIR_gpu_req yreq;
+        MPL_gpu_engine_type_t engine =
+            MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
+        mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_dt, 0, NULL,
+                                        MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                                        MPIDIG_REQUEST(rreq, datatype), 0, &attr,
+                                        MPL_GPU_COPY_DIRECTION_NONE, engine, true, &yreq);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (src_dt_ptr) {
+            MPIR_Datatype_free(src_dt_ptr);
         }
 
-        /* unmap */
-        mpi_errno = MPIDI_GPU_ipc_handle_unmap(src_buf, ipc_hdr->ipc_handle.gpu, 0);
+        mpi_errno = MPIDI_GPU_ipc_async_start(rreq, &yreq, src_buf, ipc_hdr->ipc_handle.gpu);
         MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
     } else if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__NONE) {
         /* no-op */
     } else {
@@ -259,19 +273,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
               MPIDIG_REQUEST(rreq, u.recv.context_id), (char *) MPIDIG_REQUEST(rreq, buffer),
               recv_data_sz);
 
-    MPIDI_IPC_ack_t am_hdr;
   fn_cont:
-    am_hdr.ipc_type = ipc_hdr->ipc_type;
-    am_hdr.req_ptr = sreq_ptr;
-
-    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
-    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    CH4_CALL(am_send_hdr(MPIDIG_REQUEST(rreq, u.recv.source), rreq->comm, MPIDI_IPC_ACK,
-                         &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-
+    mpi_errno = MPIDI_IPC_complete(rreq, ipc_hdr->ipc_type);
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:

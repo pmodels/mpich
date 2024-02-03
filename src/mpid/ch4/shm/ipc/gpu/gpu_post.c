@@ -91,6 +91,7 @@ cvars:
 #include "mpidimpl.h"
 #include "gpu_pre.h"
 #include "gpu_types.h"
+#include "mpir_async_things.h"
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
 
@@ -446,4 +447,74 @@ int MPIDI_GPU_ipc_fast_memcpy(MPIDI_IPCI_ipc_handle_t ipc_handle, void *dest_vad
 #else
     return mpi_errno;
 #endif
+}
+
+/* nonblocking IPCI_copy_data via MPIR_Async_things */
+struct gpu_ipc_async {
+    MPIR_Request *rreq;
+    /* async handle */
+    MPIR_gpu_req yreq;
+    /* for unmap */
+    void *src_buf;
+    MPIDI_GPU_ipc_handle_t gpu_handle;
+};
+
+static int gpu_ipc_async_poll(MPIR_Async_thing * thing)
+{
+    int err;
+    int is_done = 0;
+
+    struct gpu_ipc_async *p = MPIR_Async_thing_get_state(thing);
+    switch (p->yreq.type) {
+        case MPIR_NULL_REQUEST:
+            /* a dummy, immediately complete */
+            is_done = 1;
+            break;
+        case MPIR_TYPEREP_REQUEST:
+            MPIR_Typerep_test(p->yreq.u.y_req, &is_done);
+            break;
+        case MPIR_GPU_REQUEST:
+            err = MPL_gpu_test(&p->yreq.u.gpu_req, &is_done);
+            MPIR_Assertp(err == MPL_SUCCESS);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+
+    if (is_done) {
+        int vci = MPIDIG_REQUEST(p->rreq, req->local_vci);
+
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+        err = MPIDI_GPU_ipc_handle_unmap(p->src_buf, p->gpu_handle, 0);
+        MPIR_Assertp(err == MPI_SUCCESS);
+        err = MPIDI_IPC_complete(p->rreq, MPIDI_IPCI_TYPE__GPU);
+        MPIR_Assertp(err == MPI_SUCCESS);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+
+        MPL_free(p);
+        return MPIR_ASYNC_THING_DONE;
+    }
+
+    return MPIR_ASYNC_THING_NOPROGRESS;
+}
+
+int MPIDI_GPU_ipc_async_start(MPIR_Request * rreq, MPIR_gpu_req * req_p,
+                              void *src_buf, MPIDI_GPU_ipc_handle_t gpu_handle)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct gpu_ipc_async *p;
+    p = MPL_malloc(sizeof(*p), MPL_MEM_OTHER);
+    p->rreq = rreq;
+    p->src_buf = src_buf;
+    p->gpu_handle = gpu_handle;
+    if (req_p) {
+        p->yreq = *req_p;
+    } else {
+        p->yreq.type = MPIR_NULL_REQUEST;
+    }
+
+    mpi_errno = MPIR_Async_things_add(gpu_ipc_async_poll, p);
+
+    return mpi_errno;
 }

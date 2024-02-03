@@ -456,8 +456,10 @@ int MPIR_Typerep_test(MPIR_Typerep_req typerep_req, int *completed)
     int mpi_errno = MPI_SUCCESS;
     int rc;
 
-    if (typerep_req.req == MPIR_TYPEREP_REQ_NULL)
+    if (typerep_req.req == MPIR_TYPEREP_REQ_NULL) {
+        MPIR_Assert(0);
         goto fn_exit;
+    }
 
     rc = yaksa_request_test((yaksa_request_t) typerep_req.req, completed);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
