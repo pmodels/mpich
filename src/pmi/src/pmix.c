@@ -420,12 +420,12 @@ pmix_status_t PMIx_Spawn(const pmix_info_t job_info[], size_t ninfo,
 /* convert predefined keys/attributes to the server format */
 static const char *attribute_from_key(const char *key)
 {
-    if (!strcmp(key, "PMI_hwloc_xmlfile")) {
-        return key;
-    } else if (!strcmp(key, PMIX_UNIV_SIZE)) {
+    if (!strcmp(key, PMIX_UNIV_SIZE)) {
         return "universeSize";
     } else if (!strcmp(key, PMIX_ANL_MAP)) {
         return "PMI_process_mapping";
+    } else if (!strncmp(key, "PMI_", 4) || !strncmp(key, "pmix.", 5)) {
+        return key;
     }
 
     return NULL;
@@ -490,10 +490,10 @@ static char *value_to_wire(pmix_value_t * val)
     if (data != NULL) {
         /* Add deliminator '#' */
         encoded_value[len_out] = '#';
-        encoded_value += (len_out + 1);
+        char *encoded_data = encoded_value + (len_out + 1);
         size -= (len_out + 1);
         /* Add indirect data after the encoded pmix_value_t */
-        rc = MPL_hex_encode(data, len, encoded_value, size, &len_out);
+        rc = MPL_hex_encode(data, len, encoded_data, size, &len_out);
         PMIU_Assert(rc == MPL_SUCCESS);
     }
 
