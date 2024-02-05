@@ -6,6 +6,19 @@
 #include "mpidimpl.h"
 #include "mpir_async_things.h"
 
+struct chunk_req {
+    char pad[MPIDI_REQUEST_HDR_SIZE];
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
+    int event_id;               /* fixed field, do not move */
+    MPIR_Request *parent;       /* Parent request           */
+    void *buf;
+};
+
+static void spawn_send_copy(MPIR_Async_thing * thing, MPIR_Request * sreq, MPIR_async_req * areq,
+                            const void *buf, MPI_Aint chunk_sz);
+static int start_recv_copy(MPIR_Request * rreq, void *buf, MPI_Aint chunk_sz,
+                           void *recv_buf, MPI_Aint count, MPI_Datatype datatype);
+
 /* ------------------------------------
  * send_alloc: allocate send chunks and start copy, may postpone as async
  */
@@ -20,8 +33,6 @@ struct send_alloc {
 };
 
 static int send_alloc_poll(MPIR_Async_thing * thing);
-static void spawn_send_copy(MPIR_Async_thing * thing, MPIR_Request * sreq, MPIR_async_req * areq,
-                            const void *buf, MPI_Aint chunk_sz);
 
 int MPIDI_OFI_gpu_pipeline_send(MPIR_Request * sreq, const void *send_buf,
                                 MPI_Aint count, MPI_Datatype datatype,
@@ -144,8 +155,7 @@ static void send_copy_complete(MPIR_Request * sreq, const void *buf, MPI_Aint ch
     int mpi_errno = MPI_SUCCESS;
     int vci_local = MPIDI_OFI_REQUEST(sreq, pipeline_info.vci_local);
 
-    MPIDI_OFI_gpu_pipeline_request *chunk_req = (MPIDI_OFI_gpu_pipeline_request *)
-        MPL_malloc(sizeof(MPIDI_OFI_gpu_pipeline_request), MPL_MEM_BUFFER);
+    struct chunk_req *chunk_req = MPL_malloc(sizeof(struct chunk_req), MPL_MEM_BUFFER);
     MPIR_Assertp(chunk_req);
 
     chunk_req->parent = sreq;
@@ -171,11 +181,35 @@ static void send_copy_complete(MPIR_Request * sreq, const void *buf, MPI_Aint ch
 }
 
 /* ------------------------------------
+ * send_event: callback for MPIDI_OFI_dispatch_function in ofi_events.c
+ */
+int MPIDI_OFI_gpu_pipeline_send_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct chunk_req *chunk_req = (void *) r;
+    MPIR_Request *sreq = chunk_req->parent;;
+    void *host_buf = chunk_req->buf;
+    MPL_free(chunk_req);
+
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.gpu_pipeline_send_pool, host_buf);
+
+    int c;
+    MPIR_cc_decr(sreq->cc_ptr, &c);
+    if (c == 0) {
+        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
+        MPIR_Request_free(sreq);
+    }
+
+    return mpi_errno;
+}
+
+/* ------------------------------------
  * recv_alloc: allocate recv chunk buffer and post fi_trecv
  */
 struct recv_alloc {
     MPIR_Request *rreq;
-    MPIDI_OFI_gpu_pipeline_request *chunk_req;
+    struct chunk_req *chunk_req;
     int idx;
     int n_chunks;
 };
@@ -220,7 +254,7 @@ static int recv_alloc_poll(MPIR_Async_thing * thing)
     uint64_t match_bits = MPIDI_OFI_REQUEST(rreq, pipeline_info.match_bits);
     uint64_t mask_bits = MPIDI_OFI_REQUEST(rreq, pipeline_info.mask_bits);
 
-    MPIDI_OFI_gpu_pipeline_request *chunk_req;
+    struct chunk_req *chunk_req;
     chunk_req = MPL_malloc(sizeof(*chunk_req), MPL_MEM_BUFFER);
     MPIR_Assert(chunk_req);
 
@@ -252,6 +286,66 @@ static int recv_alloc_poll(MPIR_Async_thing * thing)
 };
 
 /* ------------------------------------
+ * recv_event: callback for MPIDI_OFI_dispatch_function in ofi_events.c
+ */
+int MPIDI_OFI_gpu_pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct chunk_req *chunk_req = (void *) r;
+    int event_id = chunk_req->event_id;
+    MPIR_Request *rreq = chunk_req->parent;
+    void *host_buf = chunk_req->buf;
+
+    MPL_free(chunk_req);
+
+    void *recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf);
+    size_t recv_count = MPIDI_OFI_REQUEST(rreq, noncontig.pack.count);
+    MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype);
+
+    if (event_id == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT) {
+        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
+        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+        rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
+
+        if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
+            MPIDI_OFI_REQUEST(rreq, pipeline_info.is_sync) = true;
+        }
+
+        uint32_t packed = MPIDI_OFI_idata_get_gpu_packed_bit(wc->data);
+        uint32_t n_chunks = MPIDI_OFI_idata_get_gpuchunk_bits(wc->data);
+        /* ? - Not sure why sender cannot send packed data */
+        MPIR_Assertp(packed == 0);
+        if (wc->len > 0) {
+            /* message from a normal send */
+            MPIR_Assert(n_chunks == 0);
+            mpi_errno = start_recv_copy(rreq, host_buf, wc->len, recv_buf, recv_count, datatype);
+            MPIR_ERR_CHECK(mpi_errno);
+        } else {
+            MPIR_Assert(n_chunks > 0);
+            /* There is no data in the init chunk, free the buffer */
+            MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.gpu_pipeline_recv_pool, host_buf);
+            MPIR_cc_dec(rreq->cc_ptr);
+            /* Post recv for the remaining chunks. */
+            for (int i = 0; i < n_chunks; i++) {
+                mpi_errno = MPIDI_OFI_gpu_pipeline_recv(rreq, i, n_chunks);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+        }
+    } else {
+        MPIR_Assert(event_id == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE);
+        mpi_errno = start_recv_copy(rreq, host_buf, wc->len, recv_buf, recv_count, datatype);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    rreq->status.MPI_ERROR = mpi_errno;
+    goto fn_exit;
+}
+
+/* ------------------------------------
  * recv_copy: async copy from host_buf to user buffer in recv event
  */
 struct recv_copy {
@@ -265,8 +359,8 @@ struct recv_copy {
 static int recv_copy_poll(MPIR_Async_thing * thing);
 static void recv_copy_complete(MPIR_Request * rreq, void *buf);
 
-int MPIDI_OFI_gpu_pipeline_recv_copy(MPIR_Request * rreq, void *buf, MPI_Aint chunk_sz,
-                                     void *recv_buf, MPI_Aint count, MPI_Datatype datatype)
+static int start_recv_copy(MPIR_Request * rreq, void *buf, MPI_Aint chunk_sz,
+                           void *recv_buf, MPI_Aint count, MPI_Datatype datatype)
 {
     int mpi_errno = MPI_SUCCESS;
 

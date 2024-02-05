@@ -337,43 +337,6 @@ typedef struct {
     struct fid_cq *cq;
 } MPIDI_OFI_context_t;
 
-/* GPU pipelining */
-typedef struct {
-    char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
-    int event_id;               /* fixed field, do not move */
-    MPIR_Request *parent;       /* Parent request           */
-    void *buf;
-} MPIDI_OFI_gpu_pipeline_request;
-
-typedef struct MPIDI_OFI_gpu_task {
-    MPIDI_OFI_pipeline_type_t type;
-    MPIDI_OFI_pipeline_status_t status;
-    void *buf;
-    size_t len;
-    MPIR_Request *request;
-    MPIR_async_req async_req;
-    struct MPIDI_OFI_gpu_task *next, *prev;
-} MPIDI_OFI_gpu_task_t;
-
-typedef struct MPIDI_OFI_gpu_pending_recv {
-    MPIDI_OFI_gpu_pipeline_request *req;
-    int idx;
-    uint32_t n_chunks;
-    struct MPIDI_OFI_gpu_pending_recv *next, *prev;
-} MPIDI_OFI_gpu_pending_recv_t;
-
-typedef struct MPIDI_OFI_gpu_pending_send {
-    MPIR_Request *sreq;
-    void *send_buf;
-    MPL_pointer_attr_t attr;
-    MPI_Aint offset;
-    uint32_t n_chunks;
-    MPI_Aint left_sz, count;
-    int dt_contig;
-    struct MPIDI_OFI_gpu_pending_send *next, *prev;
-} MPIDI_OFI_gpu_pending_send_t;
-
 typedef union {
     MPID_Thread_mutex_t m;
     char cacheline[MPL_CACHELINE_SIZE];
