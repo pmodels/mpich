@@ -233,27 +233,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                 remote_addr = MPIDI_OFI_av_to_phys(addr, sender_nic, vci_remote);
             }
 
-            /* Save pipeline information. */
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.offset) = 0;
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.is_sync) = false;
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.remote_addr) = remote_addr;
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.vci_local) = vci_local;
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.match_bits) = match_bits;
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.mask_bits) = mask_bits;
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.data_sz) = data_sz;
-            MPIDI_OFI_REQUEST(rreq, pipeline_info.ctx_idx) = ctx_idx;
-
-            /* Save original buf, datatype and count */
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = buf;
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
-
             if (rreq->comm == NULL) {
                 rreq->comm = comm;
                 MPIR_Comm_add_ref(comm);
             }
 
-            mpi_errno = MPIDI_OFI_gpu_pipeline_recv(rreq, 0, -1);
+            mpi_errno = MPIDI_OFI_gpu_pipeline_recv(rreq, buf, count, datatype,
+                                                    remote_addr, vci_local,
+                                                    match_bits, mask_bits, data_sz, ctx_idx);
             goto fn_exit;
         }
 
