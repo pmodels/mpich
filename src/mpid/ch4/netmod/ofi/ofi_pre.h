@@ -48,6 +48,7 @@ typedef struct {
     int enable_striping;        /* Flag to enable striping per communicator. */
     int enable_hashing;         /* Flag to enable hashing per communicator. */
     int *pref_nic;              /* Array to specify the preferred NIC for each rank (if needed) */
+    int pipeline_tag;           /* match_bits for gpu_pipeline chunks */
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_NONE = 0,
@@ -223,6 +224,7 @@ typedef struct {
             fi_addr_t remote_addr;
             uint64_t cq_data;
             uint64_t match_bits;
+            int pipeline_tag;
             int num_remain;
         } send;
         struct {
@@ -232,6 +234,7 @@ typedef struct {
             uint64_t match_bits;
             uint64_t mask_bits;
             MPI_Aint offset;
+            int pipeline_tag;
             int num_inrecv;
             int num_remain;
             bool is_sync;
