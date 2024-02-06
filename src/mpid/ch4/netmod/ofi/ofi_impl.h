@@ -831,7 +831,7 @@ int MPIDI_OFI_gpu_pipeline_send(MPIR_Request * sreq, const void *send_buf,
                                 MPI_Aint count, MPI_Datatype datatype,
                                 MPL_pointer_attr_t attr, MPI_Aint data_sz,
                                 uint64_t cq_data, fi_addr_t remote_addr,
-                                int vci_local, int ctx_idx, uint64_t match_bits);
+                                int vci_local, int ctx_idx, uint64_t match_bits, int pipeline_tag);
 int MPIDI_OFI_gpu_pipeline_recv(MPIR_Request * rreq,
                                 void *recv_buf, MPI_Aint count, MPI_Datatype datatype,
                                 fi_addr_t remote_addr, int vci_local,

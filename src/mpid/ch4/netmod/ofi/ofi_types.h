@@ -37,14 +37,12 @@
 #define MPIDI_OFI_IDATA_ERROR_BITS (2)
 /* The number of bits in the immediate data field allocated to the source rank and error propagation. */
 #define MPIDI_OFI_IDATA_SRC_ERROR_BITS (MPIDI_OFI_IDATA_SRC_BITS + MPIDI_OFI_IDATA_ERROR_BITS)
-/* The number of bits in the immediate data field allocated to MPI_Packed datatype for GPU. */
-#define MPIDI_OFI_IDATA_GPU_PACKED_BITS (1)
-/* The offset of bits in the immediate data field allocated to number of message chunks. */
-#define MPIDI_OFI_IDATA_GPUCHUNK_OFFSET (MPIDI_OFI_IDATA_SRC_ERROR_BITS + MPIDI_OFI_IDATA_GPU_PACKED_BITS)
 /* Bit mask for MPIR_ERR_OTHER */
 #define MPIDI_OFI_ERR_OTHER (0x1ULL)
 /* Bit mask for MPIR_PROC_FAILED */
 #define MPIDI_OFI_ERR_PROC_FAILED (0x2ULL)
+/* Bit mask for gpu pipeline */
+#define MPIDI_OFI_IDATA_PIPELINE  (1ULL << 32)
 
 /* Set the error bits */
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field,
@@ -73,30 +71,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
     } else {
         return MPI_SUCCESS;
     }
-}
-
-/* Set the gpu packed bit */
-static inline void MPIDI_OFI_idata_set_gpu_packed_bit(uint64_t * data_field, uint64_t is_packed)
-{
-    *data_field = (*data_field) | (is_packed << MPIDI_OFI_IDATA_SRC_ERROR_BITS);
-}
-
-/* Get the gpu packed bit from the OFI data field. */
-static inline uint32_t MPIDI_OFI_idata_get_gpu_packed_bit(uint64_t idata)
-{
-    return (idata >> MPIDI_OFI_IDATA_SRC_ERROR_BITS) & 0x1ULL;
-}
-
-/* Set gpu chunk bits */
-static inline void MPIDI_OFI_idata_set_gpuchunk_bits(uint64_t * data_field, uint64_t n_chunks)
-{
-    *data_field = (*data_field) | (n_chunks << MPIDI_OFI_IDATA_GPUCHUNK_OFFSET);
-}
-
-/* Get gpu chunks from the OFI data field. */
-static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
-{
-    return (idata >> MPIDI_OFI_IDATA_GPUCHUNK_OFFSET);
 }
 
 /* There are 4 protocol bits:

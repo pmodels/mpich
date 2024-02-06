@@ -275,9 +275,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             data_sz >= MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD) {
             /* Pipeline path */
             fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vci_remote);
+            MPIDI_OFI_COMM(comm).pipeline_tag += 1;
             mpi_errno = MPIDI_OFI_gpu_pipeline_send(sreq, buf, count, datatype, attr, data_sz,
                                                     cq_data, remote_addr, vci_local, ctx_idx,
-                                                    match_bits);
+                                                    match_bits, MPIDI_OFI_COMM(comm).pipeline_tag);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
