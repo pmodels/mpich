@@ -151,6 +151,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 {
     int mpi_errno = MPI_SUCCESS;
     char *send_buf;
+    void *pack_buffer = NULL;
     uint64_t match_bits;
     bool force_gpu_pack = false;
     int vci_local = vci_src;
@@ -275,15 +276,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         /* Pack */
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_PACK;
 
-        MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer) = MPL_malloc(data_sz, MPL_MEM_OTHER);
-        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer) == NULL, mpi_errno,
+        pack_buffer = MPL_malloc(data_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
         int fast_copy = 0;
         if (attr.type == MPL_GPU_POINTER_DEV && dt_contig &&
             data_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE) {
             int mpl_err = MPL_gpu_fast_memcpy(send_buf, &attr,
-                                              MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer),
+                                              pack_buffer,
                                               NULL, data_sz);
             if (mpl_err == MPL_SUCCESS)
                 fast_copy = 1;
@@ -294,21 +295,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             if (dt_contig && engine != MPL_GPU_ENGINE_TYPE_LAST &&
                 MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
                 mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
-                                               MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer),
+                                               pack_buffer,
                                                data_sz, MPI_BYTE, 0, NULL,
                                                MPL_GPU_COPY_DIRECTION_NONE, engine, true);
                 MPIR_ERR_CHECK(mpi_errno);
             } else {
                 MPI_Aint actual_pack_bytes;
                 MPIR_Typerep_pack(buf, count, datatype, 0,
-                                  MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer), data_sz,
-                                  &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
+                                  pack_buffer, data_sz, &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
             }
         }
-        send_buf = MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer);
-    } else {
-        /* SEND_HUGE path checks pack_buffer to see whether we are packing */
-        MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer) = NULL;
+        send_buf = pack_buffer;
+        MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer) = pack_buffer;
     }
 
     fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vci_remote);
@@ -339,6 +337,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         }
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
     } else if (unlikely(1)) {
+        /* is_huge_send */
         int num_nics = MPIDI_OFI_global.num_nics;
         uint64_t rma_keys[MPIDI_OFI_MAX_NICS];
         struct fid_mr **huge_send_mrs;
@@ -380,7 +379,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                                (vci_local, i)].ep, NULL);
             MPIR_ERR_CHECK(mpi_errno);
         }
-        MPIDI_OFI_REQUEST(sreq, huge.send_mrs) = huge_send_mrs;
+        MPIDI_OFI_REQUEST(sreq, u.huge_send.mrs) = huge_send_mrs;
+        MPIDI_OFI_REQUEST(sreq, u.huge_send.pack_buffer) = pack_buffer;
+
         if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* MR_BASIC */
             for (int i = 0; i < num_nics; i++) {

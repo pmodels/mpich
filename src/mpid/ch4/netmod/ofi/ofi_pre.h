@@ -233,6 +233,10 @@ typedef struct {
             struct iovec *iovs;
         } nopack_recv;
         struct {
+            struct fid_mr **mrs;
+            void *pack_buffer;
+        } huge_send;
+        struct {
             int vci_local;
             int ctx_idx;
             fi_addr_t remote_addr;

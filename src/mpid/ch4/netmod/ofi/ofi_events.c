@@ -94,7 +94,7 @@ static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request 
 
         comm = sreq->comm;
         num_nics = MPIDI_OFI_COMM(comm).enable_striping ? MPIDI_OFI_global.num_nics : 1;
-        huge_send_mrs = MPIDI_OFI_REQUEST(sreq, huge.send_mrs);
+        huge_send_mrs = MPIDI_OFI_REQUEST(sreq, u.huge_send.mrs);
 
         /* Clean up the memory region */
         for (int i = 0; i < num_nics; i++) {
@@ -105,10 +105,7 @@ static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request 
             }
         }
         MPL_free(huge_send_mrs);
-
-        if (MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer)) {
-            MPL_free(MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer));
-        }
+        MPL_free(MPIDI_OFI_REQUEST(sreq, u.huge_send.pack_buffer));
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIDI_CH4_REQUEST_FREE(sreq);
