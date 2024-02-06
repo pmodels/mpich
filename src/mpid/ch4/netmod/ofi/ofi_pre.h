@@ -223,6 +223,7 @@ typedef struct {
             fi_addr_t remote_addr;
             uint64_t cq_data;
             uint64_t match_bits;
+            int num_remain;
         } send;
         struct {
             int vci_local;
@@ -231,6 +232,8 @@ typedef struct {
             uint64_t match_bits;
             uint64_t mask_bits;
             MPI_Aint offset;
+            int num_inrecv;
+            int num_remain;
             bool is_sync;
         } recv;
     } pipeline_info;            /* GPU pipeline */
