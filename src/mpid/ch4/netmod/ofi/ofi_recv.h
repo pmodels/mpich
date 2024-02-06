@@ -56,18 +56,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
         flags = FI_COMPLETION;
     }
 
-    size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
+    size = (num_contig + 1) * sizeof(struct iovec);
 
-    MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_malloc(size, MPL_MEM_BUFFER);
-    memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
+    MPIDI_OFI_REQUEST(rreq, u.nopack_recv.iovs) = MPL_malloc(size, MPL_MEM_BUFFER);
+    memset(MPIDI_OFI_REQUEST(rreq, u.nopack_recv.iovs), 0, size);
 
     MPI_Aint actual_iov_len;
     MPIR_Typerep_to_iov_offset(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), 0,
-                               MPIDI_OFI_REQUEST(rreq, noncontig.nopack), num_contig,
+                               MPIDI_OFI_REQUEST(rreq, u.nopack_recv.iovs), num_contig,
                                &actual_iov_len);
     assert(num_contig == actual_iov_len);
 
-    originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[0]));
+    originv = &(MPIDI_OFI_REQUEST(rreq, u.nopack_recv.iovs[0]));
 
     if (rreq->comm == NULL) {
         rreq->comm = comm;
@@ -246,11 +246,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
         /* Unpack */
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_PACK;
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = MPL_malloc(data_sz, MPL_MEM_OTHER);
-        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
+        MPIDI_OFI_REQUEST(rreq, u.pack_recv.pack_buffer) = MPL_malloc(data_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, u.pack_recv.pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
-        recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer);
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = buf;
+        recv_buf = MPIDI_OFI_REQUEST(rreq, u.pack_recv.pack_buffer);
+        MPIDI_OFI_REQUEST(rreq, u.pack_recv.buf) = buf;
 #ifdef MPL_HAVE_ZE
         if (dt_contig && attr.type == MPL_GPU_POINTER_DEV) {
             int mpl_err = MPL_SUCCESS;
@@ -258,14 +258,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             mpl_err = MPL_ze_mmap_device_pointer(buf, &attr.device_attr, attr.device, &ptr);
             MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_ze_mmap_device_ptr");
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = ptr;
+            MPIDI_OFI_REQUEST(rreq, u.pack_recv.buf) = ptr;
         }
 #endif
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
+        MPIDI_OFI_REQUEST(rreq, u.pack_recv.count) = count;
+        MPIDI_OFI_REQUEST(rreq, u.pack_recv.datatype) = datatype;
     } else {
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = NULL;
-        MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = NULL;
+        /* MPIDI_OFI_EVENT_RECV_PACK may get overwritten with MPIDI_OFI_EVENT_RECV_HUGE */
+        MPIDI_OFI_REQUEST(rreq, u.pack_recv.pack_buffer) = NULL;
     }
 
     if (rreq->comm == NULL) {

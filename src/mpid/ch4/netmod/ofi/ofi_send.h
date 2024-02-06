@@ -101,18 +101,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     flags = FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_NOPACK;
 
-    size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(sreq, noncontig.nopack)));
+    size = (num_contig + 1) * sizeof(struct iovec);
 
-    MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_malloc(size, MPL_MEM_BUFFER);
-    memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
+    MPIDI_OFI_REQUEST(sreq, u.nopack_send.iovs) = MPL_malloc(size, MPL_MEM_BUFFER);
+    memset(MPIDI_OFI_REQUEST(sreq, u.nopack_send.iovs), 0, size);
 
     MPI_Aint actual_iov_len;
     MPIR_Typerep_to_iov_offset(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), 0,
-                               MPIDI_OFI_REQUEST(sreq, noncontig.nopack), num_contig,
+                               MPIDI_OFI_REQUEST(sreq, u.nopack_send.iovs), num_contig,
                                &actual_iov_len);
     assert(num_contig == actual_iov_len);
 
-    originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[0]));
+    originv = &(MPIDI_OFI_REQUEST(sreq, u.nopack_send.iovs[0]));
 
     msg.msg_iov = originv;
     msg.desc = NULL;
@@ -275,15 +275,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         /* Pack */
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_PACK;
 
-        MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = MPL_malloc(data_sz, MPL_MEM_OTHER);
-        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
+        MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer) = MPL_malloc(data_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
         int fast_copy = 0;
         if (attr.type == MPL_GPU_POINTER_DEV && dt_contig &&
             data_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE) {
             int mpl_err = MPL_gpu_fast_memcpy(send_buf, &attr,
-                                              MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
+                                              MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer),
                                               NULL, data_sz);
             if (mpl_err == MPL_SUCCESS)
                 fast_copy = 1;
@@ -294,21 +294,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             if (dt_contig && engine != MPL_GPU_ENGINE_TYPE_LAST &&
                 MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
                 mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
-                                               MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
+                                               MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer),
                                                data_sz, MPI_BYTE, 0, NULL,
                                                MPL_GPU_COPY_DIRECTION_NONE, engine, true);
                 MPIR_ERR_CHECK(mpi_errno);
             } else {
                 MPI_Aint actual_pack_bytes;
                 MPIR_Typerep_pack(buf, count, datatype, 0,
-                                  MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer), data_sz,
+                                  MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer), data_sz,
                                   &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
             }
         }
-        send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer);
+        send_buf = MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer);
     } else {
-        MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = NULL;
-        MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = NULL;
+        /* SEND_HUGE path checks pack_buffer to see whether we are packing */
+        MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer) = NULL;
     }
 
     fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vci_remote);
@@ -482,8 +482,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint c
     iovs[0].iov_base = send_buf;
     iovs[0].iov_len = data_sz;
 
-    MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = NULL;
-    MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = NULL;
+    /* why do we need to set this to NULL? */
+    MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer) = NULL;
 
     struct fi_msg_tagged msg;
     msg.msg_iov = iovs;

@@ -275,9 +275,9 @@ int MPIDI_OFI_gpu_pipeline_recv(MPIR_Request * rreq,
     MPIDI_OFI_REQUEST(rreq, pipeline_info.recv.ctx_idx) = ctx_idx;
 
     /* Save original buf, datatype and count */
-    MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = recv_buf;
-    MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
-    MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
+    MPIDI_OFI_REQUEST(rreq, pipeline_info.recv.buf) = recv_buf;
+    MPIDI_OFI_REQUEST(rreq, pipeline_info.recv.count) = count;
+    MPIDI_OFI_REQUEST(rreq, pipeline_info.recv.datatype) = datatype;
 
     mpi_errno = MPIR_Async_things_add(recv_init_alloc_poll, rreq);
 
@@ -410,9 +410,9 @@ int MPIDI_OFI_gpu_pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Reques
 
     MPL_free(chunk_req);
 
-    void *recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf);
-    size_t recv_count = MPIDI_OFI_REQUEST(rreq, noncontig.pack.count);
-    MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype);
+    void *recv_buf = MPIDI_OFI_REQUEST(rreq, pipeline_info.recv.buf);
+    size_t recv_count = MPIDI_OFI_REQUEST(rreq, pipeline_info.recv.count);
+    MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, pipeline_info.recv.datatype);
 
     if (event_id == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT) {
         rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);

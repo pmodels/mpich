@@ -106,8 +106,8 @@ static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request 
         }
         MPL_free(huge_send_mrs);
 
-        if (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer)) {
-            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
+        if (MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer)) {
+            MPL_free(MPIDI_OFI_REQUEST(sreq, u.pack_send.pack_buffer));
         }
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
@@ -611,12 +611,10 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                         MPIR_STATUS_SET_COUNT(req->status, 0);
                         if ((event_id == MPIDI_OFI_EVENT_RECV_PACK ||
                              event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
-                            MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
-                            MPL_free(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
-                        } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK &&
-                                   event_id == MPIDI_OFI_EVENT_RECV_NOPACK &&
-                                   MPIDI_OFI_REQUEST(req, noncontig.nopack)) {
-                            MPL_free(MPIDI_OFI_REQUEST(req, noncontig.nopack));
+                            MPIDI_OFI_REQUEST(req, u.pack_recv.pack_buffer)) {
+                            MPL_free(MPIDI_OFI_REQUEST(req, u.pack_recv.pack_buffer));
+                        } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
+                            MPL_free(MPIDI_OFI_REQUEST(req, u.nopack_recv.iovs));
                         }
                         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
                         MPIDI_Request_complete_fast(req);

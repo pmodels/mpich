@@ -205,14 +205,25 @@ typedef struct {
         void *remote_info;
     } huge;
     union {
+        /* recv path */
         struct {
+            void *pack_buffer;
+        } pack_send;
+        struct {
+            struct iovec *iovs;
+        } nopack_send;
+
+        /* recv path */
+        struct {
+            void *pack_buffer;
             void *buf;
-            size_t count;
+            MPI_Aint count;
             MPI_Datatype datatype;
-            char *pack_buffer;
-        } pack;
-        struct iovec *nopack;
-    } noncontig;
+        } pack_recv;
+        struct {
+            struct iovec *iovs;
+        } nopack_recv;
+    } u;
     union {
         struct iovec iov;
         void *inject_buf;       /* Internal buffer for inject emulation */
@@ -238,6 +249,9 @@ typedef struct {
             int num_inrecv;
             int num_remain;
             bool is_sync;
+            void *buf;
+            MPI_Aint count;
+            MPI_Datatype datatype;
         } recv;
     } pipeline_info;            /* GPU pipeline */
 } MPIDI_OFI_request_t;
