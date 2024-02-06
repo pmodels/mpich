@@ -212,6 +212,15 @@ typedef struct {
         struct {
             struct iovec *iovs;
         } nopack_send;
+        struct {
+            int vci_local;
+            int ctx_idx;
+            fi_addr_t remote_addr;
+            uint64_t cq_data;
+            uint64_t match_bits;
+            int pipeline_tag;
+            int num_remain;
+        } pipeline_send;
 
         /* recv path */
         struct {
@@ -223,21 +232,6 @@ typedef struct {
         struct {
             struct iovec *iovs;
         } nopack_recv;
-    } u;
-    union {
-        struct iovec iov;
-        void *inject_buf;       /* Internal buffer for inject emulation */
-    } util;
-    union {
-        struct {
-            int vci_local;
-            int ctx_idx;
-            fi_addr_t remote_addr;
-            uint64_t cq_data;
-            uint64_t match_bits;
-            int pipeline_tag;
-            int num_remain;
-        } send;
         struct {
             int vci_local;
             int ctx_idx;
@@ -252,8 +246,12 @@ typedef struct {
             void *buf;
             MPI_Aint count;
             MPI_Datatype datatype;
-        } recv;
-    } pipeline_info;            /* GPU pipeline */
+        } pipeline_recv;
+    } u;
+    union {
+        struct iovec iov;
+        void *inject_buf;       /* Internal buffer for inject emulation */
+    } util;
 } MPIDI_OFI_request_t;
 
 typedef struct {
