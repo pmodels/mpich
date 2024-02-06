@@ -155,9 +155,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     *request = rreq;
     MPIDI_OFI_REQUEST(rreq, kind) = MPIDI_OFI_req_kind__any;
+    /* preset some fields to NULL */
     if (!flags) {
-        MPIDI_OFI_REQUEST(rreq, huge.remote_info) = NULL;       /* for huge recv remote info */
+        /* remote_info may get set by mprobe, so exclude mrecv. */
+        MPIDI_OFI_REQUEST(rreq, u.recv.remote_info) = NULL;
     }
+    MPIDI_OFI_REQUEST(rreq, u.recv.pack_buffer) = NULL;
 
     /* Calculate the correct NICs. */
     receiver_nic =
@@ -246,11 +249,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
         /* Unpack */
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_PACK;
-        MPIDI_OFI_REQUEST(rreq, u.pack_recv.pack_buffer) = MPL_malloc(data_sz, MPL_MEM_OTHER);
-        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, u.pack_recv.pack_buffer) == NULL, mpi_errno,
+        MPIDI_OFI_REQUEST(rreq, u.recv.pack_buffer) = MPL_malloc(data_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, u.recv.pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
-        recv_buf = MPIDI_OFI_REQUEST(rreq, u.pack_recv.pack_buffer);
-        MPIDI_OFI_REQUEST(rreq, u.pack_recv.buf) = buf;
+        recv_buf = MPIDI_OFI_REQUEST(rreq, u.recv.pack_buffer);
+        MPIDI_OFI_REQUEST(rreq, u.recv.buf) = buf;
 #ifdef MPL_HAVE_ZE
         if (dt_contig && attr.type == MPL_GPU_POINTER_DEV) {
             int mpl_err = MPL_SUCCESS;
@@ -258,14 +261,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             mpl_err = MPL_ze_mmap_device_pointer(buf, &attr.device_attr, attr.device, &ptr);
             MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_ze_mmap_device_ptr");
-            MPIDI_OFI_REQUEST(rreq, u.pack_recv.buf) = ptr;
+            MPIDI_OFI_REQUEST(rreq, u.recv.buf) = ptr;
         }
 #endif
-        MPIDI_OFI_REQUEST(rreq, u.pack_recv.count) = count;
-        MPIDI_OFI_REQUEST(rreq, u.pack_recv.datatype) = datatype;
+        MPIDI_OFI_REQUEST(rreq, u.recv.count) = count;
+        MPIDI_OFI_REQUEST(rreq, u.recv.datatype) = datatype;
     } else {
         /* MPIDI_OFI_EVENT_RECV_PACK may get overwritten with MPIDI_OFI_EVENT_RECV_HUGE */
-        MPIDI_OFI_REQUEST(rreq, u.pack_recv.pack_buffer) = NULL;
+        MPIDI_OFI_REQUEST(rreq, u.recv.pack_buffer) = NULL;
     }
 
     if (rreq->comm == NULL) {

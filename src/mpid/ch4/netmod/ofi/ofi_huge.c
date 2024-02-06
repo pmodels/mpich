@@ -14,7 +14,7 @@ static int get_huge_complete(MPIR_Request * rreq);
 static int get_huge(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(rreq, huge.remote_info);
+    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(rreq, u.recv.remote_info);
 
     MPI_Aint cur_offset;
     if (MPIDI_OFI_COMM(rreq->comm).enable_striping) {
@@ -57,7 +57,7 @@ static uintptr_t recv_rbase(MPIDI_OFI_huge_remote_info_t * remote_info)
 static int get_huge_issue_read(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(rreq, huge.remote_info);
+    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(rreq, u.recv.remote_info);
     MPIR_Comm *comm = rreq->comm;
     MPIR_FUNC_ENTER;
 
@@ -142,7 +142,7 @@ static int get_huge_complete(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(rreq, huge.remote_info);
+    MPIDI_OFI_huge_remote_info_t *info = MPIDI_OFI_REQUEST(rreq, u.recv.remote_info);
 
     /* note: it's receiver ack sender */
     int vci_remote = info->vci_src;
@@ -193,7 +193,7 @@ int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     comm_ptr = rreq->comm;
     MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
                             wc->len);
-    if (MPIDI_OFI_REQUEST(rreq, huge.remote_info)) {
+    if (MPIDI_OFI_REQUEST(rreq, u.recv.remote_info)) {
         /* this is mrecv, we already got remote info */
         ready_to_get = true;
     } else {
@@ -205,7 +205,7 @@ int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
 
         LL_FOREACH(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head, list_ptr) {
             if (list_ptr->comm_id == comm_id && list_ptr->rank == rank && list_ptr->tag == tag) {
-                MPIDI_OFI_REQUEST(rreq, huge.remote_info) = list_ptr->u.info;
+                MPIDI_OFI_REQUEST(rreq, u.recv.remote_info) = list_ptr->u.info;
                 LL_DELETE(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head,
                           MPIDI_OFI_global.per_vci[vci].huge_ctrl_tail, list_ptr);
                 MPL_free(list_ptr);
@@ -287,12 +287,12 @@ int MPIDI_OFI_recv_huge_control(int vci, MPIR_Context_id_t comm_id, int rank, in
         /* let MPIDI_OFI_recv_huge_event finish the recv */
     } else if (MPIDI_OFI_REQUEST(rreq, kind) == MPIDI_OFI_req_kind__mprobe) {
         /* attach info and finish the mprobe */
-        MPIDI_OFI_REQUEST(rreq, huge.remote_info) = info;
+        MPIDI_OFI_REQUEST(rreq, u.recv.remote_info) = info;
         MPIR_STATUS_SET_COUNT(rreq->status, info->msgsize);
         MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_FOUND);
     } else {
         /* attach info and finish recv */
-        MPIDI_OFI_REQUEST(rreq, huge.remote_info) = info;
+        MPIDI_OFI_REQUEST(rreq, u.recv.remote_info) = info;
         mpi_errno = get_huge(rreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -328,7 +328,7 @@ int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     }
     if (found_msg) {
         if (MPIDI_OFI_REQUEST(rreq, kind) == MPIDI_OFI_req_kind__mprobe) {
-            MPIDI_OFI_REQUEST(rreq, huge.remote_info) = list_ptr->u.info;
+            MPIDI_OFI_REQUEST(rreq, u.recv.remote_info) = list_ptr->u.info;
             LL_DELETE(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head,
                       MPIDI_OFI_global.per_vci[vci].huge_ctrl_tail, list_ptr);
             MPL_free(list_ptr);

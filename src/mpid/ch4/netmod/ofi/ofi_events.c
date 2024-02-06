@@ -608,8 +608,8 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                         MPIR_STATUS_SET_COUNT(req->status, 0);
                         if ((event_id == MPIDI_OFI_EVENT_RECV_PACK ||
                              event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
-                            MPIDI_OFI_REQUEST(req, u.pack_recv.pack_buffer)) {
-                            MPL_free(MPIDI_OFI_REQUEST(req, u.pack_recv.pack_buffer));
+                            MPIDI_OFI_REQUEST(req, u.recv.pack_buffer)) {
+                            MPL_free(MPIDI_OFI_REQUEST(req, u.recv.pack_buffer));
                         } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
                             MPL_free(MPIDI_OFI_REQUEST(req, u.nopack_recv.iovs));
                         }

@@ -68,15 +68,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
     MPIDI_anysrc_free_partner(rreq);
 #endif
     if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
-        (MPIDI_OFI_REQUEST(rreq, u.pack_recv.pack_buffer))) {
+        (MPIDI_OFI_REQUEST(rreq, u.recv.pack_buffer))) {
         MPI_Aint actual_unpack_bytes;
         int is_contig;
         MPL_pointer_attr_t attr;
         MPI_Aint true_lb, true_extent;
 
-        void *pack_buffer = MPIDI_OFI_REQUEST(rreq, u.pack_recv.pack_buffer);
-        void *buf = MPIDI_OFI_REQUEST(rreq, u.pack_recv.buf);
-        MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, u.pack_recv.datatype);
+        void *pack_buffer = MPIDI_OFI_REQUEST(rreq, u.recv.pack_buffer);
+        void *buf = MPIDI_OFI_REQUEST(rreq, u.recv.buf);
+        MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, u.recv.datatype);
 
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPIR_Datatype_is_contig(datatype, &is_contig);
@@ -93,7 +93,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
                                            MPL_GPU_COPY_DIRECTION_NONE, engine, true);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            MPI_Aint recv_count = MPIDI_OFI_REQUEST(rreq, u.pack_recv.count);
+            MPI_Aint recv_count = MPIDI_OFI_REQUEST(rreq, u.recv.count);
             MPIR_Typerep_unpack(pack_buffer, count, buf, recv_count, datatype, 0,
                                 &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
         }

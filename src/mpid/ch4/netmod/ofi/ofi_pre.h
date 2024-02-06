@@ -201,17 +201,26 @@ typedef struct {
                                  * if needed. */
     enum MPIDI_OFI_req_kind kind;
     union {
-        struct fid_mr **send_mrs;
-        void *remote_info;
-    } huge;
-    union {
-        /* recv path */
+        /* send path */
         struct {
             void *pack_buffer;
         } pack_send;
         struct {
             struct iovec *iovs;
         } nopack_send;
+        struct {
+            struct fid_mr **mrs;
+            void *pack_buffer;
+        } huge_send;
+        struct {
+            int vci_local;
+            int ctx_idx;
+            fi_addr_t remote_addr;
+            uint64_t cq_data;
+            uint64_t match_bits;
+            int pipeline_tag;
+            int num_remain;
+        } pipeline_send;
         struct {
             int vci_local;
             int ctx_idx;
@@ -222,20 +231,19 @@ typedef struct {
             int num_remain;
         } pipeline_send;
 
-        /* recv path */
+        /* The recv path can be uncertain depend on the actual send path,
+         * thus some fields are significant and need be preset to NULL.
+         */
         struct {
-            void *pack_buffer;
+            void *remote_info;  /* huge path if not NULL */
+            char *pack_buffer;  /* need unpack if not NULL */
             void *buf;
             MPI_Aint count;
             MPI_Datatype datatype;
-        } pack_recv;
+        } recv;
         struct {
             struct iovec *iovs;
         } nopack_recv;
-        struct {
-            struct fid_mr **mrs;
-            void *pack_buffer;
-        } huge_send;
         struct {
             int vci_local;
             int ctx_idx;
