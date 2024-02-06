@@ -23,7 +23,7 @@ static int get_huge(MPIR_Request * rreq)
         cur_offset = MPIDI_OFI_global.max_msg_size;
     }
 
-    MPI_Aint data_sz = MPIDI_OFI_REQUEST(rreq, util.iov.iov_len);
+    MPI_Aint data_sz = MPIDI_OFI_REQUEST(rreq, u.recv.msg_iov.iov_len);
 
     if (data_sz < info->msgsize) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
@@ -69,7 +69,7 @@ static int get_huge_issue_read(MPIR_Request * rreq)
     }
     bytesLeft = info->msgsize - cur_offset;
 
-    void *recv_buf = MPIDI_OFI_REQUEST(rreq, util.iov.iov_base);
+    void *recv_buf = MPIDI_OFI_REQUEST(rreq, u.recv.msg_iov.iov_base);
 
     MPI_Aint chunk_size;
     if (MPIDI_OFI_COMM(comm).enable_striping) {

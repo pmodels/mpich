@@ -234,6 +234,10 @@ typedef struct {
             void *buf;
             MPI_Aint count;
             MPI_Datatype datatype;
+            struct iovec msg_iov;       /* FI_CLAIM require fi_trecvmsg which require usage of iov.
+                                         * We always set it with {recv_buf, data_sz} since they are
+                                         * useful for the huge recv path as well.
+                                         */
         } recv;
         struct {
             struct iovec *iovs;
@@ -254,9 +258,6 @@ typedef struct {
             MPI_Datatype datatype;
         } pipeline_recv;
     } u;
-    union {
-        struct iovec iov;
-    } util;
 } MPIDI_OFI_request_t;
 
 typedef struct {

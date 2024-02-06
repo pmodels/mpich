@@ -266,9 +266,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 #endif
         MPIDI_OFI_REQUEST(rreq, u.recv.count) = count;
         MPIDI_OFI_REQUEST(rreq, u.recv.datatype) = datatype;
-    } else {
-        /* MPIDI_OFI_EVENT_RECV_PACK may get overwritten with MPIDI_OFI_EVENT_RECV_HUGE */
-        MPIDI_OFI_REQUEST(rreq, u.recv.pack_buffer) = NULL;
     }
 
     if (rreq->comm == NULL) {
@@ -277,8 +274,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
     /* Read ordering unnecessary for context_id, so use relaxed load */
     MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
-    MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
-    MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
+    /* msg_iov is needed to use fi_trecvmsg (with FI_CLAIM) or the huge recv path */
+    MPIDI_OFI_REQUEST(rreq, u.recv.msg_iov.iov_base) = recv_buf;
+    MPIDI_OFI_REQUEST(rreq, u.recv.msg_iov.iov_len) = data_sz;
 
     if (unlikely(data_sz >= MPIDI_OFI_global.max_msg_size) && !MPIDI_OFI_COMM(comm).enable_striping) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
@@ -306,7 +304,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), vci_local,
                              trecv);
     } else {
-        msg.msg_iov = &MPIDI_OFI_REQUEST(rreq, util.iov);
+        msg.msg_iov = &MPIDI_OFI_REQUEST(rreq, u.recv.msg_iov);
         msg.desc = desc;
         msg.iov_count = 1;
         msg.tag = match_bits;
