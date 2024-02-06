@@ -28,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vci_idx);
  * The seq need be tracked between local (rank, vci) and remote (rank, vci).
  * We don't need local rank since it is implicit on each process.
  *
- * LOCAL_ID is send to remote precess to identify self.
+ * LOCAL_ID is send to remote process to identify self.
  * REMOTE_ID is used locally to track remote process.
  * I realize the confusing part of the naming.
  *
@@ -568,7 +568,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(MPIR_Comm * comm, fi_a
     memcpy(ibuf + sizeof(*msg_hdrp), am_hdr, am_hdr_sz);
 
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_INJECT_EMU;
-    MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ibuf;
+    MPIDI_OFI_REQUEST(sreq, u.am_inject_emu.inject_buf) = ibuf;
     MPIDI_OFI_global.per_vci[vci_src].am_inflight_inject_emus += 1;
 
     MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[ctx_idx].tx, ibuf, len,

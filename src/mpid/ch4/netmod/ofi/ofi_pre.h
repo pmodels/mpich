@@ -222,14 +222,8 @@ typedef struct {
             int num_remain;
         } pipeline_send;
         struct {
-            int vci_local;
-            int ctx_idx;
-            fi_addr_t remote_addr;
-            uint64_t cq_data;
-            uint64_t match_bits;
-            int pipeline_tag;
-            int num_remain;
-        } pipeline_send;
+            void *inject_buf;
+        } am_inject_emu;
 
         /* The recv path can be uncertain depend on the actual send path,
          * thus some fields are significant and need be preset to NULL.
@@ -262,7 +256,6 @@ typedef struct {
     } u;
     union {
         struct iovec iov;
-        void *inject_buf;       /* Internal buffer for inject emulation */
     } util;
 } MPIDI_OFI_request_t;
 
