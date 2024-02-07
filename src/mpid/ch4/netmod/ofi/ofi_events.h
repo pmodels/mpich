@@ -46,6 +46,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
         goto fn_exit;
     }
+    if (wc->data & MPIDI_OFI_IDATA_PIPELINE) {
+        mpi_errno = MPIDI_OFI_gpu_pipeline_recv_unexp_event(wc, rreq);
+        goto fn_exit;
+    }
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
     if (!rreq->status.MPI_ERROR) {
         rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);

@@ -877,5 +877,6 @@ int MPIDI_OFI_gpu_pipeline_recv(MPIR_Request * rreq,
                                 MPI_Aint data_sz, int ctx_idx);
 int MPIDI_OFI_gpu_pipeline_send_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
 int MPIDI_OFI_gpu_pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
+int MPIDI_OFI_gpu_pipeline_recv_unexp_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r);
 
 #endif /* OFI_IMPL_H_INCLUDED */

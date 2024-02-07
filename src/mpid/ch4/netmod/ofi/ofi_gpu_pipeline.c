@@ -454,6 +454,19 @@ int MPIDI_OFI_gpu_pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Reques
     goto fn_exit;
 }
 
+/* We didn't expect pipeline protocol, e.g. recv into a host buffer, but
+ * the sender uses the pipeline, e.g. send from a large gpu buffer.
+ * We need convert the rreq, i.e. prepare u.pipeline_recv data.
+ */
+int MPIDI_OFI_gpu_pipeline_recv_unexp_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+{
+    /* Since we didn't store the information (ref. u.pipeline_recv),
+     * we can't issue fi_trecv for all the chunks. Just assert fail for now.
+     */
+    MPIR_Assertp(0);
+    return MPI_SUCCESS;
+}
+
 /* ------------------------------------
  * recv_copy: async copy from host_buf to user buffer in recv event
  */
