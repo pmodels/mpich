@@ -593,28 +593,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int ran
 
     MPIR_FUNC_ENTER;
 
-    bool whole_shared = false;
-    if (win->comm_ptr->node_comm == NULL) {
-        whole_shared = (win->comm_ptr->local_size == 1);
-    } else {
-        whole_shared = (win->comm_ptr->local_size == win->comm_ptr->node_comm->local_size);
-    }
-
-    if (!whole_shared) {
-        if (win->comm_ptr->node_comm == NULL) {
-            mpi_errno = MPIDIG_win_shared_query_self(win, rank, size, disp_unit, baseptr);
-        } else {
-            mpi_errno = MPIDIG_win_shared_query_part(win, rank, size, disp_unit, baseptr);
-        }
+    if (!shared_table || win->comm_ptr->node_comm == NULL) {
+        mpi_errno = MPIDIG_win_shared_query_self(win, rank, size, disp_unit, baseptr);
         goto fn_exit;
     }
 
-    /* When only single process exists on the node or shared memory allocation fails,
-     * should only query MPI_PROC_NULL or local process. Thus, return local window's info. */
-    if (win->comm_ptr->node_comm == NULL || !shared_table) {
-        *size = win->size;
-        *disp_unit = win->disp_unit;
-        *((void **) baseptr) = win->base;
+    bool whole_shared = (win->comm_ptr->local_size == win->comm_ptr->node_comm->local_size);
+    if (!whole_shared) {
+        mpi_errno = MPIDIG_win_shared_query_part(win, rank, size, disp_unit, baseptr);
         goto fn_exit;
     }
 
