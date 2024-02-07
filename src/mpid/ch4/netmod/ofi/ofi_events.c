@@ -435,114 +435,113 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_SEND) {
-        /* Passing the event_id as a parameter; do not need to load it from the
-         * request object each time the send_event handler is invoked */
-        mpi_errno = MPIDI_OFI_send_event(vci, wc, req, MPIDI_OFI_EVENT_SEND);
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_RECV) {
-        /* Passing the event_id as a parameter; do not need to load it from the
-         * request object each time the send_event handler is invoked */
-        mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV);
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND) {
-        mpi_errno = am_isend_event(vci, wc, req);
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND_RDMA) {
-        mpi_errno = am_isend_rdma_event(vci, wc, req);
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND_PIPELINE) {
-        mpi_errno = am_isend_pipeline_event(vci, wc, req);
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_RECV) {
-        if (wc->flags & FI_RECV)
-            mpi_errno = am_recv_event(vci, wc, req);
+    switch (MPIDI_OFI_REQUEST(req, event_id)) {
+        case MPIDI_OFI_EVENT_SEND:
+            mpi_errno = MPIDI_OFI_send_event(vci, wc, req, MPIDI_OFI_EVENT_SEND);
+            break;
 
-        if (unlikely(wc->flags & FI_MULTI_RECV)) {
-            MPIDI_OFI_am_repost_request_t *am = (MPIDI_OFI_am_repost_request_t *) req;
-            mpi_errno = MPIDI_OFI_am_repost_buffer(vci, am->index);
-        }
+        case MPIDI_OFI_EVENT_RECV:
+            mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV);
+            break;
 
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_READ) {
-        mpi_errno = am_read_event(vci, wc, req);
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_SEND_GPU_PIPELINE) {
-        mpi_errno = MPIDI_OFI_gpu_pipeline_send_event(wc, req);
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT) {
-        mpi_errno = MPIDI_OFI_gpu_pipeline_recv_event(wc, req);
-        goto fn_exit;
-    } else if (MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE) {
-        mpi_errno = MPIDI_OFI_gpu_pipeline_recv_event(wc, req);
-        goto fn_exit;
-    } else if (unlikely(1)) {
-        switch (MPIDI_OFI_REQUEST(req, event_id)) {
-            case MPIDI_OFI_EVENT_PEEK:
-                mpi_errno = peek_event(vci, wc, req);
-                break;
+        case MPIDI_OFI_EVENT_PEEK:
+            mpi_errno = peek_event(vci, wc, req);
+            break;
 
-            case MPIDI_OFI_EVENT_RECV_HUGE:
-                if (wc->tag & MPIDI_OFI_HUGE_SEND) {
-                    mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, req);
-                } else {
-                    mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_HUGE);
-                }
-                break;
+        case MPIDI_OFI_EVENT_RECV_HUGE:
+            if (wc->tag & MPIDI_OFI_HUGE_SEND) {
+                mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, req);
+            } else {
+                mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_HUGE);
+            }
+            break;
 
-            case MPIDI_OFI_EVENT_RECV_PACK:
-                mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_PACK);
-                break;
+        case MPIDI_OFI_EVENT_RECV_PACK:
+            mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_PACK);
+            break;
 
-            case MPIDI_OFI_EVENT_RECV_NOPACK:
-                mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_NOPACK);
-                break;
+        case MPIDI_OFI_EVENT_RECV_NOPACK:
+            mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_NOPACK);
+            break;
 
-            case MPIDI_OFI_EVENT_SEND_HUGE:
-                mpi_errno = send_huge_event(vci, wc, req);
-                break;
+        case MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT:
+        case MPIDI_OFI_EVENT_RECV_GPU_PIPELINE:
+            mpi_errno = MPIDI_OFI_gpu_pipeline_recv_event(wc, req);
+            break;
 
-            case MPIDI_OFI_EVENT_SEND_PACK:
-                mpi_errno = MPIDI_OFI_send_event(vci, wc, req, MPIDI_OFI_EVENT_SEND_PACK);
-                break;
+        case MPIDI_OFI_EVENT_SEND_HUGE:
+            mpi_errno = send_huge_event(vci, wc, req);
+            break;
 
-            case MPIDI_OFI_EVENT_SEND_NOPACK:
-                mpi_errno = MPIDI_OFI_send_event(vci, wc, req, MPIDI_OFI_EVENT_SEND_NOPACK);
-                break;
+        case MPIDI_OFI_EVENT_SEND_GPU_PIPELINE:
+            mpi_errno = MPIDI_OFI_gpu_pipeline_send_event(wc, req);
+            break;
 
-            case MPIDI_OFI_EVENT_SSEND_ACK:
-                mpi_errno = ssend_ack_event(vci, wc, req);
-                break;
+        case MPIDI_OFI_EVENT_SEND_PACK:
+            mpi_errno = MPIDI_OFI_send_event(vci, wc, req, MPIDI_OFI_EVENT_SEND_PACK);
+            break;
 
-            case MPIDI_OFI_EVENT_CHUNK_DONE:
-                mpi_errno = chunk_done_event(vci, wc, req);
-                break;
+        case MPIDI_OFI_EVENT_SEND_NOPACK:
+            mpi_errno = MPIDI_OFI_send_event(vci, wc, req, MPIDI_OFI_EVENT_SEND_NOPACK);
+            break;
 
-            case MPIDI_OFI_EVENT_HUGE_CHUNK_DONE:
-                mpi_errno = MPIDI_OFI_huge_chunk_done_event(vci, wc, req);
-                break;
+        case MPIDI_OFI_EVENT_SSEND_ACK:
+            mpi_errno = ssend_ack_event(vci, wc, req);
+            break;
 
-            case MPIDI_OFI_EVENT_INJECT_EMU:
-                mpi_errno = inject_emu_event(vci, wc, req);
-                break;
+        case MPIDI_OFI_EVENT_CHUNK_DONE:
+            mpi_errno = chunk_done_event(vci, wc, req);
+            break;
 
-            case MPIDI_OFI_EVENT_DYNPROC_DONE:
-                mpi_errno = dynproc_done_event(vci, wc, req);
-                break;
+        case MPIDI_OFI_EVENT_HUGE_CHUNK_DONE:
+            mpi_errno = MPIDI_OFI_huge_chunk_done_event(vci, wc, req);
+            break;
 
-            case MPIDI_OFI_EVENT_ACCEPT_PROBE:
-                mpi_errno = accept_probe_event(vci, wc, req);
-                break;
+        case MPIDI_OFI_EVENT_INJECT_EMU:
+            mpi_errno = inject_emu_event(vci, wc, req);
+            break;
 
-            case MPIDI_OFI_EVENT_ABORT:
-            default:
-                mpi_errno = MPI_SUCCESS;
-                MPIR_Assert(0);
-                break;
-        }
+        case MPIDI_OFI_EVENT_DYNPROC_DONE:
+            mpi_errno = dynproc_done_event(vci, wc, req);
+            break;
+
+        case MPIDI_OFI_EVENT_ACCEPT_PROBE:
+            mpi_errno = accept_probe_event(vci, wc, req);
+            break;
+
+        case MPIDI_OFI_EVENT_AM_SEND:
+            mpi_errno = am_isend_event(vci, wc, req);
+            break;
+
+        case MPIDI_OFI_EVENT_AM_SEND_RDMA:
+            mpi_errno = am_isend_rdma_event(vci, wc, req);
+            break;
+
+        case MPIDI_OFI_EVENT_AM_SEND_PIPELINE:
+            mpi_errno = am_isend_pipeline_event(vci, wc, req);
+            break;
+
+        case MPIDI_OFI_EVENT_AM_RECV:
+            if (wc->flags & FI_RECV)
+                mpi_errno = am_recv_event(vci, wc, req);
+
+            if (unlikely(wc->flags & FI_MULTI_RECV)) {
+                MPIDI_OFI_am_repost_request_t *am = (MPIDI_OFI_am_repost_request_t *) req;
+                mpi_errno = MPIDI_OFI_am_repost_buffer(vci, am->index);
+            }
+            break;
+
+        case MPIDI_OFI_EVENT_AM_READ:
+            mpi_errno = am_read_event(vci, wc, req);
+            break;
+
+        case MPIDI_OFI_EVENT_ABORT:
+        default:
+            mpi_errno = MPI_SUCCESS;
+            MPIR_Assert(0);
+            break;
     }
 
-  fn_exit:
     return mpi_errno;
 }
 
