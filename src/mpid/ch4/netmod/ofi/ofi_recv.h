@@ -153,7 +153,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         goto fn_fail;
     }
 
-    *request = rreq;
     MPIDI_OFI_REQUEST(rreq, kind) = MPIDI_OFI_req_kind__any;
     /* preset some fields to NULL */
     if (!flags) {
