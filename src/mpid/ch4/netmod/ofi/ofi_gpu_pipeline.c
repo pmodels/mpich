@@ -4,6 +4,7 @@
  */
 
 #include "mpidimpl.h"
+#include "ofi_impl.h"
 #include "mpir_async_things.h"
 
 struct chunk_req {
