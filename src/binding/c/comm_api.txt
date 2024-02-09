@@ -192,6 +192,12 @@ MPIX_Comm_test_threadcomm:
 
 MPI_Intercomm_create_from_groups:
     .desc: Create an intercommuncator from local and remote groups
+{ -- early_return --
+    if (local_group == MPI_GROUP_EMPTY || remote_group == MPI_GROUP_EMPTY) {
+        *newintercomm = MPI_COMM_NULL;
+        goto fn_exit;
+    }
+}
 
 MPI_Intercomm_create:
     .desc: Creates an intercommuncator from two intracommunicators
@@ -290,7 +296,7 @@ MPI_Intercomm_merge:
 }
 { -- error_check --
     int acthigh;
-    /* Check for consistent valus of high in each local group.
+    /* Check for consistent values of high in each local group.
      * The Intel test suite checks for this; it is also an easy
      * error to make */
     acthigh = high ? 1 : 0;     /* Clamp high into 1 or 0 */
