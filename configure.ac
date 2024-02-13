@@ -3689,6 +3689,12 @@ fi
 # because the coverage options may affect the other tests.
 PAC_ENABLE_COVERAGE
 
+AC_ARG_ENABLE([doc],
+              [AS_HELP_STRING([--disable-doc],
+                              [Do not install man pages and html/pdf docs])],
+              [],[enable_doc=yes])
+AM_CONDITIONAL([INSTALL_DOCS],[test "X$enable_doc" = "Xyes"])
+
 # -----------------------------------------------------------------------------
 # Check for a specific header
 # Grrr.  OS/X fails the test for sys/uio.h because uio *requires* sys/types.h
