@@ -35,7 +35,7 @@ libdir=__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__
 
 # Default settings for compiler, flags, and libraries.
 # Determined by a combination of environment variables and tests within
-# configure (e.g., determining whether -lsocket is needee)
+# configure (e.g., determining whether -lsocket is needed)
 CC="@CC@"
 MPICH_VERSION="@MPICH_VERSION@"
 
@@ -69,8 +69,8 @@ Show=eval
 # (e.g., "cc -64" becomes "cc--64", that file is sources, allowing other
 # changes to the compilation environment.  See the variables used by the 
 # script (defined above)
-# Added MPICH_CC_OLD, MPICH_CC can be used to prefix CC with external utility, 
-# e.g. setenv MPICH_CC 'eval linkcache $MPICH_CC_OLD'
+# Added MPICH_CC_OLD, MPICH_CC can be used to prefix CC
+# with external utility, e.g. setenv MPICH_CC 'eval linkcache $MPICH_CC_OLD'
 if [ -n "$MPICH_CC" ] ; then
     MPICH_CC_OLD="$CC"
     CC="$MPICH_CC"

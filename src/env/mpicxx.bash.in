@@ -25,14 +25,17 @@
 # --------------------------------------------------------------------------
 # Set the default values of all variables.
 #
-# Directory locations: Fixed for any MPI implementation
+# Directory locations: Fixed for any MPI implementation.
+# Set from the directory arguments to configure (e.g., --prefix=/usr/local)
 prefix=__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
 exec_prefix=__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
 sysconfdir=__SYSCONFDIR_TO_BE_FILLED_AT_INSTALL_TIME__
 includedir=__INCLUDEDIR_TO_BE_FILLED_AT_INSTALL_TIME__
 libdir=__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__
 
-# Default settings for compiler, flags, and libraries
+# Default settings for compiler, flags, and libraries.
+# Determined by a combination of environment variables and tests within
+# configure (e.g., determining whether -lsocket is needed)
 CXX="@CXX@"
 MPICH_VERSION="@MPICH_VERSION@"
 
@@ -57,16 +60,6 @@ Show=
 #
 # End of initialization of variables
 #---------------------------------------------------------------------
-
-# Check recursive situations
-# User mistakes, e.g. setting MPICH_CC=mpicc, may end up recursively running
-# this script. A simple check to bail if that's the case.
-if [ -n "$MPICH_RECURSION_CHECK" ] ; then
-    echo "This script ($0) is being called recursively, check that MPICH_CXX does not refer to mpicxx."
-    exit 1
-fi
-MPICH_RECURSION_CHECK=1
-export MPICH_RECURSION_CHECK
 
 # Environment Variables.
 # The environment variables MPICH_CXX may be used to override the 
@@ -219,7 +212,7 @@ for arg in "$@" ; do
 
     esac
     if [ $addarg = no ] ; then
-	unset allargs[$argno]
+        unset allargs[$argno]
     fi
     # Some versions of bash do not accept ((argno++))
     argno=`expr $argno + 1`
@@ -230,6 +223,16 @@ if [ $# -eq 0 ] ; then
     "$0" -help
     exit 1
 fi
+
+# Check recursive situations
+# User mistakes, e.g. setting MPICH_CXX=mpicxx, may end up recursively running
+# this script. A simple check to bail if that's the case.
+if [ -n "$MPICH_RECURSION_CHECK" ] ; then
+    echo "This script ($0) is being called recursively, check that MPICH_CXX does not refer to mpicxx."
+    exit 1
+fi
+MPICH_RECURSION_CHECK=1
+export MPICH_RECURSION_CHECK
 
 # -----------------------------------------------------------------------
 # Derived variables.  These are assembled from variables set from the
@@ -270,7 +273,13 @@ fi
 # A temporary statement to invoke the compiler
 # Place the -L before any args in case there are any mpi libraries in there.
 # Eventually, we'll want to move this after any non-MPI implementation 
-# libraries
+# libraries.
+# We use a single invocation of the compiler.  This will be adequate until
+# we run into a system that uses a separate linking command.  With any luck,
+# such archaic systems are no longer with us.  This also lets us
+# accept any argument; we don't need to know if we've seen a source
+# file or an object file.  Instead, we just check for an option that
+# suppressing linking, such as -c or -M.
 if [ "$show_info" = compile ] ; then
     echo ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} -I$includedir
 elif [ "$show_info" = link ] ; then
