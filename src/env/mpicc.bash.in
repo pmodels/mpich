@@ -102,6 +102,7 @@ interlib_deps=yes
 static_mpi=no
 showinfo=""
 delay_libs=
+mpi_abi=no
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -189,6 +190,10 @@ for arg in "$@" ; do
     delay_libs="$delay_libs $arg"
     addarg=no
     ;;
+    -mpi-abi|-mpi_abi)
+    mpi_abi=yes
+    addarg=no
+    ;;
     -help)
     NC=`echo "$CC" | sed 's%\/% %g' | awk '{print $NF}' -`
     if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
@@ -261,6 +266,18 @@ if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
     final_libs="${final_libs} __LIBS_TO_BE_FILLED_AT_INSTALL_TIME__"
 fi
 
+if [ "${0%_abi}" != "$0" ] ; then
+    mpi_abi=yes
+fi
+if [ "$mpi_abi" = no ] ; then
+    mpi_libs_shared=-l@MPILIBNAME@ @LPMPILIBNAME@
+    mpi_libs_static=$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@
+else
+    final_cppflags="-DMPI_ABI ${final_cppflags}"
+    mpi_libs_shared=-l@MPIABILIBNAME@ @LPMPIABILIBNAME@
+    mpi_libs_static=$libdir/lib@MPIABILIBNAME@.a @LPMPIABILIBNAME@
+fi
+
 # -----------------------------------------------------------------------
 #
 # A temporary statement to invoke the compiler
@@ -280,9 +297,9 @@ elif [ "$show_info" = link ] ; then
         echo ${final_ldflags}
     else
         if [ "$static_mpi" = no ] ; then
-            echo ${final_ldflags} -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+            echo ${final_ldflags} -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_shared} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
         else
-            echo ${final_ldflags} -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+            echo ${final_ldflags} -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_static} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
         fi
     fi
 elif [ "$linking" = yes ] ; then
@@ -291,9 +308,9 @@ elif [ "$linking" = yes ] ; then
         rc=$?
     else
         if [ "$static_mpi" = no ] ; then
-          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_shared} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
         else
-          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+          $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_static} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
         fi
         rc=$?
     fi
