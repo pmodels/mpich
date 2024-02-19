@@ -31,6 +31,7 @@
                 This option should normally not be used.
 .  \-static-mpi - Use a statically compile MPI library, but shared libraries
                 for all of the other dependencies.
+.  \-mpi-abi  - Compile and link using the standard MPI ABI.
 -  others     - are passed to the compiler or linker.  For example, '\-c'
                 causes files to be compiled, '\-g' selects compilation with
                 debugging on most systems, and '\-o name' causes linking
