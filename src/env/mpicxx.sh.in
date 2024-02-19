@@ -25,14 +25,17 @@
 # --------------------------------------------------------------------------
 # Set the default values of all variables.
 #
-# Directory locations: Fixed for any MPI implementation
+# Directory locations: Fixed for any MPI implementation.
+# Set from the directory arguments to configure (e.g., --prefix=/usr/local)
 prefix=__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
 exec_prefix=__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
 sysconfdir=__SYSCONFDIR_TO_BE_FILLED_AT_INSTALL_TIME__
 includedir=__INCLUDEDIR_TO_BE_FILLED_AT_INSTALL_TIME__
 libdir=__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__
 
-# Default settings for compiler, flags, and libraries
+# Default settings for compiler, flags, and libraries.
+# Determined by a combination of environment variables and tests within
+# configure (e.g., determining whether -lsocket is needed)
 CXX="@CXX@"
 MPICH_VERSION="@MPICH_VERSION@"
 
@@ -57,16 +60,6 @@ Show=eval
 #
 # End of initialization of variables
 #---------------------------------------------------------------------
-
-# Check recursive situations
-# User mistakes, e.g. setting MPICH_CC=mpicc, may end up recursively running
-# this script. A simple check to bail if that's the case.
-if [ -n "$MPICH_RECURSION_CHECK" ] ; then
-    echo "This script ($0) is being called recursively, check that MPICH_CXX does not refer to mpicxx."
-    exit 1
-fi
-MPICH_RECURSION_CHECK=1
-export MPICH_RECURSION_CHECK
 
 # Environment Variables.
 # The environment variables MPICH_CXX may be used to override the 
@@ -108,6 +101,7 @@ interlib_deps=yes
 static_mpi=no
 showinfo=""
 delay_libs=
+mpi_abi=no
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -201,6 +195,10 @@ for arg in "$@" ; do
     delay_libs="$delay_libs $arg"
     addarg=no
     ;;
+    -mpi-abi|-mpi_abi)
+    mpi_abi=yes
+    addarg=no
+    ;;
     -help)
     NC=`echo "$CXX" | sed 's%\/% %g' | awk '{print $NF}' -`
     if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
@@ -237,14 +235,20 @@ if [ $# -eq 0 ] ; then
     exit 1
 fi
 
+# Check recursive situations
+# User mistakes, e.g. setting MPICH_CXX=mpicxx, may end up recursively running
+# this script. A simple check to bail if that's the case.
+if [ -n "$MPICH_RECURSION_CHECK" ] ; then
+    echo "This script ($0) is being called recursively, check that MPICH_CXX does not refer to mpicxx."
+    exit 1
+fi
+MPICH_RECURSION_CHECK=1
+export MPICH_RECURSION_CHECK
+
 # -----------------------------------------------------------------------
 # Derived variables.  These are assembled from variables set from the
 # default, environment, configuration file (if any) and command-line
 # options (if any)
-cxxlibs=
-if [ "@MPICXXLIBNAME@" != "@MPILIBNAME@" ] ; then
-    cxxlibs="-l@MPICXXLIBNAME@"
-fi
 
 PROFILE_FOO=
 # Handle the case of a profile switch
@@ -273,10 +277,42 @@ if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
     final_libs="${final_libs} __LIBS_TO_BE_FILLED_AT_INSTALL_TIME__"
 fi
 
+if [ "${0%_abi}" != "$0" ] ; then
+    mpi_abi=yes
+fi
+if [ "$mpi_abi" = no ] ; then
+    mpi_libs_shared=-l@MPILIBNAME@ @LPMPILIBNAME@
+    mpi_libs_static=$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@
+else
+    final_cppflags="-DMPI_ABI ${final_cppflags}"
+    mpi_libs_shared=-l@MPIABILIBNAME@ @LPMPIABILIBNAME@
+    mpi_libs_static=$libdir/lib@MPIABILIBNAME@.a @LPMPIABILIBNAME@
+fi
+
+cxxlibs=
+if [ "$mpi_abi" = no ] ; then
+    if [ "@MPICXXLIBNAME@" != "@MPILIBNAME@" ] ; then
+        cxxlibs="-l@MPICXXLIBNAME@"
+    fi
+else
+    true # TODO: Implement support for libmpicxx_abi
+    # if [ "@MPICXXABILIBNAME@" != "@MPIABILIBNAME@" ] ; then
+    #     cxxlibs="-l@MPICXXABILIBNAME@"
+    # fi
+fi
+
+# -----------------------------------------------------------------------
+#
 # A temporary statement to invoke the compiler
 # Place the -L before any args in case there are any mpi libraries in there.
 # Eventually, we'll want to move this after any non-MPI implementation 
-# libraries
+# libraries.
+# We use a single invocation of the compiler.  This will be adequate until
+# we run into a system that uses a separate linking command.  With any luck,
+# such archaic systems are no longer with us.  This also lets us
+# accept any argument; we don't need to know if we've seen a source
+# file or an object file.  Instead, we just check for an option that
+# suppressing linking, such as -c or -M.
 if [ "$show_info" = compile ] ; then
     echo ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} -I$includedir
 elif [ "$show_info" = link ] ; then
@@ -284,9 +320,9 @@ elif [ "$show_info" = link ] ; then
         echo ${final_ldflags}
     else
         if [ "$static_mpi" = no ] ; then
-            echo ${final_ldflags} -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+            echo ${final_ldflags} -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_shared} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
         else
-            echo ${final_ldflags} -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+            echo ${final_ldflags} -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_static} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
         fi
     fi
 elif [ "$linking" = yes ] ; then
@@ -295,9 +331,9 @@ elif [ "$linking" = yes ] ; then
         rc=$?
     else
       if [ "$static_mpi" = no ] ; then
-        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} $allargs -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} $allargs -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_shared} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
       else
-        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} $allargs -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} $libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@ $PROFILE_POSTLIB ${delay_libs} ${final_libs}
+        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} $allargs -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO ${wrapper_dl_type_flags} ${mpi_libs_static} $PROFILE_POSTLIB ${delay_libs} ${final_libs}
       fi
         rc=$?
     fi

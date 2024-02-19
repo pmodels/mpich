@@ -240,14 +240,9 @@ test-clean:
 ## better approach might be to have each Makefile.mk append to a
 ## common set of rules.
 install-exec-hook:
-	if test -e lib/lib@PMPILIBNAME@.la ; then \
-	    . lib/lib@PMPILIBNAME@.la ; \
-	elif test -e lib/lib@MPILIBNAME@.la ; then \
-	    . lib/lib@MPILIBNAME@.la ; \
-	fi ; \
-	for e in ${DESTDIR}${bindir}/@MPICC_NAME@ ${DESTDIR}${bindir}/@MPICXX_NAME@ \
-	        ${DESTDIR}${bindir}/@MPICC_ABI_NAME@ \
-		${DESTDIR}${bindir}/@MPIF77_NAME@ ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; do \
+	for e in ${DESTDIR}${bindir}/@MPICC_NAME@ \
+		${DESTDIR}${bindir}/@MPICXX_NAME@ \
+		${DESTDIR}${bindir}/@MPIFORT_NAME@ ; do \
 		if test -e $${e} ; then \
 			sed -e 's|__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${prefix}|g' \
 				-e 's|__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${exec_prefix}|g' \
@@ -263,16 +258,41 @@ install-exec-hook:
 		if test "@MPICXX_NAME@" != "@MPICPP_NAME@" ; then \
 			cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; \
 		fi ; \
-	fi ; \
+	fi ;
+if BUILD_FC_BINDING
+if INSTALL_MPIF90
 	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
 		if test "@MPIFORT_NAME@" != "@MPIF90_NAME@" ; then \
 			cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF90_NAME@ ; \
 		fi ; \
-	fi ; \
-	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ -a ! -e ${DESTDIR}${bindir}/@MPIF77_NAME@ ; then \
+	fi ;
+endif INSTALL_MPIF90
+endif BUILD_FC_BINDING
+if BUILD_F77_BINDING
+if INSTALL_MPIF77
+	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
 		if test "@MPIFORT_NAME@" != "@MPIF77_NAME@" ; then \
 			cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF77_NAME@ ; \
 		fi ; \
+	fi ;
+endif INSTALL_MPIF77
+endif BUILD_F77_BINDING
+if BUILD_ABI_LIB
+	if test -e ${DESTDIR}${bindir}/@MPICC_NAME@ ; then \
+		if test "@MPICC_NAME@" != "@MPICC_ABI_NAME@" ; then \
+			cd ${DESTDIR}${bindir} && ln -f -s @MPICC_NAME@ @MPICC_ABI_NAME@ ; \
+		fi ; \
+	fi ; \
+	if test -e ${DESTDIR}${bindir}/@MPICXX_NAME@ ; then \
+		if test "@MPICXX_NAME@" != "@MPICXX_ABI_NAME@" ; then \
+			cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICXX_ABI_NAME@ ; \
+		fi ; \
+	fi ;
+endif BUILD_ABI_LIB
+	if test -e lib/lib@PMPILIBNAME@.la ; then \
+	    . lib/lib@PMPILIBNAME@.la ; \
+	elif test -e lib/lib@MPILIBNAME@.la ; then \
+	    . lib/lib@MPILIBNAME@.la ; \
 	fi ; \
 	if test -e ${DESTDIR}${libdir}/lib@MPILIBNAME@@SHLIB_EXT@ ; then \
 		if test "@MPILIBNAME@" != "mpl" ; then \
@@ -319,6 +339,9 @@ uninstall-local:
 	for x in @MPICPP_NAME@ @MPIF90_NAME@ @MPIF77_NAME@ ; do \
 		rm -f ${DESTDIR}${bindir}/$$x ; \
 	done ; \
+	for x in @MPICC_ABI_NAME@ @MPICXX_ABI_NAME@ ; do \
+		rm -f ${DESTDIR}${bindir}/$$x ; \
+	done \
 	for x in mpl opa mpich fmpich mpichf90 mpichcxx ; do \
 		rm -f ${DESTDIR}${libdir}/lib$$x@SHLIB_EXT@ ; \
 	done

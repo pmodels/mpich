@@ -749,7 +749,8 @@ if test "$enable_fortran" != "no" ; then
 
 fi
 
-AM_CONDITIONAL([INSTALL_MPIF77],[false])
+AM_CONDITIONAL([INSTALL_MPIF90],[true])
+AM_CONDITIONAL([INSTALL_MPIF77],[true])
 
 # compute canonical system types
 AC_CANONICAL_BUILD
@@ -4009,6 +4010,7 @@ export MPI_NO_RMA
 AC_SUBST(MPICC_NAME)
 AC_SUBST(MPICC_ABI_NAME)
 AC_SUBST(MPICXX_NAME)
+AC_SUBST(MPICXX_ABI_NAME)
 AC_SUBST(MPICPP_NAME)
 AC_SUBST(MPIFORT_NAME)
 AC_SUBST(MPIF90_NAME)
@@ -4016,6 +4018,7 @@ AC_SUBST(MPIF77_NAME)
 PAC_GET_EXENAME("mpicc", MPICC_NAME)
 PAC_GET_EXENAME("mpicc_abi", MPICC_ABI_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
+PAC_GET_EXENAME("mpicxx_abi", MPICXX_ABI_NAME)
 PAC_GET_EXENAME("mpic++", MPICPP_NAME)
 PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpif90", MPIF90_NAME)
@@ -4330,8 +4333,6 @@ AC_CONFIG_FILES([Makefile \
           src/env/mpixxx_opts.conf \
           src/env/mpicc.sh \
 	  src/env/mpicc.bash \
-          src/env/mpicc_abi.sh \
-	  src/env/mpicc_abi.bash \
           src/env/mpicxx.sh \
 	  src/env/mpicxx.bash \
 	  src/env/mpifort.sh \
