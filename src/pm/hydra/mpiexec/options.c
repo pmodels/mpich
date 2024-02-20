@@ -993,6 +993,7 @@ static void bind_to_help_fn(void)
     printf("            ib{<id>|:<n>}    -- bind to non-io ancestor of IB device(s)\n");
     printf("            en|eth{<id>|:<n>} -- bind to non-io ancestor of Ethernet device(s)\n");
     printf("            hfi{<id>|:<n>}   -- bind to non-io ancestor of OPA device(s)\n");
+    printf("            hsn{<id>|:<n>}   -- bind to non-io ancestor of Cray Cassini device(s)\n");
 
 
     printf("\n\n");

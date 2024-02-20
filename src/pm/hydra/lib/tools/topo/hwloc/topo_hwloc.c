@@ -306,6 +306,7 @@ static HYD_status get_hw_obj_list(const char *resource, hwloc_obj_t ** resource_
         *resource_list_length = count;
     } else if (!strncmp(resource, "ib", strlen("ib"))
                || !strncmp(resource, "hfi", strlen("hfi"))
+               || !strncmp(resource, "hsn", strlen("hsn"))
                || !strncmp(resource, "eth", strlen("eth"))
                || !strncmp(resource, "en", strlen("en"))) {
         hwloc_obj_t io_device = NULL;
@@ -315,11 +316,15 @@ static HYD_status get_hw_obj_list(const char *resource, hwloc_obj_t ** resource_
             obj_type_prefix = MPL_strdup("ib");
         else if (!strncmp(resource, "hfi", strlen("hfi")))
             obj_type_prefix = MPL_strdup("hfi");
+        else if (!strncmp(resource, "hsn", strlen("hsn")))
+            obj_type_prefix = MPL_strdup("hsn");
         else if (!strncmp(resource, "eth", strlen("eth")) || !strncmp(resource, "en", strlen("en")))
             obj_type_prefix = MPL_strdup("en");
 
         while ((io_device = hwloc_get_next_osdev(topology, io_device))) {
             if (!io_device_found(resource_str, "hfi", io_device, HWLOC_OBJ_OSDEV_OPENFABRICS))
+                continue;
+            if (!io_device_found(resource_str, "hsn", io_device, HWLOC_OBJ_OSDEV_NETWORK))
                 continue;
             if (!io_device_found(resource_str, "ib", io_device, HWLOC_OBJ_OSDEV_NETWORK))
                 continue;
