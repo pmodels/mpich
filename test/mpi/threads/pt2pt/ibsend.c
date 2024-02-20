@@ -42,7 +42,7 @@ static MTEST_THREAD_RETURN_TYPE receiver(void *ptr)
         MPI_Recv(buf, MSGSIZE, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG,
                  MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-    return NULL;
+    MTEST_THREAD_RETURN_EXPRESSION;
 }
 
 
@@ -54,7 +54,7 @@ static MTEST_THREAD_RETURN_TYPE sender_bsend(void *ptr)
     for (i = 0; i < NUMSENDS; i++)
         MPI_Bsend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD);
 
-    return NULL;
+    MTEST_THREAD_RETURN_EXPRESSION;
 }
 
 static MTEST_THREAD_RETURN_TYPE sender_ibsend(void *ptr)
@@ -67,7 +67,7 @@ static MTEST_THREAD_RETURN_TYPE sender_ibsend(void *ptr)
         MPI_Ibsend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD, &reqs[i]);
     MPI_Waitall(NUMSENDS, reqs, MPI_STATUSES_IGNORE);
 
-    return NULL;
+    MTEST_THREAD_RETURN_EXPRESSION;
 }
 
 static MTEST_THREAD_RETURN_TYPE sender_isend(void *ptr)
@@ -80,7 +80,7 @@ static MTEST_THREAD_RETURN_TYPE sender_isend(void *ptr)
         MPI_Isend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD, &reqs[i]);
     MPI_Waitall(NUMSENDS, reqs, MPI_STATUSES_IGNORE);
 
-    return NULL;
+    MTEST_THREAD_RETURN_EXPRESSION;
 }
 
 static MTEST_THREAD_RETURN_TYPE sender_send(void *ptr)
@@ -91,7 +91,7 @@ static MTEST_THREAD_RETURN_TYPE sender_send(void *ptr)
     for (i = 0; i < NUMSENDS; i++)
         MPI_Send(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD);
 
-    return NULL;
+    MTEST_THREAD_RETURN_EXPRESSION;
 }
 
 int main(int argc, char *argv[])

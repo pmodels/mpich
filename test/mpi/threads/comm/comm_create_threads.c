@@ -44,7 +44,8 @@ static MTEST_THREAD_RETURN_TYPE test_comm_create(void *arg)
         MPI_Group_free(&world_group);
     }
 
-    return NULL;
+
+    MTEST_THREAD_RETURN_EXPRESSION;
 }
 
 

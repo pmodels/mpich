@@ -739,6 +739,12 @@ case $with_thread_package in
         PAC_CHECK_HEADER_LIB_FATAL([argobots], [abt.h], [abt], [ABT_key_create])
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_ARGOBOTS
         ;;
+   qthreads)
+        with_thread_package=qthreads
+        PAC_CHECK_HEADER_LIB_FATAL([qthreads], [qthread/qthread.h], [qthread], [qthread_fork_syncvar_to])
+        threadlib="-lqthread"
+        THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_QTHREADS
+        ;;
     no|none)
 	with_thread_package=none
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_NONE

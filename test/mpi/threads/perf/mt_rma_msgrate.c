@@ -135,7 +135,7 @@ MTEST_THREAD_RETURN_TYPE thread_fn(void *arg)
 
     free(buf);
     free(result_buf);
-    return 0;
+    MTEST_THREAD_RETURN_EXPRESSION;
 }
 
 

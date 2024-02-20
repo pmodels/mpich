@@ -56,6 +56,10 @@ static volatile int nthreads = 0;
 #elif THREAD_PACKAGE_NAME == THREAD_PACKAGE_POSIX || THREAD_PACKAGE_NAME == THREAD_PACKAGE_SOLARIS
 #include "mtest_thread_pthread.h"
 
+#elif THREAD_PACKAGE_NAME == THREAD_PACKAGE_QTHREADS
+#include "mtest_thread_qthreads.h"
+
+
 #elif THREAD_PACKAGE_NAME == THREAD_PACKAGE_ARGOBOTS
 #include "mtest_thread_abt.h"
 

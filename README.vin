@@ -901,12 +901,17 @@ to enable multiple vcis at runtime. For best performance, match number of VCIs
 to the number threads application is using.
 
 MPICH supports multiple threading packages.  The default is posix
-threads (pthreads), but solaris threads, windows threads and argobots
-are also supported.
+threads (pthreads), but solaris threads, windows threads, argobots and
+qthreads are also supported.
 
-To configure mpich to work with argobots threads, use the following
-configure options:
+To configure mpich to work with argobots or qthreads, use the
+following configure options:
 
     --with-thread-package=argobots \
         CFLAGS="-I<path_to_argobots/include>" \
         LDFLAGS="-L<path_to_argobots/lib>"
+
+    --with-thread-package=qthreads \
+        CFLAGS="-I<path_to_qthreads/include>" \
+        LDFLAGS="-L<path_to_qthreads/lib>"
+

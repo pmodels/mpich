@@ -16,6 +16,7 @@
 #define MPL_THREAD_PACKAGE_WIN     4
 #define MPL_THREAD_PACKAGE_UTI     5
 #define MPL_THREAD_PACKAGE_ARGOBOTS 6
+#define MPL_THREAD_PACKAGE_QTHREADS 7
 
 #define MPL_THREAD_PRIO_HIGH 0
 #define MPL_THREAD_PRIO_LOW 1
@@ -30,6 +31,8 @@
 #include "mpl_thread_win.h"
 #elif MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
 #include "mpl_thread_argobots.h"
+#elif MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_QTHREADS
+#include "mpl_thread_qthreads.h"
 #elif MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_NONE
 typedef int MPL_thread_mutex_t;
 typedef int MPL_thread_cond_t;
@@ -60,7 +63,8 @@ typedef void (*MPL_thread_func_t) (void *data);
 
 #elif defined(MPL_COMPILER_TLS)
 #define MPL_TLS MPL_COMPILER_TLS
-/* Thread package such as argobots may define MPL_NO_COMPILER_TLS to indicate that
+
+/* Thread package such as argobots or qthreads may define MPL_NO_COMPILER_TLS to indicate that
  * compiler native tls (e.g. __thread) should not be used.
  */
 #if !defined(MPL_NO_COMPILER_TLS)
