@@ -1128,7 +1128,7 @@ fi
 # config time:
 # * MPID_MAX_THREAD_LEVEL, set in one of the device subconfigure.m4,
 #    determines the maximum thread level, typically MPI_THREAD_MULTIPLE.
-#    If missing, equivallent to single.
+#    If missing, equivalent to single.
 # * --enable-threads, explicit user config option, raise error if beyond
 #    MPID_MAX_THREAD_LEVEL.
 #    It default to MPID_MAX_THREAD_LEVEL.
@@ -2339,7 +2339,7 @@ if test "$enable_cxx" = "yes" ; then
     AC_LANG_POP([C++])
 ])
     if test "$pac_cv_cxx_compiles_string" != yes ; then
-        AC_MSG_WARN([The C++ compiler $CXX cannot compile a program containing the <string> header - this may indicate a problem with the C++ installation.  Consider configuing with --disable-cxx])
+        AC_MSG_WARN([The C++ compiler $CXX cannot compile a program containing the <string> header - this may indicate a problem with the C++ installation.  Consider configuring with --disable-cxx])
     fi
 
     AC_LANG([C++])
@@ -2499,7 +2499,7 @@ AC_PATH_PROG(BASH_SHELL,bash)
 #
 # Confirm that bash has working arrays.  We can use this to
 # build more robust versions of the scripts (particularly the
-# compliation scripts) by taking advantage of the array features in
+# compilation scripts) by taking advantage of the array features in
 # bash.
 bashWorks=no
 if test -x "$BASH_SHELL" ; then
@@ -3070,7 +3070,7 @@ if test "$enable_f77" = yes ; then
     AC_MSG_RESULT($MPIR_FC_DOUBLE_CTYPE)
     AC_DEFINE_UNQUOTED([MPIR_FC_DOUBLE_CTYPE],[$MPIR_FC_DOUBLE_CTYPE], [The C type for FORTRAN DOUBLE PRECISION])
 
-    # get C types for Fortran fixed-size REAL and INTEGER. If no equivallent C type, set
+    # get C types for Fortran fixed-size REAL and INTEGER. If no equivalent C type, set
     # pac_cv_f77_sizeof_real# to 0, so that PAC_SET_MPI_TYPE can skip the type.
 
     PAC_F77_CHECK_FIXED_REAL(4)
@@ -3577,7 +3577,7 @@ PAC_SET_MPI_DATATYPE_ALIAS(MPI_C_COMPLEX, MPI_C_FLOAT_COMPLEX)
 
 # ------------------------------------------------------------------------
 # Test if  type_tag_for_datatype is agnostic to modifiers such as const, volatile, and restrict
-# if not, the type tags are disabled to avoid compiler warings. A new type_tag for const etc. does
+# if not, the type tags are disabled to avoid compiler warnings. A new type_tag for const etc. does
 # does not help, since only the latest type_tag definition is used. Type tags are defined in mpi.h,
 # therefore, they must be also be activated/deavtivated there
 PAC_PUSH_FLAG([CFLAGS])
@@ -3813,7 +3813,7 @@ AC_SUBST(BSEND_OVERHEAD)
 dnl Configure any subdirectories.  Note that config.status will *not*
 dnl reexecute these!
 dnl
-dnl Gastly problem.  CONFIG_SUBDIRS only adds the directories to the
+dnl Ghastly problem.  CONFIG_SUBDIRS only adds the directories to the
 dnl list of directories to be configured.  It does NOT control the
 dnl timing of the configuration.  For that, we must do something different.
 dnl Our original solution was to use a separate macro that does cause
