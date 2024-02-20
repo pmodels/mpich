@@ -28,12 +28,12 @@ shell = sh
 endif
 
 # create a local copy of the compiler wrapper that will actually be installed
-src/env/mpicc: $(top_builddir)/src/env/mpicc.$(shell)
-	cp -p $< $@
-src/env/mpicxx: $(top_builddir)/src/env/mpicxx.$(shell)
-	cp -p $< $@
-src/env/mpifort: $(top_builddir)/src/env/mpifort.$(shell)
-	cp -p $< $@
+src/env/mpicc: src/env/mpicc.$(shell)
+	cp -p src/env/mpicc.$(shell) src/env/mpicc
+src/env/mpicxx: src/env/mpicxx.$(shell)
+	cp -p src/env/mpicxx.$(shell) src/env/mpicxx
+src/env/mpifort: src/env/mpifort.$(shell)
+	cp -p src/env/mpifort.$(shell) src/env/mpifort
 
 DISTCLEANFILES += $(top_builddir)/src/env/cc_shlib.conf  \
                   $(top_builddir)/src/env/cxx_shlib.conf \
