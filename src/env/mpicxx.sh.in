@@ -281,12 +281,12 @@ if [ "${0%_abi}" != "$0" ] ; then
     mpi_abi=yes
 fi
 if [ "$mpi_abi" = no ] ; then
-    mpi_libs_shared=-l@MPILIBNAME@ @LPMPILIBNAME@
-    mpi_libs_static=$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@
+    mpi_libs_shared="-l@MPILIBNAME@ @LPMPILIBNAME@"
+    mpi_libs_static="$libdir/lib@MPILIBNAME@.a @LPMPILIBNAME@"
 else
     final_cppflags="-DMPI_ABI ${final_cppflags}"
-    mpi_libs_shared=-l@MPIABILIBNAME@ @LPMPIABILIBNAME@
-    mpi_libs_static=$libdir/lib@MPIABILIBNAME@.a @LPMPIABILIBNAME@
+    mpi_libs_shared="-l@MPIABILIBNAME@ @LPMPIABILIBNAME@"
+    mpi_libs_static="$libdir/lib@MPIABILIBNAME@.a @LPMPIABILIBNAME@"
 fi
 
 cxxlibs=
