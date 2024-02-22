@@ -14,7 +14,7 @@
 # changing this by playing with diversions, but then we would probably be
 # playing with autotools-fire.
 
-m4_define([MPICH_VERSION_m4],[4.1.2])dnl
+m4_define([MPICH_VERSION_m4],[4.1.3])dnl
 m4_define([MPICH_RELEASE_DATE_m4],[unreleased development copy])dnl
 
 # For libtool ABI versioning rules see:
@@ -36,7 +36,7 @@ m4_define([MPICH_RELEASE_DATE_m4],[unreleased development copy])dnl
 # standard, and does not include MPIX_ functions and C++ bindings.
 
 # Use [0:0:0] for unstable (e.g. alpha and beta) releases.
-# last version: 4.1.2 - 15:1:3
+# last version: 4.1.3 - 15:2:3
 
 m4_define([libmpi_so_version_m4],[0:0:0])dnl
 

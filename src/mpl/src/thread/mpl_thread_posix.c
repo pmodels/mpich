@@ -86,7 +86,8 @@ void *MPLI_thread_start(void *arg)
 void MPL_thread_set_affinity(MPL_thread_id_t thread, int *affinity_arr, int affinity_size,
                              int *errp)
 {
-#if defined(MPL_HAVE_PTHREAD_SETAFFINITY_NP) && defined(MPL_HAVE_CPU_SET_MACROS)
+#if defined(MPL_HAVE_PTHREAD_SETAFFINITY_NP) && defined(MPL_HAVE_CPU_SET_MACROS) && defined(__linux__)
+    /* FIXME: this implementation uses Linux-specific types and macros */
     int err = MPL_SUCCESS;
     int proc_idx, set_size = 0;
     cpu_set_t cpuset;

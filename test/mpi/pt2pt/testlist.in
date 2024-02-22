@@ -36,6 +36,7 @@ probe_unexp 4 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
 probenull 1
 probenull 1 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
 probenull 1 env=MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE=true
+recvnull 1
 # For testing, scancel will run with 1 process as well
 scancel 2 xfail=ticket2266 xfail=ticket2270
 scancel2 2 xfail=ticket2266 xfail=ticket2270

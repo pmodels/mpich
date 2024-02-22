@@ -1,4 +1,50 @@
 ===============================================================================
+                               Changes in 4.1.3
+===============================================================================
+
+# Ignore error when shutting down ch4/ofi netmod to avoid crashing in
+  MPI_FINALIZE. Debug builds will now warn.
+
+# Add missing PMPI_Status_{f082f,f2f08} in mpi_f08 module
+
+# Fix names for large count subroutines in mpi_f08 module
+
+# Fix return argument name to be ierror in Fortran mpi module
+
+# Fix bug in persistent synchronous send that could result in completion
+  before matching
+
+# Fix integer overflow bugs in ROMIO GPFS driver
+
+# Fix bug in ch4/ucx netmod when partial data is send to a noncontig
+  recv
+
+# Fix bug in MPI_REDUCE with MPI_IN_PLACE in ch4/shm collectives
+
+# Fix status object returned by MPI_IRECV with MPI_PROC_NULL
+
+# Fix memory leak in release_gather collectives
+
+# Fix integer overflow bugs in MPI_(I)ALLGATHERV
+
+# Return MPI_ERR_TYPE if MPI_TYPE_GET_ENVELOPE is used with a large
+  count datatype
+
+# Return an error if no valid libfabric provider is found by ch4/ofi
+  netmod
+
+# Return an error if no executable is given to mpiexec (Hydra)
+
+# Return an error when cudaMalloc fails in the GPU tests
+
+# Return an error if MPI_ACCUMULATE datatypes are mismatched
+
+# Return an error when shared memory segment creation fails
+
+# Return an error if there is failure to create a datatype in mpi_f08
+  module for noncontiguous user data
+
+===============================================================================
                                Changes in 4.1.2
 ===============================================================================
 
