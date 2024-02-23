@@ -202,7 +202,7 @@ lib_lib@MPIFCLIBNAME@_la_SOURCES =
 if BUILD_FC_BINDING
 modinc_HEADERS = $(mpi_fc_modules)
 endif BUILD_FC_BINDING
-lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS) @FCLIB_LDFLAGS@
 lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(mpifort_convenience_libs)
 endif BUILD_F77_BINDING
 
