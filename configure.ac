@@ -569,17 +569,6 @@ else
 fi
 AC_SUBST(ENABLE_QMPI)
 
-AC_ARG_ENABLE([two-level-namespace],
-              [AS_HELP_STRING([--disable-two-level-namespace],
-                              [(Darwin only) Add `-Wl,-flat_namespace` to
-                               mpicc/mpifort/etc. compiler wrappers.
-                               This may fix some issues due to not resolving
-                               MPI constants, such as MPI_IN_PLACE.
-                               Try disable this option if you encounter these issues
-                               on Mac OS.])],
-              [],
-              [enable_two_level_namespace=yes])
-
 AC_ARG_ENABLE(multi-aliases,
 	AS_HELP_STRING([--enable-multi-aliases],
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
@@ -4087,6 +4076,19 @@ AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h f
 # linking issue on Darwin
 LT_OUTPUT
 
+AC_ARG_ENABLE([two-level-namespace],
+              [AS_HELP_STRING([--enable-two-level-namespace],
+                              [(Darwin only) Do not use `-Wl,-flat_namespace` to
+                               link libmpifort.dylib. MacOS uses two-level namespace
+                               to compile dylibs by default. This may cause issues
+                               not resolving MPI constants, such as MPI_IN_PLACE.
+                               Thus, we use flat_namespace by default. Enable this
+                               option to use two-level-namespace instead. ])],
+              [],
+              [enable_two_level_namespace=no])
+FCLIB_LDFLAGS=
+AC_SUBST([FCLIB_LDFLAGS])
+
 if test "X$enable_shared" = "Xyes" ; then
     # see ticket #1590 for some more background on these Darwin linking issues
     AS_CASE([$host],
@@ -4147,8 +4149,7 @@ if test "X$enable_shared" = "Xyes" ; then
             # necessary for Darwin for now, so this unconditional, single-var
             # approximation will work for now.
             if test "X$pac_cv_wl_flat_namespace_works" = "Xyes" ; then
-                PAC_APPEND_FLAG([-Wl,-flat_namespace], [LDFLAGS])
-                PAC_APPEND_FLAG([-Wl,-flat_namespace], [WRAPPER_LDFLAGS])
+                FCLIB_LDFLAGS="-Wl,-flat_namespace"
             fi
         fi
 
