@@ -483,8 +483,8 @@ typedef struct {
 #define MPI_F_ERROR 4
 
 /* Provided in libmpifort.so */
-extern MPI_F08_status *MPI_F08_STATUS_IGNORE;
-extern MPI_F08_status *MPI_F08_STATUSES_IGNORE;
+extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
+extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
 
 #endif /* BUILD_MPI_ABI */
 
