@@ -1153,11 +1153,11 @@ print $OUTFD "namespace MPI {\n";
 # Provide a way to invoke the error handler on the object
 print $OUTFD "#if \@HAVE_CXX_EXCEPTIONS\@
 #define MPIX_CALLREF( _objptr, fnc ) \\
-    { int err = fnc; if (err) { (_objptr)->Call_errhandler( err ); }}
+    { int err = fnc; if (err) { (_objptr)->Call_errhandler( err ); }} (void)0
 #define MPIX_CALLOBJ( _obj, fnc ) \\
-    { int err = fnc; if (err) { (_obj).Call_errhandler( err ); }}
+    { int err = fnc; if (err) { (_obj).Call_errhandler( err ); }} (void)0
 #define MPIX_CALLWORLD( fnc ) \\
-    { int err = fnc ; if (err) MPIR_Call_world_errhand( err ); }
+    { int err = fnc ; if (err) MPIR_Call_world_errhand( err ); } (void)0
 extern void MPIR_Call_world_errhand( int );
 #else
 #define MPIX_CALLREF( _objptr, fnc ) (void)fnc
