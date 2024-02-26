@@ -25,8 +25,6 @@ def main():
     # -- functions that are not generated yet
     extras = []
     extras.append("MPI_DUP_FN")
-    for a in ['f082c', 'c2f08', 'f082f', 'f2f08']:
-        extras.append("MPI_Status_%s" % a)
     # now generate the prototypes
     for a in extras:
         func = G.FUNCS[a.lower()]
