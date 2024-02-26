@@ -520,6 +520,9 @@ fn_gen_binding_c() {
     set_PYTHON
     echo_n "generating MPI C functions..."
     _opt=
+    if test "$do_quick" = "yes"; then
+        _opt="$_opt -single-source"
+    fi
     if test "$do_doc" = "yes"; then
         _opt="$_opt -output-mansrc"
     fi

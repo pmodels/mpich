@@ -11,7 +11,7 @@ from local_python.info_hints import collect_info_hint_blocks
 import glob
 
 def main():
-    # currently support: -output-mansrc
+    # currently support: -single-source
     G.parse_cmdline()
 
     binding_dir = G.get_srcdir_path("src/binding")
@@ -39,6 +39,19 @@ def main():
     else:
         G.hints = None
 
+    # -- prescan the functions and set internal attributes
+    for func in func_list:
+        # Note: set func['_has_poly'] = False to skip embiggenning
+        func['_has_poly'] = function_has_POLY_parameters(func)
+
+        if 'replace' in func and 'body' not in func:
+            m = re.search(r'with\s+(MPI_\w+)', func['replace'])
+            repl_func = G.FUNCS[m.group(1).lower()]
+            if '_replaces' not in repl_func:
+                repl_func['_replaces'] = []
+            repl_func['_replaces'].append(func)
+
+
     # -- Generating code --
     G.out = []
     G.out.append("#include \"mpiimpl.h\"")
@@ -57,14 +70,8 @@ def main():
         G.out.append("")
         G.need_dump_romio_reference = True
 
-    # ----
-    for func in func_list:
-        G.err_codes = {}
-        manpage_out = []
-
+    def dump_func(func, manpage_out):
         # dumps the code to G.out array
-        # Note: set func['_has_poly'] = False to skip embiggenning
-        func['_has_poly'] = function_has_POLY_parameters(func)
         dump_mpi_c(func, False)
         if func['_has_poly']:
             dump_mpi_c(func, True)
@@ -78,7 +85,26 @@ def main():
                     print(l.rstrip(), file=Out)
             G.doc3_src_txt.append(f)
 
-    dump_out(c_dir + "/c_binding.c")
+    # ----
+    for func in func_list:
+        G.err_codes = {}
+        manpage_out = []
+
+        if 'replace' in func and 'body' not in func:
+            continue
+
+        dump_func(func, manpage_out)
+        if '_replaces' in func:
+            for t_func in func['_replaces']:
+                dump_func(t_func, manpage_out)
+
+        if 'single-source' not in G.opts:
+            # dump individual functions in separate source files
+            dump_out(get_func_file_path(func, c_dir))
+
+    if 'single-source' in G.opts:
+        # otherwise, dump all functions in binding.c
+        dump_out(c_dir + "/c_binding.c")
 
     # ---- dump c_binding_abi.c
     G.out = []
