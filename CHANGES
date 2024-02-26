@@ -2,8 +2,8 @@
                                Changes in 4.1.3
 ===============================================================================
 
-# Ignore error when shutting down ch4/ofi netmod to avoid crashing in
-  MPI_FINALIZE. Debug builds will now warn.
+# Ignore errors when shutting down ch4/ofi netmod to avoid crashing in
+  MPI_FINALIZE. Debug builds will now warn about unclean shutdown.
 
 # Add missing PMPI_Status_{f082f,f2f08} in mpi_f08 module
 
@@ -16,7 +16,7 @@
 
 # Fix integer overflow bugs in ROMIO GPFS driver
 
-# Fix bug in ch4/ucx netmod when partial data is send to a noncontig
+# Fix bug in ch4/ucx netmod when partial data is sent to a noncontig
   recv
 
 # Fix bug in MPI_REDUCE with MPI_IN_PLACE in ch4/shm collectives
