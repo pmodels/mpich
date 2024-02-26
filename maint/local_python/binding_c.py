@@ -63,7 +63,8 @@ def dump_mpi_c(func, is_large=False):
             G.out.append("    (void *) MPIR_ROMIO_Set_file_errhand,")
             G.out.append("};")
             G.out.append("#endif")
-            G.need_dump_romio_reference = False
+            if 'single-source' in G.opts:
+                G.need_dump_romio_reference = False
 
     # -- "dump" accumulates output lines in G.out
     if not is_large:
@@ -90,7 +91,7 @@ def dump_mpi_c(func, is_large=False):
     if 'polymorph' in func:
         dump_function_internal(func, kind="call-polymorph")
     elif 'replace' in func and 'body' not in func:
-        declare_call_replace_internal(func)
+        pass
     else:
         dump_function_internal(func, kind="normal")
     G.out.append("")
@@ -1337,18 +1338,6 @@ def dump_function_internal(func, kind):
             pass
         else:
             push_impl_decl(func)
-
-def declare_call_replace_internal(func):
-    m = re.search(r'with\s+(MPI_\w+)', func['replace'])
-    repl_name = m.group(1).lower()
-    if repl_name not in G.FUNCS:
-        raise Exception("Replacement function %s not found!" % repl_name)
-    repl_func = G.FUNCS[repl_name]
-    s = get_declare_function(repl_func, func['_is_large'])
-    s = "static " + re.sub(r'MPI(X?)_', r'internal_', s, 1)
-
-    G.out.append("")
-    dump_line_with_break(s + ';')
 
 # ref. dump_{qmpi,abi}_wrappers, call the internal function
 def get_static_call_internal(func, is_large):
