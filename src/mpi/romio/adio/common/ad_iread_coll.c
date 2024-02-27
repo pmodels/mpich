@@ -41,7 +41,7 @@ struct ADIOI_GEN_IreadStridedColl_vars {
     int nprocs;
     int nprocs_for_coll;
     int myrank;
-    int contig_access_count;
+    MPI_Count contig_access_count;
     int interleave_count;
     int buftype_is_contig;
     int *count_my_req_per_proc;
@@ -76,7 +76,7 @@ struct ADIOI_Iread_and_exch_vars {
     ADIOI_Access *others_req;
     ADIO_Offset *offset_list;
     ADIO_Offset *len_list;
-    int contig_access_count;
+    MPI_Count contig_access_count;
     ADIO_Offset min_st_offset;
     ADIO_Offset fd_size;
     ADIO_Offset *fd_start;
@@ -134,7 +134,7 @@ struct ADIOI_R_Iexchange_data_vars {
     int nprocs;
     int myrank;
     int buftype_is_contig;
-    int contig_access_count;
+    MPI_Count contig_access_count;
     ADIO_Offset min_st_offset;
     ADIO_Offset fd_size;
     ADIO_Offset *fd_start;
@@ -160,7 +160,7 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             unsigned *recv_size,
                             MPI_Request * requests, MPI_Status * statuses,
                             int *recd_from_proc, int nprocs,
-                            int contig_access_count,
+                            MPI_Count contig_access_count,
                             ADIO_Offset min_st_offset,
                             ADIO_Offset fd_size, ADIO_Offset * fd_start,
                             ADIO_Offset * fd_end, MPI_Aint buftype_extent);
@@ -207,9 +207,6 @@ void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
     ADIOI_NBC_Request *nbc_req = NULL;
     ADIOI_GEN_IreadStridedColl_vars *vars = NULL;
     int nprocs, myrank;
-#ifdef RDCOLL_DEBUG
-    int i;
-#endif
 
     /* FIXME: need an implementation of ADIOI_IOIstridedColl
      * if (fd->hints->cb_pfr != ADIOI_HINT_DISABLE) {
@@ -269,7 +266,7 @@ void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
                               &vars->start_offset, &vars->end_offset, &vars->contig_access_count);
 
 #ifdef RDCOLL_DEBUG
-        for (i = 0; i < vars->contig_access_count; i++) {
+        for (MPI_Count i = 0; i < vars->contig_access_count; i++) {
             DBG_FPRINTF(stderr, "rank %d  off %lld  len %lld\n",
                         myrank, (long long) vars->offset_list[i], (long long) vars->len_list[i]);
         }
