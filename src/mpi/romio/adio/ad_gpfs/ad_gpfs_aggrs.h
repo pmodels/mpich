@@ -48,7 +48,7 @@ int ADIOI_GPFS_Calc_aggregator(ADIO_File fd,
     /* overriding ADIOI_Calc_my_req for the default implementation is specific for
      * static file domain partitioning */
 void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * len_list,
-                            int contig_access_count, ADIO_Offset
+                            MPI_Count contig_access_count, ADIO_Offset
                             min_st_offset, ADIO_Offset * fd_start,
                             ADIO_Offset * fd_end, ADIO_Offset fd_size,
                             int nprocs,

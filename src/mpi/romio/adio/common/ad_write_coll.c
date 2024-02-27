@@ -15,7 +15,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                                  datatype, int nprocs, int myrank,
                                  ADIOI_Access
                                  * others_req, ADIO_Offset * offset_list,
-                                 ADIO_Offset * len_list, int contig_access_count, ADIO_Offset
+                                 ADIO_Offset * len_list, MPI_Count contig_access_count, ADIO_Offset
                                  min_st_offset, ADIO_Offset fd_size,
                                  ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                                  MPI_Aint * buf_idx, int *error_code);
@@ -26,7 +26,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
                                   int *count, int *start_pos, int *partial_recv,
                                   int *sent_to_proc, int nprocs,
                                   int myrank, int
-                                  buftype_is_contig, int contig_access_count,
+                                  buftype_is_contig, MPI_Count contig_access_count,
                                   ADIO_Offset min_st_offset, ADIO_Offset fd_size,
                                   ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                                   ADIOI_Access * others_req,
@@ -38,7 +38,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             * offset_list, ADIO_Offset * len_list, int *send_size,
                             MPI_Request * requests, int *sent_to_proc,
                             int nprocs, int myrank,
-                            int contig_access_count, ADIO_Offset
+                            MPI_Count contig_access_count, ADIO_Offset
                             min_st_offset, ADIO_Offset fd_size,
                             ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                             int *send_buf_idx, int *curr_to_proc,
@@ -68,7 +68,8 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count,
      * whose request lies in this process's file domain. */
 
     int i, filetype_is_contig, nprocs, nprocs_for_coll, myrank;
-    int contig_access_count = 0, interleave_count = 0, buftype_is_contig;
+    MPI_Count contig_access_count = 0;
+    int interleave_count = 0, buftype_is_contig;
     int *count_my_req_per_proc, count_my_req_procs;
     int *count_others_req_per_proc, count_others_req_procs;
     ADIO_Offset orig_fp, start_offset, end_offset, fd_size, min_st_offset, off;
@@ -259,7 +260,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                                  int myrank,
                                  ADIOI_Access
                                  * others_req, ADIO_Offset * offset_list,
-                                 ADIO_Offset * len_list, int contig_access_count,
+                                 ADIO_Offset * len_list, MPI_Count contig_access_count,
                                  ADIO_Offset min_st_offset, ADIO_Offset fd_size,
                                  ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                                  MPI_Aint * buf_idx, int *error_code)
@@ -518,7 +519,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
                                   int *partial_recv,
                                   int *sent_to_proc, int nprocs,
                                   int myrank, int
-                                  buftype_is_contig, int contig_access_count,
+                                  buftype_is_contig, MPI_Count contig_access_count,
                                   ADIO_Offset min_st_offset,
                                   ADIO_Offset fd_size,
                                   ADIO_Offset * fd_start, ADIO_Offset * fd_end,
@@ -819,7 +820,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             * offset_list, ADIO_Offset * len_list, int *send_size,
                             MPI_Request * requests, int *sent_to_proc,
                             int nprocs, int myrank,
-                            int contig_access_count,
+                            MPI_Count contig_access_count,
                             ADIO_Offset min_st_offset, ADIO_Offset fd_size,
                             ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                             int *send_buf_idx, int *curr_to_proc,
@@ -827,7 +828,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 {
 /* this function is only called if buftype is not contig */
 
-    int i, p, flat_buf_idx;
+    int p, flat_buf_idx;
     ADIO_Offset flat_buf_sz, size_in_buf, buf_incr, size;
     int jj, n_buftypes;
     ADIO_Offset off, len, rem_len, user_buf_idx;
@@ -839,7 +840,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     user_buf_idx = current location in user buffer
     send_buf_idx[p] = current location in send_buf of proc. p  */
 
-    for (i = 0; i < nprocs; i++) {
+    for (MPI_Count i = 0; i < nprocs; i++) {
         send_buf_idx[i] = curr_to_proc[i] = 0;
         done_to_proc[i] = sent_to_proc[i];
     }
@@ -854,7 +855,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
      * flat_buf_sz = size of current contiguous component in
      * flattened buf */
 
-    for (i = 0; i < contig_access_count; i++) {
+    for (MPI_Count i = 0; i < contig_access_count; i++) {
         off = offset_list[i];
         rem_len = len_list[i];
 
@@ -906,7 +907,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
             rem_len -= len;
         }
     }
-    for (i = 0; i < nprocs; i++) {
+    for (int i = 0; i < nprocs; i++) {
         if (send_size[i]) {
             sent_to_proc[i] = curr_to_proc[i];
         }

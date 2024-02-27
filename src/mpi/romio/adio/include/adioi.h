@@ -459,8 +459,7 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, MPI_Aint bufcount, MPI_Datatype
                            datatype, int file_ptr_type, ADIO_Offset
                            offset, ADIO_Offset ** offset_list_ptr, ADIO_Offset
                            ** len_list_ptr, ADIO_Offset * start_offset_ptr,
-                           ADIO_Offset * end_offset_ptr, int
-                           *contig_access_count_ptr);
+                           ADIO_Offset * end_offset_ptr, MPI_Count * contig_access_count_ptr);
 void ADIOI_Calc_file_domains(ADIO_Offset * st_offsets, ADIO_Offset
                              * end_offsets, int nprocs, int nprocs_for_coll,
                              ADIO_Offset * min_st_offset_ptr,
@@ -473,9 +472,9 @@ int ADIOI_Calc_aggregator(ADIO_File fd,
                           ADIO_Offset * len,
                           ADIO_Offset fd_size, ADIO_Offset * fd_start, ADIO_Offset * fd_end);
 void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
-                       ADIO_Offset * len_list, int
-                       contig_access_count, ADIO_Offset
-                       min_st_offset, ADIO_Offset * fd_start,
+                       ADIO_Offset * len_list,
+                       MPI_Count contig_access_count,
+                       ADIO_Offset min_st_offset, ADIO_Offset * fd_start,
                        ADIO_Offset * fd_end, ADIO_Offset fd_size,
                        int nprocs,
                        int *count_my_req_procs_ptr,
@@ -727,7 +726,7 @@ int ADIOI_OneSidedCleanup(ADIO_File fd);
 void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     ADIO_Offset * offset_list,
                                     ADIO_Offset * len_list,
-                                    int contig_access_count,
+                                    MPI_Count contig_access_count,
                                     const void *buf,
                                     MPI_Datatype datatype,
                                     int *error_code,
@@ -740,7 +739,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                    ADIO_Offset * offset_list,
                                    ADIO_Offset * len_list,
-                                   int contig_access_count,
+                                   MPI_Count contig_access_count,
                                    const void *buf,
                                    MPI_Datatype datatype,
                                    int *error_code,

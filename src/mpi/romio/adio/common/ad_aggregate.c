@@ -247,8 +247,8 @@ void ADIOI_Calc_file_domains(ADIO_Offset * st_offsets, ADIO_Offset
  * (including this one)
  */
 void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * len_list,
-                       int contig_access_count, ADIO_Offset
-                       min_st_offset, ADIO_Offset * fd_start,
+                       MPI_Count contig_access_count,
+                       ADIO_Offset min_st_offset, ADIO_Offset * fd_start,
                        ADIO_Offset * fd_end, ADIO_Offset fd_size,
                        int nprocs,
                        int *count_my_req_procs_ptr,
@@ -259,7 +259,7 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
 {
     int *count_my_req_per_proc, count_my_req_procs;
     MPI_Aint *buf_idx;
-    int i, l, proc;
+    int l, proc;
     size_t memLen;
     ADIO_Offset fd_len, rem_len, curr_idx, off, *ptr;
     ADIOI_Access *my_req;
@@ -282,13 +282,13 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
    without extra buffer. This can't be done if buftype is not contig. */
 
     /* initialize buf_idx to -1 */
-    for (i = 0; i < nprocs; i++)
+    for (int i = 0; i < nprocs; i++)
         buf_idx[i] = -1;
 
     /* one pass just to calculate how much space to allocate for my_req;
      * contig_access_count was calculated way back in ADIOI_Calc_my_off_len()
      */
-    for (i = 0; i < contig_access_count; i++) {
+    for (MPI_Count i = 0; i < contig_access_count; i++) {
         /* short circuit offset/len processing if len == 0
          *      (zero-byte  read/write */
         if (len_list[i] == 0)
@@ -330,13 +330,13 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
      * make 'lens' point to the over-allocated part
      */
     memLen = 0;
-    for (i = 0; i < nprocs; i++)
+    for (int i = 0; i < nprocs; i++)
         memLen += count_my_req_per_proc[i];
     ptr = (ADIO_Offset *) ADIOI_Malloc(memLen * 2 * sizeof(ADIO_Offset));
     my_req[0].offsets = ptr;
 
     count_my_req_procs = 0;
-    for (i = 0; i < nprocs; i++) {
+    for (int i = 0; i < nprocs; i++) {
         if (count_my_req_per_proc[i]) {
             my_req[i].offsets = ptr;
             ptr += count_my_req_per_proc[i];
@@ -350,7 +350,7 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
 
 /* now fill in my_req */
     curr_idx = 0;
-    for (i = 0; i < contig_access_count; i++) {
+    for (MPI_Count i = 0; i < contig_access_count; i++) {
         /* short circuit offset/len processing if len == 0
          *      (zero-byte  read/write */
         if (len_list[i] == 0)

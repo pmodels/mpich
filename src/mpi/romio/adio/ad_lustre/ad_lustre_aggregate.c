@@ -124,7 +124,7 @@ int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset off,
 
 
 void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
-                              ADIO_Offset * len_list, int contig_access_count,
+                              ADIO_Offset * len_list, MPI_Count contig_access_count,
                               int *striping_info, int nprocs,
                               int *count_my_req_procs_ptr,
                               int **count_my_req_per_proc_ptr,
@@ -133,7 +133,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
     /* Nothing different from ADIOI_Calc_my_req(), except calling
      * ADIOI_Lustre_Calc_aggregator() instead of the old one */
     int *count_my_req_per_proc, count_my_req_procs;
-    int i, l, proc;
+    int l, proc;
     size_t memLen;
     ADIO_Offset avail_len, rem_len, curr_idx, off, **buf_idx, *ptr;
     ADIOI_Access *my_req;
@@ -149,7 +149,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
     /* one pass just to calculate how much space to allocate for my_req;
      * contig_access_count was calculated way back in ADIOI_Calc_my_off_len()
      */
-    for (i = 0; i < contig_access_count; i++) {
+    for (MPI_Count i = 0; i < contig_access_count; i++) {
         /* short circuit offset/len processing if len == 0
          * (zero-byte  read/write
          */
@@ -186,14 +186,14 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
      */
 
     memLen = 0;
-    for (i = 0; i < nprocs; i++)
+    for (int i = 0; i < nprocs; i++)
         memLen += count_my_req_per_proc[i];
     ptr = (ADIO_Offset *) ADIOI_Malloc((memLen * 3 + nprocs) * sizeof(ADIO_Offset));
 
     /* initialize buf_idx vectors */
     buf_idx = (ADIO_Offset **) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset *));
     buf_idx[0] = ptr;
-    for (i = 1; i < nprocs; i++)
+    for (int i = 1; i < nprocs; i++)
         buf_idx[i] = buf_idx[i - 1] + count_my_req_per_proc[i - 1] + 1;
     ptr += memLen + nprocs;     /* "+ nprocs" puts a terminal index at the end */
 
@@ -216,7 +216,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
 
     /* now fill in my_req */
     curr_idx = 0;
-    for (i = 0; i < contig_access_count; i++) {
+    for (MPI_Count i = 0; i < contig_access_count; i++) {
         /* short circuit offset/len processing if len == 0
          *      (zero-byte  read/write */
         if (len_list[i] == 0)
@@ -263,7 +263,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
     }
 
 #ifdef AGG_DEBUG
-    for (i = 0; i < nprocs; i++) {
+    for (int i = 0; i < nprocs; i++) {
         if (count_my_req_per_proc[i] > 0) {
             FPRINTF(stdout, "data needed from %d (count = %d):\n", i, my_req[i].count);
             for (l = 0; l < my_req[i].count; l++) {
@@ -278,7 +278,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
     *buf_idx_ptr = buf_idx;
 }
 
-int ADIOI_LUSTRE_Docollect(ADIO_File fd, int contig_access_count,
+int ADIOI_LUSTRE_Docollect(ADIO_File fd, MPI_Count contig_access_count,
                            ADIO_Offset * len_list, int nprocs)
 {
     /* If the processes are non-interleaved, we will check the req_size.
@@ -287,15 +287,16 @@ int ADIOI_LUSTRE_Docollect(ADIO_File fd, int contig_access_count,
      *   }
      */
 
-    int i, docollect = 1, big_req_size = 0;
+    int docollect = 1, big_req_size = 0;
     ADIO_Offset req_size = 0, total_req_size;
-    int avg_req_size, total_access_count;
+    int avg_req_size;
+    MPI_Count total_access_count;
 
     /* calculate total_req_size and total_access_count */
-    for (i = 0; i < contig_access_count; i++)
+    for (MPI_Count i = 0; i < contig_access_count; i++)
         req_size += len_list[i];
     MPI_Allreduce(&req_size, &total_req_size, 1, MPI_LONG_LONG_INT, MPI_SUM, fd->comm);
-    MPI_Allreduce(&contig_access_count, &total_access_count, 1, MPI_INT, MPI_SUM, fd->comm);
+    MPI_Allreduce(&contig_access_count, &total_access_count, 1, MPI_COUNT, MPI_SUM, fd->comm);
     /* avoid possible divide-by-zero) */
     if (total_access_count != 0) {
         /* estimate average req_size */

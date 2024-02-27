@@ -443,7 +443,7 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
  * (including this one)
  */
 void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * len_list,
-                            int contig_access_count, ADIO_Offset
+                            MPI_Count contig_access_count, ADIO_Offset
                             min_st_offset, ADIO_Offset * fd_start,
                             ADIO_Offset * fd_end, ADIO_Offset fd_size,
                             int nprocs,
@@ -455,7 +455,7 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
 {
     int *count_my_req_per_proc, count_my_req_procs;
     MPI_Aint *buf_idx;
-    int i, l, proc;
+    int l, proc;
     ADIO_Offset fd_len, rem_len, curr_idx, off;
     ADIOI_Access *my_req;
     TRACE_ERR("Entering ADIOI_GPFS_Calc_my_req\n");
@@ -477,13 +477,13 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
    without extra buffer. This can't be done if buftype is not contig. */
 
     /* initialize buf_idx to -1 */
-    for (i = 0; i < nprocs; i++)
+    for (int i = 0; i < nprocs; i++)
         buf_idx[i] = -1;
 
     /* one pass just to calculate how much space to allocate for my_req;
      * contig_access_count was calculated way back in ADIOI_Calc_my_off_len()
      */
-    for (i = 0; i < contig_access_count; i++) {
+    for (MPI_Count i = 0; i < contig_access_count; i++) {
         /* short circuit offset/len processing if len == 0
          *      (zero-byte  read/write */
         if (len_list[i] == 0)
@@ -524,7 +524,7 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
     my_req = *my_req_ptr;
 
     count_my_req_procs = 0;
-    for (i = 0; i < nprocs; i++) {
+    for (int i = 0; i < nprocs; i++) {
         if (count_my_req_per_proc[i]) {
             my_req[i].offsets = (ADIO_Offset *)
                 ADIOI_Malloc(count_my_req_per_proc[i] * 2 * sizeof(ADIO_Offset));
@@ -537,7 +537,7 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
 
 /* now fill in my_req */
     curr_idx = 0;
-    for (i = 0; i < contig_access_count; i++) {
+    for (MPI_Count i = 0; i < contig_access_count; i++) {
         /* short circuit offset/len processing if len == 0
          *      (zero-byte  read/write */
         if (len_list[i] == 0)
@@ -591,7 +591,7 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
 
 
 #ifdef AGG_DEBUG
-    for (i = 0; i < nprocs; i++) {
+    for (int i = 0; i < nprocs; i++) {
         if (count_my_req_per_proc[i] > 0) {
             DBG_FPRINTF(stderr, "data needed from %d (count = %d):\n", i, my_req[i].count);
             for (l = 0; l < my_req[i].count; l++) {
