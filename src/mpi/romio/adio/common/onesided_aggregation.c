@@ -200,7 +200,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
 void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     ADIO_Offset * offset_list,
                                     ADIO_Offset * len_list,
-                                    int contig_access_count,
+                                    MPI_Count contig_access_count,
                                     const void *buf,
                                     MPI_Datatype datatype,
                                     int *error_code,
@@ -211,10 +211,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     ADIO_Offset * fd_end,
                                     int *hole_found, ADIOI_OneSidedStripeParms * stripe_parms)
 {
-    int i, j;                   /* generic iterators */
-
-/* make local copy of certain ADIOI_OneSidedStripeParms elements for faster access -
-   pay for pointer dereference only once. */
+    /* make local copy of certain ADIOI_OneSidedStripeParms elements for faster access -
+     * pay for pointer dereference only once. */
     int stripeSize = stripe_parms->stripeSize;
     int segmentIter = stripe_parms->segmentIter;
     MPI_Aint bufTypeExtent = stripe_parms->bufTypeExtent;
@@ -224,19 +222,19 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         stripe_parms->iWasUsedStripingAgg = 0;
 #ifdef onesidedtrace
     if (buf == NULL) {
-        printf("ADIOI_OneSidedWriteAggregation - buf is NULL contig_access_count is %d\n",
-               contig_access_count);
-        for (i = 0; i < contig_access_count; i++)
+        printf("ADIOI_OneSidedWriteAggregation - buf is NULL contig_access_count is %lld\n",
+               (long long) contig_access_count);
+        for (MPI_Count i = 0; i < contig_access_count; i++)
             printf("offset_list[%d] is %ld len_list[%d] is %ld\n",
                    i, offset_list[i], i, len_list[i]);
     }
     if (contig_access_count < 0)
         printf("ADIOI_OneSidedWriteAggregation - contig_access_count "
-               "of %d is less than 0\n", contig_access_count);
+               "of %lld is less than 0\n", (long long) contig_access_count);
 #endif
 
     int lenListOverZero = 0;
-    for (i = 0; ((i < contig_access_count) && (!lenListOverZero)); i++)
+    for (MPI_Count i = 0; ((i < contig_access_count) && (!lenListOverZero)); i++)
         if (len_list[i] > 0)
             lenListOverZero = 1;
 
@@ -312,7 +310,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     FDSourceBufferState *currentFDSourceBufferState =
         (FDSourceBufferState *) ADIOI_Malloc(naggs * sizeof(FDSourceBufferState));
 
-    for (i = 0; i < naggs; i++) {
+    for (int i = 0; i < naggs; i++) {
         /* initialize based on the bufType to indicate that it is unset.
          */
         if (bufTypeIsContig) {
@@ -323,14 +321,14 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     }
 
 #ifdef onesidedtrace
-    printf(" ADIOI_OneSidedWriteAggregation bufTypeIsContig is %d contig_access_count is %d\n",
-           bufTypeIsContig, contig_access_count);
+    printf(" ADIOI_OneSidedWriteAggregation bufTypeIsContig is %d contig_access_count is %lld\n",
+           bufTypeIsContig, (long long) contig_access_count);
 #endif
 
     /* maxNumContigOperations keeps track of how many different chunks we will need to send
      * for the purpose of pre-allocating the data structures to hold them.
      */
-    int maxNumContigOperations = contig_access_count;
+    MPI_Count maxNumContigOperations = contig_access_count;
 
     int myAggRank = -1;         /* if I am an aggregor this is my index into fd->hints->ranklist */
     int iAmUsedAgg = 0;         /* whether or not this rank is used as an aggregator. */
@@ -356,7 +354,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     int greatestFileDomainAggRank = -1, smallestFileDomainAggRank = -1;
     ADIO_Offset greatestFileDomainOffset = 0;
     ADIO_Offset smallestFileDomainOffset = lastFileOffset;
-    for (j = 0; j < naggs; j++) {
+    for (int j = 0; j < naggs; j++) {
         if (fd_end[j] > greatestFileDomainOffset) {
             greatestFileDomainOffset = fd_end[j];
             greatestFileDomainAggRank = j;
@@ -375,9 +373,9 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     }
 
 #ifdef onesidedtrace
-    printf("contig_access_count is %d lastFileOffset is %ld firstFileOffset is %ld\n",
-           contig_access_count, lastFileOffset, firstFileOffset);
-    for (j = 0; j < contig_access_count; j++) {
+    printf("contig_access_count is %lld lastFileOffset is %ld firstFileOffset is %ld\n",
+           (long long) contig_access_count, lastFileOffset, firstFileOffset);
+    for (MPI_Count j = 0; j < contig_access_count; j++) {
         printf("offset_list[%d]: %ld , len_list[%d]: %ld\n", j, offset_list[j], j, len_list[j]);
 
     }
@@ -386,7 +384,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     /* Compute number of rounds.
      */
     int numberOfRounds = 0;
-    for (j = 0; j < naggs; j++) {
+    for (int j = 0; j < naggs; j++) {
         int currentNumberOfRounds =
             (int) (((fd_end[j] - fd_start[j]) + (ADIO_Offset) 1) / coll_bufsize);
         if (((ADIO_Offset) currentNumberOfRounds * coll_bufsize) <
@@ -411,9 +409,9 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
      */
     int **targetAggsForMyDataFirstOffLenIndex =
         (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
-    for (i = 0; i < numberOfRounds; i++) {
+    for (int i = 0; i < numberOfRounds; i++) {
         targetAggsForMyDataFirstOffLenIndex[i] = (int *) ADIOI_Malloc(naggs * sizeof(int));
-        for (j = 0; j < naggs; j++)
+        for (int j = 0; j < naggs; j++)
             targetAggsForMyDataFirstOffLenIndex[i][j] = -1;
     }
 
@@ -422,15 +420,15 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
      */
     int **targetAggsForMyDataLastOffLenIndex =
         (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
-    for (i = 0; i < numberOfRounds; i++)
+    for (int i = 0; i < numberOfRounds; i++)
         targetAggsForMyDataLastOffLenIndex[i] = (int *) ADIOI_Malloc(naggs * sizeof(int));
 
 #ifdef onesidedtrace
     printf("NumberOfRounds is %d\n", numberOfRounds);
-    for (i = 0; i < naggs; i++)
+    for (int i = 0; i < naggs; i++)
         printf("fd->hints->ranklist[%d]is %d fd_start is %ld fd_end is %ld\n", i,
                fd->hints->ranklist[i], fd_start[i], fd_end[i]);
-    for (j = 0; j < contig_access_count; j++)
+    for (MPI_Count j = 0; j < contig_access_count; j++)
         printf("offset_list[%d] is %ld len_list is %ld\n", j, offset_list[j], len_list[j]);
 #endif
 
@@ -462,7 +460,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     /* This data structure tracks what target aggs need to be written to on what rounds.
      */
     int *targetAggsForMyDataCurrentRoundIter = (int *) ADIOI_Malloc(naggs * sizeof(int));
-    for (i = 0; i < naggs; i++)
+    for (int i = 0; i < naggs; i++)
         targetAggsForMyDataCurrentRoundIter[i] = 0;
 
     /* This is the first of the two main loops in this algorithm.  The purpose of this loop is essentially to populate
@@ -471,8 +469,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
      * within the target agg.
      */
     if ((contig_access_count > 0) && (buf != NULL) && lenListOverZero) {
-        int blockIter;
-        for (blockIter = 0; blockIter < contig_access_count; blockIter++) {
+        for (MPI_Count blockIter = 0; blockIter < contig_access_count; blockIter++) {
 
             /* Determine the starting source buffer offset for this block - for iter 0 skip it since that value is 0.
              */
@@ -1560,7 +1557,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     ADIOI_Free(targetAggsForMyDataFDStart);
     ADIOI_Free(targetAggsForMyDataFDEnd);
 
-    for (i = 0; i < numberOfRounds; i++) {
+    for (int i = 0; i < numberOfRounds; i++) {
         ADIOI_Free(targetAggsForMyDataFirstOffLenIndex[i]);
         ADIOI_Free(targetAggsForMyDataLastOffLenIndex[i]);
     }
@@ -1576,7 +1573,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                    ADIO_Offset * offset_list,
                                    ADIO_Offset * len_list,
-                                   int contig_access_count,
+                                   MPI_Count contig_access_count,
                                    const void *buf,
                                    MPI_Datatype datatype,
                                    int *error_code,
@@ -1585,23 +1582,21 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                    int numNonZeroDataOffsets,
                                    ADIO_Offset * fd_start, ADIO_Offset * fd_end)
 {
-    int i, j;                   /* generic iterators */
-
 #ifdef onesidedtrace
     if (buf == NULL) {
-        printf("ADIOI_OneSidedWriteAggregation - buf is NULL contig_access_count is %d\n",
-               contig_access_count);
-        for (i = 0; i < contig_access_count; i++)
+        printf("ADIOI_OneSidedWriteAggregation - buf is NULL contig_access_count is %lld\n",
+               (long long) contig_access_count);
+        for (MPI_Count i = 0; i < contig_access_count; i++)
             printf("offset_list[%d] is %ld len_list[%d] is %ld\n", i, offset_list[i], i,
                    len_list[i]);
     }
     if (contig_access_count < 0)
-        printf("ADIOI_OneSidedWriteAggregation - contig_access_count of %d is less than 0\n",
-               contig_access_count);
+        printf("ADIOI_OneSidedWriteAggregation - contig_access_count of %lld is less than 0\n",
+               (long long) contig_access_count);
 #endif
 
     int lenListOverZero = 0;
-    for (i = 0; ((i < contig_access_count) && (!lenListOverZero)); i++)
+    for (MPI_Count i = 0; ((i < contig_access_count) && (!lenListOverZero)); i++)
         if (len_list[i] > 0)
             lenListOverZero = 1;
 
@@ -1656,8 +1651,8 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 #endif
     }
 #ifdef onesidedtrace
-    printf("ADIOI_OneSidedReadAggregation bufTypeIsContig is %d contig_access_count is %d\n",
-           bufTypeIsContig, contig_access_count);
+    printf("ADIOI_OneSidedReadAggregation bufTypeIsContig is %d contig_access_count is %lld\n",
+           bufTypeIsContig, (long long) contig_access_count);
 #endif
 
     int naggs = fd->hints->cb_nodes;
@@ -1679,7 +1674,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
     currentFDSourceBufferState =
         (FDSourceBufferState *) ADIOI_Malloc(naggs * sizeof(FDSourceBufferState));
-    for (i = 0; i < naggs; i++) {
+    for (int i = 0; i < naggs; i++) {
         /* initialize based on the bufType to indicate that it is unset.
          */
         if (bufTypeIsContig) {
@@ -1690,22 +1685,22 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     }
 
 #ifdef onesidedtrace
-    printf(" ADIOI_OneSidedReadAggregation bufTypeIsContig is %d contig_access_count is %d\n",
-           bufTypeIsContig, contig_access_count);
+    printf(" ADIOI_OneSidedReadAggregation bufTypeIsContig is %d contig_access_count is %lld\n",
+           bufTypeIsContig, (long long) contig_access_count);
 #endif
 
     /* maxNumContigOperations keeps track of how many different chunks we will
      * need to recv for the purpose of pre-allocating the data structures to
      * hold them.
      */
-    int maxNumContigOperations = contig_access_count;
+    MPI_Count maxNumContigOperations = contig_access_count;
 
 
     ADIO_Offset lastFileOffset = 0, firstFileOffset = -1;
 
     /* Get the total range being read.
      */
-    for (j = 0; j < numNonZeroDataOffsets; j++) {
+    for (int j = 0; j < numNonZeroDataOffsets; j++) {
 #ifdef onesidedtrace
         printf("end_offsets[%d] is %ld st_offsets[%d] is %ld\n", j, end_offsets[j], j,
                st_offsets[j]);
@@ -1734,7 +1729,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     int greatestFileDomainAggRank = -1, smallestFileDomainAggRank = -1;
     ADIO_Offset greatestFileDomainOffset = 0;
     ADIO_Offset smallestFileDomainOffset = lastFileOffset;
-    for (j = 0; j < naggs; j++) {
+    for (int j = 0; j < naggs; j++) {
         if (fd_end[j] > greatestFileDomainOffset) {
             greatestFileDomainOffset = fd_end[j];
             greatestFileDomainAggRank = j;
@@ -1752,9 +1747,9 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     }
 
 #ifdef onesidedtrace
-    printf("contig_access_count is %d lastFileOffset is %ld firstFileOffset is %ld\n",
-           contig_access_count, lastFileOffset, firstFileOffset);
-    for (j = 0; j < contig_access_count; j++) {
+    printf("contig_access_count is %lld lastFileOffset is %ld firstFileOffset is %ld\n",
+           (long long) contig_access_count, lastFileOffset, firstFileOffset);
+    for (MPI_Count j = 0; j < contig_access_count; j++) {
         printf("offset_list[%d]: %ld , len_list[%d]: %ld\n", j, offset_list[j], j, len_list[j]);
     }
 #endif
@@ -1762,7 +1757,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     /* Compute number of rounds.
      */
     int numberOfRounds = 0;
-    for (j = 0; j < naggs; j++) {
+    for (int j = 0; j < naggs; j++) {
         int currentNumberOfRounds =
             (int) (((fd_end[j] - fd_start[j]) + (ADIO_Offset) 1) / coll_bufsize);
         if (((ADIO_Offset) currentNumberOfRounds * coll_bufsize) <
@@ -1786,9 +1781,9 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
      */
     int **sourceAggsForMyDataFirstOffLenIndex =
         (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
-    for (i = 0; i < numberOfRounds; i++) {
+    for (int i = 0; i < numberOfRounds; i++) {
         sourceAggsForMyDataFirstOffLenIndex[i] = (int *) ADIOI_Malloc(naggs * sizeof(int));
-        for (j = 0; j < naggs; j++)
+        for (int j = 0; j < naggs; j++)
             sourceAggsForMyDataFirstOffLenIndex[i][j] = -1;
     }
 
@@ -1797,15 +1792,15 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
      */
     int **sourceAggsForMyDataLastOffLenIndex =
         (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
-    for (i = 0; i < numberOfRounds; i++)
+    for (int i = 0; i < numberOfRounds; i++)
         sourceAggsForMyDataLastOffLenIndex[i] = (int *) ADIOI_Malloc(naggs * sizeof(int));
 
 #ifdef onesidedtrace
     printf("NumberOfRounds is %d\n", numberOfRounds);
-    for (i = 0; i < naggs; i++)
+    for (int i = 0; i < naggs; i++)
         printf("fd->hints->ranklist[%d]is %d fd_start is %ld fd_end is %ld\n", i,
                fd->hints->ranklist[i], fd_start[i], fd_end[i]);
-    for (j = 0; j < contig_access_count; j++)
+    for (MPI_Count j = 0; j < contig_access_count; j++)
         printf("offset_list[%d] is %ld len_list is %ld\n", j, offset_list[j], len_list[j]);
 #endif
 
@@ -1824,7 +1819,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     /* This data structure tracks what source aggs need to be read to on what rounds.
      */
     int *sourceAggsForMyDataCurrentRoundIter = (int *) ADIOI_Malloc(naggs * sizeof(int));
-    for (i = 0; i < naggs; i++)
+    for (int i = 0; i < naggs; i++)
         sourceAggsForMyDataCurrentRoundIter[i] = 0;
 
     /* This is the first of the two main loops in this algorithm.  The purpose of this loop is essentially to populate
@@ -1833,8 +1828,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
      * within the source agg.
      */
     if ((contig_access_count > 0) && (buf != NULL) && lenListOverZero) {
-        int blockIter;
-        for (blockIter = 0; blockIter < contig_access_count; blockIter++) {
+        for (MPI_Count blockIter = 0; blockIter < contig_access_count; blockIter++) {
 
             /* Determine the starting source buffer offset for this block - for iter 0 skip it since that value is 0.
              */
@@ -2670,7 +2664,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     ADIOI_Free(sourceAggsForMyDataFDStart);
     ADIOI_Free(sourceAggsForMyDataFDEnd);
 
-    for (i = 0; i < numberOfRounds; i++) {
+    for (int i = 0; i < numberOfRounds; i++) {
         ADIOI_Free(sourceAggsForMyDataFirstOffLenIndex[i]);
         ADIOI_Free(sourceAggsForMyDataLastOffLenIndex[i]);
     }

@@ -39,7 +39,7 @@ struct ADIOI_GEN_IwriteStridedColl_vars {
     int nprocs;
     int nprocs_for_coll;
     int myrank;
-    int contig_access_count;
+    MPI_Count contig_access_count;
     int interleave_count;
     int buftype_is_contig;
     int *count_my_req_per_proc;
@@ -77,7 +77,7 @@ struct ADIOI_Iexch_and_write_vars {
     ADIOI_Access *others_req;
     ADIO_Offset *offset_list;
     ADIO_Offset *len_list;
-    int contig_access_count;
+    MPI_Count contig_access_count;
     ADIO_Offset min_st_offset;
     ADIO_Offset fd_size;
     ADIO_Offset *fd_start;
@@ -140,7 +140,7 @@ struct ADIOI_W_Iexchange_data_vars {
     int nprocs;
     int myrank;
     int buftype_is_contig;
-    int contig_access_count;
+    MPI_Count contig_access_count;
     ADIO_Offset min_st_offset;
     ADIO_Offset fd_size;
     ADIO_Offset *fd_start;
@@ -175,8 +175,8 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             * offset_list, ADIO_Offset * len_list, int *send_size,
                             MPI_Request * requests, int *sent_to_proc,
                             int nprocs, int myrank,
-                            int contig_access_count, ADIO_Offset
-                            min_st_offset, ADIO_Offset fd_size,
+                            MPI_Count contig_access_count,
+                            ADIO_Offset min_st_offset, ADIO_Offset fd_size,
                             ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                             int *send_buf_idx, int *curr_to_proc,
                             int *done_to_proc, int iter, MPI_Aint buftype_extent);
