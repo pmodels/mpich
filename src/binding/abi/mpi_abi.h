@@ -23,6 +23,13 @@ typedef struct {
     int internal[5];
 } MPI_Status;
 
+typedef struct {
+    MPI_Fint MPI_SOURCE;
+    MPI_Fint MPI_TAG;
+    MPI_Fint MPI_ERROR;
+    MPI_Fint internal[5];
+} MPI_F08_status;
+
 typedef struct MPI_ABI_Op * MPI_Op;
 #define MPI_OP_NULL                    (MPI_Op)0x00000020
 #define MPI_SUM                        (MPI_Op)0x00000021
@@ -543,6 +550,8 @@ typedef void (MPI_T_event_dropped_cb_function)(MPI_Count count, MPI_T_event_regi
 /* MPI global variables */
 extern MPI_Fint * MPI_F_STATUS_IGNORE;
 extern MPI_Fint * MPI_F_STATUSES_IGNORE;
+extern MPI_F08_status * MPI_F08_STATUS_IGNORE;
+extern MPI_F08_status * MPI_F08_STATUSES_IGNORE;
 
 /* MPI functions */
 int MPI_Abort(MPI_Comm comm, int errorcode);
