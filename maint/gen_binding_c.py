@@ -83,6 +83,15 @@ def main():
                     print(l.rstrip(), file=Out)
             G.doc3_src_txt.append(f)
 
+    def dump_func_abi(func):
+        func['_is_abi'] = True
+        G.err_codes = {}
+        # dumps the code to G.out array
+        dump_mpi_c(func, False)
+        if func['_has_poly']:
+            dump_mpi_c(func, True)
+        del func['_is_abi']
+
     # ----
     for func in func_list:
         G.err_codes = {}
@@ -111,21 +120,19 @@ def main():
     G.out.append("")
 
     for func in func_list:
+        if 'replace' in func and 'body' not in func:
+            continue
+
         if re.match(r'MPIX_', func['name']):
             if re.match(r'MPIX_(Grequest_|Type_iov)', func['name']):
                 # needed by ROMIO
                 pass
             else:
                 continue
-        func['_is_abi'] = True
-        G.err_codes = {}
-        # dumps the code to G.out array
-        # Note: set func['_has_poly'] = False to skip embiggenning
-        func['_has_poly'] = function_has_POLY_parameters(func)
-        dump_mpi_c(func, False)
-        if func['_has_poly']:
-            dump_mpi_c(func, True)
-        del func['_is_abi']
+        dump_func_abi(func)
+        if '_replaces' in func:
+            for t_func in func['_replaces']:
+                dump_func_abi(t_func)
 
     abi_file_path = abi_dir + "/c_binding_abi.c"
     G.check_write_path(abi_file_path)
