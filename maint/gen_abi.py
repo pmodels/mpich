@@ -43,11 +43,13 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
             elif RE.match(r'\s*int MPI_(SOURCE|TAG|ERROR);', line):
                 # no need to rename status fields
                 out.append(line.rstrip())
-            elif RE.match(r'\s*int (reserved|internal)\[(\d+)\];', line):
-                n = int(RE.m.group(2))
-                out.append("    int count_lo;")
-                out.append("    int count_hi_and_cancelled;")
-                out.append("    int reserved[%d];" % (n - 2))
+            elif RE.match(r'\s*(int|MPI_Fint) (reserved|internal)\[(\d+)\];', line):
+                # internal fields in MPI_Status/MPI_F08_status
+                T = RE.m.group(1)
+                n = int(RE.m.group(3))
+                out.append("    %s count_lo;" % T)
+                out.append("    %s count_hi_and_cancelled;" % T)
+                out.append("    %s reserved[%d];" % (T, n - 2))
             elif RE.match(r'#define\s+(MPI_\w+)\s+\((MPI_\w+)\)\s*(0x\S+)', line):
                 (name, T, val) = RE.m.group(1,2,3)
                 if T == "MPI_Datatype":
