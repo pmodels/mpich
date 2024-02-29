@@ -302,7 +302,7 @@ adio_daos_coh_lookup_create(daos_handle_t poh, struct duns_attr_t *attr, int amo
         if (uuid_parse(attr->da_cont, cuuid) != 0) {
             rc = dfs_cont_create_with_label(poh, attr->da_cont, NULL, &cuuid, &coh, &dfs);
         } else {
-            rc = dfs_cont_create(poh, cuuid, NULL, &coh, &dfs);
+            rc = dfs_cont_create(poh, &cuuid, NULL, &coh, &dfs);
         }
 #else
         rc = dfs_cont_create(poh, attr->da_cuuid, NULL, &coh, &dfs);
