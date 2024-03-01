@@ -964,8 +964,8 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
                                           int *done_to_proc, int iter, MPI_Aint buftype_extent)
 {
     /* this function is only called if buftype is not contig */
-    int i, p, flat_buf_idx, size;
-    int flat_buf_sz, buf_incr, size_in_buf, jj, n_buftypes;
+    int64_t i, p, flat_buf_idx, size;
+    int64_t flat_buf_sz, buf_incr, size_in_buf, jj, n_buftypes;
     ADIO_Offset off, len, rem_len, user_buf_idx;
 
     /* curr_to_proc[p] = amount of data sent to proc. p that has already
@@ -1006,19 +1006,19 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
             if (send_buf_idx[p] < send_size[p]) {
                 if (curr_to_proc[p] + len > done_to_proc[p]) {
                     if (done_to_proc[p] > curr_to_proc[p]) {
-                        size = (int) MPL_MIN(curr_to_proc[p] + len -
+                        size = MPL_MIN(curr_to_proc[p] + len -
                                              done_to_proc[p], send_size[p] - send_buf_idx[p]);
                         buf_incr = done_to_proc[p] - curr_to_proc[p];
                         ADIOI_BUF_INCR
                             ADIOI_Assert((curr_to_proc[p] + len - done_to_proc[p]) ==
                                          (unsigned) (curr_to_proc[p] + len - done_to_proc[p]));
-                        buf_incr = (int) (curr_to_proc[p] + len - done_to_proc[p]);
+                        buf_incr = (curr_to_proc[p] + len - done_to_proc[p]);
                         ADIOI_Assert((done_to_proc[p] + size) ==
                                      (unsigned) (done_to_proc[p] + size));
                         curr_to_proc[p] = done_to_proc[p] + size;
                     ADIOI_BUF_COPY} else {
-                        size = (int) MPL_MIN(len, send_size[p] - send_buf_idx[p]);
-                        buf_incr = (int) len;
+                        size = MPL_MIN(len, send_size[p] - send_buf_idx[p]);
+                        buf_incr =  len;
                         ADIOI_Assert((curr_to_proc[p] + size) ==
                                      (unsigned) ((ADIO_Offset) curr_to_proc[p] + size));
                         curr_to_proc[p] += size;
@@ -1031,11 +1031,11 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
                 } else {
                     ADIOI_Assert((curr_to_proc[p] + len) ==
                                  (unsigned) ((ADIO_Offset) curr_to_proc[p] + len));
-                    curr_to_proc[p] += (int) len;
-                    buf_incr = (int) len;
+                    curr_to_proc[p] += len;
+                    buf_incr = len;
                 ADIOI_BUF_INCR}
             } else {
-                buf_incr = (int) len;
+                buf_incr = len;
             ADIOI_BUF_INCR}
             off += len;
             rem_len -= len;
