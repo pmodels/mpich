@@ -42,9 +42,9 @@ struct ADIOI_GEN_IwriteStridedColl_vars {
     MPI_Count contig_access_count;
     int interleave_count;
     int buftype_is_contig;
-    int *count_my_req_per_proc;
-    int count_my_req_procs;
-    int count_others_req_procs;
+    MPI_Count *count_my_req_per_proc;
+    MPI_Count count_my_req_procs;
+    MPI_Count count_others_req_procs;
     ADIO_Offset start_offset;
     ADIO_Offset end_offset;
     ADIO_Offset orig_fp;

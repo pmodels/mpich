@@ -71,7 +71,6 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
 {
     ADIOI_Flatlist_node *flat_buf, *flat_file;
     int fwr_size = 0, st_index = 0;
-    size_t i, j, k;
     int sum, n_etypes_in_filetype, size_in_filetype;
     MPI_Count bufsize;
     int n_filetypes, etype_in_filetype;
@@ -155,6 +154,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
 
     /* Create Memory SGL */
     file_length = 0;
+    MPI_Count k; // how many entries in scatter-gather list
     if (!buftype_is_contig) {
         flat_buf = ADIOI_Flatten_and_find(datatype);
         mem_list_count = count * flat_buf->count;
@@ -162,8 +162,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
         iovs = (d_iov_t *) ADIOI_Malloc(mem_list_count * sizeof(d_iov_t));
 
         k = 0;
-        for (j = 0; j < count; j++) {
-            for (i = 0; i < flat_buf->count; i++) {
+        for (MPI_Count j = 0; j < count; j++) {
+            for (MPI_Count i = 0; i < flat_buf->count; i++) {
                 ADIO_Offset tmp_off;
 
                 if (flat_buf->blocklens[i] == 0) {

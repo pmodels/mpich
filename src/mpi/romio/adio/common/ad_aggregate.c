@@ -251,13 +251,13 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
                        ADIO_Offset min_st_offset, ADIO_Offset * fd_start,
                        ADIO_Offset * fd_end, ADIO_Offset fd_size,
                        int nprocs,
-                       int *count_my_req_procs_ptr,
-                       int **count_my_req_per_proc_ptr,
+                       MPI_Count *count_my_req_procs_ptr,
+                       MPI_Count **count_my_req_per_proc_ptr,
                        ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr)
 /* Possibly reconsider if buf_idx's are ok as int's, or should they be aints/offsets?
    They are used as memory buffer indices so it seems like the 2G limit is in effect */
 {
-    int *count_my_req_per_proc, count_my_req_procs;
+    MPI_Count *count_my_req_per_proc, count_my_req_procs;
     MPI_Aint *buf_idx;
     int l, proc;
     size_t memLen;
@@ -268,7 +268,7 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
     MPE_Log_event(5024, 0, NULL);
 #endif
 
-    *count_my_req_per_proc_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int));
+    *count_my_req_per_proc_ptr = ADIOI_Calloc(nprocs, sizeof(MPI_Count));
     count_my_req_per_proc = *count_my_req_per_proc_ptr;
 /* count_my_req_per_proc[i] gives the no. of contig. requests of this
    process in process i's file domain. calloc initializes to zero.
@@ -420,7 +420,7 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
 #endif
 }
 
-void ADIOI_Free_my_req(int nprocs, int *count_my_req_per_proc,
+void ADIOI_Free_my_req(int nprocs, MPI_Count *count_my_req_per_proc,
                        ADIOI_Access * my_req, MPI_Aint * buf_idx)
 {
     ADIOI_Free(count_my_req_per_proc);
@@ -429,12 +429,12 @@ void ADIOI_Free_my_req(int nprocs, int *count_my_req_per_proc,
     ADIOI_Free(buf_idx);
 }
 
-void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
-                           int *count_my_req_per_proc,
+void ADIOI_Calc_others_req(ADIO_File fd, MPI_Count count_my_req_procs,
+                           MPI_Count *count_my_req_per_proc,
                            ADIOI_Access * my_req,
                            int nprocs, int myrank,
-                           int *count_others_req_procs_ptr,
-                           int **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr)
+                           MPI_Count *count_others_req_procs_ptr,
+                           MPI_Count **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr)
 {
 /* determine what requests of other processes lie in this process's
    file domain */
@@ -444,7 +444,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
    count_others_req_per_proc[i] indicates how many separate contiguous
    requests of proc. i lie in this process's file domain. */
 
-    int *count_others_req_per_proc, count_others_req_procs;
+    MPI_Count *count_others_req_per_proc, count_others_req_procs;
     int i, j;
     MPI_Request *requests;
     ADIOI_Access *others_req;
@@ -456,10 +456,10 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event(5026, 0, NULL);
 #endif
-    count_others_req_per_proc = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    count_others_req_per_proc = ADIOI_Malloc(nprocs * sizeof(MPI_Count));
 
-    MPI_Alltoall(count_my_req_per_proc, 1, MPI_INT,
-                 count_others_req_per_proc, 1, MPI_INT, fd->comm);
+    MPI_Alltoall(count_my_req_per_proc, 1, MPI_COUNT,
+                 count_others_req_per_proc, 1, MPI_COUNT, fd->comm);
 
     *others_req_ptr = (ADIOI_Access *) ADIOI_Malloc(nprocs * sizeof(ADIOI_Access));
     others_req = *others_req_ptr;
@@ -527,7 +527,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 #endif
 }
 
-void ADIOI_Free_others_req(int nprocs, int *count_others_req_per_proc, ADIOI_Access * others_req)
+void ADIOI_Free_others_req(int nprocs, MPI_Count *count_others_req_per_proc, ADIOI_Access * others_req)
 {
     ADIOI_Free(count_others_req_per_proc);
     ADIOI_Free(others_req[0].offsets);
@@ -549,10 +549,10 @@ void ADIOI_Icalc_others_req(ADIOI_NBC_Request * nbc_req, int *error_code)
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event(5026, 0, NULL);
 #endif
-    vars->count_others_req_per_proc = (int *) ADIOI_Malloc(vars->nprocs * sizeof(int));
+    vars->count_others_req_per_proc = ADIOI_Malloc(vars->nprocs * sizeof(MPI_Count));
 
-    *error_code = MPI_Ialltoall(vars->count_my_req_per_proc, 1, MPI_INT,
-                                vars->count_others_req_per_proc, 1, MPI_INT, vars->fd->comm,
+    *error_code = MPI_Ialltoall(vars->count_my_req_per_proc, 1, MPI_COUNT,
+                                vars->count_others_req_per_proc, 1, MPI_COUNT, vars->fd->comm,
                                 &vars->req1);
 
     if (nbc_req->rdwr == ADIOI_READ) {
@@ -581,8 +581,8 @@ void ADIOI_Icalc_others_req_main(ADIOI_NBC_Request * nbc_req, int *error_code)
      * count_others_req_per_proc[i] indicates how many separate contiguous
      * requests of proc. i lie in this process's file domain. */
 
-    int *count_others_req_per_proc = vars->count_others_req_per_proc;
-    int count_others_req_procs;
+    MPI_Count *count_others_req_per_proc = vars->count_others_req_per_proc;
+    MPI_Count count_others_req_procs;
     int i, j;
     ADIOI_Access *others_req;
     size_t memLen;

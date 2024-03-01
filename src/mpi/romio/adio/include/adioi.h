@@ -356,7 +356,7 @@ typedef struct {
     MPI_Aint *mem_ptrs;         /* array of pointers. used in the read/write
                                  * phase to indicate where the data
                                  * is stored in memory */
-    int count;                  /* size of above arrays */
+    MPI_Count count;            /* size of above arrays */
 } ADIOI_Access;
 
 /* structure for storing generic offset/length pairs.  used to describe
@@ -364,7 +364,7 @@ typedef struct {
 typedef struct {
     ADIO_Offset *offsets;       /* array of offsets */
     ADIO_Offset *lens;          /* array of lengths */
-    int count;                  /* size of above arrays */
+    MPI_Count count;                  /* size of above arrays */
 } ADIOI_Offlen;
 
 /* prototypes for ADIO internal functions */
@@ -477,18 +477,18 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
                        ADIO_Offset min_st_offset, ADIO_Offset * fd_start,
                        ADIO_Offset * fd_end, ADIO_Offset fd_size,
                        int nprocs,
-                       int *count_my_req_procs_ptr,
-                       int **count_my_req_per_proc_ptr,
+                       MPI_Count *count_my_req_procs_ptr,
+                       MPI_Count **count_my_req_per_proc_ptr,
                        ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
-void ADIOI_Free_my_req(int nprocs, int *count_my_req_per_proc,
+void ADIOI_Free_my_req(int nprocs, MPI_Count *count_my_req_per_proc,
                        ADIOI_Access * my_req, MPI_Aint * buf_idx);
-void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
-                           int *count_my_req_per_proc,
+void ADIOI_Calc_others_req(ADIO_File fd, MPI_Count count_my_req_procs,
+                           MPI_Count *count_my_req_per_proc,
                            ADIOI_Access * my_req,
                            int nprocs, int myrank,
-                           int *count_others_req_procs_ptr,
-                           int **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr);
-void ADIOI_Free_others_req(int nprocs, int *count_others_req_per_proc, ADIOI_Access * others_req);
+                           MPI_Count *count_others_req_procs_ptr,
+                           MPI_Count **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr);
+void ADIOI_Free_others_req(int nprocs, MPI_Count *count_others_req_per_proc, ADIOI_Access * others_req);
 
 
 /* Nonblocking Collective I/O internals */
@@ -538,17 +538,17 @@ typedef struct ADIOI_Icalc_others_req_vars {
 
     /* parameters */
     ADIO_File fd;
-    int count_my_req_procs;
-    int *count_my_req_per_proc;
+    MPI_Count count_my_req_procs;
+    MPI_Count *count_my_req_per_proc;
     ADIOI_Access *my_req;
     int nprocs;
     int myrank;
-    int *count_others_req_procs_ptr;
+    MPI_Count *count_others_req_procs_ptr;
     ADIOI_Access **others_req_ptr;
 
     /* stack variables */
-    int *count_others_req_per_proc;
-    int count_others_req_procs;
+    MPI_Count *count_others_req_per_proc;
+    MPI_Count count_others_req_procs;
     ADIOI_Access *others_req;
 
     /* next function to be called */

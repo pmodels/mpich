@@ -81,10 +81,10 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int *striping_info, int mode);
 void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
                               ADIO_Offset * len_list, MPI_Count contig_access_count,
                               int *striping_info, int nprocs,
-                              int *count_my_req_procs_ptr,
-                              int **count_my_req_per_proc_ptr,
+                              MPI_Count *count_my_req_procs_ptr,
+                              MPI_Count **count_my_req_per_proc_ptr,
                               ADIOI_Access ** my_req_ptr, ADIO_Offset *** buf_idx_ptr);
-void ADIOI_LUSTRE_Free_my_req(int nprocs, int *count_my_req_per_proc,
+void ADIOI_LUSTRE_Free_my_req(int nprocs, MPI_Count *count_my_req_per_proc,
                               ADIOI_Access * my_req, ADIO_Offset ** buf_idx);
 
 int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset off,
