@@ -126,19 +126,19 @@ int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset off,
 void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
                               ADIO_Offset * len_list, MPI_Count contig_access_count,
                               int *striping_info, int nprocs,
-                              int *count_my_req_procs_ptr,
-                              int **count_my_req_per_proc_ptr,
+                              MPI_Count *count_my_req_procs_ptr,
+                              MPI_Count **count_my_req_per_proc_ptr,
                               ADIOI_Access ** my_req_ptr, ADIO_Offset *** buf_idx_ptr)
 {
     /* Nothing different from ADIOI_Calc_my_req(), except calling
      * ADIOI_Lustre_Calc_aggregator() instead of the old one */
-    int *count_my_req_per_proc, count_my_req_procs;
+    MPI_Count *count_my_req_per_proc, count_my_req_procs;
     int l, proc;
     size_t memLen;
     ADIO_Offset avail_len, rem_len, curr_idx, off, **buf_idx, *ptr;
     ADIOI_Access *my_req;
 
-    *count_my_req_per_proc_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int));
+    *count_my_req_per_proc_ptr = ADIOI_Calloc(nprocs, sizeof(MPI_Count));
     count_my_req_per_proc = *count_my_req_per_proc_ptr;
     /* count_my_req_per_proc[i] gives the no. of contig. requests of this
      * process in process i's file domain. calloc initializes to zero.
@@ -203,7 +203,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
     my_req[0].offsets = ptr;
 
     count_my_req_procs = 0;
-    for (i = 0; i < nprocs; i++) {
+    for (MPI_Count i = 0; i < nprocs; i++) {
         if (count_my_req_per_proc[i]) {
             my_req[i].offsets = ptr;
             ptr += count_my_req_per_proc[i];
@@ -313,7 +313,7 @@ int ADIOI_LUSTRE_Docollect(ADIO_File fd, MPI_Count contig_access_count,
     return docollect;
 }
 
-void ADIOI_LUSTRE_Free_my_req(int nprocs, int *count_my_req_per_proc,
+void ADIOI_LUSTRE_Free_my_req(int nprocs, MPI_Count *count_my_req_per_proc,
                               ADIOI_Access * my_req, ADIO_Offset ** buf_idx)
 {
     ADIOI_Free(count_my_req_per_proc);

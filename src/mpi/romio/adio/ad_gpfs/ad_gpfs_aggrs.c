@@ -447,13 +447,13 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
                             min_st_offset, ADIO_Offset * fd_start,
                             ADIO_Offset * fd_end, ADIO_Offset fd_size,
                             int nprocs,
-                            int *count_my_req_procs_ptr,
-                            int **count_my_req_per_proc_ptr,
+                            MPI_Count *count_my_req_procs_ptr,
+                            MPI_Count **count_my_req_per_proc_ptr,
                             ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr)
 /* Possibly reconsider if buf_idx's are ok as int's, or should they be aints/offsets?
    They are used as memory buffer indices so it seems like the 2G limit is in effect */
 {
-    int *count_my_req_per_proc, count_my_req_procs;
+    MPI_Count *count_my_req_per_proc, count_my_req_procs;
     MPI_Aint *buf_idx;
     int l, proc;
     ADIO_Offset fd_len, rem_len, curr_idx, off;

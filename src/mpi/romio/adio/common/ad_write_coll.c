@@ -70,8 +70,8 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count,
     int i, filetype_is_contig, nprocs, nprocs_for_coll, myrank;
     MPI_Count contig_access_count = 0;
     int interleave_count = 0, buftype_is_contig;
-    int *count_my_req_per_proc, count_my_req_procs;
-    int *count_others_req_per_proc, count_others_req_procs;
+    MPI_Count *count_my_req_per_proc, count_my_req_procs;
+    MPI_Count *count_others_req_per_proc, count_others_req_procs;
     ADIO_Offset orig_fp, start_offset, end_offset, fd_size, min_st_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *fd_start = NULL,
         *fd_end = NULL, *end_offsets = NULL;
