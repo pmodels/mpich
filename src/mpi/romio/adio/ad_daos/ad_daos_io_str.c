@@ -70,7 +70,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
                          MPI_Request * request, int rw_type, int *error_code)
 {
     ADIOI_Flatlist_node *flat_buf, *flat_file;
-    int i, j, k, fwr_size = 0, st_index = 0;
+    int fwr_size = 0, st_index = 0;
+    size_t i, j, k;
     int sum, n_etypes_in_filetype, size_in_filetype;
     MPI_Count bufsize;
     int n_filetypes, etype_in_filetype;
