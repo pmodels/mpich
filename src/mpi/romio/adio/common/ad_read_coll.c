@@ -91,8 +91,8 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
     int filetype_is_contig, nprocs, nprocs_for_coll, myrank;
     MPI_Count contig_access_count = 0;
     int interleave_count = 0, buftype_is_contig;
-    int *count_my_req_per_proc, count_my_req_procs;
-    int *count_others_req_per_proc, count_others_req_procs;
+    MPI_Count *count_my_req_per_proc, count_my_req_procs;
+    MPI_Count *count_others_req_per_proc, count_others_req_procs;
     ADIO_Offset start_offset, end_offset, orig_fp, fd_size, min_st_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *fd_start = NULL,
         *fd_end = NULL, *end_offsets = NULL;
@@ -253,7 +253,8 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, MPI_Aint bufcount, MPI_Datatype
 {
     MPI_Count filetype_size, etype_size;
     MPI_Count buftype_size;
-    int i, j, k;
+    int i, j;
+    MPI_Count k;
     ADIO_Offset i_offset;
     ADIO_Offset frd_size = 0, old_frd_size = 0;
     int st_index = 0;
