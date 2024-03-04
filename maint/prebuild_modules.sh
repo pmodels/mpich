@@ -18,26 +18,25 @@ make_it_lean () {
 }
 
 pushd modules/hwloc
+extra_option=$HWLOC_EXTRA
 ./autogen.sh
 ./configure CFLAGS=-fvisibility=hidden \
     --enable-embedded-mode --enable-visibility=no \
-    --disable-libxml2 --disable-nvml --disable-cuda --disable-opencl --disable-rsmi
+    --disable-libxml2 --disable-nvml --disable-cuda --disable-opencl --disable-rsmi $extra_option
 make
 make_it_lean
 popd
 
 pushd modules/json-c
+extra_option=$JSONC_EXTRA
 ./autogen.sh
-./configure --enable-embedded --disable-werror
+./configure --enable-embedded --disable-werror $extra_option
 make
 make_it_lean
 popd
 
 pushd modules/yaksa
-extra_option=
-if test -d "$CUDA_DIR" ; then
-    extra_option=--with-cuda=$CUDA_DIR
-fi
+extra_option=$YAKSA_EXTRA
 ./autogen.sh
 ./configure --enable-embedded $extra_option
 make
@@ -45,10 +44,7 @@ make_it_lean
 popd
 
 pushd modules/libfabric
-extra_option=
-if test $(uname) = "FreeBSD" ; then
-    extra_option='--disable-verbs'
-fi
+extra_option=$LIBFABRIC_EXTRA
 ./autogen.sh
 ./configure --enable-embedded $extra_option
 make
@@ -57,10 +53,11 @@ popd
 
 # ucx need make install to work, which need replace all hardcoded paths to work
 pushd modules/ucx
+extra_option=$UCX_EXTRA
 ./autogen.sh
 if false ; then
     # skip for now
-    ./configure --prefix=/MODPREFIX --disable-static
+    ./configure --prefix=/MODPREFIX --disable-static $extra_option
     make
     find . -name '*.la' | xargs --verbose sed -i "s,$PWD,MODDIR,g"
 fi
