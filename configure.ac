@@ -302,11 +302,17 @@ AC_ARG_VAR(MPICHLIB_FFLAGS,
 	[extra FFLAGS used in building MPICH libraries])
 AC_ARG_VAR(MPICHLIB_FCFLAGS,
 	[extra FCFLAGS used in building MPICH libraries])
+AC_ARG_VAR(MPICHLIB_LDFLAGS,
+	[extra LDFLAGS used in building MPICH libraries])
+AC_ARG_VAR(MPICHLIB_LIBS,
+	[extra LIBS used in building MPICH libraries])
 CFLAGS="$CFLAGS $MPICHLIB_CFLAGS"
 CPPFLAGS="$CPPFLAGS $MPICHLIB_CPPFLAGS"
 CXXFLAGS="$CXXFLAGS $MPICHLIB_CXXFLAGS"
 FFLAGS="$FFLAGS $MPICHLIB_FFLAGS"
 FCFLAGS="$FCFLAGS $MPICHLIB_FCFLAGS"
+LDFLAGS="$LDFLAGS $MPICHLIB_LDFLAGS"
+LIBS="$LIBS $MPICHLIB_LIBS"
 
 # Save a copy of precious flags as USER_* before any of these flags
 # are being modified by configure tests.
