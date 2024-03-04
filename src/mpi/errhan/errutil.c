@@ -1250,6 +1250,7 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
             if (error_ring_loc > max_error_ring_loc)
                 max_error_ring_loc = error_ring_loc;
 
+            memset(&ErrorRing[ring_idx], 0, sizeof(MPIR_Err_msg_t));
             ring_msg = ErrorRing[ring_idx].msg;
 
             if (specific_msg != NULL) {
