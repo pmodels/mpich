@@ -416,6 +416,113 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, M
     goto fn_exit;
 }
 
+/*
+ * This type of composition performs well for GPU bcast as it can utilize the direct links between
+ * the GPUs in the same node. It has four steps:
+ * 1. Root copies data to the host.
+ * 2. Inter-node bcast among the leaders on the host.
+ * 3. Leaders copy data to GPU.
+ * 4. Intra-node bcast in each node on the GPU buffer.
+*/
+MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, MPI_Aint count,
+                                                                 MPI_Datatype datatype,
+                                                                 int root, MPIR_Comm * comm,
+                                                                 MPIR_Errflag_t errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int coll_ret = MPI_SUCCESS;
+    void *host_buffer = NULL;
+    void *saved_buffer = buffer;
+    MPL_pointer_attr_t attr;
+    MPI_Aint size, shift;
+
+#ifdef HAVE_ERROR_CHECKING
+    MPI_Status status;
+    MPI_Aint nbytes, recvd_size, type_size;
+#endif
+
+    int intra_root = MPIR_Get_intranode_rank(comm, root);
+    /* if node_comm exists and root is not local leader (node_comm rank 0)*/
+    if (intra_root != -1 && intra_root != 0) {
+        /* root sends message to local leader (node_comm rank 0) */
+        if (comm->rank == root) {
+            coll_ret = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm->node_comm, errflag);
+            MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
+        }
+        /* local leader receives message from root */
+        if (comm->node_roots_comm != NULL){
+#ifndef HAVE_ERROR_CHECKING
+            coll_ret =
+                MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
+                          MPI_STATUS_IGNORE);
+            MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
+#else
+            coll_ret =
+                MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
+                          &status);
+            MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
+
+            MPIR_Datatype_get_size_macro(datatype, type_size);
+            nbytes = type_size * count;
+            /* check that we received as much as we expected */
+            MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
+            if (recvd_size != nbytes) {
+                MPIR_ERR_SET2(coll_ret, MPI_ERR_OTHER,
+                            "**collective_size_mismatch",
+                            "**collective_size_mismatch %d %d", recvd_size, nbytes);
+                MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
+            }
+#endif
+        }
+    }
+
+    MPIR_GPU_query_pointer_attr(buffer, &attr);
+
+    MPIDI_Coll_calculate_size_shift(count, datatype, &size, &shift);
+
+    /* only node leaders need to allocate a host buffer */
+    if (attr.type == MPL_GPU_POINTER_DEV && size <= MPIR_CVAR_CH4_GPU_COLL_SWAP_BUFFER_SZ
+        && comm->node_roots_comm != NULL) {
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_global.gpu_coll_pool, (void **) &host_buffer);
+        if (host_buffer != NULL) {
+            host_buffer = (char *) host_buffer - shift;
+            MPIR_gpu_host_swap_gpu(buffer, count, datatype, attr, host_buffer);
+            buffer = host_buffer;
+        }
+    }
+
+    if (comm->node_roots_comm != NULL) {
+        coll_ret =
+            MPIDI_NM_mpi_bcast(buffer, count, datatype, MPIR_Get_internode_rank(comm, root),
+                               comm->node_roots_comm, errflag);
+        MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
+
+        /* Node leaders copy data to GPU */
+        buffer = saved_buffer;
+        if (host_buffer != NULL && comm->rank != root) {
+            MPIR_gpu_swap_back_gpu(host_buffer, buffer, count, datatype, attr);
+            host_buffer = (char *) host_buffer + shift;
+            MPIDU_genq_private_pool_free_cell(MPIDI_global.gpu_coll_pool, host_buffer);
+        } else if (host_buffer != NULL && comm->rank == root) {
+            host_buffer = (char *) host_buffer + shift;
+            MPIDU_genq_private_pool_free_cell(MPIDI_global.gpu_coll_pool, host_buffer);
+        }
+    }
+
+    /* intra-node Bcast */
+    if (comm->node_comm != NULL) {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        coll_ret = MPIDI_SHM_mpi_bcast(buffer, count, datatype, 0, comm->node_comm, errflag);
+        MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
+#else
+        coll_ret = MPIDI_NM_mpi_bcast(buffer, count, datatype, 0, comm->node_comm, errflag);
+        MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+    }
+
+    return mpi_errno;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void *sendbuf,
                                                                      void *recvbuf, MPI_Aint count,
                                                                      MPI_Datatype datatype,
