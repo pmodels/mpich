@@ -279,6 +279,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
             mpi_errno =
                 MPIDI_Bcast_intra_composition_gamma(buffer, count, datatype, root, comm, errflag);
             break;
+        case 4:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
+                                           (comm->hierarchy_kind ==
+                                            MPIR_COMM_HIERARCHY_KIND__PARENT), mpi_errno,
+                                           "Bcast composition delta cannot be applied.\n");
+            mpi_errno =
+                MPIDI_Bcast_intra_composition_delta(buffer, count, datatype, root, comm, errflag);
+            break;
         default:
             mpi_errno =
                 MPIDI_Bcast_allcomm_composition_json(buffer, count, datatype, root, comm, errflag);
