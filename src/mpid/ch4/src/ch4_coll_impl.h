@@ -233,35 +233,39 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
     MPI_Aint nbytes, recvd_size, type_size;
 #endif
 
-    if (comm->node_roots_comm == NULL && comm->rank == root) {
-        coll_ret = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm->node_comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
-    }
-
-    if (comm->node_roots_comm != NULL && comm->rank != root &&
-        MPIR_Get_intranode_rank(comm, root) != -1) {
-#ifndef HAVE_ERROR_CHECKING
-        coll_ret =
-            MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm, root), MPIR_BCAST_TAG,
-                      comm->node_comm, MPI_STATUS_IGNORE);
-        MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
-#else
-        coll_ret =
-            MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm, root), MPIR_BCAST_TAG,
-                      comm->node_comm, &status);
-        MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
-
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-        nbytes = type_size * count;
-        /* check that we received as much as we expected */
-        MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
-        if (recvd_size != nbytes) {
-            MPIR_ERR_SET2(coll_ret, MPI_ERR_OTHER,
-                          "**collective_size_mismatch",
-                          "**collective_size_mismatch %d %d", recvd_size, nbytes);
+    int intra_root = MPIR_Get_intranode_rank(comm, root);
+    /* if node_comm exists and root is not local leader (node_comm rank 0)*/
+    if (intra_root != -1 && intra_root != 0) {
+        /* root sends message to local leader (node_comm rank 0) */
+        if (comm->rank == root) {
+            coll_ret = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm->node_comm, errflag);
             MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
         }
+        /* local leader receives message from root */
+        if (comm->node_roots_comm != NULL){
+#ifndef HAVE_ERROR_CHECKING
+            coll_ret =
+                MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
+                          MPI_STATUS_IGNORE);
+            MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
+#else
+            coll_ret =
+                MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
+                          &status);
+            MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
+
+            MPIR_Datatype_get_size_macro(datatype, type_size);
+            nbytes = type_size * count;
+            /* check that we received as much as we expected */
+            MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
+            if (recvd_size != nbytes) {
+                MPIR_ERR_SET2(coll_ret, MPI_ERR_OTHER,
+                            "**collective_size_mismatch",
+                            "**collective_size_mismatch %d %d", recvd_size, nbytes);
+                MPIR_ERR_COLL_CHECKANDCONT(coll_ret, errflag, mpi_errno);
+            }
 #endif
+        }
     }
 
     MPIR_GPU_query_pointer_attr(buffer, &attr);
