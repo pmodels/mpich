@@ -1444,11 +1444,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_beta(const void *
                                                                     MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_allgather(sendbuf, sendcount, sendtype,
-                               recvbuf, recvcount, recvtype, comm_ptr, errflag);
-    MPIR_ERR_CHECK(mpi_errno);
+    int node_comm_size = 0;
+    if (comm_ptr->node_comm != NULL) {
+        node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
+    }
+    int total_comm_size = MPIR_Comm_size(comm_ptr);
+    /* invokes MPIDI_SHM_mpi_allgather when all the processes are on the same node */
+    if (comm_ptr->node_comm != NULL && node_comm_size == total_comm_size) {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno =
+            MPIDI_SHM_mpi_allgather(sendbuf, sendcount, sendtype, recvbuf,
+                                    recvcount, recvtype, comm_ptr, errflag);
+#else
+        mpi_errno =
+            MPIDI_NM_mpi_allgather(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcount, recvtype, comm_ptr, errflag);
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIDI_NM_mpi_allgather(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcount, recvtype, comm_ptr, errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -1467,11 +1485,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void
                                                                       MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIDI_NM_mpi_allgatherv(sendbuf, sendcount, sendtype,
-                                recvbuf, recvcounts, displs, recvtype, comm_ptr, errflag);
-    MPIR_ERR_CHECK(mpi_errno);
+    int node_comm_size = 0;
+    if (comm_ptr->node_comm != NULL) {
+        node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
+    }
+    int total_comm_size = MPIR_Comm_size(comm_ptr);
+    /* invokes MPIDI_SHM_mpi_allgatherv when all the processes are on the same node */
+    if (comm_ptr->node_comm != NULL && node_comm_size == total_comm_size) {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno =
+            MPIDI_SHM_mpi_allgatherv(sendbuf, sendcount, sendtype, recvbuf,
+                                     recvcounts, displs, recvtype, comm_ptr, errflag);
+#else
+        mpi_errno =
+            MPIDI_NM_mpi_allgatherv(sendbuf, sendcount, sendtype, recvbuf,
+                                    recvcounts, displs, recvtype, comm_ptr, errflag);
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIDI_NM_mpi_allgatherv(sendbuf, sendcount, sendtype, recvbuf,
+                                    recvcounts, displs, recvtype, comm_ptr, errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     return mpi_errno;
