@@ -109,6 +109,30 @@ cvars:
         mpir           - Fallback to MPIR collectives (default)
         ipc_read    - Uses read-based collective with ipc
 
+    - name        : MPIR_CVAR_ALLGATHER_POSIX_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      default     : mpir
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select algorithm for intra-node allgather
+        mpir        - Fallback to MPIR collectives (default)
+        ipc_read    - Uses read-based collective with ipc
+
+    - name        : MPIR_CVAR_ALLGATHERV_POSIX_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      default     : mpir
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select algorithm for intra-node allgatherv
+        mpir        - Fallback to MPIR collectives (default)
+        ipc_read    - Uses read-based collective with ipc
+
     - name        : MPIR_CVAR_POSIX_POLL_FREQUENCY
       category    : COLLECTIVE
       type        : int
@@ -346,14 +370,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather(const void *sendbuf, MPI_
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype,
-                                    recvbuf, recvcount, recvtype, comm, errflag);
+    switch (MPIR_CVAR_ALLGATHER_POSIX_INTRA_ALGORITHM) {
+        case MPIR_CVAR_ALLGATHER_POSIX_INTRA_ALGORITHM_ipc_read:
+            mpi_errno = MPIDI_POSIX_mpi_allgather_gpu_ipc_read(sendbuf, sendcount, sendtype,
+                                                               recvbuf, recvcount, recvtype,
+                                                               comm, errflag);
+            break;
+
+        case MPIR_CVAR_ALLGATHER_POSIX_INTRA_ALGORITHM_mpir:
+            goto fallback;
+
+        default:
+            MPIR_Assert(0);
+    }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
 
-    MPIR_FUNC_EXIT;
+  fallback:
+    mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype,
+                                    recvbuf, recvcount, recvtype, comm, errflag);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -370,14 +410,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv(const void *sendbuf, MPI
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype,
-                                     recvbuf, recvcounts, displs, recvtype, comm, errflag);
+    switch (MPIR_CVAR_ALLGATHERV_POSIX_INTRA_ALGORITHM) {
+        case MPIR_CVAR_ALLGATHERV_POSIX_INTRA_ALGORITHM_ipc_read:
+            mpi_errno = MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(sendbuf, sendcount, sendtype,
+                                                                recvbuf, recvcounts, displs,
+                                                                recvtype, comm, errflag);
+            break;
+
+        case MPIR_CVAR_ALLGATHERV_POSIX_INTRA_ALGORITHM_mpir:
+            goto fallback;
+
+        default:
+            MPIR_Assert(0);
+    }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
 
-    MPIR_FUNC_EXIT;
+  fallback:
+    mpi_errno = MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype,
+                                     recvbuf, recvcounts, displs, recvtype, comm, errflag);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
