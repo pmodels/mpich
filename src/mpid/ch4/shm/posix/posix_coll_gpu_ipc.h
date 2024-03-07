@@ -256,13 +256,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
     MPIR_CHKLMEM_MALLOC(reqs, MPL_gpu_request *, sizeof(MPL_gpu_request) * comm_size, mpi_errno,
                         "Memcpy requests", MPL_MEM_COLL);
     for (int i = 0; i < comm_size; i++) {
-        char *temp_recv = (char *) recv_mem_addr + i * data_sz;
-        char *temp_send = (char *) (remote_bufs[i]) + my_rank * data_sz;
+        int target = (my_rank + 1 + i) % comm_size;
+        char *temp_recv = (char *) recv_mem_addr + target * data_sz;
+        char *temp_send = (char *) (remote_bufs[target]) + my_rank * data_sz;
         /* get engine type */
         MPL_gpu_engine_type_t engine_type =
-            MPIDI_IPCI_choose_engine(ipc_handles[i].gpu.global_dev_id,
-                                     my_ipc_handle.gpu.global_dev_id);
-        mpi_errno =
+            MPIDI_IPCI_choose_engine(ipc_handles[target].gpu.global_dev_id,
+                                     my_ipc_handle.gpu.global_dev_id);        mpi_errno =
             MPL_gpu_imemcpy((char *) MPIR_get_contig_ptr(temp_recv, true_lb),
                             (char *) MPIR_get_contig_ptr(temp_send, true_lb),
                             data_sz, dev_id, MPL_GPU_COPY_DIRECTION_NONE,
