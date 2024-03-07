@@ -159,3 +159,27 @@ MPI_Win_f2c:
 {
     return (MPI_Win) win;
 }
+
+MPI_Status_c2f:
+    .desc: Convert MPI_Status object to MPI_Fint array
+    .skip: initcheck, global_cs
+
+MPI_Status_f2c:
+    .desc: Convert MPI_Fint array to MPI_Status object
+    .skip: initcheck, global_cs
+
+MPI_Status_c2f08:
+    .desc: Convert MPI_Status object to MPI_F08_status object
+    .skip: initcheck, global_cs
+
+MPI_Status_f082c:
+    .desc: Convert MPI_F08_status object to MPI_Status object
+    .skip: initcheck, global_cs
+
+MPI_Status_f2f08:
+    .desc: Convert MPI_Fint array to MPI_F08_status object
+    .skip: initcheck, global_cs
+
+MPI_Status_f082f:
+    .desc: Convert MPI_F08_status object to MPI_Fint array
+    .skip: initcheck, global_cs
