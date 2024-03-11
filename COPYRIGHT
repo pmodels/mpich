@@ -42,15 +42,17 @@ privately owned rights.
 
 Portions of this code have been contributed under the above license by:
 
- * Intel Corporation
+
  * Cray
- * IBM Corporation
- * Microsoft Corporation
- * Mellanox Technologies Ltd.
  * DataDirect Networks.
- * Oak Ridge National Laboratory
- * Sun Microsystems, Lustre group
  * Dolphin Interconnect Solutions Inc.
+ * IBM Corporation
  * Institut Polytechnique de Bordeaux
- * Quobyte Corporation
+ * Intel Corporation
+ * Mellanox Technologies Ltd.
+ * Microsoft Corporation
+ * Oak Ridge National Laboratory
  * ParTec AG
+ * Quobyte Corporation
+ * Sandia National Laboratories
+ * Sun Microsystems, Lustre group
