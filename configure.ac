@@ -302,11 +302,21 @@ AC_ARG_VAR(MPICHLIB_FFLAGS,
 	[extra FFLAGS used in building MPICH libraries])
 AC_ARG_VAR(MPICHLIB_FCFLAGS,
 	[extra FCFLAGS used in building MPICH libraries])
+AC_ARG_VAR(MPICHLIB_LDFLAGS,
+	[extra LDFLAGS used in building MPICH libraries])
+AC_ARG_VAR(MPICHLIB_LIBS,
+	[extra LIBS used in building MPICH libraries])
 CFLAGS="$CFLAGS $MPICHLIB_CFLAGS"
 CPPFLAGS="$CPPFLAGS $MPICHLIB_CPPFLAGS"
 CXXFLAGS="$CXXFLAGS $MPICHLIB_CXXFLAGS"
 FFLAGS="$FFLAGS $MPICHLIB_FFLAGS"
 FCFLAGS="$FCFLAGS $MPICHLIB_FCFLAGS"
+# Save LDFLAGS before merging with MPICHLIB_LDFLAGS. The wrapper scripts
+# may need this in case interlibrary dependencies are not supported.
+SAVE_LDFLAGS=$LDFLAGS
+AC_SUBST(SAVE_LDFLAGS)
+LDFLAGS="$LDFLAGS $MPICHLIB_LDFLAGS"
+LIBS="$LIBS $MPICHLIB_LIBS"
 
 # Save a copy of precious flags as USER_* before any of these flags
 # are being modified by configure tests.
