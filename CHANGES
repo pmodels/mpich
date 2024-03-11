@@ -1,4 +1,35 @@
 ===============================================================================
+                               Changes in 4.2.1
+===============================================================================
+
+# Disable flat_namespace to build libmpifort on macOS by default
+
+# Prefix warning messages with "MPICH"
+
+# Add --disable-doc configure option
+
+# Fix support for building MPICH Fortran support with Xcode 15 on macOS
+
+# Fix bug in MPI_WIN_SHARED_QUERY when window is not shared
+
+# Fix bug in ch4/ofi gpu pipelining
+
+# Fixes for Intel GPU support
+
+# Fix memory leak in ch4/shm collectives
+
+# Fix bug in MPI_COMM_SPLIT with intercommunicators and non-zero root
+
+# Fix bug in DAOS ROMIO driver
+
+# Fix bug in cycling error code array
+
+# Return an error if there is failure to create a datatype in mpi_f08
+  module for noncontiguous user data
+
+# Return an error when shared memory segment creation fails
+
+===============================================================================
                                Changes in 4.2.0
 ===============================================================================
 # Complete support MPI 4.1 specification
