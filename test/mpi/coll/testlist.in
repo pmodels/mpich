@@ -77,7 +77,7 @@ exscan 10
 exscan2 5
 gather 4
 gather2 4
-@largetest@gather_big 8 mem=20.1
+gather_big 8 mem=20.1
 scattern 4
 scatter2 4
 scatter3 4
