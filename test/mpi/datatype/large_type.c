@@ -132,6 +132,10 @@ int main(int argc, char **argv)
     };
     MPI_Datatype types[NR_TYPES];
 
+    /* MPICH does not support datatype that can not fit in the address space */
+    if (sizeof(MPI_Aint) == sizeof(int))
+        goto epilogue;
+
     /* a contig type, itself large, but does not need 8 byte aints */
     types[0] = make_largexfer_type_struct(expected_sizes[0]);
     /* struct with addresses out past 2 GiB */
@@ -146,6 +150,7 @@ int main(int argc, char **argv)
         }
     }
 
+  epilogue:
     MTest_Finalize(errs);
 
     return MTestReturnValue(errs);
