@@ -177,9 +177,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                                         release_gather_info_ptr->release_state);
     } else {
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
-            parent_flag_addr =
-                MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR(release_gather_info_ptr->
-                                                             reduce_tree.parent);
+            MPI_Aint type_size;
+            MPIR_Datatype_get_size_macro(datatype, type_size);
+            if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD ||
+                release_gather_info_ptr->reduce_tree_large.nranks == 0) {
+                parent_flag_addr =
+                    MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR
+                    (release_gather_info_ptr->reduce_tree.parent);
+            } else {
+                parent_flag_addr =
+                    MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR
+                    (release_gather_info_ptr->reduce_tree_large.parent);
+            }
         } else {
             parent_flag_addr =
                 MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR(release_gather_info_ptr->
@@ -254,6 +263,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 {
     MPIR_FUNC_ENTER;
 
+    MPI_Aint type_size;
+    MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank, num_children;
     void *child_data_addr;
@@ -302,8 +313,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
                 MPIR_Localcopy(inbuf, count, datatype, (void *) reduce_data_addr, count, datatype);
         }
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-        num_children = release_gather_info_ptr->reduce_tree.num_children;
-        children = release_gather_info_ptr->reduce_tree.children;
+        if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD ||
+            release_gather_info_ptr->reduce_tree_large.nranks == 0) {
+            num_children = release_gather_info_ptr->reduce_tree.num_children;
+            children = release_gather_info_ptr->reduce_tree.children;
+        } else {
+            num_children = release_gather_info_ptr->reduce_tree_large.num_children;
+            children = release_gather_info_ptr->reduce_tree_large.children;
+        }
     }
 
     /* Avoid checking for availability of next buffer if it is guaranteed to be available */
@@ -326,9 +343,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 
             if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE ||
                 operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE) {
-                child_data_addr =
-                    (char *) release_gather_info_ptr->child_reduce_buf_addr[i] +
-                    segment * MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE;
+                if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD ||
+                    release_gather_info_ptr->reduce_tree_large.nranks == 0) {
+                    child_data_addr =
+                        (char *) release_gather_info_ptr->child_reduce_buf_addr[i] +
+                        segment * MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE;
+                } else {
+                    child_data_addr =
+                        (char *) release_gather_info_ptr->child_reduce_buf_addr_large[i] +
+                        segment * MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE;
+                }
                 /* zm_memord_acquire in MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN makes sure
                  * that the reduce_local call does not get reordered before read of children's flag
                  * in MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN */
