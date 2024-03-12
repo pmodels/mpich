@@ -69,7 +69,7 @@ type_large 1
 large_count 1
 cxx_types 1
 large_type 1
-@largetest@large_type_sendrec 2 arg=31 mem=4.3
-@largetest@large_type_sendrec 2 arg=32 timeLimit=360 mem=8.6
-@largetest@large_type_sendrec 2 arg=33 timeLimit=360 mem=17.2
-@largetest@large_vec 3 mem=9.8
+large_type_sendrec 2 arg=31 mem=4.3
+large_type_sendrec 2 arg=32 timeLimit=360 mem=8.6
+large_type_sendrec 2 arg=33 timeLimit=360 mem=17.2
+large_vec 3 mem=9.8

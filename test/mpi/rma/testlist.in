@@ -82,8 +82,8 @@ win_shared_query 4 arg=-flavor=create
 win_shared_query 4 arg=-flavor=allocate
 win_shared_query 4 arg=-flavor=allocate_shared
 win_zero 4
-@largetest@win_large_shm 4
-@largetest@win_large_shm 3
+win_large_shm 4 mem=4.0
+win_large_shm 3 mem=3.0
 win_dynamic_acc 4
 win_dynamic_acc_collattach 4
 get_acc_local 1
