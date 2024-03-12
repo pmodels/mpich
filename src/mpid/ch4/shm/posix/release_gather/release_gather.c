@@ -81,6 +81,19 @@ cvars:
         knomial_2 - knomial_2 tree type (ranks are added in order from the right side)
         	    knomial_2 is only supported with non topology aware trees.
 
+    - name        : MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD
+      category    : COLLECTIVE
+      type        : int
+      default     : 2048
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL and MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE are used
+        when the message size is smaller than or equal to this threshold;
+        MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL_LARGE and MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE_LARGE are
+        used when the message size is larger than this threshold.
+
     - name        : MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL
       category    : COLLECTIVE
       type        : int
@@ -91,6 +104,16 @@ cvars:
       description : >-
         K value for the kary/knomial tree for intra-node reduce
 
+    - name        : MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL_LARGE
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for the kary/knomial tree for intra-node reduce. Used for large messages.
+
     - name        : MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE
       category    : COLLECTIVE
       type        : string
@@ -100,6 +123,20 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Tree type for intra-node reduce tree
+        kary      - kary tree type
+        knomial_1 - knomial_1 tree type (ranks are added in order from the left side)
+        knomial_2 - knomial_2 tree type (ranks are added in order from the right side)
+        	    knomial_2 is only supported with non topology aware trees.
+
+    - name        : MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE_LARGE
+      category    : COLLECTIVE
+      type        : string
+      default     : kary
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Tree type for intra-node reduce tree. Used for large messages.
         kary      - kary tree type
         knomial_1 - knomial_1 tree type (ranks are added in order from the left side)
         knomial_2 - knomial_2 tree type (ranks are added in order from the right side)
@@ -207,6 +244,10 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type) =
             get_tree_type(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE);
         RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval) = MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL;
+        RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type_large) =
+            get_tree_type(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE_LARGE);
+        RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large) =
+            MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL_LARGE;
         RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size) =
             MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE;
         RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells) = MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS;
@@ -318,6 +359,12 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                                  &release_gather_info_ptr->reduce_tree,
                                                  &topotree_fail[1]);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                mpi_errno =
+                    MPIR_Treealgo_tree_create(rank, num_ranks,
+                                              RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type_large),
+                                              RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large), 0,
+                                              &release_gather_info_ptr->reduce_tree_large);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             } else {
                 /* Finalize was already called and MPIR_Process.hwloc_topology has been destroyed */
                 topotree_fail[0] = -1;
@@ -344,13 +391,21 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         }
 
         if (topotree_fail[1] != 0) {
-            if (topotree_fail[1] == 1)
+            if (topotree_fail[1] == 1) {
                 MPIR_Treealgo_tree_free(&release_gather_info_ptr->reduce_tree);
+                MPIR_Treealgo_tree_free(&release_gather_info_ptr->reduce_tree_large);
+            }
             mpi_errno =
                 MPIR_Treealgo_tree_create(rank, num_ranks,
                                           RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type),
                                           RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval), 0,
                                           &release_gather_info_ptr->reduce_tree);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            mpi_errno =
+                MPIR_Treealgo_tree_create(rank, num_ranks,
+                                          RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type_large),
+                                          RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large), 0,
+                                          &release_gather_info_ptr->reduce_tree_large);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         }
@@ -362,6 +417,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         release_gather_info_ptr->bcast_buf_addr = NULL;
         release_gather_info_ptr->reduce_buf_addr = NULL;
         release_gather_info_ptr->child_reduce_buf_addr = NULL;
+        release_gather_info_ptr->child_reduce_buf_addr_large = NULL;
 
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, flags_shm_size,
@@ -409,6 +465,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         int i;
         RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr) =
             MPL_malloc(num_ranks * sizeof(void *), MPL_MEM_COLL);
+        RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr_large) =
+            MPL_malloc(num_ranks * sizeof(void *), MPL_MEM_COLL);
 
         if (rank == 0)
             MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter,
@@ -431,6 +489,13 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             int child_rank =
                 *(int *) utarray_eltptr(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree).children, i);
             RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr[i]) =
+                addr + (child_rank * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
+        }
+        for (i = 0; i < RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_large.num_children); i++) {
+            int child_rank =
+                *(int *) utarray_eltptr(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_large).children,
+                                        i);
+            RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr_large[i]) =
                 addr + (child_rank * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
         }
     }
@@ -487,10 +552,12 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
         MPL_free(RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr));
+        MPL_free(RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr_large));
     }
 
     MPIR_Treealgo_tree_free(&(RELEASE_GATHER_FIELD(comm_ptr, bcast_tree)));
     MPIR_Treealgo_tree_free(&(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree)));
+    MPIR_Treealgo_tree_free(&(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_large)));
 
   fn_exit:
     MPIR_FUNC_EXIT;
