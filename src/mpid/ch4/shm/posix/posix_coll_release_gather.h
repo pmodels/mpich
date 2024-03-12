@@ -229,7 +229,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
         MPI_Aint chunk_count = (i == 0) ? chunk_size_floor : chunk_size_ceil;
 
         mpi_errno =
-            MPIDI_POSIX_mpi_release_gather_release(NULL, 0, MPI_DATATYPE_NULL, root,
+            MPIDI_POSIX_mpi_release_gather_release(NULL, chunk_count, datatype, root,
                                                    comm_ptr, errflag,
                                                    MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
