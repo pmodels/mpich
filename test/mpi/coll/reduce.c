@@ -46,19 +46,19 @@ static void check_buf(int rank, int size, int count, int *errs, int *buf)
 static int test_reduce(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
 {
     int errs = 0;
-    int rank, size, root;
+    int wrank, rank, size, root;
     void *sendbuf, *recvbuf, *sendbuf_h, *recvbuf_h;
     int minsize = 2, count;
     MPI_Comm comm;
     mtest_mem_type_e memtype;
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if (rank % 2 == 0)
+    MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
+    if (wrank % 2 == 0)
         memtype = evenmem;
     else
         memtype = oddmem;
 
-    if (rank == 0) {
+    if (wrank == 0) {
         MTestPrintfMsg(1, "./reduce -evenmemtype=%s -oddmemtype=%s\n",
                        MTest_memtype_name(evenmem), MTest_memtype_name(oddmem));
     }
@@ -71,8 +71,9 @@ static int test_reduce(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
         MPI_Comm_size(comm, &size);
 
         for (count = 1; count < 130000; count = count * 2) {
-            MTestMalloc(count * sizeof(int), memtype, &recvbuf_h, &recvbuf, rank);
-            MTestMalloc(count * sizeof(int), memtype, &sendbuf_h, &sendbuf, rank);
+            /* we use wrank here to avoid switching devices midway thru the test */
+            MTestMalloc(count * sizeof(int), memtype, &recvbuf_h, &recvbuf, wrank);
+            MTestMalloc(count * sizeof(int), memtype, &sendbuf_h, &sendbuf, wrank);
 
             for (root = 0; root < size; root++) {
                 set_send_buf(count, sendbuf_h);

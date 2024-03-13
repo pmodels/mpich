@@ -1153,11 +1153,11 @@ print $OUTFD "namespace MPI {\n";
 # Provide a way to invoke the error handler on the object
 print $OUTFD "#if \@HAVE_CXX_EXCEPTIONS\@
 #define MPIX_CALLREF( _objptr, fnc ) \\
-    { int err = fnc; if (err) { (_objptr)->Call_errhandler( err ); }}
+    do { int err = fnc; if (err) { (_objptr)->Call_errhandler( err ); }} while(0)
 #define MPIX_CALLOBJ( _obj, fnc ) \\
-    { int err = fnc; if (err) { (_obj).Call_errhandler( err ); }}
+    do { int err = fnc; if (err) { (_obj).Call_errhandler( err ); }} while(0)
 #define MPIX_CALLWORLD( fnc ) \\
-    { int err = fnc ; if (err) MPIR_Call_world_errhand( err ); }
+    do { int err = fnc ; if (err) MPIR_Call_world_errhand( err ); } while(0)
 extern void MPIR_Call_world_errhand( int );
 #else
 #define MPIX_CALLREF( _objptr, fnc ) (void)fnc
@@ -4987,7 +4987,7 @@ sub printCoverageInitialize {
 # ----------------------------------------------------------------------------
 # Read a specification file for a binding.  This helps provide information on
 # exceptions and enhancements to the binding automatically derived from the
-# prototype file (the C header file).  The format of this specificaiton
+# prototype file (the C header file).  The format of this specification
 # file is:
 # class-name: [static] return (args) [const]
 #

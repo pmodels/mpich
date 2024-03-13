@@ -91,7 +91,7 @@ dnl Multiplier can be used to define double types
 dnl     e.g. PAC_SET_MPI_TYPE(48, MPI_COMPLEX, $pac_cv_f77_sizeof_real, 2)
 dnl
 AC_DEFUN([PAC_SET_MPI_TYPE], [
-    if test -z "$3" -o $3 = 0 ; then
+    if test -z "$3" -o "$3" = 0 ; then
         $2=MPI_DATATYPE_NULL
         F77_$2=MPI_DATATYPE_NULL
         F08_$2=MPI_DATATYPE_NULL%MPI_VAL

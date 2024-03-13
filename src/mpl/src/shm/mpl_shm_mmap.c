@@ -85,6 +85,10 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
         do {
             rc = (int) write(lhnd, "", 1);
         } while ((rc == -1) && (errno == EINTR));
+        if (rc == -1) {
+            rc = MPL_ERR_SHM_INTERN;
+            goto fn_fail;
+        }
 
         rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
         if (rc != MPL_SUCCESS) {

@@ -32,11 +32,11 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint recvtype_extent, recvtype_sz;
-    MPI_Aint curr_cnt, last_recv_cnt;
-    int dst, total_count;
+    MPI_Aint curr_cnt, last_recv_cnt, total_count;
+    int dst;
     void *tmp_buf;
-    int mask, dst_tree_root, my_tree_root, position,
-        send_offset, recv_offset, nprocs_completed, k, offset, tmp_mask, tree_root;
+    int mask, dst_tree_root, my_tree_root, nprocs_completed, k, tmp_mask, tree_root;
+    MPI_Aint position, send_offset, recv_offset, offset;
     MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;

@@ -204,7 +204,7 @@ static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
 static int close_handle(int dev_fd, int handle);
 static int parse_affinity_mask();
-static void get_max_dev_id(int *max_dev_id, int *max_subdev_id);
+static void get_max_dev_id(uint32_t *max_dev_id, uint32_t *max_subdev_id);
 static int gpu_mem_hook_init(void);
 static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
 static int MPL_event_pool_add_new_pool(void);
@@ -256,8 +256,8 @@ int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev)
         *dev_count = device_count;
         *dev_list = device_list;
     } else {
-        int driver_count = 0;
-        int *subdev_counts = NULL;
+        uint32_t driver_count = 0;
+        uint32_t *subdev_counts = NULL;
         int total_subdev_count = 0;
         ze_driver_handle_t *all_drivers = NULL;
 
@@ -405,8 +405,8 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdevid)
                 }
             } else {
                 int idx = global_dev_count + device * global_subdev_count;
-                for (int i = 0; i < global_subdev_count; ++i) {
-                    global_to_local_map[idx + i] = 1;
+                for (int j = 0; j < global_subdev_count; ++j) {
+                    global_to_local_map[idx + j] = 1;
                 }
             }
         }
@@ -1109,7 +1109,7 @@ static int gpu_ze_init_driver(void)
 /* Parses ZE_AFFINITY_MASK to populate mask_contents with corresponding data */
 static int parse_affinity_mask()
 {
-    int i, curr_dev, num_dev, mpl_err = MPL_SUCCESS;
+    int i, curr_dev, num_dev = 0, mpl_err = MPL_SUCCESS;
 
     char *visible_devices = getenv("ZE_AFFINITY_MASK");
     if (visible_devices) {
@@ -1177,7 +1177,7 @@ static int parse_affinity_mask()
 }
 
 /* Get the max dev_id and subdev_id based on the environment */
-static void get_max_dev_id(int *max_dev_id, int *max_subdev_id)
+static void get_max_dev_id(uint32_t *max_dev_id, uint32_t *max_subdev_id)
 {
     /* This function assumes that parse_affinity_mask was previously called */
     int mpl_err = MPL_SUCCESS;

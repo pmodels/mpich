@@ -1157,6 +1157,11 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         }
     }
 
+    if (MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE) {
+        MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.gpu_pipeline_send_pool);
+        MPIDU_genq_private_pool_destroy(MPIDI_OFI_global.gpu_pipeline_recv_pool);
+    }
+
     int err;
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_UTIL_MUTEX, &err);
     MPIR_Assert(err == 0);

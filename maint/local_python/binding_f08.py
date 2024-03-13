@@ -69,6 +69,7 @@ def dump_f08_wrappers_c(func, is_large):
 
         code_list.append("if (%s->rank != 0 && !CFI_is_contiguous(%s)) {" % (buf, buf))
         code_list.append("    err = cdesc_create_datatype(%s, %s, %s, &%s_i);" % (buf, ct, dt, dt))
+        code_list.append("    if (err) return err;")
         code_list.append("    %s_i = 1;" % ct)
         code_list.append("}")
         code_list.append("")

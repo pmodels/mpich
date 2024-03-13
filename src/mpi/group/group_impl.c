@@ -71,7 +71,8 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
                                MPIR_Group ** new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
+    int size1, i, k, g1_idx, g2_idx, nnew;
+    uint64_t l1_pid, l2_pid;
     int *flags = NULL;
 
     MPIR_FUNC_ENTER;
@@ -245,7 +246,8 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
                                  MPIR_Group ** new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
+    int size1, i, k, g1_idx, g2_idx, nnew;
+    uint64_t l1_pid, l2_pid;
     int *flags = NULL;
 
     MPIR_FUNC_ENTER;
@@ -290,7 +292,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
     k = 0;
     for (i = 0; i < size1; i++) {
         if (flags[i]) {
-            int lpid = group_ptr1->lrank_to_lpid[i].lpid;
+            uint64_t lpid = group_ptr1->lrank_to_lpid[i].lpid;
             (*new_group_ptr)->lrank_to_lpid[k].lpid = lpid;
             if (i == group_ptr1->rank)
                 (*new_group_ptr)->rank = k;
@@ -466,7 +468,8 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
                                     MPIR_Group * gp2, int ranks2[])
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, g2_idx, l1_pid, l2_pid;
+    int i, g2_idx;
+    uint64_t l1_pid, l2_pid;
 
     MPL_DBG_MSG_S(MPIR_DBG_OTHER, VERBOSE, "gp2->is_local_dense_monotonic=%s",
                   (gp2->is_local_dense_monotonic ? "TRUE" : "FALSE"));
@@ -477,11 +480,10 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
 
     if (gp2->size > 0 && gp2->is_local_dense_monotonic) {
         /* g2 probably == group_of(MPI_COMM_WORLD); use fast, constant-time lookup */
-        int lpid_offset = gp2->lrank_to_lpid[0].lpid;
+        uint64_t lpid_offset = gp2->lrank_to_lpid[0].lpid;
 
-        MPIR_Assert(lpid_offset >= 0);
         for (i = 0; i < n; ++i) {
-            int g1_lpid;
+            uint64_t g1_lpid;
 
             if (ranks1[i] == MPI_PROC_NULL) {
                 ranks2[i] = MPI_PROC_NULL;
@@ -489,7 +491,7 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
             }
             /* "adjusted" lpid from g1 */
             g1_lpid = gp1->lrank_to_lpid[ranks1[i]].lpid - lpid_offset;
-            if ((g1_lpid >= 0) && (g1_lpid < gp2->size)) {
+            if (g1_lpid < gp2->size) {
                 ranks2[i] = g1_lpid;
             }
             /* else leave UNDEFINED */
@@ -538,7 +540,8 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
                           MPIR_Group ** new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int g1_idx, g2_idx, nnew, i, k, size1, size2, mylpid;
+    int g1_idx, g2_idx, nnew, i, k, size1, size2;
+    uint64_t mylpid;
     int *flags = NULL;
 
     MPIR_FUNC_ENTER;
@@ -569,7 +572,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
      * id) to detect which processes in group 2 are not in group 1
      */
     while (g1_idx >= 0 && g2_idx >= 0) {
-        int l1_pid, l2_pid;
+        uint64_t l1_pid, l2_pid;
         l1_pid = group_ptr1->lrank_to_lpid[g1_idx].lpid;
         l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
         if (l1_pid > l2_pid) {

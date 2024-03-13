@@ -956,7 +956,7 @@ sub check_result {
         elsif (/^\s*Test Skipped\s*$/) {
             $test_skipped++;
         }
-        elsif (/^(WARNING: |(Abort.*)?application called MPI_Abort)/) {
+        elsif (/^(MPICH: |WARNING: |(Abort.*)?application called MPI_Abort)/) {
             $warning_output++;
         }
         elsif (/(FORTRAN STOP|requesting checkpoint|checkpoint completed)\s*$/) {

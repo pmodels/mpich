@@ -1406,7 +1406,7 @@ int MPIR_Comm_free_inactive_requests(MPIR_Comm * comm)
                 request->comm = NULL;
             }
             MPL_internal_error_printf
-                ("WARNING: freeing inactive persistent request %x on communicator %x.\n",
+                ("MPICH: freeing inactive persistent request %x on communicator %x.\n",
                  request->handle, comm->handle);
             MPIR_Request_free_impl(request);
         }

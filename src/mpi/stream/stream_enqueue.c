@@ -441,6 +441,7 @@ static void waitall_enqueue_cb(void *data)
                 MPL_free(p2);
             }
         }
+        MPIR_Request_free(enqueue_req->u.enqueue.real_request);
         MPIR_Request_free(enqueue_req);
     }
     MPL_free(reqs);
