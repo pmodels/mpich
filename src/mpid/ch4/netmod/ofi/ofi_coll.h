@@ -48,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_bcast_json(void *buffer, int count, MPI_Datatype datatype,
+static inline int MPIDI_OFI_bcast_json(void *buffer, MPI_Aint count, MPI_Datatype datatype,
                                        int root, MPIR_Comm * comm, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
