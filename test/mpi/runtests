@@ -488,6 +488,11 @@ sub LoadTests {
                 next;
             }
 
+            if ($test_opt->{mem} and $test_opt->{mem} > $g_opt{memory_total}) {
+                SkippedTest($test_opt, "xfail due to memory requirement");
+                next;
+            }
+
             push @$all_tests, $test_opt;
         }
         close( $LIST );
@@ -702,10 +707,7 @@ sub RunMPIProgram {
     } elsif ($test_opt->{mem}) {
         # implicit lock by checking memory annotation
         $lockfile="/tmp/runtests-mem.lock";
-        if ($test_opt->{mem} > $g_opt{memory_total}) {
-            SkippedTest($test_opt, "xfail due to memory requirement");
-            next;
-        } elsif ($test_opt->{mem} * $g_opt{memory_multiplier} > $g_opt{memory_total} ) {
+        if ($test_opt->{mem} * $g_opt{memory_multiplier} > $g_opt{memory_total} ) {
             $got_lock = get_lock($lockfile, LOCK_EX);
         } else {
             $got_lock = get_lock($lockfile, LOCK_SH);
