@@ -362,10 +362,9 @@ cvars:
         goto fn_fail;                                                   \
     }
 
-/* We use -2 (MPI_PROC_NULL and MPI_ROOT are negative) for the
-   intercomm test */
 #define MPIR_ERRTEST_INTER_ROOT(comm_ptr,root,err)                      \
-    if ((root) < -3 || (root) >= (comm_ptr)->remote_size) {             \
+    if (((root) < 0 && (root) != MPI_ROOT && (root) != MPI_PROC_NULL) || \
+        (root) >= (comm_ptr)->remote_size) {                            \
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_ROOT, "**root", "**root %d", root); \
         goto fn_fail;                                                   \
