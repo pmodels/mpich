@@ -109,6 +109,10 @@ int main(int argc, char *argv[])
     if (sizeof(MPI_Count) == sizeof(int))
         goto epilogue;
 
+    /* MPICH does not support datatype that can not fit in the address space */
+    if (sizeof(MPI_Aint) == sizeof(int))
+        goto epilogue;
+
     /* a very large type */
     MPI_Type_contiguous(INT_MAX, MPI_CHAR, &imax_contig);
     MPI_Type_commit(&imax_contig);

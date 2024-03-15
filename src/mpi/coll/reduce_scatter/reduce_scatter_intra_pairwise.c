@@ -19,11 +19,11 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
-    int *disps;
+    MPI_Aint *disps;
     void *tmp_recvbuf;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int total_count, src, dst;
+    int src, dst;
     MPIR_CHKLMEM_DECL(5);
 
     comm_size = comm_ptr->local_size;
@@ -41,8 +41,10 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
     }
 #endif /* HAVE_ERROR_CHECKING */
 
-    MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, comm_size * sizeof(MPI_Aint), mpi_errno, "disps",
+                        MPL_MEM_BUFFER);
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < comm_size; i++) {
         disps[i] = total_count;

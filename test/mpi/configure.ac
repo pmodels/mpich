@@ -187,11 +187,6 @@ AC_ARG_ENABLE(perftest,
                 [Include tests for basic performance consistency (default)])],,
         [enable_perftest=yes])
 
-AC_ARG_ENABLE(large-tests,
-        [AS_HELP_STRING([--enable-large-tests],
-                [Enable tests which require large (>2GB per proc) amount of memory])],,
-        [enable_large_tests=no])
-
 AC_ARG_ENABLE(ft-tests,
         [AS_HELP_STRING([--enable-ft-tests],
                 [Include tests for fault tolerance (default no)])],,
@@ -879,13 +874,6 @@ elif test $enable_gpu_tests_only = "yes" ; then
 fi
 AC_SUBST([default_testdirs])
 AC_SUBST([default_testlist])
-
-# for tests that require large mem
-largetest="#"
-if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
-    largetest=""
-fi
-AC_SUBST(largetest)
 
 # Enable device specific tests in impls/mpich
 ch3_tests="#"
