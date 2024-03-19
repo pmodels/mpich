@@ -108,18 +108,19 @@ static int type_create_contiguous_x(MPI_Count count, MPI_Datatype oldtype, MPI_D
  * length is longer than an integer?  We will create 'count' types, using
  * contig if length is small enough, or something more complex if not */
 
-int ADIOI_Type_create_hindexed_x(int count,
+/* In an MPI-4 "Large Count" world do we even need this routine any longer? */
+int ADIOI_Type_create_hindexed_x(MPI_Count count,
                                  const MPI_Count array_of_blocklengths[],
-                                 const MPI_Aint array_of_displacements[],
+                                 const MPI_Count array_of_displacements[],
                                  MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int i, ret;
     MPI_Datatype *types;
-    int *blocklens;
+    MPI_Count *blocklens;
     int is_big = 0;
 
     types = ADIOI_Malloc(count * sizeof(MPI_Datatype));
-    blocklens = ADIOI_Malloc(count * sizeof(int));
+    blocklens = ADIOI_Malloc(count * sizeof(*blocklens));
 
     /* squashing two loops into one.
      * - Look in the array_of_blocklengths for any large values
@@ -144,12 +145,12 @@ int ADIOI_Type_create_hindexed_x(int count,
     }
 
     if (is_big) {
-        ret = MPI_Type_create_struct(count, blocklens, array_of_displacements, types, newtype);
+        ret = MPI_Type_create_struct_c(count, blocklens, array_of_displacements, types, newtype);
         for (i = 0; i < count; i++)
             if (types[i] != oldtype)
                 MPI_Type_free(&(types[i]));
     } else {
-        ret = MPI_Type_create_hindexed(count, blocklens, array_of_displacements, oldtype, newtype);
+        ret = MPI_Type_create_hindexed_c(count, blocklens, array_of_displacements, oldtype, newtype);
     }
     ADIOI_Free(types);
     ADIOI_Free(blocklens);

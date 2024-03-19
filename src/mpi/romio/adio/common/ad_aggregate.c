@@ -257,9 +257,9 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
 /* Possibly reconsider if buf_idx's are ok as int's, or should they be aints/offsets?
    They are used as memory buffer indices so it seems like the 2G limit is in effect */
 {
-    MPI_Count *count_my_req_per_proc, count_my_req_procs;
+    MPI_Count *count_my_req_per_proc, count_my_req_procs, l;
     MPI_Aint *buf_idx;
-    int l, proc;
+    int proc;
     size_t memLen;
     ADIO_Offset fd_len, rem_len, curr_idx, off, *ptr;
     ADIOI_Access *my_req;
@@ -450,7 +450,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, MPI_Count count_my_req_procs,
     ADIOI_Access *others_req;
     size_t memLen;
     ADIO_Offset *ptr;
-    MPI_Aint *mem_ptrs;
+    MPI_Count *mem_ptrs;
 
 /* first find out how much to send/recv and from/to whom */
 #ifdef AGGREGATION_PROFILE
@@ -468,7 +468,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, MPI_Count count_my_req_procs,
     for (i = 0; i < nprocs; i++)
         memLen += count_others_req_per_proc[i];
     ptr = (ADIO_Offset *) ADIOI_Malloc(memLen * 2 * sizeof(ADIO_Offset));
-    mem_ptrs = (MPI_Aint *) ADIOI_Malloc(memLen * sizeof(MPI_Aint));
+    mem_ptrs = ADIOI_Malloc(memLen * sizeof(*mem_ptrs));
     others_req[0].offsets = ptr;
     others_req[0].mem_ptrs = mem_ptrs;
 
@@ -567,7 +567,7 @@ void ADIOI_Icalc_others_req_main(ADIOI_NBC_Request * nbc_req, int *error_code)
 {
     ADIOI_Icalc_others_req_vars *vars = nbc_req->cor_vars;
     ADIO_File fd = vars->fd;
-    int count_my_req_procs = vars->count_my_req_procs;
+    MPI_Count count_my_req_procs = vars->count_my_req_procs;
     ADIOI_Access *my_req = vars->my_req;
     int nprocs = vars->nprocs;
     int myrank = vars->myrank;
@@ -587,7 +587,7 @@ void ADIOI_Icalc_others_req_main(ADIOI_NBC_Request * nbc_req, int *error_code)
     ADIOI_Access *others_req;
     size_t memLen;
     ADIO_Offset *ptr;
-    MPI_Aint *mem_ptrs;
+    MPI_Count *mem_ptrs;
 
     *others_req_ptr = (ADIOI_Access *) ADIOI_Malloc(nprocs * sizeof(ADIOI_Access));
     others_req = *others_req_ptr;
@@ -596,7 +596,7 @@ void ADIOI_Icalc_others_req_main(ADIOI_NBC_Request * nbc_req, int *error_code)
     for (i = 0; i < nprocs; i++)
         memLen += count_others_req_per_proc[i];
     ptr = (ADIO_Offset *) ADIOI_Malloc(memLen * 2 * sizeof(ADIO_Offset));
-    mem_ptrs = (MPI_Aint *) ADIOI_Malloc(memLen * sizeof(MPI_Aint));
+    mem_ptrs = ADIOI_Malloc(memLen * sizeof(*mem_ptrs));
     others_req[0].offsets = ptr;
     others_req[0].mem_ptrs = mem_ptrs;
 

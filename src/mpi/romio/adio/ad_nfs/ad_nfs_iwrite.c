@@ -54,7 +54,7 @@ void ADIOI_NFS_IwriteContig(ADIO_File fd, void *buf, MPI_Aint count,
  * Returns 0 on success, -errno on failure.
  */
 #ifdef ROMIO_HAVE_WORKING_AIO
-int ADIOI_NFS_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
+int ADIOI_NFS_aio(ADIO_File fd, void *buf, MPI_Aint len, ADIO_Offset offset,
                   int wr, MPI_Request * request)
 {
     int err = -1, fd_sys;

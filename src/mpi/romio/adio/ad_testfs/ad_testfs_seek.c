@@ -23,9 +23,9 @@ ADIO_Offset ADIOI_TESTFS_SeekIndividual(ADIO_File fd, ADIO_Offset offset,
 
     ADIO_Offset off;
     ADIOI_Flatlist_node *flat_file;
-    int i, n_etypes_in_filetype, n_filetypes, etype_in_filetype;
+    int i, n_filetypes, etype_in_filetype;
+    MPI_Count n_etypes_in_filetype, size_in_filetype;
     ADIO_Offset abs_off_in_filetype = 0, sum;
-    int size_in_filetype;
     int filetype_is_contig;
     MPI_Count filetype_size;
     MPI_Aint etype_size, lb, filetype_extent;
