@@ -102,8 +102,8 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
     int filetype_is_contig, nprocs, nprocs_for_coll, myrank;
     MPI_Count contig_access_count = 0;
     int interleave_count = 0, buftype_is_contig;
-    int *count_my_req_per_proc, count_my_req_procs;
-    int *count_others_req_per_proc, count_others_req_procs;
+    MPI_Count *count_my_req_per_proc, count_my_req_procs;
+    MPI_Count *count_others_req_per_proc, count_others_req_procs;
     ADIO_Offset start_offset, end_offset, orig_fp, fd_size, min_st_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *fd_start = NULL,
         *fd_end = NULL, *end_offsets = NULL;
@@ -227,7 +227,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
         GPFSMPIO_T_CIO_SET_GET(r, 1, 1, GPFSMPIO_CIO_T_PATANA, GPFSMPIO_CIO_T_GATHER);
 
         /* are the accesses of different processes interleaved? */
-        for (i = 1; i < nprocs; i++)
+        for (int i = 1; i < nprocs; i++)
             if ((st_offsets[i] < end_offsets[i - 1]) && (st_offsets[i] <= end_offsets[i]))
                 interleave_count++;
         /* This is a rudimentary check for interleaving, but should suffice
@@ -287,7 +287,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
          * with empty data potentially dilute the file domains and create
          * problems for the one-sided aggregation.
          */
-        for (i = 0; i < nprocs; i++) {
+        for (int i = 0; i < nprocs; i++) {
             if (count_sizes[i] > 0) {
                 st_offsets[currentNonZeroDataIndex] = st_offsets[i];
                 end_offsets[currentNonZeroDataIndex] = end_offsets[i];
@@ -1066,7 +1066,7 @@ static void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
             rem_len -= len;
         }
     }
-    for (i = 0; i < nprocs; i++)
+    for (int i = 0; i < nprocs; i++)
         if (recv_size[i])
             recd_from_proc[i] = curr_from_proc[i];
 

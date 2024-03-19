@@ -828,10 +828,9 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 {
 /* this function is only called if buftype is not contig */
 
-    int p, flat_buf_idx;
-    ADIO_Offset flat_buf_sz, size_in_buf, buf_incr, size;
-    int jj, n_buftypes;
-    ADIO_Offset off, len, rem_len, user_buf_idx;
+    int p, jj;
+    ADIO_Offset flat_buf_idx, flat_buf_sz, size_in_buf, buf_incr, size;
+    ADIO_Offset n_buftypes, off, len, rem_len, user_buf_idx;
 
 /*  curr_to_proc[p] = amount of data sent to proc. p that has already
     been accounted for so far
