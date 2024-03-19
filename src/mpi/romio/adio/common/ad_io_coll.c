@@ -857,7 +857,8 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, MPI_Aint count,
 #endif
     MPI_Type_get_extent(custom_ftype, &lb, &f_extent);
     MPI_Type_size_x(custom_ftype, &f_size);
-    f_ds_percent = 100 * f_size / f_extent;
+    /* cast ok: percent is a value between 0 and 100 */
+    f_ds_percent = 100 * (int)(f_size / f_extent);
 
     /* temporarily store file view information */
     user_filetype = fd->filetype;

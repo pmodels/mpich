@@ -147,11 +147,21 @@ int main(int argc, char **argv)
     err = MPI_File_write_all(fh, buf, 1, buftype, &status);
     ERROR("MPI_File_write_all");
 
+    /* do it again but use the non-blocking collectives */
     err = MPI_File_seek(fh, 0, MPI_SEEK_SET);
     ERROR("MPI_File_seek");
+    MPI_Request  req;
+    err = MPI_File_iwrite_all(fh, buf, 1, buftype, &req);
+    ERROR("MPI_File_write_all");
+    MPI_Wait(&req, &status);
 
     err = MPI_File_read_all(fh, buf, 1, buftype, &status);
     ERROR("MPI_File_read_all");
+
+    err = MPI_File_seek(fh, 0, MPI_SEEK_SET);
+    ERROR("MPI_File_seek");
+    err = MPI_File_iread_all(fh, buf, 1, buftype, &req);
+    MPI_Wait(&req, &status);
 
 
     MPI_File_close(&fh);

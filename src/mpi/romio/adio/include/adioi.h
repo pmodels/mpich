@@ -353,9 +353,10 @@ struct ADIOI_Fns_struct {
 typedef struct {
     ADIO_Offset *offsets;       /* array of offsets */
     ADIO_Offset *lens;          /* array of lengths */
-    MPI_Aint *mem_ptrs;         /* array of pointers. used in the read/write
+    MPI_Count *mem_ptrs;         /* array of pointers. used in the read/write
                                  * phase to indicate where the data
-                                 * is stored in memory */
+                                 * is stored in memory
+				 * promoted to MPI_Count so we can construct types with _c versions */
     MPI_Count count;            /* size of above arrays */
 } ADIOI_Access;
 
@@ -619,9 +620,9 @@ typedef struct view_state {
 
     /* Preprocessed data amount and ol pairs */
     ADIO_Offset pre_sz;
-    int pre_ol_ct;
+    MPI_Count pre_ol_ct;
     MPI_Aint *pre_disp_arr;
-    int *pre_blk_arr;
+    MPI_Count *pre_blk_arr;
 
     ADIOI_Flatlist_node *flat_type_p;
 } view_state;
@@ -718,7 +719,7 @@ typedef struct ADIOI_OneSidedStripeParms {
     /* These three elements track the state of the source buffer advancement through multiple calls */
     /* to ADIOI_OneSidedWriteAggregation */
     ADIO_Offset lastDataTypeExtent;
-    int lastFlatBufIndice;
+    MPI_Count lastFlatBufIndice;
     ADIO_Offset lastIndiceOffset;
 } ADIOI_OneSidedStripeParms;
 
@@ -762,9 +763,9 @@ int ADIOI_Err_create_code(const char *myname, const char *filename, int my_errno
 int ADIOI_Type_get_combiner(MPI_Datatype datatype, int *combiner);
 int ADIOI_Type_ispredef(MPI_Datatype datatype, int *flag);
 int ADIOI_Type_dispose(MPI_Datatype * datatype);
-int ADIOI_Type_create_hindexed_x(int count,
+int ADIOI_Type_create_hindexed_x(MPI_Count count,
                                  const MPI_Count array_of_blocklengths[],
-                                 const MPI_Aint array_of_displacements[],
+                                 const MPI_Count array_of_displacements[],
                                  MPI_Datatype oldtype, MPI_Datatype * newtype);
 
 
@@ -1023,7 +1024,7 @@ typedef struct wcThreadFuncData {
     ADIO_File fd;
     int io_kind;
     char *buf;
-    int size;
+    MPI_Count size;
     ADIO_Offset offset;
     ADIO_Status *status;
     int error_code;

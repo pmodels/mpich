@@ -13,22 +13,22 @@
 #endif
 
 int MPIU_write_external32_conversion_fn(const void *userbuf, MPI_Datatype datatype,
-                                        int count, void *filebuf)
+                                        MPI_Count count, void *filebuf)
 {
-    int position_i = 0;
-    MPI_Aint position = 0;
-    MPI_Aint bytes = 0;
+    MPI_Count position_i = 0;
+    MPI_Count position = 0;
+    MPI_Count bytes = 0;
     int mpi_errno = MPI_SUCCESS;
     int is_contig = 0;
 
     ADIOI_Datatype_iscontig(datatype, &is_contig);
-    mpi_errno = MPI_Pack_external_size("external32", count, datatype, &bytes);
+    mpi_errno = MPI_Pack_external_size_c("external32", count, datatype, &bytes);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_exit;
 
     if (is_contig) {
 #if MPI_VERSION >= 3
-        mpi_errno = MPI_Pack_external("external32", userbuf, count,
+        mpi_errno = MPI_Pack_external_c("external32", userbuf, count,
                                       datatype, filebuf, bytes, &position);
 #else
         mpi_errno = MPI_Pack_external("external32", (void *) userbuf, count,
@@ -44,7 +44,7 @@ int MPIU_write_external32_conversion_fn(const void *userbuf, MPI_Datatype dataty
             goto fn_exit;
         }
 #if MPI_VERSION >= 3
-        mpi_errno = MPI_Pack_external("external32", userbuf, count,
+        mpi_errno = MPI_Pack_external_c("external32", userbuf, count,
                                       datatype, tmp_buf, bytes, &position);
 #else
         mpi_errno = MPI_Pack_external("external32", (void *) userbuf, count,
@@ -55,7 +55,7 @@ int MPIU_write_external32_conversion_fn(const void *userbuf, MPI_Datatype dataty
             goto fn_exit;
         }
 
-        mpi_errno = MPI_Unpack(tmp_buf, bytes, &position_i, filebuf, count,
+        mpi_errno = MPI_Unpack_c(tmp_buf, bytes, &position_i, filebuf, count,
                                datatype, MPI_COMM_WORLD);
         if (mpi_errno != MPI_SUCCESS) {
             ADIOI_Free(tmp_buf);
@@ -69,21 +69,21 @@ int MPIU_write_external32_conversion_fn(const void *userbuf, MPI_Datatype dataty
 }
 
 int MPIU_read_external32_conversion_fn(void *userbuf, MPI_Datatype datatype,
-                                       int count, void *filebuf)
+                                       MPI_Count count, void *filebuf)
 {
-    int position_i = 0;
-    MPI_Aint position = 0;
-    MPI_Aint bytes = 0;
+    MPI_Count position_i = 0;
+    MPI_Count position = 0;
+    MPI_Count bytes = 0;
     int mpi_errno = MPI_SUCCESS;
     int is_contig = 0;
 
     ADIOI_Datatype_iscontig(datatype, &is_contig);
-    mpi_errno = MPI_Pack_external_size("external32", count, datatype, &bytes);
+    mpi_errno = MPI_Pack_external_size_c("external32", count, datatype, &bytes);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_exit;
 
     if (is_contig) {
-        mpi_errno = MPI_Unpack_external("external32", filebuf, bytes,
+        mpi_errno = MPI_Unpack_external_c("external32", filebuf, bytes,
                                         &position, userbuf, count, datatype);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_exit;
@@ -95,13 +95,13 @@ int MPIU_read_external32_conversion_fn(void *userbuf, MPI_Datatype datatype,
             goto fn_exit;
         }
 
-        mpi_errno = MPI_Pack(filebuf, count, datatype, tmp_buf, bytes, &position_i, MPI_COMM_WORLD);
+        mpi_errno = MPI_Pack_c(filebuf, count, datatype, tmp_buf, bytes, &position_i, MPI_COMM_WORLD);
         if (mpi_errno != MPI_SUCCESS) {
             ADIOI_Free(tmp_buf);
             goto fn_exit;
         }
 
-        mpi_errno = MPI_Unpack_external("external32", tmp_buf, bytes,
+        mpi_errno = MPI_Unpack_external_c("external32", tmp_buf, bytes,
                                         &position, userbuf, count, datatype);
         if (mpi_errno != MPI_SUCCESS) {
             ADIOI_Free(tmp_buf);

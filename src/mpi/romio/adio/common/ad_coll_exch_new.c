@@ -22,7 +22,7 @@
 
 
 typedef struct {
-    int count;
+    MPI_Count count;
     ADIO_Offset fp_ind;
     ADIO_Offset disp;
     ADIO_Offset byte_off;
@@ -298,11 +298,11 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
         recv_req_arr = (MPI_Request *) ADIOI_Calloc(2 * (recv_req_arr_sz), sizeof(MPI_Request));
         for (i = 0; i < nprocs; i++) {
             if (recv_count_arr[i].count > 0) {
-                MPI_Irecv(client_file_view_state_arr[i].flat_type_p->indices,
+                MPI_Irecv_c(client_file_view_state_arr[i].flat_type_p->indices,
                           recv_count_arr[i].count, ADIO_OFFSET, i,
                           INDICES, fd->comm, &recv_req_arr[j]);
                 j++;
-                MPI_Irecv(client_file_view_state_arr[i].flat_type_p->blocklens,
+                MPI_Irecv_c(client_file_view_state_arr[i].flat_type_p->blocklens,
                           recv_count_arr[i].count, ADIO_OFFSET, i,
                           BLOCK_LENS, fd->comm, &recv_req_arr[j]);
                 j++;
@@ -314,11 +314,11 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
         j = 0;
         for (i = 0; i < nprocs; i++) {
             if (send_count_arr[i].count > 0) {
-                MPI_Isend(flat_file_p->indices,
+                MPI_Isend_c(flat_file_p->indices,
                           send_count_arr[i].count, ADIO_OFFSET, i,
                           INDICES, fd->comm, &send_req_arr[j]);
                 j++;
-                MPI_Isend(flat_file_p->blocklens,
+                MPI_Isend_c(flat_file_p->blocklens,
                           send_count_arr[i].count, ADIO_OFFSET, i,
                           BLOCK_LENS, fd->comm, &send_req_arr[j]);
                 j++;
@@ -328,11 +328,11 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
         j = 0;
         for (i = 0; i < fd->hints->cb_nodes; i++) {
             if (send_count_arr[i].count > 0) {
-                MPI_Isend(flat_file_p->indices,
+                MPI_Isend_c(flat_file_p->indices,
                           send_count_arr[i].count, ADIO_OFFSET,
                           fd->hints->ranklist[i], INDICES, fd->comm, &send_req_arr[j]);
                 j++;
-                MPI_Isend(flat_file_p->blocklens,
+                MPI_Isend_c(flat_file_p->blocklens,
                           send_count_arr[i].count, ADIO_OFFSET,
                           fd->hints->ranklist[i], BLOCK_LENS, fd->comm, &send_req_arr[j]);
                 j++;
