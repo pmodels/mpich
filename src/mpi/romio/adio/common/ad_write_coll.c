@@ -874,18 +874,12 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                        done_to_proc[p], send_size[p] - send_buf_idx[p]);
                         buf_incr = done_to_proc[p] - curr_to_proc[p];
                         ADIOI_BUF_INCR
-                            ADIOI_Assert((curr_to_proc[p] + len - done_to_proc[p]) ==
-                                         (unsigned) (curr_to_proc[p] + len - done_to_proc[p]));
                         buf_incr = curr_to_proc[p] + len - done_to_proc[p];
-                        ADIOI_Assert((done_to_proc[p] + size) ==
-                                     (unsigned) (done_to_proc[p] + size));
                         /* ok to cast: bounded by cb buffer size */
                         curr_to_proc[p] = done_to_proc[p] + (int) size;
                     ADIOI_BUF_COPY} else {
                         size = MPL_MIN(len, send_size[p] - send_buf_idx[p]);
                         buf_incr = len;
-                        ADIOI_Assert((curr_to_proc[p] + size) ==
-                                     (unsigned) ((ADIO_Offset) curr_to_proc[p] + size));
                         curr_to_proc[p] += size;
                     ADIOI_BUF_COPY}
                     if (send_buf_idx[p] == send_size[p]) {
@@ -894,8 +888,6 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                         jj++;
                     }
                 } else {
-                    ADIOI_Assert((curr_to_proc[p] + len) ==
-                                 (unsigned) ((ADIO_Offset) curr_to_proc[p] + len));
                     curr_to_proc[p] += len;
                     buf_incr = len;
                 ADIOI_BUF_INCR}
