@@ -12,6 +12,7 @@ typedef enum {
     MPIR_HWTOPO_TYPE__NODE,
     MPIR_HWTOPO_TYPE__PACKAGE,
     MPIR_HWTOPO_TYPE__SOCKET,
+    MPIR_HWTOPO_TYPE__GROUP,
     MPIR_HWTOPO_TYPE__CPU,
     MPIR_HWTOPO_TYPE__CORE,
     MPIR_HWTOPO_TYPE__HWTHREAD,
@@ -146,4 +147,26 @@ bool MPIR_hwtopo_is_dev_close_by_pci(int domain, int bus, int dev, int func);
  * Return the global id of the first non-io object above the PCI device
  */
 MPIR_hwtopo_gid_t MPIR_hwtopo_get_dev_parent_by_pci(int domain, int bus, int dev, int func);
+
+/*
+ * Return the number of numa nodes.
+ * This function is used to determine if a node is in SPR SNC4 mode
+ */
+int MPIR_hwtopo_get_num_numa_nodes(void);
+
+/*
+ * Return the global id of the group ancestor of the first bound PU.
+ * This function is used for nic binding in SPR SNC4 mode
+ */
+MPIR_hwtopo_gid_t MPIR_hwtopo_get_first_pu_group(void);
+
+/*
+ * Return the global id of the socket ancestor of the passed gid.
+ */
+MPIR_hwtopo_gid_t MPIR_hwtopo_get_parent_socket(MPIR_hwtopo_gid_t gid);
+
+/*
+ * Return the local index of my nic in my first non io ancestor.
+ */
+int MPIR_hwtopo_get_pci_network_lid(int domain, int bus, int dev, int func);
 #endif /* MPIR_HWTOPO_H_INCLUDED */

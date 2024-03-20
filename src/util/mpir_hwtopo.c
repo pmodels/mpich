@@ -106,6 +106,9 @@ static hwloc_obj_type_t get_hwloc_obj_type(MPIR_hwtopo_type_e type)
         case MPIR_HWTOPO_TYPE__CPU:
             hwloc_obj_type = HWLOC_OBJ_PACKAGE;
             break;
+        case MPIR_HWTOPO_TYPE__GROUP:
+            hwloc_obj_type = HWLOC_OBJ_GROUP;
+            break;
         case MPIR_HWTOPO_TYPE__CORE:
             hwloc_obj_type = HWLOC_OBJ_CORE;
             break;
@@ -320,6 +323,7 @@ MPIR_hwtopo_type_e MPIR_hwtopo_get_type_id(const char *name)
         {"machine", MPIR_HWTOPO_TYPE__NODE},
         {"socket", MPIR_HWTOPO_TYPE__SOCKET},
         {"package", MPIR_HWTOPO_TYPE__PACKAGE},
+        {"group", MPIR_HWTOPO_TYPE__GROUP},
         {"cpu", MPIR_HWTOPO_TYPE__CPU},
         {"core", MPIR_HWTOPO_TYPE__CORE},
         {"hwthread", MPIR_HWTOPO_TYPE__HWTHREAD},
@@ -627,4 +631,130 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_dev_parent_by_pci(int domain, int bus, int dev
     gid = HWTOPO_GET_GID(class, first_non_io->depth, first_non_io->logical_index);
 #endif
     return gid;
+}
+
+int MPIR_hwtopo_get_num_numa_nodes(void)
+{
+    int num_numa_nodes = 0;
+
+#ifdef HAVE_HWLOC
+    MPIR_hwtopo_gid_t gid = MPIR_hwtopo_get_obj_by_name("node");
+    hwloc_obj_t obj =
+        hwloc_get_obj_by_depth(hwloc_topology, HWTOPO_GET_DEPTH(gid), HWTOPO_GET_INDEX(gid));
+
+    hwloc_obj_t tmp = NULL;
+
+    while ((tmp = hwloc_get_next_obj_by_type(hwloc_topology, HWLOC_OBJ_NUMANODE, tmp)) != NULL) {
+        if (hwloc_bitmap_isset(obj->nodeset, tmp->os_index)) {
+            num_numa_nodes++;
+        }
+    }
+#endif
+    return num_numa_nodes;
+}
+
+MPIR_hwtopo_gid_t MPIR_hwtopo_get_first_pu_group(void)
+{
+    MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_ROOT;
+#ifdef HAVE_HWLOC
+    hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
+    hwloc_get_proc_cpubind(hwloc_topology, getpid(), cpuset, HWLOC_CPUBIND_PROCESS);
+
+    hwloc_obj_t obj = hwloc_get_pu_obj_by_os_index(hwloc_topology, hwloc_bitmap_first(cpuset));
+    gid = HWTOPO_GET_GID(get_type_class(obj->type), obj->depth, obj->logical_index);
+
+    /* Traverse up the PU object until a group object is reached */
+    while (obj && obj->type != HWLOC_OBJ_GROUP && obj->parent)
+        obj = obj->parent;
+    gid = HWTOPO_GET_GID(get_type_class(obj->type), obj->depth, obj->logical_index);
+#endif
+    return gid;
+}
+
+MPIR_hwtopo_gid_t MPIR_hwtopo_get_parent_socket(MPIR_hwtopo_gid_t gid)
+{
+    MPIR_hwtopo_gid_t parent_gid = MPIR_HWTOPO_GID_ROOT;
+#ifdef HAVE_HWLOC
+    hwloc_obj_t obj =
+        hwloc_get_obj_by_depth(hwloc_topology, HWTOPO_GET_DEPTH(gid), HWTOPO_GET_INDEX(gid));
+
+    while (obj && obj->parent && obj->type != HWLOC_OBJ_PACKAGE)
+        obj = obj->parent;
+
+    if (obj->type == HWLOC_OBJ_PACKAGE)
+        parent_gid = HWTOPO_GET_GID(get_type_class(obj->type), obj->depth, obj->logical_index);
+#endif
+    return parent_gid;
+}
+
+#ifdef HAVE_HWLOC
+static MPIR_hwtopo_gid_t obj_to_gid(hwloc_obj_t obj)
+{
+    hwtopo_class_e class = get_type_class(obj->type);
+    return HWTOPO_GET_GID(class, obj->depth, obj->logical_index);
+}
+
+static int get_number_of_nics_below_me(hwloc_obj_t obj)
+{
+    int num = 0;
+
+    /* Found a network device, increment by 1 */
+    if (obj->attr && obj->attr->osdev.type == HWLOC_OBJ_OSDEV_NETWORK)
+        num++;
+
+    /* Find network devices among all my 'regular' children */
+    for (int i = 0; i < obj->arity; i++) {
+        num += get_number_of_nics_below_me(obj->children[i]);
+    }
+
+    /* Find network devices among all my io children */
+    hwloc_obj_t io_child = obj->io_first_child;
+    while (io_child) {
+        num += get_number_of_nics_below_me(io_child);
+        io_child = io_child->next_sibling;
+    }
+    return num;
+}
+#endif
+
+int MPIR_hwtopo_get_pci_network_lid(int domain, int bus, int dev, int func)
+{
+    int myIndex = 0;
+#ifdef HAVE_HWLOC
+    hwloc_obj_t my_io_device = hwloc_get_pcidev_by_busid(hwloc_topology, domain, bus, dev, func);
+    MPIR_Assert(my_io_device);
+    hwloc_obj_t my_first_non_io = hwloc_get_non_io_ancestor_obj(hwloc_topology, my_io_device);
+    MPIR_Assert(my_first_non_io);
+
+    MPIR_hwtopo_gid_t my_parent_gid = obj_to_gid(my_first_non_io);
+    hwloc_obj_t io_device = my_io_device;
+
+    /* Determine the number of network devices before me in my first non io ancestor. This
+     * can be used to determine my local network nic, which is used for nic mapping.
+     * First, look for network devices among my previous siblings. */
+    while (io_device->prev_sibling) {
+        MPIR_hwtopo_gid_t prev_sibling_parent_gid =
+            obj_to_gid(hwloc_get_non_io_ancestor_obj(hwloc_topology, io_device->prev_sibling));
+
+        if (my_parent_gid != prev_sibling_parent_gid)
+            break;
+
+        myIndex += get_number_of_nics_below_me(io_device->prev_sibling);
+        io_device = io_device->prev_sibling;
+    }
+
+    /* Next, look for network devices among my previous cousins */
+    io_device = my_io_device;
+    while (io_device->prev_cousin) {
+        MPIR_hwtopo_gid_t prev_cousin_parent_gid =
+            obj_to_gid(hwloc_get_non_io_ancestor_obj(hwloc_topology, io_device->prev_cousin));
+
+        if (my_parent_gid != prev_cousin_parent_gid)
+            break;
+
+        myIndex += get_number_of_nics_below_me(io_device->prev_cousin);
+        io_device = io_device->prev_cousin;
+    }
+#endif
+    return myIndex;
 }
