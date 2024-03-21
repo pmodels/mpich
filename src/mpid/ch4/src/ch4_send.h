@@ -15,20 +15,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend(const void *buf,
                                          int rank,
                                          int tag,
                                          MPIR_Comm * comm, int attr,
-                                         MPIDI_av_entry_t * av, MPIR_Request ** req)
+                                         MPIDI_av_entry_t * av,
+                                         MPIR_cc_t * parent_cc_ptr, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     *(req) = NULL;
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, attr, av, req);
+    mpi_errno =
+        MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr, req);
 #else
     int r;
     if ((r = MPIDI_av_is_local(av)))
-        mpi_errno = MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, attr, av, req);
+        mpi_errno =
+            MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr,
+                                req);
     else
-        mpi_errno = MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, attr, av, req);
+        mpi_errno =
+            MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr, req);
     if (mpi_errno == MPI_SUCCESS)
         MPIDI_REQUEST(*req, is_local) = r;
 #endif
@@ -54,10 +59,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     MPIR_FUNC_ENTER;
 
     if (MPIR_is_self_comm(comm)) {
-        mpi_errno = MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, request);
+        mpi_errno = MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, NULL, request);
     } else {
         av = MPIDIU_comm_rank_to_av(comm, rank);
-        mpi_errno = MPIDI_isend(buf, count, datatype, rank, tag, comm, attr, av, request);
+        mpi_errno = MPIDI_isend(buf, count, datatype, rank, tag, comm, attr, av, NULL, request);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -71,6 +76,52 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Isend_parent(const void *buf,
+                                               MPI_Aint count,
+                                               MPI_Datatype datatype,
+                                               int rank,
+                                               int tag,
+                                               MPIR_Comm * comm, int attr,
+                                               MPIR_cc_t * parent_cc_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = NULL;
+    MPIR_FUNC_ENTER;
+
+    if (MPIDI_is_self_comm(comm)) {
+        mpi_errno =
+            MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, parent_cc_ptr, request);
+    } else {
+        av = MPIDIU_comm_rank_to_av(comm, rank);
+        mpi_errno =
+            MPIDI_isend(buf, count, datatype, rank, tag, comm, attr, av, parent_cc_ptr, request);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (*request) {
+        MPII_SENDQ_REMEMBER(*request, rank, tag, comm->recvcontext_id, buf, count);
+    }
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Isend_coll(const void *buf,
+                                             MPI_Aint count,
+                                             MPI_Datatype datatype,
+                                             int rank,
+                                             int tag,
+                                             MPIR_Comm * comm, int attr,
+                                             MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, *errflag);
+    return MPID_Isend(buf, count, datatype, rank, tag, comm, attr, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
@@ -110,10 +161,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
     MPIR_FUNC_ENTER;
 
     if (MPIR_is_self_comm(comm)) {
-        mpi_errno = MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, request);
+        mpi_errno = MPIDI_Self_isend(buf, count, datatype, rank, tag, comm, attr, NULL, request);
     } else {
         av = MPIDIU_comm_rank_to_av(comm, rank);
-        mpi_errno = MPIDI_isend(buf, count, datatype, rank, tag, comm, attr, av, request);
+        mpi_errno = MPIDI_isend(buf, count, datatype, rank, tag, comm, attr, av, NULL, request);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
