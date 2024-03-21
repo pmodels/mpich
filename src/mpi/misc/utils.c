@@ -166,6 +166,11 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         } else if (send_attr.type == MPL_GPU_POINTER_DEV || recv_attr.type == MPL_GPU_POINTER_DEV) {
             MPL_gpu_free_host(buf);
         }
+
+        if (localcopy_kind == LOCALCOPY_NONBLOCKING) {
+            MPIR_Typerep_req *typerep_req = extra_param;
+            typerep_req->req = YAKSA_REQUEST__NULL;
+        }
     }
 
   fn_exit:

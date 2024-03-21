@@ -363,6 +363,7 @@ typedef struct MPIDIG_win_shared_info {
     MPIDI_GPU_ipc_handle_t ipc_handle;
 #endif
     int mapped_type;            /* 0: gpu ipc mapped 1: gpu host mmapped 2: xpmem */
+    int global_dev_id;          /* device ID if mapped_type is 0 */
 } MPIDIG_win_shared_info_t;
 
 #define MPIDIG_ACCU_ORDER_RAR (1)
