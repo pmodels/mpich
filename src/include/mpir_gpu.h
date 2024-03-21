@@ -88,6 +88,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_GPU_query_pointer_attr(const void *ptr, MPL_po
     } else {
         attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
         attr->device = MPL_GPU_DEVICE_INVALID;
+        attr->device_attr = 0;
     }
 
   fn_exit:

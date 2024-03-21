@@ -98,18 +98,16 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     MPIR_Assert(pvalue->data.uint32 <= INT_MAX);        /* overflow check */
     *appnum = (int) pvalue->data.uint32;
     PMIX_VALUE_RELEASE(pvalue);
-    pmix_value_t value;
-    pmix_value_t *val = &value;
 
     for (int i = 0; i < *size; i++) {
         pmix_proc.rank = i;
-        pmi_errno = PMIx_Get(&pmix_proc, PMIX_FABRIC_COORDINATES, NULL, 0, &val);
+        pmi_errno = PMIx_Get(&pmix_proc, PMIX_FABRIC_COORDINATES, NULL, 0, &pvalue);
         if (pmi_errno != PMIX_SUCCESS) {
             MPIR_Process.coords = NULL;
             break;
         }
-        MPIR_Assert(val->data.coord->dims <= INT_MAX);
-        MPIR_Process.coords_dims = (int) val->data.coord->dims;
+        MPIR_Assert(pvalue->data.coord->dims <= INT_MAX);
+        MPIR_Process.coords_dims = (int) pvalue->data.coord->dims;
         MPIR_Assert(MPIR_Process.coords_dims == 3);
 
         if (i == 0) {
@@ -118,13 +116,14 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
             MPIR_ERR_CHKANDJUMP(!MPIR_Process.coords, mpi_errno, MPI_ERR_OTHER, "**nomem");
         }
 
-        if (PMIX_COORD == val->type) {
+        if (PMIX_COORD == pvalue->type) {
             for (int j = 0; j < MPIR_Process.coords_dims; j++) {
-                /* MPIR_Process.coords stores the coords in this order: port number, switch_id, group_id */
+                /* MPIR_Process.coords is in this order: port number, switch_id, group_id */
                 MPIR_Process.coords[i * MPIR_Process.coords_dims + j] =
-                    val->data.coord->coord[MPIR_Process.coords_dims - 1 - j];
+                    pvalue->data.coord->coord[MPIR_Process.coords_dims - 1 - j];
             }
         }
+        PMIX_VALUE_RELEASE(pvalue);
     }
 
   fn_exit:
