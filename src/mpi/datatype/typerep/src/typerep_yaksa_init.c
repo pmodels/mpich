@@ -10,6 +10,7 @@
 static yaksa_type_t TYPEREP_YAKSA_TYPE__REAL16;
 static yaksa_type_t TYPEREP_YAKSA_TYPE__COMPLEX32;
 static yaksa_type_t TYPEREP_YAKSA_TYPE__INTEGER16;
+static yaksa_type_t TYPEREP_YAKSA_TYPE__LOGICAL16;
 
 yaksa_info_t MPII_yaksa_info_nogpu;
 
@@ -145,8 +146,12 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
         case MPI_COUNT:
         case MPI_C_BOOL:
 #ifdef HAVE_FORTRAN_BINDING
-        case MPI_LOGICAL:
         case MPI_CHARACTER:
+        case MPI_LOGICAL:
+        case MPI_LOGICAL1:
+        case MPI_LOGICAL2:
+        case MPI_LOGICAL4:
+        case MPI_LOGICAL8:
         case MPI_INTEGER:
         case MPI_INTEGER1:
         case MPI_INTEGER2:
@@ -325,6 +330,8 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
                     yaksa_type = TYPEREP_YAKSA_TYPE__COMPLEX32;
                 } else if (type == MPI_INTEGER16) {
                     yaksa_type = TYPEREP_YAKSA_TYPE__INTEGER16;
+                } else if (type == MPI_LOGICAL16) {
+                    yaksa_type = TYPEREP_YAKSA_TYPE__LOGICAL16;
                 } else {
                     MPIR_Datatype *typeptr;
                     MPIR_Datatype_get_ptr(type, typeptr);
@@ -424,6 +431,9 @@ void MPIR_Typerep_init(void)
 
     MPIR_Datatype_get_size_macro(MPI_INTEGER16, size);
     yaksa_type_create_contig(size, YAKSA_TYPE__BYTE, NULL, &TYPEREP_YAKSA_TYPE__INTEGER16);
+
+    MPIR_Datatype_get_size_macro(MPI_LOGICAL16, size);
+    yaksa_type_create_contig(size, YAKSA_TYPE__BYTE, NULL, &TYPEREP_YAKSA_TYPE__LOGICAL16);
 
     MPIR_FUNC_EXIT;
 }
