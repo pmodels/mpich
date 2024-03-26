@@ -225,12 +225,12 @@ sub CreateErrmsgsHeader {
  * This file automatically created by extracterrmsgs\
  * DO NOT EDIT\
  */\n";
-    print $FD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS
+    print $FD "
 typedef struct msgpair {
         const unsigned int sentinal1;
         const char *short_name, *long_name; 
         const unsigned int sentinal2; } msgpair;
-#endif\n"
+\n"
 }
 #
 # We also need a way to create the records
@@ -247,24 +247,11 @@ typedef struct msgpair {
 sub CreateErrMsgMapping {
     my $OUTFD = $_[0];
 
-    # For the case of classes only, output the strings for the class 
-    # messages
-    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__CLASS\n";
-    print $OUTFD "static const char *classToMsg[] = {\n";
-    for (my $i=0; $i<=$max_err_class; $i++) {
-	my $shortname = $class_msgs[$i];
-        my $msg       = $longnames{$shortname};
-        print $OUTFD "    \"$msg\", /* $i  $class_msgs[$i] */\n";
-    }
-    print $OUTFD "    NULL\n};\n";
-    print $OUTFD "#endif /* MSG_CLASS */\n";
-
     # Now, output each short,long key
     # Do the generic, followed by the specific, messages
     # The long messages must be available for the generic message output.
     # An alternative is to separate the short from the long messages;
     # the long messages are needed for > MSG_NONE, the short for > MSG_CLASS.
-    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS\n";
     print $OUTFD "/* The names are in sorted order, allowing the use of a simple\
   linear search or bisection algorithm to find the message corresponding to\
   a particular message */\n";
@@ -323,11 +310,9 @@ sub CreateErrMsgMapping {
 	print $OUTFD "\n";
     }
     print $OUTFD "};\n";
-    print $OUTFD "#endif\n\n";
 
     $num = 0;
     # Now output the instance specific messages
-    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__GENERIC\n";
     foreach my $key (sort keys %specific_msgs)
     {
 	my $longvalue = "\"\0\"";
@@ -361,9 +346,7 @@ sub CreateErrMsgMapping {
 	print $OUTFD "\n";
     }
     print $OUTFD "};\n";
-    print $OUTFD "#endif\n\n";
 
-    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS\n";
     my $maxval = $max_err_class + 1;
     print $OUTFD "static int class_to_index[] = {\n    ";
     for (my $i=0; $i<=$max_err_class; $i++) {
@@ -377,7 +360,6 @@ sub CreateErrMsgMapping {
 	print $OUTFD "\n    " if !(($i + 1) % 10);
     }
     print $OUTFD "\n};\n";
-    print $OUTFD "#endif\n";
 }
 #
 # Add a call to test this message for the error message.
