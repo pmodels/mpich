@@ -361,15 +361,6 @@ AC_ARG_ENABLE(error-checking,
         all       - error checking always enabled (default)
 ],,enable_error_checking=runtime)
 
-AC_ARG_ENABLE(error-messages,
-[  --enable-error-messages=level - Control the amount of detail in error messages.
-        all       - Maximum amount of information
-        generic   - Only generic messages (no information about the specific
-                    instance)
-        class     - One message per MPI error class
-        none      - No messages
-],,enable_error_messages=all)
-
 AC_ARG_ENABLE(tag-error-bits,
 [  --enable-tag-error-bits=yes|no - Control whether bits are taken from the user tag for error handling.
         yes       - Two bits are taken from the user tag to support error propagation.
@@ -1052,26 +1043,6 @@ case "$enable_error_checking" in
 esac
 # permit @HAVE_ERROR_CHECKING@ substitution in mpir_ext.h
 AC_SUBST([HAVE_ERROR_CHECKING])
-
-# error-messages
-case "$enable_error_messages" in
-    no|none)
-        error_message_kind="MPICH_ERROR_MSG__NONE"
-    ;;
-    all|yes)
-	error_message_kind="MPICH_ERROR_MSG__ALL"
-    ;;
-    generic)
-	error_message_kind="MPICH_ERROR_MSG__GENERIC"
-    ;;
-    class)
-	error_message_kind="MPICH_ERROR_MSG__CLASS"
-    ;;
-    *)
-    AC_MSG_WARN([Unknown value $enable_error_messages for enable-error-messages])
-    ;;
-esac
-AC_DEFINE_UNQUOTED(MPICH_ERROR_MSG_LEVEL,$error_message_kind,[define to enable error messages])
 
 #error-tags
 if test "$enable_tag_error_bits" = "yes" ; then
