@@ -407,9 +407,10 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             /* If found, call the delete function before replacing the
-             * attribute */
+             * attribute. If the delete function fails on the old
+             * attribute value, we keep the old value. */
             mpi_errno = MPIR_Call_attr_delete(comm_ptr->handle, p);
-            if (mpi_errno) {
+            if (mpi_errno != MPI_SUCCESS) {
                 goto fn_fail;
             }
             p->attrType = attrType;
@@ -514,10 +515,11 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
          * standard, if the usr function returns something other than
          * MPI_SUCCESS, we should either return the user return code,
          * or an mpich error code.  The precedent set by the Intel
-         * test suite says we should return the user return code.  So
+         * test suite says we should return the user return code. So
          * we must not ERR_POP here. */
         mpi_errno = MPIR_Call_attr_delete(comm_ptr->handle, p);
-        if (mpi_errno)
+        /* If the user delete function fails, we still remove the attribute from the list. */
+        if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
         /* NOTE: it's incorrect to remove p by its parent pointer because the delete function
@@ -536,6 +538,7 @@ int MPIR_Type_get_attr_impl(MPIR_Datatype * type_ptr, int type_keyval, void *att
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p;
+
     MPIR_FUNC_ENTER;
 
     /* ... body of routine ...  */
@@ -594,15 +597,15 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             /* If found, call the delete function before replacing the
-             * attribute */
+             * attribute. If the delete function fails on the old
+             * attribute value, we keep the old value. */
             mpi_errno = MPIR_Call_attr_delete(type_ptr->handle, p);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno) {
+            if (mpi_errno != MPI_SUCCESS) {
                 goto fn_fail;
             }
-            /* --END ERROR HANDLING-- */
-            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
             p->attrType = attrType;
+            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
+            /* Does not change the reference count on the keyval */
             break;
         } else if (p->keyval->handle > keyval_ptr->handle) {
             MPIR_Attribute *new_p = MPID_Attr_alloc();
@@ -644,7 +647,6 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -678,9 +680,12 @@ int MPIR_Type_delete_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_pt
          * test suite says we should return the user return code.  So
          * we must not ERR_POP here. */
         mpi_errno = MPIR_Call_attr_delete(type_ptr->handle, p);
-        if (mpi_errno)
+        /* If the user delete function fails, we still remove the attribute from the list. */
+        if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
+        /* NOTE: it's incorrect to remove p by its parent pointer because the delete function
+         *       may have invalidated the parent pointer, e.g. by removing the parent attribute */
         delete_attr(&type_ptr->attributes, p);
     }
 
@@ -694,6 +699,8 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
                            int *flag, MPIR_Attr_type outAttrType)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
 
     /* Check for builtin attribute */
     /* This code is ok for correct programs, but it would be better
@@ -819,16 +826,14 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             /* If found, call the delete function before replacing the
-             * attribute */
+             * attribute. If the delete function fails on the old
+             * attribute value, we keep the old value. */
             mpi_errno = MPIR_Call_attr_delete(win_ptr->handle, p);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno) {
-                /* FIXME : communicator of window? */
+            if (mpi_errno != MPI_SUCCESS) {
                 goto fn_fail;
             }
-            /* --END ERROR HANDLING-- */
-            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
             p->attrType = attrType;
+            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
             /* Does not change the reference count on the keyval */
             break;
         } else if (p->keyval->handle > keyval_ptr->handle) {
@@ -873,7 +878,6 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 int MPIR_Win_delete_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr)
@@ -904,9 +908,12 @@ int MPIR_Win_delete_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr)
          * test suite says we should return the user return code.  So
          * we must not ERR_POP here. */
         mpi_errno = MPIR_Call_attr_delete(win_ptr->handle, p);
-        if (mpi_errno)
+        /* If the user delete function fails, we still remove the attribute from the list. */
+        if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
+        /* NOTE: it's incorrect to remove p by its parent pointer because the delete function
+         *       may have invalidated the parent pointer, e.g. by removing the parent attribute */
         delete_attr(&win_ptr->attributes, p);
     }
 

@@ -220,8 +220,6 @@ int MPIR_Attr_delete_list(int handle, MPIR_Attribute ** attr)
         /* --END ERROR HANDLING-- */
         /* For this attribute, find the delete function for the
          * corresponding keyval */
-        /* Still to do: capture any error returns but continue to
-         * process attributes */
         mpi_errno = MPIR_Call_attr_delete(handle, p);
 
         /* We must also remove the keyval reference.  If the keyval
