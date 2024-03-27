@@ -66,7 +66,7 @@ void abort_msg(const char *str, int code)
 int test_communicators(void)
 {
     MPI_Comm dup_comm_world, d2;
-    int world_rank, world_size, key_1;
+    int world_rank, world_size, key_1, flag = 0;
     int err, errs = 0;
     MPI_Aint value;
 
@@ -99,12 +99,32 @@ int test_communicators(void)
         printf("delete function return code was MPI_SUCCESS in put\n");
     }
 
-    /* Because the attribute delete function should fail, the attribute
-     * should *not be removed* */
     err = MPI_Comm_delete_attr(dup_comm_world, key_1);
     if (err == MPI_SUCCESS) {
         errs++;
         printf("delete function return code was MPI_SUCCESS in delete\n");
+    }
+
+    /* Because the attribute delete function should fail, the attribute
+     * may *not be removed* */
+    err = MPI_Comm_get_attr(dup_comm_world, key_1, &value, &flag);
+    if (err) {
+        errs++;
+        printf("Error with get\n");
+
+    }
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
+    if (!flag) {
+        errs++;
+        printf("delete function failed but the attribute was removed\n");
+    }
+#endif
+    if (!flag) {
+        err = MPI_Comm_set_attr(dup_comm_world, key_1, (void *) (MPI_Aint) (2 * world_rank));
+        if (err) {
+            errs++;
+            printf("Error with second put\n");
+        }
     }
 
     err = MPI_Comm_dup(dup_comm_world, &d2);
