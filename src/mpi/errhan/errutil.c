@@ -1006,10 +1006,10 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
                                 const char generic_msg[], const char specific_msg[], va_list Argp)
 {
     int err_code;
-    int generic_idx;
+    int generic_idx, ring_idx, ring_seq = 0;
     int use_user_error_code = 0;
     int user_error_code = -1;
-    char user_ring_msg[MPIR_MAX_ERROR_LINE + 1];
+    char user_ring_msg[MPIR_MAX_ERROR_LINE + 1] = "";
 
     /* Create the code from the class and the message ring index */
 
@@ -1047,14 +1047,12 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
         return MPI_ERR_IN_STATUS;
     }
 
-    err_code = error_class;
-
     /* Handle the generic message.  This selects a subclass, based on a text
      * string */
     generic_idx = FindGenericMsgIndex(generic_msg);
     if (generic_idx >= 0) {
         if (strcmp(generic_err_msgs[generic_idx].short_name, "**user") == 0) {
-            use_user_error_code = 1;
+            const char *specific_fmt = "unspecified user error";
             /* This is a special case.  The format is
              * "**user", "**userxxx %d", intval
              * (generic, specific, parameter).  In this
@@ -1063,7 +1061,6 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
              * We do this here because we cannot both access the
              * user error code and pass the argp to vsnprintf_mpi . */
             if (specific_msg) {
-                const char *specific_fmt;
                 int specific_idx;
                 user_error_code = va_arg(Argp, int);
                 specific_idx = FindSpecificMsgIndex(specific_msg);
@@ -1073,15 +1070,16 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
                     specific_fmt = specific_msg;
                 }
                 snprintf(user_ring_msg, sizeof(user_ring_msg), specific_fmt, user_error_code);
-            } else {
-                user_ring_msg[0] = 0;
+                if (user_error_code & ERROR_DYN_MASK) {
+                    use_user_error_code = 1;
+                } else if (is_valid_error_class(user_error_code)) {
+                    error_class = MPIR_ERR_GET_CLASS(user_error_code);
+                }
             }
+            snprintf(user_ring_msg, sizeof(user_ring_msg), specific_fmt, user_error_code);
         }
-        err_code |= (generic_idx + 1) << ERROR_GENERIC_SHIFT;
     } else {
         /* TODO: lookup index for class error message */
-        err_code &= ~ERROR_GENERIC_MASK;
-
 #ifdef MPICH_DBG_OUTPUT
         {
             if (generic_msg[0] == '*' && generic_msg[1] == '*') {
@@ -1096,7 +1094,6 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
     {
         int specific_idx;
         const char *specific_fmt = 0;
-        int ring_idx, ring_seq = 0;
         char *ring_msg;
 
         error_ring_mutex_lock();
@@ -1120,10 +1117,10 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
                     specific_fmt = specific_msg;
                 }
                 /* See the code above for handling user errors */
-                if (!use_user_error_code) {
-                    vsnprintf_mpi(ring_msg, MPIR_MAX_ERROR_LINE, specific_fmt, Argp);
-                } else {
+                if (user_ring_msg[0]) {
                     MPL_strncpy(ring_msg, user_ring_msg, MPIR_MAX_ERROR_LINE);
+                } else {
+                    vsnprintf_mpi(ring_msg, MPIR_MAX_ERROR_LINE, specific_fmt, Argp);
                 }
             } else if (generic_idx >= 0) {
                 MPL_strncpy(ring_msg, generic_err_msgs[generic_idx].long_name, MPIR_MAX_ERROR_LINE);
@@ -1185,10 +1182,15 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
         }
         error_ring_mutex_unlock();
 
-        err_code |= ring_idx << ERROR_SPECIFIC_INDEX_SHIFT;
-        err_code |= ring_seq << ERROR_SPECIFIC_SEQ_SHIFT;
-
     }
+
+    /* Build the error code out of the pieces */
+    err_code = error_class;
+    if (generic_idx >= 0) {
+        err_code |= (generic_idx + 1) << ERROR_GENERIC_SHIFT;
+    }
+    err_code |= ring_idx << ERROR_SPECIFIC_INDEX_SHIFT;
+    err_code |= ring_seq << ERROR_SPECIFIC_SEQ_SHIFT;
 
     if (fatal || MPIR_Err_is_fatal(lastcode)) {
         err_code |= ERROR_FATAL_MASK;
