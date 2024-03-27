@@ -8,9 +8,7 @@
 #include "mpiimpl.h"
 
 /* defmsg is generated automatically from the source files and contains
-   all of the error messages, both the generic and specific.  Depending
-   on the value of MPICH_ERROR_MSG_LEVEL, different amounts of message
-   information will be included from the file defmsg.h */
+   all of the error messages, both the generic and specific. */
 #include "defmsg.h"
 
 /* stdio is needed for vsprintf and vsnprintf */
@@ -70,23 +68,12 @@ cvars:
  * abort the program.  The comm and win versions are here; ROMIO
  * provides its own routines for invoking the error handlers for Files.
  *
- * The third group of code handles the error messages.  There are four
- * options, controlled by the value of MPICH_ERROR_MSG_LEVEL.
- *
- * MPICH_ERROR_MSG__NONE - No text messages at all
- * MPICH_ERROR_MSG__CLASS - Only messages for the MPI error classes
- * MPICH_ERROR_MSG__GENERIC - Only predefined messages for the MPI error codes
- * MPICH_ERROR_MSG__ALL - Instance specific error messages (and error message
- *                       stack)
- *
- * In only the latter (MPICH_ERROR_MSG__ALL) case are instance-specific
- * messages maintained (including the error message "stack" that you may
- * see mentioned in various places.  In the other cases, an error code
- * identifies a fixed message string (unless MPICH_ERROR_MSG__NONE,
- * when there are no strings) from the "generic" strings defined in defmsg.h
+ * The third group of code handles the error messages.
  *
  * A major subgroup in this section is the code to handle the instance-specific
- * messages (MPICH_ERROR_MSG__ALL only).
+ * messages.
+ * NOTE: the option to message levels have been removed. We support
+ * instance specific error messages by default.
  *
  * An MPI error code is made up of a number of fields (see mpir_errcodes.h)
  * These ar
@@ -111,15 +98,9 @@ static int did_err_init = FALSE;        /* helps us solve a bootstrapping proble
 
 static int checkValidErrcode(int, const char[], int *);
 
-#if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG__ALL
 static int ErrGetInstanceString(int, char[], int);
 static void MPIR_Err_stack_init(void);
 static int checkForUserErrcode(int);
-#else
-/* We only need special handling for user error codes when we support the
-   error message stack */
-#define checkForUserErrcode(_a) _a
-#endif /* ERROR_MSG_LEVEL >= ERROR_MSG_ALL */
 
 
 /* ------------------------------------------------------------------------- */
@@ -151,9 +132,7 @@ void MPIR_Err_init(void)
     MPIR_Errhandler_builtin[2].handle = MPIR_ERRORS_THROW_EXCEPTIONS;
     MPIR_Errhandler_builtin[3].handle = MPI_ERRORS_ABORT;
 
-#if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG__ALL
     MPIR_Err_stack_init();
-#endif
     did_err_init = TRUE;
 }
 
@@ -906,152 +885,14 @@ void MPIR_Err_get_string(int errorcode, char *msg, int length, MPIR_Err_get_clas
 
         /* FIXME: Replace with function to add instance string or
          * error code string */
-#if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG__ALL
         if (ErrGetInstanceString(errorcode, msg, num_remaining))
             goto fn_exit;
-#elif MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS
-        {
-            int generic_idx;
-
-            generic_idx = ((errorcode & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT) - 1;
-
-            if (generic_idx >= 0) {
-                snprintf(msg, num_remaining, ", %s", generic_err_msgs[generic_idx].long_name);
-                msg[num_remaining - 1] = '\0';
-                goto fn_exit;
-            }
-        }
-#endif /* MSG_LEVEL >= MSG_ALL */
     }
 
   fn_exit:
     return;
 }
 
-#if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__NONE
-/* No error message support */
-int MPIR_Err_create_code(int lastcode, int fatal, const char fcname[],
-                         int line, int error_class, const char generic_msg[],
-                         const char specific_msg[], ...)
-{
-    MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, TYPICAL,
-                    (MPL_DBG_FDEST, "%sError created: last=%#010x class=%#010x %s(%d) %s",
-                     fatal ? "Fatal " : "", lastcode, error_class, fcname, line, generic_msg));
-    return (lastcode == MPI_SUCCESS) ? error_class : lastcode;
-}
-
-int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
-                                int line, int error_class,
-                                const char generic_msg[], const char specific_msg[], va_list Argp)
-{
-    return (lastcode == MPI_SUCCESS) ? error_class : lastcode;
-}
-
-/* Internal routines */
-static void CombineSpecificCodes(int error1_code, int error2_code, int error2_class)
-{
-}
-
-static const char *get_class_msg(int error_class)
-{
-    /* FIXME: Not internationalized */
-    return "Error message texts are not available";
-}
-
-#elif MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__CLASS
-/* Only class error messages.  Note this is nearly the same as
-   MPICH_ERROR_MSG_LEVEL == NONE, since the handling of error codes
-   is the same */
-int MPIR_Err_create_code(int lastcode, int fatal, const char fcname[],
-                         int line, int error_class, const char generic_msg[],
-                         const char specific_msg[], ...)
-{
-    MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, TYPICAL,
-                    (MPL_DBG_FDEST, "%sError created: last=%#010x class=%#010x %s(%d) %s",
-                     fatal ? "Fatal " : "", lastcode, error_class, fcname, line, generic_msg));
-    return (lastcode == MPI_SUCCESS) ? error_class : lastcode;
-}
-
-int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
-                                int line, int error_class,
-                                const char generic_msg[], const char specific_msg[], va_list Argp)
-{
-    return (lastcode == MPI_SUCCESS) ? error_class : lastcode;
-}
-
-static void CombineSpecificCodes(int error1_code, int error2_code, int error2_class)
-{
-}
-
-static const char *get_class_msg(int error_class)
-{
-    if (is_valid_error_class(error_class)) {
-        return classToMsg[error_class];
-    } else {
-        /* --BEGIN ERROR HANDLING-- */
-        return "Unknown error class";
-        /* --END ERROR HANDLING-- */
-    }
-}
-
-#elif MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__GENERIC
-#define NEEDS_FIND_GENERIC_MSG_INDEX
-static int FindGenericMsgIndex(const char[]);
-
-/* Only generic error messages (more than class, but all predefined) */
-
-int MPIR_Err_create_code(int lastcode, int fatal, const char fcname[],
-                         int line, int error_class, const char generic_msg[],
-                         const char specific_msg[], ...)
-{
-    int rc;
-    va_list Argp;
-    va_start(Argp, specific_msg);
-    MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, TYPICAL,
-                    (MPL_DBG_FDEST, "%sError created: last=%#010x class=%#010x %s(%d) %s",
-                     fatal ? "Fatal " : "", lastcode, error_class, fcname, line, generic_msg));
-    rc = MPIR_Err_create_code_valist(lastcode, fatal, fcname, line, error_class, generic_msg,
-                                     specific_msg, Argp);
-    va_end(Argp);
-    /* Looks like Coverity has a hard time understanding that logic that
-     * (error_class != MPI_SUCCESS => rc != MPI_SUCCESS), so adding an explicit assertion here. */
-    MPIR_Assert(error_class == MPI_SUCCESS || rc != MPI_SUCCESS);
-    return rc;
-}
-
-int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
-                                int line, int error_class,
-                                const char generic_msg[], const char specific_msg[], va_list Argp)
-{
-    int generic_idx;
-    int errcode = lastcode;
-    if (lastcode == MPI_SUCCESS) {
-        generic_idx = FindGenericMsgIndex(generic_msg);
-        if (generic_idx >= 0) {
-            errcode = (generic_idx << ERROR_GENERIC_SHIFT) | error_class;
-            if (fatal)
-                errcode |= ERROR_FATAL_MASK;
-        }
-    }
-    return errcode;
-}
-
-static void CombineSpecificCodes(int error1_code, int error2_code, int error2_class)
-{
-}
-
-static const char *get_class_msg(int error_class)
-{
-    if (is_valid_error_class(error_class)) {
-        return generic_err_msgs[class_to_index[error_class]].long_name;
-    } else {
-        /* --BEGIN ERROR HANDLING-- */
-        return "Unknown error class";
-        /* --END ERROR HANDLING-- */
-    }
-}
-
-#elif MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__ALL
 /* General error message support, including the error message stack */
 
 static int checkErrcodeIsValid(int);
@@ -2285,10 +2126,6 @@ static int ErrGetInstanceString(int errorcode, char msg[], int num_remaining)
 
     return 0;
 }
-
-#else
-#error MPICH_ERROR_MSG_LEVEL undefined or has invalid value
-#endif
 
 /* Common routines that are used by two or more error-message levels.
    Very simple routines are defined inline */
