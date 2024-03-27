@@ -22,19 +22,31 @@ void MPIR_free_keyval(MPII_Keyval * keyval_ptr)
 
 int MPIR_Comm_free_keyval_impl(MPII_Keyval * keyval_ptr)
 {
+    MPIR_FUNC_ENTER;
+
     MPIR_free_keyval(keyval_ptr);
+
+    MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 
 int MPIR_Type_free_keyval_impl(MPII_Keyval * keyval_ptr)
 {
+    MPIR_FUNC_ENTER;
+
     MPIR_free_keyval(keyval_ptr);
+
+    MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 
 int MPIR_Win_free_keyval_impl(MPII_Keyval * keyval_ptr)
 {
+    MPIR_FUNC_ENTER;
+
     MPIR_free_keyval(keyval_ptr);
+
+    MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 
@@ -44,6 +56,8 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn
 {
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr;
+
+    MPIR_FUNC_ENTER;
 
     keyval_ptr = (MPII_Keyval *) MPIR_Handle_obj_alloc(&MPII_Keyval_mem);
     MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -79,6 +93,7 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn
     MPIR_OBJ_PUBLISH_HANDLE(*comm_keyval, keyval_ptr->handle);
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
 
@@ -91,6 +106,8 @@ int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn
 {
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr;
+
+    MPIR_FUNC_ENTER;
 
     keyval_ptr = (MPII_Keyval *) MPIR_Handle_obj_alloc(&MPII_Keyval_mem);
     MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -131,6 +148,7 @@ int MPIR_Type_create_keyval_impl(MPI_Type_copy_attr_function * type_copy_attr_fn
     MPIR_OBJ_PUBLISH_HANDLE(*type_keyval, keyval_ptr->handle);
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -142,6 +160,8 @@ int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
 {
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr;
+
+    MPIR_FUNC_ENTER;
 
     keyval_ptr = (MPII_Keyval *) MPIR_Handle_obj_alloc(&MPII_Keyval_mem);
     MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -179,6 +199,7 @@ int MPIR_Win_create_keyval_impl(MPI_Win_copy_attr_function * win_copy_attr_fn,
     MPIR_OBJ_PUBLISH_HANDLE(*win_keyval, keyval_ptr->handle);
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -388,6 +409,8 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p; /* old_p is needed if we are adding new attribute */
 
+    MPIR_FUNC_ENTER;
+
     /* CHANGE FOR MPI 2.2:  Look for attribute.  They are ordered by when they
      * were added, with the most recent first. This uses
      * a simple linear list algorithm because few applications use more than a
@@ -407,9 +430,10 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             /* If found, call the delete function before replacing the
-             * attribute */
+             * attribute. If the delete function fails on the old
+             * attribute value, we keep the old value. */
             mpi_errno = MPIR_Call_attr_delete(comm_ptr->handle, p);
-            if (mpi_errno) {
+            if (mpi_errno != MPI_SUCCESS) {
                 goto fn_fail;
             }
             p->attrType = attrType;
@@ -451,6 +475,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr, void
 
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -485,6 +510,8 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **attributes_list;
 
+    MPIR_FUNC_ENTER;
+
     /* Look for attribute.  They are ordered by keyval handle */
 
     attributes_list = &comm_ptr->attributes;
@@ -514,10 +541,11 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
          * standard, if the usr function returns something other than
          * MPI_SUCCESS, we should either return the user return code,
          * or an mpich error code.  The precedent set by the Intel
-         * test suite says we should return the user return code.  So
+         * test suite says we should return the user return code. So
          * we must not ERR_POP here. */
         mpi_errno = MPIR_Call_attr_delete(comm_ptr->handle, p);
-        if (mpi_errno)
+        /* If the user delete function fails, we still remove the attribute from the list. */
+        if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
         /* NOTE: it's incorrect to remove p by its parent pointer because the delete function
@@ -526,6 +554,7 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr)
     }
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -536,6 +565,7 @@ int MPIR_Type_get_attr_impl(MPIR_Datatype * type_ptr, int type_keyval, void *att
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p;
+
     MPIR_FUNC_ENTER;
 
     /* ... body of routine ...  */
@@ -585,6 +615,8 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p;
 
+    MPIR_FUNC_ENTER;
+
     /* Look for attribute.  They are ordered by keyval handle.  This uses
      * a simple linear list algorithm because few applications use more than a
      * handful of attributes */
@@ -594,15 +626,15 @@ int MPIR_Type_set_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_ptr, 
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             /* If found, call the delete function before replacing the
-             * attribute */
+             * attribute. If the delete function fails on the old
+             * attribute value, we keep the old value. */
             mpi_errno = MPIR_Call_attr_delete(type_ptr->handle, p);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno) {
+            if (mpi_errno != MPI_SUCCESS) {
                 goto fn_fail;
             }
-            /* --END ERROR HANDLING-- */
-            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
             p->attrType = attrType;
+            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
+            /* Does not change the reference count on the keyval */
             break;
         } else if (p->keyval->handle > keyval_ptr->handle) {
             MPIR_Attribute *new_p = MPID_Attr_alloc();
@@ -655,6 +687,8 @@ int MPIR_Type_delete_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_pt
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p;
 
+    MPIR_FUNC_ENTER;
+
     /* Look for attribute.  They are ordered by keyval handle */
 
     p = type_ptr->attributes;
@@ -678,13 +712,17 @@ int MPIR_Type_delete_attr_impl(MPIR_Datatype * type_ptr, MPII_Keyval * keyval_pt
          * test suite says we should return the user return code.  So
          * we must not ERR_POP here. */
         mpi_errno = MPIR_Call_attr_delete(type_ptr->handle, p);
-        if (mpi_errno)
+        /* If the user delete function fails, we still remove the attribute from the list. */
+        if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
+        /* NOTE: it's incorrect to remove p by its parent pointer because the delete function
+         *       may have invalidated the parent pointer, e.g. by removing the parent attribute */
         delete_attr(&type_ptr->attributes, p);
     }
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -694,6 +732,8 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
                            int *flag, MPIR_Attr_type outAttrType)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_ENTER;
 
     /* Check for builtin attribute */
     /* This code is ok for correct programs, but it would be better
@@ -810,6 +850,8 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p;
 
+    MPIR_FUNC_ENTER;
+
     /* Look for attribute.  They are ordered by keyval handle.  This uses
      * a simple linear list algorithm because few applications use more than a
      * handful of attributes */
@@ -819,16 +861,14 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
     while (p) {
         if (p->keyval->handle == keyval_ptr->handle) {
             /* If found, call the delete function before replacing the
-             * attribute */
+             * attribute. If the delete function fails on the old
+             * attribute value, we keep the old value. */
             mpi_errno = MPIR_Call_attr_delete(win_ptr->handle, p);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno) {
-                /* FIXME : communicator of window? */
+            if (mpi_errno != MPI_SUCCESS) {
                 goto fn_fail;
             }
-            /* --END ERROR HANDLING-- */
-            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
             p->attrType = attrType;
+            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
             /* Does not change the reference count on the keyval */
             break;
         } else if (p->keyval->handle > keyval_ptr->handle) {
@@ -873,13 +913,14 @@ int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *a
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 int MPIR_Win_delete_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p;
+
+    MPIR_FUNC_ENTER;
 
     /* Look for attribute.  They are ordered by keyval handle */
 
@@ -904,13 +945,17 @@ int MPIR_Win_delete_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr)
          * test suite says we should return the user return code.  So
          * we must not ERR_POP here. */
         mpi_errno = MPIR_Call_attr_delete(win_ptr->handle, p);
-        if (mpi_errno)
+        /* If the user delete function fails, we still remove the attribute from the list. */
+        if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
+        /* NOTE: it's incorrect to remove p by its parent pointer because the delete function
+         *       may have invalidated the parent pointer, e.g. by removing the parent attribute */
         delete_attr(&win_ptr->attributes, p);
     }
 
   fn_exit:
+    MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     goto fn_exit;
