@@ -25,10 +25,10 @@ int main(int argc, char **argv)
     int errs = 0;
     int size, rank;
     long sum;
-    complex < float >c[2], c_out[2];
-    complex < double >cd[2], cd_out[2];
+    complex < float >c[2], c_out[2], c_expected;
+    complex < double >cd[2], cd_out[2], cd_expected;
 #ifdef HAVE_LONG_DOUBLE
-    complex < long double >cld[2], cld_out[2];
+    complex < long double >cld[2], cld_out[2], cld_expected;
     MTEST_VG_MEM_INIT(cld, 2 * sizeof(complex < long double >));
 #endif
 
@@ -51,38 +51,44 @@ int main(int argc, char **argv)
     // The sum is (size*(size-1))/2
     comm.Allreduce(c, c_out, 2, MPI::COMPLEX, MPI::SUM);
     sum = (size * (size - 1)) / 2;
-    if (c_out[0] != ((float) sum) * complex < float >(1, 2)) {
+    c_expected = ((float) sum) * complex < float >(1, 2);
+    if (c_out[0].real() != c_expected.real() || c_out[0].imag() != c_expected.imag()) {
         errs++;
         cout << "c_out[0] was " << c_out[0] << " expected " <<
-            ((float) sum) * complex < float >(1, 2);
+            c_expected;
     }
-    if (c_out[1] != ((float) sum) * complex < float >(-1, 4)) {
+    c_expected = ((float) sum) * complex < float >(-1, 4);
+    if (c_out[1].real() != c_expected.real() || c_out[1].imag() != c_expected.imag()) {
         errs++;
         cout << "c_out[1] was " << c_out[1] << " expected " <<
-            ((float) sum) * complex < float >(-1, 4);
+            c_expected;
     }
     comm.Allreduce(cd, cd_out, 2, MPI::DOUBLE_COMPLEX, MPI::SUM);
-    if (cd_out[0] != ((double) sum) * complex < double >(1, 2)) {
+    cd_expected = ((double) sum) * complex < double >(1, 2);
+    if (cd_out[0].real() != cd_expected.real() || cd_out[0].imag() != cd_expected.imag()) {
         errs++;
         cout << "cd_out[0] was " << cd_out[0] << " expected " <<
-            ((double) sum) * complex < double >(1, 2);
+            cd_expected;
     }
-    if (cd_out[1] != ((double) sum) * complex < double >(-1, 4)) {
+    cd_expected = ((double) sum) * complex < double >(-1, 4);
+    if (cd_out[1].real() != cd_expected.real() || cd_out[1].imag() != cd_expected.imag()) {
         errs++;
         cout << "cd_out[1] was " << cd_out[1] << " expected " <<
-            ((double) sum) * complex < double >(-1, 4);
+            cd_expected;
     }
 #ifdef HAVE_LONG_DOUBLE
     comm.Allreduce(cld, cld_out, 2, MPI::LONG_DOUBLE_COMPLEX, MPI::SUM);
-    if (cld_out[0] != ((long double) sum) * complex < long double >(1, 2)) {
+    cld_expected = ((long double) sum) * complex < long double >(1, 2);
+    if (cld_out[0].real() != cld_expected.real() || cld_out[0].imag() != cld_expected.imag()) {
         errs++;
         cout << "cld_out[0] was " << cld_out[0] << " expected " <<
-            ((long double) sum) * complex < long double >(1, 2);
+            cld_expected;
     }
-    if (cld_out[1] != ((long double) sum) * complex < long double >(-1, 4)) {
+    cld_expected = ((long double) sum) * complex < long double >(-1, 4);
+    if (cld_out[1].real() != cld_expected.real() || cld_out[1].imag() != cld_expected.imag()) {
         errs++;
         cout << "cld_out[1] was " << cld_out[1] << " expected " <<
-            ((long double) sum) * complex < long double >(-1, 4);
+            cld_expected;
     }
 #endif
 
