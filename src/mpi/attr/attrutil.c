@@ -88,7 +88,8 @@ int MPIR_Call_attr_delete(int handle, MPIR_Attribute * attr_p)
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     /* --BEGIN ERROR HANDLING-- */
     if (rc != 0) {
-        mpi_errno = rc;
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                         MPI_ERR_OTHER, "**user", "**userdel %d", rc);
         goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
@@ -133,7 +134,8 @@ int MPIR_Call_attr_copy(int handle, MPIR_Attribute * attr_p, void **value_copy, 
 
     /* --BEGIN ERROR HANDLING-- */
     if (rc != 0) {
-        mpi_errno = rc;
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                         MPI_ERR_OTHER, "**user", "**userdel %d", rc);
         goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
