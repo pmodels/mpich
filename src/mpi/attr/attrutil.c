@@ -69,8 +69,7 @@ void MPID_Attr_free(MPIR_Attribute * attr_ptr)
 */
 int MPIR_Call_attr_delete(int handle, MPIR_Attribute * attr_p)
 {
-    int rc;
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, rc;
     MPII_Keyval *kv = attr_p->keyval;
 
     if (kv->delfn.user_function == NULL)
@@ -88,7 +87,7 @@ int MPIR_Call_attr_delete(int handle, MPIR_Attribute * attr_p)
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     /* --BEGIN ERROR HANDLING-- */
     if (rc != 0) {
-        mpi_errno = rc;
+        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**user", "**userdel %d", rc);
         goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
@@ -113,8 +112,7 @@ int MPIR_Call_attr_delete(int handle, MPIR_Attribute * attr_p)
 */
 int MPIR_Call_attr_copy(int handle, MPIR_Attribute * attr_p, void **value_copy, int *flag)
 {
-    int mpi_errno = MPI_SUCCESS;
-    int rc;
+    int mpi_errno = MPI_SUCCESS, rc;
     MPII_Keyval *kv = attr_p->keyval;
 
     if (kv->copyfn.user_function == NULL)
@@ -133,7 +131,7 @@ int MPIR_Call_attr_copy(int handle, MPIR_Attribute * attr_p, void **value_copy, 
 
     /* --BEGIN ERROR HANDLING-- */
     if (rc != 0) {
-        mpi_errno = rc;
+        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**user", "**usercopy %d", rc);
         goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
@@ -168,9 +166,7 @@ int MPIR_Attr_dup_list(int handle, MPIR_Attribute * old_attrs, MPIR_Attribute **
         new_p = MPID_Attr_alloc();
         /* --BEGIN ERROR HANDLING-- */
         if (!new_p) {
-            mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                     MPI_ERR_OTHER, "**nomem", 0);
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
             goto fn_fail;
         }
         /* --END ERROR HANDLING-- */
