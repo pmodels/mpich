@@ -157,7 +157,9 @@ noinst_PROGRAMS =      \
     bcast_comm_world_only \
     bcast_gpu          \
     coll_large	       \
-    ring_neighbor_alltoall
+    ring_neighbor_alltoall \
+    allgather_gpu \
+    allgatherv_gpu
 
 allgatherv4_LDADD = $(LDADD) -lm
 
