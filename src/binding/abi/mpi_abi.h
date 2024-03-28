@@ -161,7 +161,6 @@ typedef struct MPI_ABI_Datatype* MPI_Datatype;
 #define MPI_UINT64_T                   ((MPI_Datatype)0x00000259)
 #define MPIX_LOGICAL1                  ((MPI_Datatype)0x000002c0)
 #define MPI_INTEGER1                   ((MPI_Datatype)0x000002c1)
-#define MPIX_REAL1                     ((MPI_Datatype)0x000002c2)
 #define MPI_CHARACTER                  ((MPI_Datatype)0x000002c3)
 #define MPIX_LOGICAL2                  ((MPI_Datatype)0x000002c8)
 #define MPI_INTEGER2                   ((MPI_Datatype)0x000002c9)
@@ -434,20 +433,20 @@ enum {
     MPI_KEYVAL_INVALID                 = 0,
 
     /* Communicator */
-    MPI_TAG_UB                         = -51,
-    MPI_IO                             = -52,
-    MPI_HOST                           = -53, /* deprecated: MPI-4.1 */
-    MPI_WTIME_IS_GLOBAL                = -54,
-    MPI_UNIVERSE_SIZE                  = -55,
-    MPI_APPNUM                         = -56,
-    MPI_LASTUSEDCODE                   = -57,
+    MPI_TAG_UB                         = 501,
+    MPI_IO                             = 502,
+    MPI_HOST                           = 503, /* deprecated: MPI-4.1 */
+    MPI_WTIME_IS_GLOBAL                = 504,
+    MPI_UNIVERSE_SIZE                  = 505,
+    MPI_APPNUM                         = 506,
+    MPI_LASTUSEDCODE                   = 507,
 
     /* Window */
-    MPI_WIN_BASE                       = -61,
-    MPI_WIN_DISP_UNIT                  = -62,
-    MPI_WIN_SIZE                       = -63,
-    MPI_WIN_CREATE_FLAVOR              = -64,
-    MPI_WIN_MODEL                      = -65
+    MPI_WIN_BASE                       = 601,
+    MPI_WIN_DISP_UNIT                  = 602,
+    MPI_WIN_SIZE                       = 603,
+    MPI_WIN_CREATE_FLAVOR              = 604,
+    MPI_WIN_MODEL                      = 605
 };
 
 typedef void (MPI_User_function)(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype);
@@ -511,10 +510,10 @@ typedef struct MPI_T_event_instance_t* MPI_T_event_instance;
 #define MPI_T_PVAR_ALL_HANDLES         ((MPI_T_pvar_handle)1)
 
 typedef enum  MPI_T_cb_safety {
-    MPI_T_CB_REQUIRE_NONE              = 1,
-    MPI_T_CB_REQUIRE_MPI_RESTRICTED    = 2,
+    MPI_T_CB_REQUIRE_NONE              = 0,
+    MPI_T_CB_REQUIRE_MPI_RESTRICTED    = 1,
     MPI_T_CB_REQUIRE_THREAD_SAFE       = 3,
-    MPI_T_CB_REQUIRE_ASYNC_SIGNAL_SAFE = 4
+    MPI_T_CB_REQUIRE_ASYNC_SIGNAL_SAFE = 7
 } MPI_T_cb_safety;
 
 typedef enum MPI_T_source_order {
@@ -523,15 +522,15 @@ typedef enum MPI_T_source_order {
 } MPI_T_source_order;
 
 enum {
-    MPI_T_VERBOSITY_USER_BASIC         = 1,
-    MPI_T_VERBOSITY_USER_DETAIL        = 2,
-    MPI_T_VERBOSITY_USER_ALL           = 3,
-    MPI_T_VERBOSITY_TUNER_BASIC        = 4,
-    MPI_T_VERBOSITY_TUNER_DETAIL       = 5,
-    MPI_T_VERBOSITY_TUNER_ALL          = 6,
-    MPI_T_VERBOSITY_MPIDEV_BASIC       = 7,
-    MPI_T_VERBOSITY_MPIDEV_DETAIL      = 8,
-    MPI_T_VERBOSITY_MPIDEV_ALL         = 9
+    MPI_T_VERBOSITY_USER_BASIC         = 0x09,
+    MPI_T_VERBOSITY_USER_DETAIL        = 0x0a,
+    MPI_T_VERBOSITY_USER_ALL           = 0x0c,
+    MPI_T_VERBOSITY_TUNER_BASIC        = 0x11,
+    MPI_T_VERBOSITY_TUNER_DETAIL       = 0x12,
+    MPI_T_VERBOSITY_TUNER_ALL          = 0x14,
+    MPI_T_VERBOSITY_MPIDEV_BASIC       = 0x21,
+    MPI_T_VERBOSITY_MPIDEV_DETAIL      = 0x22,
+    MPI_T_VERBOSITY_MPIDEV_ALL         = 0x24
 };
 
 enum {
