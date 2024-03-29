@@ -27,11 +27,17 @@ int MPII_Recexchalgo_comm_init(MPIR_Comm * comm)
     comm->coll.recexch_allreduce_nbr_buffer = NULL;
 
     comm->coll.topo_aware_tree_root = -1;
+    comm->coll.topo_aware_tree_k = 0;
     comm->coll.topo_aware_tree = NULL;
     comm->coll.topo_aware_k_tree_root = -1;
+    comm->coll.topo_aware_k_tree_k = 0;
     comm->coll.topo_aware_k_tree = NULL;
     comm->coll.topo_wave_tree_root = -1;
     comm->coll.topo_wave_tree = NULL;
+    comm->coll.topo_wave_tree_overhead = 0;
+    comm->coll.topo_wave_tree_lat_diff_groups = 0;
+    comm->coll.topo_wave_tree_lat_diff_switches = 0;
+    comm->coll.topo_wave_tree_lat_same_switches = 0;
 
     return mpi_errno;
 }
