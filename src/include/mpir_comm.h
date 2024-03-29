@@ -235,10 +235,16 @@ struct MPIR_Comm {
         int nbrs_defined[MAX_RADIX - 1];
         void **recexch_allreduce_nbr_buffer;
         int topo_aware_tree_root;
+        int topo_aware_tree_k;
         MPIR_Treealgo_tree_t *topo_aware_tree;
         int topo_aware_k_tree_root;
+        int topo_aware_k_tree_k;
         MPIR_Treealgo_tree_t *topo_aware_k_tree;
         int topo_wave_tree_root;
+        int topo_wave_tree_overhead;
+        int topo_wave_tree_lat_diff_groups;
+        int topo_wave_tree_lat_diff_switches;
+        int topo_wave_tree_lat_same_switches;
         MPIR_Treealgo_tree_t *topo_wave_tree;
     } coll;
 
