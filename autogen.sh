@@ -323,6 +323,8 @@ fn_copy_confdb_etc() {
         confdb_dirs="${confdb_dirs} test/mpi/dtpools/confdb"
     fi
 
+    confdb_dirs="${confdb_dirs} src/binding/abi_fortran/confdb"
+
     # all the confdb directories, by various names
     for destdir in $confdb_dirs ; do
         sync_external confdb "$destdir"
@@ -334,6 +336,7 @@ fn_copy_confdb_etc() {
         cp -pPR maint/version.m4 src/mpi/romio/version.m4
         cp -pPR maint/version.m4 src/pmi/version.m4
         cp -pPR maint/version.m4 test/mpi/version.m4
+        cp -pPR maint/version.m4 src/binding/abi_fortran/version.m4
     fi
 
     # Now sanity check that some of the above sync was successful
