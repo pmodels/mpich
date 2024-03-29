@@ -37,7 +37,7 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
     def gen_mpi_abi_internal_h(out):
         re_Handle = r'\bMPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|KEYVAL_INVALID|TAG_UB|IO|HOST|WTIME_IS_GLOBAL|APPNUM|LASTUSEDCODE|UNIVERSE_SIZE|WIN_BASE|WIN_DISP_UNIT|WIN_SIZE|WIN_CREATE_FLAVOR|WIN_MODEL)\b'
         for line in G.abi_h_lines:
-            if RE.search(r'MPI_ABI_H_INCLUDED', line):
+            if RE.search(r'MPI_ABI_H_INCLUDED|MPI_H_ABI', line):
                 # skip the include guard, harmless
                 pass
             elif RE.match(r'\s*int MPI_(SOURCE|TAG|ERROR);', line):
@@ -99,6 +99,13 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
         print("#ifndef MPI_ABI_INTERNAL_H_INCLUDED", file=Out)
         print("#define MPI_ABI_INTERNAL_H_INCLUDED", file=Out)
         print("", file=Out)
+
+        # the internal code use MPI_Fint etc. Temporary until ABI proposal settles and MPICH implementation cleans up.
+        # TODO: skip src/mpi/misc/f2c_impl.c
+        print("typedef int MPI_Fint;", file=Out)
+        print("typedef struct {MPI_Fint MPI_SOURCE,MPI_TAG,MPI_ERROR,count_lo,count_hi_and_cancelled,dummy[3];} MPI_F08_status;", file=Out)
+        print("extern MPI_Fint *MPI_F_STATUS_IGNORE, *MPI_F_STATUSES_IGNORE;", file=Out);
+        print("extern MPI_F08_status *MPI_F08_STATUS_IGNORE, *MPI_F08_STATUSES_IGNORE;", file=Out);
 
         for k in define_constants:
             print("#define %s %s" % (k, define_constants[k]), file=Out)
