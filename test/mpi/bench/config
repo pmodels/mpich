@@ -1,0 +1,4 @@
+module: c
+output_dir: out
+CC: mpicc
+run: mpirun -n 2
