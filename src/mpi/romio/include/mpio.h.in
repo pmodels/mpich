@@ -47,18 +47,18 @@ typedef struct ADIOI_RequestD *MPIO_Request;
 #ifndef HAVE_MPI_OFFSET
 /* *INDENT-OFF* */
 @DEFINE_MPI_OFFSET@
-/* *INDENT-ON* */
-/* If we needed to define MPI_Offset, then we also need to make
-   this definition. */
-#ifndef HAVE_MPI_DATAREP_FUNCTIONS
-#define HAVE_MPI_DATAREP_FUNCTIONS
+#endif
+#ifndef HAVE_MPI_DATAREP_CONVERSION_FUNCTION
 typedef int (MPI_Datarep_conversion_function)(void *, MPI_Datatype, int, 
              void *, MPI_Offset, void *);
+#endif
+#ifndef HAVE_MPI_DATAREP_CONVERSION_FUNCTION_C
 typedef int (MPI_Datarep_conversion_function_c)(void *, MPI_Datatype, MPI_Count,
                                                 void *, MPI_Offset, void *);
+#endif
+#ifndef HAVE_MPI_DATAREP_EXTENT_FUNCTION
 typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
 					  void *);
-#endif
 #endif
 
 #ifndef NEEDS_MPI_FINT

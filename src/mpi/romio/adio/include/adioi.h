@@ -94,6 +94,18 @@ struct ADIOI_Hints_struct {
     } fs_hints;
 };
 
+#ifndef HAVE_MPI_DATAREP_CONVERSION_FUNCTION
+typedef int (MPI_Datarep_conversion_function) (void *, MPI_Datatype, int,
+                                               void *, MPI_Offset, void *);
+#endif
+#ifndef HAVE_MPI_DATAREP_EXTENT_FUNCTION
+typedef int (MPI_Datarep_extent_function) (MPI_Datatype datatype, MPI_Aint *, void *);
+#endif
+#ifndef HAVE_MPI_DATAREP_CONVERSION_FUNCTION_C
+typedef int (MPI_Datarep_conversion_function_c) (void *, MPI_Datatype, MPI_Count,
+                                                 void *, MPI_Offset, void *);
+#endif
+
 typedef struct ADIOI_Datarep {
     char *name;
     void *state;
