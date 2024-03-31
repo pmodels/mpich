@@ -59,6 +59,13 @@ def main():
         G.mpih_defines = {}
         load_mpi_h_in("src/include/mpi.h.in")
         load_mpi_h_in("src/mpi/romio/include/mpio.h.in")
+
+        for a in ['INTEGER', 'ADDRESS', 'COUNT', 'OFFSET']:
+            G.mpih_defines['MPI_%s_KIND' % a] = '@%s_KIND@' % a
+        G.mpih_defines['MPI_STATUS_SIZE'] = G.mpih_defines['MPI_F_STATUS_SIZE']
+        for a in ['SOURCE', 'TAG', 'ERROR']:
+            G.mpih_defines['MPI_%s' % a] = int(G.mpih_defines['MPI_F_%s' % a]) + 1
+
         f = "%s/mpif.h.in" % f77_dir
         dump_mpif_h(f)
 

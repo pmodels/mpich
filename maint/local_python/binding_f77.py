@@ -952,18 +952,12 @@ def dump_f77_c_file(f, lines):
                     print("    " * indent, end='', file=Out)
                 print(l, file=Out)
 
-def dump_mpif_h(f):
+def dump_mpif_h(f, autoconf_macros={}):
     print("  --> [%s]" % f)
     # note: fixed-form Fortran line is ignored after column 72
     with open(f, "w") as Out:
         for l in G.copyright_f77:
             print(l, file=Out)
-
-        for a in ['INTEGER', 'ADDRESS', 'COUNT', 'OFFSET']:
-            G.mpih_defines['MPI_%s_KIND' % a] = '@%s_KIND@' % a
-        G.mpih_defines['MPI_STATUS_SIZE'] = G.mpih_defines['MPI_F_STATUS_SIZE']
-        for a in ['SOURCE', 'TAG', 'ERROR']:
-            G.mpih_defines['MPI_%s' % a] = int(G.mpih_defines['MPI_F_%s' % a]) + 1
 
         # -- all integer constants
         for name in G.mpih_defines:
@@ -977,7 +971,10 @@ def dump_mpif_h(f):
             elif re.match(r'MPI_(UNWEIGHTED|WEIGHTS_EMPTY|BUFFER_AUTOMATIC|BOTTOM|IN_PLACE|STATUS_IGNORE|STATUSES_IGNORE|ERRCODES_IGNORE|ARGVS_NULL|ARGV_NULL)', name):
                 continue
             elif re.match(r'MPI_DISPLACEMENT_CURRENT', name):
-                T = '@FORTRAN_MPI_OFFSET@'
+                if 'FORTRAN_MPI_OFFSET' in autoconf_macros:
+                    T = autoconf_macros['FORTRAN_MPI_OFFSET']
+                else:
+                    T = '@FORTRAN_MPI_OFFSET@'
             print("       %s %s" % (T, name), file=Out)
             print("       PARAMETER (%s=%s)" % (name, G.mpih_defines[name]), file=Out)
 
@@ -1011,7 +1008,10 @@ def dump_mpif_h(f):
         print("       INTEGER MPI_ERRCODES_IGNORE(1)", file=Out)
         print("       CHARACTER*1 MPI_ARGVS_NULL(1,1)", file=Out)
         print("       CHARACTER*1 MPI_ARGV_NULL(1)", file=Out)
-        print("@DLLIMPORT@", file=Out)
+        if 'DLLIMPORT' in autoconf_macros:
+            print(autoconf_macros['DLLIMPORT'], file=Out)
+        else:
+            print("@DLLIMPORT@", file=Out)
         print("       COMMON /MPIFCMB5/ MPI_UNWEIGHTED", file=Out)
         print("       COMMON /MPIFCMB9/ MPI_WEIGHTS_EMPTY", file=Out)
         print("       COMMON /MPIFCMBa/ MPI_BUFFER_AUTOMATIC", file=Out)
