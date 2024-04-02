@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>     /* strcmp() */
-#include <unistd.h>     /* access() */
 #include <romioconf.h>
 
 #include <mpi.h>
@@ -98,6 +97,39 @@ void err_handler(int err, const char *err_msg)
     exit(1);
 }
 
+static int check_file_exist(const char *out_fname)
+{
+    int err, rank;
+    MPI_File fh;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (rank == 0) {
+        err = MPI_File_open(MPI_COMM_SELF, out_fname, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+        if (err != MPI_SUCCESS)
+            err = -1;
+        else
+            MPI_File_close(&fh);
+    }
+    MPI_Bcast(&err, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    return err;
+}
+
+static int delete_file(const char *out_fname)
+{
+    int err, rank;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (rank == 0) {
+        err = MPI_File_delete(out_fname, MPI_INFO_NULL);
+        if (err != MPI_SUCCESS)
+            err = -1;
+    }
+    MPI_Bcast(&err, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    return err;
+}
+
 int main(int argc, char **argv)
 {
     int i, err = 0, verbose = 0, rank, len;
@@ -145,12 +177,13 @@ int main(int argc, char **argv)
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    if (access(out_fname, F_OK) != 0) {
-        /* file does not exist */
-        err = -1;
+    err = check_file_exist(out_fname);
+    if (err != 0)
         goto err_out;
-    }
-    unlink(out_fname);
+
+    err = delete_file(out_fname);
+    if (err != 0)
+        goto err_out;
     if (verbose && rank == 0)
         fprintf(stdout, " ---- pass\n");
 
@@ -172,12 +205,13 @@ int main(int argc, char **argv)
 
     /* strip the known prefix */
     sprintf(out_fname, "%s.out", filename);
-    if (access(out_fname, F_OK) != 0) {
-        /* file does not exist */
-        err = -1;
+    err = check_file_exist(out_fname);
+    if (err != 0)
         goto err_out;
-    }
-    unlink(out_fname);
+
+    err = delete_file(out_fname);
+    if (err != 0)
+        goto err_out;
     if (verbose && rank == 0)
         fprintf(stdout, " ---- pass\n");
 
@@ -199,12 +233,13 @@ int main(int argc, char **argv)
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    if (access(out_fname, F_OK) != 0) {
-        /* file does not exist */
-        err = -1;
+    err = check_file_exist(out_fname);
+    if (err != 0)
         goto err_out;
-    }
-    unlink(out_fname);
+
+    err = delete_file(out_fname);
+    if (err != 0)
+        goto err_out;
     if (verbose && rank == 0)
         fprintf(stdout, " ---- pass\n");
 
