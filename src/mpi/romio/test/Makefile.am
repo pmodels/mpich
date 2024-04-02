@@ -42,6 +42,11 @@ nodist_pfcoll_test_SOURCES = pfcoll_test.f
 
 endif BUILD_F77_TESTS
 
-TESTS = runtests
+TESTS_ENVIRONMENT = export srcdir="$(srcdir)";
+
+TESTS = $(check_PROGRAMS)
+TEST_EXTENSIONS = .sh
+LOG_COMPILER = $(builddir)/parallel_run.sh
+SH_LOG_COMPILER =
 
 EXTRA_DIST = romio_hintfile
