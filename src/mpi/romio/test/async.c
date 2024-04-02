@@ -62,7 +62,6 @@ int main(int argc, char **argv)
         MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
     }
 
-
     buf = (int *) malloc(SIZE);
     nints = SIZE / sizeof(int);
     for (i = 0; i < nints; i++)

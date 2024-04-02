@@ -11,7 +11,7 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
 mpirun="@MPIRUN@"
-# valgrind_opt="libtool --mode=execute /usr/bin/valgrind --quiet --leak-check=full"
+valgrind_opt="libtool --mode=execute /usr/bin/valgrind --quiet --leak-check=full"
 
 STOPFILE=${MPITEST_STOPTEST:-"$HOME/.stopmpichtests"}
 #
@@ -304,13 +304,13 @@ CleanExe aggregation1
 OutTime
 MakeExe aggregation2
 echo '**** Testing aggregation2 ****'
-$mpirun -np 4 ${valgrind_opt} ./aggregation2 $FILENAME
+$mpirun -np 4 ${valgrind_opt} ./aggregation2 -fname $FILENAME
 # CheckOutput aggregation2
 CleanExe aggregation2
 OutTime
 MakeExe hindexed
 echo '**** Testing hindexed ****'
-$mpirun -np 4 ${valgrind_opt} ./hindexed $FILENAME
+$mpirun -np 4 ${valgrind_opt} ./hindexed -fname $FILENAME
 # CheckOutput hindexed
 CleanExe hindexed
 #
@@ -394,25 +394,26 @@ testfiles="$testfiles types_with_zeros.out"
 \rm -f types_with_zeros.out
 MakeExe types_with_zeros
 echo '**** Testing types_with_zeros ****'
-$mpirun -np 2 ${valgrind_opt} ./types_with_zeros $FILENAME
+$mpirun -np 2 ${valgrind_opt} ./types_with_zeros -fname $FILENAME
 CleanExe types_with_zeros
 OutTime
 testfiles="$testfiles darray_read.out"
 \rm -f darray_read.out
 MakeExe darray_read
 echo '**** Testing darray_read ****'
-$mpirun -np 4 ${valgrind_opt} ./darray_read $FILENAME
+$mpirun -np 4 ${valgrind_opt} ./darray_read -fname $FILENAME
 CleanExe darray_read
 OutTime
 MakeExe syshints
 echo '**** Testing syshints ****'
-$mpirun -np 1 ${valgrind_opt} ./syshints $srcdir/test_hintfile
+$mpirun -np 1 ${valgrind_opt} ./syshints -fname $srcdir/test_hintfile
 CleanExe syshints
 #
 OutTime
 MakeExe fstype_prefix
 echo '**** Testing fstype_prefix ****'
-$mpirun -np 2 ${valgrind_opt} ./fstype_prefix
+$mpirun -np 2 ${valgrind_opt} ./fstype_prefix -fname $FILENAME
+CleanExe fstype_prefix
 #
 
 #
