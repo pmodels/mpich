@@ -255,7 +255,7 @@ int main(int argc, char **argv)
     char *filename;
     char *cb_config_string;
     int cb_config_len;
-    ADIO_cb_name_array array;
+    ADIO_cb_name_array array = NULL;
 
 
     MPI_Init(&argc, &argv);
@@ -350,6 +350,14 @@ int main(int argc, char **argv)
     }
     free(filename);
     free(cb_config_string);
+    if (array != NULL) {
+        if (array->names != NULL) {
+            for (i = 0; i < nprocs; i++)
+                free(array->names[i]);
+            free(array->names);
+        }
+        free(array);
+    }
     MPI_Finalize();
     return (sum_errs > 0);
 }
