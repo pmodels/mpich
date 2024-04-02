@@ -84,7 +84,7 @@ void err_expected(int err, int exp_err)
 }
 
 static
-void err_handler(int err, char *err_msg)
+void err_handler(int err, const char *err_msg)
 {
     int rank, errorStringLen;
     char errorString[MPI_MAX_ERROR_STRING];
@@ -120,6 +120,8 @@ int main(int argc, char **argv)
     if (err != MPI_SUCCESS)
         err_handler(err, "MPI_File_close()");
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     if (access(filename, F_OK) != 0) {
         /* file does not exist */
         err = -1;
@@ -128,6 +130,8 @@ int main(int argc, char **argv)
     unlink(filename);
     if (verbose && rank == 0)
         fprintf(stdout, " ---- pass\n");
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* test a file system type prefix known to ROMIO and enabled at configure */
     sprintf(filename, "%s%s.out", enabled_prefix, basename(argv[0]));
@@ -141,6 +145,8 @@ int main(int argc, char **argv)
     if (err != MPI_SUCCESS)
         err_handler(err, "MPI_File_close()");
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     /* strip the known prefix */
     sprintf(filename, "%s.out", basename(argv[0]));
     if (access(filename, F_OK) != 0) {
@@ -151,6 +157,8 @@ int main(int argc, char **argv)
     unlink(filename);
     if (verbose && rank == 0)
         fprintf(stdout, " ---- pass\n");
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* set a known file system type prefix to ROMIO in environment variable ROMIO_FSTYPE_FORCE */
     setenv("ROMIO_FSTYPE_FORCE", enabled_prefix, 1);
@@ -165,6 +173,9 @@ int main(int argc, char **argv)
     err = MPI_File_close(&fh);
     if (err != MPI_SUCCESS)
         err_handler(err, "MPI_File_close()");
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
     if (access(filename, F_OK) != 0) {
         /* file does not exist */
         err = -1;
@@ -173,6 +184,8 @@ int main(int argc, char **argv)
     unlink(filename);
     if (verbose && rank == 0)
         fprintf(stdout, " ---- pass\n");
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* test a file system type prefix known to ROMIO but disabled at configure */
     sprintf(filename, "%s%s.out", disabled_prefix, basename(argv[0]));
@@ -183,6 +196,8 @@ int main(int argc, char **argv)
     err_expected(err, MPI_ERR_IO);
     if (verbose && rank == 0)
         fprintf(stdout, " ---- pass\n");
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* set a known file system type prefix to ROMIO in environment variable ROMIO_FSTYPE_FORCE */
     setenv("ROMIO_FSTYPE_FORCE", disabled_prefix, 1);
