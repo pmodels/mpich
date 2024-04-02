@@ -34,12 +34,37 @@ int main(int argc, char **argv)
     MPI_File fh;
     MPI_Offset off = 0;
     MPI_Status status;
-    int errcode;
+    int errcode, len;
     int i, rank, errs = 0, toterrs, buffer[BUFSIZE], buf2[BUFSIZE];
+    char *filename;
 
     MPI_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+/* process 0 takes the file name as a command-line argument and
+   broadcasts it to other processes */
+    if (!rank) {
+        i = 1;
+        while ((i < argc) && strcmp("-fname", *argv)) {
+            i++;
+            argv++;
+        }
+        if (i >= argc) {
+            fprintf(stderr, "\n*#  Usage: %s -fname filename\n\n", argv[0]);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+        argv++;
+        len = strlen(*argv);
+        filename = (char *) malloc(len + 10);
+        strcpy(filename, *argv);
+        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
+    } else {
+        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        filename = (char *) malloc(len + 10);
+        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
+    }
 
     MPI_Info_create(&info);
     MPI_Info_set(info, "romio_cb_write", "enable");
@@ -50,7 +75,7 @@ int main(int argc, char **argv)
     }
     off = rank * sizeof(buffer);
 
-    errcode = MPI_File_open(MPI_COMM_WORLD, argv[1], MPI_MODE_WRONLY | MPI_MODE_CREATE, info, &fh);
+    errcode = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_WRONLY | MPI_MODE_CREATE, info, &fh);
     if (errcode != MPI_SUCCESS)
         handle_error(errcode, "MPI_File_open");
     errcode = MPI_File_write_at_all(fh, off, buffer, BUFSIZE, MPI_INT, &status);
@@ -60,7 +85,7 @@ int main(int argc, char **argv)
     if (errcode != MPI_SUCCESS)
         handle_error(errcode, "MPI_File_close");
 
-    errcode = MPI_File_open(MPI_COMM_WORLD, argv[1], MPI_MODE_RDONLY, info, &fh);
+    errcode = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, info, &fh);
     if (errcode != MPI_SUCCESS)
         handle_error(errcode, "MPI_File_open");
     errcode = MPI_File_read_at_all(fh, off, buf2, BUFSIZE, MPI_INT, &status);
@@ -83,6 +108,7 @@ int main(int argc, char **argv)
         }
     }
     MPI_Info_free(&info);
+    free(filename);
     MPI_Finalize();
 
     return (toterrs > 0);
