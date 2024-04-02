@@ -22,7 +22,8 @@ MAKE="@MAKE@"
 srcdir=@srcdir@
 check_canrun=0
 subset_only=0
-FILENAME=test
+PREFIX_FILENAME=
+FILENAME=
 # Using shifts should remove args from the list.
 for arg in "$@" ; do
     case $arg in
@@ -55,7 +56,7 @@ for arg in "$@" ; do
 	subset_only=1
 	;;
 	-fname=*)
-	FILENAME=`echo $arg|sed 's/-*fname=//'`
+	PREFIX_FILENAME=`echo $arg|sed 's/-*fname=//'`
 	;;
 	-atend)
 	shift
@@ -63,7 +64,7 @@ for arg in "$@" ; do
 	;;
 	-help|-u)
 	shift
-	echo "runtests [-fname=FILENAME] [-checkonly] [-atend] [-check]"
+	echo "runtests [-fname=FILENAME_PREFIX] [-checkonly] [-atend] [-check]"
 	echo "run tests in this directory.  If -checkonly set, just run"
 	echo "the differences check (do NOT rerun the test programs)."
 	echo "If -small is used, the examples are built, run, and deleted."
@@ -84,6 +85,10 @@ for arg in "$@" ; do
     esac
 done
 
+if ["$PREFIX_FILENAME" = ""] ; then
+    PREFIX_FILENAME="romio_test_"
+fi
+
 # MakeExe program-name
 MakeExe() {
     if [ -s $STOPFILE ] ; then
@@ -97,12 +102,16 @@ MakeExe() {
 	    exit 1
         fi
     fi
+    FILENAME="${PREFIX_FILENAME}$1"
+    \rm -f $FILENAME*
 }
+
 # CleanExe program-name
 CleanExe() {
     if [ $makeeach = 1 ] ; then
 	rm -f $1 $1.o
     fi
+    \rm -f $FILENAME*
 }
 # Output marker
 OutTime() {
@@ -176,7 +185,6 @@ OutTime
 testfiles="$testfiles simple.out"
 \rm -f simple.out
 MakeExe simple
-\rm -f $FILENAME*
 echo '**** Testing simple.c ****'
 $mpirun -np 4 ./simple -fname $FILENAME
 # CheckOutput simple
@@ -186,7 +194,6 @@ OutTime
 testfiles="$testfiles async.out"
 \rm -f async.out
 MakeExe async
-\rm -f $FILENAME*
 echo '**** Testing async.c ****'
 $mpirun -np 4 ./async -fname $FILENAME
 # CheckOutput async
@@ -196,7 +203,6 @@ OutTime
 testfiles="$testfiles async-multi.out"
 \rm -f async-multi.out
 MakeExe async-multiple
-\rm -f $FILENAME*
 echo '**** Testing async-multiple.c ****'
 $mpirun -np 4 ./async-multiple -fname $FILENAME
 # CheckOutput async-multiple
@@ -207,7 +213,6 @@ if [ $subset_only -eq 0 ] ; then
 	testfiles="$testfiles atomicity.out"
 	\rm -f atomicity.out
 	MakeExe atomicity
-	\rm -f $FILENAME*
 	echo '**** Testing atomicity.c ****'
 	# Atomicity test recommends at least 8 processes (separate processors
 	# even better)
@@ -220,7 +225,6 @@ fi
 testfiles="$testfiles coll_test.out"
 \rm -f coll_test.out
 MakeExe coll_test
-\rm -f $FILENAME*
 echo '**** Testing coll_test.c ****'
 $mpirun -np 4 ./coll_test -fname $FILENAME
 # CheckOutput coll_test
@@ -230,7 +234,6 @@ OutTime
 testfiles="$testfiles excl.out"
 \rm -f excl.out
 MakeExe excl
-\rm -f $FILENAME*
 echo '**** Testing excl.c ****'
 $mpirun -np 4 ./excl -fname $FILENAME
 # CheckOutput excl
@@ -239,7 +242,6 @@ CleanExe excl
 testfiles="$testfiles file_info.out"
 \rm -f file_info.out
 MakeExe file_info
-\rm -f $FILENAME*
 for fs in @FILE_SYSTEM@ ; do
    OutTime
    echo "**** Testing file_info.c - file system = $fs ****"
@@ -260,7 +262,6 @@ OutTime
 testfiles="$testfiles i_noncontig.out"
 \rm -f i_noncontig.out
 MakeExe i_noncontig
-\rm -f $FILENAME*
 echo '**** Testing i_noncontig.c ****'
 $mpirun -np 2 ./i_noncontig -fname $FILENAME
 # CheckOutput i_noncontig
@@ -270,7 +271,6 @@ OutTime
 testfiles="$testfiles noncontig.out"
 \rm -f noncontig.out
 MakeExe noncontig
-\rm -f $FILENAME*
 echo '**** Testing noncontig.c ****'
 $mpirun -np 2 ./noncontig -fname $FILENAME
 # CheckOutput noncontig
@@ -280,7 +280,6 @@ OutTime
 testfiles="$testfiles noncontig_coll.out"
 \rm -f noncontig_coll.out
 MakeExe noncontig_coll
-\rm -f $FILENAME*
 echo '**** Testing noncontig_coll.c ****'
 $mpirun -np 2 ./noncontig_coll -fname $FILENAME
 # CheckOutput noncontig_coll
@@ -290,7 +289,6 @@ OutTime
 testfiles="$testfiles noncontig_coll2.out"
 \rm -f noncontig_coll2.out
 MakeExe noncontig_coll2
-\rm -f $FILENAME*
 echo '**** Testing noncontig_coll2.c ****'
 $mpirun -np 4 ./noncontig_coll2 -fname $FILENAME
 # CheckOutput noncontig_coll2
@@ -326,7 +324,6 @@ if [ $subset_only -eq 0 ] ; then
 	testfiles="$testfiles misc.out"
 	\rm -f misc.out
 	MakeExe misc
-	\rm -f $FILENAME*
 	echo '**** Testing misc.c ****'
 	$mpirun -np 4 ./misc -fname $FILENAME
 	# CheckOutput misc
@@ -338,7 +335,6 @@ if [ $subset_only -eq 0 ] ; then
 	testfiles="$testfiles shared_fp.out"
 	\rm -f shared_fp.out
 	MakeExe shared_fp
-	\rm -f $FILENAME*
 	echo '**** Testing shared_fp.c ****'
 	$mpirun -np 4 ./shared_fp -fname $FILENAME
 	# CheckOutput shared_fp
@@ -348,7 +344,6 @@ if [ $subset_only -eq 0 ] ; then
 	testfiles="$testfiles ordered_fp.out"
 	\rm -f ordered_fp.out
 	MakeExe ordered_fp
-	\rm -f $FILENAME*
 	echo '**** Testing ordered_fp.c ****'
 	$mpirun -np 4 ./ordered_fp -fname $FILENAME
 	CleanExe ordered_fp
@@ -358,7 +353,6 @@ fi
 testfiles="$testfiles split_coll.out"
 \rm -f split_coll.out
 MakeExe split_coll
-\rm -f $FILENAME*
 echo '**** Testing split_coll.c ****'
 $mpirun -np 4 ./split_coll -fname $FILENAME
 # CheckOutput split_coll
@@ -369,7 +363,6 @@ if [ @NOPROFILE@ = 0 ] ; then
 	testfiles="$testfiles psimple.out"
 	\rm -f psimple.out
 	MakeExe psimple
-	\rm -f $FILENAME*
 	echo '**** Testing psimple.c ****'
 	$mpirun -np 4 ./psimple -fname $FILENAME
 	# CheckOutput psimple
@@ -380,7 +373,6 @@ OutTime
 testfiles="$testfiles error.out"
 \rm -f error.out
 MakeExe error
-\rm -f $FILENAME*
 echo '**** Testing error.c ****'
 $mpirun -np 1 ./error -fname $FILENAME
 # CheckOutput error
@@ -390,7 +382,6 @@ OutTime
 testfiles="$testfiles status.out"
 \rm -f status.out
 MakeExe status
-\rm -f $FILENAME*
 echo '**** Testing status.c ****'
 # Some systems have a status program.
 $mpirun -np 1 ./status -fname $FILENAME
@@ -400,7 +391,6 @@ OutTime
 testfiles="$testfiles types_with_zeros.out"
 \rm -f types_with_zeros.out
 MakeExe types_with_zeros
-\rm -f $FILENAME*
 echo '**** Testing types_with_zeros ****'
 $mpirun -np 2 ./types_with_zeros $FILENAME
 CleanExe types_with_zeros
@@ -408,11 +398,9 @@ OutTime
 testfiles="$testfiles darray_read.out"
 \rm -f darray_read.out
 MakeExe darray_read
-\rm -f $FILENAME*
 echo '**** Testing darray_read ****'
 $mpirun -np 4 ./darray_read $FILENAME
 CleanExe darray_read
-\rm -f $FILENAME*
 OutTime
 MakeExe syshints
 echo '**** Testing syshints ****'
@@ -434,7 +422,6 @@ if [ @NOF77@ = 0 ] ; then
 	    testfiles="$testfiles fmisc.out"
 	    \rm -f fmisc.out
 	    MakeExe fmisc
-	    \rm -f $FILENAME*
 	    echo '**** Testing fmisc.f ****'
 	    $mpirun -np 4 ./fmisc -fname $FILENAME
 	    # CheckOutput fmisc
@@ -445,7 +432,6 @@ if [ @NOF77@ = 0 ] ; then
     testfiles="$testfiles fcoll_test.out"
     \rm -f fcoll_test.out
     MakeExe fcoll_test
-    \rm -f $FILENAME*
     echo '**** Testing fcoll_test.f ****'
     $mpirun -np 4 ./fcoll_test -fname $FILENAME
     # CheckOutput fcoll_test
@@ -455,12 +441,10 @@ if [ @NOF77@ = 0 ] ; then
     testfiles="$testfiles pfcoll_test.out"
     \rm -f pfcoll_test.out
     MakeExe pfcoll_test
-    \rm -f $FILENAME*
     echo '**** Testing pfcoll_test.f ****'
     $mpirun -np 4 ./pfcoll_test -fname $FILENAME
     # CheckOutput pfcoll_test
     CleanExe pfcoll_test
-    \rm -f $FILENAME*
 #
 echo ""
 fi
