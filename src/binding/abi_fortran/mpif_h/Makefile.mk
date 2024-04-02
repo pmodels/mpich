@@ -14,7 +14,6 @@ mpifort_convenience_libs += libf77_mpi.la
 libf77_mpi_la_SOURCES = \
 	mpif_h/fortran_binding.c \
 	mpif_h/attr_proxy.c \
-	mpif_h/fdebug.c \
 	mpif_h/setbot.c \
 	mpif_h/setbotf.f
 

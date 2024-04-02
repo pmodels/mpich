@@ -7,6 +7,7 @@ from local_python import MPI_API_Global as G
 from local_python.mpi_api import *
 from local_python.binding_common import *
 from local_python.binding_f77 import *
+from local_python.binding_f08 import *
 from local_python import RE
 import os
 
@@ -16,16 +17,13 @@ def main():
 
     binding_dir = G.get_srcdir_path("src/binding")
     f77_dir = "src/binding/abi_fortran/mpif_h"
+    f08_dir = "src/binding/abi_fortran/use_mpi_f08"
 
-    func_list = load_C_func_list(binding_dir, True) # suppress noise
-
-    func_list.extend(get_mpiio_func_list())
-    func_list.extend(get_f77_dummy_func_list())
-    func_list.append(G.FUNCS['mpi_f_sync_reg'])
+    func_list = load_C_func_list(binding_dir, True, custom_dir=None) # suppress noise
 
     # preprocess
     for func in func_list:
-        check_func_directives(func)
+        check_func_directives_abi(func)
     func_list = [f for f in func_list if '_skip_fortran' not in f]
 
     # fortran_binding.c
@@ -39,9 +37,9 @@ def main():
     G.profile_out = []
     for func in func_list:
         G.out.append("")
-        dump_f77_c_func(func)
+        dump_f77_c_func(func, is_abi=True)
         if has_cptr(func):
-            dump_f77_c_func(func, True)
+            dump_f77_c_func(func, True, is_abi=True)
 
     f = "%s/fortran_binding.c" % f77_dir
     dump_f77_c_file(f, G.out)
@@ -75,6 +73,9 @@ def main():
         f = "%s/mpif.h" % f77_dir
         dump_mpif_h(f, autoconf_macros)
 
+        f = "%s/mpi_f08_compile_constants.f90" % f08_dir
+        dump_compile_constants_f90(f)
+
 def load_mpi_abi_h(f):
     # load constants into G.mpih_defines
     with open(f, "r") as In:
@@ -84,9 +85,9 @@ def load_mpi_abi_h(f):
             if RE.match(r'#define\s+(MPI_\w+)\s+(.+)', line):
                 # direct macros
                 (name, val) = RE.m.group(1, 2)
-                if RE.match(r'\(+MPI_\w+\)\(?0x([0-9a-fA-F]+)', val):
+                if RE.match(r'\(+(MPI_\w+)\)\(?0x([0-9a-fA-F]+)', val):
                     # handle constants
-                    val = int(RE.m.group(1), 16)
+                    val = "%s(%d)" % (RE.m.group(1), int(RE.m.group(2), 16))
                 elif RE.match(r'\(+MPI_Offset\)(-?\d+)', val):
                     # MPI_DISPLACEMENT_CURRENT
                     val = RE.m.group(1)
@@ -111,6 +112,18 @@ def load_mpi_abi_h(f):
                 # enum values
                 (name, val) = RE.m.group(1, 2)
                 G.mpih_defines[name] = val
+
+def check_func_directives_abi(func):
+    if RE.match(r'mpi_t_', func['name'], re.IGNORECASE):
+        func['_skip_fortran'] = 1
+    elif RE.match(r'mpix_(grequest_|type_iov)', func['name'], re.IGNORECASE):
+        func['_skip_fortran'] = 1
+    elif RE.match(r'mpi_\w+_(f|f08|c)2(f|f08|c)$', func['name'], re.IGNORECASE):
+        # implemented in mpi_f08_types.f90
+        func['_skip_fortran'] = 1
+    elif RE.match(r'mpi_.*_function$', func['name'], re.IGNORECASE):
+        # defined in mpi_f08_callbacks.f90
+        func['_skip_fortran'] = 1
 
 # ---------------------------------------------------------
 if __name__ == "__main__":

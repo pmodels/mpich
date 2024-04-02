@@ -6,14 +6,14 @@
 #ifndef MPI_FORTIMPL_H_INCLUDED
 #define MPI_FORTIMPL_H_INCLUDED
 
-#include "mpichconf.h"
+#include "config.h"
 #include "mpi.h"
-#include "mpir_attr_generic.h"
-#include "mpii_f77interface.h"
 #include <sys/types.h>  /* for ssize_t */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define MPICH_API_PUBLIC
 
 /* Handle different mechanisms for passing Fortran CHARACTER to routines.
  *
@@ -280,7 +280,10 @@ typedef MPI_Aint MPI_FAint;
 /* The definitions for the Fortran logical values are also needed
    by the reduction operations in mpi/coll/opland, oplor, and oplxor,
    so they are defined in src/include/mpii_fortlogical.h */
-#include "mpii_fortlogical.h"
+#define MPII_F_TRUE 1
+#define MPII_F_FALSE 0
+#define MPII_TO_FLOG(a) ((a) ? MPII_F_TRUE : MPII_F_FALSE)
+#define MPII_FROM_FLOG(a) ((a) == MPII_F_FALSE ? 0 : 1)
 
 
 /* MPIR_F_MPI_BOTTOM is the address of the Fortran MPI_BOTTOM value */

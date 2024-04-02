@@ -9,7 +9,7 @@ from local_python import RE
 
 import re
 
-def dump_f77_c_func(func, is_cptr=False):
+def dump_f77_c_func(func, is_cptr=False, is_abi=False):
     func_name = get_function_name(func)
     f_mapping = get_kind_map('F90')
     c_mapping = get_kind_map('C')
@@ -68,15 +68,23 @@ def dump_f77_c_func(func, is_cptr=False):
                 raise Exception("Unhandled: %s - %s, length=%s" % (func['name'], p['name'], p['length']))
         else:
             c_param_list.append("MPI_Fint *" + p['name'])
-            c_arg_list_A.append("(%s) (*%s)" % (c_type, p['name']))
-            c_arg_list_B.append("(%s) (*%s)" % (c_type, p['name']))
+            if is_abi and c_type in G.handle_list:
+                arg = "%s_f2c(*%s)" % (c_type, p['name'])
+            else:
+                arg = "(%s) (*%s)" % (c_type, p['name'])
+            c_arg_list_A.append(arg)
+            c_arg_list_B.append(arg)
 
     def dump_scalar_out(v, f_type, c_type):
         c_param_list.append("%s *%s" % (f_type, v))
         c_arg_list_A.append("&%s_i" % v)
         c_arg_list_B.append("&%s_i" % v)
         code_list_common.append("%s %s_i;" % (c_type, v))
-        end_list_common.append("*%s = (%s) %s_i;" % (v, f_type, v))
+        if is_abi and c_type in G.handle_list:
+            val = "%s_c2f(%s_i)" % (c_type, v)
+        else:
+            val = "(%s) %s_i" % (f_type, v)
+        end_list_common.append("*%s = %s;" % (v, val))
 
     # void *
     def dump_buf(buf, check_in_place):
@@ -498,7 +506,7 @@ def dump_f77_c_func(func, is_cptr=False):
         end_list_common.append("if (*ierr || !%s) {" % flag)
         end_list_common.append("    *%s = 0;" % v)
         end_list_common.append("} else {")
-        end_list_common.append("    *%s = (MPI_Aint) %s_i;" % (v, v))
+        end_list_common.append("    *%s = (%s) (intptr_t) (*(void **) %s_i);" % (v, c_type, v))
         end_list_common.append("}")
 
     def dump_handle_create(v, c_type):
@@ -845,19 +853,7 @@ def dump_f77_c_func(func, is_cptr=False):
     process_func_parameters()
 
     c_func_name = func_name
-    if need_ATTR_AINT:
-        if RE.match(r'MPI_Attr_(get|put)', func['name'], re.IGNORECASE):
-            if RE.m.group(1) == 'put':
-                c_func_name = "MPII_Comm_set_attr"
-            else:
-                c_func_name = "MPII_Comm_get_attr"
-            c_arg_list_A.append("MPIR_ATTR_INT")
-            c_arg_list_B.append("MPIR_ATTR_INT")
-        else:
-            c_func_name = re.sub(r'MPI_', 'MPII_', func['name'])
-            c_arg_list_A.append("MPIR_ATTR_AINT")
-            c_arg_list_B.append("MPIR_ATTR_AINT")
-    elif re.match(r'MPI_(Init|Init_thread|Info_create_env)$', func['name'], re.IGNORECASE):
+    if re.match(r'MPI_(Init|Init_thread|Info_create_env)$', func['name'], re.IGNORECASE):
         # argc, argv
         c_arg_list_A.insert(0, "0, 0")
         c_arg_list_B.insert(0, "0, 0")
@@ -961,6 +957,7 @@ def dump_mpif_h(f, autoconf_macros={}):
 
         # -- all integer constants
         for name in G.mpih_defines:
+            val = G.mpih_defines[name]
             T = "INTEGER"
             if re.match(r'MPI_[TF]_', name):
                 continue
@@ -975,8 +972,11 @@ def dump_mpif_h(f, autoconf_macros={}):
                     T = autoconf_macros['FORTRAN_MPI_OFFSET']
                 else:
                     T = '@FORTRAN_MPI_OFFSET@'
+            elif isinstance(val, str) and RE.match(r'(MPI_\w+)\((.+)\)', val):
+                # handles in F77 are just ITNEGERs
+                val = RE.m.group(2)
             print("       %s %s" % (T, name), file=Out)
-            print("       PARAMETER (%s=%s)" % (name, G.mpih_defines[name]), file=Out)
+            print("       PARAMETER (%s=%s)" % (name, val), file=Out)
 
         # -- Fortran08 capability
         for a in ['SUBARRAYS_SUPPORTED', 'ASYNC_PROTECTS_NONBLOCKING']:

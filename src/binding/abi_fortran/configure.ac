@@ -39,6 +39,9 @@ F77=$FC
 FFLAGS=$FCFLAGS
 AC_PROG_F77
 
+AC_DEFINE([MPI_ABI], 1, [Define to use MPI ABI header.])
+AC_DEFINE([MPI_ABI_FORT], 1, [Define to include MPI ABI Fortran header.])
+
 # MPI C ABI standard sizes
 MPI_STATUS_SIZE=8
 AC_SUBST([MPI_STATUS_SIZE])
@@ -57,8 +60,8 @@ MPI_OFFSET=$pac_retval
 MPI_COUNT=$pac_retval
 
 enable_f77=yes
-enable_f90=yes
-enable_f08=yes
+enable_f90=no
+enable_f08=no
 PAC_FC_2008_SUPPORT([:],[enable_f08=no])
 
 modincdir=$includedir
@@ -168,7 +171,8 @@ if test "$enable_f77" = yes ; then
     # Check if $MPI_DEFAULT_FOPTS is valid with $F77
     if test -n "$MPI_DEFAULT_FOPTS" ; then
         PAC_F77_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_FOPTS], [
-        FFLAGS="$FFLAGS $MPI_DEFAULT_FOPTS"
+            FFLAGS="$FFLAGS $MPI_DEFAULT_FOPTS"
+        ])
     fi
 fi
 
@@ -291,11 +295,6 @@ information to configure with the FCFLAGS environment variable.])
 fi
 
 if test "$enable_f77" = "yes" ; then
-    # determine shared library flags for F77
-    f77_shlib_conf=src/env/f77_shlib.conf
-    PAC_COMPILER_SHLIB_FLAGS([F77],[$f77_shlib_conf])
-    AC_SUBST_FILE([f77_shlib_conf])
-
     AC_LANG([Fortran 77])
     PAC_PROG_F77_EXCLAIM_COMMENTS(has_exclaim="yes",has_exclaim="no")
     PAC_PROG_F77_HAS_INCDIR(src)
@@ -342,7 +341,7 @@ fi
 
 if test "$enable_f90" = "yes" -o "$enable_f08" = "yes"; then
     # determine shared library flags for FC
-    fc_shlib_conf=src/env/fc_shlib.conf
+    fc_shlib_conf=confdb/fc_shlib.conf
     PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
     AC_SUBST_FILE([fc_shlib_conf])
 
@@ -828,11 +827,14 @@ AM_CONDITIONAL([BUILD_F77_BINDING],[test "$enable_f77" = "yes"])
 AM_CONDITIONAL([BUILD_F90_BINDING],[test "$enable_f90" = "yes"])
 AM_CONDITIONAL([BUILD_F08_BINDING],[test "$enable_f08" = "yes"])
 
+# Python 3 is needed to generate Fortran bindings
+PAC_CHECK_PYTHON
+
 if test "$enable_f90" = "yes" ; then
     PAC_FC_CHECK_IGNORE_TKR
     PAC_FC_ISO_C_BINDING
     if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi/mpi_base.f90 ; then
+        if test -f use_mpi/mpi_base.f90 ; then
             AC_MSG_NOTICE([Use pre-generated Fortran mpi binding. To prevent issues, install Python 3 and re-run configure.])
         else
             AC_MSG_ERROR([Python 3 is required to generate F90 bindings but not found!])
@@ -854,7 +856,7 @@ fi
 if test "$enable_f08" = "yes" ; then
     PAC_FC_CHECK_REAL128
     if test -z "$PYTHON" ; then
-        if test -f src/binding/fortran/use_mpi_f08/mpi_f08.f90 ; then
+        if test -f use_mpi_f08/mpi_f08.f90 ; then
             AC_MSG_NOTICE([Using pre-generated Fortran mpi_f08 binding source. To prevent issues, install Python 3 and rerun configure.])
         else
             AC_MSG_ERROR([Python 3 is required to generate F08 bindings but not found!])
@@ -877,12 +879,15 @@ AC_CONFIG_FILES([
 ])
 
 if test "$enable_f77" = "yes" ; then
-    AC_CONFIG_FILES([mpif_h/setbotf.f \
-                     mpif_h/setbot.c])
+    AC_CONFIG_FILES([
+        mpif_h/setbotf.f
+        mpif_h/setbot.c
+    ])
 fi
 if test "$enable_f08" = "yes" ; then
-    AC_CONFIG_FILES([use_mpi_f08/mpi_f08_compile_constants.f90 \
-                     use_mpi_f08/mpi_c_interface_types.f90])
+    AC_CONFIG_FILES([
+        use_mpi_f08/mpi_c_interface_types.f90
+    ])
 fi
 
 AC_OUTPUT
