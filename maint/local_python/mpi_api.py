@@ -12,7 +12,7 @@ import copy
 import os
 import glob
 
-def load_C_func_list(binding_dir="src/binding", silent=False):
+def load_C_func_list(binding_dir="src/binding", silent=False, custom_dir="src/binding/c"):
     # -- Loading Standard APIs --
     if os.path.exists("%s/apis.json" % binding_dir):
         if not silent: print("Loading %s/apis.json ..." % binding_dir)
@@ -26,16 +26,16 @@ def load_C_func_list(binding_dir="src/binding", silent=False):
     if not silent: print("Loading %s/custom_mapping.txt ..." % binding_dir)
     load_mpi_mapping("%s/custom_mapping.txt" % binding_dir)
 
-    # -- Loading MPICH APIs --
-
-    api_files = glob.glob("%s/c/*_api.txt" % binding_dir)
-    for f in api_files:
-        if RE.match(r'.*\/(\w+)_api.txt', f):
-            # The name in eg pt2pt_api.txt indicates the output folder.
-            # Only the api functions with output folder will get generated.
-            # This allows simple control of what functions to generate.
-            if not silent: print("Loading %s ..." % f)
-            load_mpi_api(f, RE.m.group(1))
+    if custom_dir:
+        # -- Loading MPICH APIs --
+        api_files = glob.glob("%s/*_api.txt" % custom_dir)
+        for f in api_files:
+            if RE.match(r'.*\/(\w+)_api.txt', f):
+                # The name in eg pt2pt_api.txt indicates the output folder.
+                # Only the api functions with output folder will get generated.
+                # This allows simple control of what functions to generate.
+                if not silent: print("Loading %s ..." % f)
+                load_mpi_api(f, RE.m.group(1))
 
     # -- filter and sort func_list --
     func_list = []
@@ -45,11 +45,13 @@ def load_C_func_list(binding_dir="src/binding", silent=False):
         elif RE.match(r'\w+_(function|FN)$', f['name']):
             # skip various callback functions
             continue
-        elif not 'dir' in f:
+        elif custom_dir and not 'dir' in f:
             if not silent: print("    skip %s (not defined)" % f['name'])
         else:
             func_list.append(f)
-    func_list.sort(key = lambda f: f['dir'])
+
+    if custom_dir:
+        func_list.sort(key = lambda f: f['dir'])
 
     load_mpix_txt("%s/mpix.txt" % binding_dir)
 
