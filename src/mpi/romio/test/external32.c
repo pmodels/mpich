@@ -64,7 +64,7 @@ static void is_little_or_big_endian(FILE * fileh_std, const char *datarep, char 
 /* This test checks if datareps given are little- or big-endian */
 int main(int argc, char *argv[])
 {
-    int sample_i = 123456789, i, j;
+    int sample_i = 123456789, i;
     char sample_i_le[4] = { 0x15, 0xcd, 0x5b, 0x07 };
     const char *datarep[3] = { "native", "external32", "internal" };
     MPI_File fileh;

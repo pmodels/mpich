@@ -67,6 +67,7 @@ static const char *disabled_prefix =
     "quobyte:";
 #endif
 
+static
 void err_expected(int err, int exp_err)
 {
     int rank, errorclass;
@@ -82,6 +83,7 @@ void err_expected(int err, int exp_err)
     }
 }
 
+static
 void err_handler(int err, char *err_msg)
 {
     int rank, errorStringLen;
@@ -90,8 +92,9 @@ void err_handler(int err, char *err_msg)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Error_string(err, errorString, &errorStringLen);
     if (err_msg == NULL)
-        err_msg = "";
-    fprintf(stderr, "rank %d: MPI error (%s) : %s\n", rank, err_msg, errorString);
+        fprintf(stderr, "rank %d: MPI error : %s\n", rank, errorString);
+    else
+        fprintf(stderr, "rank %d: MPI error (%s) : %s\n", rank, err_msg, errorString);
     MPI_Abort(MPI_COMM_WORLD, -1);
     exit(1);
 }
