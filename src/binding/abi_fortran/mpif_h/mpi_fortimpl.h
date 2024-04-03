@@ -375,13 +375,24 @@ typedef char *MPID_FCHAR_T;
 #endif
 #endif /* HAVE_ROMIO */
 
-/* The F90 attr copy/delete function prototype and calling convention */
+/* The F77/F90 attr copy/delete function prototype and calling convention */
+typedef void (FORT_CALL F77_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *,
+                                           MPI_Fint *, MPI_Fint *, MPI_Fint *);
+typedef void (FORT_CALL F77_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *,
+                                             MPI_Fint *);
 typedef void (FORT_CALL F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
                                            MPI_Aint *, MPI_Fint *, MPI_Fint *);
 typedef void (FORT_CALL F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
                                              MPI_Fint *);
 
-void MPII_Keyval_set_f90_proxy(int keyval);
+int MPII_keyval_create(F77_CopyFunction * copyfn, F77_DeleteFunction * delfn,
+                       void *extra_state, int *keyval);
+int MPII_comm_keyval_create(F90_CopyFunction * copyfn, F90_DeleteFunction * delfn,
+                            void *extra_state, int *keyval);
+int MPII_type_keyval_create(F90_CopyFunction * copyfn, F90_DeleteFunction * delfn,
+                            void *extra_state, int *keyval);
+int MPII_win_keyval_create(F90_CopyFunction * copyfn, F90_DeleteFunction * delfn,
+                           void *extra_state, int *keyval);
 
 extern FORT_DLL_SPEC void FORT_CALL mpi_alloc_mem_cptr_(MPI_Aint * size, MPI_Fint * info,
                                                         void **baseptr, MPI_Fint * ierr);
