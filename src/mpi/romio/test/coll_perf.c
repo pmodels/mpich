@@ -91,12 +91,12 @@ int main(int argc, char **argv)
         array_of_psizes[i] = 0;
     MPI_Dims_create(nprocs, ndims, array_of_psizes);
 
-    MPI_Type_create_darray(nprocs, mynod, ndims, array_of_gsizes,
-                           array_of_distribs, array_of_dargs,
-                           array_of_psizes, order, MPI_INT, &newtype);
-    MPI_Type_commit(&newtype);
+    MPI_CHECK(MPI_Type_create_darray(nprocs, mynod, ndims, array_of_gsizes,
+                                     array_of_distribs, array_of_dargs,
+                                     array_of_psizes, order, MPI_INT, &newtype));
+    MPI_CHECK(MPI_Type_commit(&newtype));
 
-    MPI_Type_size_x(newtype, &bufcount);
+    MPI_CHECK(MPI_Type_size_x(newtype, &bufcount));
     bufcount = bufcount / sizeof(int);
     buf = (int *) malloc(bufcount * sizeof(int));
 
