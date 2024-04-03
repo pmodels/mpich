@@ -351,17 +351,17 @@ int main(int argc, char **argv)
     free(filename);
     free(cb_config_string);
     MPI_Finalize();
-    return 0;
+    return (sum_errs > 0);
 }
 
 #define SEEDER(x,y,z) ((x)*1000000 + (y) + (x)*(z))
 
 int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg, int verbose)
 {
-    MPI_Datatype typevec, newtype, t[3];
-    int *buf, i, b[3], errcode, errors = 0;
+    MPI_Datatype typevec, newtype, tmptype;
+    int *buf, i, len, err, errcode, errors = 0;
     MPI_File fh;
-    MPI_Aint d[3];
+    MPI_Aint disp, extent;
     MPI_Status status;
     int SIZE = (STARTING_SIZE / nprocs) * nprocs;
     MPI_Info info;
@@ -385,23 +385,30 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
 
     MPI_Type_vector(SIZE / nprocs, 1, nprocs, MPI_INT, &typevec);
 
-    b[0] = b[1] = b[2] = 1;
-    d[0] = 0;
-    d[1] = mynod * sizeof(int);
-    d[2] = SIZE * sizeof(int);
-    t[0] = MPI_LB;
-    t[1] = typevec;
-    t[2] = MPI_UB;
+    extent = SIZE * sizeof(int);
 
-    MPI_Type_create_struct(3, b, d, t, &newtype);
-    MPI_Type_commit(&newtype);
+    len = 1;
+    disp = mynod * sizeof(int);
+
+    /* keep the struct, ditch the vector */
+    MPI_Type_create_struct(1, &len, &disp, &typevec, &tmptype);
     MPI_Type_free(&typevec);
+
+    MPI_Type_create_resized(tmptype, 0, extent, &newtype);
+    MPI_Type_free(&tmptype);
+    MPI_Type_commit(&newtype);
 
     if (!mynod) {
         if (verbose)
             fprintf(stderr,
                     "\ntesting noncontiguous in memory, noncontiguous in file using collective I/O\n");
-        MPI_File_delete(filename, info);
+        err = MPI_File_delete(filename, info);
+        if (err != MPI_SUCCESS) {
+            int errorclass;
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_NO_SUCH_FILE)     /* ignore this error class */
+                MPI_CHECK(err);
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -468,7 +475,13 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
         if (verbose)
             fprintf(stderr,
                     "\ntesting noncontiguous in memory, contiguous in file using collective I/O\n");
-        MPI_File_delete(filename, info);
+        err = MPI_File_delete(filename, info);
+        if (err != MPI_SUCCESS) {
+            int errorclass;
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_NO_SUCH_FILE)     /* ignore this error class */
+                MPI_CHECK(err);
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -521,7 +534,13 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
         if (verbose)
             fprintf(stderr,
                     "\ntesting contiguous in memory, noncontiguous in file using collective I/O\n");
-        MPI_File_delete(filename, info);
+        err = MPI_File_delete(filename, info);
+        if (err != MPI_SUCCESS) {
+            int errorclass;
+            MPI_Error_class(err, &errorclass);
+            if (errorclass != MPI_ERR_NO_SUCH_FILE)     /* ignore this error class */
+                MPI_CHECK(err);
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
