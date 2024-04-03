@@ -159,6 +159,24 @@ static MPL_ze_mapped_buffer_entry_t **ipc_cache_mapped = NULL;
 static MPL_ze_mapped_buffer_entry_t **ipc_cache_removal = NULL;
 static MPL_ze_mapped_buffer_entry_t **mmap_cache_removal = NULL;
 
+/* LRU replacement structures for ipc_cache_mapped (i.e. recv side) */
+typedef struct MPL_ze_ipc_lru_mapped_entry_t {
+    void *ipc_buf;
+    struct MPL_ze_ipc_lru_mapped_entry_t *next, *prev;
+} MPL_ze_ipc_lru_mapped_entry_t;
+
+typedef struct {
+    void *ipc_buf;  /* key */
+    MPL_ze_ipc_lru_mapped_entry_t *entry;  /* entry in dl ipc_lru_order_head */
+    UT_hash_handle hh;
+} MPL_ze_ipc_lru_map_t;
+
+static MPL_ze_ipc_lru_map_t **ipc_lru_map = NULL;
+static MPL_ze_ipc_lru_mapped_entry_t **ipc_lru_mapped_order_head = NULL;
+static MPL_ze_ipc_lru_mapped_entry_t **ipc_lru_mapped_order_tail = NULL;
+static int *ipc_curr_mapped_entries = NULL;
+static int *ipc_max_entries = NULL;
+
 /* For pidfd */
 #ifndef __NR_pidfd_open
 #define __NR_pidfd_open 434     /* System call # on most architectures */
@@ -208,6 +226,7 @@ static int parse_affinity_mask(void);
 static void get_max_dev_id(int *max_dev_id, int *max_subdev_id);
 static int gpu_mem_hook_init(void);
 static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
+static int update_lru_mapped_order(void *ipc_buf, int dev_id);
 static int MPL_event_pool_add_new_pool(void);
 static void MPL_event_pool_destroy(void);
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
@@ -505,6 +524,7 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdevid)
 int MPL_gpu_init(int debug_summary)
 {
     int mpl_err = MPL_SUCCESS;
+    int max_cache_entries = 0;
     if (gpu_initialized) {
         goto fn_exit;
     }
@@ -538,6 +558,14 @@ int MPL_gpu_init(int debug_summary)
 
     get_max_dev_id(&max_dev_id, &max_subdev_id);
 
+    ipc_max_entries = MPL_malloc(local_ze_device_count * sizeof(int), MPL_MEM_OTHER);
+    if (ipc_max_entries == NULL) {
+        mpl_err = MPL_ERR_GPU_NOMEM;
+        goto fn_fail;
+    }
+
+    memset(ipc_max_entries, 0, local_ze_device_count * sizeof(int));
+
     if (likely(MPL_gpu_info.specialized_cache)) {
         ipc_cache_tracked =
             MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_handle_entry_t *), MPL_MEM_OTHER);
@@ -570,14 +598,54 @@ int MPL_gpu_init(int debug_summary)
             goto fn_fail;
         }
 
+        ipc_lru_map =
+            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_lru_map_t *), MPL_MEM_OTHER);
+        if (ipc_lru_map == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+
+        ipc_lru_mapped_order_head =
+            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_lru_mapped_entry_t *), MPL_MEM_OTHER);
+        if (ipc_lru_mapped_order_head == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+
+        ipc_lru_mapped_order_tail =
+            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_lru_mapped_entry_t *), MPL_MEM_OTHER);
+        if (ipc_lru_mapped_order_tail == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+
+        ipc_curr_mapped_entries = MPL_malloc(local_ze_device_count * sizeof(int), MPL_MEM_OTHER);
+        if (ipc_curr_mapped_entries == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+
+        /* Set the max size for the opened IPC handles cache */
+        max_cache_entries = MPL_gpu_info.max_cache_entries;
+
+        if (max_cache_entries == -1)
+            max_cache_entries = INT_MAX;
+
         for (int i = 0; i < local_ze_device_count; ++i) {
             ipc_cache_tracked[i] = NULL;
             ipc_cache_mapped[i] = NULL;
             ipc_cache_removal[i] = NULL;
             mmap_cache_removal[i] = NULL;
+            ipc_lru_map[i] = NULL;
+            ipc_lru_mapped_order_head[i] = NULL;
+            ipc_lru_mapped_order_tail[i] = NULL;
+            ipc_curr_mapped_entries[i] = 0;
+            ipc_max_entries[i] = max_cache_entries;
         }
 
         MPL_gpu_free_hook_register(MPL_ze_ipc_remove_cache_handle);
+    } else {
+        MPL_gpu_info.specialized_cache = false;
     }
 
     /* Initialize gpu engine mapping */
@@ -1282,6 +1350,19 @@ int MPL_gpu_finalize(void)
                     MPL_free(entry);
                 }
             }
+
+            /* Cleanup the lru entries - the ipc handles are already closed */
+            MPL_ze_ipc_lru_map_t *lru_mapped_entry = NULL, *lru_mapped_tmp = NULL;
+            HASH_ITER(hh, ipc_lru_map[i], lru_mapped_entry, lru_mapped_tmp) {
+                HASH_DELETE(hh, ipc_lru_map[i], lru_mapped_entry);
+                MPL_free(lru_mapped_entry);
+            }
+
+            MPL_ze_ipc_lru_mapped_entry_t *lru_dl_mapped_entry = NULL, *lru_dl_mapped_tmp = NULL;
+            DL_FOREACH_SAFE(ipc_lru_mapped_order_head[i], lru_dl_mapped_entry, lru_dl_mapped_tmp) {
+                DL_DELETE(ipc_lru_mapped_order_head[i], lru_dl_mapped_entry);
+                MPL_free(lru_dl_mapped_entry);
+            }
         }
 
         {
@@ -1296,8 +1377,13 @@ int MPL_gpu_finalize(void)
         MPL_free(ipc_cache_removal);
         MPL_free(mmap_cache_removal);
         MPL_free(ipc_cache_mapped);
+        MPL_free(ipc_lru_map);
+        MPL_free(ipc_lru_mapped_order_head);
+        MPL_free(ipc_lru_mapped_order_tail);
+        MPL_free(ipc_curr_mapped_entries);
     }
 
+    MPL_free(ipc_max_entries);
     MPL_free(local_to_global_map);
     MPL_free(global_to_local_map);
     MPL_free(global_to_root_map);
@@ -1466,6 +1552,99 @@ static void MPL_event_pool_destroy(void)
         zeEventPoolDestroy(ep->pool);
         MPL_free(ep);
     }
+}
+
+static int update_lru_mapped_order(void *ipc_buf, int dev_id)
+{
+    int mpl_err = MPL_SUCCESS;
+    MPL_ze_ipc_lru_mapped_entry_t *new_tail = NULL;
+    MPL_ze_ipc_lru_map_t *map_entry = NULL;
+    MPL_ze_ipc_lru_mapped_entry_t **head = &ipc_lru_mapped_order_head[dev_id];
+    MPL_ze_ipc_lru_mapped_entry_t **tail = &ipc_lru_mapped_order_tail[dev_id];
+
+    if (ipc_max_entries[dev_id] == 0) goto fn_exit;
+
+    /* Find the existing entry */
+    HASH_FIND_PTR(ipc_lru_map[dev_id], &ipc_buf, map_entry);
+
+    if (map_entry) {
+        /* If it's already the head, don't do anything */
+        if (map_entry->entry == *head)
+            goto fn_exit;
+
+        /* Remove it from the list */
+        DL_DELETE(*head, map_entry->entry);
+
+        /* Check if the tail needs updating */
+        if (map_entry->entry == *tail) {
+            *tail = map_entry->entry->prev;
+        }
+
+        /* Prepend to the list */
+        DL_PREPEND(*head, map_entry->entry);
+    } else {
+        /* Allocate a new entry */
+        MPL_ze_ipc_lru_mapped_entry_t *entry =
+            (MPL_ze_ipc_lru_mapped_entry_t *) MPL_calloc(1, sizeof(MPL_ze_ipc_lru_mapped_entry_t),
+                                                  MPL_MEM_OTHER);
+        if (entry == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+
+        entry->ipc_buf = ipc_buf;
+
+        /* Prepend to the list */
+        DL_PREPEND(*head, entry);
+        ipc_curr_mapped_entries[dev_id] += 1;
+
+        /* Set the tail for the first entry */
+        if (*tail == NULL) {
+            *tail = *head;
+        }
+
+        /* Add to the map for constant access during reorder */
+        MPL_ze_ipc_lru_map_t *map_entry =
+            (MPL_ze_ipc_lru_map_t *) MPL_calloc(1, sizeof(MPL_ze_ipc_lru_map_t), MPL_MEM_OTHER);
+        if (map_entry == NULL) {
+            mpl_err = MPL_ERR_GPU_NOMEM;
+            goto fn_fail;
+        }
+
+        map_entry->ipc_buf = ipc_buf;
+        map_entry->entry = entry;
+
+        HASH_ADD_PTR(ipc_lru_map[dev_id], ipc_buf, map_entry, MPL_MEM_OTHER);
+
+        /* Check if cache size is over the limit */
+        if (ipc_curr_mapped_entries[dev_id] > ipc_max_entries[dev_id]) {
+            map_entry = NULL;
+            new_tail = (*tail)->prev;
+
+            /* Remove last entry from list */
+            DL_DELETE(*head, *tail);
+
+            /* Delete entry from the hash table */
+            HASH_FIND_PTR(ipc_lru_map[dev_id], &(*tail)->ipc_buf, map_entry);
+            assert(map_entry != NULL);
+            HASH_DELETE(hh, ipc_lru_map[dev_id], map_entry);
+            MPL_free(map_entry);
+
+            /* Close IPC handle for removed entry */
+            MPL_gpu_ipc_handle_unmap((*tail)->ipc_buf);
+            MPL_free(*tail);
+
+            /* Set the new tail */
+            *tail = new_tail;
+
+            ipc_curr_mapped_entries[dev_id] -= 1;
+        }
+    }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* given a local device pointer, create an IPC handle */
@@ -1699,6 +1878,10 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id
                          MPL_MEM_OTHER);
             }
         }
+    }
+
+    if (likely(MPL_gpu_info.specialized_cache && MPL_gpu_info.max_cache_entries != -1)) {
+        update_lru_mapped_order(*ptr, dev_id);
     }
 
   fn_exit:
