@@ -26,6 +26,8 @@ int MPII_init_gpu(void)
         MPL_gpu_info.specialized_cache = specialized_cache;
         MPL_gpu_info.use_immediate_cmdlist = MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST;
         MPL_gpu_info.roundrobin_cmdq = MPIR_CVAR_GPU_ROUND_ROBIN_COMMAND_QUEUES;
+        /* Note this currently only effects the specialized cache unless set to 0 */
+        MPL_gpu_info.max_cache_entries = MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES;
 
         int mpl_errno = MPL_gpu_init(debug_summary);
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
@@ -43,7 +45,12 @@ int MPII_init_gpu(void)
             }
             /* If the MPL gpu backend doesn't support specialized cache, fallback to generic. */
             if (specialized_cache && !MPL_gpu_info.specialized_cache) {
-                MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE = MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic;
+                if (MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES == 0) {
+                    MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE =
+                        MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled;
+                } else {
+                    MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE = MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_generic;
+                }
             }
         }
     }
