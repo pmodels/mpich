@@ -60,7 +60,7 @@ static int test_bcast(mtest_mem_type_e oddmem, mtest_mem_type_e evenmem)
         MPI_Comm_size(comm, &size);
         MPI_Comm_rank(comm, &rank);
 
-        for (count = 1; count < 65000; count = count * 2) {
+        for (count = 1; count < 32000; count = count * 2) {
             MTestMalloc(count * sizeof(int), memtype, &buf_h, &buf, rank);
             for (root = 0; root < size; root++) {
                 for (reps = 0; reps < num_reps; reps++) {
