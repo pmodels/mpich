@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 
 #define NSIDE 5
@@ -26,9 +27,8 @@ static void handle_error(int errcode, const char *str)
 int main(int argc, char *argv[])
 {
     int i, j, nerrors = 0, total_errors = 0;
-
-    int rank, size;
-    int bpos;
+    int rank, size, bpos, len;
+    char *filename;
 
     MPI_Datatype darray;
     MPI_Status status;
@@ -53,6 +53,38 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+/* process 0 takes the file name as a command-line argument and
+   broadcasts it to other processes */
+    if (!rank) {
+        i = 1;
+        while ((i < argc) && strcmp("-fname", *argv)) {
+            i++;
+            argv++;
+        }
+        if (i >= argc) {
+            fprintf(stderr, "\n*#  Usage: %s -fname filename\n\n", argv[0]);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+        argv++;
+        len = strlen(*argv);
+        filename = (char *) malloc(len + 10);
+        strcpy(filename, *argv);
+        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
+    } else {
+        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        filename = (char *) malloc(len + 10);
+        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
+    }
+
+    if (size != psize[0] * psize[1]) {
+        if (!rank)
+            fprintf(stderr, "Error: this program %s must run on %d MPI processes\n",
+                    argv[0], psize[0] * psize[1]);
+        MPI_Finalize();
+        exit(1);
+    }
+
     /* Set up type */
     CHECK(MPI_Type_create_darray(size, rank, 2, gsize, distrib,
                                  bsize, psize, MPI_ORDER_FORTRAN, MPI_DOUBLE, &darray));
@@ -64,7 +96,7 @@ int main(int argc, char *argv[])
         data[i] = i;
 
     if (rank == 0) {
-        CHECK(MPI_File_open(MPI_COMM_SELF, argv[1],
+        CHECK(MPI_File_open(MPI_COMM_SELF, filename,
                             MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &dfile));
         CHECK(MPI_File_write(dfile, data, NSIDE * NSIDE, MPI_DOUBLE, &status));
         CHECK(MPI_File_close(&dfile));
@@ -82,7 +114,7 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* Read in array from file.  */
-    CHECK(MPI_File_open(MPI_COMM_WORLD, argv[1], MPI_MODE_RDONLY, MPI_INFO_NULL, &mpi_fh));
+    CHECK(MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &mpi_fh));
     CHECK(MPI_File_set_view(mpi_fh, 0, MPI_DOUBLE, darray, "native", MPI_INFO_NULL));
     CHECK(MPI_File_read_all(mpi_fh, ldata, nelem, MPI_DOUBLE, &status));
     CHECK(MPI_File_close(&mpi_fh));
@@ -121,6 +153,7 @@ int main(int argc, char *argv[])
 
     free(ldata);
     free(pdata);
+    free(filename);
     MPI_Type_free(&darray);
     MPI_Finalize();
 

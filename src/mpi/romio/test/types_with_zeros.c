@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -23,11 +24,11 @@ static void handle_error(int errcode, const char *str)
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
-enum {
+enum testcases {
     INDEXED,
     HINDEXED,
     STRUCT
-} testcases;
+};
 
 static int test_indexed_with_zeros(char *filename, int testcase)
 {
@@ -136,12 +137,36 @@ static int test_indexed_with_zeros(char *filename, int testcase)
 
 int main(int argc, char **argv)
 {
-
-    int nr_errors, rank, np;
+    char *filename;
+    int i, len, nr_errors, rank, np;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
+
+/* process 0 takes the file name as a command-line argument and
+   broadcasts it to other processes */
+    if (!rank) {
+        i = 1;
+        while ((i < argc) && strcmp("-fname", *argv)) {
+            i++;
+            argv++;
+        }
+        if (i >= argc) {
+            fprintf(stderr, "\n*#  Usage: %s -fname filename\n\n", argv[0]);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+        argv++;
+        len = strlen(*argv);
+        filename = (char *) malloc(len + 10);
+        strcpy(filename, *argv);
+        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
+    } else {
+        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        filename = (char *) malloc(len + 10);
+        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
+    }
 
     if (np != 2) {
         if (rank == 0)
@@ -149,13 +174,14 @@ int main(int argc, char **argv)
         MPI_Finalize();
         return 1;
     }
-    nr_errors = test_indexed_with_zeros(argv[1], INDEXED);
-    nr_errors += test_indexed_with_zeros(argv[1], HINDEXED);
-    nr_errors += test_indexed_with_zeros(argv[1], STRUCT);
+    nr_errors = test_indexed_with_zeros(filename, INDEXED);
+    nr_errors += test_indexed_with_zeros(filename, HINDEXED);
+    nr_errors += test_indexed_with_zeros(filename, STRUCT);
 
     if (rank == 0 && nr_errors == 0)
         printf(" No Errors\n");
 
+    free(filename);
     MPI_Finalize();
-    return 0;
+    return (nr_errors > 0);
 }

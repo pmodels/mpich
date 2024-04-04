@@ -59,8 +59,8 @@ int main(int argc, char **argv)
         MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
     }
 
-    buf = (int *) malloc(SIZE);
     nints = SIZE / sizeof(int);
+    buf = (int *) calloc(nints, sizeof(int));
 
     /* each process opens a separate file called filename.'myrank' */
     tmp = (char *) malloc(len + 10);
@@ -99,5 +99,5 @@ int main(int argc, char **argv)
     free(tmp);
 
     MPI_Finalize();
-    return 0;
+    return (toterrs > 0);
 }

@@ -256,6 +256,8 @@ int main(int argc, char *argv[])
         }
     }
     MPI_Info_free(&info);
+    if (target != NULL)
+        free(target);
 
     MPI_Finalize();
     free(prog);

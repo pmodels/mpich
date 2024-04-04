@@ -57,7 +57,7 @@ char compare_buf[XLEN * 4][YLEN * 4] = {
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int i, j, err, rank, np, num_io;
+    int i, j, err, rank, np, num_io, len;
     char *buf, *filename;
     int rank_dim[2], array_of_sizes[2];
     int array_of_subsizes[2];
@@ -77,14 +77,36 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
+/* process 0 takes the file name as a command-line argument and
+   broadcasts it to other processes */
+    if (!rank) {
+        i = 1;
+        while ((i < argc) && strcmp("-fname", *argv)) {
+            i++;
+            argv++;
+        }
+        if (i >= argc) {
+            fprintf(stderr, "\n*#  Usage: %s -fname filename\n\n", argv[0]);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+        argv++;
+        len = strlen(*argv);
+        filename = (char *) malloc(len + 10);
+        strcpy(filename, *argv);
+        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
+    } else {
+        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        filename = (char *) malloc(len + 10);
+        MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
+    }
+
     if (np != 4) {
         if (!rank)
             printf("Please run with 4 processes. Exiting ...\n\n");
         MPI_Finalize();
         return 1;
     }
-
-    filename = argv[1];
 
     num_io = 2;
 
@@ -237,9 +259,10 @@ int main(int argc, char **argv)
     free(blocklengths);
     free(displacements);
     free(buf);
+    free(filename);
     MPI_Type_free(&ftype);
     MPI_Finalize();
-    return 0;
+    return (nr_errors > 0);
 }
 
 /* command-line outputs are: (the global array is written twice)
