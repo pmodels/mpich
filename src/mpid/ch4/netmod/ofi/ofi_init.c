@@ -771,6 +771,15 @@ int MPIDI_OFI_init_local(int *tag_bits)
         dump_global_settings();
     }
 
+    if (MPIR_CVAR_DEBUG_SUMMARY >= 2) {
+        if (MPIR_Process.rank == 0) {
+            fprintf(stdout, "====== Rank to NIC assignment ========\n");
+        }
+        fprintf(stdout, "Rank: %d, Local_rank: %d, NIC: %s\n", MPIR_Process.rank,
+                MPIR_Process.local_rank, MPIDI_OFI_global.prov_use[0]->domain_attr->name);
+    }
+    fflush(stdout);
+
     /* Finally open the fabric */
     MPIDI_OFI_CALL(fi_fabric(MPIDI_OFI_global.prov_use[0]->fabric_attr,
                              &MPIDI_OFI_global.fabric, NULL), fabric);
