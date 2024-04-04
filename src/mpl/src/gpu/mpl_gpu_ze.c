@@ -45,8 +45,8 @@ static int gpu_initialized = 0;
 static uint32_t device_count;   /* Counts all local devices, does not include subdevices */
 static uint32_t local_ze_device_count;  /* Counts all local devices and subdevices */
 static uint32_t global_ze_device_count; /* Counts all global devices and subdevices */
-static uint32_t max_dev_id;     /* Does not include subdevices */
-static uint32_t max_subdev_id;
+static int max_dev_id;  /* Does not include subdevices */
+static int max_subdev_id;
 static char **device_list = NULL;
 static int *engine_conversion = NULL;
 
@@ -204,7 +204,7 @@ static int fd_to_handle(int dev_fd, int fd, int *handle);
 static int handle_to_fd(int dev_fd, int handle, int *fd);
 static int close_handle(int dev_fd, int handle);
 static int parse_affinity_mask();
-static void get_max_dev_id(uint32_t *max_dev_id, uint32_t *max_subdev_id);
+static void get_max_dev_id(int *max_dev_id, int *max_subdev_id);
 static int gpu_mem_hook_init(void);
 static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
 static int MPL_event_pool_add_new_pool(void);
@@ -1177,7 +1177,7 @@ static int parse_affinity_mask()
 }
 
 /* Get the max dev_id and subdev_id based on the environment */
-static void get_max_dev_id(uint32_t *max_dev_id, uint32_t *max_subdev_id)
+static void get_max_dev_id(int *max_dev_id, int *max_subdev_id)
 {
     /* This function assumes that parse_affinity_mask was previously called */
     int mpl_err = MPL_SUCCESS;
