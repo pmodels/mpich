@@ -151,10 +151,11 @@ int MPIR_Attr_dup_list(int handle, MPIR_Attribute * old_attrs, MPIR_Attribute **
     for (p = old_attrs; p != NULL; p = p->next) {
         /* call the attribute copy function (if any) */
         int flag = 0;
-        mpi_errno = MPIR_Call_attr_copy(handle, p, &new_value, &flag);
-
-        if (mpi_errno != MPI_SUCCESS)
+        rc = MPIR_Call_attr_copy(handle, p, &new_value, &flag);
+        if (rc != 0) {
+            mpi_errno = rc;
             goto fn_fail;
+        }
 
         if (!flag)
             continue;
@@ -193,6 +194,11 @@ int MPIR_Attr_dup_list(int handle, MPIR_Attribute * old_attrs, MPIR_Attribute **
   fn_exit:
     return mpi_errno;
   fn_fail:
+    /* In case of any failure, remove the attributes duplicated so far
+     * to prevent MPICH and user memory leaks.  We ignore any errors
+     * from the cleanup, otherwise we would be masking the original
+     * error from the user attribute copy operation. */
+    (void) MPIR_Attr_delete_list(handle, new_attr);
     goto fn_exit;
 }
 
@@ -219,8 +225,12 @@ int MPIR_Attr_delete_list(int handle, MPIR_Attribute ** attr)
         }
         /* --END ERROR HANDLING-- */
         /* For this attribute, find the delete function for the
-         * corresponding keyval */
-        mpi_errno = MPIR_Call_attr_delete(handle, p);
+         * corresponding keyval. If the delete function fails,
+         * we record the last failure */
+         rc = MPIR_Call_attr_delete(handle, p);
+         if (rc != 0) {
+             mpi_errno = rc;
+         }
 
         /* We must also remove the keyval reference.  If the keyval
          * was freed earlier (reducing the refcount), the actual
