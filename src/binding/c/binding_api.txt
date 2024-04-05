@@ -1,0 +1,21 @@
+MPIX_Op_create_x:
+    user_fn_x: FUNCTION, func_type=MPIX_User_function_x, [user defined function with extra_state]
+    delete_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when op is freed]
+    commute: LOGICAL, suppress=lis_paren, [true if commutative; false otherwise.]
+    extra_state: EXTRA_STATE, [extra state]
+    op: OPERATION, direction=out, [operation]
+    .desc: Creates a user-defined reduction op with an extra_state
+/*
+    Notes on MPIX_User_function_x:
+    The calling list for the user function type is
+    .vb
+        typedef void (MPIX_User_function_x) (void * a, void * b,
+                                             MPI_Count len, MPI_Datatype datatype,
+                                             void *extra_state);
+    .ve
+    There are a few differences from MPI_User_function used in MPI_Op_create.
+    1. It passes len and datatype as scalar input, rather than as addresses.
+    2. The len is of MPI_Count, rather than int.
+    3. It accepts a void *extra_state which is passed from users during MPIX_Op_create_x.
+*/
+

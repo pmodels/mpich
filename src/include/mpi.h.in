@@ -807,6 +807,8 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 /* User combination function */
 typedef void (MPI_User_function) ( void *, void *, int *, MPI_Datatype * );
 typedef void (MPI_User_function_c) ( void *, void *, MPI_Count *, MPI_Datatype * );
+typedef void (MPIX_User_function_x) ( void *, void *, MPI_Count, MPI_Datatype, void *);
+typedef void (MPIX_Destructor_function) (void *);
 
 /* Typedefs for generalized requests */
 typedef int (MPI_Grequest_cancel_function)(void *, int);
