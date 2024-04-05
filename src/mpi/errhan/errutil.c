@@ -156,16 +156,6 @@ void MPII_Errhandler_set_cxx(MPI_Errhandler errhand, void (*errcall) (void))
 }
 #endif /* HAVE_CXX_BINDING */
 
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-void MPII_Errhandler_set_fc(MPI_Errhandler errhand)
-{
-    MPIR_Errhandler *errhand_ptr;
-
-    MPIR_Errhandler_get_ptr(errhand, errhand_ptr);
-    errhand_ptr->language = MPIR_LANG__FORTRAN;
-}
-
-#endif
 
 /* ------------------------------------------------------------------------- */
 /* Group 2: These routines are called on error exit from most
@@ -291,27 +281,6 @@ int MPIR_call_errhandler(MPIR_Errhandler * errhandler, int errorcode, MPIR_handl
 #endif
                 break;
             }
-#endif
-#ifdef HAVE_FORTRAN_BINDING
-        case MPIR_LANG__FORTRAN90:
-        case MPIR_LANG__FORTRAN:
-            {
-                /* If int and MPI_Fint aren't the same size, we need to
-                 * convert.  As this is not performance critical, we
-                 * do this even if MPI_Fint and int are the same size. */
-                MPI_Fint ferr = errorcode;
-                MPI_Fint commhandle;
-#ifdef HAVE_ROMIO
-                if (h.kind == MPI_FILE) {
-                    commhandle = MPI_File_c2f(h.u.fh);
-                } else
-#endif
-                {
-                    commhandle = h.u.handle;
-                }
-                (*errhandler->errfn.F77_Handler_function) (&commhandle, &ferr);
-            }
-            break;
 #endif
     }
 

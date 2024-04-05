@@ -12,11 +12,6 @@
 MPICH_API_PUBLIC void MPII_Keyval_set_fortran(int);
 MPICH_API_PUBLIC void MPII_Keyval_set_fortran90(int);
 MPICH_API_PUBLIC void MPII_Grequest_set_lang_f77(MPI_Request greq);
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-MPICH_API_PUBLIC void MPII_Op_set_fc(MPI_Op);
-typedef void (MPII_F77_User_function) (void *, void *, MPI_Fint *, MPI_Fint *);
-MPICH_API_PUBLIC void MPII_Errhandler_set_fc(MPI_Errhandler);
-#endif
 
 #define MPII_ATTR_C_TO_FORTRAN(ATTR) ((ATTR)+1)
 
