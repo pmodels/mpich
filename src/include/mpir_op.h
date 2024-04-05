@@ -37,9 +37,7 @@ typedef enum MPIR_Op_kind {
     MPIR_OP_KIND__REPLACE = 13,
     MPIR_OP_KIND__NO_OP = 14,
     MPIR_OP_KIND__EQUAL = 15,
-    MPIR_OP_KIND__USER_NONCOMMUTE = 32,
     MPIR_OP_KIND__USER = 33,
-    MPIR_OP_KIND__USER_NONCOMMUTE_LARGE = 34,
     MPIR_OP_KIND__USER_LARGE = 35
 } MPIR_Op_kind;
 
@@ -110,6 +108,7 @@ typedef struct MPIR_Op {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPIR_Op_kind kind;
     MPIR_Lang_t language;
+    int is_commute;
     MPIR_User_function function;
 #ifdef MPID_DEV_OP_DECL
      MPID_DEV_OP_DECL
