@@ -92,8 +92,7 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         if (op_ptr->language == MPIR_LANG__CXX) {
             /* large count not supported */
             MPIR_Assert(count <= INT_MAX);
-            MPIR_Assert(op_ptr->kind == MPIR_OP_KIND__USER ||
-                        op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE);
+            MPIR_Assert(op_ptr->kind == MPIR_OP_KIND__USER);
             call_user_op_cxx(inbuf, inoutbuf, (int) count, datatype,
                              (MPI_User_function *) op_ptr->function.c_function);
             goto fn_exit;
@@ -102,15 +101,13 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
         if (op_ptr->language == MPIR_LANG__FORTRAN) {
             /* large count not supported */
-            MPIR_Assert(op_ptr->kind == MPIR_OP_KIND__USER ||
-                        op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE);
+            MPIR_Assert(op_ptr->kind == MPIR_OP_KIND__USER);
             call_user_op_f77(inbuf, inoutbuf, (MPI_Fint) count, (MPI_Fint) datatype,
                              op_ptr->function);
             goto fn_exit;
         }
 #endif
-        if (op_ptr->kind == MPIR_OP_KIND__USER_LARGE ||
-            op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE_LARGE) {
+        if (op_ptr->kind == MPIR_OP_KIND__USER_LARGE) {
             call_user_op_large(inbuf, inoutbuf, (MPI_Count) count, datatype, op_ptr->function);
         } else {
             MPIR_Assert(count <= INT_MAX);

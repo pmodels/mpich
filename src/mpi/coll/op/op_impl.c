@@ -31,7 +31,7 @@ void MPII_Op_set_cxx(MPI_Op op, void (*opcall) (void))
 /* Normally, the C and Fortran versions are the same, by design in the
    MPI Standard.  However, if MPI_Fint and int are not the same size (e.g.,
    MPI_Fint was made 8 bytes but int is 4 bytes), then the C and Fortran
-   versions must be distinquished. */
+   versions must be distinguished. */
 void MPII_Op_set_fc(MPI_Op op)
 {
     MPIR_Op *op_ptr;
@@ -57,7 +57,8 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPIR_Op ** p_o
     /* --END ERROR HANDLING-- */
 
     op_ptr->language = MPIR_LANG__C;
-    op_ptr->kind = commute ? MPIR_OP_KIND__USER : MPIR_OP_KIND__USER_NONCOMMUTE;
+    op_ptr->is_commute = commute;
+    op_ptr->kind = MPIR_OP_KIND__USER;
 #ifndef BUILD_MPI_ABI
     op_ptr->function.c_function = (void (*)(const void *, void *,
                                             const int *, const MPI_Datatype *)) user_fn;
@@ -81,8 +82,8 @@ int MPIR_Op_create_large_impl(MPI_User_function_c * user_fn, int commute, MPIR_O
 {
     int mpi_errno = MPIR_Op_create_impl(NULL, commute, p_op_ptr);
     if (mpi_errno == MPI_SUCCESS) {
-        (*p_op_ptr)->kind =
-            commute ? MPIR_OP_KIND__USER_LARGE : MPIR_OP_KIND__USER_NONCOMMUTE_LARGE;
+        (*p_op_ptr)->is_commute = commute;
+        (*p_op_ptr)->kind = MPIR_OP_KIND__USER_LARGE;
 #ifndef BUILD_MPI_ABI
         (*p_op_ptr)->function.c_large_function = (void (*)(const void *, void *,
                                                            const MPI_Count *,
@@ -126,8 +127,7 @@ int MPIR_Op_is_commutative(MPI_Op op)
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
         MPIR_Assert(op_ptr != NULL);
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE ||
-            op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE_LARGE) {
+        if (!op_ptr->is_commute) {
             return FALSE;
         } else {
             return TRUE;
