@@ -762,7 +762,9 @@ def dump_f77_c_func(func, is_cptr=False):
             elif p['kind'] == "ERRHANDLER" and re.match(r'.*_create_errhandler', func['name'], re.IGNORECASE):
                 dump_handle_create(p['name'], "MPI_Errhandler")
             elif p['kind'] == "OPERATION" and re.match(r'.*_op_create$', func['name'], re.IGNORECASE):
-                dump_handle_create(p['name'], "MPI_Op")
+                # use MPII_op_create(opfn, *commute, op)
+                c_param_list.append("MPI_Fint *%s" % p['name'])
+                c_arg_list_A.append(p['name'])
             elif p['kind'] in G.handle_mpir_types or c_mapping[p['kind']] == "int":
                 c_type = c_mapping[p['kind']]
                 if p['length'] is None:
@@ -861,6 +863,8 @@ def dump_f77_c_func(func, is_cptr=False):
         # argc, argv
         c_arg_list_A.insert(0, "0, 0")
         c_arg_list_B.insert(0, "0, 0")
+    elif re.match(r'.*_op_create$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_op_create"
 
     if re.match(r'MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         param_str = "void *userbuf, MPI_Datatype datatype, int count, void *filebuf, MPI_Offset position, void *extra_state"
