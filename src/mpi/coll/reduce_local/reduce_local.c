@@ -36,6 +36,20 @@ static void call_user_op_large(const void *inbuf, void *inoutbuf, MPI_Count coun
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
+static void call_user_op_x(const void *inbuf, void *inoutbuf, MPI_Count count,
+                           MPI_Datatype datatype, MPIR_User_function uop, void *extra_state)
+{
+    /* Take off the global locks before calling user functions */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#ifndef BUILD_MPI_ABI
+    (uop.c_x_function) ((void *) inbuf, inoutbuf, count, datatype, extra_state);
+#else
+    ABI_Datatype t = ABI_Datatype_from_mpi(datatype);
+    (uop.c_x_function) ((void *) inbuf, inoutbuf, count, t, extra_state);
+#endif
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+}
+
 #ifdef HAVE_CXX_BINDING
 static void call_user_op_cxx(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype,
                              MPI_User_function * uop)
@@ -105,7 +119,9 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
             goto fn_exit;
         }
 #endif
-        if (op_ptr->kind == MPIR_OP_KIND__USER_LARGE) {
+        if (op_ptr->kind == MPIR_OP_KIND__USER_X) {
+            call_user_op_x(inbuf, inoutbuf, count, datatype, op_ptr->function, op_ptr->extra_state);
+        } else if (op_ptr->kind == MPIR_OP_KIND__USER_LARGE) {
             call_user_op_large(inbuf, inoutbuf, (MPI_Count) count, datatype, op_ptr->function);
         } else {
             MPIR_Assert(count <= INT_MAX);
