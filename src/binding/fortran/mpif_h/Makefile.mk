@@ -13,6 +13,7 @@ noinst_LTLIBRARIES += lib/libf77_mpi.la
 lib_libf77_mpi_la_SOURCES = \
 	src/binding/fortran/mpif_h/fortran_binding.c \
 	src/binding/fortran/mpif_h/attr_proxy.c \
+	src/binding/fortran/mpif_h/user_proxy.c \
 	src/binding/fortran/mpif_h/fdebug.c \
 	src/binding/fortran/mpif_h/setbot.c \
 	src/binding/fortran/mpif_h/setbotf.f

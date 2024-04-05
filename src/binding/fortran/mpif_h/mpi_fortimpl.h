@@ -196,7 +196,7 @@ static inline void MPIR_fort_copy_str_from_c(char *s, int len, char *c_str)
 /* ------------------------------------------------------------------------- */
 /* The following definitions are used to support the Microsoft compilers
 
-   The following C preprocessor macros are not discoved by configure.
+   The following C preprocessor macros are not discovered by configure.
    Instead, they must be defined separately; this is normally done as part of
    the Windows-specific configuration process.
 
@@ -380,8 +380,11 @@ typedef void (FORT_CALL F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, M
                                            MPI_Aint *, MPI_Fint *, MPI_Fint *);
 typedef void (FORT_CALL F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
                                              MPI_Fint *);
+/* compatible as MPI_User_function */
+typedef void (FORT_CALL F77_OpFunction) (void *, void *, MPI_Fint *, MPI_Fint *);
 
 void MPII_Keyval_set_f90_proxy(int keyval);
+int MPII_op_create(MPI_User_function * opfn, MPI_Fint commute, MPI_Fint * op);
 
 extern FORT_DLL_SPEC void FORT_CALL mpi_alloc_mem_cptr_(MPI_Aint * size, MPI_Fint * info,
                                                         void **baseptr, MPI_Fint * ierr);
