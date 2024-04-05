@@ -33,6 +33,10 @@ typedef union errhandler_fn {
     MPI_File_errhandler_function *C_File_Handler_function;
     MPI_Win_errhandler_function *C_Win_Handler_function;
     MPI_Session_errhandler_function *C_Session_Handler_function;
+    MPIX_Comm_errhandler_function_x *X_Comm_Handler_function;
+    MPIX_File_errhandler_function_x *X_File_Handler_function;
+    MPIX_Win_errhandler_function_x *X_Win_Handler_function;
+    MPIX_Session_errhandler_function_x *X_Session_Handler_function;
     void (*F77_Handler_function) (MPI_Fint *, MPI_Fint *);
 } errhandler_fn;
 
@@ -58,7 +62,9 @@ typedef struct MPIR_Errhandler {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPIR_Lang_t language;
     MPII_Object_kind kind;
+    void *extra_state;
     errhandler_fn errfn;
+    MPIX_Destructor_function *destructor_fn;
     /* Other, device-specific information */
 #ifdef MPID_DEV_ERRHANDLER_DECL
      MPID_DEV_ERRHANDLER_DECL

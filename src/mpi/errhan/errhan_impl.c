@@ -72,6 +72,103 @@ int MPIR_Session_create_errhandler_impl(MPI_Session_errhandler_function * sessio
     goto fn_exit;
 }
 
+int MPIR_Comm_create_errhandler_x_impl(MPIX_Comm_errhandler_function_x * errhandler_fn_x,
+                                       MPIX_Destructor_function * destructor_fn,
+                                       void *extra_state, MPIR_Errhandler ** errhandler_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errhandler *errhan_ptr;
+
+    errhan_ptr = (MPIR_Errhandler *) MPIR_Handle_obj_alloc(&MPIR_Errhandler_mem);
+    MPIR_ERR_CHKANDJUMP(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    errhan_ptr->language = MPIR_LANG__X;
+    errhan_ptr->kind = MPIR_COMM;
+    errhan_ptr->extra_state = extra_state;
+    errhan_ptr->destructor_fn = destructor_fn;
+    MPIR_Object_set_ref(errhan_ptr, 1);
+    errhan_ptr->errfn.X_Comm_Handler_function = errhandler_fn_x;
+
+    *errhandler_ptr = errhan_ptr;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+
+    goto fn_exit;
+}
+
+int MPIR_Win_create_errhandler_x_impl(MPIX_Win_errhandler_function_x * errhandler_fn_x,
+                                      MPIX_Destructor_function * destructor_fn,
+                                      void *extra_state, MPIR_Errhandler ** errhandler_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errhandler *errhan_ptr;
+
+    errhan_ptr = (MPIR_Errhandler *) MPIR_Handle_obj_alloc(&MPIR_Errhandler_mem);
+    MPIR_ERR_CHKANDJUMP1(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem",
+                         "**nomem %s", "MPI_Errhandler");
+    errhan_ptr->language = MPIR_LANG__X;
+    errhan_ptr->kind = MPIR_WIN;
+    errhan_ptr->extra_state = extra_state;
+    errhan_ptr->destructor_fn = destructor_fn;
+    MPIR_Object_set_ref(errhan_ptr, 1);
+    errhan_ptr->errfn.X_Win_Handler_function = errhandler_fn_x;
+
+    *errhandler_ptr = errhan_ptr;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_File_create_errhandler_x_impl(MPIX_File_errhandler_function_x * errhandler_fn_x,
+                                       MPIX_Destructor_function * destructor_fn,
+                                       void *extra_state, MPIR_Errhandler ** errhandler_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errhandler *errhan_ptr;
+
+    errhan_ptr = (MPIR_Errhandler *) MPIR_Handle_obj_alloc(&MPIR_Errhandler_mem);
+    MPIR_ERR_CHKANDJUMP(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    errhan_ptr->language = MPIR_LANG__X;
+    errhan_ptr->kind = MPIR_FILE;
+    errhan_ptr->extra_state = extra_state;
+    errhan_ptr->destructor_fn = destructor_fn;
+    MPIR_Object_set_ref(errhan_ptr, 1);
+    errhan_ptr->errfn.X_File_Handler_function = errhandler_fn_x;
+
+    *errhandler_ptr = errhan_ptr;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Session_create_errhandler_x_impl(MPIX_Session_errhandler_function_x * errhandler_fn_x,
+                                          MPIX_Destructor_function * destructor_fn,
+                                          void *extra_state, MPIR_Errhandler ** errhandler_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errhandler *errhan_ptr;
+
+    errhan_ptr = (MPIR_Errhandler *) MPIR_Handle_obj_alloc(&MPIR_Errhandler_mem);
+    MPIR_ERR_CHKANDJUMP1(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem",
+                         "**nomem %s", "MPI_Errhandler");
+    errhan_ptr->language = MPIR_LANG__X;
+    errhan_ptr->kind = MPIR_SESSION;
+    errhan_ptr->extra_state = extra_state;
+    errhan_ptr->destructor_fn = destructor_fn;
+    MPIR_Object_set_ref(errhan_ptr, 1);
+    errhan_ptr->errfn.X_Session_Handler_function = errhandler_fn_x;
+
+    *errhandler_ptr = errhan_ptr;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* MPIR_Comm_get_errhandler_impl
    returning NULL for errhandler_ptr means the default handler, MPI_ERRORS_ARE_FATAL is used */
 int MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPI_Errhandler * errhandler)
@@ -256,6 +353,9 @@ int MPIR_Errhandler_free_impl(MPIR_Errhandler * errhan_ptr)
     int in_use;
     MPIR_Errhandler_release_ref(errhan_ptr, &in_use);
     if (!in_use) {
+        if (errhan_ptr->language == MPIR_LANG__X) {
+            errhan_ptr->destructor_fn(errhan_ptr->extra_state);
+        }
         MPIR_Handle_obj_free(&MPIR_Errhandler_mem, errhan_ptr);
     }
     return MPI_SUCCESS;

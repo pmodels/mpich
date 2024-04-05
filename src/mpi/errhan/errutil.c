@@ -249,6 +249,24 @@ int MPIR_call_errhandler(MPIR_Errhandler * errhandler, int errorcode, MPIR_handl
             (*errhandler->errfn.C_Comm_Handler_function) ((void *) &abi_handle, &errorcode, 0);
 #endif
             break;
+        case MPIR_LANG__X:
+            {
+                void *extra_state = errhandler->extra_state;
+#ifndef BUILD_MPI_ABI
+                if (h.kind == MPIR_FILE) {
+                    (*errhandler->errfn.X_File_Handler_function) (h.u.fh, errorcode, extra_state);
+                } else {
+                    /* Comm/Win/Session handlers are compatible */
+                    (*errhandler->errfn.X_Comm_Handler_function) (h.u.handle, errorcode,
+                                                                  extra_state);
+                }
+#else
+
+                /* under MPI_ABI, all Comm/Win/File/Session are "void *" compatible */
+                (*errhandler->errfn.X_Comm_Handler_function) (abi_handle, errorcode, extra_state);
+#endif
+            }
+            break;
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
             {
