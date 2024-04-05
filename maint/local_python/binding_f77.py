@@ -506,20 +506,6 @@ def dump_f77_c_func(func, is_cptr=False):
         end_list_common.append("    *%s = (MPI_Aint) %s_i;" % (v, v))
         end_list_common.append("}")
 
-    def dump_handle_create(v, c_type):
-        c_param_list.append("MPI_Fint *%s" % v)
-        # note: when fint is int, both the handle and the handler interface are compatible with C
-        c_arg_list_A.append("(%s *) %s" % (c_type, v))
-        c_arg_list_B.append("&%s_i" % v)
-        code_list_B.append("int %s_i;" % v)
-        end_list_B.append("if (!*ierr) {")
-        if c_type == "MPI_Errhandler":
-            end_list_B.append("    MPII_Errhandler_set_fc(%s_i);" % v)
-        elif c_type == "MPI_Op":
-            end_list_B.append("    MPII_Op_set_fc(%s_i);" % v)
-        end_list_B.append("    *%s = (MPI_Fint) %s_i;" % (v, v))
-        end_list_B.append("}")
-
     def dump_sum(codelist, sum_v, sum_n, array):
         codelist.append("int %s = 0;" % sum_v)
         codelist.append("for (int i = 0; i < *%s; i++) {" % sum_n)
