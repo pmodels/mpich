@@ -794,6 +794,11 @@ typedef void (MPI_Comm_errhandler_function)(MPI_Comm *, int *, ...);
 typedef void (MPI_File_errhandler_function)(MPI_File *, int *, ...);
 typedef void (MPI_Win_errhandler_function)(MPI_Win *, int *, ...);
 typedef void (MPI_Session_errhandler_function)(MPI_Session *, int *, ...);
+/* the _x callbacks accepts scalar inputs and an additional "void *" extra_state */
+typedef void (MPIX_Comm_errhandler_function_x)(MPI_Comm, int, void *);
+typedef void (MPIX_File_errhandler_function_x)(MPI_File, int, void *);
+typedef void (MPIX_Win_errhandler_function_x)(MPI_Win, int, void *);
+typedef void (MPIX_Session_errhandler_function_x)(MPI_Session, int, void *);
 /* names that were added in MPI-2.0 and deprecated in MPI-2.2 */
 typedef MPI_Comm_errhandler_function MPI_Comm_errhandler_fn;
 typedef MPI_File_errhandler_function MPI_File_errhandler_fn;
@@ -807,7 +812,10 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 /* User combination function */
 typedef void (MPI_User_function) ( void *, void *, int *, MPI_Datatype * );
 typedef void (MPI_User_function_c) ( void *, void *, MPI_Count *, MPI_Datatype * );
+/* the _x callbacks accepts scalar inputs and an additional "void *" extra_state */
 typedef void (MPIX_User_function_x) ( void *, void *, MPI_Count, MPI_Datatype, void *);
+
+/* User destructor */
 typedef void (MPIX_Destructor_function) (void *);
 
 /* Typedefs for generalized requests */

@@ -1,6 +1,6 @@
 MPIX_Op_create_x:
     user_fn_x: FUNCTION, func_type=MPIX_User_function_x, [user defined function with extra_state]
-    delete_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when op is freed]
+    destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when op is freed]
     commute: LOGICAL, suppress=lis_paren, [true if commutative; false otherwise.]
     extra_state: EXTRA_STATE, [extra state]
     op: OPERATION, direction=out, [operation]
@@ -19,3 +19,30 @@ MPIX_Op_create_x:
     3. It accepts a void *extra_state which is passed from users during MPIX_Op_create_x.
 */
 
+MPIX_Comm_create_errhandler_x:
+    comm_errhandler_fn_x: FUNCTION, func_type=MPIX_Comm_errhandler_function_x, [user defined error handling procedure with extra_state]
+    destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when op is freed]
+    extra_state: EXTRA_STATE, [extra state]
+    errhandler: ERRHANDLER, direction=out
+    .desc: Creates an MPI-style communicator errorhandler with an extra_state
+
+MPIX_Win_create_errhandler_x:
+    comm_errhandler_fn_x: FUNCTION, func_type=MPIX_Win_errhandler_function_x, [user defined error handling procedure with extra_state]
+    destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when op is freed]
+    extra_state: EXTRA_STATE, [extra state]
+    errhandler: ERRHANDLER, direction=out
+    .desc: Creates an MPI-style window errorhandler with an extra_state
+
+MPIX_File_create_errhandler_x:
+    comm_errhandler_fn_x: FUNCTION, func_type=MPIX_File_errhandler_function_x, [user defined error handling procedure with extra_state]
+    destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when op is freed]
+    extra_state: EXTRA_STATE, [extra state]
+    errhandler: ERRHANDLER, direction=out
+    .desc: Creates an MPI-style file errorhandler with an extra_state
+
+MPIX_Session_create_errhandler_x:
+    comm_errhandler_fn_x: FUNCTION, func_type=MPIX_Session_errhandler_function_x, [user defined error handling procedure with extra_state]
+    destructor_fn: FUNCTION, func_type=MPIX_Destructor_function, [callback when op is freed]
+    extra_state: EXTRA_STATE, [extra state]
+    errhandler: ERRHANDLER, direction=out
+    .desc: Creates an MPI-style session errorhandler with an extra_state
