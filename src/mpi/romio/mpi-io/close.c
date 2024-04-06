@@ -74,7 +74,7 @@ int MPI_File_close(MPI_File * fh)
      * somehow inform the MPI library that we no longer hold a reference to any
      * user defined error handler.  We do this by setting the errhandler at this
      * point to MPI_ERRORS_RETURN. */
-    error_code = PMPI_File_set_errhandler(*fh, MPI_ERRORS_RETURN);
+    error_code = MPI_File_set_errhandler(*fh, MPI_ERRORS_RETURN);
     if (error_code != MPI_SUCCESS)
         goto fn_fail;
 
