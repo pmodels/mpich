@@ -9,11 +9,15 @@ include $(top_srcdir)/mpi-io/fortran/Makefile.mk
 AM_CPPFLAGS += -I$(top_builddir)/mpi-io -I$(top_srcdir)/mpi-io
 noinst_HEADERS += mpi-io/mpioimpl.h mpi-io/mpioprof.h
 
+if !ROMIO_INSIDE_OMPI
+romio_mpi_sources +=          \
+    mpi-io/file_c2f.c         \
+    mpi-io/file_f2c.c
+endif
+
 romio_mpi_sources +=          \
     mpi-io/close.c            \
     mpi-io/delete.c           \
-    mpi-io/file_c2f.c         \
-    mpi-io/file_f2c.c         \
     mpi-io/fsync.c            \
     mpi-io/get_amode.c        \
     mpi-io/get_atom.c         \
@@ -103,5 +107,5 @@ endif BUILD_MPIO_REQUEST
 
 # not used in MPICH
 if BUILD_MPIO_ERRHAN
-romio_other_sources += $(mpio_request_sources)
+romio_other_sources += $(mpio_extra_sources)
 endif BUILD_MPIO_ERRHAN
