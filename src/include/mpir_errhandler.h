@@ -90,4 +90,14 @@ extern MPIR_Errhandler MPIR_Errhandler_direct[];
         }                                                                 \
     } while (0)
 
+typedef struct {
+    int kind;
+    union {
+        int handle;
+        MPI_File fh;
+    } u;
+} MPIR_handle;
+
+int MPIR_call_errhandler(MPIR_Errhandler * errhandler, int errorcode, MPIR_handle handle);
+
 #endif /* MPIR_ERRHANDLER_H_INCLUDED */

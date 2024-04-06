@@ -203,6 +203,104 @@ int MPIR_Err_is_fatal(int errcode)
     }
 }
 
+int MPIR_call_errhandler(MPIR_Errhandler * errhandler, int errorcode, MPIR_handle h)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (errhandler->handle == MPI_ERRORS_RETURN ||
+        errhandler->handle == MPIR_ERRORS_THROW_EXCEPTIONS) {
+        mpi_errno = errorcode;
+        goto fn_exit;
+    }
+#ifdef BUILD_MPI_ABI
+    void *abi_handle = NULL;
+    if (h.kind == MPIR_COMM) {
+        abi_handle = ABI_Comm_from_mpi(h.u.handle);
+    } else if (h.kind == MPIR_WIN) {
+        abi_handle = ABI_Win_from_mpi(h.u.handle);
+    } else if (h.kind == MPIR_FILE) {
+        abi_handle = ABI_File_from_mpi(h.u.handle);
+    } else if (h.kind == MPIR_SESSION) {
+        abi_handle = ABI_Session_from_mpi(h.u.handle);
+    } else {
+        MPIR_Assert(0);
+    }
+#endif
+
+    /* Process any user-defined error handling function */
+    switch (errhandler->language) {
+        case MPIR_LANG__C:
+            /* We pass a final 0 (for a null pointer) to these routines
+             * because MPICH-1 expected that */
+#ifndef BUILD_MPI_ABI
+            if (h.kind == MPIR_FILE) {
+                (*errhandler->errfn.C_File_Handler_function) (&h.u.fh, &errorcode);
+            } else {
+                /* Comm/Win/Session handlers are compatible */
+                (*errhandler->errfn.C_Comm_Handler_function) (&h.u.handle, &errorcode, 0);
+            }
+#else
+            /* under MPI_ABI, all Comm/Win/File/Session are "void *" compatible */
+            (*errhandler->errfn.C_Comm_Handler_function) ((void *) &abi_handle, &errorcode, 0);
+#endif
+            break;
+#ifdef HAVE_CXX_BINDING
+        case MPIR_LANG__CXX:
+            {
+                int cxx_kind = 0;
+                if (h.kind == MPIR_COMM) {
+                    cxx_kind = 0;
+                } else if (h.kind == MPIR_WIN) {
+                    cxx_kind = 2;
+                } else {
+                    MPIR_Assert_error("kind not supported");
+                }
+#ifndef BUILD_MPI_ABI
+                if (h.kind == MPIR_FILE) {
+                    MPIR_Process.cxx_call_errfn(cxx_kind, (void *) &h.u.fh, &errorcode,
+                                                (void (*)(void)) errhandler->
+                                                errfn.C_File_Handler_function);
+                } else {
+                    MPIR_Process.cxx_call_errfn(cxx_kind, &h.u.handle, &errorcode,
+                                                (void (*)(void)) errhandler->
+                                                errfn.C_Comm_Handler_function);
+                }
+#else
+
+                MPIR_Process.cxx_call_errfn(cxx_kind, (void *) &abi_handle, &errorcode,
+                                            (void (*)(void)) errhandler->
+                                            errfn.C_Comm_Handler_function);
+#endif
+                break;
+            }
+#endif
+#ifdef HAVE_FORTRAN_BINDING
+        case MPIR_LANG__FORTRAN90:
+        case MPIR_LANG__FORTRAN:
+            {
+                /* If int and MPI_Fint aren't the same size, we need to
+                 * convert.  As this is not performance critical, we
+                 * do this even if MPI_Fint and int are the same size. */
+                MPI_Fint ferr = errorcode;
+                MPI_Fint commhandle;
+#ifdef HAVE_ROMIO
+                if (h.kind == MPI_FILE) {
+                    commhandle = MPI_File_c2f(h.u.fh);
+                } else
+#endif
+                {
+                    commhandle = h.u.handle;
+                }
+                (*errhandler->errfn.F77_Handler_function) (&commhandle, &ferr);
+            }
+            break;
+#endif
+    }
+
+  fn_exit:
+    return mpi_errno;
+}
+
 /*
  * This is the routine that is invoked by most MPI routines to
  * report an error.  It is legitimate to pass NULL for comm_ptr in order to get
@@ -280,46 +378,10 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
     /* Check for the special case of a user-provided error code */
     errcode = checkForUserErrcode(errcode);
 
-    if (errhandler->handle != MPI_ERRORS_RETURN &&
-        errhandler->handle != MPIR_ERRORS_THROW_EXCEPTIONS) {
-        /* We pass a final 0 (for a null pointer) to these routines
-         * because MPICH-1 expected that */
-#ifndef BUILD_MPI_ABI
-        int comm_handle = comm_ptr->handle;
-#else
-        ABI_Comm comm_handle = ABI_Comm_from_mpi(comm_ptr->handle);
-#endif
-        switch (comm_ptr->errhandler->language) {
-            case MPIR_LANG__C:
-                (*comm_ptr->errhandler->errfn.C_Comm_Handler_function) (&comm_handle, &errcode, 0);
-                break;
-#ifdef HAVE_CXX_BINDING
-            case MPIR_LANG__CXX:
-                (*MPIR_Process.cxx_call_errfn) (0, &comm_handle, &errcode,
-                                                (void (*)(void)) *comm_ptr->errhandler->
-                                                errfn.C_Comm_Handler_function);
-                /* The C++ code throws an exception if the error handler
-                 * returns something other than MPI_SUCCESS. There is no "return"
-                 * of an error code. */
-                errcode = MPI_SUCCESS;
-                break;
-#endif /* CXX_BINDING */
-#ifdef HAVE_FORTRAN_BINDING
-            case MPIR_LANG__FORTRAN90:
-            case MPIR_LANG__FORTRAN:
-                {
-                    /* If int and MPI_Fint aren't the same size, we need to
-                     * convert.  As this is not performance critical, we
-                     * do this even if MPI_Fint and int are the same size. */
-                    MPI_Fint ferr = errcode;
-                    MPI_Fint commhandle = comm_ptr->handle;
-                    (*comm_ptr->errhandler->errfn.F77_Handler_function) (&commhandle, &ferr);
-                }
-                break;
-#endif /* FORTRAN_BINDING */
-        }
-
-    }
+    MPIR_handle h;
+    h.kind = MPIR_COMM;
+    h.u.handle = comm_ptr->handle;
+    errcode = MPIR_call_errhandler(errhandler, errcode, h);
 
     MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
     return errcode;
@@ -356,51 +418,13 @@ int MPIR_Err_return_win(MPIR_Win * win_ptr, const char fcname[], int errcode)
 
     /* Check for the special case of a user-provided error code */
     errcode = checkForUserErrcode(errcode);
+    /* Now, invoke the error handler for the window */
 
-    if (win_ptr->errhandler->handle == MPI_ERRORS_RETURN ||
-        win_ptr->errhandler->handle == MPIR_ERRORS_THROW_EXCEPTIONS) {
-        return errcode;
-    } else {
-        /* Now, invoke the error handler for the window */
+    MPIR_handle h;
+    h.kind = MPIR_WIN;
+    h.u.handle = win_ptr->handle;
+    errcode = MPIR_call_errhandler(win_ptr->errhandler, errcode, h);
 
-        /* We pass a final 0 (for a null pointer) to these routines
-         * because MPICH-1 expected that */
-#ifndef BUILD_MPI_ABI
-        int win_handle = win_ptr->handle;
-#else
-        ABI_Win win_handle = ABI_Win_from_mpi(win_ptr->handle);
-#endif
-        switch (win_ptr->errhandler->language) {
-            case MPIR_LANG__C:
-                (*win_ptr->errhandler->errfn.C_Win_Handler_function) (&win_handle, &errcode, 0);
-                break;
-#ifdef HAVE_CXX_BINDING
-            case MPIR_LANG__CXX:
-                (*MPIR_Process.cxx_call_errfn) (2, (void *) &win_handle, &errcode,
-                                                (void (*)(void)) *win_ptr->errhandler->
-                                                errfn.C_Win_Handler_function);
-                /* The C++ code throws an exception if the error handler
-                 * returns something other than MPI_SUCCESS. There is no "return"
-                 * of an error code. */
-                errcode = MPI_SUCCESS;
-                break;
-#endif /* CXX_BINDING */
-#ifdef HAVE_FORTRAN_BINDING
-            case MPIR_LANG__FORTRAN90:
-            case MPIR_LANG__FORTRAN:
-                {
-                    /* If int and MPI_Fint aren't the same size, we need to
-                     * convert.  As this is not performance critical, we
-                     * do this even if MPI_Fint and int are the same size. */
-                    MPI_Fint ferr = errcode;
-                    MPI_Fint winhandle = win_ptr->handle;
-                    (*win_ptr->errhandler->errfn.F77_Handler_function) (&winhandle, &ferr);
-                }
-                break;
-#endif /* FORTRAN_BINDING */
-        }
-
-    }
     return errcode;
 }
 
@@ -463,44 +487,11 @@ int MPIR_Err_return_session(struct MPIR_Session *session_ptr, const char fcname[
 
     /* Check for the special case of a user-provided error code */
     errcode = checkForUserErrcode(errcode);
-    if (errhandler_handle != MPI_ERRORS_RETURN && errhandler_handle != MPIR_ERRORS_THROW_EXCEPTIONS) {
-        /* We pass a final 0 (for a null pointer) to these routines
-         * because MPICH-1 expected that */
-#ifndef BUILD_MPI_ABI
-        int session_handle = session_ptr->handle;
-#else
-        ABI_Session session_handle = ABI_Session_from_mpi(session_ptr->handle);
-#endif
-        switch (errhandler->language) {
-            case MPIR_LANG__C:
-                (*errhandler->errfn.C_Session_Handler_function) (&session_handle, &errcode, 0);
-                break;
-#ifdef HAVE_CXX_BINDING
-            case MPIR_LANG__CXX:
-                (*MPIR_Process.cxx_call_errfn) (0, (void *) &session_handle, &errcode,
-                                                (void (*)(void)) *errhandler->
-                                                errfn.C_Session_Handler_function);
-                /* The C++ code throws an exception if the error handler
-                 * returns something other than MPI_SUCCESS. There is no "return"
-                 * of an error code. */
-                errcode = MPI_SUCCESS;
-                break;
-#endif /* CXX_BINDING */
-#ifdef HAVE_FORTRAN_BINDING
-            case MPIR_LANG__FORTRAN90:
-            case MPIR_LANG__FORTRAN:
-                {
-                    /* If int and MPI_Fint aren't the same size, we need to
-                     * convert.  As this is not performance critical, we
-                     * do this even if MPI_Fint and int are the same size. */
-                    MPI_Fint ferr = errcode;
-                    MPI_Fint handle = (MPI_Fint) session_ptr->handle;
-                    (*errhandler->errfn.F77_Handler_function) (&handle, &ferr);
-                }
-                break;
-#endif /* FORTRAN_BINDING */
-        }
-    }
+
+    MPIR_handle h;
+    h.kind = MPIR_SESSION;
+    h.u.handle = session_ptr->handle;
+    errcode = MPIR_call_errhandler(errhandler, errcode, h);
 
     return errcode;
 }
@@ -545,45 +536,11 @@ int MPIR_Err_return_session_init(MPIR_Errhandler * errhandler_ptr, const char fc
 
     /* Check for the special case of a user-provided error code */
     errcode = checkForUserErrcode(errcode);
-    if (errhandler_handle != MPI_ERRORS_RETURN && errhandler_handle != MPIR_ERRORS_THROW_EXCEPTIONS) {
-        /* We pass a final 0 (for a null pointer) to these routines
-         * because MPICH-1 expected that */
-#ifndef BUILD_MPI_ABI
-        MPI_Session session_null_handle = MPI_SESSION_NULL;
-#else
-        ABI_Session session_null_handle = ABI_SESSION_NULL;
-#endif
-        switch (errhandler_ptr->language) {
-            case MPIR_LANG__C:
-                (*errhandler_ptr->errfn.C_Session_Handler_function) (&session_null_handle, &errcode,
-                                                                     0);
-                break;
-#ifdef HAVE_CXX_BINDING
-            case MPIR_LANG__CXX:
-                (*MPIR_Process.cxx_call_errfn) (0, (void *) &session_null_handle, &errcode,
-                                                (void (*)(void)) *errhandler_ptr->
-                                                errfn.C_Session_Handler_function);
-                /* The C++ code throws an exception if the error handler
-                 * returns something other than MPI_SUCCESS. There is no "return"
-                 * of an error code. */
-                errcode = MPI_SUCCESS;
-                break;
-#endif /* CXX_BINDING */
-#ifdef HAVE_FORTRAN_BINDING
-            case MPIR_LANG__FORTRAN90:
-            case MPIR_LANG__FORTRAN:
-                {
-                    /* If int and MPI_Fint aren't the same size, we need to
-                     * convert.  As this is not performance critical, we
-                     * do this even if MPI_Fint and int are the same size. */
-                    MPI_Fint ferr = errcode;
-                    MPI_Fint handle = (MPI_Fint) MPI_SESSION_NULL;
-                    (*errhandler_ptr->errfn.F77_Handler_function) (&handle, &ferr);
-                }
-                break;
-#endif /* FORTRAN_BINDING */
-        }
-    }
+
+    MPIR_handle h;
+    h.kind = MPIR_SESSION;
+    h.u.handle = MPI_SESSION_NULL;
+    errcode = MPIR_call_errhandler(errhandler_ptr, errcode, h);
 
     return errcode;
 
@@ -645,42 +602,11 @@ int MPIR_Err_return_comm_create_from_group(MPIR_Errhandler * errhandler_ptr, con
     /* Check for the special case of a user-provided error code */
     errcode = checkForUserErrcode(errcode);
     if (errhandler_handle != MPI_ERRORS_RETURN && errhandler_handle != MPIR_ERRORS_THROW_EXCEPTIONS) {
-        /* We pass a final 0 (for a null pointer) to these routines
-         * because MPICH-1 expected that */
-#ifndef BUILD_MPI_ABI
-        MPI_Comm comm_null_handle = MPI_COMM_NULL;
-#else
-        ABI_Comm comm_null_handle = ABI_COMM_NULL;
-#endif
-        switch (errhandler_ptr->language) {
-            case MPIR_LANG__C:
-                (*errhandler_ptr->errfn.C_Comm_Handler_function) (&comm_null_handle, &errcode, 0);
-                break;
-#ifdef HAVE_CXX_BINDING
-            case MPIR_LANG__CXX:
-                (*MPIR_Process.cxx_call_errfn) (0, (void *) &comm_null_handle, &errcode,
-                                                (void (*)(void)) *errhandler_ptr->
-                                                errfn.C_Comm_Handler_function);
-                /* The C++ code throws an exception if the error handler
-                 * returns something other than MPI_SUCCESS. There is no "return"
-                 * of an error code. */
-                errcode = MPI_SUCCESS;
-                break;
-#endif /* CXX_BINDING */
-#ifdef HAVE_FORTRAN_BINDING
-            case MPIR_LANG__FORTRAN90:
-            case MPIR_LANG__FORTRAN:
-                {
-                    /* If int and MPI_Fint aren't the same size, we need to
-                     * convert.  As this is not performance critical, we
-                     * do this even if MPI_Fint and int are the same size. */
-                    MPI_Fint ferr = errcode;
-                    MPI_Fint handle = (MPI_Fint) MPI_COMM_NULL;
-                    (*errhandler_ptr->errfn.F77_Handler_function) (&handle, &ferr);
-                }
-                break;
-#endif /* FORTRAN_BINDING */
-        }
+        MPIR_handle h;
+        h.kind = MPIR_COMM;
+        h.u.handle = MPI_COMM_NULL;
+
+        errcode = MPIR_call_errhandler(errhandler_ptr, errcode, h);
     }
 
     return errcode;
