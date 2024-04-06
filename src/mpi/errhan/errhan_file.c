@@ -128,6 +128,7 @@ int MPIR_File_call_errhandler_impl(MPI_File fh, int errorcode)
         goto fn_exit;
     }
 #endif
+
     if (!eh) {
         MPIR_Errhandler_get_ptr(MPI_ERRORS_RETURN, e);
     } else {
@@ -145,36 +146,10 @@ int MPIR_File_call_errhandler_impl(MPI_File fh, int errorcode)
         MPIR_Handle_fatal_error(NULL, "MPI_File_call_errhandler", errorcode);
     }
 
-    switch (e->language) {
-        case MPIR_LANG__C:
-            (*e->errfn.C_File_Handler_function) (&fh, &errorcode);
-            break;
-#ifdef HAVE_CXX_BINDING
-        case MPIR_LANG__CXX:
-            /* See HAVE_LANGUAGE_FORTRAN below for an explanation */
-            {
-                void *fh1 = (void *) &fh;
-                (*MPIR_Process.cxx_call_errfn) (1, fh1, &errorcode,
-                                                (void (*)(void)) *e->errfn.C_File_Handler_function);
-            }
-            break;
-#endif
-#ifdef HAVE_FORTRAN_BINDING
-        case MPIR_LANG__FORTRAN90:
-        case MPIR_LANG__FORTRAN:
-            /* The assignemt to a local variable prevents the compiler
-             * from generating a warning about a type-punned pointer.  Since
-             * the value is really const (but MPI didn't define error handlers
-             * with const), this preserves the intent */
-            {
-                void *fh1 = (void *) &fh;
-                MPI_Fint ferr = errorcode;      /* Needed if MPI_Fint and int aren't
-                                                 * the same size */
-                (*e->errfn.F77_Handler_function) (fh1, &ferr);
-            }
-            break;
-#endif
-    }
+    MPIR_handle h;
+    h.kind = MPIR_FILE;
+    h.u.fh = fh;
+    mpi_errno = MPIR_call_errhandler(e, errorcode, h);
 
   fn_exit:
     return mpi_errno;
@@ -227,15 +202,44 @@ static void get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int
     return;
 }
 
+static int call_file_errhandler(MPI_Errhandler e, int errorcode, MPI_File f)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Errhandler *e_ptr = NULL;
+    MPIR_Errhandler_get_ptr(e, e_ptr);
+
+    if (!e_ptr) {
+        mpi_errno = errorcode;
+    } else {
+        MPIR_handle h;
+        h.kind = MPIR_FILE;
+        h.u.fh = f;
+        mpi_errno = MPIR_call_errhandler(e_ptr, errorcode, h);
+    }
+
+    return mpi_errno;
+}
+
 #ifndef BUILD_MPI_ABI
 void MPIR_Get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind)
 {
     get_file_error_routine(e, c, kind);
 }
+
+int MPIR_Call_file_errhandler(MPI_Errhandler e, int errorcode, MPI_File f)
+{
+    return call_file_errhandler(e, errorcode, f);
+}
 #else
 void MPIR_Get_file_error_routine(ABI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind)
 {
     get_file_error_routine(ABI_Errhandler_to_mpi(e), c, kind);
+}
+
+int MPIR_Call_file_errhandler(ABI_Errhandler e, int errorcode, MPI_File f)
+{
+    return call_file_errhandler(ABI_Errhandler_to_mpi(e), errorcode, f);
 }
 #endif
 

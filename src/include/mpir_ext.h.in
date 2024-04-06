@@ -26,6 +26,7 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
    This routine is implemented in mpich/src/mpi/errhan/file_set_errhandler.c
 */
 void MPIR_Get_file_error_routine(MPI_Errhandler, void (**)(MPI_File *, int *, ...), int *);
+int MPIR_Call_file_errhandler(MPI_Errhandler e, int errorcode, MPI_File f); 
 
 /* Invoke the C++ error handler (this invokes a special C++ routine that
  in turn calls the provided function.  That special routine also
