@@ -51,8 +51,11 @@ int MPI_File_set_errhandler(MPI_File mpi_fh, MPI_Errhandler errhandler)
         MPIO_CHECK_FILE_HANDLE(fh, myname, error_code);
         /* --END ERROR HANDLING-- */
 
-        if ((errhandler != MPI_ERRORS_RETURN) && (errhandler != MPI_ERRORS_ARE_FATAL) &&
-            (errhandler != MPI_ERRORS_ABORT)) {
+        if ((errhandler != MPI_ERRORS_RETURN) && (errhandler != MPI_ERRORS_ARE_FATAL)
+#ifdef HAVE_MPI_ERRORS_ABORT
+            && (errhandler != MPI_ERRORS_ABORT)
+#endif
+           ) {
             error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                               MPIR_ERR_RECOVERABLE,
                                               myname, __LINE__,
