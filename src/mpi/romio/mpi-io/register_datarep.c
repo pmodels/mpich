@@ -73,7 +73,7 @@ int MPI_Register_datarep(ROMIO_CONST char *datarep,
                          MPI_Datarep_conversion_function * write_conversion_fn,
                          MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
 {
-    int is_large = false;
+    int is_large = 0;
     return MPIOI_Register_datarep(datarep, (MPIOI_VOID_FN *) read_conversion_fn,
                                   (MPIOI_VOID_FN *) write_conversion_fn,
                                   dtype_file_extent_fn, extra_state, is_large);
@@ -113,7 +113,7 @@ int MPI_Register_datarep_c(ROMIO_CONST char *datarep,
                            MPI_Datarep_conversion_function_c * write_conversion_fn,
                            MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
 {
-    int is_large = true;
+    int is_large = 1;
     return MPIOI_Register_datarep(datarep, (MPIOI_VOID_FN *) read_conversion_fn,
                                   (MPIOI_VOID_FN *) write_conversion_fn,
                                   dtype_file_extent_fn, extra_state, is_large);
