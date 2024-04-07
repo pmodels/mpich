@@ -1593,6 +1593,12 @@ AC_MSG_NOTICE([setting CFLAGS to $CFLAGS])
 AC_MSG_NOTICE([setting USER_CFLAGS to $USER_CFLAGS])
 AC_MSG_NOTICE([setting USER_FFLAGS to $USER_FFLAGS])
 
+# check subroutines when ROMIO is built outside MPICH
+if test "$FROM_MPICH" = no ; then
+   AC_CHECK_FUNCS([MPIR_Get_node_id], [],
+                  [AC_SEARCH_LIBS([MPIR_Get_node_id], [mpi])])
+fi
+
 AC_SUBST(ARCH)
 AC_SUBST(FILE_SYSTEM)
 AC_SUBST(CC)
