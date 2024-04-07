@@ -1599,6 +1599,9 @@ AC_CHECK_DECLS([MPI_ERRORS_ABORT], [], [], [[#include <mpi.h>]])
 if test "$FROM_MPICH" = no ; then
    AC_CHECK_FUNCS([MPIR_Get_node_id], [],
                   [AC_SEARCH_LIBS([MPIR_Get_node_id], [mpi])])
+
+   AC_CHECK_FUNCS([MPIR_Ext_datatype_iscontig], [],
+                  [AC_SEARCH_LIBS([MPIR_Ext_datatype_iscontig], [mpi])])
 fi
 
 AC_SUBST(ARCH)

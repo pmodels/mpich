@@ -5,7 +5,10 @@
 
 #include "adio.h"
 
-#if defined(MPICH)
+#if defined(ROMIO_INSIDE_MPICH) || defined(HAVE_MPIR_EXT_DATATYPE_ISCONTIG)
+
+/* MPICH also provides this routine */
+int MPIR_Ext_datatype_iscontig(MPI_Datatype datatype, int *flag);
 
 void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
@@ -49,7 +52,7 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
     *flag = MPI_SGI_type_is_contig(datatype) && (displacement == 0);
 }
 
-#elif defined(OMPI_BUILDING) && OMPI_BUILDING
+#elif defined(ROMIO_INSIDE_OMPI)
 
 /* void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag) is defined
  * and implemented in OpenMPI itself */
@@ -97,6 +100,7 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
                 ADIOI_Type_dispose(types);
                 ADIOI_Free(ints);
                 ADIOI_Free(adds);
+                ADIOI_Free(cnts);
                 ADIOI_Free(types);
             }
             break;
