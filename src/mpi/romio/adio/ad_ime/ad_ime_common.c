@@ -36,7 +36,7 @@ int ADIOI_IME_End_call(MPI_Comm comm, int keyval, void *attribute_val, void *ext
 {
     int error_code;
     ADIOI_IME_End(&error_code);
-    MPI_Keyval_free(&keyval);
+    MPI_Comm_free_keyval(&keyval);
     return error_code;
 }
 
@@ -52,7 +52,7 @@ void ADIOI_IME_Init(int rank, int *error_code)
 
     *error_code = MPI_SUCCESS;
 
-    MPI_Keyval_create(MPI_NULL_COPY_FN, ADIOI_IME_End_call, &ADIOI_IME_Initialized, (void *) 0);
+    MPI_Comm_create_keyval(MPI_NULL_COPY_FN, ADIOI_IME_End_call, &ADIOI_IME_Initialized, (void *) 0);
     /* just like romio does, we make a dummy attribute so we
      * get cleaned up */
     MPI_Comm_set_attr(MPI_COMM_SELF, ADIOI_IME_Initialized, (void *) 0);

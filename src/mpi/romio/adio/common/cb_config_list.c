@@ -123,7 +123,7 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm, MPI_Comm dupcomm, ADIO_cb_name_arr
 
     if (ADIOI_cb_config_list_keyval == MPI_KEYVAL_INVALID) {
         /* cleaned up by ADIOI_End_call */
-        MPI_Keyval_create((MPI_Copy_function *) ADIOI_cb_copy_name_array,
+        MPI_Comm_create_keyval((MPI_Copy_function *) ADIOI_cb_copy_name_array,
                           (MPI_Delete_function *) ADIOI_cb_delete_name_array,
                           &ADIOI_cb_config_list_keyval, NULL);
     } else {
