@@ -37,7 +37,7 @@ void MPIR_MPIOInit(int *error_code)
         }
         /* --END ERROR HANDLING-- */
 
-        MPI_Keyval_create(MPI_NULL_COPY_FN, ADIOI_End_call, &ADIO_Init_keyval, (void *) 0);
+        MPI_Comm_create_keyval(MPI_NULL_COPY_FN, ADIOI_End_call, &ADIO_Init_keyval, (void *) 0);
 
         /* put a dummy attribute on MPI_COMM_SELF, because we want the delete
          * function to be called when MPI_COMM_SELF is freed. Clarified
