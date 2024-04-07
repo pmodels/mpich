@@ -30,7 +30,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         *error_code = MPI_SUCCESS;
         return;
     }
-    ad_get_env_vars();
+    ad_get_env_vars(fd);
 
     /* Interpreting MPI-4.0 to mean ROMIO should only return hints it knows
      * about when user calls MPI_File_get_info */

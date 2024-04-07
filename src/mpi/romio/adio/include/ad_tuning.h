@@ -24,15 +24,7 @@
  *  Global variables for the control of performance tuning.
  *-----------------------------------------*/
 
-/* corresponds to environment variables to select optimizations */
-extern int romio_write_aggmethod;
-extern int romio_read_aggmethod;
-extern int romio_onesided_no_rmw;
-extern int romio_onesided_always_rmw;
-extern int romio_onesided_inform_rmw;
-extern int romio_tunegather;
-
 /* set internal variables for tuning environment variables */
-void ad_get_env_vars(void);
+void ad_get_env_vars(ADIO_File fd);
 
 #endif /* AD_TUNING_H_INCLUDED */
