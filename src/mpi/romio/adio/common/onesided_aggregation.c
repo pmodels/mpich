@@ -17,7 +17,7 @@
 
 /* This data structure holds the number of extents, the index into the flattened buffer and the remnant length
  * beyond the flattened buffer index corresponding to the base buffer offset for non-contiguous source data
- * for the range to be written coresponding to the round and target agg.
+ * for the range to be written corresponding to the round and target agg.
  */
 typedef struct NonContigSourceBufOffset {
     int dataTypeExtent;
@@ -74,13 +74,13 @@ int ADIOI_OneSidedCleanup(ADIO_File fd)
     return ret;
 }
 
-/* This function packs a contiguous buffer of data from the non-contgious source
+/* This function packs a contiguous buffer of data from the non-contiguous source
  * buffer for a specified chunk of data and advances the FDSourceBufferState
  * machinery, so subsequent calls with the FDSourceBufferState will return the
  * next linear chunk.
  * Parameters:
  * in:     sourceDataBuffer - pointer to source data buffer.
- * in:    flatBuf - pointer to flattened source data buffer
+ * in:     flatBuf - pointer to flattened source data buffer
  * in:     targetNumBytes - number of bytes to return and advance.
  * in:     packing - whether data is being packed from the source buffer to the
  *         packed buffer (1) or unpacked from the packed buffer to the source
@@ -116,7 +116,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
 
     int remainingBytesToLoad = targetNumBytes;
     while (remainingBytesToLoad > 0) {
-        if ((flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset) >= remainingBytesToLoad) { // we can get the rest of our data from this indice
+        if ((flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset) >= remainingBytesToLoad) { // we can get the rest of our data from this index
             ADIO_Offset physicalSourceBufferOffset =
                 (currentDataTypeExtent * bufTypeExtent) + flatBuf->indices[currentFlatBufIndice] +
                 currentIndiceOffset;
@@ -148,7 +148,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
             }
             remainingBytesToLoad = 0;
 
-        } else {        // we can only get part of our data from this indice
+        } else {        // we can only get part of our data from this index
             int amountDataToLoad = (flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset);
             ADIO_Offset physicalSourceBufferOffset =
                 (currentDataTypeExtent * bufTypeExtent) + flatBuf->indices[currentFlatBufIndice] +
@@ -204,7 +204,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
  * only needs to occur during the actual read from or write to the file system.  In the case of gpfs
  * this function is called just once.  The ADIOI_OneSidedStripeParms parameter is used to save the
  * state and re-use variables thru repetitive calls to help in the case of lustre to avoid costly
- * recomputation, for consistency gpfs utilizes it as well but doesn't use some aspects of it.  This
+ * re-computation, for consistency gpfs utilizes it as well but doesn't use some aspects of it.  This
  * function was originally first written for gpfs only and then modified to support lustre.
  */
 void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
@@ -342,7 +342,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
      */
     int maxNumContigOperations = contig_access_count;
 
-    int myAggRank = -1;         /* if I am an aggregor this is my index into fd->hints->ranklist */
+    int myAggRank = -1;         /* if I am an aggregator this is my index into fd->hints->ranklist */
     int iAmUsedAgg = 0;         /* whether or not this rank is used as an aggregator. */
 
     /* Make coll_bufsize an ADIO_Offset since it is used in calculations with offsets.
@@ -1641,7 +1641,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     if (fd->io_buf_window == MPI_WIN_NULL || fd->io_buf_put_amounts_window == MPI_WIN_NULL) {
         ADIOI_OneSidedSetup(fd, nprocs);
     }
-    /* This flag denotes whether the source datatype is contiguus, which is referenced throughout the algorithm
+    /* This flag denotes whether the source datatype is contiguous, which is referenced throughout the algorithm
      * and defines how the source buffer offsets and data chunks are determined.  If the value is 1 (true - contiguous data)
      * things are profoundly simpler in that the source buffer offset for a given source offset simply linearly increases
      * by the chunk sizes being read.  If the value is 0 (non-contiguous) then these values are based on calculations
@@ -1727,7 +1727,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
             firstFileOffset = MPL_MIN(firstFileOffset, st_offsets[j]);
     }
 
-    int myAggRank = -1;         /* if I am an aggregor this is my index into fd->hints->ranklist */
+    int myAggRank = -1;         /* if I am an aggregator this is my index into fd->hints->ranklist */
     int iAmUsedAgg = 0;         /* whether or not this rank is used as an aggregator. */
 
     int coll_bufsize = fd->hints->cb_buffer_size;
@@ -2129,7 +2129,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 #endif
                             }
                         } else if (currentFDSourceBufferState[numSourceAggs].indiceOffset == -1) {
-                            // non-contiguos source buffer
+                            // non-contiguous source buffer
                             ADIOI_Assert(numSourceAggs > 0);
 
                             /* Initialize the source buffer state appropriately and then
@@ -2319,7 +2319,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
                 }
                 if (useIOBuffer) {      /* use the thread reader for the next round */
-                    /* switch back and forth between the read buffers so that the data aggregation code is diseminating 1 buffer while the thread is reading into the other */
+                    /* switch back and forth between the read buffers so that the data aggregation code is disseminating 1 buffer while the thread is reading into the other */
 
                     if (roundIter > 0)
                         currentRoundFDEnd = nextRoundFDEnd;
