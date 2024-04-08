@@ -1061,6 +1061,26 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 
 #endif
 
+#ifdef ROMIO_INSIDE_MPICH
+/* only built within MPI requires MPL */
 #include "mpl.h"
+#else
+#define MPL_UNREFERENCED_ARG(a)
+#define MPL_MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MPL_MIN(a,b) (((a) < (b)) ? (a) : (b))
+#define MPL_malloc(a,b) malloc((size_t)(a))
+#define MPL_calloc(a,b,c) calloc((size_t)(a),(size_t)(b))
+#define MPL_free(a) free((void *)(a))
+#define MPL_direct_free(a) free((void *)(a))
+#define MPL_external_free(a) free((void *)(a))
+#define MPL_realloc(a,b,c) realloc((void *)(a),(size_t)(b))
+#define MPL_VG_MEM_INIT(addr_,len_)  do {} while (0)
+extern void MPL_create_pathname(char *dest_filename, const char *dirname,
+                                const char *prefix, const int is_dir);
+extern int MPL_strnapp(char *dest, const char *src, size_t n);
+#define MPL_MEM_IO 0
+typedef int MPL_memory_class;
+extern void *MPL_aligned_alloc(size_t alignment, size_t size, MPL_memory_class class);
+#endif
 
 #endif /* ADIOI_H_INCLUDED */

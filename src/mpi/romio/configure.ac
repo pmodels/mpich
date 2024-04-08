@@ -1612,6 +1612,15 @@ if test "$FROM_MPICH" = no ; then
 
    AC_CHECK_FUNCS([MPIR_Ext_datatype_iscontig], [],
                   [AC_SEARCH_LIBS([MPIR_Ext_datatype_iscontig], [mpi])])
+
+   AC_CHECK_FUNCS([MPL_create_pathname], [],
+                  [AC_SEARCH_LIBS([MPL_create_pathname], [mpi mpl])])
+
+   AC_CHECK_FUNCS([MPL_strnapp], [],
+                  [AC_SEARCH_LIBS([MPL_strnapp], [mpi mpl])])
+
+   AC_CHECK_FUNCS([MPL_aligned_alloc], [],
+                  [AC_SEARCH_LIBS([MPL_aligned_alloc], [mpi mpl])])
 fi
 CPPFLAGS=$saved_CPPFLAGS
 
