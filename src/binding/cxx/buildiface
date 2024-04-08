@@ -2311,36 +2311,7 @@ void operator delete[](void *p) {
      print $OUTFD "\
     }\n";
 
-    # Init is a difficult function because we must allow C to call a 
-    # C++ function.  We do this by getting help from the MPI implementation
-    # which invokes the MPIR_Call_op_fn routine, with a pointer to the 
-    # C++ routine to invoke.
-    #
-    # Note: Some compilers complain about the cast to the 
-    # (void (*)(void)) function, expecting an `extern "C"' as well, but
-    # other compilers do not accept the extern "C".  Sigh.
-    print $OUTFD "
-    extern \"C\" {
-typedef void (*mpircallback)(void);
-}
-extern \"C\" void MPII_Op_set_cxx( MPI_Op, void (*)(void) );
-extern \"C\" 
-void MPIR_Call_op_fn( void *invec, void *outvec, int len, MPI_Datatype dtype,
-		     User_function *uop )
-{
-    MPI::Datatype cxxdtype = dtype;
-    (*uop)( invec, outvec, len, cxxdtype );
-}
-void Op::Init( User_function *f, bool commute )
-    {\n";
-&printCoverageStart( $OUTFD, "Op_create", 2 );
-     print $OUTFD "\
-	MPIX_CALLWORLD( MPI_Op_create( (MPI_User_function *)f, 
-			(int) commute, &the_real_op ) ); 
-	MPII_Op_set_cxx( the_real_op, (mpircallback) MPIR_Call_op_fn );\n";
-&printCoverageEnd( $OUTFD, "Op_create", 2 );
-print $OUTFD "\
-    }\n";
+    print $OUTFD "#include \"user_proxy.inc\"\n";
 
     # Keyval and attribute routines
     print $OUTFD <<EOT;
