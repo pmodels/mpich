@@ -16,18 +16,6 @@ MPIR_Object_alloc_t MPIR_Op_mem = { 0, 0, 0, 0, 0, 0, MPIR_OP,
     NULL, {0}
 };
 
-#ifdef HAVE_CXX_BINDING
-void MPII_Op_set_cxx(MPI_Op op, void (*opcall) (void))
-{
-    MPIR_Op *op_ptr;
-
-    MPIR_Op_get_ptr(op, op_ptr);
-    op_ptr->language = MPIR_LANG__CXX;
-    MPIR_Process.cxx_call_op_fn = (void (*)(const void *, void *, int,
-                                            MPI_Datatype, MPI_User_function *)) opcall;
-}
-#endif
-
 int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPIR_Op ** p_op_ptr)
 {
     MPIR_Op *op_ptr;
@@ -43,7 +31,6 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPIR_Op ** p_o
     }
     /* --END ERROR HANDLING-- */
 
-    op_ptr->language = MPIR_LANG__C;
     op_ptr->is_commute = commute;
     op_ptr->kind = MPIR_OP_KIND__USER;
 #ifndef BUILD_MPI_ABI

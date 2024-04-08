@@ -177,10 +177,6 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_pt2pt.h"
 #include "mpir_gpu.h"
 
-#ifdef HAVE_CXX_BINDING
-#include "mpii_cxxinterface.h"
-#endif
-
 #ifdef HAVE_FORTRAN_BINDING
 #include "mpii_f77interface.h"
 #endif

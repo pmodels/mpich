@@ -141,26 +141,6 @@ void MPIR_Err_init(void)
     did_err_init = TRUE;
 }
 
-/* Language Callbacks */
-
-#ifdef HAVE_CXX_BINDING
-/* This routine is used to install a callback used by the C++ binding
- to invoke the (C++) error handler.  The callback routine is a C routine,
- defined in the C++ binding. */
-void MPII_Errhandler_set_cxx(MPI_Errhandler errhand, void (*errcall) (void))
-{
-    MPIR_Errhandler *errhand_ptr;
-
-    MPIR_Errhandler_get_ptr(errhand, errhand_ptr);
-    errhand_ptr->language = MPIR_LANG__CXX;
-#ifndef BUILD_MPI_ABI
-    MPIR_Process.cxx_call_errfn = (void (*)(int, int *, int *, void (*)(void))) errcall;
-#else
-    MPIR_Process.cxx_call_errfn = (void (*)(int, ABI_Comm *, int *, void (*)(void))) errcall;
-#endif
-}
-#endif /* HAVE_CXX_BINDING */
-
 
 /* ------------------------------------------------------------------------- */
 /* Group 2: These routines are called on error exit from most
@@ -257,36 +237,9 @@ int MPIR_call_errhandler(MPIR_Errhandler * errhandler, int errorcode, MPIR_handl
 #endif
             }
             break;
-#ifdef HAVE_CXX_BINDING
-        case MPIR_LANG__CXX:
-            {
-                int cxx_kind = 0;
-                if (h.kind == MPIR_COMM) {
-                    cxx_kind = 0;
-                } else if (h.kind == MPIR_WIN) {
-                    cxx_kind = 2;
-                } else {
-                    MPIR_Assert_error("kind not supported");
-                }
-#ifndef BUILD_MPI_ABI
-                if (h.kind == MPIR_FILE) {
-                    MPIR_Process.cxx_call_errfn(cxx_kind, (void *) &h.u.fh, &errorcode,
-                                                (void (*)(void)) errhandler->
-                                                errfn.C_File_Handler_function);
-                } else {
-                    MPIR_Process.cxx_call_errfn(cxx_kind, &h.u.handle, &errorcode,
-                                                (void (*)(void)) errhandler->
-                                                errfn.C_Comm_Handler_function);
-                }
-#else
-
-                MPIR_Process.cxx_call_errfn(cxx_kind, (void *) &abi_handle, &errorcode,
-                                            (void (*)(void)) errhandler->
-                                            errfn.C_Comm_Handler_function);
-#endif
-                break;
-            }
-#endif
+        default:
+            MPIR_Assert(0);
+            break;
     }
 
   fn_exit:
