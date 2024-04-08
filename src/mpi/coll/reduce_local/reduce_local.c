@@ -50,17 +50,6 @@ static void call_user_op_x(const void *inbuf, void *inoutbuf, MPI_Count count,
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
-#ifdef HAVE_CXX_BINDING
-static void call_user_op_cxx(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype,
-                             MPI_User_function * uop)
-{
-    /* Take off the global locks before calling user functions */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    (*MPIR_Process.cxx_call_op_fn) (inbuf, inoutbuf, count, datatype, uop);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-}
-#endif
-
 int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
                       MPI_Op op)
 {
@@ -89,16 +78,6 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
 
-#ifdef HAVE_CXX_BINDING
-        if (op_ptr->language == MPIR_LANG__CXX) {
-            /* large count not supported */
-            MPIR_Assert(count <= INT_MAX);
-            MPIR_Assert(op_ptr->kind == MPIR_OP_KIND__USER);
-            call_user_op_cxx(inbuf, inoutbuf, (int) count, datatype,
-                             (MPI_User_function *) op_ptr->function.c_function);
-            goto fn_exit;
-        }
-#endif
         if (op_ptr->kind == MPIR_OP_KIND__USER_X) {
             call_user_op_x(inbuf, inoutbuf, count, datatype, op_ptr->function, op_ptr->extra_state);
         } else if (op_ptr->kind == MPIR_OP_KIND__USER_LARGE) {

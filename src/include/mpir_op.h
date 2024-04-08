@@ -110,7 +110,6 @@ typedef union MPIR_User_function {
 typedef struct MPIR_Op {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPIR_Op_kind kind;
-    MPIR_Lang_t language;
     int is_commute;
     MPIR_User_function function;
     MPIX_Destructor_function *destructor_fn;
