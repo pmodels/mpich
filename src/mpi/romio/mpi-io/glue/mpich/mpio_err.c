@@ -31,8 +31,6 @@ int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
 int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
 {
     MPI_Errhandler e;
-    void (*c_errhandler) (MPI_File *, int *, ...);
-    int kind;                   /* Error handler kind (see below) */
     char error_msg[4096];
     int len;
 
@@ -65,19 +63,7 @@ int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
         /* FIXME: This is a hack in case no error handler was set */
         goto fn_exit;
     } else {
-        /* Actually, e is just the value provide by the MPICH routines
-         * file_set_errhandler.  This is actually a *pointer* to the
-         * errhandler structure.  We don't know that, so we ask
-         * the MPICH code to translate this object into an error handler.
-         * kind = 2: errors call C function
-         * kind = 3: errors call CXX function
-         */
-        MPIR_Get_file_error_routine(e, &c_errhandler, &kind);
-        if (kind == 2) {
-            (*c_errhandler) (&mpi_fh, &error_code, 0);
-        } else if (kind == 3) {
-            MPIR_File_call_cxx_errhandler(&mpi_fh, &error_code, c_errhandler);
-        }
+        error_code = MPIR_Call_file_errhandler(e, error_code, mpi_fh);
     }
 
   fn_exit:

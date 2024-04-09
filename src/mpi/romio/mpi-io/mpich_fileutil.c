@@ -14,7 +14,6 @@
  */
 int MPIR_ROMIO_Get_file_errhand(MPI_File, MPI_Errhandler *);
 int MPIR_ROMIO_Set_file_errhand(MPI_File, MPI_Errhandler);
-void MPIR_Get_file_error_routine(MPI_Errhandler, void (**)(MPI_File *, int *, ...), int *);
 
 /* These next two routines are used to allow MPICH to access/set the
    error handers in the MPI_File structure until MPICH knows about the
