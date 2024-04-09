@@ -209,58 +209,10 @@ static int call_errhandler(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler, i
     }
 #endif
 
-#ifdef BUILD_MPI_ABI
-    void *abi_handle = ABI_Handle_from_mpi(handle);
-#endif
-
-    /* Process any user-defined error handling function */
-    switch (errhandler->language) {
-        case MPIR_LANG__C:
-#ifndef BUILD_MPI_ABI
-            (*errhandler->errfn.C_Comm_Handler_function) (&handle, &errorcode);
-#else
-
-            (*errhandler->errfn.C_Comm_Handler_function) ((void *) &abi_handle, &errorcode);
-#endif
-            break;
-#ifdef HAVE_CXX_BINDING
-        case MPIR_LANG__CXX:
-            {
-                int cxx_kind = 0;
-                if (kind == MPIR_COMM) {
-                    cxx_kind = 0;
-                } else if (kind == MPIR_WIN) {
-                    cxx_kind = 2;
-                } else {
-                    MPIR_Assert_error("kind not supported");
-                }
-#ifndef BUILD_MPI_ABI
-                MPIR_Process.cxx_call_errfn(cxx_kind, &handle, &errorcode,
-                                            (void (*)(void)) errhandler->
-                                            errfn.C_Comm_Handler_function);
-#else
-
-                MPIR_Process.cxx_call_errfn(cxx_kind, (void *) &abi_handle, &errorcode,
-                                            (void (*)(void)) errhandler->
-                                            errfn.C_Comm_Handler_function);
-#endif
-                break;
-            }
-#endif
-#ifdef HAVE_FORTRAN_BINDING
-        case MPIR_LANG__FORTRAN90:
-        case MPIR_LANG__FORTRAN:
-            {
-                /* If int and MPI_Fint aren't the same size, we need to
-                 * convert.  As this is not performance critical, we
-                 * do this even if MPI_Fint and int are the same size. */
-                MPI_Fint ferr = errorcode;
-                MPI_Fint commhandle = handle;
-                (*errhandler->errfn.F77_Handler_function) (&commhandle, &ferr);
-            }
-            break;
-#endif
-    }
+    MPIR_handle h;
+    h.kind = kind;
+    h.u.handle = handle;
+    mpi_errno = MPIR_call_errhandler(errhandler, errorcode, h);
 
   fn_exit:
     return mpi_errno;
