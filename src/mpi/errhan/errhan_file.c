@@ -31,7 +31,7 @@ static int set_file_errhand(MPI_File file, MPI_Errhandler eh)
     return MPIR_ROMIO_Set_file_errhand(file, ABI_Errhandler_from_mpi(eh));
 }
 
-void MPIR_Get_file_error_routine(ABI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind);
+int MPIR_Call_file_errhandler(ABI_Errhandler e, int errorcode, MPI_File f);
 #endif
 
 int MPIR_File_create_errhandler_impl(MPI_File_errhandler_function * file_errhandler_fn,
@@ -159,49 +159,6 @@ int MPIR_File_call_errhandler_impl(MPI_File fh, int errorcode)
 #endif /* HAVE_ROMIO */
 }
 
-/* Export this routine only once (if we need to compile this file twice
-   to get the PMPI and MPI versions without weak symbols */
-static void get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind)
-{
-    MPIR_Errhandler *e_ptr = 0;
-    int mpi_errno = MPI_SUCCESS;
-
-    /* Convert the MPI_Errhandler into an MPIR_Errhandler */
-
-    if (!e) {
-        *c = 0;
-        *kind = 1;      /* Use errors return as the default */
-    } else {
-        MPIR_ERRTEST_ERRHANDLER(e, mpi_errno);
-        MPIR_Errhandler_get_ptr(e, e_ptr);
-        if (!e_ptr) {
-            /* FIXME: We need an error return */
-            *c = 0;
-            *kind = 1;
-            return;
-        }
-        if (e_ptr->handle == MPI_ERRORS_RETURN) {
-            *c = 0;
-            *kind = 1;
-        } else if (e_ptr->handle == MPI_ERRORS_ARE_FATAL || e_ptr->handle == MPI_ERRORS_ABORT) {
-            *c = 0;
-            *kind = 0;
-        } else {
-            *c = e_ptr->errfn.C_File_Handler_function;
-            *kind = 2;
-            /* If the language is C++, we need to use a special call
-             * interface.  This is MPIR_File_call_cxx_errhandler.
-             * See file_call_errhandler.c */
-#ifdef HAVE_CXX_BINDING
-            if (e_ptr->language == MPIR_LANG__CXX)
-                *kind = 3;
-#endif
-        }
-    }
-  fn_fail:
-    return;
-}
-
 static int call_file_errhandler(MPI_Errhandler e, int errorcode, MPI_File f)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -222,43 +179,13 @@ static int call_file_errhandler(MPI_Errhandler e, int errorcode, MPI_File f)
 }
 
 #ifndef BUILD_MPI_ABI
-void MPIR_Get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind)
-{
-    get_file_error_routine(e, c, kind);
-}
-
 int MPIR_Call_file_errhandler(MPI_Errhandler e, int errorcode, MPI_File f)
 {
     return call_file_errhandler(e, errorcode, f);
 }
 #else
-void MPIR_Get_file_error_routine(ABI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind)
-{
-    get_file_error_routine(ABI_Errhandler_to_mpi(e), c, kind);
-}
-
 int MPIR_Call_file_errhandler(ABI_Errhandler e, int errorcode, MPI_File f)
 {
     return call_file_errhandler(ABI_Errhandler_to_mpi(e), errorcode, f);
 }
 #endif
-
-
-/* This is a glue routine that can be used by ROMIO
-   (see mpi-io/glue/mpich/mpio_err.c) to properly invoke the C++
-   error handler */
-int MPIR_File_call_cxx_errhandler(MPI_File * fh, int *errorcode,
-                                  void (*c_errhandler) (MPI_File *, int *, ...))
-{
-    /* ROMIO will contain a reference to this routine, so if there is
-     * no C++ support, it will never be called but it must be available. */
-#ifdef HAVE_CXX_BINDING
-    void *fh1 = (void *) fh;
-    (*MPIR_Process.cxx_call_errfn) (1, fh1, errorcode, (void (*)(void)) c_errhandler);
-    /* The C++ code throws an exception if the error handler
-     * returns something other than MPI_SUCCESS. There is no "return"
-     * of an error code. This code mirrors that in errutil.c */
-    *errorcode = MPI_SUCCESS;
-#endif
-    return *errorcode;
-}
