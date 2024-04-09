@@ -4,7 +4,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-skip_words="inout,improbe,nd,alse,ans,parm,parms,stange,faught,gord,hellow,creat,outweights,configury,numer,thrid,offsetp"
+skip_words="inout,improbe,nd,alse,ans,parm,parms,stange,faught,gord,hellow,creat,outweights,configury,numer,thrid,offsetp,wronly"
 skip_files=".git,*.tex,*.bib,*.sty,*.f,confdb/config.*"
 
 opts=(--ignore-words-list="$skip_words" --skip="$skip_files" --write-changes)
