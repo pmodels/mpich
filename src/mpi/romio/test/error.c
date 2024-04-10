@@ -84,6 +84,7 @@ int main(int argc, char **argv)
         if (!rank) {
             int errorclass;
 #if VERBOSE
+            MPI_Error_string(err, string, &len);
             fprintf(stderr, "%s\n", string);
 #else
             /* expecting error class MPI_ERR_ARG */
