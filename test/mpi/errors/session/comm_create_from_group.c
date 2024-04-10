@@ -52,12 +52,9 @@ int main(int argc, char *argv[])
     }
 
     /* try to get a communicator with NULL comm as arg */
+    /* NOTE: the rc may be MPI_SUCCESS here but the errhandler should be invoked */
     rc = MPI_Comm_create_from_group(ghandle, "org.mpi-forum.mpi-v4_0.example-ex10_8",
                                     MPI_INFO_NULL, errhandler, NULL);
-    if (rc == MPI_SUCCESS) {
-        errs++;
-        goto fn_exit;
-    }
 
     /* get a communicator */
     rc = MPI_Comm_create_from_group(ghandle, "org.mpi-forum.mpi-v4_0.example-ex10_8",

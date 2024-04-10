@@ -47,14 +47,10 @@ C
       call mpi_comm_set_errhandler( wdup, comm_errh, ierr )
       call mpi_comm_size( wdup, wdsize, ierr )
       call mpi_send( id, 1, MPI_INTEGER, wdsize, -37, wdup, ierr )
-      if (ierr .eq. MPI_SUCCESS) then
-         print *, ' Failed to detect error in use of MPI_SEND'
+C NOTE: ierr may be MPI_SUCCESS but handler should be invoked
+      if (iseen(1) .ne. 1) then
          errs = errs + 1
-      else
-         if (iseen(1) .ne. 1) then
-            errs = errs + 1
-            print *, ' Failed to increment comm error counter'
-         endif
+         print *, ' Failed to increment comm error counter'
       endif
 
       asize = 2*sizeofint
@@ -68,14 +64,10 @@ C
       asize = 0
       call mpi_put( winbuf, 1, MPI_INT, wdsize, asize, 1, MPI_INT, winh,
      $     ierr )
-      if (ierr .eq. MPI_SUCCESS) then
-         print *, ' Failed to detect error in use of MPI_PUT'
+C NOTE: ierr may be MPI_SUCCESS but handler should be invoked
+      if (iseen(3) .ne. 1) then
          errs = errs + 1
-      else
-         if (iseen(3) .ne. 1) then
-            errs = errs + 1
-            print *, ' Failed to increment win error counter'
-         endif
+         print *, ' Failed to increment win error counter'
       endif
 
       call mpi_file_open( MPI_COMM_SELF, 'ftest', MPI_MODE_CREATE +
@@ -89,14 +81,10 @@ C
       offset = -100
       call mpi_file_read_at( fh, offset, winbuf, 1, MPI_INTEGER, status,
      $     ierr )
-      if (ierr .eq. MPI_SUCCESS) then
-         print *, ' Failed to detect error in use of MPI_PUT'
+C NOTE: ierr may be MPI_SUCCESS but handler should be invoked
+      if (iseen(2) .ne. 1) then
          errs = errs + 1
-      else
-         if (iseen(2) .ne. 1) then
-            errs = errs + 1
-            print *, ' Failed to increment file error counter'
-         endif
+         print *, ' Failed to increment file error counter'
       endif
 
       call mpi_comm_free( wdup, ierr )
