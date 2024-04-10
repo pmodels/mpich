@@ -195,10 +195,10 @@
 #define MPI_Win_lock PMPI_Win_lock
 #undef MPI_Win_unlock
 #define MPI_Win_unlock PMPI_Win_unlock
-#undef MPI_Keyval_create
-#define MPI_Keyval_create PMPI_Keyval_create
-#undef MPI_Keyval_free
-#define MPI_Keyval_free PMPI_Keyval_free
+#undef MPI_Comm_create_keyval
+#define MPI_Comm_create_keyval PMPI_Comm_create_keyval
+#undef MPI_Comm_free_keyval
+#define MPI_Comm_free_keyval PMPI_Comm_free_keyval
 #undef MPI_Name_get
 #define MPI_Name_get PMPI_Name_get
 #undef MPI_Name_put

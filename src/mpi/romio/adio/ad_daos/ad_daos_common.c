@@ -24,7 +24,7 @@ static int ad_daos_end(MPI_Comm comm, int keyval, void *attribute_val, void *ext
         return error_code;
     }
 
-    MPI_Keyval_free(&keyval);
+    MPI_Comm_free_keyval(&keyval);
     return error_code;
 }
 
@@ -57,7 +57,7 @@ void ADIOI_DAOS_Init(int *error_code)
     adio_daos_path_prefix = getenv("DAOS_UNS_PREFIX");
 
     /** attach to comm_self destroy to finalize DAOS */
-    MPI_Keyval_create(MPI_NULL_COPY_FN, ad_daos_end, &ADIOI_DAOS_Initialized, (void *) 0);
+    MPI_Comm_create_keyval(MPI_NULL_COPY_FN, ad_daos_end, &ADIOI_DAOS_Initialized, (void *) 0);
     MPI_Comm_set_attr(MPI_COMM_SELF, ADIOI_DAOS_Initialized, (void *) 0);
 }
 
