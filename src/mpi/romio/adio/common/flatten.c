@@ -182,6 +182,9 @@ static void flatlist_node_grow(ADIOI_Flatlist_node * flat, int idx)
     }
 }
 
+static MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_index);
+static void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
+                          ADIO_Offset st_offset, MPI_Count * curr_index);
 static void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type);
 /* flatten datatype and add it to Flatlist */
 static ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
