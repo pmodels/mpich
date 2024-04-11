@@ -1239,11 +1239,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 
         /* We need to release the error handler */
         if (comm_ptr->errhandler && !(HANDLE_IS_BUILTIN(comm_ptr->errhandler->handle))) {
-            int errhInuse;
-            MPIR_Errhandler_release_ref(comm_ptr->errhandler, &errhInuse);
-            if (!errhInuse) {
-                MPIR_Handle_obj_free(&MPIR_Errhandler_mem, comm_ptr->errhandler);
-            }
+            (void) MPIR_Errhandler_free_impl(comm_ptr->errhandler);
         }
 
         /* Remove from the list of active communicators if

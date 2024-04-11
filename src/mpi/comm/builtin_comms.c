@@ -118,11 +118,7 @@ static int finalize_builtin_comm(MPIR_Comm * comm)
     }
 
     if (comm->errhandler && !(HANDLE_IS_BUILTIN(comm->errhandler->handle))) {
-        int in_use;
-        MPIR_Errhandler_release_ref(comm->errhandler, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPIR_Errhandler_mem, comm->errhandler);
-        }
+        (void) MPIR_Errhandler_free_impl(comm->errhandler);
         /* always set to NULL to avoid a double-release later in finalize */
         comm->errhandler = NULL;
     }
