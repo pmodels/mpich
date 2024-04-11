@@ -4,7 +4,6 @@
  */
 
 #include "mpi_fortimpl.h"
-#include "mpl.h"
 #include <assert.h>
 
 /* ---- user op ----------------- */
@@ -24,12 +23,12 @@ static void F77_op_proxy(void *invec, void *inoutvec, MPI_Count len, MPI_Datatyp
 
 static void F77_op_free(void *extra_state)
 {
-    MPL_free(extra_state);
+    free(extra_state);
 }
 
 int MPII_op_create(F77_OpFunction * opfn, MPI_Fint commute, MPI_Fint * op)
 {
-    struct F77_op_state *p = MPL_malloc(sizeof(struct F77_op_state), MPL_MEM_OTHER);
+    struct F77_op_state *p = malloc(sizeof(struct F77_op_state));
     p->opfn = opfn;
 
     MPI_Op op_i;
@@ -37,7 +36,7 @@ int MPII_op_create(F77_OpFunction * opfn, MPI_Fint commute, MPI_Fint * op)
     if (ret == MPI_SUCCESS) {
         *op = MPI_Op_c2f(op_i);
     } else {
-        MPL_free(p);
+        free(p);
     }
 
     return ret;
@@ -86,12 +85,12 @@ static void F77_session_errhan_proxy(MPI_Session session, int error_code, void *
 
 static void F77_errhan_free(void *extra_state)
 {
-    MPL_free(extra_state);
+    free(extra_state);
 }
 
 int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77_handle_type type)
 {
-    struct F77_errhan_state *p = MPL_malloc(sizeof(struct F77_errhan_state), MPL_MEM_OTHER);
+    struct F77_errhan_state *p = malloc(sizeof(struct F77_errhan_state));
     p->err_fn = err_fn;
 
     MPI_Errhandler errhandler_i;
@@ -119,7 +118,7 @@ int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77
     if (ret == MPI_SUCCESS) {
         *errhandler = MPI_Errhandler_c2f(errhandler_i);
     } else {
-        MPL_free(p);
+        free(p);
     }
 
     return ret;
