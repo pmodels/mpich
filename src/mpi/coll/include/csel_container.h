@@ -311,6 +311,10 @@ typedef struct {
                 int tree_type;
                 int k;
                 int is_non_blocking;
+                int topo_overhead;
+                int topo_diff_groups;
+                int topo_diff_switches;
+                int topo_same_switches;
             } intra_tree;
             struct {
                 int tree_type;
@@ -349,6 +353,10 @@ typedef struct {
                 int k;
                 int chunk_size;
                 int buffer_per_child;
+                int topo_overhead;
+                int topo_diff_groups;
+                int topo_diff_switches;
+                int topo_same_switches;
             } intra_tsp_tree;
             struct {
                 int chunk_size;
@@ -371,6 +379,10 @@ typedef struct {
                 int k;
                 int chunk_size;
                 int buffer_per_child;
+                int topo_overhead;
+                int topo_diff_groups;
+                int topo_diff_switches;
+                int topo_same_switches;
             } intra_tree;
             struct {
                 int k;

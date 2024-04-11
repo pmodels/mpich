@@ -53,6 +53,18 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                     else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
                         cnt->u.bcast.intra_tree.is_non_blocking =
                             atoi(ckey + strlen("is_non_blocking="));
+                    else if (!strncmp(ckey, "topo_overhead=", strlen("topo_overhead=")))
+                        cnt->u.bcast.intra_tree.topo_overhead =
+                            atoi(ckey + strlen("topo_overhead="));
+                    else if (!strncmp(ckey, "topo_diff_groups=", strlen("topo_diff_groups=")))
+                        cnt->u.bcast.intra_tree.topo_diff_groups =
+                            atoi(ckey + strlen("topo_diff_groups="));
+                    else if (!strncmp(ckey, "topo_diff_switches=", strlen("topo_diff_switches=")))
+                        cnt->u.bcast.intra_tree.topo_diff_switches =
+                            atoi(ckey + strlen("topo_diff_switches="));
+                    else if (!strncmp(ckey, "topo_same_switches=", strlen("topo_same_switches=")))
+                        cnt->u.bcast.intra_tree.topo_same_switches =
+                            atoi(ckey + strlen("topo_same_switches="));
                     MPL_free(ckey);
                 }
             }
@@ -95,6 +107,18 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                     else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
                         cnt->u.ireduce.intra_tsp_tree.chunk_size =
                             atoi(ckey + strlen("chunk_size="));
+                    else if (!strncmp(ckey, "topo_overhead=", strlen("topo_overhead=")))
+                        cnt->u.ireduce.intra_tsp_tree.topo_overhead =
+                            atoi(ckey + strlen("topo_overhead="));
+                    else if (!strncmp(ckey, "topo_diff_groups=", strlen("topo_diff_groups=")))
+                        cnt->u.ireduce.intra_tsp_tree.topo_diff_groups =
+                            atoi(ckey + strlen("topo_diff_groups="));
+                    else if (!strncmp(ckey, "topo_diff_switches=", strlen("topo_diff_switches=")))
+                        cnt->u.ireduce.intra_tsp_tree.topo_diff_switches =
+                            atoi(ckey + strlen("topo_diff_switches="));
+                    else if (!strncmp(ckey, "topo_same_switches=", strlen("topo_same_switches=")))
+                        cnt->u.ireduce.intra_tsp_tree.topo_same_switches =
+                            atoi(ckey + strlen("topo_same_switches="));
                     MPL_free(ckey);
                 }
             }
@@ -148,6 +172,18 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                         cnt->u.allreduce.intra_tree.tree_type = atoi(ckey + strlen("tree_type="));
                     else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
                         cnt->u.allreduce.intra_tree.chunk_size = atoi(ckey + strlen("chunk_size="));
+                    else if (!strncmp(ckey, "topo_overhead=", strlen("topo_overhead=")))
+                        cnt->u.allreduce.intra_tree.topo_overhead =
+                            atoi(ckey + strlen("topo_overhead="));
+                    else if (!strncmp(ckey, "topo_diff_groups=", strlen("topo_diff_groups=")))
+                        cnt->u.allreduce.intra_tree.topo_diff_groups =
+                            atoi(ckey + strlen("topo_diff_groups="));
+                    else if (!strncmp(ckey, "topo_diff_switches=", strlen("topo_diff_switches=")))
+                        cnt->u.allreduce.intra_tree.topo_diff_switches =
+                            atoi(ckey + strlen("topo_diff_switches="));
+                    else if (!strncmp(ckey, "topo_same_switches=", strlen("topo_same_switches=")))
+                        cnt->u.allreduce.intra_tree.topo_same_switches =
+                            atoi(ckey + strlen("topo_same_switches="));
                     MPL_free(ckey);
                 }
             }

@@ -84,7 +84,8 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
 
     switch (tree_type) {
         case MPIR_TREE_TYPE_TOPOLOGY_AWARE:
-            if (!comm->coll.topo_aware_tree || root != comm->coll.topo_aware_tree_root) {
+            if (!comm->coll.topo_aware_tree || root != comm->coll.topo_aware_tree_root
+                || k != comm->coll.topo_aware_tree_k) {
                 if (comm->coll.topo_aware_tree) {
                     MPIR_Treealgo_tree_free(comm->coll.topo_aware_tree);
                 } else {
@@ -98,6 +99,7 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
                 MPIR_ERR_CHECK(mpi_errno);
                 *ct = *comm->coll.topo_aware_tree;
                 comm->coll.topo_aware_tree_root = root;
+                comm->coll.topo_aware_tree_k = k;
             }
             *ct = *comm->coll.topo_aware_tree;
             utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
@@ -109,7 +111,8 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
             break;
 
         case MPIR_TREE_TYPE_TOPOLOGY_AWARE_K:
-            if (!comm->coll.topo_aware_k_tree || root != comm->coll.topo_aware_k_tree_root) {
+            if (!comm->coll.topo_aware_k_tree || root != comm->coll.topo_aware_k_tree_root
+                || k != comm->coll.topo_aware_k_tree_k) {
                 if (comm->coll.topo_aware_k_tree) {
                     MPIR_Treealgo_tree_free(comm->coll.topo_aware_k_tree);
                 } else {
@@ -123,6 +126,7 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
                 MPIR_ERR_CHECK(mpi_errno);
                 *ct = *comm->coll.topo_aware_k_tree;
                 comm->coll.topo_aware_k_tree_root = root;
+                comm->coll.topo_aware_k_tree_k = k;
             }
             *ct = *comm->coll.topo_aware_k_tree;
             utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
@@ -160,7 +164,11 @@ int MPIR_Treealgo_tree_create_topo_wave(MPIR_Comm * comm, int k, int root,
 
     MPIR_FUNC_ENTER;
 
-    if (!comm->coll.topo_wave_tree || root != comm->coll.topo_wave_tree_root) {
+    if (!comm->coll.topo_wave_tree || root != comm->coll.topo_wave_tree_root
+        || overhead != comm->coll.topo_wave_tree_overhead
+        || lat_diff_groups != comm->coll.topo_wave_tree_lat_diff_groups
+        || lat_diff_switches != comm->coll.topo_wave_tree_lat_diff_switches
+        || lat_same_switches != comm->coll.topo_wave_tree_lat_same_switches) {
         if (comm->coll.topo_wave_tree) {
             MPIR_Treealgo_tree_free(comm->coll.topo_wave_tree);
         } else {
@@ -174,6 +182,10 @@ int MPIR_Treealgo_tree_create_topo_wave(MPIR_Comm * comm, int k, int root,
         MPIR_ERR_CHECK(mpi_errno);
         *ct = *comm->coll.topo_wave_tree;
         comm->coll.topo_wave_tree_root = root;
+        comm->coll.topo_wave_tree_overhead = overhead;
+        comm->coll.topo_wave_tree_lat_diff_groups = lat_diff_groups;
+        comm->coll.topo_wave_tree_lat_diff_switches = lat_diff_switches;
+        comm->coll.topo_wave_tree_lat_same_switches = lat_same_switches;
     }
     *ct = *comm->coll.topo_wave_tree;
     utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
