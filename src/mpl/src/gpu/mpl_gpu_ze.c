@@ -97,6 +97,7 @@ static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
 /* Mappings for translating between local and global device ids */
 static int *local_to_global_map;        /* [local_ze_device_count] */
 static int *global_to_local_map;        /* [global_ze_device_count] */
+static int *global_to_root_map; /* [global_ze_device_count] */
 
 /* Maps a subdevice id to the upper device id, specifically for indexing into shared_device_fds */
 static int *subdevice_map = NULL;
@@ -385,6 +386,27 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdevid)
 
     for (int i = 0; i < global_ze_device_count; ++i) {
         global_to_local_map[i] = -1;
+    }
+
+    /* Initialize global_to_root_map */
+    /* This is used during device comparison (MPL_gpu_query_is_same_dev) to support checking if two
+     * devices share the same root device even if one device isn't visible due to setting
+     * ZE_AFFINITY_MASK. This is necessary because the selection of copy engines defines the
+     * performance characteristic; if the comparison check is inaccurate (i.e.
+     * MPL_gpu_query_is_same_dev returns false when the two dev_ids do in fact reside on the same
+     * physical device), then a non-optimal copy engine will be selected.
+     */
+    global_to_root_map = MPL_malloc(global_ze_device_count * sizeof(int), MPL_MEM_OTHER);
+    if (global_to_root_map == NULL) {
+        mpl_err = MPL_ERR_GPU_NOMEM;
+        goto fn_fail;
+    }
+
+    for (int i = 0; i < global_dev_count; ++i) {
+        global_to_root_map[i] = i;
+        for (int j = 0; j < global_subdev_count; j++) {
+            global_to_root_map[global_dev_count + i * global_subdev_count + j] = i;
+        }
     }
 
     if (mask_contents.num_dev > 0) {
@@ -1251,6 +1273,7 @@ int MPL_gpu_finalize(void)
 
     MPL_free(local_to_global_map);
     MPL_free(global_to_local_map);
+    MPL_free(global_to_root_map);
     MPL_free(ze_devices_handle);
     MPL_free(subdevice_map);
     MPL_free(subdevice_count);
@@ -1878,6 +1901,9 @@ int MPL_gpu_query_is_same_dev(int global_dev1, int global_dev2)
 
     assert(global_dev1 >= 0 && global_dev1 < global_ze_device_count);
     assert(global_dev2 >= 0 && global_dev2 < global_ze_device_count);
+
+    if (global_to_root_map[global_dev1] == global_to_root_map[global_dev2])
+        return 1;
 
     local_dev1 = MPL_gpu_global_to_local_dev_id(global_dev1);
     local_dev2 = MPL_gpu_global_to_local_dev_id(global_dev2);
