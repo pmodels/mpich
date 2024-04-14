@@ -98,8 +98,8 @@ static int get_huge_issue_read(MPIR_Request * rreq)
     int issued_chunks = 0;
 
     int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
     while (bytesLeft > 0) {
+        int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
         fi_addr_t addr = MPIDI_OFI_comm_to_phys(comm, info->origin_rank, nic, vci_remote);
         uint64_t remote_key = info->rma_keys[nic];
 
