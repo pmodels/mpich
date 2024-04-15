@@ -22,7 +22,7 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                         cnt->u.ibcast.intra_tsp_tree.chunk_size =
                             atoi(ckey + strlen("chunk_size="));
                     else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.ibcast.intra_tsp_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                        cnt->u.ibcast.intra_tsp_tree.tree_type = get_tree_type_from_string(ckey + strlen("tree_type="));
                     else if (!strncmp(ckey, "k=", strlen("k=")))
                         cnt->u.ibcast.intra_tsp_tree.k = atoi(ckey + strlen("k="));
                     MPL_free(ckey);
@@ -47,7 +47,7 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                 json_object_object_foreach(obj, key, val) {
                     ckey = MPL_strdup_no_spaces(key);
                     if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.bcast.intra_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                        cnt->u.bcast.intra_tree.tree_type = get_tree_type_from_string(ckey + strlen("tree_type="));
                     else if (!strncmp(ckey, "k=", strlen("k=")))
                         cnt->u.bcast.intra_tree.k = atoi(ckey + strlen("k="));
                     else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
@@ -76,7 +76,7 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                     ckey = MPL_strdup_no_spaces(key);
                     if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
                         cnt->u.bcast.intra_pipelined_tree.tree_type =
-                            atoi(ckey + strlen("tree_type="));
+                            get_tree_type_from_string(ckey + strlen("tree_type="));
                     else if (!strncmp(ckey, "k=", strlen("k=")))
                         cnt->u.bcast.intra_pipelined_tree.k = atoi(ckey + strlen("k="));
                     else if (!strncmp(ckey, "is_non_blocking=", strlen("is_non_blocking=")))
@@ -103,7 +103,7 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                     else if (!strncmp(ckey, "k=", strlen("k=")))
                         cnt->u.ireduce.intra_tsp_tree.k = atoi(ckey + strlen("k="));
                     else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.ireduce.intra_tsp_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                        cnt->u.ireduce.intra_tsp_tree.tree_type = get_tree_type_from_string(ckey + strlen("tree_type="));
                     else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
                         cnt->u.ireduce.intra_tsp_tree.chunk_size =
                             atoi(ckey + strlen("chunk_size="));
@@ -150,7 +150,7 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                         cnt->u.iallreduce.intra_tsp_tree.k = atoi(ckey + strlen("k="));
                     else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
                         cnt->u.iallreduce.intra_tsp_tree.tree_type =
-                            atoi(ckey + strlen("tree_type="));
+                            get_tree_type_from_string(ckey + strlen("tree_type="));
                     else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
                         cnt->u.iallreduce.intra_tsp_tree.chunk_size =
                             atoi(ckey + strlen("chunk_size="));
@@ -169,7 +169,7 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                     else if (!strncmp(ckey, "k=", strlen("k=")))
                         cnt->u.allreduce.intra_tree.k = atoi(ckey + strlen("k="));
                     else if (!strncmp(ckey, "tree_type=", strlen("tree_type=")))
-                        cnt->u.allreduce.intra_tree.tree_type = atoi(ckey + strlen("tree_type="));
+                        cnt->u.allreduce.intra_tree.tree_type = get_tree_type_from_string(ckey + strlen("tree_type="));
                     else if (!strncmp(ckey, "chunk_size=", strlen("chunk_size=")))
                         cnt->u.allreduce.intra_tree.chunk_size = atoi(ckey + strlen("chunk_size="));
                     else if (!strncmp(ckey, "topo_overhead=", strlen("topo_overhead=")))
