@@ -27,6 +27,10 @@ int MPIR_Async_things_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    while (async_things_list != NULL) {
+        PMPIX_Stream_progress(MPIX_STREAM_NULL);
+    }
+
     int err;
     MPID_Thread_mutex_destroy(&async_things_mutex, &err);
     MPIR_Assert(err == 0);
