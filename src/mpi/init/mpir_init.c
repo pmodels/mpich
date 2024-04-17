@@ -413,6 +413,9 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     mpi_errno = MPII_finalize_async();
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIR_Async_things_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Setting isThreaded to 0 to trick any operations used within
      * MPI_Finalize to think that we are running in a single threaded
      * environment. */
@@ -442,9 +445,6 @@ int MPII_Finalize(MPIR_Session * session_ptr)
 #endif
 
     mpi_errno = MPII_Coll_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Async_things_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Call the low-priority (post Finalize) callbacks */
