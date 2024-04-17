@@ -507,10 +507,10 @@ static int gpu_ipc_async_poll(MPIR_Async_thing * thing)
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
 
         MPL_free(p);
-        return MPIR_ASYNC_THING_DONE;
+        return MPIX_ASYNC_DONE;
     }
 
-    return MPIR_ASYNC_THING_NOPROGRESS;
+    return MPIX_ASYNC_NOPROGRESS;
 }
 
 int MPIDI_GPU_ipc_async_start(MPIR_Request * rreq, MPIR_gpu_req * req_p,

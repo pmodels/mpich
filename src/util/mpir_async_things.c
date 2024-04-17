@@ -60,13 +60,13 @@ int MPIR_Async_things_progress(int *made_progress)
     MPID_THREAD_CS_ENTER(VCI, async_things_mutex);
     DL_FOREACH_SAFE(async_things_list, entry, tmp) {
         int ret = entry->poll_fn(entry);
-        if (ret != MPIR_ASYNC_THING_NOPROGRESS) {
+        if (ret != MPIX_ASYNC_NOPROGRESS) {
             *made_progress = 1;
             if (entry->new_entries) {
                 DL_CONCAT(async_things_list, entry->new_entries);
                 entry->new_entries = NULL;
             }
-            if (ret == MPIR_ASYNC_THING_DONE) {
+            if (ret == MPIX_ASYNC_DONE) {
                 DL_DELETE(async_things_list, entry);
                 MPL_free(entry);
                 if (async_things_list == NULL) {
