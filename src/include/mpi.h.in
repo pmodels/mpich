@@ -783,6 +783,8 @@ enum {
     MPIX_ASYNC_DONE = 2,
 };
 
+typedef struct MPIR_Async_thing * MPIX_Async_thing;
+
 #ifndef BUILD_MPI_ABI
 /* C callback functions */
 typedef void (MPI_Handler_function) ( MPI_Comm *, int *, ... );
@@ -831,6 +833,7 @@ typedef int (MPI_Grequest_query_function)(void *, MPI_Status *);
 #endif /* BUILD_MPI_ABI */
 typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);
 typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
+typedef int (MPIX_Async_poll_function)(MPIX_Async_thing);
 #ifndef BUILD_MPI_ABI
 
 /* Function type defs */
