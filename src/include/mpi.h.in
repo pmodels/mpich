@@ -336,6 +336,57 @@ typedef int MPI_Info;
 #define MPI_WIN_CREATE_FLAVOR 0x66000007
 #define MPI_WIN_MODEL         0x66000009
 
+/* Definitions that are determined by configure. */
+typedef @MPI_AINT@ MPI_Aint;
+typedef @MPI_FINT@ MPI_Fint;
+typedef @MPI_COUNT@ MPI_Count;
+
+/* Let ROMIO know that MPI_Offset is already defined */
+#define HAVE_MPI_OFFSET
+/* MPI_OFFSET_TYPEDEF is set in configure and is
+      typedef $MPI_OFFSET MPI_Offset;
+   where $MPI_OFFSET is the correct C type */
+@MPI_OFFSET_TYPEDEF@
+
+/* The order of these elements must match that in mpif.h, mpi_f08_types.f90,
+   and mpi_c_interface_types.f90 */
+typedef struct MPI_Status {
+    int count_lo;
+    int count_hi_and_cancelled;
+    int MPI_SOURCE;
+    int MPI_TAG;
+    int MPI_ERROR;
+} MPI_Status;
+
+/* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
+extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
+extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
+/* The annotation MPIU_DLL_SPEC to the extern statements is used
+   as a hook for systems that require C extensions to correctly construct
+   DLLs, and is defined as an empty string otherwise
+ */
+
+/* C type for MPI_STATUS in F08.
+   The field order should match that in mpi_f08_types.f90, and mpi_c_interface_types.f90.
+ */
+typedef struct {
+    MPI_Fint count_lo;
+    MPI_Fint count_hi_and_cancelled;
+    MPI_Fint MPI_SOURCE;
+    MPI_Fint MPI_TAG;
+    MPI_Fint MPI_ERROR;
+} MPI_F08_status;
+
+/* MPI 4 added following constants to allow access F90 STATUS as an array of MPI_Fint */
+#define MPI_F_STATUS_SIZE 5
+#define MPI_F_SOURCE 2
+#define MPI_F_TAG 3
+#define MPI_F_ERROR 4
+
+/* Provided in libmpifort.so */
+extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
+extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
+
 #ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
 static const MPI_Datatype mpich_mpi_datatype_null MPICH_ATTR_TYPE_TAG_MUST_BE_NULL() = MPI_DATATYPE_NULL;
 static const MPI_Datatype mpich_mpi_char               MPICH_ATTR_TYPE_TAG(char)               = MPI_CHAR;
@@ -407,57 +458,6 @@ static const MPI_Datatype mpich_mpi_c_long_double_complex MPICH_ATTR_TYPE_TAG_C9
 static const MPI_Datatype mpich_mpi_aint   MPICH_ATTR_TYPE_TAG(MPI_Aint)   = MPI_AINT;
 static const MPI_Datatype mpich_mpi_offset MPICH_ATTR_TYPE_TAG(MPI_Offset) = MPI_OFFSET;
 #endif
-
-/* Definitions that are determined by configure. */
-typedef @MPI_AINT@ MPI_Aint;
-typedef @MPI_FINT@ MPI_Fint;
-typedef @MPI_COUNT@ MPI_Count;
-
-/* Let ROMIO know that MPI_Offset is already defined */
-#define HAVE_MPI_OFFSET
-/* MPI_OFFSET_TYPEDEF is set in configure and is
-      typedef $MPI_OFFSET MPI_Offset;
-   where $MPI_OFFSET is the correct C type */
-@MPI_OFFSET_TYPEDEF@
-
-/* The order of these elements must match that in mpif.h, mpi_f08_types.f90,
-   and mpi_c_interface_types.f90 */
-typedef struct MPI_Status {
-    int count_lo;
-    int count_hi_and_cancelled;
-    int MPI_SOURCE;
-    int MPI_TAG;
-    int MPI_ERROR;
-} MPI_Status;
-
-/* See 4.12.5 for MPI_F_STATUS(ES)_IGNORE */
-extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUSES_IGNORE MPICH_API_PUBLIC;
-/* The annotation MPIU_DLL_SPEC to the extern statements is used
-   as a hook for systems that require C extensions to correctly construct
-   DLLs, and is defined as an empty string otherwise
- */
-
-/* C type for MPI_STATUS in F08.
-   The field order should match that in mpi_f08_types.f90, and mpi_c_interface_types.f90.
- */
-typedef struct {
-    MPI_Fint count_lo;
-    MPI_Fint count_hi_and_cancelled;
-    MPI_Fint MPI_SOURCE;
-    MPI_Fint MPI_TAG;
-    MPI_Fint MPI_ERROR;
-} MPI_F08_status;
-
-/* MPI 4 added following constants to allow access F90 STATUS as an array of MPI_Fint */
-#define MPI_F_STATUS_SIZE 5
-#define MPI_F_SOURCE 2
-#define MPI_F_TAG 3
-#define MPI_F_ERROR 4
-
-/* Provided in libmpifort.so */
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC;
-extern MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC;
 
 /* FIXME: The following two definition are not defined by MPI and must not be
    included in the mpi.h file, as the MPI namespace is reserved to the MPI
