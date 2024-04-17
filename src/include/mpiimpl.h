@@ -223,6 +223,7 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_impl.h"
 
 #include "mpir_gpu_util.h"
+#include "mpir_async_things.h"
 
 /*****************************************************************************/
 /******************** PART 6: DEVICE "POST" FUNCTIONALITY ********************/

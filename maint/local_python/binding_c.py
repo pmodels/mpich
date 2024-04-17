@@ -341,8 +341,7 @@ def dump_mpi_proto_h(f):
         # We need this all the time to avoid unknown types
         print("enum QMPI_Functions_enum {", file=Out)
         for l in G.mpi_declares:
-            m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', l);
-            func_name = m.group(1);
+            func_name = get_funcname_from_decl(l)
             if need_skip_qmpi(func_name):
                 continue
             print("    " + func_name.upper() + "_T,", file=Out)
@@ -352,8 +351,8 @@ def dump_mpi_proto_h(f):
 
         # -- QMPI prototypes --
         for func_decl in G.mpi_declares:
-            m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
-            if need_skip_qmpi(m.group(1)):
+            func_name = get_funcname_from_decl(func_decl)
+            if need_skip_qmpi(func_name):
                 continue
             func_decl = get_qmpi_decl_from_func_decl(func_decl, 'proto')
             dump_proto_line(func_decl, Out)
@@ -362,8 +361,8 @@ def dump_mpi_proto_h(f):
 
         # -- QMPI function typedefs --
         for func_decl in G.mpi_declares:
-            m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', func_decl);
-            if need_skip_qmpi(m.group(1)):
+            func_name = get_funcname_from_decl(func_decl)
+            if need_skip_qmpi(func_name):
                 continue
             func_decl = get_qmpi_typedef_from_func_decl(func_decl)
             dump_line(func_decl, '', Out)
@@ -403,8 +402,7 @@ def dump_qmpi_register_h(f):
         print("static inline int MPII_qmpi_register_internal_functions(void)", file=Out)
         print("{", file=Out)
         for l in G.mpi_declares:
-            m = re.match(r'[a-zA-Z0-9_]* ([a-zA-Z0-9_]*)\(.*', l);
-            func_name = m.group(1);
+            func_name = get_funcname_from_decl(l)
             if need_skip_qmpi(func_name):
                 continue
             print("    MPIR_QMPI_pointers[%s_T] = (void (*)(void)) &Q%s;" % (func_name.upper(), func_name), file=Out)
@@ -2021,7 +2019,7 @@ def get_fn_fail_create_code(func):
     mapping = get_kind_map('C', func['_is_large'])
 
     (fmts, args, err_fmts) = ([], [], [])
-    fmt_codes = {'RANK': "i", 'TAG': "t", 'COMMUNICATOR': "C", 'ASSERT': "A", 'DATATYPE': "D", 'ERRHANDLER': "E", 'FILE': "F", 'GROUP': "G", 'INFO': "I", 'OPERATION': "O", 'REQUEST': "R", 'WINDOW': "W", 'SESSION': "S", 'KEYVAL': "K", "GREQUEST_CLASS": "x", "STREAM": "x"}
+    fmt_codes = {'RANK': "i", 'TAG': "t", 'COMMUNICATOR': "C", 'ASSERT': "A", 'DATATYPE': "D", 'ERRHANDLER': "E", 'FILE': "F", 'GROUP': "G", 'INFO': "I", 'OPERATION': "O", 'REQUEST': "R", 'WINDOW': "W", 'SESSION': "S", 'KEYVAL': "K", "GREQUEST_CLASS": "x", "STREAM": "x", "ASYNC_THING": "p"}
     for p in func['c_parameters']:
         kind = p['kind']
         name = p['name']
@@ -2820,6 +2818,8 @@ def get_declare_function(func, is_large, kind=""):
     ret = "int"
     if 'return' in func:
         ret = mapping[func['return']]
+        if func['return'] == 'EXTRA_STATE':
+            ret = 'void *'
 
     params = get_C_params(func, mapping)
     s_param = ', '.join(params)
@@ -2863,6 +2863,10 @@ def get_polymorph_param_and_arg(s):
     extra_param = RE.m.group(1) + ' ' + RE.m.group(2)
     extra_arg = RE.m.group(3)
     return (extra_param, extra_arg)
+
+def get_funcname_from_decl(l):
+    m = re.match(r'([a-zA-Z0-9_]+|void \*) ([a-zA-Z0-9_]*)\(.*', l);
+    return m.group(2);
 
 def dump_error_check(sp):
     G.out.append("%sif (mpi_errno) {" % sp)

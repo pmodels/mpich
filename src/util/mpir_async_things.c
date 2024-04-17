@@ -6,7 +6,7 @@
 #include "mpidimpl.h"
 #include "mpir_async_things.h"
 
-static MPIR_Async_thing *async_things_list;
+static struct MPIR_Async_thing *async_things_list;
 static MPID_Thread_mutex_t async_things_mutex;
 static int async_things_progress_hook_id;
 
@@ -35,9 +35,9 @@ int MPIR_Async_things_finalize(void)
     return mpi_errno;
 }
 
-int MPIR_Async_things_add(int (*poll_fn) (MPIR_Async_thing * entry), void *state)
+int MPIR_Async_things_add(int (*poll_fn) (struct MPIR_Async_thing * entry), void *state)
 {
-    MPIR_Async_thing *entry = MPL_malloc(sizeof(MPIR_Async_thing), MPL_MEM_OTHER);
+    struct MPIR_Async_thing *entry = MPL_malloc(sizeof(struct MPIR_Async_thing), MPL_MEM_OTHER);
     entry->poll_fn = poll_fn;
     entry->state = state;
     entry->new_entries = NULL;
@@ -56,7 +56,7 @@ int MPIR_Async_things_add(int (*poll_fn) (MPIR_Async_thing * entry), void *state
 
 int MPIR_Async_things_progress(int *made_progress)
 {
-    MPIR_Async_thing *entry, *tmp;
+    struct MPIR_Async_thing *entry, *tmp;
     MPID_THREAD_CS_ENTER(VCI, async_things_mutex);
     DL_FOREACH_SAFE(async_things_list, entry, tmp) {
         int ret = entry->poll_fn(entry);
