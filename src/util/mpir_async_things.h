@@ -21,13 +21,6 @@
  * to progress all items eventually after repeated MPI_Test calls.
  */
 
-/* poll_fn return following states. */
-enum {
-    MPIR_ASYNC_THING_NOPROGRESS = 0,
-    MPIR_ASYNC_THING_UPDATED = 1,
-    MPIR_ASYNC_THING_DONE = 2,
-};
-
 typedef struct MPIR_Async_thing {
     int (*poll_fn) (struct MPIR_Async_thing * entry);
     void *state;

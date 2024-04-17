@@ -775,6 +775,14 @@ enum MPIR_Combiner_enum {
 #define MPIIMPL_HAVE_STATUS_SET_BYTES 1
 #define MPIIMPL_HAVE_STATUS_SET_INFO 1
 
+/* MPIX Async extensions */
+/* poll_fn return following states. */
+enum {
+    MPIX_ASYNC_NOPROGRESS = 0,
+    MPIX_ASYNC_UPDATED = 1,
+    MPIX_ASYNC_DONE = 2,
+};
+
 #ifndef BUILD_MPI_ABI
 /* C callback functions */
 typedef void (MPI_Handler_function) ( MPI_Comm *, int *, ... );
