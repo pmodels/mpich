@@ -18,6 +18,10 @@ MPI_Info_delete:
     .desc: Deletes a (key,value) pair from info
     .skip: initcheck
     .extra: NotThreadSafe
+{ -- error_check --
+    MPIR_ERR_CHKANDJUMP((info == MPI_INFO_ENV), mpi_errno, MPI_ERR_INFO,
+                        "**infoenv");
+}
 
 MPI_Info_dup:
     .desc: Returns a duplicate of the info object
@@ -26,6 +30,10 @@ MPI_Info_dup:
 MPI_Info_free:
     .desc: Frees an info object
     .skip: initcheck
+{ -- error_check --
+    MPIR_ERR_CHKANDJUMP((*info == MPI_INFO_ENV), mpi_errno, MPI_ERR_INFO,
+                        "**infoenv");
+}
 
 MPI_Info_get:
     .desc: Retrieves the value associated with a key
@@ -56,6 +64,8 @@ MPI_Info_set:
     .skip: initcheck
     .docnotes: NotThreadSafe
 { -- error_check --
+    MPIR_ERR_CHKANDJUMP((info == MPI_INFO_ENV), mpi_errno, MPI_ERR_INFO,
+                        "**infoenv");
     MPIR_ERR_CHKANDJUMP((strlen(value) > MPI_MAX_INFO_VAL), mpi_errno, MPI_ERR_INFO_VALUE,
                         "**infovallong");
 }
