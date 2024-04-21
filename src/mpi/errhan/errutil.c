@@ -1006,10 +1006,10 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
                                 const char generic_msg[], const char specific_msg[], va_list Argp)
 {
     int err_code;
-    int generic_idx;
+    int generic_idx, ring_idx, ring_seq = 0;
     int use_user_error_code = 0;
     int user_error_code = -1;
-    char user_ring_msg[MPIR_MAX_ERROR_LINE + 1];
+    char user_ring_msg[MPIR_MAX_ERROR_LINE + 1] = "";
 
     /* Create the code from the class and the message ring index */
 
@@ -1047,8 +1047,6 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
         return MPI_ERR_IN_STATUS;
     }
 
-    err_code = error_class;
-
     /* Handle the generic message.  This selects a subclass, based on a text
      * string */
     generic_idx = FindGenericMsgIndex(generic_msg);
@@ -1077,11 +1075,8 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
                 user_ring_msg[0] = 0;
             }
         }
-        err_code |= (generic_idx + 1) << ERROR_GENERIC_SHIFT;
     } else {
         /* TODO: lookup index for class error message */
-        err_code &= ~ERROR_GENERIC_MASK;
-
 #ifdef MPICH_DBG_OUTPUT
         {
             if (generic_msg[0] == '*' && generic_msg[1] == '*') {
@@ -1096,7 +1091,6 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
     {
         int specific_idx;
         const char *specific_fmt = 0;
-        int ring_idx, ring_seq = 0;
         char *ring_msg;
 
         error_ring_mutex_lock();
@@ -1185,11 +1179,15 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
         }
         error_ring_mutex_unlock();
 
-        err_code |= ring_idx << ERROR_SPECIFIC_INDEX_SHIFT;
-        err_code |= ring_seq << ERROR_SPECIFIC_SEQ_SHIFT;
-
     }
 
+    /* Build the error code out of the pieces */
+    err_code = error_class;
+    if (generic_idx >= 0) {
+        err_code |= (generic_idx + 1) << ERROR_GENERIC_SHIFT;
+    }
+    err_code |= ring_idx << ERROR_SPECIFIC_INDEX_SHIFT;
+    err_code |= ring_seq << ERROR_SPECIFIC_SEQ_SHIFT;
     if (fatal || MPIR_Err_is_fatal(lastcode)) {
         err_code |= ERROR_FATAL_MASK;
     }
