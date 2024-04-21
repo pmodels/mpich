@@ -1052,7 +1052,6 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
     generic_idx = FindGenericMsgIndex(generic_msg);
     if (generic_idx >= 0) {
         if (strcmp(generic_err_msgs[generic_idx].short_name, "**user") == 0) {
-            use_user_error_code = 1;
             /* This is a special case.  The format is
              * "**user", "**userxxx %d", intval
              * (generic, specific, parameter).  In this
@@ -1061,18 +1060,23 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
              * We do this here because we cannot both access the
              * user error code and pass the argp to vsnprintf_mpi . */
             if (specific_msg) {
-                const char *specific_fmt;
                 int specific_idx;
-                user_error_code = va_arg(Argp, int);
+                const char *specific_fmt;
                 specific_idx = FindSpecificMsgIndex(specific_msg);
                 if (specific_idx >= 0) {
                     specific_fmt = specific_err_msgs[specific_idx].long_name;
                 } else {
                     specific_fmt = specific_msg;
                 }
+                user_error_code = va_arg(Argp, int);
+                if (user_error_code & ERROR_DYN_MASK) {
+                    use_user_error_code = 1;
+                } else if (is_valid_error_class(user_error_code)) {
+                    error_class = MPIR_ERR_GET_CLASS(user_error_code);
+                }
                 snprintf(user_ring_msg, sizeof(user_ring_msg), specific_fmt, user_error_code);
             } else {
-                user_ring_msg[0] = 0;
+                MPL_strncpy(user_ring_msg, "unknown user error", MPIR_MAX_ERROR_LINE);
             }
         }
     } else {
@@ -1089,12 +1093,10 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
 
     /* Handle the instance-specific part of the error message */
     {
-        int specific_idx;
-        const char *specific_fmt = 0;
-        char *ring_msg;
-
         error_ring_mutex_lock();
         {
+            char *ring_msg;
+
             /* Get the next entry in the ring; keep track of what part of the
              * ring is in use (max_error_ring_loc) */
             ring_idx = error_ring_loc++;
@@ -1106,7 +1108,9 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
             memset(&ErrorRing[ring_idx], 0, sizeof(MPIR_Err_msg_t));
             ring_msg = ErrorRing[ring_idx].msg;
 
-            if (specific_msg != NULL) {
+            if (specific_msg) {
+                int specific_idx;
+                const char *specific_fmt;
                 specific_idx = FindSpecificMsgIndex(specific_msg);
                 if (specific_idx >= 0) {
                     specific_fmt = specific_err_msgs[specific_idx].long_name;
@@ -1114,10 +1118,10 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
                     specific_fmt = specific_msg;
                 }
                 /* See the code above for handling user errors */
-                if (!use_user_error_code) {
-                    vsnprintf_mpi(ring_msg, MPIR_MAX_ERROR_LINE, specific_fmt, Argp);
-                } else {
+                if (user_ring_msg[0]) {
                     MPL_strncpy(ring_msg, user_ring_msg, MPIR_MAX_ERROR_LINE);
+                } else {
+                    vsnprintf_mpi(ring_msg, MPIR_MAX_ERROR_LINE, specific_fmt, Argp);
                 }
             } else if (generic_idx >= 0) {
                 MPL_strncpy(ring_msg, generic_err_msgs[generic_idx].long_name, MPIR_MAX_ERROR_LINE);
