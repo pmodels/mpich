@@ -1092,98 +1092,95 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
     }
 
     /* Handle the instance-specific part of the error message */
+    error_ring_mutex_lock();
     {
-        error_ring_mutex_lock();
-        {
-            char *ring_msg;
+        char *ring_msg;
 
-            /* Get the next entry in the ring; keep track of what part of the
-             * ring is in use (max_error_ring_loc) */
-            ring_idx = error_ring_loc++;
-            if (error_ring_loc >= MAX_ERROR_RING)
-                error_ring_loc %= MAX_ERROR_RING;
-            if (error_ring_loc > max_error_ring_loc)
-                max_error_ring_loc = error_ring_loc;
+        /* Get the next entry in the ring; keep track of what part of the
+         * ring is in use (max_error_ring_loc) */
+        ring_idx = error_ring_loc++;
+        if (error_ring_loc >= MAX_ERROR_RING)
+            error_ring_loc %= MAX_ERROR_RING;
+        if (error_ring_loc > max_error_ring_loc)
+            max_error_ring_loc = error_ring_loc;
 
-            memset(&ErrorRing[ring_idx], 0, sizeof(MPIR_Err_msg_t));
-            ring_msg = ErrorRing[ring_idx].msg;
+        memset(&ErrorRing[ring_idx], 0, sizeof(MPIR_Err_msg_t));
+        ring_msg = ErrorRing[ring_idx].msg;
 
-            if (specific_msg) {
-                int specific_idx;
-                const char *specific_fmt;
-                specific_idx = FindSpecificMsgIndex(specific_msg);
-                if (specific_idx >= 0) {
-                    specific_fmt = specific_err_msgs[specific_idx].long_name;
-                } else {
-                    specific_fmt = specific_msg;
-                }
-                /* See the code above for handling user errors */
-                if (user_ring_msg[0]) {
-                    MPL_strncpy(ring_msg, user_ring_msg, MPIR_MAX_ERROR_LINE);
-                } else {
-                    vsnprintf_mpi(ring_msg, MPIR_MAX_ERROR_LINE, specific_fmt, Argp);
-                }
-            } else if (generic_idx >= 0) {
-                MPL_strncpy(ring_msg, generic_err_msgs[generic_idx].long_name, MPIR_MAX_ERROR_LINE);
+        if (specific_msg) {
+            int specific_idx;
+            const char *specific_fmt;
+            specific_idx = FindSpecificMsgIndex(specific_msg);
+            if (specific_idx >= 0) {
+                specific_fmt = specific_err_msgs[specific_idx].long_name;
             } else {
-                MPL_strncpy(ring_msg, generic_msg, MPIR_MAX_ERROR_LINE);
+                specific_fmt = specific_msg;
             }
+            /* See the code above for handling user errors */
+            if (user_ring_msg[0]) {
+                MPL_strncpy(ring_msg, user_ring_msg, MPIR_MAX_ERROR_LINE);
+            } else {
+                vsnprintf_mpi(ring_msg, MPIR_MAX_ERROR_LINE, specific_fmt, Argp);
+            }
+        } else if (generic_idx >= 0) {
+            MPL_strncpy(ring_msg, generic_err_msgs[generic_idx].long_name, MPIR_MAX_ERROR_LINE);
+        } else {
+            MPL_strncpy(ring_msg, generic_msg, MPIR_MAX_ERROR_LINE);
+        }
 
-            ring_msg[MPIR_MAX_ERROR_LINE] = '\0';
+        ring_msg[MPIR_MAX_ERROR_LINE] = '\0';
 
-            /* Get the ring sequence number and set the ring id */
-            ErrcodeCreateID(error_class, generic_idx, ring_msg, &ErrorRing[ring_idx].id, &ring_seq);
-            /* Set the previous code. */
-            ErrorRing[ring_idx].prev_error = lastcode;
+        /* Get the ring sequence number and set the ring id */
+        ErrcodeCreateID(error_class, generic_idx, ring_msg, &ErrorRing[ring_idx].id, &ring_seq);
+        /* Set the previous code. */
+        ErrorRing[ring_idx].prev_error = lastcode;
 
-            /* */
-            if (use_user_error_code) {
-                ErrorRing[ring_idx].use_user_error_code = 1;
-                ErrorRing[ring_idx].user_error_code = user_error_code;
-            } else if (lastcode != MPI_SUCCESS) {
-                int last_ring_idx;
-                int last_ring_id;
-                int last_generic_idx;
+        /* */
+        if (use_user_error_code) {
+            ErrorRing[ring_idx].use_user_error_code = 1;
+            ErrorRing[ring_idx].user_error_code = user_error_code;
+        } else if (lastcode != MPI_SUCCESS) {
+            int last_ring_idx;
+            int last_ring_id;
+            int last_generic_idx;
 
-                if (convertErrcodeToIndexes(lastcode, &last_ring_idx,
-                                            &last_ring_id, &last_generic_idx) != 0) {
-                    /* --BEGIN ERROR HANDLING-- */
-                    MPL_error_printf("Invalid error code (%d) (error ring index %d invalid)\n",
-                                     lastcode, last_ring_idx);
-                    /* --END ERROR HANDLING-- */
-                } else {
-                    if (last_generic_idx >= 0 && ErrorRing[last_ring_idx].id == last_ring_id) {
-                        if (ErrorRing[last_ring_idx].use_user_error_code) {
-                            ErrorRing[ring_idx].use_user_error_code = 1;
-                            ErrorRing[ring_idx].user_error_code =
-                                ErrorRing[last_ring_idx].user_error_code;
-                        }
+            if (convertErrcodeToIndexes(lastcode, &last_ring_idx,
+                                        &last_ring_id, &last_generic_idx) != 0) {
+                /* --BEGIN ERROR HANDLING-- */
+                MPL_error_printf("Invalid error code (%d) (error ring index %d invalid)\n",
+                                 lastcode, last_ring_idx);
+                /* --END ERROR HANDLING-- */
+            } else {
+                if (last_generic_idx >= 0 && ErrorRing[last_ring_idx].id == last_ring_id) {
+                    if (ErrorRing[last_ring_idx].use_user_error_code) {
+                        ErrorRing[ring_idx].use_user_error_code = 1;
+                        ErrorRing[ring_idx].user_error_code =
+                            ErrorRing[last_ring_idx].user_error_code;
                     }
                 }
             }
-
-            if (fcname != NULL) {
-                snprintf(ErrorRing[ring_idx].location, MAX_LOCATION_LEN, "%s(%d)", fcname, line);
-                ErrorRing[ring_idx].location[MAX_LOCATION_LEN] = '\0';
-            } else {
-                ErrorRing[ring_idx].location[0] = '\0';
-            }
-            {
-                MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, VERBOSE,
-                                (MPL_DBG_FDEST, "New ErrorRing[%d]", ring_idx));
-                MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, VERBOSE,
-                                (MPL_DBG_FDEST, "    id         = %#010x", ErrorRing[ring_idx].id));
-                MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, VERBOSE,
-                                (MPL_DBG_FDEST, "    prev_error = %#010x",
-                                 ErrorRing[ring_idx].prev_error));
-                MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, VERBOSE,
-                                (MPL_DBG_FDEST, "    user=%d",
-                                 ErrorRing[ring_idx].use_user_error_code));
-            }
         }
-        error_ring_mutex_unlock();
 
+        if (fcname != NULL) {
+            snprintf(ErrorRing[ring_idx].location, MAX_LOCATION_LEN, "%s(%d)", fcname, line);
+            ErrorRing[ring_idx].location[MAX_LOCATION_LEN] = '\0';
+        } else {
+            ErrorRing[ring_idx].location[0] = '\0';
+        }
+        {
+            MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, VERBOSE,
+                            (MPL_DBG_FDEST, "New ErrorRing[%d]", ring_idx));
+            MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, VERBOSE,
+                            (MPL_DBG_FDEST, "    id         = %#010x", ErrorRing[ring_idx].id));
+            MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, VERBOSE,
+                            (MPL_DBG_FDEST, "    prev_error = %#010x",
+                             ErrorRing[ring_idx].prev_error));
+            MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, VERBOSE,
+                            (MPL_DBG_FDEST, "    user=%d",
+                             ErrorRing[ring_idx].use_user_error_code));
+        }
     }
+    error_ring_mutex_unlock();
 
     /* Build the error code out of the pieces */
     err_code = error_class;
