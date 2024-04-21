@@ -6,4 +6,5 @@ errfatal 1 resultTest=TestErrFatal
 predef_eh 1
 predef_eh 2
 errstring2 1
+errcallback 1
 dynamic_errcode_predefined_errclass 1

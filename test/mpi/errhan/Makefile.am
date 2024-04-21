@@ -19,6 +19,7 @@ noinst_PROGRAMS =   \
     errfatal        \
     predef_eh       \
     errstring2      \
+    errcallback     \
     dynamic_errcode_predefined_errclass
 
 if NOT_STRICTMPI
