@@ -14,9 +14,9 @@ HYD_status HYDT_bscd_slurm_query_env_inherit(const char *env_name, int *ret)
     /* check if envvar starts with SBATCH_, SLURMD_, or SLURM_ */
     if (strncmp(env_name, "SBATCH_", 7) == 0 || strncmp(env_name, "SLURMD_", 7) == 0 ||
         strncmp(env_name, "SLURM_", 6) == 0) {
-        *ret = 1;
-    } else {
         *ret = 0;
+    } else {
+        *ret = 1;
     }
 
     HYDU_FUNC_EXIT();
