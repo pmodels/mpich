@@ -259,11 +259,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
-    bool need_init_builtin_comms = true;
-#ifdef ENABLE_LOCAL_SESSION_INIT
-    need_init_builtin_comms = is_world_model;
-#endif
-    if (need_init_builtin_comms) {
+    if (is_world_model) {
         mpi_errno = MPIR_init_comm_world();
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -416,6 +412,9 @@ int MPII_Finalize(MPIR_Session * session_ptr)
 
     mpi_errno = MPIR_Process_bsend_finalize();
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* Free context id reserved for creating comm from group in sessions */
+    MPIR_Free_contextid(MPIR_COMM_TMP_SESSION_CTXID);
 
     /* Signal the debugger that we are about to exit. */
     MPIR_Debugger_set_aborting(NULL);

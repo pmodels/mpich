@@ -1433,3 +1433,85 @@ void MPIR_get_memory_kinds_from_comm(MPIR_Comm * comm_ptr, char **kinds)
         *kinds = MPIR_Process.memory_alloc_kinds;
     }
 }
+
+int MPIR_Comm_create_group_session(MPIR_Group * group_ptr, int tag, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Context_id_t new_context_id = 0;
+
+    MPIR_FUNC_ENTER;
+
+    *newcomm_ptr = NULL;
+
+    /* Shift tag into the tagged coll space */
+    tag |= MPIR_TAG_COLL_BIT;
+
+    /* Create a new communicator from the specified group members */
+    if (group_ptr->rank != MPI_UNDEFINED) {
+        mpi_errno = MPIR_Comm_create(newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* Use reserved context ID temporarily to find a free context id */
+        (*newcomm_ptr)->context_id = MPIR_COMM_TMP_SESSION_CTXID;
+        (*newcomm_ptr)->recvcontext_id = (*newcomm_ptr)->context_id;
+        (*newcomm_ptr)->rank = group_ptr->rank;
+        (*newcomm_ptr)->comm_kind = MPIR_COMM_KIND__INTRACOMM;
+        /* Since the group has been provided, let the new communicator know
+         * about the group */
+        (*newcomm_ptr)->local_comm = 0;
+        (*newcomm_ptr)->local_group = group_ptr;
+        MPIR_Group_add_ref(group_ptr);
+
+        (*newcomm_ptr)->remote_group = group_ptr;
+        MPIR_Group_add_ref(group_ptr);
+        (*newcomm_ptr)->remote_size = (*newcomm_ptr)->local_size = group_ptr->size;
+
+        MPIR_Comm_set_session_ptr(*newcomm_ptr, group_ptr->session_ptr);
+
+        (*newcomm_ptr)->tainted = 0;
+        mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* Negotiate a new context id */
+        mpi_errno =
+            MPIR_Get_contextid_sparse_group(*newcomm_ptr, group_ptr, tag, &new_context_id, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(new_context_id != 0);
+
+        /* Use the newly allocated context ID instead of the temporary one */
+        (*newcomm_ptr)->context_id = new_context_id;
+        (*newcomm_ptr)->recvcontext_id = (*newcomm_ptr)->context_id;
+
+        if ((*newcomm_ptr)->node_comm) {
+            (*newcomm_ptr)->node_comm->context_id =
+                (*newcomm_ptr)->context_id + MPIR_CONTEXT_INTRANODE_OFFSET;
+            (*newcomm_ptr)->node_comm->recvcontext_id = (*newcomm_ptr)->node_comm->context_id;
+        }
+        if ((*newcomm_ptr)->node_roots_comm) {
+            (*newcomm_ptr)->node_roots_comm->context_id =
+                (*newcomm_ptr)->context_id + MPIR_CONTEXT_INTERNODE_OFFSET;
+            (*newcomm_ptr)->node_roots_comm->recvcontext_id =
+                (*newcomm_ptr)->node_roots_comm->context_id;
+        }
+    } else {
+        /* This process is not in the group. A process that is not in the group should not
+         * end up here unless the group is MPI_GROUP_EMPTY.
+         * Fixme: Add a check to return an error if a process ends up here but the group is
+         * not MPI_GROUP_EMPTY. This would be more compliant to the MPI standard.
+         */
+        new_context_id = 0;
+    }
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+    if (*newcomm_ptr != NULL) {
+        MPIR_Comm_release(*newcomm_ptr);
+        new_context_id = 0;     /* MPIR_Comm_release frees the new ctx id */
+    }
+    if (new_context_id != 0)
+        MPIR_Free_contextid(new_context_id);
+    /* --END ERROR HANDLING-- */
+    goto fn_exit;
+}

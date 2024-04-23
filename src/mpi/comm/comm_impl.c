@@ -706,11 +706,6 @@ static int get_tag_from_stringtag(const char *stringtag)
     return hash % (MPIR_Process.attrs.tag_ub);
 }
 
-static bool is_world_group(MPIR_Group * group_ptr)
-{
-    return (group_ptr->size == MPIR_Process.size && group_ptr->size > 1);
-}
-
 static bool is_self_group(MPIR_Group * group_ptr)
 {
     return (group_ptr->size == 1);
@@ -721,46 +716,43 @@ int MPIR_Comm_create_from_group_impl(MPIR_Group * group_ptr, const char *stringt
                                      MPIR_Comm ** p_newcom_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int use_comm_world = 0;
 
-    /* NOTE: only world or self is supported without first establishing comm_world.  */
+    /* NOTE: tag will be used with MPIR_TAG_COLL_BIT on, ref. MPIR_Get_contextid_sparse_group */
+    int tag = get_tag_from_stringtag(stringtag);
+    static MPL_initlock_t lock = MPL_INITLOCK_INITIALIZER;
+    MPIR_Comm *builtin_comm = NULL;
 
-    MPL_initlock_lock(&MPIR_init_lock);
-    if (MPIR_Process.comm_world) {
-        use_comm_world = 1;
-    } else if (is_world_group(group_ptr)) {
-        mpi_errno = MPIR_init_comm_world();
-        use_comm_world = 1;
-    } else if (!MPIR_Process.comm_self && is_self_group(group_ptr)) {
-        mpi_errno = MPIR_init_comm_self();
+    /* Check if built-in comm can be used */
+    if (MPIR_Process.comm_world && !is_self_group(group_ptr)) {
+        builtin_comm = MPIR_Process.comm_world;
+    } else if (MPIR_Process.comm_self && is_self_group(group_ptr)) {
+        builtin_comm = MPIR_Process.comm_self;
     }
-    MPL_initlock_unlock(&MPIR_init_lock);
-    MPIR_ERR_CHECK(mpi_errno);
 
-    if (use_comm_world) {
-        /* NOTE: tag will be used with MPIR_TAG_COLL_BIT on, ref. MPIR_Get_contextid_sparse_group */
-        int tag = get_tag_from_stringtag(stringtag);
-
+    if (builtin_comm) {
         /* Because the group_ptr may not be derived from a communicator, local_group in
-         * comm_world may not have been created */
-        static MPL_initlock_t lock = MPL_INITLOCK_INITIALIZER;
+         * builtin_comm may not have been created */
         MPL_initlock_lock(&lock);
-        if (!MPIR_Process.comm_world->local_group) {
-            mpi_errno = comm_create_local_group(MPIR_Process.comm_world);
+        if (!builtin_comm->local_group) {
+            mpi_errno = comm_create_local_group(builtin_comm);
         }
         MPL_initlock_unlock(&lock);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno =
-            MPIR_Comm_create_group_impl(MPIR_Process.comm_world, group_ptr, tag, p_newcom_ptr);
+
+        mpi_errno = MPIR_Comm_create_group_impl(builtin_comm, group_ptr, tag, p_newcom_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        /* Currently only self comm is allowed here */
-        MPIR_Assert(is_self_group(group_ptr));
+        /* No builtin comms available, we have session model-only */
+        if (group_ptr->handle != MPI_GROUP_EMPTY) {
+            MPIR_Assert(group_ptr->session_ptr != NULL);
+        }
+        MPIR_Assert(MPIR_Process.comm_world == NULL);
+        MPIR_Assert(MPIR_Process.comm_self == NULL);
 
-        mpi_errno = MPIR_Comm_dup_impl(MPIR_Process.comm_self, p_newcom_ptr);
+        MPL_initlock_lock(&lock);
+        mpi_errno = MPIR_Comm_create_group_session(group_ptr, tag, p_newcom_ptr);
+        MPL_initlock_unlock(&lock);
         MPIR_ERR_CHECK(mpi_errno);
-
-        MPIR_Comm_set_session_ptr(*p_newcom_ptr, group_ptr->session_ptr);
     }
 
     if (*p_newcom_ptr) {
