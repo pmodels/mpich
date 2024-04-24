@@ -1757,12 +1757,12 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
     ret = zeMemGetAllocProperties(ze_context, ptr, &ptr_attr, &device);
     ZE_ERR_CHECK(ret);
 
-    dev_id = device_to_dev_id(device);
-    if (dev_id == -1) {
-        goto fn_fail;
-    }
-
     if (likely(MPL_gpu_info.specialized_cache)) {
+        dev_id = device_to_dev_id(device);
+        if (dev_id == -1) {
+            goto fn_fail;
+        }
+
         /* Remove from the caches */
         HASH_FIND(hh, ipc_cache_removal[dev_id], &ptr, sizeof(void *), cache_entry);
 
