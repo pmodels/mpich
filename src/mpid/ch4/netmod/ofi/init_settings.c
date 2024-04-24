@@ -187,7 +187,9 @@ int MPIDI_OFI_init_hints(struct fi_info *hints)
         }
     }
     hints->tx_attr->op_flags = FI_COMPLETION;
+    /* apply SAS hint to both tx and rx or else ordering may not be guaranteed */
     hints->tx_attr->msg_order = FI_ORDER_SAS;
+    hints->rx_attr->msg_order = FI_ORDER_SAS;
     /* direct RMA operations supported only with delivery complete mode,
      * else (AM mode) delivery complete is not required */
     if (MPIDI_OFI_ENABLE_RMA || MPIDI_OFI_ENABLE_ATOMICS) {
