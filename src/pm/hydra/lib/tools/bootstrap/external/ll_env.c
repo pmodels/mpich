@@ -7,7 +7,7 @@
 #include "bsci.h"
 #include "common.h"
 
-HYD_status HYDT_bscd_ll_query_env_inherit(const char *env_name, int *ret)
+HYD_status HYDT_bscd_ll_query_env_inherit(const char *env_name, int *should_inherit)
 {
     const char *env_list[] = { "LOADL_STEP_CLASS", "LOADL_STEP_ARGS",
         "LOADL_STEP_ID", "LOADL_STARTD_PORT",
@@ -49,7 +49,7 @@ HYD_status HYDT_bscd_ll_query_env_inherit(const char *env_name, int *ret)
 
     HYDU_FUNC_ENTER();
 
-    *ret = !HYDTI_bscd_in_env_list(env_name, env_list);
+    *should_inherit = !HYDTI_bscd_in_env_list(env_name, env_list);
 
     HYDU_FUNC_EXIT();
 
