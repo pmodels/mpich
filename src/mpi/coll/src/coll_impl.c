@@ -108,7 +108,7 @@ MPIR_Tree_type_t MPIR_Bcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 void *MPIR_Csel_root = NULL;
 
-static MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
+MPIR_Tree_type_t get_tree_type_from_string(const char *tree_str)
 {
     MPIR_Tree_type_t tree_type = MPIR_TREE_TYPE_KARY;
     if (0 == strcmp(tree_str, "kary"))
