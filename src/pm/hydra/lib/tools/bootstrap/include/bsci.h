@@ -63,7 +63,7 @@ struct HYDT_bsci_fns {
     HYD_status(*query_proxy_id) (int *proxy_id);
 
     /** \brief Query if an environment variable should be inherited */
-    HYD_status(*query_env_inherit) (const char *env_name, int *ret);
+    HYD_status(*query_env_inherit) (const char *env_name, int *should_inherit);
 };
 
 /** \cond */
@@ -186,7 +186,7 @@ HYD_status HYDT_bsci_query_proxy_id(int *proxy_id);
  * from the user's environment is safe to be propagated to the remote
  * processes.
  */
-HYD_status HYDT_bsci_query_env_inherit(const char *env_name, int *ret);
+HYD_status HYDT_bsci_query_env_inherit(const char *env_name, int *should_inherit);
 
 /**
  * \brief HYDT_bsci_query_native_int - Query if the RMK integrates

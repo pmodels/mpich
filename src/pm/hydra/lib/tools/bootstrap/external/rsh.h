@@ -8,6 +8,6 @@
 
 #include "hydra.h"
 
-HYD_status HYDT_bscd_rsh_query_env_inherit(const char *env_name, int *ret);
+HYD_status HYDT_bscd_rsh_query_env_inherit(const char *env_name, int *should_inherit);
 
 #endif /* RSH_H_INCLUDED */
