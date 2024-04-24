@@ -39,37 +39,29 @@ HYD_status HYDU_env_to_str(struct HYD_env *env, char **str)
 
 HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
 {
-    char *env_str = NULL, *env_name;
-    int i, ret;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     *env_list = NULL;
-    i = 0;
-    while (environ[i]) {
+    for (int i = 0; environ[i]; i++) {
+        char *env_str, *env_name;
+        int should_inherit;
+
         env_str = MPL_strdup(environ[i]);
         env_name = strtok(env_str, "=");
 
-        status = HYDT_bsci_query_env_inherit(env_name, &ret);
+        status = HYDT_bsci_query_env_inherit(env_name, &should_inherit);
+        MPL_free(env_str);
         HYDU_ERR_POP(status, "error querying environment propagation\n");
 
-        MPL_free(env_str);
-        env_str = NULL;
-
-        if (!ret) {
-            i++;
-            continue;
+        if (should_inherit) {
+            status = HYDU_append_env_str_to_list(environ[i], env_list);
+            HYDU_ERR_POP(status, "unable to add env to list\n");
         }
-
-        status = HYDU_append_env_str_to_list(environ[i], env_list);
-        HYDU_ERR_POP(status, "unable to add env to list\n");
-
-        i++;
     }
 
   fn_exit:
-    MPL_free(env_str);
     HYDU_FUNC_EXIT();
     return status;
 
