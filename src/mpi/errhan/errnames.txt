@@ -371,6 +371,7 @@ be in the range 0 to %d
 **fileinuse:File in use by some process
 **file:Invalid MPI_File
 **info:Invalid MPI_Info
+**infoenv:MPI_INFO_ENV is read-only
 **infonull:Null MPI_Info 
 **infokey:Invalid key for MPI_Info 
 **infokeynull:Null key
