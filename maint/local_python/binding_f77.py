@@ -471,7 +471,12 @@ def dump_f77_c_func(func, is_cptr=False):
         end_list_common.append("}")
 
     def dump_function(v, func_type):
-        c_param_list.append("%s %s" % (func_type, v))
+        if re.match(r'MPI_\w+_errhandler_function', func_type, re.IGNORECASE):
+            # Fortran errhandler does not do variadic (...); use MPI_Fint for handle
+            # F77_ErrFunction is defined in mpi_fortimpl.h
+            c_param_list.append("F77_ErrFunction %s" % v)
+        else:
+            c_param_list.append("%s %s" % (func_type, v))
         c_arg_list_A.append(v)
         c_arg_list_B.append(v)
         if func_type == "MPI_Datarep_conversion_function":
@@ -500,20 +505,6 @@ def dump_f77_c_func(func, is_cptr=False):
         end_list_common.append("} else {")
         end_list_common.append("    *%s = (MPI_Aint) %s_i;" % (v, v))
         end_list_common.append("}")
-
-    def dump_handle_create(v, c_type):
-        c_param_list.append("MPI_Fint *%s" % v)
-        # note: when fint is int, both the handle and the handler interface are compatible with C
-        c_arg_list_A.append("(%s *) %s" % (c_type, v))
-        c_arg_list_B.append("&%s_i" % v)
-        code_list_B.append("int %s_i;" % v)
-        end_list_B.append("if (!*ierr) {")
-        if c_type == "MPI_Errhandler":
-            end_list_B.append("    MPII_Errhandler_set_fc(%s_i);" % v)
-        elif c_type == "MPI_Op":
-            end_list_B.append("    MPII_Op_set_fc(%s_i);" % v)
-        end_list_B.append("    *%s = (MPI_Fint) %s_i;" % (v, v))
-        end_list_B.append("}")
 
     def dump_sum(codelist, sum_v, sum_n, array):
         codelist.append("int %s = 0;" % sum_v)
@@ -759,10 +750,14 @@ def dump_f77_c_func(func, is_cptr=False):
                 else:
                     dump_c_type_in(p['name'], c_type)
 
-            elif p['kind'] == "ERRHANDLER" and re.match(r'.*_create_errhandler', func['name'], re.IGNORECASE):
-                dump_handle_create(p['name'], "MPI_Errhandler")
+            elif p['kind'] == "ERRHANDLER" and re.match(r'.*_(create_errhandler|errhandler_create)', func['name'], re.IGNORECASE):
+                # use MPII_errhan_create(err_fn, errhan, type
+                c_param_list.append("MPI_Fint *%s" % p['name'])
+                c_arg_list_A.append(p['name'])
             elif p['kind'] == "OPERATION" and re.match(r'.*_op_create$', func['name'], re.IGNORECASE):
-                dump_handle_create(p['name'], "MPI_Op")
+                # use MPII_op_create(opfn, *commute, op)
+                c_param_list.append("MPI_Fint *%s" % p['name'])
+                c_arg_list_A.append(p['name'])
             elif p['kind'] in G.handle_mpir_types or c_mapping[p['kind']] == "int":
                 c_type = c_mapping[p['kind']]
                 if p['length'] is None:
@@ -861,6 +856,14 @@ def dump_f77_c_func(func, is_cptr=False):
         # argc, argv
         c_arg_list_A.insert(0, "0, 0")
         c_arg_list_B.insert(0, "0, 0")
+    elif re.match(r'.*_op_create$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_op_create"
+    elif RE.match(r'MPI_(\w+)_create_errhandler$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_errhan_create"
+        c_arg_list_A.append("F77_" + RE.m.group(1).upper())
+    elif RE.match(r'MPI_Errhandler_create$', func['name'], re.IGNORECASE):
+        c_func_name = "MPII_errhan_create"
+        c_arg_list_A.append("F77_COMM")
 
     if re.match(r'MPI_CONVERSION_FN_NULL', func['name'], re.IGNORECASE):
         param_str = "void *userbuf, MPI_Datatype datatype, int count, void *filebuf, MPI_Offset position, void *extra_state"

@@ -391,11 +391,8 @@ MPI_Win_free:
 
     /* We need to release the error handler */
     if (win_ptr->errhandler && !(HANDLE_IS_BUILTIN(win_ptr->errhandler->handle))) {
-        int in_use;
-        MPIR_Errhandler_release_ref(win_ptr->errhandler, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPIR_Errhandler_mem, win_ptr->errhandler);
-        }
+        mpi_errno = MPIR_Errhandler_free_impl(win_ptr->errhandler);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     mpi_errno = MPID_Win_free(&win_ptr);

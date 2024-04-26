@@ -2311,36 +2311,7 @@ void operator delete[](void *p) {
      print $OUTFD "\
     }\n";
 
-    # Init is a difficult function because we must allow C to call a 
-    # C++ function.  We do this by getting help from the MPI implementation
-    # which invokes the MPIR_Call_op_fn routine, with a pointer to the 
-    # C++ routine to invoke.
-    #
-    # Note: Some compilers complain about the cast to the 
-    # (void (*)(void)) function, expecting an `extern "C"' as well, but
-    # other compilers do not accept the extern "C".  Sigh.
-    print $OUTFD "
-    extern \"C\" {
-typedef void (*mpircallback)(void);
-}
-extern \"C\" void MPII_Op_set_cxx( MPI_Op, void (*)(void) );
-extern \"C\" 
-void MPIR_Call_op_fn( void *invec, void *outvec, int len, MPI_Datatype dtype,
-		     User_function *uop )
-{
-    MPI::Datatype cxxdtype = dtype;
-    (*uop)( invec, outvec, len, cxxdtype );
-}
-void Op::Init( User_function *f, bool commute )
-    {\n";
-&printCoverageStart( $OUTFD, "Op_create", 2 );
-     print $OUTFD "\
-	MPIX_CALLWORLD( MPI_Op_create( (MPI_User_function *)f, 
-			(int) commute, &the_real_op ) ); 
-	MPII_Op_set_cxx( the_real_op, (mpircallback) MPIR_Call_op_fn );\n";
-&printCoverageEnd( $OUTFD, "Op_create", 2 );
-print $OUTFD "\
-    }\n";
+    print $OUTFD "#include \"user_proxy.inc\"\n";
 
     # Keyval and attribute routines
     print $OUTFD <<EOT;
@@ -2642,84 +2613,6 @@ EOT
 EOT
 
 print $OUTFD <<EOT;
-// Provide a C routine that can call the C++ error handler, handling
-// any calling-sequence change.  
-extern \"C\" void MPII_Errhandler_set_cxx( MPI_Errhandler, void (*)(void) );
-extern \"C\" 
-void MPIR_Call_errhandler_function( int kind, int *handle, int *errcode, 
-			      void (*cxxfn)(void) )
-{
-    // Use horrible casts to get the correct routine signature
-    switch (kind) {
-    case 0: // comm
-	    {
-		MPI_Comm *ch = (MPI_Comm *)handle;
-		int flag;
-		MPI::Comm::Errhandler_function *f = (MPI::Comm::Errhandler_function *)cxxfn;
-		// Make an actual Comm (inter or intra-comm)
-		MPI_Comm_test_inter( *ch, &flag );
-		if (flag) {
-		    MPI::Intercomm ic(*ch);
-		    (*f)( ic, errcode );
-		}
-		else {
-		    MPI::Intracomm ic(*ch);
-		    (*f)( ic, errcode );
-		}
-	    }
-	    break;
-#ifdef HAVE_ROMIO
-    case 1: // file
-	    {
-		MPI::File fh = (MPI_File)*(MPI_File*)handle;
-		MPI::File::Errhandler_function *f = (MPI::File::Errhandler_function *)cxxfn;
-		(*f)( fh, errcode );
-	    }
-	    break;
-#endif // IO
-    case 2: // win
-	    {
-		MPI::Win fh = (MPI_Win)*(MPI_Win*)handle;
-		MPI::Win::Errhandler_function *f = (MPI::Win::Errhandler_function *)cxxfn;
-		(*f)( fh, errcode );
-	    }
-	    break;
-    }
-}
-#ifdef HAVE_ROMIO
-Errhandler File::Create_errhandler( Errhandler_function *f )
-{
-    MPI_Errhandler eh;
-    MPI::Errhandler e1;
-    MPI_File_create_errhandler( (MPI_File_errhandler_function *)f, &eh );
-    MPII_Errhandler_set_cxx( eh,
-			     (mpircallback)MPIR_Call_errhandler_function );
-    e1.the_real_errhandler = eh;
-    return e1;
-}
-#endif // IO
-Errhandler Comm::Create_errhandler( Errhandler_function *f )
-{
-    MPI_Errhandler eh;
-    MPI::Errhandler e1;
-    MPI_Comm_create_errhandler( (MPI_Comm_errhandler_function *)f, &eh );
-    MPII_Errhandler_set_cxx( eh,
-			     (mpircallback)MPIR_Call_errhandler_function );
-    e1.the_real_errhandler = eh;
-    return e1;
-}
-Errhandler Win::Create_errhandler( Errhandler_function *f )
-{
-    MPI_Errhandler eh;
-    MPI::Errhandler e1;
-    MPI_Win_create_errhandler( (MPI_Win_errhandler_function *)f, &eh );
-    MPII_Errhandler_set_cxx( eh,
-			     (mpircallback)MPIR_Call_errhandler_function );
-    e1.the_real_errhandler = eh;
-    return e1;
-}
-
-
 // Call_errhandler implementations.  These sadly must contain a bit of logic to
 // cover the ERRORS_THROW_EXCEPTIONS case.
 void Comm::Call_errhandler( int errorcode ) const

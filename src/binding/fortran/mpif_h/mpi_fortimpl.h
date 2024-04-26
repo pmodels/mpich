@@ -196,7 +196,7 @@ static inline void MPIR_fort_copy_str_from_c(char *s, int len, char *c_str)
 /* ------------------------------------------------------------------------- */
 /* The following definitions are used to support the Microsoft compilers
 
-   The following C preprocessor macros are not discoved by configure.
+   The following C preprocessor macros are not discovered by configure.
    Instead, they must be defined separately; this is normally done as part of
    the Windows-specific configuration process.
 
@@ -372,16 +372,37 @@ typedef char *MPID_FCHAR_T;
 #ifndef HAVE_ROMIO
 #ifndef MPI_File_f2c
 #define MPI_File_f2c(a) ((MPI_File)(MPI_Aint)(a))
+#define MPI_File_c2f(a) ((MPI_Fint)(MPI_Aint)(a))
 #endif
 #endif /* HAVE_ROMIO */
+
+enum F77_handle_type {
+    F77_COMM,
+    F77_GROUP,
+    F77_DATATYPE,
+    F77_FILE,
+    F77_ERRHANDLER,
+    F77_OP,
+    F77_INFO,
+    F77_WIN,
+    F77_KEYVAL,
+    F77_REQUEST,
+    F77_SESSION,
+};
 
 /* The F90 attr copy/delete function prototype and calling convention */
 typedef void (FORT_CALL F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
                                            MPI_Aint *, MPI_Fint *, MPI_Fint *);
 typedef void (FORT_CALL F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
                                              MPI_Fint *);
+/* compatible as MPI_User_function */
+typedef void (FORT_CALL F77_OpFunction) (void *, void *, MPI_Fint *, MPI_Fint *);
+/* compatible as MPI_{Comm,Win,File,Session}_errhandler_function */
+typedef void (FORT_CALL F77_ErrFunction) (MPI_Fint *, MPI_Fint *);
 
 void MPII_Keyval_set_f90_proxy(int keyval);
+int MPII_op_create(MPI_User_function * opfn, MPI_Fint commute, MPI_Fint * op);
+int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77_handle_type type);
 
 extern FORT_DLL_SPEC void FORT_CALL mpi_alloc_mem_cptr_(MPI_Aint * size, MPI_Fint * info,
                                                         void **baseptr, MPI_Fint * ierr);

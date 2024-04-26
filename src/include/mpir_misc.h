@@ -32,11 +32,16 @@ typedef enum {
   the MPI implementation can choose the correct behavior.  An example of this
   are the keyval attribute copy and delete functions.
 
+  MPIR_LANG__X is for new extensions e.g. MPIX_Comm_create_errhandler_x,
+  which calls with scalar input as in C and an extra_state for context.
+  It is meant language bindings to use a proxy for user callbacks.
+
   Module:
   Attribute-DS
   E*/
 typedef enum MPIR_Lang_t {
-    MPIR_LANG__C
+    MPIR_LANG__C,
+    MPIR_LANG__X
 #ifdef HAVE_FORTRAN_BINDING
         , MPIR_LANG__FORTRAN, MPIR_LANG__FORTRAN90
 #endif

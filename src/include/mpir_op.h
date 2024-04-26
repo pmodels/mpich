@@ -37,10 +37,9 @@ typedef enum MPIR_Op_kind {
     MPIR_OP_KIND__REPLACE = 13,
     MPIR_OP_KIND__NO_OP = 14,
     MPIR_OP_KIND__EQUAL = 15,
-    MPIR_OP_KIND__USER_NONCOMMUTE = 32,
     MPIR_OP_KIND__USER = 33,
-    MPIR_OP_KIND__USER_NONCOMMUTE_LARGE = 34,
-    MPIR_OP_KIND__USER_LARGE = 35
+    MPIR_OP_KIND__USER_LARGE = 35,
+    MPIR_OP_KIND__USER_X = 36
 } MPIR_Op_kind;
 
 /*S
@@ -82,9 +81,11 @@ typedef union MPIR_User_function {
 #ifndef BUILD_MPI_ABI
     void (*c_function) (const void *, void *, const int *, const MPI_Datatype *);
     void (*c_large_function) (const void *, void *, const MPI_Count *, const MPI_Datatype *);
+    void (*c_x_function) (void *, void *, MPI_Count, MPI_Datatype, void *);
 #else
     void (*c_function) (const void *, void *, const int *, const ABI_Datatype *);
     void (*c_large_function) (const void *, void *, const MPI_Count *, const ABI_Datatype *);
+    void (*c_x_function) (void *, void *, MPI_Count, ABI_Datatype, void *);
 #endif
     void (*f77_function) (const void *, void *, const MPI_Fint *, const MPI_Fint *);
 } MPIR_User_function;
@@ -109,8 +110,10 @@ typedef union MPIR_User_function {
 typedef struct MPIR_Op {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPIR_Op_kind kind;
-    MPIR_Lang_t language;
+    int is_commute;
     MPIR_User_function function;
+    MPIX_Destructor_function *destructor_fn;
+    void *extra_state;
 #ifdef MPID_DEV_OP_DECL
      MPID_DEV_OP_DECL
 #endif

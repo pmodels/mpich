@@ -1356,6 +1356,9 @@ def check_func_directives(func):
     elif RE.match(r'mpi_keyval_(create|free)$', func['name'], re.IGNORECASE):
         # deprecated and not defined in mpi_f08
         func['_skip_fortran'] = 1
+    elif RE.match(r'mpix_op_create_x|mpix_(\w+)_create_errhandler_x$', func['name'], re.IGNORECASE):
+        # c-only
+        func['_skip_fortran'] = 1
 
 # -------------------------------
 def need_ptr_check(p):
