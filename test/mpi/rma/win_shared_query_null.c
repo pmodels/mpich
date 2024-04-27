@@ -27,6 +27,19 @@ int main(int argc, char **argv)
 
     MTest_Init(&argc, &argv);
 
+    size = sizeof(int) * 4;
+
+    /* First test the query on self works */
+    MPI_Win_allocate_shared(size, sizeof(int), MPI_INFO_NULL, MPI_COMM_SELF, &my_base, &shm_win);
+    MPI_Win_shared_query(shm_win, MPI_PROC_NULL, &query_size, &query_disp_unit, &query_base);
+    if (query_base == NULL || query_size != size || query_disp_unit != sizeof(int)) {
+        fprintf(stderr, "Self shared query with PROC_NULL: base %p, size %ld, unit %d\n",
+                query_base, query_size, query_disp_unit);
+        errors++;
+    }
+    MPI_Win_free(&shm_win);
+
+    /* Next test the query with a true shared domain */
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm_comm);
 
@@ -37,8 +50,6 @@ int main(int argc, char **argv)
      * Just wait for others' completion*/
     if (shm_nproc < 2)
         goto exit;
-
-    size = sizeof(int) * 4;
 
     /* Allocate zero-byte window on rank 0 and non-zero for others */
     if (shm_rank == 0) {
