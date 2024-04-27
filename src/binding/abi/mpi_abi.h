@@ -451,6 +451,7 @@ enum {
 
 typedef void (MPI_User_function)(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype);
 typedef void (MPI_User_function_c)(void *invec, void *inoutvec, MPI_Count *len, MPI_Datatype *datatype);
+typedef void (MPIX_User_function_x) ( void *invec, void *inoutvec, MPI_Count count, MPI_Datatype datatype, void *extra_state);
 
 typedef int (MPI_Grequest_query_function)(void *extra_state, MPI_Status *status);
 typedef int (MPI_Grequest_free_function)(void *extra_state);
@@ -474,10 +475,17 @@ typedef void (MPI_File_errhandler_function)(MPI_File *file, int *error_code, ...
 typedef void (MPI_Win_errhandler_function)(MPI_Win *win, int *error_code, ...);
 typedef void (MPI_Session_errhandler_function)(MPI_Session *session, int *error_code, ...);
 
+typedef void (MPIX_Comm_errhandler_function_x)(MPI_Comm comm, int error_code, void *extra_state);
+typedef void (MPIX_File_errhandler_function_x)(MPI_File file, int error_code, void *extra_state);
+typedef void (MPIX_Win_errhandler_function_x)(MPI_Win win, int error_code, void *extra_state);
+typedef void (MPIX_Session_errhandler_function_x)(MPI_Session session, int error_code, void *extra_state);
+
 typedef MPI_Comm_errhandler_function MPI_Comm_errhandler_fn;
 typedef MPI_File_errhandler_function MPI_File_errhandler_fn;
 typedef MPI_Win_errhandler_function MPI_Win_errhandler_fn;
 typedef MPI_Session_errhandler_function MPI_Session_errhandler_fn;
+
+typedef void (MPIX_Destructor_function) (void *extra_state);
 
 #define MPI_NULL_COPY_FN               ((MPI_Copy_function*)0x0) /* deprecated: MPI-2.0 */
 #define MPI_DUP_FN                     ((MPI_Copy_function*)0x1) /* deprecated: MPI-2.0 */
@@ -650,6 +658,7 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result);
 int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm comm, MPI_Comm *newcomm);
 int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm);
 int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *comm_errhandler_fn, MPI_Errhandler *errhandler);
+int MPIX_Comm_create_errhandler_x(MPIX_Comm_errhandler_function_x *comm_errhandler_fn_x, MPIX_Destructor_function *destructor_fn, void *extra_state, MPI_Errhandler *errhandler);
 int MPI_Comm_create_from_group(MPI_Group group, const char *stringtag, MPI_Info info, MPI_Errhandler errhandler, MPI_Comm *newcomm);
 int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm *newcomm);
 int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn, MPI_Comm_delete_attr_function *comm_delete_attr_fn, int *comm_keyval, void *extra_state);
@@ -702,6 +711,7 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr, MPI_Datatype da
 int MPI_File_call_errhandler(MPI_File fh, int errorcode);
 int MPI_File_close(MPI_File *fh);
 int MPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn, MPI_Errhandler *errhandler);
+int MPIX_File_create_errhandler_x(MPIX_File_errhandler_function_x *comm_errhandler_fn_x, MPIX_Destructor_function *destructor_fn, void *extra_state, MPI_Errhandler *errhandler);
 int MPI_File_delete(const char *filename, MPI_Info info);
 int MPI_File_get_amode(MPI_File fh, int *amode);
 int MPI_File_get_atomicity(MPI_File fh, int *flag);
@@ -941,6 +951,7 @@ int MPI_Neighbor_alltoallw_init_c(const void *sendbuf, const MPI_Count sendcount
 int MPI_Op_commutative(MPI_Op op, int *commute);
 int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op);
 int MPI_Op_create_c(MPI_User_function_c *user_fn, int commute, MPI_Op *op);
+int MPIX_Op_create_x(MPIX_User_function_x *user_fn_x, MPIX_Destructor_function *destructor_fn, int commute, void *extra_state, MPI_Op *op);
 int MPI_Op_free(MPI_Op *op);
 int MPI_Open_port(MPI_Info info, char *port_name);
 int MPI_Pack(const void *inbuf, int incount, MPI_Datatype datatype, void *outbuf, int outsize, int *position, MPI_Comm comm);
@@ -1027,6 +1038,7 @@ int MPI_Session_attach_buffer(MPI_Session session, void *buffer, int size);
 int MPI_Session_attach_buffer_c(MPI_Session session, void *buffer, MPI_Count size);
 int MPI_Session_call_errhandler(MPI_Session session, int errorcode);
 int MPI_Session_create_errhandler(MPI_Session_errhandler_function *session_errhandler_fn, MPI_Errhandler *errhandler);
+int MPIX_Session_create_errhandler_x(MPIX_Session_errhandler_function_x *comm_errhandler_fn_x, MPIX_Destructor_function *destructor_fn, void *extra_state, MPI_Errhandler *errhandler);
 int MPI_Session_detach_buffer(MPI_Session session, void *buffer_addr, int *size);
 int MPI_Session_detach_buffer_c(MPI_Session session, void *buffer_addr, MPI_Count *size);
 int MPI_Session_finalize(MPI_Session *session);
@@ -1131,6 +1143,7 @@ int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info, MPI_
 int MPI_Win_create_c(void *base, MPI_Aint size, MPI_Aint disp_unit, MPI_Info info, MPI_Comm comm, MPI_Win *win);
 int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
 int MPI_Win_create_errhandler(MPI_Win_errhandler_function *win_errhandler_fn, MPI_Errhandler *errhandler);
+int MPIX_Win_create_errhandler_x(MPIX_Win_errhandler_function_x *comm_errhandler_fn_x, MPIX_Destructor_function *destructor_fn, void *extra_state, MPI_Errhandler *errhandler);
 int MPI_Win_create_keyval(MPI_Win_copy_attr_function *win_copy_attr_fn, MPI_Win_delete_attr_function *win_delete_attr_fn, int *win_keyval, void *extra_state);
 int MPI_Win_delete_attr(MPI_Win win, int win_keyval);
 int MPI_Win_detach(MPI_Win win, const void *base);
@@ -1318,6 +1331,7 @@ int PMPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result);
 int PMPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm comm, MPI_Comm *newcomm);
 int PMPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm);
 int PMPI_Comm_create_errhandler(MPI_Comm_errhandler_function *comm_errhandler_fn, MPI_Errhandler *errhandler);
+int PMPIX_Comm_create_errhandler_x(MPIX_Comm_errhandler_function_x *comm_errhandler_fn_x, MPIX_Destructor_function *destructor_fn, void *extra_state, MPI_Errhandler *errhandler);
 int PMPI_Comm_create_from_group(MPI_Group group, const char *stringtag, MPI_Info info, MPI_Errhandler errhandler, MPI_Comm *newcomm);
 int PMPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm *newcomm);
 int PMPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn, MPI_Comm_delete_attr_function *comm_delete_attr_fn, int *comm_keyval, void *extra_state);
@@ -1370,6 +1384,7 @@ int PMPI_Fetch_and_op(const void *origin_addr, void *result_addr, MPI_Datatype d
 int PMPI_File_call_errhandler(MPI_File fh, int errorcode);
 int PMPI_File_close(MPI_File *fh);
 int PMPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn, MPI_Errhandler *errhandler);
+int PMPIX_File_create_errhandler_x(MPIX_File_errhandler_function_x *comm_errhandler_fn_x, MPIX_Destructor_function *destructor_fn, void *extra_state, MPI_Errhandler *errhandler);
 int PMPI_File_delete(const char *filename, MPI_Info info);
 int PMPI_File_get_amode(MPI_File fh, int *amode);
 int PMPI_File_get_atomicity(MPI_File fh, int *flag);
@@ -1695,6 +1710,7 @@ int PMPI_Session_attach_buffer(MPI_Session session, void *buffer, int size);
 int PMPI_Session_attach_buffer_c(MPI_Session session, void *buffer, MPI_Count size);
 int PMPI_Session_call_errhandler(MPI_Session session, int errorcode);
 int PMPI_Session_create_errhandler(MPI_Session_errhandler_function *session_errhandler_fn, MPI_Errhandler *errhandler);
+int PMPIX_Session_create_errhandler_x(MPIX_Session_errhandler_function_x *comm_errhandler_fn_x, MPIX_Destructor_function *destructor_fn, void *extra_state, MPI_Errhandler *errhandler);
 int PMPI_Session_detach_buffer(MPI_Session session, void *buffer_addr, int *size);
 int PMPI_Session_detach_buffer_c(MPI_Session session, void *buffer_addr, MPI_Count *size);
 int PMPI_Session_finalize(MPI_Session *session);
@@ -1799,6 +1815,7 @@ int PMPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info, MPI
 int PMPI_Win_create_c(void *base, MPI_Aint size, MPI_Aint disp_unit, MPI_Info info, MPI_Comm comm, MPI_Win *win);
 int PMPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
 int PMPI_Win_create_errhandler(MPI_Win_errhandler_function *win_errhandler_fn, MPI_Errhandler *errhandler);
+int PMPIX_Win_create_errhandler_x(MPIX_Win_errhandler_function_x *comm_errhandler_fn_x, MPIX_Destructor_function *destructor_fn, void *extra_state, MPI_Errhandler *errhandler);
 int PMPI_Win_create_keyval(MPI_Win_copy_attr_function *win_copy_attr_fn, MPI_Win_delete_attr_function *win_delete_attr_fn, int *win_keyval, void *extra_state);
 int PMPI_Win_delete_attr(MPI_Win win, int win_keyval);
 int PMPI_Win_detach(MPI_Win win, const void *base);
