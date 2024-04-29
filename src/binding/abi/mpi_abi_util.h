@@ -323,6 +323,18 @@ static inline ABI_Win ABI_Win_from_mpi(MPI_Win in)
     return (ABI_Win) (void *) ptr;
 }
 
+static inline MPI_File ABI_File_to_mpi(ABI_File in)
+{
+    /* Both MPI_File in mpich and ABI_File are pointers */
+    return (MPI_File) in;
+}
+
+static inline ABI_File ABI_File_from_mpi(MPI_File in)
+{
+    /* Both MPI_File in mpich and ABI_File are pointers */
+    return (ABI_File) in;
+}
+
 /* MPICH internal callbacks does not differentiate handle types, so we need
  * a general conversion routine */
 static inline void *ABI_Handle_from_mpi(int in)
