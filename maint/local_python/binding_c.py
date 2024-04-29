@@ -1047,11 +1047,12 @@ def dump_abi_wrappers(func, is_large):
                 return True
         return False
     # ----
+    re_Handle = r'MPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)\b'
     for p in func['c_parameters']:
         skip_abi_swap = False
         param_type = mapping[p['kind']]
         name = p['name']
-        if RE.match(r'MPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win)\b', param_type):
+        if RE.match(re_Handle, param_type):
             process_handle(p)
         elif p['kind'] == 'KEYVAL' and p['param_direction'] == 'in':
             pre_filters.append("int %s = ABI_KEYVAL_to_mpi(%s_abi);" % (name, name))
@@ -1070,7 +1071,7 @@ def dump_abi_wrappers(func, is_large):
 
         # MPI_Comm comm -> ABI_Comm comm_abi
         param = get_C_param(p, func, mapping)
-        param = re.sub(r'MPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win)\b', r'ABI_\1', param)
+        param = re.sub(re_Handle, r'ABI_\1', param)
         if not skip_abi_swap:
             param = re.sub(r'\b' + name, name+"_abi", param)
         param_list.append(param)
@@ -1081,7 +1082,7 @@ def dump_abi_wrappers(func, is_large):
     ret = "int"
     if 'return' in func:
         ret = mapping[func['return']]
-        ret = re.sub(r'MPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win)\b', r'ABI_\1', ret)
+        ret = re.sub(re_Handle, r'ABI_\1', ret)
 
     static_call = get_static_call_internal(func, is_large)
 
@@ -1098,7 +1099,7 @@ def dump_abi_wrappers(func, is_large):
 
     if ret != 'int':
         # MPI_Wtime, MPI_Aint_{add,diff}, MPI_{Comm,...}_{c2f,f2c}
-        if RE.match(r'..._(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win)\b', ret):
+        if RE.match(r'..._(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File)\b', ret):
             G.out.append("return ABI_%s_from_mpi(%s);" % (RE.m.group(1), static_call))
         else:
             G.out.append("return " + static_call + ";")

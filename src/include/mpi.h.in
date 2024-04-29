@@ -271,7 +271,6 @@ typedef int MPI_Win;
 typedef int MPI_Session;
 #define MPI_SESSION_NULL     ((MPI_Session)0x38000000)
 
-#ifndef BUILD_MPI_ABI
 /* File and IO */
 /* This define lets ROMIO know that MPI_File has been defined */
 #define MPI_FILE_DEFINED
@@ -279,7 +278,6 @@ typedef int MPI_Session;
    as in src/mpi/romio/include/mpio.h.in  */
 typedef struct ADIOI_FileD *MPI_File;
 #define MPI_FILE_NULL ((MPI_File)0)
-#endif
 
 /* Collective operations */
 typedef int MPI_Op;
