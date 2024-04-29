@@ -49,72 +49,72 @@ static inline ABI_Comm ABI_Comm_from_mpi(MPI_Comm in)
 
 static inline MPIR_Comm *ABI_Comm_ptr(ABI_Comm comm_abi)
 {
-  MPIR_Comm *comm_ptr = NULL;
-  if (comm_abi != ABI_COMM_NULL) {
-    MPI_Comm comm = ABI_Comm_to_mpi(comm_abi);
-    MPIR_Comm_get_ptr(comm, comm_ptr);
-    if (comm_ptr != NULL) {
-      if (MPIR_Object_get_ref(comm_ptr) <= 0) {
-        comm_ptr = NULL;
-      }
+    MPIR_Comm *comm_ptr = NULL;
+    if (comm_abi != ABI_COMM_NULL) {
+        MPI_Comm comm = ABI_Comm_to_mpi(comm_abi);
+        MPIR_Comm_get_ptr(comm, comm_ptr);
+        if (comm_ptr != NULL) {
+            if (MPIR_Object_get_ref(comm_ptr) <= 0) {
+                comm_ptr = NULL;
+            }
+        }
     }
-  }
-  return comm_ptr;
+    return comm_ptr;
 }
 
 static inline int ABI_Comm_rank(ABI_Comm comm_abi)
 {
-  MPIR_Comm *comm_ptr = ABI_Comm_ptr(comm_abi);
-  int rank = MPI_PROC_NULL;
-  if (comm_ptr != NULL) {
-    MPIR_Comm_rank_impl(comm_ptr, &rank);
-  }
-  return rank;
+    MPIR_Comm *comm_ptr = ABI_Comm_ptr(comm_abi);
+    int rank = MPI_PROC_NULL;
+    if (comm_ptr != NULL) {
+        MPIR_Comm_rank_impl(comm_ptr, &rank);
+    }
+    return rank;
 }
 
 static inline int ABI_Comm_peer_size(ABI_Comm comm_abi)
 {
-  MPIR_Comm *comm_ptr = ABI_Comm_ptr(comm_abi);
-  int size = 0;
-  if (comm_ptr != NULL) {
-    int flag = 0;
-    MPIR_Comm_test_inter_impl(comm_ptr, &flag);
-    if (flag) {
-      MPIR_Comm_remote_size_impl(comm_ptr, &size);
-    } else {
-      MPIR_Comm_size_impl(comm_ptr, &size);
+    MPIR_Comm *comm_ptr = ABI_Comm_ptr(comm_abi);
+    int size = 0;
+    if (comm_ptr != NULL) {
+        int flag = 0;
+        MPIR_Comm_test_inter_impl(comm_ptr, &flag);
+        if (flag) {
+            MPIR_Comm_remote_size_impl(comm_ptr, &size);
+        } else {
+            MPIR_Comm_size_impl(comm_ptr, &size);
+        }
     }
-  }
-  return size;
+    return size;
 }
 
 static inline void ABI_Comm_neighbors_count(ABI_Comm comm_abi, int *indegree, int *outdegree)
 {
-  MPIR_Comm *comm_ptr = ABI_Comm_ptr(comm_abi);
-  int topo = MPI_UNDEFINED;
-  int rank = MPI_PROC_NULL;
-  int ival = 0;
-  if (comm_ptr != NULL) {
-    MPIR_Topo_test_impl(comm_ptr, &topo);
-  }
-  switch (topo) {
-  case MPI_CART:
-    MPIR_Cartdim_get_impl(comm_ptr, &ival);
-    *indegree = *outdegree = 2 * ival;
-    break;
-  case MPI_GRAPH:
-    MPIR_Comm_rank_impl(comm_ptr, &rank);
-    MPIR_Graph_neighbors_count_impl(comm_ptr, rank, &ival);
-    *indegree = *outdegree = ival;
-    break;
-  case MPI_DIST_GRAPH:
-    *indegree = *outdegree = 0;
-    MPIR_Dist_graph_neighbors_count_impl(comm_ptr, indegree, outdegree, &ival);
-    break;
-  default:
-    *indegree = *outdegree = 0;
-    break;
-  }
+    MPIR_Comm *comm_ptr = ABI_Comm_ptr(comm_abi);
+    int topo = MPI_UNDEFINED;
+    int rank = MPI_PROC_NULL;
+    int ival = 0;
+    if (comm_ptr != NULL) {
+        MPIR_Topo_test_impl(comm_ptr, &topo);
+    }
+    switch (topo) {
+        case MPI_CART:
+            MPIR_Cartdim_get_impl(comm_ptr, &ival);
+            *indegree = *outdegree = 2 * ival;
+            break;
+        case MPI_GRAPH:
+            MPIR_Comm_rank_impl(comm_ptr, &rank);
+            MPIR_Graph_neighbors_count_impl(comm_ptr, rank, &ival);
+            *indegree = *outdegree = ival;
+            break;
+        case MPI_DIST_GRAPH:
+            *indegree = *outdegree = 0;
+            MPIR_Dist_graph_neighbors_count_impl(comm_ptr, indegree, outdegree, &ival);
+            break;
+        default:
+            *indegree = *outdegree = 0;
+            break;
+    }
 }
 
 static inline MPI_Datatype ABI_Datatype_to_mpi(ABI_Datatype in)
