@@ -35,7 +35,7 @@ def load_mpi_abi_h(mpi_abi_h):
 def dump_mpi_abi_internal_h(mpi_abi_internal_h):
     define_constants = {}
     def gen_mpi_abi_internal_h(out):
-        re_Handle = r'\bMPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|KEYVAL_INVALID|TAG_UB|IO|HOST|WTIME_IS_GLOBAL|APPNUM|LASTUSEDCODE|UNIVERSE_SIZE|WIN_BASE|WIN_DISP_UNIT|WIN_SIZE|WIN_CREATE_FLAVOR|WIN_MODEL)\b'
+        re_Handle = r'\bMPI_(Comm|Datatype|Errhandler|Group|Info|Message|Op|Request|Session|Win|File|KEYVAL_INVALID|TAG_UB|IO|HOST|WTIME_IS_GLOBAL|APPNUM|LASTUSEDCODE|UNIVERSE_SIZE|WIN_BASE|WIN_DISP_UNIT|WIN_SIZE|WIN_CREATE_FLAVOR|WIN_MODEL)\b'
         for line in G.abi_h_lines:
             if RE.search(r'MPI_ABI_H_INCLUDED', line):
                 # skip the include guard, harmless
@@ -58,13 +58,8 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 elif T == "MPI_Op":
                     idx = int(val, 0) & G.op_mask
                     G.abi_ops[idx] = name
-
-                if T == "MPI_File":
-                    # pass through
-                    out.append(line.rstrip())
-                else:
-                    # replace param prefix
-                    out.append(re.sub(r'\bMPI_', 'ABI_', line.rstrip()))
+                # replace param prefix
+                out.append(re.sub(r'\bMPI_', 'ABI_', line.rstrip()))
             elif RE.match(r'#define MPI_(LONG_LONG|C_COMPLEX)', line):
                 # datatype aliases
                 out.append(re.sub(r'\bMPI_', 'ABI_', line.rstrip()))
