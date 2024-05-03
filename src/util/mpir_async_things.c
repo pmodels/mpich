@@ -18,7 +18,7 @@ int MPIR_Async_things_init(void)
     MPID_Thread_mutex_create(&async_things_mutex, &err);
     MPIR_Assert(err == 0);
 
-    mpi_errno = MPIR_Progress_hook_register(MPIR_Async_things_progress,
+    mpi_errno = MPIR_Progress_hook_register(-1, MPIR_Async_things_progress,
                                             &async_things_progress_hook_id);
     return mpi_errno;
 }

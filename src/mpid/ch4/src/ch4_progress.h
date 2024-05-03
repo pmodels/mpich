@@ -107,10 +107,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state)
 #endif
 
     if (state->flag & MPIDI_PROGRESS_HOOKS) {
-        mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
+        mpi_errno = MPIR_Progress_hook_exec_all(-1, &made_progress);
         MPIR_ERR_CHECK(mpi_errno);
         if (made_progress) {
             goto fn_exit;
+        }
+        for (int i = 0; i < state->vci_count; i++) {
+            int vci = state->vci[i];
+            mpi_errno = MPIR_Progress_hook_exec_all(vci, &made_progress);
+            MPIR_ERR_CHECK(mpi_errno);
+            if (made_progress) {
+                goto fn_exit;
+            }
         }
     }
     /* todo: progress unexp_list */

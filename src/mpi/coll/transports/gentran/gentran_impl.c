@@ -32,8 +32,8 @@ int MPII_TSP_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno =
-        MPIR_Progress_hook_register(MPII_Genutil_progress_hook, &MPII_Genutil_progress_hook_id);
+    mpi_errno = MPIR_Progress_hook_register(-1, MPII_Genutil_progress_hook,
+                                            &MPII_Genutil_progress_hook_id);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
