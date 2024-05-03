@@ -655,7 +655,7 @@ def process_func_parameters(func):
                 p['can_be_null'] = "MPI_INFO_NULL"
             elif kind == "REQUEST" and RE.match(r'mpix?_(wait|test|request_get_status|parrived)', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_REQUEST_NULL"
-            elif kind == "STREAM" and RE.match(r'mpix?_stream_(comm_create|progress)', func_name, re.IGNORECASE):
+            elif kind == "STREAM" and RE.match(r'mpix?_(stream_(comm_create|progress)|async_(start|spawn))', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPIX_STREAM_NULL"
             elif kind == "COMMUNICATOR" and RE.match(r'mpi_comm_get_name', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_COMM_NULL"

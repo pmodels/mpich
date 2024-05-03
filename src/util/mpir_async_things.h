@@ -24,6 +24,7 @@
 struct MPIR_Async_thing {
     int (*poll_fn) (struct MPIR_Async_thing * entry);
     void *state;
+    MPIR_Stream *stream_ptr;
     /* doubly-linked list */
     struct MPIR_Async_thing *next, *prev;
     /* poll_fn may add new async thing entries */
@@ -37,11 +38,13 @@ static inline void *MPIR_Async_thing_get_state(MPIX_Async_thing thing)
 }
 
 static inline int MPIR_Async_thing_spawn(struct MPIR_Async_thing *thing,
-                                         MPIX_Async_poll_function poll_fn, void *state)
+                                         MPIX_Async_poll_function poll_fn, void *state,
+                                         MPIR_Stream * stream_ptr)
 {
     struct MPIR_Async_thing *entry = MPL_malloc(sizeof(struct MPIR_Async_thing), MPL_MEM_OTHER);
     entry->poll_fn = poll_fn;
     entry->state = state;
+    entry->stream_ptr = stream_ptr;
     entry->new_entries = NULL;
 
     DL_APPEND(thing->new_entries, entry);
@@ -51,7 +54,7 @@ static inline int MPIR_Async_thing_spawn(struct MPIR_Async_thing *thing,
 
 int MPIR_Async_things_init(void);
 int MPIR_Async_things_finalize(void);
-int MPIR_Async_things_add(MPIX_Async_poll_function poll_fn, void *state);
+int MPIR_Async_things_add(MPIX_Async_poll_function poll_fn, void *state, MPIR_Stream * stream_ptr);
 int MPIR_Async_things_progress(int vci, int *made_progress);
 
 #endif /* MPIR_ASYNC_THINGS_H_INCLUDED */
