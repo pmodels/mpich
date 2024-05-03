@@ -97,7 +97,7 @@ int hcoll_initialize(void)
 
     if (!hcoll_initialized) {
         hcoll_initialized = 1;
-        mpi_errno = MPIR_Progress_hook_register(hcoll_do_progress, &hcoll_progress_hook_id);
+        mpi_errno = MPIR_Progress_hook_register(-1, hcoll_do_progress, &hcoll_progress_hook_id);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_Progress_hook_activate(hcoll_progress_hook_id);

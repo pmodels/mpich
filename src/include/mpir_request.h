@@ -257,6 +257,7 @@ void MPIR_Persist_coll_free_cb(MPIR_Request * request);
 #define REQUEST_NUM_BLOCKS   256
 #define REQUEST_NUM_INDICES  1024
 
+#define MPIR_MAX_VCIS REQUEST_POOL_MAX
 #define MPIR_REQUEST_NUM_POOLS REQUEST_POOL_MAX
 
 #define MPIR_REQUEST_POOL(req_) (((req_)->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT)

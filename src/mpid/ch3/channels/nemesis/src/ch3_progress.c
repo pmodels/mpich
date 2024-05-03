@@ -446,7 +446,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             MPIR_ERR_CHECK(mpi_errno);
         }
 
-        mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
+        mpi_errno = MPIR_Progress_hook_exec_all(-1, &made_progress);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (made_progress)

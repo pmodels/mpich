@@ -162,7 +162,7 @@ int MPII_Coll_init(void)
     MPIR_Ireduce_tree_type = get_tree_type_from_string_with_topo(MPIR_CVAR_IREDUCE_TREE_TYPE);
 
     /* register non blocking collectives progress hook */
-    mpi_errno = MPIR_Progress_hook_register(MPIDU_Sched_progress, &MPIR_Nbc_progress_hook_id);
+    mpi_errno = MPIR_Progress_hook_register(-1, MPIDU_Sched_progress, &MPIR_Nbc_progress_hook_id);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize transports */
