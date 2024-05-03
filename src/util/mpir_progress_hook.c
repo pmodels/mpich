@@ -8,7 +8,7 @@
 
 #define MAX_PROGRESS_HOOKS 10
 
-typedef int (*progress_func_ptr_t) (int *made_progress);
+typedef int (*progress_func_ptr_t) (int vci, int *made_progress);
 typedef struct progress_hook_slot {
     progress_func_ptr_t func_ptr;
     MPL_atomic_int_t active;
@@ -41,7 +41,7 @@ int MPIR_Progress_hook_exec_all(int vci, int *made_progress)
         if (is_active == TRUE) {
             MPIR_Assert(progress_hooks[vci][i].func_ptr != NULL);
             int tmp_progress = 0;
-            mpi_errno = progress_hooks[vci][i].func_ptr(&tmp_progress);
+            mpi_errno = progress_hooks[vci][i].func_ptr(vci, &tmp_progress);
             MPIR_ERR_CHECK(mpi_errno);
 
             *made_progress |= tmp_progress;
@@ -55,7 +55,7 @@ int MPIR_Progress_hook_exec_all(int vci, int *made_progress)
     goto fn_exit;
 }
 
-int MPIR_Progress_hook_register(int vci, int (*progress_fn) (int *), int *id)
+int MPIR_Progress_hook_register(int vci, progress_func_ptr_t progress_fn, int *id)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -64,7 +64,8 @@ int MPIR_Progress_hook_register(int vci, int (*progress_fn) (int *), int *id)
         vci = MPIR_MAX_VCIS;
     }
 
-    for (int i = 0; i < MAX_PROGRESS_HOOKS; i++) {
+    int i;
+    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (progress_hooks[vci][i].func_ptr == NULL) {
             progress_hooks[vci][i].func_ptr = progress_fn;
             MPL_atomic_relaxed_store_int(&progress_hooks[vci][i].active, FALSE);

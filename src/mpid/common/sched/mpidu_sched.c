@@ -1228,7 +1228,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
 }
 
 /* returns TRUE in (*made_progress) if any of the outstanding schedules completed */
-int MPIDU_Sched_progress(int *made_progress)
+int MPIDU_Sched_progress(int vci, int *made_progress)
 {
     /* Sched progress may call callback functions that will call into progress again.
      * For example, with MPI_Comm_idup, sched_cb_gcn_allocate_cid will call MPIR_Allreduce.

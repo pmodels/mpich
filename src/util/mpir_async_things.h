@@ -52,6 +52,6 @@ static inline int MPIR_Async_thing_spawn(struct MPIR_Async_thing *thing,
 int MPIR_Async_things_init(void);
 int MPIR_Async_things_finalize(void);
 int MPIR_Async_things_add(MPIX_Async_poll_function poll_fn, void *state);
-int MPIR_Async_things_progress(int *made_progress);
+int MPIR_Async_things_progress(int vci, int *made_progress);
 
 #endif /* MPIR_ASYNC_THINGS_H_INCLUDED */

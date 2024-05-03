@@ -1726,7 +1726,7 @@ int MPIDI_CH3_PktHandler_Revoke(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void * dat
                                 intptr_t *buflen, MPIR_Request **rreqp);
 int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *[], int );
 
-int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress);
+int MPIDI_CH3I_RMA_Make_progress_global(int vci, int *made_progress);
 
 #ifdef MPICH_DBG_OUTPUT
 int MPIDI_CH3_PktPrint_CancelSendReq( FILE *, MPIDI_CH3_Pkt_t * );
