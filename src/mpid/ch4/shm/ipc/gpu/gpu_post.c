@@ -529,7 +529,7 @@ int MPIDI_GPU_ipc_async_start(MPIR_Request * rreq, MPIR_gpu_req * req_p,
         p->yreq.type = MPIR_NULL_REQUEST;
     }
 
-    mpi_errno = MPIR_Async_things_add(gpu_ipc_async_poll, p);
+    mpi_errno = MPIR_Async_things_add(gpu_ipc_async_poll, p, NULL);
 
     return mpi_errno;
 }

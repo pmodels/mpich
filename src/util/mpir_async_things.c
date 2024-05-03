@@ -39,11 +39,13 @@ int MPIR_Async_things_finalize(void)
     return mpi_errno;
 }
 
-int MPIR_Async_things_add(int (*poll_fn) (struct MPIR_Async_thing * entry), void *state)
+int MPIR_Async_things_add(int (*poll_fn) (struct MPIR_Async_thing * entry), void *state,
+                          MPIR_Stream * stream_ptr)
 {
     struct MPIR_Async_thing *entry = MPL_malloc(sizeof(struct MPIR_Async_thing), MPL_MEM_OTHER);
     entry->poll_fn = poll_fn;
     entry->state = state;
+    entry->stream_ptr = stream_ptr;
     entry->new_entries = NULL;
 
     MPID_THREAD_CS_ENTER(VCI, async_things_mutex);
