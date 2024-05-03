@@ -58,7 +58,7 @@ int MPIR_Async_things_add(int (*poll_fn) (struct MPIR_Async_thing * entry), void
     return MPI_SUCCESS;
 }
 
-int MPIR_Async_things_progress(int *made_progress)
+int MPIR_Async_things_progress(int vci, int *made_progress)
 {
     struct MPIR_Async_thing *entry, *tmp;
     MPID_THREAD_CS_ENTER(VCI, async_things_mutex);

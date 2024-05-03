@@ -39,6 +39,6 @@ int hcoll_Alltoallv(const void *sbuf, const MPI_Aint * scounts, const MPI_Aint *
                     const MPI_Aint * rdispls, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
                     MPIR_Errflag_t err);
 
-int hcoll_do_progress(int *made_progress);
+int hcoll_do_progress(int vci, int *made_progress);
 
 #endif /* HCOLL_H_INCLUDED */
