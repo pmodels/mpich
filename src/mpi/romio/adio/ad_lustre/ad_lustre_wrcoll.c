@@ -71,10 +71,6 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
                                          ADIO_Offset * buf_idx,
                                          ADIO_Offset ** srt_off, int **srt_len, MPI_Count *srt_num,
                                          int *error_code);
-void ADIOI_Heap_merge(ADIOI_Access * others_req, MPI_Count *count,
-                      ADIO_Offset * srt_off, int *srt_len, MPI_Count *start_pos,
-                      int nprocs, int nprocs_recv, MPI_Count total_elements);
-
 static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *striping_info,
                                          ADIO_Offset * offset_list, ADIO_Offset * len_list,
                                          MPI_Count contig_access_count, int currentValidDataIndex,
