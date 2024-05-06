@@ -1051,4 +1051,8 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 
 #include "mpl.h"
 
+void ADIOI_Heap_merge(ADIOI_Access * others_req, MPI_Count *count,
+                      ADIO_Offset * srt_off, int *srt_len, MPI_Count *start_pos,
+                      int nprocs, int nprocs_recv, int total_elements);
+
 #endif /* ADIOI_H_INCLUDED */

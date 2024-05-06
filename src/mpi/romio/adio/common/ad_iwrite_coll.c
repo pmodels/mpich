@@ -180,10 +180,6 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                             MPI_Count *send_buf_idx, MPI_Count *curr_to_proc,
                             MPI_Count *done_to_proc, int iter, MPI_Aint buftype_extent);
-void ADIOI_Heap_merge(ADIOI_Access * others_req, MPI_Count *count,
-                      ADIO_Offset * srt_off, int *srt_len, MPI_Count *start_pos,
-                      int nprocs, int nprocs_recv, int total_elements);
-
 
 /* prototypes of functions used for nonblocking collective writes only. */
 static void ADIOI_GEN_IwriteStridedColl_inter(ADIOI_NBC_Request *, int *);
