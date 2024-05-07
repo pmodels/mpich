@@ -1364,7 +1364,8 @@ static void ADIOI_W_Exchange_data_alltoallv(ADIO_File fd, const void *buf, char 
                                             int iter, MPI_Aint buftype_extent, MPI_Aint * buf_idx,
                                             int *error_code)
 {
-    int i, j, nprocs_recv, nprocs_send, *tmp_len, err;
+    int i, j, nprocs_recv, nprocs_send, err;
+    MPI_Count *tmp_len;
     char **send_buf = NULL;
     MPI_Request *send_req = NULL;
     MPI_Status status;
@@ -1373,7 +1374,7 @@ static void ADIOI_W_Exchange_data_alltoallv(ADIO_File fd, const void *buf, char 
     MPI_Count len;
     MPI_Aint *sdispls, *rdispls;
     char *all_recv_buf, *all_send_buf;
-    int *srt_len, sum;
+    MPI_Count *srt_len, sum;
     ADIO_Offset *srt_off;
     static char myname[] = "ADIOI_W_EXCHANGE_DATA";
     double io_time;
@@ -1463,7 +1464,7 @@ static void ADIOI_W_Exchange_data_alltoallv(ADIO_File fd, const void *buf, char 
     for (i = 0; i < nprocs; i++)
         sum += count[i];
     srt_off = (ADIO_Offset *) ADIOI_Malloc((sum + 1) * sizeof(ADIO_Offset));
-    srt_len = (int *) ADIOI_Malloc((sum + 1) * sizeof(int));
+    srt_len = ADIOI_Malloc((sum + 1) * sizeof(*srt_len));
 
     ADIOI_Heap_merge(others_req, count, srt_off, srt_len, start_pos, nprocs, nprocs_recv, sum);
 
@@ -1501,7 +1502,7 @@ static void ADIOI_W_Exchange_data_alltoallv(ADIO_File fd, const void *buf, char 
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_SIEVE] += MPI_Wtime() - io_time;
 
     /* scater all_recv_buf into 4M cb_buffer */
-    tmp_len = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    tmp_len = ADIOI_Malloc(nprocs * sizeof(*tmp_len));
     for (i = 0; i < nprocs; i++) {
         if (recv_size[i]) {
             if (partial_recv[i]) {
