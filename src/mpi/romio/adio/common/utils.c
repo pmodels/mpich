@@ -150,7 +150,8 @@ int ADIOI_Type_create_hindexed_x(MPI_Count count,
             if (types[i] != oldtype)
                 MPI_Type_free(&(types[i]));
     } else {
-        ret = MPI_Type_create_hindexed_c(count, blocklens, array_of_displacements, oldtype, newtype);
+        ret =
+            MPI_Type_create_hindexed_c(count, blocklens, array_of_displacements, oldtype, newtype);
     }
     ADIOI_Free(types);
     ADIOI_Free(blocklens);
@@ -209,8 +210,8 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset)
 }
 #endif
 
-void ADIOI_Heap_merge(ADIOI_Access * others_req, MPI_Count *count,
-                      ADIO_Offset * srt_off, MPI_Count *srt_len, MPI_Count *start_pos,
+void ADIOI_Heap_merge(ADIOI_Access * others_req, MPI_Count * count,
+                      ADIO_Offset * srt_off, MPI_Count * srt_len, MPI_Count * start_pos,
                       int nprocs, int nprocs_recv, MPI_Count total_elements)
 {
     typedef struct {

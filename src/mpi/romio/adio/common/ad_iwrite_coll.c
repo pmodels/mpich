@@ -172,14 +172,14 @@ struct ADIOI_W_Iexchange_data_vars {
 
 void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             * flat_buf, char **send_buf, ADIO_Offset
-                            * offset_list, ADIO_Offset * len_list, MPI_Count *send_size,
-                            MPI_Request * requests, MPI_Count *sent_to_proc,
+                            * offset_list, ADIO_Offset * len_list, MPI_Count * send_size,
+                            MPI_Request * requests, MPI_Count * sent_to_proc,
                             int nprocs, int myrank,
                             MPI_Count contig_access_count,
                             ADIO_Offset min_st_offset, ADIO_Offset fd_size,
                             ADIO_Offset * fd_start, ADIO_Offset * fd_end,
-                            MPI_Count *send_buf_idx, MPI_Count *curr_to_proc,
-                            MPI_Count *done_to_proc, int iter, MPI_Aint buftype_extent);
+                            MPI_Count * send_buf_idx, MPI_Count * curr_to_proc,
+                            MPI_Count * done_to_proc, int iter, MPI_Aint buftype_extent);
 
 /* prototypes of functions used for nonblocking collective writes only. */
 static void ADIOI_GEN_IwriteStridedColl_inter(ADIOI_NBC_Request *, int *);
@@ -750,7 +750,7 @@ static void ADIOI_Iexch_and_write_l1_begin(ADIOI_NBC_Request * nbc_req, int *err
     for (i = 0; i < nprocs; i++) {
         if (others_req[i].count) {
             start_pos[i] = curr_offlen_ptr[i];
-	    MPI_Count j = 0;
+            MPI_Count j = 0;
             for (j = curr_offlen_ptr[i]; j < others_req[i].count; j++) {
                 if (partial_recv[i]) {
                     /* this request may have been partially
@@ -769,9 +769,9 @@ static void ADIOI_Iexch_and_write_l1_begin(ADIOI_NBC_Request * nbc_req, int *err
                     count[i]++;
                     ADIOI_Assert((((ADIO_Offset) (uintptr_t) write_buf) + req_off - off) ==
                                  (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
-		    MPI_Aint addr;
+                    MPI_Aint addr;
                     MPI_Get_address(write_buf + req_off - off, &addr);
-		    others_req[i].mem_ptrs[j] = addr;
+                    others_req[i].mem_ptrs[j] = addr;
                     recv_size[i] += (MPL_MIN(off + size - req_off, req_len));
 
                     if (off + size - req_off < req_len) {
@@ -856,16 +856,12 @@ static void ADIOI_Iexch_and_write_l1_body(ADIOI_NBC_Request * nbc_req, int *erro
             flag = 1;
 
     if (flag) {
-	/* TODO: i think we get away with this because we are bounded by the
-	 * two-phase intermediate buffer, but need to think a bit more about
-	 * it... */
-        ADIOI_Assert(size == (int) size);
 #if defined(ROMIO_RUN_ON_LINUX) && !defined(HAVE_AIO_LITE_H)
         MPI_Status status;
-        ADIO_WriteContig(fd, write_buf, (int) size, MPI_BYTE,
+        ADIO_WriteContig(fd, write_buf, size, MPI_BYTE,
                          ADIO_EXPLICIT_OFFSET, vars->off, &status, error_code);
 #else
-        ADIO_IwriteContig(fd, write_buf, (int) size, MPI_BYTE,
+        ADIO_IwriteContig(fd, write_buf, size, MPI_BYTE,
                           ADIO_EXPLICIT_OFFSET, vars->off, &vars->req3, error_code);
 
         nbc_req->data.wr.state = ADIOI_IWC_STATE_IEXCH_AND_WRITE_L1_BODY;
@@ -1179,7 +1175,7 @@ static void ADIOI_W_Iexchange_data_send(ADIOI_NBC_Request * nbc_req, int *error_
         for (i = 0; i < nprocs; i++)
             if (send_size[i]) {
                 MPI_Isend_c(((char *) buf) + buf_idx[i], send_size[i],
-                          MPI_BYTE, i, ADIOI_COLL_TAG(i, iter), fd->comm, vars->send_req + j);
+                            MPI_BYTE, i, ADIOI_COLL_TAG(i, iter), fd->comm, vars->send_req + j);
                 j++;
                 buf_idx[i] += send_size[i];
             }

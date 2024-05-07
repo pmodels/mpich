@@ -147,7 +147,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
     ADIOI_Flatlist_node *flat_buf, *flat_file;
     ADIO_Offset i_offset, sum, size_in_filetype;
     int i, j, k, st_index = 0;
-    int n_etypes_in_filetype;
+    MPI_Count n_etypes_in_filetype;
     ADIO_Offset num, size, n_filetypes, etype_in_filetype, st_n_filetypes;
     ADIO_Offset abs_off_in_filetype = 0;
     MPI_Count filetype_size, etype_size, buftype_size;
@@ -156,7 +156,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
     ADIO_Offset userbuf_off;
     ADIO_Offset off, req_off, disp, end_offset = 0, writebuf_off, start_off;
     char *writebuf;
-    unsigned bufsize, writebuf_len, write_sz;
+    MPI_Count bufsize, writebuf_len, write_sz;
     ADIO_Status status1;
     ADIO_Offset new_bwr_size, new_fwr_size, st_fwr_size, fwr_size = 0, bwr_size, req_len;
     int stripe_size;
