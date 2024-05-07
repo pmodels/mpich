@@ -1020,7 +1020,7 @@ static void ADIOI_W_Iexchange_data_hole(ADIOI_NBC_Request * nbc_req, int *error_
     int i, j, nprocs_recv;
     MPI_Count *tmp_len;
     MPI_Datatype *recv_types;
-    int *srt_len = NULL, sum;
+    MPI_Count *srt_len = NULL, sum;
     ADIO_Offset *srt_off = NULL;
 
     /* create derived datatypes for recv */
@@ -1067,7 +1067,7 @@ static void ADIOI_W_Iexchange_data_hole(ADIOI_NBC_Request * nbc_req, int *error_
      * not need to search for holes */
     if (sum) {
         srt_off = (ADIO_Offset *) ADIOI_Malloc(sum * sizeof(ADIO_Offset));
-        srt_len = (int *) ADIOI_Malloc(sum * sizeof(int));
+        srt_len = ADIOI_Malloc(sum * sizeof(*srt_len));
 
         ADIOI_Heap_merge(others_req, count, srt_off, srt_len, start_pos, nprocs, nprocs_recv, sum);
     }
@@ -1095,7 +1095,7 @@ static void ADIOI_W_Iexchange_data_hole(ADIOI_NBC_Request * nbc_req, int *error_
             for (i = 1; i < sum; i++) {
                 if (srt_off[i] <= srt_off[0] + srt_len[0]) {
                     /* ok to cast: operating on cb_buffer_size chunks */
-                    int new_len = (int) srt_off[i] + srt_len[i] - (int) srt_off[0];
+                    MPI_Count new_len = srt_off[i] + srt_len[i] - srt_off[0];
                     if (new_len > srt_len[0])
                         srt_len[0] = new_len;
                 } else

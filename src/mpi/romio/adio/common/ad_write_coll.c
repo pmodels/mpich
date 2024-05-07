@@ -532,7 +532,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
     MPI_Request *requests, *send_req;
     MPI_Datatype *recv_types;
     MPI_Status *statuses, status;
-    int *srt_len = NULL;
+    MPI_Count *srt_len = NULL;
     MPI_Count sum;
     ADIO_Offset *srt_off = NULL;
     static char myname[] = "ADIOI_W_EXCHANGE_DATA";
@@ -587,7 +587,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
      * not need to search for holes */
     if (sum) {
         srt_off = (ADIO_Offset *) ADIOI_Malloc(sum * sizeof(ADIO_Offset));
-        srt_len = (int *) ADIOI_Malloc(sum * sizeof(int));
+        srt_len = ADIOI_Malloc(sum * sizeof(*srt_len));
 
         ADIOI_Heap_merge(others_req, count, srt_off, srt_len, start_pos, nprocs, nprocs_recv, sum);
     }
@@ -614,8 +614,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         else {  /* coalesce the sorted offset-length pairs */
             for (i = 1; i < sum; i++) {
                 if (srt_off[i] <= srt_off[0] + srt_len[0]) {
-                    /* ok to cast: operating on cb_buffer_size chunks */
-                    int new_len = (int) srt_off[i] + srt_len[i] - (int) srt_off[0];
+                    MPI_Count new_len = srt_off[i] + srt_len[i] - srt_off[0];
                     if (new_len > srt_len[0])
                         srt_len[0] = new_len;
                 } else
