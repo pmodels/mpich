@@ -61,7 +61,7 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 
     MPI_Info info;
     char *value;
-    int flag, intval, nprocs = 0, nprocs_is_valid = 0;
+    int flag, intval, nprocs = 0;
     static char myname[] = "ADIOI_GPFS_SETINFO";
     size_t len;
 
@@ -105,7 +105,6 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 
         /* number of processes that perform I/O in collective I/O */
         MPI_Comm_size(fd->comm, &nprocs);
-        nprocs_is_valid = 1;
         snprintf(value, MPI_MAX_INFO_VAL + 1, "%d", nprocs);
         ADIOI_Info_set(info, "cb_nodes", value);
 #ifdef BGQPLATFORM

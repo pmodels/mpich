@@ -100,7 +100,8 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
             if (str_unit > UINT_MAX)
                 lum->lmm_stripe_size = UINT_MAX;
             else
-                lum->lmm_stripe_size = str_unit;
+                /* cast from 64 to 32 ok: we checked/set above */
+                lum->lmm_stripe_size = (unsigned int) str_unit;
 
             if (str_factor > USHRT_MAX)
                 lum->lmm_stripe_count = USHRT_MAX;

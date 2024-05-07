@@ -353,10 +353,10 @@ struct ADIOI_Fns_struct {
 typedef struct {
     ADIO_Offset *offsets;       /* array of offsets */
     ADIO_Offset *lens;          /* array of lengths */
-    MPI_Count *mem_ptrs;         /* array of pointers. used in the read/write
+    MPI_Count *mem_ptrs;        /* array of pointers. used in the read/write
                                  * phase to indicate where the data
                                  * is stored in memory
-				 * promoted to MPI_Count so we can construct types with _c versions */
+                                 * promoted to MPI_Count so we can construct types with _c versions */
     MPI_Count count;            /* size of above arrays */
 } ADIOI_Access;
 
@@ -365,7 +365,7 @@ typedef struct {
 typedef struct {
     ADIO_Offset *offsets;       /* array of offsets */
     ADIO_Offset *lens;          /* array of lengths */
-    MPI_Count count;                  /* size of above arrays */
+    MPI_Count count;            /* size of above arrays */
 } ADIOI_Offlen;
 
 /* prototypes for ADIO internal functions */
@@ -478,18 +478,20 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
                        ADIO_Offset min_st_offset, ADIO_Offset * fd_start,
                        ADIO_Offset * fd_end, ADIO_Offset fd_size,
                        int nprocs,
-                       MPI_Count *count_my_req_procs_ptr,
-                       MPI_Count **count_my_req_per_proc_ptr,
+                       MPI_Count * count_my_req_procs_ptr,
+                       MPI_Count ** count_my_req_per_proc_ptr,
                        ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
-void ADIOI_Free_my_req(int nprocs, MPI_Count *count_my_req_per_proc,
+void ADIOI_Free_my_req(int nprocs, MPI_Count * count_my_req_per_proc,
                        ADIOI_Access * my_req, MPI_Aint * buf_idx);
 void ADIOI_Calc_others_req(ADIO_File fd, MPI_Count count_my_req_procs,
-                           MPI_Count *count_my_req_per_proc,
+                           MPI_Count * count_my_req_per_proc,
                            ADIOI_Access * my_req,
                            int nprocs, int myrank,
-                           MPI_Count *count_others_req_procs_ptr,
-                           MPI_Count **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr);
-void ADIOI_Free_others_req(int nprocs, MPI_Count *count_others_req_per_proc, ADIOI_Access * others_req);
+                           MPI_Count * count_others_req_procs_ptr,
+                           MPI_Count ** count_others_req_per_proc_ptr,
+                           ADIOI_Access ** others_req_ptr);
+void ADIOI_Free_others_req(int nprocs, MPI_Count * count_others_req_per_proc,
+                           ADIOI_Access * others_req);
 
 
 /* Nonblocking Collective I/O internals */
@@ -694,7 +696,7 @@ typedef struct ADIOI_OneSidedStripeParms {
     /* onesided algorithm that we are a non-striping file system         */
     ADIO_Offset segmentLen;     /* size in bytes of the segment (stripeSize*number of aggs) */
     /* up to the size of the file)                              */
-    int stripesPerAgg;          /* the number of stripes to be packed into an agg cb for this segment */
+    MPI_Count stripesPerAgg;    /* the number of stripes to be packed into an agg cb for this segment */
     int segmentIter;            /* segment number for the group of stripes currently being packed into  */
     /* the agg cb - resets to 0 for each cb flush to the file system        */
     int flushCB;                /* once we have fully packed the cb on an agg this flags */
@@ -733,7 +735,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     int *error_code,
                                     ADIO_Offset firstFileOffset,
                                     ADIO_Offset lastFileOffset,
-                                    int numNonZeroDataOffsets,
+                                    MPI_Count numNonZeroDataOffsets,
                                     ADIO_Offset * fd_start,
                                     ADIO_Offset * fd_end,
                                     int *hole_found, ADIOI_OneSidedStripeParms * stripe_parms);
@@ -1051,8 +1053,8 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 
 #include "mpl.h"
 
-void ADIOI_Heap_merge(ADIOI_Access * others_req, MPI_Count *count,
-                      ADIO_Offset * srt_off, MPI_Count *srt_len, MPI_Count *start_pos,
+void ADIOI_Heap_merge(ADIOI_Access * others_req, MPI_Count * count,
+                      ADIO_Offset * srt_off, MPI_Count * srt_len, MPI_Count * start_pos,
                       int nprocs, int nprocs_recv, MPI_Count total_elements);
 
 #endif /* ADIOI_H_INCLUDED */

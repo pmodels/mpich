@@ -157,9 +157,9 @@ struct ADIOI_R_Iexchange_data_vars {
 void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             * flat_buf, char **recv_buf, ADIO_Offset
                             * offset_list, ADIO_Offset * len_list,
-                            MPI_Count *recv_size,
+                            MPI_Count * recv_size,
                             MPI_Request * requests, MPI_Status * statuses,
-                            MPI_Count *recd_from_proc, int nprocs,
+                            MPI_Count * recd_from_proc, int nprocs,
                             MPI_Count contig_access_count,
                             ADIO_Offset min_st_offset,
                             ADIO_Offset fd_size, ADIO_Offset * fd_start,
@@ -724,7 +724,7 @@ static void ADIOI_Iread_and_exch_l1_begin(ADIOI_NBC_Request * nbc_req, int *erro
 #endif
         if (others_req[i].count) {
             start_pos[i] = curr_offlen_ptr[i];
-	    MPI_Count j = 0;
+            MPI_Count j = 0;
             for (j = curr_offlen_ptr[i]; j < others_req[i].count; j++) {
                 if (partial_send[i]) {
                     /* this request may have been partially
@@ -743,12 +743,11 @@ static void ADIOI_Iread_and_exch_l1_begin(ADIOI_NBC_Request * nbc_req, int *erro
                     count[i]++;
                     ADIOI_Assert((((ADIO_Offset) (uintptr_t) read_buf) + req_off - real_off) ==
                                  (ADIO_Offset) (uintptr_t) (read_buf + req_off - real_off));
-		    MPI_Aint addr;
+                    MPI_Aint addr;
                     MPI_Get_address(read_buf + req_off - real_off, &addr);
-		    others_req[i].mem_ptrs[j] = addr;
+                    others_req[i].mem_ptrs[j] = addr;
                     send_size[i] +=
-                        (MPL_MIN
-                               (real_off + real_size - req_off, (ADIO_Offset) (unsigned) req_len));
+                        (MPL_MIN(real_off + real_size - req_off, (ADIO_Offset) (unsigned) req_len));
 
                     if (real_off + real_size - req_off < (ADIO_Offset) (unsigned) req_len) {
                         partial_send[i] = (real_off + real_size - req_off);
@@ -1003,7 +1002,7 @@ static void ADIOI_R_Iexchange_data_recv(ADIOI_NBC_Request * nbc_req, int *error_
         for (i = 0; i < nprocs; i++)
             if (recv_size[i]) {
                 MPI_Irecv_c(((char *) vars->buf) + buf_idx[i], recv_size[i],
-                          MPI_BYTE, i, ADIOI_COLL_TAG(i, vars->iter), fd->comm, vars->req2 + j);
+                            MPI_BYTE, i, ADIOI_COLL_TAG(i, vars->iter), fd->comm, vars->req2 + j);
                 j++;
                 buf_idx[i] += recv_size[i];
             }
@@ -1019,7 +1018,7 @@ static void ADIOI_R_Iexchange_data_recv(ADIOI_NBC_Request * nbc_req, int *error_
         for (i = 0; i < nprocs; i++)
             if (recv_size[i]) {
                 MPI_Irecv_c(recv_buf[i], recv_size[i], MPI_BYTE, i,
-                          ADIOI_COLL_TAG(i, vars->iter), fd->comm, vars->req2 + j);
+                            ADIOI_COLL_TAG(i, vars->iter), fd->comm, vars->req2 + j);
                 j++;
 #ifdef RDCOLL_DEBUG
                 DBG_FPRINTF(stderr, "node %d, recv_size %lld, tag %d \n",
@@ -1034,7 +1033,7 @@ static void ADIOI_R_Iexchange_data_recv(ADIOI_NBC_Request * nbc_req, int *error_
     for (i = 0; i < nprocs; i++) {
         if (send_size[i]) {
             /* take care if the last off-len pair is a partial send */
-            MPI_Count k=0, tmp;
+            MPI_Count k = 0, tmp = 0;
             if (partial_send[i]) {
                 k = start_pos[i] + count[i] - 1;
                 tmp = others_req[i].lens[k];

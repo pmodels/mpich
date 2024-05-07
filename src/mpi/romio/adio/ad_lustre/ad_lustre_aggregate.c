@@ -126,14 +126,14 @@ int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset off,
 void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
                               ADIO_Offset * len_list, MPI_Count contig_access_count,
                               int *striping_info, int nprocs,
-                              MPI_Count *count_my_req_procs_ptr,
-                              MPI_Count **count_my_req_per_proc_ptr,
+                              MPI_Count * count_my_req_procs_ptr,
+                              MPI_Count ** count_my_req_per_proc_ptr,
                               ADIOI_Access ** my_req_ptr, ADIO_Offset *** buf_idx_ptr)
 {
     /* Nothing different from ADIOI_Calc_my_req(), except calling
      * ADIOI_Lustre_Calc_aggregator() instead of the old one */
-    MPI_Count *count_my_req_per_proc, count_my_req_procs;
-    int l, proc;
+    MPI_Count *count_my_req_per_proc, count_my_req_procs, l;
+    int proc;
     size_t memLen;
     ADIO_Offset avail_len, rem_len, curr_idx, off, **buf_idx, *ptr;
     ADIOI_Access *my_req;
@@ -313,7 +313,7 @@ int ADIOI_LUSTRE_Docollect(ADIO_File fd, MPI_Count contig_access_count,
     return docollect;
 }
 
-void ADIOI_LUSTRE_Free_my_req(int nprocs, MPI_Count *count_my_req_per_proc,
+void ADIOI_LUSTRE_Free_my_req(int nprocs, MPI_Count * count_my_req_per_proc,
                               ADIOI_Access * my_req, ADIO_Offset ** buf_idx)
 {
     ADIOI_Free(count_my_req_per_proc);
