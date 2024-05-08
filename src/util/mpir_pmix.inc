@@ -93,11 +93,14 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 
     /* Get the appnum */
     pmi_errno = PMIx_Get(&pmix_proc, PMIX_APPNUM, NULL, 0, &pvalue);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                         "**pmix_get", "**pmix_get %s", PMIx_Error_string(pmi_errno));
-    MPIR_Assert(pvalue->data.uint32 <= INT_MAX);        /* overflow check */
-    *appnum = (int) pvalue->data.uint32;
-    PMIX_VALUE_RELEASE(pvalue);
+    if (pmi_errno != PMIX_ERR_NOT_FOUND) {
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_get", "**pmix_get %s", PMIx_Error_string(pmi_errno));
+        MPIR_Assert(pvalue->data.uint32 <= INT_MAX);    /* overflow check */
+        *appnum = (int) pvalue->data.uint32;
+        PMIX_VALUE_RELEASE(pvalue);
+    }
+
     pmix_value_t value;
     pmix_value_t *val = &value;
 
