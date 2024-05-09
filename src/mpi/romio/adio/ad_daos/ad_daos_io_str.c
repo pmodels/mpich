@@ -70,20 +70,21 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
                          MPI_Request * request, int rw_type, int *error_code)
 {
     ADIOI_Flatlist_node *flat_buf, *flat_file;
-    int fwr_size = 0, st_index = 0;
-    int sum, n_etypes_in_filetype, size_in_filetype;
+    MPI_Count fwr_size = 0, st_index = 0;
+    MPI_Count sum, n_etypes_in_filetype, size_in_filetype;
     MPI_Count bufsize;
-    int n_filetypes, etype_in_filetype;
+    MPI_Count n_filetypes, etype_in_filetype;
     ADIO_Offset abs_off_in_filetype = 0;
     MPI_Count filetype_size, etype_size, buftype_size;
     MPI_Aint lb, filetype_extent, buftype_extent;
     int buftype_is_contig, filetype_is_contig;
     ADIO_Offset off, disp, start_off;
-    int flag, st_fwr_size, st_n_filetypes;
-    int mem_list_count;
+    int flag;
+    MPI_Count st_fwr_size, st_n_filetypes;
+    MPI_Count mem_list_count;
     int64_t file_length;
     int total_blks_to_write;
-    int f_data_wrote;
+    MPI_Count f_data_wrote;
     int n_write_lists;
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     struct ADIO_DAOS_req *aio_req = NULL;
@@ -154,7 +155,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
 
     /* Create Memory SGL */
     file_length = 0;
-    MPI_Count k; // how many entries in scatter-gather list
+    MPI_Count k;                // how many entries in scatter-gather list
     if (!buftype_is_contig) {
         flat_buf = ADIOI_Flatten_and_find(datatype);
         mem_list_count = count * flat_buf->count;
@@ -191,7 +192,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
         printf("(MEM SINGLE) off %lld len %zu\n", buf, bufsize);
 #endif
     }
-    sgl->sg_nr = k;
+    ADIOI_Assert(k < UINT_MAX);
+    sgl->sg_nr = (uint32_t) k;
     sgl->sg_nr_out = 0;
     sgl->sg_iovs = iovs;
     if (request)
