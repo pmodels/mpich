@@ -27,7 +27,7 @@
             }                                                           \
             writebuf_off = req_off;                                     \
             /* stripe_size alignment */                                 \
-            writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
+            writebuf_len = MPL_MIN(end_offset - writebuf_off + 1, \
                                               (writebuf_off / stripe_size + 1) * \
                                               stripe_size - writebuf_off); \
             if (!fd->atomicity && fd->hints->ds_write == ADIOI_HINT_DISABLE) \
@@ -45,10 +45,8 @@
                 return;                                                 \
             }                                                           \
         }                                                               \
-        write_sz = (unsigned) (MPL_MIN(req_len,                         \
+        write_sz = (MPL_MIN(req_len,                         \
                                        writebuf_off + writebuf_len - req_off)); \
-        ADIOI_Assert((ADIO_Offset)write_sz ==                           \
-                     MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
         memcpy(writebuf + req_off - writebuf_off, (char *)buf +userbuf_off, write_sz); \
         while (write_sz != req_len) {                                   \
             ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE,      \
@@ -67,7 +65,7 @@
             userbuf_off += write_sz;                                    \
             writebuf_off += writebuf_len;                               \
             /* stripe_size alignment */                                 \
-            writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
+            writebuf_len = MPL_MIN(end_offset - writebuf_off + 1, \
                                               (writebuf_off / stripe_size + 1) * \
                                               stripe_size - writebuf_off); \
             if (!fd->atomicity && fd->hints->ds_write == ADIOI_HINT_DISABLE) \
@@ -108,12 +106,11 @@
             }                                                           \
             writebuf_off = req_off;                                     \
             /* stripe_size alignment */                                 \
-            writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
+            writebuf_len = MPL_MIN(end_offset - writebuf_off + 1, \
                                               (writebuf_off / stripe_size + 1) * \
                                               stripe_size - writebuf_off); \
         }                                                               \
-        write_sz = (unsigned) MPL_MIN(req_len, writebuf_off + writebuf_len - req_off); \
-        ADIOI_Assert((ADIO_Offset)write_sz == MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
+        write_sz = MPL_MIN(req_len, writebuf_off + writebuf_len - req_off); \
         memcpy(writebuf + req_off - writebuf_off,                       \
                (char *)buf + userbuf_off, write_sz);                    \
         while (write_sz != req_len) {                                   \
@@ -131,7 +128,7 @@
             userbuf_off += write_sz;                                    \
             writebuf_off += writebuf_len;                               \
             /* stripe_size alignment */                                 \
-            writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
+            writebuf_len = MPL_MIN(end_offset - writebuf_off + 1, \
                                               (writebuf_off / stripe_size + 1) * \
                                               stripe_size - writebuf_off); \
             write_sz = MPL_MIN(req_len, writebuf_len);                  \
@@ -191,8 +188,6 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
     MPI_Type_get_extent(datatype, &lb, &buftype_extent);
     etype_size = fd->etype_size;
 
-    ADIOI_Assert((buftype_size * count) ==
-                 ((ADIO_Offset) (unsigned) buftype_size * (ADIO_Offset) count));
     bufsize = buftype_size * count;
 
     /* get striping info */
