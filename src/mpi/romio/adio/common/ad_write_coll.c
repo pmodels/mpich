@@ -468,8 +468,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                 flag = 1;
 
         if (flag) {
-            ADIOI_Assert(size == (int) size);
-            ADIO_WriteContig(fd, write_buf, (int) size, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
+            ADIO_WriteContig(fd, write_buf, size, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                              off, &status, error_code);
             if (*error_code != MPI_SUCCESS)
                 return;

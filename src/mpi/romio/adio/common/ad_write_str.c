@@ -166,7 +166,6 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
     MPI_Type_get_extent(datatype, &lb, &buftype_extent);
     etype_size = fd->etype_size;
 
-    ADIOI_Assert((buftype_size * count) == ((MPI_Count) buftype_size * (ADIO_Offset) count));
     bufsize = buftype_size * count;
 
 /* get max_bufsize from the info object. */

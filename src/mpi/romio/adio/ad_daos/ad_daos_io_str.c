@@ -225,7 +225,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
             flag = 0;
             while (!flag) {
                 n_filetypes++;
-                for (i = 0; i < flat_file->count; i++) {
+                for (MPI_Count i = 0; i < flat_file->count; i++) {
                     if (disp + flat_file->indices[i] +
                         ((ADIO_Offset) n_filetypes) * filetype_extent +
                         flat_file->blocklens[i] >= start_off) {
@@ -241,12 +241,12 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
         } /* if (file_ptr_type == ADIO_INDIVIDUAL) */
         else {
             n_etypes_in_filetype = filetype_size / etype_size;
-            n_filetypes = (int) (offset / n_etypes_in_filetype);
-            etype_in_filetype = (int) (offset % n_etypes_in_filetype);
+            n_filetypes = offset / n_etypes_in_filetype;
+            etype_in_filetype = offset % n_etypes_in_filetype;
             size_in_filetype = etype_in_filetype * etype_size;
 
             sum = 0;
-            for (i = 0; i < flat_file->count; i++) {
+            for (MPI_Count i = 0; i < flat_file->count; i++) {
                 sum += flat_file->blocklens[i];
                 if (sum > size_in_filetype) {
                     st_index = i;
@@ -263,8 +263,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
         st_fwr_size = fwr_size;
         st_n_filetypes = n_filetypes;
 
-        i = 0;
-        j = st_index;
+        MPI_Count j = st_index;
         f_data_wrote = MPL_MIN(st_fwr_size, bufsize);
         n_filetypes = st_n_filetypes;
 
@@ -302,7 +301,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
         fprintf(stderr, "NUM IO lists = %d\n", n_write_lists);
 #endif
 
-        for (i = 0; i < n_write_lists; i++) {
+        for (MPI_Count i = 0; i < n_write_lists; i++) {
             if (!i) {
                 rgs[i].rg_idx = start_off;
                 rgs[i].rg_len = MPL_MIN(f_data_wrote, st_fwr_size);
