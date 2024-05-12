@@ -82,18 +82,17 @@ int MPIR_Async_things_progress(int vci, int *made_progress)
     MPID_THREAD_CS_ENTER(VCI, async_things_mutex[vci]);
     DL_FOREACH_SAFE(async_things_list[vci], entry, tmp) {
         int ret = entry->poll_fn(entry);
-        if (ret != MPIX_ASYNC_NOPROGRESS) {
+        if (entry->new_entries) {
             *made_progress = 1;
-            if (entry->new_entries) {
-                DL_CONCAT(async_things_list[vci], entry->new_entries);
-                entry->new_entries = NULL;
-            }
-            if (ret == MPIX_ASYNC_DONE) {
-                DL_DELETE(async_things_list[vci], entry);
-                MPL_free(entry);
-                if (async_things_list[vci] == NULL) {
-                    MPIR_Progress_hook_deactivate(async_things_progress_hook_id[vci]);
-                }
+            DL_CONCAT(async_things_list[vci], entry->new_entries);
+            entry->new_entries = NULL;
+        }
+        if (ret == MPIX_ASYNC_DONE) {
+            *made_progress = 1;
+            DL_DELETE(async_things_list[vci], entry);
+            MPL_free(entry);
+            if (async_things_list[vci] == NULL) {
+                MPIR_Progress_hook_deactivate(async_things_progress_hook_id[vci]);
             }
         }
     }
