@@ -779,8 +779,7 @@ enum MPIR_Combiner_enum {
 /* poll_fn return following states. */
 enum {
     MPIX_ASYNC_NOPROGRESS = 0,
-    MPIX_ASYNC_UPDATED = 1,
-    MPIX_ASYNC_DONE = 2,
+    MPIX_ASYNC_DONE = 1,
 };
 
 typedef struct MPIR_Async_thing * MPIX_Async_thing;
