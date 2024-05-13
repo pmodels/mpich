@@ -51,8 +51,6 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
 
     MPIR_CHKPMEM_MALLOC(memory, MPIDU_shm_seg_t *, sizeof(*memory), mpi_errno, "memory_handle",
                         MPL_MEM_OTHER);
-    MPIR_CHKPMEM_MALLOC(memory_node, memory_list_t *, sizeof(*memory_node), mpi_errno,
-                        "memory_node", MPL_MEM_OTHER);
 
     mpl_err = MPL_shm_hnd_init(&(memory->hnd));
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
@@ -118,6 +116,8 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
 
     *ptr = current_addr;
 
+    MPIR_CHKPMEM_MALLOC(memory_node, memory_list_t *, sizeof(*memory_node), mpi_errno,
+                        "memory_node", MPL_MEM_OTHER);
     memory_node->ptr = *ptr;
     memory_node->memory = memory;
     LL_APPEND(memory_head, memory_tail, memory_node);
