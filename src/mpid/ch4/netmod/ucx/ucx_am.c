@@ -17,6 +17,9 @@ ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h
 
     /* need to copy the message data for alignment purposes */
     tmp = MPL_malloc(length, MPL_MEM_BUFFER);
+    if (tmp == NULL) {
+        return UCS_ERR_NO_MEMORY;
+    }
     MPIR_Memcpy(tmp, data, length);
     MPIDI_UCX_am_header_t *msg_hdr = tmp;
     p_data = (char *) msg_hdr->payload + (length - msg_hdr->data_sz - sizeof(*msg_hdr));
@@ -75,6 +78,9 @@ ucs_status_t MPIDI_UCX_am_nbx_handler(void *arg, const void *header, size_t head
 {
     /* need to copy the message data for alignment purposes */
     void *tmp = MPL_malloc(header_length, MPL_MEM_BUFFER);
+    if (tmp == NULL) {
+        return UCS_ERR_NO_MEMORY;
+    }
     MPIR_Memcpy(tmp, header, header_length);
     MPIDI_UCX_am_header_t *msg_hdr = tmp;
 

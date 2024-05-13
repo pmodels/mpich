@@ -574,8 +574,6 @@ int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, vo
 
     MPIR_CHKPMEM_MALLOC(shm_seg, MPIDU_shm_seg_t *, sizeof(*shm_seg), mpi_errno, "shm_seg_handle",
                         MPL_MEM_OTHER);
-    MPIR_CHKPMEM_MALLOC(el, seg_list_t *, sizeof(*el), mpi_errno,
-                        "seg_list_element", MPL_MEM_OTHER);
 
     mpl_err = MPL_shm_hnd_init(&(shm_seg->hnd));
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
@@ -596,6 +594,8 @@ int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, vo
     *ptr = shm_seg->base_addr;
 
     /* store shm_seg handle in linked list for later retrieval */
+    MPIR_CHKPMEM_MALLOC(el, seg_list_t *, sizeof(*el), mpi_errno,
+                        "seg_list_element", MPL_MEM_OTHER);
     el->key = *ptr;
     el->shm_seg = shm_seg;
     LL_APPEND(seg_list_head, seg_list_tail, el);
@@ -633,8 +633,6 @@ int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr)
 
     MPIR_CHKPMEM_MALLOC(shm_seg, MPIDU_shm_seg_t *, sizeof(*shm_seg), mpi_errno, "shm_seg_handle",
                         MPL_MEM_OTHER);
-    MPIR_CHKPMEM_MALLOC(el, seg_list_t *, sizeof(*el), mpi_errno,
-                        "seg_list_element", MPL_MEM_OTHER);
 
     mpl_err = MPL_shm_hnd_init(&(shm_seg->hnd));
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
@@ -647,6 +645,8 @@ int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr)
     *ptr = shm_seg->base_addr;
 
     /* store shm_seg handle in linked list for later retrieval */
+    MPIR_CHKPMEM_MALLOC(el, seg_list_t *, sizeof(*el), mpi_errno,
+                        "seg_list_element", MPL_MEM_OTHER);
     el->key = *ptr;
     el->shm_seg = shm_seg;
     LL_APPEND(seg_list_head, seg_list_tail, el);
