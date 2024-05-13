@@ -44,7 +44,7 @@ int MPII_Typerep_convert_darray(int size, int rank, int ndims, const MPI_Aint * 
         tmp_rank = tmp_rank % procs;
     }
 
-    st_offsets = (MPI_Aint *) MPL_malloc(ndims * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    st_offsets = (MPI_Aint *) MPL_calloc(ndims, sizeof(MPI_Aint), MPL_MEM_DATATYPE);
     MPIR_ERR_CHKANDJUMP(!st_offsets, mpi_errno, MPI_ERR_OTHER, "**nomem");
     type_old = oldtype;
 
