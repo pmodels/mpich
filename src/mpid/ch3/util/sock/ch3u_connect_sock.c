@@ -176,7 +176,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
     int port, port_name_tag;
     MPL_sockaddr_t ifaddr;
     int hasIfaddr = 0;
-    MPIDI_CH3I_Connection_t * conn;
+    MPIDI_CH3I_Connection_t * conn = NULL;
 
     MPIR_FUNC_ENTER;
 
@@ -469,7 +469,7 @@ static void connection_destroy(MPIDI_CH3I_Connection_t * conn);
 int MPIDI_CH3_Sockconn_handle_accept_event( void )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_Connection_t * conn;
+    MPIDI_CH3I_Connection_t * conn = NULL;
 
     MPIR_FUNC_ENTER;
     
