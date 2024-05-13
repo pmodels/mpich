@@ -125,43 +125,32 @@ int MPIDI_GPU_init_world(void)
     }
 
     MPIDI_GPUI_global.ipc_handle_mapped_trees =
-        (MPL_gavl_tree_t ***) MPL_malloc(sizeof(MPL_gavl_tree_t **) * MPIR_Process.local_size,
+        (MPL_gavl_tree_t ***) MPL_calloc(MPIR_Process.local_size, sizeof(MPL_gavl_tree_t **),
                                          MPL_MEM_OTHER);
     MPIR_Assert(MPIDI_GPUI_global.ipc_handle_mapped_trees != NULL);
-    memset(MPIDI_GPUI_global.ipc_handle_mapped_trees, 0,
-           sizeof(MPL_gavl_tree_t *) * MPIR_Process.local_size);
 
     MPIDI_GPUI_global.ipc_handle_track_trees =
-        (MPL_gavl_tree_t **) MPL_malloc(sizeof(MPL_gavl_tree_t *) * MPIR_Process.local_size,
+        (MPL_gavl_tree_t **) MPL_calloc(MPIR_Process.local_size, sizeof(MPL_gavl_tree_t *),
                                         MPL_MEM_OTHER);
     MPIR_Assert(MPIDI_GPUI_global.ipc_handle_track_trees != NULL);
-    memset(MPIDI_GPUI_global.ipc_handle_track_trees, 0,
-           sizeof(MPL_gavl_tree_t *) * MPIR_Process.local_size);
 
     for (int i = 0; i < MPIR_Process.local_size; ++i) {
         MPIDI_GPUI_global.ipc_handle_mapped_trees[i] =
-            (MPL_gavl_tree_t **) MPL_malloc(sizeof(MPL_gavl_tree_t *) *
-                                            (MPIDI_GPUI_global.global_max_dev_id + 1),
+            (MPL_gavl_tree_t **) MPL_calloc(MPIDI_GPUI_global.global_max_dev_id + 1,
+                                            sizeof(MPL_gavl_tree_t *),
                                             MPL_MEM_OTHER);
         MPIR_Assert(MPIDI_GPUI_global.ipc_handle_mapped_trees[i]);
-        memset(MPIDI_GPUI_global.ipc_handle_mapped_trees[i], 0,
-               sizeof(MPL_gavl_tree_t *) * (MPIDI_GPUI_global.global_max_dev_id + 1));
 
         MPIDI_GPUI_global.ipc_handle_track_trees[i] =
-            (MPL_gavl_tree_t *) MPL_malloc(sizeof(MPL_gavl_tree_t) *
-                                           (MPIDI_GPUI_global.global_max_dev_id + 1),
+            (MPL_gavl_tree_t *) MPL_calloc(MPIDI_GPUI_global.global_max_dev_id + 1,
+                                           sizeof(MPL_gavl_tree_t),
                                            MPL_MEM_OTHER);
         MPIR_Assert(MPIDI_GPUI_global.ipc_handle_track_trees[i]);
-        memset(MPIDI_GPUI_global.ipc_handle_track_trees[i], 0,
-               sizeof(MPL_gavl_tree_t) * (MPIDI_GPUI_global.global_max_dev_id + 1));
 
         for (int j = 0; j < (MPIDI_GPUI_global.global_max_dev_id + 1); ++j) {
             MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j] =
-                (MPL_gavl_tree_t *) MPL_malloc(sizeof(MPL_gavl_tree_t) *
-                                               device_count, MPL_MEM_OTHER);
+                (MPL_gavl_tree_t *) MPL_calloc(device_count, sizeof(MPL_gavl_tree_t), MPL_MEM_OTHER);
             MPIR_Assert(MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]);
-            memset(MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j], 0,
-                   sizeof(MPL_gavl_tree_t) * device_count);
 
             for (int k = 0; k < device_count; ++k) {
                 mpl_err =
