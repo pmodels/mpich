@@ -15,12 +15,21 @@ void ADIOI_DAOS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int *
         case ADIO_FCNTL_GET_FSIZE:
             {
                 daos_size_t fsize;
+		int rank;
 
-                rc = dfs_get_size(cont->dfs, cont->obj, &fsize);
-                if (rc != 0) {
-                    *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
-                    break;
-                }
+		MPI_Comm_rank(fd->comm, &rank);
+		MPI_Barrier(fd->comm);
+
+		if (rank == fd->hints->ranklist[0])
+			rc = dfs_get_size(cont->dfs, cont->obj, &fsize);
+
+		MPI_Bcast(&rc, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
+		if (rc != 0) {
+			*error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
+			break;
+		}
+
+		MPI_Bcast(&fsize, 1, MPI_UINT64_T, fd->hints->ranklist[0], fd->comm);
                 *error_code = MPI_SUCCESS;
                 fcntl_struct->fsize = (ADIO_Offset) fsize;
                 break;
