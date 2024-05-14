@@ -142,7 +142,7 @@ int MPIR_pmi_init(void)
     MPL_env2int("PMI_VERSION", &pmi_version);
     MPL_env2int("PMI_SUBVERSION", &pmi_subversion);
 
-    int has_parent, rank, size, appnum;
+    int has_parent, rank, size, appnum = -1;
     SWITCH_PMI(mpi_errno = pmi1_init(&has_parent, &rank, &size, &appnum),
                mpi_errno = pmi2_init(&has_parent, &rank, &size, &appnum),
                mpi_errno = pmix_init(&has_parent, &rank, &size, &appnum));
