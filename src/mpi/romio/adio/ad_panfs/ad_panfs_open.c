@@ -24,10 +24,10 @@ void ADIOI_PANFS_Open(ADIO_File fd, int *error_code)
     amode = 0;
     if (fd->access_mode & ADIO_CREATE) {
         pan_fs_client_layout_agg_type_t layout_type = PAN_FS_CLIENT_LAYOUT_TYPE__DEFAULT;
-        unsigned long int layout_stripe_unit = 0;
-        unsigned long int layout_parity_stripe_width = 0;
-        unsigned long int layout_parity_stripe_depth = 0;
-        unsigned long int layout_total_num_comps = 0;
+        unsigned int layout_stripe_unit = 0;
+        unsigned int layout_parity_stripe_width = 0;
+        unsigned int layout_parity_stripe_depth = 0;
+        unsigned int layout_total_num_comps = 0;
         pan_fs_client_layout_visit_t layout_visit_policy = PAN_FS_CLIENT_LAYOUT_VISIT__ROUND_ROBIN;
         int myrank;
 
@@ -37,29 +37,29 @@ void ADIOI_PANFS_Open(ADIO_File fd, int *error_code)
         value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL + 1) * sizeof(char));
         ADIOI_Info_get(fd->info, "panfs_layout_type", MPI_MAX_INFO_VAL, value, &flag);
         if (flag) {
-            layout_type = strtoul(value, NULL, 10);
+            layout_type = (int) strtoul(value, NULL, 10);
         }
         ADIOI_Info_get(fd->info, "panfs_layout_stripe_unit", MPI_MAX_INFO_VAL, value, &flag);
         if (flag) {
-            layout_stripe_unit = strtoul(value, NULL, 10);
+            layout_stripe_unit = (int) strtoul(value, NULL, 10);
         }
         ADIOI_Info_get(fd->info, "panfs_layout_total_num_comps", MPI_MAX_INFO_VAL, value, &flag);
         if (flag) {
-            layout_total_num_comps = strtoul(value, NULL, 10);
+            layout_total_num_comps = (int) strtoul(value, NULL, 10);
         }
         ADIOI_Info_get(fd->info, "panfs_layout_parity_stripe_width", MPI_MAX_INFO_VAL,
                        value, &flag);
         if (flag) {
-            layout_parity_stripe_width = strtoul(value, NULL, 10);
+            layout_parity_stripe_width = (int) strtoul(value, NULL, 10);
         }
         ADIOI_Info_get(fd->info, "panfs_layout_parity_stripe_depth", MPI_MAX_INFO_VAL,
                        value, &flag);
         if (flag) {
-            layout_parity_stripe_depth = strtoul(value, NULL, 10);
+            layout_parity_stripe_depth = (int) strtoul(value, NULL, 10);
         }
         ADIOI_Info_get(fd->info, "panfs_layout_visit_policy", MPI_MAX_INFO_VAL, value, &flag);
         if (flag) {
-            layout_visit_policy = strtoul(value, NULL, 10);
+            layout_visit_policy = (int) strtoul(value, NULL, 10);
         }
         ADIOI_Free(value);
 

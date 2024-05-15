@@ -30,6 +30,8 @@ noinst_PROGRAMS = \
     external32_derived_dtype \
     tst_fileview \
     zero_count \
+    large_count \
+    large_dtype \
     striped_hints
 
 

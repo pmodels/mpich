@@ -163,9 +163,10 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, MPI_Aint count,
 
     ADIOI_Flatlist_node *flat_buf, *flat_file;
     ADIO_Offset i_offset, new_brd_size, brd_size, size;
-    int i, j, k, err, err_flag = 0, st_index = 0;
+    int i, j, k, err_flag = 0, st_index = 0;
+    ssize_t err;
     MPI_Count num, bufsize;
-    int n_etypes_in_filetype;
+    MPI_Count n_etypes_in_filetype;
     ADIO_Offset n_filetypes, etype_in_filetype, st_n_filetypes, size_in_filetype;
     ADIO_Offset abs_off_in_filetype = 0, new_frd_size, frd_size = 0, st_frd_size;
     MPI_Count filetype_size, etype_size, buftype_size, partial_read;

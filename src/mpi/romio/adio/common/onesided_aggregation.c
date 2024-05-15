@@ -31,7 +31,7 @@ typedef struct FDSourceBufferState {
     ADIO_Offset indiceOffset;
     MPI_Aint bufTypeExtent;
     ADIO_Offset dataTypeExtent;
-    int flatBufIndice;
+    MPI_Count flatBufIndice;
 
     ADIO_Offset sourceBufferOffset;
 
@@ -84,7 +84,7 @@ int ADIOI_OneSidedCleanup(ADIO_File fd)
  */
 inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
                                                     ADIOI_Flatlist_node * flatBuf,
-                                                    int targetNumBytes, int packing,
+                                                    MPI_Count targetNumBytes, int packing,
                                                     FDSourceBufferState *
                                                     currentFDSourceBufferState,
                                                     char *packedDataBufer)
@@ -94,7 +94,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
     ADIO_Offset currentIndiceOffset = currentFDSourceBufferState->indiceOffset;
     ADIO_Offset bufTypeExtent = (ADIO_Offset) currentFDSourceBufferState->bufTypeExtent;
     ADIO_Offset currentDataTypeExtent = currentFDSourceBufferState->dataTypeExtent;
-    int currentFlatBufIndice = currentFDSourceBufferState->flatBufIndice;
+    MPI_Count currentFlatBufIndice = currentFDSourceBufferState->flatBufIndice;
 
     int targetSendDataIndex = 0;
 
@@ -104,7 +104,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
          currentFlatBufIndice, currentDataTypeExtent, currentIndiceOffset);
 #endif
 
-    int remainingBytesToLoad = targetNumBytes;
+    MPI_Count remainingBytesToLoad = targetNumBytes;
     while (remainingBytesToLoad > 0) {
         if ((flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset) >= remainingBytesToLoad) { // we can get the rest of our data from this indice
             ADIO_Offset physicalSourceBufferOffset =
@@ -139,7 +139,8 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
             remainingBytesToLoad = 0;
 
         } else {        // we can only get part of our data from this indice
-            int amountDataToLoad = (flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset);
+            MPI_Count amountDataToLoad =
+                (flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset);
             ADIO_Offset physicalSourceBufferOffset =
                 (currentDataTypeExtent * bufTypeExtent) + flatBuf->indices[currentFlatBufIndice] +
                 currentIndiceOffset;
@@ -200,21 +201,19 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
 void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     ADIO_Offset * offset_list,
                                     ADIO_Offset * len_list,
-                                    int contig_access_count,
+                                    MPI_Count contig_access_count,
                                     const void *buf,
                                     MPI_Datatype datatype,
                                     int *error_code,
                                     ADIO_Offset firstFileOffset,
                                     ADIO_Offset lastFileOffset,
-                                    int numNonZeroDataOffsets,
+                                    MPI_Count numNonZeroDataOffsets,
                                     ADIO_Offset * fd_start,
                                     ADIO_Offset * fd_end,
                                     int *hole_found, ADIOI_OneSidedStripeParms * stripe_parms)
 {
-    int i, j;                   /* generic iterators */
-
-/* make local copy of certain ADIOI_OneSidedStripeParms elements for faster access -
-   pay for pointer dereference only once. */
+    /* make local copy of certain ADIOI_OneSidedStripeParms elements for faster access -
+     * pay for pointer dereference only once. */
     int stripeSize = stripe_parms->stripeSize;
     int segmentIter = stripe_parms->segmentIter;
     MPI_Aint bufTypeExtent = stripe_parms->bufTypeExtent;
@@ -224,19 +223,19 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         stripe_parms->iWasUsedStripingAgg = 0;
 #ifdef onesidedtrace
     if (buf == NULL) {
-        printf("ADIOI_OneSidedWriteAggregation - buf is NULL contig_access_count is %d\n",
-               contig_access_count);
-        for (i = 0; i < contig_access_count; i++)
+        printf("ADIOI_OneSidedWriteAggregation - buf is NULL contig_access_count is %lld\n",
+               (long long) contig_access_count);
+        for (MPI_Count i = 0; i < contig_access_count; i++)
             printf("offset_list[%d] is %ld len_list[%d] is %ld\n",
                    i, offset_list[i], i, len_list[i]);
     }
     if (contig_access_count < 0)
         printf("ADIOI_OneSidedWriteAggregation - contig_access_count "
-               "of %d is less than 0\n", contig_access_count);
+               "of %lld is less than 0\n", (long long) contig_access_count);
 #endif
 
     int lenListOverZero = 0;
-    for (i = 0; ((i < contig_access_count) && (!lenListOverZero)); i++)
+    for (MPI_Count i = 0; ((i < contig_access_count) && (!lenListOverZero)); i++)
         if (len_list[i] > 0)
             lenListOverZero = 1;
 
@@ -312,7 +311,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     FDSourceBufferState *currentFDSourceBufferState =
         (FDSourceBufferState *) ADIOI_Malloc(naggs * sizeof(FDSourceBufferState));
 
-    for (i = 0; i < naggs; i++) {
+    for (int i = 0; i < naggs; i++) {
         /* initialize based on the bufType to indicate that it is unset.
          */
         if (bufTypeIsContig) {
@@ -323,14 +322,14 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     }
 
 #ifdef onesidedtrace
-    printf(" ADIOI_OneSidedWriteAggregation bufTypeIsContig is %d contig_access_count is %d\n",
-           bufTypeIsContig, contig_access_count);
+    printf(" ADIOI_OneSidedWriteAggregation bufTypeIsContig is %d contig_access_count is %lld\n",
+           bufTypeIsContig, (long long) contig_access_count);
 #endif
 
     /* maxNumContigOperations keeps track of how many different chunks we will need to send
      * for the purpose of pre-allocating the data structures to hold them.
      */
-    int maxNumContigOperations = contig_access_count;
+    MPI_Count maxNumContigOperations = contig_access_count;
 
     int myAggRank = -1;         /* if I am an aggregor this is my index into fd->hints->ranklist */
     int iAmUsedAgg = 0;         /* whether or not this rank is used as an aggregator. */
@@ -356,7 +355,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     int greatestFileDomainAggRank = -1, smallestFileDomainAggRank = -1;
     ADIO_Offset greatestFileDomainOffset = 0;
     ADIO_Offset smallestFileDomainOffset = lastFileOffset;
-    for (j = 0; j < naggs; j++) {
+    for (int j = 0; j < naggs; j++) {
         if (fd_end[j] > greatestFileDomainOffset) {
             greatestFileDomainOffset = fd_end[j];
             greatestFileDomainAggRank = j;
@@ -375,9 +374,9 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     }
 
 #ifdef onesidedtrace
-    printf("contig_access_count is %d lastFileOffset is %ld firstFileOffset is %ld\n",
-           contig_access_count, lastFileOffset, firstFileOffset);
-    for (j = 0; j < contig_access_count; j++) {
+    printf("contig_access_count is %lld lastFileOffset is %ld firstFileOffset is %ld\n",
+           (long long) contig_access_count, lastFileOffset, firstFileOffset);
+    for (MPI_Count j = 0; j < contig_access_count; j++) {
         printf("offset_list[%d]: %ld , len_list[%d]: %ld\n", j, offset_list[j], j, len_list[j]);
 
     }
@@ -386,7 +385,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     /* Compute number of rounds.
      */
     int numberOfRounds = 0;
-    for (j = 0; j < naggs; j++) {
+    for (int j = 0; j < naggs; j++) {
         int currentNumberOfRounds =
             (int) (((fd_end[j] - fd_start[j]) + (ADIO_Offset) 1) / coll_bufsize);
         if (((ADIO_Offset) currentNumberOfRounds * coll_bufsize) <
@@ -409,37 +408,38 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     /* This data structure holds the beginning offset and len list index for the range to be written
      * corresponding to the round and target agg.  Initialize to -1 to denote being unset.
      */
-    int **targetAggsForMyDataFirstOffLenIndex =
-        (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
-    for (i = 0; i < numberOfRounds; i++) {
-        targetAggsForMyDataFirstOffLenIndex[i] = (int *) ADIOI_Malloc(naggs * sizeof(int));
-        for (j = 0; j < naggs; j++)
+    MPI_Count **targetAggsForMyDataFirstOffLenIndex =
+        ADIOI_Malloc(numberOfRounds * sizeof(*targetAggsForMyDataFirstOffLenIndex));
+    for (int i = 0; i < numberOfRounds; i++) {
+        targetAggsForMyDataFirstOffLenIndex[i] =
+            ADIOI_Malloc(naggs * sizeof(targetAggsForMyDataFirstOffLenIndex[i]));
+        for (int j = 0; j < naggs; j++)
             targetAggsForMyDataFirstOffLenIndex[i][j] = -1;
     }
 
     /* This data structure holds the ending offset and len list index for the range to be written
      * corresponding to the round and target agg.
      */
-    int **targetAggsForMyDataLastOffLenIndex =
-        (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
-    for (i = 0; i < numberOfRounds; i++)
-        targetAggsForMyDataLastOffLenIndex[i] = (int *) ADIOI_Malloc(naggs * sizeof(int));
+    MPI_Count **targetAggsForMyDataLastOffLenIndex =
+        ADIOI_Malloc(numberOfRounds * sizeof(MPI_Count *));
+    for (int i = 0; i < numberOfRounds; i++)
+        targetAggsForMyDataLastOffLenIndex[i] = ADIOI_Malloc(naggs * sizeof(MPI_Count));
 
 #ifdef onesidedtrace
     printf("NumberOfRounds is %d\n", numberOfRounds);
-    for (i = 0; i < naggs; i++)
+    for (int i = 0; i < naggs; i++)
         printf("fd->hints->ranklist[%d]is %d fd_start is %ld fd_end is %ld\n", i,
                fd->hints->ranklist[i], fd_start[i], fd_end[i]);
-    for (j = 0; j < contig_access_count; j++)
+    for (MPI_Count j = 0; j < contig_access_count; j++)
         printf("offset_list[%d] is %ld len_list is %ld\n", j, offset_list[j], len_list[j]);
 #endif
 
     int currentAggRankListIndex = 0;
-    int maxNumNonContigSourceChunks = 0;
+    MPI_Count maxNumNonContigSourceChunks = 0;
 
     ADIO_Offset currentSourceBufferOffset = 0;
     ADIO_Offset currentDataTypeExtent = 0;
-    int currentFlatBufIndice = 0;
+    MPI_Count currentFlatBufIndice = 0;
     ADIO_Offset currentIndiceOffset = 0;
 
     /* Remember where we left off in the source buffer when packing stripes. */
@@ -462,7 +462,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     /* This data structure tracks what target aggs need to be written to on what rounds.
      */
     int *targetAggsForMyDataCurrentRoundIter = (int *) ADIOI_Malloc(naggs * sizeof(int));
-    for (i = 0; i < naggs; i++)
+    for (int i = 0; i < naggs; i++)
         targetAggsForMyDataCurrentRoundIter[i] = 0;
 
     /* This is the first of the two main loops in this algorithm.  The purpose of this loop is essentially to populate
@@ -471,8 +471,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
      * within the target agg.
      */
     if ((contig_access_count > 0) && (buf != NULL) && lenListOverZero) {
-        int blockIter;
-        for (blockIter = 0; blockIter < contig_access_count; blockIter++) {
+        for (MPI_Count blockIter = 0; blockIter < contig_access_count; blockIter++) {
 
             /* Determine the starting source buffer offset for this block - for iter 0 skip it since that value is 0.
              */
@@ -486,8 +485,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                      * and file domains.
                      */
                     ADIO_Offset sourceBlockTotal = 0;
-                    int lastIndiceUsed = currentFlatBufIndice;
-                    int numNonContigSourceChunks = 0;
+                    MPI_Count lastIndiceUsed = currentFlatBufIndice;
+                    MPI_Count numNonContigSourceChunks = 0;
 
                     while (sourceBlockTotal < len_list[blockIter - 1]) {
                         numNonContigSourceChunks++;
@@ -531,8 +530,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
              */
             if ((blockIter == (contig_access_count - 1)) && (!bufTypeIsContig)) {
                 ADIO_Offset sourceBlockTotal = 0;
-                int tmpCurrentFlatBufIndice = currentFlatBufIndice;
-                int lastNumNonContigSourceChunks = 0;
+                MPI_Count tmpCurrentFlatBufIndice = currentFlatBufIndice;
+                MPI_Count lastNumNonContigSourceChunks = 0;
                 while (sourceBlockTotal < len_list[blockIter]) {
                     lastNumNonContigSourceChunks++;
                     sourceBlockTotal += flatBuf->blocklens[tmpCurrentFlatBufIndice];
@@ -1064,8 +1063,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                     /* These data structures are used for the derived datatype mpi_put
                      * in the romio_write_aggmethod of 2 case.
                      */
-                    int *targetAggBlockLengths = NULL;
-                    MPI_Aint *targetAggDisplacements = NULL, *sourceBufferDisplacements = NULL;
+                    MPI_Count *targetAggBlockLengths = NULL;
+                    MPI_Count *targetAggDisplacements = NULL, *sourceBufferDisplacements = NULL;
                     MPI_Datatype *targetAggDataTypes = NULL;
 
                     char *derivedTypePackedSourceBuffer = NULL;
@@ -1080,8 +1079,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
                     /* Process the range of offsets for this target agg.
                      */
-                    int offsetIter;
-                    int startingOffLenIndex =
+                    MPI_Count offsetIter;
+                    MPI_Count startingOffLenIndex =
                         targetAggsForMyDataFirstOffLenIndex[roundIter][aggIter], endingOffLenIndex =
                         targetAggsForMyDataLastOffLenIndex[roundIter][aggIter];
                     for (offsetIter = startingOffLenIndex; offsetIter <= endingOffLenIndex;
@@ -1104,7 +1103,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
                         /* Determine the amount of data and exact source buffer offsets to use.
                          */
-                        int bufferAmountToSend = 0;
+                        MPI_Count bufferAmountToSend = 0;
 
                         if ((offsetStart >= currentRoundFDStartForMyTargetAgg) &&
                             (offsetStart <= currentRoundFDEndForMyTargetAgg)) {
@@ -1143,18 +1142,19 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                  */
                                 if (!allocatedDerivedTypeArrays) {
                                     targetAggBlockLengths =
-                                        (int *) ADIOI_Malloc(maxNumContigOperations * sizeof(int));
+                                        ADIOI_Malloc(maxNumContigOperations *
+                                                     sizeof(*targetAggBlockLengths));
                                     targetAggDisplacements =
-                                        (MPI_Aint *) ADIOI_Malloc(maxNumContigOperations *
-                                                                  sizeof(MPI_Aint));
+                                        ADIOI_Malloc(maxNumContigOperations *
+                                                     sizeof(*targetAggDisplacements));
                                     sourceBufferDisplacements =
-                                        (MPI_Aint *) ADIOI_Malloc(maxNumContigOperations *
-                                                                  sizeof(MPI_Aint));
+                                        ADIOI_Malloc(maxNumContigOperations *
+                                                     sizeof(*sourceBufferDisplacements));
                                     targetAggDataTypes =
                                         (MPI_Datatype *) ADIOI_Malloc(maxNumContigOperations *
                                                                       sizeof(MPI_Datatype));
                                     if (!bufTypeIsContig) {
-                                        int k;
+                                        MPI_Count k;
                                         for (k = targetAggsForMyDataFirstOffLenIndex[roundIter]
                                              [aggIter];
                                              k <=
@@ -1198,12 +1198,12 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                              write_buf_window);
                                 char *putSourceData = NULL;
                                 if (bufTypeIsContig) {
-                                    MPI_Put(((char *) buf) +
-                                            currentFDSourceBufferState[aggIter].sourceBufferOffset,
-                                            bufferAmountToSend, MPI_BYTE,
-                                            targetAggsForMyData[aggIter],
-                                            targetDisplacementToUseThisRound, bufferAmountToSend,
-                                            MPI_BYTE, write_buf_window);
+                                    MPI_Put_c(((char *) buf) +
+                                              currentFDSourceBufferState
+                                              [aggIter].sourceBufferOffset, bufferAmountToSend,
+                                              MPI_BYTE, targetAggsForMyData[aggIter],
+                                              targetDisplacementToUseThisRound, bufferAmountToSend,
+                                              MPI_BYTE, write_buf_window);
                                     currentFDSourceBufferState[aggIter].sourceBufferOffset +=
                                         (ADIO_Offset) bufferAmountToSend;
                                 } else {
@@ -1213,10 +1213,10 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                                                      bufferAmountToSend, 1,
                                                                      &currentFDSourceBufferState
                                                                      [aggIter], putSourceData);
-                                    MPI_Put(putSourceData, bufferAmountToSend, MPI_BYTE,
-                                            targetAggsForMyData[aggIter],
-                                            targetDisplacementToUseThisRound, bufferAmountToSend,
-                                            MPI_BYTE, write_buf_window);
+                                    MPI_Put_c(putSourceData, bufferAmountToSend, MPI_BYTE,
+                                              targetAggsForMyData[aggIter],
+                                              targetDisplacementToUseThisRound, bufferAmountToSend,
+                                              MPI_BYTE, write_buf_window);
 
                                 }
                                 MPI_Win_unlock(targetAggsForMyData[aggIter], write_buf_window);
@@ -1278,13 +1278,13 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                     if (romio_write_aggmethod == 2) {
 
                         MPI_Datatype sourceBufferDerivedDataType, targetBufferDerivedDataType;
-                        MPI_Type_create_struct(targetAggContigAccessCount, targetAggBlockLengths,
-                                               sourceBufferDisplacements, targetAggDataTypes,
-                                               &sourceBufferDerivedDataType);
+                        MPI_Type_create_struct_c(targetAggContigAccessCount, targetAggBlockLengths,
+                                                 sourceBufferDisplacements, targetAggDataTypes,
+                                                 &sourceBufferDerivedDataType);
                         MPI_Type_commit(&sourceBufferDerivedDataType);
-                        MPI_Type_create_struct(targetAggContigAccessCount, targetAggBlockLengths,
-                                               targetAggDisplacements, targetAggDataTypes,
-                                               &targetBufferDerivedDataType);
+                        MPI_Type_create_struct_c(targetAggContigAccessCount, targetAggBlockLengths,
+                                                 targetAggDisplacements, targetAggDataTypes,
+                                                 &targetBufferDerivedDataType);
                         MPI_Type_commit(&targetBufferDerivedDataType);
 
 #ifdef onesidedtrace
@@ -1560,7 +1560,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     ADIOI_Free(targetAggsForMyDataFDStart);
     ADIOI_Free(targetAggsForMyDataFDEnd);
 
-    for (i = 0; i < numberOfRounds; i++) {
+    for (int i = 0; i < numberOfRounds; i++) {
         ADIOI_Free(targetAggsForMyDataFirstOffLenIndex[i]);
         ADIOI_Free(targetAggsForMyDataLastOffLenIndex[i]);
     }
@@ -1576,7 +1576,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                    ADIO_Offset * offset_list,
                                    ADIO_Offset * len_list,
-                                   int contig_access_count,
+                                   MPI_Count contig_access_count,
                                    const void *buf,
                                    MPI_Datatype datatype,
                                    int *error_code,
@@ -1585,23 +1585,21 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                    int numNonZeroDataOffsets,
                                    ADIO_Offset * fd_start, ADIO_Offset * fd_end)
 {
-    int i, j;                   /* generic iterators */
-
 #ifdef onesidedtrace
     if (buf == NULL) {
-        printf("ADIOI_OneSidedWriteAggregation - buf is NULL contig_access_count is %d\n",
-               contig_access_count);
-        for (i = 0; i < contig_access_count; i++)
+        printf("ADIOI_OneSidedWriteAggregation - buf is NULL contig_access_count is %lld\n",
+               (long long) contig_access_count);
+        for (MPI_Count i = 0; i < contig_access_count; i++)
             printf("offset_list[%d] is %ld len_list[%d] is %ld\n", i, offset_list[i], i,
                    len_list[i]);
     }
     if (contig_access_count < 0)
-        printf("ADIOI_OneSidedWriteAggregation - contig_access_count of %d is less than 0\n",
-               contig_access_count);
+        printf("ADIOI_OneSidedWriteAggregation - contig_access_count of %lld is less than 0\n",
+               (long long) contig_access_count);
 #endif
 
     int lenListOverZero = 0;
-    for (i = 0; ((i < contig_access_count) && (!lenListOverZero)); i++)
+    for (MPI_Count i = 0; ((i < contig_access_count) && (!lenListOverZero)); i++)
         if (len_list[i] > 0)
             lenListOverZero = 1;
 
@@ -1656,8 +1654,8 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 #endif
     }
 #ifdef onesidedtrace
-    printf("ADIOI_OneSidedReadAggregation bufTypeIsContig is %d contig_access_count is %d\n",
-           bufTypeIsContig, contig_access_count);
+    printf("ADIOI_OneSidedReadAggregation bufTypeIsContig is %d contig_access_count is %lld\n",
+           bufTypeIsContig, (long long) contig_access_count);
 #endif
 
     int naggs = fd->hints->cb_nodes;
@@ -1679,7 +1677,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
     currentFDSourceBufferState =
         (FDSourceBufferState *) ADIOI_Malloc(naggs * sizeof(FDSourceBufferState));
-    for (i = 0; i < naggs; i++) {
+    for (int i = 0; i < naggs; i++) {
         /* initialize based on the bufType to indicate that it is unset.
          */
         if (bufTypeIsContig) {
@@ -1690,22 +1688,22 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     }
 
 #ifdef onesidedtrace
-    printf(" ADIOI_OneSidedReadAggregation bufTypeIsContig is %d contig_access_count is %d\n",
-           bufTypeIsContig, contig_access_count);
+    printf(" ADIOI_OneSidedReadAggregation bufTypeIsContig is %d contig_access_count is %lld\n",
+           bufTypeIsContig, (long long) contig_access_count);
 #endif
 
     /* maxNumContigOperations keeps track of how many different chunks we will
      * need to recv for the purpose of pre-allocating the data structures to
      * hold them.
      */
-    int maxNumContigOperations = contig_access_count;
+    MPI_Count maxNumContigOperations = contig_access_count;
 
 
     ADIO_Offset lastFileOffset = 0, firstFileOffset = -1;
 
     /* Get the total range being read.
      */
-    for (j = 0; j < numNonZeroDataOffsets; j++) {
+    for (int j = 0; j < numNonZeroDataOffsets; j++) {
 #ifdef onesidedtrace
         printf("end_offsets[%d] is %ld st_offsets[%d] is %ld\n", j, end_offsets[j], j,
                st_offsets[j]);
@@ -1734,7 +1732,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     int greatestFileDomainAggRank = -1, smallestFileDomainAggRank = -1;
     ADIO_Offset greatestFileDomainOffset = 0;
     ADIO_Offset smallestFileDomainOffset = lastFileOffset;
-    for (j = 0; j < naggs; j++) {
+    for (int j = 0; j < naggs; j++) {
         if (fd_end[j] > greatestFileDomainOffset) {
             greatestFileDomainOffset = fd_end[j];
             greatestFileDomainAggRank = j;
@@ -1752,9 +1750,9 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     }
 
 #ifdef onesidedtrace
-    printf("contig_access_count is %d lastFileOffset is %ld firstFileOffset is %ld\n",
-           contig_access_count, lastFileOffset, firstFileOffset);
-    for (j = 0; j < contig_access_count; j++) {
+    printf("contig_access_count is %lld lastFileOffset is %ld firstFileOffset is %ld\n",
+           (long long) contig_access_count, lastFileOffset, firstFileOffset);
+    for (MPI_Count j = 0; j < contig_access_count; j++) {
         printf("offset_list[%d]: %ld , len_list[%d]: %ld\n", j, offset_list[j], j, len_list[j]);
     }
 #endif
@@ -1762,7 +1760,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     /* Compute number of rounds.
      */
     int numberOfRounds = 0;
-    for (j = 0; j < naggs; j++) {
+    for (int j = 0; j < naggs; j++) {
         int currentNumberOfRounds =
             (int) (((fd_end[j] - fd_start[j]) + (ADIO_Offset) 1) / coll_bufsize);
         if (((ADIO_Offset) currentNumberOfRounds * coll_bufsize) <
@@ -1784,37 +1782,38 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     /* This data structure holds the beginning offset and len list index for the range to be read
      * corresponding to the round and source agg. Initialize to -1 to denote being unset.
      */
-    int **sourceAggsForMyDataFirstOffLenIndex =
-        (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
-    for (i = 0; i < numberOfRounds; i++) {
-        sourceAggsForMyDataFirstOffLenIndex[i] = (int *) ADIOI_Malloc(naggs * sizeof(int));
-        for (j = 0; j < naggs; j++)
+    MPI_Count **sourceAggsForMyDataFirstOffLenIndex =
+        ADIOI_Malloc(numberOfRounds * sizeof(*sourceAggsForMyDataFirstOffLenIndex));
+    for (int i = 0; i < numberOfRounds; i++) {
+        sourceAggsForMyDataFirstOffLenIndex[i] =
+            ADIOI_Malloc(naggs * sizeof(sourceAggsForMyDataFirstOffLenIndex[i]));
+        for (int j = 0; j < naggs; j++)
             sourceAggsForMyDataFirstOffLenIndex[i][j] = -1;
     }
 
     /* This data structure holds the ending offset and len list index for the range to be read
      * corresponding to the round and source agg.
      */
-    int **sourceAggsForMyDataLastOffLenIndex =
-        (int **) ADIOI_Malloc(numberOfRounds * sizeof(int *));
-    for (i = 0; i < numberOfRounds; i++)
-        sourceAggsForMyDataLastOffLenIndex[i] = (int *) ADIOI_Malloc(naggs * sizeof(int));
+    MPI_Count **sourceAggsForMyDataLastOffLenIndex =
+        ADIOI_Malloc(numberOfRounds * sizeof(MPI_Count *));
+    for (int i = 0; i < numberOfRounds; i++)
+        sourceAggsForMyDataLastOffLenIndex[i] = ADIOI_Malloc(naggs * sizeof(MPI_Count));
 
 #ifdef onesidedtrace
     printf("NumberOfRounds is %d\n", numberOfRounds);
-    for (i = 0; i < naggs; i++)
+    for (int i = 0; i < naggs; i++)
         printf("fd->hints->ranklist[%d]is %d fd_start is %ld fd_end is %ld\n", i,
                fd->hints->ranklist[i], fd_start[i], fd_end[i]);
-    for (j = 0; j < contig_access_count; j++)
+    for (MPI_Count j = 0; j < contig_access_count; j++)
         printf("offset_list[%d] is %ld len_list is %ld\n", j, offset_list[j], len_list[j]);
 #endif
 
     int currentAggRankListIndex = 0;
-    int maxNumNonContigSourceChunks = 0;
+    MPI_Count maxNumNonContigSourceChunks = 0;
 
     ADIO_Offset currentRecvBufferOffset = 0;
     ADIO_Offset currentDataTypeExtent = 0;
-    int currentFlatBufIndice = 0;
+    MPI_Count currentFlatBufIndice = 0;
     ADIO_Offset currentIndiceOffset = 0;
 
     /* This denotes the coll_bufsize boundaries within the source buffer for reading for 1 round.
@@ -1824,7 +1823,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     /* This data structure tracks what source aggs need to be read to on what rounds.
      */
     int *sourceAggsForMyDataCurrentRoundIter = (int *) ADIOI_Malloc(naggs * sizeof(int));
-    for (i = 0; i < naggs; i++)
+    for (int i = 0; i < naggs; i++)
         sourceAggsForMyDataCurrentRoundIter[i] = 0;
 
     /* This is the first of the two main loops in this algorithm.  The purpose of this loop is essentially to populate
@@ -1833,8 +1832,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
      * within the source agg.
      */
     if ((contig_access_count > 0) && (buf != NULL) && lenListOverZero) {
-        int blockIter;
-        for (blockIter = 0; blockIter < contig_access_count; blockIter++) {
+        for (MPI_Count blockIter = 0; blockIter < contig_access_count; blockIter++) {
 
             /* Determine the starting source buffer offset for this block - for iter 0 skip it since that value is 0.
              */
@@ -1846,7 +1844,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                      * in the blocks.
                      */
                     ADIO_Offset sourceBlockTotal = 0;
-                    int lastIndiceUsed = currentFlatBufIndice;
+                    MPI_Count lastIndiceUsed = currentFlatBufIndice;
                     int numNonContigSourceChunks = 0;
                     while (sourceBlockTotal < len_list[blockIter - 1]) {
                         numNonContigSourceChunks++;
@@ -1890,7 +1888,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
              */
             if ((blockIter == (contig_access_count - 1)) && (!bufTypeIsContig)) {
                 ADIO_Offset sourceBlockTotal = 0;
-                int tmpCurrentFlatBufIndice = currentFlatBufIndice;
+                MPI_Count tmpCurrentFlatBufIndice = currentFlatBufIndice;
                 int lastNumNonContigSourceChunks = 0;
                 while (sourceBlockTotal < len_list[blockIter]) {
                     lastNumNonContigSourceChunks++;
@@ -2292,7 +2290,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                 currentRoundFDStart = nextRoundFDStart;
 
                 if (!useIOBuffer || (roundIter == 0)) {
-                    int amountDataToReadThisRound;
+                    MPI_Count amountDataToReadThisRound;
                     if ((fd_end[myAggRank] - currentRoundFDStart) < coll_bufsize) {
                         currentRoundFDEnd = fd_end[myAggRank];
                         amountDataToReadThisRound = ((currentRoundFDEnd - currentRoundFDStart) + 1);
@@ -2316,7 +2314,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
                     if (roundIter < (numberOfRounds - 1)) {
                         nextRoundFDStart += coll_bufsize;
-                        int amountDataToReadNextRound;
+                        MPI_Count amountDataToReadNextRound;
                         if ((fd_end[myAggRank] - nextRoundFDStart) < coll_bufsize) {
                             nextRoundFDEnd = fd_end[myAggRank];
                             amountDataToReadNextRound = ((nextRoundFDEnd - nextRoundFDStart) + 1);
@@ -2415,8 +2413,8 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                     /* These data structures are used for the derived datatype mpi_get
                      * in the romio_read_aggmethod of 2 case.
                      */
-                    int *sourceAggBlockLengths = NULL;
-                    MPI_Aint *sourceAggDisplacements = NULL, *recvBufferDisplacements = NULL;
+                    MPI_Count *sourceAggBlockLengths = NULL;
+                    MPI_Count *sourceAggDisplacements = NULL, *recvBufferDisplacements = NULL;
                     MPI_Datatype *sourceAggDataTypes = NULL;
                     char *derivedTypePackedSourceBuffer = NULL;
                     int derivedTypePackedSourceBufferOffset = 0;
@@ -2425,8 +2423,8 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
                     /* Process the range of offsets for this source agg.
                      */
-                    int offsetIter;
-                    int startingOffLenIndex =
+                    MPI_Count offsetIter;
+                    MPI_Count startingOffLenIndex =
                         sourceAggsForMyDataFirstOffLenIndex[roundIter][aggIter], endingOffLenIndex =
                         sourceAggsForMyDataLastOffLenIndex[roundIter][aggIter];
                     for (offsetIter = startingOffLenIndex; offsetIter <= endingOffLenIndex;
@@ -2439,7 +2437,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
                         /* Determine the amount of data and exact source buffer offsets to use.
                          */
-                        int bufferAmountToRecv = 0;
+                        MPI_Count bufferAmountToRecv = 0;
 
                         if ((offsetStart >= currentRoundFDStartForMySourceAgg) &&
                             (offsetStart <= currentRoundFDEndForMySourceAgg)) {
@@ -2474,18 +2472,19 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                  */
                                 if (!allocatedDerivedTypeArrays) {
                                     sourceAggBlockLengths =
-                                        (int *) ADIOI_Malloc(maxNumContigOperations * sizeof(int));
+                                        ADIOI_Malloc(maxNumContigOperations *
+                                                     sizeof(*sourceAggBlockLengths));
                                     sourceAggDisplacements =
-                                        (MPI_Aint *) ADIOI_Malloc(maxNumContigOperations *
-                                                                  sizeof(MPI_Aint));
+                                        ADIOI_Malloc(maxNumContigOperations *
+                                                     sizeof(*sourceAggDisplacements));
                                     recvBufferDisplacements =
-                                        (MPI_Aint *) ADIOI_Malloc(maxNumContigOperations *
-                                                                  sizeof(MPI_Aint));
+                                        ADIOI_Malloc(maxNumContigOperations *
+                                                     sizeof(*recvBufferDisplacements));
                                     sourceAggDataTypes =
                                         (MPI_Datatype *) ADIOI_Malloc(maxNumContigOperations *
                                                                       sizeof(MPI_Datatype));
                                     if (!bufTypeIsContig) {
-                                        int k;
+                                        MPI_Offset k;
                                         for (k = sourceAggsForMyDataFirstOffLenIndex[roundIter]
                                              [aggIter];
                                              k <=
@@ -2528,22 +2527,22 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                              read_buf_window);
                                 char *getSourceData = NULL;
                                 if (bufTypeIsContig) {
-                                    MPI_Get(((char *) buf) +
-                                            currentFDSourceBufferState[aggIter].sourceBufferOffset,
-                                            bufferAmountToRecv, MPI_BYTE,
-                                            sourceAggsForMyData[aggIter],
-                                            sourceDisplacementToUseThisRound, bufferAmountToRecv,
-                                            MPI_BYTE, read_buf_window);
+                                    MPI_Get_c(((char *) buf) +
+                                              currentFDSourceBufferState
+                                              [aggIter].sourceBufferOffset, bufferAmountToRecv,
+                                              MPI_BYTE, sourceAggsForMyData[aggIter],
+                                              sourceDisplacementToUseThisRound, bufferAmountToRecv,
+                                              MPI_BYTE, read_buf_window);
                                     currentFDSourceBufferState[aggIter].sourceBufferOffset +=
                                         (ADIO_Offset) bufferAmountToRecv;
 
                                 } else {
                                     getSourceData =
                                         (char *) ADIOI_Malloc(bufferAmountToRecv * sizeof(char));
-                                    MPI_Get(getSourceData, bufferAmountToRecv, MPI_BYTE,
-                                            sourceAggsForMyData[aggIter],
-                                            sourceDisplacementToUseThisRound, bufferAmountToRecv,
-                                            MPI_BYTE, read_buf_window);
+                                    MPI_Get_c(getSourceData, bufferAmountToRecv, MPI_BYTE,
+                                              sourceAggsForMyData[aggIter],
+                                              sourceDisplacementToUseThisRound, bufferAmountToRecv,
+                                              MPI_BYTE, read_buf_window);
 
                                 }
                                 MPI_Win_unlock(sourceAggsForMyData[aggIter], read_buf_window);
@@ -2593,13 +2592,13 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                     if (romio_read_aggmethod == 2) {
                         MPI_Datatype recvBufferDerivedDataType, sourceBufferDerivedDataType;
 
-                        MPI_Type_create_struct(sourceAggContigAccessCount, sourceAggBlockLengths,
-                                               recvBufferDisplacements, sourceAggDataTypes,
-                                               &recvBufferDerivedDataType);
+                        MPI_Type_create_struct_c(sourceAggContigAccessCount, sourceAggBlockLengths,
+                                                 recvBufferDisplacements, sourceAggDataTypes,
+                                                 &recvBufferDerivedDataType);
                         MPI_Type_commit(&recvBufferDerivedDataType);
-                        MPI_Type_create_struct(sourceAggContigAccessCount, sourceAggBlockLengths,
-                                               sourceAggDisplacements, sourceAggDataTypes,
-                                               &sourceBufferDerivedDataType);
+                        MPI_Type_create_struct_c(sourceAggContigAccessCount, sourceAggBlockLengths,
+                                                 sourceAggDisplacements, sourceAggDataTypes,
+                                                 &sourceBufferDerivedDataType);
                         MPI_Type_commit(&sourceBufferDerivedDataType);
 
                         if (sourceAggContigAccessCount > 0) {
@@ -2670,7 +2669,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     ADIOI_Free(sourceAggsForMyDataFDStart);
     ADIOI_Free(sourceAggsForMyDataFDEnd);
 
-    for (i = 0; i < numberOfRounds; i++) {
+    for (int i = 0; i < numberOfRounds; i++) {
         ADIOI_Free(sourceAggsForMyDataFirstOffLenIndex[i]);
         ADIOI_Free(sourceAggsForMyDataLastOffLenIndex[i]);
     }

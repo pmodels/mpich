@@ -108,18 +108,19 @@ static int type_create_contiguous_x(MPI_Count count, MPI_Datatype oldtype, MPI_D
  * length is longer than an integer?  We will create 'count' types, using
  * contig if length is small enough, or something more complex if not */
 
-int ADIOI_Type_create_hindexed_x(int count,
+/* In an MPI-4 "Large Count" world do we even need this routine any longer? */
+int ADIOI_Type_create_hindexed_x(MPI_Count count,
                                  const MPI_Count array_of_blocklengths[],
-                                 const MPI_Aint array_of_displacements[],
+                                 const MPI_Count array_of_displacements[],
                                  MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int i, ret;
     MPI_Datatype *types;
-    int *blocklens;
+    MPI_Count *blocklens;
     int is_big = 0;
 
     types = ADIOI_Malloc(count * sizeof(MPI_Datatype));
-    blocklens = ADIOI_Malloc(count * sizeof(int));
+    blocklens = ADIOI_Malloc(count * sizeof(*blocklens));
 
     /* squashing two loops into one.
      * - Look in the array_of_blocklengths for any large values
@@ -144,12 +145,13 @@ int ADIOI_Type_create_hindexed_x(int count,
     }
 
     if (is_big) {
-        ret = MPI_Type_create_struct(count, blocklens, array_of_displacements, types, newtype);
+        ret = MPI_Type_create_struct_c(count, blocklens, array_of_displacements, types, newtype);
         for (i = 0; i < count; i++)
             if (types[i] != oldtype)
                 MPI_Type_free(&(types[i]));
     } else {
-        ret = MPI_Type_create_hindexed(count, blocklens, array_of_displacements, oldtype, newtype);
+        ret =
+            MPI_Type_create_hindexed_c(count, blocklens, array_of_displacements, oldtype, newtype);
     }
     ADIOI_Free(types);
     ADIOI_Free(blocklens);
@@ -207,3 +209,119 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset)
     return write_ret;
 }
 #endif
+
+void ADIOI_Heap_merge(ADIOI_Access * others_req, MPI_Count * count,
+                      ADIO_Offset * srt_off, MPI_Count * srt_len, MPI_Count * start_pos,
+                      int nprocs, int nprocs_recv, MPI_Count total_elements)
+{
+    typedef struct {
+        ADIO_Offset *off_list;
+        ADIO_Offset *len_list;
+        MPI_Count nelem;
+    } heap_struct;
+
+    heap_struct *a, tmp;
+    int i, j, heapsize, l, r, k, smallest;
+
+    a = (heap_struct *) ADIOI_Malloc((nprocs_recv + 1) * sizeof(heap_struct));
+
+    j = 0;
+    for (i = 0; i < nprocs; i++)
+        if (count[i]) {
+            a[j].off_list = &(others_req[i].offsets[start_pos[i]]);
+            a[j].len_list = &(others_req[i].lens[start_pos[i]]);
+            a[j].nelem = count[i];
+            j++;
+        }
+
+    /* build a heap out of the first element from each list, with
+     * the smallest element of the heap at the root */
+
+    heapsize = nprocs_recv;
+    for (i = heapsize / 2 - 1; i >= 0; i--) {
+        /* Heapify(a, i, heapsize); Algorithm from Cormen et al. pg. 143
+         * modified for a heap with smallest element at root. I have
+         * removed the recursion so that there are no function calls.
+         * Function calls are too expensive. */
+        k = i;
+        for (;;) {
+            l = 2 * (k + 1) - 1;
+            r = 2 * (k + 1);
+
+            if ((l < heapsize) && (*(a[l].off_list) < *(a[k].off_list)))
+                smallest = l;
+            else
+                smallest = k;
+
+            if ((r < heapsize) && (*(a[r].off_list) < *(a[smallest].off_list)))
+                smallest = r;
+
+            if (smallest != k) {
+                tmp.off_list = a[k].off_list;
+                tmp.len_list = a[k].len_list;
+                tmp.nelem = a[k].nelem;
+
+                a[k].off_list = a[smallest].off_list;
+                a[k].len_list = a[smallest].len_list;
+                a[k].nelem = a[smallest].nelem;
+
+                a[smallest].off_list = tmp.off_list;
+                a[smallest].len_list = tmp.len_list;
+                a[smallest].nelem = tmp.nelem;
+
+                k = smallest;
+            } else
+                break;
+        }
+    }
+
+    for (i = 0; i < total_elements; i++) {
+        /* extract smallest element from heap, i.e. the root */
+        srt_off[i] = *(a[0].off_list);
+        srt_len[i] = *(a[0].len_list);
+        (a[0].nelem)--;
+
+        if (!a[0].nelem) {
+            a[0].off_list = a[heapsize - 1].off_list;
+            a[0].len_list = a[heapsize - 1].len_list;
+            a[0].nelem = a[heapsize - 1].nelem;
+            heapsize--;
+        } else {
+            (a[0].off_list)++;
+            (a[0].len_list)++;
+        }
+
+        /* Heapify(a, 0, heapsize); */
+        k = 0;
+        for (;;) {
+            l = 2 * (k + 1) - 1;
+            r = 2 * (k + 1);
+
+            if ((l < heapsize) && (*(a[l].off_list) < *(a[k].off_list)))
+                smallest = l;
+            else
+                smallest = k;
+
+            if ((r < heapsize) && (*(a[r].off_list) < *(a[smallest].off_list)))
+                smallest = r;
+
+            if (smallest != k) {
+                tmp.off_list = a[k].off_list;
+                tmp.len_list = a[k].len_list;
+                tmp.nelem = a[k].nelem;
+
+                a[k].off_list = a[smallest].off_list;
+                a[k].len_list = a[smallest].len_list;
+                a[k].nelem = a[smallest].nelem;
+
+                a[smallest].off_list = tmp.off_list;
+                a[smallest].len_list = tmp.len_list;
+                a[smallest].nelem = tmp.nelem;
+
+                k = smallest;
+            } else
+                break;
+        }
+    }
+    ADIOI_Free(a);
+}

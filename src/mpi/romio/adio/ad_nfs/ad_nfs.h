@@ -35,7 +35,7 @@
 #define aiocb aiocb64
 #endif
 
-int ADIOI_NFS_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
+int ADIOI_NFS_aio(ADIO_File fd, void *buf, MPI_Aint len, ADIO_Offset offset,
                   int wr, MPI_Request * request);
 
 #ifdef SX4

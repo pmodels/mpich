@@ -7,9 +7,9 @@
 #define MPIU_EXTERNAL32_H_INCLUDED
 
 int MPIU_write_external32_conversion_fn(const void *userbuf, MPI_Datatype datatype,
-                                        int count, void *filebuf);
+                                        MPI_Count count, void *filebuf);
 int MPIU_read_external32_conversion_fn(void *userbuf, MPI_Datatype datatype,
-                                       int count, void *filebuf);
+                                       MPI_Count count, void *filebuf);
 int MPIU_datatype_full_size(MPI_Datatype datatype, MPI_Aint * size);
 
 /* given a buffer, count, and datatype, return an appropriately sized and

@@ -119,7 +119,7 @@ double gpfsmpio_prof_cr[GPFSMPIO_CIO_LAST + 1];
  *
  */
 
-void ad_gpfs_get_env_vars()
+void ad_gpfs_get_env_vars(void)
 {
     char *x, *dummy;
 

@@ -36,49 +36,40 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                         ADIOI_Access * my_req,
                                         ADIO_Offset * offset_list,
                                         ADIO_Offset * len_list,
-                                        int contig_access_count,
+                                        MPI_Count contig_access_count,
                                         int *striping_info,
                                         ADIO_Offset ** buf_idx, int *error_code);
 static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
                                           ADIOI_Flatlist_node * flat_buf,
                                           char **send_buf,
                                           ADIO_Offset * offset_list,
-                                          ADIO_Offset * len_list, int *send_size,
+                                          ADIO_Offset * len_list, MPI_Count * send_size,
                                           MPI_Request * requests,
-                                          int *sent_to_proc, int nprocs,
-                                          int myrank, int contig_access_count,
+                                          MPI_Count * sent_to_proc, int nprocs,
+                                          int myrank, MPI_Count contig_access_count,
                                           int *striping_info,
                                           ADIO_Offset * send_buf_idx,
-                                          int *curr_to_proc,
-                                          int *done_to_proc, int iter, MPI_Aint buftype_extent);
-static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
-                                         char *write_buf,
-                                         ADIOI_Flatlist_node * flat_buf,
-                                         ADIO_Offset * offset_list,
-                                         ADIO_Offset * len_list, int *send_size,
-                                         int *recv_size, ADIO_Offset off,
-                                         int size, int *count,
-                                         int *start_pos,
-                                         int *sent_to_proc, int nprocs,
-                                         int myrank, int buftype_is_contig,
-                                         int contig_access_count,
-                                         int *striping_info,
-                                         ADIOI_Access * others_req,
-                                         ADIO_Offset * send_buf_idx,
-                                         int *curr_to_proc,
-                                         int *done_to_proc, int *hole,
-                                         int iter, MPI_Aint buftype_extent,
-                                         ADIO_Offset * buf_idx,
-                                         ADIO_Offset ** srt_off, int **srt_len, int *srt_num,
-                                         int *error_code);
-void ADIOI_Heap_merge(ADIOI_Access * others_req, int *count,
-                      ADIO_Offset * srt_off, int *srt_len, int *start_pos,
-                      int nprocs, int nprocs_recv, int total_elements);
-
+                                          MPI_Count * curr_to_proc,
+                                          MPI_Count * done_to_proc, int iter,
+                                          MPI_Aint buftype_extent);
+static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf,
+                                         ADIOI_Flatlist_node * flat_buf, ADIO_Offset * offset_list,
+                                         ADIO_Offset * len_list, MPI_Count * send_size,
+                                         MPI_Count * recv_size, ADIO_Offset off, MPI_Count size,
+                                         MPI_Count * count, MPI_Count * start_pos,
+                                         MPI_Count * sent_to_proc, int nprocs, int myrank,
+                                         int buftype_is_contig, MPI_Count contig_access_count,
+                                         int *striping_info, ADIOI_Access * others_req,
+                                         ADIO_Offset * send_buf_idx, MPI_Count * curr_to_proc,
+                                         MPI_Count * done_to_proc, int *hole, int iter,
+                                         MPI_Aint buftype_extent, ADIO_Offset * buf_idx,
+                                         ADIO_Offset ** srt_off, MPI_Count ** srt_len,
+                                         MPI_Count * srt_num, int *error_code);
 static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *striping_info,
                                          ADIO_Offset * offset_list, ADIO_Offset * len_list,
-                                         int contig_access_count, int currentValidDataIndex,
-                                         int count, int file_ptr_type, ADIO_Offset offset,
+                                         MPI_Count contig_access_count,
+                                         MPI_Count currentValidDataIndex, MPI_Aint count,
+                                         int file_ptr_type, ADIO_Offset offset,
                                          ADIO_Offset start_offset, ADIO_Offset end_offset,
                                          ADIO_Offset firstFileOffset, ADIO_Offset lastFileOffset,
                                          MPI_Datatype datatype, int myrank, int *error_code);
@@ -104,9 +95,10 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count
      * whose request is written by this process. */
 
     int i, filetype_is_contig, nprocs, myrank, do_collect = 0;
-    int contig_access_count = 0, buftype_is_contig, interleave_count = 0;
-    int *count_my_req_per_proc, count_my_req_procs;
-    int *count_others_req_per_proc, count_others_req_procs;
+    MPI_Count contig_access_count = 0;
+    int buftype_is_contig, interleave_count = 0;
+    MPI_Count *count_my_req_per_proc, count_my_req_procs;
+    MPI_Count *count_others_req_per_proc, count_others_req_procs;
     ADIO_Offset orig_fp, start_offset, end_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *end_offsets = NULL;
     ADIO_Offset *len_list = NULL;
@@ -241,7 +233,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count
     }
 
     ADIO_Offset lastFileOffset = 0, firstFileOffset = -1;
-    int currentValidDataIndex = 0;
+    MPI_Count currentValidDataIndex = 0;
     if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
         /* Take out the 0-data offsets by shifting the indexes with data to the front
          * and keeping track of the valid data index for use as the length.
@@ -370,7 +362,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                         ADIOI_Access * my_req,
                                         ADIO_Offset * offset_list,
                                         ADIO_Offset * len_list,
-                                        int contig_access_count,
+                                        MPI_Count contig_access_count,
                                         int *striping_info, ADIO_Offset ** buf_idx, int *error_code)
 {
     /* Send data to appropriate processes and write in sizes of no more
@@ -383,15 +375,16 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
      * at least another 8Mbytes of temp space is unacceptable.
      */
 
-    int hole, i, j, m, flag, ntimes = 1, max_ntimes, buftype_is_contig;
+    int hole, i, m, flag, ntimes = 1, buftype_is_contig;
+    MPI_Count max_ntimes, req_len, send_len;
     ADIO_Offset st_loc = -1, end_loc = -1, min_st_loc, max_end_loc;
     ADIO_Offset off, req_off, send_off, iter_st_off, *off_list;
     ADIO_Offset max_size, step_size = 0;
-    int real_size, req_len, send_len;
-    int *recv_curr_offlen_ptr, *recv_count, *recv_size;
-    int *send_curr_offlen_ptr, *send_size;
-    int *sent_to_proc, *recv_start_pos;
-    int *curr_to_proc, *done_to_proc;
+    int real_size;
+    MPI_Count *recv_count, *send_curr_offlen_ptr, *recv_curr_offlen_ptr;
+    MPI_Count *recv_size, *send_size;
+    MPI_Count *sent_to_proc, *recv_start_pos;
+    MPI_Count *curr_to_proc, *done_to_proc;
     ADIO_Offset *send_buf_idx, *this_buf_idx;
     char *write_buf = NULL;
     MPI_Status status;
@@ -400,10 +393,10 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     int stripe_size = striping_info[0], avail_cb_nodes = striping_info[2];
     int data_sieving = 0;
     ADIO_Offset *srt_off = NULL;
-    int *srt_len = NULL;
-    int srt_num = 0;
+    MPI_Count *srt_len = NULL;
+    MPI_Count srt_num = 0;
     ADIO_Offset block_offset;
-    int block_len;
+    MPI_Count block_len;
 
     *error_code = MPI_SUCCESS;  /* changed below if error */
     /* only I/O errors are currently reported */
@@ -423,7 +416,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
         }
     }
     for (i = 0; i < nprocs; i++) {
-        for (j = 0; j < others_req[i].count; j++) {
+        for (MPI_Count j = 0; j < others_req[i].count; j++) {
             st_loc = MPL_MIN(st_loc, others_req[i].offsets[j]);
             end_loc = MPL_MAX(end_loc, (others_req[i].offsets[j] + others_req[i].lens[j] - 1));
         }
@@ -458,14 +451,14 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     for (m = 0; m < max_ntimes; m++)
         off_list[m] = max_end_loc;
     for (i = 0; i < nprocs; i++) {
-        for (j = 0; j < others_req[i].count; j++) {
+        for (MPI_Count j = 0; j < others_req[i].count; j++) {
             req_off = others_req[i].offsets[j];
             m = (int) ((req_off - min_st_loc) / step_size);
             off_list[m] = MPL_MIN(off_list[m], req_off);
         }
     }
 
-    recv_curr_offlen_ptr = (int *) ADIOI_Calloc(nprocs * 9, sizeof(int));
+    recv_curr_offlen_ptr = ADIOI_Calloc(nprocs * 9, sizeof(MPI_Count));
     send_curr_offlen_ptr = recv_curr_offlen_ptr + nprocs;
     /* their use is explained below. calloc initializes to 0. */
 
@@ -554,6 +547,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
         real_size = (int) MPL_MIN((off / stripe_size + 1) * stripe_size - off, end_loc - off + 1);
 
         for (i = 0; i < nprocs; i++) {
+            MPI_Count j;
             if (my_req[i].count) {
                 this_buf_idx[i] = buf_idx[i][send_curr_offlen_ptr[i]];
                 for (j = send_curr_offlen_ptr[i]; j < my_req[i].count; j++) {
@@ -574,9 +568,9 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                     req_len = others_req[i].lens[j];
                     if (req_off < iter_st_off + max_size) {
                         recv_count[i]++;
-                        ADIOI_Assert((((ADIO_Offset) (uintptr_t) write_buf) + req_off - off) ==
-                                     (ADIO_Offset) (uintptr_t) (write_buf + req_off - off));
-                        MPI_Get_address(write_buf + req_off - off, &(others_req[i].mem_ptrs[j]));
+                        MPI_Aint addr;
+                        MPI_Get_address(write_buf + req_off - off, &addr);
+                        others_req[i].mem_ptrs[j] = addr;
                         recv_size[i] += req_len;
                     } else {
                         break;
@@ -679,24 +673,24 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
                                          char *write_buf,
                                          ADIOI_Flatlist_node * flat_buf,
                                          ADIO_Offset * offset_list,
-                                         ADIO_Offset * len_list, int *send_size,
-                                         int *recv_size, ADIO_Offset off,
-                                         int size, int *count,
-                                         int *start_pos,
-                                         int *sent_to_proc, int nprocs,
+                                         ADIO_Offset * len_list, MPI_Count * send_size,
+                                         MPI_Count * recv_size, ADIO_Offset off,
+                                         MPI_Count size, MPI_Count * count,
+                                         MPI_Count * start_pos,
+                                         MPI_Count * sent_to_proc, int nprocs,
                                          int myrank, int buftype_is_contig,
-                                         int contig_access_count,
+                                         MPI_Count contig_access_count,
                                          int *striping_info,
                                          ADIOI_Access * others_req,
                                          ADIO_Offset * send_buf_idx,
-                                         int *curr_to_proc, int *done_to_proc,
+                                         MPI_Count * curr_to_proc, MPI_Count * done_to_proc,
                                          int *hole, int iter,
                                          MPI_Aint buftype_extent,
                                          ADIO_Offset * buf_idx,
-                                         ADIO_Offset ** srt_off, int **srt_len, int *srt_num,
-                                         int *error_code)
+                                         ADIO_Offset ** srt_off, MPI_Count ** srt_len,
+                                         MPI_Count * srt_num, int *error_code)
 {
-    int i, j, k, nprocs_recv, nprocs_send, err;
+    int i, j, nprocs_recv, nprocs_send, err;
     char **send_buf = NULL;
     MPI_Request *requests, *send_req;
     MPI_Datatype *recv_types;
@@ -756,7 +750,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
                 ADIOI_Free(*srt_len);
             }
             *srt_off = (ADIO_Offset *) ADIOI_Malloc(*srt_num * sizeof(ADIO_Offset));
-            *srt_len = (int *) ADIOI_Malloc(*srt_num * sizeof(int));
+            *srt_len = ADIOI_Malloc(*srt_num * sizeof(MPI_Offset));
             malloc_srt_num = *srt_num;
         }
 
@@ -823,8 +817,8 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
         for (i = 0; i < nprocs; i++)
             if (send_size[i]) {
                 ADIOI_Assert(buf_idx[i] != -1);
-                MPI_Issend(((char *) buf) + buf_idx[i], send_size[i],
-                           MPI_BYTE, i, ADIOI_COLL_TAG(i, iter), fd->comm, send_req + j);
+                MPI_Issend_c(((char *) buf) + buf_idx[i], send_size[i],
+                             MPI_BYTE, i, ADIOI_COLL_TAG(i, iter), fd->comm, send_req + j);
                 j++;
             }
     } else if (nprocs_send) {
@@ -926,8 +920,6 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
 { \
     while (size) { \
         size_in_buf = MPL_MIN(size, flat_buf_sz); \
-        ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + user_buf_idx) == (ADIO_Offset)(uintptr_t)((uintptr_t)buf + user_buf_idx)); \
-        ADIOI_Assert(size_in_buf == (size_t)size_in_buf);               \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
                ((char *) buf) + user_buf_idx, size_in_buf); \
         send_buf_idx[p] += size_in_buf; \
@@ -953,19 +945,22 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
                                           ADIOI_Flatlist_node * flat_buf,
                                           char **send_buf,
                                           ADIO_Offset * offset_list,
-                                          ADIO_Offset * len_list, int *send_size,
+                                          ADIO_Offset * len_list, MPI_Count * send_size,
                                           MPI_Request * requests,
-                                          int *sent_to_proc, int nprocs,
+                                          MPI_Count * sent_to_proc, int nprocs,
                                           int myrank,
-                                          int contig_access_count,
+                                          MPI_Count contig_access_count,
                                           int *striping_info,
                                           ADIO_Offset * send_buf_idx,
-                                          int *curr_to_proc,
-                                          int *done_to_proc, int iter, MPI_Aint buftype_extent)
+                                          MPI_Count * curr_to_proc,
+                                          MPI_Count * done_to_proc, int iter,
+                                          MPI_Aint buftype_extent)
 {
     /* this function is only called if buftype is not contig */
-    int i, p, flat_buf_idx, size;
-    int flat_buf_sz, buf_incr, size_in_buf, jj, n_buftypes;
+    int p;
+    MPI_Count size, flat_buf_idx, buf_incr;
+    MPI_Aint flat_buf_sz, size_in_buf;
+    int jj, n_buftypes;
     ADIO_Offset off, len, rem_len, user_buf_idx;
 
     /* curr_to_proc[p] = amount of data sent to proc. p that has already
@@ -976,7 +971,7 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
      * send_buf_idx[p] = current location in send_buf of proc. p
      */
 
-    for (i = 0; i < nprocs; i++) {
+    for (int i = 0; i < nprocs; i++) {
         send_buf_idx[i] = curr_to_proc[i] = 0;
         done_to_proc[i] = sent_to_proc[i];
     }
@@ -990,7 +985,7 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
     /* flat_buf_idx = current index into flattened buftype
      * flat_buf_sz = size of current contiguous component in flattened buf
      */
-    for (i = 0; i < contig_access_count; i++) {
+    for (MPI_Count i = 0; i < contig_access_count; i++) {
         off = offset_list[i];
         rem_len = (ADIO_Offset) len_list[i];
 
@@ -1006,42 +1001,33 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
             if (send_buf_idx[p] < send_size[p]) {
                 if (curr_to_proc[p] + len > done_to_proc[p]) {
                     if (done_to_proc[p] > curr_to_proc[p]) {
-                        size = (int) MPL_MIN(curr_to_proc[p] + len -
-                                             done_to_proc[p], send_size[p] - send_buf_idx[p]);
+                        size = MPL_MIN(curr_to_proc[p] + len -
+                                       done_to_proc[p], send_size[p] - send_buf_idx[p]);
                         buf_incr = done_to_proc[p] - curr_to_proc[p];
-                        ADIOI_BUF_INCR
-                            ADIOI_Assert((curr_to_proc[p] + len - done_to_proc[p]) ==
-                                         (unsigned) (curr_to_proc[p] + len - done_to_proc[p]));
-                        buf_incr = (int) (curr_to_proc[p] + len - done_to_proc[p]);
-                        ADIOI_Assert((done_to_proc[p] + size) ==
-                                     (unsigned) (done_to_proc[p] + size));
+                        ADIOI_BUF_INCR buf_incr = (curr_to_proc[p] + len - done_to_proc[p]);
                         curr_to_proc[p] = done_to_proc[p] + size;
                     ADIOI_BUF_COPY} else {
-                        size = (int) MPL_MIN(len, send_size[p] - send_buf_idx[p]);
-                        buf_incr = (int) len;
-                        ADIOI_Assert((curr_to_proc[p] + size) ==
-                                     (unsigned) ((ADIO_Offset) curr_to_proc[p] + size));
+                        size = MPL_MIN(len, send_size[p] - send_buf_idx[p]);
+                        buf_incr = len;
                         curr_to_proc[p] += size;
                     ADIOI_BUF_COPY}
                     if (send_buf_idx[p] == send_size[p]) {
-                        MPI_Issend(send_buf[p], send_size[p], MPI_BYTE, p,
-                                   ADIOI_COLL_TAG(p, iter), fd->comm, requests + jj);
+                        MPI_Issend_c(send_buf[p], send_size[p], MPI_BYTE, p,
+                                     ADIOI_COLL_TAG(p, iter), fd->comm, requests + jj);
                         jj++;
                     }
                 } else {
-                    ADIOI_Assert((curr_to_proc[p] + len) ==
-                                 (unsigned) ((ADIO_Offset) curr_to_proc[p] + len));
-                    curr_to_proc[p] += (int) len;
-                    buf_incr = (int) len;
+                    curr_to_proc[p] += len;
+                    buf_incr = len;
                 ADIOI_BUF_INCR}
             } else {
-                buf_incr = (int) len;
+                buf_incr = len;
             ADIOI_BUF_INCR}
             off += len;
             rem_len -= len;
         }
     }
-    for (i = 0; i < nprocs; i++)
+    for (int i = 0; i < nprocs; i++)
         if (send_size[i])
             sent_to_proc[i] = curr_to_proc[i];
 }
@@ -1053,8 +1039,9 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
  */
 static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *striping_info,
                                          ADIO_Offset * offset_list, ADIO_Offset * len_list,
-                                         int contig_access_count, int currentValidDataIndex,
-                                         int count, int file_ptr_type, ADIO_Offset offset,
+                                         MPI_Count contig_access_count,
+                                         MPI_Count currentValidDataIndex, MPI_Aint count,
+                                         int file_ptr_type, ADIO_Offset offset,
                                          ADIO_Offset start_offset, ADIO_Offset end_offset,
                                          ADIO_Offset firstFileOffset, ADIO_Offset lastFileOffset,
                                          MPI_Datatype datatype, int myrank, int *error_code)
@@ -1120,10 +1107,10 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
     /* Find the actual range of stripes in the file that have data in the offset
      * ranges being written -- skip holes at the front and back of the file.
      */
-    int currentOffsetListIndex = 0;
-    int fileSegmentIter = 0;
-    int startingStripeWithData = 0;
-    int foundStartingStripeWithData = 0;
+    MPI_Count currentOffsetListIndex = 0;
+    MPI_Count fileSegmentIter = 0;
+    MPI_Count startingStripeWithData = 0;
+    MPI_Count foundStartingStripeWithData = 0;
     while (!foundStartingStripeWithData) {
         if (((startingStripeWithData + 1) * (ADIO_Offset) (striping_info[0])) > firstFileOffset)
             foundStartingStripeWithData = 1;
@@ -1134,8 +1121,8 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
     ADIO_Offset currentSegementOffset =
         (ADIO_Offset) startingStripeWithData * (ADIO_Offset) (striping_info[0]);
 
-    int numSegments =
-        (int) ((lastFileOffset + (ADIO_Offset) 1 - currentSegementOffset) / stripeParms.segmentLen);
+    MPI_Count numSegments =
+        ((lastFileOffset + (ADIO_Offset) 1 - currentSegementOffset) / stripeParms.segmentLen);
     if ((lastFileOffset + (ADIO_Offset) 1 - currentSegementOffset) % stripeParms.segmentLen > 0)
         numSegments++;
 
@@ -1167,7 +1154,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
 
         for (fileSegmentIter = 0; fileSegmentIter < numSegments; fileSegmentIter++) {
 
-            int dataWrittenThisRound = 0;
+            MPI_Count dataWrittenThisRound = 0;
 
             /* Define the segment range in terms of file offsets.
              */
@@ -1200,9 +1187,9 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
              * segment, and then restore it appropriately after processing for this segment has
              * concluded, so it is ready for the next segment.
              */
-            int segmentContigAccessCount = 0;
-            int startingOffsetListIndex = -1;
-            int endingOffsetListIndex = -1;
+            MPI_Count segmentContigAccessCount = 0;
+            MPI_Count startingOffsetListIndex = -1;
+            MPI_Count endingOffsetListIndex = -1;
             ADIO_Offset startingOffsetAdvancement = 0;
             ADIO_Offset startingLenTrim = 0;
             ADIO_Offset endingLenTrim = 0;
@@ -1213,7 +1200,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                 currentOffsetListIndex++;
             startingOffsetListIndex = currentOffsetListIndex;
             endingOffsetListIndex = currentOffsetListIndex;
-            int offsetInSegment = 0;
+            MPI_Count offsetInSegment = 0;
             ADIO_Offset offsetStart = offset_list[currentOffsetListIndex];
             ADIO_Offset offsetEnd =
                 (offset_list[currentOffsetListIndex] +
@@ -1241,7 +1228,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
 
                 while ((offset_list[currentOffsetListIndex] <= segmentLastFileOffset) &&
                        (currentOffsetListIndex < contig_access_count)) {
-                    dataWrittenThisRound += (int) len_list[currentOffsetListIndex];
+                    dataWrittenThisRound += len_list[currentOffsetListIndex];
                     currentOffsetListIndex++;
                 }
 
@@ -1255,7 +1242,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                          */
                         currentOffsetListIndex--;
                     } else {
-                        dataWrittenThisRound += (int) len_list[currentOffsetListIndex];
+                        dataWrittenThisRound += len_list[currentOffsetListIndex];
                     }
                     segmentContigAccessCount += (currentOffsetListIndex - startingOffsetListIndex);
                     endingOffsetListIndex = currentOffsetListIndex;
@@ -1269,7 +1256,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                     startingOffsetAdvancement =
                         segmentFirstFileOffset - offset_list[startingOffsetListIndex];
                     offset_list[startingOffsetListIndex] += startingOffsetAdvancement;
-                    dataWrittenThisRound -= (int) startingOffsetAdvancement;
+                    dataWrittenThisRound -= startingOffsetAdvancement;
                     startingLenTrim = startingOffsetAdvancement;
                     len_list[startingOffsetListIndex] -= startingLenTrim;
                 }
@@ -1282,7 +1269,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                         ((ADIO_Offset) (len_list[endingOffsetListIndex])) - (ADIO_Offset) 1 -
                         segmentLastFileOffset;
                     len_list[endingOffsetListIndex] -= endingLenTrim;
-                    dataWrittenThisRound -= (int) endingLenTrim;
+                    dataWrittenThisRound -= endingLenTrim;
                 }
             }
 
@@ -1314,10 +1301,8 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
             ADIOI_Datatype_iscontig(datatype, &bufTypeIsContig);
             if (bufTypeIsContig) {
                 ADIOI_OneSidedWriteAggregation(fd,
-                                               (ADIO_Offset *) &
-                                               (offset_list[startingOffsetListIndex]),
-                                               (ADIO_Offset *) &
-                                               (len_list[startingOffsetListIndex]),
+                                               &(offset_list[startingOffsetListIndex]),
+                                               &(len_list[startingOffsetListIndex]),
                                                segmentContigAccessCount,
                                                buf + totalDataWrittenLastRound, datatype,
                                                error_code, segmentFirstFileOffset,
@@ -1326,10 +1311,8 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                                                &holeFoundThisRound, &stripeParms);
             } else {
                 ADIOI_OneSidedWriteAggregation(fd,
-                                               (ADIO_Offset *) &
-                                               (offset_list[startingOffsetListIndex]),
-                                               (ADIO_Offset *) &
-                                               (len_list[startingOffsetListIndex]),
+                                               &(offset_list[startingOffsetListIndex]),
+                                               &(len_list[startingOffsetListIndex]),
                                                segmentContigAccessCount, buf, datatype, error_code,
                                                segmentFirstFileOffset, segmentLastFileOffset,
                                                currentValidDataIndex, segment_stripe_start,
