@@ -96,7 +96,7 @@ if test "X$main_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
 fi
 
 AC_ARG_ENABLE(echo,
-        [AC_HELP_STRING([--enable-echo],[Turn on strong echoing. The default is enable=no.])],
+        [AS_HELP_STRING([--enable-echo],[Turn on strong echoing. The default is enable=no.])],
         [set -x])
 
 AC_ARG_ENABLE(fortran,
@@ -141,23 +141,23 @@ RUNTESTS_OPTS=
 AC_SUBST(RUNTESTS_OPTS)
 
 AC_ARG_ENABLE(cxx,
-        [AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
+        [AS_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
 
 AC_ARG_ENABLE(romio,
-        [AC_HELP_STRING([--enable-romio],[Enable MPI I/O tests])])
+        [AS_HELP_STRING([--enable-romio],[Enable MPI I/O tests])])
 
 AC_ARG_ENABLE(namepub,
-        [AC_HELP_STRING([--enable-namepub],
+        [AS_HELP_STRING([--enable-namepub],
                 [Enable tests of the dynamic process parts of MPI-2 (default)])],,
         [enable_namepub=yes])
 
 AC_ARG_ENABLE(spawn,
-        [AC_HELP_STRING([--enable-spawn],
+        [AS_HELP_STRING([--enable-spawn],
                 [Enable tests of the dynamic process parts of MPI-2 (default)])],,
         [enable_spawn=yes])
 
 AC_ARG_ENABLE(rma,
-        [AC_HELP_STRING([--enable-rma],[Enable tests of the one sided parts of MPI-2 (default)])],,
+        [AS_HELP_STRING([--enable-rma],[Enable tests of the one sided parts of MPI-2 (default)])],,
         [enable_rma=yes])
 
 AC_ARG_ENABLE(part,
@@ -228,7 +228,7 @@ AC_ARG_ENABLE(threads,
         [enable_threads=yes])
 
 AC_ARG_ENABLE(xfail,
-        [AC_HELP_STRING([--enable-xfail],
+        [AS_HELP_STRING([--enable-xfail],
                 [Run tests marked for expected failure])],,
         [enable_xfail=no])
 
@@ -261,16 +261,16 @@ dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
 
 AC_ARG_WITH(mpi,
-        [AC_HELP_STRING([--with-mpi=dir],
+        [AS_HELP_STRING([--with-mpi=dir],
                 [Use the selected MPI; compilation scripts for mpicc,
                 mpifort and mpicxx should be in dir/bin])],,)
 
 AC_ARG_ENABLE(mpi-abi,
-        [AC_HELP_STRING([--enable-mpi-abi],
+        [AS_HELP_STRING([--enable-mpi-abi],
                 [Compile the C tests using mpicc_abi])],,[enable_mpi_abi=no])
 
 AC_ARG_WITH(pm,
-        AC_HELP_STRING([--with-pm=name],
+        AS_HELP_STRING([--with-pm=name],
                 [Specify the process manager for MPICH.  "no" or "none" are
                  valid values.  Multiple process managers may be specified as
                  long as they all use the same pmi interface by separating them
@@ -314,7 +314,7 @@ else
 fi
 
 AC_ARG_WITH(config-args,
-        [AC_HELP_STRING([--with-config-args=filename],
+        [AS_HELP_STRING([--with-config-args=filename],
                 [Specify configure argument file that contains the
                 values of variables that configure reads,
                 e.g. CC,CFLAGS,F77,FFLAGS,FC,FCFLAGS....  If the
