@@ -17,7 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h> /* getopt() */
+#include <unistd.h>     /* getopt() */
 #include <assert.h>
 
 #include <mpi.h>
@@ -53,19 +53,18 @@ int Errors;
 #define GAP   1
 #define NVARS 1100
 
-static void
-usage(char *argv0)
+static void usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-hvwr | -n num | -l num | -g num | file_name]\n"
-    "       [-h] Print this help\n"
-    "       [-v] verbose mode\n"
-    "       [-w] performs write only (default: both write and read)\n"
-    "       [-r] performs read  only (default: both write and read)\n"
-    "       [-n num] number of global variables (default: %d)\n"
-    "       [-l num] length of dimensions X and Y each local variable (default: %d)\n"
-    "       [-g num] gap at the end of each dimension (default: %d)\n"
-    "       [file_name] output file name\n";
+        "Usage: %s [-hvwr | -n num | -l num | -g num | file_name]\n"
+        "       [-h] Print this help\n"
+        "       [-v] verbose mode\n"
+        "       [-w] performs write only (default: both write and read)\n"
+        "       [-r] performs read  only (default: both write and read)\n"
+        "       [-n num] number of global variables (default: %d)\n"
+        "       [-l num] length of dimensions X and Y each local variable (default: %d)\n"
+        "       [-g num] gap at the end of each dimension (default: %d)\n"
+        "       [file_name] output file name\n";
     fprintf(stderr, help, argv0, NVARS, LEN, GAP);
 }
 
@@ -77,9 +76,9 @@ int main(int argc, char **argv)
     int ret, err, rank, verbose, omode, nprocs, do_read, do_write;
     int nvars, len, gap, psize[2], gsize[2], count[2], start[2];
     char *buf;
-    MPI_File     fh;
+    MPI_File fh;
     MPI_Datatype subType, filetype, buftype;
-    MPI_Status   status;
+    MPI_Status status;
     MPI_Offset fsize;
     int *array_of_blocklengths;
     MPI_Aint *array_of_displacements;
@@ -95,37 +94,45 @@ int main(int argc, char **argv)
     gap = GAP;
     nvars = NVARS;
     do_write = 1;
-    do_read  = 1;
+    do_read = 1;
     verbose = 0;
 
     /* get command-line arguments */
     while ((ret = getopt(argc, argv, "hvwrn:l:g:")) != EOF)
-        switch(ret) {
-            case 'v': verbose = 1;
-                      break;
-            case 'w': do_read = 0;
-                      break;
-            case 'r': do_write = 0;
-                      break;
-            case 'n': nvars = atoi(optarg);
-                      break;
-            case 'l': len = atoi(optarg);
-                      break;
-            case 'g': gap = atoi(optarg);
-                      break;
+        switch (ret) {
+            case 'v':
+                verbose = 1;
+                break;
+            case 'w':
+                do_read = 0;
+                break;
+            case 'r':
+                do_write = 0;
+                break;
+            case 'n':
+                nvars = atoi(optarg);
+                break;
+            case 'l':
+                len = atoi(optarg);
+                break;
+            case 'g':
+                gap = atoi(optarg);
+                break;
             case 'h':
-            default:  if (rank==0) usage(argv[0]);
-                      MPI_Finalize();
-                      return 1;
+            default:
+                if (rank == 0)
+                    usage(argv[0]);
+                MPI_Finalize();
+                return 1;
         }
     if (argv[optind] == NULL)
         sprintf(filename, "%s.out", argv[0]);
     else
         snprintf(filename, 256, "%s", argv[optind]);
 
-    array_of_blocklengths = (int*) malloc(sizeof(int) * nvars);
-    array_of_displacements = (MPI_Aint*) malloc(sizeof(MPI_Aint) * nvars);
-    array_of_types = (MPI_Datatype*) malloc(sizeof(MPI_Datatype) * nvars);
+    array_of_blocklengths = (int *) malloc(sizeof(int) * nvars);
+    array_of_displacements = (MPI_Aint *) malloc(sizeof(MPI_Aint) * nvars);
+    array_of_types = (MPI_Datatype *) malloc(sizeof(MPI_Datatype) * nvars);
 
     /* Creates a division of processors in a cartesian grid */
     psize[0] = psize[1] = 0;
@@ -139,26 +146,26 @@ int main(int argc, char **argv)
     /* set subarray offset and length */
     start[0] = len * (rank / psize[1]);
     start[1] = len * (rank % psize[1]);
-    count[0] = len - gap;   /* -1 to create holes */
+    count[0] = len - gap;       /* -1 to create holes */
     count[1] = len - gap;
 
-    fsize = (MPI_Offset)gsize[0] * gsize[1] * nvars - (len+1);
+    fsize = (MPI_Offset) gsize[0] * gsize[1] * nvars - (len + 1);
     if (verbose) {
-        buf_len = (size_t)nvars * (len-1) * (len-1);
+        buf_len = (size_t) nvars *(len - 1) * (len - 1);
         if (rank == 0) {
             printf("Output file name = %s\n", filename);
             printf("nprocs=%d nvars=%d len=%d\n", nprocs, nvars, len);
             printf("Expecting file size=%lld bytes (%.1f MB, %.1f GB)\n",
-                   fsize*2, (float)fsize*2/1048576,(float)fsize*2/1073741824);
+                   fsize * 2, (float) fsize * 2 / 1048576, (float) fsize * 2 / 1073741824);
             printf("Each global variable is of size %d bytes (%.1f MB)\n",
-                   gsize[0]*gsize[1],(float)gsize[0]*gsize[1]/1048576);
+                   gsize[0] * gsize[1], (float) gsize[0] * gsize[1] / 1048576);
             printf("Each process writes %zd bytes (%.1f MB, %.1f GB)\n",
-                   buf_len,(float)buf_len/1048576,(float)buf_len/1073741824);
+                   buf_len, (float) buf_len / 1048576, (float) buf_len / 1073741824);
             printf("** For nonblocking I/O test, the amount is twice\n");
             printf("-------------------------------------------------------\n");
         }
         printf("rank %3d: gsize=%4d %4d start=%4d %4d count=%4d %4d\n", rank,
-               gsize[0],gsize[1],start[0],start[1],count[0],count[1]);
+               gsize[0], gsize[1], start[0], start[1], count[0], count[1]);
     }
 
     /* create 2D subarray datatype for fileview */
@@ -168,15 +175,13 @@ int main(int argc, char **argv)
     CHECK_MPI_ERROR("MPI_Type_commit");
 
     /* create a filetype by concatenating nvars subType */
-    for (i=0; i<nvars; i++) {
+    for (i = 0; i < nvars; i++) {
         array_of_blocklengths[i] = 1;
-        array_of_displacements[i] = gsize[0]*gsize[1]*i;
+        array_of_displacements[i] = gsize[0] * gsize[1] * i;
         array_of_types[i] = subType;
     }
     err = MPI_Type_create_struct(nvars, array_of_blocklengths,
-                                        array_of_displacements,
-                                        array_of_types,
-                                        &filetype);
+                                 array_of_displacements, array_of_types, &filetype);
     CHECK_MPI_ERROR("MPI_Type_create_struct");
     err = MPI_Type_commit(&filetype);
     CHECK_MPI_ERROR("MPI_Type_commit");
@@ -188,7 +193,7 @@ int main(int argc, char **argv)
     gsize[1] = len;
     start[0] = 0;
     start[1] = 0;
-    count[0] = len - gap;  /* -1 to create holes */
+    count[0] = len - gap;       /* -1 to create holes */
     count[1] = len - gap;
 
     err = MPI_Type_create_subarray(2, gsize, count, start, MPI_ORDER_C, MPI_BYTE, &subType);
@@ -197,17 +202,15 @@ int main(int argc, char **argv)
     CHECK_MPI_ERROR("MPI_Type_commit");
 
     /* concatenate nvars subType into a buftype */
-    for (i=0; i<nvars; i++) {
+    for (i = 0; i < nvars; i++) {
         array_of_blocklengths[i] = 1;
-        array_of_displacements[i] = len*len*i;
+        array_of_displacements[i] = len * len * i;
         array_of_types[i] = subType;
     }
 
     /* create a buftype by concatenating nvars subTypes */
     err = MPI_Type_create_struct(nvars, array_of_blocklengths,
-                                        array_of_displacements,
-                                        array_of_types,
-                                        &buftype);
+                                 array_of_displacements, array_of_types, &buftype);
     CHECK_MPI_ERROR("MPI_Type_create_struct");
     err = MPI_Type_commit(&buftype);
     CHECK_MPI_ERROR("MPI_Type_commit");
@@ -219,9 +222,10 @@ int main(int argc, char **argv)
     free(array_of_types);
 
     /* allocate a local buffer */
-    buf_len = (size_t)nvars * len * len;
-    buf = (char*) malloc(buf_len);
-    for (i=0; i<buf_len; i++) buf[i] = (char)rank;
+    buf_len = (size_t) nvars *len * len;
+    buf = (char *) malloc(buf_len);
+    for (i = 0; i < buf_len; i++)
+        buf[i] = (char) rank;
 
     /* open to create a file */
     omode = MPI_MODE_CREATE | MPI_MODE_RDWR;
@@ -248,8 +252,9 @@ int main(int argc, char **argv)
         CHECK_MPIO_ERROR("MPI_File_write");
 
         /* MPI nonblocking collective write */
-        char *buf2 = (char*) malloc(buf_len);
-        for (i=0; i<buf_len; i++) buf2[i] = (char)rank;
+        char *buf2 = (char *) malloc(buf_len);
+        for (i = 0; i < buf_len; i++)
+            buf2[i] = (char) rank;
 
         err = MPI_File_seek(fh, 0, MPI_SEEK_SET);
         CHECK_MPIO_ERROR("MPI_File_seek");
@@ -295,8 +300,9 @@ int main(int argc, char **argv)
         CHECK_MPIO_ERROR("MPI_File_read");
 
         /* MPI nonblocking collective read */
-        char *buf2 = (char*) malloc(buf_len);
-        for (i=0; i<buf_len; i++) buf2[i] = (char)rank;
+        char *buf2 = (char *) malloc(buf_len);
+        for (i = 0; i < buf_len; i++)
+            buf2[i] = (char) rank;
 
         err = MPI_File_seek(fh, 0, MPI_SEEK_SET);
         CHECK_MPIO_ERROR("MPI_File_seek");
