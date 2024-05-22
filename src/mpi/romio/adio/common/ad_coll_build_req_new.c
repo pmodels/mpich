@@ -241,16 +241,16 @@ int ADIOI_init_view_state(int file_ptr_type, int nprocs, view_state * view_state
 /* Return the next file realm offset and length for this datatype state
  * within a particular file realm. */
 static inline MPI_Count get_next_fr_off(ADIO_File fd,
-                                  ADIO_Offset off,
-                                  ADIO_Offset fr_st_off,
-                                  MPI_Datatype * fr_type_p,
-                                  ADIO_Offset * fr_next_off_p, ADIO_Offset * fr_max_len_p)
+                                        ADIO_Offset off,
+                                        ADIO_Offset fr_st_off,
+                                        MPI_Datatype * fr_type_p,
+                                        ADIO_Offset * fr_next_off_p, ADIO_Offset * fr_max_len_p)
 {
     MPI_Aint lb, fr_extent = -1;
     ADIO_Offset tmp_off, off_rem;
     ADIOI_Flatlist_node *fr_node_p;
     int i = -1;
-    MPI_Count fr_dtype_ct=0;
+    MPI_Count fr_dtype_ct = 0;
 
     /* Should have already been flattened in calc_file_realms() */
     fr_node_p = ADIOI_Flatten_and_find(*fr_type_p);
@@ -292,11 +292,11 @@ static inline MPI_Count get_next_fr_off(ADIO_File fd,
  * realm (possibly more than the actual view state may be able to
  * process contiguously). */
 static inline MPI_Count find_next_off(ADIO_File fd,
-                                view_state * view_state_p,
-                                ADIO_Offset fr_st_off,
-                                MPI_Datatype * fr_type_p,
-                                int op_type,
-                                ADIO_Offset * cur_off_p, ADIO_Offset * cur_reg_max_len_p)
+                                      view_state * view_state_p,
+                                      ADIO_Offset fr_st_off,
+                                      MPI_Datatype * fr_type_p,
+                                      int op_type,
+                                      ADIO_Offset * cur_off_p, ADIO_Offset * cur_reg_max_len_p)
 {
     ADIOI_Flatlist_node *tmp_flat_type_p = NULL;
     ADIO_Offset tmp_off = -1, fr_next_off = -1, fr_max_len = -1, tmp_fr_max_len = -1;
@@ -569,7 +569,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
                          * the file than an MPI_Aint */
                         if (!agg_ol_cur_ct)
                             *agg_dtype_offset_p = st_reg;
-                        agg_disp_arr[agg_ol_cur_ct] = st_reg -  *agg_dtype_offset_p;
+                        agg_disp_arr[agg_ol_cur_ct] = st_reg - *agg_dtype_offset_p;
                         agg_blk_arr[agg_ol_cur_ct] = act_reg_sz;
                         agg_ol_cur_ct++;
                     } else {
@@ -599,8 +599,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
         if (i == TEMP_OFF) {
             /* Allocate offset-length pairs for creating hindexed
              * MPI_Datatypes for both the client and the aggregator. */
-            if ((client_disp_arr =
-                 ADIOI_Malloc(nprocs * sizeof(MPI_Count *))) == NULL) {
+            if ((client_disp_arr = ADIOI_Malloc(nprocs * sizeof(MPI_Count *))) == NULL) {
                 fprintf(stderr, "ADIOI_Build_agg_reqs: malloc " "client_disp_arr failed\n");
                 return -1;
             }
@@ -626,13 +625,11 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
             }
 
             if (agg_ol_ct > 0) {
-                if ((agg_disp_arr =
-                    ADIOI_Malloc(agg_ol_ct * sizeof(*agg_disp_arr))) == NULL) {
+                if ((agg_disp_arr = ADIOI_Malloc(agg_ol_ct * sizeof(*agg_disp_arr))) == NULL) {
                     fprintf(stderr, "ADIOI_Build_agg_reqs: malloc disp_arr failed\n");
                     return -1;
                 }
-                if ((agg_blk_arr =
-                     ADIOI_Malloc(agg_ol_ct * sizeof(MPI_Count))) == NULL) {
+                if ((agg_blk_arr = ADIOI_Malloc(agg_ol_ct * sizeof(MPI_Count))) == NULL) {
                     ADIOI_Free(agg_disp_arr);
                     fprintf(stderr, "ADIOI_Build_agg_reqs: malloc blk_arr failed\n");
                     return -1;
@@ -708,7 +705,7 @@ int ADIOI_Build_agg_reqs(ADIO_File fd, int rw_type, int nprocs,
     for (i = 0; i < nprocs; i++) {
         if (client_comm_sz_arr[i] > 0) {
             MPI_Type_create_hindexed_c(client_ol_ct_arr[i], client_blk_arr[i],
-                                     client_disp_arr[i], MPI_BYTE, &(client_comm_dtype_arr[i]));
+                                       client_disp_arr[i], MPI_BYTE, &(client_comm_dtype_arr[i]));
             MPI_Type_commit(&(client_comm_dtype_arr[i]));
         } else {
             client_comm_dtype_arr[i] = MPI_BYTE;
@@ -938,8 +935,7 @@ int ADIOI_Build_client_reqs(ADIO_File fd,
         if (i == TEMP_OFF) {
             /* Allocate offset-length pairs for creating hindexed
              * MPI_Datatypes for each aggregator */
-            if ((agg_disp_arr =
-                 ADIOI_Malloc(nprocs * sizeof(MPI_Count *))) == NULL) {
+            if ((agg_disp_arr = ADIOI_Malloc(nprocs * sizeof(MPI_Count *))) == NULL) {
                 fprintf(stderr, "ADIOI_Build_client_reqs: malloc agg_disp_arr failed\n");
                 return -1;
             }
@@ -950,14 +946,12 @@ int ADIOI_Build_client_reqs(ADIO_File fd,
                 return -1;
             }
             for (j = 0; j < nprocs; j++) {
-                if ((agg_disp_arr[j] =
-                     ADIOI_Malloc(agg_ol_ct_arr[j] * sizeof(MPI_Count))) == NULL) {
+                if ((agg_disp_arr[j] = ADIOI_Malloc(agg_ol_ct_arr[j] * sizeof(MPI_Count))) == NULL) {
                     fprintf(stderr, "ADIOI_Build_client_reqs: malloc "
                             "agg_disp_arr[%d] failed\n", j);
                     return -1;
                 }
-                if ((agg_blk_arr[j] =
-                     ADIOI_Malloc(agg_ol_ct_arr[j] * sizeof(MPI_Count))) == NULL) {
+                if ((agg_blk_arr[j] = ADIOI_Malloc(agg_ol_ct_arr[j] * sizeof(MPI_Count))) == NULL) {
                     ADIOI_Free(agg_disp_arr[j]);
                     fprintf(stderr, "ADIOI_Build_client_reqs: malloc "
                             "agg_blk_arr[%d] failed\n", j);
@@ -997,7 +991,7 @@ int ADIOI_Build_client_reqs(ADIO_File fd,
     for (i = 0; i < nprocs; i++) {
         if (agg_comm_sz_arr[i] > 0) {
             MPI_Type_create_hindexed_c(agg_ol_ct_arr[i], agg_blk_arr[i],
-                                     agg_disp_arr[i], MPI_BYTE, &(agg_comm_dtype_arr[i]));
+                                       agg_disp_arr[i], MPI_BYTE, &(agg_comm_dtype_arr[i]));
             MPI_Type_commit(&(agg_comm_dtype_arr[i]));
         } else {
             agg_comm_dtype_arr[i] = MPI_BYTE;
@@ -1311,11 +1305,12 @@ static int process_pre_req(ADIO_File fd,
                            ADIO_Offset agg_comm_sz,
                            int off_type,
                            MPI_Count * agg_disp_arr,
-                           MPI_Count *agg_blk_arr,
+                           MPI_Count * agg_blk_arr,
                            ADIO_Offset * agg_comm_pre_sz_p,
                            ADIO_Offset * agg_comm_cur_sz_p,
                            ADIO_Offset * agg_comm_sz_p,
-                           MPI_Count *agg_ol_cur_ct_p, MPI_Count *agg_ol_ct_p, ADIO_Offset * agg_mem_next_off_p)
+                           MPI_Count * agg_ol_cur_ct_p, MPI_Count * agg_ol_ct_p,
+                           ADIO_Offset * agg_mem_next_off_p)
 {
     int i, has_partial = 0;
     MPI_Aint partial_disp = 0;
@@ -1410,7 +1405,7 @@ static int process_pre_req(ADIO_File fd,
                     return -1;
                 }
                 if ((new_pre_blk_arr =
-                    ADIOI_Malloc(remain_ol_ct * sizeof(*new_pre_blk_arr))) == NULL) {
+                     ADIOI_Malloc(remain_ol_ct * sizeof(*new_pre_blk_arr))) == NULL) {
                     fprintf(stderr, "process_pre_req: malloc " "new_pre_blk_arr failed\n");
                     return -1;
                 }
@@ -1639,18 +1634,17 @@ int ADIOI_Build_client_req(ADIO_File fd,
         if (i == TEMP_OFF) {
             /* Allocate offset-length pairs for creating hindexed
              * MPI_Datatypes for each aggregator */
-            if ((agg_disp_arr =
-                 ADIOI_Malloc(agg_ol_ct * sizeof(MPI_Count))) == NULL) {
+            if ((agg_disp_arr = ADIOI_Malloc(agg_ol_ct * sizeof(MPI_Count))) == NULL) {
                 fprintf(stderr, "ADIOI_Build_client_req: malloc "
                         "agg_disp_arr of size %ld failed\n",
                         (long int) agg_ol_ct * sizeof(MPI_Count));
                 return -1;
             }
-            if ((agg_blk_arr =
-                 ADIOI_Malloc(agg_ol_ct * sizeof(*agg_blk_arr))) == NULL) {
+            if ((agg_blk_arr = ADIOI_Malloc(agg_ol_ct * sizeof(*agg_blk_arr))) == NULL) {
                 ADIOI_Free(agg_disp_arr);
                 fprintf(stderr, "ADIOI_Build_client_req: malloc "
-                        "agg_blk_arr of size %ld failed\n", (long int) agg_ol_ct * sizeof(*agg_blk_arr));
+                        "agg_blk_arr of size %ld failed\n",
+                        (long int) agg_ol_ct * sizeof(*agg_blk_arr));
                 return -1;
             }
         }
@@ -1695,7 +1689,8 @@ int ADIOI_Build_client_req(ADIO_File fd,
 
     /* Create the aggregator MPI_Datatype */
     if (agg_comm_sz > 0) {
-        MPI_Type_create_hindexed_c(agg_ol_ct, agg_blk_arr, agg_disp_arr, MPI_BYTE, agg_comm_dtype_p);
+        MPI_Type_create_hindexed_c(agg_ol_ct, agg_blk_arr, agg_disp_arr, MPI_BYTE,
+                                   agg_comm_dtype_p);
         MPI_Type_commit(agg_comm_dtype_p);
     } else {
         *agg_comm_dtype_p = MPI_BYTE;

@@ -268,7 +268,7 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
     ADIOI_Flatlist_node *flat_buf, *flat_file;
     int i, j, k, st_index = 0;
     MPI_Count bwr_size;
-    ssize_t err=-1, write_sz;
+    ssize_t err = -1, write_sz;
     ADIO_Offset i_offset, sum, size_in_filetype;
     ADIO_Offset num, size, n_etypes_in_filetype;
     MPI_Count bufsize;
