@@ -31,7 +31,7 @@ cvars:
       description : >-
         Size of each cell.
 
-    - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NT_MEMCPY
+    - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_MEMCPY_NTW
       category    : CH4
       type        : boolean
       default     : false
@@ -39,7 +39,17 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        Size of each cell.
+        Using non-temporal memcpy on sender side.
+
+    - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_MEMCPY_NTR
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Using non-temporal memcpy on receiver side.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */

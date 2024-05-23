@@ -61,7 +61,8 @@ int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype type, MPI_Aint max_iov_byt
     MPIR_Typerep_iov_len(count, type, -1, iov_len, NULL)
 
 #define MPIR_TYPEREP_FLAG_NONE          0x0UL
-#define MPIR_TYPEREP_FLAG_STREAM        0x1UL
+#define MPIR_TYPEREP_FLAG_NTW           0x1UL
+#define MPIR_TYPEREP_FLAG_NTR           0x2UL
 
 int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes, uint32_t flags);
 int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,

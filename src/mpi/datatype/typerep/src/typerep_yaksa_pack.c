@@ -4,6 +4,7 @@
  */
 
 #include "mpiimpl.h"
+#include "mpir_assert.h"
 #include "yaksa.h"
 #include "typerep_internal.h"
 
@@ -163,10 +164,18 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
         MPI_Aint real_bytes = MPL_MIN(total_size - inoffset, max_pack_bytes);
         /* Make sure we never pack partial element */
         real_bytes -= real_bytes % element_size;
-        if (flags & MPIR_TYPEREP_FLAG_STREAM) {
-            MPIR_Memcpy_stream(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), real_bytes);
-        } else {
-            MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), real_bytes);
+        switch (flags) {
+            case MPIR_TYPEREP_FLAG_NONE:
+                MPIR_Memcpy(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), real_bytes);
+                break;
+            case MPIR_TYPEREP_FLAG_NTW:
+                MPIR_Memcpy_ntw(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), real_bytes);
+                break;
+            case MPIR_TYPEREP_FLAG_NTR:
+                MPIR_Memcpy_ntr(outbuf, MPIR_get_contig_ptr(inbuf_ptr, inoffset), real_bytes);
+                break;
+            default:
+                MPIR_Assert(-1);
         }
         *actual_pack_bytes = real_bytes;
         goto fn_exit;
