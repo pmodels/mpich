@@ -31,6 +31,16 @@ cvars:
       description : >-
         Size of each cell.
 
+    - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NT_MEMCPY
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Size of each cell.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
