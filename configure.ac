@@ -892,6 +892,7 @@ for option in $enable_fast ; do
     case "$option" in
         O*)
         enable_fast_opts=$option
+        enable_fast_sse_instr=yes
         ;;
         ndebug)
         enable_fast_ndebug=yes
@@ -976,6 +977,39 @@ if test "$enable_fast_avx_instr" = "yes" ; then
     fi
     if test "$pac_cv_found__mm256_stream_si256" = "yes" ; then
         AC_DEFINE(HAVE_MM256_STREAM_SI256,1,[Define if 256 bit streaming memcpy is available])
+        # no need for SSE2 version if AVX is supported
+        enable_fast_sse_instr=no
+    fi
+fi
+
+if test "$enable_fast_sse_instr" = "yes" ; then
+    AC_CACHE_CHECK([whether -msse2 is supported], pac_cv_found_sse2,
+                   [PAC_C_CHECK_COMPILER_OPTION([-msse2],pac_cv_found_sse2=yes,pac_cv_found_sse2=no)],
+                   pac_cv_found_avx=no,pac_cv_found_sse2=yes)
+    if test "$pac_cv_found_sse2" = "yes" ; then
+        PAC_APPEND_FLAG([-msse2],[CFLAGS])
+        AC_MSG_CHECKING([for SSE2 support])
+        AC_CACHE_CHECK([whether SSE2 stream store is supported], pac_cv_found_sse2_stream_store,[
+                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                       #include <immintrin.h>
+
+                                       int main(int argc, char **argv) {
+                                       char source[1024], dest[1024];
+                                       for (int i = 0; i < 1024; i++) source[i] = 'a';
+
+                                           __m128i xmm0 = _mm_loadu_si128((__m128i const *) source);
+                                           _mm_stream_si128((__m128i *) dest, xmm0);
+
+                                           if (dest[0] == source[0]) return 0;
+                                           else return 1;
+                                           }
+                                           ]])], pac_cv_found_sse2_stream_store="yes",
+                                           pac_cv_found_sse2_stream_store"no",
+                                           pac_cv_found_sse2_stream_store="unknown")
+                        ])
+    fi
+    if test "$pac_cv_found_sse2_stream_store" = "yes" ; then
+        AC_DEFINE(HAVE_SSE2,1,[Define if SSE2 128 bit streaming memcpy is available])
     fi
 fi
 
