@@ -156,7 +156,7 @@ aint 2
 aint_collattach 2
 acc_pairtype 2
 acc_pairtype_shm 2
-manyget 2 timeLimit=300
+manyget 2
 derived_acc_flush_local 3
 large_acc_flush_local 3
 large_small_acc 2
