@@ -139,18 +139,22 @@ bool MPIDI_OFI_nic_already_used(const struct fi_info * prov, struct fi_info ** o
 
 /* Setup the multi-NIC data structures to use the fi_info structure given in prov */
 static int setup_single_nic(void);
+#ifdef HAVE_LIBFABRIC_NIC
 static int setup_multi_nic(int nic_count);
+#endif
 
 int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
 {
     int mpi_errno = MPI_SUCCESS;
     int nic_count = 0;
-    int max_nics = MPIR_CVAR_CH4_OFI_MAX_NICS;
 
+#ifdef HAVE_LIBFABRIC_NIC
+    int max_nics = MPIR_CVAR_CH4_OFI_MAX_NICS;
     if (MPIR_CVAR_CH4_OFI_MAX_NICS == 0 || MPIR_CVAR_CH4_OFI_MAX_NICS <= -2) {
         /* Invalid values for the CVAR will default to single nic */
         max_nics = 1;
     }
+#endif
 
     /* Count the number of NICs */
     struct fi_info *first_prov = NULL;
