@@ -36,8 +36,12 @@ int main(int argc, char *argv[])
 
     MPI_Win_fence(0, win);
 
+    int num_iter = 1000;
+    if (MTestGetStressLevel()) {
+        num_iter = 100000;
+    }
     if (rank == 1) {
-        for (i = 0; i < 100000; i++)
+        for (i = 0; i < num_iter; i++)
             MPI_Get(buf, BUFSIZE / sizeof(int), MPI_INT, 0, 0, BUFSIZE / sizeof(int), MPI_INT, win);
     }
 
