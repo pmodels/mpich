@@ -182,15 +182,14 @@ int main(int argc, char *argv[])
             }
             MTest_dtp_destroy(&send);
             MTest_dtp_destroy(&recv);
-#ifdef USE_BARRIER
-            /* NOTE: Without MPI_Barrier, recv side can easily accumulate large unexpected queue
-             * across multiple batches, especially in an async test. Currently, both libfabric and ucx
-             * netmod does not handle large message queue well, resulting in exponential slow-downs.
-             * Adding barrier let the current tests pass.
-             */
-            /* FIXME: fix netmod issues then remove the barrier (and corresponding tests). */
-            MPI_Barrier(comm);
-#endif
+            if (MTestGetStressLevel() == 0) {
+                /* NOTE: Without MPI_Barrier, recv side can easily accumulate large unexpected queue
+                 * across multiple batches, especially in an async test. Currently, both libfabric and ucx
+                 * netmod does not handle large message queue well, resulting in exponential slow-downs.
+                 * Adding barrier let the current tests pass.
+                 */
+                MPI_Barrier(comm);
+            }
         }
         MTestFreeComm(&comm);
     }
