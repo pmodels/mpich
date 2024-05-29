@@ -91,13 +91,21 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id)
     return MPL_SUCCESS;
 }
 
+#ifdef MPL_HIP_USE_MEMORYTYPE
+/* pre-ROCm 6.0 */
+#define DEVICE_ATTR_TYPE attr->device_attr.memoryType
+#else
+/* post-ROCm 6.0 */
+#define DEVICE_ATTR_TYPE attr->device_attr.type
+#endif
+
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
     int mpl_err = MPL_SUCCESS;
     hipError_t ret;
     ret = hipPointerGetAttributes(&attr->device_attr, ptr);
     if (ret == hipSuccess) {
-        switch (attr->device_attr.memoryType) {
+        switch (DEVICE_ATTR_TYPE) {
             case hipMemoryTypeHost:
                 attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
                 attr->device = attr->device_attr.device;
