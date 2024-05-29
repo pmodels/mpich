@@ -70,20 +70,21 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
                          MPI_Request * request, int rw_type, int *error_code)
 {
     ADIOI_Flatlist_node *flat_buf, *flat_file;
-    int i, j, k, fwr_size = 0, st_index = 0;
-    int sum, n_etypes_in_filetype, size_in_filetype;
+    MPI_Count fwr_size = 0, st_index = 0;
+    MPI_Count sum, n_etypes_in_filetype, size_in_filetype;
     MPI_Count bufsize;
-    int n_filetypes, etype_in_filetype;
+    MPI_Count n_filetypes, etype_in_filetype;
     ADIO_Offset abs_off_in_filetype = 0;
     MPI_Count filetype_size, etype_size, buftype_size;
     MPI_Aint lb, filetype_extent, buftype_extent;
     int buftype_is_contig, filetype_is_contig;
     ADIO_Offset off, disp, start_off;
-    int flag, st_fwr_size, st_n_filetypes;
-    int mem_list_count;
+    int flag;
+    MPI_Count st_fwr_size, st_n_filetypes;
+    MPI_Count mem_list_count;
     int64_t file_length;
     int total_blks_to_write;
-    int f_data_wrote;
+    MPI_Count f_data_wrote;
     int n_write_lists;
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     struct ADIO_DAOS_req *aio_req = NULL;
@@ -154,6 +155,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
 
     /* Create Memory SGL */
     file_length = 0;
+    MPI_Count k;                // how many entries in scatter-gather list
     if (!buftype_is_contig) {
         flat_buf = ADIOI_Flatten_and_find(datatype);
         mem_list_count = count * flat_buf->count;
@@ -161,8 +163,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
         iovs = (d_iov_t *) ADIOI_Malloc(mem_list_count * sizeof(d_iov_t));
 
         k = 0;
-        for (j = 0; j < count; j++) {
-            for (i = 0; i < flat_buf->count; i++) {
+        for (MPI_Count j = 0; j < count; j++) {
+            for (MPI_Count i = 0; i < flat_buf->count; i++) {
                 ADIO_Offset tmp_off;
 
                 if (flat_buf->blocklens[i] == 0) {
@@ -190,7 +192,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
         printf("(MEM SINGLE) off %lld len %zu\n", buf, bufsize);
 #endif
     }
-    sgl->sg_nr = k;
+    ADIOI_Assert(k < UINT_MAX);
+    sgl->sg_nr = (uint32_t) k;
     sgl->sg_nr_out = 0;
     sgl->sg_iovs = iovs;
     if (request)
@@ -224,7 +227,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
             flag = 0;
             while (!flag) {
                 n_filetypes++;
-                for (i = 0; i < flat_file->count; i++) {
+                for (MPI_Count i = 0; i < flat_file->count; i++) {
                     if (disp + flat_file->indices[i] +
                         ((ADIO_Offset) n_filetypes) * filetype_extent +
                         flat_file->blocklens[i] >= start_off) {
@@ -240,12 +243,12 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
         } /* if (file_ptr_type == ADIO_INDIVIDUAL) */
         else {
             n_etypes_in_filetype = filetype_size / etype_size;
-            n_filetypes = (int) (offset / n_etypes_in_filetype);
-            etype_in_filetype = (int) (offset % n_etypes_in_filetype);
+            n_filetypes = offset / n_etypes_in_filetype;
+            etype_in_filetype = offset % n_etypes_in_filetype;
             size_in_filetype = etype_in_filetype * etype_size;
 
             sum = 0;
-            for (i = 0; i < flat_file->count; i++) {
+            for (MPI_Count i = 0; i < flat_file->count; i++) {
                 sum += flat_file->blocklens[i];
                 if (sum > size_in_filetype) {
                     st_index = i;
@@ -262,8 +265,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
         st_fwr_size = fwr_size;
         st_n_filetypes = n_filetypes;
 
-        i = 0;
-        j = st_index;
+        MPI_Count j = st_index;
         f_data_wrote = MPL_MIN(st_fwr_size, bufsize);
         n_filetypes = st_n_filetypes;
 
@@ -301,7 +303,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, MPI_Aint count,
         fprintf(stderr, "NUM IO lists = %d\n", n_write_lists);
 #endif
 
-        for (i = 0; i < n_write_lists; i++) {
+        for (MPI_Count i = 0; i < n_write_lists; i++) {
             if (!i) {
                 rgs[i].rg_idx = start_off;
                 rgs[i].rg_len = MPL_MIN(f_data_wrote, st_fwr_size);

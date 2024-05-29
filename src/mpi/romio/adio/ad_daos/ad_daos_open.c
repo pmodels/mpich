@@ -203,7 +203,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
             goto out;
     }
 
-    rc = MPI_Bcast(buf, total_size, MPI_BYTE, 0, comm);
+    rc = MPI_Bcast_c(buf, total_size, MPI_BYTE, 0, comm);
     if (rc != MPI_SUCCESS)
         goto out;
 

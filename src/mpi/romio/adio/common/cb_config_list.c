@@ -90,7 +90,7 @@ int ADIOI_cb_bcast_rank_map(ADIO_File fd)
      * wasn't clever enough to figure out how to rewind and put '...' at the
      * end in the truncate case */
     for (i = 0; i < fd->hints->cb_nodes; i++) {
-        int incr, remain = (MPI_MAX_INFO_VAL) - (p - value);
+        long incr, remain = (MPI_MAX_INFO_VAL) - (p - value);
         incr = snprintf(p, remain, "%d ", fd->hints->ranklist[i]);
         if (incr >= remain)
             break;

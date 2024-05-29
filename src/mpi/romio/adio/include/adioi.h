@@ -353,10 +353,11 @@ struct ADIOI_Fns_struct {
 typedef struct {
     ADIO_Offset *offsets;       /* array of offsets */
     ADIO_Offset *lens;          /* array of lengths */
-    MPI_Aint *mem_ptrs;         /* array of pointers. used in the read/write
+    MPI_Count *mem_ptrs;        /* array of pointers. used in the read/write
                                  * phase to indicate where the data
-                                 * is stored in memory */
-    int count;                  /* size of above arrays */
+                                 * is stored in memory
+                                 * promoted to MPI_Count so we can construct types with _c versions */
+    MPI_Count count;            /* size of above arrays */
 } ADIOI_Access;
 
 /* structure for storing generic offset/length pairs.  used to describe
@@ -364,7 +365,7 @@ typedef struct {
 typedef struct {
     ADIO_Offset *offsets;       /* array of offsets */
     ADIO_Offset *lens;          /* array of lengths */
-    int count;                  /* size of above arrays */
+    MPI_Count count;            /* size of above arrays */
 } ADIOI_Offlen;
 
 /* prototypes for ADIO internal functions */
@@ -459,8 +460,7 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, MPI_Aint bufcount, MPI_Datatype
                            datatype, int file_ptr_type, ADIO_Offset
                            offset, ADIO_Offset ** offset_list_ptr, ADIO_Offset
                            ** len_list_ptr, ADIO_Offset * start_offset_ptr,
-                           ADIO_Offset * end_offset_ptr, int
-                           *contig_access_count_ptr);
+                           ADIO_Offset * end_offset_ptr, MPI_Count * contig_access_count_ptr);
 void ADIOI_Calc_file_domains(ADIO_Offset * st_offsets, ADIO_Offset
                              * end_offsets, int nprocs, int nprocs_for_coll,
                              ADIO_Offset * min_st_offset_ptr,
@@ -473,23 +473,25 @@ int ADIOI_Calc_aggregator(ADIO_File fd,
                           ADIO_Offset * len,
                           ADIO_Offset fd_size, ADIO_Offset * fd_start, ADIO_Offset * fd_end);
 void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
-                       ADIO_Offset * len_list, int
-                       contig_access_count, ADIO_Offset
-                       min_st_offset, ADIO_Offset * fd_start,
+                       ADIO_Offset * len_list,
+                       MPI_Count contig_access_count,
+                       ADIO_Offset min_st_offset, ADIO_Offset * fd_start,
                        ADIO_Offset * fd_end, ADIO_Offset fd_size,
                        int nprocs,
-                       int *count_my_req_procs_ptr,
-                       int **count_my_req_per_proc_ptr,
+                       MPI_Count * count_my_req_procs_ptr,
+                       MPI_Count ** count_my_req_per_proc_ptr,
                        ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
-void ADIOI_Free_my_req(int nprocs, int *count_my_req_per_proc,
+void ADIOI_Free_my_req(int nprocs, MPI_Count * count_my_req_per_proc,
                        ADIOI_Access * my_req, MPI_Aint * buf_idx);
-void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
-                           int *count_my_req_per_proc,
+void ADIOI_Calc_others_req(ADIO_File fd, MPI_Count count_my_req_procs,
+                           MPI_Count * count_my_req_per_proc,
                            ADIOI_Access * my_req,
                            int nprocs, int myrank,
-                           int *count_others_req_procs_ptr,
-                           int **count_others_req_per_proc_ptr, ADIOI_Access ** others_req_ptr);
-void ADIOI_Free_others_req(int nprocs, int *count_others_req_per_proc, ADIOI_Access * others_req);
+                           MPI_Count * count_others_req_procs_ptr,
+                           MPI_Count ** count_others_req_per_proc_ptr,
+                           ADIOI_Access ** others_req_ptr);
+void ADIOI_Free_others_req(int nprocs, MPI_Count * count_others_req_per_proc,
+                           ADIOI_Access * others_req);
 
 
 /* Nonblocking Collective I/O internals */
@@ -539,17 +541,17 @@ typedef struct ADIOI_Icalc_others_req_vars {
 
     /* parameters */
     ADIO_File fd;
-    int count_my_req_procs;
-    int *count_my_req_per_proc;
+    MPI_Count count_my_req_procs;
+    MPI_Count *count_my_req_per_proc;
     ADIOI_Access *my_req;
     int nprocs;
     int myrank;
-    int *count_others_req_procs_ptr;
+    MPI_Count *count_others_req_procs_ptr;
     ADIOI_Access **others_req_ptr;
 
     /* stack variables */
-    int *count_others_req_per_proc;
-    int count_others_req_procs;
+    MPI_Count *count_others_req_per_proc;
+    MPI_Count count_others_req_procs;
     ADIOI_Access *others_req;
 
     /* next function to be called */
@@ -620,9 +622,9 @@ typedef struct view_state {
 
     /* Preprocessed data amount and ol pairs */
     ADIO_Offset pre_sz;
-    int pre_ol_ct;
+    MPI_Count pre_ol_ct;
     MPI_Aint *pre_disp_arr;
-    int *pre_blk_arr;
+    MPI_Count *pre_blk_arr;
 
     ADIOI_Flatlist_node *flat_type_p;
 } view_state;
@@ -694,7 +696,7 @@ typedef struct ADIOI_OneSidedStripeParms {
     /* onesided algorithm that we are a non-striping file system         */
     ADIO_Offset segmentLen;     /* size in bytes of the segment (stripeSize*number of aggs) */
     /* up to the size of the file)                              */
-    int stripesPerAgg;          /* the number of stripes to be packed into an agg cb for this segment */
+    MPI_Count stripesPerAgg;    /* the number of stripes to be packed into an agg cb for this segment */
     int segmentIter;            /* segment number for the group of stripes currently being packed into  */
     /* the agg cb - resets to 0 for each cb flush to the file system        */
     int flushCB;                /* once we have fully packed the cb on an agg this flags */
@@ -719,7 +721,7 @@ typedef struct ADIOI_OneSidedStripeParms {
     /* These three elements track the state of the source buffer advancement through multiple calls */
     /* to ADIOI_OneSidedWriteAggregation */
     ADIO_Offset lastDataTypeExtent;
-    int lastFlatBufIndice;
+    MPI_Count lastFlatBufIndice;
     ADIO_Offset lastIndiceOffset;
 } ADIOI_OneSidedStripeParms;
 
@@ -727,20 +729,20 @@ int ADIOI_OneSidedCleanup(ADIO_File fd);
 void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     ADIO_Offset * offset_list,
                                     ADIO_Offset * len_list,
-                                    int contig_access_count,
+                                    MPI_Count contig_access_count,
                                     const void *buf,
                                     MPI_Datatype datatype,
                                     int *error_code,
                                     ADIO_Offset firstFileOffset,
                                     ADIO_Offset lastFileOffset,
-                                    int numNonZeroDataOffsets,
+                                    MPI_Count numNonZeroDataOffsets,
                                     ADIO_Offset * fd_start,
                                     ADIO_Offset * fd_end,
                                     int *hole_found, ADIOI_OneSidedStripeParms * stripe_parms);
 void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                    ADIO_Offset * offset_list,
                                    ADIO_Offset * len_list,
-                                   int contig_access_count,
+                                   MPI_Count contig_access_count,
                                    const void *buf,
                                    MPI_Datatype datatype,
                                    int *error_code,
@@ -763,9 +765,9 @@ int ADIOI_Err_create_code(const char *myname, const char *filename, int my_errno
 int ADIOI_Type_get_combiner(MPI_Datatype datatype, int *combiner);
 int ADIOI_Type_ispredef(MPI_Datatype datatype, int *flag);
 int ADIOI_Type_dispose(MPI_Datatype * datatype);
-int ADIOI_Type_create_hindexed_x(int count,
+int ADIOI_Type_create_hindexed_x(MPI_Count count,
                                  const MPI_Count array_of_blocklengths[],
-                                 const MPI_Aint array_of_displacements[],
+                                 const MPI_Count array_of_displacements[],
                                  MPI_Datatype oldtype, MPI_Datatype * newtype);
 
 
@@ -1024,7 +1026,7 @@ typedef struct wcThreadFuncData {
     ADIO_File fd;
     int io_kind;
     char *buf;
-    int size;
+    MPI_Count size;
     ADIO_Offset offset;
     ADIO_Status *status;
     int error_code;
@@ -1050,5 +1052,9 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 #endif
 
 #include "mpl.h"
+
+void ADIOI_Heap_merge(ADIOI_Access * others_req, MPI_Count * count,
+                      ADIO_Offset * srt_off, MPI_Count * srt_len, MPI_Count * start_pos,
+                      int nprocs, int nprocs_recv, MPI_Count total_elements);
 
 #endif /* ADIOI_H_INCLUDED */
