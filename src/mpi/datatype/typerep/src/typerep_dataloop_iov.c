@@ -38,9 +38,19 @@ int MPIR_Typerep_to_iov_offset(const void *buf, MPI_Aint count, MPI_Datatype typ
 {
     int mpi_errno = MPI_SUCCESS;
 
+    int is_contig;
+    MPI_Aint typesize;
     if (HANDLE_IS_BUILTIN(type)) {
-        MPI_Aint typesize;
+        is_contig = 1;
         typesize = MPIR_Datatype_get_basic_size(type);
+    } else {
+        MPIR_Datatype *dt_ptr;
+        MPIR_Datatype_get_ptr(type, dt_ptr);
+        is_contig = dt_ptr->is_contig;
+        typesize = dt_ptr->size;
+    }
+
+    if (is_contig) {
         if (max_iov_len >= 1) {
             iov[0].iov_base = (char *) buf;
             iov[0].iov_len = typesize * count;
