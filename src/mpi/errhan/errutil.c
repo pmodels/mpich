@@ -189,7 +189,7 @@ int MPIR_call_errhandler(MPIR_Errhandler * errhandler, int errorcode, MPIR_handl
     } else if (h.kind == MPIR_WIN) {
         abi_handle = ABI_Win_from_mpi(h.u.handle);
     } else if (h.kind == MPIR_FILE) {
-        abi_handle = ABI_File_from_mpi(h.u.handle);
+        abi_handle = ABI_File_from_mpi(h.u.fh);
     } else if (h.kind == MPIR_SESSION) {
         abi_handle = ABI_Session_from_mpi(h.u.handle);
     } else {
