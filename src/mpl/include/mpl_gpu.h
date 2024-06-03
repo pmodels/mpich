@@ -61,7 +61,7 @@ typedef enum {
     MPL_GPU_COPY_H2D,
     MPL_GPU_COPY_D2D_INCOMING,  /* copy from remote to local */
     MPL_GPU_COPY_D2D_OUTGOING,  /* copy from local to remote */
-    MPL_GPU_COPY_DIRECTION_NONE,  /* copy in any direction and to/from any buffer type */
+    MPL_GPU_COPY_DIRECTION_NONE,        /* copy in any direction and to/from any buffer type */
 } MPL_gpu_copy_direction_t;
 
 #define MPL_GPU_COPY_DIRECTION_TYPES 4
@@ -152,6 +152,7 @@ int MPL_gpu_launch_hostfn(MPL_gpu_stream_t stream, MPL_gpu_hostfn fn, void *data
 bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream);
 void MPL_gpu_enqueue_trigger(MPL_gpu_event_t * var, MPL_gpu_stream_t stream);
 void MPL_gpu_enqueue_wait(MPL_gpu_event_t * var, MPL_gpu_stream_t stream);
+int MPL_gpu_stream_synchronize(MPL_gpu_stream_t stream);
 
 /* the synchronization event has the similar semantics as completion counter,
  * init to a count, then each completion decrement it by 1. */
