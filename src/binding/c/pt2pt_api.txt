@@ -4,6 +4,7 @@ MPI_Bsend:
     .desc: Basic send with user-provided buffering
     .seealso: MPI_Buffer_attach, MPI_Ibsend, MPI_Bsend_init
     .earlyreturn: pt2pt_proc_null
+    .extra: streamsync
 /*
     Notes:
     This send is provided as a convenience function; it allows the user to
@@ -174,6 +175,7 @@ MPI_Comm_iflush_buffer:
 MPI_Ibsend:
     .desc: Starts a nonblocking buffered send
     .earlyreturn: pt2pt_proc_null
+    .extra: streamsync
 {
     mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
     if (mpi_errno)
@@ -202,6 +204,7 @@ MPI_Improbe:
 
 MPI_Imrecv:
     .desc: Nonblocking receive of message matched by MPI_Mprobe or MPI_Improbe.
+    .extra: streamsync
 { -- early_return --
     if (message_ptr == NULL || message_ptr->handle == MPIR_REQUEST_NULL_RECV) {
         MPIR_Request *rreq;
@@ -235,7 +238,7 @@ MPI_Iprobe:
 MPI_Irecv:
     .desc: Begins a nonblocking receive
     .earlyreturn: pt2pt_proc_null
-    .extra: threadcomm
+    .extra: threadcomm, streamsync
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -258,6 +261,7 @@ MPI_Irecv:
 MPI_Irsend:
     .desc: Starts a nonblocking ready send
     .earlyreturn: pt2pt_proc_null
+    .extra: streamsync
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -275,7 +279,7 @@ MPI_Irsend:
 MPI_Isend:
     .desc: Begins a nonblocking send
     .earlyreturn: pt2pt_proc_null
-    .extra: threadcomm
+    .extra: threadcomm, streamsync
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -293,6 +297,7 @@ MPI_Isend:
 MPI_Issend:
     .desc: Starts a nonblocking synchronous send
     .earlyreturn: pt2pt_proc_null
+    .extra: streamsync
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -323,6 +328,7 @@ MPI_Mprobe:
 
 MPI_Mrecv:
     .desc: Blocking receive of message matched by MPI_Mprobe or MPI_Improbe.
+    .extra: streamsync
 { -- early_return --
     if (message_ptr == NULL || message_ptr->handle == MPIR_REQUEST_NULL_RECV) {
         /* treat as though MPI_MESSAGE_NO_PROC was passed */
@@ -358,7 +364,7 @@ MPI_Probe:
 MPI_Recv:
     .desc: Blocking receive for a message
     .earlyreturn: pt2pt_proc_null
-    .extra: threadcomm
+    .extra: threadcomm, streamsync
 /*
     Notes:
     The 'count' argument indicates the maximum length of a message; the actual
@@ -401,6 +407,7 @@ MPI_Recv_init:
 MPI_Rsend:
     .desc: Blocking ready send
     .earlyreturn: pt2pt_proc_null
+    .extra: streamsync
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -437,7 +444,7 @@ MPI_Send:
     .desc: Performs a blocking send
     .seealso: MPI_Isend, MPI_Bsend
     .earlyreturn: pt2pt_proc_null
-    .extra: threadcomm
+    .extra: threadcomm, streamsync
 /*
     Notes:
     This routine may block until the message is received by the destination
@@ -475,10 +482,12 @@ MPI_Send_init:
 
 MPI_Sendrecv:
     .desc: Sends and receives a message
+    .extra: streamsync
 
 MPI_Sendrecv_replace:
     .desc: Sends and receives using a single buffer
     .decl: MPIR_Sendrecv_replace_impl
+    .extra: streamsync
 {
 #if defined(MPID_Sendrecv_replace)
     mpi_errno = MPID_Sendrecv_replace(buf, count, datatype, dest,
@@ -513,6 +522,7 @@ MPI_Session_iflush_buffer:
 MPI_Ssend:
     .desc: Blocking synchronous send
     .earlyreturn: pt2pt_proc_null
+    .extra: streamsync
 {
     MPIR_Request *request_ptr = NULL;
 
@@ -546,6 +556,8 @@ MPI_Ssend_init:
 
 MPI_Isendrecv:
     .desc: Starts a nonblocking send and receive
+    .extra: streamsync
 
 MPI_Isendrecv_replace:
     .desc: Starts a nonblocking send and receive with a single buffer
+    .extra: streamsync
