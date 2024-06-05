@@ -16,6 +16,8 @@
  * 24-31: reserved (must be 0)
  */
 /* NOTE: All explicit vci (allocated) must be greater than 0 */
+/* NOTE: MPIR_ERR_XXX flags defined in mpir_misc.h and must be
+ *       consistent, i.e. 0x2 and 0x4 respectively. */
 
 #define MPIR_PT2PT_ATTR_SRC_VCI_SHIFT 8
 #define MPIR_PT2PT_ATTR_DST_VCI_SHIFT 16
@@ -33,19 +35,11 @@
 #define MPIR_PT2PT_ATTR_SET_CONTEXT_OFFSET(attr, context_offset) (attr) |= (context_offset)
 
 /* bit 1-2: errflag */
-#define MPIR_PT2PT_ATTR_GET_ERRFLAG(attr) \
-    ((!((attr) & 0x6)) ? MPIR_ERR_NONE : \
-        (((attr) & 0x2) ? MPIX_ERR_PROC_FAILED : MPI_ERR_OTHER))
+#define MPIR_PT2PT_ATTR_GET_ERRFLAG(attr) ((attr) & 0x6)
 
 #define MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag) \
     do { \
-        if (errflag) { \
-            if (errflag == MPIR_ERR_PROC_FAILED) { \
-                (attr) |= 0x2; \
-            } else { \
-                (attr) |= 0x4; \
-            } \
-        } \
+        (attr) |= (errflag); \
     } while (0)
 
 /* bit 3: syncflag */
