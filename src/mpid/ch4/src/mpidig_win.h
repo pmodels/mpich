@@ -537,7 +537,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_win_shared_query_self(MPIR_Win * win, int rank, MPI_Aint * size,
                                                           int *disp_unit, void *baseptr)
 {
-    if (rank == win->comm_ptr->rank) {
+    if (rank == win->comm_ptr->rank || (rank == MPI_PROC_NULL && win->comm_ptr->local_size == 1)) {
         *size = win->size;
         *disp_unit = win->disp_unit;
         *((void **) baseptr) = win->base;

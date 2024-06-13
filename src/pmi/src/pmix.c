@@ -399,11 +399,13 @@ pmix_status_t PMIx_Resolve_peers(const char *nodename,
                                  const pmix_nspace_t nspace, pmix_proc_t ** procs, size_t * nprocs)
 {
     assert(0);
+    return PMIX_SUCCESS;
 }
 
 pmix_status_t PMIx_Resolve_nodes(const pmix_nspace_t nspace, char **nodelist)
 {
     assert(0);
+    return PMIX_SUCCESS;
 }
 
 const char *PMIx_Error_string(pmix_status_t status)
@@ -415,6 +417,7 @@ pmix_status_t PMIx_Spawn(const pmix_info_t job_info[], size_t ninfo,
                          const pmix_app_t apps[], size_t napps, pmix_nspace_t nspace)
 {
     assert(0);
+    return PMIX_SUCCESS;
 }
 
 /* convert predefined keys/attributes to the server format */

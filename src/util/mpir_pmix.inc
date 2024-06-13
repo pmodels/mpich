@@ -93,11 +93,14 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 
     /* Get the appnum */
     pmi_errno = PMIx_Get(&pmix_proc, PMIX_APPNUM, NULL, 0, &pvalue);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                         "**pmix_get", "**pmix_get %s", PMIx_Error_string(pmi_errno));
-    MPIR_Assert(pvalue->data.uint32 <= INT_MAX);        /* overflow check */
-    *appnum = (int) pvalue->data.uint32;
-    PMIX_VALUE_RELEASE(pvalue);
+    if (pmi_errno != PMIX_ERR_NOT_FOUND) {
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_get", "**pmix_get %s", PMIx_Error_string(pmi_errno));
+        MPIR_Assert(pvalue->data.uint32 <= INT_MAX);    /* overflow check */
+        *appnum = (int) pvalue->data.uint32;
+        PMIX_VALUE_RELEASE(pvalue);
+    }
+
     pmix_value_t value;
     pmix_value_t *val = &value;
 
@@ -219,14 +222,25 @@ static int pmix_get_parent(const char *key, char *val, int val_size)
 
 static bool pmix_get_jobattr(const char *key, char *valbuf)
 {
+    bool found = false;
     pmix_value_t *pvalue;
-    int pmi_errno = PMIx_Get(NULL, key, NULL, 0, &pvalue);
-    if (pmi_errno != PMIX_SUCCESS) {
-        return false;
+
+    /* if this is a non-reserved key, we want to make sure not to block
+     * by using PMIX_IMMEDIATE */
+    pmix_info_t *info;
+    PMIX_INFO_CREATE(info, 1);
+    int flag = 1;
+    PMIx_Info_load(info, PMIX_IMMEDIATE, &flag, PMIX_BOOL);
+
+    int pmi_errno = PMIx_Get(NULL, key, info, 1, &pvalue);
+    if (pmi_errno == PMIX_SUCCESS) {
+        strncpy(valbuf, pvalue->data.string, pmi_max_val_size);
+        PMIX_VALUE_RELEASE(pvalue);
+        found = true;
     }
-    strncpy(valbuf, pvalue->data.string, pmi_max_val_size);
-    PMIX_VALUE_RELEASE(pvalue);
-    return true;
+    PMIX_INFO_FREE(info, 1);
+
+    return found;
 }
 
 static int pmix_barrier(void)

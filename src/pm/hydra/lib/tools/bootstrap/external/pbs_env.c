@@ -7,7 +7,7 @@
 #include "common.h"
 #include "pbs.h"
 
-HYD_status HYDT_bscd_pbs_query_env_inherit(const char *env_name, int *ret)
+HYD_status HYDT_bscd_pbs_query_env_inherit(const char *env_name, int *should_inherit)
 {
     const char *env_list[] = { "PBSCOREDUMP",
         "PBSDEBUG",
@@ -47,7 +47,7 @@ HYD_status HYDT_bscd_pbs_query_env_inherit(const char *env_name, int *ret)
 
     HYDU_FUNC_ENTER();
 
-    *ret = !HYDTI_bscd_in_env_list(env_name, env_list);
+    *should_inherit = !HYDTI_bscd_in_env_list(env_name, env_list);
 
     HYDU_FUNC_EXIT();
 

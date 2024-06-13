@@ -322,7 +322,12 @@ def dump_f08_wrappers_f(func, is_large):
         if p['param_direction'] == 'in' or p['param_direction'] == 'inout':
             convert_list_pre.append("%s = %s - 1" % (arg, p['name']))
         if p['param_direction'] == 'out' or p['param_direction'] == 'inout':
-            convert_list_post.append("%s = %s + 1" % (p['name'], arg))
+            uses['MPI_UNDEFINED'] = 1
+            convert_list_post.append("IF (%s == MPI_UNDEFINED) THEN" % arg)
+            convert_list_post.append("    %s = %s" % (p['name'], arg))
+            convert_list_post.append("ELSE")
+            convert_list_post.append("    %s = %s + 1" % (p['name'], arg))
+            convert_list_post.append("END IF")
         return (arg, arg)
 
     def process_string(p):

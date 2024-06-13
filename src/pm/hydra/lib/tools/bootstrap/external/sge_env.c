@@ -7,7 +7,7 @@
 #include "bsci.h"
 #include "common.h"
 
-HYD_status HYDT_bscd_sge_query_env_inherit(const char *env_name, int *ret)
+HYD_status HYDT_bscd_sge_query_env_inherit(const char *env_name, int *should_inherit)
 {
     const char *env_list[] = { "DISPLAY", "SGE_ROOT", "SGE_CELL", "SGE_DEBUG_LEVEL",
         "SGE_QMASTER_PORT", "SGE_O_HOME", "SGE_O_HOST",
@@ -26,7 +26,7 @@ HYD_status HYDT_bscd_sge_query_env_inherit(const char *env_name, int *ret)
 
     HYDU_FUNC_ENTER();
 
-    *ret = !HYDTI_bscd_in_env_list(env_name, env_list);
+    *should_inherit = !HYDTI_bscd_in_env_list(env_name, env_list);
 
     HYDU_FUNC_EXIT();
 

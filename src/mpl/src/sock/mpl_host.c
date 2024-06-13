@@ -11,15 +11,24 @@
 #define MAX_HOSTNAME_LEN MAXHOSTNAMELEN
 #endif
 
+/* we use a static array here to avoid cleaning up (e.g. with uthash) */
 #define MAX_LOCAL_HOSTNAMES  (100)
 static char lhost[MAX_LOCAL_HOSTNAMES][MAX_HOSTNAME_LEN];
 static int lhost_count = 0;
 
 static void append_lhost(const char *host)
 {
-    int i;
+    if (lhost_count == MAX_LOCAL_HOSTNAMES) {
+        /* For the rare case when there are more than 100 local IP
+         * addresses, we only check against the first 100.
+         *
+         * MPL_host_is_local is only used in Hydra, and it is not
+         * fatal to miss some localhost detections.
+         */
+        return;
+    }
 
-    for (i = 0; i < lhost_count; i++)
+    for (int i = 0; i < lhost_count; i++)
         if (!strcmp(lhost[i], host))
             return;
 

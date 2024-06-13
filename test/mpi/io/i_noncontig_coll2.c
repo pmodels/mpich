@@ -75,7 +75,7 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
      * uses a keyval to cache the name array.  We'll just rebuild it if we
      * need to */
 
-    char my_procname[MPI_MAX_PROCESSOR_NAME], **procname = 0;
+    char my_procname[MPI_MAX_PROCESSOR_NAME], **procname = 0, *procname_buffer;
     int *procname_len = NULL, my_procname_len, *disp = NULL, i;
     int commsize, commrank;
     ADIO_cb_name_array array = NULL;
@@ -121,30 +121,22 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
         }
 #endif
 
+        int len_total = 0;
+        disp = malloc((commsize + 1) * sizeof(int));
+        disp[0] = 0;
         for (i = 0; i < commsize; i++) {
             /* add one to the lengths because we need to count the
              * terminator, and we are going to use this list of lengths
              * again in the gatherv.
              */
             procname_len[i]++;
-            procname[i] = malloc(procname_len[i]);
-            if (procname[i] == NULL) {
-                return -1;
-            }
+            len_total += procname_len[i];
+            disp[i + 1] = len_total;
         }
 
-        /* create our list of displacements for the gatherv.  we're going
-         * to do everything relative to the start of the region allocated
-         * for procname[0]
-         *
-         * I suppose it is theoretically possible that the distance between
-         * malloc'd regions could be more than will fit in an int.  We don't
-         * cover that case.
-         */
-        disp = malloc(commsize * sizeof(int));
-        disp[0] = 0;
-        for (i = 1; i < commsize; i++) {
-            disp[i] = (int) (procname[i] - procname[0]);
+        procname_buffer = malloc(len_total);
+        for (i = 0; i < commsize; i++) {
+            procname[i] = procname_buffer + disp[i];
         }
     }
 
@@ -322,9 +314,10 @@ int main(int argc, char **argv)
 
     free(filename);
     free(cb_config_string);
-    for (i = 0; i < array->namect; i++)
-        free(array->names[i]);
-    free(array->names);
+    if (mynod == 0) {
+        free(array->names[0]);
+        free(array->names);
+    }
     free(array);
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
