@@ -14,31 +14,6 @@
 int MPIDI_OFI_rma_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
 int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 
-MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_recv_engine_type(int cvar)
-{
-    if (cvar == MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_compute) {
-        return MPL_GPU_ENGINE_TYPE_COMPUTE;
-    } else if (cvar == MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_copy_high_bandwidth) {
-        return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
-    } else if (cvar == MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_copy_low_latency) {
-        return MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
-    } else {
-        return MPL_GPU_ENGINE_TYPE_LAST;
-    }
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
-{
-    if (MPIDI_OFI_ENABLE_DATA) {
-        if (unlikely(has_err)) {
-            return wc->data & ((1 << MPIDI_OFI_IDATA_SRC_BITS) - 1);
-        }
-        return wc->data;
-    } else {
-        return MPIDI_OFI_init_get_source(wc->tag);
-    }
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
                                                   struct fi_cq_tagged_entry *wc /* unused */ ,
                                                   MPIR_Request * sreq, int event_id)
