@@ -51,6 +51,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
                                                    int rank,
                                                    int tag,
                                                    MPIR_Comm * comm, int attr,
+                                                   MPIR_cc_t * parent_cc_ptr,
                                                    MPIR_Request ** request)
 {
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
@@ -67,6 +68,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
     }
     int mpi_errno = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
                                      vci, request, 1, NULL);
+
+    /* if the lock is not set, we come from anysource and it's ok to set the counter here */
+    if (parent_cc_ptr) {
+        if (MPIR_Request_is_complete(*request)) {
+            /* if the request is already completed, decrement the parent counter */
+            MPIR_cc_dec(parent_cc_ptr);
+        } else {
+            /* if the request is not done yet, assign the completion pointer to the parent one and it will be decremented later */
+            (*request)->dev.completion_notification = parent_cc_ptr;
+        }
+    }
+
     if (need_lock) {
         MPIDI_POSIX_THREAD_CS_EXIT_VCI(vci);
     }

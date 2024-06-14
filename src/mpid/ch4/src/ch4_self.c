@@ -118,7 +118,7 @@ int MPIDI_Self_finalize(void)
     } while (0)
 
 int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
-                     MPIR_Comm * comm, int attr, MPIR_Request ** request)
+                     MPIR_Comm * comm, int attr, MPIR_cc_t * parent_cc_ptr, MPIR_Request ** request)
 {
     MPIR_Request *sreq = NULL;
     MPIR_Request *rreq = NULL;
@@ -143,13 +143,25 @@ int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
     }
 
     *request = sreq;
+
+    /* if the parent_cc_ptr exists */
+    if (parent_cc_ptr) {
+        if (MPIR_Request_is_complete(*request)) {
+            /* if the request is already completed, decrement the parent counter */
+            MPIR_cc_dec(parent_cc_ptr);
+        } else {
+            /* if the request is not done yet, assign the completion pointer to the parent one and it will be decremented later */
+            (*request)->dev.completion_notification = parent_cc_ptr;
+        }
+    }
+
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SELF_MUTEX);
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 
 int MPIDI_Self_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
-                     MPIR_Comm * comm, int attr, MPIR_Request ** request)
+                     MPIR_Comm * comm, int attr, MPIR_cc_t * parent_cc_ptr, MPIR_Request ** request)
 {
     MPIR_Request *sreq = NULL;
     MPIR_Request *rreq = NULL;
@@ -177,6 +189,17 @@ int MPIDI_Self_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
     }
 
     *request = rreq;
+
+    /* if the parent_cc_ptr exists */
+    if (parent_cc_ptr) {
+        if (MPIR_Request_is_complete(*request)) {
+            /* if the request is already completed, decrement the parent counter */
+            MPIR_cc_dec(parent_cc_ptr);
+        } else {
+            /* if the request is not done yet, assign the completion pointer to the parent one and it will be decremented later */
+            (*request)->dev.completion_notification = parent_cc_ptr;
+        }
+    }
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SELF_MUTEX);
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
