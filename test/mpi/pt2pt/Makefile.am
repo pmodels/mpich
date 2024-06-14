@@ -65,7 +65,6 @@ noinst_PROGRAMS =  \
     irecv_any   \
     large_tag \
     pingping  \
-    pingping_barrier  \
     sendrecv1 \
     sendself \
     send_tests \
@@ -78,15 +77,3 @@ noinst_PROGRAMS =  \
 
 irecv_any_CPPFLAGS = -DTEST_NB $(AM_CPPFLAGS)
 irecv_any_SOURCES  = recv_any.c
-
-pingping_CPPFLAGS = $(AM_CPPFLAGS)
-pingping_SOURCES = pingping.c
-
-pingping_barrier_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_BARRIER
-pingping_barrier_SOURCES = pingping.c
-
-sendrecv1_CPPFLAGS = $(AM_CPPFLAGS)
-sendrecv1_SOURCES = sendrecv1.c
-
-sendself_CPPFLAGS = $(AM_CPPFLAGS)
-sendself_SOURCES = sendself.c

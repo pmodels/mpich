@@ -39,11 +39,17 @@ static void MTestResourceSummary(FILE *);
    memory testing */
 
 static int dbgflag = 0;         /* Flag used for debugging */
+static int stress = 0;          /* Stress level */
 static int verbose = 0;         /* Message level (0 is none) */
 static int returnWithVal = 1;   /* Allow programs to return with a non-zero
                                  * if there was an error (may cause problems
                                  * with some runtime systems) */
 static int usageOutput = 0;     /* */
+
+int MTestGetStressLevel(void)
+{
+    return stress;
+}
 
 /* Provide backward portability to MPI 1 */
 #ifndef MPI_VERSION
@@ -62,6 +68,8 @@ static int usageOutput = 0;     /* */
 
  Environment Variables:
 + MPITEST_DEBUG - If set (to any value), turns on debugging output
+. MPITEST_STRESS - If set, run tests with increased stress (e.g. more
+                   iterations, larger datatype counts, more processes).
 . MPITEST_THREADLEVEL_DEFAULT - If set, use as the default "provided"
                                 level of thread support.  Applies to
                                 MTest_Init but not MTest_Init_thread.
@@ -90,6 +98,11 @@ void MTest_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* Check for debugging control */
     if (getenv("MPITEST_DEBUG")) {
         dbgflag = 1;
+    }
+
+    /* Check for stress level */
+    if (getenv("MPITEST_STRESS")) {
+        stress = 1;
     }
 
     /* Check for verbose control */
