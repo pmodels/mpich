@@ -237,7 +237,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size) =
             MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE;
         RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells) = MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS;
-        RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_large).nranks = 0;
         /* release_gather based collectives have not been used before on this comm */
         initialize_flags = true;
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
@@ -345,6 +344,12 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                                  RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type),
                                                  &release_gather_info_ptr->reduce_tree,
                                                  &topotree_fail[1]);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                mpi_errno =
+                    MPIR_Treealgo_tree_create(rank, num_ranks,
+                                            RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type_large),
+                                            RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large), 0,
+                                            &release_gather_info_ptr->reduce_tree_large);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             } else {
                 /* Finalize was already called and MPIR_Process.hwloc_topology has been destroyed */

@@ -190,8 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
             MPI_Aint type_size;
             MPIR_Datatype_get_size_macro(datatype, type_size);
-            if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD ||
-                release_gather_info_ptr->reduce_tree_large.nranks == 0) {
+            if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD) {
                 parent_flag_addr =
                     MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR
                     (release_gather_info_ptr->reduce_tree.parent);
@@ -324,8 +323,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
                 MPIR_Localcopy(inbuf, count, datatype, (void *) reduce_data_addr, count, datatype);
         }
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-        if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD ||
-            release_gather_info_ptr->reduce_tree_large.nranks == 0) {
+        if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD) {
             num_children = release_gather_info_ptr->reduce_tree.num_children;
             children = release_gather_info_ptr->reduce_tree.children;
         } else {
@@ -354,8 +352,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 
             if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE ||
                 operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE) {
-                if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD ||
-                    release_gather_info_ptr->reduce_tree_large.nranks == 0) {
+                if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD) {
                     child_data_addr =
                         (char *) release_gather_info_ptr->child_reduce_buf_addr[i] +
                         segment * MPIDI_POSIX_RELEASE_GATHER_REDUCE_CELLSIZE;
