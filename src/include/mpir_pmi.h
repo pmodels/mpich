@@ -51,6 +51,7 @@ int MPIR_pmi_set_threaded(int is_threaded);
 int MPIR_pmi_max_key_size(void);
 int MPIR_pmi_max_val_size(void);
 const char *MPIR_pmi_job_id(void);
+const char *MPIR_pmi_hostname(void);
 char *MPIR_pmi_get_jobattr(const char *key);    /* key must use "PMI_" prefix */
 
 /* PMI wrapper utilities */
