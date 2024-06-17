@@ -58,6 +58,7 @@ static int pmi_max_key_size;
 static int pmi_max_val_size;
 
 static char *pmi_kvs_name;
+static char *pmi_hostname;
 
 static char *hwloc_topology_xmlfile;
 
@@ -148,6 +149,11 @@ int MPIR_pmi_init(void)
                mpi_errno = pmix_init(&has_parent, &rank, &size, &appnum));
     MPIR_ERR_CHECK(mpi_errno);
 
+    const char *hostname;
+    if (MPL_env2str("PMI_HOSTNAME", &hostname)) {
+        pmi_hostname = MPL_strdup(hostname);
+    }
+
     unsigned world_id = 0;
     if (pmi_kvs_name) {
         HASH_FNV(pmi_kvs_name, strlen(pmi_kvs_name), world_id);
@@ -211,6 +217,8 @@ void MPIR_pmi_finalize(void)
      * here: free allocated memory */
     MPL_free(pmi_kvs_name);
     pmi_kvs_name = NULL;
+    MPL_free(pmi_hostname);
+    pmi_hostname = NULL;
 
     MPL_free(MPIR_Process.node_map);
     MPL_free(MPIR_Process.node_root_map);
@@ -261,6 +269,11 @@ int MPIR_pmi_max_val_size(void)
 const char *MPIR_pmi_job_id(void)
 {
     return (const char *) pmi_kvs_name;
+}
+
+const char *MPIR_pmi_hostname(void)
+{
+    return (const char *) pmi_hostname;
 }
 
 /* wrapper functions */
