@@ -981,6 +981,11 @@ static HYD_status launch_procs(struct pmip_pg *pg)
                 MPL_free(str);
             }
 
+            if (pg->hostname) {
+                status = HYDU_append_env_to_list("PMI_HOSTNAME", pg->hostname, &force_env);
+                HYDU_ERR_POP(status, "unable to add env to list\n");
+            }
+
             HYD_STRING_STASH_INIT(stash);
             for (j = 0; exec->exec[j]; j++)
                 HYD_STRING_STASH(stash, MPL_strdup(exec->exec[j]), status);
