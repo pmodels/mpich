@@ -324,8 +324,11 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname, MPL_soc
     /* Check for a host name supplied through an environment variable */
     ifname_string = MPIR_CVAR_CH3_INTERFACE_HOSTNAME;
     if (!ifname_string) {
+        ifname_string = MPIR_pmi_hostname();
+    }
+    if (!ifname_string) {
         /* See if there is a per-process name for the interfaces (e.g.,
-         * the process manager only delievers the same values for the
+         * the process manager only delivers the same values for the
          * environment to each process.  There's no way to do this with
          * the param interface, so we need to use getenv() here. */
         char namebuf[1024];
