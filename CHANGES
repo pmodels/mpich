@@ -1,4 +1,28 @@
 ===============================================================================
+                               Changes in 4.2.2
+===============================================================================
+
+# Update embedded libfabric to v1.20.1 and fix compilation with GCC 14.
+
+# Fix dataloop support for MPIX_Type_iov routines
+
+# Fix crash in Hydra when system has many local ip addresses
+
+# Fix RMA fallback check in ch4:ofi netmod
+
+# Fix MPI_UNDEFINED handling in mpi_f08 module
+
+# Fix Slurm environment variable inheritance in Hydra
+
+# Fix multiple issues with large count support in ROMIO
+
+# Fix potential hang in init using PMIx client and nonstandard keys
+
+# Fix crash if PMIx client cannot get appnum from server during init
+
+# Fix other build errors and warnings
+
+===============================================================================
                                Changes in 4.2.1
 ===============================================================================
 
