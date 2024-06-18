@@ -262,11 +262,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
         /* get engine type */
         MPL_gpu_engine_type_t engine_type =
             MPIDI_IPCI_choose_engine(ipc_handles[target].gpu.global_dev_id,
-                                     my_ipc_handle.gpu.global_dev_id);        mpi_errno =
-            MPL_gpu_imemcpy((char *) MPIR_get_contig_ptr(temp_recv, true_lb),
-                            (char *) MPIR_get_contig_ptr(temp_send, true_lb),
-                            data_sz, dev_id, MPL_GPU_COPY_DIRECTION_NONE,
-                            engine_type, &reqs[i], true);
+                                     my_ipc_handle.gpu.global_dev_id);
+        mpi_errno = MPL_gpu_imemcpy(temp_recv, temp_send, data_sz, dev_id,
+                                    MPL_GPU_COPY_DIRECTION_NONE, engine_type, &reqs[i], true);
         MPIR_ERR_CHECK(mpi_errno);
     }
     /* wait for the imemcpy to finish */
@@ -391,11 +389,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
         MPL_gpu_engine_type_t engine_type =
             MPIDI_IPCI_choose_engine(ipc_handles[target].gpu.global_dev_id,
                                      my_ipc_handle.gpu.global_dev_id);
-        mpi_errno =
-            MPL_gpu_imemcpy((char *) MPIR_get_contig_ptr(temp_recv, true_lb),
-                            (char *) MPIR_get_contig_ptr(temp_send, true_lb),
-                            data_sz, dev_id, MPL_GPU_COPY_DIRECTION_NONE,
-                            engine_type, &reqs[i], true);
+        mpi_errno = MPL_gpu_imemcpy(temp_recv, temp_send, data_sz, dev_id,
+                                    MPL_GPU_COPY_DIRECTION_NONE, engine_type, &reqs[i], true);
         MPIR_ERR_CHECK(mpi_errno);
     }
     /* wait for the imemcpy to finish */
@@ -529,11 +524,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
         MPL_gpu_engine_type_t engine_type =
             MPIDI_IPCI_choose_engine(ipc_handles[target].gpu.global_dev_id,
                                      my_ipc_handle.gpu.global_dev_id);
-        mpi_errno =
-            MPL_gpu_imemcpy((char *) MPIR_get_contig_ptr(temp_recv, true_lb),
-                            (char *) MPIR_get_contig_ptr(temp_send, true_lb),
-                            recvcounts[target] * recvtype_sz, dev_id, MPL_GPU_COPY_DIRECTION_NONE,
-                            engine_type, &reqs[i], true);
+        mpi_errno = MPL_gpu_imemcpy(temp_recv, temp_send, recvcounts[target] * recvtype_sz, dev_id,
+                                    MPL_GPU_COPY_DIRECTION_NONE, engine_type, &reqs[i], true);
         MPIR_ERR_CHECK(mpi_errno);
     }
     /* wait for the imemcpy to finish */
