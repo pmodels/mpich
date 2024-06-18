@@ -79,13 +79,11 @@ static int allgather_ipc_handles(const void *buf, MPI_Aint count, MPI_Datatype d
         goto fn_exit;
     }
 
-    int my_rank = MPIR_Comm_rank(comm);
     int comm_size = MPIR_Comm_size(comm);
     void *mem_addr = MPIR_get_contig_ptr(buf, true_lb);
 
     MPIDI_IPCI_ipc_attr_t ipc_attr;
-    memset(&ipc_attr, 0, sizeof(ipc_attr));
-    MPIR_GPU_query_pointer_attr(mem_addr, &ipc_attr.gpu_attr);
+    mpi_errno = MPIDI_GPU_get_ipc_attr(buf, count, datatype, MPI_PROC_NULL, comm, &ipc_attr);
 
     MPIDI_IPCI_ipc_handle_t *ipc_handles;
     ipc_handles = MPL_malloc(sizeof(MPIDI_IPCI_ipc_handle_t) * comm_size, MPL_MEM_COLL);
@@ -93,14 +91,9 @@ static int allgather_ipc_handles(const void *buf, MPI_Aint count, MPI_Datatype d
 
     MPIDI_IPCI_ipc_handle_t my_ipc_handle;
     memset(&my_ipc_handle, 0, sizeof(my_ipc_handle));
-
-    int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.gpu_attr);
-    /* CPU memory, registered host memory and USM need to fallback,
-     * GPU memory will use ipc read path */
-    if (dev_id >= 0 && ipc_attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
-        mpi_errno = MPIDI_GPU_get_ipc_attr(mem_addr, my_rank, comm, &ipc_attr);
+    if (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE) {
+        mpi_errno = MPIDI_GPU_fill_ipc_handle(&ipc_attr, &my_ipc_handle);
         MPIR_ERR_CHECK(mpi_errno);
-        my_ipc_handle = ipc_attr.ipc_handle;
     } else {
         my_ipc_handle.gpu.global_dev_id = -1;
     }
