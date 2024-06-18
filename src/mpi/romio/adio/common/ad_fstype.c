@@ -41,6 +41,10 @@
 #include "gpfs.h"
 #endif
 
+#ifdef ROMIO_DAOS
+#include <daos_uns.h>
+#endif
+
 /* Notes on detection process:
  *
  * There are three more "general" mechanisms that we use for detecting
@@ -100,6 +104,10 @@
 
 #if !defined(DAOS_SUPER_MAGIC)
 #define DAOS_SUPER_MAGIC (0xDA05AD10)
+#endif
+
+#if !defined(FUSE_SUPER_MAGIC)
+#define FUSE_SUPER_MAGIC  0x65735546
 #endif
 
 #define UNKNOWN_SUPER_MAGIC (0xDEADBEEF)
@@ -198,6 +206,10 @@ static struct ADIO_FSTypes fstypes[] = {
     /* userspace driver only selected via prefix */
     {&ADIO_QUOBYTEFS_operations, ADIO_QUOBYTEFS, "quobyte:", 0},
 #endif
+    /* we don't have a FUSE ADIO driver, but this data structure is also
+     * helpful in `romio_statfs` where we have to map string identifiers to
+     * file ids */
+    {NULL, 0, "fuse", FUSE_SUPER_MAGIC},
     {0, 0, 0, 0}        /* guard entry */
 };
 
@@ -370,6 +382,23 @@ static int romio_statfs(const char *filename, int64_t * file_id)
         }
     }
 #endif
+    /* fuse is a special case: normally we don't care if a file is on fuse
+     * or not, unless that file is actually a DAOS file */
+    if (*file_id == FUSE_SUPER_MAGIC) {
+        *file_id = UNKNOWN_SUPER_MAGIC;
+#ifdef ROMIO_DAOS
+        int ret;
+        /* DAOS adds a wrinkle here:  fuse overwrites the backend's stat structure
+         * with the fuse filesystem type.  For DAOS, we have to make a special call
+         * to see if a file on FUSE is actually DAOS */
+        struct duns_attr_t attr = { 0 };
+
+        ret = duns_resolve_path(filename, &attr);
+        if (ret == 0)
+            *file_id = DAOS_SUPER_MAGIC;
+        duns_destroy_attr(&attr);
+#endif
+    }
 
     return err;
 
