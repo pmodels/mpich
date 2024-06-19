@@ -33,6 +33,9 @@ cvars:
 
 extern MPL_TLS int global_vci_poll_count;
 
+extern bool mpidix_netmod_progress_disabled;
+void MPIDIX_disable_netmod_progress();
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 {
     if (MPIDI_global.n_vcis == 1 || !MPIDI_global.is_initialized || !MPIR_CVAR_CH4_GLOBAL_PROGRESS) {
@@ -69,13 +72,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 #else
 #define MPIDI_PROGRESS(vci)			\
     do {                                                \
+        MPIDIX_disable_netmod_progress();               \
         if (state->flag & MPIDI_PROGRESS_SHM && !made_progress) { \
             MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);             \
             mpi_errno = MPIDI_SHM_progress(vci, &made_progress); \
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);              \
             MPIR_ERR_CHECK(mpi_errno); \
         }                                                               \
-        if (state->flag & MPIDI_PROGRESS_NM && !made_progress) { \
+        if (!mpidix_netmod_progress_disabled && state->flag & MPIDI_PROGRESS_NM && !made_progress) { \
             MPIDI_THREAD_CS_ENTER_VCI_OPTIONAL(vci);            \
             mpi_errno = MPIDI_NM_progress(vci, &made_progress); \
             MPIDI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);                     \
