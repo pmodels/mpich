@@ -727,10 +727,13 @@ AC_INIT
 AC_PREREQ($ver)
 AC_OUTPUT
 EOF
-        if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
+        if (cd .tmp && $autoreconf $autoreconf_args >autoreconf.out 2>autoreconf.err) ; then
             echo ">= $ver"
         else
             echo "bad autoconf installation"
+            echo "--- autoreconf diagnositcs ---"
+            $(cat autoreconf.err)
+            echo "--- autoreconf diagnositcs ---"
             cat <<EOF
 You either do not have autoconf in your path or it is too old (version
 $ver or higher required). You may be able to use
