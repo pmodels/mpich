@@ -587,7 +587,7 @@ Makefile.am-stamp
 
 # /test/mpi/
 /test/mpi/libtool
-/test/mpi/coll/testlist.cvar
+/test/mpi/coll/testlist.collalgo
 /test/mpi/attr/testlist.dtp
 /test/mpi/pt2pt/testlist.dtp
 /test/mpi/coll/testlist.dtp
