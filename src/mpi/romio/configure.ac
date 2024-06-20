@@ -178,7 +178,7 @@ dnl An m4 macro for use with m4_foreach_w and friends.  You should modify this
 dnl list if you want to add a known file system.  The list is just whitespace
 dnl separated, so you can use newlines and tabs as well.
 m4_define([known_filesystems_m4_w],
-          [daos nfs ufs pvfs2 testfs xfs panfs lustre gpfs ime quobytefs])dnl
+          [daos nfs ufs pvfs2 testfs xfs panfs lustre gpfs ime quobytefs oceanfs])dnl
 dnl
 dnl An m4 macro for use with m4_foreach and friends.  Expands to a quoted list of
 dnl quoted elements.  A bit easier to use without unintended expansion than the
@@ -978,6 +978,10 @@ fi
 if test -n "$file_system_quobytefs" ; then
 	AC_DEFINE(ROMIO_QUOBYTEFS,1,[Define for ROMIO with QUOBYTEFS])
 	PAC_APPEND_FLAG([-lquobyte],[LIBS])
+fi
+
+if test -n "$file_system_oceanfs" ; then
+	AC_DEFINE(ROMIO_OCEANFS,1,[Define for ROMIO with OCEANFS])
 fi
 
 #

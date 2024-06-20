@@ -94,12 +94,20 @@
 #define GPFS_SUPER_MAGIC 0x47504653
 #endif
 
+#if defined(ROMIO_OCEANFS) && !defined(OCEANFS_MAGIC)
+#define OCEANFS_MAGIC 0xFFEA36969
+#endif
+
 #ifndef LL_SUPER_MAGIC
 #define LL_SUPER_MAGIC 0x0BD00BD0
 #endif
 
 #if !defined(DAOS_SUPER_MAGIC)
 #define DAOS_SUPER_MAGIC (0xDA05AD10)
+#endif
+
+#if defined(ROMIO_OCEANFS) && !defined(OCEANFS_SUPER_MAGIC)
+#define OCEANFS_SUPER_MAGIC (0x0CEAAEC0)
 #endif
 
 #define UNKNOWN_SUPER_MAGIC (0xDEADBEEF)
@@ -198,6 +206,9 @@ static struct ADIO_FSTypes fstypes[] = {
     /* userspace driver only selected via prefix */
     {&ADIO_QUOBYTEFS_operations, ADIO_QUOBYTEFS, "quobyte:", 0},
 #endif
+#ifdef ROMIO_OCEANFS
+    {&ADIO_OCEANFS_operations, ADIO_OCEANFS, "oceanfs:", OCEANFS_SUPER_MAGIC},
+#endif
     {0, 0, 0, 0}        /* guard entry */
 };
 
@@ -217,6 +228,7 @@ static const char *fstype_prefix[] = {
     "testfs",
     "ime",
     "quobyte",
+    "oceanfs",
     NULL        /* guard entry */
 };
 
@@ -474,6 +486,11 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #ifdef ROMIO_PVFS2
         case PVFS2_SUPER_MAGIC:
             *fstype = ADIO_PVFS2;
+            return;
+#endif
+#ifdef ROMIO_OCEANFS
+        case OCEANFS_SUPER_MAGIC:
+            *fstype = ADIO_OCEANFS;
             return;
 #endif
         default:
