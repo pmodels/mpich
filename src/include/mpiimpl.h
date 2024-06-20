@@ -53,6 +53,14 @@
 #include "mpl.h"
 #include "mpi.h"
 
+/* TODO: remove once these become standard */
+#define MPI_LOGICAL1 MPIX_LOGICAL1
+#define MPI_LOGICAL2 MPIX_LOGICAL2
+#define MPI_LOGICAL4 MPIX_LOGICAL4
+#define MPI_LOGICAL8 MPIX_LOGICAL8
+#define MPI_LOGICAL16 MPIX_LOGICAL16
+#define MPI_TYPECLASS_LOGICAL MPIX_TYPECLASS_LOGICAL
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

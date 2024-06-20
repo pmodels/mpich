@@ -160,8 +160,8 @@ AC_DEFUN([PAC_SET_MPI_DATATYPE_ALIAS], [
 
 dnl
 dnl PAC_F77_CHECK_FIXED_REAL(size) and PAC_F77_CHECK_FIXED_INTEGER(size)
-dnl Map fixed-size Fortran types, e.g. REAL*4, to equivallent C types.
-dnl If no equivallent C types exist, set corresponding sizeof value to 0.
+dnl Map fixed-size Fortran types, e.g. REAL*4, to equivalent C types.
+dnl If no equivalent C types exist, set corresponding sizeof value to 0.
 dnl
 AC_DEFUN([PAC_F77_CHECK_FIXED_REAL], [
     get_c_float_type $1
@@ -180,6 +180,21 @@ AC_DEFUN([PAC_F77_CHECK_FIXED_INTEGER], [
     else
         eval pac_cv_f77_sizeof_integer$1=$1
         AC_DEFINE_UNQUOTED(MPIR_INTEGER$1_CTYPE,$pac_retval,[C type to use for MPI_INTEGER$1])
+    fi
+])
+
+dnl
+dnl PAC_F77_CHECK_FIXED_LOGICAL(size)
+dnl Map fixed-size Fortran LOGICAL types, e.g. LOGICAL*1, to equivalent C types.
+dnl If no equivalent C types exist, set corresponding sizeof value to 0.
+dnl
+AC_DEFUN([PAC_F77_CHECK_FIXED_LOGICAL], [
+    get_c_int_type $1
+    if test "$pac_retval" = "unavailable" ; then
+        eval pac_cv_f77_sizeof_logical$1=0
+    else
+        eval pac_cv_f77_sizeof_logical$1=$1
+        AC_DEFINE_UNQUOTED(MPIR_LOGICAL$1_CTYPE,$pac_retval,[C type to use for MPI_LOGICAL$1])
     fi
 ])
 
