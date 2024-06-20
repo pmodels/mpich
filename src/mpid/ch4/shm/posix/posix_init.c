@@ -42,11 +42,14 @@ cvars:
 #include "utarray.h"
 #include <strings.h>    /* for strncasecmp */
 
+#include <hwloc.h>
+
 extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 
 static int choose_posix_eager(void);
 static void *host_alloc(uintptr_t size);
 static void host_free(void *ptr);
+static void init_topo_info();
 
 static void *host_alloc(uintptr_t size)
 {
@@ -148,6 +151,67 @@ static int init_vci(int vci)
     goto fn_exit;
 }
 
+static void init_topo_info()
+{
+    hwloc_topology_t topology;
+    hwloc_cpuset_t cpuset;
+    MPIDI_POSIX_topo_info_t *topo = &MPIDI_POSIX_global.topo;
+
+    hwloc_topology_init(&topology);
+    hwloc_topology_load(topology);
+
+    cpuset = hwloc_bitmap_alloc();
+    hwloc_get_cpubind(topology, cpuset, HWLOC_CPUBIND_PROCESS);
+
+    /* init topo info with the first cpu */
+    int cpu_index = hwloc_bitmap_first(cpuset);
+    if (cpu_index != -1) {
+        hwloc_obj_t obj = hwloc_get_pu_obj_by_os_index(topology, cpu_index);
+        if (obj) {
+            do {
+                if (obj->type == HWLOC_OBJ_PU) {
+                    topo->core_id = obj->logical_index;
+                }
+                if (obj->type == HWLOC_OBJ_L3CACHE) {
+                    topo->l3_cache_id = obj->logical_index;
+                }
+                if (obj->type == HWLOC_OBJ_PACKAGE) {
+                    topo->numa_id = obj->logical_index;
+                }
+                obj = obj->parent;
+            } while (obj != NULL);
+        }
+    }
+
+    /* if there are other cpus left, make sure they share L3 and NUMA node.
+     * If not, the cpu binding cannot leverage topology aware SHM communication, we revert
+     * to basic mode and assumes every process are on the same NUMA. */
+    cpu_index = hwloc_bitmap_next(cpuset, cpu_index);
+    while (cpu_index != -1) {
+        hwloc_obj_t obj = hwloc_get_pu_obj_by_os_index(topology, cpu_index);
+        if (obj) {
+            do {
+                if (obj->type == HWLOC_OBJ_L3CACHE && obj->logical_index != topo->l3_cache_id) {
+                    topo->l3_cache_id = -1;
+                    topo->numa_id = -1;
+                    break;
+                }
+                obj = obj->parent;
+            } while (obj != NULL);
+        }
+        cpu_index = hwloc_bitmap_next(cpuset, cpu_index);
+    }
+
+    hwloc_bitmap_free(cpuset);
+    hwloc_topology_destroy(topology);
+
+    if (topo->numa_id == -1 || topo->l3_cache_id == -1) {
+        MPIDI_POSIX_global.topo_aware = false;
+    } else {
+        MPIDI_POSIX_global.topo_aware = true;
+    }
+}
+
 int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -172,6 +236,14 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
     MPIDI_POSIX_global.my_local_rank = MPIR_Process.local_rank;
 
     MPIDI_POSIX_global.local_rank_0 = local_rank_0;
+
+    MPIDI_POSIX_global.local_rank_dist = NULL;
+    MPIDI_POSIX_global.topo_aware = false;
+    /* hwloc getting topo info */
+    MPIDI_POSIX_global.topo.core_id = -1;
+    MPIDI_POSIX_global.topo.l3_cache_id = -1;
+    MPIDI_POSIX_global.topo.numa_id = -1;
+    init_topo_info();
 
     choose_posix_eager();
 
@@ -229,6 +301,7 @@ int MPIDI_POSIX_init_world(void)
 int MPIDI_POSIX_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_topo_info_t *local_rank_topo = NULL;
 
     MPIDI_POSIX_global.num_vcis = MPIDI_global.n_total_vcis;
     for (int i = 1; i < MPIDI_POSIX_global.num_vcis; i++) {
@@ -239,7 +312,49 @@ int MPIDI_POSIX_post_init(void)
     mpi_errno = MPIDI_POSIX_eager_post_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* gather topo info from local procs and calculate distance */
+    if (MPIDI_POSIX_global.topo_aware) {
+        int topo_info_size = sizeof(MPIDI_POSIX_topo_info_t);
+        local_rank_topo =
+            (MPIDI_POSIX_topo_info_t *) MPL_malloc(MPIDI_POSIX_global.num_local * topo_info_size,
+                                                   MPL_MEM_SHM);
+        memset(local_rank_topo, 0, MPIDI_POSIX_global.num_local * topo_info_size);
+        mpi_errno = MPIR_Allgather_fallback(&MPIDI_POSIX_global.topo, topo_info_size, MPI_BYTE,
+                                            local_rank_topo, topo_info_size, MPI_BYTE,
+                                            MPIR_Process.comm_world->node_comm, MPIR_ERR_NONE);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPIDI_POSIX_global.local_rank_dist =
+            (int *) MPL_malloc(MPIR_Process.local_size * sizeof(int), MPL_MEM_SHM);
+        for (int i = 0; i < MPIR_Process.local_size; i++) {
+            MPIDI_POSIX_global.local_rank_dist[i] = MPIDI_POSIX_DIST__LOCAL;
+        }
+        for (int i = 0; i < MPIDI_POSIX_global.num_local; i++) {
+            if (local_rank_topo[i].l3_cache_id != MPIDI_POSIX_global.topo.l3_cache_id) {
+                MPIDI_POSIX_global.local_rank_dist[i] = MPIDI_POSIX_DIST__NO_SHARED_CACHE;
+                continue;
+            }
+            if (local_rank_topo[i].numa_id != MPIDI_POSIX_global.topo.numa_id) {
+                MPIDI_POSIX_global.local_rank_dist[i] = MPIDI_POSIX_DIST__INTER_NUMA;
+                continue;
+            }
+        }
+
+        if (MPIR_CVAR_DEBUG_SUMMARY >= 2) {
+            if (MPIR_Process.rank == 0) {
+                fprintf(stdout, "====== POSIX Topo Dist ======\n");
+            }
+            fprintf(stdout, "Rank: %d, Local_rank: %d [ %d", MPIR_Process.rank,
+                    MPIR_Process.local_rank, MPIDI_POSIX_global.local_rank_dist[0]);
+            for (int i = 1; i < MPIDI_POSIX_global.num_local; i++) {
+                fprintf(stdout, ", %d", MPIDI_POSIX_global.local_rank_dist[i]);
+            }
+            fprintf(stdout, " ]\n");
+        }
+    }
+
   fn_exit:
+    MPL_free(local_rank_topo);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -275,6 +390,7 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     }
 
     MPL_free(MPIDI_POSIX_global.local_ranks);
+    MPL_free(MPIDI_POSIX_global.local_rank_dist);
 
     posix_world_initialized = 0;
 
