@@ -319,7 +319,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
 
     if (MPIDI_RMA_Win_inactive_list_head == NULL && MPIDI_RMA_Win_active_list_head == NULL) {
         /* this is the first window, register RMA progress hook */
-        mpi_errno = MPIR_Progress_hook_register(MPIDI_CH3I_RMA_Make_progress_global,
+        mpi_errno = MPIR_Progress_hook_register(-1, MPIDI_CH3I_RMA_Make_progress_global,
                                                 &MPIDI_CH3I_RMA_Progress_hook_id);
         MPIR_ERR_CHECK(mpi_errno);
     }

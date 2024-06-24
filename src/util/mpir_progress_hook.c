@@ -6,27 +6,42 @@
 #include "mpiimpl.h"
 #include "mpl.h"
 
-#define MAX_PROGRESS_HOOKS 100
+#define MAX_PROGRESS_HOOKS 10
 
-typedef int (*progress_func_ptr_t) (int *made_progress);
+typedef int (*progress_func_ptr_t) (int vci, int *made_progress);
 typedef struct progress_hook_slot {
     progress_func_ptr_t func_ptr;
     MPL_atomic_int_t active;
 } progress_hook_slot_t;
 
-static int registered_progress_hooks = 0;
-static progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
+static int registered_progress_hooks[MPIR_MAX_VCIS + 1];
+static progress_hook_slot_t progress_hooks[MPIR_MAX_VCIS + 1][MAX_PROGRESS_HOOKS];
 
-int MPIR_Progress_hook_exec_all(int *made_progress)
+#define MAKE_HOOK_ID(vci, i)  (((vci) << 16) + i)
+#define PARSE_HOOK_ID(id, vci, i) \
+    do { \
+        MPIR_Assert((id) >= 0); \
+        vci = (id) >> 16; \
+        i = (id) & 0xffff; \
+        MPIR_Assert(vci <= MPIR_MAX_VCIS); \
+        MPIR_Assert(i < MAX_PROGRESS_HOOKS); \
+    } while (0)
+
+int MPIR_Progress_hook_exec_all(int vci, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    for (int i = 0; i < registered_progress_hooks; i++) {
-        int is_active = MPL_atomic_acquire_load_int(&progress_hooks[i].active);
+    /* if vci is -1, this progress hook will always get invoked */
+    if (vci == -1) {
+        vci = MPIR_MAX_VCIS;
+    }
+
+    for (int i = 0; i < registered_progress_hooks[vci]; i++) {
+        int is_active = MPL_atomic_acquire_load_int(&progress_hooks[vci][i].active);
         if (is_active == TRUE) {
-            MPIR_Assert(progress_hooks[i].func_ptr != NULL);
+            MPIR_Assert(progress_hooks[vci][i].func_ptr != NULL);
             int tmp_progress = 0;
-            mpi_errno = progress_hooks[i].func_ptr(&tmp_progress);
+            mpi_errno = progress_hooks[vci][i].func_ptr(vci, &tmp_progress);
             MPIR_ERR_CHECK(mpi_errno);
 
             *made_progress |= tmp_progress;
@@ -40,15 +55,20 @@ int MPIR_Progress_hook_exec_all(int *made_progress)
     goto fn_exit;
 }
 
-int MPIR_Progress_hook_register(int (*progress_fn) (int *), int *id)
+int MPIR_Progress_hook_register(int vci, progress_func_ptr_t progress_fn, int *id)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
 
+    /* if vci is -1, this progress hook will always get invoked */
+    if (vci == -1) {
+        vci = MPIR_MAX_VCIS;
+    }
+
+    int i;
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-        if (progress_hooks[i].func_ptr == NULL) {
-            progress_hooks[i].func_ptr = progress_fn;
-            MPL_atomic_relaxed_store_int(&progress_hooks[i].active, FALSE);
+        if (progress_hooks[vci][i].func_ptr == NULL) {
+            progress_hooks[vci][i].func_ptr = progress_fn;
+            MPL_atomic_relaxed_store_int(&progress_hooks[vci][i].active, FALSE);
             break;
         }
     }
@@ -56,9 +76,9 @@ int MPIR_Progress_hook_register(int (*progress_fn) (int *), int *id)
     if (i >= MAX_PROGRESS_HOOKS)
         goto fn_fail;
 
-    registered_progress_hooks++;
+    registered_progress_hooks[vci]++;
 
-    (*id) = i;
+    (*id) = MAKE_HOOK_ID(vci, i);
 
   fn_exit:
     return mpi_errno;
@@ -73,13 +93,14 @@ int MPIR_Progress_hook_deregister(int id)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(id >= 0);
-    MPIR_Assert(id < MAX_PROGRESS_HOOKS);
-    MPIR_Assert(progress_hooks[id].func_ptr != NULL);
-    progress_hooks[id].func_ptr = NULL;
-    MPL_atomic_release_store_int(&progress_hooks[id].active, FALSE);
+    int vci, i;
+    PARSE_HOOK_ID(id, vci, i);
 
-    registered_progress_hooks--;
+    MPIR_Assert(progress_hooks[vci][i].func_ptr != NULL);
+    progress_hooks[vci][i].func_ptr = NULL;
+    MPL_atomic_release_store_int(&progress_hooks[vci][i].active, FALSE);
+
+    registered_progress_hooks[vci]--;
 
     return mpi_errno;
 }
@@ -103,11 +124,11 @@ int MPIR_Progress_hook_activate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(id >= 0);
-    MPIR_Assert(id < MAX_PROGRESS_HOOKS);
+    int vci, i;
+    PARSE_HOOK_ID(id, vci, i);
 
-    MPL_atomic_release_store_int(&progress_hooks[id].active, TRUE);
-    MPIR_Assert(progress_hooks[id].func_ptr != NULL);
+    MPL_atomic_release_store_int(&progress_hooks[vci][i].active, TRUE);
+    MPIR_Assert(progress_hooks[vci][i].func_ptr != NULL);
 
     return mpi_errno;
 }
@@ -116,11 +137,11 @@ int MPIR_Progress_hook_deactivate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(id >= 0);
-    MPIR_Assert(id < MAX_PROGRESS_HOOKS);
+    int vci, i;
+    PARSE_HOOK_ID(id, vci, i);
 
-    MPL_atomic_release_store_int(&progress_hooks[id].active, FALSE);
-    MPIR_Assert(progress_hooks[id].func_ptr != NULL);
+    MPL_atomic_release_store_int(&progress_hooks[vci][i].active, FALSE);
+    MPIR_Assert(progress_hooks[vci][i].func_ptr != NULL);
 
     return mpi_errno;
 }

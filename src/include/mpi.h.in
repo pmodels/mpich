@@ -775,6 +775,15 @@ enum MPIR_Combiner_enum {
 #define MPIIMPL_HAVE_STATUS_SET_BYTES 1
 #define MPIIMPL_HAVE_STATUS_SET_INFO 1
 
+/* MPIX Async extensions */
+/* poll_fn return following states. */
+enum {
+    MPIX_ASYNC_NOPROGRESS = 0,
+    MPIX_ASYNC_DONE = 1,
+};
+
+typedef struct MPIR_Async_thing * MPIX_Async_thing;
+
 #ifndef BUILD_MPI_ABI
 /* C callback functions */
 typedef void (MPI_Handler_function) ( MPI_Comm *, int *, ... );
@@ -823,6 +832,7 @@ typedef int (MPI_Grequest_query_function)(void *, MPI_Status *);
 #endif /* BUILD_MPI_ABI */
 typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);
 typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
+typedef int (MPIX_Async_poll_function)(MPIX_Async_thing);
 #ifndef BUILD_MPI_ABI
 
 /* Function type defs */

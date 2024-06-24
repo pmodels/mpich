@@ -1260,7 +1260,7 @@ def dump_fortran_line(s):
 def check_func_directives(func):
     if 'dir' in func and func['dir'] == "mpit":
         func['_skip_fortran'] = 1
-    elif RE.match(r'mpix_(grequest_|type_iov)', func['name'], re.IGNORECASE):
+    elif RE.match(r'mpix_(grequest_|type_iov|async_)', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpi_\w+_(f|f08|c)2(f|f08|c)$', func['name'], re.IGNORECASE):
         # implemented in mpi_f08_types.f90

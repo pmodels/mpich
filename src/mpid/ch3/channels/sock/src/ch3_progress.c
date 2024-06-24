@@ -52,7 +52,7 @@ static int MPIDI_CH3i_Progress_test(void)
     MPIR_FUNC_ENTER;
 
     int made_progress = 0;
-    mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
+    mpi_errno = MPIR_Progress_hook_exec_all(-1, &made_progress);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (made_progress) {
@@ -137,7 +137,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
     do {
         int made_progress = FALSE;
 
-        mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
+        mpi_errno = MPIR_Progress_hook_exec_all(-1, &made_progress);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (made_progress) {

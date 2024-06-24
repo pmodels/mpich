@@ -536,3 +536,17 @@ MPI_Waitsome:
     if (mpi_errno)
         goto fn_fail;
 }
+
+MPIX_Request_is_complete:
+    .return: LOGICAL
+    request: REQUEST, direction=in, pointer=False
+    .impl: direct
+{
+    MPIR_Request *request_ptr;
+    MPIR_Request_get_ptr(request, request_ptr);
+    if (request_ptr) {
+        return MPIR_Request_is_complete(request_ptr);
+    } else {
+        return 1;
+    }
+}

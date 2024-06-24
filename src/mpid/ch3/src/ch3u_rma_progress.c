@@ -609,7 +609,7 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPIR_Win * win_ptr, int *made_progress)
 }
 
 
-int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
+int MPIDI_CH3I_RMA_Make_progress_global(int vci, int *made_progress)
 {
     MPIR_Win *win_ptr;
     int mpi_errno = MPI_SUCCESS;
