@@ -8,9 +8,10 @@
 
 /* memory handle definition */
 typedef struct {
-    const void *src_offset;
     int src_lrank;
-    MPI_Aint data_sz;
+    int is_contig;
+    const void *addr;
+    MPI_Aint true_lb, range;
 } MPIDI_XPMEM_ipc_handle_t;
 
 /* local struct used for query and preparing memory handle.
