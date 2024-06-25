@@ -1,0 +1,59 @@
+!
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
+!
+! Module mpi_c_interface_types is a helper module used by the modules
+! specifying c interfaces:
+!
+! mpi_c_interface_cdesc - interfaces for MPI functions with a descriptor argument
+! mpi_c_interface_nobuf - interfaces for MPI functions with no choice argument
+!
+! MPICH C interface uses integer for handles and status type.
+! It is not defined in the spec and not intended for end users.
+!--------------------------------------------------------------
+
+module mpi_c_interface_types
+
+use, intrinsic :: iso_c_binding
+
+implicit none
+
+integer,parameter :: c_Fint       = KIND(0)
+
+integer,parameter :: c_Aint       = @F08_C_AINT@
+integer,parameter :: c_Count      = @F08_C_COUNT@
+integer,parameter :: c_Offset     = @F08_C_OFFSET@
+
+!=============================================================
+! Kinds for handle types in C prototypes; should match  mpi.h
+!=============================================================
+
+integer,parameter :: c_Datatype   = c_int
+integer,parameter :: c_Comm       = c_int
+integer,parameter :: c_Group      = c_int
+integer,parameter :: c_Win        = c_int
+integer,parameter :: c_Op         = c_int
+integer,parameter :: c_Info       = c_int
+integer,parameter :: c_Errhandler = c_int
+integer,parameter :: c_Request    = c_int
+integer,parameter :: c_Message    = c_int
+integer,parameter :: c_Session    = c_int
+integer,parameter :: c_Stream     = c_int
+integer,parameter :: c_File       = c_intptr_t
+
+!================================================
+! C struct for STATUS values; should match  mpi.h
+!================================================
+
+! MPI_Status, with name changed to c_Status for internal disambiguation
+! A.1.2 p 676
+
+type, bind(c) :: c_Status
+   integer(c_int)  :: count_lo
+   integer(c_int)  :: count_hi_and_cancelled
+   integer(c_int)  :: MPI_SOURCE
+   integer(c_int)  :: MPI_TAG
+   integer(c_int)  :: MPI_ERROR
+end type c_Status
+
+end module mpi_c_interface_types
