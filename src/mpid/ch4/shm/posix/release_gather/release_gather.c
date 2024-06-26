@@ -347,9 +347,9 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 mpi_errno =
                     MPIR_Treealgo_tree_create(rank, num_ranks,
-                                            RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type_large),
-                                            RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large), 0,
-                                            &release_gather_info_ptr->reduce_tree_large);
+                                              RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type_large),
+                                              RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large), 0,
+                                              &release_gather_info_ptr->reduce_tree_large);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             } else {
                 /* Finalize was already called and MPIR_Process.hwloc_topology has been destroyed */
@@ -393,7 +393,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                           RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large), 0,
                                           &release_gather_info_ptr->reduce_tree_large);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
-
         }
 
         release_gather_info_ptr->gather_state = release_gather_info_ptr->release_state =

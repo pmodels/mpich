@@ -95,10 +95,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     /* Set the relaxation to 0 because in Bcast, gather step is "relaxed" to make sure multiple
      * buffers can be used to pipeline the copying in and out of shared memory, and data is not
      * overwritten */
-    const int relaxation =
-        (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) ?
-        RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells) - 1 : 0;
-
+    // const int relaxation =
+    //     (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) ?
+    //     RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells) - 1 : 0;
+    const int relaxation = 0;
     rank = MPIR_Comm_rank(comm_ptr);
     release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
     release_gather_info_ptr->release_state++;
@@ -194,10 +194,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 parent_flag_addr =
                     MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR
                     (release_gather_info_ptr->reduce_tree.parent);
+                //printf("reduce_tree.parent = %d\n", release_gather_info_ptr->reduce_tree.parent);
             } else {
                 parent_flag_addr =
                     MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR
                     (release_gather_info_ptr->reduce_tree_large.parent);
+                //printf("reduce_tree_large.parent = %d\n", release_gather_info_ptr->reduce_tree_large.parent);
             }
         } else {
             parent_flag_addr =
