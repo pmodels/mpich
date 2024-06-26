@@ -592,7 +592,7 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
     }
 
     /* Create a request */
-    reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
+    reqp = MPID_Request_create_from_comm(MPIR_REQUEST_KIND__COLL, comm);
     if (!reqp)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     *req = reqp;
