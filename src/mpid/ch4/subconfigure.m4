@@ -400,18 +400,19 @@ AC_DEFUN([PAC_CH4_CONFIG_SUMMARY], [
     elif test "$ch4_netmods" = "ucx" -a "$with_ucx" = "embedded"; then
         t_netmod="ucx (embedded)"
     fi
-    t_xpmem=""
+    t_ipc=""
     if test "$pac_have_xpmem" = "yes" ; then
-        t_xpmem="xpmem"
+        t_ipc="xpmem"
     fi
     t_gpu="disabled"
     if test -n "${GPU_SUPPORT}" ; then
         t_gpu="${GPU_SUPPORT}"
+        t_ipc="$t_ipc gpudirect"
     fi
     cat <<EOF
 ***
 *** device      : ch4:${t_netmod}
-*** shm feature : ${ch4_shm} $t_xpmem
+*** ipc feature : ${t_ipc}
 *** gpu support : ${t_gpu}
 ***
 EOF    
