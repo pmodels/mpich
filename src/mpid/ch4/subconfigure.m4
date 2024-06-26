@@ -262,18 +262,10 @@ AC_ARG_WITH(ch4-shmmods,
     [  --with-ch4-shmmods@<:@=ARG@:>@ Comma-separated list of shared memory modules for MPICH/CH4.
                           Valid options are:
                           auto         - Enable everything that is available/allowed by netmod (default)
-                                         (cannot be combined with other options)
-                          none         - No shmmods, network only (cannot be combined with other options)
-                          posix        - Enable POSIX shmmod
-                          xpmem        - Enable XPMEM IPC (requires posix)
-                          gpudirect    - Enable GPU Direct IPC (requires posix)
+                          none         - No shmmods, network only
                  ],
                  [with_ch4_shmmods=$withval],
                  [with_ch4_shmmods=auto])
-# shmmod0,shmmod1,... format
-# (posix is always enabled thus ch4_shm is not checked in posix module)
-ch4_shm="`echo $with_ch4_shmmods | sed -e 's/,/ /g'`"
-export ch4_shm
 
 # setup default direct communication routine
 if test "${with_ch4_shmmods}" = "auto" -a "${ch4_netmods}" = "ucx" ; then
