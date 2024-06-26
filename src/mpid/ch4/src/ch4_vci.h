@@ -315,4 +315,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 #error Invalid MPIDI_CH4_VCI_METHOD!
 #endif
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_get_comm_vci(MPIR_Comm * comm_ptr)
+{
+#if MPIDI_CH4_VCI_METHOD == MPICH_VCI__COMM
+    return MPIDI_hash_local_vci(comm_ptr->seq);
+#else
+    return 0;
+#endif
+}
+
 #endif /* CH4_VCI_H_INCLUDED */
