@@ -67,6 +67,7 @@ MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction
 
     transport = MPIDI_POSIX_eager_iqueue_get_transport(transaction->src_vci, transaction->dst_vci);
     cell = (MPIDI_POSIX_eager_iqueue_cell_t *) transaction->transport.iqueue.pointer_to_cell;
+
     MPIDU_genq_shmem_pool_cell_free(transport->cell_pool, cell);
 
     MPIR_FUNC_EXIT;
