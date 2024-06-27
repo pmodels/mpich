@@ -196,7 +196,12 @@ static int ipc_track_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, u
     int mpl_err = MPL_gavl_tree_search(gavl_tree, addr, len, &obj);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_search");
 
-    *handle_out = *((MPL_gpu_ipc_mem_handle_t *) obj);
+    if (obj) {
+        *handle_out = *((MPL_gpu_ipc_mem_handle_t *) obj);
+        *found = true;
+    } else {
+        *found = false;
+    }
 
   fn_exit:
     return mpi_errno;
