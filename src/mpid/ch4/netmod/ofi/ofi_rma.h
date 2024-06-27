@@ -54,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_gpu_rma_enabled(const void *ptr)
                 return 0;
         }
     }
-    return 0;
+    return 1;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query_type,

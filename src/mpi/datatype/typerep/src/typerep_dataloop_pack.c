@@ -8,6 +8,12 @@
 #include "typerep_pre.h"
 #include "typerep_internal.h"
 
+int MPIR_Typerep_test(MPIR_Typerep_req typerep_req, int *completed)
+{
+    *completed = 1;
+    return MPI_SUCCESS;
+}
+
 int MPIR_Typerep_icopy(void *outbuf, const void *inbuf, MPI_Aint num_bytes,
                        MPIR_Typerep_req * typerep_req, uint32_t flags)
 {
