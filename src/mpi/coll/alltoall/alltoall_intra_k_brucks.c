@@ -253,7 +253,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
             mpi_errno =
                 MPIC_Irecv(tmp_rbuf[j - 1], packsize, MPI_BYTE, src, MPIR_ALLTOALL_TAG, comm,
                            &reqs[num_reqs++]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno =
                 MPIC_Isend(tmp_sbuf[j - 1], packsize, MPI_BYTE, dst, MPIR_ALLTOALL_TAG, comm,
@@ -264,7 +264,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
         }
 
         MPIC_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         for (j = 1; j < k; j++) {
             if (delta * j >= size)      /* if the first location exceeds comm size, nothing is to be sent */

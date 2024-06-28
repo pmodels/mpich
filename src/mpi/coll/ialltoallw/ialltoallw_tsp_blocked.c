@@ -50,7 +50,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                     mpi_errno = MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[dst],
                                                      recvcounts[dst], recvtypes[dst], dst, tag,
                                                      comm, sched, 0, NULL, &vtx_id);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             }
         }
@@ -63,14 +63,14 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                     mpi_errno = MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst],
                                                      sendcounts[dst], sendtypes[dst], dst, tag,
                                                      comm, sched, 0, NULL, &vtx_id);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             }
         }
 
         /* force our block of sends/recvs to complete before starting the next block */
         mpi_errno = MPIR_TSP_sched_fence(sched);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

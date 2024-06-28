@@ -45,7 +45,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
      * one process, just copy the raw data. */
     if (comm_ptr->node_comm != NULL) {
         mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr->node_comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         MPIR_ERR_CHECK(mpi_errno);
@@ -59,13 +59,13 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
         mpi_errno = MPIC_Recv(localfulldata, count, datatype,
                               comm_ptr->node_comm->local_size - 1, MPIR_SCAN_TAG,
                               comm_ptr->node_comm, &status);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (comm_ptr->node_roots_comm == NULL &&
                comm_ptr->node_comm != NULL &&
                MPIR_Get_intranode_rank(comm_ptr, rank) == comm_ptr->node_comm->local_size - 1) {
         mpi_errno = MPIC_Send(recvbuf, count, datatype,
                               0, MPIR_SCAN_TAG, comm_ptr->node_comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (comm_ptr->node_roots_comm != NULL) {
         localfulldata = recvbuf;
     }
@@ -77,20 +77,20 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     if (comm_ptr->node_roots_comm != NULL) {
         mpi_errno = MPIR_Scan(localfulldata, prefulldata, count, datatype,
                               op, comm_ptr->node_roots_comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (MPIR_Get_internode_rank(comm_ptr, rank) != comm_ptr->node_roots_comm->local_size - 1) {
             mpi_errno = MPIC_Send(prefulldata, count, datatype,
                                   MPIR_Get_internode_rank(comm_ptr, rank) + 1,
                                   MPIR_SCAN_TAG, comm_ptr->node_roots_comm, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         if (MPIR_Get_internode_rank(comm_ptr, rank) != 0) {
             mpi_errno = MPIC_Recv(tempbuf, count, datatype,
                                   MPIR_Get_internode_rank(comm_ptr, rank) - 1,
                                   MPIR_SCAN_TAG, comm_ptr->node_roots_comm, &status);
             noneed = 0;
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -102,13 +102,13 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
     if (comm_ptr->node_comm != NULL) {
         mpi_errno = MPIR_Bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (noneed == 0) {
         if (comm_ptr->node_comm != NULL) {
             mpi_errno = MPIR_Bcast(tempbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         mpi_errno = MPIR_Reduce_local(tempbuf, recvbuf, count, datatype, op);

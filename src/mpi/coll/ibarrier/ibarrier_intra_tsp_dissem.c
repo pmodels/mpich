@@ -53,14 +53,14 @@ int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_
             mpi_errno =
                 MPIR_TSP_sched_irecv(NULL, 0, MPI_BYTE, from, tag, comm, sched, 0, NULL,
                                      &recv_ids[i * (k - 1) + j - 1]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST, "dissem barrier - scheduling send to %d\n", to));
             mpi_errno =
                 MPIR_TSP_sched_isend(NULL, 0, MPI_BYTE, to, tag, comm, sched, i * (k - 1), recv_ids,
                                      &vtx_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST, "dissem barrier - scheduled phase %d\n", i));

@@ -131,7 +131,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         || (!is_root && tree_type == MPIR_TREE_TYPE_KARY)) {
         src = parent;
         mpi_errno = MPIC_Recv(send_buf, count, dtype, src, MPIR_BCAST_TAG, comm_ptr, &status);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
         /* check that we received as much as we expected */
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
         MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, errflag, mpi_errno_ret);
@@ -151,7 +151,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
                 mpi_errno = MPIC_Isend(send_buf, count, dtype, dst,
                                        MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
             }
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
         for (j = 0; j < num_children; j++) {
@@ -165,12 +165,12 @@ int MPIR_Bcast_intra_tree(void *buffer,
                 mpi_errno = MPIC_Isend(send_buf, count, dtype, dst,
                                        MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
             }
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
     if (is_nb) {
         mpi_errno = MPIC_Waitall(num_req, reqs, statuses);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (tree_type != MPIR_TREE_TYPE_KARY)

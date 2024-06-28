@@ -155,22 +155,22 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
         /* non-participating rank sends the data to a participating rank */
         mpi_errno = MPIC_Send(recvbuf, count,
                               datatype, step1_sendto, MPIR_ALLREDUCE_TAG, comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {    /* odd */
         if (step1_nrecvs) {
             for (i = 0; i < step1_nrecvs; i++) {        /* participating rank gets data from non-partcipating ranks */
                 mpi_errno = MPIC_Irecv(nbr_buffer[i], count,
                                        datatype, step1_recvfrom[i],
                                        MPIR_ALLREDUCE_TAG, comm, &recv_reqs[recv_nreq++]);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
             mpi_errno = MPIC_Waitall(recv_nreq, recv_reqs, MPI_STATUSES_IGNORE);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* Do reduction of reduced data */
             for (i = 0; i < step1_nrecvs && count > 0; i++) {   /* participating rank gets data from non-partcipating ranks */
                 mpi_errno = MPIR_Reduce_local(nbr_buffer[i], recvbuf, count, datatype, op);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
@@ -188,7 +188,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                 mpi_errno =
                     MPIC_Irecv(nbr_buffer[buf++], count, datatype, nbr, MPIR_ALLREDUCE_TAG,
                                comm, &recv_reqs[recv_nreq++]);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
 
@@ -198,16 +198,16 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
             nbr = step2_nbrs[phase][i];
             mpi_errno = MPIC_Isend(recvbuf, count, datatype, nbr, MPIR_ALLREDUCE_TAG, comm,
                                    &send_reqs[send_nreq++], errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             if (rank > nbr) {
             }
         }
 
         mpi_errno = MPIC_Waitall(send_nreq, send_reqs, MPI_STATUSES_IGNORE);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIC_Waitall((k - 1), recv_reqs, MPI_STATUSES_IGNORE);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (is_commutative && !is_float) {
             myidx = k - 1;
@@ -215,7 +215,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
             myidx = find_myidx(step2_nbrs[phase], k, rank);
         }
         mpi_errno = do_reduce(nbr_buffer, recvbuf, k, myidx, count, datatype, op);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (single_phase_recv == false) {       /* post sends and do reduction for the 2nd phase */
             phase++;
@@ -228,14 +228,14 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                     mpi_errno =
                         MPIC_Isend(recvbuf, count, datatype, nbr, MPIR_ALLREDUCE_TAG, comm,
                                    &send_reqs[send_nreq++], errflag);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
 
                 mpi_errno = MPIC_Waitall(send_nreq, send_reqs, MPI_STATUSES_IGNORE);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 mpi_errno = MPIC_Waitall((k - 1), recv_reqs + (k - 1), MPI_STATUSES_IGNORE);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 if (is_commutative && !is_float) {
                     myidx = k - 1;
@@ -243,7 +243,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                     myidx = find_myidx(step2_nbrs[phase], k, rank);
                 }
                 mpi_errno = do_reduce(nbr_buffer + k - 1, recvbuf, k, myidx, count, datatype, op);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
@@ -253,17 +253,17 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
         mpi_errno = MPIC_Recv(recvbuf, count, datatype, step1_sendto, MPIR_ALLREDUCE_TAG, comm,
                               MPI_STATUS_IGNORE);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         for (i = 0; i < step1_nrecvs; i++) {
             mpi_errno =
                 MPIC_Isend(recvbuf, count, datatype, step1_recvfrom[i], MPIR_ALLREDUCE_TAG,
                            comm, &send_reqs[i], errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         mpi_errno = MPIC_Waitall(i, send_reqs, MPI_STATUSES_IGNORE);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (in_step2 && (k > MAX_RADIX || count * extent > 8192)) {

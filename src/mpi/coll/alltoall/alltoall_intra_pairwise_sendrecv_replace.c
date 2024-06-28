@@ -57,14 +57,14 @@ int MPIR_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf,
                     MPIC_Sendrecv_replace(((char *) recvbuf + j * recvcount * recvtype_extent),
                                           recvcount, recvtype, j, MPIR_ALLTOALL_TAG, j,
                                           MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             } else if (rank == j) {
                 /* same as above with i/j args reversed */
                 mpi_errno =
                     MPIC_Sendrecv_replace(((char *) recvbuf + i * recvcount * recvtype_extent),
                                           recvcount, recvtype, i, MPIR_ALLTOALL_TAG, i,
                                           MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }

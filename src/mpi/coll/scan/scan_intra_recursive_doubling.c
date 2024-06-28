@@ -98,7 +98,7 @@ int MPIR_Scan_intra_recursive_doubling(const void *sendbuf,
                                       dst, MPIR_SCAN_TAG, tmp_buf,
                                       count, datatype, dst,
                                       MPIR_SCAN_TAG, comm_ptr, &status, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             if (rank > dst) {
                 mpi_errno = MPIR_Reduce_local(tmp_buf, partial_scan, count, datatype, op);

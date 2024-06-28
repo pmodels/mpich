@@ -54,12 +54,12 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
             mpi_errno = MPIR_TSP_sched_isend((char *) recvbuf + rdispls[dst] * recv_extent,
                                              recvcounts[dst], recvtype, dst, tag, comm,
                                              sched, nvtcs, vtcs, &send_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno =
                 MPIR_TSP_sched_irecv(tmp_buf, recvcounts[dst], recvtype, dst, tag, comm,
                                      sched, nvtcs, vtcs, &recv_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             nvtcs = 2;
             vtcs[0] = send_id;
@@ -68,7 +68,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
                                                  ((char *) recvbuf +
                                                   rdispls[dst] * recv_extent), recvcounts[dst],
                                                  recvtype, sched, nvtcs, vtcs, &dtcopy_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 

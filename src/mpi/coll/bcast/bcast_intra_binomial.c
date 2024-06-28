@@ -96,7 +96,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             else
                 mpi_errno = MPIC_Recv(buffer, count, datatype, src,
                                       MPIR_BCAST_TAG, comm_ptr, status_p);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 #ifdef HAVE_ERROR_CHECKING
             /* check that we received as much as we expected */
             MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
@@ -130,7 +130,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             else
                 mpi_errno = MPIC_Send(buffer, count, datatype, dst,
                                       MPIR_BCAST_TAG, comm_ptr, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         mask >>= 1;
     }

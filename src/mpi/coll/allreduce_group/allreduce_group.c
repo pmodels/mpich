@@ -69,7 +69,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
         if (group_rank % 2 == 0) {      /* even */
             to_comm_rank(cdst, group_rank + 1);
             mpi_errno = MPIC_Send(recvbuf, count, datatype, cdst, tag, comm_ptr, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* temporarily set the rank to -1 so that this
              * process does not pariticipate in recursive
@@ -78,7 +78,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
         } else {        /* odd */
             to_comm_rank(csrc, group_rank - 1);
             mpi_errno = MPIC_Recv(tmp_buf, count, datatype, csrc, tag, comm_ptr, MPI_STATUS_IGNORE);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* do the reduction on received data. since the
              * ordering is right, it doesn't matter whether
@@ -118,7 +118,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
                                           cdst, tag, tmp_buf,
                                           count, datatype, cdst,
                                           tag, comm_ptr, MPI_STATUS_IGNORE, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
                 if (!mpi_errno) {
                     /* tmp_buf contains data received in this step.
                      * recvbuf contains data accumulated so far */
@@ -199,7 +199,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
                                           disps[recv_idx] * extent,
                                           recv_cnt, datatype, cdst,
                                           tag, comm_ptr, MPI_STATUS_IGNORE, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 /* tmp_buf contains data received in this step.
                  * recvbuf contains data accumulated so far */
@@ -259,7 +259,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
                                           disps[recv_idx] * extent,
                                           recv_cnt, datatype, cdst,
                                           tag, comm_ptr, MPI_STATUS_IGNORE, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 if (newrank > newdst)
                     send_idx = recv_idx;
@@ -280,7 +280,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
             to_comm_rank(csrc, group_rank + 1);
             mpi_errno = MPIC_Recv(recvbuf, count, datatype, csrc, tag, comm_ptr, MPI_STATUS_IGNORE);
         }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

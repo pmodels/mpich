@@ -49,7 +49,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
         mpi_errno =
             MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype, sched, 0,
                                      NULL, &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
         mpi_errno =
             MPIR_TSP_sched_localcopy(sendbuf, count, datatype, partial_scan, count, datatype, sched,
                                      0, NULL, &dtcopy_id);
@@ -58,7 +58,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
             MPIR_TSP_sched_localcopy(recvbuf, count, datatype, partial_scan, count, datatype, sched,
                                      0, NULL, &dtcopy_id);
 
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+    MPIR_ERR_CHECK(mpi_errno);
 
     tmp_buf = MPIR_TSP_sched_malloc(count * extent, sched);
     mask = 0x1;
@@ -78,7 +78,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
                 MPIR_TSP_sched_isend(partial_scan, count, datatype, dst, tag, comm, sched, nvtcs,
                                      vtcs, &send_id);
 
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             if (recv_reduce != -1) {
                 nvtcs++;
@@ -88,7 +88,7 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
                 MPIR_TSP_sched_irecv(tmp_buf, count, datatype, dst, tag, comm, sched, nvtcs, vtcs,
                                      &recv_id);
 
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             nvtcs = 2;
             vtcs[0] = send_id;
@@ -97,30 +97,30 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
                 mpi_errno = MPIR_TSP_sched_reduce_local(tmp_buf, partial_scan, count,
                                                         datatype, op, sched, nvtcs, vtcs,
                                                         &reduce_id);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 mpi_errno = MPIR_TSP_sched_reduce_local(tmp_buf, recvbuf, count,
                                                         datatype, op, sched, nvtcs, vtcs,
                                                         &recv_reduce);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             } else {
                 if (is_commutative) {
                     mpi_errno = MPIR_TSP_sched_reduce_local(tmp_buf, partial_scan, count,
                                                             datatype, op, sched, nvtcs, vtcs,
                                                             &reduce_id);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
                 } else {
                     mpi_errno = MPIR_TSP_sched_reduce_local(partial_scan, tmp_buf, count,
                                                             datatype, op, sched, nvtcs, vtcs,
                                                             &reduce_id);
 
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     mpi_errno = MPIR_TSP_sched_localcopy(tmp_buf, count, datatype,
                                                          partial_scan, count, datatype, sched, 1,
                                                          &reduce_id, &vtx_id);
                     reduce_id = vtx_id;
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
 
                 }
                 recv_reduce = -1;

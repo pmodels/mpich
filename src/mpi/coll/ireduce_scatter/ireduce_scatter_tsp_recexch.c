@@ -88,7 +88,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
             mpi_errno =
                 MPIR_TSP_sched_isend((char *) tmp_results + send_offset, send_cnt,
                                      datatype, dst, tag, comm, sched, nvtcs, vtcs, &send_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             rank_for_offset =
                 (is_dist_halving) ? MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k) : rank;
@@ -106,7 +106,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
                 MPIR_TSP_sched_irecv((char *) tmp_recvbuf + recv_offset, recv_cnt,
                                      datatype, dst, tag, comm, sched, nvtcs, vtcs, &recv_id);
 
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             nvtcs = 2;
             vtcs[0] = send_id;
@@ -115,7 +115,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
                 MPIR_TSP_sched_reduce_local((char *) tmp_recvbuf + recv_offset,
                                             (char *) tmp_results + recv_offset,
                                             recv_cnt, datatype, op, sched, nvtcs, vtcs, &reduce_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -203,7 +203,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
             mpi_errno = MPIR_TSP_sched_localcopy(recvbuf, total_count, datatype,
                                                  tmp_results, total_count, datatype, sched, 0,
                                                  NULL, &dtcopy_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "After initial dt copy"));
 
@@ -218,7 +218,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
         mpi_errno =
             MPIR_TSP_sched_isend(buf_to_send, total_count, datatype, step1_sendto, tag, comm, sched,
                                  0, NULL, &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
     } else {    /* Step 2 participating rank */
         for (i = 0; i < step1_nrecvs; i++) {    /* participating rank gets data from non-partcipating ranks */
@@ -228,12 +228,12 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
             mpi_errno = MPIR_TSP_sched_irecv(tmp_recvbuf, total_count, datatype,
                                              step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs,
                                              &recv_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             nvtcs++;
             vtcs[1] = recv_id;
             mpi_errno = MPIR_TSP_sched_reduce_local(tmp_recvbuf, tmp_results, total_count,
                                                     datatype, op, sched, nvtcs, vtcs, &reduce_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -255,7 +255,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
         mpi_errno = MPIR_TSP_sched_localcopy((char *) tmp_results + displs[rank] * extent,
                                              recvcounts[rank], datatype, recvbuf, recvcounts[rank],
                                              datatype, sched, nvtcs, vtcs, &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "After Step 2"));
@@ -266,7 +266,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
         mpi_errno =
             MPIR_TSP_sched_irecv(recvbuf, recvcounts[rank], datatype, step1_sendto, tag, comm,
                                  sched, 1, &sink_id, &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
     for (i = 0; i < step1_nrecvs; i++) {
         nvtcs = 1;
@@ -274,7 +274,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
         mpi_errno = MPIR_TSP_sched_isend((char *) tmp_results + displs[step1_recvfrom[i]] * extent,
                                          recvcounts[step1_recvfrom[i]], datatype, step1_recvfrom[i],
                                          tag, comm, sched, nvtcs, vtcs, &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Done Step 3"));

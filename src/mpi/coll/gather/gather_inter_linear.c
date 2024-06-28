@@ -37,12 +37,12 @@ int MPIR_Gather_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
             mpi_errno =
                 MPIC_Recv(((char *) recvbuf + recvcount * i * extent), recvcount, recvtype, i,
                           MPIR_GATHER_TAG, comm_ptr, &status);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
         mpi_errno =
             MPIC_Send(sendbuf, sendcount, sendtype, root, MPIR_GATHER_TAG, comm_ptr, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     return mpi_errno_ret;
