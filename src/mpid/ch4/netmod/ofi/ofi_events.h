@@ -27,12 +27,9 @@ MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_recv_engine_typ
     }
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc)
 {
     if (MPIDI_OFI_ENABLE_DATA) {
-        if (unlikely(has_err)) {
-            return wc->data & ((1 << MPIDI_OFI_IDATA_SRC_BITS) - 1);
-        }
         return wc->data;
     } else {
         return MPIDI_OFI_init_get_source(wc->tag);
@@ -70,10 +67,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
         goto fn_exit;
     }
-    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
-    if (!rreq->status.MPI_ERROR) {
-        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
-    }
+    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc);
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
     count = wc->len;
     MPIR_STATUS_SET_COUNT(rreq->status, count);

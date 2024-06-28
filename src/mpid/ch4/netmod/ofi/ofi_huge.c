@@ -200,7 +200,7 @@ int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
         /* Check for remote control info */
         MPIDI_OFI_huge_recv_list_t *list_ptr;
         MPIR_Context_id_t comm_id = comm_ptr->recvcontext_id;
-        int rank = MPIDI_OFI_cqe_get_source(wc, false);
+        int rank = MPIDI_OFI_cqe_get_source(wc);
         int tag = (MPIDI_OFI_TAG_MASK & wc->tag);
 
         LL_FOREACH(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head, list_ptr) {
@@ -223,7 +223,7 @@ int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         list_ptr->comm_id = comm_ptr->recvcontext_id;
-        list_ptr->rank = MPIDI_OFI_cqe_get_source(wc, false);
+        list_ptr->rank = MPIDI_OFI_cqe_get_source(wc);
         list_ptr->tag = (MPIDI_OFI_TAG_MASK & wc->tag);
         list_ptr->u.rreq = rreq;
 
@@ -318,7 +318,7 @@ int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     LL_FOREACH(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head, list_ptr) {
         /* FIXME: fix the type of comm_id */
         MPIR_Context_id_t comm_id = rreq->comm->recvcontext_id;
-        int rank = MPIDI_OFI_cqe_get_source(wc, false);
+        int rank = MPIDI_OFI_cqe_get_source(wc);
         int tag = (int) (MPIDI_OFI_TAG_MASK & wc->tag);
         if (list_ptr->comm_id == comm_id && list_ptr->rank == rank && list_ptr->tag == tag) {
             count = list_ptr->u.info->msgsize;
@@ -333,7 +333,7 @@ int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
                       MPIDI_OFI_global.per_vci[vci].huge_ctrl_tail, list_ptr);
             MPL_free(list_ptr);
         }
-        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc);
         rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
         rreq->status.MPI_ERROR = MPI_SUCCESS;
         MPIR_STATUS_SET_COUNT(rreq->status, count);
@@ -346,7 +346,7 @@ int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
         MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_NOT_FOUND);
     } else if (MPIDI_OFI_REQUEST(rreq, kind) == MPIDI_OFI_req_kind__mprobe) {
         /* fill the status with wc info. Count is still missing */
-        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc);
         rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
         rreq->status.MPI_ERROR = MPI_SUCCESS;
 
@@ -358,7 +358,7 @@ int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
         MPIR_ERR_CHKANDJUMP(huge_list_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         huge_list_ptr->comm_id = rreq->comm->recvcontext_id;
-        huge_list_ptr->rank = MPIDI_OFI_cqe_get_source(wc, false);
+        huge_list_ptr->rank = MPIDI_OFI_cqe_get_source(wc);
         huge_list_ptr->tag = MPIDI_OFI_TAG_MASK & wc->tag;
         huge_list_ptr->u.rreq = rreq;
 
