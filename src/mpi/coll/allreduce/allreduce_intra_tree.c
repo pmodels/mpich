@@ -171,7 +171,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         if (rank != root) {     /* send data to the parent */
             mpi_errno =
                 MPIC_Isend(reduce_address, msgsize, datatype, my_tree.parent, MPIR_ALLREDUCE_TAG,
-                           comm_ptr, &reqs[num_reqs++], errflag);
+                           comm_ptr, &reqs[num_reqs++]);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -188,7 +188,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
                 MPIR_Assert(child != 0);
                 mpi_errno = MPIC_Isend(reduce_address, msgsize,
                                        datatype, child,
-                                       MPIR_ALLREDUCE_TAG, comm_ptr, &reqs[num_reqs++], errflag);
+                                       MPIR_ALLREDUCE_TAG, comm_ptr, &reqs[num_reqs++]);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }

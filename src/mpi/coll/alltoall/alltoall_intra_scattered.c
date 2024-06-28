@@ -80,7 +80,7 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
             mpi_errno = MPIC_Isend((char *) sendbuf +
                                    dst * sendcount * sendtype_extent,
                                    sendcount, sendtype, dst,
-                                   MPIR_ALLTOALL_TAG, comm_ptr, &reqarray[i + ss], errflag);
+                                   MPIR_ALLTOALL_TAG, comm_ptr, &reqarray[i + ss]);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

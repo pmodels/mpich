@@ -61,25 +61,25 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Reduce_allcomm_auto(sendbuf, tmp_buf, total_count, datatype, op,
-                                             root, comm_ptr, errflag);
+                                             root, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* reduce to rank 0 of right group */
         root = 0;
         mpi_errno = MPIR_Reduce_allcomm_auto(sendbuf, tmp_buf, total_count, datatype, op,
-                                             root, comm_ptr, errflag);
+                                             root, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* reduce to rank 0 of left group */
         root = 0;
         mpi_errno = MPIR_Reduce_allcomm_auto(sendbuf, tmp_buf, total_count, datatype, op,
-                                             root, comm_ptr, errflag);
+                                             root, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Reduce_allcomm_auto(sendbuf, tmp_buf, total_count, datatype, op,
-                                             root, comm_ptr, errflag);
+                                             root, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -92,7 +92,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
     newcomm_ptr = comm_ptr->local_comm;
 
     mpi_errno = MPIR_Scatterv(tmp_buf, recvcounts, disps, datatype, recvbuf,
-                              recvcounts[rank], datatype, 0, newcomm_ptr, errflag);
+                              recvcounts[rank], datatype, 0, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

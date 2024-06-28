@@ -41,7 +41,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
         if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {       /* is not the node root (0) and is on our node (!-1) */
             if (root == comm_ptr->rank) {
                 mpi_errno = MPIC_Send(buffer, count, datatype, 0,
-                                      MPIR_BCAST_TAG, comm_ptr->node_comm, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr->node_comm);
                 MPIR_ERR_CHECK(mpi_errno);
             } else if (0 == comm_ptr->node_comm->rank) {
                 mpi_errno =
@@ -61,13 +61,13 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
         if (comm_ptr->node_roots_comm != NULL) {
             mpi_errno = MPIR_Bcast(buffer, count, datatype,
                                    MPIR_Get_internode_rank(comm_ptr, root),
-                                   comm_ptr->node_roots_comm, errflag);
+                                   comm_ptr->node_roots_comm);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* perform the intranode broadcast on all except for the root's node */
         if (comm_ptr->node_comm != NULL) {
-            mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
+            mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {    /* (nbytes > MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_ptr->size >= MPIR_CVAR_BCAST_MIN_PROCS) */
@@ -85,7 +85,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                  * right algorithms here. */
                 mpi_errno = MPIR_Bcast(buffer, count, datatype,
                                        MPIR_Get_intranode_rank(comm_ptr, root),
-                                       comm_ptr->node_comm, errflag);
+                                       comm_ptr->node_comm);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
@@ -93,7 +93,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
             if (comm_ptr->node_roots_comm != NULL) {
                 mpi_errno = MPIR_Bcast(buffer, count, datatype,
                                        MPIR_Get_internode_rank(comm_ptr, root),
-                                       comm_ptr->node_roots_comm, errflag);
+                                       comm_ptr->node_roots_comm);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
@@ -102,7 +102,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                 /* FIXME binomial may not be the best algorithm for on-node
                  * bcast.  We need a more comprehensive system for selecting the
                  * right algorithms here. */
-                mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
+                mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         } else {        /* large msg or non-pof2 */

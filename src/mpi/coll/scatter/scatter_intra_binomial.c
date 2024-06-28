@@ -152,15 +152,13 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
                 /* mask is also the size of this process's subtree */
                 mpi_errno = MPIC_Send(((char *) sendbuf +
                                        extent * sendcount * mask),
-                                      send_subtree_cnt,
-                                      sendtype, dst, MPIR_SCATTER_TAG, comm_ptr, errflag);
+                                      send_subtree_cnt, sendtype, dst, MPIR_SCATTER_TAG, comm_ptr);
             } else {
                 /* non-zero root and others */
                 send_subtree_cnt = curr_cnt - nbytes * mask;
                 /* mask is also the size of this process's subtree */
                 mpi_errno = MPIC_Send(((char *) tmp_buf + nbytes * mask),
-                                      send_subtree_cnt,
-                                      MPI_BYTE, dst, MPIR_SCATTER_TAG, comm_ptr, errflag);
+                                      send_subtree_cnt, MPI_BYTE, dst, MPIR_SCATTER_TAG, comm_ptr);
             }
             MPIR_ERR_CHECK(mpi_errno);
             curr_cnt -= send_subtree_cnt;

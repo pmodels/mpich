@@ -63,7 +63,7 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
                                   ((char *) recvbuf +
                                    jnext * recvcount * recvtype_extent),
                                   recvcount, recvtype, left,
-                                  MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
         j = jnext;
         jnext = (comm_size + jnext - 1) % comm_size;

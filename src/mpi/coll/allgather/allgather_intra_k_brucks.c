@@ -153,7 +153,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Send from the start of recv till `count` amount of data. */
             mpi_errno =
                 MPIC_Isend(tmp_recvbuf, count, recvtype, dst, MPIR_ALLGATHER_TAG, comm,
-                           &reqs[num_reqs++], errflag);
+                           &reqs[num_reqs++]);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,

@@ -58,7 +58,7 @@ int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const MPI_Aint * sendcount
                 } else {
                     mpi_errno = MPIC_Isend(((char *) sendbuf + displs[i] * extent),
                                            sendcounts[i], sendtype, i,
-                                           MPIR_SCATTERV_TAG, comm_ptr, &reqarray[reqs++], errflag);
+                                           MPIR_SCATTERV_TAG, comm_ptr, &reqarray[reqs++]);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
             }

@@ -148,8 +148,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
             mpi_errno = MPIC_Sendrecv(tmp_results, 1, sendtype, dst,
                                       MPIR_REDUCE_SCATTER_TAG,
                                       tmp_recvbuf, 1, recvtype, dst,
-                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr,
-                                      MPI_STATUS_IGNORE, errflag);
+                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, MPI_STATUS_IGNORE);
             received = 1;
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -190,7 +189,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
                     && (dst >= tree_root + nprocs_completed)) {
                     /* send the current result */
                     mpi_errno = MPIC_Send(tmp_recvbuf, 1, recvtype,
-                                          dst, MPIR_REDUCE_SCATTER_TAG, comm_ptr, errflag);
+                                          dst, MPIR_REDUCE_SCATTER_TAG, comm_ptr);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
                 /* recv only if this proc. doesn't have data and sender

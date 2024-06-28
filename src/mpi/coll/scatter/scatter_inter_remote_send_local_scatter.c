@@ -69,7 +69,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
 
         /* now do the usual scatter on this intracommunicator */
         mpi_errno = MPIR_Scatter(tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
-                                 recvbuf, recvcount, recvtype, 0, newcomm_ptr, errflag);
+                                 recvbuf, recvcount, recvtype, 0, newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -70,7 +70,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
     mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
-                                       nbytes, tmp_buf, is_contig, errflag);
+                                       nbytes, tmp_buf, is_contig);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
@@ -103,7 +103,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
         mpi_errno = MPIC_Sendrecv((char *) tmp_buf + right_disp, right_count,
                                   MPI_BYTE, right, MPIR_BCAST_TAG,
                                   (char *) tmp_buf + left_disp, left_count,
-                                  MPI_BYTE, left, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                                  MPI_BYTE, left, MPIR_BCAST_TAG, comm_ptr, &status);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
         curr_size += recvd_size;

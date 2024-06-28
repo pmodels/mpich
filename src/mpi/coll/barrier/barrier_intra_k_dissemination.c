@@ -29,7 +29,7 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr)
         src = (rank - mask + size) % size;
         mpi_errno = MPIC_Sendrecv(NULL, 0, MPI_BYTE, dst,
                                   MPIR_BARRIER_TAG, NULL, 0, MPI_BYTE,
-                                  src, MPIR_BARRIER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  src, MPIR_BARRIER_TAG, comm_ptr, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
         mask <<= 1;
     }
@@ -60,7 +60,7 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k)
         k = nranks;
 
     if (k == 2) {
-        return MPIR_Barrier_intra_dissemination(comm, errflag);
+        return MPIR_Barrier_intra_dissemination(comm);
     }
 
     /* If k value is greater than the maximum radix defined by MAX_RADIX macro,

@@ -40,8 +40,7 @@ int MPIR_Gather_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
-        mpi_errno =
-            MPIC_Send(sendbuf, sendcount, sendtype, root, MPIR_GATHER_TAG, comm_ptr, errflag);
+        mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, root, MPIR_GATHER_TAG, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -73,7 +73,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sen
 
         if (rank == 0) {
             mpi_errno = MPIC_Send(tmp_buf, sendcount * local_size * sendtype_sz, MPI_BYTE,
-                                  root, MPIR_GATHER_TAG, comm_ptr, errflag);
+                                  root, MPIR_GATHER_TAG, comm_ptr);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

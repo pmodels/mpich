@@ -96,7 +96,7 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                     dst -= comm_size;
                 mpi_errno = MPIC_Send(((char *) tmp_buf +
                                        scatter_size * (relative_rank + mask)),
-                                      send_size, MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, errflag);
+                                      send_size, MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 curr_size -= send_size;

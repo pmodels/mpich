@@ -123,11 +123,9 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             if (dst >= comm_size)
                 dst -= comm_size;
             if (!is_contig)
-                mpi_errno = MPIC_Send(tmp_buf, nbytes, MPI_BYTE, dst,
-                                      MPIR_BCAST_TAG, comm_ptr, errflag);
+                mpi_errno = MPIC_Send(tmp_buf, nbytes, MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr);
             else
-                mpi_errno = MPIC_Send(buffer, count, datatype, dst,
-                                      MPIR_BCAST_TAG, comm_ptr, errflag);
+                mpi_errno = MPIC_Send(buffer, count, datatype, dst, MPIR_BCAST_TAG, comm_ptr);
             MPIR_ERR_CHECK(mpi_errno);
         }
         mask >>= 1;

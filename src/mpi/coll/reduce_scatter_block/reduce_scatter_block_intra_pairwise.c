@@ -82,15 +82,13 @@ int MPIR_Reduce_scatter_block_intra_pairwise(const void *sendbuf,
                                       recvcount, datatype, dst,
                                       MPIR_REDUCE_SCATTER_BLOCK_TAG, tmp_recvbuf,
                                       recvcount, datatype, src,
-                                      MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr,
-                                      MPI_STATUS_IGNORE, errflag);
+                                      MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, MPI_STATUS_IGNORE);
         else
             mpi_errno = MPIC_Sendrecv(((char *) recvbuf + disps[dst] * extent),
                                       recvcount, datatype, dst,
                                       MPIR_REDUCE_SCATTER_BLOCK_TAG, tmp_recvbuf,
                                       recvcount, datatype, src,
-                                      MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr,
-                                      MPI_STATUS_IGNORE, errflag);
+                                      MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, MPI_STATUS_IGNORE);
 
         MPIR_ERR_CHECK(mpi_errno);
 

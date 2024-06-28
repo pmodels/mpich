@@ -73,8 +73,7 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
                                   MPIR_ALLTOALL_TAG,
                                   ((char *) recvbuf +
                                    src * recvcount * recvtype_extent),
-                                  recvcount, recvtype, src,
-                                  MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
+                                  recvcount, recvtype, src, MPIR_ALLTOALL_TAG, comm_ptr, &status);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -106,7 +106,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
 
         mpi_errno = MPIC_Sendrecv(tmp_buf, newtype_sz, MPI_BYTE, dst,
                                   MPIR_ALLTOALL_TAG, recvbuf, 1, newtype,
-                                  src, MPIR_ALLTOALL_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  src, MPIR_ALLTOALL_TAG, comm_ptr, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_Type_free_impl(&newtype);

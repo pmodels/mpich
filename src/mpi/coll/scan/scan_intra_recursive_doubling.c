@@ -95,8 +95,7 @@ int MPIR_Scan_intra_recursive_doubling(const void *sendbuf,
             /* Send partial_scan to dst. Recv into tmp_buf */
             mpi_errno = MPIC_Sendrecv(partial_scan, count, datatype,
                                       dst, MPIR_SCAN_TAG, tmp_buf,
-                                      count, datatype, dst,
-                                      MPIR_SCAN_TAG, comm_ptr, &status, errflag);
+                                      count, datatype, dst, MPIR_SCAN_TAG, comm_ptr, &status);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (rank > dst) {

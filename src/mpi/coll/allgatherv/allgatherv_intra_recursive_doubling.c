@@ -112,7 +112,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                       MPIR_ALLGATHERV_TAG,
                                       ((char *) tmp_buf + recv_offset * recvtype_sz),
                                       (total_count - recv_offset) * recvtype_sz, MPI_BYTE, dst,
-                                      MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
+                                      MPIR_ALLGATHERV_TAG, comm_ptr, &status);
             MPIR_ERR_CHECK(mpi_errno);
             if (mpi_errno) {
                 last_recv_cnt = 0;
@@ -175,7 +175,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
 
                     mpi_errno = MPIC_Send(((char *) tmp_buf + offset * recvtype_sz),
                                           last_recv_cnt * recvtype_sz,
-                                          MPI_BYTE, dst, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
+                                          MPI_BYTE, dst, MPIR_ALLGATHERV_TAG, comm_ptr);
                     MPIR_ERR_CHECK(mpi_errno);
                     /* last_recv_cnt was set in the previous
                      * receive. that's the amount of data to be

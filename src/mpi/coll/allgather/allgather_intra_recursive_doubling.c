@@ -80,8 +80,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                                       MPIR_ALLGATHER_TAG,
                                       ((char *) recvbuf + recv_offset),
                                       (comm_size - dst_tree_root) * recvcount,
-                                      recvtype, dst,
-                                      MPIR_ALLGATHER_TAG, comm_ptr, &status, errflag);
+                                      recvtype, dst, MPIR_ALLGATHER_TAG, comm_ptr, &status);
             MPIR_ERR_CHECK(mpi_errno);
             if (mpi_errno) {
                 last_recv_cnt = 0;
@@ -139,7 +138,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                     && (dst >= tree_root + nprocs_completed)) {
                     mpi_errno = MPIC_Send(((char *) recvbuf + offset),
                                           last_recv_cnt,
-                                          recvtype, dst, MPIR_ALLGATHER_TAG, comm_ptr, errflag);
+                                          recvtype, dst, MPIR_ALLGATHER_TAG, comm_ptr);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
                 /* recv only if this proc. doesn't have data and sender

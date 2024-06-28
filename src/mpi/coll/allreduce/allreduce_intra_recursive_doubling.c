@@ -64,8 +64,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
 
     if (rank < 2 * rem) {
         if (rank % 2 == 0) {    /* even */
-            mpi_errno = MPIC_Send(recvbuf, count,
-                                  datatype, rank + 1, MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
+            mpi_errno = MPIC_Send(recvbuf, count, datatype, rank + 1, MPIR_ALLREDUCE_TAG, comm_ptr);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* temporarily set the rank to -1 so that this
@@ -111,7 +110,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
             mpi_errno = MPIC_Sendrecv(recvbuf, count, datatype,
                                       dst, MPIR_ALLREDUCE_TAG, tmp_buf,
                                       count, datatype, dst,
-                                      MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                      MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* tmp_buf contains data received in this step.
@@ -138,8 +137,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
      * (rank-1), the ranks who didn't participate above. */
     if (rank < 2 * rem) {
         if (rank % 2)   /* odd */
-            mpi_errno = MPIC_Send(recvbuf, count,
-                                  datatype, rank - 1, MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
+            mpi_errno = MPIC_Send(recvbuf, count, datatype, rank - 1, MPIR_ALLREDUCE_TAG, comm_ptr);
         else    /* even */
             mpi_errno = MPIC_Recv(recvbuf, count,
                                   datatype, rank + 1,

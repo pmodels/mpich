@@ -25,7 +25,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_src).lock);
     mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                 vci_src, vci_dst, request, syncflag, errflag);
+                                 vci_src, vci_dst, request, syncflag);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_src).lock);
 
     return mpi_errno;

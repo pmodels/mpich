@@ -183,11 +183,11 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 if (!is_nb) {
                     mpi_errno =
                         MPIC_Send((char *) sendbuf + offset, msgsize, MPI_BYTE, dst,
-                                  MPIR_BCAST_TAG, comm_ptr, errflag);
+                                  MPIR_BCAST_TAG, comm_ptr);
                 } else {
                     mpi_errno =
                         MPIC_Isend((char *) sendbuf + offset, msgsize, MPI_BYTE, dst,
-                                   MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
+                                   MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++]);
                 }
                 MPIR_ERR_CHECK(mpi_errno);
 
@@ -199,11 +199,11 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 dst = *p;
                 if (!is_nb) {
                     mpi_errno = MPIC_Send((char *) sendbuf + offset, msgsize, MPI_BYTE, dst,
-                                          MPIR_BCAST_TAG, comm_ptr, errflag);
+                                          MPIR_BCAST_TAG, comm_ptr);
                 } else {
                     mpi_errno =
                         MPIC_Isend((char *) sendbuf + offset, msgsize, MPI_BYTE, dst,
-                                   MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
+                                   MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++]);
                 }
                 MPIR_ERR_CHECK(mpi_errno);
             }

@@ -21,12 +21,10 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
             /* IN_PLACE and not root of reduce. Data supplied to this
              * allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
 
-            mpi_errno =
-                MPIR_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, errflag);
+            mpi_errno = MPIR_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            mpi_errno =
-                MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm, errflag);
+            mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
@@ -47,7 +45,7 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
     /* now broadcast the result among local processes */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
+        mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
     goto fn_exit;

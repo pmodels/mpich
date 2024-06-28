@@ -113,7 +113,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
     /* allgather is needed to exchange all the IPC handles */
     mpi_errno =
         MPIR_Allgather_impl(&my_ipc_handle, sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, ipc_handles,
-                            sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, comm_ptr, errflag);
+                            sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* check the ipc_handles to make sure all the buffers are on GPU */
@@ -157,7 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
     goto fn_exit;
   fallback:
     /* Fall back to other algorithms as gpu ipc bcast cannot be used */
-    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 
@@ -219,7 +219,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
     /* allgather is needed to exchange all the IPC handles */
     mpi_errno =
         MPIR_Allgather_impl(&my_ipc_handle, sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, ipc_handles,
-                            sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, comm_ptr, errflag);
+                            sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* check the ipc_handles to make sure all the buffers are on GPU */
@@ -286,7 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
   fallback:
     /* Fall back to other algorithms as gpu ipc alltoall cannot be used */
     mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                   comm_ptr, errflag);
+                                   comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }
@@ -347,7 +347,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
     /* allgather is needed to exchange all the IPC handles */
     mpi_errno =
         MPIR_Allgather_impl(&my_ipc_handle, sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, ipc_handles,
-                            sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, comm_ptr, errflag);
+                            sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* check the ipc_handles to make sure all the buffers are on GPU */
@@ -414,7 +414,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
   fallback:
     /* Fall back to other algorithms as gpu ipc allgather cannot be used */
     mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                    comm_ptr, errflag);
+                                    comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }
@@ -484,7 +484,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
     /* allgather is needed to exchange all the IPC handles */
     mpi_errno =
         MPIR_Allgather_impl(&my_ipc_handle, sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, ipc_handles,
-                            sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, comm_ptr, errflag);
+                            sizeof(MPIDI_IPCI_ipc_handle_t), MPI_BYTE, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* check the ipc_handles to make sure all the buffers are on GPU */
@@ -551,7 +551,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
   fallback:
     /* Fall back to other algorithms as gpu ipc allgatherv cannot be used */
     mpi_errno = MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                     recvtype, comm_ptr, errflag);
+                                     recvtype, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }

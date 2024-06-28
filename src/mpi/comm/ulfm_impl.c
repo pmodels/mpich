@@ -224,7 +224,7 @@ int MPIR_Comm_agree_impl(MPIR_Comm * comm_ptr, int *flag)
     /* Do an allreduce to decide whether or not anyone thinks the group
      * has changed */
     mpi_errno_tmp = MPII_Allreduce_group(MPI_IN_PLACE, &success, 1, MPI_INT, MPI_MIN, comm_ptr,
-                                         new_group_ptr, MPIR_AGREE_TAG, errflag);
+                                         new_group_ptr, MPIR_AGREE_TAG);
     if (!success || errflag || mpi_errno_tmp)
         success = 0;
 
@@ -234,7 +234,7 @@ int MPIR_Comm_agree_impl(MPIR_Comm * comm_ptr, int *flag)
     /* Determine both the result of this function (mpi_errno) and the result
      * of flag that will be returned to the user. */
     MPII_Allreduce_group(MPI_IN_PLACE, values, 2, MPI_INT, MPI_BAND, comm_ptr,
-                         new_group_ptr, MPIR_AGREE_TAG, errflag);
+                         new_group_ptr, MPIR_AGREE_TAG);
     /* Ignore the result of the operation this time. Everyone will either
      * return a failure because of !success earlier or they will return
      * something useful for flag because of this operation. If there was a new

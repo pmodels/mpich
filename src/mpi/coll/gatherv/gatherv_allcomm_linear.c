@@ -107,11 +107,11 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
 
             if (comm_size >= min_procs) {
                 mpi_errno = MPIC_Ssend(sendbuf, sendcount, sendtype, root,
-                                       MPIR_GATHERV_TAG, comm_ptr, errflag);
+                                       MPIR_GATHERV_TAG, comm_ptr);
                 MPIR_ERR_CHECK(mpi_errno);
             } else {
                 mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, root,
-                                      MPIR_GATHERV_TAG, comm_ptr, errflag);
+                                      MPIR_GATHERV_TAG, comm_ptr);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }

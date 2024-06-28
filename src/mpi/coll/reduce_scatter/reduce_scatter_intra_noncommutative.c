@@ -101,7 +101,7 @@ int MPIR_Reduce_scatter_intra_noncommutative(const void *sendbuf, void *recvbuf,
                                   size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
                                   incoming_data + recv_offset * true_extent,
                                   size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
-                                  comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  comm_ptr, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
         /* always perform the reduction at recv_offset, the data at send_offset
          * is now our peer's responsibility */

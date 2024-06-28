@@ -35,28 +35,28 @@ int MPIR_Barrier_inter_bcast(MPIR_Comm * comm_ptr)
     newcomm_ptr = comm_ptr->local_comm;
 
     /* do a barrier on the local intracommunicator */
-    mpi_errno = MPIR_Barrier(newcomm_ptr, errflag);
+    mpi_errno = MPIR_Barrier(newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (comm_ptr->is_low_group) {
         /* bcast to right */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* receive bcast from right */
         root = 0;
-        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* receive bcast from left */
         root = 0;
-        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* bcast to left */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
   fn_exit:
