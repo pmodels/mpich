@@ -57,9 +57,11 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -101,9 +103,11 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int 
         }
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -185,9 +189,11 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
 
     *nrecvs_ = nrecvs;
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -222,9 +228,11 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int 
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Routine to schedule a recursive exchange based allgather */

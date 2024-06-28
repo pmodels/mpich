@@ -455,21 +455,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
         mpi_errno =
             MPIR_TSP_sched_generic(finish_send_recv_type_id, data, sched, 1, &first_vtx_id,
                                    &second_vtx_id);
-        MPI_ERR_CHECK(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno =
             MPIR_TSP_sched_generic(update_release_flag_type_id, data, sched, 1, &second_vtx_id,
                                    &third_vtx_id);
-        MPI_ERR_CHECK(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno =
             MPIR_TSP_sched_cb(&MPIDI_POSIX_NB_RG_non_root_datacopy_cb, data, sched, 1,
                               &third_vtx_id, &fourth_vtx_id);
-        MPI_ERR_CHECK(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno =
             MPIR_TSP_sched_generic(gather_type_id, data, sched, 1, &fourth_vtx_id, &fifth_vtx_id);
-        MPI_ERR_CHECK(mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno =
             MPIR_TSP_sched_cb(&MPIDI_POSIX_NB_RG_update_gather_flag_cb, data, sched, 1,

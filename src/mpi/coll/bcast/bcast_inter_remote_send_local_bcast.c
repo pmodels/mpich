@@ -53,6 +53,9 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

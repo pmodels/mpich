@@ -110,8 +110,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
              * algorithm that (at least approximately) minimized internode
              * communication. */
             mpi_errno =
-                MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr,
-                                                        errflag);
+                MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

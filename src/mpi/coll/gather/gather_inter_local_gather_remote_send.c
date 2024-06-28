@@ -66,8 +66,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sen
 
         /* now do the a local gather on this intracommunicator */
         mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype,
-                                tmp_buf, sendcount * sendtype_sz, MPI_BYTE, 0, newcomm_ptr,
-                                errflag);
+                                tmp_buf, sendcount * sendtype_sz, MPI_BYTE, 0, newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (rank == 0) {

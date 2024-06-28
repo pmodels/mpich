@@ -32,5 +32,8 @@ int MPIR_Barrier_intra_smp(MPIR_Comm * comm_ptr)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

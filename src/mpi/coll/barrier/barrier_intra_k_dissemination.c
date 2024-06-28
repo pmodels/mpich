@@ -33,7 +33,10 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr)
         mask <<= 1;
     }
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* Algorithm: high radix dissemination

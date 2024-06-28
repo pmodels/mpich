@@ -67,5 +67,8 @@ int MPIR_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf,
         }
     }
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

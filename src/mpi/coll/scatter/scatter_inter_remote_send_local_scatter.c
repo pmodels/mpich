@@ -34,8 +34,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
     if (root == MPI_ROOT) {
         /* root sends all data to rank 0 on remote group and returns */
         mpi_errno =
-            MPIC_Send(sendbuf, sendcount * remote_size, sendtype, 0, MPIR_SCATTER_TAG, comm_ptr,
-                      errflag);
+            MPIC_Send(sendbuf, sendcount * remote_size, sendtype, 0, MPIR_SCATTER_TAG, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     } else {

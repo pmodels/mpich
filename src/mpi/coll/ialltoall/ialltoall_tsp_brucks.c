@@ -44,13 +44,13 @@ cvars:
 static int
 brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Aint count,
                  int phase, int k, int digitval, int comm_size, int *pupsize,
-                 MPIR_TSP_sched_t sched, int ninvtcs, int *invtcs)
+                 MPIR_TSP_sched_t sched, int ninvtcs, int *invtcs, int *sink_id)
 {
     MPI_Aint type_extent, type_lb, type_true_extent;
     int pow_k_phase, offset, nconsecutive_occurrences, delta;
     int *dtcopy_id;
     int counter;
-    int sink_id, vtx_id;
+    int vtx_id;
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
@@ -99,14 +99,16 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Ain
         *pupsize += count * type_extent;        /* NOTE: This may not be extent, it might be type_size - CHECK THIS */
     }
 
-    mpi_errno = MPIR_TSP_sched_selective_sink(sched, counter, dtcopy_id, &sink_id);
+    mpi_errno = MPIR_TSP_sched_selective_sink(sched, counter, dtcopy_id, sink_id);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(dtcopy_id);
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-
-    return sink_id;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int
@@ -271,10 +273,11 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                 pack_invtcs[k - 1] = sendids[j - 1];
                 pack_ninvtcs = k;
             }
-            packids[j - 1] =
+            mpi_errno =
                 brucks_sched_pup(1, recvbuf, tmp_sbuf[i][j - 1],
                                  recvtype, recvcount, i, k, j, size,
-                                 &packsize, sched, pack_ninvtcs, pack_invtcs);
+                                 &packsize, sched, pack_ninvtcs, pack_invtcs, &packids[j - 1]);
+            MPIR_ERR_CHECK(mpi_errno);
             *unpack_invtcs = packids[j - 1];
             unpack_ninvtcs = 1;
 
@@ -295,10 +298,12 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
             *(unpack_invtcs + 1) = recvids[j - 1];
             unpack_ninvtcs = 2;
-            unpackids[j - 1] =
+            mpi_errno =
                 brucks_sched_pup(0, recvbuf, tmp_rbuf[i][j - 1], recvtype,
                                  recvcount, i, k, j, size,
-                                 &packsize, sched, unpack_ninvtcs, unpack_invtcs);
+                                 &packsize, sched, unpack_ninvtcs, unpack_invtcs,
+                                 &unpackids[j - 1]);
+            MPIR_ERR_CHECK(mpi_errno);
             num_unpacks_in_last_phase++;
         }
         MPIR_Localcopy(unpackids, sizeof(int) * (k - 1), MPI_BYTE,

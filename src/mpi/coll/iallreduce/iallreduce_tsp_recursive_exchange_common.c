@@ -114,6 +114,10 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
             }
         }
     }
+
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

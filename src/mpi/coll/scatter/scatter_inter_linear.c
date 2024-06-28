@@ -23,7 +23,7 @@ int MPIR_Scatter_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datat
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
-        return MPI_SUCCESS;
+        goto fn_exit;
     }
 
     remote_size = comm_ptr->remote_size;
@@ -42,5 +42,8 @@ int MPIR_Scatter_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datat
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

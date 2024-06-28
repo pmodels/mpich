@@ -68,5 +68,9 @@ int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint s
                                   recvcount, recvtype, src, MPIR_ALLTOALLW_TAG, comm_ptr, &status);
         MPIR_ERR_CHECK(mpi_errno);
     }
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

@@ -49,9 +49,11 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int n
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -91,8 +93,11 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *
         }
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -169,9 +174,11 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int s
 
     *nrecvs_ = nrecvs;
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -201,9 +208,11 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 

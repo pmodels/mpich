@@ -120,9 +120,11 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
     if (is_out_vtcs)
         *reduce_id_ = reduce_id;
 
+  fn_exit:
     MPIR_FUNC_EXIT;
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 

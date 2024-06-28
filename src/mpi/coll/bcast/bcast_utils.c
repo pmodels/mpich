@@ -104,5 +104,8 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
         mask >>= 1;
     }
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
