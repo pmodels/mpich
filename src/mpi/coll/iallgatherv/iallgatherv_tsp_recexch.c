@@ -20,7 +20,6 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int partner, offset, count;
     int i, vtx_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 
@@ -78,7 +77,6 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int 
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, vtx_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
 
     MPIR_FUNC_ENTER;
@@ -127,7 +125,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
     int vtx_id;
     int *recv_id = *recv_id_;
     int nrecvs = 0;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 
@@ -209,7 +206,6 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int 
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     MPI_Aint total_count = 0;
     int i, vtx_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 

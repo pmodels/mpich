@@ -30,7 +30,6 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
     MPI_Aint extent;
     int min_procs;
     int tag;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     rank = comm_ptr->rank;
 

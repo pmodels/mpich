@@ -28,7 +28,6 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
     int ibcast_flags_num_pages, ireduce_flags_num_pages, fallback = 0;
     size_t ibcast_flags_shm_size = 0, ireduce_flags_shm_size = 0;
     const long pg_sz = sysconf(_SC_PAGESIZE);
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int topotree_fail[2] = { -1, -1 };  /* -1 means topo trees not created due to reasons like not
                                          * specifying binding, no hwloc etc. 0 means topo trees were
                                          * created successfully. 1 means topo trees were created
@@ -285,7 +284,6 @@ int MPIDI_POSIX_nb_release_gather_comm_free(MPIR_Comm * comm_ptr)
 
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     /* Clean up is not required for NULL struct */
     if (NB_RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {

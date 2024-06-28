@@ -52,7 +52,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
     int i, nvtcs, vtx_id;
     int mpi_errno_ret = MPI_SUCCESS;
     void **step1_recvbuf;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
     /* Step 1 */

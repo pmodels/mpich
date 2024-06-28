@@ -54,7 +54,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
     MPI_Aint send_cnt, recv_cnt, send_offset, recv_offset;
     int nvtcs, vtcs[2];
     int send_id, recv_id, reduce_id = -1;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 
@@ -150,7 +149,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
     MPI_Aint *displs;
     int tag, vtx_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_ENTER;

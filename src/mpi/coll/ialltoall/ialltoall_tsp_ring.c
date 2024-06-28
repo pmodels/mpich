@@ -41,7 +41,6 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, src, dst, copy_dst;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     /* Temporary buffers to execute the ring algorithm */
     void *buf1, *buf2, *data_buf, *sbuf, *rbuf;

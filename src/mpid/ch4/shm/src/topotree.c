@@ -476,7 +476,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k, in
     int *package_ctr = NULL;
     int topo_depth = 0;
     int package_level = 0, i, max_ranks_per_package = 0;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int (*shared_region_ptr)[topo_depth];
 
     MPIR_FUNC_ENTER;
