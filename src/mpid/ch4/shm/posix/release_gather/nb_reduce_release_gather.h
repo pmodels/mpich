@@ -252,7 +252,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_reduce_start_sendrecv_completion(
         } else if (rank == 0) {
             MPIC_Isend(MPIDI_POSIX_RELEASE_GATHER_NB_REDUCE_DATA_ADDR(rank, segment),
                        per_call_data->count, per_call_data->datatype, per_call_data->root,
-                       per_call_data->tag, comm_ptr, &(per_call_data->sreq), MPIR_ERR_NONE);
+                       per_call_data->tag, comm_ptr, &(per_call_data->sreq));
         }
     }
 

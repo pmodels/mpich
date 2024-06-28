@@ -681,7 +681,7 @@ int MPIDI_world_post_init(void)
 
     mpi_errno = MPIR_Allgather_fallback(&MPIDI_global.n_vcis, 1, MPI_INT,
                                         MPIDI_global.all_num_vcis, 1, MPI_INT,
-                                        MPIR_Process.comm_world, MPIR_ERR_NONE);
+                                        MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 

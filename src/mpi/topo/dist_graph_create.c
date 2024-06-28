@@ -132,8 +132,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
 
     /* compute the number of peers I will recv from */
     int in_out_peers[2] = { -1, 1 };
-    mpi_errno =
-        MPIR_Reduce_scatter_block(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Reduce_scatter_block(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(in_out_peers[0] <= comm_size && in_out_peers[0] >= 0);
@@ -150,14 +149,14 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
             /* send edges where i is a destination to process i */
             mpi_errno =
                 MPIC_Isend(&rin[i][0], rin_sizes[i], MPI_INT, i, MPIR_TOPO_A_TAG, comm_ptr,
-                           &reqs[idx++], MPIR_ERR_NONE);
+                           &reqs[idx++]);
             MPIR_ERR_CHECK(mpi_errno);
         }
         if (rout_sizes[i]) {
             /* send edges where i is a source to process i */
             mpi_errno =
                 MPIC_Isend(&rout[i][0], rout_sizes[i], MPI_INT, i, MPIR_TOPO_B_TAG, comm_ptr,
-                           &reqs[idx++], MPIR_ERR_NONE);
+                           &reqs[idx++]);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
