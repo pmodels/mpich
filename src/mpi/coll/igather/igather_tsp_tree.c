@@ -14,7 +14,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
                                       int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int size, rank, lrank;
     int i, j, tag, is_inplace = false;
     MPI_Aint sendtype_lb, sendtype_extent, sendtype_true_extent;

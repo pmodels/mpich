@@ -15,7 +15,6 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
                                MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     int comm_size, rank, is_commutative;
     int mask, relrank, source, lroot;
@@ -134,8 +133,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

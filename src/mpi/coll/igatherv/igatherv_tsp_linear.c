@@ -24,7 +24,6 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
                                            MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, vtx_id;
     int comm_size, rank;
     MPI_Aint extent;

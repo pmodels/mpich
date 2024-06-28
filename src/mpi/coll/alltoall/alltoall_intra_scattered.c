@@ -36,7 +36,6 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
     int comm_size, i;
     MPI_Aint sendtype_extent, recvtype_extent;
     int mpi_errno = MPI_SUCCESS, dst, rank;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPIR_Request **reqarray;
     MPI_Status *starray;
     MPIR_CHKLMEM_DECL(6);
@@ -91,8 +90,7 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

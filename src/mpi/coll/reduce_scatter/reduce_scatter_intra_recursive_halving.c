@@ -43,7 +43,6 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
     int *disps;
     void *tmp_recvbuf, *tmp_results;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int total_count, dst;
     int mask;
     int rem, newdst, send_idx, recv_idx, last_idx, send_cnt, recv_cnt;
@@ -262,8 +261,7 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

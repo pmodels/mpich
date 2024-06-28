@@ -15,7 +15,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                                                     MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     size_t extent, type_size;
     MPI_Aint true_lb, true_extent;
     int size, rank, tag;

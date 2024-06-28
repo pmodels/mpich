@@ -12,7 +12,7 @@
 int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm)
 {
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int i, src, dst;
     int nranks, is_inplace, rank;
     size_t extent;
@@ -103,8 +103,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
     MPL_free(tmpbuf);
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

@@ -19,7 +19,6 @@ int MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(const void *send
                                                                 MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int rank, mpi_errno, root, local_size;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb = 0, extent;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
@@ -84,8 +83,7 @@ int MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(const void *send
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

@@ -48,7 +48,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
                                                        MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int x, i, j, phase;
     int current_cnt, offset, rank_for_offset, dst;
     MPI_Aint send_cnt, recv_cnt, send_offset, recv_offset;
@@ -134,7 +133,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
                                                  int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int is_inplace;
     size_t extent;
     MPI_Aint lb, true_extent;

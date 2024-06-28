@@ -339,7 +339,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
 {
     MPIR_FUNC_ENTER;
 
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int tag, my_rank;
     int first_vtx_id = -1, second_vtx_id, third_vtx_id, fourth_vtx_id, fifth_vtx_id, *sixth_vtx_id;
     int prev_vtx_id, pack_vtx_id = -1;
@@ -388,11 +388,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
         local_buf = MPIR_TSP_sched_malloc(count, sched);
         if (my_rank == root) {
             /* Root packs the data before sending, for non contiguous datatypes */
-            mpi_errno_ret =
+            mpi_errno =
                 MPIR_TSP_sched_localcopy(ori_local_buf, ori_count, ori_datatype, local_buf, nbytes,
                                          MPI_BYTE, sched, 0, NULL, &pack_vtx_id);
-            if (mpi_errno_ret)
-                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -448,39 +447,34 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
             n_incoming = 1;
             prev_vtx_id = first_vtx_id;
         }
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_generic(root_datacopy_type_id, data, sched, n_incoming, &prev_vtx_id,
                                    &first_vtx_id);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_generic(finish_send_recv_type_id, data, sched, 1, &first_vtx_id,
                                    &second_vtx_id);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPI_ERR_CHECK(mpi_errno);
 
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_generic(update_release_flag_type_id, data, sched, 1, &second_vtx_id,
                                    &third_vtx_id);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPI_ERR_CHECK(mpi_errno);
 
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_cb(&MPIDI_POSIX_NB_RG_non_root_datacopy_cb, data, sched, 1,
                               &third_vtx_id, &fourth_vtx_id);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
-        mpi_errno_ret =
+        MPI_ERR_CHECK(mpi_errno);
+
+        mpi_errno =
             MPIR_TSP_sched_generic(gather_type_id, data, sched, 1, &fourth_vtx_id, &fifth_vtx_id);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPI_ERR_CHECK(mpi_errno);
 
         mpi_errno =
             MPIR_TSP_sched_cb(&MPIDI_POSIX_NB_RG_update_gather_flag_cb, data, sched, 1,
                               &fifth_vtx_id, &sixth_vtx_id[i]);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
         offset += chunk_count;
     }
 

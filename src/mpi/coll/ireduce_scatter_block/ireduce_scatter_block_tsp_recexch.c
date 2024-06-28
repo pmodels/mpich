@@ -14,7 +14,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
                                                        MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int is_inplace;
     MPI_Aint extent, lb, true_extent;
     int step1_sendto = -1, step2_nphases = 0, step1_nrecvs = 0;

@@ -18,7 +18,6 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf,
                                                       MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int indegree, outdegree, weighted;
     int k, l;
     int *srcs, *dsts;

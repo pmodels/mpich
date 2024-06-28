@@ -47,7 +47,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     MPI_Aint offset = 0;
     int is_contig;
     MPI_Aint ori_count = count;
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     MPI_Aint actual_packed_unpacked_bytes;
     MPI_Aint lb, true_lb, true_extent, extent, type_size;
     void *ori_buffer = buffer;
@@ -69,7 +69,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     /* Lazy initialization of release_gather specific struct */
     mpi_errno =
         MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr, MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST);
-    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno_ret,
+    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno,
                                    "release_gather bcast cannot create more shared memory. Falling back to pt2pt algorithms.\n");
 
     my_rank = MPIR_Comm_rank(comm_ptr);
@@ -145,7 +145,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
 
   fn_exit:
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
   fallback:
@@ -170,7 +170,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     int i;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     MPI_Aint offset = 0;
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     MPI_Aint lb, true_extent, extent, type_size;
 
     MPIR_FUNC_ENTER;
@@ -209,7 +209,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     mpi_errno =
         MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr,
                                                  MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE);
-    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno_ret,
+    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno,
                                    "release_gather reduce cannot create more shared memory. Falling back to pt2pt algorithms.\n");
 
     if (sendbuf == MPI_IN_PLACE) {
@@ -242,7 +242,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
 
   fn_exit:
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
   fallback:
@@ -266,7 +266,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     int i;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     MPI_Aint offset = 0;
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     MPI_Aint lb, true_extent, extent, type_size;
 
     MPIR_FUNC_ENTER;
@@ -300,7 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     mpi_errno =
         MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr,
                                                  MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE);
-    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno_ret,
+    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno,
                                    "release_gather allreduce cannot create more shared memory. Falling back to pt2pt algorithms.\n");
 
     if (sendbuf == MPI_IN_PLACE) {
@@ -334,7 +334,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
 
   fn_exit:
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
 
   fn_fail:
     goto fn_exit;
@@ -350,7 +350,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * comm_ptr)
 {
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
@@ -366,7 +366,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * 
     mpi_errno =
         MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr,
                                                  MPIDI_POSIX_RELEASE_GATHER_OPCODE_BARRIER);
-    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno_ret,
+    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno,
                                    "release_gather barrier cannot create more shared memory. Falling back to pt2pt algorithms.\n");
 
     mpi_errno =
@@ -381,7 +381,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * 
 
   fn_exit:
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
 
   fn_fail:
     goto fn_exit;

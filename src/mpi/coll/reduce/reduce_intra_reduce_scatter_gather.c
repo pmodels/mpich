@@ -39,7 +39,6 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
                                             MPI_Op op, int root, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int comm_size, rank, pof2, rem, newrank;
     int mask, i, j, send_idx = 0;
     int recv_idx, last_idx = 0, newdst;
@@ -331,8 +330,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

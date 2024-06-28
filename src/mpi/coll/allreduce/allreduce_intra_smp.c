@@ -9,7 +9,6 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
 
     /* on each node, do a reduce to the local root */
     if (comm_ptr->node_comm != NULL) {
@@ -50,7 +49,7 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     goto fn_exit;
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
 }

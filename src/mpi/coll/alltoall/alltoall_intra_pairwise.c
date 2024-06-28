@@ -31,7 +31,6 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
     int comm_size, i;
     MPI_Aint sendtype_extent, recvtype_extent;
     int mpi_errno = MPI_SUCCESS, src, dst, rank;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
 
     comm_size = comm_ptr->local_size;
@@ -78,8 +77,7 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
     }
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

@@ -19,7 +19,6 @@
 int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr)
 {
     int size, rank, src, dst, mask, mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, size);
 
@@ -34,7 +33,7 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr)
         mask <<= 1;
     }
 
-    return mpi_errno_ret;
+    return mpi_errno;
 }
 
 /* Algorithm: high radix dissemination
@@ -42,7 +41,7 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr)
  */
 int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k)
 {
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int i, j, nranks, rank;
     int p_of_k;                 /* minimum power of k that is greater than or equal to number of ranks */
     int shift, to, from;
@@ -123,8 +122,7 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k)
         MPL_free(recv_reqs);
         MPL_free(send_reqs);
     }
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

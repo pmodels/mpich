@@ -39,7 +39,6 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
     MPI_Aint tmp_buf_size = 0;
     void *tmp_buf = NULL;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(4);
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
@@ -179,8 +178,7 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

@@ -29,7 +29,6 @@ int MPIR_Reduce_scatter_block_intra_pairwise(const void *sendbuf,
     MPI_Aint extent, true_extent, true_lb;
     void *tmp_recvbuf;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int src, dst;
     MPIR_CHKLMEM_DECL(5);
 
@@ -117,8 +116,7 @@ int MPIR_Reduce_scatter_block_intra_pairwise(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

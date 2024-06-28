@@ -50,7 +50,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
 {
     int mpi_errno = MPI_SUCCESS;
     int i, nvtcs, vtx_id;
-    int mpi_errno_ret = MPI_SUCCESS;
     void **step1_recvbuf;
 
     MPIR_FUNC_ENTER;
@@ -65,12 +64,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
         mpi_errno =
             MPIR_TSP_sched_isend(buf_to_send, count, datatype, step1_sendto, tag, comm, sched, 0,
                                  NULL, &vtx_id);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            errflag = MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     } else {    /* Step 2 participating rank */
         step1_recvbuf = *step1_recvbuf_ =
             (void **) MPL_malloc(sizeof(void *) * step1_nrecvs, MPL_MEM_COLL);

@@ -75,7 +75,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank;
     void *bcast_data_addr = NULL;
@@ -214,7 +213,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
 
   fn_exit:
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
@@ -238,7 +237,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     void *child_data_addr;
     MPL_atomic_uint64_t *child_flag_addr;
     void *reduce_data_addr = NULL;
-    int i, mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int i, mpi_errno = MPI_SUCCESS;
     bool skip_checking = false;
     /* Set the relaxation to 0 because in Reduce, release step is "relaxed" to make sure multiple
      * buffers can be used to pipeline the copying in and out of shared memory, and data is not
@@ -351,7 +350,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
         MPL_free(temp_recvbuf);
     }
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
 }

@@ -16,7 +16,6 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
                                              MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr)
 {
     int rank, mpi_errno;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPIR_Comm *newcomm_ptr = NULL;
 
@@ -55,5 +54,5 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
     }
 
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
 }

@@ -18,7 +18,6 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbu
                                                MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
@@ -57,8 +56,7 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbu
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

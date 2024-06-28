@@ -26,7 +26,6 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint recvtype_extent;
     int j, i;
     MPI_Aint curr_cnt, last_recv_cnt = 0;
@@ -170,8 +169,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
     }
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

@@ -22,7 +22,6 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Ain
                                                     MPIR_Comm * comm_ptr)
 {
     int remote_size, mpi_errno, root, rank;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPIR_Comm *newcomm_ptr = NULL;
     MPI_Datatype newtype = MPI_DATATYPE_NULL;
 
@@ -78,11 +77,10 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Ain
     MPIR_Type_free_impl(&newtype);
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     if (newtype != MPI_DATATYPE_NULL)
         MPIR_Type_free_impl(&newtype);
 
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

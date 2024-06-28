@@ -28,7 +28,6 @@ int MPIR_Alltoallv_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint *
     int local_size, remote_size, max_size, i;
     MPI_Aint send_extent, recv_extent;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     int src, dst, rank;
     char *sendaddr, *recvaddr;
@@ -70,5 +69,5 @@ int MPIR_Alltoallv_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint *
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    return mpi_errno_ret;
+    return mpi_errno;
 }

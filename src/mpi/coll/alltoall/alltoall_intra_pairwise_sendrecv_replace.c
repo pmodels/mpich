@@ -29,7 +29,6 @@ int MPIR_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf,
     int comm_size, i, j;
     MPI_Aint recvtype_extent;
     int mpi_errno = MPI_SUCCESS, rank;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
 
     comm_size = comm_ptr->local_size;
@@ -68,5 +67,5 @@ int MPIR_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf,
         }
     }
 
-    return mpi_errno_ret;
+    return mpi_errno;
 }

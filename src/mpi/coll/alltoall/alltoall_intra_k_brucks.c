@@ -110,7 +110,6 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
                                  MPI_Aint recvcnt, MPI_Datatype recvtype, MPIR_Comm * comm, int k)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int i, j;
     int rank, size;
     int nphases, max;
@@ -326,8 +325,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
     MPIR_CHKLMEM_FREEALL();
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

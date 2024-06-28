@@ -20,7 +20,6 @@
 int MPIR_Barrier_inter_bcast(MPIR_Comm * comm_ptr)
 {
     int rank, mpi_errno = MPI_SUCCESS, root;
-    int mpi_errno_ret = MPI_SUCCESS;
     int i = 0;
     MPIR_Comm *newcomm_ptr = NULL;
 
@@ -60,8 +59,7 @@ int MPIR_Barrier_inter_bcast(MPIR_Comm * comm_ptr)
         MPIR_ERR_CHECK(mpi_errno);
     }
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

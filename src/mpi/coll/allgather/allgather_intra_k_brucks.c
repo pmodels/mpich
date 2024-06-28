@@ -25,7 +25,6 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
                               MPI_Aint recvcount, MPI_Datatype recvtype, MPIR_Comm * comm, int k)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int i, j;
     int nphases = 0;
     int src, dst, p_of_k = 0;   /* Largest power of k that is smaller than 'size' */
@@ -188,8 +187,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPIR_CHKLMEM_FREEALL();
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

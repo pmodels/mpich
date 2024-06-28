@@ -12,7 +12,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
                                          MPIR_Comm * comm, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, src, dst, copy_dst;
     /* Temporary buffers to execute the ring algorithm */
     void *buf1, *buf2, *data_buf, *rbuf, *sbuf;

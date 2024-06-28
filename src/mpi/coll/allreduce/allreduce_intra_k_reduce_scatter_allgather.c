@@ -17,7 +17,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                                                     MPI_Op op, MPIR_Comm * comm, int k,
                                                     int single_phase_recv)
 {
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int rank, nranks, nbr;
     int rem = 0, idx = 0, dst = 0, rank_for_offset;
     MPI_Aint true_extent, true_lb, extent;
@@ -295,8 +295,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     MPL_free(tmp_recvbuf);
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

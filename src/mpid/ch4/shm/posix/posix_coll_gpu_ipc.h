@@ -70,7 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
     MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL(1);
 
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
 
     MPI_Aint true_lb;
     MPIR_Datatype *dt_ptr;
@@ -152,7 +152,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
   fallback:
@@ -174,7 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
     MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL(3);
 
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
 
     /* fallback if sendtype and recvtype is different */
     if (sendtype != recvtype || sendcount != recvcount) {
@@ -280,7 +280,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
   fallback:
@@ -302,7 +302,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
     MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL(3);
 
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
 
     /* fallback if sendtype and recvtype is different */
     if (sendtype != recvtype || sendcount != recvcount) {
@@ -408,7 +408,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
   fallback:
@@ -431,7 +431,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
     MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL(3);
 
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
 
     /* fallback if sendtype and recvtype is different */
     if (sendtype != recvtype) {
@@ -545,7 +545,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
   fallback:

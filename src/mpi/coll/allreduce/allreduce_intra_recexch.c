@@ -19,7 +19,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                                  MPI_Datatype datatype,
                                  MPI_Op op, MPIR_Comm * comm, int k, int single_phase_recv)
 {
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int is_commutative, rank, nranks, nbr, myidx;
     int buf = 0;
     MPI_Aint true_extent, true_lb, extent;
@@ -291,9 +291,8 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
         }
     }
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }
 

@@ -60,7 +60,6 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */

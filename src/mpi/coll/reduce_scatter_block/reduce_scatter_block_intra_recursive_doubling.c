@@ -30,7 +30,6 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
     MPI_Aint extent, true_extent, true_lb;
     void *tmp_recvbuf, *tmp_results;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int dst;
     int mask, dst_tree_root, my_tree_root, j, k;
     int received;
@@ -251,8 +250,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

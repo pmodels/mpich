@@ -31,7 +31,6 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
 {
     int comm_size, rank, i, left, right;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint recvtype_extent;
     MPI_Aint total_count;
@@ -138,8 +137,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     }
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

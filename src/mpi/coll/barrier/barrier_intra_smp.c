@@ -8,7 +8,6 @@
 int MPIR_Barrier_intra_smp(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
 
     MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
 
@@ -33,5 +32,5 @@ int MPIR_Barrier_intra_smp(MPIR_Comm * comm_ptr)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    return mpi_errno_ret;
+    return mpi_errno;
 }

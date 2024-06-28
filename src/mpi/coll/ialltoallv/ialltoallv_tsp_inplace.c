@@ -14,7 +14,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
                                             MPIR_Comm * comm, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     size_t recv_extent;
     MPI_Aint recv_lb, true_extent;
     int nranks, rank, nvtcs;

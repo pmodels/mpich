@@ -16,7 +16,6 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int n
                                                                  MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int partner, offset, count, vtx_id;
 
     MPIR_FUNC_ENTER;
@@ -65,7 +64,6 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *
                                                          MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i;
     int vtx_id;
 
@@ -108,7 +106,6 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int s
                                                          MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int phase, i, j, count, nbr, offset, rank_for_offset;
     int *recv_id = *recv_id_;
     int nrecvs = 0, vtx_id;
@@ -187,7 +184,6 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *
                                                          MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, vtx_id;
 
     MPIR_FUNC_ENTER;
@@ -226,7 +222,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, MPI_Aint sendco
                                             MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int is_inplace, i;
     int nranks, rank;
     size_t recv_extent;

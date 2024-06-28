@@ -15,7 +15,6 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int size, rank;
     int i, j, is_inplace = false;
     int lrank;

@@ -26,7 +26,6 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     MPIR_CHKLMEM_DECL(1);
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int mask, dst, is_commutative, pof2, newrank, rem, newdst;
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
@@ -146,7 +145,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     }
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
 }

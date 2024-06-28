@@ -26,7 +26,6 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
 {
     int comm_size, rank, j, i;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint recvtype_extent, recvtype_sz;
     int pof2, src, dst, rem;
@@ -132,8 +131,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

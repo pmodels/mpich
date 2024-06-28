@@ -28,7 +28,6 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     MPI_Aint sendtype_extent, recvtype_extent;
     MPI_Aint recvtype_sz;
     int mpi_errno = MPI_SUCCESS, src, dst, rank;
-    int mpi_errno_ret = MPI_SUCCESS;
     int block, count;
     MPI_Aint pack_size;
     MPI_Datatype newtype = MPI_DATATYPE_NULL;
@@ -139,10 +138,9 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     if (newtype != MPI_DATATYPE_NULL)
         MPIR_Type_free_impl(&newtype);
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

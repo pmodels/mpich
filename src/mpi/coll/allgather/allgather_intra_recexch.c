@@ -21,7 +21,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                                  MPI_Datatype recvtype, MPIR_Comm * comm,
                                  int recexch_type, int k, int single_phase_recv)
 {
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
     int nranks, rank;
     size_t recv_extent;

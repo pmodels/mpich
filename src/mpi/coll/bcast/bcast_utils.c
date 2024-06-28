@@ -26,7 +26,6 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
     int rank, comm_size, src, dst;
     int relative_rank, mask;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint scatter_size, recv_size = 0;
     MPI_Aint curr_size, send_size;
 
@@ -105,5 +104,5 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
         mask >>= 1;
     }
 
-    return mpi_errno_ret;
+    return mpi_errno;
 }

@@ -352,7 +352,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
 {
     MPIR_FUNC_ENTER;
 
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int tag;
     int first_vtx_id = -1, second_vtx_id, third_vtx_id, fourth_vtx_id, fifth_vtx_id, sixth_vtx_id,
         seventh_vtx_id, prev_vtx_id;
@@ -446,48 +446,41 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
             n_incoming = 1;
             prev_vtx_id = first_vtx_id;
         }
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_generic(reserve_buf_type_id, data, sched, n_incoming, &prev_vtx_id,
                                    &first_vtx_id);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_generic(propagate_release_flag_type_id, data, sched, 1, &first_vtx_id,
                                    &second_vtx_id);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_cb(&MPIDI_POSIX_NB_RG_all_datacopy_cb, data, sched, 1, &second_vtx_id,
                               &third_vtx_id);
 
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_generic(gather_type_id, data, sched, 1, &third_vtx_id, &fourth_vtx_id);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_cb(&MPIDI_POSIX_NB_RG_reduce_data_cb, data, sched, 1, &fourth_vtx_id,
                               &fifth_vtx_id);
 
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_generic(start_sendrecv_type_id, data, sched, 1, &fifth_vtx_id,
                                    &sixth_vtx_id);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno_ret =
+        mpi_errno =
             MPIR_TSP_sched_generic(finish_sendrecv_type_id, data, sched, 1, &sixth_vtx_id,
                                    &seventh_vtx_id);
-        if (mpi_errno_ret)
-            MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         offset += chunk_count;
     }

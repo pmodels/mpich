@@ -20,7 +20,6 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
                                                MPI_Op op, int root, MPIR_Comm * comm_ptr)
 {
     int rank, mpi_errno;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf = NULL;
@@ -73,8 +72,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }
