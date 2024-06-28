@@ -27,7 +27,6 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 {
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint scatter_size;
     int j, i, is_contig;
     MPI_Aint nbytes, type_size;
@@ -113,7 +112,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
 #ifdef HAVE_ERROR_CHECKING
     /* check that we received as much as we expected */
-    MPIR_ERR_COLL_CHECK_SIZE(curr_size, nbytes, errflag, mpi_errno_ret);
+    MPIR_ERR_COLL_CHECK_SIZE(curr_size, nbytes, mpi_errno);
 #endif
 
     if (!is_contig) {
@@ -125,8 +124,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

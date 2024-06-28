@@ -14,7 +14,6 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                          MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint type_size, nbytes = 0;
     MPI_Status *status_p;
 #ifdef HAVE_ERROR_CHECKING
@@ -51,7 +50,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
 #ifdef HAVE_ERROR_CHECKING
                 /* check that we received as much as we expected */
                 MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
-                MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, errflag, mpi_errno_ret);
+                MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, mpi_errno);
 #endif
             }
 
@@ -118,5 +117,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
     }
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

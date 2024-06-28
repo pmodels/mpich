@@ -907,6 +907,13 @@ cvars:
         (err_) = MPIR_Err_combine_codes((err_), (newerr_));     \
     } while (0)
 
+#define MPIR_ERR_COLL_CHECK_SIZE(recv_sz, expect_sz, err_) \
+    do { \
+        if (recv_sz != expect_sz) { \
+            MPIR_ERR_SETANDJUMP2(err_, MPI_ERR_OTHER, "**collective_size_mismatch", "**collective_size_mismatch %d %d", recv_sz, expect_sz); \
+        } \
+    } while (0)
+
 #else
 /* Simply set the class, being careful not to override a previously
    set class. */

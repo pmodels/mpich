@@ -18,7 +18,6 @@ int MPIR_Bcast_intra_tree(void *buffer,
     int rank, comm_size, src, dst, *p, j, k, lrank, is_contig;
     int parent = -1, num_children = 0, num_req = 0, is_root = 0;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint nbytes = 0, type_size, actual_packed_unpacked_bytes, recvd_size;
     MPI_Aint saved_count = count;
     MPI_Status status;
@@ -134,7 +133,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         MPIR_ERR_CHECK(mpi_errno);
         /* check that we received as much as we expected */
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
-        MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, mpi_errno);
     }
     if (tree_type == MPIR_TREE_TYPE_KARY) {
         for (k = 1; k <= branching_factor; k++) {       /* Send to children */
@@ -184,8 +183,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }
