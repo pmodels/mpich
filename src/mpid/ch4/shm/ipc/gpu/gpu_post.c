@@ -300,6 +300,17 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     uintptr_t data_sz ATTRIBUTE((unused));
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, true_lb);
 
+    void *mem_addr;
+    if (dt_contig) {
+        mem_addr = MPIR_get_contig_ptr(buf, true_lb);
+    } else {
+        mem_addr = (char *) buf;
+    }
+    MPIR_GPU_query_pointer_attr(mem_addr, &ipc_attr->u.gpu.gpu_attr);
+    if (ipc_attr->u.gpu.gpu_attr.type != MPL_GPU_POINTER_DEV) {
+        goto fn_exit;
+    }
+
     if (!dt_contig) {
         if (dt_ptr->contents) {
             /* skip HINDEXED and STRUCT */
@@ -327,17 +338,6 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
         if (dt_ptr->true_lb < 0 || dt_ptr->extent < 0) {
             goto fn_exit;
         }
-    }
-
-    void *mem_addr;
-    if (dt_contig) {
-        mem_addr = MPIR_get_contig_ptr(buf, true_lb);
-    } else {
-        mem_addr = (char *) buf;
-    }
-    MPIR_GPU_query_pointer_attr(mem_addr, &ipc_attr->u.gpu.gpu_attr);
-    if (ipc_attr->u.gpu.gpu_attr.type != MPL_GPU_POINTER_DEV) {
-        goto fn_exit;
     }
 
     void *bounds_base;
