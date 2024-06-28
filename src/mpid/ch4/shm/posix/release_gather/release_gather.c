@@ -177,7 +177,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int rank, num_ranks;
     bool initialize_flags = false, initialize_bcast_buf = false, initialize_reduce_buf = false;
     int flags_num_pages, fallback = 0;
@@ -277,7 +276,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
                 fallback = 1;
                 MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, errflag);
-                MPIR_ERR_SETANDJUMP(mpi_errno_ret, MPI_ERR_NO_MEM, "**nomem");
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_NO_MEM, "**nomem");
             } else {
                 /* More shm can be created, update the shared counter */
                 MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter, memory_to_be_allocated);
@@ -289,7 +288,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             mpi_errno = MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, errflag);
             MPIR_ERR_CHECK(mpi_errno);
             if (fallback) {
-                MPIR_ERR_SETANDJUMP(mpi_errno_ret, MPI_ERR_NO_MEM, "**nomem");
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_NO_MEM, "**nomem");
             }
         }
     }
@@ -366,13 +365,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, flags_shm_size,
                             (void **) &(release_gather_info_ptr->flags_addr));
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
-        }
-
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno_ret, errflag, mpi_errno_ret);
-        MPIR_ERR_CHECK(mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Calculate gather and release flag address and initialize to the gather and release states */
         release_gather_info_ptr->gather_flag_addr =
@@ -398,9 +391,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size),
                             (void **) &(RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr)));
-        if (mpi_errno) {
-            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
-        }
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -417,12 +407,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, num_ranks * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size),
                             (void **) &(RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr)));
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
-        }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno_ret, errflag, mpi_errno_ret);
-        MPIR_ERR_CHECK(mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Store address of each of the children's reduce buffer */
         char *addr;
@@ -437,12 +422,10 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
   fn_exit:
     MPIR_FUNC_EXIT;
-    if (mpi_errno_ret != MPI_SUCCESS) {
-        MPIDI_POSIX_mpi_release_gather_comm_free(comm_ptr);
-        RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
-    }
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
+    MPIDI_POSIX_mpi_release_gather_comm_free(comm_ptr);
+    RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
     goto fn_exit;
 }
 
@@ -452,7 +435,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     /* Clean up is not required for NULL struct */
@@ -494,5 +476,5 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 
   fn_exit:
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
 }
