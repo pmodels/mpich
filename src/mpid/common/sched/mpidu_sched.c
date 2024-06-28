@@ -226,17 +226,14 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                  * &send.count, but this requires patching up the pointers
                  * during realloc of entries, so this is easier */
                 ret_errno = MPIC_Isend(e->u.send.buf, *e->u.send.count_p, e->u.send.datatype,
-                                       e->u.send.dest, s->tag, comm, &e->u.send.sreq,
-                                       r->u.nbc.errflag);
+                                       e->u.send.dest, s->tag, comm, &e->u.send.sreq);
             } else {
                 if (e->u.send.is_sync) {
                     ret_errno = MPIC_Issend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
-                                            e->u.send.dest, s->tag, comm, &e->u.send.sreq,
-                                            r->u.nbc.errflag);
+                                            e->u.send.dest, s->tag, comm, &e->u.send.sreq);
                 } else {
                     ret_errno = MPIC_Isend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
-                                           e->u.send.dest, s->tag, comm, &e->u.send.sreq,
-                                           r->u.nbc.errflag);
+                                           e->u.send.dest, s->tag, comm, &e->u.send.sreq);
                 }
             }
             /* Check if the error is actually fatal to the NBC or we can continue. */

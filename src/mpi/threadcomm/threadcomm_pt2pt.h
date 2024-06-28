@@ -340,7 +340,7 @@ static void threadcomm_set_status(struct send_hdr *hdr, MPI_Status * status,
 {
     status->MPI_SOURCE = MPIR_THREADCOMM_TID_TO_RANK(p->threadcomm, hdr->src_id);
     status->MPI_TAG = hdr->tag;
-    status->MPI_ERROR = MPIR_PT2PT_ATTR_GET_ERRFLAG(hdr->attr);
+    status->MPI_ERROR = MPI_SUCCESS;
 
     /* set count */
     MPI_Aint data_sz;

@@ -69,8 +69,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     am_hdr.hdr.context_id = comm->context_id + context_offset;
     am_hdr.hdr.data_sz = data_sz;
     am_hdr.hdr.rndv_hdr_sz = sizeof(MPIDI_IPC_hdr);
+    am_hdr.hdr.error_bits = MPIR_ERR_NONE;
     am_hdr.hdr.sreq_ptr = sreq;
-    am_hdr.hdr.error_bits = errflag;
     am_hdr.hdr.flags = flags;
     MPIDIG_AM_SEND_SET_RNDV(am_hdr.hdr.flags, MPIDIG_RNDV_IPC);
 
