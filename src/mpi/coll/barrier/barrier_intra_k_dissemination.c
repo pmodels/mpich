@@ -106,8 +106,7 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k)
             }
 
             mpi_errno =
-                MPIC_Isend(NULL, 0, MPI_BYTE, to, MPIR_BARRIER_TAG, comm, &send_reqs[j - 1],
-                           errflag);
+                MPIC_Isend(NULL, 0, MPI_BYTE, to, MPIR_BARRIER_TAG, comm, &send_reqs[j - 1]);
             MPIR_ERR_CHECK(mpi_errno);
         }
         mpi_errno = MPIC_Waitall(k - 1, send_reqs, MPI_STATUSES_IGNORE);

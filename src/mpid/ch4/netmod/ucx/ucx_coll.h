@@ -240,8 +240,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recv
     if (mpi_errno != MPI_SUCCESS)
 #endif
     {
-        mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
-                                     errflag);
+        mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr);
     }
     MPIR_FUNC_EXIT;
     return mpi_errno;

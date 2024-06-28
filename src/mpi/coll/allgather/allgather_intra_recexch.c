@@ -104,14 +104,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
         mpi_errno =
             MPIR_Localcopy(sendbuf, recvcount, recvtype,
                            (char *) recvbuf + rank * recv_extent * recvcount, recvcount, recvtype);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (step1_sendto != -1) {   /* non-participating rank sends the data to a partcipating rank */
@@ -122,8 +115,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
         else
             buf_to_send = (void *) sendbuf;
         mpi_errno =
-            MPIC_Send(buf_to_send, recvcount, recvtype, step1_sendto, MPIR_ALLGATHER_TAG, comm,
-                      errflag);
+            MPIC_Send(buf_to_send, recvcount, recvtype, step1_sendto, MPIR_ALLGATHER_TAG, comm);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         if (step1_nrecvs) {
@@ -165,8 +157,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                     MPIC_Sendrecv(((char *) recvbuf + send_offset), send_count * recvcount,
                                   recvtype, partner, MPIR_ALLGATHER_TAG,
                                   ((char *) recvbuf + recv_offset), recv_count * recvcount,
-                                  recvtype, partner, MPIR_ALLGATHER_TAG, comm, MPI_STATUS_IGNORE,
-                                  errflag);
+                                  recvtype, partner, MPIR_ALLGATHER_TAG, comm, MPI_STATUS_IGNORE);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
@@ -292,10 +283,6 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     }
 
   fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, errflag, "**coll_fail");
     return mpi_errno;
   fn_fail:
     goto fn_exit;

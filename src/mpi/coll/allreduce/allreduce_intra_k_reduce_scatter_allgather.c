@@ -161,8 +161,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                     send_cnt += cnts[offset + x];
                 mpi_errno =
                     MPIC_Isend((char *) recvbuf + send_offset, send_cnt,
-                               datatype, dst, MPIR_ALLREDUCE_TAG, comm, &recv_reqs[num_rreq++],
-                               errflag);
+                               datatype, dst, MPIR_ALLREDUCE_TAG, comm, &recv_reqs[num_rreq++]);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 rank_for_offset = MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k);
@@ -224,8 +223,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                 for (x = 0; x < current_cnt; x++)
                     send_count += cnts[offset + x];
                 mpi_errno = MPIC_Isend(((char *) recvbuf + send_offset), send_count, datatype,
-                                       nbr, MPIR_ALLREDUCE_TAG, comm, &send_reqs[num_sreq++],
-                                       errflag);
+                                       nbr, MPIR_ALLREDUCE_TAG, comm, &send_reqs[num_sreq++]);
                 MPIR_ERR_CHECK(mpi_errno);
             }
             /* wait on prev recvs */

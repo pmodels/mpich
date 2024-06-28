@@ -104,7 +104,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
 #ifdef HAVE_ERROR_CHECKING
     /* When error checking is enabled, only (cellsize-(2*cacheline_size)) bytes are reserved for data.
      * Initial 2 cacheline_size bytes are reserved to put the amount of data being placed and the
-     errflag respectively */
+     errflag(removed) respectively */
     cellsize -= (2 * MPIDU_SHM_CACHE_LINE_LEN);
 #endif
 

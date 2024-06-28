@@ -243,8 +243,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast(void *buffer, MPI_Aint count,
             switch (cnt->id) {
                 case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather:
                     mpi_errno =
-                        MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm,
-                                                             errflag);
+                        MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm);
                     break;
                 case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_impl:
                     goto fallback;

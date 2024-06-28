@@ -38,8 +38,7 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     /* now do an IN_PLACE allreduce among the local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
         mpi_errno =
-            MPIR_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm,
-                           errflag);
+            MPIR_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
