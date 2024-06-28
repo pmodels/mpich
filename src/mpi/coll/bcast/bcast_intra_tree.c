@@ -15,10 +15,10 @@ int MPIR_Bcast_intra_tree(void *buffer,
                           int root, MPIR_Comm * comm_ptr, int tree_type,
                           int branching_factor, int is_nb)
 {
-    int rank, comm_size, src, dst, *p, j, k, lrank, is_contig;
+    int rank, comm_size, src, dst, *p, j, k, is_contig;
     int parent = -1, num_children = 0, num_req = 0, is_root = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint nbytes = 0, type_size, actual_packed_unpacked_bytes, recvd_size;
+    MPI_Aint nbytes = 0, type_size, actual_packed_unpacked_bytes;
     MPI_Aint saved_count = count;
     MPI_Status status;
     void *send_buf = NULL;
@@ -67,7 +67,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
     if (tree_type == MPIR_TREE_TYPE_KARY) {
         if (rank == root)
             is_root = 1;
-        lrank = (rank + (comm_size - root)) % comm_size;
+        int lrank = (rank + (comm_size - root)) % comm_size;
         parent = (lrank == 0) ? -1 : (((lrank - 1) / branching_factor) + root) % comm_size;
         num_children = branching_factor;
     } else {
@@ -131,11 +131,15 @@ int MPIR_Bcast_intra_tree(void *buffer,
         src = parent;
         mpi_errno = MPIC_Recv(send_buf, count, dtype, src, MPIR_BCAST_TAG, comm_ptr, &status);
         MPIR_ERR_CHECK(mpi_errno);
+#ifdef HAVE_ERROR_CHECKING
         /* check that we received as much as we expected */
+        MPI_Aint recvd_size;
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
         MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, mpi_errno);
+#endif
     }
     if (tree_type == MPIR_TREE_TYPE_KARY) {
+        int lrank = (rank + (comm_size - root)) % comm_size;
         for (k = 1; k <= branching_factor; k++) {       /* Send to children */
             dst = lrank * branching_factor + k;
             if (dst >= comm_size)

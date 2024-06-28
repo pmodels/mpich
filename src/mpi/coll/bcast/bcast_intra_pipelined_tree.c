@@ -23,7 +23,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
     int mpi_errno = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint type_size, num_chunks, chunk_size_floor, chunk_size_ceil;
-    MPI_Aint true_lb, true_extent, recvd_size, actual_packed_unpacked_bytes, nbytes = 0;
+    MPI_Aint true_lb, true_extent, actual_packed_unpacked_bytes, nbytes = 0;
     void *sendbuf = NULL;
     int parent = -1, num_children = 0, lrank = 0, num_req = 0;
     MPIR_Request **reqs = NULL;
@@ -148,16 +148,22 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
             if (src != -1) {
                 mpi_errno = MPIC_Wait(reqs[i]);
                 MPIR_ERR_CHECK(mpi_errno);
+#ifdef HAVE_ERROR_CHECKING
+                MPI_Aint recvd_size;
                 MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
                 MPIR_ERR_COLL_CHECK_SIZE(recvd_size, msgsize, mpi_errno);
+#endif
             }
         } else if (num_chunks > 3 && is_nb && i < 3 && !recv_pre_posted) {
             /* Wait to receive the chunk before it can be sent to the children */
             if (src != -1) {
                 mpi_errno = MPIC_Wait(reqs[i]);
                 MPIR_ERR_CHECK(mpi_errno);
+#ifdef HAVE_ERROR_CHECKING
+                MPI_Aint recvd_size;
                 MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
                 MPIR_ERR_COLL_CHECK_SIZE(recvd_size, msgsize, mpi_errno);
+#endif
             }
         } else {
             /* Receive message from parent */
@@ -166,8 +172,11 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                     MPIC_Recv((char *) sendbuf + offset, msgsize, MPI_BYTE,
                               src, MPIR_BCAST_TAG, comm_ptr, &status);
                 MPIR_ERR_CHECK(mpi_errno);
+#ifdef HAVE_ERROR_CHECKING
+                MPI_Aint recvd_size;
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
                 MPIR_ERR_COLL_CHECK_SIZE(recvd_size, msgsize, mpi_errno);
+#endif
             }
         }
         if (tree_type == MPIR_TREE_TYPE_KARY) {

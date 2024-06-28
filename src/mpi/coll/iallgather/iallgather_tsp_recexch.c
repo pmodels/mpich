@@ -172,9 +172,8 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int s
             phase++;
     }
 
-    *nrecvs_ = nrecvs;
-
   fn_exit:
+    *nrecvs_ = nrecvs;
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
