@@ -109,6 +109,11 @@ int MPIR_Threadcomm_free_impl(MPIR_Comm * comm)
 
         if (p->tid > 0) {
             goto fn_exit;
+        } else {
+            /* wait for everyone else to leave before deleting threadcomm */
+            int P = threadcomm->num_threads;
+            while (MPL_atomic_load_int(&threadcomm->leave_counter) < P) {
+            }
         }
     }
 
