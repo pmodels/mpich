@@ -17,7 +17,7 @@
  * group.
  */
 
-int MPIR_Barrier_inter_bcast(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+int MPIR_Barrier_inter_bcast(MPIR_Comm * comm_ptr)
 {
     int rank, mpi_errno = MPI_SUCCESS, root;
     int mpi_errno_ret = MPI_SUCCESS;

@@ -41,8 +41,7 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
                                 void *recvbuf,
                                 const MPI_Aint * recvcounts,
                                 const MPI_Aint * displs,
-                                MPI_Datatype recvtype,
-                                int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;

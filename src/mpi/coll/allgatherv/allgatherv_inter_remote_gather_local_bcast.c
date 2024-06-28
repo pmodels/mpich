@@ -19,7 +19,7 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Ain
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     const MPI_Aint * recvcounts, const MPI_Aint
                                                     * displs, MPI_Datatype recvtype,
-                                                    MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                    MPIR_Comm * comm_ptr)
 {
     int remote_size, mpi_errno, root, rank;
     int mpi_errno_ret = MPI_SUCCESS;

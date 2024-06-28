@@ -6,14 +6,14 @@
 #ifndef SHM_AM_FALLBACK_COLL_H_INCLUDED
 #define SHM_AM_FALLBACK_COLL_H_INCLUDED
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm_ptr)
 {
     return MPIR_Barrier_impl(comm_ptr, errflag);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bcast(void *buffer, MPI_Aint count,
                                                  MPI_Datatype datatype, int root,
-                                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                 MPIR_Comm * comm_ptr)
 {
     return MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
 }
@@ -29,7 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allreduce(const void *sendbuf, void *
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allgather(const void *sendbuf, MPI_Aint sendcount,
                                                      MPI_Datatype sendtype, void *recvbuf,
                                                      MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                     MPIR_Comm * comm_ptr)
 {
     return MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf,
                                recvcount, recvtype, comm_ptr, errflag);
@@ -82,7 +82,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scatterv(const void *sendbuf,
                                                     const MPI_Aint * displs, MPI_Datatype sendtype,
                                                     void *recvbuf, MPI_Aint recvcount,
                                                     MPI_Datatype recvtype, int root,
-                                                    MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                    MPIR_Comm * comm_ptr)
 {
     return MPIR_Scatterv_impl(sendbuf, sendcounts, displs, sendtype,
                               recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
@@ -91,7 +91,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scatterv(const void *sendbuf,
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoall(const void *sendbuf, MPI_Aint sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                    MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                    MPIR_Comm * comm_ptr)
 {
     return MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf,
                               recvcount, recvtype, comm_ptr, errflag);
@@ -117,7 +117,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoallw(const void *sendbuf,
                                                      const MPI_Aint recvcounts[],
                                                      const MPI_Aint rdispls[],
                                                      const MPI_Datatype recvtypes[],
-                                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                     MPIR_Comm * comm_ptr)
 {
     return MPIR_Alltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes,
                                recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, errflag);
@@ -152,14 +152,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter_block(const void *send
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scan(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                                 MPI_Datatype datatype, MPI_Op op,
-                                                MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                MPIR_Comm * comm_ptr)
 {
     return MPIR_Scan_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_exscan(const void *sendbuf, void *recvbuf,
                                                   MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
-                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                  MPIR_Comm * comm_ptr)
 {
     return MPIR_Exscan_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
 }

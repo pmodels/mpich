@@ -23,7 +23,7 @@ int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint s
                                            const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                            void *recvbuf, const MPI_Aint recvcounts[],
                                            const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                           MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                           MPIR_Comm * comm_ptr)
 {
     int local_size, remote_size, max_size, i;
     int mpi_errno = MPI_SUCCESS;

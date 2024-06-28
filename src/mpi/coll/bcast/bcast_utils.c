@@ -20,8 +20,7 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                            MPI_Aint count ATTRIBUTE((unused)),
                            MPI_Datatype datatype ATTRIBUTE((unused)),
                            int root,
-                           MPIR_Comm * comm_ptr,
-                           MPI_Aint nbytes, void *tmp_buf, int is_contig, MPIR_Errflag_t errflag)
+                           MPIR_Comm * comm_ptr, MPI_Aint nbytes, void *tmp_buf, int is_contig)
 {
     MPI_Status status;
     int rank, comm_size, src, dst;

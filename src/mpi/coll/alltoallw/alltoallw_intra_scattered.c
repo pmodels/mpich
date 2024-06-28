@@ -23,7 +23,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                                    const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                    void *recvbuf, const MPI_Aint recvcounts[],
                                    const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                   MPIR_Comm * comm_ptr)
 {
     int comm_size, i;
     int mpi_errno = MPI_SUCCESS;

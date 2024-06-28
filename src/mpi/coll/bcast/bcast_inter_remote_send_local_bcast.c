@@ -13,8 +13,7 @@
 
 int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
                                              MPI_Aint count,
-                                             MPI_Datatype datatype,
-                                             int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                             MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr)
 {
     int rank, mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;

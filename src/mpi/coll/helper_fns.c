@@ -127,7 +127,7 @@ int MPIC_Wait(MPIR_Request * request_ptr)
    this is OK since there is no data that can be received corrupted. */
 
 int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-              MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+              MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -216,7 +216,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
 }
 
 int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+               MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -260,7 +260,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                   int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                   MPI_Datatype recvtype, int source, int recvtag,
-                  MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t errflag)
+                  MPIR_Comm * comm_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -338,8 +338,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
  * equivalent inline because of the overhead of the repeated malloc/free */
 int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
                           int dest, int sendtag,
-                          int source, int recvtag,
-                          MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t errflag)
+                          int source, int recvtag, MPIR_Comm * comm_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Status mystatus;
@@ -442,7 +441,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
 }
 
 int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-               MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t errflag)
+               MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -476,7 +475,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 }
 
 int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t errflag)
+                MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;

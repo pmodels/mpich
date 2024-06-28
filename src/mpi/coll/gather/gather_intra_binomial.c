@@ -39,7 +39,7 @@ cvars:
  */
 int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                               MPIR_Comm * comm_ptr)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;

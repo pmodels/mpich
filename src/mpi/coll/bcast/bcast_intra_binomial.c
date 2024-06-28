@@ -11,9 +11,7 @@
  * Cost = lgp.alpha + n.lgp.beta
  */
 int MPIR_Bcast_intra_binomial(void *buffer,
-                              MPI_Aint count,
-                              MPI_Datatype datatype,
-                              int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                              MPI_Aint count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr)
 {
     int rank, comm_size, src, dst;
     int relative_rank, mask;

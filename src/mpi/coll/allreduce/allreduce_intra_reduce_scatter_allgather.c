@@ -42,8 +42,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
                                                   void *recvbuf,
                                                   MPI_Aint count,
                                                   MPI_Datatype datatype,
-                                                  MPI_Op op,
-                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                  MPI_Op op, MPIR_Comm * comm_ptr)
 {
     MPIR_CHKLMEM_DECL(3);
     int comm_size, rank;

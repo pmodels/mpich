@@ -23,9 +23,7 @@
 int MPIR_Reduce_scatter_block_intra_pairwise(const void *sendbuf,
                                              void *recvbuf,
                                              MPI_Aint recvcount,
-                                             MPI_Datatype datatype,
-                                             MPI_Op op,
-                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;

@@ -137,7 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_allcomm_composition_json(MPIR_Comm * 
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -231,7 +231,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                        int root, MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                                        int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -595,7 +595,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
 MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendcount,
                                             MPI_Datatype sendtype, void *recvbuf,
                                             MPI_Aint recvcount, MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                                            MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size;
@@ -771,7 +771,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
 MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint * sendcounts,
                                            const MPI_Aint * displs, MPI_Datatype sendtype,
                                            void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                           int root, MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                                           int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
@@ -1091,7 +1091,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
                                             const MPI_Aint * sdispls, MPI_Datatype sendtype,
                                             void *recvbuf, const MPI_Aint * recvcounts,
                                             const MPI_Aint * rdispls, MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                                            MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
@@ -1257,7 +1257,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_allcomm_composition_json(const void *s
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
                                          MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
-                                         int root, MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                                         int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 

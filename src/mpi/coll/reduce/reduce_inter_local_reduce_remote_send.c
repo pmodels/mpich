@@ -17,9 +17,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
                                                void *recvbuf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
-                                               MPI_Op op,
-                                               int root,
-                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                               MPI_Op op, int root, MPIR_Comm * comm_ptr)
 {
     int rank, mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;

@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
                                                  int context_offset, MPIDI_av_entry_t * addr,
                                                  MPIDI_IPCI_ipc_attr_t ipc_attr,
                                                  int vci_src, int vci_dst, MPIR_Request ** request,
-                                                 bool syncflag, MPIR_Errflag_t errflag)
+                                                 bool syncflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;

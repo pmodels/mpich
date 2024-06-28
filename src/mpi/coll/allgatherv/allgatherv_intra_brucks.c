@@ -22,8 +22,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                  void *recvbuf,
                                  const MPI_Aint * recvcounts,
                                  const MPI_Aint * displs,
-                                 MPI_Datatype recvtype,
-                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                 MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
 {
     int comm_size, rank, j, i;
     int mpi_errno = MPI_SUCCESS;
