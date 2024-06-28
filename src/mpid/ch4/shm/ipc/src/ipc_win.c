@@ -92,7 +92,12 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         mpi_errno = MPIDI_GPU_get_ipc_attr(win->base, win->size, MPI_BYTE,
                                            MPI_PROC_NULL, shm_comm_ptr, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
-        done = (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE);
+        if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__SKIP) {
+            ipc_attr.ipc_type = MPIDI_IPCI_TYPE__NONE;
+            done = true;
+        } else {
+            done = (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE);
+        }
     }
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM

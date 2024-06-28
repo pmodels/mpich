@@ -73,14 +73,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     if (!do_ipc) {
         mpi_errno = MPIDI_GPU_get_ipc_attr(buf, count, datatype, rank, comm, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
-        if (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE) {
-            do_ipc = true;
-        } else {
+        if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__SKIP) {
             /* GPU IPC is not supported but it is still a device memory,
              * we can't do shared memory IPC either, so skip to fn_exit. */
-            if (MPL_gpu_query_pointer_is_dev(buf, &ipc_attr.u.gpu.gpu_attr)) {
-                goto fn_exit;
-            }
+            goto fn_exit;
+        }
+        if (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE) {
+            do_ipc = true;
         }
     }
 #endif
