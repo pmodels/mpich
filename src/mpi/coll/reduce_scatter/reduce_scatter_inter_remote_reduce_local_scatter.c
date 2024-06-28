@@ -15,8 +15,7 @@
 int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, void *recvbuf,
                                                           const MPI_Aint recvcounts[],
                                                           MPI_Datatype datatype, MPI_Op op,
-                                                          MPIR_Comm * comm_ptr,
-                                                          MPIR_Errflag_t errflag)
+                                                          MPIR_Comm * comm_ptr)
 {
     int rank, mpi_errno, root, local_size, total_count, i;
     int mpi_errno_ret = MPI_SUCCESS;

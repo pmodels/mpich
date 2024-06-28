@@ -28,9 +28,7 @@
 int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                                                           MPI_Aint count,
                                                           MPI_Datatype datatype,
-                                                          int root,
-                                                          MPIR_Comm * comm_ptr,
-                                                          MPIR_Errflag_t errflag)
+                                                          int root, MPIR_Comm * comm_ptr)
 {
     MPI_Status status;
     int rank, comm_size, dst;

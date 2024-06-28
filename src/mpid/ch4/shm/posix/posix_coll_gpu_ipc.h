@@ -65,8 +65,7 @@ cvars:
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
                                                                 MPI_Aint count,
                                                                 MPI_Datatype datatype,
-                                                                int root, MPIR_Comm * comm_ptr,
-                                                                MPIR_Errflag_t errflag)
+                                                                int root, MPIR_Comm * comm_ptr)
 {
     MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL(1);
@@ -170,8 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
                                                                    void *recvbuf,
                                                                    MPI_Aint recvcount,
                                                                    MPI_Datatype recvtype,
-                                                                   MPIR_Comm * comm_ptr,
-                                                                   MPIR_Errflag_t errflag)
+                                                                   MPIR_Comm * comm_ptr)
 {
     MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL(3);
@@ -299,8 +297,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
                                                                     void *recvbuf,
                                                                     MPI_Aint recvcount,
                                                                     MPI_Datatype recvtype,
-                                                                    MPIR_Comm * comm_ptr,
-                                                                    MPIR_Errflag_t errflag)
+                                                                    MPIR_Comm * comm_ptr)
 {
     MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL(3);
@@ -429,8 +426,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
                                                                      const MPI_Aint * recvcounts,
                                                                      const MPI_Aint * displs,
                                                                      MPI_Datatype recvtype,
-                                                                     MPIR_Comm * comm_ptr,
-                                                                     MPIR_Errflag_t errflag)
+                                                                     MPIR_Comm * comm_ptr)
 {
     MPIR_FUNC_ENTER;
     MPIR_CHKLMEM_DECL(3);

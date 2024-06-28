@@ -38,8 +38,7 @@ cvars:
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
                                                                   MPI_Aint count,
                                                                   MPI_Datatype datatype,
-                                                                  int root, MPIR_Comm * comm_ptr,
-                                                                  MPIR_Errflag_t errflag)
+                                                                  int root, MPIR_Comm * comm_ptr)
 {
     MPIR_FUNC_ENTER;
 
@@ -167,8 +166,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
                                                                    void *recvbuf, MPI_Aint count,
                                                                    MPI_Datatype datatype,
                                                                    MPI_Op op, int root,
-                                                                   MPIR_Comm * comm_ptr,
-                                                                   MPIR_Errflag_t errflag)
+                                                                   MPIR_Comm * comm_ptr)
 {
     int i;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
@@ -265,8 +263,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
                                                                       MPI_Aint count,
                                                                       MPI_Datatype datatype,
                                                                       MPI_Op op,
-                                                                      MPIR_Comm * comm_ptr,
-                                                                      MPIR_Errflag_t errflag)
+                                                                      MPIR_Comm * comm_ptr)
 {
     int i;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
@@ -354,8 +351,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
 /* Intra-node barrier is implemented as a gather step followed by a release step in release_gather
  * framework.
  */
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * comm_ptr,
-                                                                    MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
 

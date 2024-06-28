@@ -17,8 +17,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                                  void *recvbuf,
                                  MPI_Aint count,
                                  MPI_Datatype datatype,
-                                 MPI_Op op, MPIR_Comm * comm, int k, int single_phase_recv,
-                                 MPIR_Errflag_t errflag)
+                                 MPI_Op op, MPIR_Comm * comm, int k, int single_phase_recv)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     int is_commutative, rank, nranks, nbr, myidx;

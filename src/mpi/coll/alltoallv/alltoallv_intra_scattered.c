@@ -24,8 +24,7 @@
 int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcounts,
                                    const MPI_Aint * sdispls, MPI_Datatype sendtype, void *recvbuf,
                                    const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
-                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                   MPIR_Errflag_t errflag)
+                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
 {
     int comm_size, i;
     MPI_Aint send_extent, recv_extent;

@@ -19,8 +19,7 @@
  */
 int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
                                                  const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                                 MPI_Op op, MPIR_Comm * comm_ptr,
-                                                 MPIR_Errflag_t errflag)
+                                                 MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;

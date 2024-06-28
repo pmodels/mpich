@@ -162,8 +162,7 @@ static void MPIDI_Coll_calculate_size_shift(MPI_Aint count, MPI_Datatype datatyp
     }
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * comm,
-                                                                   MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -201,8 +200,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * comm,
-                                                                  MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -217,8 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * co
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, MPI_Aint count,
                                                                  MPI_Datatype datatype,
-                                                                 int root, MPIR_Comm * comm,
-                                                                 MPIR_Errflag_t errflag)
+                                                                 int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     void *host_buffer = NULL;
@@ -309,8 +306,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, MPI_Aint count,
                                                                 MPI_Datatype datatype,
-                                                                int root, MPIR_Comm * comm,
-                                                                MPIR_Errflag_t errflag)
+                                                                int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     void *host_buffer = NULL;
@@ -375,8 +371,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, MP
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, MPI_Aint count,
                                                                  MPI_Datatype datatype,
-                                                                 int root, MPIR_Comm * comm,
-                                                                 MPIR_Errflag_t errflag)
+                                                                 int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     void *host_buffer = NULL;
@@ -426,8 +421,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, M
 */
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, MPI_Aint count,
                                                                  MPI_Datatype datatype,
-                                                                 int root, MPIR_Comm * comm,
-                                                                 MPIR_Errflag_t errflag)
+                                                                 int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     void *host_buffer = NULL;
@@ -524,9 +518,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, M
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void *sendbuf,
                                                                      void *recvbuf, MPI_Aint count,
                                                                      MPI_Datatype datatype,
-                                                                     MPI_Op op,
-                                                                     MPIR_Comm * comm,
-                                                                     MPIR_Errflag_t errflag)
+                                                                     MPI_Op op, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     void *in_recvbuf = recvbuf;
@@ -615,9 +607,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *sendbuf,
                                                                     void *recvbuf, MPI_Aint count,
                                                                     MPI_Datatype datatype,
-                                                                    MPI_Op op,
-                                                                    MPIR_Comm * comm,
-                                                                    MPIR_Errflag_t errflag)
+                                                                    MPI_Op op, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     void *in_recvbuf = recvbuf;
@@ -664,9 +654,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void *sendbuf,
                                                                      void *recvbuf, MPI_Aint count,
                                                                      MPI_Datatype datatype,
-                                                                     MPI_Op op,
-                                                                     MPIR_Comm * comm,
-                                                                     MPIR_Errflag_t errflag)
+                                                                     MPI_Op op, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     void *in_recvbuf = recvbuf;
@@ -725,8 +713,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_delta(const void 
                                                                      MPI_Datatype datatype,
                                                                      MPI_Op op,
                                                                      int num_leads,
-                                                                     MPIR_Comm * comm_ptr,
-                                                                     MPIR_Errflag_t errflag)
+                                                                     MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     char *shm_addr;
@@ -921,8 +908,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
                                                                   void *recvbuf, MPI_Aint count,
                                                                   MPI_Datatype datatype,
                                                                   MPI_Op op, int root,
-                                                                  MPIR_Comm * comm,
-                                                                  MPIR_Errflag_t errflag)
+                                                                  MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint true_lb = 0;
@@ -1004,8 +990,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
                                                                  void *recvbuf, MPI_Aint count,
                                                                  MPI_Datatype datatype,
                                                                  MPI_Op op, int root,
-                                                                 MPIR_Comm * comm,
-                                                                 MPIR_Errflag_t errflag)
+                                                                 MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint true_lb = 0;
@@ -1103,8 +1088,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_gamma(const void *se
                                                                   void *recvbuf, MPI_Aint count,
                                                                   MPI_Datatype datatype,
                                                                   MPI_Op op, int root,
-                                                                  MPIR_Comm * comm,
-                                                                  MPIR_Errflag_t errflag)
+                                                                  MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1126,8 +1110,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
                                                                     void *recvbuf,
                                                                     int recvcount,
                                                                     MPI_Datatype recvtype,
-                                                                    MPIR_Comm * comm_ptr,
-                                                                    MPIR_Errflag_t errflag)
+                                                                    MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int num_nodes;
@@ -1231,8 +1214,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_beta(const void *s
                                                                    void *recvbuf,
                                                                    MPI_Aint recvcount,
                                                                    MPI_Datatype recvtype,
-                                                                   MPIR_Comm * comm_ptr,
-                                                                   MPIR_Errflag_t errflag)
+                                                                   MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int node_comm_size = 0;
@@ -1273,8 +1255,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_composition_alpha(const void 
                                                                      const MPI_Aint * recvcounts,
                                                                      const MPI_Aint * rdispls,
                                                                      MPI_Datatype recvtype,
-                                                                     MPIR_Comm * comm_ptr,
-                                                                     MPIR_Errflag_t errflag)
+                                                                     MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1299,8 +1280,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_composition_alpha(const void 
                                                                      const MPI_Aint rdispls[],
                                                                      const MPI_Datatype
                                                                      recvtypes[],
-                                                                     MPIR_Comm * comm_ptr,
-                                                                     MPIR_Errflag_t errflag)
+                                                                     MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1321,8 +1301,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_alpha(const void 
                                                                      void *recvbuf,
                                                                      int recvcount,
                                                                      MPI_Datatype recvtype,
-                                                                     MPIR_Comm * comm_ptr,
-                                                                     MPIR_Errflag_t errflag)
+                                                                     MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int node_comm_size = MPIR_Comm_size(comm_ptr->node_comm);
@@ -1418,8 +1397,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_composition_beta(const void *
                                                                     void *recvbuf,
                                                                     MPI_Aint recvcount,
                                                                     MPI_Datatype recvtype,
-                                                                    MPIR_Comm * comm_ptr,
-                                                                    MPIR_Errflag_t errflag)
+                                                                    MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int node_comm_size = 0;
@@ -1459,8 +1437,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_composition_alpha(const void
                                                                       const MPI_Aint * recvcounts,
                                                                       const MPI_Aint * displs,
                                                                       MPI_Datatype recvtype,
-                                                                      MPIR_Comm * comm_ptr,
-                                                                      MPIR_Errflag_t errflag)
+                                                                      MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int node_comm_size = 0;
@@ -1498,8 +1475,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_intra_composition_alpha(const void *se
                                                                   MPI_Datatype sendtype,
                                                                   void *recvbuf, MPI_Aint recvcount,
                                                                   MPI_Datatype recvtype,
-                                                                  int root, MPIR_Comm * comm,
-                                                                  MPIR_Errflag_t errflag)
+                                                                  int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1520,8 +1496,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intra_composition_alpha(const void *s
                                                                    const MPI_Aint * recvcounts,
                                                                    const MPI_Aint * displs,
                                                                    MPI_Datatype recvtype,
-                                                                   int root, MPIR_Comm * comm,
-                                                                   MPIR_Errflag_t errflag)
+                                                                   int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1542,8 +1517,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_composition_alpha(const void *s
                                                                    void *recvbuf,
                                                                    MPI_Aint recvcount,
                                                                    MPI_Datatype recvtype,
-                                                                   int root, MPIR_Comm * comm,
-                                                                   MPIR_Errflag_t errflag)
+                                                                   int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1565,8 +1539,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *
                                                                     void *recvbuf,
                                                                     MPI_Aint recvcount,
                                                                     MPI_Datatype recvtype,
-                                                                    int root, MPIR_Comm * comm,
-                                                                    MPIR_Errflag_t errflag)
+                                                                    int root, MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1587,8 +1560,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_composition_alpha(const 
                                                                           recvcounts[],
                                                                           MPI_Datatype
                                                                           datatype, MPI_Op op,
-                                                                          MPIR_Comm * comm_ptr,
-                                                                          MPIR_Errflag_t errflag)
+                                                                          MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1627,9 +1599,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                                                                 void *recvbuf,
                                                                 MPI_Aint count,
                                                                 MPI_Datatype datatype,
-                                                                MPI_Op op,
-                                                                MPIR_Comm * comm_ptr,
-                                                                MPIR_Errflag_t errflag)
+                                                                MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = comm_ptr->rank;
@@ -1764,9 +1734,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_beta(const void *sendb
                                                                void *recvbuf,
                                                                MPI_Aint count,
                                                                MPI_Datatype datatype,
-                                                               MPI_Op op,
-                                                               MPIR_Comm * comm_ptr,
-                                                               MPIR_Errflag_t errflag)
+                                                               MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1783,9 +1751,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Exscan_intra_composition_alpha(const void *se
                                                                   void *recvbuf,
                                                                   MPI_Aint count,
                                                                   MPI_Datatype datatype,
-                                                                  MPI_Op op,
-                                                                  MPIR_Comm * comm_ptr,
-                                                                  MPIR_Errflag_t errflag)
+                                                                  MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 

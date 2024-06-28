@@ -29,8 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                                int root, MPIR_Comm * comm_ptr,
-                                                MPIR_Errflag_t errflag)
+                                                int root, MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
@@ -49,8 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MP
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf,
                                                     MPI_Aint count, MPI_Datatype datatype,
-                                                    MPI_Op op, MPIR_Comm * comm_ptr,
-                                                    MPIR_Errflag_t errflag)
+                                                    MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
@@ -108,8 +106,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allgatherv(const void *sendbuf, MPI_Ai
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_gather(const void *sendbuf, MPI_Aint sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                 int root, MPIR_Comm * comm_ptr,
-                                                 MPIR_Errflag_t errflag)
+                                                 int root, MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
@@ -125,8 +122,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_gatherv(const void *sendbuf, MPI_Aint 
                                                   MPI_Datatype sendtype, void *recvbuf,
                                                   const MPI_Aint * recvcounts,
                                                   const MPI_Aint * displs, MPI_Datatype recvtype,
-                                                  int root, MPIR_Comm * comm_ptr,
-                                                  MPIR_Errflag_t errflag)
+                                                  int root, MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
@@ -141,8 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_gatherv(const void *sendbuf, MPI_Aint 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_scatter(const void *sendbuf, MPI_Aint sendcount,
                                                   MPI_Datatype sendtype, void *recvbuf,
                                                   MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                  int root, MPIR_Comm * comm_ptr,
-                                                  MPIR_Errflag_t errflag)
+                                                  int root, MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
@@ -255,8 +250,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recv
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf,
                                                          const MPI_Aint recvcounts[],
                                                          MPI_Datatype datatype, MPI_Op op,
-                                                         MPIR_Comm * comm_ptr,
-                                                         MPIR_Errflag_t errflag)
+                                                         MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
@@ -271,8 +265,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, vo
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                                MPI_Aint recvcount,
                                                                MPI_Datatype datatype, MPI_Op op,
-                                                               MPIR_Comm * comm_ptr,
-                                                               MPIR_Errflag_t errflag)
+                                                               MPIR_Comm * comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_ENTER;
