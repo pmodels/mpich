@@ -6,11 +6,9 @@
 #include "mpiimpl.h"
 
 int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                          MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
-                          MPIR_Errflag_t errflag)
+                          MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     void *tmp_buf = NULL;
     MPI_Aint true_lb, true_extent, extent;
     MPIR_CHKLMEM_DECL(1);
@@ -37,9 +35,8 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
     /* do the intranode reduce on all nodes other than the root's node */
     if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) == -1) {
-        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype,
-                                op, 0, comm_ptr->node_comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, comm_ptr->node_comm);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* do the internode reduce to the root's node */
@@ -50,8 +47,8 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
             const void *buf = (comm_ptr->node_comm == NULL ? sendbuf : tmp_buf);
             mpi_errno = MPIR_Reduce(buf, NULL, count, datatype,
                                     op, MPIR_Get_internode_rank(comm_ptr, root),
-                                    comm_ptr->node_roots_comm, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                    comm_ptr->node_roots_comm);
+            MPIR_ERR_CHECK(mpi_errno);
         } else {        /* I am on root's node. I have not participated in the earlier reduce. */
             if (comm_ptr->rank != root) {
                 /* I am not the root though. I don't have a valid recvbuf.
@@ -59,8 +56,8 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
                 mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype,
                                         op, MPIR_Get_internode_rank(comm_ptr, root),
-                                        comm_ptr->node_roots_comm, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                        comm_ptr->node_roots_comm);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 /* point sendbuf at tmp_buf to make final intranode reduce easy */
                 sendbuf = tmp_buf;
@@ -69,8 +66,8 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
                 mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype,
                                         op, MPIR_Get_internode_rank(comm_ptr, root),
-                                        comm_ptr->node_roots_comm, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                        comm_ptr->node_roots_comm);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 /* set sendbuf to MPI_IN_PLACE to make final intranode reduce easy. */
                 sendbuf = MPI_IN_PLACE;
@@ -82,15 +79,13 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     /* do the intranode reduce on the root's node */
     if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) != -1) {
         mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype,
-                                op, MPIR_Get_intranode_rank(comm_ptr, root),
-                                comm_ptr->node_comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                op, MPIR_Get_intranode_rank(comm_ptr, root), comm_ptr->node_comm);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

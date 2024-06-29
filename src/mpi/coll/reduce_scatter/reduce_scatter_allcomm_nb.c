@@ -6,8 +6,7 @@
 #include "mpiimpl.h"
 
 int MPIR_Reduce_scatter_allcomm_nb(const void *sendbuf, void *recvbuf, const MPI_Aint recvcounts[],
-                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                   MPIR_Errflag_t errflag)
+                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req_ptr = NULL;

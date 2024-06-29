@@ -23,11 +23,10 @@ int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint s
                                            const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                            void *recvbuf, const MPI_Aint recvcounts[],
                                            const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                           MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                           MPIR_Comm * comm_ptr)
 {
     int local_size, remote_size, max_size, i;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     int src, dst, rank;
     char *sendaddr, *recvaddr;
@@ -66,9 +65,12 @@ int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint s
 
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype,
                                   dst, MPIR_ALLTOALLW_TAG, recvaddr,
-                                  recvcount, recvtype, src,
-                                  MPIR_ALLTOALLW_TAG, comm_ptr, &status, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                  recvcount, recvtype, src, MPIR_ALLTOALLW_TAG, comm_ptr, &status);
+        MPIR_ERR_CHECK(mpi_errno);
     }
-    return mpi_errno_ret;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

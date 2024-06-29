@@ -22,12 +22,11 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
                                                    const MPI_Aint * sdispls, MPI_Datatype sendtype,
                                                    void *recvbuf, const MPI_Aint * recvcounts,
                                                    const MPI_Aint * rdispls, MPI_Datatype recvtype,
-                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                   MPIR_Comm * comm_ptr)
 {
     int comm_size, i, j;
     MPI_Aint recv_extent;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     int rank;
 
@@ -58,21 +57,23 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
                 mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[j] * recv_extent),
                                                   recvcounts[j], recvtype,
                                                   j, MPIR_ALLTOALLV_TAG,
-                                                  j, MPIR_ALLTOALLV_TAG,
-                                                  comm_ptr, &status, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                                  j, MPIR_ALLTOALLV_TAG, comm_ptr, &status);
+                MPIR_ERR_CHECK(mpi_errno);
 
             } else if (rank == j) {
                 /* same as above with i/j args reversed */
                 mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[i] * recv_extent),
                                                   recvcounts[i], recvtype,
                                                   i, MPIR_ALLTOALLV_TAG,
-                                                  i, MPIR_ALLTOALLV_TAG,
-                                                  comm_ptr, &status, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                                  i, MPIR_ALLTOALLV_TAG, comm_ptr, &status);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
 
-    return mpi_errno_ret;
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

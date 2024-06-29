@@ -611,8 +611,7 @@ static void allreduce_enqueue_cb(void *data)
         }
     }
 
-    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, p->count, p->datatype, p->op, p->comm_ptr,
-                               MPIR_ERR_NONE);
+    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, p->count, p->datatype, p->op, p->comm_ptr);
     MPIR_Assertp(mpi_errno == MPI_SUCCESS);
 
     if (p->host_recvbuf) {

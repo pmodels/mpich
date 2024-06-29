@@ -39,14 +39,12 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
                                                       void *recvbuf,
                                                       MPI_Aint recvcount,
                                                       MPI_Datatype datatype,
-                                                      MPI_Op op,
-                                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                      MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
     void *tmp_recvbuf, *tmp_results;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int dst;
     int mask;
     int rem, newdst, send_idx, recv_idx, last_idx;
@@ -114,9 +112,8 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
     if (rank < 2 * rem) {
         if (rank % 2 == 0) {    /* even */
             mpi_errno = MPIC_Send(tmp_results, total_count,
-                                  datatype, rank + 1,
-                                  MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                  datatype, rank + 1, MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* temporarily set the rank to -1 so that this
              * process does not pariticipate in recursive
@@ -126,7 +123,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
             mpi_errno = MPIC_Recv(tmp_recvbuf, total_count,
                                   datatype, rank - 1,
                                   MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, MPI_STATUS_IGNORE);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* do the reduction on received data. since the
              * ordering is right, it doesn't matter whether
@@ -204,7 +201,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
                                           newdisps[recv_idx] * extent,
                                           recv_cnt, datatype, dst,
                                           MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr,
-                                          MPI_STATUS_IGNORE, errflag);
+                                          MPI_STATUS_IGNORE);
             else if ((send_cnt == 0) && (recv_cnt != 0))
                 mpi_errno = MPIC_Recv((char *) tmp_recvbuf +
                                       newdisps[recv_idx] * extent,
@@ -214,9 +211,9 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
                 mpi_errno = MPIC_Send((char *) tmp_results +
                                       newdisps[send_idx] * extent,
                                       send_cnt, datatype,
-                                      dst, MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, errflag);
+                                      dst, MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr);
 
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* tmp_recvbuf contains data received in this step.
              * tmp_results contains data accumulated so far */
@@ -248,20 +245,18 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
         if (rank % 2) { /* odd */
             mpi_errno = MPIC_Send((char *) tmp_results +
                                   disps[rank - 1] * extent, recvcount,
-                                  datatype, rank - 1,
-                                  MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, errflag);
+                                  datatype, rank - 1, MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr);
         } else {        /* even */
             mpi_errno = MPIC_Recv(recvbuf, recvcount,
                                   datatype, rank + 1,
                                   MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, MPI_STATUS_IGNORE);
         }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

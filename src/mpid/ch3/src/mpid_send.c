@@ -31,17 +31,6 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
     MPIR_FUNC_ENTER;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    int errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
-
-    switch (errflag) {
-        case MPIR_ERR_NONE:
-            break;
-        case MPIR_ERR_PROC_FAILED:
-            MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
-            break;
-        default:
-            MPIR_TAG_SET_ERROR_BIT(tag);
-    }
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                 "rank=%d, tag=%d, context=%d", 

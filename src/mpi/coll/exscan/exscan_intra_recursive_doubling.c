@@ -47,13 +47,11 @@
 int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
                                          void *recvbuf,
                                          MPI_Aint count,
-                                         MPI_Datatype datatype,
-                                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                         MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr)
 {
     MPI_Status status;
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int mask, dst, is_commutative, flag;
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
@@ -92,9 +90,8 @@ int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
             /* Send partial_scan to dst. Recv into tmp_buf */
             mpi_errno = MPIC_Sendrecv(partial_scan, count, datatype,
                                       dst, MPIR_EXSCAN_TAG, tmp_buf,
-                                      count, datatype, dst,
-                                      MPIR_EXSCAN_TAG, comm_ptr, &status, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                      count, datatype, dst, MPIR_EXSCAN_TAG, comm_ptr, &status);
+            MPIR_ERR_CHECK(mpi_errno);
 
             if (rank > dst) {
                 mpi_errno = MPIR_Reduce_local(tmp_buf, partial_scan, count, datatype, op);
@@ -138,8 +135,7 @@ int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

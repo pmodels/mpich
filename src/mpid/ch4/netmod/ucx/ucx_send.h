@@ -133,17 +133,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
     int vci_src, vci_dst;
     MPIDI_UCX_SEND_VNIS(vci_src, vci_dst);
 
-    MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
-    switch (errflag) {
-        case MPIR_ERR_NONE:
-            break;
-        case MPIR_ERR_PROC_FAILED:
-            MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
-            break;
-        default:
-            MPIR_TAG_SET_ERROR_BIT(tag);
-    }
-
     MPIDI_UCX_THREAD_CS_ENTER_VCI(vci_src);
     mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
                                addr, request, vci_src, vci_dst, 1, is_sync);

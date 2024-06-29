@@ -121,7 +121,7 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_grou
         for (i = 1; i < comm_ptr->local_size; i++) {
             /* Send the list to each rank to be processed locally */
             ret_errno = MPIC_Send(bitarray, bitarray_size, MPI_INT, i,
-                tag, comm_ptr, MPIR_ERR_NONE);
+                tag, comm_ptr);
             if (ret_errno) continue;
         }
 
@@ -130,7 +130,7 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_grou
     } else {
         /* Send my bitarray to rank 0 */
         mpi_errno = MPIC_Send(bitarray, bitarray_size, MPI_INT, 0,
-            tag, comm_ptr, MPIR_ERR_NONE);
+            tag, comm_ptr);
 
         /* Get the resulting bitarray back from rank 0 */
         mpi_errno = MPIC_Recv(remote_bitarray, bitarray_size, MPI_INT, 0,

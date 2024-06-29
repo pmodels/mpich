@@ -15,14 +15,13 @@
  */
 int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
                                        const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                       MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                       MPI_Op op, MPIR_Comm * comm_ptr)
 {
     int rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb;
     MPI_Aint *disps;
     void *tmp_recvbuf;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int src, dst;
     MPIR_CHKLMEM_DECL(5);
 
@@ -82,17 +81,15 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
                                       recvcounts[dst], datatype, dst,
                                       MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
                                       recvcounts[rank], datatype, src,
-                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr,
-                                      MPI_STATUS_IGNORE, errflag);
+                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, MPI_STATUS_IGNORE);
         else
             mpi_errno = MPIC_Sendrecv(((char *) recvbuf + disps[dst] * extent),
                                       recvcounts[dst], datatype, dst,
                                       MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
                                       recvcounts[rank], datatype, src,
-                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr,
-                                      MPI_STATUS_IGNORE, errflag);
+                                      MPIR_REDUCE_SCATTER_TAG, comm_ptr, MPI_STATUS_IGNORE);
 
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (sendbuf != MPI_IN_PLACE) {
             mpi_errno = MPIR_Reduce_local(tmp_recvbuf, recvbuf, recvcounts[rank], datatype, op);
@@ -119,8 +116,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

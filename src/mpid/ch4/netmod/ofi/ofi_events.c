@@ -37,7 +37,7 @@ static int peek_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rre
         goto fn_exit;
     }
 
-    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc);
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
     rreq->status.MPI_ERROR = MPI_SUCCESS;
     MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
@@ -133,8 +133,8 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
     vci_local = MPIDI_OFI_REQUEST(rreq, pipeline_info.vci_local);
 
     if (event_id == MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT) {
-        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
-        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc);
+        rreq->status.MPI_ERROR = MPI_SUCCESS;
         rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
 
         if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
@@ -328,7 +328,7 @@ static int accept_probe_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
 {
     MPIR_FUNC_ENTER;
     MPIDI_OFI_dynamic_process_request_t *ctrl = (MPIDI_OFI_dynamic_process_request_t *) rreq;
-    ctrl->source = MPIDI_OFI_cqe_get_source(wc, false);
+    ctrl->source = MPIDI_OFI_cqe_get_source(wc);
     ctrl->tag = MPIDI_OFI_init_get_tag(wc->tag);
     ctrl->msglen = wc->len;
     ctrl->done = MPIDI_OFI_PEEK_FOUND;

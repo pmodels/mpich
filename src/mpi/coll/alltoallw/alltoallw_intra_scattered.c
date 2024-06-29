@@ -23,11 +23,10 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                                    const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                    void *recvbuf, const MPI_Aint recvcounts[],
                                    const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                   MPIR_Comm * comm_ptr)
 {
     int comm_size, i;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status *starray;
     MPIR_Request **reqarray;
     int dst, rank;
@@ -86,7 +85,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                     mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst],
                                            sendcounts[dst], sendtypes[dst], dst,
                                            MPIR_ALLTOALLW_TAG, comm_ptr,
-                                           &reqarray[outstanding_requests], errflag);
+                                           &reqarray[outstanding_requests]);
                     MPIR_ERR_CHECK(mpi_errno);
 
                     outstanding_requests++;
@@ -95,14 +94,14 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
         }
 
         mpi_errno = MPIC_Waitall(outstanding_requests, reqarray, starray);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {
             for (i = 0; i < outstanding_requests; i++) {
                 if (starray[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = starray[i].MPI_ERROR;
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
             }
         }
@@ -111,8 +110,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }
