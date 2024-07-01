@@ -8,6 +8,24 @@
 
 #include "ofi_impl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_INJECT
+      category    : DEVELOPER
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Set MPIR_CVAR_CH4_OFI_ENABLE_INJECT=0 to disable buffered send for small messages. This
+        may help avoid hang due to lack of global progress.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_send_engine_type(int cvar)
 {
     if (cvar == MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_compute) {
@@ -357,7 +375,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vci_remote);
-    if (data_sz <= MPIDI_OFI_global.max_buffered_send && !MPIDI_OFI_ENABLE_HMEM) {
+    if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && data_sz <= MPIDI_OFI_global.max_buffered_send &&
+        !MPIDI_OFI_ENABLE_HMEM) {
         if (MPIDI_OFI_ENABLE_DATA) {
             MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                                 send_buf, data_sz, cq_data, dest_addr, match_bits),
@@ -578,7 +597,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     void *send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPIR_GPU_query_pointer_attr(send_buf, &attr);
 
-    if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send))) {
+    if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag && dt_contig &&
+        (data_sz <= MPIDI_OFI_global.max_buffered_send)) {
         MPI_Aint actual_pack_bytes = 0;
         if (attr.type == MPL_GPU_POINTER_DEV && data_sz) {
             MPIDI_OFI_register_am_bufs();
