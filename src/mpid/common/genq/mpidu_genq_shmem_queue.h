@@ -188,6 +188,7 @@ static inline int MPIDU_genqi_nem_mpmc_dequeue(MPIDU_genqi_shmem_pool_s * pool_o
                     MPL_atomic_store_ptr(&queue->q.head.m, next_handle);
                 }
             }
+            break;
         }
     }
 

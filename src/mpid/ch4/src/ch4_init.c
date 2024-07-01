@@ -180,6 +180,17 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Specifies the total number of buffers for GPU collectives data transfer.
+
+    - name        : MPIR_CVAR_CH4_X_DISABLE_NETMOD_PROGRESS
+      category    : CH4_OFI
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Disable netmod progress after MPICH initialized.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 

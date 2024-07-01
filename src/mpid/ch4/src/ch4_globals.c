@@ -164,3 +164,16 @@ MPL_dbg_class MPIDI_CH4_DBG_MAP;
 MPL_dbg_class MPIDI_CH4_DBG_COMM;
 MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
 #endif
+
+bool mpidix_netmod_progress_disabled = false;
+
+void MPIDIX_disable_netmod_progress()
+{
+    if (MPIR_CVAR_CH4_X_DISABLE_NETMOD_PROGRESS) {
+        if (!mpidix_netmod_progress_disabled) {
+            if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__INITIALIZED) {
+                mpidix_netmod_progress_disabled = true;
+            }
+        }
+    }
+}

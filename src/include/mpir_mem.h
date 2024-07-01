@@ -84,10 +84,16 @@ extern "C" {
         memcpy((dst), (src), (len));            \
     } while (0)
 
-#define MPIR_Memcpy_stream(dst, src, len)       \
+#define MPIR_Memcpy_ntw(dst, src, len)          \
     do {                                        \
         CHECK_MEMCPY((dst),(src),(len));        \
-        MPL_Memcpy_stream((dst), (src), (len)); \
+        MPL_Memcpy_ntw((dst), (src), (len));    \
+    } while (0)
+
+#define MPIR_Memcpy_ntr(dst, src, len)          \
+    do {                                        \
+        CHECK_MEMCPY((dst),(src),(len));        \
+        MPL_Memcpy_ntr((dst), (src), (len));    \
     } while (0)
 
 /* Memory allocation macros. See document. */
