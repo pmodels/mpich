@@ -369,7 +369,7 @@ static HYD_status post_process(void)
         /* If hostname propagation is requested (or not set), set the
          * environment variable for doing that */
         if (HYD_ui_mpich_info.hostname_propagation || HYD_ui_mpich_info.hostname_propagation == -1)
-            HYD_server_info.iface_ip_env_name = MPL_strdup("MPIR_CVAR_CH3_INTERFACE_HOSTNAME");
+            HYD_server_info.iface_ip_env_name = MPL_strdup("PMI_HOSTNAME");
     }
 
   fn_exit:
