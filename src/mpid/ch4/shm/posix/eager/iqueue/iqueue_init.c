@@ -46,11 +46,21 @@ static int init_transport(int vci_src, int vci_dst)
     transport->num_cells = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NUM_CELLS;
     transport->size_of_cell = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE;
 
-    mpi_errno = MPIDU_genq_shmem_pool_create(transport->size_of_cell, transport->num_cells,
-                                             MPIDI_POSIX_global.num_local,
-                                             MPIDI_POSIX_global.my_local_rank,
-                                             &transport->cell_pool);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (MPIR_CVAR_GENQ_SHMEM_POOL_FREE_QUEUE_SENDER_SIDE) {
+        int queue_type = MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC;
+        mpi_errno = MPIDU_genq_shmem_pool_create(transport->size_of_cell, transport->num_cells,
+                                                 MPIDI_POSIX_global.num_local,
+                                                 MPIDI_POSIX_global.my_local_rank,
+                                                 1, &queue_type, &transport->cell_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        int queue_type = MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPMC;
+        mpi_errno = MPIDU_genq_shmem_pool_create(transport->size_of_cell, transport->num_cells,
+                                                 MPIDI_POSIX_global.num_local,
+                                                 MPIDI_POSIX_global.my_local_rank,
+                                                 1, &queue_type, &transport->cell_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     size_t size_of_terminals;
     /* Create one terminal for each process with which we will be able to communicate. */

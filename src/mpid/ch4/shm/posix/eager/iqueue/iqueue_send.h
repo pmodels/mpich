@@ -55,10 +55,14 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
     /* Try to get a new cell to hold the message */
     /* Select the appropriate pool depending on whether we are using sender-side or receiver-side
      * queuing. */
-    MPIDU_genq_shmem_pool_cell_alloc(transport->cell_pool, (void **) &cell,
-                                     MPIR_CVAR_GENQ_SHMEM_POOL_FREE_QUEUE_SENDER_SIDE ?
-                                     MPIR_Process.local_rank :
-                                     MPIDI_POSIX_global.local_ranks[grank], buf);
+    if (MPIR_CVAR_GENQ_SHMEM_POOL_FREE_QUEUE_SENDER_SIDE) {
+        MPIDU_genq_shmem_pool_cell_alloc(transport->cell_pool, (void **) &cell,
+                                         MPIR_Process.local_rank, 0, buf);
+    } else {
+        int dst_local_rank = MPIDI_POSIX_global.local_ranks[grank];
+        MPIDU_genq_shmem_pool_cell_alloc(transport->cell_pool, (void **) &cell, dst_local_rank, 0,
+                                         buf);
+    }
 
     /* If a cell wasn't available, let the caller know that we weren't able to send the message
      * immediately. */
