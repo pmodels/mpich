@@ -266,6 +266,7 @@ AC_ARG_WITH(ch4-shmmods,
                           none         - No shmmods, network only (cannot be combined with other options)
                           posix        - Enable POSIX shmmod
                           xpmem        - Enable XPMEM IPC (requires posix)
+                          cma          - Enable CMA IPC (requires posix)
                           gpudirect    - Enable GPU Direct IPC (requires posix)
                  ],
                  [with_ch4_shmmods=$withval],
