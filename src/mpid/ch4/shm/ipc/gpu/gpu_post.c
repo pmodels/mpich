@@ -479,7 +479,7 @@ static int gpu_ipc_async_poll(MPIX_Async_thing thing)
     int err;
     int is_done = 0;
 
-    struct gpu_ipc_async *p = MPIX_Async_get_state(thing);
+    struct gpu_ipc_async *p = MPIR_Async_thing_get_state(thing);
     switch (p->yreq.type) {
         case MPIR_NULL_REQUEST:
             /* a dummy, immediately complete */

@@ -32,7 +32,7 @@ int MPIR_Async_things_finalize(void)
 
     for (int vci = 0; vci < MPIR_MAX_VCIS + 1; vci++) {
         while (async_things_list[vci] != NULL) {
-            PMPIX_Stream_progress(MPIX_STREAM_NULL);
+            MPID_Progress_test(NULL);
         }
     }
 
