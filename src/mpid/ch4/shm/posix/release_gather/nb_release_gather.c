@@ -149,11 +149,13 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 mpi_errno =
                     MPIDI_SHM_topology_tree_init(comm_ptr, 0,
                                                  MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL,
-                                                 MPIDI_POSIX_Bcast_tree_type,
+                                                 MPIDI_POSIX_mpi_release_gather_get_tree_type
+                                                 (MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE),
                                                  &nb_release_gather_info_ptr->bcast_tree,
                                                  &topotree_fail[0],
                                                  MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL,
-                                                 MPIDI_POSIX_Reduce_tree_type,
+                                                 MPIDI_POSIX_mpi_release_gather_get_tree_type
+                                                 (MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE),
                                                  &nb_release_gather_info_ptr->reduce_tree,
                                                  &topotree_fail[1]);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
@@ -174,7 +176,9 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
             if (topotree_fail[0] == 1)
                 MPIR_Treealgo_tree_free(&nb_release_gather_info_ptr->bcast_tree);
             mpi_errno =
-                MPIR_Treealgo_tree_create(rank, num_ranks, MPIDI_POSIX_Bcast_tree_type,
+                MPIR_Treealgo_tree_create(rank, num_ranks,
+                                          MPIDI_POSIX_mpi_release_gather_get_tree_type
+                                          (MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE),
                                           MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL, 0,
                                           &nb_release_gather_info_ptr->bcast_tree);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
@@ -184,7 +188,9 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
             if (topotree_fail[1] == 1)
                 MPIR_Treealgo_tree_free(&nb_release_gather_info_ptr->reduce_tree);
             mpi_errno =
-                MPIR_Treealgo_tree_create(rank, num_ranks, MPIDI_POSIX_Reduce_tree_type,
+                MPIR_Treealgo_tree_create(rank, num_ranks,
+                                          MPIDI_POSIX_mpi_release_gather_get_tree_type
+                                          (MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE),
                                           MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL, 0,
                                           &nb_release_gather_info_ptr->reduce_tree);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
