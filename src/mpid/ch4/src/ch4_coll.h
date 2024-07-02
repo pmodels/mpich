@@ -544,7 +544,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
                                                                       MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPI_Aint type_size;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (sendbuf != MPI_IN_PLACE) {
+        MPIR_Datatype_get_size_macro(sendtype, type_size);
+    } else {
+        MPIR_Datatype_get_size_macro(recvtype, type_size);
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLGATHER,
@@ -570,19 +577,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha:
-            MPIDI_Allgather_fill_multi_leads_info(comm);
             /* make sure that the algo can be run */
-            if (MPIDI_COMM_ALLGATHER(comm, use_multi_leads) == 1) {
-                mpi_errno =
-                    MPIDI_Allgather_intra_composition_alpha(sendbuf, sendcount, sendtype,
-                                                            recvbuf, recvcount, recvtype,
-                                                            comm, errflag);
-            } else
-                mpi_errno =
-                    MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                        comm, errflag);
+            if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+                MPIDI_Allgather_fill_multi_leads_info(comm);
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           MPIDI_COMM_ALLGATHER(comm, use_multi_leads) == 1 &&
+                                           (MPL_MAX(sendcount, recvcount) * type_size <=
+                                            MPIR_CVAR_ALLGATHER_SHM_PER_RANK), mpi_errno,
+                                           "Allgather composition alpha cannot be applied.\n");
+	    mpi_errno =
+		MPIDI_Allgather_intra_composition_alpha(sendbuf, sendcount, sendtype,
+							recvbuf, recvcount, recvtype,
+							comm, errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           comm->comm_kind == MPIR_COMM_KIND__INTRACOMM, mpi_errno,
+                                           "Allgather composition beta cannot be applied.\n");
             mpi_errno =
                 MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcount, recvtype, comm, errflag);
@@ -592,6 +603,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+        mpi_errno =
+            MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
+                                errflag);
+    else
+        mpi_errno =
+            MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                                   recvtype, comm, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -972,6 +994,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
                                                                      MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPI_Aint type_size;
+
+    if (sendbuf != MPI_IN_PLACE) {
+        MPIR_Datatype_get_size_macro(sendtype, type_size);
+    } else {
+        MPIR_Datatype_get_size_macro(recvtype, type_size);
+    }
+
     const MPIDI_Csel_container_s *cnt = NULL;
 
     MPIR_Csel_coll_sig_s coll_sig = {
@@ -997,27 +1027,43 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_alpha:
-            MPIDI_Alltoall_fill_multi_leads_info(comm);
-            /* make sure that the algo can be run */
-            if (MPIDI_COMM_ALLTOALL(comm, use_multi_leads) == 1) {
-                mpi_errno =
-                    MPIDI_Alltoall_intra_composition_alpha(sendbuf, sendcount, sendtype,
-                                                           recvbuf, recvcount, recvtype,
-                                                           comm, errflag);
-            } else
-                mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype,
-                                               recvbuf, recvcount, recvtype, comm, errflag);
+            if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+                MPIDI_Alltoall_fill_multi_leads_info(comm);
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, comm->comm_kind == MPIR_COMM_KIND__INTRACOMM
+                                           && MPIDI_COMM_ALLTOALL(comm, use_multi_leads) == 1 &&
+                                           (MPL_MAX(sendcount, recvcount) * type_size <=
+                                            MPIR_CVAR_ALLTOALL_SHM_PER_RANK), mpi_errno,
+                                           "Alltoall composition alpha cannot be applied.\n");
+	    mpi_errno =
+		MPIDI_Alltoall_intra_composition_alpha(sendbuf, sendcount, sendtype,
+						       recvbuf, recvcount, recvtype,
+						       comm, errflag);
             break;
+
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_beta:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
+                                           comm->comm_kind == MPIR_COMM_KIND__INTRACOMM, mpi_errno,
+                                           "Alltoall composition beta cannot be applied.\n");
             mpi_errno =
                 MPIDI_Alltoall_intra_composition_beta(sendbuf, sendcount, sendtype,
                                                       recvbuf, recvcount, recvtype, comm, errflag);
             break;
+
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+        mpi_errno =
+            MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
+                               errflag);
+    else
+        mpi_errno = MPIDI_Alltoall_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
+                                                          recvcount, recvtype, comm, errflag);
 
   fn_exit:
     return mpi_errno;
