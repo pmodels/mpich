@@ -14,13 +14,15 @@
 #include <stdint.h>
 #include <string.h>
 
-int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_proc,
-                                 uintptr_t num_proc, int rank, MPIDU_genq_shmem_pool_t * pool);
+int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_free_queue,
+                                 uintptr_t num_proc, int rank, uintptr_t num_free_queue,
+                                 int *queue_types, MPIDU_genq_shmem_pool_t * pool);
 int MPIDU_genq_shmem_pool_destroy(MPIDU_genq_shmem_pool_t pool);
 int MPIDU_genqi_shmem_pool_register(MPIDU_genqi_shmem_pool_s * pool_obj);
 
 static inline int MPIDU_genq_shmem_pool_cell_alloc(MPIDU_genq_shmem_pool_t pool, void **cell,
-                                                   int block_idx, const void *src_buf)
+                                                   int block_idx, int free_queue_idx,
+                                                   const void *src_buf)
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_pool_s *pool_obj = (MPIDU_genqi_shmem_pool_s *) pool;
@@ -35,7 +37,9 @@ static inline int MPIDU_genq_shmem_pool_cell_alloc(MPIDU_genq_shmem_pool_t pool,
         MPIR_ERR_CHECK(rc);
     }
 
-    rc = MPIDU_genq_shmem_queue_dequeue(pool, &pool_obj->free_queues[block_idx], cell);
+    int idx = block_idx * pool_obj->num_free_queue + free_queue_idx;
+
+    rc = MPIDU_genq_shmem_queue_dequeue(pool, &pool_obj->free_queues[idx], cell);
     MPIR_ERR_CHECK(rc);
 
   fn_exit:

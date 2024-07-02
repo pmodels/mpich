@@ -49,8 +49,9 @@ typedef union MPIDU_genq_shmem_queue {
 typedef struct MPIDU_genqi_shmem_pool {
     uintptr_t cell_size;
     uintptr_t cell_alloc_size;
-    uintptr_t cells_per_proc;
+    uintptr_t cells_per_free_queue;
     uintptr_t num_proc;
+    uintptr_t num_free_queue;
     int rank;
 
     void *slab;
