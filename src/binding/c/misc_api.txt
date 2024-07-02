@@ -208,3 +208,22 @@ MPIX_Query_hip_support:
 
     return is_supported;
 }
+
+MPIX_Query_pointer_attr:
+    ptr: BUFFER, [Pointer address to be queried]
+    type: POINTER_TYPE, direction=out, [Memory type (enum MPIX_Pointer_type)]
+    device: INDEX, direction=out, [Device id (if the pointer address is associated with a device, -1 otherwise)]
+    .desc: return buffer type (enum MPIX_Pointer_type) and device id (if it is a device buffer or device registered buffer)
+    .impl: direct
+    .skip: global_cs
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPL_pointer_attr_t attr;
+    mpi_errno = MPL_gpu_query_pointer_attr(ptr, &attr);
+
+    *type = attr.type;
+    *device = attr.device;
+
+    return mpi_errno;
+}

@@ -22,6 +22,7 @@
 #include "mpl_gpu_fallback.h"
 #endif
 
+/* NOTE: must agree with MPIX_Pointer_type in mpi.h */
 typedef enum {
     MPL_GPU_POINTER_UNREGISTERED_HOST = 0,
     MPL_GPU_POINTER_REGISTERED_HOST,
@@ -61,7 +62,7 @@ typedef enum {
     MPL_GPU_COPY_H2D,
     MPL_GPU_COPY_D2D_INCOMING,  /* copy from remote to local */
     MPL_GPU_COPY_D2D_OUTGOING,  /* copy from local to remote */
-    MPL_GPU_COPY_DIRECTION_NONE,  /* copy in any direction and to/from any buffer type */
+    MPL_GPU_COPY_DIRECTION_NONE,        /* copy in any direction and to/from any buffer type */
 } MPL_gpu_copy_direction_t;
 
 #define MPL_GPU_COPY_DIRECTION_TYPES 4
