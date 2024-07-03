@@ -81,13 +81,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     int segment, rank;
     void *bcast_data_addr = NULL;
     MPL_atomic_uint64_t *parent_flag_addr;
-    /* Set the relaxation to 0 because in Bcast, gather step is "relaxed" to make sure multiple
-     * buffers can be used to pipeline the copying in and out of shared memory, and data is not
-     * overwritten */
-    const int relaxation =
-        (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) ?
-        RELEASE_GATHER_FIELD(comm_ptr, reduce_num_cells) - 1 : 0;
-
     rank = MPIR_Comm_rank(comm_ptr);
     release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
     release_gather_info_ptr->release_state++;
@@ -196,8 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
 
         /* Wait until the parent has updated its flag */
         MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN(parent_flag_addr,
-                                                        release_gather_info_ptr->release_state -
-                                                        relaxation);
+                                                        release_gather_info_ptr->release_state);
         /* Update its own flag */
         /* "release" makes sure that the read of parent's flag does not get reordered after
          * this store */
