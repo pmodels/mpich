@@ -54,13 +54,14 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx)
 
     new_cell_headers =
         (MPIDU_genqi_shmem_cell_header_s **) MPL_malloc(pool->cells_per_free_queue
+                                                        * pool->num_free_queue
                                                         * sizeof(MPIDU_genqi_shmem_cell_header_s *),
                                                         MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!new_cell_headers, rc, MPI_ERR_OTHER, "**nomem");
     pool->cell_headers = new_cell_headers;
 
     /* init cell headers */
-    int cells_per_block = pool->num_free_queue;
+    int cells_per_block = pool->cells_per_free_queue;
     int hdr_idx = 0;
     for (int free_queue_idx = 0; free_queue_idx < pool->num_free_queue; free_queue_idx++) {
         int real_block_idx = block_idx * pool->num_free_queue + free_queue_idx;
