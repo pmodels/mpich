@@ -46,8 +46,8 @@ cvars:
 #define RESIZE_TO_MAX_ALIGN(x) \
     ((((x) / MAX_ALIGNMENT) + !!((x) % MAX_ALIGNMENT)) * MAX_ALIGNMENT)
 
-static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx);
-static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx)
+static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int rank);
+static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int rank)
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_cell_header_s **new_cell_headers = NULL;
@@ -61,13 +61,13 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx)
     pool->cell_headers = new_cell_headers;
 
     /* init cell headers */
-    int cells_per_block = pool->cells_per_free_queue;
+    int cells_per_fq = pool->cells_per_free_queue;
     int hdr_idx = 0;
-    for (int free_queue_idx = 0; free_queue_idx < pool->num_free_queue; free_queue_idx++) {
-        int real_block_idx = block_idx * pool->num_free_queue + free_queue_idx;
-        int cell_idx_base = real_block_idx * cells_per_block;
+    for (int queue_id = 0; queue_id < pool->num_free_queue; queue_id++) {
+        int fq_idx = rank * pool->num_free_queue + queue_id;
+        int cell_idx_base = fq_idx * cells_per_fq;
 
-        for (int i = 0; i < cells_per_block; i++) {
+        for (int i = 0; i < cells_per_fq; i++) {
             /* Have the "host" process for each cell zero-out the cell contents to force the first-touch
              * policy to make the pages resident to that process. */
             int cell_idx = cell_idx_base + i;
@@ -78,10 +78,10 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx)
             /* The handle value is the one being stored in the next, prev, head, tail pointers.
              * All valid handle must to be non-zero, a zero handle is equivalent to a NULL pointer. */
             cell_h->handle = (uintptr_t) cell_h - (uintptr_t) pool->cell_header_base + 1;
-            cell_h->block_idx = real_block_idx;
+            cell_h->block_idx = fq_idx;
             pool->cell_headers[hdr_idx] = cell_h;
 
-            rc = MPIDU_genq_shmem_queue_enqueue(pool, &pool->free_queues[real_block_idx],
+            rc = MPIDU_genq_shmem_queue_enqueue(pool, &pool->free_queues[fq_idx],
                                                 HEADER_TO_CELL(cell_h));
             MPIR_ERR_CHECK(rc);
             hdr_idx++;
