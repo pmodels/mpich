@@ -48,6 +48,7 @@ typedef struct {
     int enable_striping;        /* Flag to enable striping per communicator. */
     int enable_hashing;         /* Flag to enable hashing per communicator. */
     int *pref_nic;              /* Array to specify the preferred NIC for each rank (if needed) */
+    int pipeline_tag;           /* match_bits for gpu_pipeline chunks */
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_NONE = 0,
@@ -216,20 +217,28 @@ typedef struct {
         struct iovec iov;
         void *inject_buf;       /* Internal buffer for inject emulation */
     } util;
-    struct {
-        fi_addr_t remote_addr;
-        int ctx_idx;
-        int vci_local;
-        int chunk_sz;
-        bool is_sync;
-        uint64_t cq_data;
-        uint64_t match_bits;
-        uint64_t mask_bits;
-        size_t offset;
-        size_t data_sz;
-        char *pack_recv_buf;
-        void *usm_host_buf;     /* recv */
-        MPIR_Request *req;
+    union {
+        struct {
+            int vci_local;
+            int ctx_idx;
+            fi_addr_t remote_addr;
+            uint64_t cq_data;
+            uint64_t match_bits;
+            int pipeline_tag;
+            int num_remain;
+        } send;
+        struct {
+            int vci_local;
+            int ctx_idx;
+            fi_addr_t remote_addr;
+            uint64_t match_bits;
+            uint64_t mask_bits;
+            MPI_Aint offset;
+            int pipeline_tag;
+            int num_inrecv;
+            int num_remain;
+            bool is_sync;
+        } recv;
     } pipeline_info;            /* GPU pipeline */
 } MPIDI_OFI_request_t;
 
