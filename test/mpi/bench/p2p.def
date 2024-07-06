@@ -1,0 +1,55 @@
+/* Instructions: 
+ *     mydef_page p2p.def  # -> p2p_latency.c p2p_bw.c
+ *     mpicc p2p_latency.c && mpi_run -n 2 ./a.out
+ *     mpicc p2p_bw.c      && mpi_run -n 2 ./a.out
+ *
+ * Reference the output C code or bench_{frame,p2p}.def.
+ */
+
+include: macros/bench_frame.def
+include: macros/bench_p2p.def
+
+subcode: _autoload
+    $register_name(buf) void *
+    $register_name(size) int
+    $register_name(batch_size) int
+
+page: p2p_latency, bench_frame
+    params: buf, size
+    MSG_SIZE: size
+    MULTIPLICITY: 2
+
+    bench_p2p(comm, 0, 1, buf, 0)
+    $for int size = 1; size < $(MAX_MSG); size *= 2
+        bench_p2p(comm, 0, 1, buf, size)
+
+    subcode: send_side
+        MPI_Send($(data), dst, TAG, comm);
+        MPI_Recv($(data), dst, TAG, comm, MPI_STATUS_IGNORE);
+
+    subcode: recv_side
+        MPI_Recv($(data), src, TAG, comm, MPI_STATUS_IGNORE);
+        MPI_Send($(data), src, TAG, comm);
+
+page: p2p_bw, bench_frame
+    params: buf, size, batch_size
+    MSG_SIZE: size
+    MULTIPLICITY: batch_size
+    MAX_BATCH_SIZE: 64
+
+    $for int size = 1; size < $(MAX_MSG); size *= 2
+        bench_p2p(comm, 0, 1, buf, size, 64)
+
+    subcode: send_side
+        $my MPI_Request reqs[$(MAX_BATCH_SIZE)]
+        $for j=0:batch_size
+            MPI_Isend($(data), dst, TAG, comm, &reqs[j])
+        MPI_Waitall(batch_size, reqs, MPI_STATUSES_IGNORE)
+        MPI_Recv(NULL, 0, MPI_DATATYPE_NULL, dst, TAG, comm, MPI_STATUS_IGNORE)
+
+    subcode: recv_side
+        $my MPI_Request reqs[$(MAX_BATCH_SIZE)]
+        $for j=0:batch_size
+            MPI_Irecv($(data), src, TAG, comm, &reqs[j])
+        MPI_Waitall(batch_size, reqs, MPI_STATUSES_IGNORE)
+        MPI_Send(NULL, 0, MPI_DATATYPE_NULL, src, TAG, comm)
