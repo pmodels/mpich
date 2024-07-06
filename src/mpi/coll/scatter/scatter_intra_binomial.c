@@ -28,7 +28,7 @@
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                 void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                MPIR_Comm * comm_ptr)
 {
     MPI_Status status;
     MPI_Aint extent = 0;
@@ -39,7 +39,6 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
     MPI_Aint tmp_buf_size = 0;
     void *tmp_buf = NULL;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(4);
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
@@ -118,11 +117,11 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
             if (relative_rank % 2) {
                 mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype,
                                       src, MPIR_SCATTER_TAG, comm_ptr, &status);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             } else {
                 mpi_errno = MPIC_Recv(tmp_buf, tmp_buf_size, MPI_BYTE, src,
                                       MPIR_SCATTER_TAG, comm_ptr, &status);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
                 if (mpi_errno) {
                     curr_cnt = 0;
                 } else
@@ -152,17 +151,15 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
                 /* mask is also the size of this process's subtree */
                 mpi_errno = MPIC_Send(((char *) sendbuf +
                                        extent * sendcount * mask),
-                                      send_subtree_cnt,
-                                      sendtype, dst, MPIR_SCATTER_TAG, comm_ptr, errflag);
+                                      send_subtree_cnt, sendtype, dst, MPIR_SCATTER_TAG, comm_ptr);
             } else {
                 /* non-zero root and others */
                 send_subtree_cnt = curr_cnt - nbytes * mask;
                 /* mask is also the size of this process's subtree */
                 mpi_errno = MPIC_Send(((char *) tmp_buf + nbytes * mask),
-                                      send_subtree_cnt,
-                                      MPI_BYTE, dst, MPIR_SCATTER_TAG, comm_ptr, errflag);
+                                      send_subtree_cnt, MPI_BYTE, dst, MPIR_SCATTER_TAG, comm_ptr);
             }
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             curr_cnt -= send_subtree_cnt;
         }
         mask >>= 1;
@@ -181,8 +178,7 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

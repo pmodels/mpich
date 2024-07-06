@@ -26,14 +26,11 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
                                  MPI_Aint sendcount,
                                  MPI_Datatype sendtype,
                                  void *recvbuf,
-                                 MPI_Aint recvcount,
-                                 MPI_Datatype recvtype,
-                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                 MPI_Aint recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
 {
     int comm_size, i;
     MPI_Aint sendtype_extent, recvtype_extent;
     int mpi_errno = MPI_SUCCESS, src, dst, rank;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
 
     comm_size = comm_ptr->local_size;
@@ -75,14 +72,12 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
                                   MPIR_ALLTOALL_TAG,
                                   ((char *) recvbuf +
                                    src * recvcount * recvtype_extent),
-                                  recvcount, recvtype, src,
-                                  MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                  recvcount, recvtype, src, MPIR_ALLTOALL_TAG, comm_ptr, &status);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

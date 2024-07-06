@@ -15,10 +15,9 @@
 
 int MPIR_Gather_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                              void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                             MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                             MPIR_Comm * comm_ptr)
 {
     int remote_size, mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int i;
     MPI_Status status;
     MPI_Aint extent;
@@ -37,13 +36,15 @@ int MPIR_Gather_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
             mpi_errno =
                 MPIC_Recv(((char *) recvbuf + recvcount * i * extent), recvcount, recvtype, i,
                           MPIR_GATHER_TAG, comm_ptr, &status);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
-        mpi_errno =
-            MPIC_Send(sendbuf, sendcount, sendtype, root, MPIR_GATHER_TAG, comm_ptr, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, root, MPIR_GATHER_TAG, comm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
-    return mpi_errno_ret;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

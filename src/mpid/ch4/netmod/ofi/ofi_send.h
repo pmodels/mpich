@@ -488,8 +488,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint c
                                                      int dst_rank, int tag,
                                                      MPIR_Comm * comm, int context_offset,
                                                      MPIDI_av_entry_t * addr, int vci_src,
-                                                     int vci_dst, MPIR_Request ** request,
-                                                     MPIR_Errflag_t err_flag)
+                                                     int vci_dst, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -513,7 +512,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint c
     uint64_t match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset,
                                                  comm->rank, tag, 0);
     uint64_t cq_data = comm->rank;
-    MPIDI_OFI_idata_set_error_bits(&cq_data, err_flag);
 
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
@@ -560,8 +558,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                             int dst_rank, int tag, MPIR_Comm * comm,
                                             int context_offset, MPIDI_av_entry_t * addr,
                                             int vci_src, int vci_dst,
-                                            MPIR_Request ** request, int noreq,
-                                            uint64_t syncflag, MPIR_Errflag_t err_flag)
+                                            MPIR_Request ** request, int noreq, uint64_t syncflag)
 {
     int dt_contig, mpi_errno;
     size_t data_sz;
@@ -572,7 +569,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     MPIR_FUNC_ENTER;
 
     uint64_t cq_data = comm->rank;
-    MPIDI_OFI_idata_set_error_bits(&cq_data, err_flag);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     void *send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
@@ -669,7 +665,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     MPIR_FUNC_ENTER;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
 
     int vci_src, vci_dst;
     MPIDI_OFI_SEND_VNIS(vci_src, vci_dst);      /* defined just above */
@@ -678,17 +673,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         bool syncflag = MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr) ? MPIDIG_AM_SEND_FLAGS_SYNC : 0;
         mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                     vci_src, vci_dst, request, syncflag, errflag);
+                                     vci_src, vci_dst, request, syncflag);
     } else if (!MPIDI_global.is_initialized) {
         MPIR_Assert(!MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr));
         mpi_errno = MPIDI_OFI_send_fallback(buf, count, datatype, rank, tag, comm,
-                                            context_offset, addr, vci_src, vci_dst,
-                                            request, errflag);
+                                            context_offset, addr, vci_src, vci_dst, request);
     } else {
         uint64_t syncflag = MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr) ? MPIDI_OFI_SYNC_SEND : 0;
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, vci_src, vci_dst,
-                                   request, 0, syncflag, errflag);
+                                   context_offset, addr, vci_src, vci_dst, request, 0, syncflag);
     }
     MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_src);
 

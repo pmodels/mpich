@@ -392,8 +392,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     if (!comm_ptr->node_comm)
         no_local = true;
 
-    mpi_errno = MPIR_Allreduce(&no_local, &all_no_local, 1, MPI_C_BOOL,
-                               MPI_LAND, comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Allreduce(&no_local, &all_no_local, 1, MPI_C_BOOL, MPI_LAND, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     if (all_no_local)
         MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_NO_SHM;
@@ -523,8 +522,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
                                    0,
                                    MPI_DATATYPE_NULL,
                                    shared_table,
-                                   sizeof(MPIDIG_win_shared_info_t), MPI_BYTE, shm_comm_ptr,
-                                   MPIR_ERR_NONE);
+                                   sizeof(MPIDIG_win_shared_info_t), MPI_BYTE, shm_comm_ptr);
         MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
@@ -561,7 +559,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
          * - user sets alloc_shared_noncontig=true, thus we can internally make
          *   the size aligned on each process. */
         mpi_errno = MPIR_Allreduce(&symheap_flag, &global_symheap_flag, 1, MPI_C_BOOL,
-                                   MPI_LAND, comm_ptr, MPIR_ERR_NONE);
+                                   MPI_LAND, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else
         global_symheap_flag = false;
@@ -692,7 +690,7 @@ int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
     /* Do not update winattr except for info set at window creation.
      * Because it will change RMA's behavior which requires collective synchronization. */
 
-    mpi_errno = MPIR_Barrier(win->comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier(win->comm_ptr);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -857,7 +855,7 @@ int MPIDIG_mpi_win_free(MPIR_Win ** win_ptr)
     MPIDIG_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
     MPIDIG_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
 
-    mpi_errno = MPIR_Barrier(win->comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier(win->comm_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
@@ -894,7 +892,7 @@ int MPIDIG_mpi_win_create(void *base, MPI_Aint length, int disp_unit, MPIR_Info 
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    mpi_errno = MPIR_Barrier(win->comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier(win->comm_ptr);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -962,7 +960,7 @@ int MPIDIG_mpi_win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * inf
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    mpi_errno = MPIR_Barrier(comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier(comm_ptr);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1026,7 +1024,7 @@ int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    mpi_errno = MPIR_Barrier(comm, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier(comm);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -1065,7 +1063,7 @@ int MPIDIG_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win *
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    mpi_errno = MPIR_Barrier(comm, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier(comm);
 
   fn_exit:
     MPIR_FUNC_EXIT;

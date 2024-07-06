@@ -14,7 +14,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                                       int buffer_per_child, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, j, t;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
@@ -38,7 +37,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     int dtcopy_id = -1;
     int nvtcs;
     int tag;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
     MPIR_FUNC_ENTER;
@@ -172,7 +170,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         reduce_buffer = (void *) sendbuf;
     }
 
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize arrays to store graph vertex indices */
     MPIR_CHKLMEM_MALLOC(vtcs, int *, sizeof(int) * (num_children + 1),
@@ -217,7 +215,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
             mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,
                                              sched, nvtcs, vtcs, &recv_id[i]);
 
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             /* Setup dependencies for reduction. Reduction depends on the corresponding recv to complete */
             vtcs[0] = recv_id[i];
             nvtcs = 1;
@@ -244,7 +242,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                 reduce_id[i] = vtx_id;
 
             }
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         if (is_commutative && buffer_per_child) {       /* wait for all the reductions */
@@ -262,7 +260,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
             mpi_errno =
                 MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, tag, comm,
                                      sched, nvtcs, vtcs, &vtx_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* send data to the root of the collective operation */
@@ -276,7 +274,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                     MPIR_TSP_sched_irecv((char *) recvbuf + offset * extent, msgsize, datatype,
                                          tree_root, tag, comm, sched, 0, NULL, &vtx_id);
             }
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         offset += msgsize;

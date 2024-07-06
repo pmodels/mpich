@@ -20,14 +20,12 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                            MPI_Aint count ATTRIBUTE((unused)),
                            MPI_Datatype datatype ATTRIBUTE((unused)),
                            int root,
-                           MPIR_Comm * comm_ptr,
-                           MPI_Aint nbytes, void *tmp_buf, int is_contig, MPIR_Errflag_t errflag)
+                           MPIR_Comm * comm_ptr, MPI_Aint nbytes, void *tmp_buf, int is_contig)
 {
     MPI_Status status;
     int rank, comm_size, src, dst;
     int relative_rank, mask;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint scatter_size, recv_size = 0;
     MPI_Aint curr_size, send_size;
 
@@ -68,7 +66,7 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                 mpi_errno = MPIC_Recv(((char *) tmp_buf +
                                        relative_rank * scatter_size),
                                       recv_size, MPI_BYTE, src, MPIR_BCAST_TAG, comm_ptr, &status);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
                 if (mpi_errno) {
                     curr_size = 0;
                 } else
@@ -97,8 +95,8 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                     dst -= comm_size;
                 mpi_errno = MPIC_Send(((char *) tmp_buf +
                                        scatter_size * (relative_rank + mask)),
-                                      send_size, MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                      send_size, MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 curr_size -= send_size;
             }
@@ -106,5 +104,8 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
         mask >>= 1;
     }
 
-    return mpi_errno_ret;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

@@ -24,12 +24,10 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                              void *recvbuf,
                                              const MPI_Aint * recvcounts,
                                              const MPI_Aint * displs,
-                                             MPI_Datatype recvtype,
-                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                             MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
 {
     int comm_size, rank, j, i;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint recvtype_extent, recvtype_sz;
     MPI_Aint curr_cnt, last_recv_cnt, total_count;
@@ -113,8 +111,8 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                       MPIR_ALLGATHERV_TAG,
                                       ((char *) tmp_buf + recv_offset * recvtype_sz),
                                       (total_count - recv_offset) * recvtype_sz, MPI_BYTE, dst,
-                                      MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                      MPIR_ALLGATHERV_TAG, comm_ptr, &status);
+            MPIR_ERR_CHECK(mpi_errno);
             if (mpi_errno) {
                 last_recv_cnt = 0;
             } else {
@@ -176,8 +174,8 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
 
                     mpi_errno = MPIC_Send(((char *) tmp_buf + offset * recvtype_sz),
                                           last_recv_cnt * recvtype_sz,
-                                          MPI_BYTE, dst, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                          MPI_BYTE, dst, MPIR_ALLGATHERV_TAG, comm_ptr);
+                    MPIR_ERR_CHECK(mpi_errno);
                     /* last_recv_cnt was set in the previous
                      * receive. that's the amount of data to be
                      * sent now. */
@@ -195,7 +193,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                     mpi_errno = MPIC_Recv(((char *) tmp_buf + offset * recvtype_sz),
                                           (total_count - offset) * recvtype_sz, MPI_BYTE,
                                           dst, MPIR_ALLGATHERV_TAG, comm_ptr, &status);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
                     if (mpi_errno) {
                         last_recv_cnt = 0;
                     } else
@@ -231,8 +229,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }
