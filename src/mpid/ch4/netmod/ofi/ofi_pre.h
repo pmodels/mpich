@@ -48,6 +48,7 @@ typedef struct {
     int enable_striping;        /* Flag to enable striping per communicator. */
     int enable_hashing;         /* Flag to enable hashing per communicator. */
     int *pref_nic;              /* Array to specify the preferred NIC for each rank (if needed) */
+    int pipeline_tag;           /* match_bits for gpu_pipeline chunks */
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_NONE = 0,
@@ -200,37 +201,63 @@ typedef struct {
                                  * if needed. */
     enum MPIDI_OFI_req_kind kind;
     union {
-        struct fid_mr **send_mrs;
-        void *remote_info;
-    } huge;
-    union {
+        /* send path */
         struct {
+            void *pack_buffer;
+        } pack_send;
+        struct {
+            struct iovec *iovs;
+        } nopack_send;
+        struct {
+            struct fid_mr **mrs;
+            void *pack_buffer;
+        } huge_send;
+        struct {
+            int vci_local;
+            int ctx_idx;
+            fi_addr_t remote_addr;
+            uint64_t cq_data;
+            uint64_t match_bits;
+            int pipeline_tag;
+            int num_remain;
+        } pipeline_send;
+        struct {
+            void *inject_buf;
+        } am_inject_emu;
+
+        /* The recv path can be uncertain depend on the actual send path,
+         * thus some fields are significant and need be preset to NULL.
+         */
+        struct {
+            void *remote_info;  /* huge path if not NULL */
+            char *pack_buffer;  /* need unpack if not NULL */
             void *buf;
-            size_t count;
+            MPI_Aint count;
             MPI_Datatype datatype;
-            char *pack_buffer;
-        } pack;
-        struct iovec *nopack;
-    } noncontig;
-    union {
-        struct iovec iov;
-        void *inject_buf;       /* Internal buffer for inject emulation */
-    } util;
-    struct {
-        fi_addr_t remote_addr;
-        int ctx_idx;
-        int vci_local;
-        int chunk_sz;
-        bool is_sync;
-        uint64_t cq_data;
-        uint64_t match_bits;
-        uint64_t mask_bits;
-        size_t offset;
-        size_t data_sz;
-        char *pack_recv_buf;
-        void *usm_host_buf;     /* recv */
-        MPIR_Request *req;
-    } pipeline_info;            /* GPU pipeline */
+            struct iovec msg_iov;       /* FI_CLAIM require fi_trecvmsg which require usage of iov.
+                                         * We always set it with {recv_buf, data_sz} since they are
+                                         * useful for the huge recv path as well.
+                                         */
+        } recv;
+        struct {
+            struct iovec *iovs;
+        } nopack_recv;
+        struct {
+            int vci_local;
+            int ctx_idx;
+            fi_addr_t remote_addr;
+            uint64_t match_bits;
+            uint64_t mask_bits;
+            MPI_Aint offset;
+            int pipeline_tag;
+            int num_inrecv;
+            int num_remain;
+            bool is_sync;
+            void *buf;
+            MPI_Aint count;
+            MPI_Datatype datatype;
+        } pipeline_recv;
+    } u;
 } MPIDI_OFI_request_t;
 
 typedef struct {

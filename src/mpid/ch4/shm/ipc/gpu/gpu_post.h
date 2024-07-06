@@ -25,7 +25,7 @@ typedef struct {
     int max_subdev_id;
 } MPIDI_GPU_device_info_t;
 
-int MPIDI_GPU_ipc_async_start(MPIR_Request * rreq, MPIR_gpu_req * req_p,
+int MPIDI_GPU_ipc_async_start(MPIR_Request * rreq, MPIR_async_req * req_p,
                               void *src_buf, MPIDI_GPU_ipc_handle_t gpu_handle);
 
 #endif /* GPU_POST_H_INCLUDED */

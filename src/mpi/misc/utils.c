@@ -188,7 +188,8 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
                             MPI_Aint sendoffset, MPL_pointer_attr_t * send_attr, void *recvbuf,
                             MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
                             MPL_pointer_attr_t * recv_attr, MPL_gpu_copy_direction_t dir,
-                            MPL_gpu_engine_type_t enginetype, bool commit, MPIR_gpu_req * gpu_req)
+                            MPL_gpu_engine_type_t enginetype, bool commit,
+                            MPIR_async_req * async_req)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpl_errno = MPL_SUCCESS;
@@ -200,8 +201,8 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
 
     MPIR_FUNC_ENTER;
 
-    if (gpu_req)
-        gpu_req->type = MPIR_NULL_REQUEST;
+    if (async_req)
+        async_req->type = MPIR_NULL_REQUEST;
 
     MPIR_Datatype_get_size_macro(sendtype, sendsize);
     MPIR_Datatype_get_size_macro(recvtype, recvsize);
@@ -260,7 +261,7 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             MPIR_ERR_CHKANDJUMP(dev_id == -1, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_get_dev_id_from_attr");
 
-            if (gpu_req == NULL) {
+            if (async_req == NULL) {
                 MPL_gpu_request req;
                 mpl_errno =
                     MPL_gpu_imemcpy((char *) MPIR_get_contig_ptr(recvbuf, recvtype_true_lb) +
@@ -281,8 +282,8 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
                                     recvoffset, (char *) MPIR_get_contig_ptr(sendbuf,
                                                                              sendtype_true_lb) +
                                     sendoffset, copy_sz, dev_id, dir, enginetype,
-                                    &gpu_req->u.gpu_req, commit);
-                gpu_req->type = MPIR_GPU_REQUEST;
+                                    &async_req->u.gpu_req, commit);
+                async_req->type = MPIR_GPU_REQUEST;
             }
         }
 #else
@@ -300,15 +301,15 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
   fn_fail:
     goto fn_exit;
   fn_fallback:
-    if (gpu_req) {
+    if (async_req) {
         mpi_errno =
             do_localcopy(sendbuf, sendcount, sendtype, sendoffset, recvbuf, recvcount, recvtype,
-                         recvoffset, LOCALCOPY_NONBLOCKING, &gpu_req->u.y_req);
+                         recvoffset, LOCALCOPY_NONBLOCKING, &async_req->u.y_req);
         MPIR_ERR_CHECK(mpi_errno);
-        if (gpu_req->u.y_req.req == MPIR_TYPEREP_REQ_NULL) {
-            gpu_req->type = MPIR_NULL_REQUEST;
+        if (async_req->u.y_req.req == MPIR_TYPEREP_REQ_NULL) {
+            async_req->type = MPIR_NULL_REQUEST;
         } else {
-            gpu_req->type = MPIR_TYPEREP_REQUEST;
+            async_req->type = MPIR_TYPEREP_REQUEST;
         }
     } else {
         mpi_errno =
@@ -414,7 +415,7 @@ int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
                         MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
                         MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
                         MPL_pointer_attr_t * recvattr, MPL_gpu_copy_direction_t dir,
-                        MPL_gpu_engine_type_t enginetype, bool commit, MPIR_gpu_req * req)
+                        MPL_gpu_engine_type_t enginetype, bool commit, MPIR_async_req * async_req)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -423,14 +424,14 @@ int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
 #ifdef MPL_HAVE_GPU
     mpi_errno =
         do_localcopy_gpu(sendbuf, sendcount, sendtype, sendoffset, sendattr, recvbuf, recvcount,
-                         recvtype, recvoffset, recvattr, dir, enginetype, commit, req);
+                         recvtype, recvoffset, recvattr, dir, enginetype, commit, async_req);
     MPIR_ERR_CHECK(mpi_errno);
 #else
     mpi_errno =
         do_localcopy(sendbuf, sendcount, sendtype, sendoffset, recvbuf, recvcount, recvtype,
-                     recvoffset, LOCALCOPY_NONBLOCKING, &req->u.y_req);
+                     recvoffset, LOCALCOPY_NONBLOCKING, &async_req->u.y_req);
     MPIR_ERR_CHECK(mpi_errno);
-    req->type = MPIR_TYPEREP_REQUEST;
+    async_req->type = MPIR_TYPEREP_REQUEST;
 #endif
 
   fn_exit:

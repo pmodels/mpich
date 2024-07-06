@@ -468,7 +468,7 @@ int MPIDI_GPU_ipc_fast_memcpy(MPIDI_IPCI_ipc_handle_t ipc_handle, void *dest_vad
 struct gpu_ipc_async {
     MPIR_Request *rreq;
     /* async handle */
-    MPIR_gpu_req yreq;
+    MPIR_async_req async_req;
     /* for unmap */
     void *src_buf;
     MPIDI_GPU_ipc_handle_t gpu_handle;
@@ -480,21 +480,7 @@ static int gpu_ipc_async_poll(MPIX_Async_thing thing)
     int is_done = 0;
 
     struct gpu_ipc_async *p = MPIR_Async_thing_get_state(thing);
-    switch (p->yreq.type) {
-        case MPIR_NULL_REQUEST:
-            /* a dummy, immediately complete */
-            is_done = 1;
-            break;
-        case MPIR_TYPEREP_REQUEST:
-            MPIR_Typerep_test(p->yreq.u.y_req, &is_done);
-            break;
-        case MPIR_GPU_REQUEST:
-            err = MPL_gpu_test(&p->yreq.u.gpu_req, &is_done);
-            MPIR_Assertp(err == MPL_SUCCESS);
-            break;
-        default:
-            MPIR_Assert(0);
-    }
+    MPIR_async_test(&(p->async_req), &is_done);
 
     if (is_done) {
         int vci = MPIDIG_REQUEST(p->rreq, req->local_vci);
@@ -513,7 +499,7 @@ static int gpu_ipc_async_poll(MPIX_Async_thing thing)
     return MPIX_ASYNC_NOPROGRESS;
 }
 
-int MPIDI_GPU_ipc_async_start(MPIR_Request * rreq, MPIR_gpu_req * req_p,
+int MPIDI_GPU_ipc_async_start(MPIR_Request * rreq, MPIR_async_req * req_p,
                               void *src_buf, MPIDI_GPU_ipc_handle_t gpu_handle)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -524,9 +510,9 @@ int MPIDI_GPU_ipc_async_start(MPIR_Request * rreq, MPIR_gpu_req * req_p,
     p->src_buf = src_buf;
     p->gpu_handle = gpu_handle;
     if (req_p) {
-        p->yreq = *req_p;
+        p->async_req = *req_p;
     } else {
-        p->yreq.type = MPIR_NULL_REQUEST;
+        p->async_req.type = MPIR_NULL_REQUEST;
     }
 
     mpi_errno = MPIR_Async_things_add(gpu_ipc_async_poll, p, NULL);
