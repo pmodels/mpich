@@ -142,6 +142,7 @@ static int setup_single_nic(void);
 #ifdef HAVE_LIBFABRIC_NIC
 static int setup_multi_nic(int nic_count);
 #endif
+static bool match_prov_addr(struct fi_info *prov, const char *hostname);
 
 int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
 {
@@ -157,7 +158,7 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
 #endif
 
     /* Count the number of NICs */
-    struct fi_info *first_prov = NULL;
+    struct fi_info *pref_prov = NULL;
     for (struct fi_info * p = prov; p; p = p->next) {
         /* additional filtering */
         if (MPIR_CVAR_OFI_SKIP_IPV6 && p->addr_format == FI_SOCKADDR_IN6) {
@@ -166,8 +167,8 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
         if (!MPIDI_OFI_nic_is_up(p)) {
             continue;
         }
-        if (!first_prov) {
-            first_prov = p;
+        if (!pref_prov || match_prov_addr(p, MPIR_pmi_hostname())) {
+            pref_prov = p;
         }
 #ifdef HAVE_LIBFABRIC_NIC
         /* check the nic */
@@ -185,9 +186,9 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
     }
 
     if (nic_count == 0) {
-        MPIR_ERR_CHKANDJUMP(!first_prov, mpi_errno, MPI_ERR_OTHER, "**ofi_no_prov");
+        MPIR_ERR_CHKANDJUMP(!pref_prov, mpi_errno, MPI_ERR_OTHER, "**ofi_no_prov");
         /* If no NICs are detected, then force using first provider */
-        MPIDI_OFI_global.prov_use[0] = fi_dupinfo(first_prov);
+        MPIDI_OFI_global.prov_use[0] = fi_dupinfo(pref_prov);
         MPIR_Assert(MPIDI_OFI_global.prov_use[0]);
         mpi_errno = setup_single_nic();
         MPIR_ERR_CHECK(mpi_errno);
@@ -438,4 +439,39 @@ bool MPIDI_OFI_nic_is_up(struct fi_info *prov)
 #endif
 
     return true;
+}
+
+static bool match_prov_addr(struct fi_info *prov, const char *hostname)
+{
+    bool match = false;
+
+    if (!hostname) {
+        goto fn_exit;
+    }
+
+    char addr_buf[500];
+    switch (prov->addr_format) {
+        case FI_SOCKADDR_IN:
+            inet_ntop(AF_INET, &((struct sockaddr_in *) prov->src_addr)->sin_addr, addr_buf, 500);
+            match = (strcmp(hostname, addr_buf) == 0);
+            break;
+        case FI_SOCKADDR_IN6:
+            inet_ntop(AF_INET6, &((struct sockaddr_in6 *) prov->src_addr)->sin6_addr,
+                      addr_buf, 500);
+            match = (strcmp(hostname, addr_buf) == 0);
+            break;
+        case FI_SOCKADDR_IB:
+            break;
+        case FI_ADDR_PSMX:
+            break;
+        case FI_ADDR_GNI:
+            break;
+        case FI_ADDR_STR:
+            match = (strcmp(hostname, (char *) prov->src_addr) == 0);
+            break;
+        default:
+            break;
+    }
+  fn_exit:
+    return match;
 }
