@@ -469,7 +469,7 @@ PMI_API_PUBLIC int PMI_KVS_Get(const char kvsname[], const char key[], char valu
 
     const char *tmp_val;
     bool found;
-    pmi_errno = PMIU_msg_get_response_get(&pmicmd, &tmp_val, &found);
+    pmi_errno = PMIU_msg_get_response_get(&pmicmd, &found, &tmp_val);
     PMIU_ERR_POP(pmi_errno);
 
     MPL_strncpy(value, tmp_val, length);

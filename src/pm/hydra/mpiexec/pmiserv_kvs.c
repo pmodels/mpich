@@ -79,9 +79,9 @@ HYD_status HYD_pmiserv_kvs_get(struct HYD_proxy *proxy, int process_fd, int pgid
     struct PMIU_cmd pmi_response;
     if (val) {
         if (sync) {
-            pmi_errno = PMIU_msg_set_response_kvsget(pmi, &pmi_response, is_static, val, true);
+            pmi_errno = PMIU_msg_set_response_kvsget(pmi, &pmi_response, is_static, true, val);
         } else {
-            pmi_errno = PMIU_msg_set_response_get(pmi, &pmi_response, is_static, val, true);
+            pmi_errno = PMIU_msg_set_response_get(pmi, &pmi_response, is_static, true, val);
         }
     } else {
         pmi_errno = PMIU_msg_set_response_fail(pmi, &pmi_response, is_static, 1, "key_not_found");
