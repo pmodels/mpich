@@ -79,8 +79,8 @@ GETNODEATTR:
         key: STRING
         wait: BOOLEAN, optional=false
     R: info-getnodeattr-response
-        value: STRING
         found: BOOLEAN
+        value: STRING
 
 # PMI2 info-getjobattr is within the semantics of PMI1 get
 GET:
@@ -88,8 +88,8 @@ GET:
         kvsname: STRING, optional=NULL
         key: STRING
     R: info-getjobattr-response
-        value: STRING
         found: BOOLEAN
+        value: STRING
 
 KVSPUT:
     Q: kvs-put
@@ -103,8 +103,8 @@ KVSGET:
         srcid: INTEGER, optional=-1
         key: STRING
     R: kvs-get-response
-        value: STRING
         found: BOOLEAN
+        value: STRING
 
 KVSFENCE:
     Q: kvs-fence

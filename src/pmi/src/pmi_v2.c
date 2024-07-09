@@ -393,7 +393,7 @@ PMI_API_PUBLIC
 
     const char *tmp_val;
     bool found;
-    pmi_errno = PMIU_msg_get_response_kvsget(&pmicmd, &tmp_val, &found);
+    pmi_errno = PMIU_msg_get_response_kvsget(&pmicmd, &found, &tmp_val);
     PMIU_ERR_POP(pmi_errno || !found);
 
     int ret;
@@ -423,7 +423,7 @@ PMI_API_PUBLIC
     const char *tmp_val;
     bool found;
     if (!pmi_errno) {
-        pmi_errno = PMIU_msg_get_response_getnodeattr(&pmicmd, &tmp_val, &found);
+        pmi_errno = PMIU_msg_get_response_getnodeattr(&pmicmd, &found, &tmp_val);
     }
 
     if (!pmi_errno && found) {
@@ -481,7 +481,7 @@ PMI_API_PUBLIC int PMI2_Info_GetNodeAttrIntArray(const char name[], int array[],
     const char *tmp_val;
     bool found;
     if (!pmi_errno) {
-        pmi_errno = PMIU_msg_get_response_getnodeattr(&pmicmd, &tmp_val, &found);
+        pmi_errno = PMIU_msg_get_response_getnodeattr(&pmicmd, &found, &tmp_val);
     }
 
     if (!pmi_errno && found) {
@@ -530,7 +530,7 @@ PMI_API_PUBLIC int PMI2_Info_GetJobAttr(const char name[], char value[], int val
         bool found;
         const char *tmp_val;
         if (pmi_errno == PMIU_SUCCESS) {
-            pmi_errno = PMIU_msg_get_response_get(&pmicmd, &tmp_val, &found);
+            pmi_errno = PMIU_msg_get_response_get(&pmicmd, &found, &tmp_val);
         }
 
         if (!pmi_errno && found) {
@@ -562,7 +562,7 @@ PMI_API_PUBLIC int PMI2_Info_GetJobAttrIntArray(const char name[], int array[], 
     bool found;
     const char *tmp_val;
     if (pmi_errno == PMIU_SUCCESS) {
-        pmi_errno = PMIU_msg_get_response_get(&pmicmd, &tmp_val, &found);
+        pmi_errno = PMIU_msg_get_response_get(&pmicmd, &found, &tmp_val);
     }
 
     if (!pmi_errno && found) {

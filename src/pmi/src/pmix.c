@@ -262,7 +262,7 @@ pmix_status_t PMIx_Get(const pmix_proc_t * proc, const char key[],
         bool found;
         const char *tmp_val;
         if (pmi_errno == PMIU_SUCCESS) {
-            pmi_errno = PMIU_msg_get_response_get(&pmicmd, &tmp_val, &found);
+            pmi_errno = PMIU_msg_get_response_get(&pmicmd, &found, &tmp_val);
         }
 
         if (!pmi_errno && found) {
@@ -298,7 +298,7 @@ pmix_status_t PMIx_Get(const pmix_proc_t * proc, const char key[],
 
     const char *tmp_val;
     bool found;
-    pmi_errno = PMIU_msg_get_response_kvsget(&pmicmd, &tmp_val, &found);
+    pmi_errno = PMIU_msg_get_response_kvsget(&pmicmd, &found, &tmp_val);
     PMIU_ERR_POP(pmi_errno);
 
     if (found) {
