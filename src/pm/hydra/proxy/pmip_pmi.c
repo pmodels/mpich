@@ -438,7 +438,7 @@ HYD_status fn_get(struct pmip_downstream * p, struct PMIU_cmd * pmi)
 
     if (found) {
         struct PMIU_cmd pmi_response;
-        PMIU_msg_set_response_get(pmi, &pmi_response, is_static, val, found);
+        PMIU_msg_set_response_get(pmi, &pmi_response, is_static, found, val);
 
         status = send_cmd_downstream(p->pmi_fd, &pmi_response);
         HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -715,7 +715,7 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     struct PMIU_cmd pmi_response;
     if (found) {
-        pmi_errno = PMIU_msg_set_response_getnodeattr(pmi, &pmi_response, is_static, val, true);
+        pmi_errno = PMIU_msg_set_response_getnodeattr(pmi, &pmi_response, is_static, true, val);
     } else {
         pmi_errno = PMIU_msg_set_response_fail(pmi, &pmi_response, is_static, 1, "not_found");
     }
