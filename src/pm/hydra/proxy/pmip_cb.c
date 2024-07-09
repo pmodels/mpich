@@ -312,16 +312,19 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             close(fd);
 
             if (HYD_pmcd_pmip.user_global.auto_cleanup) {
-                /* kill all processes */
-                /* preset all exit_status except for the closed pid */
-                struct pmip_pg *pg = PMIP_pg_from_downstream(p);
-                for (int i = 0; i < pg->num_procs; i++) {
-                    if (p != &pg->downstreams[i] &&
-                        pg->downstreams[i].exit_status == PMIP_EXIT_STATUS_UNSET) {
-                        pg->downstreams[i].exit_status = 0;
+                /* if exit_status has been set, the kill signals bcast'ed already */
+                if (p->exit_status == PMIP_EXIT_STATUS_UNSET) {
+                    /* kill all processes */
+                    /* preset all exit_status except for the closed pid */
+                    struct pmip_pg *pg = PMIP_pg_from_downstream(p);
+                    for (int i = 0; i < pg->num_procs; i++) {
+                        if (p != &pg->downstreams[i] &&
+                            pg->downstreams[i].exit_status == PMIP_EXIT_STATUS_UNSET) {
+                            pg->downstreams[i].exit_status = 0;
+                        }
                     }
+                    PMIP_bcast_signal(SIGKILL);
                 }
-                PMIP_bcast_signal(SIGKILL);
             } else {
                 /* If the user doesn't want to automatically cleanup,
                  * signal the remaining processes, and send this
