@@ -110,6 +110,10 @@
 **pmix_resolve_peers %d: PMIx_Resolve_peers returned %d
 **pmix_spawn: PMIx_Spawn failed
 **pmix_spawn %s: PMIx_Spawn failed with error %s
+**pmix_load_topo: PMIx_Load_topology failed
+**pmix_load_topo %d: PMIx_Load_topology failed with error %d
+**pmix_unknown_topo: PMIx_Load_topology returns unknown topology
+**pmix_unknown_topo %s: PMIx_Load_topology returns unknown topology with error %s
 #
 # PMI finalize exit handler registration
 #

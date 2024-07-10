@@ -202,27 +202,21 @@ int MPII_hwtopo_init(void)
 
 #ifdef HAVE_HWLOC
     bindset = hwloc_bitmap_alloc();
-    hwloc_topology_init(&hwloc_topology);
-    char *xmlfile = MPIR_pmi_get_jobattr("PMI_hwloc_xmlfile");
-    if (xmlfile != NULL) {
-        int rc;
-        rc = hwloc_topology_set_xml(hwloc_topology, xmlfile);
-        if (rc == 0) {
-            /* To have hwloc still actually call OS-specific hooks, the
-             * HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
-             * file is really the underlying system. */
-            hwloc_topology_set_flags(hwloc_topology, HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM);
-        }
-        MPL_free(xmlfile);
-    }
 
-    hwloc_topology_set_io_types_filter(hwloc_topology, HWLOC_TYPE_FILTER_KEEP_ALL);
-    if (!hwloc_topology_load(hwloc_topology))
-        bindset_is_valid =
-            !hwloc_get_proc_cpubind(hwloc_topology, getpid(), bindset, HWLOC_CPUBIND_PROCESS);
+    MPIR_pmi_topology_t topo;
+    mpi_errno = MPIR_pmi_load_hwloc_topology(&topo);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    hwloc_topology = (hwloc_topology_t) topo.topology;
+
+    bindset_is_valid =
+        !hwloc_get_proc_cpubind(hwloc_topology, getpid(), bindset, HWLOC_CPUBIND_PROCESS);
 #endif
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPII_hwtopo_finalize(void)
@@ -230,7 +224,6 @@ int MPII_hwtopo_finalize(void)
     int mpi_errno = MPI_SUCCESS;
 
 #ifdef HAVE_HWLOC
-    hwloc_topology_destroy(hwloc_topology);
     hwloc_bitmap_free(bindset);
 #endif
 

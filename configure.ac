@@ -1730,6 +1730,7 @@ if test "$pac_3rd_party_pmi" = "yes" ; then
     AC_CHECK_FUNC([PMI2_Init], [enable_pmi2="yes"])
     AC_CHECK_FUNC([PMIx_Init], [enable_pmix="yes"])
     AC_CHECK_FUNC([PMIx_Info_load],[],[AC_DEFINE([NEED_PMIX_INFO_LOAD], 1, [Define if PMIX_INFO_LOAD macro is needed])])
+    AC_CHECK_FUNC([PMIx_Load_topology],[AC_DEFINE([HAS_PMIX_LOAD_TOPOLOGY], 1, [Define if PMIx_Load_topology is available])])
     if test "$enable_pmi2" = "yes"; then
         AC_CHECK_MEMBER([PMI2_keyval_t.key], [], [
             AC_DEFINE([MISSING_PMI2_KEYVAL_T], 1, [Define if PMI2_KEYVAL_T is missing])
