@@ -365,7 +365,7 @@ AC_ARG_ENABLE(tag-error-bits,
 [  --enable-tag-error-bits=yes|no - Control whether bits are taken from the user tag for error handling.
         yes       - Two bits are taken from the user tag to support error propagation.
         no        - No bits are taken from the user tag (this could cause deadlock if an error is detected during a collective).
-],,enable_tag_error_bits=yes)
+],,enable_tag_error_bits=no)
 
 AC_ARG_ENABLE(extended-context-bits,
 [  --enable-extended-context-bits=yes|no - Enable wider context id space. (experimental)
