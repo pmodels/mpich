@@ -133,6 +133,8 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     /* FIXME: rank, size, nodemap parameters are not needed */
     MPIR_Assert(MPIR_Process.rank == rank);
     MPIR_Assert(MPIR_Process.size == size);
+    int local_size = MPIR_Process.local_size;
+    MPIR_Assert(local_size > 0);
 
     int recv_bc_len = bc_len;
     if (!same_len) {
@@ -142,7 +144,9 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         *ret_bc_len = recv_bc_len;
     }
 
-    mpi_errno = MPIDU_Init_shm_alloc(recv_bc_len * size, (void **) &segment);
+    /* the allgather is no long in-place, allocate space for both
+     * the node and allgather results for all ranks */
+    mpi_errno = MPIDU_Init_shm_alloc(recv_bc_len * (size + local_size), (void **) &segment);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (size == 1) {

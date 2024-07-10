@@ -46,6 +46,11 @@ int MPIDI_create_init_comm(MPIR_Comm ** comm)
         }
         mpi_errno = MPIDIG_init_comm(init_comm);
         MPIR_ERR_CHECK(mpi_errno);
+        /* hacky, consider a separate MPIDI_{NM,SHM}_init_comm_hook
+	 * to initialize the init_comm, e.g. to eliminate potential
+	 * runtime features for stability during init */
+        mpi_errno = MPIDI_NM_mpi_comm_commit_pre_hook(init_comm);
+        MPIR_ERR_CHECK(mpi_errno);
 
         *comm = init_comm;
     }
