@@ -192,6 +192,11 @@ AC_ARG_ENABLE(ft-tests,
                 [Include tests for fault tolerance (default no)])],,
         [enable_ft_tests=no])
 
+AC_ARG_ENABLE(coll-error-tests,
+        [AS_HELP_STRING([--enable-coll-error-tests],
+                [Include tests for fault tolerance (default no)])],,
+        [enable_coll_error_tests=no])
+
 AC_ARG_ENABLE(comm-overlap-tests,
         [AS_HELP_STRING([--enable-comm-overlap-tests],
                 [Include tests for communicator overlap (default)])],,
@@ -543,6 +548,15 @@ if test "$first_pm" = "hydra" -a  "$enable_strictmpi" = "no" -a "$enable_ft_test
     ftdir="ft"
 fi
 AC_SUBST(ftdir)
+
+# Setup "coll_error" variable based on whether coll error tests
+# are enabled or not
+if test "${enable_coll_error_tests}" = "yes" ; then
+   coll_error=""
+else
+   coll_error="#"
+fi
+AC_SUBST(coll_error)
 
 # Setup "comm_overlap" variable based on whether comm_overlap tests
 # are enabled or not
@@ -1861,6 +1875,7 @@ AC_OUTPUT(maint/testmerge \
           f08/testlist \
           threads/testlist \
           errors/testlist \
+          errors/coll/testlist \
           errors/cxx/testlist \
           errors/f77/testlist \
           errors/f90/testlist \
