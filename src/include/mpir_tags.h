@@ -87,21 +87,21 @@
 #ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_SET_ERROR_BIT(tag) ((tag) |= MPIR_TAG_ERROR_BIT)
 #else
-#define MPIR_TAG_SET_ERROR_BIT(tag) (tag)
+#define MPIR_TAG_SET_ERROR_BIT(tag) do { } while (0)
 #endif
 
 /* This macro sets the value of the process failure bit in the MPI tag to 1 */
 #ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_SET_PROC_FAILURE_BIT(tag) ((tag) |= (MPIR_TAG_ERROR_BIT | MPIR_TAG_PROC_FAILURE_BIT))
 #else
-#define MPIR_TAG_SET_PROC_FAILURE_BIT(tag) (tag)
+#define MPIR_TAG_SET_PROC_FAILURE_BIT(tag) do { } while (0)
 #endif
 
 /* This macro clears the value of the error bits in the MPI tag */
 #ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_CLEAR_ERROR_BITS(tag) ((tag) &= ~(MPIR_TAG_ERROR_BIT ^ MPIR_TAG_PROC_FAILURE_BIT))
 #else
-#define MPIR_TAG_CLEAR_ERROR_BITS(tag) (tag)
+#define MPIR_TAG_CLEAR_ERROR_BITS(tag) do { } while (0)
 #endif
 
 /* This macro masks the value of the error bits in the MPI tag */
