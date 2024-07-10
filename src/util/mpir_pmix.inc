@@ -265,6 +265,22 @@ static int pmix_barrier(void)
     goto fn_exit;
 }
 
+static int pmix_barrier_only(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+    /* use global wildcard proc set */
+    pmi_errno = PMIx_Fence(&pmix_wcproc, 1, NULL, 0);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_fence", "**pmix_fence %d", pmi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static int pmix_barrier_local(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -933,6 +949,11 @@ static bool pmix_get_jobattr(const char *key, char *valbuf)
 }
 
 static int pmix_barrier(void)
+{
+    return MPI_ERR_INTERN;
+}
+
+static int pmix_barrier_only(void)
 {
     return MPI_ERR_INTERN;
 }

@@ -359,6 +359,14 @@ int MPIR_pmi_barrier(void)
     return mpi_errno;
 }
 
+int MPIR_pmi_barrier_only(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    SWITCH_PMI(mpi_errno = pmi1_barrier(), mpi_errno = pmi2_barrier(), mpi_errno =
+               pmix_barrier_only());
+    return mpi_errno;
+}
+
 int MPIR_pmi_barrier_local(void)
 {
     int mpi_errno = MPI_SUCCESS;

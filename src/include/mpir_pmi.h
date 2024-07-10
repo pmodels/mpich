@@ -58,6 +58,7 @@ char *MPIR_pmi_get_jobattr(const char *key);    /* key must use "PMI_" prefix */
 
 /* * barrier or kvs fence. */
 int MPIR_pmi_barrier(void);
+int MPIR_pmi_barrier_only(void);
 /* * barrier over local set. More efficient for PMIx. Same as MPIR_pmi_barrier for PMI1/2. */
 int MPIR_pmi_barrier_local(void);
 /* * put, to global domain */
