@@ -1,0 +1,23 @@
+noalias 2
+nb_noalias 2
+noalias2 4
+noalias3 4
+rerr 2
+nb_rerr 2
+reduce_local 1
+@coll_error@bcastlength 4
+@coll_error@ibcastlength 4
+@coll_error@reducelength 4
+@coll_error@ireducelength 4
+@coll_error@allreducelength 4
+@coll_error@iallreducelength 4
+@coll_error@reduceop 4
+@coll_error@ireduceop 4
+@coll_error@gatherlength 4
+@coll_error@igatherlength 4
+@coll_error@scatterlength 4
+@coll_error@iscatterlength 4
+@coll_error@allgatherlength 4
+@coll_error@iallgatherlength 4
+@coll_error@alltoalllength 4
+

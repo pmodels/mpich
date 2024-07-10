@@ -464,6 +464,7 @@
 /errors/coll/reduceop
 /errors/coll/rerr
 /errors/coll/scatterlength
+/errors/coll/testlist
 /errors/comm/ccreate1
 /errors/comm/cfree
 /errors/comm/comm_create_group_nullarg
