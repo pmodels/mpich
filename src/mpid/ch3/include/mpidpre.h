@@ -20,6 +20,8 @@ struct MPIR_Request;
 #include "hcoll/api/hcoll_dte.h"
 #endif
 
+#define MPID_TAG_DEV_BITS 0
+
 typedef struct {
 #ifdef HAVE_HCOLL
     hcoll_datatype_t hcoll_datatype;
