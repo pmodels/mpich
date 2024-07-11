@@ -15,13 +15,13 @@ cvars:
     - name        : MPIR_CVAR_CH4_CMA_ENABLE
       category    : CH4
       type        : int
-      default     : 1
+      default     : 0
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        To manually disable CMA set to 0. The environment variable is valid only when the CMA
-        submodule is enabled.
+        Set to 1 to manually enable CMA. It is disabled by default because the CMA requires
+        the ptrace_scope permission, which is often disabled.
 
     - name        : MPIR_CVAR_CH4_IPC_CMA_P2P_THRESHOLD
       category    : CH4
