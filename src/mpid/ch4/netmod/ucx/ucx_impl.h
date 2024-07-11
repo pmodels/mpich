@@ -58,7 +58,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_tag_mask(int mpi_tag, int src)
     uint64_t tag_mask = 0xffffffffffffffff;
     MPIR_TAG_CLEAR_ERROR_BITS(tag_mask);
     if (mpi_tag == MPI_ANY_TAG)
-        tag_mask &= ~MPIR_TAG_USABLE_BITS;
+        tag_mask &= ~MPIR_TAG_USABLE_MASK;
 
     if (src == MPI_ANY_SOURCE)
         tag_mask &= ~(MPIDI_UCX_RANK_MASK);
