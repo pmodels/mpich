@@ -27,6 +27,16 @@ cvars:
       description : >-
         Defines the location of tuning file.
 
+    - name        : MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file for GPU.
+
     - name        : MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE
       category    : CH4
       type        : boolean
@@ -117,6 +127,9 @@ static void *create_container(struct json_object *obj)
         if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_release_gather"))
             cnt->id =
                 MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather;
+        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_ipc_read"))
+            cnt->id =
+                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read;
         else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_barrier_release_gather"))
             cnt->id =
                 MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather;
@@ -384,6 +397,16 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     }
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Initialize collective selection for gpu*/
+    if (!strcmp(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU, "")) {
+        mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json,
+                                              create_container, &MPIDI_global.shm.posix.csel_root_gpu);
+    } else {
+        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU,
+                                               create_container, &MPIDI_global.shm.posix.csel_root_gpu);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno = MPIDU_Init_shm_alloc(sizeof(int), &MPIDI_POSIX_global.shm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
@@ -421,6 +444,11 @@ int MPIDI_POSIX_coll_finalize(void)
 
     if (MPIDI_global.shm.posix.csel_root) {
         mpi_errno = MPIR_Csel_free(MPIDI_global.shm.posix.csel_root);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (MPIDI_global.shm.posix.csel_root_gpu) {
+        mpi_errno = MPIR_Csel_free(MPIDI_global.shm.posix.csel_root_gpu);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

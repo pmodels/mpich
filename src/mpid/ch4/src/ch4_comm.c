@@ -230,8 +230,21 @@ int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
 #endif
 
     /* prune selection tree */
-    mpi_errno = MPIR_Csel_prune(MPIDI_global.csel_root, comm, &MPIDI_COMM(comm, csel_comm));
-    MPIR_ERR_CHECK(mpi_errno);
+    if (MPIDI_global.csel_root) {
+        mpi_errno = MPIR_Csel_prune(MPIDI_global.csel_root, comm, &MPIDI_COMM(comm, csel_comm));
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        MPIDI_COMM(comm, csel_comm) = NULL;
+    }
+
+    /* prune selection tree for gpu */
+    if (MPIDI_global.csel_root_gpu) {
+        mpi_errno = MPIR_Csel_prune(MPIDI_global.csel_root_gpu, comm,
+                                    &MPIDI_COMM(comm, csel_comm_gpu));
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        MPIDI_COMM(comm, csel_comm_gpu) = NULL;
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -342,6 +355,11 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
 
     if (MPIDI_COMM(comm, csel_comm)) {
         mpi_errno = MPIR_Csel_free(MPIDI_COMM(comm, csel_comm));
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (MPIDI_COMM(comm, csel_comm_gpu)) {
+        mpi_errno = MPIR_Csel_free(MPIDI_COMM(comm, csel_comm_gpu));
         MPIR_ERR_CHECK(mpi_errno);
     }
 
