@@ -1150,6 +1150,7 @@
 /impls/mpich/comm/comm_info_hint
 /impls/mpich/comm/testlist
 /impls/mpich/info/memory_alloc_kinds
+/impls/mpich/info/testlist
 /impls/mpich/mpi_t/collparmt
 /impls/mpich/mpi_t/recvq_events
 /impls/mpich/misc/gpu_query
