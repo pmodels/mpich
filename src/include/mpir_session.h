@@ -14,6 +14,7 @@ struct MPIR_Session {
     MPID_Thread_mutex_t mutex;
     MPIR_Errhandler *errhandler;
     struct MPII_BsendBuffer *bsendbuffer;       /* for MPI_Session_attach_buffer */
+    int requested_thread_level;
     int thread_level;
     bool strict_finalize;
     char *memory_alloc_kinds;
