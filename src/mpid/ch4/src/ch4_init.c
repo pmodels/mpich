@@ -823,8 +823,6 @@ int MPID_Finalize(void)
     mpi_errno = MPIDU_stream_workq_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_pmi_finalize();
-
     for (int i = 0; i < MAX_CH4_MUTEXES; i++) {
         int err;
         MPID_Thread_mutex_destroy(&MPIDI_global.m[i], &err);
