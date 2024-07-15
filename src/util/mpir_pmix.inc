@@ -15,6 +15,7 @@
 #define PMIX_ERR_NOT_IMPLEMENTED -48
 #endif
 
+/* These are const after init. FIXME: We need a way to guard changes outside init. */
 static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
 static pmix_proc_t pmix_parent;
@@ -104,9 +105,12 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     pmix_value_t value;
     pmix_value_t *val = &value;
 
+    pmix_proc_t proc;
+    PMIX_PROC_CONSTRUCT(&proc);
+    MPL_strncpy(proc.nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
     for (int i = 0; i < *size; i++) {
-        pmix_proc.rank = i;
-        pmi_errno = PMIx_Get(&pmix_proc, PMIX_FABRIC_COORDINATES, NULL, 0, &val);
+        proc.rank = i;
+        pmi_errno = PMIx_Get(&proc, PMIX_FABRIC_COORDINATES, NULL, 0, &val);
         if (pmi_errno != PMIX_SUCCESS) {
             MPIR_Process.coords = NULL;
             break;
