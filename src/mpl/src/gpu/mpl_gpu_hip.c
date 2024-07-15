@@ -492,7 +492,7 @@ hipError_t hipFree(void *dptr)
     gpu_free_hooks_cb(dptr);
     result = sys_hipFree(dptr);
 
-    MPL_initlock_lock(&free_hook_mutex);
+    MPL_initlock_unlock(&free_hook_mutex);
     return result;
 }
 
