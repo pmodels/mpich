@@ -123,7 +123,7 @@ MPIR_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, 0, 0, MPIR_ERRHANDLER,
     NULL, {0}
 };
 
-void MPIR_Err_init(void)
+static void init_builtins(void)
 {
     /* these are "stub" objects, so the other fields (which are statically
      * initialized to zero) don't really matter */
@@ -131,6 +131,11 @@ void MPIR_Err_init(void)
     MPIR_Errhandler_builtin[1].handle = MPI_ERRORS_RETURN;
     MPIR_Errhandler_builtin[2].handle = MPIR_ERRORS_THROW_EXCEPTIONS;
     MPIR_Errhandler_builtin[3].handle = MPI_ERRORS_ABORT;
+}
+
+void MPIR_Err_init(void)
+{
+    init_builtins();
 
     MPIR_Err_stack_init();
     did_err_init = TRUE;
@@ -442,6 +447,13 @@ int MPIR_Err_return_session_init(MPIR_Errhandler * errhandler_ptr, const char fc
     const int error_class = ERROR_GET_CLASS(errcode);
     checkValidErrcode(error_class, fcname, &errcode);
     int errhandler_handle;
+
+    /* It's likely nothing is initialized yet. Make sure the builtin error handlers are recognized */
+    init_builtins();
+    if (errhandler_ptr->handle == MPI_ERRORS_RETURN ||
+        errhandler_ptr->handle == MPIR_ERRORS_THROW_EXCEPTIONS) {
+        return errcode;
+    }
 
     /* --BEGIN ERROR HANDLING-- */
     if (!MPIR_Errutil_is_initialized()) {
