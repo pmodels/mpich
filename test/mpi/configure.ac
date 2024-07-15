@@ -409,6 +409,13 @@ fi
 dnl MPIEXEC is used in the Makefile testing target.
 AC_SUBST([MPIEXEC])
 
+if ($MPIEXEC --version | grep -i hydra) ; then
+    use_hydra=""
+else
+    use_hydra="#"
+fi
+AC_SUBST([use_hydra])
+
 # Make sure we export CC before configuring DTPools, since MPI is
 # needed to build the library.
 export CC
@@ -1864,5 +1871,6 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/misc/Makefile \
           impls/mpich/ulfm/Makefile \
           impls/mpich/info/Makefile \
+          impls/mpich/info/testlist \
           )
 
