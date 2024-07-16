@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-static int verbose = 0;
 static int check_value(const char *value, const char *expected);
 
 int main(int argc, char *argv[])
@@ -28,6 +27,7 @@ int main(int argc, char *argv[])
          * those keys, returning a value for mpi_memory_alloc_kind is
          * optional, and MPICH does not support it at this time. */
         errs++;
+        printf("Key mpi_memory_alloc_kinds was not found in MPI_INFO_ENV.\n");
     }
 
     /* test if MPI_COMM_WORLD gets the right value */
@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
         errs += check_value(value, "mpi,system,mpi:alloc_mem");
     } else {
         errs++;
+        printf("Key mpi_memory_alloc_kinds was not found in info from MPI_COMM_WORLD.\n");
     }
 
     /* test if session gets the right value */
@@ -52,6 +53,7 @@ int main(int argc, char *argv[])
         errs += check_value(value, "mpi,system,mpi:alloc_mem");
     } else {
         errs++;
+        printf("Key mpi_memory_alloc_kinds was not found in info from MPI session.\n");
     }
     MPI_Session_finalize(&session);
 
@@ -66,6 +68,7 @@ int main(int argc, char *argv[])
         errs += check_value(value, "mpi,system,mpi:win_allocate:alloc_mem");
     } else {
         errs++;
+        printf("Key mpi_memory_alloc_kinds was not found in info from MPI_Session_init with info.\n");
     }
     MPI_Info_free(&info_in);
     MPI_Info_free(&sinfo);
@@ -78,8 +81,7 @@ int main(int argc, char *argv[])
 static int check_value(const char *value, const char *expected)
 {
     if (strcmp(value, expected)) {
-        MTestPrintfMsg(verbose, "mpi_memory_alloc_kinds value is \"%s\", expected \"%s\"\n",
-                       value, expected);
+        printf("mpi_memory_alloc_kinds value is \"%s\", expected \"%s\"\n", value, expected);
         return 1;
     }
 
