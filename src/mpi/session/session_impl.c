@@ -59,7 +59,13 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
 
     session_ptr->requested_thread_level = thread_level;
     session_ptr->strict_finalize = strict_finalize;
-    session_ptr->memory_alloc_kinds = memory_alloc_kinds;
+
+    if (memory_alloc_kinds) {
+        session_ptr->memory_alloc_kinds = memory_alloc_kinds;
+    } else {
+        MPIR_Assert(MPIR_Process.memory_alloc_kinds);
+        session_ptr->memory_alloc_kinds = MPL_strdup(MPIR_Process.memory_alloc_kinds);
+    }
 
     *p_session_ptr = session_ptr;
 
