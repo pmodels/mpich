@@ -33,7 +33,7 @@ static int pmix_build_app_cmd(char *path, char *command, char **app_cmd);
 static int pmix_prep_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
                            MPIR_Info * info_ptrs[], pmix_app_t * apps, pmix_info_t ** job_info,
                            size_t * njob_info);
-static int pmix_fence_nspace_proc(char *nspace, pmix_proc_t proc);
+static int pmix_fence_nspace_proc(const char *nspace, const char *parent_nspace, int parent_rank);
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -215,7 +215,7 @@ static int pmix_get_parent(const char *key, char *val, int val_size)
 
     /* Fence with all other spawned procs in namespace and parent proc to
      * sync with MPIR_pmi_spawn_multiple in parent process */
-    mpi_errno = pmix_fence_nspace_proc(pmix_proc.nspace, pmix_parent);
+    mpi_errno = pmix_fence_nspace_proc(pmix_proc.nspace, pmix_parent.nspace, pmix_parent.rank);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -472,7 +472,7 @@ static int pmix_spawn(int count, char *commands[], char **argvs[], const int max
 
     /* Fence with spawned procs in new nspace (counter part in MPIR_pmi_kvs_parent_get)
      * Preput data in KVS must be read by child procs before is overwritten in next Spawn */
-    mpi_errno = pmix_fence_nspace_proc(new_nspace, pmix_proc);
+    mpi_errno = pmix_fence_nspace_proc(new_nspace, pmix_proc.nspace, pmix_proc.rank);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     /* Free job info */
@@ -864,7 +864,7 @@ int pmix_prep_spawn(int count, char *commands[], char **argvs[], const int maxpr
 }
 
 static
-int pmix_fence_nspace_proc(char *nspace, pmix_proc_t proc)
+int pmix_fence_nspace_proc(const char *nspace, const char *parent_nspace, int parent_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno = PMIX_SUCCESS;
@@ -888,12 +888,12 @@ int pmix_fence_nspace_proc(char *nspace, pmix_proc_t proc)
     nprocs = pvalue->data.uint32;
     PMIX_VALUE_RELEASE(pvalue);
 
-    /* Create procs array for fence of procs in nspace and proc */
-    PMIX_PROC_CREATE(procs, nprocs + 1);        /* +1 for proc */
+    /* Create procs array for fence of procs in nspace and parent */
+    PMIX_PROC_CREATE(procs, nprocs + 1);        /* +1 for parent */
     for (size_t i = 0; i < nprocs; i++) {
         PMIX_LOAD_PROCID(&(procs[i]), nspace, i);
     }
-    PMIX_PROC_LOAD(&(procs[nprocs]), proc.nspace, proc.rank);
+    PMIX_PROC_LOAD(&(procs[nprocs]), parent_nspace, parent_rank);
 
     /* Fence */
     PMIX_INFO_CREATE(fence_info, 1);
