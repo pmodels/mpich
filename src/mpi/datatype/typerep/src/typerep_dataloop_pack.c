@@ -173,7 +173,7 @@ int MPIR_Typerep_wait(MPIR_Typerep_req typerep_req)
     return MPI_SUCCESS;
 }
 
-int MPIR_Typerep_reduce_is_supported(MPI_Op op, MPI_Datatype datatype)
+int MPIR_Typerep_reduce_is_supported(MPI_Op op, MPI_Aint count, MPI_Datatype datatype)
 {
     /* This function is supposed to return 1 only for yaksa */
     return 0;
