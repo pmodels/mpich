@@ -58,6 +58,7 @@ char *MPIR_pmi_get_jobattr(const char *key);    /* key must use "PMI_" prefix */
 
 /* * barrier or kvs fence. */
 int MPIR_pmi_barrier(void);
+int MPIR_pmi_barrier_only(void);
 /* * barrier over local set. More efficient for PMIx. Same as MPIR_pmi_barrier for PMI1/2. */
 int MPIR_pmi_barrier_local(void);
 /* * put, to global domain */
@@ -105,5 +106,15 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
 int MPIR_pmi_has_local_cliques(void);
 int MPIR_pmi_build_nodemap(int *nodemap, int sz);
 int MPIR_pmi_build_nodemap_fallback(int sz, int myrank, int *out_nodemap);
+
+#ifdef HAVE_HWLOC
+/* A fallback for PMIx_Load_topology. */
+typedef struct MPIR_pmi_topology {
+    const char *source;
+    void *topology;  /* assume hwloc_topology_t is a pointer */
+} MPIR_pmi_topology_t;
+
+int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t *topo);
+#endif
 
 #endif /* MPIR_PMI_H_INCLUDED */

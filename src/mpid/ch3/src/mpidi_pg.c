@@ -64,12 +64,6 @@ int MPIDI_PG_Finalize(void)
 	MPIU_PG_Printall( stdout );
     }
 
-    /* FIXME - straighten out the use of MPIR_pmi_finalize - no use after 
-       PG_Finalize */
-    if (pg_world->connData) {
-        MPIR_pmi_finalize();
-    }
-
     /* Free the storage associated with the process groups */
     pg = MPIDI_PG_list;
     while (pg) {

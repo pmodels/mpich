@@ -1,0 +1,1 @@
+@use_hydra@memory_alloc_kinds 1 mpiexecarg=-memory-alloc-kinds=mpi:alloc_mem

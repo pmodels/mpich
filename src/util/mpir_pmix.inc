@@ -15,6 +15,7 @@
 #define PMIX_ERR_NOT_IMPLEMENTED -48
 #endif
 
+/* These are const after init. FIXME: We need a way to guard changes outside init. */
 static pmix_proc_t pmix_proc;
 static pmix_proc_t pmix_wcproc;
 static pmix_proc_t pmix_parent;
@@ -32,7 +33,7 @@ static int pmix_build_app_cmd(char *path, char *command, char **app_cmd);
 static int pmix_prep_spawn(int count, char *commands[], char **argvs[], const int maxprocs[],
                            MPIR_Info * info_ptrs[], pmix_app_t * apps, pmix_info_t ** job_info,
                            size_t * njob_info);
-static int pmix_fence_nspace_proc(char *nspace, pmix_proc_t proc);
+static int pmix_fence_nspace_proc(const char *nspace, const char *parent_nspace, int parent_rank);
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -104,9 +105,12 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     pmix_value_t value;
     pmix_value_t *val = &value;
 
+    pmix_proc_t proc;
+    PMIX_PROC_CONSTRUCT(&proc);
+    MPL_strncpy(proc.nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
     for (int i = 0; i < *size; i++) {
-        pmix_proc.rank = i;
-        pmi_errno = PMIx_Get(&pmix_proc, PMIX_FABRIC_COORDINATES, NULL, 0, &val);
+        proc.rank = i;
+        pmi_errno = PMIx_Get(&proc, PMIX_FABRIC_COORDINATES, NULL, 0, &val);
         if (pmi_errno != PMIX_SUCCESS) {
             MPIR_Process.coords = NULL;
             break;
@@ -211,7 +215,7 @@ static int pmix_get_parent(const char *key, char *val, int val_size)
 
     /* Fence with all other spawned procs in namespace and parent proc to
      * sync with MPIR_pmi_spawn_multiple in parent process */
-    mpi_errno = pmix_fence_nspace_proc(pmix_proc.nspace, pmix_parent);
+    mpi_errno = pmix_fence_nspace_proc(pmix_proc.nspace, pmix_parent.nspace, pmix_parent.rank);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -258,6 +262,22 @@ static int pmix_barrier(void)
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_fence", "**pmix_fence %d", pmi_errno);
     PMIX_INFO_FREE(info, 1);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int pmix_barrier_only(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+
+    /* use global wildcard proc set */
+    pmi_errno = PMIx_Fence(&pmix_wcproc, 1, NULL, 0);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_fence", "**pmix_fence %d", pmi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -452,7 +472,7 @@ static int pmix_spawn(int count, char *commands[], char **argvs[], const int max
 
     /* Fence with spawned procs in new nspace (counter part in MPIR_pmi_kvs_parent_get)
      * Preput data in KVS must be read by child procs before is overwritten in next Spawn */
-    mpi_errno = pmix_fence_nspace_proc(new_nspace, pmix_proc);
+    mpi_errno = pmix_fence_nspace_proc(new_nspace, pmix_proc.nspace, pmix_proc.rank);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     /* Free job info */
@@ -844,7 +864,7 @@ int pmix_prep_spawn(int count, char *commands[], char **argvs[], const int maxpr
 }
 
 static
-int pmix_fence_nspace_proc(char *nspace, pmix_proc_t proc)
+int pmix_fence_nspace_proc(const char *nspace, const char *parent_nspace, int parent_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno = PMIX_SUCCESS;
@@ -868,12 +888,12 @@ int pmix_fence_nspace_proc(char *nspace, pmix_proc_t proc)
     nprocs = pvalue->data.uint32;
     PMIX_VALUE_RELEASE(pvalue);
 
-    /* Create procs array for fence of procs in nspace and proc */
-    PMIX_PROC_CREATE(procs, nprocs + 1);        /* +1 for proc */
+    /* Create procs array for fence of procs in nspace and parent */
+    PMIX_PROC_CREATE(procs, nprocs + 1);        /* +1 for parent */
     for (size_t i = 0; i < nprocs; i++) {
         PMIX_LOAD_PROCID(&(procs[i]), nspace, i);
     }
-    PMIX_PROC_LOAD(&(procs[nprocs]), proc.nspace, proc.rank);
+    PMIX_PROC_LOAD(&(procs[nprocs]), parent_nspace, parent_rank);
 
     /* Fence */
     PMIX_INFO_CREATE(fence_info, 1);
@@ -933,6 +953,11 @@ static bool pmix_get_jobattr(const char *key, char *valbuf)
 }
 
 static int pmix_barrier(void)
+{
+    return MPI_ERR_INTERN;
+}
+
+static int pmix_barrier_only(void)
 {
     return MPI_ERR_INTERN;
 }

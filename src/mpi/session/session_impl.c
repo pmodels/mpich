@@ -22,7 +22,21 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     int mpi_errno = MPI_SUCCESS;
     MPIR_Session *session_ptr = NULL;
 
-    int provided;
+    int thread_level;
+    bool strict_finalize;
+    char *memory_alloc_kinds;
+    /* Get the thread level requested by the user via info object (if any) */
+    mpi_errno = MPIR_Session_get_thread_level_from_info(info_ptr, &thread_level);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Get the strict finalize parameter via info object (if any) */
+    mpi_errno =
+        MPIR_Session_get_strict_finalize_from_info(info_ptr, &strict_finalize);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Get memory allocation kinds requested by the user (if any) */
+    mpi_errno = MPIR_Session_get_memory_kinds_from_info(info_ptr, &memory_alloc_kinds);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Remark on MPI_THREAD_SINGLE: Multiple sessions may run in threads
      * concurrently, so significant work is needed to support per-session MPI_THREAD_SINGLE.
@@ -36,22 +50,22 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
      * TODO: support per-session MPI_THREAD_SINGLE, use user-requested thread level here
      * instead of MPI_THREAD_MULTIPLE, and optimize
      */
+    int provided;
+
     mpi_errno = MPII_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &provided, &session_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     session_ptr->thread_level = provided;
 
-    /* Get the thread level requested by the user via info object (if any) */
-    mpi_errno = MPIR_Session_get_thread_level_from_info(info_ptr, &(session_ptr->thread_level));
-    MPIR_ERR_CHECK(mpi_errno);
+    session_ptr->requested_thread_level = thread_level;
+    session_ptr->strict_finalize = strict_finalize;
 
-    /* Get the strict finalize parameter via info object (if any) */
-    mpi_errno =
-        MPIR_Session_get_strict_finalize_from_info(info_ptr, &(session_ptr->strict_finalize));
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Get memory allocation kinds requested by the user (if any) */
-    mpi_errno = MPIR_Session_get_memory_kinds_from_info(info_ptr, &session_ptr->memory_alloc_kinds);
+    if (memory_alloc_kinds) {
+        session_ptr->memory_alloc_kinds = memory_alloc_kinds;
+    } else {
+        MPIR_Assert(MPIR_Process.memory_alloc_kinds);
+        session_ptr->memory_alloc_kinds = MPL_strdup(MPIR_Process.memory_alloc_kinds);
+    }
 
     *p_session_ptr = session_ptr;
 

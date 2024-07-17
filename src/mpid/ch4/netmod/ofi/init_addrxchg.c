@@ -190,7 +190,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
     MPIR_Comm *comm = MPIR_Process.comm_world;
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL(3);
 
     int max_vcis;
     int *all_num_vcis;

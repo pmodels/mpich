@@ -25,7 +25,8 @@ static HYD_status HYD_pmcd_pmi_v2_queue_req(struct HYD_proxy *proxy, int process
                                             struct PMIU_cmd *pmi, const char *key);
 static HYD_status check_pending_reqs(const char *key);
 
-static const bool is_static = true;
+/* PMI KVS command may exceed static buffer size */
+static const bool is_static = false;
 
 HYD_status HYD_pmiserv_kvs_get(struct HYD_proxy *proxy, int process_fd, int pgid,
                                struct PMIU_cmd *pmi, bool sync)
@@ -90,6 +91,8 @@ HYD_status HYD_pmiserv_kvs_get(struct HYD_proxy *proxy, int process_fd, int pgid
     status = HYD_pmiserv_pmi_reply(proxy, process_fd, &pmi_response);
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
+    PMIU_cmd_free_buf(&pmi_response);
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
@@ -126,6 +129,8 @@ HYD_status HYD_pmiserv_kvs_put(struct HYD_proxy *proxy, int process_fd, int pgid
 
     status = check_pending_reqs(key);
     HYDU_ERR_POP(status, "check_pending_reqs failed\n");
+
+    PMIU_cmd_free_buf(&pmi_response);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -218,6 +223,8 @@ HYD_status HYD_pmiserv_kvs_fence(struct HYD_proxy *proxy, int process_fd, int pg
             }
         }
     }
+
+    PMIU_cmd_free_buf(&pmi_response);
 
   fn_exit:
     HYDU_FUNC_EXIT();

@@ -209,6 +209,8 @@ int MPIR_pmi_init(void)
     goto fn_exit;
 }
 
+static void fallback_free_hwloc_topology(void);
+
 void MPIR_pmi_finalize(void)
 {
     /* Finalize of PM interface happens in exit handler,
@@ -225,6 +227,10 @@ void MPIR_pmi_finalize(void)
     MPL_free(hwloc_topology_xmlfile);
     hwloc_topology_xmlfile = NULL;
     MPL_free(MPIR_Process.coords);
+
+#ifdef HAVE_HWLOC
+    fallback_free_hwloc_topology();
+#endif
 
     /* delay PMI_Finalize to the exit hook */
     finalize_pending++;
@@ -356,6 +362,14 @@ int MPIR_pmi_barrier(void)
 {
     int mpi_errno = MPI_SUCCESS;
     SWITCH_PMI(mpi_errno = pmi1_barrier(), mpi_errno = pmi2_barrier(), mpi_errno = pmix_barrier());
+    return mpi_errno;
+}
+
+int MPIR_pmi_barrier_only(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    SWITCH_PMI(mpi_errno = pmi1_barrier(), mpi_errno = pmi2_barrier(), mpi_errno =
+               pmix_barrier_only());
     return mpi_errno;
 }
 
@@ -769,6 +783,93 @@ int MPIR_pmi_unpublish(const char name[])
                mpi_errno = pmi2_unpublish(name), mpi_errno = pmix_unpublish(name));
     return mpi_errno;
 }
+
+/* ---- hwloc functions ---- */
+#ifdef HAVE_HWLOC
+
+#include "hwloc.h"
+
+enum {
+    GOT_HWLOC_TOPOLOGY_NONE,
+    GOT_HWLOC_TOPOLOGY_FALLBACK,
+    GOT_HWLOC_TOPOLOGY_PMIX,
+};
+static int got_hwloc_topology = GOT_HWLOC_TOPOLOGY_NONE;
+static hwloc_topology_t hwloc_topology;
+
+static int fallback_load_hwloc_topology(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    hwloc_topology_init(&hwloc_topology);
+    char *xmlfile = MPIR_pmi_get_jobattr("PMI_hwloc_xmlfile");
+    if (xmlfile != NULL) {
+        int rc;
+        rc = hwloc_topology_set_xml(hwloc_topology, xmlfile);
+        if (rc == 0) {
+            /* To have hwloc still actually call OS-specific hooks, the
+                * HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
+                * file is really the underlying system. */
+            hwloc_topology_set_flags(hwloc_topology, HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM);
+        }
+        MPL_free(xmlfile);
+    }
+
+    hwloc_topology_set_io_types_filter(hwloc_topology, HWLOC_TYPE_FILTER_KEEP_ALL);
+    if (hwloc_topology_load(hwloc_topology) == 0) {
+        got_hwloc_topology = GOT_HWLOC_TOPOLOGY_FALLBACK;
+    } else {
+        mpi_errno = MPI_ERR_INTERN;
+    }
+
+    return mpi_errno;
+}
+
+static void fallback_free_hwloc_topology(void)
+{
+    if (got_hwloc_topology == GOT_HWLOC_TOPOLOGY_FALLBACK) {
+        hwloc_topology_destroy(hwloc_topology);
+        got_hwloc_topology = GOT_HWLOC_TOPOLOGY_NONE;
+    }
+}
+
+int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t *topo)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (got_hwloc_topology != GOT_HWLOC_TOPOLOGY_NONE) {
+        goto fn_got;
+    }
+
+#ifdef HAS_PMIX_LOAD_TOPOLOGY
+    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
+        pmix_topology_t ptopo;
+        PMIX_TOPOLOGY_CONSTRUCT(&ptopo);
+        pmix_status_t rc = PMIx_Load_topology(&ptopo);
+        MPIR_ERR_CHKANDJUMP1(rc != PMIX_SUCCESS, mpi_errno, MPI_ERR_INTERN,
+                             "**pmix_load_topo", "**pmix_load_topo %d", rc);
+        MPIR_ERR_CHKANDJUMP1(strcmp(ptopo.source, "hwloc"), mpi_errno, MPI_ERR_INTERN,
+                             "**pmix_unknown_topo", "**pmix_unknown_topo %s", ptopo.source);
+        hwloc_topology = ptopo.topology;
+        got_hwloc_topology = GOT_HWLOC_TOPOLOGY_PMIX;
+        goto fn_got;
+    }
+#endif
+
+    mpi_errno = fallback_load_hwloc_topology();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_got:
+    topo->source = "hwloc";
+    topo->topology = (void *) hwloc_topology;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#endif  /* HAVE_HWLOC */
 
 /* ---- static functions ---- */
 
