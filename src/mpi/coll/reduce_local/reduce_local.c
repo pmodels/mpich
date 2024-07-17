@@ -66,7 +66,9 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         if (mpi_errno != MPI_SUCCESS)
             goto fn_exit;
         /* --END ERROR HANDLING-- */
-        if (ENABLE_GPU && MPIR_Typerep_reduce_is_supported(op, datatype)) {
+        /* FIXME: ENABLE_GPU is irrelevant here. We should check whether inbuf or inoutbuf is device buffer */
+        /* use count=0 since we don't make MPIR_CVAR_YAKSA_REDUCTION_THRESHOLD decision here */
+        if (ENABLE_GPU && MPIR_Typerep_reduce_is_supported(op, 0, datatype)) {
             mpi_errno = MPIR_Typerep_reduce(inbuf, inoutbuf, count, datatype, op);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_exit;
