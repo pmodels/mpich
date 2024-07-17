@@ -688,9 +688,14 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
             HYDU_dump_noprefix(stdout, "process %d binding: %s\n", idx, binding);
             MPL_free(binding);
         }
-        hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
-        hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id],
-                          HYDT_topo_hwloc_info.membind, 0);
+        int rc;
+        rc = hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
+        HYDU_ERR_CHKANDJUMP(status, rc, HYD_INTERNAL_ERROR,
+                            "hwloc_set_cpubind failed, rc = %d\n", rc);
+        rc = hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id],
+                               HYDT_topo_hwloc_info.membind, 0);
+        HYDU_ERR_CHKANDJUMP(status, rc, HYD_INTERNAL_ERROR,
+                            "hwloc_set_membind failed, rc = %d\n", rc);
     }
 
 
