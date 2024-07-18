@@ -450,8 +450,8 @@ int MPIR_Err_return_session_init(MPIR_Errhandler * errhandler_ptr, const char fc
 
     /* It's likely nothing is initialized yet. Make sure the builtin error handlers are recognized */
     init_builtins();
-    if (errhandler_ptr->handle == MPI_ERRORS_RETURN ||
-        errhandler_ptr->handle == MPIR_ERRORS_THROW_EXCEPTIONS) {
+    if (errhandler_ptr && (errhandler_ptr->handle == MPI_ERRORS_RETURN ||
+                           errhandler_ptr->handle == MPIR_ERRORS_THROW_EXCEPTIONS)) {
         return errcode;
     }
 
