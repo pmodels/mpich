@@ -462,7 +462,7 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event(5024, 0, NULL);
 #endif
-    *count_my_req_per_proc_ptr = ADIOI_Calloc(nprocs, sizeof(int));
+    *count_my_req_per_proc_ptr = ADIOI_Calloc(nprocs, sizeof(**count_my_req_per_proc_ptr));
     count_my_req_per_proc = *count_my_req_per_proc_ptr;
 /* count_my_req_per_proc[i] gives the no. of contig. requests of this
    process in process i's file domain. calloc initializes to zero.
@@ -677,12 +677,14 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, MPI_Count count_my_req_procs,
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event(5026, 0, NULL);
 #endif
-    /* Send 1 int to each process.  count_my_req_per_proc[i] is the number of
+    /* Preliminary "how much work will we do?" data exchange:
+     * count_my_req_per_proc[i] is the number of
      * requests that my process will do to the file domain owned by process[i].
-     * Receive 1 int from each process.  count_others_req_per_proc[i] is the number of
+     * count_others_req_per_proc[i] is the number of
      * requests that process[i] will do to the file domain owned by my process.
-     */
-    count_others_req_per_proc = ADIOI_Malloc(nprocs * sizeof(int));
+     * Just sending/receiving one value here: a few lines later we'll set up
+     * the data structures for the full alltoallv */
+    count_others_req_per_proc = ADIOI_Malloc(nprocs * sizeof(*count_others_req_per_proc));
 /*     cora2a1=timebase(); */
 /*for(i=0;i<nprocs;i++) ?*/
     MPI_Alltoall(count_my_req_per_proc, 1, MPI_COUNT,
