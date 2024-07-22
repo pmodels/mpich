@@ -8,8 +8,6 @@
 
 extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 extern MPL_shm_hnd_t shm_limit_handle;
-extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
-    MPIDI_POSIX_Reduce_tree_type;
 
 #define RELEASE_GATHER_FIELD(comm, field)                   \
     MPIDI_POSIX_COMM(comm, release_gather).field
@@ -58,6 +56,19 @@ int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr);
 int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                              const MPIDI_POSIX_release_gather_opcode_t operation);
 int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr);
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_get_tree_type(const char
+                                                                          *tree_type_name)
+{
+    if (0 == strcmp(tree_type_name, "kary"))
+        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
+    else if (0 == strcmp(tree_type_name, "knomial_1"))
+        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_1;
+    else if (0 == strcmp(tree_type_name, "knomial_2"))
+        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_2;
+    else
+        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
+}
 
 /* Release step of the release_gather framework. This is top-down step in the release_tree.
  * Parent notifies the children to go, once it arrives. In case of Bcast, root places the data in

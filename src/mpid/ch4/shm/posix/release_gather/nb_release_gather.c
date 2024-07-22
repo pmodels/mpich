@@ -14,6 +14,8 @@
 #include "mpir_hwtopo.h"
 #endif
 
+static MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type;
+static MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Reduce_tree_type;
 
 /* Initialize the data structures and allocate the shared memory (flags, bcast buffer) */
 int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
@@ -42,6 +44,10 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
     MPIDI_POSIX_release_gather_comm_t *nb_release_gather_info_ptr = NULL;
 
     if (NB_RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {
+        MPIDI_POSIX_Bcast_tree_type = 
+            MPIDI_POSIX_mpi_release_gather_get_tree_type(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE);
+        MPIDI_POSIX_Reduce_tree_type = 
+            MPIDI_POSIX_mpi_release_gather_get_tree_type(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE);
         /* release_gather based nb collectives have not been used before on this comm */
         initialize_tree = true;
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
