@@ -176,20 +176,6 @@ cvars:
 #include "topotree_util.h"
 
 
-MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type, MPIDI_POSIX_Reduce_tree_type;
-
-static int get_tree_type(const char *tree_type_name)
-{
-    if (0 == strcmp(tree_type_name, "kary"))
-        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
-    else if (0 == strcmp(tree_type_name, "knomial_1"))
-        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_1;
-    else if (0 == strcmp(tree_type_name, "knomial_2"))
-        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_2;
-    else
-        return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
-}
-
 /* Initialize the release_gather struct to NULL */
 int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
 {
@@ -236,16 +222,16 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     if (RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {
         /* CVARs may get updated. Turn them into per-comm settings */
         RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_type) =
-            get_tree_type(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE);
+            MPIDI_POSIX_mpi_release_gather_get_tree_type(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE);
         RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_kval) = MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL;
         RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size) =
             MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE;
         RELEASE_GATHER_FIELD(comm_ptr, bcast_num_cells) = MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS;
         RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type) =
-            get_tree_type(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE);
+            MPIDI_POSIX_mpi_release_gather_get_tree_type(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE);
         RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval) = MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL;
         RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type_large) =
-            get_tree_type(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE_LARGE);
+            MPIDI_POSIX_mpi_release_gather_get_tree_type(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE_LARGE);
         RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large) =
             MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL_LARGE;
         RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size) =
