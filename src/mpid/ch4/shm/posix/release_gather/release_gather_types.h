@@ -25,7 +25,7 @@ typedef struct MPIDI_POSIX_release_gather_comm_t {
     int is_initialized;
     int num_collective_calls;
 
-    MPIR_Treealgo_tree_t bcast_tree, reduce_tree;
+    MPIR_Treealgo_tree_t bcast_tree, reduce_tree, reduce_tree_large;
     /* shm mem allocated to this comm */
     MPI_Aint flags_shm_size;
     MPI_Aint bcast_shm_size;
@@ -35,6 +35,7 @@ typedef struct MPIDI_POSIX_release_gather_comm_t {
     void *flags_addr, *bcast_buf_addr, *reduce_buf_addr;
     void *ibcast_flags_addr, *ireduce_flags_addr;
     void **child_reduce_buf_addr;
+    void **child_reduce_buf_addr_large;
     MPL_atomic_uint64_t *release_flag_addr, *gather_flag_addr;
 
     /* parameters need persist for each communicator */
@@ -42,6 +43,7 @@ typedef struct MPIDI_POSIX_release_gather_comm_t {
     int bcast_num_cells;
 
     int reduce_tree_type, reduce_tree_kval;
+    int reduce_tree_type_large, reduce_tree_kval_large;
     int reduce_num_cells;
     int *ibcast_last_seq_no_completed, *ireduce_last_seq_no_completed;
 } MPIDI_POSIX_release_gather_comm_t;
