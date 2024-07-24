@@ -88,10 +88,13 @@ typedef enum {
 #define MPIDI_MAX_KVS_VALUE_LEN  4096
 
 typedef struct MPIDIG_rreq_t {
-    /* mrecv fields */
-    void *mrcv_buffer;
-    uint64_t mrcv_count;
-    MPI_Datatype mrcv_datatype;
+    union {
+        struct {
+            void *buffer;
+            MPI_Aint count;
+            MPI_Datatype datatype;
+        } mrcv;
+    } u;
 
     MPIR_Request *peer_req_ptr;
     MPIR_Request *match_req;
@@ -646,7 +649,7 @@ typedef struct MPIDI_Devcomm_t {
         int shm_size_per_lead;
 
         void *csel_comm;        /* collective selection handle */
-        void *csel_comm_gpu;    /* collective selection handle for gpu*/
+        void *csel_comm_gpu;    /* collective selection handle for gpu */
     } ch4;
 } MPIDI_Devcomm_t;
 
