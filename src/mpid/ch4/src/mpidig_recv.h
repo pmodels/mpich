@@ -172,13 +172,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
 MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Datatype mrcv_dt = MPIDIG_REQUEST(rreq, req->rreq.mrcv_datatype);
+    MPI_Datatype mrcv_dt = MPIDIG_REQUEST(rreq, req->rreq.u.mrcv.datatype);
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIDIG_handle_unexpected(MPIDIG_REQUEST(rreq, req->rreq.mrcv_buffer),
-                                         MPIDIG_REQUEST(rreq, req->rreq.mrcv_count),
-                                         MPIDIG_REQUEST(rreq, req->rreq.mrcv_datatype), rreq);
+    mpi_errno = MPIDIG_handle_unexpected(MPIDIG_REQUEST(rreq, req->rreq.u.mrcv.buffer),
+                                         MPIDIG_REQUEST(rreq, req->rreq.u.mrcv.count),
+                                         MPIDIG_REQUEST(rreq, req->rreq.u.mrcv.datatype), rreq);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(mrcv_dt);
 
@@ -297,9 +297,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIDIG_REQUEST(message, req->rreq.mrcv_buffer) = buf;
-    MPIDIG_REQUEST(message, req->rreq.mrcv_count) = count;
-    MPIDIG_REQUEST(message, req->rreq.mrcv_datatype) = datatype;
+    MPIDIG_REQUEST(message, req->rreq.u.mrcv.buffer) = buf;
+    MPIDIG_REQUEST(message, req->rreq.u.mrcv.count) = count;
+    MPIDIG_REQUEST(message, req->rreq.u.mrcv.datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_BUSY) {
