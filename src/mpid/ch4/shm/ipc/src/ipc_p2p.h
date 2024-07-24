@@ -246,6 +246,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
             src_count = ipc_hdr->count;
             src_dt = src_dt_ptr->handle;
         }
+        MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr) = src_dt_ptr;
+
         MPIR_gpu_req yreq;
         MPL_gpu_engine_type_t engine =
             MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
@@ -254,9 +256,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
                                         MPIDIG_REQUEST(rreq, datatype), 0, &attr,
                                         MPL_GPU_COPY_DIRECTION_NONE, engine, true, &yreq);
         MPIR_ERR_CHECK(mpi_errno);
-        if (src_dt_ptr) {
-            MPIR_Datatype_free(src_dt_ptr);
-        }
 
         mpi_errno = MPIDI_GPU_ipc_async_start(rreq, &yreq, src_buf, ipc_hdr->ipc_handle.gpu);
         MPIR_ERR_CHECK(mpi_errno);

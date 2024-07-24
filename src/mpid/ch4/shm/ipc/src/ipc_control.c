@@ -56,6 +56,10 @@ int MPIDI_IPC_complete(MPIR_Request * rreq, int ipc_type)
                          &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
+    if (MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr)) {
+        MPIR_Datatype_free(MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr));
+    }
+
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
   fn_exit:

@@ -94,6 +94,9 @@ typedef struct MPIDIG_rreq_t {
             MPI_Aint count;
             MPI_Datatype datatype;
         } mrcv;
+        struct {
+            MPIR_Datatype *src_dt_ptr;
+        } ipc;
     } u;
 
     MPIR_Request *peer_req_ptr;
