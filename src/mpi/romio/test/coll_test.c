@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <limits.h>
 
 /* A 32^3 array. For other array sizes, change array_of_gsizes below. */
 
@@ -35,7 +36,7 @@ int main(int argc, char **argv)
     int i, ndims, array_of_gsizes[3], array_of_distribs[3];
     int order, nprocs, j, len;
     int array_of_dargs[3], array_of_psizes[3];
-    int *readbuf, *writebuf, mynod, *tmpbuf, array_size;
+    int *readbuf, *writebuf, mynod, *tmpbuf, array_size, item_count;
     MPI_Count bufcount;
     char *filename;
     int errs = 0, toterrs;
@@ -62,7 +63,7 @@ int main(int argc, char **argv)
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
         argv++;
-        len = strlen(*argv);
+        len = (int) strlen(*argv);
         filename = (char *) malloc(len + 1);
         strcpy(filename, *argv);
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -102,15 +103,21 @@ int main(int argc, char **argv)
 /* initialize writebuf */
 
     MPI_Type_size_x(newtype, &bufcount);
-    bufcount = bufcount / sizeof(int);
-    writebuf = (int *) malloc(bufcount * sizeof(int));
-    for (i = 0; i < bufcount; i++)
+    if (bufcount / sizeof(int) >= INT_MAX) {
+        fprintf(stderr, "datatype too large: update for MPI-4 support");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+    /* ok to cast: checked for overflow above */
+    item_count = (int) (bufcount / sizeof(int));
+
+    writebuf = malloc(item_count * sizeof(*writebuf));
+    for (i = 0; i < item_count; i++)
         writebuf[i] = 1;
 
     array_size = array_of_gsizes[0] * array_of_gsizes[1] * array_of_gsizes[2];
     tmpbuf = (int *) calloc(array_size, sizeof(int));
     MPI_Irecv(tmpbuf, 1, newtype, mynod, 10, MPI_COMM_WORLD, &request);
-    MPI_Send(writebuf, bufcount, MPI_INT, mynod, 10, MPI_COMM_WORLD);
+    MPI_Send(writebuf, item_count, MPI_INT, mynod, 10, MPI_COMM_WORLD);
     MPI_Wait(&request, &status);
 
     j = 0;
@@ -121,7 +128,7 @@ int main(int argc, char **argv)
         }
     free(tmpbuf);
 
-    if (j != bufcount) {
+    if (j != item_count) {
         fprintf(stderr, "Error in initializing writebuf on process %d\n", mynod);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
@@ -136,7 +143,7 @@ int main(int argc, char **argv)
     if (errcode != MPI_SUCCESS)
         handle_error(errcode, "MPI_File_set_view");
 
-    errcode = MPI_File_write_all(fh, writebuf, bufcount, MPI_INT, &status);
+    errcode = MPI_File_write_all(fh, writebuf, item_count, MPI_INT, &status);
     if (errcode != MPI_SUCCESS)
         handle_error(errcode, "MPI_File_write_all");
     errcode = MPI_File_close(&fh);
@@ -171,7 +178,7 @@ int main(int argc, char **argv)
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* now read it back */
-    readbuf = (int *) malloc(bufcount * sizeof(int));
+    readbuf = malloc(item_count * sizeof(*readbuf));
     errcode = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
     if (errcode != MPI_SUCCESS)
         handle_error(errcode, "MPI_File_open");
@@ -179,7 +186,7 @@ int main(int argc, char **argv)
     errcode = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
     if (errcode != MPI_SUCCESS)
         handle_error(errcode, "MPI_File_set_view");
-    errcode = MPI_File_read_all(fh, readbuf, bufcount, MPI_INT, &status);
+    errcode = MPI_File_read_all(fh, readbuf, item_count, MPI_INT, &status);
     if (errcode != MPI_SUCCESS)
         handle_error(errcode, "MPI_File_read_all");
     errcode = MPI_File_close(&fh);
@@ -187,7 +194,7 @@ int main(int argc, char **argv)
         handle_error(errcode, "MPI_File_close");
 
     /* check the data read */
-    for (i = 0; i < bufcount; i++) {
+    for (i = 0; i < item_count; i++) {
         if (readbuf[i] != writebuf[i]) {
             errs++;
             fprintf(stderr, "Process %d, readbuf %d, writebuf %d, i %d\n", mynod, readbuf[i],
