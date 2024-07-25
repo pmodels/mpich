@@ -485,7 +485,7 @@ def dump_mpir(name, blocking_type):
         else:
             use_recvbuf = "recvbuf"
 
-        G.out.append("if(!MPIR_Typerep_reduce_is_supported(op, datatype))") 
+        G.out.append("if(!MPIR_Typerep_reduce_is_supported(op, count, datatype))")
         G.out.append("  MPIR_Coll_host_buffer_alloc(sendbuf, %s, count, datatype, &host_sendbuf, &host_recvbuf);" % use_recvbuf)
         G.out.append("")
 

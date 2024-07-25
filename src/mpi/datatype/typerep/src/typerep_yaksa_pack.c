@@ -50,6 +50,18 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         This cvar enables yaksa based reduction for local reduce.
+
+    - name        : MPIR_CVAR_YAKSA_REDUCTION_THRESHOLD
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar disables yaksa based reduction for messages above the threshold.
+        The default is no limit.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -203,12 +215,22 @@ static int typerep_do_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype dat
 
 /* This function checks whether the operation is supported in yaksa for the
  * provided datatype */
-int MPIR_Typerep_reduce_is_supported(MPI_Op op, MPI_Datatype datatype)
+int MPIR_Typerep_reduce_is_supported(MPI_Op op, MPI_Aint count, MPI_Datatype datatype)
 {
     yaksa_op_t yaksa_op;
 
     if (!MPIR_CVAR_ENABLE_YAKSA_REDUCTION)
         return 0;
+
+    /* HACK: check count to decide whether we need reduce buffer swap, ref. maint/gen_coll.py */
+    if (count > 0) {
+        MPI_Aint data_sz;
+        MPIR_Pack_size(count, datatype, &data_sz);
+        if (MPIR_CVAR_YAKSA_REDUCTION_THRESHOLD > 0 &&
+            data_sz > MPIR_CVAR_YAKSA_REDUCTION_THRESHOLD) {
+            return 0;
+        }
+    }
 
     /* yaksa pup code currently treat unsigned integer type the same as
      * the corresponding signed integer type, which will not work with
@@ -522,7 +544,8 @@ int MPIR_Typerep_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source
     MPIR_Assert(HANDLE_IS_BUILTIN(op));
     MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(source_dtp));
 
-    bool use_yaksa = MPIR_Typerep_reduce_is_supported(op, source_dtp);
+    /* use count=0 since we don't make MPIR_CVAR_YAKSA_REDUCTION_THRESHOLD decision here */
+    bool use_yaksa = MPIR_Typerep_reduce_is_supported(op, 0, source_dtp);
     if (use_yaksa) {
         int source_is_contig, target_is_contig;
         MPIR_Datatype_is_contig(source_dtp, &source_is_contig);
