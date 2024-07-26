@@ -64,6 +64,11 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
 #define MPIR_OP_TYPE_MACRO_HAVE_LONG_LONG(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(mpi_type_,c_type_,type_name_)
+#define MPIR_OP_TYPE_MACRO_HAVE_LOGICAL1_CTYPE(mpi_type_,c_type_,type_name_)
+#define MPIR_OP_TYPE_MACRO_HAVE_LOGICAL2_CTYPE(mpi_type_,c_type_,type_name_)
+#define MPIR_OP_TYPE_MACRO_HAVE_LOGICAL4_CTYPE(mpi_type_,c_type_,type_name_)
+#define MPIR_OP_TYPE_MACRO_HAVE_LOGICAL8_CTYPE(mpi_type_,c_type_,type_name_)
+#define MPIR_OP_TYPE_MACRO_HAVE_LOGICAL16_CTYPE(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_INTEGER1_CTYPE(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_INTEGER2_CTYPE(mpi_type_,c_type_,type_name_)
 #define MPIR_OP_TYPE_MACRO_HAVE_INTEGER4_CTYPE(mpi_type_,c_type_,type_name_)
@@ -109,6 +114,27 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
 #if defined(HAVE_FLOAT16)
 #undef MPIR_OP_TYPE_MACRO_HAVE_FLOAT16
 #define MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#endif
+/* Fortran fixed width logical type support */
+#if defined(MPIR_LOGICAL1_CTYPE)
+#undef MPIR_OP_TYPE_MACRO_HAVE_LOGICAL1_CTYPE
+#define MPIR_OP_TYPE_MACRO_HAVE_LOGICAL1_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#endif
+#if defined(MPIR_LOGICAL2_CTYPE)
+#undef MPIR_OP_TYPE_MACRO_HAVE_LOGICAL2_CTYPE
+#define MPIR_OP_TYPE_MACRO_HAVE_LOGICAL2_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#endif
+#if defined(MPIR_LOGICAL4_CTYPE)
+#undef MPIR_OP_TYPE_MACRO_HAVE_LOGICAL4_CTYPE
+#define MPIR_OP_TYPE_MACRO_HAVE_LOGICAL4_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#endif
+#if defined(MPIR_LOGICAL8_CTYPE)
+#undef MPIR_OP_TYPE_MACRO_HAVE_LOGICAL8_CTYPE
+#define MPIR_OP_TYPE_MACRO_HAVE_LOGICAL8_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#endif
+#if defined(MPIR_LOGICAL16_CTYPE)
+#undef MPIR_OP_TYPE_MACRO_HAVE_LOGICAL16_CTYPE
+#define MPIR_OP_TYPE_MACRO_HAVE_LOGICAL16_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
 #endif
 /* Fortran fixed width integer type support */
 #if defined(MPIR_INTEGER1_CTYPE)
@@ -322,7 +348,12 @@ typedef struct {
     MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_LOGICAL, MPI_Fint, mpir_typename_logical)     \
     MPIR_OP_TYPE_MACRO_HAVE_C_BOOL(MPI_C_BOOL, _Bool, mpir_typename_c_bool)           \
     MPIR_OP_TYPE_MACRO_HAVE_CXX_BOOL(MPI_CXX_BOOL, MPIR_CXX_BOOL_CTYPE, mpir_typename_cxx_bool_value)
-#define MPIR_OP_TYPE_GROUP_LOGICAL_EXTRA        /* empty, provided for consistency */
+#define MPIR_OP_TYPE_GROUP_LOGICAL_EXTRA                                                              \
+    MPIR_OP_TYPE_MACRO_HAVE_LOGICAL1_CTYPE(MPI_LOGICAL1, MPIR_LOGICAL1_CTYPE, mpir_typename_logical1) \
+    MPIR_OP_TYPE_MACRO_HAVE_LOGICAL2_CTYPE(MPI_LOGICAL2, MPIR_LOGICAL2_CTYPE, mpir_typename_logical2) \
+    MPIR_OP_TYPE_MACRO_HAVE_LOGICAL4_CTYPE(MPI_LOGICAL4, MPIR_LOGICAL4_CTYPE, mpir_typename_logical4) \
+    MPIR_OP_TYPE_MACRO_HAVE_LOGICAL8_CTYPE(MPI_LOGICAL8, MPIR_LOGICAL8_CTYPE, mpir_typename_logical8) \
+    MPIR_OP_TYPE_MACRO_HAVE_LOGICAL16_CTYPE(MPI_LOGICAL16, MPIR_LOGICAL16_CTYPE, mpir_typename_logical16)
 
 /* complex group */
 #define MPIR_OP_TYPE_GROUP_COMPLEX                                                                                    \

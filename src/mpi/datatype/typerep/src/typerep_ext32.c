@@ -63,6 +63,12 @@ static external32_basic_size_t external32_basic_size_array[] = {
     {MPI_COMPLEX, 8},
     {MPI_DOUBLE_COMPLEX, 16},
 
+    {MPI_LOGICAL1, 1},
+    {MPI_LOGICAL2, 2},
+    {MPI_LOGICAL4, 4},
+    {MPI_LOGICAL8, 8},
+    {MPI_LOGICAL16, 16},
+
     {MPI_INTEGER1, 1},
     {MPI_INTEGER2, 2},
     {MPI_INTEGER4, 4},
