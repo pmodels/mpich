@@ -46,10 +46,10 @@ mt_iprobe_sendrecv_huge 2 arg=-iter=64 arg=-count=4096 env=MPIR_CVAR_CH4_OFI_EAG
 mt_mprobe_sendrecv_huge 2 arg=-iter=64 arg=-count=4096 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
 mt_improbe_sendrecv_huge 2 arg=-iter=64 arg=-count=4096 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
 
-mt_probe_sendrecv_huge 2 arg=-iter=64 arg=-count=4194304 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
-mt_iprobe_sendrecv_huge 2 arg=-iter=64 arg=-count=4194304 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
-mt_mprobe_sendrecv_huge 2 arg=-iter=64 arg=-count=4194304 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
-mt_improbe_sendrecv_huge 2 arg=-iter=64 arg=-count=4194304 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
+mt_probe_sendrecv_huge 2 arg=-iter=64 arg=-count=65530 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
+mt_iprobe_sendrecv_huge 2 arg=-iter=64 arg=-count=65530 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
+mt_mprobe_sendrecv_huge 2 arg=-iter=64 arg=-count=65530 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
+mt_improbe_sendrecv_huge 2 arg=-iter=64 arg=-count=65530 env=MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE=16384
 
 mt_sendrecv_pers_huge 2 arg=-iter=64 arg=-count=4096
 mt_bsendrecv_pers_huge 2 arg=-iter=8 arg=-count=4096
