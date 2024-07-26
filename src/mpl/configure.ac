@@ -157,7 +157,6 @@ AC_ARG_ENABLE(fast,
 # only alwaysinline option is valid but still need break down multiple options
 # transferred from MPICH separated by commas
 enable_fast_alwaysinline=no
-enable_fast_avx_instr=no
 save_IFS="$IFS"
 IFS=","
 for option in $enable_fast ; do
@@ -165,11 +164,20 @@ for option in $enable_fast ; do
         alwaysinline)
         enable_fast_alwaysinline=yes
         ;;
-        all|yes)
-        enable_fast_alwaysinline=yes
+        sse2)
+        enable_fast_sse2_instr=yes
         ;;
         avx)
         enable_fast_avx_instr=yes
+        ;;
+        avx512f)
+        enable_fast_avx512f_instr=yes
+        ;;
+        all|yes)
+        enable_fast_sse2_instr=yes
+        enable_fast_avx_instr=yes
+        enable_fast_avx512f_instr=yes
+        enable_fast_alwaysinline=yes
         ;;
         *) # do not change default value (no) for other fast options
         ;;
@@ -179,6 +187,184 @@ IFS="$save_IFS"
 
 if test "$enable_fast_alwaysinline" = "yes"; then
     AC_DEFINE(ENABLE_ALWAYS_INLINE,1,[Define if force compiler to always inline functions with MPL_STATIC_INLINE_PREFIX|SUFFIX])
+fi
+
+if test "$enable_fast_sse2_instr" = "yes" ; then
+    AC_CACHE_CHECK([whether -msse2 is supported], pac_cv_found_sse2,
+                   [PAC_C_CHECK_COMPILER_OPTION([-msse2],pac_cv_found_sse2=yes,pac_cv_found_sse2=no)],
+                   pac_cv_found_sse2=no,pac_cv_found_sse2=yes)
+    PAC_PUSH_FLAG([CFLAGS])
+    PAC_APPEND_FLAG([-msse2],[CFLAGS])
+    AC_CACHE_CHECK([whether SSE2 is supported by the CPU], pac_cv_found_sse2_runnable,[
+                    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                   #include <emmintrin.h>
+
+                                   int main() {
+                                       __m128i a = _mm_set1_epi32(1);
+                                       __asm__ volatile("" : : "x" (a) : "memory");
+                                       return 0;
+                                   }
+                                   ]])], pac_cv_found_sse2_runnable="yes",
+                                   pac_cv_found_sse2_runnable="no",
+                                   pac_cv_found_sse2_runnable="unknown")
+                    ])
+    PAC_POP_FLAG([CFLAGS])
+    if test "$pac_cv_found_sse2" = "yes" && test "$pac_cv_found_sse2_runnable" = "yes"; then
+        PAC_APPEND_FLAG([-msse2],[CFLAGS])
+        AC_CACHE_CHECK([whether _mm_stream_si128 is supported], pac_cv_found__mm_stream_si128,[
+                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                       #include <immintrin.h>
+                                       #include <stdlib.h>
+
+                                       int main(int argc, char **argv) {
+                                           int ret = 0;
+                                           char *source = NULL, *dest = NULL;
+                                           posix_memalign(&source, 64, 64);
+                                           posix_memalign(&dest, 64, 64);
+                                           for (int i = 0; i < 64; i++) source[i] = 'a';
+
+                                           __m128i xmm0 = _mm_loadu_si128((__m128i const *) source);
+                                           _mm_stream_si128((__m128i *) dest, xmm0);
+                                           _mm_sfence();
+
+                                           if (dest[0] == source[0]) ret = 0;
+                                           else ret = 1;
+
+                                           free(source);
+                                           free(dest);
+
+                                           return ret;
+                                       }
+                                       ]])], pac_cv_found__mm_stream_si128="yes",
+                                       pac_cv_found__mm_stream_si128"no",
+                                       pac_cv_found__mm_stream_si128="unknown")
+                        ])
+        if test "$pac_cv_found__mm_stream_si128" = "yes" ; then
+            AC_DEFINE(HAVE__MM_STREAM_SI128,1,[Define if _mm_stream_si128 is available])
+        fi
+    fi
+fi
+
+if test "$enable_fast_avx_instr" = "yes" ; then
+    AC_CACHE_CHECK([whether -mavx is supported], pac_cv_found_avx,
+                   [PAC_C_CHECK_COMPILER_OPTION([-mavx],pac_cv_found_avx=yes,pac_cv_found_avx=no)],
+                   pac_cv_found_avx=no,pac_cv_found_avx=yes)
+    PAC_PUSH_FLAG([CFLAGS])
+    PAC_APPEND_FLAG([-mavx],[CFLAGS])
+    AC_CACHE_CHECK([whether AVX is supported by the CPU], pac_cv_found_avx_runnable,[
+                    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                   #include <immintrin.h>
+
+                                   int main() {
+                                       __m256i a = _mm256_set1_epi32(1);
+                                       __asm__ volatile("" : : "x" (a) : "memory");
+                                       return 0;
+                                   }
+                                   ]])], pac_cv_found_avx_runnable="yes",
+                                   pac_cv_found_avx_runnable="no",
+                                   pac_cv_found_avx_runnable="unknown")
+                    ])
+    PAC_POP_FLAG([CFLAGS])
+    if test "$pac_cv_found_avx" = "yes" && test "$pac_cv_found_avx_runnable" = "yes"; then
+        PAC_APPEND_FLAG([-mavx],[CFLAGS])
+        AC_CACHE_CHECK([whether _mm256_storeu_si256 is supported], pac_cv_found__mm256_storeu_si256,[
+                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                       #include <immintrin.h>
+
+                                       int main(int argc, char **argv) {
+                                           char source[1024], dest[1024];
+                                           for (int i = 0; i < 1024; i++) source[i] = 'a';
+
+                                           _mm256_storeu_si256((__m256i *) dest, _mm256_loadu_si256((__m256i const *) source));
+
+                                           if (dest[0] == source[0]) return 0;
+                                           else return 1;
+                                       }
+                                       ]])], pac_cv_found__mm256_storeu_si256="yes",
+                                       pac_cv_found__mm256_storeu_si256="no",
+                                       pac_cv_found__mm256_storeu_si256="unknown")
+                        ])
+        if test "$pac_cv_found__mm256_storeu_si256" = "yes" ; then
+            AC_DEFINE(HAVE__MM256_STOREU_SI256,1,[Define if _mm256_storeu_si256 is available])
+        fi
+
+        AC_CACHE_CHECK([whether _mm256_stream_si256 is supported], pac_cv_found__mm256_stream_si256,[
+                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                       #include <immintrin.h>
+                                       #include <stdlib.h>
+
+                                       int main(int argc, char **argv) {
+                                           int ret = 0;
+                                           char *source = NULL, *dest = NULL;
+                                           posix_memalign(&source, 64, 64);
+                                           posix_memalign(&dest, 64, 64);
+                                           for (int i = 0; i < 64; i++) source[i] = 'a';
+
+                                           __m256i ymm0 = _mm256_loadu_si256((__m256i const *) source);
+                                           _mm256_stream_si256((__m256i *) dest, ymm0);
+                                           _mm_sfence();
+
+                                           if (dest[0] == source[0]) ret = 0;
+                                           else ret = 1;
+
+                                           free(source);
+                                           free(dest);
+
+                                           return ret;
+                                       }
+                                       ]])], pac_cv_found__mm256_stream_si256="yes",
+                                       pac_cv_found__mm256_stream_si256="no",
+                                       pac_cv_found__mm256_stream_si256="unknown")
+                        ])
+        if test "$pac_cv_found__mm256_stream_si256" = "yes" ; then
+            AC_DEFINE(HAVE__MM256_STREAM_SI256,1,[Define if _mm256_stream_si256 is available])
+        fi
+    fi
+fi
+
+if test "$enable_fast_avx512f_instr" = "yes" ; then
+    AC_CACHE_CHECK([whether -mavx512f is supported], pac_cv_found_avx512f,
+                   [PAC_C_CHECK_COMPILER_OPTION([-mavx512f],pac_cv_found_avx512f=yes,pac_cv_found_avx512f=no)],
+                   pac_cv_found_avx512f=no,pac_cv_found_avx512f=yes)
+    PAC_PUSH_FLAG([CFLAGS])
+    PAC_APPEND_FLAG([-mavx512f],[CFLAGS])
+    AC_CACHE_CHECK([whether AVX512F is supported by the CPU], pac_cv_found_avx512f_runnable,[
+                    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                   #include <immintrin.h>
+
+                                   int main() {
+                                       __m512i a = _mm512_set1_epi32(1);
+                                       __asm__ volatile("" : : "x" (a) : "memory");
+                                       return 0;
+                                   }
+                                   ]])], pac_cv_found_avx512f_runnable="yes",
+                                   pac_cv_found_avx512f_runnable="no",
+                                   pac_cv_found_avx512f_runnable="unknown")
+                    ])
+    PAC_POP_FLAG([CFLAGS])
+    if test "$pac_cv_found_avx512f" = "yes" && test "$pac_cv_found_avx512f_runnable" = "yes"; then
+        PAC_APPEND_FLAG([-mavx512f],[CFLAGS])
+        AC_CACHE_CHECK([whether _mm512_storeu_si512 is supported], pac_cv_found__mm512_storeu_si512,[
+                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                       #include <immintrin.h>
+
+                                       int main(int argc, char **argv) {
+                                           char source[1024], dest[1024];
+                                           for (int i = 0; i < 1024; i++) source[i] = 'a';
+
+                                           _mm512_storeu_si512((__m512i *) dest, _mm512_loadu_si512((__m512i const *) source));
+
+                                           if (dest[0] == source[0]) return 0;
+                                           else return 1;
+                                       }
+                                       ]])], pac_cv_found__mm512_storeu_si512="yes",
+                                       pac_cv_found__mm512_storeu_si512="no",
+                                       pac_cv_found__mm512_storeu_si512="unknown")
+                        ])
+        if test "$pac_cv_found__mm512_storeu_si512" = "yes" ; then
+            AC_DEFINE(HAVE__MM512_STOREU_SI512,1,[Define if _mm512_storeu_si512 is available])
+        fi
+    fi
 fi
 
 #######################################################################
@@ -1131,65 +1317,6 @@ if test "X${pac_have_ze}" = "Xyes" ; then
     AC_CHECK_LIB(dl, dlopen, [], AC_MSG_ERROR([dlopen not found.  MPL ZE support requires libdl.]))
 fi
 AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
-
-if test "$enable_fast_avx_instr" = "yes" ; then
-    AC_CACHE_CHECK([whether -mavx512f is supported], pac_cv_found_avx512f,
-                   [PAC_C_CHECK_COMPILER_OPTION([-mavx512f],pac_cv_found_avx512f=yes,pac_cv_found_avx512f=no)],
-                   pac_cv_found_avx512f=no,pac_cv_found_avx512f=yes)
-    if test "$pac_cv_found_avx512f" = "yes" ; then
-        PAC_APPEND_FLAG([-mavx512f],[CFLAGS])
-
-        AC_CACHE_CHECK([whether _mm512_storeu_si512 is supported], pac_cv_found___mm512_storeu_si512,[
-                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
-                                       #include <x86intrin.h>
-
-                                       int main(int argc, char **argv) {
-                                           char source[1024], dest[1024];
-                                           for (int i = 0; i < 1024; i++) source[i] = 'a';
-
-                                           _mm512_storeu_si512((__m512i *) dest, _mm512_loadu_si512((__m512i const *) source));
-
-                                           if (dest[0] == source[0]) return 0;
-                                           else return 1;
-                                       }
-                                       ]])], pac_cv_found___mm512_storeu_si512="yes",
-                                       pac_cv_found___mm512_storeu_si512="no",
-                                       pac_cv_found___mm512_storeu_si512="unknown")
-                        ])
-    fi
-    if test "$pac_cv_found___mm512_storeu_si512" = "yes" ; then
-        AC_DEFINE(HAVE_MM512_STOREU_SI512,1,[Define if avx512f is available])
-    fi
-
-    AC_CACHE_CHECK([whether -mavx is supported], pac_cv_found_avx,
-                   [PAC_C_CHECK_COMPILER_OPTION([-mavx],pac_cv_found_avx=yes,pac_cv_found_avx=no)],
-                   pac_cv_found_avx=no,pac_cv_found_avx=yes)
-    if test "$pac_cv_found_avx" = "yes" ; then
-        PAC_APPEND_FLAG([-mavx],[CFLAGS])
-
-        AC_CACHE_CHECK([whether _mm256_storeu_si256 is supported], pac_cv_found___mm256_storeu_si256,[
-                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
-                                       #include <x86intrin.h>
-
-                                       int main(int argc, char **argv) {
-                                           char source[1024], dest[1024];
-                                           for (int i = 0; i < 1024; i++) source[i] = 'a';
-
-                                           _mm256_storeu_si256((__m256i *) dest, _mm256_loadu_si256((__m256i const *) source));
-
-                                           if (dest[0] == source[0]) return 0;
-                                           else return 1;
-                                       }
-                                       ]])], pac_cv_found___mm256_storeu_si256="yes",
-                                       pac_cv_found___mm256_storeu_si256="no",
-                                       pac_cv_found___mm256_storeu_si256="unknown")
-                        ])
-    fi
-    if test "$pac_cv_found___mm256_storeu_si256" = "yes" ; then
-        AC_DEFINE(HAVE_MM256_STOREU_SI256,1,[Define if avx is available])
-    fi
-fi
-
 
 # Check HIP availability
 if test "$have_gpu" = "no" ; then
