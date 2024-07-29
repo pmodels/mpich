@@ -2800,22 +2800,22 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 
     if (physical_device_states != NULL) {
         if (use_shared_fd) {
-            int shared_dev_id = get_physical_device(local_dev_id);
-            for (int i = 0; i < nfds; i++) {
-                /* convert dma_buf fd to GEM handle */
-                memcpy(&fds[i], &ze_ipc_handle[i], sizeof(int));
-                status =
-                    fd_to_handle(physical_device_states[shared_dev_id].fd, fds[i], &handles[i]);
-                if (status) {
-                    goto fn_fail;
-                }
-            }
-
             /* Hash (ptr, dev_id, handle) to close later */
             MPL_ze_gem_hash_entry_t *entry = NULL;
             HASH_FIND_PTR(gem_hash, &ptr, entry);
 
             if (entry == NULL) {
+                int shared_dev_id = get_physical_device(local_dev_id);
+                for (int i = 0; i < nfds; i++) {
+                    /* convert dma_buf fd to GEM handle */
+                    memcpy(&fds[i], &ze_ipc_handle[i], sizeof(int));
+                    status =
+                        fd_to_handle(physical_device_states[shared_dev_id].fd, fds[i], &handles[i]);
+                    if (status) {
+                        goto fn_fail;
+                    }
+                }
+
                 entry =
                     (MPL_ze_gem_hash_entry_t *) MPL_malloc(sizeof(MPL_ze_gem_hash_entry_t),
                                                            MPL_MEM_OTHER);
@@ -2831,9 +2831,9 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
                 HASH_ADD_PTR(gem_hash, ptr, entry, MPL_MEM_OTHER);
             }
 
-            for (int i = 0; i < nfds; i++)
-                h.fds[i] = handles[i];
-            h.dev_id = shared_dev_id;
+            for (int i = 0; i < entry->nhandles; i++)
+                h.fds[i] = entry->handles[i];
+            h.dev_id = entry->dev_id;
         } else {
             for (int i = 0; i < nfds; i++) {
                 memcpy(&h.fds[i], &ze_ipc_handle[i], sizeof(int));
@@ -2932,6 +2932,10 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shar
             ret = zeMemOpenIpcHandle(ze_context, dev_handle, ze_ipc_handle[0], 0, ptr);
         }
         ZE_ERR_CHECK(ret);
+
+        for (int i = 0; i < nfds; ++i) {
+            close(fds[i]);
+        }
     }
 
   fn_exit:
