@@ -2798,7 +2798,6 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
     }
     ZE_ERR_CHECK(ret);
 
-    h.nfds = nfds;
     if (physical_device_states != NULL) {
         if (use_shared_fd) {
             int shared_dev_id = get_physical_device(local_dev_id);
@@ -2851,6 +2850,7 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 
     h.pid = mypid;
     h.mem_id = mem_id;
+    h.nfds = nfds;
 
     for (int i = 0; i < nfds; i++) {
         memcpy(&mpl_ipc_handle->ipc_handles[i], &ze_ipc_handle[i], sizeof(ze_ipc_mem_handle_t));
