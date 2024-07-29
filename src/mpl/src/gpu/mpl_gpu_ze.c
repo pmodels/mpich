@@ -3116,7 +3116,7 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
                 /* store only the basic ze_ipc_handle info, missing the
                  * fd_pid_t data as shareable IPC handle */
                 for (int i = 0; i < nfds; i++) {
-                    memcpy(&cache_entry->ipc_handle.ipc_handles[0], &ze_ipc_handle[i],
+                    memcpy(&cache_entry->ipc_handle.ipc_handles[i], &ze_ipc_handle[i],
                            sizeof(ze_ipc_mem_handle_t));
                 }
                 HASH_ADD(hh, ipc_cache_tracked[local_dev_id], mem_id, sizeof(uint64_t), cache_entry,
