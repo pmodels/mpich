@@ -1574,22 +1574,20 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
     if (physical_device_states != NULL) {
         MPL_ze_gem_hash_entry_t *entry = NULL;
         HASH_FIND_PTR(gem_hash, &ptr, entry);
-        if (entry == NULL) {
-            /* This might get called for pointers that didn't have IPC handles created */
-            goto fn_exit;
-        }
 
-        HASH_DEL(gem_hash, entry);
+        if (entry) {
+            HASH_DEL(gem_hash, entry);
 
-        /* close GEM handle */
-        for (int i = 0; i < entry->nhandles; i++) {
-            status = close_handle(physical_device_states[entry->dev_id].fd, entry->handles[i]);
-            if (status) {
-                goto fn_fail;
+            /* close GEM handle */
+            for (int i = 0; i < entry->nhandles; i++) {
+                status = close_handle(physical_device_states[entry->dev_id].fd, entry->handles[i]);
+                if (status) {
+                    break;
+                }
             }
-        }
 
-        MPL_free(entry);
+            MPL_free(entry);
+        }
     }
 
     if (likely(MPL_gpu_info.specialized_cache)) {
