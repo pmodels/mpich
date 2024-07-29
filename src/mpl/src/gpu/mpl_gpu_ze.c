@@ -1516,7 +1516,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
     if (cache_entry && cache_entry->handle_cached) {
         memcpy(ipc_handle, &cache_entry->ipc_handle, sizeof(MPL_gpu_ipc_mem_handle_t));
     } else {
-        mpl_err = MPL_ze_ipc_handle_create(ptr, ptr_attr, local_dev_id, true, ipc_handle);
+        mpl_err = MPL_ze_ipc_handle_create(pbase, ptr_attr, local_dev_id, true, ipc_handle);
         if (mpl_err != MPL_SUCCESS) {
             goto fn_fail;
         }
