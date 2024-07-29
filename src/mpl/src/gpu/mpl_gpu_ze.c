@@ -1711,6 +1711,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
 
                 cache_entry->handle_cached = true;
                 memcpy(&cache_entry->ipc_handle, ipc_handle, sizeof(MPL_gpu_ipc_mem_handle_t));
+                cache_entry->nfds = ipc_handle->data.nfds;
                 HASH_ADD(hh, ipc_cache_tracked[local_dev_id], mem_id, sizeof(uint64_t), cache_entry,
                          MPL_MEM_OTHER);
             }
@@ -3029,6 +3030,7 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 
     h.pid = mypid;
     h.mem_id = mem_id;
+    h.nfds = nfds;
 
     for (int i = 0; i < nfds; i++) {
         memcpy(&mpl_ipc_handle->ipc_handles[i], &ze_ipc_handle[i], sizeof(ze_ipc_mem_handle_t));
