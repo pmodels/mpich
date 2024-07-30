@@ -148,6 +148,7 @@ typedef struct {
     void *ipc_buf;
     void *mapped_ptr;
     size_t mapped_size;
+    int fds[2];
     int nfds;
     UT_hash_handle hh;
 } MPL_ze_mapped_buffer_entry_t;
@@ -1620,6 +1621,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id
     MPL_ze_mapped_buffer_entry_t *removal_entry = NULL;
     MPL_ze_mapped_buffer_lookup_t lookup_entry;
     unsigned keylen = 0;
+    int fds[2] = { -1 };
 
     fd_pid_t h;
     h = mpl_ipc_handle->data;
@@ -1638,7 +1640,16 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id
     if (cache_entry && cache_entry->ipc_buf) {
         *ptr = cache_entry->ipc_buf;
     } else {
-        mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, false, 0, ptr);
+        if (cache_entry) {
+            /* If a cache entry exists, then MPL_ze_ipc_handle_map was already called previously
+             * (inside MPL_ze_ipc_handle_mmap_host). Make sure to reuse the fds from that call
+             * instead of creating new ones */
+            for (int i = 0; i < cache_entry->nfds; ++i) {
+                fds[i] = cache_entry->fds[i];
+            }
+        }
+
+        mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, true, dev_id, false, 0, &fds, ptr);
         if (mpl_err != MPL_SUCCESS) {
             goto fn_fail;
         }
@@ -1669,6 +1680,11 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id
                 memset(cache_entry, 0, sizeof(MPL_ze_mapped_buffer_entry_t));
                 cache_entry->key = lookup_entry;
                 cache_entry->ipc_buf = *ptr;
+                cache_entry->nfds = h.nfds;
+
+                /* Store the fds created from MPL_ze_ipc_handle_map for closing later */
+                for (int i = 0; i < cache_entry->nfds; i++)
+                    cache_entry->fds[i] = fds[i];
 
                 removal_entry = (MPL_ze_mapped_buffer_entry_t *)
                     MPL_malloc(sizeof(MPL_ze_mapped_buffer_entry_t), MPL_MEM_OTHER);
@@ -1780,6 +1796,10 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
                     munmapFunction(cache_entry->nfds, cache_entry->mapped_ptr,
                                    cache_entry->mapped_size);
                 }
+                for (int i = 0; i < cache_entry->nfds; ++i) {
+                    close(cache_entry->fds[i]);
+                }
+
                 HASH_DEL(ipc_cache_mapped[dev_id], cache_entry);
                 MPL_free(cache_entry);
                 cache_entry = NULL;
@@ -1822,6 +1842,9 @@ static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, i
         }
         if (cache_entry->mapped_ptr) {
             munmapFunction(cache_entry->nfds, cache_entry->mapped_ptr, cache_entry->mapped_size);
+        }
+        for (int i = 0; i < cache_entry->nfds; ++i) {
+            close(cache_entry->fds[i]);
         }
         HASH_DEL(ipc_cache_mapped[dev_id], cache_entry);
         MPL_free(cache_entry);
@@ -2863,47 +2886,57 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 }
 
 int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shared_handle,
-                          int dev_id, int is_mmap, size_t size, void **ptr)
+                          int dev_id, int is_mmap, size_t size, int (*_fds)[2], void **ptr)
 {
+    /* The fds created below need to be stored for closing later. Normally they should be closed
+     * immediately, but instead need to remain open in case they are ever needed for mmapping to
+     * the host (i.e. via mmapFunction)
+     */
+
     int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
-    int fds[2], status;
+    int status;
     uint32_t nfds;
     MPL_gpu_device_handle_t dev_handle;
 
     fd_pid_t h;
     h = mpl_ipc_handle->data;
     nfds = h.nfds;
+    int *fds = *_fds;
 
-    if (physical_device_states != NULL) {
-        /* convert GEM handle to fd */
-        for (int i = 0; i < nfds; i++) {
-            status = handle_to_fd(physical_device_states[h.dev_id].fd, h.fds[i], &fds[i]);
-            if (status) {
-                goto fn_fail;
-            }
-        }
-    } else {
-        /* pidfd_getfd */
-        if (h.pid != mypid) {
-            int pid_fd = syscall(__NR_pidfd_open, h.pid, 0);
-            if (pid_fd == -1) {
-                printf("pidfd_open error: %s (%d %d %d)\n", strerror(errno), h.pid, h.fds[0],
-                       h.dev_id);
-            }
-            assert(pid_fd != -1);
+    /* Only do the conversion if it wasn't previously done */
+    if (fds[0] == -1) {
+        if (physical_device_states != NULL) {
+            /* convert GEM handle to fd */
             for (int i = 0; i < nfds; i++) {
-                fds[i] = syscall(__NR_pidfd_getfd, pid_fd, h.fds[i], 0);
-                if (fds[i] == -1) {
-                    printf("Error> pidfd_getfd is not implemented!");
-                    mpl_err = MPL_ERR_GPU_INTERNAL;
+                status = handle_to_fd(physical_device_states[h.dev_id].fd, h.fds[i], &fds[i]);
+                if (status) {
                     goto fn_fail;
                 }
             }
-            close(pid_fd);
         } else {
-            fds[0] = h.fds[0];
-            fds[1] = h.fds[1];
+            /* pidfd_getfd */
+            if (h.pid != mypid) {
+                int pid_fd = syscall(__NR_pidfd_open, h.pid, 0);
+                if (pid_fd == -1) {
+                    printf("pidfd_open error: %s (%d %d %d)\n", strerror(errno), h.pid, h.fds[0],
+                           h.dev_id);
+                }
+                assert(pid_fd != -1);
+                for (int i = 0; i < nfds; i++) {
+                    fds[i] = syscall(__NR_pidfd_getfd, pid_fd, h.fds[i], 0);
+                    if (fds[i] == -1) {
+                        printf("Error> pidfd_getfd is not implemented!");
+                        mpl_err = MPL_ERR_GPU_INTERNAL;
+                        goto fn_fail;
+                    }
+                }
+                close(pid_fd);
+            } else {
+                for (int i = 0; i < nfds; i++) {
+                    fds[i] = h.fds[i];
+                }
+            }
         }
     }
 
@@ -2930,10 +2963,6 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shar
             ret = zeMemOpenIpcHandle(ze_context, dev_handle, ze_ipc_handle[0], 0, ptr);
         }
         ZE_ERR_CHECK(ret);
-
-        for (int i = 0; i < nfds; ++i) {
-            close(fds[i]);
-        }
     }
 
   fn_exit:
@@ -2947,6 +2976,7 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int i
                                 int dev_id, size_t size, void **ptr)
 {
     int mpl_err = MPL_SUCCESS;
+    int fds[2] = { -1 };
     unsigned keylen;
     MPL_ze_mapped_buffer_entry_t *cache_entry = NULL;
     MPL_ze_mapped_buffer_entry_t *removal_entry = NULL;
@@ -2972,6 +3002,13 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int i
         if (cache_entry->mapped_ptr) {
             *ptr = cache_entry->mapped_ptr;
         }
+
+        /* If a cache entry exists, then MPL_ze_ipc_handle_map was already called previously
+         * (inside MPL_gpu_ipc_handle_map). Make sure to reuse the fds from that call instead of
+         * creating new ones */
+        for (int i = 0; i < h.nfds; ++i) {
+            fds[i] = cache_entry->fds[i];
+        }
     } else {
         if (likely(MPL_gpu_info.specialized_cache)) {
             /* Insert into the cache */
@@ -2989,7 +3026,7 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int i
     }
 
     if (*ptr == NULL) {
-        mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, ptr);
+        mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, &fds, ptr);
         if (mpl_err != MPL_SUCCESS) {
             goto fn_fail;
         }
@@ -2998,6 +3035,10 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int i
             cache_entry->mapped_ptr = *ptr;
             cache_entry->mapped_size = size;
             cache_entry->nfds = h.nfds;
+
+            /* Store the fds created from MPL_ze_ipc_handle_map for closing later */
+            for (int i = 0; i < h.nfds; i++)
+                cache_entry->fds[i] = fds[i];
 
             removal_entry =
                 (MPL_ze_mapped_buffer_entry_t *) MPL_malloc(sizeof(MPL_ze_mapped_buffer_entry_t),
