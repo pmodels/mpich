@@ -841,21 +841,6 @@ int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t *topo)
         goto fn_got;
     }
 
-#ifdef HAS_PMIX_LOAD_TOPOLOGY
-    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
-        pmix_topology_t ptopo;
-        PMIX_TOPOLOGY_CONSTRUCT(&ptopo);
-        pmix_status_t rc = PMIx_Load_topology(&ptopo);
-        MPIR_ERR_CHKANDJUMP1(rc != PMIX_SUCCESS, mpi_errno, MPI_ERR_INTERN,
-                             "**pmix_load_topo", "**pmix_load_topo %d", rc);
-        MPIR_ERR_CHKANDJUMP1(strcmp(ptopo.source, "hwloc"), mpi_errno, MPI_ERR_INTERN,
-                             "**pmix_unknown_topo", "**pmix_unknown_topo %s", ptopo.source);
-        hwloc_topology = ptopo.topology;
-        got_hwloc_topology = GOT_HWLOC_TOPOLOGY_PMIX;
-        goto fn_got;
-    }
-#endif
-
     mpi_errno = fallback_load_hwloc_topology();
     MPIR_ERR_CHECK(mpi_errno);
 
