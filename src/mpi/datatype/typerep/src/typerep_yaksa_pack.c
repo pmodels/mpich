@@ -66,8 +66,7 @@ cvars:
 */
 
 #define IS_HOST(attr) \
-    ((attr).type == MPL_GPU_POINTER_UNREGISTERED_HOST || \
-    (attr).type == MPL_GPU_POINTER_REGISTERED_HOST)
+    ((attr).type & (MPL_GPU_POINTER_UNREGISTERED_HOST | MPL_GPU_POINTER_REGISTERED_HOST))
 
 /* When a returned typerep_req is expected, using the nonblocking yaksa routine and
  * return the request; otherwise use the blocking yaksa routine. */
