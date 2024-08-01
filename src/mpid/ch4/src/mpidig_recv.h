@@ -151,6 +151,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
             MPIDIG_REQUEST(rreq, datatype) = datatype;
             MPIDIG_REQUEST(rreq, buffer) = buf;
             MPIDIG_REQUEST(rreq, count) = count;
+            MPIR_GPU_query_pointer_attr(buf, &MPIDIG_REQUEST(rreq, buf_attr));
             MPIDIG_recv_type_init(unexp_data_sz, rreq);
         }
     }
@@ -256,6 +257,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
             MPIDIG_REQUEST(unexp_req, buffer) = buf;
             MPIDIG_REQUEST(unexp_req, count) = count;
             MPIDIG_REQUEST(unexp_req, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
+            MPIR_GPU_query_pointer_attr(buf, &MPIDIG_REQUEST(rreq, buf_attr));
             /* MPIDIG_recv_type_init will call the callback to finish the rndv protocol */
             mpi_errno = MPIDIG_recv_type_init(data_sz, unexp_req);
         } else {
@@ -284,6 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
 
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
+        MPIR_GPU_query_pointer_attr(buf, &MPIDIG_REQUEST(rreq, buf_attr));
         MPIDIG_enqueue_request(rreq, &MPIDI_global.per_vci[vci].posted_list, MPIDIG_PT2PT_POSTED);
     }
 

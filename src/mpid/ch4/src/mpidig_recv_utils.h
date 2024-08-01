@@ -219,6 +219,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     MPI_Aint in_data_sz = p->in_data_sz;
+    int flags = (MPIDIG_REQUEST(rreq, buf_attr).type &
+                 (MPL_GPU_POINTER_UNREGISTERED_HOST | MPL_GPU_POINTER_REGISTERED_HOST))
+        ? MPIR_TYPEREP_FLAG_H2H : MPIR_TYPEREP_FLAG_NONE;
     if (in_data_sz == 0) {
         /* otherwise if recv size = 0, it is at least a truncation error */
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
@@ -228,7 +231,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
                             MPIDIG_REQUEST(rreq, buffer),
                             MPIDIG_REQUEST(rreq, count),
                             MPIDIG_REQUEST(rreq, datatype),
-                            0, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
+                            0, &actual_unpack_bytes, flags & MPIR_TYPEREP_FLAG_NONE);
         if (!rreq->status.MPI_ERROR && in_data_sz > actual_unpack_bytes) {
             /* Truncation error has been checked at MPIDIG_recv_type_init.
              * If the receive buffer had enough space, but we still
@@ -251,7 +254,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
         }
 
         data_sz = MPL_MIN(data_sz, in_data_sz);
-        MPIR_Typerep_copy(data, in_data, data_sz, MPIR_TYPEREP_FLAG_NONE);
+        MPIR_Typerep_copy(data, in_data, data_sz, flags & MPIR_TYPEREP_FLAG_NONE);
         MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
     } else {
         /* noncontig case */
@@ -263,7 +266,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
         for (int i = 0; i < iov_len && rem > 0; i++) {
             int curr_len = MPL_MIN(rem, iov[i].iov_len);
             MPIR_Typerep_copy(iov[i].iov_base, (char *) in_data + done, curr_len,
-                              MPIR_TYPEREP_FLAG_NONE);
+                              flags & MPIR_TYPEREP_FLAG_NONE);
             rem -= curr_len;
             done += curr_len;
         }
@@ -282,6 +285,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_setup(MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
+    MPIDIG_REQUEST(rreq, req->recv_async).typerep_flags =
+        (MPIDIG_REQUEST(rreq, buf_attr).type &
+         (MPL_GPU_POINTER_UNREGISTERED_HOST | MPL_GPU_POINTER_REGISTERED_HOST)) ?
+        MPIR_TYPEREP_FLAG_H2H : MPIR_TYPEREP_FLAG_NONE;
     p->offset = 0;
     if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         /* it's ready, rreq status to be set */
@@ -330,7 +337,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
                             MPIDIG_REQUEST(rreq, buffer),
                             MPIDIG_REQUEST(rreq, count),
                             MPIDIG_REQUEST(rreq, datatype),
-                            p->offset, &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
+                            p->offset, &actual_unpack_bytes,
+                            p->typerep_flags & MPIR_TYPEREP_FLAG_NONE);
         p->offset += payload_sz;
         if (payload_sz > actual_unpack_bytes) {
             /* basic element size mismatch */
@@ -353,7 +361,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
         for (int i = 0; i < p->iov_num; i++) {
             if (payload_sz < p->iov_ptr[i].iov_len) {
                 MPIR_Typerep_copy(p->iov_ptr[i].iov_base, payload, payload_sz,
-                                  MPIR_TYPEREP_FLAG_NONE);
+                                  p->typerep_flags & MPIR_TYPEREP_FLAG_NONE);
                 p->iov_ptr[i].iov_base = (char *) p->iov_ptr[i].iov_base + payload_sz;
                 p->iov_ptr[i].iov_len -= payload_sz;
                 /* not done */
@@ -361,7 +369,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
             } else {
                 /* fill one iov */
                 MPIR_Typerep_copy(p->iov_ptr[i].iov_base, payload, p->iov_ptr[i].iov_len,
-                                  MPIR_TYPEREP_FLAG_NONE);
+                                  p->typerep_flags & MPIR_TYPEREP_FLAG_NONE);
                 payload = (char *) payload + p->iov_ptr[i].iov_len;
                 payload_sz -= p->iov_ptr[i].iov_len;
                 iov_done++;
