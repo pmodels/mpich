@@ -6,6 +6,10 @@
 #ifndef MPIDIG_SEND_UTILS_H_INCLUDED
 #define MPIDIG_SEND_UTILS_H_INCLUDED
 
+#undef IS_HOST
+#define IS_HOST(attr) \
+    ((attr).type & (MPL_GPU_POINTER_UNREGISTERED_HOST | MPL_GPU_POINTER_REGISTERED_HOST))
+
 /* This file is for supporting routines used for pipelined data send. These routines mainly is for
  * managing the send request counters, completion counters and DT refcount */
 

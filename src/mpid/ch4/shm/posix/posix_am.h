@@ -11,6 +11,10 @@
 #include "posix_eager.h"
 #include "mpidu_genq.h"
 
+#undef IS_HOST
+#define IS_HOST(attr) \
+    ((attr).type & (MPL_GPU_POINTER_UNREGISTERED_HOST | MPL_GPU_POINTER_REGISTERED_HOST))
+
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_POSIX_am_eager_limit(void)
 {
     return MPIDI_POSIX_eager_payload_limit() - MAX_ALIGNMENT;
@@ -284,9 +288,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
 
         msg_hdr_p = msg_hdr;
         if (data_sz + am_hdr_sz <= MPIDI_POSIX_am_eager_limit()) {
-            msg_hdr_p->am_type = MPIDI_POSIX_AM_TYPE__SHORT;
+            if (IS_HOST(MPIDIG_REQUEST(sreq, buf_attr))) {
+                msg_hdr_p->am_type = MPIDI_POSIX_AM_TYPE__SHORT_HOST;
+            } else {
+                msg_hdr_p->am_type = MPIDI_POSIX_AM_TYPE__SHORT;
+            }
         } else {
-            msg_hdr_p->am_type = MPIDI_POSIX_AM_TYPE__PIPELINE;
+            if (IS_HOST(MPIDIG_REQUEST(sreq, buf_attr))) {
+                msg_hdr_p->am_type = MPIDI_POSIX_AM_TYPE__PIPELINE_HOST;
+            } else {
+                msg_hdr_p->am_type = MPIDI_POSIX_AM_TYPE__PIPELINE;
+            }
         }
 
         MPIDIG_am_send_async_init(sreq, datatype, data_sz);
