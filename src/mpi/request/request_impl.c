@@ -84,6 +84,7 @@ cvars:
             MPL_wtime_diff(&time_start, &time_cur, &time_diff); \
             if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT) { \
                 MPIR_Request_debug(); \
+                MPL_backtrace_show(stdout); \
             } else { \
                 iter = 0; \
             } \
