@@ -63,7 +63,7 @@ void MPL_ze_ipc_remove_cache_handle(void *dptr);
 int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, int local_dev_id,
                              int use_shared_fd, MPL_gpu_ipc_mem_handle_t * ipc_handle);
 int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int is_shared_handle, int dev_id,
-                          int is_mmap, size_t size, void **ptr);
+                          int is_mmap, size_t size, int (*fds)[2], void **ptr);
 int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * ipc_handle, int shared_handle,
                                 int dev_id, size_t size, void **ptr);
 int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
