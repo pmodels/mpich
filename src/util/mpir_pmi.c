@@ -793,8 +793,8 @@ static int fallback_load_hwloc_topology(void)
         rc = hwloc_topology_set_xml(hwloc_topology, xmlfile);
         if (rc == 0) {
             /* To have hwloc still actually call OS-specific hooks, the
-                * HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
-                * file is really the underlying system. */
+             * HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
+             * file is really the underlying system. */
             hwloc_topology_set_flags(hwloc_topology, HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM);
         }
         MPL_free(xmlfile);
@@ -818,26 +818,30 @@ static void fallback_free_hwloc_topology(void)
     }
 }
 
-int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t *topo)
+int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t * topo)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (got_hwloc_topology != GOT_HWLOC_TOPOLOGY_NONE) {
         goto fn_got;
     }
-
 #ifdef HAS_PMIX_LOAD_TOPOLOGY
     if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
         pmix_topology_t ptopo;
         PMIX_TOPOLOGY_CONSTRUCT(&ptopo);
         pmix_status_t rc = PMIx_Load_topology(&ptopo);
-        MPIR_ERR_CHKANDJUMP1(rc != PMIX_SUCCESS, mpi_errno, MPI_ERR_INTERN,
-                             "**pmix_load_topo", "**pmix_load_topo %d", rc);
-        MPIR_ERR_CHKANDJUMP1(strcmp(ptopo.source, "hwloc"), mpi_errno, MPI_ERR_INTERN,
-                             "**pmix_unknown_topo", "**pmix_unknown_topo %s", ptopo.source);
-        hwloc_topology = ptopo.topology;
-        got_hwloc_topology = GOT_HWLOC_TOPOLOGY_PMIX;
-        goto fn_got;
+        /* example of ptopo.source: hwloc:2.9.0 */
+        if (rc == PMIX_SUCCESS && strncmp(ptopo.source, "hwloc", 5) == 0) {
+            hwloc_topology = ptopo.topology;
+            got_hwloc_topology = GOT_HWLOC_TOPOLOGY_PMIX;
+            goto fn_got;
+        } else {
+            /* FIXME: Do we want to fail here or fallback? */
+            MPIR_ERR_CHKANDJUMP1(rc != PMIX_SUCCESS, mpi_errno, MPI_ERR_INTERN,
+                                 "**pmix_load_topo", "**pmix_load_topo %d", rc);
+            MPIR_ERR_CHKANDJUMP1(strncmp(ptopo.source, "hwloc", 5) != 0, mpi_errno, MPI_ERR_INTERN,
+                                 "**pmix_unknown_topo", "**pmix_unknown_topo %s", ptopo.source);
+        }
     }
 #endif
 
@@ -854,7 +858,7 @@ int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t *topo)
     goto fn_exit;
 }
 
-#endif  /* HAVE_HWLOC */
+#endif /* HAVE_HWLOC */
 
 /* ---- static functions ---- */
 
