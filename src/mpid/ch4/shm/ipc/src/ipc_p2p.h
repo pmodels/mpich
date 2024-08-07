@@ -231,6 +231,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, u.recv.source);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
 
+    MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr) = NULL;
+
     /* attach remote buffer */
     switch (ipc_hdr->ipc_type) {
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
