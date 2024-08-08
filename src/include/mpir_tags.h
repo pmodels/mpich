@@ -67,6 +67,10 @@
    with user-supplied tags and internally-defined tags. */
 #define MPIR_TAG_COLL_BIT (1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1))
 
+/* This macro defines tag bits available for user tags */
+#define MPIR_TAG_USABLE_BITS (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1 - MPID_TAG_DEV_BITS)
+#define MPIR_TAG_USABLE_MASK ((1 << MPIR_TAG_USABLE_BITS) - 1)
+
 /* This macro checks the value of the error bit in the MPI tag and returns 1
  * if the tag is set and 0 if it is not. */
 #ifdef HAVE_TAG_ERROR_BITS
@@ -87,21 +91,21 @@
 #ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_SET_ERROR_BIT(tag) ((tag) |= MPIR_TAG_ERROR_BIT)
 #else
-#define MPIR_TAG_SET_ERROR_BIT(tag) (tag)
+#define MPIR_TAG_SET_ERROR_BIT(tag) do { } while (0)
 #endif
 
 /* This macro sets the value of the process failure bit in the MPI tag to 1 */
 #ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_SET_PROC_FAILURE_BIT(tag) ((tag) |= (MPIR_TAG_ERROR_BIT | MPIR_TAG_PROC_FAILURE_BIT))
 #else
-#define MPIR_TAG_SET_PROC_FAILURE_BIT(tag) (tag)
+#define MPIR_TAG_SET_PROC_FAILURE_BIT(tag) do { } while (0)
 #endif
 
 /* This macro clears the value of the error bits in the MPI tag */
 #ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_CLEAR_ERROR_BITS(tag) ((tag) &= ~(MPIR_TAG_ERROR_BIT ^ MPIR_TAG_PROC_FAILURE_BIT))
 #else
-#define MPIR_TAG_CLEAR_ERROR_BITS(tag) (tag)
+#define MPIR_TAG_CLEAR_ERROR_BITS(tag) do { } while (0)
 #endif
 
 /* This macro masks the value of the error bits in the MPI tag */
@@ -111,15 +115,12 @@
 #define MPIR_TAG_MASK_ERROR_BITS(tag) (tag)
 #endif
 
-/* This macro defines tag bits available for user tags */
-#define MPIR_TAG_USABLE_BITS ((1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1)) - 1)
-
 #ifdef ENABLE_THREADCOMM
 #define MPIR_TAG_THREADCOMM_TID_BITS 6
 #define MPIR_TAG_THREADCOMM_USABLE_BITS \
-    (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1 - MPIR_TAG_THREADCOMM_TID_BITS * 2)
+    (MPIR_TAG_USABLE_BITS - MPIR_TAG_THREADCOMM_TID_BITS * 2)
 /* Threadcomm won't use MPIR_TAG_COLL_BIT, re-purpose it for marking INTERPROCESS messages */
-#define MPIR_TAG_THREADCOMM_INTERPROCESS_BIT (1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1))
+#define MPIR_TAG_THREADCOMM_INTERPROCESS_BIT MPIR_TAG_COLL_BIT
 
 #define THREADCOMM_INTERPROCESS_TAG(tag, src_id, dst_id) \
     (MPIR_TAG_THREADCOMM_INTERPROCESS_BIT | ((((src_id) << MPIR_TAG_THREADCOMM_TID_BITS) + (dst_id)) << MPIR_TAG_THREADCOMM_USABLE_BITS) | (tag))

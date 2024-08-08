@@ -23,6 +23,8 @@
 #include "uthash.h"
 #include "ch4_csel_container.h"
 
+#define MPID_TAG_DEV_BITS 0
+
 enum {
     MPIDI_CH4_MT_DIRECT,
     MPIDI_CH4_MT_LOCKLESS,

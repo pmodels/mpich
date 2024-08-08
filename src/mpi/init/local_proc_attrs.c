@@ -89,7 +89,7 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
 int MPII_init_tag_ub(void)
 {
     /* Set tag_ub as function of tag_bits set by the device */
-    MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;
+    MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_MASK;
 
     /* TODO: turn assertions into error code */
     /* Assert: tag_ub should be a power of 2 minus 1 */
