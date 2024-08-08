@@ -100,19 +100,25 @@ static int copy_iovs(pid_t src_pid, MPI_Aint src_data_sz,
 
     MPI_Aint i_src = 0, i_dst = 0;
     MPI_Aint cur_offset = 0;
+    bool got_err_truncate = false;
 
+/* Apparently process_vm_readv can't handle iov segment larger than 0x7ffff000 */
+/* FIXME: confirm and find reference */
+#define MAX_IOV_SEG_SIZE 0x7ffff000
     while (i_src < src_iov_len && i_dst < dst_iov_len) {
         MPI_Aint n_src, n_dst;
         MPI_Aint exp_data_sz;
         /* in case we result in partial iov */
-        MPI_Aint remain_len = 0;
-        bool adjust_src_iov = false;
+        MPI_Aint remain_src_len, remain_dst_len;
+
+        remain_src_len = 0;
+        remain_dst_len = 0;
 
         n_src = src_iov_len - i_src;
         n_dst = dst_iov_len - i_dst;
-        if (n_src <= IOV_MAX && n_dst <= IOV_MAX) {
-            exp_data_sz = src_data_sz - cur_offset;
+        exp_data_sz = src_data_sz - cur_offset;
 
+        if (n_src <= IOV_MAX && n_dst <= IOV_MAX && exp_data_sz <= MAX_IOV_SEG_SIZE) {
             MPI_Aint cnt_dst = 0;
             for (int i = 0; i < n_dst; i++) {
                 cnt_dst += dst_iovs[i_dst + i].iov_len;
@@ -125,20 +131,20 @@ static int copy_iovs(pid_t src_pid, MPI_Aint src_data_sz,
                 for (int i = 0; i < n_src; i++) {
                     cnt_src += src_iovs[i_src + i].iov_len;
                     if (cnt_src >= exp_data_sz) {
-                        remain_len = cnt_src - exp_data_sz;
+                        MPI_Aint remain_len = cnt_src - exp_data_sz;
                         src_iovs[i_src + i].iov_len -= remain_len;
                         n_src = i + 1;
                         break;
                     }
                 }
                 /* signal MPI_ERR_TRUNCATE */
-                remain_len = -1;
+                got_err_truncate = true;
             } else if (cnt_dst > exp_data_sz) {
-                MPI_Aint cnt_dst = 0;
+                cnt_dst = 0;
                 for (int i = 0; i < n_dst; i++) {
                     cnt_dst += dst_iovs[i_dst + i].iov_len;
                     if (cnt_dst >= exp_data_sz) {
-                        remain_len = cnt_dst - exp_data_sz;
+                        MPI_Aint remain_len = cnt_dst - exp_data_sz;
                         dst_iovs[i_dst + i].iov_len -= remain_len;
                         n_dst = i + 1;
                     }
@@ -160,31 +166,33 @@ static int copy_iovs(pid_t src_pid, MPI_Aint src_data_sz,
             for (int i = 0; i < n_dst; i++) {
                 cnt_dst += dst_iovs[i_dst + i].iov_len;
             }
-            exp_data_sz = MPL_MIN(cnt_src, cnt_dst);
+            exp_data_sz = MPL_MIN(MAX_IOV_SEG_SIZE, MPL_MIN(cnt_src, cnt_dst));
 
             if (cnt_src > exp_data_sz) {
                 cnt_src = 0;
                 for (int i = 0; i < n_src; i++) {
                     cnt_src += src_iovs[i_src + i].iov_len;
                     if (cnt_src >= exp_data_sz) {
-                        remain_len = cnt_src - exp_data_sz;
+                        MPI_Aint remain_len = cnt_src - exp_data_sz;
                         src_iovs[i_src + i].iov_len -= remain_len;
                         n_src = i + 1;
+                        remain_src_len = remain_len;
                         break;
                     }
                 }
-                adjust_src_iov = true;
-            } else if (cnt_dst > exp_data_sz) {
+            }
+            if (cnt_dst > exp_data_sz) {
                 cnt_dst = 0;
                 for (int i = 0; i < n_dst; i++) {
                     cnt_dst += dst_iovs[i_dst + i].iov_len;
                     if (cnt_dst >= exp_data_sz) {
-                        remain_len = cnt_dst - exp_data_sz;
+                        MPI_Aint remain_len = cnt_dst - exp_data_sz;
                         dst_iovs[i_dst + i].iov_len -= remain_len;
                         n_dst = i + 1;
+                        remain_dst_len = remain_len;
+                        break;
                     }
                 }
-                adjust_src_iov = false;
             }
         }
 
@@ -199,21 +207,19 @@ static int copy_iovs(pid_t src_pid, MPI_Aint src_data_sz,
         i_src += n_src;
         i_dst += n_dst;
 
-        if (remain_len > 0) {
-            if (adjust_src_iov) {
-                i_src--;
-                /* adjust the remaining iov */
-                src_iovs[i_src].iov_base =
-                    (char *) src_iovs[i_src].iov_base + src_iovs[i_src].iov_len;
-                src_iovs[i_src].iov_len = remain_len;
-            } else {
-                i_dst--;
-                /* adjust the remaining iov */
-                dst_iovs[i_dst].iov_base =
-                    (char *) dst_iovs[i_dst].iov_base + dst_iovs[i_dst].iov_len;
-                dst_iovs[i_dst].iov_len = remain_len;
-            }
-        } else if (remain_len < 0) {
+        if (remain_src_len > 0) {
+            i_src--;
+            /* adjust the remaining iov */
+            src_iovs[i_src].iov_base = (char *) src_iovs[i_src].iov_base + src_iovs[i_src].iov_len;
+            src_iovs[i_src].iov_len = remain_src_len;
+        }
+        if (remain_dst_len > 0) {
+            i_dst--;
+            /* adjust the remaining iov */
+            dst_iovs[i_dst].iov_base = (char *) dst_iovs[i_dst].iov_base + dst_iovs[i_dst].iov_len;
+            dst_iovs[i_dst].iov_len = remain_dst_len;
+        }
+        if (got_err_truncate) {
             /* This signals truncation error */
             /* FIXME: set specific error "**truncate %d %d %d %d" */
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TRUNCATE, "**truncate");
