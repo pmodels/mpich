@@ -240,6 +240,11 @@ test-clean:
 ## better approach might be to have each Makefile.mk append to a
 ## common set of rules.
 install-exec-hook:
+	if test -e lib/lib@PMPILIBNAME@.la ; then \
+	    . lib/lib@PMPILIBNAME@.la ; \
+	elif test -e lib/lib@MPILIBNAME@.la ; then \
+	    . lib/lib@MPILIBNAME@.la ; \
+	fi ; \
 	for e in ${DESTDIR}${bindir}/@MPICC_NAME@ \
 		${DESTDIR}${bindir}/@MPICXX_NAME@ \
 		${DESTDIR}${bindir}/@MPIFORT_NAME@ ; do \
@@ -289,11 +294,6 @@ if BUILD_ABI_LIB
 		fi ; \
 	fi ;
 endif BUILD_ABI_LIB
-	if test -e lib/lib@PMPILIBNAME@.la ; then \
-	    . lib/lib@PMPILIBNAME@.la ; \
-	elif test -e lib/lib@MPILIBNAME@.la ; then \
-	    . lib/lib@MPILIBNAME@.la ; \
-	fi ; \
 	if test -e ${DESTDIR}${libdir}/lib@MPILIBNAME@@SHLIB_EXT@ ; then \
 		if test "@MPILIBNAME@" != "mpl" ; then \
 			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpl@SHLIB_EXT@ ; \
