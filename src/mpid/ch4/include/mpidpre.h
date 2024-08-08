@@ -164,6 +164,7 @@ typedef struct MPIDIG_req_async {
     struct iovec iov_one;       /* used with MPIDIG_RECV_CONTIG */
     MPIDIG_recv_data_copy_cb data_copy_cb;      /* called in recv_init/recv_type_init for async
                                                  * data copying */
+    int typerep_flags;
 } MPIDIG_rreq_async_t;
 
 typedef struct MPIDIG_sreq_async {
@@ -209,6 +210,7 @@ typedef struct MPIDIG_req_t {
     void *buffer;
     MPI_Aint count;
     MPI_Datatype datatype;
+    MPL_pointer_attr_t buf_attr;
     union {
         struct {
             int dest;
