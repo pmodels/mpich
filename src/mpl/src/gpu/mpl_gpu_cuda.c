@@ -8,6 +8,11 @@
 #include <dlfcn.h>
 #include <assert.h>
 
+// We need to give the pre-processor a chance to replace a function, such as:
+// cuMemFree => cuMemFree_v2
+#define STRINGIFY(x) #x
+#define CUDA_SYMBOL_STRING(x) STRINGIFY(x)
+
 #define CUDA_ERR_CHECK(ret) if (unlikely((ret) != cudaSuccess)) goto fn_fail
 #define CU_ERR_CHECK(ret) if (unlikely((ret) != CUDA_SUCCESS)) goto fn_fail
 
@@ -492,9 +497,9 @@ static int gpu_mem_hook_init()
     libcudart_handle = dlopen("libcudart.so", RTLD_LAZY | RTLD_GLOBAL);
     assert(libcudart_handle);
 
-    sys_cuMemFree = (void *) dlsym(libcuda_handle, "cuMemFree");
+    sys_cuMemFree = (void *) dlsym(libcuda_handle, CUDA_SYMBOL_STRING(cuMemFree));
     assert(sys_cuMemFree);
-    sys_cudaFree = (void *) dlsym(libcudart_handle, "cudaFree");
+    sys_cudaFree = (void *) dlsym(libcudart_handle, CUDA_SYMBOL_STRING(cudaFree));
     assert(sys_cudaFree);
 
     return MPL_SUCCESS;
