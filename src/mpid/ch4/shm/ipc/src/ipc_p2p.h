@@ -11,6 +11,7 @@
 #include "ipc_pre.h"
 #include "ipc_types.h"
 #include "../xpmem/xpmem_post.h"
+#include "../cma/cma_post.h"
 #include "../gpu/gpu_post.h"
 
 /* Generic IPC protocols for P2P. */
@@ -31,8 +32,7 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count,
-                                                 MPI_Datatype datatype, uintptr_t data_sz,
-                                                 int is_contig,
+                                                 MPI_Datatype datatype,
                                                  int rank, int tag, MPIR_Comm * comm,
                                                  int context_offset, MPIDI_av_entry_t * addr,
                                                  MPIDI_IPCI_ipc_attr_t ipc_attr,
@@ -60,7 +60,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     MPIDIG_REQUEST(sreq, count) = count;
 
     am_hdr.ipc_hdr.ipc_type = ipc_attr.ipc_type;
-    am_hdr.ipc_hdr.ipc_handle = ipc_attr.ipc_handle;
+    switch (ipc_attr.ipc_type) {
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+        case MPIDI_IPCI_TYPE__XPMEM:
+            MPIDI_XPMEM_fill_ipc_handle(&ipc_attr, &(am_hdr.ipc_hdr.ipc_handle));
+            break;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_CMA
+        case MPIDI_IPCI_TYPE__CMA:
+            MPIDI_CMA_fill_ipc_handle(&ipc_attr, &(am_hdr.ipc_hdr.ipc_handle));
+            break;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+        case MPIDI_IPCI_TYPE__GPU:
+            MPIDI_GPU_fill_ipc_handle(&ipc_attr, &(am_hdr.ipc_hdr.ipc_handle));
+            break;
+#endif
+        default:
+            MPIR_Assert(0);
+            break;
+    }
+
+    int is_contig;
+    MPI_Aint data_sz;
+    MPIR_Datatype_is_contig(datatype, &is_contig);
+    MPIR_Datatype_get_size_macro(datatype, data_sz);
+    data_sz *= count;
+
     am_hdr.ipc_hdr.is_contig = is_contig;
 
     /* message matching info */
@@ -188,8 +214,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
                                                         MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *src_buf = NULL;
     uintptr_t data_sz, recv_data_sz;
+    bool is_async_copy = false;
 
     MPIR_FUNC_ENTER;
 
@@ -205,65 +231,41 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, u.recv.source);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
 
+    MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr) = NULL;
+
     /* attach remote buffer */
-    if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__XPMEM) {
-        /* map */
-        mpi_errno = MPIDI_XPMEM_ipc_handle_map(ipc_hdr->ipc_handle.xpmem, &src_buf);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* copy */
-        mpi_errno = MPIDI_IPCI_copy_data(ipc_hdr, rreq, src_buf, src_data_sz);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* skip unmap */
-    } else if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__GPU) {
-#ifdef MPL_HAVE_ZE
-        bool do_mmap = (src_data_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE);
-#else
-        bool do_mmap = false;
+    switch (ipc_hdr->ipc_type) {
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+        case MPIDI_IPCI_TYPE__XPMEM:
+            {
+                void *src_buf = NULL;
+                /* map */
+                mpi_errno = MPIDI_XPMEM_ipc_handle_map(ipc_hdr->ipc_handle.xpmem, &src_buf);
+                MPIR_ERR_CHECK(mpi_errno);
+                /* copy */
+                mpi_errno = MPIDI_IPCI_copy_data(ipc_hdr, rreq, src_buf, src_data_sz);
+                MPIR_ERR_CHECK(mpi_errno);
+                /* skip unmap */
+            }
+            break;
 #endif
-        MPL_pointer_attr_t attr;
-        MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
-        int dev_id = MPL_gpu_get_dev_id_from_attr(&attr);
-        int map_dev = MPIDI_GPU_ipc_get_map_dev(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id,
-                                                MPIDIG_REQUEST(rreq, datatype));
-        mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_hdr->ipc_handle.gpu, map_dev, &src_buf, do_mmap);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        /* copy */
-        MPI_Aint src_count;
-        MPI_Datatype src_dt;
-        MPIR_Datatype *src_dt_ptr = NULL;
-        if (ipc_hdr->is_contig) {
-            src_count = src_data_sz;
-            src_dt = MPI_BYTE;
-        } else {
-            /* TODO: get sender datatype and call MPIR_Typerep_op with mapped_device set to dev_id */
-            void *flattened_type = ipc_hdr + 1;
-            src_dt_ptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-            MPIR_Assert(src_dt_ptr);
-            mpi_errno = MPIR_Typerep_unflatten(src_dt_ptr, flattened_type);
+#ifdef MPIDI_CH4_SHM_ENABLE_CMA
+        case MPIDI_IPCI_TYPE__CMA:
+            mpi_errno = MPIDI_CMA_copy_data(ipc_hdr, rreq, src_data_sz);
             MPIR_ERR_CHECK(mpi_errno);
-
-            src_count = ipc_hdr->count;
-            src_dt = src_dt_ptr->handle;
-        }
-        MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr) = src_dt_ptr;
-
-        MPIR_gpu_req yreq;
-        MPL_gpu_engine_type_t engine =
-            MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
-        mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_dt, 0, NULL,
-                                        MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                                        MPIDIG_REQUEST(rreq, datatype), 0, &attr,
-                                        MPL_GPU_COPY_DIRECTION_NONE, engine, true, &yreq);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        mpi_errno = MPIDI_GPU_ipc_async_start(rreq, &yreq, src_buf, ipc_hdr->ipc_handle.gpu);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
-    } else if (ipc_hdr->ipc_type == MPIDI_IPCI_TYPE__NONE) {
-        /* no-op */
-    } else {
-        MPIR_Assert(0);
+            break;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+        case MPIDI_IPCI_TYPE__GPU:
+            is_async_copy = true;
+            mpi_errno = MPIDI_GPU_copy_data_async(ipc_hdr, rreq, src_data_sz);
+            MPIR_ERR_CHECK(mpi_errno);
+            break;
+#endif
+        case MPIDI_IPCI_TYPE__NONE:
+            break;
+        default:
+            MPIR_Assert(0);
     }
 
     IPC_TRACE("handle_lmt_recv: handle matched rreq %p [source %d, tag %d, "
@@ -272,17 +274,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
               MPIDIG_REQUEST(rreq, u.recv.context_id), (char *) MPIDIG_REQUEST(rreq, buffer),
               recv_data_sz);
 
-  fn_cont:
-    mpi_errno = MPIDI_IPC_complete(rreq, ipc_hdr->ipc_type);
   fn_exit:
+    if (!is_async_copy) {
+        mpi_errno = MPIDI_IPC_complete(rreq, ipc_hdr->ipc_type);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
     /* Need to send ack and complete the request so we don't block sender and receiver */
     if (!rreq->status.MPI_ERROR) {
+        is_async_copy = false;
         rreq->status.MPI_ERROR = mpi_errno;
     }
-    goto fn_cont;
+    goto fn_exit;
 }
 
 #endif /* IPC_P2P_H_INCLUDED */
