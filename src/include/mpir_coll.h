@@ -9,6 +9,14 @@
 #include "coll_impl.h"
 #include "coll_algos.h"
 
+/* Define bit values for collective attributes. */
+
+/* NOTE: the two-bit errflag must be compatible with pt2pt attribute, ref. mpir_pt2pt.h */
+#define MPIR_COLL_ATTR_GET_ERRFLAG(attr) ((attr) & 0x6)
+#define MPIR_ERR_NONE 0
+#define MPIR_ERR_PROC_FAILED 2
+#define MPIR_ERR_OTHER 4
+
 /* During init, not all algorithms are safe to use. For example, the csel
  * may not have been initialized. We define a set of fallback routines that
  * are safe to use during init. They are all intra algorithms.
@@ -28,23 +36,23 @@ int MPIC_Wait(MPIR_Request * request_ptr);
 int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status);
 
 int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-              MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag);
+              MPIR_Comm * comm_ptr, int coll_attr);
 int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int tag,
               MPIR_Comm * comm_ptr, MPI_Status * status);
 int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag);
+               MPIR_Comm * comm_ptr, int coll_attr);
 int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                   int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                   MPI_Datatype recvtype, int source, int recvtag,
-                  MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t errflag);
+                  MPIR_Comm * comm_ptr, MPI_Status * status, int coll_attr);
 int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
                           int dest, int sendtag,
                           int source, int recvtag,
-                          MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t errflag);
+                          MPIR_Comm * comm_ptr, MPI_Status * status, int coll_attr);
 int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-               MPIR_Comm * comm_ptr, MPIR_Request ** request, MPIR_Errflag_t errflag);
+               MPIR_Comm * comm_ptr, MPIR_Request ** request, int coll_attr);
 int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                MPIR_Comm * comm_ptr, MPIR_Request ** request, MPIR_Errflag_t errflag);
+                MPIR_Comm * comm_ptr, MPIR_Request ** request, int coll_attr);
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
                int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request);
 int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses);
@@ -52,7 +60,7 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses);
 int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
                       MPI_Op op);
 
-int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag);
+int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, int coll_attr);
 
 /* TSP auto */
 int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,

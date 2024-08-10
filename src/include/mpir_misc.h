@@ -14,16 +14,6 @@
 #define MPIR_FINALIZE_CALLBACK_DEFAULT_PRIO 0
 #define MPIR_FINALIZE_CALLBACK_MAX_PRIO 10
 
-/* Define a typedef for the errflag value used by many internal
- * functions.  If an error needs to be returned, these values can be
- * used to signal such.  More details can be found further down in the
- * code with the bitmasking logic */
-typedef enum {
-    MPIR_ERR_NONE = 0,
-    MPIR_ERR_PROC_FAILED = 0x2,
-    MPIR_ERR_OTHER = 0x4
-} MPIR_Errflag_t;
-
 /*E
   MPIR_Lang_t - Known language bindings for MPI
 
