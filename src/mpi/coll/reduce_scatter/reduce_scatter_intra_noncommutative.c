@@ -22,8 +22,7 @@
  */
 int MPIR_Reduce_scatter_intra_noncommutative(const void *sendbuf, void *recvbuf,
                                              const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                             MPI_Op op, MPIR_Comm * comm_ptr,
-                                             MPIR_Errflag_t errflag)
+                                             MPI_Op op, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -102,8 +101,8 @@ int MPIR_Reduce_scatter_intra_noncommutative(const void *sendbuf, void *recvbuf,
                                   size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
                                   incoming_data + recv_offset * true_extent,
                                   size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
-                                  comm_ptr, MPI_STATUS_IGNORE, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                  comm_ptr, MPI_STATUS_IGNORE, coll_attr);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         /* always perform the reduction at recv_offset, the data at send_offset
          * is now our peer's responsibility */
         if (rank > peer) {

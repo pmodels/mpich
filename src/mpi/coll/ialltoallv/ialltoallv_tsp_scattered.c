@@ -21,7 +21,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
     int invtcs;
     int tag;
     int *vtcs, *recv_id, *send_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
     MPIR_Assert(!(sendbuf == MPI_IN_PLACE));
@@ -66,14 +66,14 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
             MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[src] * recvtype_extent,
                                  recvcounts[src], recvtype, src, tag, comm, sched, 0, NULL,
                                  &recv_id[i]);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
         dst = (rank - i + size) % size;
         mpi_errno =
             MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst] * sendtype_extent,
                                  sendcounts[dst], sendtype, dst, tag, comm, sched, 0, NULL,
                                  &send_id[i]);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 
     /* Post more send/recv pairs as the previous ones finish */
@@ -88,7 +88,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
             vtcs[i_vtcs++] = send_id[(i + j) % bblock];
         }
         mpi_errno = MPIR_TSP_sched_selective_sink(sched, 2 * ww, vtcs, &invtcs);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
         for (j = 0; j < ww; j++) {
             src = (rank + i + j) % size;
@@ -96,14 +96,14 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
                 MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[src] * recvtype_extent,
                                      recvcounts[src], recvtype, src, tag, comm, sched, 1, &invtcs,
                                      &recv_id[(i + j) % bblock]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
             dst = (rank - i - j + size) % size;
             mpi_errno =
                 MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst] * sendtype_extent,
                                      sendcounts[dst], sendtype, dst, tag, comm, sched, 1, &invtcs,
                                      &send_id[(i + j) % bblock]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         }
     }
 

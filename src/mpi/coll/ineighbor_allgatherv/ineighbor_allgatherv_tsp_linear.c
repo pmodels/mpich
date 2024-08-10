@@ -22,7 +22,7 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, MPI_
     int *srcs, *dsts;
     int tag, vtx_id;
     MPI_Aint recvtype_extent;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(2);
 
     MPIR_FUNC_ENTER;
@@ -47,7 +47,7 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, MPI_
         mpi_errno =
             MPIR_TSP_sched_isend(sendbuf, sendcount, sendtype, dsts[k], tag, comm_ptr, sched, 0,
                                  NULL, &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 
     for (l = 0; l < indegree; ++l) {
@@ -55,7 +55,7 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, MPI_
         mpi_errno =
             MPIR_TSP_sched_irecv(rb, recvcounts[l], recvtype, srcs[l], tag, comm_ptr, sched, 0,
                                  NULL, &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 
   fn_exit:

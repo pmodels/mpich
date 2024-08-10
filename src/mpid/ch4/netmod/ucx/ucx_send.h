@@ -133,7 +133,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
     int vci_src, vci_dst;
     MPIDI_UCX_SEND_VNIS(vci_src, vci_dst);
 
-    MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    int errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
     switch (errflag) {
         case MPIR_ERR_NONE:
             break;

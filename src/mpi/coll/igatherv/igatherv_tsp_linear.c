@@ -30,7 +30,7 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
     MPI_Aint extent;
     int min_procs;
     int tag;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     rank = comm_ptr->rank;
 
@@ -62,7 +62,7 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
                                                      recvcounts[i], recvtype, i, tag, comm_ptr,
                                                      sched, 0, NULL, &vtx_id);
                 }
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             }
         }
     } else if (root != MPI_PROC_NULL) {
@@ -87,7 +87,7 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
                 mpi_errno =
                     MPIR_TSP_sched_isend(sendbuf, sendcount, sendtype, root, tag, comm_ptr, sched,
                                          0, NULL, &vtx_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         }
     }
 

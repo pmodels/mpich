@@ -28,7 +28,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     int current_child, next_child, lrank, total_count, sink_id;
     int num_children, *child_subtree_size = NULL;
     int num_send_dependencies;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
     /* For correctness, transport based collectives need to get the
@@ -86,7 +86,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                                          0, NULL, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIR_TSP_sched_fence(sched);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         }
     }
 
@@ -160,7 +160,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
             MPIR_TSP_sched_irecv((char *) tmp_buf + displs[rank], recv_size, MPI_BYTE,
                                  my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
 #endif
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv", rank));
 
     }
@@ -177,13 +177,13 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                                          child_subtree_size[i], MPI_BYTE,
                                          child, tag, comm, sched, num_send_dependencies, &recv_id,
                                          &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 
 
     MPIR_Treealgo_tree_free(&my_tree);
     mpi_errno = MPIR_TSP_sched_fence(sched);    /* wait for scatter to complete */
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
     if (allgatherv_algo == MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_ring)
         /* Schedule Allgatherv ring */

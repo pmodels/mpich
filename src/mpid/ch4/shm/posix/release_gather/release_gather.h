@@ -79,7 +79,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                                                                     MPI_Datatype datatype,
                                                                     const int root,
                                                                     MPIR_Comm * comm_ptr,
-                                                                    MPIR_Errflag_t errflag,
+                                                                    int coll_attr,
                                                                     const
                                                                     MPIDI_POSIX_release_gather_opcode_t
                                                                     operation)
@@ -95,6 +95,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     rank = MPIR_Comm_rank(comm_ptr);
     release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
     release_gather_info_ptr->release_state++;
+
+    int errflag = MPIR_COLL_ATTR_GET_ERRFLAG(coll_attr);
 
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
         segment = release_gather_info_ptr->release_state %
@@ -127,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                  * roots might expect same data as other ranks but different from the actual root.
                  * So only datasize mismatch handling is not sufficient */
                 MPIR_Typerep_copy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, &errflag,
-                                  sizeof(MPIR_Errflag_t), MPIR_TYPEREP_FLAG_NONE);
+                                  sizeof(int), MPIR_TYPEREP_FLAG_NONE);
                 if ((int) recv_bytes != count) {
                     /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
                     errflag = MPIR_ERR_OTHER;
@@ -153,7 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
              * expect same data as other ranks but different from the actual root. So only
              * datasize mismatch handling is not sufficient */
             MPIR_Typerep_copy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, &errflag,
-                              sizeof(MPIR_Errflag_t), MPIR_TYPEREP_FLAG_NONE);
+                              sizeof(int), MPIR_TYPEREP_FLAG_NONE);
             mpi_errno =
                 MPIR_Localcopy(local_buf, count, datatype,
                                (char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
@@ -258,7 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
                                                                    MPI_Datatype datatype, MPI_Op op,
                                                                    const int root,
                                                                    MPIR_Comm * comm_ptr,
-                                                                   MPIR_Errflag_t errflag,
+                                                                   int coll_attr,
                                                                    const
                                                                    MPIDI_POSIX_release_gather_opcode_t
                                                                    operation)
@@ -283,6 +285,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     uint64_t min_gather, child_gather_flag;
     UT_array *children;
     void *temp_recvbuf = NULL;
+
+    int errflag = MPIR_COLL_ATTR_GET_ERRFLAG(coll_attr);
 
     release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
     children = release_gather_info_ptr->bcast_tree.children;

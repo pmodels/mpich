@@ -52,7 +52,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
     int i, nvtcs, vtx_id;
     int mpi_errno_ret = MPI_SUCCESS;
     void **step1_recvbuf;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    int coll_attr = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
     /* Step 1 */
@@ -68,8 +68,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                                  NULL, &vtx_id);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            errflag = MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
+            coll_attr = MPIR_ERR_OTHER;
+            MPIR_ERR_SET(mpi_errno, coll_attr, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
     } else {    /* Step 2 participating rank */
@@ -98,7 +98,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
             mpi_errno = MPIR_TSP_sched_irecv(step1_recvbuf[i], count, datatype,
                                              step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs,
                                              &recv_id[i]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             if (count != 0) {   /* Reduce only if data is present */
                 /* setup reduce dependencies */
                 nvtcs = 1;
@@ -117,7 +117,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                 mpi_errno = MPIR_TSP_sched_reduce_local(step1_recvbuf[i], recvbuf, count,
                                                         datatype, op, sched, nvtcs, vtcs,
                                                         &reduce_id[i]);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             }
         }
     }

@@ -18,8 +18,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
                                                MPI_Op op,
-                                               int root,
-                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                               int root, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int rank, mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -37,7 +36,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
     if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
         mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr, &status);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     } else {
         /* remote group. Rank 0 allocates temporary buffer, does
          * local intracommunicator reduce, and then sends the data
@@ -64,13 +63,13 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do a local reduce on this intracommunicator */
-        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, coll_attr);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
         if (rank == 0) {
             mpi_errno = MPIC_Send(tmp_buf, count, datatype, root,
-                                  MPIR_REDUCE_TAG, comm_ptr, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                  MPIR_REDUCE_TAG, comm_ptr, coll_attr);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         }
     }
 

@@ -1691,7 +1691,7 @@ def push_impl_decl(func, impl_name=None):
         if func['dir'] == 'coll':
             # block collective use an extra errflag
             if not RE.match(r'MPI_(I.*|Neighbor.*|.*_init)$', func['name']):
-                params = params + ", MPIR_Errflag_t errflag"
+                params = params + ", int coll_attr"
     else:
         params="void"
 

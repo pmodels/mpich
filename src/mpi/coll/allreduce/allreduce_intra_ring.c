@@ -10,8 +10,7 @@
 #include "mpiimpl.h"
 
 int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                              MPI_Datatype datatype, MPI_Op op,
-                              MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm, int coll_attr)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     int i, src, dst;
@@ -79,25 +78,25 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIC_Irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, &reqs[0]);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
         mpi_errno = MPIC_Isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
-                               datatype, dst, tag, comm, &reqs[1], errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                               datatype, dst, tag, comm, &reqs[1], coll_attr);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
         mpi_errno = MPIC_Waitall(2, reqs, MPI_STATUSES_IGNORE);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
         mpi_errno =
             MPIR_Reduce_local(tmpbuf, (char *) recvbuf + displs[recv_rank] * extent,
                               cnts[recv_rank], datatype, op);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 
     /* Phase 3: Allgatherv ring, so everyone has the reduced data */
     mpi_errno = MPIR_Allgatherv_intra_ring(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, recvbuf, cnts,
-                                           displs, datatype, comm, errflag);
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                           displs, datatype, comm, coll_attr);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
     MPL_free(cnts);
     MPL_free(displs);

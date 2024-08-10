@@ -44,7 +44,7 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                                vtxp->u.isend.dt,
                                vtxp->u.isend.dest,
                                vtxp->u.isend.tag, vtxp->u.isend.comm, &vtxp->u.isend.req,
-                               r->u.nbc.errflag);
+                               r->u.nbc.coll_attr);
 
                     if (MPIR_Request_is_complete(vtxp->u.isend.req)) {
                         MPIR_Request_free(vtxp->u.isend.req);
@@ -144,7 +144,7 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                                    vtxp->u.imcast.dt,
                                    dests[i],
                                    vtxp->u.imcast.tag, vtxp->u.imcast.comm, &vtxp->u.imcast.req[i],
-                                   r->u.nbc.errflag);
+                                   r->u.nbc.coll_attr);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
@@ -160,7 +160,7 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                                 vtxp->u.issend.dt,
                                 vtxp->u.issend.dest,
                                 vtxp->u.issend.tag, vtxp->u.issend.comm, &vtxp->u.issend.req,
-                                r->u.nbc.errflag);
+                                r->u.nbc.coll_attr);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
@@ -232,11 +232,11 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                     /* ignore communicator and tag */
                     int ret_errno = vtxp->u.cb.cb_p(NULL, -1, vtxp->u.cb.cb_data);
                     if (unlikely(ret_errno)) {
-                        if (MPIR_ERR_NONE == r->u.nbc.errflag) {
+                        if (MPIR_ERR_NONE == r->u.nbc.coll_attr) {
                             if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
-                                r->u.nbc.errflag = MPIR_ERR_PROC_FAILED;
+                                r->u.nbc.coll_attr = MPIR_ERR_PROC_FAILED;
                             } else {
-                                r->u.nbc.errflag = MPIR_ERR_OTHER;
+                                r->u.nbc.coll_attr = MPIR_ERR_OTHER;
                             }
                         }
                     }
@@ -683,7 +683,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
             *made_progress = TRUE;
 
         /* error handling */
-        switch (sched->req->u.nbc.errflag) {
+        switch (sched->req->u.nbc.coll_attr) {
             case MPIR_ERR_PROC_FAILED:
                 MPIR_ERR_SET(sched->req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm");
                 break;

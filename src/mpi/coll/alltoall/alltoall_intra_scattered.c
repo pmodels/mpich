@@ -32,8 +32,7 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
                                   MPI_Datatype sendtype,
                                   void *recvbuf,
                                   MPI_Aint recvcount,
-                                  MPI_Datatype recvtype,
-                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                  MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int comm_size, i;
     MPI_Aint sendtype_extent, recvtype_extent;
@@ -74,7 +73,7 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
                                    dst * recvcount * recvtype_extent,
                                    recvcount, recvtype, dst,
                                    MPIR_ALLTOALL_TAG, comm_ptr, &reqarray[i]);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         }
 
         for (i = 0; i < ss; i++) {
@@ -82,13 +81,13 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
             mpi_errno = MPIC_Isend((char *) sendbuf +
                                    dst * sendcount * sendtype_extent,
                                    sendcount, sendtype, dst,
-                                   MPIR_ALLTOALL_TAG, comm_ptr, &reqarray[i + ss], errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                   MPIR_ALLTOALL_TAG, comm_ptr, &reqarray[i + ss], coll_attr);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         }
 
         /* ... then wait for them to finish: */
         mpi_errno = MPIC_Waitall(2 * ss, reqarray, starray);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 
   fn_exit:

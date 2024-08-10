@@ -22,7 +22,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
     int is_inplace = (sendbuf == MPI_IN_PLACE);
     int tag;
     int vtx_id;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPI_Aint recvtype_lb, recvtype_extent;
     MPI_Aint sendtype_lb, sendtype_extent;
@@ -69,7 +69,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
                                              (char *) buf1, recvcount, recvtype, sched, 0, NULL,
                                              &dtcopy_id[0]);
     }
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
     /* In ring algorithm src and dst are fixed */
     src = (size + rank - 1) % size;
@@ -110,12 +110,12 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
                 vtcs[2] = recv_id[(i - 1) % 3];
             }
         }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
         mpi_errno = MPIR_TSP_sched_irecv((char *) rbuf, recvcount, recvtype,
                                          src, tag, comm, sched, nvtcs, vtcs, &recv_id[i % 3]);
 
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
         copy_dst = (size + rank - i - 1) % size;        /* Destination offset of the copy */
         mpi_errno = MPIR_TSP_sched_localcopy((char *) rbuf, recvcount, recvtype,
@@ -124,7 +124,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
                                              recvcount, recvtype, sched, 1, &recv_id[i % 3],
                                              &dtcopy_id[i % 3]);
 
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
         data_buf = sbuf;
         sbuf = rbuf;

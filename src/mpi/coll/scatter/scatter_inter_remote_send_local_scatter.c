@@ -16,8 +16,7 @@
 int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                 int root, MPIR_Comm * comm_ptr,
-                                                 MPIR_Errflag_t errflag)
+                                                 int root, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -37,8 +36,8 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
         /* root sends all data to rank 0 on remote group and returns */
         mpi_errno =
             MPIC_Send(sendbuf, sendcount * remote_size, sendtype, 0, MPIR_SCATTER_TAG, comm_ptr,
-                      errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                      coll_attr);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         goto fn_exit;
     } else {
         /* remote group. rank 0 receives data from root. need to
@@ -56,7 +55,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
 
             mpi_errno = MPIC_Recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
                                   root, MPIR_SCATTER_TAG, comm_ptr, &status);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         } else {
             /* silence -Wmaybe-uninitialized due to MPIR_Scatter by non-zero ranks */
             recvtype_sz = 0;
@@ -70,8 +69,8 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
 
         /* now do the usual scatter on this intracommunicator */
         mpi_errno = MPIR_Scatter(tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
-                                 recvbuf, recvcount, recvtype, 0, newcomm_ptr, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                 recvbuf, recvcount, recvtype, 0, newcomm_ptr, coll_attr);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 
   fn_exit:

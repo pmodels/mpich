@@ -19,7 +19,7 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
                                 MPI_Datatype sendtype,
                                 void *recvbuf,
                                 MPI_Aint recvcount,
-                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
@@ -67,8 +67,8 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
                                   MPIR_ALLGATHER_TAG,
                                   ((char *) tmp_buf + curr_cnt * recvtype_sz),
                                   curr_cnt * recvtype_sz, MPI_BYTE,
-                                  src, MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                  src, MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, coll_attr);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         curr_cnt *= 2;
         pof2 *= 2;
     }
@@ -84,8 +84,8 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
                                   dst, MPIR_ALLGATHER_TAG,
                                   ((char *) tmp_buf + curr_cnt * recvtype_sz),
                                   rem * recvcount * recvtype_sz, MPI_BYTE,
-                                  src, MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                  src, MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, coll_attr);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 
     /* Rotate blocks in tmp_buf down by (rank) blocks and store
@@ -101,7 +101,7 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
                                    (comm_size - rank) * recvcount * recvtype_sz,
                                    rank * recvcount * recvtype_sz, MPI_BYTE, recvbuf,
                                    rank * recvcount, recvtype);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 
   fn_exit:

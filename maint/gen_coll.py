@@ -652,7 +652,7 @@ def get_algo_args(args, algo, kind):
     elif algo['func-commkind'].startswith('i'):
         algo_args += ", *sched_p"
     elif not algo['func-commkind'].startswith('neighbor_'):
-        algo_args += ", errflag"
+        algo_args += ", coll_attr"
 
     return algo_args
 
@@ -666,7 +666,7 @@ def get_algo_params(params, algo):
     elif algo['func-commkind'].startswith('i'):
         algo_params += ", MPIR_Sched_t s"
     elif not algo['func-commkind'].startswith('neighbor_'):
-        algo_params += ", MPIR_Errflag_t errflag"
+        algo_params += ", int coll_attr"
 
     return algo_params
 
@@ -683,7 +683,7 @@ def get_func_params(params, name, kind):
     func_params = params
     if kind == "blocking":
         if not name.startswith('neighbor_'):
-            func_params += ", MPIR_Errflag_t errflag"
+            func_params += ", int coll_attr"
     elif kind == "nonblocking":
         func_params += ", MPIR_Request ** request"
     elif kind == "persistent":
@@ -703,7 +703,7 @@ def get_func_args(args, name, kind):
     func_args = args
     if kind == "blocking":
         if not name.startswith('neighbor_'):
-            func_args += ", errflag"
+            func_args += ", coll_attr"
     elif kind == "nonblocking":
         func_args += ", request"
     elif kind == "persistent":

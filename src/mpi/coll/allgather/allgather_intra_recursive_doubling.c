@@ -23,7 +23,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                                             void *recvbuf,
                                             MPI_Aint recvcount,
                                             MPI_Datatype recvtype,
-                                            MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                            MPIR_Comm * comm_ptr, int coll_attr)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
@@ -82,8 +82,8 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                                       ((char *) recvbuf + recv_offset),
                                       (comm_size - dst_tree_root) * recvcount,
                                       recvtype, dst,
-                                      MPIR_ALLGATHER_TAG, comm_ptr, &status, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                      MPIR_ALLGATHER_TAG, comm_ptr, &status, coll_attr);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             if (mpi_errno) {
                 last_recv_cnt = 0;
             } else {
@@ -140,8 +140,8 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                     && (dst >= tree_root + nprocs_completed)) {
                     mpi_errno = MPIC_Send(((char *) recvbuf + offset),
                                           last_recv_cnt,
-                                          recvtype, dst, MPIR_ALLGATHER_TAG, comm_ptr, errflag);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                          recvtype, dst, MPIR_ALLGATHER_TAG, comm_ptr, coll_attr);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
                 }
                 /* recv only if this proc. doesn't have data and sender
                  * has data */
@@ -151,7 +151,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                     mpi_errno = MPIC_Recv(((char *) recvbuf + offset),
                                           (comm_size - (my_tree_root + mask)) * recvcount,
                                           recvtype, dst, MPIR_ALLGATHER_TAG, comm_ptr, &status);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
                     /* nprocs_completed is also equal to the
                      * no. of processes whose data we don't have */
                     if (mpi_errno) {

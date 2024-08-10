@@ -25,7 +25,7 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
                               MPI_Datatype sendtype,
                               void *recvbuf,
                               MPI_Aint recvcount,
-                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_attr)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
@@ -64,8 +64,8 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
                                   ((char *) recvbuf +
                                    jnext * recvcount * recvtype_extent),
                                   recvcount, recvtype, left,
-                                  MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                                  MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, coll_attr);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         j = jnext;
         jnext = (comm_size + jnext - 1) % comm_size;
     }

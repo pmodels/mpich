@@ -22,7 +22,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
     int nranks, rank, nvtcs;
     int i, dst, send_id, recv_id, dtcopy_id = -1, vtcs[2];
     void *tmp_buf = NULL, *adj_tmp_buf = NULL;
-    MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
+    int coll_attr ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
 
@@ -65,11 +65,11 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
             mpi_errno = MPIR_TSP_sched_isend((char *) recvbuf + rdispls[dst],
                                              recvcounts[dst], recvtypes[dst], dst, tag, comm, sched,
                                              nvtcs, vtcs, &send_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             mpi_errno =
                 MPIR_TSP_sched_irecv(adj_tmp_buf, recvcounts[dst], recvtypes[dst], dst, tag, comm,
                                      sched, nvtcs, vtcs, &recv_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
             nvtcs = 2;
             vtcs[0] = send_id;
@@ -77,7 +77,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
             mpi_errno = MPIR_TSP_sched_localcopy(adj_tmp_buf, recvcounts[dst], recvtypes[dst],
                                                  ((char *) recvbuf + rdispls[dst]), recvcounts[dst],
                                                  recvtypes[dst], sched, nvtcs, vtcs, &dtcopy_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         }
     }
 

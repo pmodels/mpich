@@ -719,7 +719,7 @@ sub ProcessFile
 		    !($args[$errClassLoc] =~ /^MPIDI_CH3I_SOCK_ERR_/) &&
 		    !($args[$errClassLoc] =~ /^MPIX_ERR_/) &&
 		    !($args[$errClassLoc] =~ /^errclass/) &&
-                    !($args[$errClassLoc] =~ /^errflag/) &&
+                    !($args[$errClassLoc] =~ /^(errflag|coll_attr)/) &&
                     !($args[$errClassLoc] =~ /^\*errflag/)) {
 		    $bad_syntax_in_file{$filename} = 1;
 		    print STDERR "Invalid argument $args[$errClassLoc] for the MPI Error class in $routineName in $filename\n";
