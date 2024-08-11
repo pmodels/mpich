@@ -755,6 +755,10 @@ int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
     rank = MPIR_Comm_rank(comm);
 
     external_rank = comm->internode_table[rank];
+    /* FIXME: this is very restrictive. Do we have sufficient check?
+     *        Not only it asserts the same number of ranks per node,
+     *        the ranks have to be ordered exactly round-robin.
+     */
     for (i = 0; i < num_external; ++i) {
         external_procs[i] = i * num_local + local_rank;
     }
