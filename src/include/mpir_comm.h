@@ -101,6 +101,51 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };
 
+/* MPIR_Subgroup is similar to MPIR_Group, but only used to describe subgroups within
+ * an intra communicator. The proc_table refers to ranks within the communicator.
+ * It is only used internally for group collectives.
+ */
+typedef struct MPIR_Subgroup {
+    int size;
+    int rank;
+    int *proc_table;            /* can be NULL if the group is trivial */
+} MPIR_Subgroup;
+
+#define MPIR_MAX_SUBGROUPS 16
+
+/* reserved subgroup indexes */
+enum {
+    MPIR_SUBGROUP_THREADCOMM = -1,
+    MPIR_SUBGROUP_NONE = 0,
+    MPIR_SUBGROUP_NODE, /* i.e. nodecomm */
+    MPIR_SUBGROUP_NODE_CROSS,   /* node_roots_comm, node_rank_1_comm, ... */
+    MPIR_SUBGROUP_NUMA1,        /* 1-level below node in topology */
+    MPIR_SUBGROUP_NUMA1_CROSS,  /* cross-link group at NUMA1 within NODE */
+    MPIR_SUBGROUP_NUMA2,        /* and so on */
+    MPIR_SUBGROUP_NUMA2_CROSS,
+    MPIR_SUBGROUP_NUM_RESERVED,
+};
+
+/* macros to create dynamic subgroups.
+ * It is expected to fillout the proc_table after MPIR_COMM_PUSH_SUBGROUP.
+ */
+#define MPIR_COMM_PUSH_SUBGROUP(comm, _size, _rank, newgrp, proc_table_out) \
+    do { \
+        (newgrp) = (comm)->num_subgroups++; \
+        MPIR_Assert((comm)->num_subgroups < MPIR_MAX_SUBGROUPS); \
+        (comm)->subgroups[newgrp].size = _size; \
+        (comm)->subgroups[newgrp].rank = _rank; \
+        (proc_table_out) = MPL_malloc((_size) * sizeof(int), MPL_MEM_OTHER); \
+        (comm)->subgroups[newgrp].proc_table = (proc_table_out); \
+    } while (0)
+
+#define MPIR_COMM_POP_SUBGROUP(comm) \
+    do { \
+        int i = --(comm)->num_subgroups; \
+        MPIR_Assert(i > 0); \
+        MPL_free((comm)->subgroups[i].proc_table); \
+    } while (0)
+
 /*S
   MPIR_Comm - Description of the Communicator data structure
 
@@ -197,6 +242,8 @@ struct MPIR_Comm {
                                  * intercommunicator collective operations
                                  * that wish to use half-duplex operations
                                  * to implement a full-duplex operation */
+    MPIR_Subgroup subgroups[MPIR_MAX_SUBGROUPS];
+    int num_subgroups;
 
     struct MPIR_Comm *comm_next;        /* Provides a chain through all active
                                          * communicators */
