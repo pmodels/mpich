@@ -309,6 +309,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->node_roots_comm = NULL;
     comm_p->intranode_table = NULL;
     comm_p->internode_table = NULL;
+    comm_p->num_subgroups = 0;
 
     /* abstractions bleed a bit here... :(*/
     comm_p->next_sched_tag = MPIR_FIRST_NBC_TAG;
@@ -613,6 +614,21 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
     comm->num_local = num_local;
     comm->num_external = num_external;
 
+    int i_node_group = comm->num_subgroups;
+    MPIR_COMM_NEW_SUBGROUP(comm, MPIR_SUBGROUP_NODE, num_local, local_rank);
+    comm->subgroups[i_node_group].proc_table = MPL_malloc(num_local * sizeof(int), MPL_MEM_OTHER);
+    for (int i = 0; i < num_local; i++) {
+        comm->subgroups[i_node_group].proc_table[i] = local_procs[i];
+    }
+
+    int i_cross_group = comm->num_subgroups;
+    MPIR_COMM_NEW_SUBGROUP(comm, MPIR_SUBGROUP_NODE_CROSS, num_external, external_rank);
+    comm->subgroups[i_cross_group].proc_table =
+        MPL_malloc(num_external * sizeof(int), MPL_MEM_OTHER);
+    for (int i = 0; i < num_external; i++) {
+        comm->subgroups[i_cross_group].proc_table[i] = external_procs[i];
+    }
+
     /* if the node_roots_comm and comm would be the same size, then creating
      * the second communicator is useless and wasteful. */
     if (num_external == comm->remote_size) {
@@ -736,6 +752,10 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+
+    /* always set the 1st subgroup to self so that nontrivial subgroups have non-zero index */
+    MPIR_COMM_NEW_SUBGROUP(comm, MPIR_SUBGROUP_SELF, comm->local_size, comm->rank);
+    MPIR_Assert(comm->num_subgroups == 1);
 
     /* It's OK to relax these assertions, but we should do so very
      * intentionally.  For now this function is the only place that we create
@@ -1167,6 +1187,12 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
             MPIR_Comm_release(comm_ptr->node_roots_comm);
         MPL_free(comm_ptr->intranode_table);
         MPL_free(comm_ptr->internode_table);
+
+        /* free subgroups */
+        for (int i = 0; i < comm_ptr->num_subgroups; i++) {
+            MPL_free(comm_ptr->subgroups[i].proc_table);
+        }
+        comm_ptr->num_subgroups = 0;
 
         MPIR_stream_comm_free(comm_ptr);
 

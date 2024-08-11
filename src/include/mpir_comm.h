@@ -101,6 +101,51 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };
 
+/* MPIR_Subgroup is similar to MPIR_Group, but only used to describe subgroups within
+ * an intra communicator. The proc_table refers to ranks within the communicator.
+ * It is only used internally for group collectives.
+ */
+enum MPIR_Subgoup_kind {
+    MPIR_SUBGROUP_SELF,         /* Refers to the comm group itself */
+    MPIR_SUBGROUP_THREADCOMM,   /* Supercomm includes threads in a threadcomm */
+    MPIR_SUBGROUP_NODE,         /* i.e. nodecomm */
+    MPIR_SUBGROUP_NODE_CROSS,   /* node_roots_comm, node_rank_1_comm, ... */
+    MPIR_SUBGROUP_NUMA1,        /* 1-level below node in topology */
+    MPIR_SUBGROUP_NUMA1_CROSS,  /* cross-link group at NUMA1 within NODE */
+    MPIR_SUBGROUP_NUMA2,        /* and so on */
+    MPIR_SUBGROUP_NUMA2_CROSS,
+    MPIR_SUBGROUP_TEMP,         /* Temporary anonymous group */
+};
+
+typedef struct MPIR_Subgroup {
+    enum MPIR_Subgoup_kind kind;
+    int size;
+    int rank;
+    int *proc_table;            /* can be NULL if the group is trivial */
+} MPIR_Subgroup;
+
+/* NOTE: cross reference coll_attr bit patterns in mpir_coll.h */
+#define MPIR_MAX_SUBGROUPS 16
+
+#define MPIR_COMM_LAST_SUBGROUP(comm) ((comm)->num_subgroups - 1)
+
+#define MPIR_COMM_NEW_SUBGROUP(comm, _kind, _size, _rank) \
+    do { \
+        int i = (comm)->num_subgroups++; \
+        MPIR_Assert((comm)->num_subgroups < MPIR_MAX_SUBGROUPS); \
+        (comm)->subgroups[i].kind = _kind; \
+        (comm)->subgroups[i].size = _size; \
+        (comm)->subgroups[i].rank = _rank; \
+        (comm)->subgroups[i].proc_table = NULL; \
+    } while (0)
+
+#define MPIR_COMM_POP_SUBGROUP(comm) \
+    do { \
+        int i = --(comm)->num_subgroups; \
+        MPIR_Assert(i > 0); \
+        MPL_free((comm)->subgroups[i].proc_table); \
+    } while (0)
+
 /*S
   MPIR_Comm - Description of the Communicator data structure
 
@@ -197,6 +242,8 @@ struct MPIR_Comm {
                                  * intercommunicator collective operations
                                  * that wish to use half-duplex operations
                                  * to implement a full-duplex operation */
+    MPIR_Subgroup subgroups[MPIR_MAX_SUBGROUPS];
+    int num_subgroups;
 
     struct MPIR_Comm *comm_next;        /* Provides a chain through all active
                                          * communicators */
