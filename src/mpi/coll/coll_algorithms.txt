@@ -68,6 +68,7 @@ bcast-intra:
     scatter_ring_allgather
     smp
         restrictions: parent-comm
+    smp_new
     tree
         extra_params: tree_type, k, is_non_blocking
         cvar_params: TREE_TYPE, TREE_KVAL, IS_NON_BLOCKING

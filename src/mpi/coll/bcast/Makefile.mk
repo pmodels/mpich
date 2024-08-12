@@ -14,6 +14,7 @@ mpi_core_sources +=											\
     src/mpi/coll/bcast/bcast_intra_scatter_recursive_doubling_allgather.c	\
     src/mpi/coll/bcast/bcast_intra_scatter_ring_allgather.c		\
     src/mpi/coll/bcast/bcast_intra_smp.c						\
+    src/mpi/coll/bcast/bcast_intra_smp_new.c \
     src/mpi/coll/bcast/bcast_intra_tree.c				\
     src/mpi/coll/bcast/bcast_intra_pipelined_tree.c			\
     src/mpi/coll/bcast/bcast_inter_remote_send_local_bcast.c

@@ -351,6 +351,7 @@ algorithms:
             composition:3
             binomial
             smp
+            smp_new
             scatter_recursive_doubling_allgather
             scatter_ring_allgather
 	    tree
