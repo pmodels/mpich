@@ -499,6 +499,10 @@ unexpected messages queued.
 #**argnull %s:Invalid null parameter %s
 **commstack:Internal overflow in stack used for MPI_Comm_split
 **timeout:Operation timed out
+**cmaread:process_vm_readv failed
+**cmaread %d:process_vm_readv failed (errno %d)
+**cmadata:process_vm_readv bytes mismatch
+**cmadata %d %d:process_vm_readv bytes mismatch, got %d, expect %d
 
 **cond_create:MPID_Thread_cond_create failed
 **cond_create %s:MPID_Thread_cond_create failed: %s
