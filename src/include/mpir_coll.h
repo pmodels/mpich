@@ -11,11 +11,31 @@
 
 /* Define bit values for collective attributes. */
 
-/* NOTE: the two-bit errflag must be compatible with pt2pt attribute, ref. mpir_pt2pt.h */
+/* NOTE: the low 8 bits must be the same as pt2pt attr, ref. mpir_pt2pt.h */
 #define MPIR_COLL_ATTR_GET_ERRFLAG(attr) ((attr) & 0x6)
 #define MPIR_ERR_NONE 0
 #define MPIR_ERR_PROC_FAILED 2
 #define MPIR_ERR_OTHER 4
+
+#define MPIR_ATTR_COLL_CONTEXT 1
+#define MPIR_ATTR_SYNCFLAG 8
+
+/* Subgroup is the index to comm->subgroups[], and resulting in group collectives.
+ * NOTE: cross reference MPIR_MAX_SUBGROUPS */
+#define MPIR_COLL_ATTR_GET_SUBGROUP(attr) (((attr) & 0xf00) >> 8)
+#define MPIR_COLL_ATTR_SUBGROUP(idx) (((idx) & 0xf) << 8)
+
+#define MPIR_COLL_INTRA_RANK_SIZE(comm, coll_attr, rank_, size_) \
+    do { \
+        int grp = MPIR_COLL_ATTR_GET_SUBGROUP(coll_attr); \
+        if (grp == 0) { \
+            rank_ = (comm)->rank; \
+            size_ = (comm)->local_size; \
+        } else { \
+            rank_ = (comm)->subgroups[grp].rank; \
+            size_ = (comm)->subgroups[grp].size; \
+        } \
+    } while (0)
 
 /* During init, not all algorithms are safe to use. For example, the csel
  * may not have been initialized. We define a set of fallback routines that
