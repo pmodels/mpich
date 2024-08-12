@@ -262,7 +262,8 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "starting RECV entry %d\n", (int) idx);
             comm = e->u.recv.comm;
             ret_errno = MPIC_Irecv(e->u.recv.buf, e->u.recv.count, e->u.recv.datatype,
-                                   e->u.recv.src, s->tag, comm, &e->u.recv.rreq);
+                                   e->u.recv.src, s->tag, comm, r->u.nbc.coll_attr,
+                                   &e->u.recv.rreq);
             /* Check if the error is actually fatal to the NBC or we can continue. */
             if (unlikely(ret_errno)) {
                 if (!MPIR_COLL_ATTR_GET_ERRFLAG(r->u.nbc.coll_attr)) {

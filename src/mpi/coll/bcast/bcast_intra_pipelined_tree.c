@@ -119,7 +119,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 if (src != -1) {        /* post receive from parent */
                     mpi_errno =
                         MPIC_Irecv((char *) sendbuf + offset, msgsize, MPI_BYTE,
-                                   src, MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++]);
+                                   src, MPIR_BCAST_TAG, comm_ptr, coll_attr, &reqs[num_req++]);
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
                 }
                 offset += msgsize;
@@ -132,7 +132,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 if (src != -1) {
                     mpi_errno =
                         MPIC_Irecv((char *) sendbuf + offset, msgsize, MPI_BYTE,
-                                   src, MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++]);
+                                   src, MPIR_BCAST_TAG, comm_ptr, coll_attr, &reqs[num_req++]);
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
                 }
                 offset += msgsize;
@@ -165,7 +165,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
             if (src != -1) {
                 mpi_errno =
                     MPIC_Recv((char *) sendbuf + offset, msgsize, MPI_BYTE,
-                              src, MPIR_BCAST_TAG, comm_ptr, &status);
+                              src, MPIR_BCAST_TAG, comm_ptr, coll_attr, &status);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
                 MPIR_ERR_COLL_CHECK_SIZE(recvd_size, msgsize, coll_attr, mpi_errno_ret);

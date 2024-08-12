@@ -38,7 +38,7 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status);
 int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
               MPIR_Comm * comm_ptr, int coll_attr);
 int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int tag,
-              MPIR_Comm * comm_ptr, MPI_Status * status);
+              MPIR_Comm * comm_ptr, int coll_attr, MPI_Status * status);
 int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                MPIR_Comm * comm_ptr, int coll_attr);
 int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
@@ -54,7 +54,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                 MPIR_Comm * comm_ptr, MPIR_Request ** request, int coll_attr);
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
-               int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request);
+               int tag, MPIR_Comm * comm_ptr, int coll_attr, MPIR_Request ** request);
 int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses);
 
 int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,

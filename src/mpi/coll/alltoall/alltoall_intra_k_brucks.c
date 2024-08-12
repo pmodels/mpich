@@ -251,7 +251,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
 
             mpi_errno =
                 MPIC_Irecv(tmp_rbuf[j - 1], packsize, MPI_BYTE, src, MPIR_ALLTOALL_TAG, comm,
-                           &reqs[num_reqs++]);
+                           coll_attr, &reqs[num_reqs++]);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
             mpi_errno =

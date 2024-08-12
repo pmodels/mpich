@@ -71,7 +71,8 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
                 if (type_size) {
                     mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst] * recv_extent,
                                            recvcounts[dst], recvtype, dst,
-                                           MPIR_ALLTOALLV_TAG, comm_ptr, &reqarray[req_cnt]);
+                                           MPIR_ALLTOALLV_TAG, comm_ptr,
+                                           coll_attr, &reqarray[req_cnt]);
                     MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
                     req_cnt++;
                 }

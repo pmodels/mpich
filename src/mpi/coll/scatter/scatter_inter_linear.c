@@ -38,8 +38,8 @@ int MPIR_Scatter_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datat
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         }
     } else {
-        mpi_errno =
-            MPIC_Recv(recvbuf, recvcount, recvtype, root, MPIR_SCATTER_TAG, comm_ptr, &status);
+        mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype, root, MPIR_SCATTER_TAG, comm_ptr,
+                              coll_attr, &status);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 

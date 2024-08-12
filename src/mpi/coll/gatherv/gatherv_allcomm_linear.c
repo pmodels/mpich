@@ -82,7 +82,8 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
                 } else {
                     mpi_errno = MPIC_Irecv(((char *) recvbuf + displs[i] * extent),
                                            recvcounts[i], recvtype, i,
-                                           MPIR_GATHERV_TAG, comm_ptr, &reqarray[reqs++]);
+                                           MPIR_GATHERV_TAG, comm_ptr,
+                                           coll_attr, &reqarray[reqs++]);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
             }

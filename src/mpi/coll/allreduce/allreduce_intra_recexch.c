@@ -161,7 +161,8 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
             for (i = 0; i < step1_nrecvs; i++) {        /* participating rank gets data from non-partcipating ranks */
                 mpi_errno = MPIC_Irecv(nbr_buffer[i], count,
                                        datatype, step1_recvfrom[i],
-                                       MPIR_ALLREDUCE_TAG, comm, &recv_reqs[recv_nreq++]);
+                                       MPIR_ALLREDUCE_TAG, comm,
+                                       coll_attr, &recv_reqs[recv_nreq++]);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             }
             mpi_errno = MPIC_Waitall(recv_nreq, recv_reqs, MPI_STATUSES_IGNORE);
@@ -187,7 +188,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                 nbr = step2_nbrs[phase + j][i];
                 mpi_errno =
                     MPIC_Irecv(nbr_buffer[buf++], count, datatype, nbr, MPIR_ALLREDUCE_TAG,
-                               comm, &recv_reqs[recv_nreq++]);
+                               comm, coll_attr, &recv_reqs[recv_nreq++]);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             }
         }
@@ -252,7 +253,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
      * send the data to non-partcipating rans */
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
         mpi_errno = MPIC_Recv(recvbuf, count, datatype, step1_sendto, MPIR_ALLREDUCE_TAG, comm,
-                              MPI_STATUS_IGNORE);
+                              coll_attr, MPI_STATUS_IGNORE);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     } else {
         for (i = 0; i < step1_nrecvs; i++) {

@@ -76,7 +76,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
         } else {        /* odd */
             mpi_errno = MPIC_Recv(tmp_buf, count,
                                   datatype, rank - 1,
-                                  MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE);
+                                  MPIR_ALLREDUCE_TAG, comm_ptr, coll_attr, MPI_STATUS_IGNORE);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
             /* do the reduction on received data. since the
@@ -144,7 +144,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
         else    /* even */
             mpi_errno = MPIC_Recv(recvbuf, count,
                                   datatype, rank + 1,
-                                  MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE);
+                                  MPIR_ALLREDUCE_TAG, comm_ptr, coll_attr, MPI_STATUS_IGNORE);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
   fn_exit:

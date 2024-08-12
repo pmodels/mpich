@@ -36,7 +36,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sen
         /* root receives data from rank 0 on remote group */
         mpi_errno =
             MPIC_Recv(recvbuf, recvcount * remote_size, recvtype, 0, MPIR_GATHER_TAG, comm_ptr,
-                      &status);
+                      coll_attr, &status);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     } else {
         /* remote group. Rank 0 allocates temporary buffer, does

@@ -70,7 +70,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                     mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst],
                                            recvcounts[dst], recvtypes[dst], dst,
                                            MPIR_ALLTOALLW_TAG, comm_ptr,
-                                           &reqarray[outstanding_requests]);
+                                           coll_attr, &reqarray[outstanding_requests]);
                     MPIR_ERR_CHECK(mpi_errno);
 
                     outstanding_requests++;

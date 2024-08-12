@@ -72,7 +72,7 @@ int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const MPI_Aint * sendcount
     else if (root != MPI_PROC_NULL) {   /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (recvcount) {
             mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype, root,
-                                  MPIR_SCATTERV_TAG, comm_ptr, MPI_STATUS_IGNORE);
+                                  MPIR_SCATTERV_TAG, comm_ptr, coll_attr, MPI_STATUS_IGNORE);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
         }
     }

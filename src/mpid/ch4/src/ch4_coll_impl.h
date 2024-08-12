@@ -245,12 +245,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
 #ifndef HAVE_ERROR_CHECKING
             coll_ret =
                 MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
-                          MPI_STATUS_IGNORE);
+                          coll_attr, MPI_STATUS_IGNORE);
             MPIR_ERR_COLL_CHECKANDCONT(coll_ret, coll_attr, mpi_errno);
 #else
             coll_ret =
                 MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
-                          &status);
+                          coll_attr, &status);
             MPIR_ERR_COLL_CHECKANDCONT(coll_ret, coll_attr, mpi_errno);
 
             MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -458,12 +458,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, M
 #ifndef HAVE_ERROR_CHECKING
             coll_ret =
                 MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
-                          MPI_STATUS_IGNORE);
+                          coll_attr, MPI_STATUS_IGNORE);
             MPIR_ERR_COLL_CHECKANDCONT(coll_ret, coll_attr, mpi_errno);
 #else
             coll_ret =
                 MPIC_Recv(buffer, count, datatype, intra_root, MPIR_BCAST_TAG, comm->node_comm,
-                          &status);
+                          coll_attr, &status);
             MPIR_ERR_COLL_CHECKANDCONT(coll_ret, coll_attr, mpi_errno);
 
             MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -1004,7 +1004,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
         if (comm->rank == 0) {
             MPIC_Send(recvbuf, count, datatype, root, MPIR_REDUCE_TAG, comm, coll_attr);
         } else if (comm->rank == root) {
-            MPIC_Recv(ori_recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm, MPI_STATUS_IGNORE);
+            MPIC_Recv(ori_recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm,
+                      coll_attr, MPI_STATUS_IGNORE);
         }
     }
 
@@ -1719,7 +1720,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
     if (comm_ptr->node_roots_comm != NULL && comm_ptr->node_comm != NULL) {
         coll_ret = MPIC_Recv(localfulldata, count, datatype,
                              comm_ptr->node_comm->local_size - 1, MPIR_SCAN_TAG,
-                             comm_ptr->node_comm, &status);
+                             comm_ptr->node_comm, coll_attr, &status);
         MPIR_ERR_COLL_CHECKANDCONT(coll_ret, coll_attr, mpi_errno);
     } else if (comm_ptr->node_roots_comm == NULL &&
                comm_ptr->node_comm != NULL &&
@@ -1749,7 +1750,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
         if (MPIR_Get_internode_rank(comm_ptr, rank) != 0) {
             coll_ret = MPIC_Recv(tempbuf, count, datatype,
                                  MPIR_Get_internode_rank(comm_ptr, rank) - 1,
-                                 MPIR_SCAN_TAG, comm_ptr->node_roots_comm, &status);
+                                 MPIR_SCAN_TAG, comm_ptr->node_roots_comm, coll_attr, &status);
             noneed = 0;
             MPIR_ERR_COLL_CHECKANDCONT(coll_ret, coll_attr, mpi_errno);
         }

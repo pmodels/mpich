@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_root_datacopy_completion(void *v,
             } else if (rank == 0) {
                 MPIC_Irecv(MPIDI_POSIX_RELEASE_GATHER_NB_IBCAST_DATA_ADDR(segment),
                            per_call_data->count, per_call_data->datatype, per_call_data->root,
-                           per_call_data->tag, comm_ptr, &(per_call_data->rreq));
+                           per_call_data->tag, comm_ptr, 0, &(per_call_data->rreq));
                 *done = 1;
             }
         } else {

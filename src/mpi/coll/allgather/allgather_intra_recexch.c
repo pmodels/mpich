@@ -132,7 +132,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                 recv_offset = step1_recvfrom[i] * recv_extent * recvcount;
                 mpi_errno = MPIC_Irecv(((char *) recvbuf + recv_offset), recvcount, recvtype,
                                        step1_recvfrom[i], MPIR_ALLGATHER_TAG, comm,
-                                       &recv_reqs[num_rreq++]);
+                                       coll_attr, &recv_reqs[num_rreq++]);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             }
             mpi_errno = MPIC_Waitall(num_rreq, recv_reqs, MPI_STATUSES_IGNORE);
@@ -197,7 +197,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                 recv_offset = offset * recv_extent * recvcount;
                 mpi_errno =
                     MPIC_Irecv(((char *) recvbuf + recv_offset), count * recvcount, recvtype, nbr,
-                               MPIR_ALLGATHER_TAG, comm, &recv_reqs[num_rreq++]);
+                               MPIR_ALLGATHER_TAG, comm, coll_attr, &recv_reqs[num_rreq++]);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             }
             if (recexch_type == MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING)
@@ -267,7 +267,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     if (step1_sendto != -1) {
         mpi_errno =
             MPIC_Recv(recvbuf, recvcount * nranks, recvtype, step1_sendto, MPIR_ALLGATHER_TAG,
-                      comm, MPI_STATUS_IGNORE);
+                      comm, coll_attr, MPI_STATUS_IGNORE);
         MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
     }
 

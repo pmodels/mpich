@@ -75,7 +75,7 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                                vtxp->u.irecv.count,
                                vtxp->u.irecv.dt,
                                vtxp->u.irecv.src, vtxp->u.irecv.tag, vtxp->u.irecv.comm,
-                               &vtxp->u.irecv.req);
+                               r->u.nbc.coll_attr, &vtxp->u.irecv.req);
 
                     if (MPIR_Request_is_complete(vtxp->u.irecv.req)) {
                         MPIR_Request_free(vtxp->u.irecv.req);
@@ -104,7 +104,8 @@ static int vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t 
                                vtxp->u.irecv_status.count,
                                vtxp->u.irecv_status.dt,
                                vtxp->u.irecv_status.src, vtxp->u.irecv_status.tag,
-                               vtxp->u.irecv_status.comm, &vtxp->u.irecv_status.req);
+                               vtxp->u.irecv_status.comm,
+                               r->u.nbc.coll_attr, &vtxp->u.irecv_status.req);
 
                     if (MPIR_Request_is_complete(vtxp->u.irecv_status.req)) {
                         if (vtxp->u.irecv_status.status != MPI_STATUS_IGNORE) {

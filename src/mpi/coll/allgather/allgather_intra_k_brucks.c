@@ -142,7 +142,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Receive at the exact location. */
             mpi_errno = MPIC_Irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
                                    count, recvtype, src, MPIR_ALLGATHER_TAG, comm,
-                                   &reqs[num_reqs++]);
+                                   coll_attr, &reqs[num_reqs++]);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,

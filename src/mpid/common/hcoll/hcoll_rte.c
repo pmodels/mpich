@@ -134,7 +134,7 @@ static int recv_nb(struct dte_data_representation_t data,
     size = (size_t) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
     dtype = MPI_CHAR;
     request = NULL;
-    mpi_errno = MPIC_Irecv(buffer, size, dtype, ec_h.rank, tag, comm, &request);
+    mpi_errno = MPIC_Irecv(buffer, size, dtype, ec_h.rank, tag, comm, 0, &request);
     MPIR_Assert(request);
     req->data = (void *) request;
     req->status = HCOLRTE_REQUEST_ACTIVE;

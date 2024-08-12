@@ -96,7 +96,7 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, int coll_attr)
             /* recv from (k-1) nbrs */
             mpi_errno =
                 MPIC_Irecv(NULL, 0, MPI_BYTE, from, MPIR_BARRIER_TAG, comm,
-                           &recv_reqs[(j - 1) + ((k - 1) * (i & 1))]);
+                           coll_attr, &recv_reqs[(j - 1) + ((k - 1) * (i & 1))]);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             /* wait on recvs from prev phase */
             if (i > 0 && j == 1) {

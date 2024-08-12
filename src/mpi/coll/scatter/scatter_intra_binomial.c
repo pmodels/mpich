@@ -117,11 +117,11 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
              * receive data into a temporary buffer. */
             if (relative_rank % 2) {
                 mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype,
-                                      src, MPIR_SCATTER_TAG, comm_ptr, &status);
+                                      src, MPIR_SCATTER_TAG, comm_ptr, coll_attr, &status);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
             } else {
                 mpi_errno = MPIC_Recv(tmp_buf, tmp_buf_size, MPI_BYTE, src,
-                                      MPIR_SCATTER_TAG, comm_ptr, &status);
+                                      MPIR_SCATTER_TAG, comm_ptr, coll_attr, &status);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
                 if (mpi_errno) {
                     curr_cnt = 0;

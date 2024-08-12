@@ -91,10 +91,10 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 src += comm_size;
             if (!is_contig)
                 mpi_errno = MPIC_Recv(tmp_buf, nbytes, MPI_BYTE, src,
-                                      MPIR_BCAST_TAG, comm_ptr, status_p);
+                                      MPIR_BCAST_TAG, comm_ptr, coll_attr, status_p);
             else
                 mpi_errno = MPIC_Recv(buffer, count, datatype, src,
-                                      MPIR_BCAST_TAG, comm_ptr, status_p);
+                                      MPIR_BCAST_TAG, comm_ptr, coll_attr, status_p);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, coll_attr, mpi_errno_ret);
 #ifdef HAVE_ERROR_CHECKING
             /* check that we received as much as we expected */

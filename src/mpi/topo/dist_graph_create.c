@@ -203,7 +203,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
         MPIR_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_A_TAG,
-                              comm_ptr, MPI_STATUS_IGNORE);
+                              comm_ptr, 0, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (int j = 0; j < count / 2; ++j) {
@@ -236,7 +236,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
         MPIR_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG,
-                              comm_ptr, MPI_STATUS_IGNORE);
+                              comm_ptr, 0, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (int j = 0; j < count / 2; ++j) {

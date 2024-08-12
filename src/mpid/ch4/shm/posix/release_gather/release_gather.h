@@ -119,7 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 MPI_Aint recv_bytes;
                 mpi_errno =
                     MPIC_Recv((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
-                              datatype, root, MPIR_BCAST_TAG, comm_ptr, &status);
+                              datatype, root, MPIR_BCAST_TAG, comm_ptr, coll_attr, &status);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recv_bytes);
                 MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(int),
@@ -140,7 +140,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 /* When error checking is disabled, MPI_STATUS_IGNORE is used */
                 mpi_errno =
                     MPIC_Recv(bcast_data_addr, count, datatype, root, MPIR_BCAST_TAG, comm_ptr,
-                              MPI_STATUS_IGNORE);
+                              coll_attr, MPI_STATUS_IGNORE);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 #endif
             }
@@ -381,7 +381,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
             if (rank == root) {
                 mpi_errno =
                     MPIC_Recv(outbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr,
-                              MPI_STATUS_IGNORE);
+                              coll_attr, MPI_STATUS_IGNORE);
                 MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
             } else if (rank == 0) {
                 MPIR_ERR_CHKANDJUMP(!reduce_data_addr, mpi_errno, MPI_ERR_OTHER, "**nomem");

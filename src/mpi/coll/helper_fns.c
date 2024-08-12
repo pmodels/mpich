@@ -168,7 +168,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
 }
 
 int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int tag,
-              MPIR_Comm * comm_ptr, MPI_Status * status)
+              MPIR_Comm * comm_ptr, int coll_attr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
@@ -511,7 +511,7 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
 }
 
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
-               int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr)
+               int tag, MPIR_Comm * comm_ptr, int coll_attr, MPIR_Request ** request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int attr = 0;
