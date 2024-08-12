@@ -32,7 +32,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, coll_attr, rank, comm_size);
 
     is_commutative = MPIR_Op_is_commutative(op);
 

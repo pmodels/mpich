@@ -111,23 +111,22 @@ MPL_STATIC_INLINE_PREFIX
 }
 
 #ifdef ENABLE_THREADCOMM
-#define MPIR_THREADCOMM_RANK_SIZE(comm, rank_, size_) do { \
+#define MPIR_THREADCOMM_RANK_SIZE(comm, coll_attr, rank_, size_) do { \
         MPIR_Threadcomm *threadcomm = (comm)->threadcomm; \
         if (threadcomm) { \
+            MPIR_Assert(MPIR_COLL_ATTR_GET_SUBGROUP(coll_attr) == 0); /* for now */ \
             int intracomm_size = (comm)->local_size; \
             size_ = threadcomm->rank_offset_table[intracomm_size - 1]; \
             rank_ = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, MPIR_threadcomm_get_tid(threadcomm)); \
         } else { \
-            rank_ = (comm)->rank; \
-            size_ = (comm)->local_size; \
+            MPIR_COLL_INTRA_RANK_SIZE(comm, coll_attr, rank_, size_); \
         } \
     } while (0)
 
 #else
-#define MPIR_THREADCOMM_RANK_SIZE(comm, rank_, size_) do { \
+#define MPIR_THREADCOMM_RANK_SIZE(comm, coll_attr, rank_, size_) do { \
         MPIR_Assert((comm)->threadcomm == NULL); \
-        rank_ = (comm)->rank; \
-        size_ = (comm)->local_size; \
+        MPIR_COLL_INTRA_RANK_SIZE(comm, coll_attr, rank_, size_); \
     } while (0)
 
 #endif

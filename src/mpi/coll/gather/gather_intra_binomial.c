@@ -58,7 +58,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
     MPIR_CHKLMEM_DECL(1);
 
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, coll_attr, rank, comm_size);
 
     /* Use binomial tree algorithm. */
 
