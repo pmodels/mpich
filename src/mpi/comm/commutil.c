@@ -665,6 +665,9 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
     MPIR_Assert(num_local > 1 || external_rank >= 0);
     MPIR_Assert(external_rank < 0 || external_procs != NULL);
 
+    comm->num_local = num_local;
+    comm->num_external = num_external;
+
     /* if the node_roots_comm and comm would be the same size, then creating
      * the second communicator is useless and wasteful. */
     if (num_external == comm->remote_size) {

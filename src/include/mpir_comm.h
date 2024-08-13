@@ -188,6 +188,8 @@ struct MPIR_Comm {
                                  * node_roots_comm of rank i in this comm.
                                  * It is of size 'local_size'. */
     int node_count;             /* number of nodes this comm is spread over */
+    int num_local;              /* number of procs in this comm on local node */
+    int num_external;           /* number of nodes this comm is spread over */
 
     int is_low_group;           /* For intercomms only, this boolean is
                                  * set for all members of one of the
