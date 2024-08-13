@@ -10,7 +10,7 @@
 #   - src/mpid/ch4/shm/src/shm_noinline.h
 #   - src/mpid/ch4/shm/posix/posix_noinline.h
 #   - src/mpid/ch4/shm/stubshm/shm_noinline.h
-# It also gnerates the stub codes in 
+# It also generates the stub codes in 
 #   - src/mpid/ch4/netmod/stubnm
 #   - src/mpid/ch4/shm/stubshm
 #

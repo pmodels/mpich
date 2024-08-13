@@ -58,7 +58,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
                                   root, MPIR_SCATTER_TAG, comm_ptr, &status);
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
         } else {
-            /* silience -Wmaybe-uninitialized due to MPIR_Scatter by non-zero ranks */
+            /* silence -Wmaybe-uninitialized due to MPIR_Scatter by non-zero ranks */
             recvtype_sz = 0;
         }
 

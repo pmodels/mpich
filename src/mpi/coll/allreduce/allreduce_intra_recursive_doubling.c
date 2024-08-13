@@ -70,7 +70,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
             MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
 
             /* temporarily set the rank to -1 so that this
-             * process does not pariticipate in recursive
+             * process does not participate in recursive
              * doubling */
             newrank = -1;
         } else {        /* odd */

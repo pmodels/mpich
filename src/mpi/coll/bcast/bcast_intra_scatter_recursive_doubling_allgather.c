@@ -90,7 +90,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
     if (curr_size < 0)
         curr_size = 0;
 
-    /* medium size allgather and pof2 comm_size. use recurive doubling. */
+    /* medium size allgather and pof2 comm_size. use recursive doubling. */
 
     mask = 0x1;
     i = 0;

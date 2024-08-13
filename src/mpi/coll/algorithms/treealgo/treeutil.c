@@ -1129,7 +1129,7 @@ int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int k, int root, boo
     heap_vector minHeaps;
     heap_vector_init(&minHeaps);
 
-    /* To build hierarchy of ranks, swiches and groups */
+    /* To build hierarchy of ranks, switches and groups */
     int dim = MPIR_Process.coords_dims - 1;
     for (dim = MPIR_Process.coords_dims - 1; dim >= 0; --dim)
         tree_ut_hierarchy_init(&hierarchy[dim]);

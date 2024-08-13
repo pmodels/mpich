@@ -74,7 +74,7 @@ static int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *
 
     MPIR_FUNC_ENTER;
 
-    if (step1_sendto != -1) {   /* non-participating rank sends the data to a partcipating rank */
+    if (step1_sendto != -1) {   /* non-participating rank sends the data to a participating rank */
         void *buf_to_send;
         MPI_Aint send_offset = rank * recv_extent * recvcount;
         if (is_inplace)

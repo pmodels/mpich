@@ -80,7 +80,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
      * and send/operate on that.
      *
      * In general, we can't use MPI_PACK, because the alignment of that
-     * is rather vague, and the data may not be re-usable.  What we actually
+     * is rather vague, and the data may not be reusable.  What we actually
      * need is a "squeeze" operation that removes the skips.
      */
     mask = 0x1;

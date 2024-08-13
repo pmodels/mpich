@@ -115,7 +115,7 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
         }
     }
 
-    if (step1_sendto != -1) {   /* non-participating rank sends the data to a partcipating rank */
+    if (step1_sendto != -1) {   /* non-participating rank sends the data to a participating rank */
         void *buf_to_send;
         send_offset = rank * recv_extent * recvcount;
         if (is_inplace)
