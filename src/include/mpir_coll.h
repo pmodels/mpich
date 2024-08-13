@@ -42,6 +42,7 @@
  * are safe to use during init. They are all intra algorithms.
  */
 #define MPIR_Barrier_fallback    MPIR_Barrier_intra_dissemination
+#define MPIR_Bcast_fallback      MPIR_Bcast_intra_binomial
 #define MPIR_Allgather_fallback  MPIR_Allgather_intra_brucks
 #define MPIR_Allgatherv_fallback MPIR_Allgatherv_intra_brucks
 #define MPIR_Allreduce_fallback  MPIR_Allreduce_intra_recursive_doubling

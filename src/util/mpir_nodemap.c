@@ -451,16 +451,16 @@ int MPIR_nodeid_init(void)
                              MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
         my_hostname[MAX_HOSTNAME_LEN - 1] = '\0';
 
-        mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, MAX_HOSTNAME_LEN, MPI_CHAR,
-                                        allhostnames, MAX_HOSTNAME_LEN, MPI_CHAR,
-                                        node_roots_comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, MAX_HOSTNAME_LEN, MPI_CHAR,
+                                            allhostnames, MAX_HOSTNAME_LEN, MPI_CHAR,
+                                            node_roots_comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPIR_Comm *node_comm = MPIR_Process.comm_world->node_comm;
     if (node_comm) {
-        mpi_errno = MPIR_Bcast_impl(allhostnames, MAX_HOSTNAME_LEN * MPIR_Process.num_nodes,
-                                    MPI_CHAR, 0, node_comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Bcast_fallback(allhostnames, MAX_HOSTNAME_LEN * MPIR_Process.num_nodes,
+                                        MPI_CHAR, 0, node_comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
