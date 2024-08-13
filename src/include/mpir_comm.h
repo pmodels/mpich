@@ -187,7 +187,6 @@ struct MPIR_Comm {
     int *internode_table;       /* internode_table[i] gives the rank in
                                  * node_roots_comm of rank i in this comm.
                                  * It is of size 'local_size'. */
-    int node_count;             /* number of nodes this comm is spread over */
     int num_local;              /* number of procs in this comm on local node */
     int num_external;           /* number of nodes this comm is spread over */
 
