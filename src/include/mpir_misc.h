@@ -14,6 +14,16 @@
 #define MPIR_FINALIZE_CALLBACK_DEFAULT_PRIO 0
 #define MPIR_FINALIZE_CALLBACK_MAX_PRIO 10
 
+/* Misc. declarations that need be included before e.g. mpidpre.h */
+
+typedef struct MPIR_Data {
+    void *buf;
+    MPI_Aint count;
+    MPI_Datatype datatype;
+    MPI_Aint offset;
+    MPI_Aint length;
+} MPIR_Data;
+
 /* Define a typedef for the errflag value used by many internal
  * functions.  If an error needs to be returned, these values can be
  * used to signal such.  More details can be found further down in the

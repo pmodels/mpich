@@ -175,4 +175,20 @@ MPL_STATIC_INLINE_PREFIX int MPID_Cancel_send(MPIR_Request * sreq)
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPID_Send_data(MPIR_Data * data, int rank, int tag,
+                                            MPIR_Comm * comm, int attr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = NULL;
+    MPIR_FUNC_ENTER;
+
+    MPIR_Assert(0);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif /* CH4_SEND_H_INCLUDED */
