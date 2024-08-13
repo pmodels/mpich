@@ -517,58 +517,6 @@ int MPIR_Comm_map_free(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-static int get_node_count(MPIR_Comm * comm, int *node_count)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct uniq_nodes {
-        int id;
-        UT_hash_handle hh;
-    } *node_list = NULL;
-    struct uniq_nodes *s, *tmp;
-
-    if (comm->comm_kind != MPIR_COMM_KIND__INTRACOMM) {
-        *node_count = comm->local_size;
-        goto fn_exit;
-    } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        *node_count = 1;
-        goto fn_exit;
-    } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS) {
-        *node_count = comm->local_size;
-        goto fn_exit;
-    }
-
-    /* go through the list of ranks and add the unique ones to the
-     * node_list array */
-    for (int i = 0; i < comm->local_size; i++) {
-        int node;
-
-        mpi_errno = MPID_Get_node_id(comm, i, &node);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        HASH_FIND_INT(node_list, &node, s);
-        if (s == NULL) {
-            s = (struct uniq_nodes *) MPL_malloc(sizeof(struct uniq_nodes), MPL_MEM_COLL);
-            MPIR_Assert(s);
-            s->id = node;
-            HASH_ADD_INT(node_list, id, s, MPL_MEM_COLL);
-        }
-    }
-
-    /* the final size of our hash table is our node count */
-    *node_count = HASH_COUNT(node_list);
-
-    /* free up everything */
-    HASH_ITER(hh, node_list, s, tmp) {
-        HASH_DEL(node_list, s);
-        MPL_free(s);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -576,9 +524,6 @@ static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
 
     /* Notify device of communicator creation */
     mpi_errno = MPID_Comm_commit_pre_hook(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = get_node_count(comm, &comm->node_count);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Comm_map_free(comm);
