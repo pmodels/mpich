@@ -23,22 +23,20 @@ static MPIR_Request *self_recv_queue;
  *     req->dev.ch4.self
  */
 
-#define ENQUEUE_SELF(req_, buf_, count_, datatype_, tag_, context_id_, queue) \
+#define ENQUEUE_SELF(req_, data_, tag_, context_id_, queue) \
     do { \
         MPIR_Request_add_ref(req_); \
-        req_->dev.ch4.self.buf = (char *) buf_; \
-        req_->dev.ch4.self.count = count_; \
-        req_->dev.ch4.self.datatype = datatype_; \
+        memcpy(&req_->dev.ch4.self.data, data_, sizeof(MPIR_Data)); \
         req_->dev.ch4.self.tag = tag_; \
         req_->dev.ch4.self.context_id = context_id_; \
         DL_APPEND(queue, req_); \
     } while (0)
 
-#define ENQUEUE_SELF_SEND(req, buf, count, datatype, tag, context_id) \
-    ENQUEUE_SELF(req, buf, count, datatype, tag, context_id, self_send_queue)
+#define ENQUEUE_SELF_SEND(req, data, tag, context_id) \
+    ENQUEUE_SELF(req, data, tag, context_id, self_send_queue)
 
-#define ENQUEUE_SELF_RECV(req, buf, count, datatype, tag, context_id) \
-    ENQUEUE_SELF(req, buf, count, datatype, tag, context_id, self_recv_queue)
+#define ENQUEUE_SELF_RECV(req, data, tag, context_id) \
+    ENQUEUE_SELF(req, data, tag, context_id, self_recv_queue)
 
 #define MATCH_TAG(tag1, tag2) (tag1 == tag2 || tag1 == MPI_ANY_TAG || tag2 == MPI_ANY_TAG)
 #define DEQUEUE_SELF(req_, tag_, context_id_, queue) \
@@ -94,14 +92,18 @@ int MPIDI_Self_finalize(void)
     return MPI_SUCCESS;
 }
 
-#define SELF_COPY(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, status, tag) \
+#define SELF_COPY(sendbuf, sendcnt, sendtype, sendoffset, sendlength, recvbuf, recvcnt, recvtype, recvoffset, status, tag) \
     do { \
         MPI_Aint sdata_sz, rdata_sz; \
         MPIR_Datatype_get_size_macro(sendtype, sdata_sz); \
         MPIR_Datatype_get_size_macro(recvtype, rdata_sz); \
         sdata_sz *= sendcnt; \
         rdata_sz *= recvcnt; \
-        MPIR_Localcopy(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype); \
+        \
+        MPIR_Typerep_req typerep_req; \
+        MPIR_Ilocalcopy(sendbuf, sendcnt, sendtype, sendoffset, sendlength, recvbuf, recvcnt, recvtype, recvoffset, &typerep_req); \
+        MPIR_Typerep_wait(typerep_req); \
+        \
         status.MPI_SOURCE = 0; \
         status.MPI_TAG = tag; \
         if (sdata_sz > rdata_sz) { \
@@ -117,8 +119,8 @@ int MPIDI_Self_finalize(void)
         } \
     } while (0)
 
-int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
-                     MPIR_Comm * comm, int attr, MPIR_Request ** request)
+int MPIDI_Self_send_data(MPIR_Data * data, int rank, int tag,
+                         MPIR_Comm * comm, int attr, MPIR_Request ** request)
 {
     MPIR_Request *sreq = NULL;
     MPIR_Request *rreq = NULL;
@@ -127,19 +129,21 @@ int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
 
     DEQUEUE_SELF_RECV(rreq, tag, comm->context_id);
     if (rreq) {
-        SELF_COPY(buf, count, datatype, rreq->dev.ch4.self.buf,
-                  rreq->dev.ch4.self.count, rreq->dev.ch4.self.datatype, rreq->status, tag);
+        MPIR_Data *rdata = &rreq->dev.ch4.self.data;
+        MPIR_Assert(data->length == rdata->length);
+        SELF_COPY(data->buf, data->count, data->datatype, data->offset, data->length,
+                  rdata->buf, rdata->count, rdata->datatype, rdata->offset, rreq->status, tag);
         /* comm will be released by MPIR_Request_free(rreq) */
-        MPIR_Datatype_release_if_not_builtin(rreq->dev.ch4.self.datatype);
+        MPIR_Datatype_release_if_not_builtin(rdata->datatype);
         MPIR_Request_complete(rreq);
         sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
     } else {
         sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-        ENQUEUE_SELF_SEND(sreq, buf, count, datatype, tag, comm->context_id);
+        ENQUEUE_SELF_SEND(sreq, data, tag, comm->context_id);
         MPII_UNEXPQ_REMEMBER(sreq, rank, tag, comm->context_id);
         sreq->comm = comm;
         MPIR_Comm_add_ref(comm);
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
+        MPIR_Datatype_add_ref_if_not_builtin(data->datatype);
     }
 
     *request = sreq;
@@ -148,8 +152,23 @@ int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
     return MPI_SUCCESS;
 }
 
-int MPIDI_Self_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
+int MPIDI_Self_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
                      MPIR_Comm * comm, int attr, MPIR_Request ** request)
+{
+    /* Are we concerned about this extra param copy? */
+    MPIR_Data data = {
+        .buf = (void *) buf,
+        .count = count,
+        .datatype = datatype,
+        .offset = 0,
+        .length = -1,
+    };
+
+    return MPIDI_Self_send_data(&data, rank, tag, comm, attr, request);
+}
+
+int MPIDI_Self_recv_data(MPIR_Data * data, int rank, int tag,
+                         MPIR_Comm * comm, int attr, MPIR_Request ** request)
 {
     MPIR_Request *sreq = NULL;
     MPIR_Request *rreq = NULL;
@@ -160,26 +179,40 @@ int MPIDI_Self_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 
     DEQUEUE_SELF_SEND(sreq, tag, comm->context_id);
     if (sreq) {
-        SELF_COPY(sreq->dev.ch4.self.buf,
-                  sreq->dev.ch4.self.count,
-                  sreq->dev.ch4.self.datatype,
-                  buf, count, datatype, rreq->status, sreq->dev.ch4.self.tag);
+        MPIR_Data *sdata = &rreq->dev.ch4.self.data;
+        SELF_COPY(sdata->buf, sdata->count, sdata->datatype, sdata->offset, sdata->length,
+                  data->buf, data->count, data->datatype, data->offset,
+                  rreq->status, sreq->dev.ch4.self.tag);
         /* comm will be released by MPIR_Request_free(sreq) */
-        MPIR_Datatype_release_if_not_builtin(sreq->dev.ch4.self.datatype);
+        MPIR_Datatype_release_if_not_builtin(sdata->datatype);
         MPIR_Request_complete(sreq);
         MPIR_cc_set(&rreq->cc, 0);
         MPII_UNEXPQ_FORGET(sreq);
     } else {
-        ENQUEUE_SELF_RECV(rreq, buf, count, datatype, tag, comm->context_id);
+        ENQUEUE_SELF_RECV(rreq, data, tag, comm->context_id);
         rreq->comm = comm;
         MPIR_Comm_add_ref(comm);
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
+        MPIR_Datatype_add_ref_if_not_builtin(data->datatype);
     }
 
     *request = rreq;
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SELF_MUTEX);
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
+}
+
+int MPIDI_Self_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
+                     MPIR_Comm * comm, int attr, MPIR_Request ** request)
+{
+    MPIR_Data data = {
+        .buf = buf,
+        .count = count,
+        .datatype = datatype,
+        .offset = 0,
+        .length = -1,
+    };
+
+    return MPIDI_Self_recv_data(&data, rank, tag, comm, attr, request);
 }
 
 int MPIDI_Self_iprobe(int rank, int tag, MPIR_Comm * comm, int attr, int *flag, MPI_Status * status)
@@ -192,8 +225,8 @@ int MPIDI_Self_iprobe(int rank, int tag, MPIR_Comm * comm, int attr, int *flag, 
     if (sreq) {
         if (status != MPI_STATUS_IGNORE) {
             MPI_Aint sdata_sz;
-            MPIR_Datatype_get_size_macro(sreq->dev.ch4.self.datatype, sdata_sz);
-            sdata_sz *= sreq->dev.ch4.self.count;
+            MPIR_Datatype_get_size_macro(sreq->dev.ch4.self.data.datatype, sdata_sz);
+            sdata_sz *= sreq->dev.ch4.self.data.count;
             MPIR_STATUS_SET_COUNT(*status, sdata_sz);
             status->MPI_SOURCE = 0;
             status->MPI_TAG = sreq->dev.ch4.self.tag;
@@ -219,8 +252,8 @@ int MPIDI_Self_improbe(int rank, int tag, MPIR_Comm * comm, int attr,
     if (sreq) {
         if (status != MPI_STATUS_IGNORE) {
             MPI_Aint sdata_sz;
-            MPIR_Datatype_get_size_macro(sreq->dev.ch4.self.datatype, sdata_sz);
-            sdata_sz *= sreq->dev.ch4.self.count;
+            MPIR_Datatype_get_size_macro(sreq->dev.ch4.self.data.datatype, sdata_sz);
+            sdata_sz *= sreq->dev.ch4.self.data.count;
             MPIR_STATUS_SET_COUNT(*status, sdata_sz);
             status->MPI_SOURCE = 0;
             status->MPI_TAG = sreq->dev.ch4.self.tag;
@@ -250,12 +283,14 @@ int MPIDI_Self_imrecv(char *buf, MPI_Aint count, MPI_Datatype datatype,
     MPIR_Request *sreq = message->dev.ch4.self.match_req;
     MPIR_Request *rreq = message;
     rreq->kind = MPIR_REQUEST_KIND__RECV;
-    SELF_COPY(sreq->dev.ch4.self.buf,
-              sreq->dev.ch4.self.count,
-              sreq->dev.ch4.self.datatype,
-              buf, count, datatype, rreq->status, sreq->dev.ch4.self.tag);
+    SELF_COPY(sreq->dev.ch4.self.data.buf,
+              sreq->dev.ch4.self.data.count,
+              sreq->dev.ch4.self.data.datatype,
+              sreq->dev.ch4.self.data.length,
+              sreq->dev.ch4.self.data.offset,
+              buf, count, datatype, 0, rreq->status, sreq->dev.ch4.self.tag);
     /* comm will be released by MPIR_Request_free(sreq) */
-    MPIR_Datatype_release_if_not_builtin(sreq->dev.ch4.self.datatype);
+    MPIR_Datatype_release_if_not_builtin(sreq->dev.ch4.self.data.datatype);
     MPIR_Request_complete(sreq);
     MPIR_cc_set(&rreq->cc, 0);
 
@@ -291,7 +326,7 @@ int MPIDI_Self_cancel(MPIR_Request * request)
         }
         if (found) {
             /* comm will be released at MPIR_Request_free */
-            MPIR_Datatype_release_if_not_builtin(request->dev.ch4.self.datatype);
+            MPIR_Datatype_release_if_not_builtin(request->dev.ch4.self.data.datatype);
         } else {
             goto fn_exit;
         }
