@@ -704,7 +704,7 @@ int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_
     MPIR_gpu_req yreq;
     MPL_gpu_engine_type_t engine =
         MPIDI_IPCI_choose_engine(ipc_hdr->ipc_handle.gpu.global_dev_id, dev_id);
-    mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_dt, 0, NULL,
+    mpi_errno = MPIR_Ilocalcopy_gpu(src_buf, src_count, src_dt, 0, -1, NULL,
                                     MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
                                     MPIDIG_REQUEST(rreq, datatype), 0, &attr,
                                     MPL_GPU_COPY_DIRECTION_NONE, engine, true, &yreq);
