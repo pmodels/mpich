@@ -138,12 +138,18 @@ Non Native API:
      SHM*: req
 
 Native API:
+  send_data : int
+      NM*: data-2, rank, tag, comm, attr-2, addr, req_p
+     SHM*: data-2, rank, tag, comm, attr-2, addr, req_p
   mpi_isend : int
       NM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p
      SHM*: buf, count, datatype, rank, tag, comm, attr-2, addr, req_p
   mpi_cancel_send : int
       NM*: sreq
      SHM*: sreq
+  recv_data : int
+      NM*: data-2, rank, tag, comm, attr-2, addr, req_p, partner
+     SHM*: data-2, rank, tag, comm, attr-2, req_p
   mpi_irecv : int
       NM*: buf-2, count, datatype, rank, tag, comm, attr-2, addr, req_p, partner
      SHM*: buf-2, count, datatype, rank, tag, comm, attr-2, req_p
@@ -446,6 +452,7 @@ PARAM:
     context_id: MPIR_Context_id_t
     count: MPI_Aint
     data: const void *
+    data-2: MPIR_Data *
     data_sz: MPI_Aint
     datatype: MPI_Datatype
     datatype_p: MPIR_Datatype *
