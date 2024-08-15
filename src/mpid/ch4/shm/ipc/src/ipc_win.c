@@ -77,11 +77,11 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 
     /* Determine IPC type based on buffer type and submodule availability.
      * We always exchange in case any remote buffer can be shared by IPC. */
+    ipc_attr.ipc_type = MPIDI_IPCI_TYPE__NONE;
     bool done = false;
 
     /* Disable local IPC for zero buffer */
     if (win->size == 0) {
-        ipc_attr.ipc_type = MPIDI_IPCI_TYPE__NONE;
         done = true;
     }
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
