@@ -507,7 +507,7 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle, int map_dev_id, void
 
     if (do_mmap) {
 #ifdef MPL_HAVE_ZE
-        mpl_err =
+        int mpl_err =
             MPL_ze_ipc_handle_mmap_host(&handle.ipc_handle, 1, map_dev_id, handle.len, &pbase);
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                             "**gpu_ipc_handle_map");
