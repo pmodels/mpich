@@ -27,16 +27,15 @@
 #define MPIDIG_AM_SEND_GET_RNDV_ID(flags) (flags >> 8)
 
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_check_eager(int is_local, MPI_Aint am_hdr_sz, MPI_Aint data_sz,
-                                                 const void *buf, MPI_Aint count,
-                                                 MPI_Datatype datatype, MPIR_Request * sreq)
+                                                 MPIR_Request * sreq)
 {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    return MPIDI_NM_am_check_eager(am_hdr_sz, data_sz, buf, count, datatype, sreq);
+    return MPIDI_NM_am_check_eager(am_hdr_sz, data_sz, sreq);
 #else
     if (is_local) {
-        return MPIDI_SHM_am_check_eager(am_hdr_sz, data_sz, buf, count, datatype, sreq);
+        return MPIDI_SHM_am_check_eager(am_hdr_sz, data_sz, sreq);
     } else {
-        return MPIDI_NM_am_check_eager(am_hdr_sz, data_sz, buf, count, datatype, sreq);
+        return MPIDI_NM_am_check_eager(am_hdr_sz, data_sz, sreq);
     }
 #endif
 }
@@ -91,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
 
     int is_local = MPIDI_av_is_local(addr);
     MPI_Aint am_hdr_sz = (MPI_Aint) sizeof(am_hdr);
-    if (MPIDIG_check_eager(is_local, am_hdr_sz, data_sz, buf, count, datatype, sreq)) {
+    if (MPIDIG_check_eager(is_local, am_hdr_sz, data_sz, sreq)) {
         /* EAGER send */
         CH4_CALL(am_isend(rank, comm, MPIDIG_SEND, &am_hdr, am_hdr_sz, buf, count, datatype,
                           src_vci, dst_vci, sreq), is_local, mpi_errno);

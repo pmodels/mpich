@@ -76,8 +76,8 @@ Non Native API:
       NM*: void
      SHM*: void
   am_check_eager: bool
-      NM*: am_hdr_sz, data_sz, data, count, datatype, sreq
-     SHM*: am_hdr_sz, data_sz, data, count, datatype, sreq
+      NM*: am_hdr_sz, data_sz, sreq
+     SHM*: am_hdr_sz, data_sz, sreq
   comm_get_gpid : int
       NM*: comm_ptr, idx, gpid_ptr, is_remote
   get_local_upids : int
