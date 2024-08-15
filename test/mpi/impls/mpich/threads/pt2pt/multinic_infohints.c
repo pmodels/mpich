@@ -58,16 +58,16 @@ static int check_nic_pvar(int rank, int num_nics, unsigned long long *nic_pvar_b
             if (nic_expected_bytes_count[idx] != nic_pvar_bytes_count[idx]) {
                 printf
                     ("rank=%d --> target=1: Actual sent byte count=%ld through NIC %d does not match with the "
-                     "expected sent byte count=%ld\n", rank, nic_pvar_bytes_count[idx], idx,
-                     nic_expected_bytes_count[idx]);
+                     "expected sent byte count=%ld\n", rank, (long) nic_pvar_bytes_count[idx], idx,
+                     (long) nic_expected_bytes_count[idx]);
                 return 1;
             }
         } else {
             if (nic_expected_bytes_count[idx] != nic_pvar_bytes_count[idx]) {
                 printf
                     ("rank=%d --> target=0: Actual received byte count=%ld through NIC %d does not match with the "
-                     "expected received byte count=%ld\n", rank, nic_pvar_bytes_count[idx],
-                     idx, nic_expected_bytes_count[idx]);
+                     "expected received byte count=%ld\n", rank, (long) nic_pvar_bytes_count[idx],
+                     idx, (long) nic_expected_bytes_count[idx]);
                 return 1;
             }
         }
