@@ -43,6 +43,7 @@ struct MPIDU_Sched_send {
     int tag;                    /* only used for _PT2PT_SEND */
     int dest;
     struct MPIR_Comm *comm;
+    int coll_group;
     struct MPIR_Request *sreq;
 };
 
@@ -53,6 +54,7 @@ struct MPIDU_Sched_recv {
     int tag;                    /* only used for _PT2PT_RECV */
     int src;
     struct MPIR_Comm *comm;
+    int coll_group;
     struct MPIR_Request *rreq;
     MPI_Status *status;
 };
@@ -141,9 +143,9 @@ int MPIDU_Sched_reset(MPIR_Sched_t s);
 void *MPIDU_Sched_alloc_state(MPIR_Sched_t s, MPI_Aint size);
 int MPIDU_Sched_start(MPIR_Sched_t sp, struct MPIR_Comm *comm, struct MPIR_Request **req);
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                     struct MPIR_Comm *comm, MPIR_Sched_t s);
+                     struct MPIR_Comm *comm, int coll_group, MPIR_Sched_t s);
 int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
-                     struct MPIR_Comm *comm, MPIR_Sched_t s);
+                     struct MPIR_Comm *comm, int coll_group, MPIR_Sched_t s);
 int MPIDU_Sched_pt2pt_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                            int tag, int dest, struct MPIR_Comm *comm, MPIR_Sched_t s);
 int MPIDU_Sched_pt2pt_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,

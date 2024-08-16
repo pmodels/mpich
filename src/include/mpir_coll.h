@@ -74,21 +74,22 @@ int MPIC_Wait(MPIR_Request * request_ptr);
 int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status);
 
 int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-              MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag);
+              MPIR_Comm * comm_ptr, int coll_group, MPIR_Errflag_t errflag);
 int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int tag,
-              MPIR_Comm * comm_ptr, MPI_Status * status);
+              MPIR_Comm * comm_ptr, int coll_group, MPI_Status * status);
 int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                   int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                   MPI_Datatype recvtype, int source, int recvtag,
-                  MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t errflag);
-int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                          int dest, int sendtag,
-                          int source, int recvtag,
-                          MPIR_Comm * comm_ptr, MPI_Status * status, MPIR_Errflag_t errflag);
+                  MPIR_Comm * comm_ptr, int coll_group, MPI_Status * status,
+                  MPIR_Errflag_t errflag);
+int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int sendtag,
+                          int source, int recvtag, MPIR_Comm * comm_ptr, int coll_group,
+                          MPI_Status * status, MPIR_Errflag_t errflag);
 int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-               MPIR_Comm * comm_ptr, MPIR_Request ** request, MPIR_Errflag_t errflag);
-int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
-               int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request);
+               MPIR_Comm * comm_ptr, int coll_group, MPIR_Request ** request,
+               MPIR_Errflag_t errflag);
+int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int tag,
+               MPIR_Comm * comm_ptr, int coll_group, MPIR_Request ** request);
 int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses);
 
 int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
