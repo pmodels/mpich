@@ -79,7 +79,7 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
         }
     }
 
-    mpi_errno = MPII_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, nbytes, s);
+    mpi_errno = MPII_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, coll_group, nbytes, s);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPI_Aint scatter_size, curr_size;
@@ -120,11 +120,11 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
         right_disp = rel_j * scatter_size;
 
         mpi_errno = MPIR_Sched_send(((char *) tmp_buf + right_disp),
-                                    right_count, MPI_BYTE, right, comm_ptr, s);
+                                    right_count, MPI_BYTE, right, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         /* sendrecv, no barrier here */
         mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + left_disp),
-                                           left_count, MPI_BYTE, left, comm_ptr,
+                                           left_count, MPI_BYTE, left, comm_ptr, coll_group,
                                            &ibcast_state->status, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);

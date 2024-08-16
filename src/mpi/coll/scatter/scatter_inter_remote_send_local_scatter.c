@@ -36,7 +36,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
         /* root sends all data to rank 0 on remote group and returns */
         mpi_errno =
             MPIC_Send(sendbuf, sendcount * remote_size, sendtype, 0, MPIR_SCATTER_TAG, comm_ptr,
-                      errflag);
+                      coll_group, errflag);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     } else {
@@ -54,7 +54,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
                                 "tmp_buf", MPL_MEM_BUFFER);
 
             mpi_errno = MPIC_Recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
-                                  root, MPIR_SCATTER_TAG, comm_ptr, &status);
+                                  root, MPIR_SCATTER_TAG, comm_ptr, coll_group, &status);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             /* silience -Wmaybe-uninitialized due to MPIR_Scatter by non-zero ranks */

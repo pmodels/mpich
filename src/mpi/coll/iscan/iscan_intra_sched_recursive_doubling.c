@@ -56,10 +56,11 @@ int MPIR_Iscan_intra_sched_recursive_doubling(const void *sendbuf, void *recvbuf
         dst = rank ^ mask;
         if (dst < comm_size) {
             /* Send partial_scan to dst. Recv into tmp_buf */
-            mpi_errno = MPIR_Sched_send(partial_scan, count, datatype, dst, comm_ptr, s);
+            mpi_errno =
+                MPIR_Sched_send(partial_scan, count, datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier here */
-            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 

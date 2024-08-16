@@ -78,12 +78,12 @@ int MPIR_Iallgatherv_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount,
 
         /* Communicate */
         if (recvnow) {  /* If there's no data to send, just do a recv call */
-            mpi_errno = MPIR_Sched_recv(rbuf, recvnow, recvtype, left, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(rbuf, recvnow, recvtype, left, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             torecv -= recvnow;
         }
         if (sendnow) {  /* If there's no data to receive, just do a send call */
-            mpi_errno = MPIR_Sched_send(sbuf, sendnow, recvtype, right, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(sbuf, sendnow, recvtype, right, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             tosend -= sendnow;
         }

@@ -68,7 +68,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                 if (type_size) {
                     mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst],
                                            recvcounts[dst], recvtypes[dst], dst,
-                                           MPIR_ALLTOALLW_TAG, comm_ptr,
+                                           MPIR_ALLTOALLW_TAG, comm_ptr, coll_group,
                                            &reqarray[outstanding_requests]);
                     MPIR_ERR_CHECK(mpi_errno);
 
@@ -84,7 +84,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                 if (type_size) {
                     mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst],
                                            sendcounts[dst], sendtypes[dst], dst,
-                                           MPIR_ALLTOALLW_TAG, comm_ptr,
+                                           MPIR_ALLTOALLW_TAG, comm_ptr, coll_group,
                                            &reqarray[outstanding_requests], errflag);
                     MPIR_ERR_CHECK(mpi_errno);
 

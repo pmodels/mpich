@@ -40,7 +40,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
         /* send my data to partner */
         mpi_errno =
             MPIR_TSP_sched_isend(((char *) recvbuf + send_offset), send_count, recvtype, partner,
-                                 tag, comm, sched, 0, NULL, &vtx_id);
+                                 tag, comm, coll_group, sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* calculate offset and count of the data to be received from the partner */
@@ -54,7 +54,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
                          recv_offset, recv_count));
         /* recv data from my partner */
         mpi_errno = MPIR_TSP_sched_irecv(((char *) recvbuf + recv_offset), recv_count, recvtype,
-                                         partner, tag, comm, sched, 0, NULL, &vtx_id);
+                                         partner, tag, comm, coll_group, sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -92,7 +92,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int 
             buf_to_send = (void *) sendbuf;
         mpi_errno =
             MPIR_TSP_sched_isend(buf_to_send, recvcounts[rank], recvtype, step1_sendto, tag, comm,
-                                 sched, 0, NULL, &vtx_id);
+                                 coll_group, sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         for (i = 0; i < step1_nrecvs; i++) {    /* participating rank gets the data from non-participating rank */
@@ -100,7 +100,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int 
             mpi_errno =
                 MPIR_TSP_sched_irecv(((char *) recvbuf + recv_offset),
                                      recvcounts[step1_recvfrom[i]], recvtype, step1_recvfrom[i],
-                                     tag, comm, sched, n_invtcs, invtx, &vtx_id);
+                                     tag, comm, coll_group, sched, n_invtcs, invtx, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -152,7 +152,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
             for (x = 0; x < count; x++)
                 send_count += recvcounts[offset + x];
             mpi_errno = MPIR_TSP_sched_isend(((char *) recvbuf + send_offset), send_count, recvtype,
-                                             nbr, tag, comm, sched, nrecvs, recv_id, &vtx_id);
+                                             nbr, tag, comm, coll_group, sched, nrecvs, recv_id,
+                                             &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST,
@@ -173,7 +174,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
                 recv_count += recvcounts[offset + x];
             mpi_errno =
                 MPIR_TSP_sched_irecv(((char *) recvbuf + recv_offset), recv_count, recvtype,
-                                     nbr, tag, comm, sched, 0, NULL, &vtx_id);
+                                     nbr, tag, comm, coll_group, sched, 0, NULL, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
 
             recv_id[j * (k - 1) + i] = vtx_id;
@@ -221,14 +222,14 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int 
 
     if (step1_sendto != -1) {
         mpi_errno =
-            MPIR_TSP_sched_irecv(recvbuf, total_count, recvtype, step1_sendto, tag, comm, sched, 0,
-                                 NULL, &vtx_id);
+            MPIR_TSP_sched_irecv(recvbuf, total_count, recvtype, step1_sendto, tag, comm,
+                                 coll_group, sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     for (i = 0; i < step1_nrecvs; i++) {
         mpi_errno = MPIR_TSP_sched_isend(recvbuf, total_count, recvtype, step1_recvfrom[i],
-                                         tag, comm, sched, nrecvs, recv_id, &vtx_id);
+                                         tag, comm, coll_group, sched, nrecvs, recv_id, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

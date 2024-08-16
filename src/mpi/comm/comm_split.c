@@ -217,7 +217,8 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         if (comm_ptr->rank == 0) {
             mpi_errno = MPIC_Sendrecv(&new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
                                       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
-                                      0, 0, comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                      0, 0, comm_ptr, MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE,
+                                      MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno =
                 MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr,

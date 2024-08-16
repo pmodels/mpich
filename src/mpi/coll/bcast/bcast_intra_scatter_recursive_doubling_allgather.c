@@ -78,7 +78,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
     MPI_Aint scatter_size;
     scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
-    mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
+    mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr, coll_group,
                                        nbytes, tmp_buf, is_contig, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -119,12 +119,10 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                                       curr_size, MPI_BYTE, dst, MPIR_BCAST_TAG,
                                       ((char *) tmp_buf + recv_offset),
                                       (nbytes - recv_offset < 0 ? 0 : nbytes - recv_offset),
-                                      MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                                      MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, coll_group, &status,
+                                      errflag);
             MPIR_ERR_CHECK(mpi_errno);
-            if (mpi_errno) {
-                recv_size = 0;
-            } else
-                MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
+            MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
             curr_size += recv_size;
         }
 
@@ -184,7 +182,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                      * fflush(stdout); */
                     mpi_errno = MPIC_Send(((char *) tmp_buf + offset),
                                           recv_size, MPI_BYTE, dst,
-                                          MPIR_BCAST_TAG, comm_ptr, errflag);
+                                          MPIR_BCAST_TAG, comm_ptr, coll_group, errflag);
                     /* recv_size was set in the previous
                      * receive. that's the amount of data to be
                      * sent now. */
@@ -199,7 +197,8 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                      * relative_rank, dst); */
                     mpi_errno = MPIC_Recv(((char *) tmp_buf + offset),
                                           nbytes - offset < 0 ? 0 : nbytes - offset,
-                                          MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status);
+                                          MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, coll_group,
+                                          &status);
                     /* nprocs_completed is also equal to the no. of processes
                      * whose data we don't have */
                     MPIR_ERR_CHECK(mpi_errno);

@@ -135,8 +135,8 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     /* Leaf nodes send to parent */
     if (num_children == 0) {
         mpi_errno =
-            MPIR_TSP_sched_isend(tmp_buf, sendcount, sendtype, my_tree.parent, tag, comm, sched, 0,
-                                 NULL, &vtx_id);
+            MPIR_TSP_sched_isend(tmp_buf, sendcount, sendtype, my_tree.parent, tag, comm,
+                                 coll_group, sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv\n", rank));
     } else {
@@ -160,13 +160,14 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) tmp_buf + child_data_offset[i] * recvtype_extent,
                                      child_subtree_size[i] * recvcount, recvtype, child, tag, comm,
-                                     sched, num_dependencies, &dtcopy_id, &recv_id[i]);
+                                     coll_group, sched, num_dependencies, &dtcopy_id, &recv_id[i]);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
         if (my_tree.parent != -1) {
             mpi_errno = MPIR_TSP_sched_isend(tmp_buf, recv_size, recvtype, my_tree.parent,
-                                             tag, comm, sched, num_children, recv_id, &vtx_id);
+                                             tag, comm, coll_group, sched, num_children, recv_id,
+                                             &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

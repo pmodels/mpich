@@ -67,9 +67,9 @@ int MPIR_Ialltoallv_inter_sched_pairwise_exchange(const void *sendbuf, const MPI
         if (recvcount * recvtype_size == 0)
             src = MPI_PROC_NULL;
 
-        mpi_errno = MPIR_Sched_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
+        mpi_errno = MPIR_Sched_send(sendaddr, sendcount, sendtype, dst, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Sched_recv(recvaddr, recvcount, recvtype, src, comm_ptr, s);
+        mpi_errno = MPIR_Sched_recv(recvaddr, recvcount, recvtype, src, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Sched_barrier(s);
         MPIR_ERR_CHECK(mpi_errno);

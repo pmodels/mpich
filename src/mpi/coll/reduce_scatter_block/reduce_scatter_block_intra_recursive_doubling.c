@@ -146,7 +146,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
             mpi_errno = MPIC_Sendrecv(tmp_results, 1, sendtype, dst,
                                       MPIR_REDUCE_SCATTER_BLOCK_TAG,
                                       tmp_recvbuf, 1, recvtype, dst,
-                                      MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr,
+                                      MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, coll_group,
                                       MPI_STATUS_IGNORE, errflag);
             received = 1;
             MPIR_ERR_CHECK(mpi_errno);
@@ -188,7 +188,8 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
                     && (dst >= tree_root + nprocs_completed)) {
                     /* send the current result */
                     mpi_errno = MPIC_Send(tmp_recvbuf, 1, recvtype,
-                                          dst, MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, errflag);
+                                          dst, MPIR_REDUCE_SCATTER_BLOCK_TAG, comm_ptr, coll_group,
+                                          errflag);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
                 /* recv only if this proc. doesn't have data and sender
@@ -198,7 +199,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
                          (rank >= tree_root + nprocs_completed)) {
                     mpi_errno = MPIC_Recv(tmp_recvbuf, 1, recvtype, dst,
                                           MPIR_REDUCE_SCATTER_BLOCK_TAG,
-                                          comm_ptr, MPI_STATUS_IGNORE);
+                                          comm_ptr, coll_group, MPI_STATUS_IGNORE);
                     received = 1;
                     MPIR_ERR_CHECK(mpi_errno);
                 }

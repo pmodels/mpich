@@ -52,12 +52,12 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
             vtcs[0] = dtcopy_id;
 
             mpi_errno = MPIR_TSP_sched_isend((char *) recvbuf + rdispls[dst] * recv_extent,
-                                             recvcounts[dst], recvtype, dst, tag, comm,
+                                             recvcounts[dst], recvtype, dst, tag, comm, coll_group,
                                              sched, nvtcs, vtcs, &send_id);
             MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno =
-                MPIR_TSP_sched_irecv(tmp_buf, recvcounts[dst], recvtype, dst, tag, comm,
+                MPIR_TSP_sched_irecv(tmp_buf, recvcounts[dst], recvtype, dst, tag, comm, coll_group,
                                      sched, nvtcs, vtcs, &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
 

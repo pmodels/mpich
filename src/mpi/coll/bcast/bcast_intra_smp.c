@@ -40,12 +40,12 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
         if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {       /* is not the node root (0) and is on our node (!-1) */
             if (root == comm_ptr->rank) {
                 mpi_errno = MPIC_Send(buffer, count, datatype, 0,
-                                      MPIR_BCAST_TAG, comm_ptr->node_comm, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr->node_comm, coll_group, errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             } else if (0 == comm_ptr->node_comm->rank) {
                 mpi_errno =
                     MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm_ptr, root),
-                              MPIR_BCAST_TAG, comm_ptr->node_comm, status_p);
+                              MPIR_BCAST_TAG, comm_ptr->node_comm, coll_group, status_p);
                 MPIR_ERR_CHECK(mpi_errno);
 #ifdef HAVE_ERROR_CHECKING
                 /* check that we received as much as we expected */

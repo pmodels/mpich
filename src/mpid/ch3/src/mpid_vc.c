@@ -492,7 +492,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
                                       remote_leader, cts_tag,
                                       remote_size, 1, MPI_INT,
                                       remote_leader, cts_tag,
-                                      peer_comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE );
+                                      peer_comm_ptr, MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
 
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST, "local size = %d, remote size = %d", local_size,
@@ -511,7 +511,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         mpi_errno = MPIC_Sendrecv( local_gpids, local_size*sizeof(MPIDI_Gpid), MPI_BYTE,
                                       remote_leader, cts_tag,
                                       remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE,
-                                      remote_leader, cts_tag, peer_comm_ptr,
+                                      remote_leader, cts_tag, peer_comm_ptr, MPIR_SUBGROUP_NONE,
                                       MPI_STATUS_IGNORE, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
 

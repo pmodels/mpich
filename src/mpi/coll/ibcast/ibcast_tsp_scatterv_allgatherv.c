@@ -150,14 +150,14 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
         ibcast_state->n_bytes = recv_size;
         mpi_errno =
             MPIR_TSP_sched_irecv_status((char *) tmp_buf + displs[rank], recv_size, MPI_BYTE,
-                                        my_tree.parent, tag, comm, &ibcast_state->status, sched, 0,
-                                        NULL, &recv_id);
+                                        my_tree.parent, tag, comm, coll_group,
+                                        &ibcast_state->status, sched, 0, NULL, &recv_id);
         MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
                           &vtx_id);
 #else
         mpi_errno =
             MPIR_TSP_sched_irecv((char *) tmp_buf + displs[rank], recv_size, MPI_BYTE,
-                                 my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
+                                 my_tree.parent, tag, comm, coll_group, sched, 0, NULL, &recv_id);
 #endif
         MPIR_ERR_CHECK(mpi_errno);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv", rank));
@@ -174,8 +174,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
         mpi_errno = MPIR_TSP_sched_isend((char *) tmp_buf + displs[child],
                                          child_subtree_size[i], MPI_BYTE,
-                                         child, tag, comm, sched, num_send_dependencies, &recv_id,
-                                         &vtx_id);
+                                         child, tag, comm, coll_group, sched, num_send_dependencies,
+                                         &recv_id, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

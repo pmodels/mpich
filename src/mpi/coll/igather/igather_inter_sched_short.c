@@ -30,7 +30,8 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_
         mpi_errno = MPI_SUCCESS;
     } else if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
-        mpi_errno = MPIR_Sched_recv(recvbuf, recvcount * remote_size, recvtype, 0, comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_recv(recvbuf, recvcount * remote_size, recvtype, 0, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* remote group. Rank 0 allocates temporary buffer, does
@@ -66,7 +67,7 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_
 
         if (rank == 0) {
             mpi_errno = MPIR_Sched_send(tmp_buf, sendcount * local_size * sendtype_sz, MPI_BYTE,
-                                        root, comm_ptr, s);
+                                        root, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

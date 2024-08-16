@@ -152,8 +152,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
             nbr = step2_nbrs[phase][i];
             mpi_errno =
-                MPIR_TSP_sched_isend(tmp_buf, count, datatype, nbr, tag, comm, sched, nvtcs, vtcs,
-                                     &send_id[i]);
+                MPIR_TSP_sched_isend(tmp_buf, count, datatype, nbr, tag, comm, coll_group, sched,
+                                     nvtcs, vtcs, &send_id[i]);
             MPIR_ERR_CHECK(mpi_errno);
             if (rank > nbr) {
                 myidx = i + 1;
@@ -168,8 +168,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                 vtcs[nvtcs++] = (counter == 0) ? reduce_id[k - 2] : reduce_id[counter - 1];
             }
             mpi_errno =
-                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, sched, nvtcs,
-                                     vtcs, &recv_id[buf]);
+                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, coll_group,
+                                     sched, nvtcs, vtcs, &recv_id[buf]);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (count != 0) {
@@ -196,8 +196,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                 vtcs[nvtcs++] = (counter == 0) ? reduce_id[k - 2] : reduce_id[counter - 1];
             }
             mpi_errno =
-                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, sched, nvtcs,
-                                     vtcs, &recv_id[buf]);
+                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, coll_group,
+                                     sched, nvtcs, vtcs, &recv_id[buf]);
 
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -233,8 +233,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
      * send the data to non-partcipating ranks */
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
         mpi_errno =
-            MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, tag, comm, sched, 0, NULL,
-                                 &vtx_id);
+            MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, tag, comm, coll_group,
+                                 sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         for (i = 0; i < step1_nrecvs; i++) {
@@ -253,8 +253,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                 vtcs[0] = reduce_id[k - 2];
             }
             mpi_errno =
-                MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], tag, comm, sched,
-                                     nvtcs, vtcs, &vtx_id);
+                MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], tag, comm,
+                                     coll_group, sched, nvtcs, vtcs, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

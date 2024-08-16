@@ -20,7 +20,7 @@ int MPII_Ibcast_sched_test_length(MPIR_Comm * comm, int tag, void *state);
 int MPII_Ibcast_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state);
 int MPII_Ibcast_sched_init_length(MPIR_Comm * comm, int tag, void *state);
 int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state);
-int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr, MPI_Aint nbytes,
-                                  MPIR_Sched_t s);
+int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr, int coll_group,
+                                  MPI_Aint nbytes, MPIR_Sched_t s);
 
 #endif /* IBCAST_H_INCLUDED */

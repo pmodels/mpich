@@ -56,8 +56,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
             dst = (rank + j + i) % nranks;
             if (recvcounts[dst] && recvtype_size) {
                 mpi_errno = MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[dst] * recv_extent,
-                                                 recvcounts[dst], recvtype, dst, tag, comm, sched,
-                                                 0, NULL, &vtx_id);
+                                                 recvcounts[dst], recvtype, dst, tag, comm,
+                                                 coll_group, sched, 0, NULL, &vtx_id);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
@@ -66,8 +66,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
             dst = (rank - j - i + nranks) % nranks;
             if (sendcounts[dst] && sendtype_size) {
                 mpi_errno = MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst] * send_extent,
-                                                 sendcounts[dst], sendtype, dst, tag, comm, sched,
-                                                 0, NULL, &vtx_id);
+                                                 sendcounts[dst], sendtype, dst, tag, comm,
+                                                 coll_group, sched, 0, NULL, &vtx_id);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }

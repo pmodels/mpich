@@ -36,13 +36,15 @@ int MPIR_Ineighbor_allgather_allcomm_sched_linear(const void *sendbuf, MPI_Aint 
     MPIR_ERR_CHECK(mpi_errno);
 
     for (k = 0; k < outdegree; ++k) {
-        mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, dsts[k], comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_send(sendbuf, sendcount, sendtype, dsts[k], comm_ptr, MPIR_SUBGROUP_NONE, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     for (l = 0; l < indegree; ++l) {
         char *rb = ((char *) recvbuf) + l * recvcount * recvtype_extent;
-        mpi_errno = MPIR_Sched_recv(rb, recvcount, recvtype, srcs[l], comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_recv(rb, recvcount, recvtype, srcs[l], comm_ptr, MPIR_SUBGROUP_NONE, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

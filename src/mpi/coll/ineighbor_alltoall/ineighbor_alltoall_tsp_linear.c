@@ -46,8 +46,8 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, MPI_Ai
     for (k = 0; k < outdegree; ++k) {
         char *sb = ((char *) sendbuf) + k * sendcount * sendtype_extent;
         mpi_errno =
-            MPIR_TSP_sched_isend(sb, sendcount, sendtype, dsts[k], tag, comm_ptr, sched, 0, NULL,
-                                 &vtx_id);
+            MPIR_TSP_sched_isend(sb, sendcount, sendtype, dsts[k], tag, comm_ptr,
+                                 MPIR_SUBGROUP_NONE, sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -57,8 +57,8 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, MPI_Ai
     for (l = indegree - 1; l >= 0; l--) {
         char *rb = ((char *) recvbuf) + l * recvcount * recvtype_extent;
         mpi_errno =
-            MPIR_TSP_sched_irecv(rb, recvcount, recvtype, srcs[l], tag, comm_ptr, sched, 0, NULL,
-                                 &vtx_id);
+            MPIR_TSP_sched_irecv(rb, recvcount, recvtype, srcs[l], tag, comm_ptr,
+                                 MPIR_SUBGROUP_NONE, sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

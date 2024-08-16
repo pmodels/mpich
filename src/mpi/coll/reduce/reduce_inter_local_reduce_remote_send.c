@@ -36,7 +36,8 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
 
     if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
-        mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr, &status);
+        mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0, MPIR_REDUCE_TAG,
+                              comm_ptr, coll_group, &status);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* remote group. Rank 0 allocates temporary buffer, does
@@ -70,7 +71,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
 
         if (rank == 0) {
             mpi_errno = MPIC_Send(tmp_buf, count, datatype, root,
-                                  MPIR_REDUCE_TAG, comm_ptr, errflag);
+                                  MPIR_REDUCE_TAG, comm_ptr, coll_group, errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

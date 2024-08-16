@@ -218,8 +218,8 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Recv at the exact location */
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) tmp_recvbuf + recv_index[idx] * recvtype_extent,
-                                     r_counts[i][j - 1], recvtype, src, tag, comm, sched, 0, NULL,
-                                     &vtx_id);
+                                     r_counts[i][j - 1], recvtype, src, tag, comm, coll_group,
+                                     sched, 0, NULL, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
 
             recv_id[idx] = vtx_id;
@@ -228,7 +228,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Send from the start of recv till the count amount of data */
             mpi_errno =
                 MPIR_TSP_sched_isend(tmp_recvbuf, s_counts[i][j - 1], recvtype, dst, tag, comm,
-                                     sched, n_invtcs, recv_id, &vtx_id);
+                                     coll_group, sched, n_invtcs, recv_id, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
         n_invtcs += (k - 1);

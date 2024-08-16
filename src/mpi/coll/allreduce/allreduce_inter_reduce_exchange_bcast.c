@@ -48,7 +48,7 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbu
     if (comm_ptr->rank == 0) {
         mpi_errno = MPIC_Sendrecv(tmp_buf, count, datatype, 0, MPIR_REDUCE_TAG,
                                   recvbuf, count, datatype, 0, MPIR_REDUCE_TAG,
-                                  comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  comm_ptr, coll_group, MPI_STATUS_IGNORE, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

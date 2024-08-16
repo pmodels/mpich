@@ -88,8 +88,8 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
         nvtcs = (i == 0) ? 0 : 1;
         vtcs = (i == 0) ? 0 : reduce_id[(i - 1) % 2];
         mpi_errno =
-            MPIR_TSP_sched_irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, sched, nvtcs,
-                                 &vtcs, &recv_id);
+            MPIR_TSP_sched_irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, coll_group,
+                                 sched, nvtcs, &vtcs, &recv_id);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno =
@@ -101,7 +101,8 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
 
         mpi_errno =
             MPIR_TSP_sched_isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
-                                 datatype, dst, tag, comm, sched, nvtcs, &vtcs, &vtx_id);
+                                 datatype, dst, tag, comm, coll_group, sched, nvtcs, &vtcs,
+                                 &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
     MPIR_CHKLMEM_MALLOC(reduce_id, int *, 2 * sizeof(int), mpi_errno, "reduce_id", MPL_MEM_COLL);

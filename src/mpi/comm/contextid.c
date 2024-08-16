@@ -646,11 +646,11 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
         if (st->comm_ptr_inter->rank == 0) {
             mpi_errno =
                 MPIR_Sched_recv(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
-                                st->s);
+                                MPIR_SUBGROUP_NONE, st->s);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno =
                 MPIR_Sched_send(st->ctx0, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
-                                st->s);
+                                MPIR_SUBGROUP_NONE, st->s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(st->s);
         }
@@ -1058,7 +1058,7 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
     if (comm_ptr->rank == 0) {
         mpi_errno = MPIC_Sendrecv(&mycontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
                                   &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
-                                  comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                  comm_ptr, MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

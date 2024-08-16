@@ -39,7 +39,9 @@ int MPIR_Ineighbor_alltoallw_allcomm_sched_linear(const void *sendbuf, const MPI
         char *sb;
 
         sb = ((char *) sendbuf) + sdispls[k];
-        mpi_errno = MPIR_Sched_send(sb, sendcounts[k], sendtypes[k], dsts[k], comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_send(sb, sendcounts[k], sendtypes[k], dsts[k], comm_ptr, MPIR_SUBGROUP_NONE,
+                            s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -50,7 +52,9 @@ int MPIR_Ineighbor_alltoallw_allcomm_sched_linear(const void *sendbuf, const MPI
         char *rb;
 
         rb = ((char *) recvbuf) + rdispls[l];
-        mpi_errno = MPIR_Sched_recv(rb, recvcounts[l], recvtypes[l], srcs[l], comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_recv(rb, recvcounts[l], recvtypes[l], srcs[l], comm_ptr, MPIR_SUBGROUP_NONE,
+                            s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

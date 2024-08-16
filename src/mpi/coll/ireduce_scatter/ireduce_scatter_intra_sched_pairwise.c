@@ -73,14 +73,15 @@ int MPIR_Ireduce_scatter_intra_sched_pairwise(const void *sendbuf, void *recvbuf
          * needs from src into tmp_recvbuf */
         if (sendbuf != MPI_IN_PLACE) {
             mpi_errno = MPIR_Sched_send(((char *) sendbuf + disps[dst] * extent),
-                                        recvcounts[dst], datatype, dst, comm_ptr, s);
+                                        recvcounts[dst], datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             mpi_errno = MPIR_Sched_send(((char *) recvbuf + disps[dst] * extent),
-                                        recvcounts[dst], datatype, dst, comm_ptr, s);
+                                        recvcounts[dst], datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
-        mpi_errno = MPIR_Sched_recv(tmp_recvbuf, recvcounts[rank], datatype, src, comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_recv(tmp_recvbuf, recvcounts[rank], datatype, src, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 

@@ -140,7 +140,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
 
             /* Receive at the exact location. */
             mpi_errno = MPIC_Irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
-                                   count, recvtype, src, MPIR_ALLGATHER_TAG, comm,
+                                   count, recvtype, src, MPIR_ALLGATHER_TAG, comm, coll_group,
                                    &reqs[num_reqs++]);
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -152,7 +152,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
 
             /* Send from the start of recv till `count` amount of data. */
             mpi_errno =
-                MPIC_Isend(tmp_recvbuf, count, recvtype, dst, MPIR_ALLGATHER_TAG, comm,
+                MPIC_Isend(tmp_recvbuf, count, recvtype, dst, MPIR_ALLGATHER_TAG, comm, coll_group,
                            &reqs[num_reqs++], errflag);
             MPIR_ERR_CHECK(mpi_errno);
 
