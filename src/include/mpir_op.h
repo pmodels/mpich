@@ -235,8 +235,8 @@ int MPIR_Op_is_commutative(MPI_Op);
 MPI_Datatype MPIR_Op_get_alt_datatype(MPI_Op op, MPI_Datatype datatype);
 
 int MPIR_Reduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datatype,
-                      int *is_equal, int root, MPIR_Comm * comm_ptr);
+                      int *is_equal, int root, MPIR_Comm * comm_ptr, int coll_group);
 int MPIR_Allreduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datatype,
-                         int *is_equal, MPIR_Comm * comm_ptr);
+                         int *is_equal, MPIR_Comm * comm_ptr, int coll_group);
 
 #endif /* MPIR_OP_H_INCLUDED */

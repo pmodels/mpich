@@ -644,6 +644,9 @@ def get_algo_extra_params(algo):
 # additional wrappers
 def get_algo_args(args, algo, kind):
     algo_args = args
+    if not re.match(r'i?neighbor_', algo['func-commkind']):
+        algo_args += ", coll_group"
+
     if 'extra_params' in algo:
         algo_args += ", " + get_algo_extra_args(algo, kind)
 
@@ -658,6 +661,9 @@ def get_algo_args(args, algo, kind):
 
 def get_algo_params(params, algo):
     algo_params = params
+    if not re.match(r'i?neighbor_', algo['func-commkind']):
+        algo_params += ", int coll_group"
+
     if 'extra_params' in algo:
         algo_params += ", " + get_algo_extra_params(algo)
 
@@ -681,6 +687,8 @@ def get_algo_name(algo):
 
 def get_func_params(params, name, kind):
     func_params = params
+    if not name.startswith('neighbor_'):
+        func_params += ", int coll_group"
     if kind == "blocking":
         if not name.startswith('neighbor_'):
             func_params += ", MPIR_Errflag_t errflag"
@@ -701,6 +709,8 @@ def get_func_params(params, name, kind):
 
 def get_func_args(args, name, kind):
     func_args = args
+    if not name.startswith('neighbor_'):
+        func_args += ", coll_group"
     if kind == "blocking":
         if not name.startswith('neighbor_'):
             func_args += ", errflag"
