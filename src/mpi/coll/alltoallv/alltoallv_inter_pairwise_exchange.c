@@ -66,7 +66,8 @@ int MPIR_Alltoallv_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint *
 
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype, dst,
                                   MPIR_ALLTOALLV_TAG, recvaddr, recvcount,
-                                  recvtype, src, MPIR_ALLTOALLV_TAG, comm_ptr, &status, errflag);
+                                  recvtype, src, MPIR_ALLTOALLV_TAG, comm_ptr, coll_group, &status,
+                                  errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -51,7 +51,8 @@ int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *re
 
     if (rank < 2 * rem) {
         if (rank % 2 == 0) {    /* even */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank + 1, comm_ptr, s);
+            mpi_errno =
+                MPIR_Sched_send(recvbuf, count, datatype, rank + 1, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -60,7 +61,8 @@ int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *re
              * doubling */
             newrank = -1;
         } else {        /* odd */
-            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, rank - 1, comm_ptr, s);
+            mpi_errno =
+                MPIR_Sched_recv(tmp_buf, count, datatype, rank - 1, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -86,10 +88,10 @@ int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *re
 
             /* Send the most current data, which is in recvbuf. Recv
              * into tmp_buf */
-            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier here */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -121,10 +123,12 @@ int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *re
      * (rank-1), the ranks who didn't participate above. */
     if (rank < 2 * rem) {
         if (rank % 2) { /* odd */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank - 1, comm_ptr, s);
+            mpi_errno =
+                MPIR_Sched_send(recvbuf, count, datatype, rank - 1, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         } else {        /* even */
-            mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, rank + 1, comm_ptr, s);
+            mpi_errno =
+                MPIR_Sched_recv(recvbuf, count, datatype, rank + 1, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

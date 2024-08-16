@@ -450,8 +450,8 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
         mpi_errno = MPIC_Sendrecv(&local_size_send, 1, MPI_INT,
                                   remote_leader, cts_tag,
                                   &remote_size_recv, 1, MPI_INT,
-                                  remote_leader, cts_tag, peer_comm, MPI_STATUS_IGNORE,
-                                  MPIR_ERR_NONE);
+                                  remote_leader, cts_tag, peer_comm, MPIR_SUBGROUP_NONE,
+                                  MPI_STATUS_IGNORE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (remote_size_recv & MPIDI_DYNPROC_MASK)
@@ -488,7 +488,8 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                       remote_leader, cts_tag,
                                       remote_upid_size, *remote_size, MPI_INT,
                                       remote_leader, cts_tag,
-                                      peer_comm, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                      peer_comm, MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE,
+                                      MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
             upid_send_size = 0;
             for (i = 0; i < local_size; i++)
@@ -502,7 +503,8 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                       remote_leader, cts_tag,
                                       remote_upids, upid_recv_size, MPI_BYTE,
                                       remote_leader, cts_tag,
-                                      peer_comm, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                      peer_comm, MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE,
+                                      MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* Stage 1.2 convert remote UPID to GPID and get GPID for local group */
@@ -513,7 +515,8 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                       remote_leader, cts_tag,
                                       *remote_gpids, *remote_size, MPI_UINT64_T,
                                       remote_leader, cts_tag,
-                                      peer_comm, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                      peer_comm, MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE,
+                                      MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
         }
         /* Stage 1.3 check if local/remote groups are disjoint */

@@ -471,8 +471,8 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         info[1] = group_ptr->size;
 
         mpi_errno = MPIC_Sendrecv(info, 2, MPI_INT, 0, 0,
-                                  rinfo, 2, MPI_INT, 0, 0, comm_ptr, MPI_STATUS_IGNORE,
-                                  MPIR_ERR_NONE);
+                                  rinfo, 2, MPI_INT, 0, 0, comm_ptr, MPIR_SUBGROUP_NONE,
+                                  MPI_STATUS_IGNORE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         if (*newcomm_ptr != NULL) {
             (*newcomm_ptr)->context_id = rinfo[0];
@@ -486,7 +486,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         /* Populate and exchange the ranks */
         mpi_errno = MPIC_Sendrecv(mapping, group_ptr->size, MPI_INT, 0, 0,
                                   remote_mapping, remote_size, MPI_INT, 0, 0,
-                                  comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                                  comm_ptr, MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Broadcast to the other members of the local group */
@@ -1033,7 +1033,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
         mpi_errno =
             MPIC_Sendrecv(&recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
                           &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
-                          peer_comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
+                          peer_comm_ptr, MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         final_context_id = remote_context_id;
@@ -1206,7 +1206,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
         /* This routine allows use to use the collective communication
          * context rather than the point-to-point context. */
         mpi_errno = MPIC_Sendrecv(&local_high, 1, MPI_INT, 0, 0,
-                                  &remote_high, 1, MPI_INT, 0, 0, comm_ptr,
+                                  &remote_high, 1, MPI_INT, 0, 0, comm_ptr, MPIR_SUBGROUP_NONE,
                                   MPI_STATUS_IGNORE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 

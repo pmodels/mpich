@@ -131,8 +131,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
         }
 
         mpi_errno =
-            MPIR_TSP_sched_isend((char *) sbuf, size * recvcount, recvtype, dst, tag, comm, sched,
-                                 nvtcs, vtcs, &send_id[i % 3]);
+            MPIR_TSP_sched_isend((char *) sbuf, size * recvcount, recvtype, dst, tag, comm,
+                                 coll_group, sched, nvtcs, vtcs, &send_id[i % 3]);
         MPIR_ERR_CHECK(mpi_errno);
         /* schedule recv */
         if (i == 0)
@@ -149,8 +149,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
         }
 
         mpi_errno =
-            MPIR_TSP_sched_irecv((char *) rbuf, size * recvcount, recvtype, src, tag, comm, sched,
-                                 nvtcs, vtcs, &recv_id[i % 3]);
+            MPIR_TSP_sched_irecv((char *) rbuf, size * recvcount, recvtype, src, tag, comm,
+                                 coll_group, sched, nvtcs, vtcs, &recv_id[i % 3]);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* destination offset of the copy */

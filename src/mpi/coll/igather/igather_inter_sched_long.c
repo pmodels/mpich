@@ -29,11 +29,11 @@ int MPIR_Igather_inter_sched_long(const void *sendbuf, MPI_Aint sendcount, MPI_D
 
         for (i = 0; i < remote_size; i++) {
             mpi_errno = MPIR_Sched_recv(((char *) recvbuf + recvcount * i * extent),
-                                        recvcount, recvtype, i, comm_ptr, s);
+                                        recvcount, recvtype, i, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
-        mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, root, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

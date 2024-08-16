@@ -74,12 +74,12 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
      * reduced data of rank 1,2,3. */
     if (roots_comm != NULL && node_comm != NULL) {
         mpi_errno = MPIR_Sched_recv(localfulldata, count, datatype,
-                                    (node_comm->local_size - 1), node_comm, s);
+                                    (node_comm->local_size - 1), node_comm, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     } else if (roots_comm == NULL && node_comm != NULL &&
                node_comm->rank == node_comm->local_size - 1) {
-        mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, 0, node_comm, s);
+        mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, 0, node_comm, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     } else if (roots_comm != NULL) {
@@ -103,12 +103,15 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
 
         if (roots_rank != roots_comm->local_size - 1) {
             mpi_errno =
-                MPIR_Sched_send(prefulldata, count, datatype, (roots_rank + 1), roots_comm, s);
+                MPIR_Sched_send(prefulldata, count, datatype, (roots_rank + 1), roots_comm,
+                                coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
         if (roots_rank != 0) {
-            mpi_errno = MPIR_Sched_recv(tempbuf, count, datatype, (roots_rank - 1), roots_comm, s);
+            mpi_errno =
+                MPIR_Sched_recv(tempbuf, count, datatype, (roots_rank - 1), roots_comm, coll_group,
+                                s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }

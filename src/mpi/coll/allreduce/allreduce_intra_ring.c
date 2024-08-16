@@ -78,11 +78,12 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
         mpi_errno = MPIR_Sched_next_tag(comm, &tag);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIC_Irecv(tmpbuf, cnts[recv_rank], datatype, src, tag, comm, &reqs[0]);
+        mpi_errno = MPIC_Irecv(tmpbuf, cnts[recv_rank], datatype, src, tag,
+                               comm, coll_group, &reqs[0]);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIC_Isend((char *) recvbuf + displs[send_rank] * extent, cnts[send_rank],
-                               datatype, dst, tag, comm, &reqs[1], errflag);
+                               datatype, dst, tag, comm, coll_group, &reqs[1], errflag);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIC_Waitall(2, reqs, MPI_STATUSES_IGNORE);

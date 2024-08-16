@@ -108,9 +108,9 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
         MPIR_SCHED_BARRIER(s);
 
         /* now send and recv in parallel */
-        mpi_errno = MPIR_Sched_send(tmp_buf, newtype_size, MPI_BYTE, dst, comm_ptr, s);
+        mpi_errno = MPIR_Sched_send(tmp_buf, newtype_size, MPI_BYTE, dst, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Sched_recv(recvbuf, 1, newtype, src, comm_ptr, s);
+        mpi_errno = MPIR_Sched_recv(recvbuf, 1, newtype, src, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 

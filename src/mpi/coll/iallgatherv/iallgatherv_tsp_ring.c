@@ -94,8 +94,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
             vtcs[0] = dtcopy_id[0];
 
             mpi_errno =
-                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm, sched,
-                                     nvtcs, vtcs, &send_id[i % 3]);
+                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm,
+                                     coll_group, sched, nvtcs, vtcs, &send_id[i % 3]);
             MPIR_ERR_CHECK(mpi_errno);
             nvtcs = 0;
         } else {
@@ -104,8 +104,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
             vtcs[1] = send_id[(i - 1) % 3];
 
             mpi_errno =
-                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm, sched,
-                                     nvtcs, vtcs, &send_id[i % 3]);
+                MPIR_TSP_sched_isend(sbuf, recvcounts[send_rank], recvtype, dst, tag, comm,
+                                     coll_group, sched, nvtcs, vtcs, &send_id[i % 3]);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (i == 1) {
@@ -121,8 +121,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, MPI_Aint sendcoun
         }
 
         mpi_errno =
-            MPIR_TSP_sched_irecv(rbuf, recvcounts[recv_rank], recvtype, src, tag, comm, sched,
-                                 nvtcs, vtcs, &recv_id[i % 3]);
+            MPIR_TSP_sched_irecv(rbuf, recvcounts[recv_rank], recvtype, src, tag, comm, coll_group,
+                                 sched, nvtcs, vtcs, &recv_id[i % 3]);
         MPIR_ERR_CHECK(mpi_errno);
         /* Copy to correct position in recvbuf */
         mpi_errno =

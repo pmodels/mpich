@@ -33,14 +33,13 @@ int MPIR_Gather_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
         MPIR_Datatype_get_extent_macro(recvtype, extent);
 
         for (i = 0; i < remote_size; i++) {
-            mpi_errno =
-                MPIC_Recv(((char *) recvbuf + recvcount * i * extent), recvcount, recvtype, i,
-                          MPIR_GATHER_TAG, comm_ptr, &status);
+            mpi_errno = MPIC_Recv(((char *) recvbuf + recvcount * i * extent), recvcount, recvtype,
+                                  i, MPIR_GATHER_TAG, comm_ptr, coll_group, &status);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
-        mpi_errno =
-            MPIC_Send(sendbuf, sendcount, sendtype, root, MPIR_GATHER_TAG, comm_ptr, errflag);
+        mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, root, MPIR_GATHER_TAG,
+                              comm_ptr, coll_group, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

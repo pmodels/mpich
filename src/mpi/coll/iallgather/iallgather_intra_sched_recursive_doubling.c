@@ -105,12 +105,13 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
 
         if (dst < comm_size) {
             mpi_errno = MPIR_Sched_send_defer(((char *) recvbuf + send_offset),
-                                              &ss->curr_count, recvtype, dst, comm_ptr, s);
+                                              &ss->curr_count, recvtype, dst, comm_ptr, coll_group,
+                                              s);
             MPIR_ERR_CHECK(mpi_errno);
             /* send-recv, no sched barrier here */
             mpi_errno = MPIR_Sched_recv_status(((char *) recvbuf + recv_offset),
                                                ((comm_size - dst_tree_root) * recvcount),
-                                               recvtype, dst, comm_ptr, &ss->status, s);
+                                               recvtype, dst, comm_ptr, coll_group, &ss->status, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -169,7 +170,7 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
                      * sent now. */
                     mpi_errno = MPIR_Sched_send_defer(((char *) recvbuf + offset),
                                                       &ss->last_recv_count,
-                                                      recvtype, dst, comm_ptr, s);
+                                                      recvtype, dst, comm_ptr, coll_group, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 }
@@ -183,7 +184,8 @@ int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint
                     mpi_errno = MPIR_Sched_recv_status(((char *) recvbuf + offset),
                                                        ((comm_size -
                                                          (my_tree_root + mask)) * recvcount),
-                                                       recvtype, dst, comm_ptr, &ss->status, s);
+                                                       recvtype, dst, comm_ptr, coll_group,
+                                                       &ss->status, s);
                     MPIR_SCHED_BARRIER(s);
                     mpi_errno = MPIR_Sched_cb(&get_count, ss, s);
                     MPIR_ERR_CHECK(mpi_errno);

@@ -92,10 +92,10 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
                 src += comm_size;
             if (!is_contig)
                 mpi_errno = MPIR_Sched_recv_status(tmp_buf, nbytes, MPI_BYTE, src,
-                                                   comm_ptr, &ibcast_state->status, s);
+                                                   comm_ptr, coll_group, &ibcast_state->status, s);
             else
                 mpi_errno = MPIR_Sched_recv_status(buffer, count, datatype, src,
-                                                   comm_ptr, &ibcast_state->status, s);
+                                                   comm_ptr, coll_group, &ibcast_state->status, s);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIR_SCHED_BARRIER(s);
@@ -125,9 +125,10 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
             if (dst >= comm_size)
                 dst -= comm_size;
             if (!is_contig)
-                mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, dst, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, dst, comm_ptr, coll_group, s);
             else
-                mpi_errno = MPIR_Sched_send(buffer, count, datatype, dst, comm_ptr, s);
+                mpi_errno = MPIR_Sched_send(buffer, count, datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* NOTE: This is departure from MPIR_Bcast_intra_binomial.  A true analog

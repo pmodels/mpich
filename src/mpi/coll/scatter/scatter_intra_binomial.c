@@ -116,11 +116,11 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
              * receive data into a temporary buffer. */
             if (relative_rank % 2) {
                 mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype,
-                                      src, MPIR_SCATTER_TAG, comm_ptr, &status);
+                                      src, MPIR_SCATTER_TAG, comm_ptr, coll_group, &status);
                 MPIR_ERR_CHECK(mpi_errno);
             } else {
                 mpi_errno = MPIC_Recv(tmp_buf, tmp_buf_size, MPI_BYTE, src,
-                                      MPIR_SCATTER_TAG, comm_ptr, &status);
+                                      MPIR_SCATTER_TAG, comm_ptr, coll_group, &status);
                 MPIR_ERR_CHECK(mpi_errno);
                 if (mpi_errno) {
                     curr_cnt = 0;
@@ -152,14 +152,16 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
                 mpi_errno = MPIC_Send(((char *) sendbuf +
                                        extent * sendcount * mask),
                                       send_subtree_cnt,
-                                      sendtype, dst, MPIR_SCATTER_TAG, comm_ptr, errflag);
+                                      sendtype, dst, MPIR_SCATTER_TAG, comm_ptr, coll_group,
+                                      errflag);
             } else {
                 /* non-zero root and others */
                 send_subtree_cnt = curr_cnt - nbytes * mask;
                 /* mask is also the size of this process's subtree */
                 mpi_errno = MPIC_Send(((char *) tmp_buf + nbytes * mask),
                                       send_subtree_cnt,
-                                      MPI_BYTE, dst, MPIR_SCATTER_TAG, comm_ptr, errflag);
+                                      MPI_BYTE, dst, MPIR_SCATTER_TAG, comm_ptr, coll_group,
+                                      errflag);
             }
             MPIR_ERR_CHECK(mpi_errno);
             curr_cnt -= send_subtree_cnt;

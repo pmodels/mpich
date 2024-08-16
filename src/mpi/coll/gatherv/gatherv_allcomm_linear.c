@@ -61,7 +61,8 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
                 } else {
                     mpi_errno = MPIC_Irecv(((char *) recvbuf + displs[i] * extent),
                                            recvcounts[i], recvtype, i,
-                                           MPIR_GATHERV_TAG, comm_ptr, &reqarray[reqs++]);
+                                           MPIR_GATHERV_TAG, comm_ptr, coll_group,
+                                           &reqarray[reqs++]);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
             }
@@ -74,7 +75,7 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
     else if (root != MPI_PROC_NULL) {   /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (sendcount) {
             mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, root,
-                                  MPIR_GATHERV_TAG, comm_ptr, errflag);
+                                  MPIR_GATHERV_TAG, comm_ptr, coll_group, errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

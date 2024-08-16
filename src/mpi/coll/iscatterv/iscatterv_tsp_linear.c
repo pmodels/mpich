@@ -57,7 +57,7 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
                 } else {
                     mpi_errno = MPIR_TSP_sched_isend(((char *) sendbuf + displs[i] * extent),
                                                      sendcounts[i], sendtype, i, tag, comm_ptr,
-                                                     sched, 0, NULL, &vtx_id);
+                                                     coll_group, sched, 0, NULL, &vtx_id);
                 }
             }
             MPIR_ERR_CHECK(mpi_errno);
@@ -68,8 +68,8 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
         /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (recvcount) {
             mpi_errno =
-                MPIR_TSP_sched_irecv(recvbuf, recvcount, recvtype, root, tag, comm_ptr, sched, 0,
-                                     NULL, &vtx_id);
+                MPIR_TSP_sched_irecv(recvbuf, recvcount, recvtype, root, tag, comm_ptr, coll_group,
+                                     sched, 0, NULL, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

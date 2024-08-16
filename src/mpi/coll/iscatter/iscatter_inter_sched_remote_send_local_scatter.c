@@ -34,7 +34,8 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
 
     if (root == MPI_ROOT) {
         /* root sends all data to rank 0 on remote group and returns */
-        mpi_errno = MPIR_Sched_send(sendbuf, sendcount * remote_size, sendtype, 0, comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_send(sendbuf, sendcount * remote_size, sendtype, 0, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
         goto fn_exit;
@@ -53,7 +54,7 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
 
             mpi_errno =
                 MPIR_Sched_recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
-                                root, comm_ptr, s);
+                                root, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         } else {

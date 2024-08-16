@@ -154,14 +154,16 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     if (!in_step2) {    /* even */
         /* non-participating rank sends the data to a participating rank */
         mpi_errno = MPIC_Send(recvbuf, count,
-                              datatype, step1_sendto, MPIR_ALLREDUCE_TAG, comm, errflag);
+                              datatype, step1_sendto, MPIR_ALLREDUCE_TAG, comm, coll_group,
+                              errflag);
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* odd */
         if (step1_nrecvs) {
             for (i = 0; i < step1_nrecvs; i++) {        /* participating rank gets data from non-partcipating ranks */
                 mpi_errno = MPIC_Irecv(nbr_buffer[i], count,
                                        datatype, step1_recvfrom[i],
-                                       MPIR_ALLREDUCE_TAG, comm, &recv_reqs[recv_nreq++]);
+                                       MPIR_ALLREDUCE_TAG, comm, coll_group,
+                                       &recv_reqs[recv_nreq++]);
                 MPIR_ERR_CHECK(mpi_errno);
             }
             mpi_errno = MPIC_Waitall(recv_nreq, recv_reqs, MPI_STATUSES_IGNORE);
@@ -187,7 +189,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
                 nbr = step2_nbrs[phase + j][i];
                 mpi_errno =
                     MPIC_Irecv(nbr_buffer[buf++], count, datatype, nbr, MPIR_ALLREDUCE_TAG,
-                               comm, &recv_reqs[recv_nreq++]);
+                               comm, coll_group, &recv_reqs[recv_nreq++]);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
@@ -196,8 +198,8 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
         /* send data to all the neighbors */
         for (i = 0; i < k - 1; i++) {
             nbr = step2_nbrs[phase][i];
-            mpi_errno = MPIC_Isend(recvbuf, count, datatype, nbr, MPIR_ALLREDUCE_TAG, comm,
-                                   &send_reqs[send_nreq++], errflag);
+            mpi_errno = MPIC_Isend(recvbuf, count, datatype, nbr, MPIR_ALLREDUCE_TAG,
+                                   comm, coll_group, &send_reqs[send_nreq++], errflag);
             MPIR_ERR_CHECK(mpi_errno);
             if (rank > nbr) {
             }
@@ -227,7 +229,7 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
 
                     mpi_errno =
                         MPIC_Isend(recvbuf, count, datatype, nbr, MPIR_ALLREDUCE_TAG, comm,
-                                   &send_reqs[send_nreq++], errflag);
+                                   coll_group, &send_reqs[send_nreq++], errflag);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
 
@@ -251,14 +253,14 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     /* Step 3: This is reverse of Step 1. Rans that participated in Step 2
      * send the data to non-partcipating rans */
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
-        mpi_errno = MPIC_Recv(recvbuf, count, datatype, step1_sendto, MPIR_ALLREDUCE_TAG, comm,
-                              MPI_STATUS_IGNORE);
+        mpi_errno = MPIC_Recv(recvbuf, count, datatype, step1_sendto, MPIR_ALLREDUCE_TAG,
+                              comm, coll_group, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         for (i = 0; i < step1_nrecvs; i++) {
             mpi_errno =
                 MPIC_Isend(recvbuf, count, datatype, step1_recvfrom[i], MPIR_ALLREDUCE_TAG,
-                           comm, &send_reqs[i], errflag);
+                           comm, coll_group, &send_reqs[i], errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

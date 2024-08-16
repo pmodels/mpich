@@ -124,9 +124,9 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbu
             /* tmp_results contains data to be sent in each step. Data is
              * received in tmp_recvbuf and then accumulated into
              * tmp_results. accumulation is done later below.   */
-            mpi_errno = MPIR_Sched_send(tmp_results, 1, sendtype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(tmp_results, 1, sendtype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno = MPIR_Sched_recv(tmp_recvbuf, 1, recvtype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(tmp_recvbuf, 1, recvtype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
             received = 1;
@@ -167,7 +167,8 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbu
                 if ((dst > rank) && (rank < tree_root + nprocs_completed)
                     && (dst >= tree_root + nprocs_completed)) {
                     /* send the current result */
-                    mpi_errno = MPIR_Sched_send(tmp_recvbuf, 1, recvtype, dst, comm_ptr, s);
+                    mpi_errno =
+                        MPIR_Sched_send(tmp_recvbuf, 1, recvtype, dst, comm_ptr, coll_group, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 }
@@ -176,7 +177,8 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(const void *sendbu
                 else if ((dst < rank) &&
                          (dst < tree_root + nprocs_completed) &&
                          (rank >= tree_root + nprocs_completed)) {
-                    mpi_errno = MPIR_Sched_recv(tmp_recvbuf, 1, recvtype, dst, comm_ptr, s);
+                    mpi_errno =
+                        MPIR_Sched_recv(tmp_recvbuf, 1, recvtype, dst, comm_ptr, coll_group, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                     received = 1;

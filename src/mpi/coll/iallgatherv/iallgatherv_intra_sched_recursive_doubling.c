@@ -109,11 +109,13 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
                 incoming_count += recvcounts[j];
 
             mpi_errno = MPIR_Sched_send(((char *) tmp_buf + send_offset * recvtype_sz),
-                                        curr_count * recvtype_sz, MPI_BYTE, dst, comm_ptr, s);
+                                        curr_count * recvtype_sz, MPI_BYTE, dst, comm_ptr,
+                                        coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier here */
             mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + recv_offset * recvtype_sz),
-                                        incoming_count * recvtype_sz, MPI_BYTE, dst, comm_ptr, s);
+                                        incoming_count * recvtype_sz, MPI_BYTE, dst, comm_ptr,
+                                        coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -178,7 +180,7 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
                      * sent now. */
                     mpi_errno = MPIR_Sched_send(((char *) tmp_buf + offset),
                                                 incoming_count * recvtype_sz, MPI_BYTE,
-                                                dst, comm_ptr, s);
+                                                dst, comm_ptr, coll_group, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 }
@@ -200,7 +202,7 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
 
                     mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + offset * recvtype_sz),
                                                 incoming_count * recvtype_sz, MPI_BYTE,
-                                                dst, comm_ptr, s);
+                                                dst, comm_ptr, coll_group, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                     curr_count += incoming_count;

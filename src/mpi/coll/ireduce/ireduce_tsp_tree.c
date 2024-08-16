@@ -213,8 +213,9 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                 nvtcs = 1;
             }
 
-            mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,
-                                             sched, nvtcs, vtcs, &recv_id[i]);
+            mpi_errno =
+                MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm, coll_group,
+                                     sched, nvtcs, vtcs, &recv_id[i]);
 
             MPIR_ERR_CHECK(mpi_errno);
             /* Setup dependencies for reduction. Reduction depends on the corresponding recv to complete */
@@ -260,7 +261,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         if (!is_tree_root) {
             mpi_errno =
                 MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, tag, comm,
-                                     sched, nvtcs, vtcs, &vtx_id);
+                                     coll_group, sched, nvtcs, vtcs, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -268,12 +269,12 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         if (tree_root != root) {
             if (is_tree_root) { /* tree_root sends data to root */
                 mpi_errno =
-                    MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, root, tag, comm, sched,
-                                         nvtcs, vtcs, &vtx_id);
+                    MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, root, tag, comm,
+                                         coll_group, sched, nvtcs, vtcs, &vtx_id);
             } else if (is_root) {       /* root receives data from tree_root */
                 mpi_errno =
                     MPIR_TSP_sched_irecv((char *) recvbuf + offset * extent, msgsize, datatype,
-                                         tree_root, tag, comm, sched, 0, NULL, &vtx_id);
+                                         tree_root, tag, comm, coll_group, sched, 0, NULL, &vtx_id);
             }
             MPIR_ERR_CHECK(mpi_errno);
         }

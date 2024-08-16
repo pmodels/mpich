@@ -109,19 +109,19 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
             /* Don't do anything. This case is possible if two
              * consecutive processes contribute 0 bytes each. */
         } else if (!sendnow) {  /* If there's no data to send, just do a recv call */
-            mpi_errno =
-                MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm_ptr, &status);
+            mpi_errno = MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG,
+                                  comm_ptr, coll_group, &status);
             MPIR_ERR_CHECK(mpi_errno);
             torecv -= recvnow;
         } else if (!recvnow) {  /* If there's no data to receive, just do a send call */
-            mpi_errno =
-                MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
+            mpi_errno = MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG,
+                                  comm_ptr, coll_group, errflag);
             MPIR_ERR_CHECK(mpi_errno);
             tosend -= sendnow;
         } else {        /* There's data to be sent and received */
             mpi_errno = MPIC_Sendrecv(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG,
                                       rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG,
-                                      comm_ptr, &status, errflag);
+                                      comm_ptr, coll_group, &status, errflag);
             MPIR_ERR_CHECK(mpi_errno);
             tosend -= sendnow;
             torecv -= recvnow;

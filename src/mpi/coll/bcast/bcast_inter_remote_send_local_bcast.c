@@ -29,7 +29,8 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
         mpi_errno = MPI_SUCCESS;
     } else if (root == MPI_ROOT) {
         /* root sends to rank 0 on remote group and returns */
-        mpi_errno = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm_ptr, errflag);
+        mpi_errno =
+            MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm_ptr, coll_group, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* remote group. rank 0 on remote group receives from root */
@@ -37,7 +38,8 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
         rank = comm_ptr->rank;
 
         if (rank == 0) {
-            mpi_errno = MPIC_Recv(buffer, count, datatype, root, MPIR_BCAST_TAG, comm_ptr, &status);
+            mpi_errno = MPIC_Recv(buffer, count, datatype, root, MPIR_BCAST_TAG,
+                                  comm_ptr, coll_group, &status);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

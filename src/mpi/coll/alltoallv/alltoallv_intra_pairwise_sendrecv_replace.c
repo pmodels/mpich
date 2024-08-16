@@ -59,7 +59,7 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
                                                   recvcounts[j], recvtype,
                                                   j, MPIR_ALLTOALLV_TAG,
                                                   j, MPIR_ALLTOALLV_TAG,
-                                                  comm_ptr, &status, errflag);
+                                                  comm_ptr, coll_group, &status, errflag);
                 MPIR_ERR_CHECK(mpi_errno);
 
             } else if (rank == j) {
@@ -68,7 +68,7 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
                                                   recvcounts[i], recvtype,
                                                   i, MPIR_ALLTOALLV_TAG,
                                                   i, MPIR_ALLTOALLV_TAG,
-                                                  comm_ptr, &status, errflag);
+                                                  comm_ptr, coll_group, &status, errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
