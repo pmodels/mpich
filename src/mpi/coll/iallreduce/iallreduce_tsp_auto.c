@@ -10,7 +10,8 @@
 /* Routine to schedule a pipelined tree based allreduce */
 int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                              MPI_Datatype datatype, MPI_Op op,
-                                             MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+                                             MPIR_Comm * comm, int coll_group,
+                                             MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative = MPIR_Op_is_commutative(op);
@@ -35,7 +36,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
         case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_tsp_recexch_single_buffer:
             mpi_errno =
                 MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count,
-                                                        datatype, op, comm,
+                                                        datatype, op, comm, coll_group,
                                                         MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER,
                                                         MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL, sched);
             break;
@@ -43,7 +44,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
         case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_tsp_recexch_multiple_buffer:
             mpi_errno =
                 MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count,
-                                                        datatype, op, comm,
+                                                        datatype, op, comm, coll_group,
                                                         MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
                                                         MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL, sched);
             break;
@@ -56,7 +57,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
                                            "Iallreduce gentran_tree cannot be applied.\n");
             mpi_errno =
                 MPIR_TSP_Iallreduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op,
-                                                     comm, MPIR_Iallreduce_tree_type,
+                                                     comm, coll_group, MPIR_Iallreduce_tree_type,
                                                      MPIR_CVAR_IALLREDUCE_TREE_KVAL,
                                                      MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE,
                                                      MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD,
@@ -68,7 +69,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
                                            "Iallreduce gentran_ring cannot be applied.\n");
             mpi_errno =
                 MPIR_TSP_Iallreduce_sched_intra_ring(sendbuf, recvbuf, count, datatype,
-                                                     op, comm, sched);
+                                                     op, comm, coll_group, sched);
             break;
         case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_tsp_recexch_reduce_scatter_recexch_allgatherv:
             /* This algorithm will work for commutative
@@ -86,6 +87,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
                                                                                           datatype,
                                                                                           op,
                                                                                           comm,
+                                                                                          coll_group,
                                                                                           MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL,
                                                                                           sched);
             break;
@@ -97,7 +99,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_single_buffer:
                     mpi_errno =
                         MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count,
-                                                                datatype, op, comm,
+                                                                datatype, op, comm, coll_group,
                                                                 MPIR_IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER,
                                                                 cnt->u.
                                                                 iallreduce.intra_tsp_recexch_single_buffer.
@@ -107,7 +109,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_multiple_buffer:
                     mpi_errno =
                         MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count,
-                                                                datatype, op, comm,
+                                                                datatype, op, comm, coll_group,
                                                                 MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
                                                                 cnt->u.
                                                                 iallreduce.intra_tsp_recexch_single_buffer.
@@ -117,7 +119,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_tree:
                     mpi_errno =
                         MPIR_TSP_Iallreduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op,
-                                                             comm,
+                                                             comm, coll_group,
                                                              cnt->u.iallreduce.
                                                              intra_tsp_tree.tree_type,
                                                              cnt->u.iallreduce.intra_tsp_tree.k,
@@ -131,13 +133,13 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_ring:
                     mpi_errno =
                         MPIR_TSP_Iallreduce_sched_intra_ring(sendbuf, recvbuf, count, datatype, op,
-                                                             comm, sched);
+                                                             comm, coll_group, sched);
                     break;
 
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_tsp_recexch_reduce_scatter_recexch_allgatherv:
                     mpi_errno =
                         MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv
-                        (sendbuf, recvbuf, count, datatype, op, comm,
+                        (sendbuf, recvbuf, count, datatype, op, comm, coll_group,
                          cnt->u.iallreduce.intra_tsp_recexch_reduce_scatter_recexch_allgatherv.k,
                          sched);
                     break;
@@ -155,7 +157,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
   fallback:
     mpi_errno =
         MPIR_TSP_Iallreduce_sched_intra_recexch(sendbuf, recvbuf, count,
-                                                datatype, op, comm,
+                                                datatype, op, comm, coll_group,
                                                 MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
                                                 MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL, sched);
   fn_exit:

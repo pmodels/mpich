@@ -12,7 +12,7 @@
 int MPIR_Bcast_intra_tree(void *buffer,
                           MPI_Aint count,
                           MPI_Datatype datatype,
-                          int root, MPIR_Comm * comm_ptr, int tree_type,
+                          int root, MPIR_Comm * comm_ptr, int coll_group, int tree_type,
                           int branching_factor, int is_nb, MPIR_Errflag_t errflag)
 {
     int rank, comm_size, src, dst, *p, j, k, lrank = -1, is_contig;

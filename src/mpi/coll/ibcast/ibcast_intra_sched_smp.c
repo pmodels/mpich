@@ -28,7 +28,7 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
  * currently make any decision about which particular algorithm to use for any
  * subcommunicator. */
 int MPIR_Ibcast_intra_sched_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size;
@@ -69,7 +69,7 @@ int MPIR_Ibcast_intra_sched_smp(void *buffer, MPI_Aint count, MPI_Datatype datat
     if (comm_ptr->node_roots_comm != NULL) {
         mpi_errno = MPIR_Ibcast_intra_sched_auto(buffer, count, datatype,
                                                  MPIR_Get_internode_rank(comm_ptr, root),
-                                                 comm_ptr->node_roots_comm, s);
+                                                 comm_ptr->node_roots_comm, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* don't allow the local ops for the intranode phase to start until this has completed */
@@ -78,7 +78,8 @@ int MPIR_Ibcast_intra_sched_smp(void *buffer, MPI_Aint count, MPI_Datatype datat
     /* perform the intranode broadcast on all except for the root's node */
     if (comm_ptr->node_comm != NULL) {
         mpi_errno =
-            MPIR_Ibcast_intra_sched_auto(buffer, count, datatype, 0, comm_ptr->node_comm, s);
+            MPIR_Ibcast_intra_sched_auto(buffer, count, datatype, 0, comm_ptr->node_comm,
+                                         coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

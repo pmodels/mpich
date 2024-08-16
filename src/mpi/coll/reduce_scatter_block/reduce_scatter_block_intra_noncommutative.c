@@ -25,7 +25,8 @@ int MPIR_Reduce_scatter_block_intra_noncommutative(const void *sendbuf,
                                                    MPI_Aint recvcount,
                                                    MPI_Datatype datatype,
                                                    MPI_Op op,
-                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                   MPIR_Comm * comm_ptr, int coll_group,
+                                                   MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size = comm_ptr->local_size;

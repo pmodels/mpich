@@ -490,15 +490,19 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Broadcast to the other members of the local group */
-        mpi_errno = MPIR_Bcast(rinfo, 2, MPI_INT, 0, comm_ptr->local_comm, MPIR_ERR_NONE);
+        mpi_errno =
+            MPIR_Bcast(rinfo, 2, MPI_INT, 0, comm_ptr->local_comm, MPIR_SUBGROUP_NONE,
+                       MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Bcast(remote_mapping, remote_size, MPI_INT, 0,
-                               comm_ptr->local_comm, MPIR_ERR_NONE);
+                               comm_ptr->local_comm, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* The other processes */
         /* Broadcast to the other members of the local group */
-        mpi_errno = MPIR_Bcast(rinfo, 2, MPI_INT, 0, comm_ptr->local_comm, MPIR_ERR_NONE);
+        mpi_errno =
+            MPIR_Bcast(rinfo, 2, MPI_INT, 0, comm_ptr->local_comm, MPIR_SUBGROUP_NONE,
+                       MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         if (*newcomm_ptr != NULL) {
             (*newcomm_ptr)->context_id = rinfo[0];
@@ -508,7 +512,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
                             remote_size * sizeof(int),
                             mpi_errno, "remote_mapping", MPL_MEM_ADDRESS);
         mpi_errno = MPIR_Bcast(remote_mapping, remote_size, MPI_INT, 0,
-                               comm_ptr->local_comm, MPIR_ERR_NONE);
+                               comm_ptr->local_comm, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -1038,14 +1042,18 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
          * along with the final context id */
         comm_info[0] = final_context_id;
         MPL_DBG_MSG(MPIR_DBG_COMM, VERBOSE, "About to bcast on local_comm");
-        mpi_errno = MPIR_Bcast(comm_info, 1, MPI_INT, local_leader, local_comm_ptr, MPIR_ERR_NONE);
+        mpi_errno =
+            MPIR_Bcast(comm_info, 1, MPI_INT, local_leader, local_comm_ptr, MPIR_SUBGROUP_NONE,
+                       MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "end of bcast on local_comm of size %d",
                       local_comm_ptr->local_size);
     } else {
         /* we're the other processes */
         MPL_DBG_MSG(MPIR_DBG_COMM, VERBOSE, "About to receive bcast on local_comm");
-        mpi_errno = MPIR_Bcast(comm_info, 1, MPI_INT, local_leader, local_comm_ptr, MPIR_ERR_NONE);
+        mpi_errno =
+            MPIR_Bcast(comm_info, 1, MPI_INT, local_leader, local_comm_ptr, MPIR_SUBGROUP_NONE,
+                       MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Extract the context and group sign information */
@@ -1217,7 +1225,9 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
      * value of local_high, which may have changed if both groups
      * of processes had the same value for high
      */
-    mpi_errno = MPIR_Bcast(&local_high, 1, MPI_INT, 0, comm_ptr->local_comm, MPIR_ERR_NONE);
+    mpi_errno =
+        MPIR_Bcast(&local_high, 1, MPI_INT, 0, comm_ptr->local_comm, MPIR_SUBGROUP_NONE,
+                   MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     /*

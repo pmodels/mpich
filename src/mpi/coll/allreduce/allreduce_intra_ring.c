@@ -11,7 +11,7 @@
 
 int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
                               MPI_Datatype datatype, MPI_Op op,
-                              MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                              MPIR_Comm * comm, int coll_group, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst;
@@ -96,7 +96,7 @@ int MPIR_Allreduce_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count
 
     /* Phase 3: Allgatherv ring, so everyone has the reduced data */
     mpi_errno = MPIR_Allgatherv_intra_ring(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, recvbuf, cnts,
-                                           displs, datatype, comm, errflag);
+                                           displs, datatype, comm, coll_group, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(cnts);

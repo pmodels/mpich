@@ -13,7 +13,8 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
                                void *recvbuf,
                                MPI_Aint count,
                                MPI_Datatype datatype,
-                               MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                               MPI_Op op, int root, MPIR_Comm * comm_ptr, int coll_group,
+                               MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Status status;

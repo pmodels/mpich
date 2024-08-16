@@ -25,7 +25,8 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
                               MPI_Datatype sendtype,
                               void *recvbuf,
                               MPI_Aint recvcount,
-                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                              MPIR_Errflag_t errflag)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;

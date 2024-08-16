@@ -41,11 +41,11 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
                                                        const MPI_Aint * recvcounts,
                                                        MPI_Aint * displs, MPI_Datatype datatype,
                                                        MPI_Op op, size_t extent, int tag,
-                                                       MPIR_Comm * comm, int k, int is_dist_halving,
-                                                       int step2_nphases, int **step2_nbrs,
-                                                       int rank, int nranks, int sink_id,
-                                                       int is_out_vtcs, int *reduce_id_,
-                                                       MPIR_TSP_sched_t sched)
+                                                       MPIR_Comm * comm, int coll_group, int k,
+                                                       int is_dist_halving, int step2_nphases,
+                                                       int **step2_nbrs, int rank, int nranks,
+                                                       int sink_id, int is_out_vtcs,
+                                                       int *reduce_id_, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int x, i, j, phase;
@@ -132,8 +132,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
 /* Routine to schedule a recursive exchange based reduce_scatter with distance halving in each phase */
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
                                                  const MPI_Aint * recvcounts, MPI_Datatype datatype,
-                                                 MPI_Op op, MPIR_Comm * comm, int is_dist_halving,
-                                                 int k, MPIR_TSP_sched_t sched)
+                                                 MPI_Op op, MPIR_Comm * comm, int coll_group,
+                                                 int is_dist_halving, int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace;
@@ -246,9 +246,10 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     if (in_step2) {
         MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(tmp_results, tmp_recvbuf,
                                                            recvcounts, displs, datatype, op, extent,
-                                                           tag, comm, k, is_dist_halving,
-                                                           step2_nphases, step2_nbrs, rank, nranks,
-                                                           sink_id, 1, &reduce_id, sched);
+                                                           tag, comm, coll_group, k,
+                                                           is_dist_halving, step2_nphases,
+                                                           step2_nbrs, rank, nranks, sink_id, 1,
+                                                           &reduce_id, sched);
         /* copy data from tmp_results buffer correct position into recvbuf for all participating ranks */
         nvtcs = 1;
         vtcs[0] = reduce_id;    /* This assignment will also be used in step3 sends */

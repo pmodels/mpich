@@ -28,7 +28,7 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_tagged(void *buffer, int count,
                                                                     MPI_Datatype datatype, int root,
                                                                     MPIR_Comm * comm_ptr,
-                                                                    int tree_type,
+                                                                    int coll_group, int tree_type,
                                                                     int branching_factor)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -52,16 +52,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_tagged(void *buffer
     if (tree_type == MPIR_TREE_TYPE_KNOMIAL_1 || tree_type == MPIR_TREE_TYPE_KNOMIAL_2) {
         mpi_errno =
             MPIDI_OFI_Ibcast_knomial_triggered_tagged(buffer, count, datatype, root, comm_ptr,
-                                                      tree_type, branching_factor, &num_children,
-                                                      &snd_cntr, &rcv_cntr, &works, &my_tree,
-                                                      myrank, nranks, &num_works);
+                                                      coll_group, tree_type, branching_factor,
+                                                      &num_children, &snd_cntr, &rcv_cntr, &works,
+                                                      &my_tree, myrank, nranks, &num_works);
     } else {
         /* Invoke the helper function to perform kary tree-based Ibcast */
         mpi_errno =
             MPIDI_OFI_Ibcast_kary_triggered_tagged(buffer, count, datatype, root, comm_ptr,
-                                                   branching_factor, &leaf, &num_children,
-                                                   &snd_cntr, &rcv_cntr, &works, myrank, nranks,
-                                                   &num_works);
+                                                   coll_group, branching_factor, &leaf,
+                                                   &num_children, &snd_cntr, &rcv_cntr, &works,
+                                                   myrank, nranks, &num_works);
     }
 
     /* Wait for the completion counters to reach their desired values */

@@ -170,7 +170,8 @@ static int all_vcis_address_exchange(void)
     /* Allgather */
     MPIR_Comm *comm = MPIR_Process.comm_world;
     mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_BYTE,
-                                            all_names, my_len, MPI_BYTE, comm, MPIR_ERR_NONE);
+                                            all_names, my_len, MPI_BYTE, comm, MPIR_SUBGROUP_NONE,
+                                            MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* insert the addresses */

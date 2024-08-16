@@ -21,7 +21,7 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
                                            MPI_Datatype sendtype, void *recvbuf,
                                            const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                            MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                           MPIR_TSP_sched_t sched)
+                                           int coll_group, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, vtx_id;

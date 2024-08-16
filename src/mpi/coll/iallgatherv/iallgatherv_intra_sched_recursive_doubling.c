@@ -9,7 +9,8 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     const MPI_Aint recvcounts[],
                                                     const MPI_Aint displs[], MPI_Datatype recvtype,
-                                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                    MPIR_Comm * comm_ptr, int coll_group,
+                                                    MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, i, j, k;

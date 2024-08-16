@@ -10,8 +10,8 @@
 /* Routine to schedule a pipelined tree based reduce */
 int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
-                                      MPIR_Comm * comm, int tree_type, int k, int chunk_size,
-                                      int buffer_per_child, MPIR_TSP_sched_t sched)
+                                      MPIR_Comm * comm, int coll_group, int tree_type, int k,
+                                      int chunk_size, int buffer_per_child, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, t;

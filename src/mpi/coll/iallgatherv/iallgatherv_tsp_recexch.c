@@ -13,7 +13,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(int rank, int 
                                                                   size_t recv_extent,
                                                                   const MPI_Aint * recvcounts,
                                                                   const MPI_Aint * displs, int tag,
-                                                                  MPIR_Comm * comm,
+                                                                  MPIR_Comm * comm, int coll_group,
                                                                   MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -74,7 +74,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(int step1_sendto, int 
                                                           const MPI_Aint * displs,
                                                           MPI_Datatype recvtype, int n_invtcs,
                                                           int *invtx, MPIR_Comm * comm,
-                                                          MPIR_TSP_sched_t sched)
+                                                          int coll_group, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, vtx_id;
@@ -120,7 +120,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(int step1_sendto, int step2_n
                                                    size_t recv_extent, const MPI_Aint * recvcounts,
                                                    const MPI_Aint * displs, MPI_Datatype recvtype,
                                                    int is_dist_halving, MPIR_Comm * comm,
-                                                   MPIR_TSP_sched_t sched)
+                                                   int coll_group, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int phase, i, j, count, nbr, offset, rank_for_offset;
@@ -206,7 +206,7 @@ static int MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(int step1_sendto, int 
                                                           const MPI_Aint * recvcounts, int nranks,
                                                           int k, int nrecvs, int *recv_id, int tag,
                                                           MPI_Datatype recvtype, MPIR_Comm * comm,
-                                                          MPIR_TSP_sched_t sched)
+                                                          int coll_group, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint total_count = 0;
@@ -244,7 +244,8 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
                                              MPI_Datatype sendtype, void *recvbuf,
                                              const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                              MPI_Datatype recvtype, MPIR_Comm * comm,
-                                             int is_dist_halving, int k, MPIR_TSP_sched_t sched)
+                                             int coll_group, int is_dist_halving, int k,
+                                             MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i;
@@ -300,7 +301,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
     MPIR_TSP_Iallgatherv_sched_intra_recexch_step1(step1_sendto, step1_recvfrom, step1_nrecvs,
                                                    is_inplace, rank, tag, sendbuf, recvbuf,
                                                    recv_extent, recvcounts, displs, recvtype,
-                                                   n_invtcs, &invtx, comm, sched);
+                                                   n_invtcs, &invtx, comm, coll_group, sched);
     mpi_errno = MPIR_TSP_sched_fence(sched);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -311,7 +312,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
             MPIR_TSP_Iallgatherv_sched_intra_recexch_data_exchange(rank, nranks, k, p_of_k,
                                                                    log_pofk, T, recvbuf, recvtype,
                                                                    recv_extent, recvcounts, displs,
-                                                                   tag, comm, sched);
+                                                                   tag, comm, coll_group, sched);
             mpi_errno = MPIR_TSP_sched_fence(sched);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -321,13 +322,15 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
     MPIR_TSP_Iallgatherv_sched_intra_recexch_step2(step1_sendto, step2_nphases, step2_nbrs, rank,
                                                    nranks, k, p_of_k, log_pofk, T, &nrecvs,
                                                    &recv_id, tag, recvbuf, recv_extent, recvcounts,
-                                                   displs, recvtype, is_dist_halving, comm, sched);
+                                                   displs, recvtype, is_dist_halving, comm,
+                                                   coll_group, sched);
 
     /* Step 3: This is reverse of Step 1. Ranks that participated in Step 2
      * send the data to non-partcipating ranks */
     MPIR_TSP_Iallgatherv_sched_intra_recexch_step3(step1_sendto, step1_recvfrom, step1_nrecvs,
                                                    step2_nphases, recvbuf, recvcounts, nranks, k,
-                                                   nrecvs, recv_id, tag, recvtype, comm, sched);
+                                                   nrecvs, recv_id, tag, recvtype, comm, coll_group,
+                                                   sched);
 
   fn_exit:
     /* free the memory */

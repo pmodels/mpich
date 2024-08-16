@@ -717,7 +717,8 @@ static int init_comm_seq(MPIR_Comm * comm)
         /* Every rank need share the same seq from root. NOTE: it is possible for
          * different communicators to have the same seq. It is only used as an
          * opportunistic optimization */
-        mpi_errno = MPIR_Bcast_allcomm_auto(&tmp, 1, MPI_INT, 0, comm, MPIR_ERR_NONE);
+        mpi_errno =
+            MPIR_Bcast_allcomm_auto(&tmp, 1, MPI_INT, 0, comm, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         comm->seq = tmp;
@@ -1276,11 +1277,14 @@ int MPII_collect_info_key(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, const char
     }
 
     int is_equal;
-    mpi_errno = MPIR_Allreduce_equal(&hint_str_size, 1, MPI_INT, &is_equal, comm_ptr);
+    mpi_errno =
+        MPIR_Allreduce_equal(&hint_str_size, 1, MPI_INT, &is_equal, comm_ptr, MPIR_SUBGROUP_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (is_equal && hint_str_size > 0) {
-        mpi_errno = MPIR_Allreduce_equal(hint_str, hint_str_size, MPI_CHAR, &is_equal, comm_ptr);
+        mpi_errno =
+            MPIR_Allreduce_equal(hint_str, hint_str_size, MPI_CHAR, &is_equal, comm_ptr,
+                                 MPIR_SUBGROUP_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

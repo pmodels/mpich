@@ -49,7 +49,7 @@
 int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, MPI_Aint count,
                                                                  MPI_Datatype datatype, int root,
                                                                  MPIR_Comm * comm_ptr,
-                                                                 MPIR_Sched_t s)
+                                                                 int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, dst;

@@ -24,7 +24,8 @@
 int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
                                             MPI_Aint count,
                                             MPI_Datatype datatype,
-                                            int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                            int root, MPIR_Comm * comm_ptr, int coll_group,
+                                            MPIR_Errflag_t errflag)
 {
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;

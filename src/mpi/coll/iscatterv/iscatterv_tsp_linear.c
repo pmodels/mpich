@@ -11,7 +11,7 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const MPI_Aint 
                                             const MPI_Aint displs[], MPI_Datatype sendtype,
                                             void *recvbuf, MPI_Aint recvcount,
                                             MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                            MPIR_TSP_sched_t sched)
+                                            int coll_group, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;

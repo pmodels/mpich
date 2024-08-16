@@ -18,7 +18,8 @@
  * process i sends to process (i + 2^k) % p and receives from process
  * (i - 2^k + p) % p.
  */
-int MPIR_Ibarrier_intra_sched_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_intra_sched_recursive_doubling(MPIR_Comm * comm_ptr, int coll_group,
+                                                 MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int size, rank, src, dst, mask;

@@ -46,7 +46,8 @@ static int reset_shared_state(MPIR_Comm * comm, int tag, void *state)
 int MPIR_Iallgather_intra_sched_recursive_doubling(const void *sendbuf, MPI_Aint sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    MPI_Aint recvcount, MPI_Datatype recvtype,
-                                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                   MPIR_Comm * comm_ptr, int coll_group,
+                                                   MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct shared_state *ss = NULL;

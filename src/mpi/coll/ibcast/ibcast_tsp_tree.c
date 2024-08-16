@@ -10,8 +10,8 @@
 
 /* Routine to schedule a pipelined tree based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                                     MPIR_Comm * comm, int tree_type, int k, int chunk_size,
-                                     MPIR_TSP_sched_t sched)
+                                     MPIR_Comm * comm, int coll_group, int tree_type, int k,
+                                     int chunk_size, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;

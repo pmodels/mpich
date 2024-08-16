@@ -10,7 +10,8 @@ int
 MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        MPI_Aint recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched)
+                                       MPIR_Comm * comm, int coll_group, int k,
+                                       MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;

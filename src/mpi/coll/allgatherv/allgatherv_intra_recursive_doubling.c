@@ -25,7 +25,8 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                              const MPI_Aint * recvcounts,
                                              const MPI_Aint * displs,
                                              MPI_Datatype recvtype,
-                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                             MPIR_Comm * comm_ptr, int coll_group,
+                                             MPIR_Errflag_t errflag)
 {
     int comm_size, rank, j, i;
     int mpi_errno = MPI_SUCCESS;

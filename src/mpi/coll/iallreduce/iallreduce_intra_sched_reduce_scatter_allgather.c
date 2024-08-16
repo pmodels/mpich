@@ -9,7 +9,7 @@
 int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, void *recvbuf,
                                                          MPI_Aint count, MPI_Datatype datatype,
                                                          MPI_Op op, MPIR_Comm * comm_ptr,
-                                                         MPIR_Sched_t s)
+                                                         int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, newrank, pof2, rem;

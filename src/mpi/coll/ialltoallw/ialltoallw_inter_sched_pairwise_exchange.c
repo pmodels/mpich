@@ -11,7 +11,8 @@ int MPIR_Ialltoallw_inter_sched_pairwise_exchange(const void *sendbuf, const MPI
                                                   const MPI_Aint recvcounts[],
                                                   const MPI_Aint rdispls[],
                                                   const MPI_Datatype recvtypes[],
-                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                  MPIR_Comm * comm_ptr, int coll_group,
+                                                  MPIR_Sched_t s)
 {
 /* Intercommunicator alltoallw. We use a pairwise exchange algorithm
    similar to the one used in intracommunicator alltoallw. Since the local and

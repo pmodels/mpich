@@ -6,7 +6,7 @@
 #include "mpiimpl.h"
 
 /* sched version of CVAR and json based collective selection. Meant only for gentran scheduler */
-int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, int coll_group, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -23,14 +23,15 @@ int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, MPIR_TSP_sched_t sc
         case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_tsp_recexch:
             mpi_errno =
                 MPIR_TSP_Iallreduce_sched_intra_recexch(MPI_IN_PLACE, recvbuf, 0, MPI_BYTE, MPI_SUM,
-                                                        comm,
+                                                        comm, coll_group,
                                                         MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
                                                         MPIR_CVAR_IBARRIER_RECEXCH_KVAL, sched);
             break;
 
         case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_tsp_k_dissemination:
             mpi_errno =
-                MPIR_TSP_Ibarrier_sched_intra_k_dissemination(comm, MPIR_CVAR_IBARRIER_DISSEM_KVAL,
+                MPIR_TSP_Ibarrier_sched_intra_k_dissemination(comm, coll_group,
+                                                              MPIR_CVAR_IBARRIER_DISSEM_KVAL,
                                                               sched);
             break;
 
@@ -42,7 +43,7 @@ int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, MPIR_TSP_sched_t sc
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibarrier_intra_tsp_recexch:
                     mpi_errno =
                         MPIR_TSP_Iallreduce_sched_intra_recexch(MPI_IN_PLACE, recvbuf, 0, MPI_BYTE,
-                                                                MPI_SUM, comm,
+                                                                MPI_SUM, comm, coll_group,
                                                                 MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
                                                                 cnt->u.ibarrier.intra_tsp_recexch.k,
                                                                 sched);
@@ -50,7 +51,7 @@ int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, MPIR_TSP_sched_t sc
 
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibarrier_intra_tsp_k_dissemination:
                     mpi_errno =
-                        MPIR_TSP_Ibarrier_sched_intra_k_dissemination(comm,
+                        MPIR_TSP_Ibarrier_sched_intra_k_dissemination(comm, coll_group,
                                                                       cnt->u.
                                                                       ibarrier.intra_tsp_k_dissemination.
                                                                       k, sched);
@@ -68,7 +69,8 @@ int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, MPIR_TSP_sched_t sc
 
   fallback:
     mpi_errno = MPIR_TSP_Iallreduce_sched_intra_recexch(MPI_IN_PLACE, NULL, 0,
-                                                        MPI_BYTE, MPI_SUM, comm, 0, 2, sched);
+                                                        MPI_BYTE, MPI_SUM, comm, coll_group, 0, 2,
+                                                        sched);
 
   fn_exit:
     return mpi_errno;

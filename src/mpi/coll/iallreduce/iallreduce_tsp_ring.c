@@ -12,7 +12,7 @@
  * explained here: http://andrew.gibiansky.com/ */
 int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                          MPI_Datatype datatype, MPI_Op op,
-                                         MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+                                         MPIR_Comm * comm, int coll_group, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, src, dst;
@@ -111,7 +111,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
 
     /* Phase 3: Allgatherv ring, so everyone has the reduced data */
     MPIR_TSP_Iallgatherv_sched_intra_ring(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, recvbuf, cnts,
-                                          displs, datatype, comm, sched);
+                                          displs, datatype, comm, coll_group, sched);
 
     MPIR_CHKLMEM_FREEALL();
 

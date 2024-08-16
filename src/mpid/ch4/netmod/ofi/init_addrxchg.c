@@ -222,7 +222,8 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
     MPIR_CHKLMEM_MALLOC(all_num_vcis, void *, sizeof(int) * size,
                         mpi_errno, "all_num_vcis", MPL_MEM_ADDRESS);
     mpi_errno = MPIR_Allgather_fallback(&MPIDI_OFI_global.num_vcis, 1, MPI_INT,
-                                        all_num_vcis, 1, MPI_INT, comm, MPIR_ERR_NONE);
+                                        all_num_vcis, 1, MPI_INT, comm, MPIR_SUBGROUP_NONE,
+                                        MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     max_vcis = 0;
@@ -261,7 +262,8 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
     }
     /* Allgather */
     mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPI_BYTE,
-                                        all_names, my_len, MPI_BYTE, comm, MPIR_ERR_NONE);
+                                        all_names, my_len, MPI_BYTE, comm, MPIR_SUBGROUP_NONE,
+                                        MPIR_ERR_NONE);
 
     /* Step 2: insert and store non-root nic/vci on the root context */
     int root_ctx_idx = MPIDI_OFI_get_ctx_index(0, 0);
@@ -335,7 +337,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
             }
         }
     }
-    mpi_errno = MPIR_Barrier_fallback(comm, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier_fallback(comm, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* check */

@@ -23,7 +23,8 @@ int MPIR_Alltoallv_inter_pairwise_exchange(const void *sendbuf, const MPI_Aint *
                                            const MPI_Aint * sdispls, MPI_Datatype sendtype,
                                            void *recvbuf, const MPI_Aint * recvcounts,
                                            const MPI_Aint * rdispls, MPI_Datatype recvtype,
-                                           MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                           MPIR_Comm * comm_ptr, int coll_group,
+                                           MPIR_Errflag_t errflag)
 {
     int local_size, remote_size, max_size, i;
     MPI_Aint send_extent, recv_extent;

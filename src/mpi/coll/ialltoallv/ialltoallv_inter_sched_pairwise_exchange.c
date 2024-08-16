@@ -9,7 +9,8 @@ int MPIR_Ialltoallv_inter_sched_pairwise_exchange(const void *sendbuf, const MPI
                                                   const MPI_Aint sdispls[], MPI_Datatype sendtype,
                                                   void *recvbuf, const MPI_Aint recvcounts[],
                                                   const MPI_Aint rdispls[], MPI_Datatype recvtype,
-                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                  MPIR_Comm * comm_ptr, int coll_group,
+                                                  MPIR_Sched_t s)
 {
     /* Intercommunicator alltoallv. We use a pairwise exchange algorithm
      * similar to the one used in intracommunicator alltoallv. Since the
