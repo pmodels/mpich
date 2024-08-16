@@ -614,71 +614,71 @@ int MPID_Recv_init( void *buf, MPI_Aint count, MPI_Datatype datatype,
 int MPID_Startall(int count, MPIR_Request *requests[]);
 
 int MPID_Bcast_init(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                    MPIR_Comm *comm_ptr, MPIR_Info* info_ptr, MPIR_Request **request);
+                    MPIR_Comm *comm_ptr, int coll_group, MPIR_Info* info_ptr, MPIR_Request **request);
 
 int MPID_Allreduce_init(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                        MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                        MPI_Op op, MPIR_Comm * comm_ptr, int coll_group, MPIR_Info * info_ptr,
                         MPIR_Request ** request);
 
 int MPID_Reduce_init(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                     MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Info* info_ptr,
+                     MPI_Op op, int root, MPIR_Comm *comm_ptr, int coll_group, MPIR_Info* info_ptr,
                      MPIR_Request **request);
 
 int MPID_Alltoall_init(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                        void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                       MPIR_Comm *comm_ptr, MPIR_Info* info_ptr, MPIR_Request** request);
+                       MPIR_Comm *comm_ptr, int coll_group, MPIR_Info* info_ptr, MPIR_Request** request);
 
 int MPID_Alltoallv_init(const void *sendbuf, const MPI_Aint sendcounts[], const MPI_Aint sdispls[],
                         MPI_Datatype sendtype, void *recvbuf, const MPI_Aint recvcounts[],
-                        const MPI_Aint rdispls[], MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                        const MPI_Aint rdispls[], MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
                         MPIR_Info * info_ptr, MPIR_Request ** request);
 
 int MPID_Alltoallw_init(const void *sendbuf, const MPI_Aint sendcounts[], const MPI_Aint sdispls[],
                         const MPI_Datatype sendtypes[], void *recvbuf, const MPI_Aint recvcounts[],
                         const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                        MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, MPIR_Request ** request);
+                        MPIR_Comm * comm_ptr, int coll_group, MPIR_Info * info_ptr, MPIR_Request ** request);
 
 int MPID_Allgather_init(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                         void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                        MPIR_Comm *comm_ptr, MPIR_Info* info_ptr, MPIR_Request** request);
+                        MPIR_Comm *comm_ptr, int coll_group, MPIR_Info* info_ptr, MPIR_Request** request);
 
 int MPID_Allgatherv_init(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                          void *recvbuf, const MPI_Aint * recvcounts, const MPI_Aint * displs,
-                         MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Info* info_ptr,
+                         MPI_Datatype recvtype, MPIR_Comm *comm_ptr, int coll_group, MPIR_Info* info_ptr,
                          MPIR_Request** request);
 
 int MPID_Reduce_scatter_block_init(const void *sendbuf, void *recvbuf, MPI_Aint recvcount,
-                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm, int coll_group,
                                    MPIR_Info * info, MPIR_Request ** request);
 
 int MPID_Reduce_scatter_init(const void *sendbuf, void *recvbuf, const MPI_Aint recvcounts[],
-                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm, MPIR_Info * info,
+                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm, int coll_group, MPIR_Info * info,
                              MPIR_Request ** request);
 
 int MPID_Scan_init(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                   MPI_Op op, MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
+                   MPI_Op op, MPIR_Comm * comm, int coll_group, MPIR_Info * info, MPIR_Request ** request);
 
 int MPID_Gather_init(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype, void *recvbuf,
-                     MPI_Aint recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm,
+                     MPI_Aint recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm, int coll_group,
                      MPIR_Info * info, MPIR_Request ** request);
 
 int MPID_Gatherv_init(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype, void *recvbuf,
                       const MPI_Aint recvcounts[], const MPI_Aint displs[], MPI_Datatype recvtype,
-                      int root, MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
+                      int root, MPIR_Comm * comm, int coll_group, MPIR_Info * info, MPIR_Request ** request);
 
 int MPID_Scatter_init(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype, void *recvbuf,
-                      MPI_Aint recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm,
+                      MPI_Aint recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm, int coll_group,
                       MPIR_Info * info, MPIR_Request ** request);
 
 int MPID_Scatterv_init(const void *sendbuf, const MPI_Aint sendcounts[], const MPI_Aint displs[],
                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                       MPI_Datatype recvtype, int root, MPIR_Comm * comm, MPIR_Info * info,
+                       MPI_Datatype recvtype, int root, MPIR_Comm * comm, int coll_group, MPIR_Info * info,
                        MPIR_Request ** request);
 
-int MPID_Barrier_init(MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
+int MPID_Barrier_init(MPIR_Comm * comm, int coll_group, MPIR_Info * info, MPIR_Request ** request);
 
 int MPID_Exscan_init(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                     MPI_Op op, MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
+                     MPI_Op op, MPIR_Comm * comm, int coll_group, MPIR_Info * info, MPIR_Request ** request);
 
 int MPID_Neighbor_allgather_init(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,

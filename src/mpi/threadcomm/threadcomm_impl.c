@@ -34,8 +34,9 @@ int MPIR_Threadcomm_init_impl(MPIR_Comm * comm, int num_threads, MPIR_Comm ** co
     threads_table = MPL_malloc(comm_size * sizeof(int), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!threads_table, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    mpi_errno = MPIR_Allgather_impl(&num_threads, 1, MPI_INT, threads_table, 1, MPI_INT, comm,
-                                    MPIR_ERR_NONE);
+    mpi_errno =
+        MPIR_Allgather_impl(&num_threads, 1, MPI_INT, threads_table, 1, MPI_INT, comm,
+                            MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     int *rank_offset_table;;

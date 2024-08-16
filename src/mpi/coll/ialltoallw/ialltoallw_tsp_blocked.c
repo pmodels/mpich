@@ -12,7 +12,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                                             const MPI_Datatype sendtypes[], void *recvbuf,
                                             const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
                                             const MPI_Datatype recvtypes[], MPIR_Comm * comm,
-                                            int bblock, MPIR_TSP_sched_t sched)
+                                            int coll_group, int bblock, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag, vtx_id;

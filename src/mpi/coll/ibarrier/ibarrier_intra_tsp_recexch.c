@@ -6,7 +6,8 @@
 #include "mpiimpl.h"
 
 /* Routine to schedule a disdem based barrier with radix k */
-int MPIR_TSP_Ibarrier_sched_intra_recexch(MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched)
+int MPIR_TSP_Ibarrier_sched_intra_recexch(MPIR_Comm * comm, int coll_group, int k,
+                                          MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     void *recvbuf = NULL;
@@ -14,7 +15,7 @@ int MPIR_TSP_Ibarrier_sched_intra_recexch(MPIR_Comm * comm, int k, MPIR_TSP_sche
 
     mpi_errno =
         MPIR_TSP_Iallreduce_sched_intra_recexch(MPI_IN_PLACE, recvbuf, 0, MPI_BYTE, MPI_SUM,
-                                                comm,
+                                                comm, coll_group,
                                                 MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
                                                 k, sched);
     MPIR_ERR_CHECK(mpi_errno);

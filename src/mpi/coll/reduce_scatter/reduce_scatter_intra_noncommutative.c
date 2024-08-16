@@ -22,7 +22,7 @@
  */
 int MPIR_Reduce_scatter_intra_noncommutative(const void *sendbuf, void *recvbuf,
                                              const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                             MPI_Op op, MPIR_Comm * comm_ptr,
+                                             MPI_Op op, MPIR_Comm * comm_ptr, int coll_group,
                                              MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;

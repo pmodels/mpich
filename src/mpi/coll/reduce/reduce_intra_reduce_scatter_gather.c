@@ -37,7 +37,8 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
                                             MPI_Aint count,
                                             MPI_Datatype datatype,
                                             MPI_Op op,
-                                            int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                            int root, MPIR_Comm * comm_ptr, int coll_group,
+                                            MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, pof2, rem, newrank;

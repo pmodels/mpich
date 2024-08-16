@@ -7,7 +7,7 @@
 
 
 int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
-                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, int coll_group,
                         MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -43,7 +43,8 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
     /* perform intranode scan to get temporary result in recvbuf. if there is only
      * one process, just copy the raw data. */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr->node_comm, errflag);
+        mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr->node_comm,
+                              coll_group, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
@@ -75,7 +76,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
      * main process of node 3. */
     if (comm_ptr->node_roots_comm != NULL) {
         mpi_errno = MPIR_Scan(localfulldata, prefulldata, count, datatype,
-                              op, comm_ptr->node_roots_comm, errflag);
+                              op, comm_ptr->node_roots_comm, coll_group, errflag);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (MPIR_Get_internode_rank(comm_ptr, rank) != comm_ptr->node_roots_comm->local_size - 1) {
@@ -100,13 +101,14 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
      * reduce it with recvbuf to get final result if necessary. */
 
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, errflag);
+        mpi_errno = MPIR_Bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, coll_group, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (noneed == 0) {
         if (comm_ptr->node_comm != NULL) {
-            mpi_errno = MPIR_Bcast(tempbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
+            mpi_errno = MPIR_Bcast(tempbuf, count, datatype, 0, comm_ptr->node_comm,
+                                   coll_group, errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

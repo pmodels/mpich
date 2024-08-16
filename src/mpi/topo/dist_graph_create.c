@@ -133,7 +133,8 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     /* compute the number of peers I will recv from */
     int in_out_peers[2] = { -1, 1 };
     mpi_errno =
-        MPIR_Reduce_scatter_block(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr, MPIR_ERR_NONE);
+        MPIR_Reduce_scatter_block(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr,
+                                  MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(in_out_peers[0] <= comm_size && in_out_peers[0] >= 0);

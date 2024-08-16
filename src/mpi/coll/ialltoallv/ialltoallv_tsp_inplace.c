@@ -11,7 +11,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
                                             const MPI_Aint sdispls[], MPI_Datatype sendtype,
                                             void *recvbuf, const MPI_Aint recvcounts[],
                                             const MPI_Aint rdispls[], MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+                                            MPIR_Comm * comm, int coll_group,
+                                            MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t recv_extent;

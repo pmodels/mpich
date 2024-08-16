@@ -15,7 +15,7 @@ int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        const MPI_Aint recvcounts[], const MPI_Aint displs[],
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                       MPIR_Sched_t s)
+                                       int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;

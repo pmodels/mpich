@@ -201,7 +201,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_wi
         base_shm_offs[node_rank] = (MPI_Aint) ((*win_ptr)->base)
             - (MPI_Aint) (shm_win->shm_base_addr);
         mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                                        base_shm_offs, 1, MPI_AINT, node_comm_ptr, MPIR_ERR_NONE);
+                                        base_shm_offs, 1, MPI_AINT, node_comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         base_diff = 0;
@@ -345,12 +345,12 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno =
-            MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+            MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr, MPIR_SUBGROUP_NONE,
                        MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* wait for other processes to attach to win */
-        mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* unlink shared memory region so it gets deleted when all processes exit */
@@ -362,7 +362,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
 
         /* get serialized handle from rank 0 and deserialize it */
         mpi_errno =
-            MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+            MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr, MPIR_SUBGROUP_NONE,
                        MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -376,7 +376,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
                                      &(*win_ptr)->info_shm_base_addr, 0);
         MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
-        mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -391,7 +391,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     tmp_buf[4 * comm_rank + 3] = (MPI_Aint) (*win_ptr)->handle;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, tmp_buf, 4, MPI_AINT,
-                                    (*win_ptr)->comm_ptr, MPIR_ERR_NONE);
+                                    (*win_ptr)->comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (node_rank == 0) {
@@ -406,7 +406,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     }
 
     /* Make sure that all local processes see the results written by node_rank == 0 */
-    mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -479,7 +479,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                node_sizes, sizeof(MPI_Aint), MPI_BYTE,
-                               node_comm_ptr, MPIR_ERR_NONE);
+                               node_comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -518,12 +518,12 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno =
-                MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr, MPIR_SUBGROUP_NONE,
                                 MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* wait for other processes to attach to win */
-            mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_ERR_NONE);
+            mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* unlink shared memory region so it gets deleted when all processes exit */
@@ -535,7 +535,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
 
             /* get serialized handle from rank 0 and deserialize it */
             mpi_errno =
-                MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr, MPIR_SUBGROUP_NONE,
                            MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -550,7 +550,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
                                          &(*win_ptr)->shm_base_addr, 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
-            mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_ERR_NONE);
+            mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -577,12 +577,12 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno =
-                MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr, MPIR_SUBGROUP_NONE,
                            MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* wait for other processes to attach to win */
-            mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_ERR_NONE);
+            mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* unlink shared memory region so it gets deleted when all processes exit */
@@ -594,7 +594,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
 
             /* get serialized handle from rank 0 and deserialize it */
             mpi_errno =
-                MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr, MPIR_SUBGROUP_NONE,
                            MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -609,7 +609,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
                                          (void **) &(*win_ptr)->shm_mutex, 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
-            mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_ERR_NONE);
+            mpi_errno = MPIR_Barrier(node_comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

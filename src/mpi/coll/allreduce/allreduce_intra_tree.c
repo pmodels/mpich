@@ -14,7 +14,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
                               void *recvbuf,
                               MPI_Aint count,
                               MPI_Datatype datatype,
-                              MPI_Op op, MPIR_Comm * comm_ptr,
+                              MPI_Op op, MPIR_Comm * comm_ptr, int coll_group,
                               int tree_type, int k, int chunk_size,
                               int buffer_per_child, MPIR_Errflag_t errflag)
 {

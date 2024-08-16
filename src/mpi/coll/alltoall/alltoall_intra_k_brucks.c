@@ -108,7 +108,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
                                  MPI_Datatype sendtype,
                                  void *recvbuf,
                                  MPI_Aint recvcnt,
-                                 MPI_Datatype recvtype, MPIR_Comm * comm, int k,
+                                 MPI_Datatype recvtype, MPIR_Comm * comm, int coll_group, int k,
                                  MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;

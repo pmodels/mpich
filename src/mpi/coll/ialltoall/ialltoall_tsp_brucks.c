@@ -117,7 +117,7 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Ain
 int
 MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                      MPI_Datatype recvtype, MPIR_Comm * comm,
+                                      MPI_Datatype recvtype, MPIR_Comm * comm, int coll_group,
                                       int k, int buffer_per_phase, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;

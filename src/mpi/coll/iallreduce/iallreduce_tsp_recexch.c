@@ -11,8 +11,8 @@
 /* Routine to schedule a recursive exchange based allreduce */
 int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                             MPI_Datatype datatype, MPI_Op op,
-                                            MPIR_Comm * comm, int per_nbr_buffer, int k,
-                                            MPIR_TSP_sched_t sched)
+                                            MPIR_Comm * comm, int coll_group, int per_nbr_buffer,
+                                            int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
@@ -76,7 +76,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                                                   tag, extent, dtcopy_id, recv_id, reduce_id, vtcs,
                                                   is_inplace, step1_sendto, in_step2, step1_nrecvs,
                                                   step1_recvfrom, per_nbr_buffer, &step1_recvbuf,
-                                                  comm, sched);
+                                                  comm, coll_group, sched);
 
     mpi_errno = MPIR_TSP_sched_sink(sched, &step1_id);  /* sink for all the tasks up to end of Step 1 */
     if (mpi_errno)

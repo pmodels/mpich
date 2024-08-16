@@ -11,8 +11,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
                                               const MPI_Aint sdispls[], MPI_Datatype sendtype,
                                               void *recvbuf, const MPI_Aint recvcounts[],
                                               const MPI_Aint rdispls[], MPI_Datatype recvtype,
-                                              MPIR_Comm * comm, int batch_size, int bblock,
-                                              MPIR_TSP_sched_t sched)
+                                              MPIR_Comm * comm, int coll_group, int batch_size,
+                                              int bblock, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int src, dst;

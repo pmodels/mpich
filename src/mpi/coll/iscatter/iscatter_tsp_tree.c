@@ -10,7 +10,7 @@
 int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                       int k, MPIR_TSP_sched_t sched)
+                                       int coll_group, int k, MPIR_TSP_sched_t sched)
 {
     MPIR_FUNC_ENTER;
 

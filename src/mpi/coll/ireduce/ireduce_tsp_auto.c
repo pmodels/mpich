@@ -11,7 +11,7 @@
 /* Remove this function when gentran algos are in json file */
 static int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *recvbuf,
                                                   MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
-                                                  int root, MPIR_Comm * comm_ptr,
+                                                  int root, MPIR_Comm * comm_ptr, int coll_group,
                                                   MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -25,7 +25,7 @@ static int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *rec
      * gentran_tree algo */
     /* gentran tree with knomial tree type, radix 2 and pipeline block size 0 */
     mpi_errno = MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count,
-                                                  datatype, op, root, comm_ptr,
+                                                  datatype, op, root, comm_ptr, coll_group,
                                                   tree_type, radix, block_size,
                                                   buffer_per_child, sched);
     if (mpi_errno)
@@ -40,7 +40,8 @@ static int MPIR_Ireduce_sched_intra_tsp_flat_auto(const void *sendbuf, void *rec
 /* sched version of CVAR and json based collective selection. Meant only for gentran scheduler */
 int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                           MPI_Datatype datatype, MPI_Op op, int root,
-                                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched)
+                                          MPIR_Comm * comm_ptr, int coll_group,
+                                          MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -67,7 +68,7 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
                                            mpi_errno, "Ireduce gentran_tree cannot be applied.\n");
             mpi_errno =
                 MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
-                                                  comm_ptr, MPIR_Ireduce_tree_type,
+                                                  comm_ptr, coll_group, MPIR_Ireduce_tree_type,
                                                   MPIR_CVAR_IREDUCE_TREE_KVAL,
                                                   MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE,
                                                   MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD, sched);
@@ -76,7 +77,7 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
         case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_tsp_ring:
             mpi_errno =
                 MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
-                                                  comm_ptr, MPIR_TREE_TYPE_KARY, 1,
+                                                  comm_ptr, coll_group, MPIR_TREE_TYPE_KARY, 1,
                                                   MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE,
                                                   MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD, sched);
             break;
@@ -89,7 +90,7 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_tsp_tree:
                     mpi_errno =
                         MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op,
-                                                          root, comm_ptr,
+                                                          root, comm_ptr, coll_group,
                                                           cnt->u.ireduce.intra_tsp_tree.tree_type,
                                                           cnt->u.ireduce.intra_tsp_tree.k,
                                                           cnt->u.ireduce.intra_tsp_tree.chunk_size,
@@ -100,7 +101,8 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
                 case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_tsp_ring:
                     mpi_errno =
                         MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op,
-                                                          root, comm_ptr, MPIR_TREE_TYPE_KARY, 1,
+                                                          root, comm_ptr, coll_group,
+                                                          MPIR_TREE_TYPE_KARY, 1,
                                                           cnt->u.ireduce.intra_tsp_ring.chunk_size,
                                                           cnt->u.ireduce.
                                                           intra_tsp_ring.buffer_per_child, sched);
@@ -110,7 +112,8 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
                     /* Replace this call with MPIR_Assert(0) when json files have gentran algos */
                     mpi_errno =
                         MPIR_Ireduce_sched_intra_tsp_flat_auto(sendbuf, recvbuf, count,
-                                                               datatype, op, root, comm_ptr, sched);
+                                                               datatype, op, root, comm_ptr,
+                                                               coll_group, sched);
                     break;
             }
     }
@@ -120,7 +123,7 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
   fallback:
     mpi_errno =
         MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root,
-                                          comm_ptr, MPIR_TREE_TYPE_KARY, 1,
+                                          comm_ptr, coll_group, MPIR_TREE_TYPE_KARY, 1,
                                           MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE,
                                           MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD, sched);
 

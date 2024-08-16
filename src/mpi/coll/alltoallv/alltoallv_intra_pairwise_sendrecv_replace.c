@@ -22,7 +22,8 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
                                                    const MPI_Aint * sdispls, MPI_Datatype sendtype,
                                                    void *recvbuf, const MPI_Aint * recvcounts,
                                                    const MPI_Aint * rdispls, MPI_Datatype recvtype,
-                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                   MPIR_Comm * comm_ptr, int coll_group,
+                                                   MPIR_Errflag_t errflag)
 {
     int comm_size, i, j;
     MPI_Aint recv_extent;

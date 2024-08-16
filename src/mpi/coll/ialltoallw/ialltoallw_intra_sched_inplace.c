@@ -21,7 +21,7 @@ int MPIR_Ialltoallw_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
                                         const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                         void *recvbuf, const MPI_Aint recvcounts[],
                                         const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                        MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, i, j;

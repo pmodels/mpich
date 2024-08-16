@@ -14,8 +14,9 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                                                     void *recvbuf,
                                                     MPI_Aint count,
                                                     MPI_Datatype datatype,
-                                                    MPI_Op op, MPIR_Comm * comm, int k,
-                                                    int single_phase_recv, MPIR_Errflag_t errflag)
+                                                    MPI_Op op, MPIR_Comm * comm, int coll_group,
+                                                    int k, int single_phase_recv,
+                                                    MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, nranks, nbr;

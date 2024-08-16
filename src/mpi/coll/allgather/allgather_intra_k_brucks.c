@@ -22,8 +22,8 @@
 int
 MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
                               MPI_Datatype sendtype, void *recvbuf,
-                              MPI_Aint recvcount, MPI_Datatype recvtype, MPIR_Comm * comm, int k,
-                              MPIR_Errflag_t errflag)
+                              MPI_Aint recvcount, MPI_Datatype recvtype, MPIR_Comm * comm,
+                              int coll_group, int k, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;

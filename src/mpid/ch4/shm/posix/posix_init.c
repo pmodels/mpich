@@ -128,8 +128,7 @@ static void *create_container(struct json_object *obj)
             cnt->id =
                 MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather;
         else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_ipc_read"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read;
+            cnt->id = MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read;
         else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_barrier_release_gather"))
             cnt->id =
                 MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather;
@@ -300,7 +299,8 @@ int MPIDI_POSIX_post_init(void)
         memset(local_rank_topo, 0, MPIDI_POSIX_global.num_local * topo_info_size);
         mpi_errno = MPIR_Allgather_fallback(&MPIDI_POSIX_global.topo, topo_info_size, MPI_BYTE,
                                             local_rank_topo, topo_info_size, MPI_BYTE,
-                                            MPIR_Process.comm_world->node_comm, MPIR_ERR_NONE);
+                                            MPIR_Process.comm_world->node_comm, MPIR_SUBGROUP_NONE,
+                                            MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         for (int i = 0; i < MPIDI_POSIX_global.num_local; i++) {
             if (local_rank_topo[i].l3_cache_id == -1 || local_rank_topo[i].numa_id == -1) {
@@ -397,13 +397,15 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     }
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Initialize collective selection for gpu*/
+    /* Initialize collective selection for gpu */
     if (!strcmp(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json,
-                                              create_container, &MPIDI_global.shm.posix.csel_root_gpu);
+                                              create_container,
+                                              &MPIDI_global.shm.posix.csel_root_gpu);
     } else {
-        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU,
-                                               create_container, &MPIDI_global.shm.posix.csel_root_gpu);
+        mpi_errno =
+            MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU,
+                                       create_container, &MPIDI_global.shm.posix.csel_root_gpu);
     }
     MPIR_ERR_CHECK(mpi_errno);
 

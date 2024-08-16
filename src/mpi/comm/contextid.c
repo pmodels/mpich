@@ -462,7 +462,8 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                                              MPIR_ERR_NONE);
         } else {
             mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
-                                            MPI_INT, MPI_BAND, comm_ptr, MPIR_ERR_NONE);
+                                            MPI_INT, MPI_BAND, comm_ptr, MPIR_SUBGROUP_NONE,
+                                            MPIR_ERR_NONE);
         }
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -562,7 +563,8 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                                                  comm_ptr, group_ptr, coll_tag, MPIR_ERR_NONE);
             } else {
                 mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, &minfree, 1, MPI_INT,
-                                                MPI_MIN, comm_ptr, MPIR_ERR_NONE);
+                                                MPI_MIN, comm_ptr, MPIR_SUBGROUP_NONE,
+                                                MPIR_ERR_NONE);
             }
 
             if (minfree > 0) {
@@ -655,7 +657,7 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
 
         mpi_errno = MPIR_Ibcast_intra_sched_auto(st->ctx1, 1,
                                                  MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr,
-                                                 st->s);
+                                                 MPIR_SUBGROUP_NONE, st->s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(st->s);
     }
@@ -733,7 +735,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
              */
             /* FIXME: study and resolve */
             /*
-             * mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN, st->comm_ptr, MPIR_ERR_NONE);
+             * mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN, st->comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
              * MPIR_ERR_CHECK(mpi_errno);
              */
             if (minfree > 0) {
@@ -837,7 +839,7 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
 
     mpi_errno = MPIR_Iallreduce_intra_sched_auto(MPI_IN_PLACE, st->local_mask,
                                                  MPIR_MAX_CONTEXT_MASK + 1, MPI_UINT32_T, MPI_BAND,
-                                                 st->comm_ptr, st->s);
+                                                 st->comm_ptr, MPIR_SUBGROUP_NONE, st->s);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(st->s);
 
@@ -1063,7 +1065,7 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
     /* Make sure that all of the local processes now have this
      * id */
     mpi_errno = MPIR_Bcast_impl(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
-                                0, comm_ptr->local_comm, MPIR_ERR_NONE);
+                                0, comm_ptr->local_comm, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     /* The recvcontext_id must be the one that was allocated out of the local
      * group, not the remote group.  Otherwise we could end up posting two

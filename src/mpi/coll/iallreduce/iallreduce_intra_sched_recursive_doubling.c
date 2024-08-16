@@ -7,7 +7,8 @@
 
 int MPIR_Iallreduce_intra_sched_recursive_doubling(const void *sendbuf, void *recvbuf,
                                                    MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
-                                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                   MPIR_Comm * comm_ptr, int coll_group,
+                                                   MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int pof2, rem, comm_size, is_commutative, rank;

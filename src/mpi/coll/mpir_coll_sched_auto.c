@@ -12,28 +12,28 @@
  * defining them here.
  */
 
-int MPIR_Ibarrier_intra_sched_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_intra_sched_auto(MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ibarrier_intra_sched_recursive_doubling(comm_ptr, s);
+    mpi_errno = MPIR_Ibarrier_intra_sched_recursive_doubling(comm_ptr, coll_group, s);
 
     return mpi_errno;
 }
 
 /* It will choose between several different algorithms based on the given
  * parameters. */
-int MPIR_Ibarrier_inter_sched_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_inter_sched_auto(MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno;
 
-    mpi_errno = MPIR_Ibarrier_inter_sched_bcast(comm_ptr, s);
+    mpi_errno = MPIR_Ibarrier_inter_sched_bcast(comm_ptr, coll_group, s);
 
     return mpi_errno;
 }
 
 int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                 MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size;
@@ -42,7 +42,8 @@ int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype data
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-        mpi_errno = MPIR_Ibcast_intra_sched_smp(buffer, count, datatype, root, comm_ptr, s);
+        mpi_errno =
+            MPIR_Ibcast_intra_sched_smp(buffer, count, datatype, root, comm_ptr, coll_group, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -55,7 +56,9 @@ int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype data
 
     /* simplistic implementation for now */
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-        mpi_errno = MPIR_Ibcast_intra_sched_binomial(buffer, count, datatype, root, comm_ptr, s);
+        mpi_errno =
+            MPIR_Ibcast_intra_sched_binomial(buffer, count, datatype, root, comm_ptr, coll_group,
+                                             s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */
 
@@ -63,12 +66,13 @@ int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype data
             mpi_errno =
                 MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(buffer, count,
                                                                              datatype, root,
-                                                                             comm_ptr, s);
+                                                                             comm_ptr, coll_group,
+                                                                             s);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             mpi_errno =
                 MPIR_Ibcast_intra_sched_scatter_ring_allgather(buffer, count, datatype, root,
-                                                               comm_ptr, s);
+                                                               comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -83,24 +87,25 @@ int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype data
  * know anything about hierarchy.  It will choose between several
  * different algorithms based on the given parameters. */
 int MPIR_Ibcast_inter_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                 MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ibcast_inter_sched_flat(buffer, count, datatype, root, comm_ptr, s);
+    mpi_errno =
+        MPIR_Ibcast_inter_sched_flat(buffer, count, datatype, root, comm_ptr, coll_group, s);
 
     return mpi_errno;
 }
 
 int MPIR_Igather_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                  int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                  int root, MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
         MPIR_Igather_intra_sched_binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                          recvtype, root, comm_ptr, s);
+                                          recvtype, root, comm_ptr, coll_group, s);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -111,7 +116,7 @@ int MPIR_Igather_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_D
 
 int MPIR_Igather_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                  int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                  int root, MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint local_size, remote_size;
@@ -137,11 +142,11 @@ int MPIR_Igather_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_D
     if (nbytes < MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE) {
         mpi_errno =
             MPIR_Igather_inter_sched_short(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                           recvtype, root, comm_ptr, s);
+                                           recvtype, root, comm_ptr, coll_group, s);
     } else {
         mpi_errno =
             MPIR_Igather_inter_sched_long(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                          recvtype, root, comm_ptr, s);
+                                          recvtype, root, comm_ptr, coll_group, s);
     }
 
   fn_exit:
@@ -151,13 +156,13 @@ int MPIR_Igather_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_D
 int MPIR_Igatherv_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, const MPI_Aint recvcounts[],
                                    const MPI_Aint displs[], MPI_Datatype recvtype, int root,
-                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
         MPIR_Igatherv_allcomm_sched_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                           displs, recvtype, root, comm_ptr, s);
+                                           displs, recvtype, root, comm_ptr, coll_group, s);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -170,13 +175,13 @@ int MPIR_Igatherv_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_
 int MPIR_Igatherv_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, const MPI_Aint recvcounts[],
                                    const MPI_Aint displs[], MPI_Datatype recvtype, int root,
-                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
         MPIR_Igatherv_allcomm_sched_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                           displs, recvtype, root, comm_ptr, s);
+                                           displs, recvtype, root, comm_ptr, coll_group, s);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -188,13 +193,13 @@ int MPIR_Igatherv_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_
 
 int MPIR_Iscatter_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   int root, MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
         MPIR_Iscatter_intra_sched_binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                           recvtype, root, comm_ptr, s);
+                                           recvtype, root, comm_ptr, coll_group, s);
     MPIR_ERR_CHECK(mpi_errno);
 
 
@@ -206,7 +211,7 @@ int MPIR_Iscatter_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_
 
 int MPIR_Iscatter_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   int root, MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int local_size, remote_size;
     MPI_Aint sendtype_size, recvtype_size, nbytes;
@@ -227,11 +232,11 @@ int MPIR_Iscatter_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_
         mpi_errno =
             MPIR_Iscatter_inter_sched_remote_send_local_scatter(sendbuf, sendcount, sendtype,
                                                                 recvbuf, recvcount, recvtype, root,
-                                                                comm_ptr, s);
+                                                                comm_ptr, coll_group, s);
     } else {
         mpi_errno = MPIR_Iscatter_inter_sched_linear(sendbuf, sendcount, sendtype,
                                                      recvbuf, recvcount, recvtype, root, comm_ptr,
-                                                     s);
+                                                     coll_group, s);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -245,13 +250,13 @@ int MPIR_Iscatter_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_
 int MPIR_Iscatterv_intra_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
                                     const MPI_Aint displs[], MPI_Datatype sendtype, void *recvbuf,
                                     MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                    MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
         MPIR_Iscatterv_allcomm_sched_linear(sendbuf, sendcounts, displs, sendtype, recvbuf,
-                                            recvcount, recvtype, root, comm_ptr, s);
+                                            recvcount, recvtype, root, comm_ptr, coll_group, s);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -264,13 +269,13 @@ int MPIR_Iscatterv_intra_sched_auto(const void *sendbuf, const MPI_Aint sendcoun
 int MPIR_Iscatterv_inter_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
                                     const MPI_Aint displs[], MPI_Datatype sendtype, void *recvbuf,
                                     MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                    MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
         MPIR_Iscatterv_allcomm_sched_linear(sendbuf, sendcounts, displs, sendtype, recvbuf,
-                                            recvcount, recvtype, root, comm_ptr, s);
+                                            recvcount, recvtype, root, comm_ptr, coll_group, s);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -282,7 +287,7 @@ int MPIR_Iscatterv_inter_sched_auto(const void *sendbuf, const MPI_Aint sendcoun
 
 int MPIR_Iallgather_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size;
@@ -296,15 +301,16 @@ int MPIR_Iallgather_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MP
     if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
         mpi_errno =
             MPIR_Iallgather_intra_sched_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
-                                                           recvcount, recvtype, comm_ptr, s);
+                                                           recvcount, recvtype, comm_ptr,
+                                                           coll_group, s);
     } else if (tot_bytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
         mpi_errno =
             MPIR_Iallgather_intra_sched_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                               recvtype, comm_ptr, s);
+                                               recvtype, comm_ptr, coll_group, s);
     } else {
         mpi_errno =
             MPIR_Iallgather_intra_sched_ring(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                             recvtype, comm_ptr, s);
+                                             recvtype, comm_ptr, coll_group, s);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -316,13 +322,15 @@ int MPIR_Iallgather_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MP
 
 int MPIR_Iallgather_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount,
                                      MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                                     MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Iallgather_inter_sched_local_gather_remote_bcast(sendbuf, sendcount,
                                                                       sendtype, recvbuf, recvcount,
-                                                                      recvtype, comm_ptr, s);
+                                                                      recvtype, comm_ptr,
+                                                                      coll_group, s);
 
     return mpi_errno;
 }
@@ -330,7 +338,8 @@ int MPIR_Iallgather_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount,
 int MPIR_Iallgatherv_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf,
                                       const MPI_Aint recvcounts[], const MPI_Aint displs[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                                      MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, comm_size;
@@ -353,21 +362,21 @@ int MPIR_Iallgatherv_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount,
         mpi_errno =
             MPIR_Iallgatherv_intra_sched_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
                                                             recvcounts, displs, recvtype, comm_ptr,
-                                                            s);
+                                                            coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (total_count * recvtype_size < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
         /* Short message and non-power-of-two no. of processes. Use
          * Bruck algorithm (see description above). */
         mpi_errno =
             MPIR_Iallgatherv_intra_sched_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                                displs, recvtype, comm_ptr, s);
+                                                displs, recvtype, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* long message or medium-size message and non-power-of-two
          * no. of processes. Use ring algorithm. */
         mpi_errno =
             MPIR_Iallgatherv_intra_sched_ring(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                              displs, recvtype, comm_ptr, s);
+                                              displs, recvtype, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -380,21 +389,22 @@ int MPIR_Iallgatherv_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount,
 int MPIR_Iallgatherv_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf,
                                       const MPI_Aint recvcounts[], const MPI_Aint displs[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                                      MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(sendbuf, sendcount,
                                                                        sendtype, recvbuf,
                                                                        recvcounts, displs, recvtype,
-                                                                       comm_ptr, s);
+                                                                       comm_ptr, coll_group, s);
 
     return mpi_errno;
 }
 
 int MPIR_Ialltoall_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                    MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size;
@@ -408,19 +418,20 @@ int MPIR_Ialltoall_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI
     if (sendbuf == MPI_IN_PLACE) {
         mpi_errno =
             MPIR_Ialltoall_intra_sched_inplace(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                               recvtype, comm_ptr, s);
+                                               recvtype, comm_ptr, coll_group, s);
     } else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
         mpi_errno =
             MPIR_Ialltoall_intra_sched_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                              recvtype, comm_ptr, s);
+                                              recvtype, comm_ptr, coll_group, s);
     } else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
         mpi_errno =
             MPIR_Ialltoall_intra_sched_permuted_sendrecv(sendbuf, sendcount, sendtype, recvbuf,
-                                                         recvcount, recvtype, comm_ptr, s);
+                                                         recvcount, recvtype, comm_ptr, coll_group,
+                                                         s);
     } else {
         mpi_errno =
             MPIR_Ialltoall_intra_sched_pairwise(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                                recvtype, comm_ptr, s);
+                                                recvtype, comm_ptr, coll_group, s);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -433,13 +444,14 @@ int MPIR_Ialltoall_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI
 
 int MPIR_Ialltoall_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype
                                     sendtype, void *recvbuf, MPI_Aint recvcount,
-                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                                    MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Ialltoall_inter_sched_pairwise_exchange(sendbuf, sendcount,
                                                              sendtype, recvbuf, recvcount, recvtype,
-                                                             comm_ptr, s);
+                                                             comm_ptr, coll_group, s);
 
     return mpi_errno;
 }
@@ -447,7 +459,8 @@ int MPIR_Ialltoall_inter_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI
 int MPIR_Ialltoallv_intra_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
                                      const MPI_Aint sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                      const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
-                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                                     MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -456,11 +469,11 @@ int MPIR_Ialltoallv_intra_sched_auto(const void *sendbuf, const MPI_Aint sendcou
     if (sendbuf == MPI_IN_PLACE) {
         mpi_errno = MPIR_Ialltoallv_intra_sched_inplace(sendbuf, sendcounts, sdispls,
                                                         sendtype, recvbuf, recvcounts,
-                                                        rdispls, recvtype, comm_ptr, s);
+                                                        rdispls, recvtype, comm_ptr, coll_group, s);
     } else {
         mpi_errno = MPIR_Ialltoallv_intra_sched_blocked(sendbuf, sendcounts, sdispls,
                                                         sendtype, recvbuf, recvcounts,
-                                                        rdispls, recvtype, comm_ptr, s);
+                                                        rdispls, recvtype, comm_ptr, coll_group, s);
     }
 
     return mpi_errno;
@@ -469,13 +482,15 @@ int MPIR_Ialltoallv_intra_sched_auto(const void *sendbuf, const MPI_Aint sendcou
 int MPIR_Ialltoallv_inter_sched_auto(const void *sendbuf, const MPI_Aint sendcounts[],
                                      const MPI_Aint sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                      const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
-                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                                     MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Ialltoallv_inter_sched_pairwise_exchange(sendbuf, sendcounts, sdispls,
                                                               sendtype, recvbuf, recvcounts,
-                                                              rdispls, recvtype, comm_ptr, s);
+                                                              rdispls, recvtype, comm_ptr,
+                                                              coll_group, s);
 
     return mpi_errno;
 }
@@ -484,18 +499,20 @@ int MPIR_Ialltoallw_intra_sched_auto(const void *sendbuf, const MPI_Aint sendcou
                                      const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                      void *recvbuf, const MPI_Aint recvcounts[],
                                      const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (sendbuf == MPI_IN_PLACE) {
         mpi_errno = MPIR_Ialltoallw_intra_sched_inplace(sendbuf, sendcounts, sdispls,
                                                         sendtypes, recvbuf, recvcounts,
-                                                        rdispls, recvtypes, comm_ptr, s);
+                                                        rdispls, recvtypes, comm_ptr, coll_group,
+                                                        s);
     } else {
         mpi_errno = MPIR_Ialltoallw_intra_sched_blocked(sendbuf, sendcounts, sdispls,
                                                         sendtypes, recvbuf, recvcounts,
-                                                        rdispls, recvtypes, comm_ptr, s);
+                                                        rdispls, recvtypes, comm_ptr, coll_group,
+                                                        s);
     }
 
     return mpi_errno;
@@ -505,20 +522,21 @@ int MPIR_Ialltoallw_inter_sched_auto(const void *sendbuf, const MPI_Aint sendcou
                                      const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                      void *recvbuf, const MPI_Aint recvcounts[],
                                      const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Ialltoallw_inter_sched_pairwise_exchange(sendbuf, sendcounts, sdispls,
                                                               sendtypes, recvbuf, recvcounts,
-                                                              rdispls, recvtypes, comm_ptr, s);
+                                                              rdispls, recvtypes, comm_ptr,
+                                                              coll_group, s);
 
     return mpi_errno;
 }
 
 int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                   MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
-                                  MPIR_Sched_t s)
+                                  int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int pof2;
@@ -528,7 +546,7 @@ int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint c
 
     if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT && MPIR_Op_is_commutative(op)) {
         mpi_errno = MPIR_Ireduce_intra_sched_smp(sendbuf, recvbuf, count,
-                                                 datatype, op, root, comm_ptr, s);
+                                                 datatype, op, root, comm_ptr, coll_group, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -545,13 +563,13 @@ int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint c
         /* do a reduce-scatter followed by gather to root. */
         mpi_errno =
             MPIR_Ireduce_intra_sched_reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op,
-                                                           root, comm_ptr, s);
+                                                           root, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* use a binomial tree algorithm */
         mpi_errno =
             MPIR_Ireduce_intra_sched_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
-                                              s);
+                                              coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -563,19 +581,20 @@ int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint c
 
 int MPIR_Ireduce_inter_sched_auto(const void *sendbuf, void *recvbuf,
                                   MPI_Aint count, MPI_Datatype datatype, MPI_Op op, int root,
-                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                  MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Ireduce_inter_sched_local_reduce_remote_send(sendbuf, recvbuf, count,
-                                                                  datatype, op, root, comm_ptr, s);
+                                                                  datatype, op, root, comm_ptr,
+                                                                  coll_group, s);
 
     return mpi_errno;
 }
 
 int MPIR_Iallreduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                     MPIR_Sched_t s)
+                                     int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int pof2;
@@ -584,7 +603,8 @@ int MPIR_Iallreduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Ain
 
     if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT && MPIR_Op_is_commutative(op)) {
         mpi_errno =
-            MPIR_Iallreduce_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            MPIR_Iallreduce_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                            coll_group, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -611,13 +631,13 @@ int MPIR_Iallreduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Ain
         /* use recursive doubling */
         mpi_errno =
             MPIR_Iallreduce_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                           comm_ptr, s);
+                                                           comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* do a reduce-scatter followed by allgather */
         mpi_errno =
             MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype,
-                                                                 op, comm_ptr, s);
+                                                                 op, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -629,19 +649,21 @@ int MPIR_Iallreduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Ain
 
 int MPIR_Iallreduce_inter_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                     MPIR_Sched_t s)
+                                     int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast(sendbuf, recvbuf, count,
-                                                                      datatype, op, comm_ptr, s);
+                                                                      datatype, op, comm_ptr,
+                                                                      coll_group, s);
 
     return mpi_errno;
 }
 
 int MPIR_Ireduce_scatter_intra_sched_auto(const void *sendbuf, void *recvbuf,
                                           const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                          MPI_Op op, MPIR_Comm * comm_ptr, int coll_group,
+                                          MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -666,12 +688,13 @@ int MPIR_Ireduce_scatter_intra_sched_auto(const void *sendbuf, void *recvbuf,
     if (is_commutative && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         mpi_errno =
             MPIR_Ireduce_scatter_intra_sched_recursive_halving(sendbuf, recvbuf, recvcounts,
-                                                               datatype, op, comm_ptr, s);
+                                                               datatype, op, comm_ptr, coll_group,
+                                                               s);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         mpi_errno =
             MPIR_Ireduce_scatter_intra_sched_pairwise(sendbuf, recvbuf, recvcounts, datatype, op,
-                                                      comm_ptr, s);
+                                                      comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* (!is_commutative) */
 
@@ -687,13 +710,15 @@ int MPIR_Ireduce_scatter_intra_sched_auto(const void *sendbuf, void *recvbuf,
             /* noncommutative, pof2 size, and block regular */
             mpi_errno =
                 MPIR_Ireduce_scatter_intra_sched_noncommutative(sendbuf, recvbuf, recvcounts,
-                                                                datatype, op, comm_ptr, s);
+                                                                datatype, op, comm_ptr, coll_group,
+                                                                s);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             /* noncommutative and (non-pof2 or block irregular), use recursive doubling. */
             mpi_errno =
                 MPIR_Ireduce_scatter_intra_sched_recursive_doubling(sendbuf, recvbuf, recvcounts,
-                                                                    datatype, op, comm_ptr, s);
+                                                                    datatype, op, comm_ptr,
+                                                                    coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -706,20 +731,23 @@ int MPIR_Ireduce_scatter_intra_sched_auto(const void *sendbuf, void *recvbuf,
 
 int MPIR_Ireduce_scatter_inter_sched_auto(const void *sendbuf, void *recvbuf,
                                           const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                          MPI_Op op, MPIR_Comm * comm_ptr, int coll_group,
+                                          MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
         MPIR_Ireduce_scatter_inter_sched_remote_reduce_local_scatterv(sendbuf, recvbuf, recvcounts,
-                                                                      datatype, op, comm_ptr, s);
+                                                                      datatype, op, comm_ptr,
+                                                                      coll_group, s);
 
     return mpi_errno;
 }
 
 int MPIR_Ireduce_scatter_block_intra_sched_auto(const void *sendbuf, void *recvbuf,
                                                 MPI_Aint recvcount, MPI_Datatype datatype,
-                                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                MPI_Op op, MPIR_Comm * comm_ptr, int coll_group,
+                                                MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
@@ -740,12 +768,13 @@ int MPIR_Ireduce_scatter_block_intra_sched_auto(const void *sendbuf, void *recvb
     if (is_commutative && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         mpi_errno =
             MPIR_Ireduce_scatter_block_intra_sched_recursive_halving(sendbuf, recvbuf, recvcount,
-                                                                     datatype, op, comm_ptr, s);
+                                                                     datatype, op, comm_ptr,
+                                                                     coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         mpi_errno =
             MPIR_Ireduce_scatter_block_intra_sched_pairwise(sendbuf, recvbuf, recvcount, datatype,
-                                                            op, comm_ptr, s);
+                                                            op, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* (!is_commutative) */
 
@@ -753,14 +782,15 @@ int MPIR_Ireduce_scatter_block_intra_sched_auto(const void *sendbuf, void *recvb
             /* noncommutative, pof2 size */
             mpi_errno =
                 MPIR_Ireduce_scatter_block_intra_sched_noncommutative(sendbuf, recvbuf, recvcount,
-                                                                      datatype, op, comm_ptr, s);
+                                                                      datatype, op, comm_ptr,
+                                                                      coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             /* noncommutative and non-pof2, use recursive doubling. */
             mpi_errno =
                 MPIR_Ireduce_scatter_block_intra_sched_recursive_doubling(sendbuf, recvbuf,
                                                                           recvcount, datatype, op,
-                                                                          comm_ptr, s);
+                                                                          comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -774,30 +804,34 @@ int MPIR_Ireduce_scatter_block_intra_sched_auto(const void *sendbuf, void *recvb
 
 int MPIR_Ireduce_scatter_block_inter_sched_auto(const void *sendbuf, void *recvbuf,
                                                 MPI_Aint recvcount, MPI_Datatype datatype,
-                                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                MPI_Op op, MPIR_Comm * comm_ptr, int coll_group,
+                                                MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
         MPIR_Ireduce_scatter_block_inter_sched_remote_reduce_local_scatterv(sendbuf, recvbuf,
                                                                             recvcount, datatype, op,
-                                                                            comm_ptr, s);
+                                                                            comm_ptr, coll_group,
+                                                                            s);
 
     return mpi_errno;
 }
 
 int MPIR_Iscan_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                MPIR_Sched_t s)
+                                int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-        mpi_errno = MPIR_Iscan_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno =
+            MPIR_Iscan_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, coll_group,
+                                       s);
     } else {
         mpi_errno =
             MPIR_Iscan_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                      comm_ptr, s);
+                                                      comm_ptr, coll_group, s);
     }
 
     return mpi_errno;
@@ -805,13 +839,13 @@ int MPIR_Iscan_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint cou
 
 int MPIR_Iexscan_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                  MPIR_Sched_t s)
+                                  int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
         MPIR_Iexscan_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                                                    s);
+                                                    coll_group, s);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

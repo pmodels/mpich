@@ -18,7 +18,7 @@
  * */
 int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
                                  MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                 MPI_Datatype recvtype, MPIR_Comm * comm,
+                                 MPI_Datatype recvtype, MPIR_Comm * comm, int coll_group,
                                  int recexch_type, int k, int single_phase_recv,
                                  MPIR_Errflag_t errflag)
 {

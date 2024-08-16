@@ -29,7 +29,7 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_rma(void *buffer, int count,
                                                                  MPI_Datatype datatype, int root,
                                                                  MPIR_Comm * comm_ptr,
-                                                                 int tree_type,
+                                                                 int coll_group, int tree_type,
                                                                  int branching_factor)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -53,13 +53,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_rma(void *buffer, i
         /* Invoke the helper function to perform one-sided knomial tree-based Ibcast */
         mpi_errno =
             MPIDI_OFI_Ibcast_knomial_triggered_rma(buffer, count, datatype, root, comm_ptr,
-                                                   tree_type, branching_factor, &num_children,
-                                                   &snd_cntr, &rcv_cntr, &r_mr, &works, &my_tree,
-                                                   myrank, nranks, &num_works);
+                                                   coll_group, tree_type, branching_factor,
+                                                   &num_children, &snd_cntr, &rcv_cntr, &r_mr,
+                                                   &works, &my_tree, myrank, nranks, &num_works);
     } else {
         /* Invoke the helper function to perform one-sided kary tree-based Ibcast */
         mpi_errno =
-            MPIDI_OFI_Ibcast_kary_triggered_rma(buffer, count, datatype, root, comm_ptr,
+            MPIDI_OFI_Ibcast_kary_triggered_rma(buffer, count, datatype, root, comm_ptr, coll_group,
                                                 branching_factor, &leaf, &num_children, &snd_cntr,
                                                 &rcv_cntr, &r_mr, &works, myrank, nranks,
                                                 &num_works);

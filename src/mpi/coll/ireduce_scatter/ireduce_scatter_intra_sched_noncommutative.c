@@ -23,7 +23,8 @@
 int MPIR_Ireduce_scatter_intra_sched_noncommutative(const void *sendbuf, void *recvbuf,
                                                     const MPI_Aint recvcounts[],
                                                     MPI_Datatype datatype, MPI_Op op,
-                                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                    MPIR_Comm * comm_ptr, int coll_group,
+                                                    MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size = comm_ptr->local_size;

@@ -15,7 +15,7 @@
  */
 int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                   int root, MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -61,7 +61,7 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, MPI_Aint sendcount, MPI_
         /* now do the a local gather on this intracommunicator */
         mpi_errno = MPIR_Igather_intra_sched_auto(sendbuf, sendcount, sendtype,
                                                   tmp_buf, sendcount * sendtype_sz, MPI_BYTE, 0,
-                                                  newcomm_ptr, s);
+                                                  newcomm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (rank == 0) {

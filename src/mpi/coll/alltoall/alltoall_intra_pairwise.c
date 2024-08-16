@@ -28,7 +28,7 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
                                  void *recvbuf,
                                  MPI_Aint recvcount,
                                  MPI_Datatype recvtype,
-                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                 MPIR_Comm * comm_ptr, int coll_group, MPIR_Errflag_t errflag)
 {
     int comm_size, i;
     MPI_Aint sendtype_extent, recvtype_extent;

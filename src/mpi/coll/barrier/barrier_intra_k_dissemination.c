@@ -16,7 +16,7 @@
  * process i sends to process (i + 2^k) % p and receives from process
  * (i - 2^k + p) % p.
  */
-int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, int coll_group, MPIR_Errflag_t errflag)
 {
     int size, rank, src, dst, mask, mpi_errno = MPI_SUCCESS;
 
@@ -42,7 +42,8 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t errfla
 /* Algorithm: high radix dissemination
  * Similar to dissemination algorithm, but generalized with high radix k
  */
-int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t errflag)
+int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int coll_group, int k,
+                                       MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, nranks, rank;
@@ -62,7 +63,7 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_Errflag_t e
         k = nranks;
 
     if (k == 2) {
-        return MPIR_Barrier_intra_dissemination(comm, errflag);
+        return MPIR_Barrier_intra_dissemination(comm, coll_group, errflag);
     }
 
     /* If k value is greater than the maximum radix defined by MAX_RADIX macro,
