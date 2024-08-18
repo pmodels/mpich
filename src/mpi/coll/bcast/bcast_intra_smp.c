@@ -27,6 +27,21 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr, coll_group));
 #endif
+    int comm_size = comm_ptr->local_size;
+
+    int node_group = 0, node_roots_group = 0;
+    int local_rank, local_size, local_root, inter_root = -1;
+
+    node_group = MPIR_SUBGROUP_NODE;
+#define NODEGROUP(field) comm_ptr->subgroups[node_group].field
+
+    local_rank = NODEGROUP(rank);
+    local_size = NODEGROUP(size);
+    local_root = MPIR_Get_intranode_rank(comm_ptr, root);
+    if (local_rank == 0) {
+        node_roots_group = MPIR_SUBGROUP_NODE_CROSS;
+        inter_root = MPIR_Get_internode_rank(comm_ptr, root);
+    }
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -34,18 +49,17 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
     if (nbytes == 0)
         goto fn_exit;   /* nothing to do */
 
-    if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
-        (comm_ptr->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
+    if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
         /* send to intranode-rank 0 on the root's node */
-        if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {       /* is not the node root (0) and is on our node (!-1) */
-            if (root == comm_ptr->rank) {
+        if (local_root > 0) {   /* is not the node root (0) and is on our node (!-1) */
+            if (local_rank == local_root) {
                 mpi_errno = MPIC_Send(buffer, count, datatype, 0,
-                                      MPIR_BCAST_TAG, comm_ptr->node_comm, coll_group, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr, node_group, errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             } else if (0 == comm_ptr->node_comm->rank) {
-                mpi_errno =
-                    MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm_ptr, root),
-                              MPIR_BCAST_TAG, comm_ptr->node_comm, coll_group, status_p);
+                mpi_errno = MPIC_Recv(buffer, count, datatype,
+                                      MPIR_Get_intranode_rank(comm_ptr, root),
+                                      MPIR_BCAST_TAG, comm_ptr, node_group, status_p);
                 MPIR_ERR_CHECK(mpi_errno);
 #ifdef HAVE_ERROR_CHECKING
                 /* check that we received as much as we expected */
@@ -59,54 +73,49 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
 
         }
 
-        /* perform the internode broadcast */
-        if (comm_ptr->node_roots_comm != NULL) {
-            mpi_errno = MPIR_Bcast(buffer, count, datatype,
-                                   MPIR_Get_internode_rank(comm_ptr, root),
-                                   comm_ptr->node_roots_comm, coll_group, errflag);
+        /* local roots perform the internode broadcast */
+        if (local_rank == 0) {
+            mpi_errno = MPIR_Bcast(buffer, count, datatype, inter_root,
+                                   comm_ptr, node_roots_group, errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* perform the intranode broadcast on all except for the root's node */
-        if (comm_ptr->node_comm != NULL) {
-            mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm,
-                                   coll_group, errflag);
+        if (local_size > 1) {
+            mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr, node_group, errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
-    } else {    /* (nbytes > MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_ptr->size >= MPIR_CVAR_BCAST_MIN_PROCS) */
+    } else {    /* (nbytes > MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */
 
         /* supposedly...
          * smp+doubling good for pof2
          * reg+ring better for non-pof2 */
-        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm_ptr->local_size)) {
+        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm_size)) {
             /* medium-sized msg and pof2 np */
 
             /* perform the intranode broadcast on the root's node */
-            if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {   /* is not the node root (0) and is on our node (!-1) */
+            if (local_size > 1 && local_root > 0) {     /* is not the node root (0) and is on our node (!-1) */
                 /* FIXME binomial may not be the best algorithm for on-node
                  * bcast.  We need a more comprehensive system for selecting the
                  * right algorithms here. */
-                mpi_errno = MPIR_Bcast(buffer, count, datatype,
-                                       MPIR_Get_intranode_rank(comm_ptr, root),
-                                       comm_ptr->node_comm, coll_group, errflag);
+                mpi_errno = MPIR_Bcast(buffer, count, datatype, local_root,
+                                       comm_ptr, node_group, errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
             /* perform the internode broadcast */
-            if (comm_ptr->node_roots_comm != NULL) {
-                mpi_errno = MPIR_Bcast(buffer, count, datatype,
-                                       MPIR_Get_internode_rank(comm_ptr, root),
-                                       comm_ptr->node_roots_comm, coll_group, errflag);
+            if (local_rank == 0) {
+                mpi_errno = MPIR_Bcast(buffer, count, datatype, inter_root,
+                                       comm_ptr, node_roots_group, errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
             /* perform the intranode broadcast on all except for the root's node */
-            if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) <= 0) {  /* 0 if root was local root too, -1 if different node than root */
+            if (local_size > 1 && local_root <= 0) {    /* 0 if root was local root too, -1 if different node than root */
                 /* FIXME binomial may not be the best algorithm for on-node
                  * bcast.  We need a more comprehensive system for selecting the
                  * right algorithms here. */
-                mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm,
-                                       coll_group, errflag);
+                mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr, node_group, errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         } else {        /* large msg or non-pof2 */
