@@ -22,6 +22,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf,
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__IALLREDUCE,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.iallreduce.sendbuf = sendbuf,
         .u.iallreduce.recvbuf = recvbuf,

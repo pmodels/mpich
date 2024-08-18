@@ -82,6 +82,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
             MPIR_Csel_coll_sig_s coll_sig = {
                 .coll_type = MPIR_CSEL_COLL_TYPE__BCAST,
                 .comm_ptr = comm_ptr,
+                .coll_group = coll_group,
                 .u.bcast.buffer = buffer,
                 .u.bcast.count = count,
                 .u.bcast.datatype = datatype,

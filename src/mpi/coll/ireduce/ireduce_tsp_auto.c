@@ -48,6 +48,7 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__IREDUCE,
         .comm_ptr = comm_ptr,
+        .coll_group = coll_group,
 
         .u.ireduce.sendbuf = sendbuf,
         .u.ireduce.recvbuf = recvbuf,
