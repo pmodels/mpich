@@ -155,6 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, int coll_
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__BARRIER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
     };
     MPIDI_POSIX_csel_container_s *cnt;
 

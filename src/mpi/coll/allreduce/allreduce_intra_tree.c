@@ -73,6 +73,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         MPIR_Csel_coll_sig_s coll_sig = {
             .coll_type = MPIR_CSEL_COLL_TYPE__ALLREDUCE,
             .comm_ptr = comm_ptr,
+            .coll_group = coll_group,
             .u.allreduce.sendbuf = sendbuf,
             .u.allreduce.recvbuf = recvbuf,
             .u.allreduce.count = count,

@@ -94,6 +94,8 @@ def dump_allcomm_auto_blocking(name):
     dump_open("MPIR_Csel_coll_sig_s coll_sig = {")
     G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__%s," % NAME)
     G.out.append(".comm_ptr = comm_ptr,")
+    if not re.match(r'i?neighbor_', func_name, re.IGNORECASE):
+        G.out.append(".coll_group = coll_group,")
     for p in func['parameters']:
         if not re.match(r'comm$', p['name']):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
@@ -169,6 +171,8 @@ def dump_allcomm_sched_auto(name):
     dump_open("MPIR_Csel_coll_sig_s coll_sig = {")
     G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__%s," % NAME)
     G.out.append(".comm_ptr = comm_ptr,")
+    if not re.match(r'i?neighbor_', func_name, re.IGNORECASE):
+        G.out.append(".coll_group = coll_group,")
     for p in func['parameters']:
         if not re.match(r'comm$', p['name']):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))

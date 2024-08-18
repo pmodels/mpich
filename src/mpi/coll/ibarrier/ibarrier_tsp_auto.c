@@ -13,6 +13,7 @@ int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, int coll_group, MPI
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__IBARRIER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
     };
     MPII_Csel_container_s *cnt;
     void *recvbuf = NULL;

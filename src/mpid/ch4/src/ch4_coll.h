@@ -109,6 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_allcomm_composition_json(MPIR_Comm * 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__BARRIER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
     };
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
@@ -192,6 +193,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__BCAST,
         .comm_ptr = comm,
+        .coll_group = coll_group,
         .u.bcast.buffer = buffer,
         .u.bcast.count = count,
         .u.bcast.datatype = datatype,
@@ -370,6 +372,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLREDUCE,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.allreduce.sendbuf = sendbuf,
         .u.allreduce.recvbuf = recvbuf,
@@ -593,6 +596,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLGATHER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.allgather.sendbuf = sendbuf,
         .u.allgather.sendcount = sendcount,
@@ -736,6 +740,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLGATHERV,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.allgatherv.sendbuf = sendbuf,
         .u.allgatherv.sendcount = sendcount,
@@ -793,6 +798,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCATTER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.scatter.sendbuf = sendbuf,
         .u.scatter.sendcount = sendcount,
@@ -852,6 +858,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCATTERV,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.scatterv.sendbuf = sendbuf,
         .u.scatterv.sendcounts = sendcounts,
@@ -911,6 +918,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__GATHER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.gather.sendbuf = sendbuf,
         .u.gather.sendcount = sendcount,
@@ -970,6 +978,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__GATHERV,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.gatherv.sendbuf = sendbuf,
         .u.gatherv.sendcount = sendcount,
@@ -1068,6 +1077,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALL,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.alltoall.sendbuf = sendbuf,
         .u.alltoall.sendcount = sendcount,
@@ -1212,6 +1222,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALLV,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.alltoallv.sendbuf = sendbuf,
         .u.alltoallv.sendcounts = sendcounts,
@@ -1274,6 +1285,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALLW,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.alltoallw.sendbuf = sendbuf,
         .u.alltoallw.sendcounts = sendcounts,
@@ -1332,6 +1344,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_allcomm_composition_json(const void *s
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.reduce.sendbuf = sendbuf,
         .u.reduce.recvbuf = recvbuf,
@@ -1463,6 +1476,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.reduce_scatter.sendbuf = sendbuf,
         .u.reduce_scatter.recvbuf = recvbuf,
@@ -1519,6 +1533,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER_BLOCK,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.reduce_scatter_block.sendbuf = sendbuf,
         .u.reduce_scatter_block.recvbuf = recvbuf,
@@ -1574,6 +1589,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_A
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCAN,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.scan.sendbuf = sendbuf,
         .u.scan.recvbuf = recvbuf,
@@ -1632,6 +1648,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, MPI
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__EXSCAN,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.exscan.sendbuf = sendbuf,
         .u.exscan.recvbuf = recvbuf,

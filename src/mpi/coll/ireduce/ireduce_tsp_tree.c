@@ -76,6 +76,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         MPIR_Csel_coll_sig_s coll_sig = {
             .coll_type = MPIR_CSEL_COLL_TYPE__IREDUCE,
             .comm_ptr = comm,
+            .coll_group = coll_group,
             .u.ireduce.sendbuf = sendbuf,
             .u.ireduce.recvbuf = recvbuf,
             .u.ireduce.count = count,
