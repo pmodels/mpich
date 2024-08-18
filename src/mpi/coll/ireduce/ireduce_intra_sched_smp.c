@@ -16,7 +16,7 @@ int MPIR_Ireduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint co
     MPIR_Comm *nc;
     MPIR_Comm *nrc;
 
-    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
+    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr, coll_group));
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     nc = comm_ptr->node_comm;

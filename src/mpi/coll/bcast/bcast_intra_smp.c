@@ -25,7 +25,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
 #endif
 
 #ifdef HAVE_ERROR_CHECKING
-    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
+    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr, coll_group));
 #endif
 
     MPIR_Datatype_get_size_macro(datatype, type_size);

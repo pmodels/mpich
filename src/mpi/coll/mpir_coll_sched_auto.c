@@ -41,7 +41,7 @@ int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype data
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+    if (MPIR_Comm_is_parent_comm(comm_ptr, coll_group)) {
         mpi_errno =
             MPIR_Ibcast_intra_sched_smp(buffer, count, datatype, root, comm_ptr, coll_group, s);
         if (mpi_errno)
@@ -544,7 +544,7 @@ int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint c
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT && MPIR_Op_is_commutative(op)) {
+    if (MPIR_Comm_is_parent_comm(comm_ptr, coll_group) && MPIR_Op_is_commutative(op)) {
         mpi_errno = MPIR_Ireduce_intra_sched_smp(sendbuf, recvbuf, count,
                                                  datatype, op, root, comm_ptr, coll_group, s);
         if (mpi_errno)
@@ -601,7 +601,7 @@ int MPIR_Iallreduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Ain
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT && MPIR_Op_is_commutative(op)) {
+    if (MPIR_Comm_is_parent_comm(comm_ptr, coll_group) && MPIR_Op_is_commutative(op)) {
         mpi_errno =
             MPIR_Iallreduce_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr,
                                             coll_group, s);
@@ -824,7 +824,7 @@ int MPIR_Iscan_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint cou
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+    if (MPIR_Comm_is_parent_comm(comm_ptr, coll_group)) {
         mpi_errno =
             MPIR_Iscan_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, coll_group,
                                        s);

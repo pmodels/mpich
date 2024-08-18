@@ -155,8 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, int coll_group, MPIR
         case 1:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
-                                           (comm->hierarchy_kind ==
-                                            MPIR_COMM_HIERARCHY_KIND__PARENT), mpi_errno,
+                                           MPIR_Comm_is_parent_comm(comm, coll_group), mpi_errno,
                                            "Barrier composition alpha cannot be applied.\n");
             mpi_errno = MPIDI_Barrier_intra_composition_alpha(comm, coll_group, errflag);
             break;
@@ -271,8 +270,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
         case 1:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
-                                           (comm->hierarchy_kind ==
-                                            MPIR_COMM_HIERARCHY_KIND__PARENT), mpi_errno,
+                                           MPIR_Comm_is_parent_comm(comm, coll_group), mpi_errno,
                                            "Bcast composition alpha cannot be applied.\n");
             mpi_errno =
                 MPIDI_Bcast_intra_composition_alpha(buffer, count, datatype, root, comm, coll_group,
@@ -281,8 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
         case 2:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
-                                           (comm->hierarchy_kind ==
-                                            MPIR_COMM_HIERARCHY_KIND__PARENT), mpi_errno,
+                                           MPIR_Comm_is_parent_comm(comm, coll_group), mpi_errno,
                                            "Bcast composition beta cannot be applied.\n");
             mpi_errno =
                 MPIDI_Bcast_intra_composition_beta(buffer, count, datatype, root, comm, coll_group,
@@ -299,8 +296,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
         case 4:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
-                                           (comm->hierarchy_kind ==
-                                            MPIR_COMM_HIERARCHY_KIND__PARENT), mpi_errno,
+                                           MPIR_Comm_is_parent_comm(comm, coll_group), mpi_errno,
                                            "Bcast composition delta cannot be applied.\n");
             mpi_errno =
                 MPIDI_Bcast_intra_composition_delta(buffer, count, datatype, root, comm, coll_group,
@@ -463,8 +459,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
         case 1:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
-                                           (comm->hierarchy_kind ==
-                                            MPIR_COMM_HIERARCHY_KIND__PARENT) &&
+                                           MPIR_Comm_is_parent_comm(comm, coll_group) &&
                                            is_commutative, mpi_errno,
                                            "Allreduce composition alpha cannot be applied.\n");
             mpi_errno =
@@ -1408,8 +1403,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
     switch (MPIR_CVAR_REDUCE_COMPOSITION) {
         case 1:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, comm->comm_kind == MPIR_COMM_KIND__INTRACOMM
-                                           && comm->hierarchy_kind ==
-                                           MPIR_COMM_HIERARCHY_KIND__PARENT &&
+                                           && MPIR_Comm_is_parent_comm(comm, coll_group) &&
                                            MPIR_Op_is_commutative(op), mpi_errno,
                                            "Reduce composition alpha cannot be applied.\n");
             mpi_errno =
@@ -1418,8 +1412,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
             break;
         case 2:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, comm->comm_kind == MPIR_COMM_KIND__INTRACOMM
-                                           && comm->hierarchy_kind ==
-                                           MPIR_COMM_HIERARCHY_KIND__PARENT &&
+                                           && MPIR_Comm_is_parent_comm(comm, coll_group) &&
                                            MPIR_Op_is_commutative(op), mpi_errno,
                                            "Reduce composition beta cannot be applied.\n");
             mpi_errno =
