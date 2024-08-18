@@ -33,7 +33,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     void *tmp_buf = NULL;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     if (HANDLE_IS_BUILTIN(datatype))
         is_contig = 1;
