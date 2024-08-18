@@ -11,9 +11,11 @@ int MPIR_Iallreduce_intra_sched_naive(const void *sendbuf, void *recvbuf, MPI_Ai
                                       int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank;
+    int rank, comm_size;
 
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    if (comm_size == 1)
+        goto fn_exit;
 
     if ((sendbuf == MPI_IN_PLACE) && (rank != 0)) {
         mpi_errno =

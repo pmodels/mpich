@@ -17,14 +17,16 @@ static int MPIR_Ibcast_sched_intra_tsp_flat_auto(void *buffer, MPI_Aint count,
                                                  MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size;
+    int comm_size, rank;
     MPI_Aint type_size, nbytes;
     int tree_type = MPIR_TREE_TYPE_KNOMIAL_1;
     int radix = 2, scatterv_k = 2, allgatherv_k = 2, block_size = 0;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    comm_size = comm_ptr->local_size;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warning */
+
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
 

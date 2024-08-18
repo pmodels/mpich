@@ -22,7 +22,7 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
     MPIR_Comm *newcomm_ptr = NULL;
 
     MPIR_FUNC_ENTER;
-
+    MPIR_Assert(coll_group == MPIR_SUBGROUP_NONE);
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */

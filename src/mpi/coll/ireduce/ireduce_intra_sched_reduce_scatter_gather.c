@@ -45,8 +45,7 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
     MPI_Aint true_lb, true_extent, extent;
     MPIR_CHKLMEM_DECL(2);
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     /* NOTE: this algorithm is currently only correct for commutative operations */
     is_commutative = MPIR_Op_is_commutative(op);
@@ -65,7 +64,7 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = MPL_pof2(comm_ptr->local_size);
+    pof2 = MPL_pof2(comm_size);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(HANDLE_IS_BUILTIN(op));

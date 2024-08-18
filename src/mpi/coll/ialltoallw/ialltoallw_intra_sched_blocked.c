@@ -34,8 +34,7 @@ int MPIR_Ialltoallw_intra_sched_blocked(const void *sendbuf, const MPI_Aint send
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
 #endif /* HAVE_ERROR_CHECKING */
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
     if (bblock == 0)

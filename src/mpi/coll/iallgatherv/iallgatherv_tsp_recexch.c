@@ -265,8 +265,7 @@ int MPIR_TSP_Iallgatherv_sched_intra_recexch(const void *sendbuf, MPI_Aint sendc
     MPIR_FUNC_ENTER;
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recv_lb, &true_extent);

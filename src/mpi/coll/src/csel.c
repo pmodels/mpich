@@ -924,7 +924,10 @@ static inline MPI_Aint get_count(MPIR_Csel_coll_sig_s coll_info)
 {
     MPI_Aint count = 0;
     int i = 0;
-    int comm_size = coll_info.comm_ptr->local_size;
+
+    int comm_size, rank;
+    MPIR_COLL_RANK_SIZE(coll_info.comm_ptr, coll_info.coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warnings */
 
     switch (coll_info.coll_type) {
         case MPIR_CSEL_COLL_TYPE__BCAST:
@@ -981,7 +984,10 @@ static inline MPI_Aint get_count(MPIR_Csel_coll_sig_s coll_info)
 static inline MPI_Aint get_total_msgsize(MPIR_Csel_coll_sig_s coll_info)
 {
     MPI_Aint total_bytes = 0, i = 0, count = 0, typesize = 0;
-    int comm_size = coll_info.comm_ptr->local_size;
+
+    int comm_size, rank;
+    MPIR_COLL_RANK_SIZE(coll_info.comm_ptr, coll_info.coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warnings */
 
     switch (coll_info.coll_type) {
         case MPIR_CSEL_COLL_TYPE__ALLREDUCE:
@@ -1285,7 +1291,8 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2:
-                if (get_count(coll_info) < MPL_pof2(coll_info.comm_ptr->local_size))
+                if (get_count(coll_info) <
+                    MPL_pof2(MPIR_Coll_size(coll_info.comm_ptr, coll_info.coll_group)))
                     node = node->success;
                 else
                     node = node->failure;
