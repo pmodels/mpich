@@ -25,8 +25,7 @@ int MPIR_Iallgather_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPI_Aint recvtype_extent, recvtype_sz;
     void *tmp_buf = NULL;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     /* allocate a temporary buffer of the same size as recvbuf. */

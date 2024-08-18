@@ -36,7 +36,6 @@ int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype data
                                  MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size;
     MPI_Aint type_size, nbytes;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
@@ -50,7 +49,10 @@ int MPIR_Ibcast_intra_sched_auto(void *buffer, MPI_Aint count, MPI_Datatype data
         goto fn_exit;
     }
 
-    comm_size = comm_ptr->local_size;
+    int comm_size, rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warnings */
+
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
 
@@ -290,10 +292,11 @@ int MPIR_Iallgather_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MP
                                      MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size;
     MPI_Aint recvtype_size, tot_bytes;
 
-    comm_size = comm_ptr->local_size;
+    int comm_size, rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warnings */
 
     MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
     tot_bytes = (MPI_Aint) recvcount *comm_size * recvtype_size;
@@ -342,10 +345,13 @@ int MPIR_Iallgatherv_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount,
                                       MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, comm_size;
+    int i;
     MPI_Aint total_count, recvtype_size;
 
-    comm_size = comm_ptr->local_size;
+    int comm_size, rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warnings */
+
     MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
 
     total_count = 0;
@@ -407,10 +413,11 @@ int MPIR_Ialltoall_intra_sched_auto(const void *sendbuf, MPI_Aint sendcount, MPI
                                     MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size;
     MPI_Aint nbytes, sendtype_size;
 
-    comm_size = comm_ptr->local_size;
+    int comm_size, rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warnings */
 
     MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
     nbytes = sendtype_size * sendcount;
@@ -556,7 +563,7 @@ int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint c
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to number of ranks in the communicator */
-    pof2 = MPL_pof2(comm_ptr->local_size);
+    pof2 = MPL_pof2(MPIR_Coll_size(comm_ptr, coll_group));
 
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_IS_BUILTIN(op)) && (count >= pof2)) {
@@ -615,7 +622,7 @@ int MPIR_Iallreduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Ain
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to number of ranks in the communicator */
-    pof2 = MPL_pof2(comm_ptr->local_size);
+    pof2 = MPL_pof2(MPIR_Coll_size(comm_ptr, coll_group));
 
     /* If op is user-defined or count is less than pof2, use
      * recursive doubling algorithm. Otherwise do a reduce-scatter
@@ -669,11 +676,13 @@ int MPIR_Ireduce_scatter_intra_sched_auto(const void *sendbuf, void *recvbuf,
     int i;
     int is_commutative;
     MPI_Aint total_count, type_size, nbytes;
-    int comm_size;
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    comm_size = comm_ptr->local_size;
+    int comm_size, rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warnings */
+
     total_count = 0;
     for (i = 0; i < comm_size; i++) {
         total_count += recvcounts[i];
@@ -752,11 +761,13 @@ int MPIR_Ireduce_scatter_block_intra_sched_auto(const void *sendbuf, void *recvb
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
     MPI_Aint total_count, type_size, nbytes;
-    int comm_size;
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    comm_size = comm_ptr->local_size;
+    int comm_size, rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warnings */
+
     total_count = recvcount * comm_size;
     if (total_count == 0) {
         goto fn_exit;

@@ -61,10 +61,16 @@ int MPIR_TSP_Ireduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MP
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
+    int rank, comm_size;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    if (comm_size == 1) {
+        goto fn_exit;
+    }
+
     switch (MPIR_CVAR_IREDUCE_INTRA_ALGORITHM) {
         case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_tsp_tree:
             /*Only knomial_1 tree supports non-commutative operations */
-            MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, MPIR_Op_is_commutative(op) ||
+            MPII_COLLECTIVE_FALLBACK_CHECK(rank, MPIR_Op_is_commutative(op) ||
                                            MPIR_Ireduce_tree_type == MPIR_TREE_TYPE_KNOMIAL_1,
                                            mpi_errno, "Ireduce gentran_tree cannot be applied.\n");
             mpi_errno =

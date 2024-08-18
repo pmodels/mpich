@@ -68,8 +68,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPIR_ERR_CHECK(mpi_errno);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
-    rank = MPIR_Comm_rank(comm);
-    size = MPIR_Comm_size(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
     max = size - 1;
 
     if (is_inplace) {

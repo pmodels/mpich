@@ -26,15 +26,17 @@ int MPIR_Iscatterv_allcomm_sched_linear(const void *sendbuf, const MPI_Aint send
     MPI_Aint extent;
     int i;
 
-    rank = comm_ptr->rank;
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    } else {
+        MPIR_Assert(coll_group == MPIR_SUBGROUP_NONE);
+        rank = comm_ptr->rank;
+        comm_size = comm_ptr->remote_size;
+    }
 
     /* If I'm the root, then scatter */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
         ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            comm_size = comm_ptr->local_size;
-        else
-            comm_size = comm_ptr->remote_size;
 
         MPIR_Datatype_get_extent_macro(sendtype, extent);
 

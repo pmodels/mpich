@@ -20,7 +20,7 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, int coll_group, MPIR_
 {
     int size, rank, src, dst, mask, mpi_errno = MPI_SUCCESS;
 
-    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, size);
 
     mask = 0x1;
     while (mask < size) {
@@ -54,8 +54,7 @@ int MPIR_Barrier_intra_k_dissemination(MPIR_Comm * comm, int coll_group, int k,
     MPIR_Request *sreqs[MAX_RADIX], *rreqs[MAX_RADIX * 2];
     MPIR_Request **send_reqs = NULL, **recv_reqs = NULL;
 
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     if (nranks == 1)
         goto fn_exit;

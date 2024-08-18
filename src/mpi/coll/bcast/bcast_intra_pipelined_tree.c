@@ -31,8 +31,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
     MPIR_Treealgo_tree_t my_tree;
     MPIR_CHKLMEM_DECL(3);
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     /* If there is only one process, return */
     if (comm_size == 1)

@@ -61,8 +61,8 @@ int MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather(void *buffer, M
     void *tmp_buf;
     struct MPII_Ibcast_state *ibcast_state;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+
     relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
 
 #ifdef HAVE_ERROR_CHECKING

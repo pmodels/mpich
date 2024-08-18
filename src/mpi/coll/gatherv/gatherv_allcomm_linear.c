@@ -33,14 +33,17 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
     MPI_Status *starray;
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    } else {
+        MPIR_Assert(coll_group == MPIR_SUBGROUP_NONE);
+        rank = comm_ptr->rank;
+        comm_size = comm_ptr->remote_size;
+    }
 
     /* If rank == root, then I recv lots, otherwise I send */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
         ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-            comm_size = comm_ptr->remote_size;
-
         MPIR_Datatype_get_extent_macro(recvtype, extent);
 
         MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, comm_size * sizeof(MPIR_Request *),

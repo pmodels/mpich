@@ -25,8 +25,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
 
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
 
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     if (bblock == 0)
         bblock = nranks;

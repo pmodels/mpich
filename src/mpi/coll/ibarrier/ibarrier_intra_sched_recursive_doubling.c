@@ -26,8 +26,7 @@ int MPIR_Ibarrier_intra_sched_recursive_doubling(MPIR_Comm * comm_ptr, int coll_
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, size);
 
     mask = 0x1;
     while (mask < size) {
