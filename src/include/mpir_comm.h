@@ -420,7 +420,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
 
-int MPIR_Comm_is_parent_comm(MPIR_Comm *);
+int MPIR_Comm_is_parent_comm(MPIR_Comm * comm, int coll_group);
 
 /* peer intercomm is an internal 1-to-1 intercomm used for connecting dynamic processes */
 int MPIR_peer_intercomm_create(MPIR_Context_id_t context_id, MPIR_Context_id_t recvcontext_id,

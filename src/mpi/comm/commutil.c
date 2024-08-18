@@ -815,9 +815,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 /* Returns true if the given communicator is aware of node topology information,
    false otherwise.  Such information could be used to implement more efficient
    collective communication, for example. */
-int MPIR_Comm_is_parent_comm(MPIR_Comm * comm)
+int MPIR_Comm_is_parent_comm(MPIR_Comm * comm, int coll_group)
 {
-    return (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
+    return (coll_group == MPIR_SUBGROUP_NONE &&
+            comm->num_external > 1 && comm->num_external != comm->remote_size &&
+            comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
 }
 
 /* Returns true if the communicator is node-aware and processes in all the nodes
@@ -828,7 +830,7 @@ int MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
     int i = 0, curr_nodeidx = 0;
     int *internode_table = comm->internode_table;
 
-    if (!MPIR_Comm_is_parent_comm(comm))
+    if (!MPIR_Comm_is_parent_comm(comm, MPIR_SUBGROUP_NONE))
         return 0;
 
     for (; i < comm->local_size; i++) {
@@ -1311,7 +1313,7 @@ int MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_bal
 
     MPIR_CHKPMEM_DECL(1);
 
-    if (!MPIR_Comm_is_parent_comm(comm)) {
+    if (!MPIR_Comm_is_parent_comm(comm, MPIR_SUBGROUP_NONE)) {
         *node_balanced = false;
         goto fn_exit;
     }

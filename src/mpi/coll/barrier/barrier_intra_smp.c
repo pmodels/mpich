@@ -9,7 +9,7 @@ int MPIR_Barrier_intra_smp(MPIR_Comm * comm_ptr, int coll_group, MPIR_Errflag_t 
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr));
+    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr, coll_group));
 
     /* do the intranode barrier on all nodes */
     if (comm_ptr->node_comm != NULL) {

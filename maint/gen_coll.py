@@ -564,7 +564,7 @@ def dump_fallback(algo):
         elif a== "builtin-op":
             cond_list.append("HANDLE_IS_BUILTIN(op)")
         elif a == "parent-comm":
-            cond_list.append("MPIR_Comm_is_parent_comm(comm_ptr)")
+            cond_list.append("MPIR_Comm_is_parent_comm(comm_ptr, coll_group)")
         elif a == "node-consecutive":
             cond_list.append("MPII_Comm_is_node_consecutive(comm_ptr)")
         elif a == "displs-ordered":
