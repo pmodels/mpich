@@ -20,7 +20,7 @@ int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, int coll_group, MPIR_
 {
     int size, rank, src, dst, mask, mpi_errno = MPI_SUCCESS;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     mask = 0x1;
     while (mask < size) {
