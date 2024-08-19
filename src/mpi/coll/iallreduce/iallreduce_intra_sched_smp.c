@@ -12,13 +12,10 @@ int MPIR_Iallreduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
-    MPIR_Comm *nc;
-    MPIR_Comm *nrc;
 
     MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr, coll_group));
-
-    nc = comm_ptr->node_comm;
-    nrc = comm_ptr->node_roots_comm;
+    int local_rank = comm_ptr->subgroups[MPIR_SUBGROUP_NODE].rank;
+    int local_size = comm_ptr->subgroups[MPIR_SUBGROUP_NODE].size;
 
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -33,21 +30,19 @@ int MPIR_Iallreduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint
     }
 
     /* on each node, do a reduce to the local root */
-    if (nc != NULL) {
+    if (local_size > 1) {
         /* take care of the MPI_IN_PLACE case. For reduce,
          * MPI_IN_PLACE is specified only on the root;
          * for allreduce it is specified on all processes. */
-        if ((sendbuf == MPI_IN_PLACE) && (comm_ptr->node_comm->rank != 0)) {
+        if ((sendbuf == MPI_IN_PLACE) && (local_rank != 0)) {
             /* IN_PLACE and not root of reduce. Data supplied to this
              * allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
-            mpi_errno =
-                MPIR_Ireduce_intra_sched_auto(recvbuf, NULL, count, datatype, op, 0, nc,
-                                              MPIR_SUBGROUP_NONE, s);
+            mpi_errno = MPIR_Ireduce_intra_sched_auto(recvbuf, NULL, count, datatype, op, 0,
+                                                      comm_ptr, MPIR_SUBGROUP_NODE, s);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            mpi_errno =
-                MPIR_Ireduce_intra_sched_auto(sendbuf, recvbuf, count, datatype, op, 0, nc,
-                                              MPIR_SUBGROUP_NONE, s);
+            mpi_errno = MPIR_Ireduce_intra_sched_auto(sendbuf, recvbuf, count, datatype, op, 0,
+                                                      comm_ptr, MPIR_SUBGROUP_NODE, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);
@@ -61,18 +56,17 @@ int MPIR_Iallreduce_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint
     }
 
     /* now do an IN_PLACE allreduce among the local roots of all nodes */
-    if (nrc != NULL) {
-        mpi_errno =
-            MPIR_Iallreduce_intra_sched_auto(MPI_IN_PLACE, recvbuf, count, datatype, op, nrc,
-                                             MPIR_SUBGROUP_NONE, s);
+    if (local_rank == 0) {
+        mpi_errno = MPIR_Iallreduce_intra_sched_auto(MPI_IN_PLACE, recvbuf, count, datatype, op,
+                                                     comm_ptr, MPIR_SUBGROUP_NODE_CROSS, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
     /* now broadcast the result among local processes */
-    if (comm_ptr->node_comm != NULL) {
-        mpi_errno =
-            MPIR_Ibcast_intra_sched_auto(recvbuf, count, datatype, 0, nc, MPIR_SUBGROUP_NONE, s);
+    if (local_size > 1) {
+        mpi_errno = MPIR_Ibcast_intra_sched_auto(recvbuf, count, datatype, 0,
+                                                 comm_ptr, MPIR_SUBGROUP_NODE, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }

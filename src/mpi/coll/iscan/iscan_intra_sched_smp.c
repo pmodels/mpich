@@ -11,13 +11,15 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
                                int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank = comm_ptr->rank;
-    MPIR_Comm *node_comm;
-    MPIR_Comm *roots_comm;
     MPI_Aint true_extent, true_lb, extent;
     void *tempbuf = NULL;
     void *prefulldata = NULL;
     void *localfulldata = NULL;
+
+    MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr, coll_group));
+    int local_rank = comm_ptr->subgroups[MPIR_SUBGROUP_NODE].rank;
+    int local_size = comm_ptr->subgroups[MPIR_SUBGROUP_NODE].size;
+    int inter_rank = MPIR_Get_internode_rank(comm_ptr, comm_ptr->rank);
 
     /* In order to use the SMP-aware algorithm, the "op" can be
      * either commutative or non-commutative, but we require a
@@ -31,9 +33,6 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
                                                          comm_ptr, coll_group, s);
     }
 
-    node_comm = comm_ptr->node_comm;
-    roots_comm = comm_ptr->node_roots_comm;
-
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
@@ -42,12 +41,12 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
     tempbuf = (void *) ((char *) tempbuf - true_lb);
 
     /* Create prefulldata and localfulldata on local roots of all nodes */
-    if (comm_ptr->node_roots_comm != NULL) {
+    if (local_rank == 0) {
         prefulldata = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
         MPIR_ERR_CHKANDJUMP(!prefulldata, mpi_errno, MPI_ERR_OTHER, "**nomem");
         prefulldata = (void *) ((char *) prefulldata - true_lb);
 
-        if (node_comm != NULL) {
+        if (local_size > 1) {
             localfulldata = MPIR_Sched_alloc_state(s, count * (MPL_MAX(extent, true_extent)));
             MPIR_ERR_CHKANDJUMP(!localfulldata, mpi_errno, MPI_ERR_OTHER, "**nomem");
             localfulldata = (void *) ((char *) localfulldata - true_lb);
@@ -56,10 +55,9 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
 
     /* perform intranode scan to get temporary result in recvbuf. if there is only
      * one process, just copy the raw data. */
-    if (node_comm != NULL) {
-        mpi_errno =
-            MPIR_Iscan_intra_sched_auto(sendbuf, recvbuf, count, datatype, op, node_comm,
-                                        coll_group, s);
+    if (local_size > 1) {
+        mpi_errno = MPIR_Iscan_intra_sched_auto(sendbuf, recvbuf, count, datatype, op,
+                                                comm_ptr, MPIR_SUBGROUP_NODE, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     } else if (sendbuf != MPI_IN_PLACE) {
@@ -72,17 +70,16 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
      * contains the reduce result of the whole node. Name it as
      * localfulldata. For example, localfulldata from node 1 contains
      * reduced data of rank 1,2,3. */
-    if (roots_comm != NULL && node_comm != NULL) {
-        mpi_errno = MPIR_Sched_recv(localfulldata, count, datatype,
-                                    (node_comm->local_size - 1), node_comm, coll_group, s);
+    if (local_rank == 0 && local_size > 1) {
+        mpi_errno = MPIR_Sched_recv(localfulldata, count, datatype, (local_size - 1),
+                                    comm_ptr, MPIR_SUBGROUP_NODE, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-    } else if (roots_comm == NULL && node_comm != NULL &&
-               node_comm->rank == node_comm->local_size - 1) {
-        mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, 0, node_comm, coll_group, s);
+    } else if (local_rank != 0 && local_size > 1 && local_rank == local_size - 1) {
+        mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, 0, comm_ptr, MPIR_SUBGROUP_NODE, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-    } else if (roots_comm != NULL) {
+    } else if (local_rank == 0) {
         localfulldata = recvbuf;
     }
 
@@ -90,28 +87,23 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
      * prefulldata on rank 4 contains reduce result of ranks
      * 1,2,3,4,5,6. it will be sent to rank 7 which is the
      * main process of node 3. */
-    if (roots_comm != NULL) {
-        /* FIXME just use roots_comm->rank instead */
-        int roots_rank = MPIR_Get_internode_rank(comm_ptr, rank);
-        MPIR_Assert(roots_rank == roots_comm->rank);
+    if (local_rank == 0) {
+        int inter_size = comm_ptr->subgroups[MPIR_SUBGROUP_NODE_CROSS].size;
 
-        mpi_errno =
-            MPIR_Iscan_intra_sched_auto(localfulldata, prefulldata, count, datatype, op, roots_comm,
-                                        coll_group, s);
+        mpi_errno = MPIR_Iscan_intra_sched_auto(localfulldata, prefulldata, count, datatype, op,
+                                                comm_ptr, MPIR_SUBGROUP_NODE_CROSS, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 
-        if (roots_rank != roots_comm->local_size - 1) {
-            mpi_errno =
-                MPIR_Sched_send(prefulldata, count, datatype, (roots_rank + 1), roots_comm,
-                                coll_group, s);
+        if (inter_rank != inter_size - 1) {
+            mpi_errno = MPIR_Sched_send(prefulldata, count, datatype, (inter_rank + 1),
+                                        comm_ptr, MPIR_SUBGROUP_NODE_CROSS, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
-        if (roots_rank != 0) {
-            mpi_errno =
-                MPIR_Sched_recv(tempbuf, count, datatype, (roots_rank - 1), roots_comm, coll_group,
-                                s);
+        if (inter_rank != 0) {
+            mpi_errno = MPIR_Sched_recv(tempbuf, count, datatype, (inter_rank - 1),
+                                        comm_ptr, MPIR_SUBGROUP_NODE_CROSS, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
@@ -123,13 +115,13 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, MPI_Aint coun
      * then we should broadcast this result in the local node, and
      * reduce it with recvbuf to get final result if necessary. */
 
-    if (MPIR_Get_internode_rank(comm_ptr, rank) != 0) {
+    if (inter_rank != 0) {
         /* we aren't on "node 0", so our node leader (possibly us) received
          * "prefulldata" from another leader into "tempbuf" */
 
-        if (node_comm != NULL) {
-            mpi_errno =
-                MPIR_Ibcast_intra_sched_auto(tempbuf, count, datatype, 0, node_comm, coll_group, s);
+        if (local_size > 1) {
+            mpi_errno = MPIR_Ibcast_intra_sched_auto(tempbuf, count, datatype, 0,
+                                                     comm_ptr, MPIR_SUBGROUP_NODE, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }

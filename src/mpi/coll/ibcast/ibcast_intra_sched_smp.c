@@ -37,6 +37,10 @@ int MPIR_Ibcast_intra_sched_smp(void *buffer, MPI_Aint count, MPI_Datatype datat
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Comm_is_parent_comm(comm_ptr, coll_group));
 #endif
+    int local_rank = comm_ptr->subgroups[MPIR_SUBGROUP_NODE].rank;
+    int local_size = comm_ptr->subgroups[MPIR_SUBGROUP_NODE].size;
+    int local_root = MPIR_Get_intranode_rank(comm_ptr, root);
+
     ibcast_state = MPIR_Sched_alloc_state(s, sizeof(struct MPII_Ibcast_state));
     MPIR_ERR_CHKANDJUMP(!ibcast_state, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
@@ -46,16 +50,15 @@ int MPIR_Ibcast_intra_sched_smp(void *buffer, MPI_Aint count, MPI_Datatype datat
     /* TODO insert packing here */
 
     /* send to intranode-rank 0 on the root's node */
-    if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {   /* is not the node root (0) *//* and is on our node (!-1) */
-        if (root == comm_ptr->rank) {
+    if (local_size > 1 && local_root > 0) {     /* is not the node root (0) *//* and is on our node (!-1) */
+        if (local_rank == local_root) {
             mpi_errno =
-                MPIR_Sched_send(buffer, count, datatype, 0, comm_ptr->node_comm, coll_group, s);
+                MPIR_Sched_send(buffer, count, datatype, 0, comm_ptr, MPIR_SUBGROUP_NODE, s);
             MPIR_ERR_CHECK(mpi_errno);
-        } else if (0 == comm_ptr->node_comm->rank) {
-            mpi_errno =
-                MPIR_Sched_recv_status(buffer, count, datatype,
-                                       MPIR_Get_intranode_rank(comm_ptr, root), comm_ptr->node_comm,
-                                       coll_group, &ibcast_state->status, s);
+        } else if (local_rank == 0) {
+            mpi_errno = MPIR_Sched_recv_status(buffer, count, datatype, local_root,
+                                               comm_ptr, MPIR_SUBGROUP_NODE, &ibcast_state->status,
+                                               s);
             MPIR_ERR_CHECK(mpi_errno);
 #ifdef HAVE_ERROR_CHECKING
             MPIR_SCHED_BARRIER(s);
@@ -67,20 +70,19 @@ int MPIR_Ibcast_intra_sched_smp(void *buffer, MPI_Aint count, MPI_Datatype datat
     }
 
     /* perform the internode broadcast */
-    if (comm_ptr->node_roots_comm != NULL) {
-        mpi_errno = MPIR_Ibcast_intra_sched_auto(buffer, count, datatype,
-                                                 MPIR_Get_internode_rank(comm_ptr, root),
-                                                 comm_ptr->node_roots_comm, coll_group, s);
+    if (local_rank == 0) {
+        int inter_root = MPIR_Get_internode_rank(comm_ptr, root);
+        mpi_errno = MPIR_Ibcast_intra_sched_auto(buffer, count, datatype, inter_root,
+                                                 comm_ptr, MPIR_SUBGROUP_NODE_CROSS, s);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* don't allow the local ops for the intranode phase to start until this has completed */
         MPIR_SCHED_BARRIER(s);
     }
     /* perform the intranode broadcast on all except for the root's node */
-    if (comm_ptr->node_comm != NULL) {
-        mpi_errno =
-            MPIR_Ibcast_intra_sched_auto(buffer, count, datatype, 0, comm_ptr->node_comm,
-                                         coll_group, s);
+    if (local_size > 1) {
+        mpi_errno = MPIR_Ibcast_intra_sched_auto(buffer, count, datatype, 0,
+                                                 comm_ptr, MPIR_SUBGROUP_NODE, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
