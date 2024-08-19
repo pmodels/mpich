@@ -630,8 +630,8 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE:
-                if (comm_ptr->node_comm != NULL &&
-                    MPIR_Comm_size(comm_ptr) == MPIR_Comm_size(comm_ptr->node_comm))
+                /* comm_size equal to node_comm_size just mean the size inter-node is 1 */
+                if (comm_ptr->num_external == 1)
                     node = node->success;
                 else
                     node = node->failure;
@@ -1229,8 +1229,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE:
-                if (comm_ptr->node_comm != NULL &&
-                    MPIR_Comm_size(comm_ptr) == MPIR_Comm_size(comm_ptr->node_comm))
+                if (comm_ptr->num_external == 1)
                     node = node->success;
                 else
                     node = node->failure;
