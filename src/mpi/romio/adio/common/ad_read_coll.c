@@ -873,9 +873,9 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     /* wait on the receives */
     if (nprocs_recv) {
 #ifdef NEEDS_MPI_TEST
-        j = 0;
-        while (!j)
-            MPI_Testall(nprocs_recv, requests, &j, statuses);
+        int flag = 0;
+        while (!flag)
+            MPI_Testall(nprocs_recv, requests, &flag, statuses);
 #else
         MPI_Waitall(nprocs_recv, requests, statuses);
 #endif
