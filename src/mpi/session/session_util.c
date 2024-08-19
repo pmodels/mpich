@@ -160,6 +160,9 @@ int MPIR_Session_get_strict_finalize_from_info(MPIR_Info * info_ptr, bool * stri
     int flag = 0;
     const char key[] = "strict_finalize";
 
+    /* default is no strict finalize */
+    *strict_finalize = false;
+
     /* No info pointer, nothing todo here */
     if (info_ptr == NULL) {
         goto fn_exit;
@@ -184,8 +187,6 @@ int MPIR_Session_get_strict_finalize_from_info(MPIR_Info * info_ptr, bool * stri
     /* Set strict finalize value as output. */
     if ((strcmp(strict_finalize_s, "1") == 0) || (strcmp(strict_finalize_s, "true") == 0)) {
         *strict_finalize = true;
-    } else {
-        *strict_finalize = false;
     }
 
   fn_exit:
