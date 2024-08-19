@@ -114,9 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_allcomm_composition_json(MPIR_Comm * 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Barrier_impl(comm, coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -131,6 +129,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_allcomm_composition_json(MPIR_Comm * 
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Barrier_impl(comm, coll_group, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -144,6 +146,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, int coll_group, MPIR
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     switch (MPIR_CVAR_BARRIER_COMPOSITION) {
         case 1:
@@ -169,10 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, int coll_group, MPIR
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno = MPIR_Barrier_impl(comm, coll_group, errflag);
-    else
-        mpi_errno = MPIDI_Barrier_intra_composition_beta(comm, coll_group, errflag);
+    mpi_errno = MPIR_Barrier_impl(comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -211,9 +213,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
         }
     }
     if (cnt == NULL) {
-        mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -242,6 +242,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, coll_group, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -256,6 +260,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     switch (MPIR_CVAR_BCAST_COMPOSITION) {
         case 1:
@@ -307,12 +315,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, coll_group, errflag);
-    else
-        mpi_errno =
-            MPIDI_Bcast_intra_composition_gamma(buffer, count, datatype, root, comm, coll_group,
-                                                errflag);
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -378,10 +381,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -428,6 +428,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op,
+                                    comm, coll_group, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -444,6 +449,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
     int num_leads = 0, node_comm_size = 0;
 
     MPIR_FUNC_ENTER;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -596,11 +605,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
-                                coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -634,14 +639,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno =
-            MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
-                                coll_group, errflag);
-    else
-        mpi_errno =
-            MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                                   recvtype, comm, coll_group, errflag);
+    mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                    comm, coll_group, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -659,6 +658,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
     MPI_Aint type_size, data_size;
 
     MPIR_FUNC_ENTER;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     if (sendbuf != MPI_IN_PLACE) {
         MPIR_Datatype_get_size_macro(sendtype, type_size);
@@ -707,14 +710,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno =
-            MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
-                                coll_group, errflag);
-    else
-        mpi_errno =
-            MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                                   recvtype, comm, coll_group, errflag);
+    mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                    comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_ENTER;
@@ -731,6 +728,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLGATHERV,
@@ -750,11 +751,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                 recvtype, comm, coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -769,7 +766,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
 
+  fallback:
+    mpi_errno = MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                     displs, recvtype, comm, coll_group, errflag);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -784,6 +785,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCATTER,
@@ -803,10 +808,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        MPIR_Scatter_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm,
-                          coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -821,6 +823,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Scatter_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root,
+                                  comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -837,6 +844,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCATTERV,
@@ -857,10 +868,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        MPIR_Scatterv_impl(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
-                           root, comm, coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -875,6 +883,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Scatterv_impl(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                   recvtype, root, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -890,6 +903,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__GATHER,
@@ -909,11 +926,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Gather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm,
-                             coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -928,6 +941,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Gather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root,
+                                 comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -944,6 +962,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__GATHERV,
@@ -964,10 +986,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                      displs, recvtype, root, comm, coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -982,6 +1001,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                  displs, recvtype, root, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1056,10 +1080,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype,
-                                       recvbuf, recvcount, recvtype, comm, coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -1094,14 +1115,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno =
-            MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
-                               coll_group, errflag);
-    else
-        mpi_errno = MPIDI_Alltoall_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
-                                                          recvcount, recvtype, comm, coll_group,
-                                                          errflag);
+    mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                   comm, coll_group, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -1118,6 +1133,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcou
     MPI_Aint type_size, data_size;
 
     MPIR_FUNC_ENTER;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     if (sendbuf != MPI_IN_PLACE) {
         MPIR_Datatype_get_size_macro(sendtype, type_size);
@@ -1166,14 +1185,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcou
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno =
-            MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
-                               coll_group, errflag);
-    else
-        mpi_errno = MPIDI_Alltoall_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
-                                                          recvcount, recvtype, comm, coll_group,
-                                                          errflag);
+    mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                   comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_ENTER;
@@ -1191,6 +1204,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALLV,
@@ -1211,11 +1228,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls,
-                                        sendtype, recvbuf, recvcounts,
-                                        rdispls, recvtype, comm, coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -1231,6 +1244,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
+                                    rdispls, recvtype, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1248,6 +1266,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALLW,
@@ -1268,11 +1290,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Alltoallw_impl(sendbuf, sendcounts, sdispls,
-                                        sendtypes, recvbuf, recvcounts,
-                                        rdispls, recvtypes, comm, coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -1288,6 +1306,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Alltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts,
+                                    rdispls, recvtypes, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1365,6 +1388,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     switch (MPIR_CVAR_REDUCE_COMPOSITION) {
         case 1:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, comm->comm_kind == MPIR_COMM_KIND__INTRACOMM
@@ -1429,6 +1456,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER,
         .comm_ptr = comm,
@@ -1445,11 +1476,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Reduce_scatter_impl(sendbuf, recvbuf, recvcounts, datatype, op, comm, coll_group,
-                                     errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -1464,6 +1491,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Reduce_scatter_impl(sendbuf, recvbuf, recvcounts, datatype, op,
+                                         comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1479,6 +1511,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER_BLOCK,
@@ -1496,11 +1532,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Reduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op, comm,
-                                           coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -1515,6 +1547,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Reduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op,
+                                               comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1529,6 +1566,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_A
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCAN,
@@ -1546,10 +1587,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_A
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Scan_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -1568,6 +1606,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_A
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Scan_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1582,6 +1624,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, MPI
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__EXSCAN,
@@ -1599,10 +1645,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, MPI
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Exscan_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, errflag);;
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -1616,6 +1659,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, MPI
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Exscan_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1810,10 +1857,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ibarrier(MPIR_Comm * comm, int coll_group, MPI
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_ibarrier(comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ibarrier_impl(comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ibcast(void *buffer, MPI_Aint count, MPI_Datatype datatype,
@@ -1824,10 +1878,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ibcast(void *buffer, MPI_Aint count, MPI_Datat
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_ibcast(buffer, count, datatype, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ibcast_impl(buffer, count, datatype, root, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iallgather(const void *sendbuf, MPI_Aint sendcount,
@@ -1839,11 +1900,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iallgather(const void *sendbuf, MPI_Aint sendc
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iallgather(sendbuf, sendcount, sendtype, recvbuf,
                                   recvcount, recvtype, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iallgather_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                recvcount, recvtype, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iallgatherv(const void *sendbuf, MPI_Aint sendcount,
@@ -1856,11 +1925,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iallgatherv(const void *sendbuf, MPI_Aint send
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iallgatherv(sendbuf, sendcount, sendtype, recvbuf,
                                    recvcounts, displs, recvtype, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iallgatherv_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                 recvcounts, displs, recvtype, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iallreduce(const void *sendbuf, void *recvbuf, MPI_Aint count,
@@ -1871,10 +1948,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iallreduce(const void *sendbuf, void *recvbuf,
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iallreduce(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iallreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ialltoall(const void *sendbuf, MPI_Aint sendcount,
@@ -1886,11 +1970,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ialltoall(const void *sendbuf, MPI_Aint sendco
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_ialltoall(sendbuf, sendcount, sendtype, recvbuf,
                                  recvcount, recvtype, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ialltoall_impl(sendbuf, sendcount, sendtype, recvbuf,
+                               recvcount, recvtype, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallv(const void *sendbuf, const MPI_Aint * sendcounts,
@@ -1903,11 +1995,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallv(const void *sendbuf, const MPI_Aint
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_ialltoallv(sendbuf, sendcounts, sdispls, sendtype,
                                   recvbuf, recvcounts, rdispls, recvtype, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ialltoallv_impl(sendbuf, sendcounts, sdispls, sendtype,
+                                recvbuf, recvcounts, rdispls, recvtype, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallw(const void *sendbuf, const MPI_Aint * sendcounts,
@@ -1921,11 +2021,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallw(const void *sendbuf, const MPI_Aint
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_ialltoallw(sendbuf, sendcounts, sdispls, sendtypes,
                                   recvbuf, recvcounts, rdispls, recvtypes, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes,
+                           recvbuf, recvcounts, rdispls, recvtypes, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iexscan(const void *sendbuf, void *recvbuf, MPI_Aint count,
@@ -1936,10 +2044,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iexscan(const void *sendbuf, void *recvbuf, MP
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iexscan(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iexscan_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Igather(const void *sendbuf, MPI_Aint sendcount,
@@ -1951,11 +2066,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Igather(const void *sendbuf, MPI_Aint sendcoun
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_igather(sendbuf, sendcount, sendtype, recvbuf,
                                recvcount, recvtype, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Igather_impl(sendbuf, sendcount, sendtype, recvbuf,
+                             recvcount, recvtype, root, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Igatherv(const void *sendbuf, MPI_Aint sendcount,
@@ -1968,11 +2091,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Igatherv(const void *sendbuf, MPI_Aint sendcou
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_igatherv(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcounts, displs, recvtype, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Igatherv(sendbuf, sendcount, sendtype, recvbuf,
+                         recvcounts, displs, recvtype, root, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
@@ -1984,12 +2115,20 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter_block(const void *sendbuf, voi
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret =
         MPIDI_NM_mpi_ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm,
                                            coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ireduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op,
+                                           comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter(const void *sendbuf, void *recvbuf,
@@ -2002,12 +2141,20 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter(const void *sendbuf, void *rec
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret =
         MPIDI_NM_mpi_ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm, coll_group,
                                      req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ireduce_scatter_impl(sendbuf, recvbuf, recvcounts, datatype, op,
+                                     comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ireduce(const void *sendbuf, void *recvbuf, MPI_Aint count,
@@ -2018,10 +2165,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ireduce(const void *sendbuf, void *recvbuf, MP
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_ireduce(sendbuf, recvbuf, count, datatype, op, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ireduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iscan(const void *sendbuf, void *recvbuf, MPI_Aint count,
@@ -2032,10 +2186,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscan(const void *sendbuf, void *recvbuf, MPI_
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iscan(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iscan_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iscatter(const void *sendbuf, MPI_Aint sendcount,
@@ -2047,11 +2208,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscatter(const void *sendbuf, MPI_Aint sendcou
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iscatter(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcount, recvtype, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iscatter_impl(sendbuf, sendcount, sendtype, recvbuf,
+                              recvcount, recvtype, root, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *sendbuf, const MPI_Aint * sendcounts,
@@ -2064,11 +2233,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *sendbuf, const MPI_Aint 
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iscatterv(sendbuf, sendcounts, displs, sendtype,
                                  recvbuf, recvcount, recvtype, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iscatterv_impl(sendbuf, sendcounts, displs, sendtype,
+                               recvbuf, recvcount, recvtype, root, comm, coll_group, req);
 }
 
 #endif /* CH4_COLL_H_INCLUDED */
