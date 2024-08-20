@@ -115,10 +115,7 @@ def get_mansrc_file_path(func, root_dir):
     dir_path = root_dir
     if 'file' in func:
         file_path = dir_path + '/' + func['file'] + ".txt"
-    elif RE.match(r'MPI_T_(\w+)', func['name'], re.IGNORECASE):
-        name = RE.m.group(1)
-        file_path = dir_path + '/' + name.lower() + ".txt"
-    elif RE.match(r'MPIX?_(\w+)', func['name'], re.IGNORECASE):
+    elif RE.match(r'(MPI(X|_T)?_\w+)', func['name'], re.IGNORECASE):
         name = RE.m.group(1)
         file_path = dir_path + '/' + name.lower() + ".txt"
     else:
