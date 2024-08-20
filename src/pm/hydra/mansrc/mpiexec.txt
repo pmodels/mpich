@@ -14,28 +14,27 @@
     mpiexec -n 4 a.out
 .ve
 
-The MPI standard specifies the following arguments and their meanings\:
+The MPI standard suggests the following arguments and their meanings\:
 
 + \-n <np> - Specify the number of processes to use
 . \-host <hostname> - Name of host on which to run processes
-. \-arch <architecture name> - Pick hosts with this architecture type
 . \-wdir <working directory> - cd to this one `before` running executable
+- \-configfile <name> - file containing specifications of host/program,
+   one per line, with # as a comment indicator, e.g., the usual
+   mpiexec input. The lines excluding comments are concatenated with newlines
+   replaced with spaces, and are then parsed as command line options.
+
+The following options are reserved by the MPI standard, but they are not
+supported by MPICH (hydra)\:
+
++ \-arch <architecture name> - Pick hosts with this architecture type
 . \-path <pathlist> - use this to find the executable
 . \-soft <triplets> - comma separated triplets that specify requested numbers
    of processes (see the MPI-2 specification for more details)
-. \-file <name> - implementation-defined specification file
-- \-configfile <name> - file containing specifications of host/program,
-   one per line, with # as a comment indicator, e.g., the usual
-   mpiexec input, but with ":" replaced with a newline.  That is,
-   the configfile contains lines with -soft, -n etc.
+- \-file <name> - implementation-defined specification file
 
    Additional arguments that are specific to the MPICH implementation
    are discussed below.
-
-   Note that not all of these parameters are meaningful for all 
-   systems.  For example, the 'gforker' version of 'mpiexec' creates all
-   processes on the same system on which it is running; in that case, the 
-   '\-arch' and '\-host' options are ignored.
 
    The colon character (':') may be used to separate different executables
    for MPMD (multiple program multiple data) programming.  For example,
