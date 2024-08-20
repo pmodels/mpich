@@ -7,12 +7,19 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
+MPL_TLS int retry_depth = 0;
+
 int MPIDI_OFI_retry_progress(void)
 {
     /* We do not call progress on hooks form netmod level
      * because it is not reentrant safe.
      */
-    return MPID_Progress_test(NULL);
+    retry_depth++;
+    MPIR_Assert(retry_depth < 2);
+    int mpi_errno = MPID_Progress_test(NULL);
+    retry_depth--;
+
+    return mpi_errno;
 }
 
 typedef struct MPIDI_OFI_mr_key_allocator_t {
