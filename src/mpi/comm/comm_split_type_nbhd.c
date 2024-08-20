@@ -474,12 +474,7 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
     if (min_mem_size == 0 || topo_type == MPIR_NETTOPO_TYPE__INVALID) {
         *newcomm_ptr = NULL;
     } else {
-        int num_ranks_node;
-        if (MPIR_Process.comm_world->node_comm != NULL) {
-            num_ranks_node = MPIR_Comm_size(MPIR_Process.comm_world->node_comm);
-        } else {
-            num_ranks_node = 1;
-        }
+        int num_ranks_node = MPIR_Process.local_size;
         memory_per_process = total_memory_size / num_ranks_node;
         mpi_errno = network_split_by_minsize(comm_ptr, key, min_mem_size / memory_per_process,
                                              newcomm_ptr);
