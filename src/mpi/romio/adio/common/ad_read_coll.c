@@ -774,7 +774,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                   ADIOI_Access * others_req, int iter, MPI_Aint buftype_extent,
                                   MPI_Aint * buf_idx, MPI_Aint * actual_recved_bytes)
 {
-    int i, nprocs_recv, nprocs_send;
+    int i, j, nprocs_recv, nprocs_send;
     char **recv_buf = NULL;
     size_t memLen;
     MPI_Request *requests;
@@ -808,7 +808,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     MPE_Log_event(5032, 0, NULL);
 #endif
 
-    MPI_Count j = 0;            // think of this as a counter of non-zero sends/recs
+    j = 0;            // think of this as a counter of non-zero sends/recs
     if (buftype_is_contig) {
         for (i = 0; i < nprocs; i++) {
             if (recv_size[i]) {
@@ -873,9 +873,9 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     /* wait on the receives */
     if (nprocs_recv) {
 #ifdef NEEDS_MPI_TEST
-        j = 0;
-        while (!j)
-            MPI_Testall(nprocs_recv, requests, &j, statuses);
+        int flag = 0;
+        while (!flag)
+            MPI_Testall(nprocs_recv, requests, &flag, statuses);
 #else
         MPI_Waitall(nprocs_recv, requests, statuses);
 #endif
