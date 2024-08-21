@@ -46,7 +46,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_ROOTS_ONLY_PMI
       category    : CH4
       type        : boolean
-      default     : false
+      default     : true
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
