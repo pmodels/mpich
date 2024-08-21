@@ -5,7 +5,7 @@
 
 noinst_HEADERS += src/timer/mpl_timer_common.h
 
-libmpl_la_SOURCES += \
+libmpl_base_la_SOURCES += \
     src/mpl_rankmap.c \
     src/atomic/mpl_atomic.c \
     src/bt/mpl_bt.c \

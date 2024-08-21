@@ -19,13 +19,13 @@ AC_DEFUN([PAC_CONFIG_MPL],[
         PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
         mplsrcdir="src/mpl"
-        mpllib="src/mpl/libmpl.la"
+        mpllib="src/mpl/libmpl_base.la src/mpl/libmpl_gpu.la"
     ], [
         dnl ---- sub-configure (e.g. hydra, romio) ----
         if test "$FROM_MPICH" = "yes"; then
-            dnl skip ROMIO since mpich already links libmpl.la
+            dnl skip ROMIO since mpich already links libmpl
             if test "$pac_skip_mpl_lib" != "yes" ; then
-                mpl_lib="$main_top_builddir/src/mpl/libmpl.la"
+                mpl_lib="$main_top_builddir/src/mpl/libmpl_base.la"
             fi
             mpl_includedir="-I$main_top_builddir/src/mpl/include -I$main_top_srcdir/src/mpl/include"
             # source variables that are configured by MPL
@@ -36,7 +36,7 @@ AC_DEFUN([PAC_CONFIG_MPL],[
                 PAC_CONFIG_MPL_EMBEDDED
                 mpl_srcdir="mpl_embedded_dir"
                 mpl_dist_srcdir="mpl_embedded_dir"
-                mpl_lib="mpl_embedded_dir/libmpl.la"
+                mpl_lib="mpl_embedded_dir/libmpl_base.la"
                 mpl_includedir='-I$(top_builddir)/mpl_embedded_dir/include -I$(top_srcdir)/mpl_embedded_dir/include'
             ], [
                 dnl both mpl and pmi are in modules/
@@ -48,7 +48,7 @@ AC_DEFUN([PAC_CONFIG_MPL],[
             PAC_CONFIG_MPL_EMBEDDED
             mpl_srcdir="mpl_embedded_dir"
             mpl_dist_srcdir="mpl_embedded_dir"
-            mpl_lib="mpl_embedded_dir/libmpl.la"
+            mpl_lib="mpl_embedded_dir/libmpl_base.la"
             mpl_includedir='-I$(top_builddir)/mpl_embedded_dir/include -I$(top_srcdir)/mpl_embedded_dir/include'
         fi
     ])

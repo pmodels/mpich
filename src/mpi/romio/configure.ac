@@ -125,7 +125,7 @@ if test "$FROM_MPICH" = "no" ; then
     mpl_subdir_args="--disable-versioning --enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
     mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
-    mpl_lib="mpl/libmpl.la"
+    mpl_lib="mpl/libmpl_base.la mpl/libmpl_gpu.la"
 else
     # we are configuring romio inside mpich. MPICH should configured MPL already,
     # just set mpl_includedir and source mpl/localdefs if any.
