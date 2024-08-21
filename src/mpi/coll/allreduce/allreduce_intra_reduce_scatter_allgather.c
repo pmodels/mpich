@@ -72,7 +72,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     }
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = comm_ptr->coll.pof2;
+    pof2 = MPL_pof2(comm_ptr->local_size);
 
     rem = comm_size - pof2;
 
