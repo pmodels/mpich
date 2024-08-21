@@ -538,7 +538,7 @@ int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Aint c
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to number of ranks in the communicator */
-    pof2 = comm_ptr->coll.pof2;
+    pof2 = MPL_pof2(comm_ptr->local_size);
 
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_IS_BUILTIN(op)) && (count >= pof2)) {
@@ -595,7 +595,7 @@ int MPIR_Iallreduce_intra_sched_auto(const void *sendbuf, void *recvbuf, MPI_Ain
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to number of ranks in the communicator */
-    pof2 = comm_ptr->coll.pof2;
+    pof2 = MPL_pof2(comm_ptr->local_size);
 
     /* If op is user-defined or count is less than pof2, use
      * recursive doubling algorithm. Otherwise do a reduce-scatter

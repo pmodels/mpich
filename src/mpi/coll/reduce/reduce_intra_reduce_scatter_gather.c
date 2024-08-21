@@ -77,7 +77,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
     }
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = comm_ptr->coll.pof2;
+    pof2 = MPL_pof2(comm_ptr->local_size);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(HANDLE_IS_BUILTIN(op));

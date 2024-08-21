@@ -780,8 +780,6 @@ int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
                           MPIDI_COMM(comm, multi_leads_comm));
 
             MPIDI_COMM(comm, multi_leads_comm)->local_size = num_external;
-            MPIDI_COMM(comm, multi_leads_comm)->coll.pof2 =
-                MPL_pof2(MPIDI_COMM(comm, multi_leads_comm)->local_size);
             MPIDI_COMM(comm, multi_leads_comm)->remote_size = num_external;
 
             MPIR_Comm_map_irregular(MPIDI_COMM(comm, multi_leads_comm), comm,
