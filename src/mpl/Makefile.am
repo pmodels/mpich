@@ -6,8 +6,8 @@
 ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 
-lib@MPLLIBNAME@_la_SOURCES =
-lib@MPLLIBNAME@_la_LDFLAGS = ${lib@MPLLIBNAME@_so_versionflags}
+libmpl_la_SOURCES =
+libmpl_la_LDFLAGS = ${libmpl_so_versionflags}
 
 noinst_HEADERS =
 include src/Makefile.mk
@@ -16,7 +16,7 @@ MPL_TESTS = strsep
 TESTS = $(MPL_TESTS)
 check_PROGRAMS = $(MPL_TESTS)
 strsep_SOURCES = test/strsep.c
-strsep_LDADD = lib@MPLLIBNAME@.la
+strsep_LDADD = libmpl.la
 
 mpl_headers =               \
     include/mpl.h           \
@@ -39,10 +39,10 @@ mpl_headers =               \
 
 if MPL_EMBEDDED_MODE
 noinst_HEADERS += $(mpl_headers)
-noinst_LTLIBRARIES = lib@MPLLIBNAME@.la
+noinst_LTLIBRARIES = libmpl.la
 else !MPL_EMBEDDED_MODE
 include_HEADERS = $(mpl_headers)
-lib_LTLIBRARIES = lib@MPLLIBNAME@.la
+lib_LTLIBRARIES = libmpl.la
 endif !MPL_EMBEDDED_MODE
 
 # --------------------------------------------------------------------------

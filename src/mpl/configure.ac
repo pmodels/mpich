@@ -31,12 +31,6 @@ LT_INIT()
 PAC_POP_FLAG([CFLAGS])
 
 # ----------------------------------------------------------------------------
-# Set default library names if names haven't already been provided
-AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
-MPLLIBNAME=${MPLLIBNAME:-"mpl"}
-AC_SUBST(MPLLIBNAME)
-export MPLLIBNAME
-
 if test -s "$srcdir/VERSION" ; then
    . $srcdir/VERSION
    AC_SUBST(libmpl_so_version)
