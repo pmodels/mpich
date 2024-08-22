@@ -28,6 +28,7 @@ typedef struct {
 
 typedef struct {
     MPIR_Tree_type_t type;
+    int coll_group;
     int root;
     union {
         struct {
