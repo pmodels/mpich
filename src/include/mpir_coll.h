@@ -8,6 +8,52 @@
 
 #include "coll_impl.h"
 #include "coll_algos.h"
+#include "mpir_threadcomm.h"
+
+#ifdef ENABLE_THREADCOMM
+#define MPIR_THREADCOMM_RANK_SIZE(comm, rank_, size_) do { \
+        MPIR_Threadcomm *threadcomm = (comm)->threadcomm; \
+        MPIR_Assert(threadcomm); \
+        int intracomm_size = (comm)->local_size; \
+        size_ = threadcomm->rank_offset_table[intracomm_size - 1]; \
+        rank_ = MPIR_THREADCOMM_TID_TO_RANK(threadcomm, MPIR_threadcomm_get_tid(threadcomm)); \
+    } while (0)
+#else
+#define MPIR_THREADCOMM_RANK_SIZE(comm, rank_, size_) do { \
+        MPIR_Assert(0); \
+        size_ = 0; \
+        rank_ = -1; \
+    } while (0)
+#endif
+
+#define MPIR_COLL_RANK_SIZE(comm, coll_group, rank_, size_) do { \
+        if (coll_group == MPIR_SUBGROUP_NONE) { \
+            rank_ = (comm)->rank; \
+            size_ = (comm)->local_size; \
+        } else if (coll_group == MPIR_SUBGROUP_THREADCOMM) { \
+            MPIR_THREADCOMM_RANK_SIZE(comm, rank_, size_); \
+        } else { \
+            rank_ = (comm)->subgroups[coll_group].rank; \
+            size_ = (comm)->subgroups[coll_group].size; \
+        } \
+    } while (0)
+
+/* sometime it is convenient to just get the rank or size */
+static inline int MPIR_Coll_size(MPIR_Comm * comm, int coll_group)
+{
+    int rank, size;
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
+    (void) rank;
+    return size;
+}
+
+static inline int MPIR_Coll_rank(MPIR_Comm * comm, int coll_group)
+{
+    int rank, size;
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
+    (void) size;
+    return rank;
+}
 
 /* During init, not all algorithms are safe to use. For example, the csel
  * may not have been initialized. We define a set of fallback routines that
