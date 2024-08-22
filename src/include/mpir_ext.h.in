@@ -72,6 +72,12 @@ void MPIR_Ext_cs_yield(void);
 int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype);
 int MPIR_Ext_datatype_iscontig(MPI_Datatype datatype, int *flag);
 
+/* for device buffer support in ROMIO */
+void *MPIR_Ext_gpu_host_alloc(const void *buf, MPI_Aint count, MPI_Datatype datatype);
+void MPIR_Ext_gpu_host_free(void *host_buf, MPI_Aint count, MPI_Datatype datatype);
+void *MPIR_Ext_gpu_host_swap(const void *buf, MPI_Aint count, MPI_Datatype datatype);
+void MPIR_Ext_gpu_swap_back(void *host_buf, void *gpu_buf, MPI_Aint count, MPI_Datatype datatype);
+
 /* make comm split based on access to a common file system easier */
 int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id);
 
