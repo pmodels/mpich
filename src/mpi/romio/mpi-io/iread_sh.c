@@ -99,6 +99,7 @@ int MPIOI_File_iread_shared(MPI_File fh, void *buf, MPI_Aint count,
     MPI_Status status;
     ADIO_Offset off, shared_fp;
     MPI_Offset nbytes = 0;
+    void *xbuf = NULL, *e32_buf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -133,12 +134,23 @@ int MPIOI_File_iread_shared(MPI_File fh, void *buf, MPI_Aint count,
     }
     /* --END ERROR HANDLING-- */
 
+    xbuf = buf;
+    if (adio_fh->is_external32) {
+        MPI_Aint e32_size = 0;
+        error_code = MPIU_datatype_full_size(datatype, &e32_size);
+        if (error_code != MPI_SUCCESS)
+            goto fn_exit;
+
+        e32_buf = ADIOI_Malloc(e32_size * count);
+        xbuf = e32_buf;
+    }
+
     if (buftype_is_contig && filetype_is_contig) {
         /* convert count and shared_fp to bytes */
         bufsize = datatype_size * count;
         off = adio_fh->disp + adio_fh->etype_size * shared_fp;
         if (!(adio_fh->atomicity)) {
-            ADIO_IreadContig(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+            ADIO_IreadContig(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
                              off, request, &error_code);
         } else {
             /* to maintain strict atomicity semantics with other concurrent
@@ -148,7 +160,7 @@ int MPIOI_File_iread_shared(MPI_File fh, void *buf, MPI_Aint count,
                 ADIOI_WRITE_LOCK(adio_fh, off, SEEK_SET, bufsize);
             }
 
-            ADIO_ReadContig(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+            ADIO_ReadContig(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
                             off, &status, &error_code);
 
             if (adio_fh->file_system != ADIO_NFS) {
@@ -160,7 +172,7 @@ int MPIOI_File_iread_shared(MPI_File fh, void *buf, MPI_Aint count,
             MPIO_Completed_request_create(&adio_fh, nbytes, &error_code, request);
         }
     } else {
-        ADIO_IreadStrided(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+        ADIO_IreadStrided(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
                           shared_fp, request, &error_code);
     }
 
@@ -168,6 +180,11 @@ int MPIOI_File_iread_shared(MPI_File fh, void *buf, MPI_Aint count,
     if (error_code != MPI_SUCCESS)
         error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
+
+    if (e32_buf != NULL) {
+        error_code = MPIU_read_external32_conversion_fn(buf, datatype, count, e32_buf);
+        ADIOI_Free(e32_buf);
+    }
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();

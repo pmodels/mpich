@@ -102,6 +102,8 @@ int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
     ADIO_Status status;
     ADIO_Offset off, shared_fp;
     static char myname[] = "MPI_FILE_IWRITE_SHARED";
+    void *e32buf = NULL;
+    const void *xbuf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -133,13 +135,22 @@ int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
         MPIO_Err_return_file(adio_fh, error_code);
     }
 
+    xbuf = buf;
+    if (adio_fh->is_external32) {
+        error_code = MPIU_external32_buffer_setup(buf, count, datatype, &e32buf);
+        if (error_code != MPI_SUCCESS)
+            goto fn_exit;
+
+        xbuf = e32buf;
+    }
+
     /* contiguous or strided? */
     if (buftype_is_contig && filetype_is_contig) {
         /* convert sizes to bytes */
         bufsize = datatype_size * count;
         off = adio_fh->disp + adio_fh->etype_size * shared_fp;
         if (!(adio_fh->atomicity))
-            ADIO_IwriteContig(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+            ADIO_IwriteContig(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
                               off, request, &error_code);
         else {
             /* to maintain strict atomicity semantics with other concurrent
@@ -148,7 +159,7 @@ int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
             if (adio_fh->file_system != ADIO_NFS)
                 ADIOI_WRITE_LOCK(adio_fh, off, SEEK_SET, bufsize);
 
-            ADIO_WriteContig(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+            ADIO_WriteContig(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
                              off, &status, &error_code);
 
             if (adio_fh->file_system != ADIO_NFS)
@@ -157,10 +168,12 @@ int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
             MPIO_Completed_request_create(&adio_fh, bufsize, &error_code, request);
         }
     } else
-        ADIO_IwriteStrided(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+        ADIO_IwriteStrided(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
                            shared_fp, request, &error_code);
 
   fn_exit:
+    if (e32buf != NULL)
+        ADIOI_Free(e32buf);
     ROMIO_THREAD_CS_EXIT();
 
     return error_code;
