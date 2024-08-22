@@ -312,6 +312,7 @@ typedef struct {
 #define ADIO_IME                 169    /* IME burst buffer */
 #define ADIO_DAOS                170
 #define ADIO_QUOBYTEFS           171    /* Quobyte FS */
+#define ADIO_OCEANFS             172    /* OceanFS */
 
 #define ADIO_SEEK_SET            SEEK_SET
 #define ADIO_SEEK_CUR            SEEK_CUR
