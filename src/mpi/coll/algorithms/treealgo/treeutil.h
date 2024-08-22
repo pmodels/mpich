@@ -123,15 +123,16 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
                                       MPIR_Treealgo_tree_t * ct);
 
 /* Generate topology_aware tree information */
-int MPII_Treeutil_tree_topology_aware_init(MPIR_Comm * comm, int k, int root, bool enable_reorder,
-                                           MPIR_Treealgo_tree_t * ct);
+int MPII_Treeutil_tree_topology_aware_init(MPIR_Comm * comm, int coll_group, int k, int root,
+                                           bool enable_reorder, MPIR_Treealgo_tree_t * ct);
 
-int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, bool enable_reorder,
-                                             MPIR_Treealgo_tree_t * ct);
+int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int coll_group, int k, int root,
+                                             bool enable_reorder, MPIR_Treealgo_tree_t * ct);
 
 /* Generate topology_wave tree information */
-int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int k, int root, bool enable_reorder,
-                                          int overhead, int lat_diff_groups, int lat_diff_switches,
-                                          int lat_same_switches, MPIR_Treealgo_tree_t * ct);
+int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int coll_group, int k, int root,
+                                          bool enable_reorder, int overhead, int lat_diff_groups,
+                                          int lat_diff_switches, int lat_same_switches,
+                                          MPIR_Treealgo_tree_t * ct);
 
 #endif /* TREEUTIL_H_INCLUDED */

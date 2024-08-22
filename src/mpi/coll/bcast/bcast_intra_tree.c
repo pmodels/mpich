@@ -76,7 +76,8 @@ int MPIR_Bcast_intra_tree(void *buffer,
         if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE ||
             tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K) {
             mpi_errno =
-                MPIR_Treealgo_tree_create_topo_aware(comm_ptr, tree_type, branching_factor, root,
+                MPIR_Treealgo_tree_create_topo_aware(comm_ptr, coll_group, tree_type,
+                                                     branching_factor, root,
                                                      MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE, &my_tree);
         } else if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_WAVE) {
             MPIR_Csel_coll_sig_s coll_sig = {
@@ -105,7 +106,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
             }
 
             mpi_errno =
-                MPIR_Treealgo_tree_create_topo_wave(comm_ptr, branching_factor, root,
+                MPIR_Treealgo_tree_create_topo_wave(comm_ptr, coll_group, branching_factor, root,
                                                     MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE,
                                                     overhead, lat_diff_groups, lat_diff_switches,
                                                     lat_same_switches, &my_tree);

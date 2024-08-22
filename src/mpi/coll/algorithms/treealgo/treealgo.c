@@ -33,37 +33,42 @@ int MPII_Treealgo_comm_cleanup(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-static bool match_param_topo_aware(MPIR_Treealgo_param_t * param, int root, int k)
+static bool match_param_topo_aware(MPIR_Treealgo_param_t * param, int coll_group, int root, int k)
 {
     return (param->type == MPIR_TREE_TYPE_TOPOLOGY_AWARE &&
+            param->coll_group == coll_group && coll_group < MPIR_SUBGROUP_NUM_RESERVED &&
             param->root == root && param->u.topo_aware.k == k);
 }
 
-static void set_param_topo_aware(MPIR_Treealgo_param_t * param, int root, int k)
+static void set_param_topo_aware(MPIR_Treealgo_param_t * param, int coll_group, int root, int k)
 {
     param->type = MPIR_TREE_TYPE_TOPOLOGY_AWARE;
+    param->coll_group = coll_group;
     param->root = root;
     param->u.topo_aware.k = k;
 }
 
-static bool match_param_topo_aware_k(MPIR_Treealgo_param_t * param, int root, int k)
+static bool match_param_topo_aware_k(MPIR_Treealgo_param_t * param, int coll_group, int root, int k)
 {
     return (param->type == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K &&
+            param->coll_group == coll_group && coll_group < MPIR_SUBGROUP_NUM_RESERVED &&
             param->root == root && param->u.topo_aware.k == k);
 }
 
-static void set_param_topo_aware_k(MPIR_Treealgo_param_t * param, int root, int k)
+static void set_param_topo_aware_k(MPIR_Treealgo_param_t * param, int coll_group, int root, int k)
 {
     param->type = MPIR_TREE_TYPE_TOPOLOGY_AWARE_K;
+    param->coll_group = coll_group;
     param->root = root;
     param->u.topo_aware.k = k;
 }
 
-static inline bool match_param_topo_wave(MPIR_Treealgo_param_t * param,
+static inline bool match_param_topo_wave(MPIR_Treealgo_param_t * param, int coll_group,
                                          int root, int overhead, int lat_diff_groups,
                                          int lat_diff_switches, int lat_same_switches)
 {
     return (param->type == MPIR_TREE_TYPE_TOPOLOGY_WAVE &&
+            param->coll_group == coll_group && coll_group < MPIR_SUBGROUP_NUM_RESERVED &&
             param->root == root &&
             param->u.topo_wave.overhead == overhead &&
             param->u.topo_wave.lat_diff_groups == lat_diff_groups &&
@@ -71,11 +76,12 @@ static inline bool match_param_topo_wave(MPIR_Treealgo_param_t * param,
             param->u.topo_wave.lat_same_switches == lat_same_switches);
 }
 
-static inline void set_param_topo_wave(MPIR_Treealgo_param_t * param,
+static inline void set_param_topo_wave(MPIR_Treealgo_param_t * param, int coll_group,
                                        int root, int overhead, int lat_diff_groups,
                                        int lat_diff_switches, int lat_same_switches)
 {
     param->type = MPIR_TREE_TYPE_TOPOLOGY_WAVE;
+    param->coll_group = coll_group;
     param->root = root;
     param->u.topo_wave.overhead = overhead;
     param->u.topo_wave.lat_diff_groups = lat_diff_groups;
@@ -125,7 +131,8 @@ int MPIR_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
 }
 
 
-int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k, int root,
+int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int coll_group, int tree_type,
+                                         int k, int root,
                                          bool enable_reorder, MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -135,7 +142,7 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
     switch (tree_type) {
         case MPIR_TREE_TYPE_TOPOLOGY_AWARE:
             if (!comm->coll.cached_tree ||
-                !match_param_topo_aware(&comm->coll.cached_tree_param, root, k)) {
+                !match_param_topo_aware(&comm->coll.cached_tree_param, coll_group, root, k)) {
                 if (comm->coll.cached_tree) {
                     MPIR_Treealgo_tree_free(comm->coll.cached_tree);
                 } else {
@@ -144,11 +151,11 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
                                                             MPL_MEM_BUFFER);
                 }
                 mpi_errno =
-                    MPII_Treeutil_tree_topology_aware_init(comm, k, root, enable_reorder,
-                                                           comm->coll.cached_tree);
+                    MPII_Treeutil_tree_topology_aware_init(comm, coll_group, k, root,
+                                                           enable_reorder, comm->coll.cached_tree);
                 MPIR_ERR_CHECK(mpi_errno);
                 *ct = *comm->coll.cached_tree;
-                set_param_topo_aware(&comm->coll.cached_tree_param, root, k);
+                set_param_topo_aware(&comm->coll.cached_tree_param, coll_group, root, k);
             }
             *ct = *comm->coll.cached_tree;
             utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
@@ -160,7 +167,7 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
 
         case MPIR_TREE_TYPE_TOPOLOGY_AWARE_K:
             if (!comm->coll.cached_tree ||
-                !match_param_topo_aware_k(&comm->coll.cached_tree_param, root, k)) {
+                !match_param_topo_aware_k(&comm->coll.cached_tree_param, coll_group, root, k)) {
                 if (comm->coll.cached_tree) {
                     MPIR_Treealgo_tree_free(comm->coll.cached_tree);
                 } else {
@@ -169,11 +176,12 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
                                                             MPL_MEM_BUFFER);
                 }
                 mpi_errno =
-                    MPII_Treeutil_tree_topology_aware_k_init(comm, k, root, enable_reorder,
+                    MPII_Treeutil_tree_topology_aware_k_init(comm, coll_group, k, root,
+                                                             enable_reorder,
                                                              comm->coll.cached_tree);
                 MPIR_ERR_CHECK(mpi_errno);
                 *ct = *comm->coll.cached_tree;
-                set_param_topo_aware_k(&comm->coll.cached_tree_param, root, k);
+                set_param_topo_aware_k(&comm->coll.cached_tree_param, coll_group, root, k);
             }
             *ct = *comm->coll.cached_tree;
             utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
@@ -201,7 +209,7 @@ int MPIR_Treealgo_tree_create_topo_aware(MPIR_Comm * comm, int tree_type, int k,
 }
 
 
-int MPIR_Treealgo_tree_create_topo_wave(MPIR_Comm * comm, int k, int root,
+int MPIR_Treealgo_tree_create_topo_wave(MPIR_Comm * comm, int coll_group, int k, int root,
                                         bool enable_reorder, int overhead, int lat_diff_groups,
                                         int lat_diff_switches, int lat_same_switches,
                                         MPIR_Treealgo_tree_t * ct)
@@ -211,21 +219,21 @@ int MPIR_Treealgo_tree_create_topo_wave(MPIR_Comm * comm, int k, int root,
     MPIR_FUNC_ENTER;
 
     if (!comm->coll.cached_tree ||
-        !match_param_topo_wave(&comm->coll.cached_tree_param, root, overhead,
-                               lat_diff_groups, lat_diff_switches, lat_same_switches)) {
+        !match_param_topo_wave(&comm->coll.cached_tree_param, coll_group, root,
+                               overhead, lat_diff_groups, lat_diff_switches, lat_same_switches)) {
         if (comm->coll.cached_tree) {
             MPIR_Treealgo_tree_free(comm->coll.cached_tree);
         } else {
             comm->coll.cached_tree =
                 (MPIR_Treealgo_tree_t *) MPL_malloc(sizeof(MPIR_Treealgo_tree_t), MPL_MEM_BUFFER);
         }
-        mpi_errno = MPII_Treeutil_tree_topology_wave_init(comm, k, root, enable_reorder, overhead,
-                                                          lat_diff_groups, lat_diff_switches,
-                                                          lat_same_switches,
-                                                          comm->coll.cached_tree);
+        mpi_errno =
+            MPII_Treeutil_tree_topology_wave_init(comm, coll_group, k, root, enable_reorder,
+                                                  overhead, lat_diff_groups, lat_diff_switches,
+                                                  lat_same_switches, comm->coll.cached_tree);
         MPIR_ERR_CHECK(mpi_errno);
         *ct = *comm->coll.cached_tree;
-        set_param_topo_wave(&comm->coll.cached_tree_param, root, overhead,
+        set_param_topo_wave(&comm->coll.cached_tree_param, coll_group, root, overhead,
                             lat_diff_groups, lat_diff_switches, lat_same_switches);
     }
     *ct = *comm->coll.cached_tree;
