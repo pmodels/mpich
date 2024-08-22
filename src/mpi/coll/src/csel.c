@@ -615,63 +615,6 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                     node = node->failure;
                 break;
 
-            case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LE:
-                if (comm_ptr->local_size <= node->u.comm_size_le.val)
-                    node = node->success;
-                else
-                    node = node->failure;
-                break;
-
-            case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_LT:
-                if (comm_ptr->local_size < node->u.comm_size_lt.val)
-                    node = node->success;
-                else
-                    node = node->failure;
-                break;
-
-            case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE:
-                /* comm_size equal to node_comm_size just mean the size inter-node is 1 */
-                if (comm_ptr->num_external == 1)
-                    node = node->success;
-                else
-                    node = node->failure;
-                break;
-
-            case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_POW2:
-                if (comm_ptr->local_size & (comm_ptr->local_size - 1))
-                    node = node->failure;
-                else
-                    node = node->success;
-                break;
-
-            case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:
-                if (comm_ptr->hierarchy_kind == node->u.comm_hierarchy.val)
-                    node = node->success;
-                else
-                    node = node->failure;
-                break;
-
-            case CSEL_NODE_TYPE__OPERATOR__IS_NODE_CONSECUTIVE:
-                if (MPII_Comm_is_node_consecutive(comm_ptr) == node->u.is_node_consecutive.val)
-                    node = node->success;
-                else
-                    node = node->failure;
-                break;
-
-            case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
-                if (comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
-                    node = node->success;
-                else
-                    node = node->failure;
-                break;
-
-            case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
-                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
-                    node = node->success;
-                else
-                    node = node->failure;
-                break;
-
             case CSEL_NODE_TYPE__OPERATOR__ANY:
                 node = node->success;
                 break;
@@ -1188,6 +1131,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
     csel_s *csel = (csel_s *) csel_;
     csel_node_s *node = NULL;
     MPIR_Comm *comm_ptr = coll_info.comm_ptr;
+    int coll_group = coll_info.coll_group;
 
     MPIR_Assert(csel_);
 
@@ -1349,7 +1293,8 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:
-                if (coll_info.comm_ptr->hierarchy_kind == node->u.comm_hierarchy.val)
+                if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__PARENT &&
+                    MPIR_Comm_is_parent_comm(comm_ptr, coll_group))
                     node = node->success;
                 else
                     node = node->failure;
