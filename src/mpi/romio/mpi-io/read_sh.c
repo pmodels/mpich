@@ -95,7 +95,7 @@ int MPIOI_File_read_shared(MPI_File fh, void *buf, MPI_Aint count,
     MPI_Count datatype_size;
     ADIO_Offset off, shared_fp, incr, bufsize;
     ADIO_File adio_fh;
-    void *xbuf = NULL, *e32_buf = NULL;
+    void *xbuf = NULL, *e32_buf = NULL, *host_buf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -151,6 +151,11 @@ int MPIOI_File_read_shared(MPI_File fh, void *buf, MPI_Aint count,
 
         e32_buf = ADIOI_Malloc(e32_size * count);
         xbuf = e32_buf;
+    } else {
+        MPIO_GPU_HOST_ALLOC(host_buf, buf, count, datatype);
+        if (host_buf != NULL) {
+            xbuf = host_buf;
+        }
     }
 
     /* contiguous or strided? */
@@ -186,6 +191,9 @@ int MPIOI_File_read_shared(MPI_File fh, void *buf, MPI_Aint count,
         error_code = MPIU_read_external32_conversion_fn(buf, datatype, count, e32_buf);
         ADIOI_Free(e32_buf);
     }
+
+    MPIO_GPU_SWAP_BACK(host_buf, buf, count, datatype);
+
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
 

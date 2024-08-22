@@ -147,6 +147,7 @@ int MPIOI_File_iwrite(MPI_File fh,
     MPI_Offset nbytes = 0;
     void *e32buf = NULL;
     const void *xbuf = NULL;
+    void *host_buf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
     adio_fh = MPIO_File_resolve(fh);
@@ -185,6 +186,11 @@ int MPIOI_File_iwrite(MPI_File fh,
             goto fn_exit;
 
         xbuf = e32buf;
+    } else {
+        MPIO_GPU_HOST_SWAP(host_buf, buf, count, datatype);
+        if (host_buf != NULL) {
+            xbuf = host_buf;
+        }
     }
 
     if (buftype_is_contig && filetype_is_contig) {
@@ -222,6 +228,9 @@ int MPIOI_File_iwrite(MPI_File fh,
         ADIO_IwriteStrided(adio_fh, xbuf, count, datatype, file_ptr_type,
                            offset, request, &error_code);
     }
+
+    MPIO_GPU_HOST_FREE(host_buf, count, datatype);
+
   fn_exit:
     if (e32buf != NULL)
         ADIOI_Free(e32buf);
