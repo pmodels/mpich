@@ -86,7 +86,7 @@ int MPIOI_File_read_ordered_begin(MPI_File fh, void *buf, MPI_Aint count, MPI_Da
     ADIO_Offset shared_fp, incr;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_READ_ORDERED_BEGIN";
-    void *xbuf = NULL, *e32_buf = NULL;
+    void *xbuf = NULL, *e32_buf = NULL, *host_buf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -149,6 +149,11 @@ int MPIOI_File_read_ordered_begin(MPI_File fh, void *buf, MPI_Aint count, MPI_Da
 
         e32_buf = ADIOI_Malloc(e32_size * count);
         xbuf = e32_buf;
+    } else {
+        MPIO_GPU_HOST_ALLOC(host_buf, buf, count, datatype);
+        if (host_buf != NULL) {
+            xbuf = host_buf;
+        }
     }
 
 
@@ -164,6 +169,8 @@ int MPIOI_File_read_ordered_begin(MPI_File fh, void *buf, MPI_Aint count, MPI_Da
         error_code = MPIU_read_external32_conversion_fn(buf, datatype, count, e32_buf);
         ADIOI_Free(e32_buf);
     }
+
+    MPIO_GPU_SWAP_BACK(host_buf, buf, count, datatype);
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();

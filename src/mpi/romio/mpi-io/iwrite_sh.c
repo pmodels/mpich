@@ -104,6 +104,7 @@ int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
     static char myname[] = "MPI_FILE_IWRITE_SHARED";
     void *e32buf = NULL;
     const void *xbuf = NULL;
+    void *host_buf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -142,6 +143,11 @@ int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
             goto fn_exit;
 
         xbuf = e32buf;
+    } else {
+        MPIO_GPU_HOST_SWAP(host_buf, buf, count, datatype);
+        if (host_buf != NULL) {
+            xbuf = host_buf;
+        }
     }
 
     /* contiguous or strided? */
@@ -170,6 +176,8 @@ int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count,
     } else
         ADIO_IwriteStrided(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
                            shared_fp, request, &error_code);
+
+    MPIO_GPU_HOST_FREE(host_buf, count, datatype);
 
   fn_exit:
     if (e32buf != NULL)

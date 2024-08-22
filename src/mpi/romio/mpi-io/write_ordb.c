@@ -93,6 +93,7 @@ int MPIOI_File_write_ordered_begin(MPI_File fh, const void *buf, MPI_Aint count,
     ADIO_File adio_fh;
     void *e32buf = NULL;
     const void *xbuf = NULL;
+    void *host_buf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -154,6 +155,11 @@ int MPIOI_File_write_ordered_begin(MPI_File fh, const void *buf, MPI_Aint count,
             goto fn_exit;
 
         xbuf = e32buf;
+    } else {
+        MPIO_GPU_HOST_SWAP(host_buf, buf, count, datatype);
+        if (host_buf != NULL) {
+            xbuf = host_buf;
+        }
     }
 
     ADIO_WriteStridedColl(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
@@ -163,6 +169,8 @@ int MPIOI_File_write_ordered_begin(MPI_File fh, const void *buf, MPI_Aint count,
     if (error_code != MPI_SUCCESS)
         error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
+
+    MPIO_GPU_HOST_FREE(host_buf, count, datatype);
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
