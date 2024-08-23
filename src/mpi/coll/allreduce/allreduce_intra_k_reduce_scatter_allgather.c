@@ -36,6 +36,8 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     MPIR_CHKLMEM_DECL(2);
 
     MPIR_Assert(k > 1);
+    /* This algorithm uses cached data in comm, thus it won't work with coll_group */
+    MPIR_Assert(coll_group == MPIR_SUBGROUP_NONE);
 
     MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 

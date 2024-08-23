@@ -34,6 +34,9 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
     MPIR_Request **send_reqs = NULL, **recv_reqs = NULL;
     int send_nreq = 0, recv_nreq = 0, total_phases = 0;
 
+    /* uses cached data in comm */
+    MPIR_Assert(coll_group == MPIR_SUBGROUP_NONE);
+
     MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     is_commutative = MPIR_Op_is_commutative(op);

@@ -36,6 +36,9 @@ int MPIR_Allgather_intra_recexch(const void *sendbuf, MPI_Aint sendcount,
     MPIR_Request *rreqs[MAX_RADIX * 2], *sreqs[MAX_RADIX * 2];
     MPIR_Request **recv_reqs = NULL, **send_reqs = NULL;
 
+    /* it caches data in comm */
+    MPIR_Assert(coll_group == MPIR_SUBGROUP_NONE);
+
     is_inplace = (sendbuf == MPI_IN_PLACE);
     MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
