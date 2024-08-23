@@ -570,6 +570,8 @@ def dump_fallback(algo):
         elif a == "displs-ordered":
             # assume it's allgatherv
             cond_list.append("MPII_Iallgatherv_is_displs_ordered(comm_ptr->local_size, recvcounts, displs)")
+        elif a == "nogroup":
+            cond_list.append("coll_group == MPIR_SUBGROUP_NONE")
         else:
             raise Exception("Unsupported restrictions - %s" % a)
     (func_name, commkind) = algo['func-commkind'].split('-')
