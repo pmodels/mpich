@@ -37,7 +37,7 @@ int MPIR_TSP_Igatherv_sched_allcomm_linear(const void *sendbuf, MPI_Aint sendcou
         comm_size = comm_ptr->remote_size;
     }
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* If rank == root, then I recv lots, otherwise I send */

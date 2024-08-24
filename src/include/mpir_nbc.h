@@ -45,7 +45,7 @@
 /* Open question: should tag allocation be rolled into Sched_start?  Keeping it
  * separate potentially allows more parallelism in the future, but it also
  * pushes more work onto the clients of this interface. */
-int MPIR_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag);
+int MPIR_Sched_next_tag(MPIR_Comm * comm_ptr, int coll_group, int *tag);
 void MPIR_Sched_set_tag(MPIR_Sched_t s, int tag);
 
 /* the device must provide a typedef for MPIR_Sched_t in mpidpre.h */

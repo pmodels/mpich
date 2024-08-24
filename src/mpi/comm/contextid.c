@@ -762,7 +762,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
                  *       are not necessarily completed in the same order as they are issued, also on the
                  *       same communicator. To avoid deadlocks, we cannot add the elements to the
                  *       list bevfore the first iallreduce is completed. The "tag" is created for the
-                 *       scheduling - by calling  MPIR_Sched_next_tag(comm_ptr, &tag) - and the same
+                 *       scheduling - by calling  MPIR_Sched_next_tag(comm_ptr, MPIR_SUBGROUP_NONE, &tag) - and the same
                  *       for a idup operation on all processes. So we use it here. */
                 /* FIXME I'm not sure if there can be an overflows for this tag */
                 st->tag = (uint64_t) tag + MPIR_Process.attrs.tag_ub;
@@ -945,7 +945,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     MPIR_FUNC_ENTER;
 
     /* now create a schedule */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, MPIR_SUBGROUP_NONE, &tag);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
     MPIR_ERR_CHECK(mpi_errno);
@@ -986,7 +986,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     }
 
     /* now create a schedule */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, MPIR_SUBGROUP_NONE, &tag);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s, MPIR_SCHED_KIND_GENERALIZED);
     MPIR_ERR_CHECK(mpi_errno);

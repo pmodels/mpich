@@ -117,7 +117,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
     for (i = 0; i < size - 1; i++) {
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+        mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
         MPIR_ERR_CHECK(mpi_errno);
 
         int vtcs[3], nvtcs;

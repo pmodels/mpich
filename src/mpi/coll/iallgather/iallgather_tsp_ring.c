@@ -83,7 +83,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
     int recv_id[3] = { 0 };     /* warning fix: icc: maybe used before set */
     for (i = 0; i < size - 1; i++) {
         /* Get new tag for each cycle so that the send-recv pairs are matched correctly */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+        mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
         MPIR_ERR_CHECK(mpi_errno);
 
         int vtcs[3], nvtcs;

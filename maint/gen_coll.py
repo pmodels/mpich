@@ -165,6 +165,8 @@ def dump_allcomm_sched_auto(name):
     dump_split(0, "int MPIR_%s_allcomm_sched_auto(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
+    if re.match(r'Ineighbor_', Name):
+        G.out.append("int coll_group = MPIR_SUBGROUP_NONE;")
     G.out.append("")
 
     # -- Csel_search
@@ -367,6 +369,8 @@ def dump_sched_impl(name):
     dump_split(0, "int MPIR_%s_sched_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
+    if re.match(r'Ineighbor_', Name):
+        G.out.append("int coll_group = MPIR_SUBGROUP_NONE;")
     G.out.append("")
 
     dump_open("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {")

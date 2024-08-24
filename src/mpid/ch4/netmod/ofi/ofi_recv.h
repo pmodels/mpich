@@ -271,6 +271,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             chunk_req->parent = rreq;
             chunk_req->buf = host_buf;
             int ret = 0;
+            /* FIXME: handle error */
             ret = fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                            host_buf,
                            MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ,
