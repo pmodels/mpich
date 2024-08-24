@@ -139,7 +139,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         void *reduce_address = (char *) reduce_buffer + offset * extent;
         MPIR_ERR_CHKANDJUMP(!reduce_address, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+        mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &tag);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < num_children; i++) {

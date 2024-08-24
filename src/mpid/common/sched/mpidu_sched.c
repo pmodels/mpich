@@ -148,7 +148,7 @@ int MPIDU_Sched_are_pending(void)
     return (all_schedules.head != NULL);
 }
 
-int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
+int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int coll_group, int *tag)
 {
     int mpi_errno = MPI_SUCCESS;
     /* TODO there should be an internal accessor/utility macro for getting the
@@ -162,6 +162,10 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     MPIR_FUNC_ENTER;
 
     *tag = comm_ptr->next_sched_tag;
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        /* subgroup collectives use the same tag within a parent collective */
+        goto fn_exit;
+    }
     ++comm_ptr->next_sched_tag;
 
 #if defined(HAVE_ERROR_CHECKING)
@@ -191,11 +195,13 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     if (comm_ptr->next_sched_tag == tag_ub) {
         comm_ptr->next_sched_tag = MPIR_FIRST_NBC_TAG;
     }
-#if defined(HAVE_ERROR_CHECKING)
-  fn_fail:
-#endif
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+#if defined(HAVE_ERROR_CHECKING)
+  fn_fail:
+    goto fn_exit;
+#endif
 }
 
 void MPIDU_Sched_set_tag(struct MPIDU_Sched *s, int tag)

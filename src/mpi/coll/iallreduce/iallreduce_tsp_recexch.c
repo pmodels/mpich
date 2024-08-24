@@ -50,7 +50,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
 
     /* get the neighbors, the function allocates the required memory */
     MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,

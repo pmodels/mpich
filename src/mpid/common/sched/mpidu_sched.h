@@ -134,7 +134,7 @@ struct MPIDU_Sched {
 /* prototypes */
 int MPIDU_Sched_progress(int vci, int *made_progress);
 int MPIDU_Sched_are_pending(void);
-int MPIDU_Sched_next_tag(struct MPIR_Comm *comm_ptr, int *tag);
+int MPIDU_Sched_next_tag(struct MPIR_Comm *comm_ptr, int coll_group, int *tag);
 void MPIDU_Sched_set_tag(MPIR_Sched_t s, int tag);
 int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind);
 int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned);

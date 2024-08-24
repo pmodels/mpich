@@ -355,6 +355,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
     MPI_Aint type_size, nbytes, true_lb, true_extent;
     void *ori_local_buf = local_buf;
     MPI_Datatype ori_datatype = datatype;
+    int coll_group = MPIR_SUBGROUP_NONE;
 
     MPIR_CHKLMEM_DECL(1);
     /* Register the vertices */
@@ -425,7 +426,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
             MPIR_TSP_sched_malloc(sizeof(MPIDI_POSIX_per_call_ibcast_info_t), sched);
         MPIR_ERR_CHKANDJUMP(!data, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+        mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &tag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

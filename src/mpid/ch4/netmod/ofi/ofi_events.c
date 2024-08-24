@@ -186,6 +186,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
                     chunk_req->offset = chunk_sz * i;
                     int ret = 0;
                     if (!MPIDI_OFI_global.gpu_recv_queue && host_buf) {
+                        /* FIXME: error handling */
                         ret = fi_trecv
                             (MPIDI_OFI_global.ctx
                              [MPIDI_OFI_REQUEST(rreq, pipeline_info.ctx_idx)].rx,

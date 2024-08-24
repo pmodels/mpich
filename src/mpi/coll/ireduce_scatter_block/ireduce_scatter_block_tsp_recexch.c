@@ -32,7 +32,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);

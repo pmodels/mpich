@@ -90,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
                                                sizeof(struct fi_deferred_work), MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDSTMT(*works == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &rtr_tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &rtr_tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -110,7 +110,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
     }
 
     i = i + j;
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -239,7 +239,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_tagged(void *buffer
     MPIR_ERR_CHKANDSTMT(*works == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &rtr_tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &rtr_tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -260,7 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_tagged(void *buffer
     }
 
     i = i + j;
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -419,7 +419,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
     MPIR_ERR_CHKANDJUMP1(*works == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                          "Triggered bcast deferred work alloc");
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &rtr_tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &rtr_tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -564,7 +564,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_rma(void *buffer, i
                                                sizeof(struct fi_deferred_work), MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDSTMT(*works == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &rtr_tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &rtr_tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
