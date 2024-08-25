@@ -51,22 +51,33 @@
 #endif
 
 ATTRIBUTE((unused))
+static int get_root_av_table_index(int rank)
+{
+    if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+        /* node roots with greater ranks are inserted before this rank if it a non-node-root */
+        int num_extra = 0;
+
+        /* check node roots */
+        for (int i = 0; i < MPIR_Process.num_nodes; i++) {
+            if (MPIR_Process.node_root_map[i] == rank) {
+                return i;
+            } else if (MPIR_Process.node_root_map[i] > rank) {
+                num_extra++;
+            }
+        }
+
+        /* must be non-node-root */
+        return rank + num_extra;
+    } else {
+        return rank;
+    }
+}
+
+ATTRIBUTE((unused))
 static int get_av_table_index(int rank, int nic, int vci, int *all_num_vcis)
 {
     if (nic == 0 && vci == 0) {
-        if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
-            /* check node roots */
-            for (int i = 0; i < MPIR_Process.num_nodes; i++) {
-                if (MPIR_Process.node_root_map[i] == rank) {
-                    return i;
-                }
-            }
-            /* must be non-node-root */
-            int num_later_nodes = MPIR_Process.num_nodes - (MPIR_Process.node_map[rank] + 1);
-            return rank + num_later_nodes;
-        } else {
-            return rank;
-        }
+        return get_root_av_table_index(rank);
     } else {
         int num_nics = MPIDI_OFI_global.num_nics;
         int idx = 0;
@@ -153,6 +164,14 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
         }
         MPL_free(mapped_table);
         MPIDU_bc_table_destroy();
+    }
+
+    /* check */
+    if (MPIDI_OFI_ENABLE_AV_TABLE) {
+        for (int r = 0; r < size; r++) {
+            MPIDI_OFI_addr_t *av ATTRIBUTE((unused)) = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
+            MPIR_Assert(av->dest[0][0] == get_root_av_table_index(r));
+        }
     }
 
   fn_exit:
