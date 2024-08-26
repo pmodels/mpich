@@ -83,15 +83,16 @@ int MPIDU_bc_allgather(MPIR_Comm * allgather_comm, void *bc, int bc_len, int sam
         int root_rank = MPIR_Process.node_root_map[i];
         rank_map[root_rank] = -1;
     }
-    /* prepare for Allgatherv */
-    for (i = 0; i < num_nodes; i++) {
-        recv_cnts[i] *= bc_len;
-        recv_offs[i] *= bc_len;
-    }
 
+    /* prepare for Allgatherv */
     int recv_bc_len = bc_len;
     if (!same_len) {
         recv_bc_len = MPID_MAX_BC_SIZE;
+    }
+
+    for (i = 0; i < num_nodes; i++) {
+        recv_cnts[i] *= recv_bc_len;
+        recv_offs[i] *= recv_bc_len;
     }
 
     mpi_errno = MPIDU_Init_shm_barrier();
