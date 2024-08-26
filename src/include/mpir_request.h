@@ -297,7 +297,7 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 #ifdef MPICH_DEBUG_PROGRESS
 #define MPIR_REQUEST_SET_INFO(req, ...) \
     do { \
-        MPL_snprintf((req)->info, 100, __VA_ARGS__); \
+        MPL_snprintf_nowarn((req)->info, 100, __VA_ARGS__); \
     } while (0)
 
 #define MPIR_REQUEST_DEBUG(req) \
@@ -308,7 +308,7 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
     } while (0)
 #else
 
-#define MPIR_REQUEST_SET_INFO(req, info) do { } while (0)
+#define MPIR_REQUEST_SET_INFO(req, ...) do { } while (0)
 #define MPIR_REQUEST_DEBUG(req) do { } while (0)
 #endif
 
