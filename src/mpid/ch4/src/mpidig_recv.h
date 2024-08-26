@@ -285,6 +285,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
         MPIDIG_enqueue_request(rreq, &MPIDI_global.per_vci[vci].posted_list, MPIDIG_PT2PT_POSTED);
+        MPIR_REQUEST_SET_INFO(rreq, "MPIDIG_do_irecv: source=%d, tag=%d, count=%ld, datatype=%x",
+                              rank, tag, count, datatype);
     }
 
   fn_exit:
