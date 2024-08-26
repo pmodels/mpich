@@ -5,8 +5,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     AM_COND_IF([BUILD_CH4],[
         build_ch4_shm_ipc_cma=auto
     ])dnl end AM_COND_IF(BUILD_CH4,...)
-
-    AM_CONDITIONAL([BUILD_SHM_IPC_CMA],[test -n "$build_ch4_shm_ipc_cma"])
 ])dnl end _PREREQ
 
 
@@ -18,8 +16,6 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
         if test "$ac_cv_func_process_vm_readv" = "yes" ; then
             pac_have_cma=yes
             AC_DEFINE(MPIDI_CH4_SHM_ENABLE_CMA, 1, [Enable CMA IPC in CH4])
-        else
-            AC_MSG_ERROR(['CMA not available.'])
         fi
     fi
     AM_CONDITIONAL([BUILD_SHM_IPC_CMA],[test "$pac_have_cma" = "yes"])
