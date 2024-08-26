@@ -193,6 +193,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         }
     }
 
+    MPIR_REQUEST_SET_INFO(rreq, "MPIDI_OFI_do_irecv: source=%d, tag=%d, data_sz=%ld", rank, tag,
+                          data_sz);
     if (!dt_contig || force_gpu_pack) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !force_gpu_pack &&
             ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping) ||
