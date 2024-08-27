@@ -12,6 +12,10 @@ use strict;
 # Root for the pages
 my $WWWRoot=`pwd`;
 chop $WWWRoot;
+
+# in case for out-of-tree build
+my $srcdir = ".";
+
 # End of line character (\r\n is DOS-friendly)
 my $eol = "\r\n";
 # Number of columns in table of names
@@ -21,6 +25,9 @@ my $TableCols = 3;
 foreach $a (@ARGV) {
     if ($a =~ /-?-wwwroot=(.*)/) {
 	$WWWRoot = $1;
+    }
+    elsif ($a =~ /-?-srcdir=(.*)/) {
+	$srcdir = $1;
     }
     elsif ($a =~ /-?help/) {
 	print STDOUT "createhtmlindex [ -wwwroot=directory ]\n\n";
@@ -34,6 +41,19 @@ foreach $a (@ARGV) {
 	exit 1;
     }
 }
+
+# ---- Create the alias pages for large count functions ----
+my $poly_aliases_lst = "$srcdir/src/binding/c/mansrc/poly_aliases.lst";
+open In, $poly_aliases_lst or die "Failed to open $poly_aliases_lst\n";
+while (<In>) {
+    # e.g. MPI_Recv - MPI_Recv_c
+    if (/^(MPI\w+) - (MPI\w+)/) {
+        open Out, "> www/www3/$2.html" or die "Can't create www/www3/$2.html\n";
+        print Out "<meta http-equiv=\"refresh\" content=\"0; url=$1.html\">\n";
+        close Out;
+    }
+}
+close In;
 
 # ---- Create the main index ----
 open( OUTFD, ">$WWWRoot/www/index.html" ) ||

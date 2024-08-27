@@ -55,6 +55,7 @@ def main():
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("")
     G.doc3_src_txt = []
+    G.poly_aliases = [] # large-count mansrc aliases
     G.need_dump_romio_reference = True
 
     # internal function to dump G.out into filepath
@@ -82,6 +83,8 @@ def main():
                 for l in manpage_out:
                     print(l.rstrip(), file=Out)
             G.doc3_src_txt.append(f)
+            if func['_has_poly']:
+                G.poly_aliases.append(func['name'])
 
     def dump_func_abi(func):
         func['_is_abi'] = True
@@ -138,6 +141,12 @@ def main():
     G.check_write_path(abi_file_path)
     dump_c_file(abi_file_path, G.out)
     G.out = []
+
+    if 'output-mansrc' in G.opts:
+        f = c_dir + '/mansrc/' + 'poly_aliases.lst'
+        with open(f, "w") as Out:
+            for name in G.poly_aliases:
+                print("%s - %s_c" % (name, name), file=Out)
 
     # -- Dump other files --
     G.check_write_path("src/include")
