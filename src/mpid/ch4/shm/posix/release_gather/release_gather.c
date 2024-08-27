@@ -200,7 +200,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     int rank, num_ranks;
     bool initialize_flags = false, initialize_bcast_buf = false, initialize_reduce_buf = false;
     int flags_num_pages, fallback = 0;
@@ -231,7 +230,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             MPIDI_POSIX_mpi_release_gather_get_tree_type(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE);
         RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval) = MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL;
         RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type_large) =
-            MPIDI_POSIX_mpi_release_gather_get_tree_type(MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE_LARGE);
+            MPIDI_POSIX_mpi_release_gather_get_tree_type
+            (MPIR_CVAR_REDUCE_INTRANODE_TREE_TYPE_LARGE);
         RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large) =
             MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL_LARGE;
         RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size) =
@@ -304,19 +304,19 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
                 fallback = 1;
                 MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, errflag);
-                MPIR_ERR_SETANDJUMP(mpi_errno_ret, MPI_ERR_NO_MEM, "**nomem");
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_NO_MEM, "**nomem");
             } else {
                 /* More shm can be created, update the shared counter */
                 MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter, memory_to_be_allocated);
                 fallback = 0;
                 mpi_errno = MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         } else {
             mpi_errno = MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             if (fallback) {
-                MPIR_ERR_SETANDJUMP(mpi_errno_ret, MPI_ERR_NO_MEM, "**nomem");
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_NO_MEM, "**nomem");
             }
         }
     }
@@ -344,13 +344,15 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                                  RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type),
                                                  &release_gather_info_ptr->reduce_tree,
                                                  &topotree_fail[1]);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno =
                     MPIR_Treealgo_tree_create(rank, num_ranks,
-                                              RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type_large),
-                                              RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large), 0,
+                                              RELEASE_GATHER_FIELD(comm_ptr,
+                                                                   reduce_tree_type_large),
+                                              RELEASE_GATHER_FIELD(comm_ptr,
+                                                                   reduce_tree_kval_large), 0,
                                               &release_gather_info_ptr->reduce_tree_large);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             } else {
                 /* Finalize was already called and MPIR_Process.hwloc_topology has been destroyed */
                 topotree_fail[0] = -1;
@@ -358,7 +360,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             }
             mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, topotree_fail, 2, MPI_INT,
                                             MPI_MAX, comm_ptr, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         } else {
             topotree_fail[0] = -1;
             topotree_fail[1] = -1;
@@ -373,7 +375,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                           RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_type),
                                           RELEASE_GATHER_FIELD(comm_ptr, bcast_tree_kval), 0,
                                           &release_gather_info_ptr->bcast_tree);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         if (topotree_fail[1] != 0) {
@@ -386,13 +388,13 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                           RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type),
                                           RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval), 0,
                                           &release_gather_info_ptr->reduce_tree);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             mpi_errno =
                 MPIR_Treealgo_tree_create(rank, num_ranks,
                                           RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_type_large),
                                           RELEASE_GATHER_FIELD(comm_ptr, reduce_tree_kval_large), 0,
                                           &release_gather_info_ptr->reduce_tree_large);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
         }
 
@@ -408,13 +410,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, flags_shm_size,
                             (void **) &(release_gather_info_ptr->flags_addr));
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
-        }
-
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno_ret, errflag, mpi_errno_ret);
-        MPIR_ERR_CHECK(mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Calculate gather and release flag address and initialize to the gather and release states */
         release_gather_info_ptr->gather_flag_addr =
@@ -428,7 +424,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
         /* Make sure all the flags are set before ranks start reading each other's flags from shm */
         mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (initialize_bcast_buf) {
@@ -440,10 +436,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size),
                             (void **) &(RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr)));
-        if (mpi_errno) {
-            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
-        }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (initialize_reduce_buf) {
@@ -461,12 +454,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, num_ranks * RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size),
                             (void **) &(RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr)));
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
-        }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno_ret, errflag, mpi_errno_ret);
-        MPIR_ERR_CHECK(mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Store address of each of the children's reduce buffer */
         char *addr;
@@ -488,11 +476,11 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
   fn_exit:
     MPIR_FUNC_EXIT;
-    if (mpi_errno_ret != MPI_SUCCESS) {
+    if (mpi_errno != MPI_SUCCESS) {
         MPIDI_POSIX_mpi_release_gather_comm_free(comm_ptr);
         RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
     }
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
@@ -503,7 +491,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     /* Clean up is not required for NULL struct */
@@ -518,7 +505,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 
     /* destroy and detach shared memory used for flags */
     mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, flags_addr));
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr) != NULL) {
         if (comm_ptr->rank == 0)
@@ -526,7 +513,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
                                         RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size));
         /* destroy and detach shared memory used for bcast buffer */
         mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr));
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr) != NULL) {
@@ -535,7 +522,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
                                         RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
         /* destroy and detach shared memory used for reduce buffers */
         mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr));
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPL_free(RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr));
         MPL_free(RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr_large));
@@ -547,5 +534,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 
   fn_exit:
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

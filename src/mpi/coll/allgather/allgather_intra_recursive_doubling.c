@@ -27,7 +27,6 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint recvtype_extent;
     int j, i;
     MPI_Aint curr_cnt, last_recv_cnt = 0;
@@ -83,7 +82,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                                       (comm_size - dst_tree_root) * recvcount,
                                       recvtype, dst,
                                       MPIR_ALLGATHER_TAG, comm_ptr, &status, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             if (mpi_errno) {
                 last_recv_cnt = 0;
             } else {
@@ -141,7 +140,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                     mpi_errno = MPIC_Send(((char *) recvbuf + offset),
                                           last_recv_cnt,
                                           recvtype, dst, MPIR_ALLGATHER_TAG, comm_ptr, errflag);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
                 /* recv only if this proc. doesn't have data and sender
                  * has data */
@@ -151,7 +150,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                     mpi_errno = MPIC_Recv(((char *) recvbuf + offset),
                                           (comm_size - (my_tree_root + mask)) * recvcount,
                                           recvtype, dst, MPIR_ALLGATHER_TAG, comm_ptr, &status);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
                     /* nprocs_completed is also equal to the
                      * no. of processes whose data we don't have */
                     if (mpi_errno) {
@@ -172,8 +171,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
     }
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

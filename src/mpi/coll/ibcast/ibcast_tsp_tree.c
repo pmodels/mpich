@@ -14,7 +14,6 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
                                      MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i;
     MPI_Aint num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
@@ -73,14 +72,14 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
                 MPIR_TSP_sched_irecv_status((char *) buffer + offset * extent, msgsize,
                                             datatype, my_tree.parent, tag, comm,
                                             &ibcast_state->status, sched, 0, NULL, &recv_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
                               &vtx_id);
 #else
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) buffer + offset * extent, msgsize, datatype,
                                      my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 #endif
         }
 
@@ -90,7 +89,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
                                               ut_int_array(my_tree.children), num_children, tag,
                                               comm, sched, (my_tree.parent != -1) ? 1 : 0, &recv_id,
                                               &vtx_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         offset += msgsize;
     }

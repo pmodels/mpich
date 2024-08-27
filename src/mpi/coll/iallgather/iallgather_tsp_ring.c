@@ -12,7 +12,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
                                          MPIR_Comm * comm, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, src, dst, copy_dst;
     /* Temporary buffers to execute the ring algorithm */
     void *buf1, *buf2, *data_buf, *rbuf, *sbuf;
@@ -69,7 +68,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
                                              (char *) buf1, recvcount, recvtype, sched, 0, NULL,
                                              &dtcopy_id[0]);
     }
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* In ring algorithm src and dst are fixed */
     src = (size + rank - 1) % size;
@@ -110,12 +109,12 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
                 vtcs[2] = recv_id[(i - 1) % 3];
             }
         }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_TSP_sched_irecv((char *) rbuf, recvcount, recvtype,
                                          src, tag, comm, sched, nvtcs, vtcs, &recv_id[i % 3]);
 
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         copy_dst = (size + rank - i - 1) % size;        /* Destination offset of the copy */
         mpi_errno = MPIR_TSP_sched_localcopy((char *) rbuf, recvcount, recvtype,
@@ -124,7 +123,7 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount
                                              recvcount, recvtype, sched, 1, &recv_id[i % 3],
                                              &dtcopy_id[i % 3]);
 
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
 
         data_buf = sbuf;
         sbuf = rbuf;
