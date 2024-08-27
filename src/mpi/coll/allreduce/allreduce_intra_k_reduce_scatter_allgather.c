@@ -17,7 +17,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                                                     MPI_Op op, MPIR_Comm * comm, int k,
                                                     int single_phase_recv, MPIR_Errflag_t errflag)
 {
-    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int rank, nranks, nbr;
     int rem = 0, idx = 0, dst = 0, rank_for_offset;
     MPI_Aint true_extent, true_lb, extent;
@@ -107,16 +107,16 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
         /* non-participating rank sends the data to a participating rank */
         mpi_errno = MPIC_Send(recvbuf, count,
                               datatype, step1_sendto, MPIR_ALLREDUCE_TAG, comm, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {    /* odd */
         for (i = 0; i < step1_nrecvs; i++) {    /* participating rank gets data from non-partcipating ranks */
             mpi_errno =
                 MPIC_Recv(tmp_recvbuf, count, datatype, step1_recvfrom[i], MPIR_ALLREDUCE_TAG, comm,
                           MPI_STATUS_IGNORE);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             /* Do reduction of reduced data */
             mpi_errno = MPIR_Reduce_local(tmp_recvbuf, recvbuf, count, datatype, op);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -164,7 +164,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                     MPIC_Isend((char *) recvbuf + send_offset, send_cnt,
                                datatype, dst, MPIR_ALLREDUCE_TAG, comm, &recv_reqs[num_rreq++],
                                errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 rank_for_offset = MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k);
                 MPII_Recexchalgo_get_count_and_offset(rank_for_offset, j, k, nranks,
@@ -177,14 +177,14 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                 mpi_errno =
                     MPIC_Irecv((char *) tmp_recvbuf + recv_offset, recv_cnt, datatype,
                                dst, MPIR_ALLREDUCE_TAG, comm, &recv_reqs[num_rreq++]);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
 
                 mpi_errno = MPIC_Waitall(num_rreq, recv_reqs, MPI_STATUSES_IGNORE);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno =
                     MPIR_Reduce_local((char *) tmp_recvbuf + recv_offset,
                                       (char *) recvbuf + recv_offset, recv_cnt, datatype, op);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
 
@@ -210,7 +210,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                         recv_count += cnts[offset + x];
                     mpi_errno = MPIC_Irecv(((char *) recvbuf + recv_offset), recv_count, datatype,
                                            nbr, MPIR_ALLREDUCE_TAG, comm, &recv_reqs[num_rreq++]);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
                 }
                 recv_phase--;
             }
@@ -227,11 +227,11 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                 mpi_errno = MPIC_Isend(((char *) recvbuf + send_offset), send_count, datatype,
                                        nbr, MPIR_ALLREDUCE_TAG, comm, &send_reqs[num_sreq++],
                                        errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
             /* wait on prev recvs */
             mpi_errno = MPIC_Waitall((k - 1), recv_reqs, MPI_STATUSES_IGNORE);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
 
             phase--;
             if (single_phase_recv == false) {
@@ -250,17 +250,17 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
                         mpi_errno =
                             MPIC_Isend(((char *) recvbuf + send_offset), send_count, datatype, nbr,
                                        MPIR_ALLREDUCE_TAG, comm, &send_reqs[num_sreq++], errflag);
-                        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                        MPIR_ERR_CHECK(mpi_errno);
                     }
                     /* wait on prev recvs */
                     mpi_errno = MPIC_Waitall((k - 1), recv_reqs + (k - 1), MPI_STATUSES_IGNORE);
-                    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                    MPIR_ERR_CHECK(mpi_errno);
 
                     phase--;
                 }
             }
             mpi_errno = MPIC_Waitall(num_sreq, send_reqs, MPI_STATUSES_IGNORE);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -269,18 +269,18 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
         mpi_errno = MPIC_Recv(recvbuf, count, datatype, step1_sendto, MPIR_ALLREDUCE_TAG, comm,
                               MPI_STATUS_IGNORE);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         if (step1_nrecvs > 0) {
             for (i = 0; i < step1_nrecvs; i++) {
                 mpi_errno =
                     MPIC_Isend(recvbuf, count, datatype, step1_recvfrom[i], MPIR_ALLREDUCE_TAG,
                                comm, &send_reqs[i], errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
 
             mpi_errno = MPIC_Waitall(i, send_reqs, MPI_STATUSES_IGNORE);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -298,8 +298,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     MPL_free(tmp_recvbuf);
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

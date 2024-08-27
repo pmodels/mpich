@@ -73,16 +73,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ireduce_release_gather(const void *send
 {
     MPIR_FUNC_ENTER;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
 
     if (MPIR_Comm_size(comm_ptr) == 1) {
         if (sendbuf != MPI_IN_PLACE) {
             /* Simply copy the data from sendbuf to recvbuf if there is only 1 rank and MPI_IN_PLACE
              * is not used */
-            mpi_errno_ret = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-            if (mpi_errno_ret) {
-                MPIR_ERR_ADD(mpi_errno, mpi_errno_ret);
-            }
+            mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+            MPI_ERR_CHECK(mpi_errno);
         }
         goto fn_exit;
     }

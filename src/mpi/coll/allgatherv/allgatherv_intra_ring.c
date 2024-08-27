@@ -32,7 +32,6 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
 {
     int comm_size, rank, i, left, right;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint recvtype_extent;
     MPI_Aint total_count;
@@ -111,18 +110,18 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
         } else if (!sendnow) {  /* If there's no data to send, just do a recv call */
             mpi_errno =
                 MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm_ptr, &status);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             torecv -= recvnow;
         } else if (!recvnow) {  /* If there's no data to receive, just do a send call */
             mpi_errno =
                 MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             tosend -= sendnow;
         } else {        /* There's data to be sent and received */
             mpi_errno = MPIC_Sendrecv(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG,
                                       rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG,
                                       comm_ptr, &status, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             tosend -= sendnow;
             torecv -= recvnow;
         }
@@ -140,8 +139,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     }
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }

@@ -27,7 +27,6 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
     int comm_size, i, j;
     MPI_Aint recv_extent;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     int rank;
 
@@ -60,7 +59,7 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
                                                   j, MPIR_ALLTOALLV_TAG,
                                                   j, MPIR_ALLTOALLV_TAG,
                                                   comm_ptr, &status, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
 
             } else if (rank == j) {
                 /* same as above with i/j args reversed */
@@ -69,10 +68,13 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
                                                   i, MPIR_ALLTOALLV_TAG,
                                                   i, MPIR_ALLTOALLV_TAG,
                                                   comm_ptr, &status, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
 
-    return mpi_errno_ret;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
