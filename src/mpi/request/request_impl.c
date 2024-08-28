@@ -69,6 +69,7 @@ cvars:
 #ifdef MPICH_DEBUG_PROGRESS
 #define PROGRESS_START \
     int iter = 0; \
+    bool progress_timed_out = false; \
     MPL_time_t time_start; \
     if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
         MPL_wtime(&time_start); \
@@ -82,12 +83,14 @@ cvars:
             MPL_time_t time_cur; \
             MPL_wtime(&time_cur); \
             MPL_wtime_diff(&time_start, &time_cur, &time_diff); \
-            if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT) { \
+            if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT && !progress_timed_out) { \
                 MPIR_Request_debug(); \
                 MPL_backtrace_show(stdout); \
-            } else { \
-                iter = 0; \
+                progress_timed_out = true; \
+            } else if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT * 2) { \
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**timeout"); \
             } \
+            iter = 0; \
         } \
     }
 
