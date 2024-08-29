@@ -13,7 +13,6 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                        MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret ATTRIBUTE((unused)) = MPI_SUCCESS;
     int i, j;
     int nphases = 0;
     int n_invtcs;
@@ -85,10 +84,10 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                              recvcount, recvtype, sched, 0, NULL, &vtx_id);
     }
 
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+    MPIR_ERR_CHECK(mpi_errno);
     /* All following sends/recvs and copies depend on this dtcopy */
     mpi_errno = MPIR_TSP_sched_fence(sched);
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+    MPIR_ERR_CHECK(mpi_errno);
 
     n_invtcs = 0;
     for (i = 0; i < nphases; i++) {
@@ -119,7 +118,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                 MPIR_TSP_sched_irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
                                      count, recvtype, src, tag, comm, sched, 0, NULL, &vtx_id);
 
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
             recv_id[i_recv++] = vtx_id;
             /* Send from the start of recv till `count` amount of data. */
             if (i == 0)
@@ -129,13 +128,13 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             else
                 mpi_errno = MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst, tag,
                                                  comm, sched, n_invtcs, recv_id, &vtx_id);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         n_invtcs += (k - 1);
         delta *= k;
     }
     mpi_errno = MPIR_TSP_sched_fence(sched);
-    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (rank != 0) {    /* No shift required for rank 0 */
         mpi_errno =
@@ -143,12 +142,12 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                      (size - rank) * recvcount * recvtype_extent, rank * recvcount,
                                      recvtype, (char *) recvbuf, rank * recvcount, recvtype, sched,
                                      0, NULL, &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
         mpi_errno =
             MPIR_TSP_sched_localcopy((char *) tmp_recvbuf, (size - rank) * recvcount, recvtype,
                                      (char *) recvbuf + rank * recvcount * recvtype_extent,
                                      (size - rank) * recvcount, recvtype, sched, 0, NULL, &vtx_id);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

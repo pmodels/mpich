@@ -87,7 +87,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     MPIR_FUNC_ENTER;
 
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank;
     void *bcast_data_addr = NULL;
@@ -106,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
             if (rank == root) {
                 mpi_errno =
                     MPIC_Send(local_buf, count, datatype, 0, MPIR_BCAST_TAG, comm_ptr, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             } else if (rank == 0) {
 #ifdef HAVE_ERROR_CHECKING
                 /* when error checking is enabled, the amount of data sender sent is retrieved from
@@ -118,7 +117,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 mpi_errno =
                     MPIC_Recv((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
                               datatype, root, MPIR_BCAST_TAG, comm_ptr, &status);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recv_bytes);
                 MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(int),
                                   MPIR_TYPEREP_FLAG_NONE);
@@ -128,18 +127,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                  * So only datasize mismatch handling is not sufficient */
                 MPIR_Typerep_copy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, &errflag,
                                   sizeof(MPIR_Errflag_t), MPIR_TYPEREP_FLAG_NONE);
-                if ((int) recv_bytes != count) {
-                    /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
-                    errflag = MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_CHKANDJUMP2(recv_bytes != count, mpi_errno, MPI_ERR_OTHER,
+                                     "**collective_size_mismatch",
+                                     "**collective_size_mismatch %d %d",
+                                     (int) recv_bytes, (int) count);
 #else
                 /* When error checking is disabled, MPI_STATUS_IGNORE is used */
                 mpi_errno =
                     MPIC_Recv(bcast_data_addr, count, datatype, root, MPIR_BCAST_TAG, comm_ptr,
                               MPI_STATUS_IGNORE);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
 #endif
             }
         } else if (rank == 0) {
@@ -162,7 +159,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
             mpi_errno = MPIR_Localcopy(local_buf, count, datatype,
                                        bcast_data_addr, count, datatype);
 #endif
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
@@ -223,13 +220,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
             MPIR_Typerep_copy(&recv_bytes, bcast_data_addr, sizeof(int), MPIR_TYPEREP_FLAG_NONE);
             MPIR_Typerep_copy(&recv_errflag, (char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN,
                               sizeof(int), MPIR_TYPEREP_FLAG_NONE);
-            if (recv_bytes != count || recv_errflag != MPI_SUCCESS) {
-                /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
-                errflag = MPIR_ERR_OTHER;
-                MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**collective_size_mismatch",
-                              "**collective_size_mismatch %d %d", recv_bytes, count);
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_CHKANDJUMP2(recv_bytes != count, mpi_errno, MPI_ERR_OTHER,
+                                 "**collective_size_mismatch",
+                                 "**collective_size_mismatch %d %d", (int) recv_bytes, (int) count);
+            MPIR_Assert(recv_errflag == MPI_SUCCESS);
             mpi_errno =
                 MPIR_Localcopy((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
                                datatype, local_buf, count, datatype);
@@ -240,12 +234,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
 #else
         mpi_errno = MPIR_Localcopy(bcast_data_addr, count, datatype, local_buf, count, datatype);
 #endif
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
@@ -272,7 +266,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     void *child_data_addr;
     MPL_atomic_uint64_t *child_flag_addr;
     void *reduce_data_addr = NULL;
-    int i, mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+    int i, mpi_errno = MPI_SUCCESS;
     bool skip_checking = false;
     /* Set the relaxation to 0 because in Reduce, release step is "relaxed" to make sure multiple
      * buffers can be used to pipeline the copying in and out of shared memory, and data is not
@@ -314,7 +308,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
             mpi_errno =
                 MPIR_Localcopy(inbuf, count, datatype, (void *) reduce_data_addr, count, datatype);
         }
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
         if (type_size * count <= MPIR_CVAR_REDUCE_INTRANODE_MSG_SIZE_THRESHOLD) {
             num_children = release_gather_info_ptr->reduce_tree.num_children;
             children = release_gather_info_ptr->reduce_tree.children;
@@ -359,7 +353,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
                 mpi_errno =
                     MPIR_Reduce_local((void *) child_data_addr, (void *) reduce_data_addr,
                                       count, datatype, op);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
             /* Read child_flag_addr which 'may' be larger than the strongest waiting condition
              * so, it is safe */
@@ -378,13 +372,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
                 mpi_errno =
                     MPIC_Recv(outbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr,
                               MPI_STATUS_IGNORE);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             } else if (rank == 0) {
                 MPIR_ERR_CHKANDJUMP(!reduce_data_addr, mpi_errno, MPI_ERR_OTHER, "**nomem");
                 mpi_errno =
                     MPIC_Send((void *) reduce_data_addr, count, datatype, root, MPIR_REDUCE_TAG,
                               comm_ptr, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
         /* No data copy is required if root was rank 0, because it reduced the data directly in its
@@ -396,7 +390,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
         MPL_free(temp_recvbuf);
     }
     MPIR_FUNC_EXIT;
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
 }

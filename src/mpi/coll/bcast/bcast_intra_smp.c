@@ -14,7 +14,6 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                          MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint type_size, nbytes = 0;
     MPI_Status *status_p;
 #ifdef HAVE_ERROR_CHECKING
@@ -42,16 +41,19 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
             if (root == comm_ptr->rank) {
                 mpi_errno = MPIC_Send(buffer, count, datatype, 0,
                                       MPIR_BCAST_TAG, comm_ptr->node_comm, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             } else if (0 == comm_ptr->node_comm->rank) {
                 mpi_errno =
                     MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm_ptr, root),
                               MPIR_BCAST_TAG, comm_ptr->node_comm, status_p);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
 #ifdef HAVE_ERROR_CHECKING
                 /* check that we received as much as we expected */
                 MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
-                MPIR_ERR_COLL_CHECK_SIZE(recvd_size, nbytes, errflag, mpi_errno_ret);
+                MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                                     "**collective_size_mismatch",
+                                     "**collective_size_mismatch %d %d",
+                                     (int) recvd_size, (int) nbytes);
 #endif
             }
 
@@ -62,13 +64,13 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
             mpi_errno = MPIR_Bcast(buffer, count, datatype,
                                    MPIR_Get_internode_rank(comm_ptr, root),
                                    comm_ptr->node_roots_comm, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* perform the intranode broadcast on all except for the root's node */
         if (comm_ptr->node_comm != NULL) {
             mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     } else {    /* (nbytes > MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_ptr->size >= MPIR_CVAR_BCAST_MIN_PROCS) */
 
@@ -86,7 +88,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                 mpi_errno = MPIR_Bcast(buffer, count, datatype,
                                        MPIR_Get_intranode_rank(comm_ptr, root),
                                        comm_ptr->node_comm, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
 
             /* perform the internode broadcast */
@@ -94,7 +96,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                 mpi_errno = MPIR_Bcast(buffer, count, datatype,
                                        MPIR_Get_internode_rank(comm_ptr, root),
                                        comm_ptr->node_roots_comm, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
 
             /* perform the intranode broadcast on all except for the root's node */
@@ -103,7 +105,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                  * bcast.  We need a more comprehensive system for selecting the
                  * right algorithms here. */
                 mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
-                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         } else {        /* large msg or non-pof2 */
 
@@ -113,10 +115,12 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
             mpi_errno =
                 MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr,
                                                         errflag);
-            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

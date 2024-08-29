@@ -29,7 +29,6 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint recvtype_extent;
     int j, i;
     int left, right, jnext;
@@ -65,14 +64,13 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
                                    jnext * recvcount * recvtype_extent),
                                   recvcount, recvtype, left,
                                   MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
-        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag, mpi_errno_ret);
+        MPIR_ERR_CHECK(mpi_errno);
         j = jnext;
         jnext = (comm_size + jnext - 1) % comm_size;
     }
 
   fn_exit:
-    return mpi_errno_ret;
+    return mpi_errno;
   fn_fail:
-    mpi_errno_ret = mpi_errno;
     goto fn_exit;
 }
