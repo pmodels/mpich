@@ -1145,9 +1145,8 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                         e->u.send.sreq = NULL;
                         if (s->kind == MPIR_SCHED_KIND_GENERALIZED) {
                             MPIR_Comm_release(e->u.send.comm);
-                            MPIR_Comm_release(e->u.send.comm);
+                            MPIR_Datatype_release_if_not_builtin(e->u.send.datatype);
                         }
-                        MPIR_Datatype_release_if_not_builtin(e->u.send.datatype);
                     }
                     break;
                 case MPIDU_SCHED_ENTRY_PT2PT_RECV:

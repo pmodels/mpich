@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 
 static void handle_error(int errcode, const char *str)
 {
@@ -34,7 +35,7 @@ int main(int argc, char **argv)
 {
     MPI_Datatype newtype;
     int i, ndims, array_of_gsizes[3], array_of_distribs[3];
-    int order, nprocs, len, *buf, mynod;
+    int order, nprocs, len, *buf, mynod, item_count;
     MPI_Count bufcount;
     int array_of_dargs[3], array_of_psizes[3];
     MPI_File fh;
@@ -60,7 +61,7 @@ int main(int argc, char **argv)
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
         argv++;
-        len = strlen(*argv);
+        len = (int) strlen(*argv);
         filename = (char *) malloc(len + 1);
         strcpy(filename, *argv);
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -91,14 +92,19 @@ int main(int argc, char **argv)
         array_of_psizes[i] = 0;
     MPI_Dims_create(nprocs, ndims, array_of_psizes);
 
-    MPI_Type_create_darray(nprocs, mynod, ndims, array_of_gsizes,
-                           array_of_distribs, array_of_dargs,
-                           array_of_psizes, order, MPI_INT, &newtype);
-    MPI_Type_commit(&newtype);
+    MPI_CHECK(MPI_Type_create_darray(nprocs, mynod, ndims, array_of_gsizes,
+                                     array_of_distribs, array_of_dargs,
+                                     array_of_psizes, order, MPI_INT, &newtype));
+    MPI_CHECK(MPI_Type_commit(&newtype));
 
-    MPI_Type_size_x(newtype, &bufcount);
-    bufcount = bufcount / sizeof(int);
-    buf = (int *) malloc(bufcount * sizeof(int));
+    MPI_CHECK(MPI_Type_size_x(newtype, &bufcount));
+    if (bufcount / sizeof(int) >= INT_MAX) {
+        fprintf(stderr, "datatype too large: update for MPI-4 support");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+    /* ok to cast: checked for overflow above */
+    item_count = (int) (bufcount / sizeof(int));
+    buf = malloc(item_count * sizeof(*buf));
 
 /* to eliminate paging effects, do the operations once but don't time
    them */
@@ -106,9 +112,9 @@ int main(int argc, char **argv)
     MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
                             MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
     MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL));
-    MPI_CHECK(MPI_File_write_all(fh, buf, bufcount, MPI_INT, &status));
+    MPI_CHECK(MPI_File_write_all(fh, buf, item_count, MPI_INT, &status));
     MPI_CHECK(MPI_File_seek(fh, 0, MPI_SEEK_SET));
-    MPI_CHECK(MPI_File_read_all(fh, buf, bufcount, MPI_INT, &status));
+    MPI_CHECK(MPI_File_read_all(fh, buf, item_count, MPI_INT, &status));
     MPI_CHECK(MPI_File_close(&fh));
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -120,7 +126,7 @@ int main(int argc, char **argv)
 
     MPI_Barrier(MPI_COMM_WORLD);
     stim = MPI_Wtime();
-    MPI_CHECK(MPI_File_write_all(fh, buf, bufcount, MPI_INT, &status));
+    MPI_CHECK(MPI_File_write_all(fh, buf, item_count, MPI_INT, &status));
     write_tim = MPI_Wtime() - stim;
     MPI_CHECK(MPI_File_close(&fh));
 
@@ -128,8 +134,8 @@ int main(int argc, char **argv)
 
     if (mynod == 0) {
         write_bw =
-            (array_of_gsizes[0] * array_of_gsizes[1] * array_of_gsizes[2] * sizeof(int)) /
-            (new_write_tim * 1024.0 * 1024.0);
+            (long) (array_of_gsizes[0] * (long) array_of_gsizes[1] * (long) array_of_gsizes[2] *
+                    sizeof(int)) / (new_write_tim * 1024.0 * 1024.0);
         fprintf(stderr, "Global array size %d x %d x %d integers\n", array_of_gsizes[0],
                 array_of_gsizes[1], array_of_gsizes[2]);
         fprintf(stderr,
@@ -146,7 +152,7 @@ int main(int argc, char **argv)
 
     MPI_Barrier(MPI_COMM_WORLD);
     stim = MPI_Wtime();
-    MPI_CHECK(MPI_File_read_all(fh, buf, bufcount, MPI_INT, &status));
+    MPI_CHECK(MPI_File_read_all(fh, buf, item_count, MPI_INT, &status));
     read_tim = MPI_Wtime() - stim;
     MPI_CHECK(MPI_File_close(&fh));
 
@@ -154,8 +160,8 @@ int main(int argc, char **argv)
 
     if (mynod == 0) {
         read_bw =
-            (array_of_gsizes[0] * array_of_gsizes[1] * array_of_gsizes[2] * sizeof(int)) /
-            (new_read_tim * 1024.0 * 1024.0);
+            (long) (array_of_gsizes[0] * (long) array_of_gsizes[1] * (long) array_of_gsizes[2] *
+                    sizeof(int)) / (new_read_tim * 1024.0 * 1024.0);
         fprintf(stderr,
                 "Collective read time = %f sec, Collective read bandwidth = %f Mbytes/sec\n",
                 new_read_tim, read_bw);

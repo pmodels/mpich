@@ -25,3 +25,15 @@ while (<In>) {
     }
 }
 close In;
+
+# large count routines
+open In, "grep '^int MPI\\w*_c\\>' man/man3/*.3 |" or die "Failed to grep for large count man pages\n";
+while (<In>) {
+    # e.g. [man/man3/MPI_Recv.3:int MPI_Recv_c(void *buf, MPI_Count count, MPI_Datatype datatype, int source,] 
+    if (/^man\/man3\/(MPI\w+)\.3:int (MPI\w+_c)\(/) {
+        open Out, "> man/man3/$2.3" or die "Can't create man/man3/$2.3\n";
+        print Out ".so man3/$1.3\n";
+        close Out;
+    }
+}
+close In;

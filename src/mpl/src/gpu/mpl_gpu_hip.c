@@ -91,13 +91,16 @@ int MPL_gpu_init_device_mappings(int max_devid, int max_subdev_id)
     return MPL_SUCCESS;
 }
 
+#ifdef MPL_HIP_USE_MEMORYTYPE
+/* pre-ROCm 6.0 */
+#define DEVICE_ATTR_TYPE attr->device_attr.memoryType
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
     int mpl_err = MPL_SUCCESS;
     hipError_t ret;
     ret = hipPointerGetAttributes(&attr->device_attr, ptr);
     if (ret == hipSuccess) {
-        switch (attr->device_attr.memoryType) {
+        switch (DEVICE_ATTR_TYPE) {
             case hipMemoryTypeHost:
                 attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
                 attr->device = attr->device_attr.device;
@@ -123,6 +126,45 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     mpl_err = MPL_ERR_GPU_INTERNAL;
     goto fn_exit;
 }
+#else
+/* post-ROCm 6.0 */
+#define DEVICE_ATTR_TYPE attr->device_attr.type
+int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
+{
+    int mpl_err = MPL_SUCCESS;
+    hipError_t ret;
+    ret = hipPointerGetAttributes(&attr->device_attr, ptr);
+    if (ret == hipSuccess) {
+        switch (DEVICE_ATTR_TYPE) {
+            case hipMemoryTypeHost:
+                attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
+                attr->device = attr->device_attr.device;
+                break;
+            case hipMemoryTypeDevice:
+                attr->type = MPL_GPU_POINTER_DEV;
+                attr->device = attr->device_attr.device;
+                break;
+            case hipMemoryTypeUnregistered:
+                attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
+                attr->device = -1;
+                break;
+            case hipMemoryTypeManaged:
+                attr->type = MPL_GPU_POINTER_MANAGED;
+                attr->device = attr->device_attr.device;
+                break;
+        }
+    } else {
+        goto fn_fail;
+    }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+#endif
+
 
 int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
 {
@@ -484,7 +526,7 @@ hipError_t hipFree(void *dptr)
     gpu_free_hooks_cb(dptr);
     result = sys_hipFree(dptr);
 
-    MPL_initlock_lock(&free_hook_mutex);
+    MPL_initlock_unlock(&free_hook_mutex);
     return result;
 }
 

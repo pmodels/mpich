@@ -1194,6 +1194,10 @@ fi
 if test "X${pac_have_hip}" = "Xyes" ; then
     AC_DEFINE([HAVE_HIP],[1],[Define if HIP is available])
     AC_CHECK_LIB(dl, dlopen, [], AC_MSG_ERROR([dlopen not found.  MPL HIP support requires libdl.]))
+    AC_CHECK_MEMBER([struct hipPointerAttribute_t.memoryType],
+                    [AC_DEFINE(HIP_USE_MEMORYTYPE, 1, [Define if struct hipPointerAttribute_t use memoryType (pre-v6.1)])],
+                    [],
+                    [[#include <hip/hip_runtime_api.h>]])
     have_gpu="yes"
     GPU_SUPPORT="HIP"
 fi

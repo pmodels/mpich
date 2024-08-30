@@ -9,15 +9,6 @@
 int MPIR_F08_MPI_IN_PLACE MPICH_API_PUBLIC;
 int MPIR_F08_MPI_BOTTOM MPICH_API_PUBLIC;
 
-/* MPI_F08_STATUS_IGNORE and MPI_F08_STATUSES_IGNORE are required by MPI-3.0.
- * the obj variables are linked in mpi_f08_link_constants module via bind(c).
- */
-MPI_F08_status MPIR_F08_MPI_STATUS_IGNORE_OBJ MPICH_API_PUBLIC;
-MPI_F08_status MPIR_F08_MPI_STATUSES_IGNORE_OBJ[1] MPICH_API_PUBLIC;
-
-MPI_F08_status *MPI_F08_STATUS_IGNORE MPICH_API_PUBLIC = &MPIR_F08_MPI_STATUS_IGNORE_OBJ;
-MPI_F08_status *MPI_F08_STATUSES_IGNORE MPICH_API_PUBLIC = &MPIR_F08_MPI_STATUSES_IGNORE_OBJ[0];
-
 /*
   Convert an array of strings in Fortran Format to an array of strings in C format (i.e., char* a[]).
 
