@@ -215,48 +215,6 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     /* --END ERROR HANDLING-- */
 }
 
-int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-               MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int attr = 0;
-    MPIR_Request *request_ptr = NULL;
-
-    MPIR_FUNC_ENTER;
-
-    /* Return immediately for dummy process */
-    if (unlikely(dest == MPI_PROC_NULL)) {
-        goto fn_exit;
-    }
-
-    MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
-
-    MPIR_PT2PT_ATTR_SET_CONTEXT_OFFSET(attr, MPIR_CONTEXT_COLL_OFFSET);
-    MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
-    MPIR_PT2PT_ATTR_SET_SYNCFLAG(attr);
-
-    DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, &request_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-    if (request_ptr) {
-        mpi_errno = MPIC_Wait(request_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Request_free(request_ptr);
-    }
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno == MPIX_ERR_NOREQ)
-        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
-    if (request_ptr)
-        MPIR_Request_free(request_ptr);
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
 int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                   int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                   MPI_Datatype recvtype, int source, int recvtag,
