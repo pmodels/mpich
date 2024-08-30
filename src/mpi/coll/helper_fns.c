@@ -433,41 +433,6 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     goto fn_exit;
 }
 
-int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr, MPIR_Errflag_t errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int attr = 0;
-
-    MPIR_FUNC_ENTER;
-
-    /* Create a completed request and return immediately for dummy process */
-    if (unlikely(dest == MPI_PROC_NULL)) {
-        *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-        MPIR_ERR_CHKANDSTMT((*request_ptr) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                            "**nomemreq");
-        goto fn_exit;
-    }
-
-    MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
-
-    MPIR_PT2PT_ATTR_SET_CONTEXT_OFFSET(attr, MPIR_CONTEXT_COLL_OFFSET);
-    MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
-    MPIR_PT2PT_ATTR_SET_SYNCFLAG(attr);
-
-    DO_MPID_ISEND(buf, count, datatype, dest, tag, comm_ptr, attr, request_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    if (mpi_errno == MPIX_ERR_NOREQ)
-        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
-    goto fn_exit;
-}
-
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
                int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request_ptr)
 {
