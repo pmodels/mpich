@@ -44,7 +44,6 @@ struct MPIDU_Sched_send {
     int dest;
     struct MPIR_Comm *comm;
     struct MPIR_Request *sreq;
-    int is_sync;                /* TRUE iff this send is an ssend */
 };
 
 struct MPIDU_Sched_recv {
@@ -149,8 +148,6 @@ int MPIDU_Sched_pt2pt_send(const void *buf, MPI_Aint count, MPI_Datatype datatyp
                            int tag, int dest, struct MPIR_Comm *comm, MPIR_Sched_t s);
 int MPIDU_Sched_pt2pt_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                            int tag, int src, struct MPIR_Comm *comm, MPIR_Sched_t s);
-int MPIR_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                     struct MPIR_Comm *comm, MPIR_Sched_t s);
 int MPIR_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
                       MPI_Op op, MPIR_Sched_t s);
 int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype, void *outbuf,

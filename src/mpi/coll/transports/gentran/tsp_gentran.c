@@ -66,10 +66,6 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
                 MPIR_Comm_release(vtx->u.isend.comm);
                 MPIR_Datatype_release_if_not_builtin(vtx->u.isend.dt);
                 break;
-            case MPII_GENUTIL_VTX_KIND__ISSEND:
-                MPIR_Comm_release(vtx->u.issend.comm);
-                MPIR_Datatype_release_if_not_builtin(vtx->u.issend.dt);
-                break;
             case MPII_GENUTIL_VTX_KIND__IRECV:
                 MPIR_Comm_release(vtx->u.irecv.comm);
                 MPIR_Datatype_release_if_not_builtin(vtx->u.irecv.dt);
@@ -331,39 +327,6 @@ int MPIR_TSP_sched_imcast(const void *buf,
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast", *vtx_id));
-    return mpi_errno;
-}
-
-int MPIR_TSP_sched_issend(const void *buf,
-                          MPI_Aint count,
-                          MPI_Datatype dt,
-                          int dest,
-                          int tag,
-                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs,
-                          int *vtx_id)
-{
-    MPII_Genutil_sched_t *sched = s;
-    vtx_t *vtxp;
-    int mpi_errno = MPI_SUCCESS;
-    /* assign a new vertex */
-    *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
-    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__ISSEND;
-    MPII_Genutil_vtx_add_dependencies(sched, *vtx_id, n_in_vtcs, in_vtcs);
-
-    /* store the arguments */
-    vtxp->u.issend.buf = buf;
-    vtxp->u.issend.count = count;
-    vtxp->u.issend.dt = dt;
-    vtxp->u.issend.dest = dest;
-    vtxp->u.issend.tag = tag;
-    vtxp->u.issend.comm = comm_ptr;
-
-    MPIR_Comm_add_ref(comm_ptr);
-    MPIR_Datatype_add_ref_if_not_builtin(dt);
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] issend", *vtx_id));
-
     return mpi_errno;
 }
 
