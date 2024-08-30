@@ -17,7 +17,7 @@
     }
 
 /* use static buffer in PMIU_cmd facility */
-static bool is_static = true;
+static bool is_static = false;
 
 /* info_getnodeattr will wait for info_putnodeattr */
 struct HYD_pmcd_pmi_v2_reqs {
@@ -229,6 +229,8 @@ HYD_status fn_init(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
 
+    PMIU_cmd_free_buf(&pmi_response);
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
@@ -281,6 +283,8 @@ HYD_status fn_fullinit(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
 
+    PMIU_cmd_free_buf(&pmi_response);
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
@@ -302,6 +306,8 @@ HYD_status fn_get_maxes(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
+
+    PMIU_cmd_free_buf(&pmi_response);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -327,6 +333,8 @@ HYD_status fn_get_appnum(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
 
+    PMIU_cmd_free_buf(&pmi_response);
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
@@ -348,6 +356,8 @@ HYD_status fn_get_my_kvsname(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
+
+    PMIU_cmd_free_buf(&pmi_response);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -384,6 +394,8 @@ HYD_status fn_get_usize(struct pmip_downstream * p, struct PMIU_cmd * pmi)
 
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
+
+    PMIU_cmd_free_buf(&pmi_response);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -442,6 +454,8 @@ HYD_status fn_get(struct pmip_downstream * p, struct PMIU_cmd * pmi)
 
         status = send_cmd_downstream(p->pmi_fd, &pmi_response);
         HYDU_ERR_POP(status, "error sending PMI response\n");
+
+        PMIU_cmd_free_buf(&pmi_response);
     } else {
         /* if we can't find the key locally, ask upstream */
         status = send_cmd_upstream(PMIP_pg_from_downstream(p), pmi, p->pmi_fd);
@@ -478,6 +492,8 @@ HYD_status fn_put(struct pmip_downstream *p, struct PMIU_cmd *pmi)
         status = send_cmd_downstream(p->pmi_fd, &pmi_response);
         HYDU_ERR_POP(status, "error sending command downstream\n");
 
+        PMIU_cmd_free_buf(&pmi_response);
+
         goto fn_exit;
     }
 
@@ -509,6 +525,8 @@ HYD_status fn_put(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
+
+    PMIU_cmd_free_buf(&pmi_response);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -608,6 +626,8 @@ HYD_status fn_finalize(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending PMI response\n");
 
+    PMIU_cmd_free_buf(&pmi_response);
+
     if (HYD_pmcd_pmip.user_global.auto_cleanup) {
         /* deregister to prevent the cleanup kill on fd close */
         status = HYDT_dmx_deregister_fd(p->pmi_fd);
@@ -649,6 +669,8 @@ HYD_status fn_info_putnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
         status = send_cmd_downstream(p->pmi_fd, &pmi_response);
         HYDU_ERR_POP(status, "error sending command downstream\n");
 
+        PMIU_cmd_free_buf(&pmi_response);
+
         goto fn_exit;
     }
 
@@ -671,6 +693,8 @@ HYD_status fn_info_putnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending command downstream\n");
+
+    PMIU_cmd_free_buf(&pmi_response);
 
     status = poke_progress(key);
     HYDU_ERR_POP(status, "poke progress error\n");
@@ -723,6 +747,8 @@ HYD_status fn_info_getnodeattr(struct pmip_downstream *p, struct PMIU_cmd *pmi)
 
     status = send_cmd_downstream(p->pmi_fd, &pmi_response);
     HYDU_ERR_POP(status, "error sending command downstream\n");
+
+    PMIU_cmd_free_buf(&pmi_response);
 
   fn_exit:
     HYDU_FUNC_EXIT();
