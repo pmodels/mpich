@@ -21,7 +21,6 @@ int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
     int i;
     int comm_size, rank;
     MPI_Aint extent;
-    int min_procs;
 
     rank = comm_ptr->rank;
 
@@ -54,21 +53,7 @@ int MPIR_Igatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint sendcount,
     } else if (root != MPI_PROC_NULL) {
         /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (sendcount) {
-            /* we want local size in both the intracomm and intercomm cases
-             * because the size of the root's group (group A in the standard) is
-             * irrelevant here. */
-            comm_size = comm_ptr->local_size;
-
-            min_procs = MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS;
-            if (min_procs == -1)
-                min_procs = comm_size + 1;      /* Disable ssend */
-            else if (min_procs == 0)    /* backwards compatibility, use default value */
-                MPIR_CVAR_GET_DEFAULT_INT(GATHERV_INTER_SSEND_MIN_PROCS, &min_procs);
-
-            if (comm_size >= min_procs)
-                mpi_errno = MPIR_Sched_ssend(sendbuf, sendcount, sendtype, root, comm_ptr, s);
-            else
-                mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, root, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, root, comm_ptr, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
