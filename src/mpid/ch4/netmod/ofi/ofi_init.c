@@ -823,9 +823,6 @@ int MPIDI_OFI_init_world(void)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
-        dump_dynamic_settings();
-    }
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -865,6 +862,10 @@ int MPIDI_OFI_init_vcis(int num_vcis, int *num_vcis_actual)
 int MPIDI_OFI_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
+        dump_dynamic_settings();
+    }
 
     /* Since we allow different process to have different num_vcis, we always need run exchange. */
     mpi_errno = MPIDI_OFI_addr_exchange_all_ctx();

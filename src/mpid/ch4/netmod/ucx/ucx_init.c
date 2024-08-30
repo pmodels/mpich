@@ -113,9 +113,8 @@ static int initial_address_exchange(void)
         /* insert new addresses, skipping over node roots */
         for (int i = 0; i < MPIR_Process.size; i++) {
             if (rank_map[i] >= 0) {
-
                 ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-                ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
+                ep_params.address = (ucp_address_t *) ((char *) table + rank_map[i] * recv_bc_len);
                 ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
                                            &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0][0]);
                 MPIDI_UCX_CHK_STATUS(ucx_status);
