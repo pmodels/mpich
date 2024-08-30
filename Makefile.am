@@ -561,7 +561,7 @@ mandoc-local: $(doc1_src_txt:.txt=.man1-phony) \
 		fi \
 	    fi \
 	done
-	$(srcdir)/maint/alias_mancnst
+	$(srcdir)/maint/alias_mancnst -srcdir=$(top_srcdir)
 
 # use htmldoc-local target to force directory creation before running DOCTEXT
 # Note that the mpi.cit is appended to by each update, so it must be removed
@@ -590,7 +590,7 @@ htmldoc-local: $(doc1_src_txt:.txt=.html1-phony) \
 		fi \
 	    fi \
 	done
-	$(srcdir)/maint/createhtmlindex -wwwroot=$(top_builddir)
+	$(srcdir)/maint/createhtmlindex -wwwroot=$(top_builddir) -srcdir=$(top_srcdir)
 
 # install-man does not have a special "-local" target for some reason
 if INSTALL_DOCS

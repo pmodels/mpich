@@ -10,6 +10,13 @@
 
 use strict;
 
+my $srcdir = ".";
+foreach my $a (@ARGV) {
+    if ($a =~ /--?srcdir=(.+)/) {
+        $srcdir = $1;
+    }
+}
+
 if (!-e "man/man3/Constants.3") {
     die "man/man3/Constants.3 not found.\n";
 }
@@ -27,10 +34,11 @@ while (<In>) {
 close In;
 
 # large count routines
-open In, "grep '^int MPI\\w*_c\\>' man/man3/*.3 |" or die "Failed to grep for large count man pages\n";
+my $poly_aliases_lst = "$srcdir/src/binding/c/mansrc/poly_aliases.lst";
+open In, $poly_aliases_lst or die "Failed to open $poly_aliases_lst\n";
 while (<In>) {
-    # e.g. [man/man3/MPI_Recv.3:int MPI_Recv_c(void *buf, MPI_Count count, MPI_Datatype datatype, int source,] 
-    if (/^man\/man3\/(MPI\w+)\.3:int (MPI\w+_c)\(/) {
+    # e.g. MPI_Recv - MPI_Recv_c
+    if (/^(MPI\w+) - (MPI\w+)/) {
         open Out, "> man/man3/$2.3" or die "Can't create man/man3/$2.3\n";
         print Out ".so man3/$1.3\n";
         close Out;
