@@ -69,12 +69,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_tagged(void *buffer
         if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
             do {
                 ret = fi_cntr_wait(rcv_cntr, 1, 1);
-                MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,
-                              mpi_errno,
-                              MPI_ERR_RMA_RANGE,
-                              "**ofid_cntr_wait",
-                              "**ofid_cntr_wait %s %d %s %s",
-                              __SHORT_FILE__, __LINE__, __func__, fi_strerror(-ret));
+                MPIR_ERR_CHKANDJUMP4(ret < 0 && ret != -FI_ETIMEDOUT,
+                                     mpi_errno, MPI_ERR_RMA_RANGE,
+                                     "**ofid_cntr_wait", "**ofid_cntr_wait %s %d %s %s",
+                                     __SHORT_FILE__, __LINE__, __func__, fi_strerror(-ret));
                 MPID_Progress_test(NULL);
             } while (ret == -FI_ETIMEDOUT);
         } else {
@@ -91,12 +89,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_tagged(void *buffer
         if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
             do {
                 ret = fi_cntr_wait(snd_cntr, num_children, 1);
-                MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,
-                              mpi_errno,
-                              MPI_ERR_RMA_RANGE,
-                              "**ofid_cntr_wait",
-                              "**ofid_cntr_wait %s %d %s %s",
-                              __SHORT_FILE__, __LINE__, __func__, fi_strerror(-ret));
+                MPIR_ERR_CHKANDJUMP4(ret < 0 && ret != -FI_ETIMEDOUT,
+                                     mpi_errno, MPI_ERR_RMA_RANGE,
+                                     "**ofid_cntr_wait", "**ofid_cntr_wait %s %d %s %s",
+                                     __SHORT_FILE__, __LINE__, __func__, fi_strerror(-ret));
                 MPID_Progress_test(NULL);
             } while (ret == -FI_ETIMEDOUT);
         } else {
