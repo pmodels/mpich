@@ -23,7 +23,6 @@
 #define MPIR_Sched_recv MPIDU_Sched_recv
 #define MPIR_Sched_pt2pt_recv MPIDU_Sched_pt2pt_recv
 #define MPIR_Sched_recv_status MPIDU_Sched_recv_status
-#define MPIR_Sched_ssend MPIDU_Sched_ssend
 #define MPIR_Sched_reduce MPIDU_Sched_reduce
 #define MPIR_Sched_copy MPIDU_Sched_copy
 #define MPIR_Sched_barrier MPIDU_Sched_barrier

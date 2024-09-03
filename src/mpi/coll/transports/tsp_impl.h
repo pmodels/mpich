@@ -52,15 +52,6 @@ int MPIR_TSP_sched_isend(const void *buf,
                          MPIR_Comm * comm_ptr, MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs,
                          int *vtx_id);
 
-/* Transport function to schedule a issend vertex */
-int MPIR_TSP_sched_issend(const void *buf,
-                          MPI_Aint count,
-                          MPI_Datatype dt,
-                          int dest,
-                          int tag,
-                          MPIR_Comm * comm_ptr,
-                          MPIR_TSP_sched_t sched, int n_in_vtcs, int *in_vtcs, int *vtx_id);
-
 /* Transport function to schedule an irecv vertex */
 int MPIR_TSP_sched_irecv(void *buf,
                          MPI_Aint count,
