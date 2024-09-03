@@ -688,6 +688,15 @@ sub ProcessFile
 	$_ = StripComments($FD, $_ );
 	# Skip the definition of the function
 	if (/int\s+MPI[OUR]_Err_create_code/) { $remainder = ""; next; }
+        if (/^\s*MPIDI_OFI_(CALL|CALL_RETRY|CALL_RETRY_AM|VCI_CALL)\b(.*)/) {
+            my $arglist = $2;
+            my ($leader, @args);
+            ($leader, $remainder, @args ) = &GetSubArgs($FD, $arglist );
+            my $name = $args[-1];
+            $generic_msgs{"**ofid_$name"}++;
+            $specific_msgs{"**ofid_$name %s %d %s %s"}++;
+            next;
+        }
 	while (/(MPI[OUR]_Err[A-Za-z0-9_]+)\s*(\(.*)$/i) {
 	    my $routineName = $1;
 	    my $arglist     = $2;
