@@ -1,117 +1,23 @@
-**ofid_pmi:PMI_Init() failure
-**ofid_pmi %s %d %s %s:pmi failed (%s:%d:%s:%s)
-**ofid_getinfo:OFI fi_getinfo() failure
-**ofid_getinfo %s %d %s %s:OFI fi_getinfo() failed (%s:%d:%s:%s)
-**ofid_getinfo %s:fi_getinfo failure ('%s')
-**ofid_opendomain:OFI fi_open domain failure
-**ofid_opendomain %s %d %s %s:OFI fi_open domain failed (%s:%d:%s:%s)
-**ofid_fabric:OFI fi_fabric failure
-**ofid_fabric %s %d %s %s:OFI fi_fabric failed (%s:%d:%s:%s)
-**ofid_opencq:OFI event queue create failure
-**ofid_opencq %s %d %s %s:OFI event queue create failed (%s:%d:%s:%s)
-**ofid_openct:OFI event counter create failure
-**ofid_openct %s %d %s %s:OFI event counter create failed (%s:%d:%s:%s)
-**ofid_bind:OFI resource bind failure
-**ofid_bind %s %d %s %s:OFI resource bind failed (%s:%d:%s:%s)
-**ofid_ep_enable:OFI EP enable failure
-**ofid_ep_enable %s %d %s %s:OFI EP enable failed (%s:%d:%s:%s)
-**ofid_avopen:OFI address vector open failed
-**ofid_avopen %s %d %s %s:OFI address vector open failed (%s:%d:%s:%s)
-**ofid_ep:OFI endpoint open failed
-**ofid_ep %s %d %s %s:OFI endpoint open failed (%s:%d:%s:%s)
-**ofid_getname:OFI get endpoint name failed
-**ofid_getname %s %d %s %s:OFI get endpoint name failed (%s:%d:%s:%s)
-**ofid_avmap:OFI get address vector map failed
-**ofid_avmap %s %d %s %s:OFI address vector map failed (%s:%d:%s:%s)
-**ofid_avlookup:OFI get address vector lookup failed
-**ofid_avlookup %s %d %s %s:OFI address vector lookup failed (%s:%d:%s:%s)
-**ofid_avsync:OFI get address vector sync failed
-**ofid_avsync %s %d %s %s:OFI address vector sync failed (%s:%d:%s:%s)
-**ofid_epclose:OFI endpoint close failed
-**ofid_epclose %s %d %s %s:OFI endpoint close failed (%s:%d:%s:%s)
-**ofid_cqclose:OFI cq close failed
-**ofid_cqclose %s %d %s %s:OFI cq close failed (%s:%d:%s:%s)
-**ofid_cntrclose:OFI counter close failed
-**ofid_cntrclose %s %d %s %s:OFI counter close failed (%s:%d:%s:%s)
-**ofid_epsync:OFI synchronization failed
-**ofid_epsync %s %d %s %s:OFI endpoint synchronization failed (%s:%d:%s:%s)
-**ofid_alias:OFI cq alias failed
-**ofid_alias %s %d %s %s:OFI cq alias failed (%s:%d:%s:%s)
-**ofid_getopt:OFI getopt failed
-**ofid_getopt %s %d %s %s:OFI getopt failed (%s:%d:%s:%s)
-**ofid_setopt:OFI setopt failed
-**ofid_setopt %s %d %s %s:OFI setopt failed (%s:%d:%s:%s)
-**ofid_domainclose:OFI domain close failed
-**ofid_domainclose %s %d %s %s:OFI domain close failed (%s:%d:%s:%s)
-**ofid_avclose:OFI av close failed
-**ofid_avclose %s %d %s %s:OFI av close failed (%s:%d:%s:%s)
-**ofid_tsend:OFI tagged send failed
-**ofid_tsend %s %d %s %s:OFI tagged send failed (%s:%d:%s:%s)
-**ofid_tsenddata:OFI tagged senddata failed
-**ofid_tsenddata %s %d %s %s:OFI tagged senddata failed (%s:%d:%s:%s)
-**ofid_tsendmsg:OFI tagged sendmsg failed
-**ofid_tsendmsg %s %d %s %s:OFI tagged sendmsg failed (%s:%d:%s:%s)
-**ofid_tinject:OFI tagged inject failed
-**ofid_tinject %s %d %s %s:OFI tagged inject failed (%s:%d:%s:%s)
-**ofid_tinjectdata:OFI tagged injectdata failed
-**ofid_tinjectdata %s %d %s %s:OFI tagged injectdata failed (%s:%d:%s:%s)
-**ofid_tsendsync:OFI tagged send sync failed
-**ofid_tsendsync %s %d %s %s:OFI tagged send sync failed (%s:%d:%s:%s)
-**ofid_trecv:OFI tagged recv failed
-**ofid_trecv %s %d %s %s:OFI tagged recv failed (%s:%d:%s:%s)
-**ofid_trecvmsg:OFI tagged recvmsg failed
-**ofid_trecvmsg %s %d %s %s:OFI tagged recvmsg failed (%s:%d:%s:%s)
-**ofid_trecvsync:OFI tagged recv sync failed
-**ofid_trecvsync %s %d %s %s:OFI tagged recv sync failed (%s:%d:%s:%s)
-**ofid_poll:OFI poll failed
-**ofid_poll %s %d %s %s:OFI poll failed (%s:%d:%s:%s)
-**ofid_peek:OFI peek failed
-**ofid_peek %s %d %s %s:OFI peek failed (%s:%d:%s:%s)
-**ofid_send:OFI send failed
-**ofid_send %s %d %s %s:OFI send failed (%s:%d:%s:%s)
-**ofid_sendv:OFI send failed
-**ofid_sendv %s %d %s %s:OFI send failed (%s:%d:%s:%s)
-**ofid_inject:OFI inject failed
-**ofid_inject %s %d %s %s:OFI inject failed (%s:%d:%s:%s)
-**ofid_rdma_write:OFI rdma write failed
-**ofid_rdma_write %s %d %s %s:OFI rdma write failed (%s:%d:%s:%s)
-**ofid_rdma_inject_write:OFI rdma write immediatefailed
-**ofid_rdma_inject_write %s %d %s %s:OFI rdma write immediate failed (%s:%d:%s:%s)
-**ofid_rdma_atomicto:OFI rdma atomicto failed
-**ofid_rdma_atomicto %s %d %s %s:OFI rdma atomicto failed (%s:%d:%s:%s)
-**ofid_rdma_cswap:OFI rdma cswap failed
-**ofid_rdma_cswap %s %d %s %s:OFI rdma cswap failed (%s:%d:%s:%s)
-**ofid_rdma_readfrom:OFI rdma read failed
-**ofid_rdma_readfrom %s %d %s %s:OFI read failed (%s:%d:%s:%s)
-**ofid_mr_reg:OFI memory registration failed
-**ofid_mr_reg %s %d %s %s:OFI memory registration failed (%s:%d:%s:%s)
-**ofid_mr_unreg:OFI memory deregistration failed
-**ofid_mr_unreg %s %d %s %s:OFI memory deregistration failed (%s:%d:%s:%s)
-**ofid_prepost:OFI preposting receives failed
-**ofid_prepost %s %d %s %s:OFI preposting receives failed (%s:%d:%s:%s)
-**ofid_ctrlcancel:OFI Control cancel failed
-**ofid_ctrlcancel %s %d %s %s:OFI control cancel failed (%s:%d:%s:%s)
-**ofid_cntr_wait:OFI Counter wait failed
-**ofid_cntr_wait %s %d %s %s:OFI OFI Counter wait failed (%s:%d:%s:%s)
-**ofid_rma_init:OFI RMA Initialization failed
-**ofid_rma_init %s %d %s %s:OFI RMA Initialization failed (%s:%d:%s:%s)
-**ofid_stx_ctx:OFI fi_stx_context failed
-**ofid_stx_ctx %s %d %s %s:OFI fi_stx_context failed (%s:%d:%s:%s)
-**ofid_stx_ctx_close:OFI stx context close failed
-**ofid_stx_ctx_close %s %d %s %s:OFI stx context close failed (%s:%d:%s:%s)
 **ofi_provider_mismatch:OFI Provider name does not match configure-time provider name
 **ofi_provider_mismatch %s %d %s %s:OFI Provider name does not match configure-time provider name (%s:%d:%s:%s)
-**ofid_cancel:OFI cancel failed
-**ofid_cancel %s %d %s %s:OFI cancel failed (%s:%d:%s:%s)
-**ofi_max_conn:OFI dynamic process reaches maximum connection
-**ofi_max_conn %d:OFI dynamic process reaches maximum connection (%d)
 **ofi_num_nics:OFI has a different number of nics available on different notes
 **ofi_num_nics %d %d:OFI has a different number of nics available on different notes (%d on this node and %d elsewhere)
-**ofid_mr_key:OFI MR key invalid
+**ofi_max_conn:OFI dynamic process reaches maximum connection
+**ofi_max_conn %d:OFI dynamic process reaches maximum connection (%d)
 **ofi_no_prov:No valid libfabric provider
-**ofid_enable_trigger:OFI triggered ops enable failed
-**ofid_enable_trigger %s %d %s %s:OFI triggered ops enable failed (%s:%d:%s:%s)
+**ofid_mr_key:OFI MR key invalid
+
+# Most of the libfabric call error names are generated from MPIDI_OFI_CALL macros,
+# some of them are explicitly used via MPIR_ERR_CHKANDJUMP4, they need be listed here.
+**ofid_cancel:OFI cancel failed
+**ofid_cancel %s %d %s %s:OFI cancel failed (%s:%d:%s:%s)
 **ofid_cntr_open:OFI Counter open failed
 **ofid_cntr_open %s %d %s %s:OFI OFI Counter open failed (%s:%d:%s:%s)
+**ofid_cntr_wait:OFI Counter wait failed
+**ofid_cntr_wait %s %d %s %s:OFI OFI Counter wait failed (%s:%d:%s:%s)
+**ofid_enable_trigger:OFI triggered ops enable failed
+**ofid_enable_trigger %s %d %s %s:OFI triggered ops enable failed (%s:%d:%s:%s)
 **ofid_issue_trigger:OFI triggered ops issue failed
 **ofid_issue_trigger %s %d %s %s:OFI triggered ops issue failed (%s:%d:%s:%s)
+**ofid_poll:OFI poll failed
+**ofid_poll %s %d %s %s:OFI poll failed (%s:%d:%s:%s)
