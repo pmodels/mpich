@@ -28,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vci_idx);
  * The seq need be tracked between local (rank, vci) and remote (rank, vci).
  * We don't need local rank since it is implicit on each process.
  *
- * LOCAL_ID is send to remote precess to identify self.
+ * LOCAL_ID is send to remote process to identify self.
  * REMOTE_ID is used locally to track remote process.
  * I realize the confusing part of the naming.
  *
@@ -156,26 +156,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_am_unordered_msg_t
     not grab the lock because the progress engine is already holding the lock.
     This is the case for reply functions such as am_isend_reply.
 */
-#define MPIDI_OFI_CALL_RETRY_AM(FUNC,vci_,STR)                          \
-    do {                                                                \
-        ssize_t _ret;                                                   \
-        do {                                                            \
-            _ret = FUNC;                                                \
-            if (likely(_ret==0)) break;                                  \
-            MPIR_ERR_##CHKANDJUMP4(_ret != -FI_EAGAIN,                  \
-                                   mpi_errno,                           \
-                                   MPI_ERR_OTHER,                       \
-                                   "**ofid_"#STR,                        \
-                                   "**ofid_"#STR" %s %d %s %s",          \
-                                   __SHORT_FILE__,                      \
-                                   __LINE__,                            \
-                                   __func__,                              \
-                                   fi_strerror(-_ret));                 \
-            mpi_errno = MPIDI_OFI_progress_do_queue(vci_);              \
-            if (mpi_errno != MPI_SUCCESS)                                \
-                MPIR_ERR_CHECK(mpi_errno);                               \
-        } while (_ret == -FI_EAGAIN);                                   \
-    } while (0)
 
 #define MPIDI_OFI_AM_FREE_REQ_HDR(req_hdr, vci) \
     do { \

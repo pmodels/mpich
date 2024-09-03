@@ -119,6 +119,27 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
         } \
     } while (0)
 
+#define MPIDI_OFI_CALL_RETRY_AM(FUNC,vci_,STR)                          \
+    do {                                                                \
+        ssize_t _ret;                                                   \
+        do {                                                            \
+            _ret = FUNC;                                                \
+            if (likely(_ret==0)) break;                                  \
+            MPIDI_OFI_ERR(_ret != -FI_EAGAIN,                  \
+                                   mpi_errno,                           \
+                                   MPI_ERR_OTHER,                       \
+                                   "**ofid_"#STR,                        \
+                                   "**ofid_"#STR" %s %d %s %s",          \
+                                   __SHORT_FILE__,                      \
+                                   __LINE__,                            \
+                                   __func__,                              \
+                                   fi_strerror(-_ret));                 \
+            mpi_errno = MPIDI_OFI_progress_do_queue(vci_);              \
+            if (mpi_errno != MPI_SUCCESS)                                \
+                MPIR_ERR_CHECK(mpi_errno);                               \
+        } while (_ret == -FI_EAGAIN);                                   \
+    } while (0)
+
 /* per-vci macros - we'll transition into these macros once the locks are
  * moved down to ofi-layer */
 #define MPIDI_OFI_VCI_PROGRESS(vci_)                                    \
@@ -180,21 +201,6 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
         do {                                                            \
             (_ret) = FUNC;                                              \
         } while (0)
-
-#define MPIDI_OFI_STR_CALL(FUNC,STR)                                   \
-  do                                                            \
-    {                                                           \
-      str_errno = FUNC;                                         \
-      MPIDI_OFI_ERR(str_errno!=MPL_SUCCESS,        \
-                            mpi_errno,                          \
-                            MPI_ERR_OTHER,                      \
-                            "**"#STR,                           \
-                            "**"#STR" %s %d %s %s",             \
-                            __SHORT_FILE__,                     \
-                            __LINE__,                           \
-                            __func__,                             \
-                            #STR);                              \
-    } while (0)
 
 #define MPIDI_OFI_REQUEST_CREATE(req, kind, vci) \
     do {                                                      \
@@ -595,7 +601,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm
     return nic_idx;
 }
 
-/* cq bufferring routines --
+/* cq buffering routines --
  * in particular, when we encounter EAGAIN error during progress, such as during
  * active message handling, recursively calling progress may result in unpredictable
  * behaviors (e.g. stack overflow). Thus we need use the cq buffering to avoid
