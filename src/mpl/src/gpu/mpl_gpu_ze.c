@@ -821,17 +821,21 @@ static inline int free_ipc_handle_cache(MPL_ze_ipc_handle_entry_t * cache_entry)
         munmapFunction(cache_entry->nfds, cache_entry->mapped_ptr, cache_entry->mapped_size);
         if (!cache_entry->handle_cached) {
             /* free the ipc handle itself */
-            for (int i = 0; i < cache_entry->nfds; i++) {
-                ret = zeMemPutIpcHandle(ze_context, cache_entry->ipc_handle.ipc_handles[i]);
+            if (cache_entry->nfds == 1) {
+                ret = zeMemPutIpcHandle(ze_context, cache_entry->ipc_handle.ipc_handles[0]);
                 ZE_ERR_CHECK(ret);
+            } else {
+                /* FIXME: in implicit scaling mode, L0 lacks an extension function to free two handles */
             }
         }
     }
 
     if (cache_entry->handle_cached) {
-        for (int i = 0; i < cache_entry->nfds; i++) {
-            ret = zeMemPutIpcHandle(ze_context, cache_entry->ipc_handle.ipc_handles[i]);
+        if (cache_entry->nfds == 1) {
+            ret = zeMemPutIpcHandle(ze_context, cache_entry->ipc_handle.ipc_handles[0]);
             ZE_ERR_CHECK(ret);
+        } else {
+            /* FIXME: in implicit scaling mode, L0 lacks an extension function to free two handles */
         }
     }
 
@@ -1532,6 +1536,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
 
                 cache_entry->handle_cached = true;
                 memcpy(&cache_entry->ipc_handle, ipc_handle, sizeof(MPL_gpu_ipc_mem_handle_t));
+                cache_entry->nfds = ipc_handle->data.nfds;
                 HASH_ADD(hh, ipc_cache_tracked[local_dev_id], mem_id, sizeof(uint64_t), cache_entry,
                          MPL_MEM_OTHER);
             }
