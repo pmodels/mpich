@@ -260,6 +260,63 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Comm * comm,
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_send(int rank, MPIR_Comm * comm,
+                                                  int handler_id, int tag,
+                                                  const void *data, MPI_Aint count,
+                                                  MPI_Datatype datatype,
+                                                  int src_vci, int dst_vci, MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    ucp_request_param_t param = {
+        .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK,
+        .cb.send = MPIDI_UCX_am_isend_callback_nbx,
+    };
+
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr, src_vci, dst_vci);
+    uint64_t ucx_tag = MPIDI_UCX_init_tag(comm->context_id, comm->rank, tag);
+
+    int dt_contig;
+    MPI_Aint data_sz;
+    MPI_Aint dt_true_lb;
+    MPIR_Datatype *dt_ptr;
+    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+
+    const void *send_buf;
+    MPI_Aint send_count;
+    if (dt_contig) {
+        send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
+        send_count = data_sz;
+    } else {
+        send_buf = buf;
+        send_count = count;
+        param.op_attr_mask |= UCP_OP_ATTR_FIELD_DATATYPE;
+        param.datatype = dt_ptr->dev.netmod.ucx.ucp_datatype;
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
+    }
+
+    MPIDI_UCX_ucp_request_t *ucp_request;
+    ucp_request =
+        (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nbx(ep, send_buf, send_count, ucx_tag, &param);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
+
+    if (ucp_request) {
+        MPIDI_UCX_AM_SEND_REQUEST(sreq, handler_id) = handler_id;
+        MPIDI_UCX_AM_SEND_REQUEST(sreq, pack_buffer) = NULL;
+        ucp_request->req = sreq;
+        ucp_request_release(ucp_request);
+    } else {
+        MPIDIG_global.origin_cbs[handler_id] (sreq);
+    }
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
                                                       const void *data, MPI_Aint count,
                                                       MPI_Datatype datatype, MPIR_Request * sreq)
