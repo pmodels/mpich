@@ -83,11 +83,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                                       recvtype, dst,
                                       MPIR_ALLGATHER_TAG, comm_ptr, &status, errflag);
             MPIR_ERR_CHECK(mpi_errno);
-            if (mpi_errno) {
-                last_recv_cnt = 0;
-            } else {
-                MPIR_Get_count_impl(&status, recvtype, &last_recv_cnt);
-            }
+            MPIR_Get_count_impl(&status, recvtype, &last_recv_cnt);
             curr_cnt += last_recv_cnt;
         }
 
@@ -153,11 +149,7 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                     MPIR_ERR_CHECK(mpi_errno);
                     /* nprocs_completed is also equal to the
                      * no. of processes whose data we don't have */
-                    if (mpi_errno) {
-                        last_recv_cnt = 0;
-                    } else {
-                        MPIR_Get_count_impl(&status, recvtype, &last_recv_cnt);
-                    }
+                    MPIR_Get_count_impl(&status, recvtype, &last_recv_cnt);
                     curr_cnt += last_recv_cnt;
                 }
                 tmp_mask >>= 1;

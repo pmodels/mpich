@@ -68,11 +68,8 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                                        relative_rank * scatter_size),
                                       recv_size, MPI_BYTE, src, MPIR_BCAST_TAG, comm_ptr, &status);
                 MPIR_ERR_CHECK(mpi_errno);
-                if (mpi_errno) {
-                    curr_size = 0;
-                } else
-                    /* query actual size of data received */
-                    MPIR_Get_count_impl(&status, MPI_BYTE, &curr_size);
+                /* query actual size of data received */
+                MPIR_Get_count_impl(&status, MPI_BYTE, &curr_size);
             }
             break;
         }
