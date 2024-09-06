@@ -405,23 +405,59 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
  * blocking other progress (under global granularity).
  */
 
+#ifdef MPICH_DEBUG_PROGRESS
+#define MPIDIU_PROGRESS_START \
+    int iter = 0; \
+    bool progress_timed_out = false; \
+    MPL_time_t time_start; \
+    if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
+        MPL_wtime(&time_start); \
+    }
+
+#define MPIDIU_PROGRESS_CHECK \
+    if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
+        iter++; \
+        if (iter == 0xffff) {\
+            double time_diff = 0.0; \
+            MPL_time_t time_cur; \
+            MPL_wtime(&time_cur); \
+            MPL_wtime_diff(&time_start, &time_cur, &time_diff); \
+            if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT && !progress_timed_out) { \
+                MPL_backtrace_show(stdout); \
+                progress_timed_out = true; \
+            } else if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT * 2) { \
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**timeout"); \
+            } \
+            iter = 0; \
+        } \
+    }
+
+#else
+#define MPIDIU_PROGRESS_START do {} while (0)
+#define MPIDIU_PROGRESS_CHECK do {} while (0)
+#endif
+
 /* declare to avoid header order dance */
 MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci);
 
 #define MPIDIU_PROGRESS_WHILE(cond, vci)         \
+    MPIDIU_PROGRESS_START; \
     while (cond) {                          \
         mpi_errno = MPIDI_progress_test_vci(vci);   \
         MPIR_ERR_CHECK(mpi_errno); \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
         MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI(vci).lock);                 \
+        MPIDIU_PROGRESS_CHECK; \
     }
 
 #define MPIDIU_PROGRESS_DO_WHILE(cond, vci) \
+    MPIDIU_PROGRESS_START; \
     do { \
         mpi_errno = MPIDI_progress_test_vci(vci); \
         MPIR_ERR_CHECK(mpi_errno); \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
         MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI(vci).lock);                 \
+        MPIDIU_PROGRESS_CHECK; \
     } while (cond)
 
 #ifdef HAVE_ERROR_CHECKING
