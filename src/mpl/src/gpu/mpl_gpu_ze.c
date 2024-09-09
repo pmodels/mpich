@@ -3111,23 +3111,32 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     if (cache_entry && cache_entry->mapped_ptr) {
         base = cache_entry->mapped_ptr;
     } else {
-        nfds = 0;       /* must be initialized to 0 */
-        if (zexMemGetIpcHandles) {
-            ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, NULL);
-            ZE_ERR_CHECK(ret);
-            if (nfds) {
-                assert(nfds <= 2);
-                ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, ze_ipc_handle);
-            }
-        }
-        if (!nfds) {
-            ret = zeMemGetIpcHandle(ze_context, pbase, &ze_ipc_handle[0]);
-            nfds = 1;
-        }
-        ZE_ERR_CHECK(ret);
+        if (cache_entry) {
+            nfds = cache_entry->nfds;
 
-        for (int i = 0; i < nfds; i++)
-            memcpy(&fds[i], &ze_ipc_handle[i], sizeof(int));
+            for (int i = 0; i < nfds; i++)
+                memcpy(&fds[i], &cache_entry->ipc_handle.ipc_handles[i], sizeof(int));
+        } else {
+            /* Only create an IPC handle in case one doesn't already exist */
+            nfds = 0;       /* must be initialized to 0 */
+            if (zexMemGetIpcHandles) {
+                ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, NULL);
+                ZE_ERR_CHECK(ret);
+                if (nfds) {
+                    assert(nfds <= 2);
+                    ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, ze_ipc_handle);
+                }
+            }
+            if (!nfds) {
+                ret = zeMemGetIpcHandle(ze_context, pbase, &ze_ipc_handle[0]);
+                nfds = 1;
+            }
+            ZE_ERR_CHECK(ret);
+
+            for (int i = 0; i < nfds; i++)
+                memcpy(&fds[i], &ze_ipc_handle[i], sizeof(int));
+        }
+
         mpl_err = mmapFunction(nfds, fds, len, &base);
         if (mpl_err != MPL_SUCCESS) {
             goto fn_fail;
