@@ -7,7 +7,7 @@ CROSS_F90_OFFSET_KIND=8
 CROSS_F77_TRUE_VALUE=1
 CROSS_F77_FALSE_VALUE=0
 CROSS_F90_INTEGER_KIND=4
-# Next variables should be set in 'src/binding/fortran/use_mpi/mpif90model.h' during './configure' step
+# Next variables should be set in 'src/include/mpif90model.h' during './configure' step
 CROSS_F90_REAL_MODEL=6,37
 CROSS_F90_DOUBLE_MODEL=15,307
 CROSS_F90_INTEGER_MODEL=9
