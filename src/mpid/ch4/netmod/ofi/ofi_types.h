@@ -99,15 +99,17 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
     return (idata >> MPIDI_OFI_IDATA_GPUCHUNK_OFFSET);
 }
 
-/* There are 4 protocol bits:
+/* There are 6 protocol bits:
+ * - MPIDI_OFI_SYNC_SEND_ACK
  * - MPIDI_DYNPROC_SEND
+ * - MPIDI_OFI_AM_TAG_SEND
+ * - MPIDI_OFI_GPU_PIPELINE_SEND
  * - MPIDI_OFI_HUGE_SEND
  * - MPIDI_OFI_SYNC_SEND
- * - MPIDI_OFI_SYNC_SEND_ACK
- * The ssend ack and dynproc send bits need to be included in matching
+ * The internal send such as ssend ack and dynproc send bits need to be included in matching
  * to avoid matching with user messages. Because of this, we only mask
  * the ssend and huge bits. */
-#define MPIDI_OFI_PROTOCOL_BITS (5)
+#define MPIDI_OFI_PROTOCOL_BITS (6)
 #define MPIDI_OFI_PROTOCOL_MASK_BITS (2)
 
 /* Define constants for default bits allocation. The actual bits are defined in
@@ -120,7 +122,7 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 
 /* without CQ data */
 #define MPIDI_OFI_CONTEXT_BITS_b 16
-#define MPIDI_OFI_SOURCE_BITS_b  23
+#define MPIDI_OFI_SOURCE_BITS_b  22
 #define MPIDI_OFI_TAG_BITS_b     20
 
 /* cxi provider has smaller tag space */
@@ -129,11 +131,12 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 #define MPIDI_OFI_TAG_BITS_c     20
 
 #define MPIDI_OFI_PROTOCOL_SHIFT     (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS)
-#define MPIDI_OFI_SYNC_SEND_ACK      (1ULL << MPIDI_OFI_PROTOCOL_SHIFT)
-#define MPIDI_OFI_DYNPROC_SEND       (2ULL << MPIDI_OFI_PROTOCOL_SHIFT)
-#define MPIDI_OFI_GPU_PIPELINE_SEND  (4ULL << MPIDI_OFI_PROTOCOL_SHIFT)
-#define MPIDI_OFI_SYNC_SEND          (8ULL << MPIDI_OFI_PROTOCOL_SHIFT)
-#define MPIDI_OFI_HUGE_SEND          (16ULL << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_AM_TAG_SEND        (1ULL << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_SYNC_SEND_ACK      (2ULL << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_DYNPROC_SEND       (4ULL << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_GPU_PIPELINE_SEND  (8ULL << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_SYNC_SEND          (16ULL << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_HUGE_SEND          (32ULL << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_PROTOCOL_MASK      (((1ULL << MPIDI_OFI_PROTOCOL_MASK_BITS) - 1) << (MPIDI_OFI_PROTOCOL_BITS - MPIDI_OFI_PROTOCOL_MASK_BITS) << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_CONTEXT_MASK       (((1ULL << MPIDI_OFI_CONTEXT_BITS) - 1) << (MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
 #define MPIDI_OFI_SOURCE_MASK        (((1ULL << MPIDI_OFI_SOURCE_BITS) - 1) << MPIDI_OFI_TAG_BITS)
