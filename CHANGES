@@ -1,4 +1,40 @@
 ===============================================================================
+                               Changes in 4.2.3
+===============================================================================
+
+# Update embedded libfabric to fix a build issue on FreeBSD
+
+# Fix HIP support for use with AMD GPUs
+
+# Fix potential invalid context issue in CUDA memory hooks
+
+# Fix GPU fallback path in ch4/ofi for Intel GPU buffers
+
+# Fix IPC handle destruction with Level Zero API (Intel GPU)
+
+# Fix potential crash in MPI_ISENDRECV with derived datatypes
+
+# Fix bug in persistent MPI_GATHER that incorrectly cached buffer
+  contents at init time
+
+# Fix memory allocation bug in ROMIO GPFS driver
+
+# Fix missing error names in ch4/ofi netmod
+
+# Fix potential hang in multi-VCI active message RMA
+
+# Fix manpage generation to provide aliases for large-count versions
+
+# Fix potential crash in Hydra with long PMI command messages
+
+# Fix bug in exit status capture in Hydra when there are multiple
+  processes with non-zero exit
+
+# Fix implementation of C/Fortran status conversion functions
+
+# Fix implementation of MPI_Type_create_f90_xxx functions
+
+===============================================================================
                                Changes in 4.2.2
 ===============================================================================
 
