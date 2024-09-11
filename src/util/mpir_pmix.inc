@@ -232,7 +232,7 @@ static bool pmix_get_jobattr(const char *key, char *valbuf)
     int flag = 1;
     PMIx_Info_load(info, PMIX_IMMEDIATE, &flag, PMIX_BOOL);
 
-    int pmi_errno = PMIx_Get(NULL, key, info, 1, &pvalue);
+    int pmi_errno = PMIx_Get(&pmix_wcproc, key, info, 1, &pvalue);
     if (pmi_errno == PMIX_SUCCESS) {
         strncpy(valbuf, pvalue->data.string, pmi_max_val_size);
         PMIX_VALUE_RELEASE(pvalue);
