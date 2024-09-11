@@ -229,6 +229,11 @@ static bool pmix_get_jobattr(const char *key, char *valbuf)
     bool found = false;
     pmix_value_t *pvalue;
 
+    /* HACK: avoid extraneous error output with OpenPMIx */
+    if (strcmp(key, "PMI_mpi_memory_alloc_kinds") == 0) {
+       return found;
+    }
+
     /* if this is a non-reserved key, we want to make sure not to block
      * by using PMIX_IMMEDIATE */
     pmix_info_t *info;
