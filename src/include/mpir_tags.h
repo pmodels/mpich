@@ -68,7 +68,7 @@
 #define MPIR_TAG_COLL_BIT (1 << (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1))
 
 /* This macro defines tag bits available for user tags */
-#define MPIR_TAG_USABLE_BITS (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1 - MPID_TAG_DEV_BITS)
+#define MPIR_TAG_USABLE_BITS (MPIR_Process.tag_bits - MPIR_TAG_ERROR_BITS - 1)
 #define MPIR_TAG_USABLE_MASK ((1 << MPIR_TAG_USABLE_BITS) - 1)
 
 /* This macro checks the value of the error bit in the MPI tag and returns 1
