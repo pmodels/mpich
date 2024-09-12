@@ -180,7 +180,7 @@ static int pmix_get(int src, const char *key, char *val, int val_size)
 
     pmix_value_t *pvalue;
     if (src < 0) {
-        pmi_errno = PMIx_Get(NULL, key, NULL, 0, &pvalue);
+        pmi_errno = PMIx_Get(&pmix_wcproc, key, NULL, 0, &pvalue);
     } else {
         pmix_proc_t proc;
         PMIX_PROC_CONSTRUCT(&proc);
@@ -350,7 +350,7 @@ static int pmix_get_binary(int src, const char *key, char *buf, int *p_size, int
     int bufsize ATTRIBUTE((unused)) = *p_size;
     pmix_value_t *pvalue;
     if (src < 0) {
-        pmi_errno = PMIx_Get(NULL, key, NULL, 0, &pvalue);
+        pmi_errno = PMIx_Get(&pmix_wcproc, key, NULL, 0, &pvalue);
     } else {
         pmix_proc_t proc;
         PMIX_PROC_CONSTRUCT(&proc);
