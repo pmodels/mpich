@@ -142,6 +142,7 @@ int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *bu
     ADIO_File adio_fh;
     ADIO_Offset off, bufsize;
     MPI_Offset nbytes = 0;
+    void *xbuf = NULL, *e32_buf = NULL, *host_buf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -174,6 +175,22 @@ int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *bu
 
     ADIOI_TEST_DEFERRED(adio_fh, myname, &error_code);
 
+    xbuf = buf;
+    if (adio_fh->is_external32) {
+        MPI_Aint e32_size = 0;
+        error_code = MPIU_datatype_full_size(datatype, &e32_size);
+        if (error_code != MPI_SUCCESS)
+            goto fn_exit;
+
+        e32_buf = ADIOI_Malloc(e32_size * count);
+        xbuf = e32_buf;
+    } else {
+        MPIO_GPU_HOST_ALLOC(host_buf, buf, count, datatype);
+        if (host_buf != NULL) {
+            xbuf = host_buf;
+        }
+    }
+
     if (buftype_is_contig && filetype_is_contig) {
         /* convert count and offset to bytes */
         bufsize = datatype_size * count;
@@ -185,7 +202,7 @@ int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *bu
         }
 
         if (!(adio_fh->atomicity))
-            ADIO_IreadContig(adio_fh, buf, count, datatype, file_ptr_type,
+            ADIO_IreadContig(adio_fh, xbuf, count, datatype, file_ptr_type,
                              off, request, &error_code);
         else {
             /* to maintain strict atomicity semantics with other concurrent
@@ -194,7 +211,7 @@ int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *bu
                 ADIOI_WRITE_LOCK(adio_fh, off, SEEK_SET, bufsize);
             }
 
-            ADIO_ReadContig(adio_fh, buf, count, datatype, file_ptr_type,
+            ADIO_ReadContig(adio_fh, xbuf, count, datatype, file_ptr_type,
                             off, &status, &error_code);
 
             if (ADIO_Feature(adio_fh, ADIO_LOCKS)) {
@@ -206,8 +223,15 @@ int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *bu
             MPIO_Completed_request_create(&adio_fh, nbytes, &error_code, request);
         }
     } else
-        ADIO_IreadStrided(adio_fh, buf, count, datatype, file_ptr_type,
+        ADIO_IreadStrided(adio_fh, xbuf, count, datatype, file_ptr_type,
                           offset, request, &error_code);
+
+    if (e32_buf != NULL) {
+        error_code = MPIU_read_external32_conversion_fn(buf, datatype, count, e32_buf);
+        ADIOI_Free(e32_buf);
+    }
+
+    MPIO_GPU_SWAP_BACK(host_buf, buf, count, datatype);
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();

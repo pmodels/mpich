@@ -145,6 +145,9 @@ int MPIOI_File_iwrite(MPI_File fh,
     ADIO_Offset off, bufsize;
     ADIO_File adio_fh;
     MPI_Offset nbytes = 0;
+    void *e32buf = NULL;
+    const void *xbuf = NULL;
+    void *host_buf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
     adio_fh = MPIO_File_resolve(fh);
@@ -176,6 +179,20 @@ int MPIOI_File_iwrite(MPI_File fh,
 
     ADIOI_TEST_DEFERRED(adio_fh, myname, &error_code);
 
+    xbuf = buf;
+    if (adio_fh->is_external32) {
+        error_code = MPIU_external32_buffer_setup(buf, count, datatype, &e32buf);
+        if (error_code != MPI_SUCCESS)
+            goto fn_exit;
+
+        xbuf = e32buf;
+    } else {
+        MPIO_GPU_HOST_SWAP(host_buf, buf, count, datatype);
+        if (host_buf != NULL) {
+            xbuf = host_buf;
+        }
+    }
+
     if (buftype_is_contig && filetype_is_contig) {
         /* convert sizes to bytes */
         bufsize = datatype_size * count;
@@ -186,7 +203,7 @@ int MPIOI_File_iwrite(MPI_File fh,
         }
 
         if (!(adio_fh->atomicity)) {
-            ADIO_IwriteContig(adio_fh, buf, count, datatype, file_ptr_type,
+            ADIO_IwriteContig(adio_fh, xbuf, count, datatype, file_ptr_type,
                               off, request, &error_code);
         } else {
             /* to maintain strict atomicity semantics with other concurrent
@@ -195,7 +212,7 @@ int MPIOI_File_iwrite(MPI_File fh,
                 ADIOI_WRITE_LOCK(adio_fh, off, SEEK_SET, bufsize);
             }
 
-            ADIO_WriteContig(adio_fh, buf, count, datatype, file_ptr_type, off,
+            ADIO_WriteContig(adio_fh, xbuf, count, datatype, file_ptr_type, off,
                              &status, &error_code);
 
             if (ADIO_Feature(adio_fh, ADIO_LOCKS)) {
@@ -208,10 +225,15 @@ int MPIOI_File_iwrite(MPI_File fh,
             MPIO_Completed_request_create(&adio_fh, nbytes, &error_code, request);
         }
     } else {
-        ADIO_IwriteStrided(adio_fh, buf, count, datatype, file_ptr_type,
+        ADIO_IwriteStrided(adio_fh, xbuf, count, datatype, file_ptr_type,
                            offset, request, &error_code);
     }
+
+    MPIO_GPU_HOST_FREE(host_buf, count, datatype);
+
   fn_exit:
+    if (e32buf != NULL)
+        ADIOI_Free(e32buf);
     ROMIO_THREAD_CS_EXIT();
     return error_code;
 }
