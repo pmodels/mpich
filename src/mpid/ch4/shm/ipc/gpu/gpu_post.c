@@ -22,6 +22,17 @@ cvars:
         specialized - use the cache mechanism in a gpu-specific mpl layer (if applicable)
         disabled - disable caching completely
 
+    - name        : MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES
+      category    : CH4
+      type        : int
+      default     : 16
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        The maximum number of entries to hold per device in the cache containing IPC mapped buffers.
+        When an entry is evicted, the corresponding IPC handle is closed.
+
     - name        : MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD
       category    : CH4
       type        : int
