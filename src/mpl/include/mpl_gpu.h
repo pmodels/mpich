@@ -69,6 +69,7 @@ typedef enum {
 typedef struct {
     /* Input */
     int debug_summary;
+    int max_cache_entries;
     bool use_immediate_cmdlist;
     bool roundrobin_cmdq;
     /* Output */

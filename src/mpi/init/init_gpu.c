@@ -26,6 +26,7 @@ int MPII_init_gpu(void)
         MPL_gpu_info.specialized_cache = specialized_cache;
         MPL_gpu_info.use_immediate_cmdlist = MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST;
         MPL_gpu_info.roundrobin_cmdq = MPIR_CVAR_GPU_ROUND_ROBIN_COMMAND_QUEUES;
+        MPL_gpu_info.max_cache_entries = MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES;
 
         int mpl_errno = MPL_gpu_init(debug_summary);
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
