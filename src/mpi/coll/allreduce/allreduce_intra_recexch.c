@@ -204,8 +204,6 @@ int MPIR_Allreduce_intra_recexch(const void *sendbuf,
             mpi_errno = MPIC_Isend(recvbuf, count, datatype, nbr, MPIR_ALLREDUCE_TAG,
                                    comm, coll_group, &send_reqs[send_nreq++], errflag);
             MPIR_ERR_CHECK(mpi_errno);
-            if (rank > nbr) {
-            }
         }
 
         mpi_errno = MPIC_Waitall(send_nreq, send_reqs, MPI_STATUSES_IGNORE);
