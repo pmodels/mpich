@@ -211,6 +211,10 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    if (enginetype == MPL_GPU_ENGINE_TYPE_LAST) {
+        goto fn_fallback;
+    }
+
     /* This case is specific for contig datatypes */
     int sendtype_iscontig, recvtype_iscontig;
     MPIR_Datatype_is_contig(sendtype, &sendtype_iscontig);
