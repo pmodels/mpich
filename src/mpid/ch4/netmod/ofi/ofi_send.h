@@ -23,16 +23,32 @@ cvars:
         Set MPIR_CVAR_CH4_OFI_ENABLE_INJECT=0 to disable buffered send for small messages. This
         may help avoid hang due to lack of global progress.
 
+    - name        : MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE
+      category    : CH4_OFI
+      type        : enum
+      default     : copy_low_latency
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : |-
+        Specifies GPU engine type for GPU pt2pt on the sender side.
+        compute - use a compute engine
+        copy_high_bandwidth - use a high-bandwidth copy engine
+        copy_low_latency - use a low-latency copy engine
+        yaksa - use Yaksa
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_send_engine_type(int cvar)
+MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_send_engine_type(void)
 {
-    if (cvar == MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_compute) {
+    if (MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE == MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_compute) {
         return MPL_GPU_ENGINE_TYPE_COMPUTE;
-    } else if (cvar == MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_copy_high_bandwidth) {
+    } else if (MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE ==
+               MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_copy_high_bandwidth) {
         return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
-    } else if (cvar == MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_copy_low_latency) {
+    } else if (MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE ==
+               MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE_copy_low_latency) {
         return MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
     } else {
         return MPL_GPU_ENGINE_TYPE_LAST;
@@ -342,12 +358,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
-        MPL_gpu_engine_type_t engine =
-            MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
         mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
                                        MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
                                        data_sz, MPI_BYTE, 0, NULL,
-                                       MPL_GPU_COPY_DIRECTION_NONE, engine, true);
+                                       MPL_GPU_COPY_DIRECTION_NONE,
+                                       MPIDI_OFI_gpu_get_send_engine_type(), true);
         MPIR_ERR_CHECK(mpi_errno);
 
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer);
@@ -574,11 +589,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
             if (!MPIDI_OFI_ENABLE_HMEM) {
                 /* Force pack for GPU buffer. */
                 pack_buf = MPL_malloc(data_sz, MPL_MEM_OTHER);
-                MPL_gpu_engine_type_t engine =
-                    MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
                 mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr, pack_buf,
                                                data_sz, MPI_BYTE, 0, NULL,
-                                               MPL_GPU_COPY_DIRECTION_NONE, engine, true);
+                                               MPL_GPU_COPY_DIRECTION_NONE,
+                                               MPIDI_OFI_gpu_get_send_engine_type(), true);
                 MPIR_ERR_CHECK(mpi_errno);
                 send_buf = pack_buf;
             } else {
