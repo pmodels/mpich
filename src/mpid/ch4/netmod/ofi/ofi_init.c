@@ -460,34 +460,6 @@ cvars:
       description : >-
         If true, enable OFI triggered ops for MPI collectives.
 
-    - name        : MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE
-      category    : CH4_OFI
-      type        : enum
-      default     : copy_low_latency
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : |-
-        Specifies GPU engine type for GPU pt2pt on the sender side.
-        compute - use a compute engine
-        copy_high_bandwidth - use a high-bandwidth copy engine
-        copy_low_latency - use a low-latency copy engine
-        yaksa - use Yaksa
-
-    - name        : MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE
-      category    : CH4_OFI
-      type        : enum
-      default     : copy_low_latency
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : |-
-        Specifies GPU engine type for GPU pt2pt on the receiver side.
-        compute - use a compute engine
-        copy_high_bandwidth - use a high-bandwidth copy engine
-        copy_low_latency - use a low-latency copy engine
-        yaksa - use Yaksa
-
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE
       category    : CH4_OFI
       type        : boolean
