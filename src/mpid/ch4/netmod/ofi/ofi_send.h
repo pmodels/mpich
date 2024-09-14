@@ -342,32 +342,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
-        int fast_copy = 0;
-        if (attr.type == MPL_GPU_POINTER_DEV && dt_contig &&
-            data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
-            int mpl_err = MPL_gpu_fast_memcpy(send_buf, &attr,
-                                              MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
-                                              NULL, data_sz);
-            if (mpl_err == MPL_SUCCESS)
-                fast_copy = 1;
-        }
-        if (!fast_copy) {
-            MPL_gpu_engine_type_t engine =
-                MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
-            if (dt_contig && engine != MPL_GPU_ENGINE_TYPE_LAST &&
-                MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
-                mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
-                                               MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
-                                               data_sz, MPI_BYTE, 0, NULL,
-                                               MPL_GPU_COPY_DIRECTION_NONE, engine, true);
-                MPIR_ERR_CHECK(mpi_errno);
-            } else {
-                MPI_Aint actual_pack_bytes;
-                MPIR_Typerep_pack(buf, count, datatype, 0,
-                                  MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer), data_sz,
-                                  &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
-            }
-        }
+        MPL_gpu_engine_type_t engine =
+            MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
+        mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
+                                       MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
+                                       data_sz, MPI_BYTE, 0, NULL,
+                                       MPL_GPU_COPY_DIRECTION_NONE, engine, true);
+        MPIR_ERR_CHECK(mpi_errno);
+
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer);
     } else {
         MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = NULL;
@@ -605,31 +587,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
             if (!MPIDI_OFI_ENABLE_HMEM) {
                 /* Force pack for GPU buffer. */
                 void *host_buf = MPL_malloc(data_sz, MPL_MEM_OTHER);
-                int fast_copy = 0;
-                if (data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
-                    int mpl_err;
-                    mpl_err = MPL_gpu_fast_memcpy(send_buf, &attr, host_buf, NULL, data_sz);
-                    if (mpl_err == MPL_SUCCESS) {
-                        fast_copy = 1;
-                        actual_pack_bytes = data_sz;
-                    }
-                }
-                if (!fast_copy) {
-                    MPL_gpu_engine_type_t engine =
-                        MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
-                    if (engine != MPL_GPU_ENGINE_TYPE_LAST) {
-                        mpi_errno =
-                            MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr, host_buf,
+                MPL_gpu_engine_type_t engine =
+                    MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
+                mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr, host_buf,
                                                data_sz, MPI_BYTE, 0, NULL,
                                                MPL_GPU_COPY_DIRECTION_NONE, engine, true);
-                        MPIR_ERR_CHECK(mpi_errno);
-                        actual_pack_bytes = data_sz;
-                    } else {
-                        MPIR_Typerep_pack(buf, count, datatype, 0, host_buf, data_sz,
-                                          &actual_pack_bytes, MPIR_TYPEREP_FLAG_NONE);
-                    }
-                }
-                MPIR_Assert(actual_pack_bytes == data_sz);
+                MPIR_ERR_CHECK(mpi_errno);
                 send_buf = host_buf;
             } else {
                 mpi_errno =
