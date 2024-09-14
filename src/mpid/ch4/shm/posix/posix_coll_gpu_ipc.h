@@ -153,7 +153,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_gpu_ipc_read(void *buffer,
     if (my_rank != root) {
         /* map root's ipc_handle to remote_buf */
         void *remote_buf = NULL;
-        bool do_mmap = (data_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE);
+        bool do_mmap = (data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
         int dev_id = ipc_handles[my_rank].gpu.local_dev_id;
         int root_dev =
             MPIDI_GPU_ipc_get_map_dev(ipc_handles[root].gpu.global_dev_id, dev_id, datatype);

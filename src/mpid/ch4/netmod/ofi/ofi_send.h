@@ -344,7 +344,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
         int fast_copy = 0;
         if (attr.type == MPL_GPU_POINTER_DEV && dt_contig &&
-            data_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE) {
+            data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
             int mpl_err = MPL_gpu_fast_memcpy(send_buf, &attr,
                                               MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
                                               NULL, data_sz);
@@ -606,7 +606,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                 /* Force pack for GPU buffer. */
                 void *host_buf = MPL_malloc(data_sz, MPL_MEM_OTHER);
                 int fast_copy = 0;
-                if (data_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE) {
+                if (data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
                     int mpl_err;
                     mpl_err = MPL_gpu_fast_memcpy(send_buf, &attr, host_buf, NULL, data_sz);
                     if (mpl_err == MPL_SUCCESS) {

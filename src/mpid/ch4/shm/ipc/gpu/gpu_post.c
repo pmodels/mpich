@@ -59,18 +59,6 @@ cvars:
         bytes), then enable GPU-based single copy protocol for intranode communication. The
         environment variable is valid only when then GPU IPC shmmod is enabled.
 
-    - name        : MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE
-      category    : CH4
-      type        : int
-      default     : 1024
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        If a send message size is less than or equal to MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE (in
-        bytes), then enable GPU-basedfast memcpy. The environment variable is valid only when then
-        GPU IPC shmmod is enabled.
-
     - name        : MPIR_CVAR_CH4_IPC_ZE_SHAREABLE_HANDLE
       category    : CH4
       type        : enum
@@ -696,7 +684,7 @@ int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_
 
     void *src_buf = NULL;
 #ifdef MPL_HAVE_ZE
-    bool do_mmap = (src_data_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE);
+    bool do_mmap = (src_data_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE);
 #else
     bool do_mmap = false;
 #endif
