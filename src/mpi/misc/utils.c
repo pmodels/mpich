@@ -3,6 +3,24 @@
  *     See COPYRIGHT in top-level directory
  */
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+cvars:
+    - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE
+      category    : CH4
+      type        : int
+      default     : 1024
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If a send message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE (in
+        bytes), then enable GPU-basedfast memcpy. The environment variable is valid only when then
+        GPU IPC shmmod is enabled.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #include "mpiimpl.h"
 
 #define COPY_BUFFER_SZ 16384
@@ -239,7 +257,7 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             MPIR_GPU_query_pointer_attr(recvbuf, &recvattr);
             recv_attr = &recvattr;
         }
-        if (copy_sz <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE) {
+        if (copy_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
             mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
             MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_fast_memcpy");
