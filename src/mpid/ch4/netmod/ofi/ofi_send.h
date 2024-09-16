@@ -357,20 +357,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vci_remote);
-    if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && data_sz <= MPIDI_OFI_global.max_buffered_send &&
-        !MPIDI_OFI_ENABLE_HMEM) {
-        if (MPIDI_OFI_ENABLE_DATA) {
-            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                                send_buf, data_sz, cq_data, dest_addr, match_bits),
-                                 vci_local, tinjectdata);
-        } else {
-            MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                            send_buf, data_sz, dest_addr, match_bits),
-                                 vci_local, tinject);
-        }
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
-        MPIDI_OFI_send_event(vci_src, NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
-    } else if (!is_huge_send) {
+    if (!is_huge_send) {
         if (MPIDI_OFI_ENABLE_DATA) {
             MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
                                               send_buf, data_sz, desc, cq_data, dest_addr,
