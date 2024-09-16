@@ -581,19 +581,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
     if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag && dt_contig &&
         (data_sz <= MPIDI_OFI_global.max_buffered_send)) {
-        MPI_Aint actual_pack_bytes = 0;
+        void *pack_buf = NULL;
         if (data_sz && MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
             MPIDI_OFI_register_am_bufs();
             if (!MPIDI_OFI_ENABLE_HMEM) {
                 /* Force pack for GPU buffer. */
-                void *host_buf = MPL_malloc(data_sz, MPL_MEM_OTHER);
+                pack_buf = MPL_malloc(data_sz, MPL_MEM_OTHER);
                 MPL_gpu_engine_type_t engine =
                     MPIDI_OFI_gpu_get_send_engine_type(MPIR_CVAR_CH4_OFI_GPU_SEND_ENGINE_TYPE);
-                mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr, host_buf,
+                mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr, pack_buf,
                                                data_sz, MPI_BYTE, 0, NULL,
                                                MPL_GPU_COPY_DIRECTION_NONE, engine, true);
                 MPIR_ERR_CHECK(mpi_errno);
-                send_buf = host_buf;
+                send_buf = pack_buf;
             } else {
                 mpi_errno =
                     MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
@@ -604,10 +604,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         }
         mpi_errno = MPIDI_OFI_send_lightweight(send_buf, data_sz, cq_data, dst_rank, tag, comm,
                                                context_offset, addr, vci_src, vci_dst);
-        if (actual_pack_bytes > 0) {
-            /* Free stage host buf (assigned to send_buf already) after
-             * lightweight_send. */
-            MPL_free(send_buf);
+        if (pack_buf) {
+            MPL_free(pack_buf);
         }
         if (!noreq) {
             *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
