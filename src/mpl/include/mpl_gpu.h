@@ -23,10 +23,10 @@
 #endif
 
 typedef enum {
-    MPL_GPU_POINTER_UNREGISTERED_HOST = 0,
-    MPL_GPU_POINTER_REGISTERED_HOST,
-    MPL_GPU_POINTER_DEV,
-    MPL_GPU_POINTER_MANAGED
+    MPL_GPU_POINTER_UNREGISTERED_HOST = 0x1,
+    MPL_GPU_POINTER_REGISTERED_HOST = 0x2,
+    MPL_GPU_POINTER_DEV = 0x4,
+    MPL_GPU_POINTER_MANAGED = 0x8
 } MPL_pointer_type_t;
 
 typedef enum {
@@ -61,7 +61,7 @@ typedef enum {
     MPL_GPU_COPY_H2D,
     MPL_GPU_COPY_D2D_INCOMING,  /* copy from remote to local */
     MPL_GPU_COPY_D2D_OUTGOING,  /* copy from local to remote */
-    MPL_GPU_COPY_DIRECTION_NONE,  /* copy in any direction and to/from any buffer type */
+    MPL_GPU_COPY_DIRECTION_NONE,        /* copy in any direction and to/from any buffer type */
 } MPL_gpu_copy_direction_t;
 
 #define MPL_GPU_COPY_DIRECTION_TYPES 4
