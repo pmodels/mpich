@@ -176,8 +176,8 @@ static HYD_status add_env_to_exec_stash(struct HYD_string_stash *exec_stash, con
 
 HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 {
-    int inherited_env_count, user_env_count, system_env_count, exec_count;
-    int total_filler_processes, total_core_count;
+    int inherited_env_count, user_env_count, system_env_count;
+    int total_core_count;
     int pmi_id, *filler_pmi_ids = NULL, *nonfiller_pmi_ids = NULL;
     struct HYD_env *env;
     struct HYD_exec *exec;
@@ -193,12 +193,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     if (strlen(mapping) > PMI_MAXVALLEN) {
         MPL_free(mapping);
         mapping = NULL;
-    }
-
-    /* Create the arguments list for each proxy */
-    total_filler_processes = 0;
-    for (int i = 0; i < pg->proxy_count; i++) {
-        total_filler_processes += pg->proxy_list[i].filler_processes;
     }
 
     total_core_count = 0;
@@ -227,9 +221,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
              env = env->next, user_env_count++);
         for (system_env_count = 0, env = HYD_server_info.user_global.global_env.system; env;
              env = env->next, system_env_count++);
-
-        for (exec_count = 0, exec = proxy->exec_list; exec; exec = exec->next)
-            exec_count++;
 
         HYD_STRING_STASH_INIT(exec_stash);
 
