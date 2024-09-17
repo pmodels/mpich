@@ -27,6 +27,21 @@ int MPII_init_gpu(void)
         MPL_gpu_info.use_immediate_cmdlist = MPIR_CVAR_GPU_USE_IMMEDIATE_COMMAND_LIST;
         MPL_gpu_info.roundrobin_cmdq = MPIR_CVAR_GPU_ROUND_ROBIN_COMMAND_QUEUES;
 
+        /* Note max_cache_entries currently only affects the specialized cache */
+        switch (MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE) {
+            case MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE_unlimited:
+                MPL_gpu_info.max_cache_entries = -1;
+                break;
+            case MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE_limited:
+                MPL_gpu_info.max_cache_entries = MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES;
+                break;
+            case MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE_disabled:
+                MPL_gpu_info.max_cache_entries = 0;
+                break;
+            default:
+                MPIR_ERR_CHKANDJUMP(true, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
+        }
+
         int mpl_errno = MPL_gpu_init(debug_summary);
         MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_init");
 

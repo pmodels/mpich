@@ -22,6 +22,31 @@ cvars:
         specialized - use the cache mechanism in a gpu-specific mpl layer (if applicable)
         disabled - disable caching completely
 
+    - name        : MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES
+      category    : CH4
+      type        : int
+      default     : 16
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        The maximum number of entries to hold per device in the cache containing IPC mapped buffers.
+        When an entry is evicted, the corresponding IPC handle is closed. This value is relevant
+        only when MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE=limited.
+
+    - name        : MPIR_CVAR_CH4_IPC_GPU_CACHE_SIZE
+      category    : CH4
+      type        : enum
+      default     : limited
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        The behavior of the cache containing IPC mapped buffers.
+        unlimited - don't restrict the cache size
+        limited - limit the cache size based on MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES
+        disabled - don't cache mapped IPC buffers
+
     - name        : MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD
       category    : CH4
       type        : int
@@ -542,7 +567,9 @@ int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle, int d
 
     MPIR_FUNC_ENTER;
 
-    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled) {
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled ||
+        (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_specialized &&
+         MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES == 0)) {
         int mpl_err = MPL_SUCCESS;
         mpl_err = MPL_gpu_ipc_handle_unmap((void *) ((uintptr_t) vaddr - handle.offset));
         MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
