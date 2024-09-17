@@ -14,6 +14,8 @@ AM_CONDITIONAL([BUILD_CH4],[test "$device_name" = "ch4"])
 AM_COND_IF([BUILD_CH4],[
 AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
 
+AC_DEFINE([HAVE_MPIR_DATA], 1, [Define if the device layer supports MPIR_Data.])
+
 # check availability of libfabric, ucx (for purpose of setting default)
 m4_define([libfabric_embedded_dir],[modules/libfabric])
 m4_define([ucx_embedded_dir],[modules/ucx])

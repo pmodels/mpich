@@ -282,9 +282,7 @@ typedef struct MPIDI_part_request {
 /* message queue within "self"-comms, i.e. MPI_COMM_SELF and all communicators with size of 1. */
 
 typedef struct {
-    void *buf;
-    MPI_Aint count;
-    MPI_Datatype datatype;
+    struct MPIR_Data data;
     int tag;
     int context_id;
     MPIR_Request *match_req;    /* for mrecv */

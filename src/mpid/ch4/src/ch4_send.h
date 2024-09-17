@@ -175,4 +175,46 @@ MPL_STATIC_INLINE_PREFIX int MPID_Cancel_send(MPIR_Request * sreq)
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPID_Send_data(MPIR_Data * data, int rank, int tag,
+                                            MPIR_Comm * comm, int attr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = NULL;
+    MPIR_FUNC_ENTER;
+
+    if (MPIR_is_self_comm(comm)) {
+        mpi_errno = MPIDI_Self_send_data(data, rank, tag, comm, attr, request);
+    } else {
+#if 1
+        MPIR_Assert(0);
+#else
+        *(request) = NULL;
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+        mpi_errno = MPIDI_NM_send_data(data, rank, tag, comm, attr, av, req);
+#else
+        int r;
+        if ((r = MPIDI_av_is_local(av)))
+            mpi_errno = MPIDI_SHM_send_data(data, rank, tag, comm, attr, av, req);
+        else
+            mpi_errno = MPIDI_NM_send_data(data, rank, tag, comm, attr, av, req);
+        if (mpi_errno == MPI_SUCCESS)
+            MPIDI_REQUEST(*req, is_local) = r;
+#endif
+        MPIR_ERR_CHECK(mpi_errno);
+#endif
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (*request) {
+        MPII_SENDQ_REMEMBER(*request, rank, tag, comm->recvcontext_id, buf, count);
+    }
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif /* CH4_SEND_H_INCLUDED */

@@ -167,14 +167,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
         if (winattr & MPIDI_WINATTR_MR_PREFERRED) {
             MPIR_gpu_req yreq;
             mpi_errno =
-                MPIR_Ilocalcopy_gpu(origin_addr, origin_count, origin_datatype, 0, &origin_attr,
+                MPIR_Ilocalcopy_gpu(origin_addr, origin_count, origin_datatype, 0, -1, &origin_attr,
                                     target_addr, target_count, target_datatype, 0, &target_attr,
                                     MPL_GPU_COPY_DIRECTION_NONE, engine_type, 1, &yreq);
             if (yreq.type != MPIR_NULL_REQUEST)
                 MPIDI_POSIX_rma_outstanding_req_enqueu(yreq, &win->dev.shm.posix);
         } else {
             mpi_errno =
-                MPIR_Localcopy_gpu(origin_addr, origin_count, origin_datatype, 0, &origin_attr,
+                MPIR_Localcopy_gpu(origin_addr, origin_count, origin_datatype, 0, -1, &origin_attr,
                                    target_addr, target_count, target_datatype, 0, &target_attr,
                                    MPL_GPU_COPY_DIRECTION_NONE, engine_type, 1);
         }
@@ -186,8 +186,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
          * increase per-op+flush overhead. */
         MPIR_gpu_req yreq;
         yreq.type = MPIR_TYPEREP_REQUEST;
-        mpi_errno = MPIR_Ilocalcopy(origin_addr, origin_count, origin_datatype,
-                                    target_addr, target_count, target_datatype, &yreq.u.y_req);
+        mpi_errno = MPIR_Ilocalcopy(origin_addr, origin_count, origin_datatype, 0, -1,
+                                    target_addr, target_count, target_datatype, 0, &yreq.u.y_req);
         MPIDI_POSIX_rma_outstanding_req_enqueu(yreq, &win->dev.shm.posix);
     } else {
         /* By default issuing blocking copy for lower per-op latency. */
@@ -259,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
         if (winattr & MPIDI_WINATTR_MR_PREFERRED) {
             MPIR_gpu_req yreq;
             mpi_errno = MPIR_Ilocalcopy_gpu(target_addr, target_count,
-                                            target_datatype, 0, NULL, origin_addr,
+                                            target_datatype, 0, -1, NULL, origin_addr,
                                             origin_count, origin_datatype, 0, NULL,
                                             MPL_GPU_COPY_DIRECTION_NONE, engine_type, 1, &yreq);
             if (yreq.type != MPIR_NULL_REQUEST)
@@ -278,9 +278,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
          * increase per-op+flush overhead. */
         MPIR_gpu_req yreq;
         yreq.type = MPIR_TYPEREP_REQUEST;
-        mpi_errno = MPIR_Ilocalcopy(target_addr, target_count,
-                                    target_datatype, origin_addr, origin_count, origin_datatype,
-                                    &yreq.u.y_req);
+        mpi_errno = MPIR_Ilocalcopy(target_addr, target_count, target_datatype, 0, -1,
+                                    origin_addr, origin_count, origin_datatype, 0, &yreq.u.y_req);
         MPIDI_POSIX_rma_outstanding_req_enqueu(yreq, &win->dev.shm.posix);
     } else {
         /* By default issuing blocking copy for lower per-op latency. */

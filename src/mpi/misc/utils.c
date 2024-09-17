@@ -14,8 +14,10 @@ enum {
     LOCALCOPY_STREAM,
 };
 
+/* sendoffset, recvoffset, and sendlength enable partial data chunk copy. Use offset 0 and sendlength -1
+ * to copy the entire data. */
 static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                        MPI_Aint sendoffset, void *recvbuf, MPI_Aint recvcount,
+                        MPI_Aint sendoffset, MPI_Aint sendlength, void *recvbuf, MPI_Aint recvcount,
                         MPI_Datatype recvtype, MPI_Aint recvoffset, int localcopy_kind,
                         void *extra_param)
 {
@@ -41,9 +43,13 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     if (!sdata_sz || !rdata_sz)
         goto fn_exit;
 
-    copy_sz = sdata_sz;
-    if (copy_sz > rdata_sz)
-        copy_sz = rdata_sz;
+    if (sendlength == -1) {
+        copy_sz = sdata_sz;
+        if (copy_sz > rdata_sz)
+            copy_sz = rdata_sz;
+    } else {
+        copy_sz = sendlength;
+    }
 
     /* Builtin types is the common case; optimize for it */
     MPIR_Datatype_is_contig(sendtype, &sendtype_iscontig);
@@ -185,7 +191,8 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
 
 #ifdef MPL_HAVE_GPU
 static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                            MPI_Aint sendoffset, MPL_pointer_attr_t * send_attr, void *recvbuf,
+                            MPI_Aint sendoffset, MPI_Aint sendlength,
+                            MPL_pointer_attr_t * send_attr, void *recvbuf,
                             MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
                             MPL_pointer_attr_t * recv_attr, MPL_gpu_copy_direction_t dir,
                             MPL_gpu_engine_type_t enginetype, bool commit, MPIR_gpu_req * gpu_req)
@@ -213,9 +220,13 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
     if (!sdata_sz || !rdata_sz)
         goto fn_exit;
 
-    copy_sz = sdata_sz;
-    if (copy_sz > rdata_sz)
-        copy_sz = rdata_sz;
+    if (sendlength == -1) {
+        copy_sz = sdata_sz;
+        if (copy_sz > rdata_sz)
+            copy_sz = rdata_sz;
+    } else {
+        copy_sz = sendlength;
+    }
 
     /* This case is specific for contig datatypes */
     MPIR_Datatype_is_contig(sendtype, &sendtype_iscontig);
@@ -327,9 +338,8 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno =
-        do_localcopy(sendbuf, sendcount, sendtype, 0, recvbuf, recvcount, recvtype, 0,
-                     LOCALCOPY_BLOCKING, NULL);
+    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, 0, -1, recvbuf, recvcount, recvtype, 0,
+                             LOCALCOPY_BLOCKING, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -340,15 +350,17 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 }
 
 int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                    MPI_Aint sendoffset, MPI_Aint sendlength,
+                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
                     MPIR_Typerep_req * typerep_req)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, 0, recvbuf, recvcount, recvtype,
-                             0, LOCALCOPY_NONBLOCKING, typerep_req);
+    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, sendoffset, sendlength,
+                             recvbuf, recvcount, recvtype, recvoffset,
+                             LOCALCOPY_NONBLOCKING, typerep_req);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -370,7 +382,7 @@ int MPIR_Localcopy_stream(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype 
 
     MPIR_FUNC_ENTER;
 
-    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, 0, recvbuf, recvcount,
+    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, 0, -1, recvbuf, recvcount,
                              recvtype, 0, LOCALCOPY_STREAM, stream);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -382,7 +394,8 @@ int MPIR_Localcopy_stream(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype 
 }
 
 int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                       MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
+                       MPI_Aint sendoffset, MPI_Aint sendlength,
+                       MPL_pointer_attr_t * sendattr, void *recvbuf,
                        MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
                        MPL_pointer_attr_t * recvattr, MPL_gpu_copy_direction_t dir,
                        MPL_gpu_engine_type_t enginetype, bool commit)
@@ -392,14 +405,13 @@ int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sen
     MPIR_FUNC_ENTER;
 
 #ifdef MPL_HAVE_GPU
-    mpi_errno =
-        do_localcopy_gpu(sendbuf, sendcount, sendtype, sendoffset, sendattr, recvbuf, recvcount,
-                         recvtype, recvoffset, recvattr, dir, enginetype, commit, NULL);
+    mpi_errno = do_localcopy_gpu(sendbuf, sendcount, sendtype, sendoffset, sendlength, sendattr,
+                                 recvbuf, recvcount, recvtype, recvoffset, recvattr,
+                                 dir, enginetype, commit, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 #else
-    mpi_errno =
-        do_localcopy(sendbuf, sendcount, sendtype, sendoffset, recvbuf, recvcount, recvtype,
-                     recvoffset, LOCALCOPY_BLOCKING, NULL);
+    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, sendoffset, sendlength,
+                             recvbuf, recvcount, recvtype, recvoffset, LOCALCOPY_BLOCKING, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
@@ -411,7 +423,8 @@ int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sen
 }
 
 int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
-                        MPI_Aint sendoffset, MPL_pointer_attr_t * sendattr, void *recvbuf,
+                        MPI_Aint sendoffset, MPI_Aint sendlength,
+                        MPL_pointer_attr_t * sendattr, void *recvbuf,
                         MPI_Aint recvcount, MPI_Datatype recvtype, MPI_Aint recvoffset,
                         MPL_pointer_attr_t * recvattr, MPL_gpu_copy_direction_t dir,
                         MPL_gpu_engine_type_t enginetype, bool commit, MPIR_gpu_req * req)
@@ -421,14 +434,14 @@ int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     MPIR_FUNC_ENTER;
 
 #ifdef MPL_HAVE_GPU
-    mpi_errno =
-        do_localcopy_gpu(sendbuf, sendcount, sendtype, sendoffset, sendattr, recvbuf, recvcount,
-                         recvtype, recvoffset, recvattr, dir, enginetype, commit, req);
+    mpi_errno = do_localcopy_gpu(sendbuf, sendcount, sendtype, sendoffset, sendlength, sendattr,
+                                 recvbuf, recvcount, recvtype, recvoffset, recvattr,
+                                 dir, enginetype, commit, req);
     MPIR_ERR_CHECK(mpi_errno);
 #else
-    mpi_errno =
-        do_localcopy(sendbuf, sendcount, sendtype, sendoffset, recvbuf, recvcount, recvtype,
-                     recvoffset, LOCALCOPY_NONBLOCKING, &req->u.y_req);
+    mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, sendoffset, sendoffset,
+                             recvbuf, recvcount, recvtype, recvoffset,
+                             LOCALCOPY_NONBLOCKING, &req->u.y_req);
     MPIR_ERR_CHECK(mpi_errno);
     req->type = MPIR_TYPEREP_REQUEST;
 #endif

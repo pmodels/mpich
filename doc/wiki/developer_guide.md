@@ -303,9 +303,7 @@ MPI_Aint MPIDI_[NM|SHM]_am_eager_limit(void)
 MPI_Aint MPIDI_[NM|SHM]_am_eager_buf_limit(void)
 
 /* return true/false if pt2pt message can be sent eagerly */
-bool MPIDI_[NM|SHM]_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
-                                   const void *data, MPI_Aint count,
-                                   MPI_Datatype datatype, MPIR_Request * sreq)
+bool MPIDI_[NM|SHM]_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz, MPIR_Request * sreq)
 
 /****************** Callback APIs ******************/
 

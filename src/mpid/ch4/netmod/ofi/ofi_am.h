@@ -192,8 +192,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Comm * comm,
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
-                                                      const void *data, MPI_Aint count,
-                                                      MPI_Datatype datatype, MPIR_Request * sreq)
+                                                      MPIR_Request * sreq)
 {
     MPIDI_OFI_AMREQUEST(sreq, data_sz) = data_sz;
     if ((am_hdr_sz + data_sz)
