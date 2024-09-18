@@ -63,6 +63,8 @@ Non Native API:
   am_isend_reply : int
       NM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, src_vci, dst_vci, sreq
      SHM*: comm, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, src_vci, dst_vci, sreq
+  am_tag_send : int
+      NM*: rank, comm, handler_id, data, count, datatype, src_vci, dst_vci, sreq
   am_get_data_copy_cb : MPIDIG_recv_data_copy_cb
       NM*: attr
      SHM*: attr
