@@ -66,15 +66,13 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     MPIR_Datatype_is_contig(sendtype, &sendtype_iscontig);
     MPIR_Datatype_is_contig(recvtype, &recvtype_iscontig);
 
-    MPI_Aint true_extent, sendtype_true_lb, recvtype_true_lb;
-    MPIR_Type_get_true_extent_impl(sendtype, &sendtype_true_lb, &true_extent);
-    MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &true_extent);
-
     /* NOTE: actual_unpack_bytes is a local variable. It works because yaksa
      *       updates it at issuing time regardless of nonblocking or stream.
      */
     if (sendtype_iscontig) {
         MPI_Aint actual_unpack_bytes;
+        MPI_Aint true_extent, sendtype_true_lb;
+        MPIR_Type_get_true_extent_impl(sendtype, &sendtype_true_lb, &true_extent);
         const char *bufptr = MPIR_get_contig_ptr(sendbuf, sendtype_true_lb);
         if (localcopy_kind == LOCALCOPY_NONBLOCKING && extra_param) {
             MPIR_Typerep_req *typerep_req = extra_param;
@@ -94,8 +92,10 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         MPIR_ERR_CHKANDJUMP(actual_unpack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
     } else if (recvtype_iscontig) {
-        char *bufptr = MPIR_get_contig_ptr(recvbuf, recvtype_true_lb);
         MPI_Aint actual_pack_bytes;
+        MPI_Aint true_extent, recvtype_true_lb;
+        MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &true_extent);
+        char *bufptr = MPIR_get_contig_ptr(recvbuf, recvtype_true_lb);
         if (localcopy_kind == LOCALCOPY_NONBLOCKING && extra_param) {
             MPIR_Typerep_req *typerep_req = extra_param;
             typerep_req->req = MPIR_TYPEREP_REQ_NULL;
@@ -261,7 +261,10 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             MPIR_GPU_query_pointer_attr(recvbuf, &recvattr);
             recv_attr = &recvattr;
         }
-        if (copy_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
+        if (send_attr->type == MPL_GPU_POINTER_UNREGISTERED_HOST &&
+            recv_attr->type == MPL_GPU_POINTER_UNREGISTERED_HOST) {
+            memcpy(recv_ptr, send_ptr, copy_sz);
+        } else if (copy_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
             mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
             MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_fast_memcpy");
