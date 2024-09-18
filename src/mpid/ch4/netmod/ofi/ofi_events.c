@@ -98,7 +98,6 @@ static int pipeline_send_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r)
 
     MPIR_cc_decr(sreq->cc_ptr, &c);
     if (c == 0) {
-        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIR_Request_free(sreq);
     }
     MPL_free(r);
@@ -269,7 +268,6 @@ static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request 
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
         }
 
-        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIDI_CH4_REQUEST_FREE(sreq);
     }
     /* c != 0, ssend */
@@ -771,13 +769,14 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                         if ((event_id == MPIDI_OFI_EVENT_RECV_PACK ||
                              event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
                             MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
+                            MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST
+                                                                 (req, noncontig.pack.datatype));
                             MPL_free(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
-                        } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK &&
-                                   event_id == MPIDI_OFI_EVENT_RECV_NOPACK &&
-                                   MPIDI_OFI_REQUEST(req, noncontig.nopack)) {
-                            MPL_free(MPIDI_OFI_REQUEST(req, noncontig.nopack));
+                        } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
+                            MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST
+                                                                 (req, noncontig.nopack.datatype));
+                            MPL_free(MPIDI_OFI_REQUEST(req, noncontig.nopack.iovs));
                         }
-                        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
                         MPIDI_Request_complete_fast(req);
                     }
                     break;

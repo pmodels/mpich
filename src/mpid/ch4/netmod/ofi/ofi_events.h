@@ -73,9 +73,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
         (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer))) {
         MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
     } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_SEND_NOPACK)) {
-        MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
+        MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack.iovs));
     }
-    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
 
     MPIDI_Request_complete_fast(sreq);
     MPIR_FUNC_EXIT;
@@ -123,22 +122,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
                                        MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0, NULL,
                                        MPL_GPU_COPY_DIRECTION_NONE,
                                        MPIDI_OFI_gpu_get_recv_engine_type(), true);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
-    } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) &&
-               (MPIDI_OFI_REQUEST(rreq, noncontig.nopack))) {
-        MPI_Count elements;
-
-        /* Check to see if there are any bytes that don't fit into the datatype basic elements */
-        MPI_Count count_x = count;      /* need a MPI_Count variable (consider 32-bit OS) */
-        MPIR_Get_elements_x_impl(&count_x, MPIDI_OFI_REQUEST(rreq, datatype), &elements);
-        if (count_x)
+        if (mpi_errno) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
+        }
+        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype));
+        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
+    } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
+        MPI_Count elements;
+        MPI_Count count_x = count;
+        MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype);
+        MPIR_Get_elements_x_impl(&count_x, datatype, &elements);
+        if (count_x) {
+            MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
+        }
 
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
+        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype));
+        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs));
     }
-
-    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
 
     /* If synchronous, ack and complete when the ack is done */
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
