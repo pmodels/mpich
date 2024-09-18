@@ -29,9 +29,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
                                                 MPIR_Datatype * dt_ptr, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct iovec *originv = NULL;
     struct fi_msg_tagged msg;
-    MPI_Aint num_contig, size;
+    MPI_Aint num_contig;
     int vci_remote = vci_src;
     int vci_local = vci_dst;
     int ctx_idx;
@@ -56,18 +55,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
         flags = FI_COMPLETION;
     }
 
-    size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
-
-    MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_malloc(size, MPL_MEM_BUFFER);
-    memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
+    struct iovec *iovs;
+    iovs = MPL_malloc(num_contig * sizeof(struct iovec), MPL_MEM_BUFFER);
+    MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = iovs;
 
     MPI_Aint actual_iov_len;
     MPIR_Typerep_to_iov_offset(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), 0,
-                               MPIDI_OFI_REQUEST(rreq, noncontig.nopack), num_contig,
-                               &actual_iov_len);
+                               iovs, num_contig, &actual_iov_len);
     assert(num_contig == actual_iov_len);
-
-    originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[0]));
 
     if (rreq->comm == NULL) {
         rreq->comm = comm;
@@ -78,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_NOPACK;
 
-    msg.msg_iov = originv;
+    msg.msg_iov = iovs;
     msg.desc = NULL;
     msg.iov_count = num_contig;
     msg.tag = match_bits;

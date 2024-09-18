@@ -124,18 +124,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf, size_t 
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count, size_t data_sz,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
+                                                MPI_Datatype datatype, size_t data_sz,
                                                 uint64_t cq_data, int dst_rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr, int vci_local,
                                                 int vci_remote, MPIR_Request * sreq, bool syncflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct iovec *originv = NULL;
-    struct fi_msg_tagged msg;
-    uint64_t flags;
-    MPI_Aint num_contig, size;
-
     MPIR_FUNC_ENTER;
 
     int sender_nic =
@@ -158,7 +154,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
 
     /* if we cannot fit the entire data into a single IOV array,
      * fallback to pack */
-    MPIR_Typerep_get_iov_len(count, MPIDI_OFI_REQUEST(sreq, datatype), &num_contig);
+    MPI_Aint num_contig;
+    MPIR_Typerep_get_iov_len(count, datatype, &num_contig);
     MPIR_Assert(num_contig <= MPIDI_OFI_global.tx_iov_limit);
 
     /* Calculate the correct NICs. */
@@ -171,23 +168,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, MPIDI_OFI_REQUEST(sreq, nic_num));
 
     /* everything fits in the IOV array */
+    uint64_t flags;
     flags = FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_NOPACK;
 
-    size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(sreq, noncontig.nopack)));
-
-    MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_malloc(size, MPL_MEM_BUFFER);
-    memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
+    struct iovec *iovs;
+    iovs = MPL_malloc(num_contig * sizeof(struct iovec), MPL_MEM_BUFFER);
+    MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = iovs;
 
     MPI_Aint actual_iov_len;
-    MPIR_Typerep_to_iov_offset(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), 0,
-                               MPIDI_OFI_REQUEST(sreq, noncontig.nopack), num_contig,
-                               &actual_iov_len);
-    assert(num_contig == actual_iov_len);
+    MPIR_Typerep_to_iov_offset(buf, count, datatype, 0, iovs, num_contig, &actual_iov_len);
+    assert(actual_iov_len == num_contig);
 
-    originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[0]));
-
-    msg.msg_iov = originv;
+    struct fi_msg_tagged msg;
+    msg.msg_iov = iovs;
     msg.desc = NULL;
     msg.iov_count = num_contig;
     msg.tag = match_bits;
@@ -196,8 +190,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.data = MPIDI_OFI_ENABLE_DATA ? cq_data : 0;
     msg.addr = MPIDI_OFI_av_to_phys(addr, receiver_nic, vci_remote);
 
-    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[ctx_idx].tx,
-                                     &msg, flags), vci_local, tsendv);
+    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[ctx_idx].tx, &msg, flags),
+                         vci_local, tsendv);
     MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
 
   fn_exit:
@@ -707,8 +701,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         /* NOTE: all previous send modes contains sync semantics already */
 
         if (do_iov) {
-            mpi_errno = MPIDI_OFI_send_iov(buf, count, data_sz, cq_data, dst_rank, tag, comm,
-                                           context_offset, addr, vci_src, vci_dst, *request,
+            mpi_errno = MPIDI_OFI_send_iov(buf, count, datatype, data_sz, cq_data, dst_rank, tag,
+                                           comm, context_offset, addr, vci_src, vci_dst, *request,
                                            syncflag);
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
