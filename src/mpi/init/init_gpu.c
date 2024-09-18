@@ -6,6 +6,8 @@
 #include "mpiimpl.h"
 #include "mpi_init.h"
 
+MPL_pointer_attr_t MPIR_static_host_attr;
+
 /* Initialize gpu in mpl in order to support shm gpu module initialization
  * inside MPID_Init. This also determines whether GPU support is requested
  * from typerep. */
@@ -13,6 +15,9 @@
 int MPII_init_gpu(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    MPIR_static_host_attr.type = MPL_GPU_POINTER_UNREGISTERED_HOST;
+    MPIR_static_host_attr.device = MPL_GPU_DEVICE_INVALID;
 
     if (MPIR_CVAR_ENABLE_GPU) {
         int debug_summary = 0;

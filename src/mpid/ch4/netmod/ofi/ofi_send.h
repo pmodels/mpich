@@ -360,7 +360,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 
         mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr,
                                        MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
-                                       data_sz, MPI_BYTE, 0, NULL,
+                                       data_sz, MPI_BYTE, 0, MPIR_GPU_ATTR_HOST,
                                        MPL_GPU_COPY_DIRECTION_NONE,
                                        MPIDI_OFI_gpu_get_send_engine_type(), true);
         MPIR_ERR_CHECK(mpi_errno);
@@ -590,7 +590,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                 /* Force pack for GPU buffer. */
                 pack_buf = MPL_malloc(data_sz, MPL_MEM_OTHER);
                 mpi_errno = MPIR_Localcopy_gpu(send_buf, data_sz, MPI_BYTE, 0, &attr, pack_buf,
-                                               data_sz, MPI_BYTE, 0, NULL,
+                                               data_sz, MPI_BYTE, 0, MPIR_GPU_ATTR_HOST,
                                                MPL_GPU_COPY_DIRECTION_NONE,
                                                MPIDI_OFI_gpu_get_send_engine_type(), true);
                 MPIR_ERR_CHECK(mpi_errno);
