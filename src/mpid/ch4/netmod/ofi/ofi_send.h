@@ -174,7 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
 
     struct iovec *iovs;
     iovs = MPL_malloc(num_contig * sizeof(struct iovec), MPL_MEM_BUFFER);
-    MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = iovs;
+    MPIDI_OFI_REQUEST(sreq, noncontig.nopack.iovs) = iovs;
 
     MPI_Aint actual_iov_len;
     MPIR_Typerep_to_iov_offset(buf, count, datatype, 0, iovs, num_contig, &actual_iov_len);
@@ -441,7 +441,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_pipeline(const void *buf, MPI_Aint c
     MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], data_sz);
 
     MPIDI_OFI_gpu_pending_send_t *send_task =
-        MPIDI_OFI_create_send_task(sreq, (void *) buf, attr, data_sz, count, dt_contig);
+        MPIDI_OFI_create_send_task(sreq, (void *) buf, count, datatype, attr, data_sz, dt_contig);
     DL_APPEND(MPIDI_OFI_global.gpu_send_queue, send_task);
     MPIDI_OFI_gpu_progress_send();
 
@@ -484,8 +484,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint c
     MPIDI_OFI_idata_set_error_bits(&cq_data, err_flag);
 
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
-    MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     /* Calculate the correct NICs. */
     MPIDI_OFI_REQUEST(sreq, nic_num) = 0;
@@ -496,7 +494,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint c
     iovs[0].iov_len = data_sz;
 
     MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = NULL;
-    MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = NULL;
 
     struct fi_msg_tagged msg;
     msg.msg_iov = iovs;
@@ -652,17 +649,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vci_src);
         MPIR_Request *sreq = *request;
 
-        MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
-
         void *data = NULL;
         if (need_pack) {
             void *pack_buf = MPL_malloc(data_sz, MPL_MEM_OTHER);
-            MPIR_ERR_CHKANDJUMP1(data == NULL, mpi_errno,
+            MPIR_ERR_CHKANDJUMP1(pack_buf == NULL, mpi_errno,
                                  MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
             mpi_errno = MPIR_Localcopy_gpu(buf, count, datatype, 0, &attr,
-                                           data, data_sz, MPI_BYTE, 0, MPIR_GPU_ATTR_HOST,
+                                           pack_buf, data_sz, MPI_BYTE, 0, MPIR_GPU_ATTR_HOST,
                                            MPL_GPU_COPY_DIRECTION_NONE,
                                            MPIDI_OFI_gpu_get_send_engine_type(), true);
             MPIR_ERR_CHECK(mpi_errno);

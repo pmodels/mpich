@@ -880,10 +880,12 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_pending_recv_t
 MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_pending_send_t *MPIDI_OFI_create_send_task(MPIR_Request *
                                                                                   req,
                                                                                   void *send_buf,
+                                                                                  MPI_Aint count,
+                                                                                  MPI_Datatype
+                                                                                  datatype,
                                                                                   MPL_pointer_attr_t
                                                                                   attr,
                                                                                   MPI_Aint left_sz,
-                                                                                  MPI_Aint count,
                                                                                   int dt_contig)
 {
     MPIDI_OFI_gpu_pending_send_t *task =
@@ -893,6 +895,8 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_gpu_pending_send_t *MPIDI_OFI_create_send_tas
     task->sreq = req;
     task->attr = attr;
     task->send_buf = send_buf;
+    task->datatype = datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
     task->offset = 0;
     task->n_chunks = 0;
     task->left_sz = left_sz;
@@ -917,7 +921,6 @@ static int MPIDI_OFI_gpu_progress_send(void)
         int vci_local = -1;
 
         MPIDI_OFI_gpu_pending_send_t *send_task = MPIDI_OFI_global.gpu_send_queue;
-        MPI_Datatype datatype = MPIDI_OFI_REQUEST(send_task->sreq, datatype);
         int block_sz = MPIDI_OFI_REQUEST(send_task->sreq, pipeline_info.chunk_sz);
         while (send_task->left_sz > 0) {
             MPIDI_OFI_gpu_task_t *task = NULL;
@@ -937,10 +940,10 @@ static int MPIDI_OFI_gpu_progress_send(void)
                 MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK - 1)
                 commit = 1;
             mpi_errno =
-                MPIR_Ilocalcopy_gpu((char *) send_task->send_buf, send_task->count, datatype,
-                                    send_task->offset, &send_task->attr, host_buf, chunk_sz,
-                                    MPI_BYTE, 0, NULL, MPL_GPU_COPY_D2H, engine_type,
-                                    commit, &yreq);
+                MPIR_Ilocalcopy_gpu((char *) send_task->send_buf, send_task->count,
+                                    send_task->datatype, send_task->offset, &send_task->attr,
+                                    host_buf, chunk_sz, MPI_BYTE, 0, NULL, MPL_GPU_COPY_D2H,
+                                    engine_type, commit, &yreq);
             MPIR_ERR_CHECK(mpi_errno);
             actual_pack_bytes = chunk_sz;
             task =
@@ -964,6 +967,7 @@ static int MPIDI_OFI_gpu_progress_send(void)
                                           (send_task->sreq, pipeline_info.cq_data),
                                           send_task->n_chunks);
         DL_DELETE(MPIDI_OFI_global.gpu_send_queue, send_task);
+        MPIR_Datatype_release_if_not_builtin(send_task->datatype);
         MPL_free(send_task);
 
         if (vci_local != -1)
@@ -1099,11 +1103,12 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
                                              vci_local, tinjectdata);
                     }
 
-                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(request, datatype));
                     /* Set number of bytes in status. */
                     MPIR_STATUS_SET_COUNT(request->status,
                                           MPIDI_OFI_REQUEST(request, pipeline_info.offset));
 
+                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST
+                                                         (request, noncontig.pack.datatype));
                     MPIR_Request_free(request);
                 }
 
