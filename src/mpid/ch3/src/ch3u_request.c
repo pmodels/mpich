@@ -393,15 +393,15 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 {
     MPI_Aint last;
-    int tmpbuf_last;
+    MPI_Aint tmpbuf_last;
     int mpi_errno = MPI_SUCCESS;
     
     MPIR_FUNC_ENTER;
 
-    tmpbuf_last = (int)(rreq->dev.msg_offset + rreq->dev.tmpbuf_sz);
+    tmpbuf_last = rreq->dev.msg_offset + rreq->dev.tmpbuf_sz;
     if (rreq->dev.msgsize < tmpbuf_last)
     {
-	tmpbuf_last = (int)rreq->dev.msgsize;
+	tmpbuf_last = rreq->dev.msgsize;
     }
 
     MPI_Aint actual_unpack_bytes;
@@ -445,7 +445,7 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
     }
     else
     {
-	rreq->dev.tmpbuf_off = (int)(tmpbuf_last - last);
+	rreq->dev.tmpbuf_off = tmpbuf_last - last;
 	if (rreq->dev.tmpbuf_off > 0)
 	{
 	    /* move any remaining data to the beginning of the buffer.  
