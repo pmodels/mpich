@@ -264,10 +264,16 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
         if (send_attr->type == MPL_GPU_POINTER_UNREGISTERED_HOST &&
             recv_attr->type == MPL_GPU_POINTER_UNREGISTERED_HOST) {
             memcpy(recv_ptr, send_ptr, copy_sz);
+            if (gpu_req) {
+                gpu_req->type = MPIR_NULL_REQUEST;
+            }
         } else if (copy_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
             mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
             MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_fast_memcpy");
+            if (gpu_req) {
+                gpu_req->type = MPIR_NULL_REQUEST;
+            }
         } else {
             if (send_attr && send_attr->type == MPL_GPU_POINTER_DEV) {
                 dev_id = MPL_gpu_get_dev_id_from_attr(send_attr);
