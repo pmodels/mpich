@@ -230,7 +230,7 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
 int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **local_upids)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, total_size = 0;
+    int i;
     char *temp_buf = NULL;
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
@@ -270,7 +270,6 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
         idx += (int) sz;
 
         (*local_upid_size)[i] = upid_len;
-        total_size += (*local_upid_size)[i];
     }
 
     *local_upids = temp_buf;
