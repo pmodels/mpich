@@ -291,7 +291,7 @@ int MPIDI_POSIX_post_init(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* gather topo info from local procs and calculate distance */
-    if (MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE) {
+    if (MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE && MPIR_Process.local_size > 1) {
         int topo_info_size = sizeof(MPIDI_POSIX_topo_info_t);
         local_rank_topo =
             (MPIDI_POSIX_topo_info_t *) MPL_malloc(MPIDI_POSIX_global.num_local * topo_info_size,
