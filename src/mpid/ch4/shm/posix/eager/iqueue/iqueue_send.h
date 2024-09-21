@@ -84,7 +84,7 @@ MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr, const void 
 
     available = capacity;
 
-    cell->from = MPIDI_POSIX_global.my_local_rank;
+    cell->from = MPIR_Process.local_rank;
 
     /* If this is the beginning of the message, mark it as the head. Otherwise it will be the
      * tail. */
