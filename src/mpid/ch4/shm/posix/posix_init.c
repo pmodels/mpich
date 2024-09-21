@@ -128,8 +128,7 @@ static void *create_container(struct json_object *obj)
             cnt->id =
                 MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather;
         else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_ipc_read"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read;
+            cnt->id = MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read;
         else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_barrier_release_gather"))
             cnt->id =
                 MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather;
@@ -397,13 +396,15 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     }
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Initialize collective selection for gpu*/
+    /* Initialize collective selection for gpu */
     if (!strcmp(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json,
-                                              create_container, &MPIDI_global.shm.posix.csel_root_gpu);
+                                              create_container,
+                                              &MPIDI_global.shm.posix.csel_root_gpu);
     } else {
-        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU,
-                                               create_container, &MPIDI_global.shm.posix.csel_root_gpu);
+        mpi_errno =
+            MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU,
+                                       create_container, &MPIDI_global.shm.posix.csel_root_gpu);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
