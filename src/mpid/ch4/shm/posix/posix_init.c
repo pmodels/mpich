@@ -128,8 +128,7 @@ static void *create_container(struct json_object *obj)
             cnt->id =
                 MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather;
         else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_ipc_read"))
-            cnt->id =
-                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read;
+            cnt->id = MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_ipc_read;
         else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_barrier_release_gather"))
             cnt->id =
                 MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather;
@@ -206,8 +205,6 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
         MPIDI_POSIX_global.local_ranks[MPIR_Process.node_local_map[i]] = i;
     }
     local_rank_0 = MPIR_Process.node_local_map[0];
-    MPIDI_POSIX_global.num_local = MPIR_Process.local_size;
-    MPIDI_POSIX_global.my_local_rank = MPIR_Process.local_rank;
 
     MPIDI_POSIX_global.local_rank_0 = local_rank_0;
 
@@ -217,7 +214,7 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
     MPIDI_POSIX_global.topo.numa_id = -1;
     MPIDI_POSIX_global.local_rank_dist = (int *) MPL_malloc(MPIR_Process.local_size * sizeof(int),
                                                             MPL_MEM_SHM);
-    for (i = 0; i < MPIDI_POSIX_global.num_local; i++) {
+    for (i = 0; i < MPIR_Process.local_size; i++) {
         MPIDI_POSIX_global.local_rank_dist[i] = MPIDI_POSIX_DIST__LOCAL;
     }
     if (MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE) {
@@ -292,17 +289,14 @@ int MPIDI_POSIX_post_init(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* gather topo info from local procs and calculate distance */
-    if (MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE) {
+    if (MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE && MPIR_Process.local_size > 1) {
         int topo_info_size = sizeof(MPIDI_POSIX_topo_info_t);
-        local_rank_topo =
-            (MPIDI_POSIX_topo_info_t *) MPL_malloc(MPIDI_POSIX_global.num_local * topo_info_size,
-                                                   MPL_MEM_SHM);
-        memset(local_rank_topo, 0, MPIDI_POSIX_global.num_local * topo_info_size);
+        local_rank_topo = MPL_calloc(MPIR_Process.local_size, topo_info_size, MPL_MEM_SHM);
         mpi_errno = MPIR_Allgather_fallback(&MPIDI_POSIX_global.topo, topo_info_size, MPI_BYTE,
                                             local_rank_topo, topo_info_size, MPI_BYTE,
                                             MPIR_Process.comm_world->node_comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
-        for (int i = 0; i < MPIDI_POSIX_global.num_local; i++) {
+        for (int i = 0; i < MPIR_Process.local_size; i++) {
             if (local_rank_topo[i].l3_cache_id == -1 || local_rank_topo[i].numa_id == -1) {
                 /* if topo info is incomplete, treat the node as local as fallback */
                 MPIDI_POSIX_global.local_rank_dist[i] = MPIDI_POSIX_DIST__LOCAL;
@@ -324,7 +318,7 @@ int MPIDI_POSIX_post_init(void)
             }
             fprintf(stdout, "Rank: %d, Local_rank: %d [ %d", MPIR_Process.rank,
                     MPIR_Process.local_rank, MPIDI_POSIX_global.local_rank_dist[0]);
-            for (int i = 1; i < MPIDI_POSIX_global.num_local; i++) {
+            for (int i = 1; i < MPIR_Process.local_size; i++) {
                 fprintf(stdout, ", %d", MPIDI_POSIX_global.local_rank_dist[i]);
             }
             fprintf(stdout, " ]\n");
@@ -397,13 +391,15 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     }
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Initialize collective selection for gpu*/
+    /* Initialize collective selection for gpu */
     if (!strcmp(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json,
-                                              create_container, &MPIDI_global.shm.posix.csel_root_gpu);
+                                              create_container,
+                                              &MPIDI_global.shm.posix.csel_root_gpu);
     } else {
-        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU,
-                                               create_container, &MPIDI_global.shm.posix.csel_root_gpu);
+        mpi_errno =
+            MPIR_Csel_create_from_file(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE_GPU,
+                                       create_container, &MPIDI_global.shm.posix.csel_root_gpu);
     }
     MPIR_ERR_CHECK(mpi_errno);
 

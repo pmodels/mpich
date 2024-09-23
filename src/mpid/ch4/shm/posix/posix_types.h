@@ -48,8 +48,6 @@ typedef struct {
     void *shm_ptr;
     /* Keep track of all of the local processes in MPI_COMM_WORLD and what their original rank was
      * in that communicator. */
-    int num_local;
-    int my_local_rank;
     int *local_ranks;
     int *local_procs;
     int local_rank_0;
