@@ -40,7 +40,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE
       category    : CH4
       type        : boolean
-      default     : false
+      default     : true
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
