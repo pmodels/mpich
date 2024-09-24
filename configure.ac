@@ -756,6 +756,9 @@ PAC_ARG_CACHING
 # it may influence the output of the other tests
 PAC_ARG_STRICT
 
+# Add options that suppress default warnings, especially those from PGI compilers (now nvc)
+PAC_C_DEFAULT_OPTIONS
+
 # To link C objects with Fortran main program may require -fPIE option
 PAC_C_CHECK_fPIE_OK
 

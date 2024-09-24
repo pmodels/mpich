@@ -67,12 +67,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_rank0_hold_buf_completion(void *v
         MPIDI_POSIX_RELEASE_GATHER_NB_IREDUCE_GATHER_FLAG_ADDR(rank, segment, num_ranks);
 
     /* Rank 0 keeps checking if the a particular cell is available */
-    if (rank == 0 && (MPL_atomic_acquire_load_uint64(my_gather_flag_addr) == -1) &&
+    if (rank == 0 && (MPL_atomic_acquire_load_uint64(my_gather_flag_addr) == (uint64_t) - 1) &&
         (last_seq_no == per_call_data->seq_no - num_cells || last_seq_no < num_cells)) {
         /* Buffer can be overwritten */
         if (rank == 0) {
             /* Mark the buffer as occupied */
-            MPL_atomic_release_store_uint64(my_gather_flag_addr, -2);
+            MPL_atomic_release_store_uint64(my_gather_flag_addr, (uint64_t) - 2);
             /* Update the release_flag, so that the children ranks can move on */
             MPL_atomic_release_store_uint64(my_release_flag_addr, per_call_data->seq_no);
             *done = 1;
@@ -222,7 +222,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_reduce_data_cb(MPIR_Comm * comm, 
 
     if (rank == 0 && root == 0) {
         /* Mark the buffer as available, if root was rank 0 */
-        MPL_atomic_release_store_uint64(my_gather_flag_addr, -1);
+        MPL_atomic_release_store_uint64(my_gather_flag_addr, (uint64_t) - 1);
     } else {
         /* Update my gather flag to seq_no (so that my parent can be unblocked) */
         MPL_atomic_release_store_uint64(my_gather_flag_addr, per_call_data->seq_no);
@@ -313,7 +313,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_reduce_finish_sendrecv_completion
                 MPIR_Request_free(per_call_data->sreq);
                 per_call_data->sreq = NULL;
                 /* Mark the buffer as available for next use */
-                MPL_atomic_release_store_uint64(my_gather_flag_addr, -1);
+                MPL_atomic_release_store_uint64(my_gather_flag_addr, (uint64_t) - 1);
                 /* Update the last seq no completed */
                 nb_release_gather_info_ptr->ireduce_last_seq_no_completed[segment] =
                     per_call_data->seq_no;

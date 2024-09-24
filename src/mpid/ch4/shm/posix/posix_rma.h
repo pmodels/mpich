@@ -159,7 +159,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
 
 #ifdef MPL_HAVE_GPU
     if (MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE != MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE_yaksa) {
-        int engine_type =
+        MPL_gpu_engine_type_t engine_type =
             MPIDI_RMA_choose_engine(MPL_gpu_query_pointer_is_dev(origin_addr, &origin_attr),
                                     origin_dev_id, MPL_gpu_query_pointer_is_dev(target_addr,
                                                                                 &target_attr),
@@ -251,7 +251,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
 
 #ifdef MPL_HAVE_GPU
     if (MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE != MPIR_CVAR_CH4_IPC_GPU_RMA_ENGINE_TYPE_yaksa) {
-        int engine_type =
+        MPL_gpu_engine_type_t engine_type =
             MPIDI_RMA_choose_engine(MPL_gpu_query_pointer_is_dev(origin_addr, &origin_attr),
                                     origin_dev_id, MPL_gpu_query_pointer_is_dev(target_addr,
                                                                                 &target_attr),

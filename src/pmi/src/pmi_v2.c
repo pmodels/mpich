@@ -108,13 +108,15 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 
     /* do full PMI2 init */
     const char *s_pmiid;
-    int pmiid = -1;
     s_pmiid = getenv("PMI_ID");
     if (!s_pmiid) {
         s_pmiid = getenv("PMI_RANK");
     }
+    int pmiid;
     if (s_pmiid) {
         pmiid = atoi(s_pmiid);
+    } else {
+        pmiid = -1;
     }
 
     PMIU_msg_set_query_fullinit(&pmicmd, USE_WIRE_VER, no_static, pmiid);
@@ -122,7 +124,7 @@ PMI_API_PUBLIC int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
     PMIU_ERR_POP(pmi_errno);
 
-    const char *spawner_jobid = NULL;
+    const char *spawner_jobid;
     int verbose;                /* unused */
     PMIU_msg_get_response_fullinit(&pmicmd, rank, size, appnum, &spawner_jobid, &verbose);
     PMIU_ERR_POP(pmi_errno);

@@ -88,14 +88,14 @@ int MPL_rankmap_str_to_array(char *mapping, int sz, int *out_rankmap)
     RANKMAP_SKIP_SPACE(s);
     RANKMAP_EXPECT_AND_SKIP_C(s, '(');
     RANKMAP_SKIP_SPACE(s);
-    bool flag = RANKMAP_EXPECT_S(s, RANKMAP_VECTOR);
-    if (!flag) {
+    if (!RANKMAP_EXPECT_S(s, RANKMAP_VECTOR)) {
         RANKMAP_PARSE_ERROR();
     }
     s += strlen(RANKMAP_VECTOR);
     RANKMAP_SKIP_SPACE(s);
 
-    bool expect_comma = true;
+    bool expect_comma;
+    expect_comma = true;
     while (*s && rank < sz) {
         RANKMAP_SKIP_SPACE(s);
         if (expect_comma) {

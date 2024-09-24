@@ -236,8 +236,9 @@ int PMIU_read_cmd(int fd, char **buf_out, int *buflen_out)
     bufsize = MAX_READLINE;
     PMIU_CHK_MALLOC(buf, char *, bufsize, pmi_errno, PMIU_ERR_NOMEM, "buf");
 
-    int wire_version = 0;
-    int pmi2_cmd_len = 0;
+    int wire_version, pmi2_cmd_len;
+    wire_version = 0;
+    pmi2_cmd_len = 0;
     while (1) {
         int n = 0;
         /* -- read more -- */
