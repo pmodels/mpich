@@ -690,6 +690,22 @@ CFLAGS="$CFLAGS $pac_cc_strict_flags"
 export CFLAGS
 ])
 
+AC_DEFUN([PAC_C_DEFAULT_OPTIONS],[
+    pac_cc_defaut_flags="
+        --diag_suppress=branch_past_initialization
+    "
+    # See if the above options work with the compiler
+    accepted_flags=""
+    for flag in $pac_cc_defaut_flags ; do
+        PAC_PUSH_FLAG([CFLAGS])
+	CFLAGS="$CFLAGS $accepted_flags"
+        PAC_C_CHECK_COMPILER_OPTION([$flag],[accepted_flags="$accepted_flags $flag"],)
+        PAC_POP_FLAG([CFLAGS])
+    done
+    CFLAGS="$CFLAGS $accepted_flags"
+    export CFLAGS
+])
+
 dnl Return the integer structure alignment in pac_cv_c_max_integer_align
 dnl Possible values include
 dnl	packed
