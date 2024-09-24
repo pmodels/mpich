@@ -35,6 +35,8 @@ static gpu_free_hook_s *free_hook_chain = NULL;
 
 static CUresult CUDAAPI(*sys_cuMemFree) (CUdeviceptr dptr);
 static cudaError_t CUDARTAPI(*sys_cudaFree) (void *dptr);
+typedef CUresult(*cuMemFree_t) (CUdeviceptr dptr);
+typedef cudaError_t CUDARTAPI(*cudaFree_t) (void *dptr);
 
 static int gpu_mem_hook_init();
 static MPL_initlock_t free_hook_mutex = MPL_INITLOCK_INITIALIZER;
@@ -313,7 +315,8 @@ int MPL_gpu_init(int debug_summary)
         goto fn_exit;
     }
 
-    cudaError_t ret = cudaGetDeviceCount(&device_count);
+    cudaError_t ret;
+    ret = cudaGetDeviceCount(&device_count);
     if (ret == cudaErrorNoDevice) {
         /* call cudaGetLastError() to consume the error */
         ret = cudaGetLastError();
@@ -333,7 +336,8 @@ int MPL_gpu_init(int debug_summary)
     MPL_gpu_info.ipc_handle_type = MPL_GPU_IPC_HANDLE_SHAREABLE;
     MPL_gpu_info.specialized_cache = false;
 
-    char *visible_devices = getenv("CUDA_VISIBLE_DEVICES");
+    char *visible_devices;
+    visible_devices = getenv("CUDA_VISIBLE_DEVICES");
     if (visible_devices) {
         local_to_global_map = MPL_malloc(device_count * sizeof(int), MPL_MEM_OTHER);
 
@@ -487,6 +491,7 @@ static void gpu_free_hooks_cb(void *dptr)
     return;
 }
 
+typedef void (*funcptr_t) (void);
 static int gpu_mem_hook_init()
 {
     void *libcuda_handle;
@@ -497,9 +502,9 @@ static int gpu_mem_hook_init()
     libcudart_handle = dlopen("libcudart.so", RTLD_LAZY | RTLD_GLOBAL);
     assert(libcudart_handle);
 
-    sys_cuMemFree = (void *) dlsym(libcuda_handle, CUDA_SYMBOL_STRING(cuMemFree));
+    sys_cuMemFree = (cuMemFree_t) dlsym(libcuda_handle, CUDA_SYMBOL_STRING(cuMemFree));
     assert(sys_cuMemFree);
-    sys_cudaFree = (void *) dlsym(libcudart_handle, CUDA_SYMBOL_STRING(cudaFree));
+    sys_cudaFree = (cudaFree_t) dlsym(libcudart_handle, CUDA_SYMBOL_STRING(cudaFree));
     assert(sys_cudaFree);
 
     return MPL_SUCCESS;

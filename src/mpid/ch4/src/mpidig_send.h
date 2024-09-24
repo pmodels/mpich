@@ -46,7 +46,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
                                                MPIR_Comm * comm, int context_offset,
                                                MPIDI_av_entry_t * addr, uint8_t flags,
                                                int src_vci, int dst_vci,
-                                               MPIR_Request ** request, MPIR_Errflag_t errflag)
+                                               MPIR_Request ** request, int errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
@@ -122,8 +122,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
                                               int rank,
                                               int tag, MPIR_Comm * comm, int context_offset,
                                               MPIDI_av_entry_t * addr, int src_vci, int dst_vci,
-                                              MPIR_Request ** request,
-                                              bool syncflag, MPIR_Errflag_t errflag)
+                                              MPIR_Request ** request, bool syncflag, int errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;

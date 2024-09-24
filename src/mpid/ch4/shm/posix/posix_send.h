@@ -33,7 +33,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
     int mpi_errno = MPI_SUCCESS;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    int errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
     bool syncflag = MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
 
     int vci_src, vci_dst;

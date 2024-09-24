@@ -57,8 +57,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                              const MPIDI_POSIX_release_gather_opcode_t operation);
 int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr);
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_get_tree_type(const char
-                                                                          *tree_type_name)
+MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_release_gather_tree_type_t
+MPIDI_POSIX_mpi_release_gather_get_tree_type(const char *tree_type_name)
 {
     if (0 == strcmp(tree_type_name, "kary"))
         return MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;

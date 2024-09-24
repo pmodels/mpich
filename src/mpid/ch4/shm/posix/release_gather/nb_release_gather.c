@@ -214,9 +214,9 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
         /* Calculate gather and release flag address and initialize to the gather and release states */
         for (i = 0; i < MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS; i++) {
             MPL_atomic_release_store_uint64(MPIDI_POSIX_RELEASE_GATHER_NB_IBCAST_GATHER_FLAG_ADDR
-                                            (rank, i, num_ranks), -1);
+                                            (rank, i, num_ranks), (uint64_t) - 1);
             MPL_atomic_release_store_uint64(MPIDI_POSIX_RELEASE_GATHER_NB_IBCAST_RELEASE_FLAG_ADDR
-                                            (rank, i, num_ranks), -1);
+                                            (rank, i, num_ranks), (uint64_t) - 1);
             nb_release_gather_info_ptr->ibcast_last_seq_no_completed[i] = -1;
         }
         /* Allocate the shared memory for ibcast buffer */
@@ -242,9 +242,9 @@ int MPIDI_POSIX_nb_release_gather_comm_init(MPIR_Comm * comm_ptr,
         MPIR_ERR_CHECK(mpi_errno);
         for (i = 0; i < MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS; i++) {
             MPL_atomic_release_store_uint64(MPIDI_POSIX_RELEASE_GATHER_NB_IREDUCE_GATHER_FLAG_ADDR
-                                            (rank, i, num_ranks), -1);
+                                            (rank, i, num_ranks), (uint64_t) - 1);
             MPL_atomic_release_store_uint64(MPIDI_POSIX_RELEASE_GATHER_NB_IREDUCE_RELEASE_FLAG_ADDR
-                                            (rank, i, num_ranks), -1);
+                                            (rank, i, num_ranks), (uint64_t) - 1);
             nb_release_gather_info_ptr->ireduce_last_seq_no_completed[i] = -1;
         }
         /* Allocate the shared memory for ireduce buffer */

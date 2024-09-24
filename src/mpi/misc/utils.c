@@ -191,12 +191,9 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
                             MPL_gpu_engine_type_t enginetype, bool commit, MPIR_gpu_req * gpu_req)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpl_errno = MPL_SUCCESS;
     int sendtype_iscontig, recvtype_iscontig;
     MPI_Aint sendsize, recvsize, sdata_sz, rdata_sz, copy_sz;
     MPI_Aint true_extent, sendtype_true_lb, recvtype_true_lb;
-    int completed = 0;
-    int dev_id = -1;
 
     MPIR_FUNC_ENTER;
 
@@ -227,6 +224,9 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
     if (sendtype_iscontig && recvtype_iscontig) {
         /* Remove guard when other backends implement MPL_gpu_imemcpy and MPL_gpu_fast_memcpy */
 #ifdef MPL_HAVE_ZE
+        int mpl_errno = MPL_SUCCESS;
+        int completed = 0;
+        int dev_id = -1;
         MPL_pointer_attr_t sendattr, recvattr;
         if (send_attr == NULL) {
             MPIR_GPU_query_pointer_attr(sendbuf, &sendattr);

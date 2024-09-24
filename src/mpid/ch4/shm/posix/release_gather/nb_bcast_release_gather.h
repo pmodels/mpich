@@ -88,7 +88,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_root_datacopy_completion(void *v,
     MPL_atomic_uint64_t *rank_0_gather_flag_addr =
         MPIDI_POSIX_RELEASE_GATHER_NB_IBCAST_GATHER_FLAG_ADDR(0, segment, num_ranks);
 
-    if (MPL_atomic_acquire_load_uint64(rank_0_gather_flag_addr) == -1) {
+    if (MPL_atomic_acquire_load_uint64(rank_0_gather_flag_addr) == (uint64_t) - 1) {
         /* Buffer can be overwritten */
         if (root != 0) {
             /* Root sends data to rank 0 */
@@ -109,7 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_root_datacopy_completion(void *v,
             if (rank == 0 &&
                 (last_seq_no == per_call_data->seq_no - num_cells || last_seq_no < num_cells)) {
                 /* Mark the buffer as occupied */
-                MPL_atomic_release_store_uint64(my_gather_flag_addr, -2);
+                MPL_atomic_release_store_uint64(my_gather_flag_addr, (uint64_t) - 2);
                 MPIR_Localcopy(per_call_data->local_buf, per_call_data->count,
                                per_call_data->datatype,
                                MPIDI_POSIX_RELEASE_GATHER_NB_IBCAST_DATA_ADDR(segment),
@@ -179,7 +179,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_finish_send_recv_completion(void 
         } else if (rank == 0) {
             if (MPIR_Request_is_complete(per_call_data->rreq)) {
                 /* Mark the buffer as occupied */
-                MPL_atomic_release_store_uint64(my_gather_flag_addr, -2);
+                MPL_atomic_release_store_uint64(my_gather_flag_addr, (uint64_t) - 2);
                 MPIR_Request_free(per_call_data->rreq);
                 per_call_data->rreq = NULL;
                 /* Rank 0 updates its flag when it arrives and data is ready in shm buffer (if bcast) */
@@ -316,7 +316,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_update_gather_flag_cb(MPIR_Comm *
 
     if (rank == 0 && MPL_atomic_acquire_load_uint64(my_gather_flag_addr) == per_call_data->seq_no) {
         /* If I am rank 0 and all the ranks have arrived, set my_gather_flag to -1 */
-        MPL_atomic_release_store_uint64(my_gather_flag_addr, -1);
+        MPL_atomic_release_store_uint64(my_gather_flag_addr, (uint64_t) - 1);
         nb_release_gather_info_ptr->ibcast_last_seq_no_completed[segment] = per_call_data->seq_no;
     }
     return MPI_SUCCESS;
