@@ -42,7 +42,7 @@ int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
     return mpi_errno;
 }
 
-int MPIDI_IPC_complete(MPIR_Request * rreq, int ipc_type)
+int MPIDI_IPC_complete(MPIR_Request * rreq, MPIDI_IPCI_type_t ipc_type)
 {
     int mpi_errno = MPI_SUCCESS;
 

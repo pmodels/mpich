@@ -908,7 +908,8 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
 static int MPIDI_OFI_gpu_progress_send(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int engine_type = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_D2H_ENGINE_TYPE;
+    MPL_gpu_engine_type_t engine_type =
+        (MPL_gpu_engine_type_t) MPIR_CVAR_CH4_OFI_GPU_PIPELINE_D2H_ENGINE_TYPE;
 
     while (MPIDI_OFI_global.gpu_send_queue) {
         char *host_buf = NULL;

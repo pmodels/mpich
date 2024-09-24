@@ -24,7 +24,6 @@ static int PMIx_size;
 static int appnum;
 
 static bool cached_singinit_inuse;
-static char *cached_singinit_key;
 
 static const char *attribute_from_key(const char *key);
 static char *value_to_wire(pmix_value_t * val);
@@ -59,13 +58,15 @@ pmix_status_t PMIx_Init(pmix_proc_t * proc, pmix_info_t info[], size_t ninfo)
 
     /* get rank from env */
     const char *s_pmiid;
-    int pmiid = -1;
     s_pmiid = getenv("PMI_ID");
     if (!s_pmiid) {
         s_pmiid = getenv("PMI_RANK");
     }
+    int pmiid;
     if (s_pmiid) {
         pmiid = atoi(s_pmiid);
+    } else {
+        pmiid = -1;
     }
     PMIx_proc.rank = pmiid;
 
@@ -86,7 +87,7 @@ pmix_status_t PMIx_Init(pmix_proc_t * proc, pmix_info_t info[], size_t ninfo)
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
     PMIU_ERR_POP(pmi_errno);
 
-    const char *spawner_jobid = NULL;
+    const char *spawner_jobid;
     int verbose;                /* unused */
     PMIU_msg_get_response_fullinit(&pmicmd, &pmiid, &PMIx_size, &appnum, &spawner_jobid, &verbose);
     PMIU_ERR_POP(pmi_errno);
@@ -167,7 +168,6 @@ pmix_status_t PMIx_Put(pmix_scope_t scope, const char key[], pmix_value_t * val)
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
         if (cached_singinit_inuse)
             return PMIX_ERROR;
-        cached_singinit_key = MPL_strdup(key);
         /* FIXME: save copy of value */
         cached_singinit_inuse = true;
         return PMIX_SUCCESS;
@@ -282,8 +282,10 @@ pmix_status_t PMIx_Get(const pmix_proc_t * proc, const char key[],
         goto fn_exit;
     }
 
-    const char *nspace = PMIx_proc.nspace;
-    int srcid = -1;
+    const char *nspace;
+    int srcid;
+    nspace = PMIx_proc.nspace;
+    srcid = -1;
     if (proc != NULL) {
         /* user-provided namespace might be the empty string, ignore it */
         if (strlen(proc->nspace) != 0) {

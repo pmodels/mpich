@@ -526,7 +526,7 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
                     if (g2_idx >= 0)
                         l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
                     else
-                        l2_pid = -1;
+                        l2_pid = (uint64_t) - 1;
                 }
                 if (l1_pid == l2_pid)
                     ranks2[i] = g2_idx;
@@ -619,7 +619,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     if (group_ptr1->rank == MPI_UNDEFINED && group_ptr2->rank >= 0) {
         mylpid = group_ptr2->lrank_to_lpid[group_ptr2->rank].lpid;
     } else {
-        mylpid = -2;
+        mylpid = (uint64_t) - 2;
     }
     k = size1;
     for (i = 0; i < size2; i++) {

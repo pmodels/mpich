@@ -26,7 +26,7 @@
  * and perform direct data transfer.
  */
 
-int MPIDI_IPC_complete(MPIR_Request * rreq, int ipc_type);
+int MPIDI_IPC_complete(MPIR_Request * rreq, MPIDI_IPCI_type_t ipc_type);
 int MPIDI_IPC_rndv_cb(MPIR_Request * rreq);
 int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                 uint32_t attr, MPIR_Request ** req);
@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
                                                  int context_offset, MPIDI_av_entry_t * addr,
                                                  MPIDI_IPCI_ipc_attr_t ipc_attr,
                                                  int vci_src, int vci_dst, MPIR_Request ** request,
-                                                 bool syncflag, MPIR_Errflag_t errflag)
+                                                 bool syncflag, int errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;

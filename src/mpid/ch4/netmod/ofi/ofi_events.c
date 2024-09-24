@@ -116,7 +116,8 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
     void *wc_buf = NULL;
     int in_use MPL_UNUSED;
     MPIDI_OFI_gpu_task_t *task = NULL;
-    int engine_type = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_H2D_ENGINE_TYPE;
+    MPL_gpu_engine_type_t engine_type =
+        (MPL_gpu_engine_type_t) MPIR_CVAR_CH4_OFI_GPU_PIPELINE_H2D_ENGINE_TYPE;
 
     MPIR_FUNC_ENTER;
 
@@ -166,8 +167,7 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
                 /* Post recv for remaining chunks. */
                 MPIR_cc_dec(rreq->cc_ptr);
                 for (i = 0; i < n_chunks; i++) {
-                    int c;
-                    MPIR_cc_incr(rreq->cc_ptr, &c);
+                    MPIR_cc_inc(rreq->cc_ptr);
 
                     size_t chunk_sz = MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ;
 

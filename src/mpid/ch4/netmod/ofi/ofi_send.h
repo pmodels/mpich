@@ -508,7 +508,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint c
                                                      MPIR_Comm * comm, int context_offset,
                                                      MPIDI_av_entry_t * addr, int vci_src,
                                                      int vci_dst, MPIR_Request ** request,
-                                                     MPIR_Errflag_t err_flag)
+                                                     int err_flag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -580,7 +580,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                             int context_offset, MPIDI_av_entry_t * addr,
                                             int vci_src, int vci_dst,
                                             MPIR_Request ** request, int noreq,
-                                            uint64_t syncflag, MPIR_Errflag_t err_flag)
+                                            uint64_t syncflag, int err_flag)
 {
     int dt_contig, mpi_errno;
     size_t data_sz;
@@ -687,7 +687,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     MPIR_FUNC_ENTER;
 
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
-    MPIR_Errflag_t errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
+    int errflag = MPIR_PT2PT_ATTR_GET_ERRFLAG(attr);
 
     int vci_src, vci_dst;
     MPIDI_OFI_SEND_VNIS(vci_src, vci_dst);      /* defined just above */

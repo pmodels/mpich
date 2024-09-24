@@ -6,6 +6,26 @@
 #include "mpiimpl.h"
 #include "mpif90model.h"
 
+#ifndef HAVE_FORTRAN_BINDING
+int MPIR_Type_create_f90_integer_impl(int range, MPI_Datatype * newtype)
+{
+    *newtype = MPI_DATATYPE_NULL;
+    return MPI_SUCCESS;
+}
+
+int MPIR_Type_create_f90_real_impl(int precision, int range, MPI_Datatype * newtype)
+{
+    *newtype = MPI_DATATYPE_NULL;
+    return MPI_SUCCESS;
+}
+
+int MPIR_Type_create_f90_complex_impl(int precision, int range, MPI_Datatype * newtype)
+{
+    *newtype = MPI_DATATYPE_NULL;
+    return MPI_SUCCESS;
+}
+
+#else /* HAVE_FORTRAN_BINDING */
 typedef struct intModel {
     int range, kind, bytes;
 } intModel;
@@ -21,15 +41,10 @@ static int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
 int MPIR_Type_create_f90_integer_impl(int range, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Datatype basetype = MPI_DATATYPE_NULL;
-
-#ifndef HAVE_FORTRAN_BINDING
-    *newtype = MPI_DATATYPE_NULL;
-    goto fn_exit;
-#endif
 
     static intModel f90_integer_map[] = { MPIR_F90_INTEGER_MODEL_MAP {0, 0, 0} };
 
+    MPI_Datatype basetype = MPI_DATATYPE_NULL;
     for (int i = 0; f90_integer_map[i].range > 0; i++) {
         if (f90_integer_map[i].range >= range) {
             /* Find the corresponding INTEGER type */
@@ -76,10 +91,6 @@ int MPIR_Type_create_f90_real_impl(int precision, int range, MPI_Datatype * newt
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype basetype;
 
-#ifndef HAVE_FORTRAN_BINDING
-    *newtype = MPI_DATATYPE_NULL;
-    goto fn_exit;
-#endif
 
     static int setupPredefTypes = 1;
     static realModel f90_real_model[2] = {
@@ -134,11 +145,6 @@ int MPIR_Type_create_f90_complex_impl(int precision, int range, MPI_Datatype * n
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype basetype;
 
-#ifndef HAVE_FORTRAN_BINDING
-    *newtype = MPI_DATATYPE_NULL;
-    goto fn_exit;
-#endif
-
     static int setupPredefTypes = 1;
     static realModel f90_real_model[2] = {
         {MPIR_F90_REAL_MODEL, MPI_COMPLEX},
@@ -187,6 +193,7 @@ int MPIR_Type_create_f90_complex_impl(int precision, int range, MPI_Datatype * n
     goto fn_exit;
 }
 
+#ifdef HAVE_FORTRAN_BINDING
 /* The MPI standard requires that the datatypes that are returned from
    the MPI_Create_f90_xxx be both predefined and return the r (and p
    if real/complex) with which it was created.  The following contains routines
@@ -305,6 +312,7 @@ static int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
   fn_fail:
     return mpi_errno;
 }
+#endif
 
 /*
    The simple approach used here is to store (unordered) the precision and
@@ -389,3 +397,4 @@ static int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
     return mpi_errno;
 }
 #endif
+#endif /* HAVE_FORTRAN_BINDING */
