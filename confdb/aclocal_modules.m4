@@ -18,6 +18,7 @@ AC_DEFUN([PAC_CONFIG_MPL],[
         PAC_CONFIG_MPL_EMBEDDED
         PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
+        PAC_APPEND_FLAG([${MPL_CFLAGS}], [CFLAGS])
         mplsrcdir="src/mpl"
         mpllib="src/mpl/libmpl.la"
     ], [
