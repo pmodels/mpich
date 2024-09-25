@@ -29,6 +29,7 @@ LT_PREREQ([2.2.6])
 PAC_PUSH_FLAG([CFLAGS])
 LT_INIT()
 PAC_POP_FLAG([CFLAGS])
+PARENT_CFLAGS=${CFLAGS}
 
 # ----------------------------------------------------------------------------
 # Set default library names if names haven't already been provided
@@ -1404,6 +1405,9 @@ AX_GCC_VAR_ATTRIBUTE(aligned)
 AX_GCC_VAR_ATTRIBUTE(used)
 
 PAC_POP_ALL_FLAGS
+
+MPL_CFLAGS="${CFLAGS#${PARENT_CFLAGS}}"
+AC_SUBST(MPL_CFLAGS)
 
 dnl Final output
 AC_CONFIG_FILES([Makefile localdefs include/mpl_timer.h])
