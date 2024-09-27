@@ -20,7 +20,7 @@
 int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const MPI_Aint * sendcounts,
                                  const MPI_Aint * displs, MPI_Datatype sendtype, void *recvbuf,
                                  MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                 MPIR_Comm * comm_ptr, int coll_group, MPIR_Errflag_t errflag)
 {
     int rank, comm_size, mpi_errno = MPI_SUCCESS;
     MPI_Aint extent;
@@ -29,14 +29,17 @@ int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const MPI_Aint * sendcount
     MPI_Status *starray;
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    } else {
+        MPIR_Assert(coll_group == MPIR_SUBGROUP_NONE);
+        rank = comm_ptr->rank;
+        comm_size = comm_ptr->remote_size;
+    }
 
     /* If I'm the root, then scatter */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
         ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-            comm_size = comm_ptr->remote_size;
-
         MPIR_Datatype_get_extent_macro(sendtype, extent);
 
         MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, comm_size * sizeof(MPIR_Request *),
@@ -57,7 +60,8 @@ int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const MPI_Aint * sendcount
                 } else {
                     mpi_errno = MPIC_Isend(((char *) sendbuf + displs[i] * extent),
                                            sendcounts[i], sendtype, i,
-                                           MPIR_SCATTERV_TAG, comm_ptr, &reqarray[reqs++], errflag);
+                                           MPIR_SCATTERV_TAG, comm_ptr, coll_group,
+                                           &reqarray[reqs++], errflag);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
             }
@@ -70,7 +74,7 @@ int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const MPI_Aint * sendcount
     else if (root != MPI_PROC_NULL) {   /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (recvcount) {
             mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype, root,
-                                  MPIR_SCATTERV_TAG, comm_ptr, MPI_STATUS_IGNORE);
+                                  MPIR_SCATTERV_TAG, comm_ptr, coll_group, MPI_STATUS_IGNORE);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

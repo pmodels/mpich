@@ -9,7 +9,8 @@
 /* Routine to schedule a recursive exchange based scan */
 int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
                                                   MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
-                                                  MPIR_Comm * comm, MPIR_TSP_sched_t sched)
+                                                  MPIR_Comm * comm, int coll_group,
+                                                  MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint extent, true_extent;
@@ -27,11 +28,10 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -74,8 +74,8 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
             nvtcs = 1;
             vtcs[0] = (loop_count == 0) ? dtcopy_id : reduce_id;
             mpi_errno =
-                MPIR_TSP_sched_isend(partial_scan, count, datatype, dst, tag, comm, sched, nvtcs,
-                                     vtcs, &send_id);
+                MPIR_TSP_sched_isend(partial_scan, count, datatype, dst, tag, comm, coll_group,
+                                     sched, nvtcs, vtcs, &send_id);
 
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -84,8 +84,8 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
                 vtcs[1] = recv_reduce;
             }
             mpi_errno =
-                MPIR_TSP_sched_irecv(tmp_buf, count, datatype, dst, tag, comm, sched, nvtcs, vtcs,
-                                     &recv_id);
+                MPIR_TSP_sched_irecv(tmp_buf, count, datatype, dst, tag, comm, coll_group, sched,
+                                     nvtcs, vtcs, &recv_id);
 
             MPIR_ERR_CHECK(mpi_errno);
 

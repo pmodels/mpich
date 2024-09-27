@@ -34,7 +34,7 @@ int MPIR_Threadcomm_barrier_impl(MPIR_Comm * comm)
     if (comm->local_size == 1) {
         thread_barrier(comm->threadcomm);
     } else {
-        mpi_errno = MPIR_Barrier_intra_dissemination(comm, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Barrier_intra_dissemination(comm, MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
     }
 
     return mpi_errno;
@@ -45,7 +45,9 @@ int MPIR_Threadcomm_bcast_impl(void *buffer, MPI_Aint count, MPI_Datatype dataty
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm, MPIR_ERR_NONE);
+    mpi_errno =
+        MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm, MPIR_SUBGROUP_THREADCOMM,
+                                  MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -57,7 +59,8 @@ int MPIR_Threadcomm_gather_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype,
-                                           recvbuf, recvcount, recvtype, root, comm, MPIR_ERR_NONE);
+                                           recvbuf, recvcount, recvtype, root, comm,
+                                           MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -71,7 +74,7 @@ int MPIR_Threadcomm_gatherv_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Da
 
     mpi_errno = MPIR_Gatherv_allcomm_linear(sendbuf, sendcount, sendtype,
                                             recvbuf, recvcounts, displs, recvtype, root,
-                                            comm, MPIR_ERR_NONE);
+                                            comm, MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -84,7 +87,7 @@ int MPIR_Threadcomm_scatter_impl(const void *sendbuf, MPI_Aint sendcount, MPI_Da
 
     mpi_errno = MPIR_Scatter_intra_binomial(sendbuf, sendcount, sendtype,
                                             recvbuf, recvcount, recvtype, root,
-                                            comm, MPIR_ERR_NONE);
+                                            comm, MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -98,7 +101,7 @@ int MPIR_Threadcomm_scatterv_impl(const void *sendbuf, const MPI_Aint * sendcoun
 
     mpi_errno = MPIR_Scatterv_allcomm_linear(sendbuf, sendcounts, displs, sendtype,
                                              recvbuf, recvcount, recvtype, root,
-                                             comm, MPIR_ERR_NONE);
+                                             comm, MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -110,7 +113,8 @@ int MPIR_Threadcomm_allgather_impl(const void *sendbuf, MPI_Aint sendcount, MPI_
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Allgather_intra_brucks(sendbuf, sendcount, sendtype,
-                                            recvbuf, recvcount, recvtype, comm, MPIR_ERR_NONE);
+                                            recvbuf, recvcount, recvtype, comm,
+                                            MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -124,7 +128,7 @@ int MPIR_Threadcomm_allgatherv_impl(const void *sendbuf, MPI_Aint sendcount, MPI
 
     mpi_errno = MPIR_Allgatherv_intra_brucks(sendbuf, sendcount, sendtype,
                                              recvbuf, recvcounts, displs, recvtype,
-                                             comm, MPIR_ERR_NONE);
+                                             comm, MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -137,7 +141,8 @@ int MPIR_Threadcomm_alltoall_impl(const void *sendbuf, MPI_Aint sendcount, MPI_D
 
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
     mpi_errno = MPIR_Alltoall_intra_brucks(sendbuf, sendcount, sendtype,
-                                           recvbuf, recvcount, recvtype, comm, MPIR_ERR_NONE);
+                                           recvbuf, recvcount, recvtype, comm,
+                                           MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -153,7 +158,7 @@ int MPIR_Threadcomm_alltoallv_impl(const void *sendbuf, const MPI_Aint * sendcou
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
     mpi_errno = MPIR_Alltoallv_intra_scattered(sendbuf, sendcounts, sdispls, sendtype,
                                                recvbuf, recvcounts, rdispls, recvtype,
-                                               comm, MPIR_ERR_NONE);
+                                               comm, MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -169,7 +174,7 @@ int MPIR_Threadcomm_alltoallw_impl(const void *sendbuf, const MPI_Aint * sendcou
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
     mpi_errno = MPIR_Alltoallw_intra_scattered(sendbuf, sendcounts, sdispls, sendtypes,
                                                recvbuf, recvcounts, rdispls, recvtypes,
-                                               comm, MPIR_ERR_NONE);
+                                               comm, MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -181,7 +186,8 @@ int MPIR_Threadcomm_allreduce_impl(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                        comm, MPIR_ERR_NONE);
+                                                        comm, MPIR_SUBGROUP_THREADCOMM,
+                                                        MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -193,7 +199,7 @@ int MPIR_Threadcomm_reduce_impl(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Reduce_intra_binomial(sendbuf, recvbuf, count, datatype, op, root,
-                                           comm, MPIR_ERR_NONE);
+                                           comm, MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -206,7 +212,9 @@ int MPIR_Threadcomm_reduce_scatter_impl(const void *sendbuf, void *recvbuf,
 
     MPIR_Assert(MPIR_Op_is_commutative(op));
     mpi_errno = MPIR_Reduce_scatter_intra_recursive_halving(sendbuf, recvbuf, recvcounts,
-                                                            datatype, op, comm, MPIR_ERR_NONE);
+                                                            datatype, op, comm,
+                                                            MPIR_SUBGROUP_THREADCOMM,
+                                                            MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -220,7 +228,8 @@ int MPIR_Threadcomm_reduce_scatter_block_impl(const void *sendbuf, void *recvbuf
     MPIR_Assert(MPIR_Op_is_commutative(op));
     mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf, recvcount,
                                                                   datatype, op,
-                                                                  comm, MPIR_ERR_NONE);
+                                                                  comm, MPIR_SUBGROUP_THREADCOMM,
+                                                                  MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -231,7 +240,7 @@ int MPIR_Threadcomm_scan_impl(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Scan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                   comm, MPIR_ERR_NONE);
+                                                   comm, MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }
@@ -242,7 +251,7 @@ int MPIR_Threadcomm_exscan_impl(const void *sendbuf, void *recvbuf,
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Exscan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                     comm, MPIR_ERR_NONE);
+                                                     comm, MPIR_SUBGROUP_THREADCOMM, MPIR_ERR_NONE);
 
     return mpi_errno;
 }

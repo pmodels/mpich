@@ -248,11 +248,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_NB_RG_reduce_start_sendrecv_completion(
     if (root != 0) {
         if (rank == root) {
             MPIC_Irecv(per_call_data->recv_buf, per_call_data->count, per_call_data->datatype,
-                       0, per_call_data->tag, comm_ptr, &(per_call_data->rreq));
+                       0, per_call_data->tag, comm_ptr, MPIR_SUBGROUP_NONE, &(per_call_data->rreq));
         } else if (rank == 0) {
             MPIC_Isend(MPIDI_POSIX_RELEASE_GATHER_NB_REDUCE_DATA_ADDR(rank, segment),
                        per_call_data->count, per_call_data->datatype, per_call_data->root,
-                       per_call_data->tag, comm_ptr, &(per_call_data->sreq), MPIR_ERR_NONE);
+                       per_call_data->tag, comm_ptr, MPIR_SUBGROUP_NONE, &(per_call_data->sreq),
+                       MPIR_ERR_NONE);
         }
     }
 
@@ -363,6 +364,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
     MPI_Aint num_chunks, chunk_count_floor, chunk_count_ceil;
     MPI_Aint true_extent, type_size, lb, extent;
     int offset = 0, is_contig;
+    int coll_group = MPIR_SUBGROUP_NONE;
 
     /* Register the vertices */
     reserve_buf_type_id = MPIR_TSP_sched_new_type(sched, MPIDI_POSIX_NB_RG_rank0_hold_buf_issue,
@@ -417,7 +419,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ireduce_impl(void *se
 
         data->seq_no = MPIDI_POSIX_COMM(comm_ptr, nb_reduce_seq_no);
 
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+        mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &tag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

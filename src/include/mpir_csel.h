@@ -60,6 +60,7 @@ typedef enum {
 typedef struct {
     MPIR_Csel_coll_type_e coll_type;
     MPIR_Comm *comm_ptr;
+    int coll_group;
 
     union {
         struct {

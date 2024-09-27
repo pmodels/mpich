@@ -6,7 +6,8 @@
 #include "mpiimpl.h"
 
 /* Routine to schedule a disdem based barrier with radix k */
-int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched)
+int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int coll_group, int k,
+                                                  MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
@@ -19,10 +20,9 @@ int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_
 
     MPIR_FUNC_ENTER;
 
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -50,15 +50,15 @@ int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST, "dissem barrier - scheduling recv from %d\n", from));
             mpi_errno =
-                MPIR_TSP_sched_irecv(NULL, 0, MPI_BYTE, from, tag, comm, sched, 0, NULL,
+                MPIR_TSP_sched_irecv(NULL, 0, MPI_BYTE, from, tag, comm, coll_group, sched, 0, NULL,
                                      &recv_ids[i * (k - 1) + j - 1]);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST, "dissem barrier - scheduling send to %d\n", to));
             mpi_errno =
-                MPIR_TSP_sched_isend(NULL, 0, MPI_BYTE, to, tag, comm, sched, i * (k - 1), recv_ids,
-                                     &vtx_id);
+                MPIR_TSP_sched_isend(NULL, 0, MPI_BYTE, to, tag, comm, coll_group, sched,
+                                     i * (k - 1), recv_ids, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,

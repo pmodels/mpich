@@ -10,8 +10,8 @@
 
 /* Routine to schedule a pipelined tree based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                                     MPIR_Comm * comm, int tree_type, int k, int chunk_size,
-                                     MPIR_TSP_sched_t sched)
+                                     MPIR_Comm * comm, int coll_group, int tree_type, int k,
+                                     int chunk_size, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -29,8 +29,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
 
     MPIR_FUNC_ENTER;
 
-    size = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
@@ -62,7 +61,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
 
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+        mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Receive message from parent */
@@ -70,7 +69,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
 #ifdef HAVE_ERROR_CHECKING
             mpi_errno =
                 MPIR_TSP_sched_irecv_status((char *) buffer + offset * extent, msgsize,
-                                            datatype, my_tree.parent, tag, comm,
+                                            datatype, my_tree.parent, tag, comm, coll_group,
                                             &ibcast_state->status, sched, 0, NULL, &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
@@ -78,7 +77,8 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
 #else
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) buffer + offset * extent, msgsize, datatype,
-                                     my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
+                                     my_tree.parent, tag, comm, coll_group, sched, 0, NULL,
+                                     &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
 #endif
         }
@@ -87,8 +87,8 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, MPI_Aint count, MPI_Datatype 
             /* Multicast data to the children */
             mpi_errno = MPIR_TSP_sched_imcast((char *) buffer + offset * extent, msgsize, datatype,
                                               ut_int_array(my_tree.children), num_children, tag,
-                                              comm, sched, (my_tree.parent != -1) ? 1 : 0, &recv_id,
-                                              &vtx_id);
+                                              comm, coll_group, sched,
+                                              (my_tree.parent != -1) ? 1 : 0, &recv_id, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
         offset += msgsize;

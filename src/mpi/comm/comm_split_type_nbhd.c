@@ -277,7 +277,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
         /* Send the count to processes */
         mpi_errno =
             MPIR_Allreduce(MPI_IN_PLACE, num_processes_at_node, num_nodes, MPI_INT,
-                           MPI_SUM, comm_ptr, MPIR_ERR_NONE);
+                           MPI_SUM, comm_ptr, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
 
         if (topo_type == MPIR_NETTOPO_TYPE__FAT_TREE ||
             topo_type == MPIR_NETTOPO_TYPE__CLOS_NETWORK) {
@@ -377,7 +377,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
 
             /* get min tree depth to all processes */
             MPIR_Allreduce(&tree_depth, &min_tree_depth, 1, MPI_INT, MPI_MIN, node_comm,
-                           MPIR_ERR_NONE);
+                           MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
 
             if (min_tree_depth) {
                 int num_hwloc_objs_at_depth;
@@ -391,7 +391,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
 
                 /* get parent_idx to all processes */
                 MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, parent_idx, 1, MPI_INT,
-                               node_comm, MPIR_ERR_NONE);
+                               node_comm, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
 
                 /* reorder parent indices */
                 for (i = 0; i < num_procs - 1; i++) {
@@ -474,12 +474,7 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
     if (min_mem_size == 0 || topo_type == MPIR_NETTOPO_TYPE__INVALID) {
         *newcomm_ptr = NULL;
     } else {
-        int num_ranks_node;
-        if (MPIR_Process.comm_world->node_comm != NULL) {
-            num_ranks_node = MPIR_Comm_size(MPIR_Process.comm_world->node_comm);
-        } else {
-            num_ranks_node = 1;
-        }
+        int num_ranks_node = MPIR_Process.local_size;
         memory_per_process = total_memory_size / num_ranks_node;
         mpi_errno = network_split_by_minsize(comm_ptr, key, min_mem_size / memory_per_process,
                                              newcomm_ptr);

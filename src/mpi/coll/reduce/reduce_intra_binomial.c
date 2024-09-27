@@ -13,7 +13,8 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
                                void *recvbuf,
                                MPI_Aint count,
                                MPI_Datatype datatype,
-                               MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                               MPI_Op op, int root, MPIR_Comm * comm_ptr, int coll_group,
+                               MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Status status;
@@ -23,7 +24,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
     void *tmp_buf;
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     /* Create a temporary buffer */
 
@@ -96,7 +97,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
             if (source < comm_size) {
                 source = (source + lroot) % comm_size;
                 mpi_errno = MPIC_Recv(tmp_buf, count, datatype, source,
-                                      MPIR_REDUCE_TAG, comm_ptr, &status);
+                                      MPIR_REDUCE_TAG, comm_ptr, coll_group, &status);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 /* The sender is above us, so the received buffer must be
@@ -117,7 +118,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
              * my parent */
             source = ((relrank & (~mask)) + lroot) % comm_size;
             mpi_errno = MPIC_Send(recvbuf, count, datatype,
-                                  source, MPIR_REDUCE_TAG, comm_ptr, errflag);
+                                  source, MPIR_REDUCE_TAG, comm_ptr, coll_group, errflag);
             MPIR_ERR_CHECK(mpi_errno);
             break;
         }
@@ -127,9 +128,11 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
     if (!is_commutative && (root != 0)) {
         if (rank == 0) {
             mpi_errno = MPIC_Send(recvbuf, count, datatype, root,
-                                  MPIR_REDUCE_TAG, comm_ptr, errflag);
+                                  MPIR_REDUCE_TAG, comm_ptr, coll_group, errflag);
         } else if (rank == root) {
-            mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr, &status);
+            mpi_errno =
+                MPIC_Recv(recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr, coll_group,
+                          &status);
         }
         MPIR_ERR_CHECK(mpi_errno);
     }

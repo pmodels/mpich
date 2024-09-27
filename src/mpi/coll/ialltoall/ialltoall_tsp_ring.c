@@ -35,7 +35,7 @@ copy (buf1)<--recv (buf1)            send (buf2)   /
 /* Routine to schedule a ring based allgather */
 int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
                                         MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                        MPI_Datatype recvtype, MPIR_Comm * comm,
+                                        MPI_Datatype recvtype, MPIR_Comm * comm, int coll_group,
                                         MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -46,8 +46,9 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
     void *buf1, *buf2, *data_buf, *sbuf, *rbuf;
     int tag, vtx_id;
 
-    int size = MPIR_Comm_size(comm);
-    int rank = MPIR_Comm_rank(comm);
+    int size, rank;
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
+
     int is_inplace = (sendbuf == MPI_IN_PLACE);
 
     MPI_Aint recvtype_lb, recvtype_extent;
@@ -116,7 +117,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
     for (i = 0; i < size - 1; i++) {
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+        mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
         MPIR_ERR_CHECK(mpi_errno);
 
         int vtcs[3], nvtcs;
@@ -131,8 +132,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
         }
 
         mpi_errno =
-            MPIR_TSP_sched_isend((char *) sbuf, size * recvcount, recvtype, dst, tag, comm, sched,
-                                 nvtcs, vtcs, &send_id[i % 3]);
+            MPIR_TSP_sched_isend((char *) sbuf, size * recvcount, recvtype, dst, tag, comm,
+                                 coll_group, sched, nvtcs, vtcs, &send_id[i % 3]);
         MPIR_ERR_CHECK(mpi_errno);
         /* schedule recv */
         if (i == 0)
@@ -149,8 +150,8 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, MPI_Aint sendcount,
         }
 
         mpi_errno =
-            MPIR_TSP_sched_irecv((char *) rbuf, size * recvcount, recvtype, src, tag, comm, sched,
-                                 nvtcs, vtcs, &recv_id[i % 3]);
+            MPIR_TSP_sched_irecv((char *) rbuf, size * recvcount, recvtype, src, tag, comm,
+                                 coll_group, sched, nvtcs, vtcs, &recv_id[i % 3]);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* destination offset of the copy */

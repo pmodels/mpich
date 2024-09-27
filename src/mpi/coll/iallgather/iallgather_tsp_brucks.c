@@ -10,7 +10,8 @@ int
 MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        MPI_Aint recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm, int k, MPIR_TSP_sched_t sched)
+                                       MPIR_Comm * comm, int coll_group, int k,
+                                       MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
@@ -20,8 +21,9 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int src, dst, p_of_k = 0;   /* Largest power of k that is (strictly) smaller than 'size' */
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
-    int rank = MPIR_Comm_rank(comm);
-    int size = MPIR_Comm_size(comm);
+    int rank, size;
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
+
     int is_inplace = (sendbuf == MPI_IN_PLACE);
     int max = size - 1;
     int vtx_id;
@@ -38,7 +40,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_ENTER;
@@ -116,18 +118,20 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Receive at the exact location. */
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
-                                     count, recvtype, src, tag, comm, sched, 0, NULL, &vtx_id);
+                                     count, recvtype, src, tag, comm, coll_group, sched, 0, NULL,
+                                     &vtx_id);
 
             MPIR_ERR_CHECK(mpi_errno);
             recv_id[i_recv++] = vtx_id;
             /* Send from the start of recv till `count` amount of data. */
             if (i == 0)
                 mpi_errno =
-                    MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst, tag, comm, sched, 0,
-                                         NULL, &vtx_id);
+                    MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst, tag, comm, coll_group,
+                                         sched, 0, NULL, &vtx_id);
             else
                 mpi_errno = MPIR_TSP_sched_isend(tmp_recvbuf, count, recvtype, dst, tag,
-                                                 comm, sched, n_invtcs, recv_id, &vtx_id);
+                                                 comm, coll_group, sched, n_invtcs, recv_id,
+                                                 &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
         n_invtcs += (k - 1);

@@ -50,7 +50,8 @@
 */
 int MPIR_Iexscan_intra_sched_recursive_doubling(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                                 MPI_Datatype datatype, MPI_Op op,
-                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                MPIR_Comm * comm_ptr, int coll_group,
+                                                MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -58,8 +59,7 @@ int MPIR_Iexscan_intra_sched_recursive_doubling(const void *sendbuf, void *recvb
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -89,10 +89,11 @@ int MPIR_Iexscan_intra_sched_recursive_doubling(const void *sendbuf, void *recvb
         dst = rank ^ mask;
         if (dst < comm_size) {
             /* Send partial_scan to dst. Recv into tmp_buf */
-            mpi_errno = MPIR_Sched_send(partial_scan, count, datatype, dst, comm_ptr, s);
+            mpi_errno =
+                MPIR_Sched_send(partial_scan, count, datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier here */
-            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 

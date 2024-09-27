@@ -8,7 +8,7 @@
 int MPIR_Alltoallw_allcomm_nb(const void *sendbuf, const MPI_Aint sendcounts[],
                               const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                               void *recvbuf, const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
-                              const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
+                              const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr, int coll_group,
                               MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -17,7 +17,7 @@ int MPIR_Alltoallw_allcomm_nb(const void *sendbuf, const MPI_Aint sendcounts[],
     /* just call the nonblocking version and wait on it */
     mpi_errno =
         MPIR_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
-                        recvtypes, comm_ptr, &req_ptr);
+                        recvtypes, comm_ptr, coll_group, &req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIC_Wait(req_ptr);

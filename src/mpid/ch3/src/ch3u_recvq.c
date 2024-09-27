@@ -921,7 +921,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
         }
 
-        if (MPIR_Comm_is_parent_comm(comm_ptr)) {
+        if (MPIR_Comm_is_parent_comm(comm_ptr, MPIR_SUBGROUP_NONE)) {
             /* node_comm pt2pt */
             match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET;
 
@@ -1014,7 +1014,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
         }
 
-        if (MPIR_Comm_is_parent_comm(comm_ptr)) {
+        if (MPIR_Comm_is_parent_comm(comm_ptr, MPIR_SUBGROUP_NONE)) {
             /* node_comm coll */
             match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET;
 

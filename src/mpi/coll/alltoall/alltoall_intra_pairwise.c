@@ -28,15 +28,14 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
                                  void *recvbuf,
                                  MPI_Aint recvcount,
                                  MPI_Datatype recvtype,
-                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                 MPIR_Comm * comm_ptr, int coll_group, MPIR_Errflag_t errflag)
 {
     int comm_size, i;
     MPI_Aint sendtype_extent, recvtype_extent;
     int mpi_errno = MPI_SUCCESS, src, dst, rank;
     MPI_Status status;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
@@ -75,7 +74,7 @@ int MPIR_Alltoall_intra_pairwise(const void *sendbuf,
                                   ((char *) recvbuf +
                                    src * recvcount * recvtype_extent),
                                   recvcount, recvtype, src,
-                                  MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
+                                  MPIR_ALLTOALL_TAG, comm_ptr, coll_group, &status, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

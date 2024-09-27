@@ -24,7 +24,8 @@
 int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
                                             MPI_Aint count,
                                             MPI_Datatype datatype,
-                                            int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                            int root, MPIR_Comm * comm_ptr, int coll_group,
+                                            MPIR_Errflag_t errflag)
 {
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;
@@ -38,8 +39,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     MPI_Aint true_extent, true_lb;
     MPIR_CHKLMEM_DECL(1);
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     if (HANDLE_IS_BUILTIN(datatype))
         is_contig = 1;
@@ -69,7 +69,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
     scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
-    mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
+    mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr, coll_group,
                                        nbytes, tmp_buf, is_contig, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -103,7 +103,8 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
         mpi_errno = MPIC_Sendrecv((char *) tmp_buf + right_disp, right_count,
                                   MPI_BYTE, right, MPIR_BCAST_TAG,
                                   (char *) tmp_buf + left_disp, left_count,
-                                  MPI_BYTE, left, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                                  MPI_BYTE, left, MPIR_BCAST_TAG, comm_ptr, coll_group, &status,
+                                  errflag);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
         curr_size += recvd_size;

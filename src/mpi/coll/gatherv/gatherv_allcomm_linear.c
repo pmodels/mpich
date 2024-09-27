@@ -22,7 +22,8 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
                                 const MPI_Aint * recvcounts,
                                 const MPI_Aint * displs,
                                 MPI_Datatype recvtype,
-                                int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                int root, MPIR_Comm * comm_ptr, int coll_group,
+                                MPIR_Errflag_t errflag)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
@@ -32,14 +33,17 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
     MPI_Status *starray;
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+    } else {
+        MPIR_Assert(coll_group == MPIR_SUBGROUP_NONE);
+        rank = comm_ptr->rank;
+        comm_size = comm_ptr->remote_size;
+    }
 
     /* If rank == root, then I recv lots, otherwise I send */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
         ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-            comm_size = comm_ptr->remote_size;
-
         MPIR_Datatype_get_extent_macro(recvtype, extent);
 
         MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, comm_size * sizeof(MPIR_Request *),
@@ -60,7 +64,8 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
                 } else {
                     mpi_errno = MPIC_Irecv(((char *) recvbuf + displs[i] * extent),
                                            recvcounts[i], recvtype, i,
-                                           MPIR_GATHERV_TAG, comm_ptr, &reqarray[reqs++]);
+                                           MPIR_GATHERV_TAG, comm_ptr, coll_group,
+                                           &reqarray[reqs++]);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
             }
@@ -73,7 +78,7 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
     else if (root != MPI_PROC_NULL) {   /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (sendcount) {
             mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, root,
-                                  MPIR_GATHERV_TAG, comm_ptr, errflag);
+                                  MPIR_GATHERV_TAG, comm_ptr, coll_group, errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

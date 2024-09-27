@@ -14,7 +14,7 @@
 
 int MPIR_Scatter_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                               void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype, int root,
-                              MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                              MPIR_Comm * comm_ptr, int coll_group, MPIR_Errflag_t errflag)
 {
     int remote_size, mpi_errno = MPI_SUCCESS;
     int i;
@@ -33,12 +33,12 @@ int MPIR_Scatter_inter_linear(const void *sendbuf, MPI_Aint sendcount, MPI_Datat
         for (i = 0; i < remote_size; i++) {
             mpi_errno =
                 MPIC_Send(((char *) sendbuf + sendcount * i * extent), sendcount, sendtype, i,
-                          MPIR_SCATTER_TAG, comm_ptr, errflag);
+                          MPIR_SCATTER_TAG, comm_ptr, coll_group, errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
     } else {
-        mpi_errno =
-            MPIC_Recv(recvbuf, recvcount, recvtype, root, MPIR_SCATTER_TAG, comm_ptr, &status);
+        mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype, root, MPIR_SCATTER_TAG,
+                              comm_ptr, coll_group, &status);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -23,7 +23,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                                    const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                    void *recvbuf, const MPI_Aint recvcounts[],
                                    const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                   MPIR_Comm * comm_ptr, int coll_group, MPIR_Errflag_t errflag)
 {
     int comm_size, i;
     int mpi_errno = MPI_SUCCESS;
@@ -35,7 +35,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
     MPI_Aint type_size;
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
 #ifdef HAVE_ERROR_CHECKING
     /* When MPI_IN_PLACE, we use pair-wise sendrecv_replace in order to conserve memory usage,
@@ -68,7 +68,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                 if (type_size) {
                     mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst],
                                            recvcounts[dst], recvtypes[dst], dst,
-                                           MPIR_ALLTOALLW_TAG, comm_ptr,
+                                           MPIR_ALLTOALLW_TAG, comm_ptr, coll_group,
                                            &reqarray[outstanding_requests]);
                     MPIR_ERR_CHECK(mpi_errno);
 
@@ -84,7 +84,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
                 if (type_size) {
                     mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst],
                                            sendcounts[dst], sendtypes[dst], dst,
-                                           MPIR_ALLTOALLW_TAG, comm_ptr,
+                                           MPIR_ALLTOALLW_TAG, comm_ptr, coll_group,
                                            &reqarray[outstanding_requests], errflag);
                     MPIR_ERR_CHECK(mpi_errno);
 

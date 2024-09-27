@@ -10,8 +10,8 @@
 /* Routine to schedule a pipelined tree based reduce */
 int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
-                                      MPIR_Comm * comm, int tree_type, int k, int chunk_size,
-                                      int buffer_per_child, MPIR_TSP_sched_t sched)
+                                      MPIR_Comm * comm, int coll_group, int tree_type, int k,
+                                      int chunk_size, int buffer_per_child, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, t;
@@ -42,8 +42,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
 
     MPIR_FUNC_ENTER;
 
-    size = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
     is_root = (rank == root);
 
     /* main algorithm */
@@ -70,12 +69,13 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
     my_tree.children = NULL;
     if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE || tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K) {
         mpi_errno =
-            MPIR_Treealgo_tree_create_topo_aware(comm, tree_type, k, tree_root,
+            MPIR_Treealgo_tree_create_topo_aware(comm, coll_group, tree_type, k, tree_root,
                                                  MPIR_CVAR_IREDUCE_TOPO_REORDER_ENABLE, &my_tree);
     } else if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_WAVE) {
         MPIR_Csel_coll_sig_s coll_sig = {
             .coll_type = MPIR_CSEL_COLL_TYPE__IREDUCE,
             .comm_ptr = comm,
+            .coll_group = coll_group,
             .u.ireduce.sendbuf = sendbuf,
             .u.ireduce.recvbuf = recvbuf,
             .u.ireduce.count = count,
@@ -100,7 +100,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         }
 
         mpi_errno =
-            MPIR_Treealgo_tree_create_topo_wave(comm, k, tree_root,
+            MPIR_Treealgo_tree_create_topo_wave(comm, coll_group, k, tree_root,
                                                 MPIR_CVAR_IREDUCE_TOPO_REORDER_ENABLE,
                                                 overhead, lat_diff_groups, lat_diff_switches,
                                                 lat_same_switches, &my_tree);
@@ -193,7 +193,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
 
         /* For correctness, transport based collectives need to get the
          * tag from the same pool as schedule based collectives */
-        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+        mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < num_children; i++) {
@@ -213,8 +213,9 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
                 nvtcs = 1;
             }
 
-            mpi_errno = MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm,
-                                             sched, nvtcs, vtcs, &recv_id[i]);
+            mpi_errno =
+                MPIR_TSP_sched_irecv(recv_address, msgsize, datatype, child, tag, comm, coll_group,
+                                     sched, nvtcs, vtcs, &recv_id[i]);
 
             MPIR_ERR_CHECK(mpi_errno);
             /* Setup dependencies for reduction. Reduction depends on the corresponding recv to complete */
@@ -260,7 +261,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         if (!is_tree_root) {
             mpi_errno =
                 MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, my_tree.parent, tag, comm,
-                                     sched, nvtcs, vtcs, &vtx_id);
+                                     coll_group, sched, nvtcs, vtcs, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -268,12 +269,12 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI_Ai
         if (tree_root != root) {
             if (is_tree_root) { /* tree_root sends data to root */
                 mpi_errno =
-                    MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, root, tag, comm, sched,
-                                         nvtcs, vtcs, &vtx_id);
+                    MPIR_TSP_sched_isend(reduce_address, msgsize, datatype, root, tag, comm,
+                                         coll_group, sched, nvtcs, vtcs, &vtx_id);
             } else if (is_root) {       /* root receives data from tree_root */
                 mpi_errno =
                     MPIR_TSP_sched_irecv((char *) recvbuf + offset * extent, msgsize, datatype,
-                                         tree_root, tag, comm, sched, 0, NULL, &vtx_id);
+                                         tree_root, tag, comm, coll_group, sched, 0, NULL, &vtx_id);
             }
             MPIR_ERR_CHECK(mpi_errno);
         }

@@ -12,7 +12,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
                                             const MPI_Datatype sendtypes[], void *recvbuf,
                                             const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
                                             const MPI_Datatype recvtypes[], MPIR_Comm * comm,
-                                            MPIR_TSP_sched_t sched)
+                                            int coll_group, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
@@ -27,12 +27,11 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
 
     MPIR_Assert(sendbuf == MPI_IN_PLACE);
 
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* FIXME: Here we allocate tmp_buf using extent and send/recv with datatype directly,
@@ -62,12 +61,12 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const MPI_Aint 
             adj_tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 
             mpi_errno = MPIR_TSP_sched_isend((char *) recvbuf + rdispls[dst],
-                                             recvcounts[dst], recvtypes[dst], dst, tag, comm, sched,
-                                             nvtcs, vtcs, &send_id);
+                                             recvcounts[dst], recvtypes[dst], dst, tag, comm,
+                                             coll_group, sched, nvtcs, vtcs, &send_id);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno =
                 MPIR_TSP_sched_irecv(adj_tmp_buf, recvcounts[dst], recvtypes[dst], dst, tag, comm,
-                                     sched, nvtcs, vtcs, &recv_id);
+                                     coll_group, sched, nvtcs, vtcs, &recv_id);
             MPIR_ERR_CHECK(mpi_errno);
 
             nvtcs = 2;

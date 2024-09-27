@@ -13,7 +13,7 @@
  * to build up a larger hierarchical broadcast from multiple invocations of this
  * function. */
 int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype datatype, int root,
-                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int mask;
@@ -25,8 +25,7 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
     struct MPII_Ibcast_state *ibcast_state;
     void *tmp_buf = NULL;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     MPIR_Datatype_is_contig(datatype, &is_contig);
     MPIR_Datatype_get_size_macro(datatype, type_size);
@@ -92,10 +91,10 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
                 src += comm_size;
             if (!is_contig)
                 mpi_errno = MPIR_Sched_recv_status(tmp_buf, nbytes, MPI_BYTE, src,
-                                                   comm_ptr, &ibcast_state->status, s);
+                                                   comm_ptr, coll_group, &ibcast_state->status, s);
             else
                 mpi_errno = MPIR_Sched_recv_status(buffer, count, datatype, src,
-                                                   comm_ptr, &ibcast_state->status, s);
+                                                   comm_ptr, coll_group, &ibcast_state->status, s);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIR_SCHED_BARRIER(s);
@@ -125,9 +124,10 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
             if (dst >= comm_size)
                 dst -= comm_size;
             if (!is_contig)
-                mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, dst, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, dst, comm_ptr, coll_group, s);
             else
-                mpi_errno = MPIR_Sched_send(buffer, count, datatype, dst, comm_ptr, s);
+                mpi_errno = MPIR_Sched_send(buffer, count, datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* NOTE: This is departure from MPIR_Bcast_intra_binomial.  A true analog

@@ -148,7 +148,7 @@ int MPIDU_Sched_are_pending(void)
     return (all_schedules.head != NULL);
 }
 
-int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
+int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int coll_group, int *tag)
 {
     int mpi_errno = MPI_SUCCESS;
     /* TODO there should be an internal accessor/utility macro for getting the
@@ -162,6 +162,10 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     MPIR_FUNC_ENTER;
 
     *tag = comm_ptr->next_sched_tag;
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        /* subgroup collectives use the same tag within a parent collective */
+        goto fn_exit;
+    }
     ++comm_ptr->next_sched_tag;
 
 #if defined(HAVE_ERROR_CHECKING)
@@ -191,11 +195,13 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     if (comm_ptr->next_sched_tag == tag_ub) {
         comm_ptr->next_sched_tag = MPIR_FIRST_NBC_TAG;
     }
-#if defined(HAVE_ERROR_CHECKING)
-  fn_fail:
-#endif
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+#if defined(HAVE_ERROR_CHECKING)
+  fn_fail:
+    goto fn_exit;
+#endif
 }
 
 void MPIDU_Sched_set_tag(struct MPIDU_Sched *s, int tag)
@@ -226,12 +232,12 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                  * &send.count, but this requires patching up the pointers
                  * during realloc of entries, so this is easier */
                 ret_errno = MPIC_Isend(e->u.send.buf, *e->u.send.count_p, e->u.send.datatype,
-                                       e->u.send.dest, s->tag, comm, &e->u.send.sreq,
-                                       r->u.nbc.errflag);
+                                       e->u.send.dest, s->tag, comm, e->u.send.coll_group,
+                                       &e->u.send.sreq, r->u.nbc.errflag);
             } else {
                 ret_errno = MPIC_Isend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
-                                       e->u.send.dest, s->tag, comm, &e->u.send.sreq,
-                                       r->u.nbc.errflag);
+                                       e->u.send.dest, s->tag, comm, e->u.send.coll_group,
+                                       &e->u.send.sreq, r->u.nbc.errflag);
             }
             /* Check if the error is actually fatal to the NBC or we can continue. */
             if (unlikely(ret_errno)) {
@@ -256,7 +262,8 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "starting RECV entry %d\n", (int) idx);
             comm = e->u.recv.comm;
             ret_errno = MPIC_Irecv(e->u.recv.buf, e->u.recv.count, e->u.recv.datatype,
-                                   e->u.recv.src, s->tag, comm, &e->u.recv.rreq);
+                                   e->u.recv.src, s->tag, comm, e->u.recv.coll_group,
+                                   &e->u.recv.rreq);
             /* Check if the error is actually fatal to the NBC or we can continue. */
             if (unlikely(ret_errno)) {
                 if (MPIR_ERR_NONE == r->u.nbc.errflag) {
@@ -655,7 +662,7 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_S
 
 /* do these ops need an entry handle returned? */
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                     MPIR_Comm * comm, MPIR_Sched_t s)
+                     MPIR_Comm * comm, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -674,6 +681,7 @@ int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
     e->u.send.dest = dest;
     e->u.send.sreq = NULL;      /* will be populated by _start_entry */
     e->u.send.comm = comm;
+    e->u.send.coll_group = coll_group;
 
     /* the user may free the comm & type after initiating but before the
      * underlying send is actually posted, so we must add a reference here and
@@ -711,6 +719,7 @@ int MPIDU_Sched_pt2pt_send(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     e->u.send.dest = dest;
     e->u.send.sreq = NULL;      /* will be populated by _start_entry */
     e->u.send.comm = comm;
+    e->u.send.coll_group = MPIR_SUBGROUP_NONE;
     e->u.send.tag = tag;
 
     /* the user may free the comm & type after initiating but before the
@@ -730,7 +739,7 @@ int MPIDU_Sched_pt2pt_send(const void *buf, MPI_Aint count, MPI_Datatype datatyp
 }
 
 int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype datatype, int dest,
-                           MPIR_Comm * comm, MPIR_Sched_t s)
+                           MPIR_Comm * comm, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -749,6 +758,7 @@ int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype
     e->u.send.dest = dest;
     e->u.send.sreq = NULL;      /* will be populated by _start_entry */
     e->u.send.comm = comm;
+    e->u.send.coll_group = coll_group;
 
     /* the user may free the comm & type after initiating but before the
      * underlying send is actually posted, so we must add a reference here and
@@ -767,7 +777,7 @@ int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype
 }
 
 int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
-                            MPIR_Comm * comm, MPI_Status * status, MPIR_Sched_t s)
+                            MPIR_Comm * comm, int coll_group, MPI_Status * status, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -785,6 +795,7 @@ int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, in
     e->u.recv.src = src;
     e->u.recv.rreq = NULL;      /* will be populated by _start_entry */
     e->u.recv.comm = comm;
+    e->u.recv.coll_group = coll_group;
     e->u.recv.status = status;
     status->MPI_ERROR = MPI_SUCCESS;
     MPIR_Comm_add_ref(comm);
@@ -801,7 +812,7 @@ int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, in
 }
 
 int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPIR_Comm * comm,
-                     MPIR_Sched_t s)
+                     int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -819,6 +830,7 @@ int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, 
     e->u.recv.src = src;
     e->u.recv.rreq = NULL;      /* will be populated by _start_entry */
     e->u.recv.comm = comm;
+    e->u.recv.coll_group = coll_group;
     e->u.recv.status = MPI_STATUS_IGNORE;
 
     MPIR_Comm_add_ref(comm);
@@ -853,6 +865,7 @@ int MPIDU_Sched_pt2pt_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
     e->u.recv.src = src;
     e->u.recv.rreq = NULL;      /* will be populated by _start_entry */
     e->u.recv.comm = comm;
+    e->u.send.coll_group = MPIR_SUBGROUP_NONE;
     e->u.recv.status = MPI_STATUS_IGNORE;
     e->u.recv.tag = tag;
 

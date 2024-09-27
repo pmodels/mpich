@@ -46,7 +46,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                                                   int step1_sendto, bool in_step2, int step1_nrecvs,
                                                   int *step1_recvfrom, int per_nbr_buffer,
                                                   void ***step1_recvbuf_, MPIR_Comm * comm,
-                                                  MPIR_TSP_sched_t sched)
+                                                  int coll_group, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, nvtcs, vtx_id;
@@ -62,8 +62,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
         else
             buf_to_send = sendbuf;
         mpi_errno =
-            MPIR_TSP_sched_isend(buf_to_send, count, datatype, step1_sendto, tag, comm, sched, 0,
-                                 NULL, &vtx_id);
+            MPIR_TSP_sched_isend(buf_to_send, count, datatype, step1_sendto, tag, comm, coll_group,
+                                 sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* Step 2 participating rank */
         step1_recvbuf = *step1_recvbuf_ =
@@ -89,8 +89,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
                                  reduce_id[i - 1]));
             }
             mpi_errno = MPIR_TSP_sched_irecv(step1_recvbuf[i], count, datatype,
-                                             step1_recvfrom[i], tag, comm, sched, nvtcs, vtcs,
-                                             &recv_id[i]);
+                                             step1_recvfrom[i], tag, comm, coll_group, sched, nvtcs,
+                                             vtcs, &recv_id[i]);
             MPIR_ERR_CHECK(mpi_errno);
             if (count != 0) {   /* Reduce only if data is present */
                 /* setup reduce dependencies */

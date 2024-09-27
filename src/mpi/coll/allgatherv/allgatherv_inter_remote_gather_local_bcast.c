@@ -19,7 +19,8 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Ain
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     const MPI_Aint * recvcounts, const MPI_Aint
                                                     * displs, MPI_Datatype recvtype,
-                                                    MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                    MPIR_Comm * comm_ptr, int coll_group,
+                                                    MPIR_Errflag_t errflag)
 {
     int remote_size, mpi_errno, root, rank;
     MPIR_Comm *newcomm_ptr = NULL;
@@ -34,23 +35,23 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Ain
         /* gatherv from right group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root, comm_ptr, errflag);
+                                 recvcounts, displs, recvtype, root, comm_ptr, coll_group, errflag);
         MPIR_ERR_CHECK(mpi_errno);
         /* gatherv to right group */
         root = 0;
         mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root, comm_ptr, errflag);
+                                 recvcounts, displs, recvtype, root, comm_ptr, coll_group, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* gatherv to left group  */
         root = 0;
         mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root, comm_ptr, errflag);
+                                 recvcounts, displs, recvtype, root, comm_ptr, coll_group, errflag);
         MPIR_ERR_CHECK(mpi_errno);
         /* gatherv from left group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root, comm_ptr, errflag);
+                                 recvcounts, displs, recvtype, root, comm_ptr, coll_group, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -71,7 +72,7 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, MPI_Ain
     mpi_errno = MPIR_Type_commit_impl(&newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Bcast_allcomm_auto(recvbuf, 1, newtype, 0, newcomm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_allcomm_auto(recvbuf, 1, newtype, 0, newcomm_ptr, coll_group, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Type_free_impl(&newtype);

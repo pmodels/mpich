@@ -25,15 +25,15 @@ int MPIR_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf,
                                                   void *recvbuf,
                                                   MPI_Aint recvcount,
                                                   MPI_Datatype recvtype,
-                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                                  MPIR_Comm * comm_ptr, int coll_group,
+                                                  MPIR_Errflag_t errflag)
 {
     int comm_size, i, j;
     MPI_Aint recvtype_extent;
     int mpi_errno = MPI_SUCCESS, rank;
     MPI_Status status;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     /* Get extent of send and recv types */
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
@@ -55,14 +55,16 @@ int MPIR_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf,
                 mpi_errno =
                     MPIC_Sendrecv_replace(((char *) recvbuf + j * recvcount * recvtype_extent),
                                           recvcount, recvtype, j, MPIR_ALLTOALL_TAG, j,
-                                          MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
+                                          MPIR_ALLTOALL_TAG, comm_ptr, coll_group, &status,
+                                          errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             } else if (rank == j) {
                 /* same as above with i/j args reversed */
                 mpi_errno =
                     MPIC_Sendrecv_replace(((char *) recvbuf + i * recvcount * recvtype_extent),
                                           recvcount, recvtype, i, MPIR_ALLTOALL_TAG, i,
-                                          MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
+                                          MPIR_ALLTOALL_TAG, comm_ptr, coll_group, &status,
+                                          errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }

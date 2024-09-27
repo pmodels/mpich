@@ -32,7 +32,6 @@ int MPIDI_create_init_comm(MPIR_Comm ** comm)
         init_comm->rank = node_roots_comm_rank;
         init_comm->remote_size = node_roots_comm_size;
         init_comm->local_size = node_roots_comm_size;
-        init_comm->coll.pof2 = MPL_pof2(node_roots_comm_size);
         MPIDI_COMM(init_comm, map).mode = MPIDI_RANK_MAP_LUT_INTRA;
         mpi_errno = MPIDIU_alloc_lut(&lut, node_roots_comm_size);
         MPIR_ERR_CHECK(mpi_errno);
@@ -47,8 +46,8 @@ int MPIDI_create_init_comm(MPIR_Comm ** comm)
         mpi_errno = MPIDIG_init_comm(init_comm);
         MPIR_ERR_CHECK(mpi_errno);
         /* hacky, consider a separate MPIDI_{NM,SHM}_init_comm_hook
-	 * to initialize the init_comm, e.g. to eliminate potential
-	 * runtime features for stability during init */
+         * to initialize the init_comm, e.g. to eliminate potential
+         * runtime features for stability during init */
         mpi_errno = MPIDI_NM_mpi_comm_commit_pre_hook(init_comm);
         MPIR_ERR_CHECK(mpi_errno);
 

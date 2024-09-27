@@ -630,8 +630,8 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE:
-                if (comm_ptr->node_comm != NULL &&
-                    MPIR_Comm_size(comm_ptr) == MPIR_Comm_size(comm_ptr->node_comm))
+                /* comm_size equal to node_comm_size just mean the size inter-node is 1 */
+                if (comm_ptr->num_external == 1)
                     node = node->success;
                 else
                     node = node->failure;
@@ -643,14 +643,14 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 else
                     node = node->success;
                 break;
-
+/*
             case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:
                 if (comm_ptr->hierarchy_kind == node->u.comm_hierarchy.val)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
-
+*/
             case CSEL_NODE_TYPE__OPERATOR__IS_NODE_CONSECUTIVE:
                 if (MPII_Comm_is_node_consecutive(comm_ptr) == node->u.is_node_consecutive.val)
                     node = node->success;
@@ -659,14 +659,14 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
-                if (comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                if (comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
-                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
@@ -924,7 +924,10 @@ static inline MPI_Aint get_count(MPIR_Csel_coll_sig_s coll_info)
 {
     MPI_Aint count = 0;
     int i = 0;
-    int comm_size = coll_info.comm_ptr->local_size;
+
+    int comm_size, rank;
+    MPIR_COLL_RANK_SIZE(coll_info.comm_ptr, coll_info.coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warnings */
 
     switch (coll_info.coll_type) {
         case MPIR_CSEL_COLL_TYPE__BCAST:
@@ -981,7 +984,10 @@ static inline MPI_Aint get_count(MPIR_Csel_coll_sig_s coll_info)
 static inline MPI_Aint get_total_msgsize(MPIR_Csel_coll_sig_s coll_info)
 {
     MPI_Aint total_bytes = 0, i = 0, count = 0, typesize = 0;
-    int comm_size = coll_info.comm_ptr->local_size;
+
+    int comm_size, rank;
+    MPIR_COLL_RANK_SIZE(coll_info.comm_ptr, coll_info.coll_group, rank, comm_size);
+    (void) rank;        /* silence unused variable warnings */
 
     switch (coll_info.coll_type) {
         case MPIR_CSEL_COLL_TYPE__ALLREDUCE:
@@ -1182,6 +1188,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
     csel_s *csel = (csel_s *) csel_;
     csel_node_s *node = NULL;
     MPIR_Comm *comm_ptr = coll_info.comm_ptr;
+    int coll_group = coll_info.coll_group;
 
     MPIR_Assert(csel_);
 
@@ -1229,8 +1236,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE:
-                if (comm_ptr->node_comm != NULL &&
-                    MPIR_Comm_size(comm_ptr) == MPIR_Comm_size(comm_ptr->node_comm))
+                if (comm_ptr->num_external == 1)
                     node = node->success;
                 else
                     node = node->failure;
@@ -1286,7 +1292,8 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2:
-                if (get_count(coll_info) < coll_info.comm_ptr->coll.pof2)
+                if (get_count(coll_info) <
+                    MPL_pof2(MPIR_Coll_size(coll_info.comm_ptr, coll_info.coll_group)))
                     node = node->success;
                 else
                     node = node->failure;
@@ -1329,21 +1336,22 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
-                if (comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                if (comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
-                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:
-                if (coll_info.comm_ptr->hierarchy_kind == node->u.comm_hierarchy.val)
+                if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__PARENT &&
+                    MPIR_Comm_is_parent_comm(comm_ptr, coll_group))
                     node = node->success;
                 else
                     node = node->failure;

@@ -14,7 +14,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
                               void *recvbuf,
                               MPI_Aint count,
                               MPI_Datatype datatype,
-                              MPI_Op op, MPIR_Comm * comm_ptr,
+                              MPI_Op op, MPIR_Comm * comm_ptr, int coll_group,
                               int tree_type, int k, int chunk_size,
                               int buffer_per_child, MPIR_Errflag_t errflag)
 {
@@ -37,8 +37,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
     MPIR_Request **reqs;
     int num_reqs = 0;
 
-    comm_size = MPIR_Comm_size(comm_ptr);
-    rank = MPIR_Comm_rank(comm_ptr);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
@@ -67,12 +66,13 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
     /* initialize the tree */
     if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE || tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K) {
         mpi_errno =
-            MPIR_Treealgo_tree_create_topo_aware(comm_ptr, tree_type, k, root,
+            MPIR_Treealgo_tree_create_topo_aware(comm_ptr, coll_group, tree_type, k, root,
                                                  MPIR_CVAR_ALLREDUCE_TOPO_REORDER_ENABLE, &my_tree);
     } else if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_WAVE) {
         MPIR_Csel_coll_sig_s coll_sig = {
             .coll_type = MPIR_CSEL_COLL_TYPE__ALLREDUCE,
             .comm_ptr = comm_ptr,
+            .coll_group = coll_group,
             .u.allreduce.sendbuf = sendbuf,
             .u.allreduce.recvbuf = recvbuf,
             .u.allreduce.count = count,
@@ -96,7 +96,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         }
 
         mpi_errno =
-            MPIR_Treealgo_tree_create_topo_wave(comm_ptr, k, root,
+            MPIR_Treealgo_tree_create_topo_wave(comm_ptr, coll_group, k, root,
                                                 MPIR_CVAR_ALLREDUCE_TOPO_REORDER_ENABLE,
                                                 overhead, lat_diff_groups, lat_diff_switches,
                                                 lat_same_switches, &my_tree);
@@ -139,7 +139,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         void *reduce_address = (char *) reduce_buffer + offset * extent;
         MPIR_ERR_CHKANDJUMP(!reduce_address, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
+        mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &tag);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < num_children; i++) {
@@ -150,7 +150,7 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
 
             mpi_errno =
                 MPIC_Recv(recv_address, msgsize, datatype, child, MPIR_ALLREDUCE_TAG, comm_ptr,
-                          MPI_STATUS_IGNORE);
+                          coll_group, MPI_STATUS_IGNORE);
             /* for communication errors, just record the error but continue */
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -172,14 +172,14 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
         if (rank != root) {     /* send data to the parent */
             mpi_errno =
                 MPIC_Isend(reduce_address, msgsize, datatype, my_tree.parent, MPIR_ALLREDUCE_TAG,
-                           comm_ptr, &reqs[num_reqs++], errflag);
+                           comm_ptr, coll_group, &reqs[num_reqs++], errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
         if (my_tree.parent != -1) {
             mpi_errno = MPIC_Recv(reduce_address, msgsize,
                                   datatype, my_tree.parent, MPIR_ALLREDUCE_TAG, comm_ptr,
-                                  MPI_STATUS_IGNORE);
+                                  coll_group, MPI_STATUS_IGNORE);
             MPIR_ERR_CHECK(mpi_errno);
         }
         if (num_children) {
@@ -189,7 +189,8 @@ int MPIR_Allreduce_intra_tree(const void *sendbuf,
                 MPIR_Assert(child != 0);
                 mpi_errno = MPIC_Isend(reduce_address, msgsize,
                                        datatype, child,
-                                       MPIR_ALLREDUCE_TAG, comm_ptr, &reqs[num_reqs++], errflag);
+                                       MPIR_ALLREDUCE_TAG, comm_ptr, coll_group, &reqs[num_reqs++],
+                                       errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }

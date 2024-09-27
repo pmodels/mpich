@@ -19,7 +19,7 @@
 int MPIR_Alltoall_inter_pairwise_exchange(const void *sendbuf, MPI_Aint sendcount,
                                           MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                          MPIR_Errflag_t errflag)
+                                          int coll_group, MPIR_Errflag_t errflag)
 {
     int local_size, remote_size, max_size, i;
     MPI_Aint sendtype_extent, recvtype_extent;
@@ -57,7 +57,7 @@ int MPIR_Alltoall_inter_pairwise_exchange(const void *sendbuf, MPI_Aint sendcoun
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype, dst,
                                   MPIR_ALLTOALL_TAG, recvaddr,
                                   recvcount, recvtype, src,
-                                  MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
+                                  MPIR_ALLTOALL_TAG, comm_ptr, coll_group, &status, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

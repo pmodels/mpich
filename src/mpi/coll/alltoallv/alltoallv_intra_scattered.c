@@ -24,7 +24,7 @@
 int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcounts,
                                    const MPI_Aint * sdispls, MPI_Datatype sendtype, void *recvbuf,
                                    const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
-                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
                                    MPIR_Errflag_t errflag)
 {
     int comm_size, i;
@@ -37,7 +37,7 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
 
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     /* Get extent of recv type, but send type is only valid if (sendbuf!=MPI_IN_PLACE) */
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
@@ -71,7 +71,8 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
                 if (type_size) {
                     mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst] * recv_extent,
                                            recvcounts[dst], recvtype, dst,
-                                           MPIR_ALLTOALLV_TAG, comm_ptr, &reqarray[req_cnt]);
+                                           MPIR_ALLTOALLV_TAG, comm_ptr, coll_group,
+                                           &reqarray[req_cnt]);
                     MPIR_ERR_CHECK(mpi_errno);
                     req_cnt++;
                 }
@@ -86,7 +87,7 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const MPI_Aint * sendcou
                 if (type_size) {
                     mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst] * send_extent,
                                            sendcounts[dst], sendtype, dst,
-                                           MPIR_ALLTOALLV_TAG, comm_ptr,
+                                           MPIR_ALLTOALLV_TAG, comm_ptr, coll_group,
                                            &reqarray[req_cnt], errflag);
                     MPIR_ERR_CHECK(mpi_errno);
                     req_cnt++;

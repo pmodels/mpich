@@ -29,7 +29,7 @@ int
 MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                         MPI_Datatype sendtype, void *recvbuf,
                                         const MPI_Aint recvcounts[], const MPI_Aint displs[],
-                                        MPI_Datatype recvtype, MPIR_Comm * comm,
+                                        MPI_Datatype recvtype, MPIR_Comm * comm, int coll_group,
                                         int k, MPIR_TSP_sched_t sched)
 {
     int i, j, l;
@@ -64,12 +64,11 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
-    rank = MPIR_Comm_rank(comm);
-    size = MPIR_Comm_size(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
     max = size - 1;
 
     if (is_inplace) {
@@ -218,8 +217,8 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Recv at the exact location */
             mpi_errno =
                 MPIR_TSP_sched_irecv((char *) tmp_recvbuf + recv_index[idx] * recvtype_extent,
-                                     r_counts[i][j - 1], recvtype, src, tag, comm, sched, 0, NULL,
-                                     &vtx_id);
+                                     r_counts[i][j - 1], recvtype, src, tag, comm, coll_group,
+                                     sched, 0, NULL, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
 
             recv_id[idx] = vtx_id;
@@ -228,7 +227,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             /* Send from the start of recv till the count amount of data */
             mpi_errno =
                 MPIR_TSP_sched_isend(tmp_recvbuf, s_counts[i][j - 1], recvtype, dst, tag, comm,
-                                     sched, n_invtcs, recv_id, &vtx_id);
+                                     coll_group, sched, n_invtcs, recv_id, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
         n_invtcs += (k - 1);

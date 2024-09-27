@@ -133,7 +133,8 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     /* compute the number of peers I will recv from */
     int in_out_peers[2] = { -1, 1 };
     mpi_errno =
-        MPIR_Reduce_scatter_block(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr, MPIR_ERR_NONE);
+        MPIR_Reduce_scatter_block(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr,
+                                  MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Assert(in_out_peers[0] <= comm_size && in_out_peers[0] >= 0);
@@ -150,14 +151,14 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
             /* send edges where i is a destination to process i */
             mpi_errno =
                 MPIC_Isend(&rin[i][0], rin_sizes[i], MPI_INT, i, MPIR_TOPO_A_TAG, comm_ptr,
-                           &reqs[idx++], MPIR_ERR_NONE);
+                           MPIR_SUBGROUP_NONE, &reqs[idx++], MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
         }
         if (rout_sizes[i]) {
             /* send edges where i is a source to process i */
             mpi_errno =
                 MPIC_Isend(&rout[i][0], rout_sizes[i], MPI_INT, i, MPIR_TOPO_B_TAG, comm_ptr,
-                           &reqs[idx++], MPIR_ERR_NONE);
+                           MPIR_SUBGROUP_NONE, &reqs[idx++], MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -203,7 +204,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
         MPIR_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_A_TAG,
-                              comm_ptr, MPI_STATUS_IGNORE);
+                              comm_ptr, MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (int j = 0; j < count / 2; ++j) {
@@ -236,7 +237,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
         MPIR_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG,
-                              comm_ptr, MPI_STATUS_IGNORE);
+                              comm_ptr, MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (int j = 0; j < count / 2; ++j) {

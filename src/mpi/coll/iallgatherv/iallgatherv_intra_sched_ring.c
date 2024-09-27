@@ -8,7 +8,8 @@
 int MPIR_Iallgatherv_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf,
                                       const MPI_Aint recvcounts[], const MPI_Aint displs[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                                      MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -18,8 +19,8 @@ int MPIR_Iallgatherv_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount,
     char *sbuf = NULL;
     char *rbuf = NULL;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     total_count = 0;
@@ -77,12 +78,12 @@ int MPIR_Iallgatherv_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount,
 
         /* Communicate */
         if (recvnow) {  /* If there's no data to send, just do a recv call */
-            mpi_errno = MPIR_Sched_recv(rbuf, recvnow, recvtype, left, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(rbuf, recvnow, recvtype, left, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             torecv -= recvnow;
         }
         if (sendnow) {  /* If there's no data to receive, just do a send call */
-            mpi_errno = MPIR_Sched_send(sbuf, sendnow, recvtype, right, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(sbuf, sendnow, recvtype, right, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             tosend -= sendnow;
         }

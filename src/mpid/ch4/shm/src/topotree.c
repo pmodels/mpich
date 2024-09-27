@@ -500,7 +500,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k, in
         shared_region_ptr[rank][depth++] = MPIR_hwtopo_get_lid(gid);
         gid = MPIR_hwtopo_get_ancestor(gid, topo_depth - depth - 1);
     }
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_impl(comm_ptr, MPIR_SUBGROUP_NONE, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* STEP 3. Root has all the bind_map information, now build tree */
@@ -558,7 +558,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k, in
                                        0 /*left_skewed */ , bcast_tree_type);
         MPIR_ERR_CHECK(mpi_errno);
     }
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_impl(comm_ptr, MPIR_SUBGROUP_NONE, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Every rank copies their tree out from shared memory */
@@ -567,7 +567,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k, in
         MPIDI_SHM_print_topotree_file("BCAST", comm_ptr->context_id, rank, bcast_tree);
 
     /* Wait until shared memory is available */
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_impl(comm_ptr, MPIR_SUBGROUP_NONE, errflag);
     MPIR_ERR_CHECK(mpi_errno);
     /* Generate the reduce tree */
     /* For Reduce, package leaders are added after the package local ranks, and the per_package
@@ -581,7 +581,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k, in
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_impl(comm_ptr, MPIR_SUBGROUP_NONE, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* each rank copy the reduce tree out */
@@ -590,7 +590,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k, in
     if (MPIDI_SHM_TOPOTREE_DEBUG)
         MPIDI_SHM_print_topotree_file("REDUCE", comm_ptr->context_id, rank, reduce_tree);
     /* Wait for all ranks to copy out the tree */
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_impl(comm_ptr, MPIR_SUBGROUP_NONE, errflag);
     MPIR_ERR_CHECK(mpi_errno);
     /* Cleanup */
     if (rank == root) {

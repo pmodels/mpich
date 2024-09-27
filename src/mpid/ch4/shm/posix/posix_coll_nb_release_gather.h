@@ -19,7 +19,7 @@
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ibcast_release_gather(void *buffer, int count,
                                                                MPI_Datatype datatype, int root,
-                                                               MPIR_Comm * comm_ptr,
+                                                               MPIR_Comm * comm_ptr, int coll_group,
                                                                MPIR_TSP_sched_t sched)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_IBCAST_RELEASE_GATHER);
@@ -69,6 +69,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_ireduce_release_gather(const void *send
                                                                 MPI_Datatype datatype,
                                                                 MPI_Op op, int root,
                                                                 MPIR_Comm * comm_ptr,
+                                                                int coll_group,
                                                                 MPIR_TSP_sched_t sched)
 {
     MPIR_FUNC_ENTER;

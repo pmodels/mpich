@@ -22,7 +22,8 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
                                             void *recvbuf,
                                             MPI_Aint count,
                                             MPI_Datatype datatype,
-                                            MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                            MPI_Op op, MPIR_Comm * comm_ptr, int coll_group,
+                                            MPIR_Errflag_t errflag)
 {
     MPIR_CHKLMEM_DECL(1);
     int comm_size, rank;
@@ -31,7 +32,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -65,7 +66,8 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     if (rank < 2 * rem) {
         if (rank % 2 == 0) {    /* even */
             mpi_errno = MPIC_Send(recvbuf, count,
-                                  datatype, rank + 1, MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
+                                  datatype, rank + 1, MPIR_ALLREDUCE_TAG, comm_ptr, coll_group,
+                                  errflag);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* temporarily set the rank to -1 so that this
@@ -75,7 +77,7 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
         } else {        /* odd */
             mpi_errno = MPIC_Recv(tmp_buf, count,
                                   datatype, rank - 1,
-                                  MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE);
+                                  MPIR_ALLREDUCE_TAG, comm_ptr, coll_group, MPI_STATUS_IGNORE);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* do the reduction on received data. since the
@@ -111,7 +113,8 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
             mpi_errno = MPIC_Sendrecv(recvbuf, count, datatype,
                                       dst, MPIR_ALLREDUCE_TAG, tmp_buf,
                                       count, datatype, dst,
-                                      MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                      MPIR_ALLREDUCE_TAG, comm_ptr, coll_group, MPI_STATUS_IGNORE,
+                                      errflag);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* tmp_buf contains data received in this step.
@@ -139,11 +142,12 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf,
     if (rank < 2 * rem) {
         if (rank % 2)   /* odd */
             mpi_errno = MPIC_Send(recvbuf, count,
-                                  datatype, rank - 1, MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
+                                  datatype, rank - 1, MPIR_ALLREDUCE_TAG, comm_ptr, coll_group,
+                                  errflag);
         else    /* even */
             mpi_errno = MPIC_Recv(recvbuf, count,
                                   datatype, rank + 1,
-                                  MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE);
+                                  MPIR_ALLREDUCE_TAG, comm_ptr, coll_group, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
     }
   fn_exit:

@@ -294,7 +294,8 @@ int MPIDI_POSIX_post_init(void)
         local_rank_topo = MPL_calloc(MPIR_Process.local_size, topo_info_size, MPL_MEM_SHM);
         mpi_errno = MPIR_Allgather_fallback(&MPIDI_POSIX_global.topo, topo_info_size, MPI_BYTE,
                                             local_rank_topo, topo_info_size, MPI_BYTE,
-                                            MPIR_Process.comm_world->node_comm, MPIR_ERR_NONE);
+                                            MPIR_Process.comm_world->node_comm, MPIR_SUBGROUP_NONE,
+                                            MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         for (int i = 0; i < MPIR_Process.local_size; i++) {
             if (local_rank_topo[i].l3_cache_id == -1 || local_rank_topo[i].numa_id == -1) {
