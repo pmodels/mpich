@@ -61,7 +61,7 @@ typedef enum {
     MPL_GPU_COPY_H2D,
     MPL_GPU_COPY_D2D_INCOMING,  /* copy from remote to local */
     MPL_GPU_COPY_D2D_OUTGOING,  /* copy from local to remote */
-    MPL_GPU_COPY_DIRECTION_NONE,  /* copy in any direction and to/from any buffer type */
+    MPL_GPU_COPY_DIRECTION_NONE,        /* copy in any direction and to/from any buffer type */
 } MPL_gpu_copy_direction_t;
 
 #define MPL_GPU_COPY_DIRECTION_TYPES 4
@@ -91,7 +91,12 @@ static inline int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t
     return MPL_SUCCESS;
 }
 
-static inline int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
+static inline int MPL_gpu_attr_is_dev(MPL_pointer_attr_t * attr)
+{
+    return 0;
+}
+
+static inline int MPL_gpu_attr_is_strict_dev(MPL_pointer_attr_t * attr)
 {
     return 0;
 }
@@ -104,8 +109,8 @@ static inline int MPL_gpu_query_is_same_dev(int dev1, int dev2)
 
 int MPL_gpu_query_support(MPL_gpu_type_t * type);
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
-int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr);
-int MPL_gpu_query_pointer_is_strict_dev(const void *ptr, MPL_pointer_attr_t * attr);
+int MPL_gpu_attr_is_dev(MPL_pointer_attr_t * attr);
+int MPL_gpu_attr_is_strict_dev(MPL_pointer_attr_t * attr);
 int MPL_gpu_query_is_same_dev(int dev1, int dev2);
 
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,

@@ -553,7 +553,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     MPL_pointer_attr_t attr;
     void *send_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPIR_GPU_query_pointer_attr(send_buf, &attr);
-    if (data_sz && MPL_gpu_query_pointer_is_dev(send_buf, &attr)) {
+    if (data_sz && MPL_gpu_attr_is_dev(&attr)) {
         is_gpu = true;
         MPIDI_OFI_register_am_bufs();
     }

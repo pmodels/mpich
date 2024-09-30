@@ -139,25 +139,13 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     goto fn_exit;
 }
 
-int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
+int MPL_gpu_attr_is_dev(MPL_pointer_attr_t * attr)
 {
-    MPL_pointer_attr_t a;
-
-    if (attr == NULL) {
-        MPL_gpu_query_pointer_attr(ptr, &a);
-        attr = &a;
-    }
     return attr->type == MPL_GPU_POINTER_DEV;
 }
 
-int MPL_gpu_query_pointer_is_strict_dev(const void *ptr, MPL_pointer_attr_t * attr)
+int MPL_gpu_attr_is_strict_dev(MPL_pointer_attr_t * attr)
 {
-    MPL_pointer_attr_t a;
-
-    if (attr == NULL) {
-        MPL_gpu_query_pointer_attr(ptr, &a);
-        attr = &a;
-    }
     return attr->type == MPL_GPU_POINTER_DEV;
 }
 

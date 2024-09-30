@@ -2078,56 +2078,17 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     goto fn_exit;
 }
 
-int MPL_gpu_query_pointer_is_dev(const void *ptr, MPL_pointer_attr_t * attr)
+int MPL_gpu_attr_is_dev(MPL_pointer_attr_t * attr)
 {
-    ze_result_t ret ATTRIBUTE((unused));
-    ze_memory_type_t type;
-
-    if (attr == NULL) {
-        ze_memory_allocation_properties_t prop = {
-            .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
-            .pNext = NULL,
-            .type = 0,
-            .id = 0,
-            .pageSize = 0,
-        };
-        ze_device_handle_t device = NULL;
-
-        ret = zeMemGetAllocProperties(ze_context, ptr, &prop, &device);
-        assert(ret == ZE_RESULT_SUCCESS);
-        type = prop.type;
-    } else {
-        type = attr->device_attr.prop.type;
-    }
-
     /* Treat all ZE allocations as device objects. This is because even host-registered memory
      * are implemented as device objects in the driver. As such, these allocations don't work
      * properly with XPMEM. */
-    return type != ZE_MEMORY_TYPE_UNKNOWN;
+    return attr->device_attr.prop.type != ZE_MEMORY_TYPE_UNKNOWN;
 }
 
-int MPL_gpu_query_pointer_is_strict_dev(const void *ptr, MPL_pointer_attr_t * attr)
+int MPL_gpu_attr_is_strict_dev(MPL_pointer_attr_t * attr)
 {
-    ze_result_t ret ATTRIBUTE((unused));
-    ze_memory_type_t type;
-
-    if (attr == NULL) {
-        ze_memory_allocation_properties_t prop = {
-            .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
-            .pNext = NULL,
-            .type = 0,
-            .id = 0,
-            .pageSize = 0,
-        };
-        ze_device_handle_t device = NULL;
-
-        ret = zeMemGetAllocProperties(ze_context, ptr, &prop, &device);
-        assert(ret == ZE_RESULT_SUCCESS);
-        type = prop.type;
-    } else {
-        type = attr->device_attr.prop.type;
-    }
-    return type == ZE_MEMORY_TYPE_DEVICE;
+    return attr->device_attr.prop.type == ZE_MEMORY_TYPE_DEVICE;
 }
 
 int MPL_gpu_query_is_same_dev(int global_dev1, int global_dev2)
