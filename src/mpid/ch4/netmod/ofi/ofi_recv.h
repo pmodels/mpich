@@ -472,7 +472,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
     fi_cancel((fid_t) MPIDI_OFI_global.ctx[ctx_idx].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
 
     if (is_blocking) {
-        /* progress until the rreq complets, either with cancel-bit set,
+        /* progress until the rreq completes, either with cancel-bit set,
          * or with message received */
         while (!MPIR_cc_is_complete(&rreq->cc)) {
             mpi_errno = MPIDI_OFI_progress_uninlined(vci);

@@ -199,15 +199,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
 
     if (MPIR_CVAR_COLL_HYBRID_MEMORY) {
         cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
-    }
-    else {
+    } else {
         /* In no hybird case, local memory type can be used to select algorithm */
         MPL_pointer_attr_t pointer_attr;
         MPIR_GPU_query_pointer_attr(buffer, &pointer_attr);
         if (pointer_attr.type == MPL_GPU_POINTER_DEV) {
             cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm_gpu), coll_sig);
-        }
-        else {
+        } else {
             cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
         }
     }
@@ -558,10 +556,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
 
     if (sendbuf != MPI_IN_PLACE) {
         MPIR_Datatype_get_size_macro(sendtype, type_size);
-	data_size = sendcount * type_size;
+        data_size = sendcount * type_size;
     } else {
         MPIR_Datatype_get_size_macro(recvtype, type_size);
-	data_size = recvcount * type_size;
+        data_size = recvcount * type_size;
     }
 
     MPIR_Csel_coll_sig_s coll_sig = {
@@ -595,10 +593,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
                                            MPIDI_COMM_ALLGATHER(comm, use_multi_leads) == 1 &&
                                            data_size <= MPIR_CVAR_ALLGATHER_SHM_PER_RANK, mpi_errno,
                                            "Allgather composition alpha cannot be applied.\n");
-	    mpi_errno =
-		MPIDI_Allgather_intra_composition_alpha(sendbuf, sendcount, sendtype,
-							recvbuf, recvcount, recvtype,
-							comm, errflag);
+            mpi_errno =
+                MPIDI_Allgather_intra_composition_alpha(sendbuf, sendcount, sendtype,
+                                                        recvbuf, recvcount, recvtype,
+                                                        comm, errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
@@ -643,10 +641,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
 
     if (sendbuf != MPI_IN_PLACE) {
         MPIR_Datatype_get_size_macro(sendtype, type_size);
-	data_size = sendcount * type_size;
+        data_size = sendcount * type_size;
     } else {
         MPIR_Datatype_get_size_macro(recvtype, type_size);
-	data_size = recvcount * type_size;
+        data_size = recvcount * type_size;
     }
 
     switch (MPIR_CVAR_ALLGATHER_COMPOSITION) {
@@ -1009,10 +1007,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
 
     if (sendbuf != MPI_IN_PLACE) {
         MPIR_Datatype_get_size_macro(sendtype, type_size);
-	data_size = sendcount * type_size;
+        data_size = sendcount * type_size;
     } else {
         MPIR_Datatype_get_size_macro(recvtype, type_size);
-	data_size = recvcount * type_size;
+        data_size = recvcount * type_size;
     }
 
     const MPIDI_Csel_container_s *cnt = NULL;
@@ -1046,10 +1044,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
                                            && MPIDI_COMM_ALLTOALL(comm, use_multi_leads) == 1 &&
                                            data_size <= MPIR_CVAR_ALLTOALL_SHM_PER_RANK, mpi_errno,
                                            "Alltoall composition alpha cannot be applied.\n");
-	    mpi_errno =
-		MPIDI_Alltoall_intra_composition_alpha(sendbuf, sendcount, sendtype,
-						       recvbuf, recvcount, recvtype,
-						       comm, errflag);
+            mpi_errno =
+                MPIDI_Alltoall_intra_composition_alpha(sendbuf, sendcount, sendtype,
+                                                       recvbuf, recvcount, recvtype, comm, errflag);
             break;
 
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_beta:
@@ -1095,10 +1092,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcou
 
     if (sendbuf != MPI_IN_PLACE) {
         MPIR_Datatype_get_size_macro(sendtype, type_size);
-	data_size = sendcount * type_size;
+        data_size = sendcount * type_size;
     } else {
         MPIR_Datatype_get_size_macro(recvtype, type_size);
-	data_size = recvcount * type_size;
+        data_size = recvcount * type_size;
     }
 
     switch (MPIR_CVAR_ALLTOALL_COMPOSITION) {
