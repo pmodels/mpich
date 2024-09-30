@@ -183,7 +183,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
             len = (size_t) win->size;
         }
 
-        if (MPIR_GPU_query_pointer_is_strict_dev(base, NULL)) {
+        if (MPIR_GPU_query_pointer_is_strict_dev(base)) {
             if (MPIDI_OFI_ENABLE_HMEM) {
                 MPL_pointer_attr_t attr;
                 MPIR_GPU_query_pointer_attr(base, &attr);

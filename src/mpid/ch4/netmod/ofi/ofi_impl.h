@@ -794,8 +794,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_gpu_rma_register(const void *buffer, siz
         MPIR_GPU_query_pointer_attr(buffer, &attr_tmp);
         attr = &attr_tmp;
     }
-    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM &&
-        MPIR_GPU_query_pointer_is_strict_dev(buffer, attr)) {
+    if (MPIDI_OFI_ENABLE_HMEM && MPIDI_OFI_ENABLE_MR_HMEM && MPL_gpu_attr_is_strict_dev(attr)) {
         MPIDI_OFI_register_memory_and_bind((char *) buffer, size, attr, ctx_idx, &mr);
         if (mr != NULL) {
             *desc = fi_mr_desc(mr);
