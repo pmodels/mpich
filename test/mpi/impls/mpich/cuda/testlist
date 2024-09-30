@@ -2,3 +2,4 @@ saxpy 2
 stream 2 env=MPIR_CVAR_CH4_RESERVE_VCIS=1
 stream 2 env=MPIR_CVAR_CH4_RESERVE_VCIS=1 env=MPIR_CVAR_CH4_ENABLE_STREAM_WORKQ=1 env=MPIR_CVAR_GPU_HAS_WAIT_KERNEL=1 arg=-progress-thread
 stream_allred 4 env=MPIR_CVAR_CH4_RESERVE_VCIS=1
+mem_alloc 4
