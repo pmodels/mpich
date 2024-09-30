@@ -705,17 +705,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_register_memory(char *send_buf, size_t da
     mr_attr.requested_key = rkey;
     mr_attr.offset = 0;
     mr_attr.context = NULL;
+    if (MPL_gpu_attr_is_strict_dev(attr)) {
 #ifdef MPL_HAVE_CUDA
-    mr_attr.iface = (attr->type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_CUDA;
-    mr_attr.device.cuda =
-        (attr->type != MPL_GPU_POINTER_DEV) ? 0 : MPL_gpu_get_dev_id_from_attr(attr);
+        mr_attr.iface = FI_HMEM_CUDA;
+        mr_attr.device.cuda = MPL_gpu_get_dev_id_from_attr(attr);
 #elif defined MPL_HAVE_ZE
-    /* OFI does not support tiles yet, need to pass the root device. */
-    mr_attr.iface = (attr->type != MPL_GPU_POINTER_DEV) ? FI_HMEM_SYSTEM : FI_HMEM_ZE;
-    mr_attr.device.ze =
-        (attr->type !=
-         MPL_GPU_POINTER_DEV) ? 0 : MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(attr));
+        /* OFI does not support tiles yet, need to pass the root device. */
+        mr_attr.iface = FI_HMEM_ZE;
+        mr_attr.device.ze = MPL_gpu_get_root_device(MPL_gpu_get_dev_id_from_attr(attr));
+#else
+        /* FIXME: add support for MPL_HAVE_HIP (FI_HMEM_ROCR) */
+        mr_attr.iface = FI_HMEM_SYSTEM;
 #endif
+    } else {
+        mr_attr.iface = FI_HMEM_SYSTEM;
+    }
     MPIDI_OFI_CALL(fi_mr_regattr
                    (MPIDI_OFI_global.ctx[ctx_idx].domain, &mr_attr, 0, mr), mr_regattr);
 

@@ -240,15 +240,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast(void *buffer, MPI_Aint count,
         case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_auto:
             if (MPIR_CVAR_COLL_HYBRID_MEMORY) {
                 cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm), coll_sig);
-            }
-            else {
+            } else {
                 /* In no hybird case, local memory type can be used to select algorithm */
                 MPL_pointer_attr_t pointer_attr;
                 MPIR_GPU_query_pointer_attr(buffer, &pointer_attr);
-                if (pointer_attr.type == MPL_GPU_POINTER_DEV) {
+                if (MPL_gpu_attr_is_strict_dev(&pointer_attr)) {
                     cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm_gpu), coll_sig);
-                }
-                else {
+                } else {
                     cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm), coll_sig);
                 }
             }

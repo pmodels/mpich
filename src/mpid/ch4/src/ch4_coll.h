@@ -203,7 +203,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
         /* In no hybird case, local memory type can be used to select algorithm */
         MPL_pointer_attr_t pointer_attr;
         MPIR_GPU_query_pointer_attr(buffer, &pointer_attr);
-        if (pointer_attr.type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_strict_dev(&pointer_attr)) {
             cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm_gpu), coll_sig);
         } else {
             cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);

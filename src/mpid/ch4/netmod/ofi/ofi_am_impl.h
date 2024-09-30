@@ -484,9 +484,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
 
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(buf, &attr);
-        if (attr.type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_dev(&attr)) {
             MPIDI_OFI_register_am_bufs();
-            if (!MPIDI_OFI_ENABLE_HMEM) {
+            if (!MPIDI_OFI_ENABLE_HMEM || !MPL_gpu_attr_is_strict_dev(&attr)) {
                 /* Force packing of GPU buffer in host memory */
                 need_packing = true;
             }
@@ -641,9 +641,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
 
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(buf, &attr);
-        if (attr.type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_dev(&attr)) {
             MPIDI_OFI_register_am_bufs();
-            if (!MPIDI_OFI_ENABLE_HMEM) {
+            if (!MPIDI_OFI_ENABLE_HMEM || !MPL_gpu_attr_is_strict_dev(&attr)) {
                 /* Force packing of GPU buffer in host memory */
                 need_packing = true;
             }
@@ -740,9 +740,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm
 
         MPL_pointer_attr_t attr;
         MPIR_GPU_query_pointer_attr(buf, &attr);
-        if (attr.type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_dev(&attr)) {
             MPIDI_OFI_register_am_bufs();
-            if (!MPIDI_OFI_ENABLE_HMEM) {
+            if (!MPIDI_OFI_ENABLE_HMEM || !MPL_gpu_attr_is_strict_dev(&attr)) {
                 /* Force packing of GPU buffer in host memory */
                 need_packing = true;
             }

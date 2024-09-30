@@ -41,7 +41,8 @@ MPL_STATIC_INLINE_PREFIX void *MPIR_gpu_host_alloc(const void *buf,
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(buf, &attr);
 
-    if (attr.type != MPL_GPU_POINTER_DEV) {
+    /* FIXME: do we allocate buffer for non-strict dev buffer? */
+    if (!MPL_gpu_attr_is_strict_dev(&attr)) {
         return NULL;
     } else {
         return MPIR_alloc_buffer(count, datatype);

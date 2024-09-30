@@ -25,7 +25,7 @@ yaksa_type_t MPII_Typerep_get_yaksa_op(MPI_Op op);
 static inline yaksa_info_t MPII_yaksa_get_info(MPL_pointer_attr_t * inattr,
                                                MPL_pointer_attr_t * outattr)
 {
-    if (inattr->type != MPL_GPU_POINTER_DEV && outattr->type != MPL_GPU_POINTER_DEV) {
+    if (!MPL_gpu_attr_is_dev(inattr) && !MPL_gpu_attr_is_dev(outattr)) {
         return MPII_yaksa_info_nogpu;
     }
 

@@ -171,7 +171,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD &&
         MPIDI_OFI_ENABLE_MR_HMEM && dt_contig) {
-        if (attr.type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_strict_dev(&attr)) {
             register_mem = true;
         }
     }

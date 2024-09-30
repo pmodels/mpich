@@ -324,7 +324,7 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
         /* if it's a device buffer, we cannot do XPMEM or CMA IPC, so set default to SKIP */
         ipc_attr->ipc_type = MPIDI_IPCI_TYPE__SKIP;
     }
-    if (ipc_attr->u.gpu.gpu_attr.type != MPL_GPU_POINTER_DEV) {
+    if (!MPL_gpu_attr_is_strict_dev(&ipc_attr->u.gpu.gpu_attr)) {
         goto fn_exit;
     }
 
