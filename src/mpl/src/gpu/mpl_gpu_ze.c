@@ -166,8 +166,8 @@ typedef struct MPL_ze_ipc_lru_mapped_entry_t {
 } MPL_ze_ipc_lru_mapped_entry_t;
 
 typedef struct {
-    void *ipc_buf;  /* key */
-    MPL_ze_ipc_lru_mapped_entry_t *entry;  /* entry in dl ipc_lru_order_head */
+    void *ipc_buf;              /* key */
+    MPL_ze_ipc_lru_mapped_entry_t *entry;       /* entry in dl ipc_lru_order_head */
     UT_hash_handle hh;
 } MPL_ze_ipc_lru_map_t;
 
@@ -606,14 +606,16 @@ int MPL_gpu_init(int debug_summary)
         }
 
         ipc_lru_mapped_order_head =
-            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_lru_mapped_entry_t *), MPL_MEM_OTHER);
+            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_lru_mapped_entry_t *),
+                       MPL_MEM_OTHER);
         if (ipc_lru_mapped_order_head == NULL) {
             mpl_err = MPL_ERR_GPU_NOMEM;
             goto fn_fail;
         }
 
         ipc_lru_mapped_order_tail =
-            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_lru_mapped_entry_t *), MPL_MEM_OTHER);
+            MPL_malloc(local_ze_device_count * sizeof(MPL_ze_ipc_lru_mapped_entry_t *),
+                       MPL_MEM_OTHER);
         if (ipc_lru_mapped_order_tail == NULL) {
             mpl_err = MPL_ERR_GPU_NOMEM;
             goto fn_fail;
@@ -1562,7 +1564,8 @@ static int update_lru_mapped_order(void *ipc_buf, int dev_id)
     MPL_ze_ipc_lru_mapped_entry_t **head = &ipc_lru_mapped_order_head[dev_id];
     MPL_ze_ipc_lru_mapped_entry_t **tail = &ipc_lru_mapped_order_tail[dev_id];
 
-    if (ipc_max_entries[dev_id] == 0) goto fn_exit;
+    if (ipc_max_entries[dev_id] == 0)
+        goto fn_exit;
 
     /* Find the existing entry */
     HASH_FIND_PTR(ipc_lru_map[dev_id], &ipc_buf, map_entry);
@@ -1586,7 +1589,7 @@ static int update_lru_mapped_order(void *ipc_buf, int dev_id)
         /* Allocate a new entry */
         MPL_ze_ipc_lru_mapped_entry_t *entry =
             (MPL_ze_ipc_lru_mapped_entry_t *) MPL_calloc(1, sizeof(MPL_ze_ipc_lru_mapped_entry_t),
-                                                  MPL_MEM_OTHER);
+                                                         MPL_MEM_OTHER);
         if (entry == NULL) {
             mpl_err = MPL_ERR_GPU_NOMEM;
             goto fn_fail;
@@ -3209,7 +3212,8 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int i
     }
 
     if (*ptr == NULL) {
-        mpl_err = MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, &fds, ptr);
+        mpl_err =
+            MPL_ze_ipc_handle_map(mpl_ipc_handle, is_shared_handle, dev_id, true, size, &fds, ptr);
         if (mpl_err != MPL_SUCCESS) {
             goto fn_fail;
         }
@@ -3301,7 +3305,7 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
                 memcpy(&fds[i], &cache_entry->ipc_handle.ipc_handles[i], sizeof(int));
         } else {
             /* Only create an IPC handle in case one doesn't already exist */
-            nfds = 0;       /* must be initialized to 0 */
+            nfds = 0;   /* must be initialized to 0 */
             if (zexMemGetIpcHandles) {
                 ret = zexMemGetIpcHandles(ze_context, pbase, &nfds, NULL);
                 ZE_ERR_CHECK(ret);
