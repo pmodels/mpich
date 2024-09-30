@@ -22,7 +22,7 @@ static void ipc_handle_free_hook(void *dptr)
         MPIR_Assert(mpl_err == MPL_SUCCESS);
 
         MPIR_GPU_query_pointer_attr(pbase, &gpu_attr);
-        if (gpu_attr.type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_strict_dev(&gpu_attr)) {
             local_dev_id = MPL_gpu_get_dev_id_from_attr(&gpu_attr);
 
             for (int i = 0; i < MPIR_Process.local_size; ++i) {

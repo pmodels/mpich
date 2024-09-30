@@ -563,7 +563,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         if (!MPIDI_OFI_ENABLE_HMEM) {
             /* HMEM (any kind) not supported */
             need_pack = true;
-        } else if (attr.type != MPL_GPU_POINTER_DEV) {
+        } else if (!MPL_gpu_attr_is_strict_dev(&attr)) {
             /* non-strict gpu ptr (ZE shared host) */
             need_pack = true;
         } else {
