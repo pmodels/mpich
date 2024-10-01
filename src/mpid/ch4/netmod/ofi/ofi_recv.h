@@ -21,7 +21,7 @@
       due to limitations with iovec. Needs to fall back to the unpack path.
   Other: An error occurred as indicated in the code.
 */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_t data_sz,      /* data_sz passed in here for reusing */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, MPI_Datatype datatype, size_t data_sz,       /* data_sz passed in here for reusing */
                                                 int rank, uint64_t match_bits, uint64_t mask_bits,
                                                 MPIR_Comm * comm, MPIR_Context_id_t context_id,
                                                 MPIDI_av_entry_t * addr, int vci_src, int vci_dst,
@@ -29,9 +29,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
                                                 MPIR_Datatype * dt_ptr, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct iovec *originv = NULL;
     struct fi_msg_tagged msg;
-    MPI_Aint num_contig, size;
+    MPI_Aint num_contig;
     int vci_remote = vci_src;
     int vci_local = vci_dst;
     int ctx_idx;
@@ -41,7 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 
     /* if we cannot fit the entire data into a single IOV array,
      * fallback to pack */
-    MPIR_Typerep_get_iov_len(count, MPIDI_OFI_REQUEST(rreq, datatype), &num_contig);
+    MPIR_Typerep_get_iov_len(count, datatype, &num_contig);
     if (num_contig > MPIDI_OFI_global.rx_iov_limit)
         goto unpack;
 
@@ -56,18 +55,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
         flags = FI_COMPLETION;
     }
 
-    size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
-
-    MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_malloc(size, MPL_MEM_BUFFER);
-    memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
+    struct iovec *iovs;
+    iovs = MPL_malloc(num_contig * sizeof(struct iovec), MPL_MEM_BUFFER);
+    MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs) = iovs;
+    MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype) = datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     MPI_Aint actual_iov_len;
-    MPIR_Typerep_to_iov_offset(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), 0,
-                               MPIDI_OFI_REQUEST(rreq, noncontig.nopack), num_contig,
-                               &actual_iov_len);
+    MPIR_Typerep_to_iov_offset(buf, count, datatype, 0, iovs, num_contig, &actual_iov_len);
     assert(num_contig == actual_iov_len);
-
-    originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[0]));
 
     if (rreq->comm == NULL) {
         rreq->comm = comm;
@@ -78,7 +74,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_NOPACK;
 
-    msg.msg_iov = originv;
+    msg.msg_iov = iovs;
     msg.desc = NULL;
     msg.iov_count = num_contig;
     msg.tag = match_bits;
@@ -168,8 +164,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, rank, tag);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    MPIDI_OFI_REQUEST(rreq, datatype) = datatype;
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     recv_buf = MPIR_get_contig_ptr(buf, dt_true_lb);
     MPL_pointer_attr_t attr = {.type = MPL_GPU_POINTER_UNREGISTERED_HOST };
@@ -204,9 +198,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping) ||
              (data_sz < MPIDI_OFI_global.stripe_threshold &&
               MPIDI_OFI_COMM(comm).enable_striping))) {
-            mpi_errno =
-                MPIDI_OFI_recv_iov(buf, count, data_sz, rank, match_bits, mask_bits, comm,
-                                   context_id, addr, vci_src, vci_dst, rreq, dt_ptr, flags);
+            mpi_errno = MPIDI_OFI_recv_iov(buf, count, datatype, data_sz, rank,
+                                           match_bits, mask_bits, comm, context_id, addr,
+                                           vci_src, vci_dst, rreq, dt_ptr, flags);
             if (mpi_errno == MPI_SUCCESS)       /* Receive posted using iov */
                 goto fn_exit;
             else if (mpi_errno != MPIDI_OFI_RECV_NEEDS_UNPACK)
@@ -256,6 +250,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = buf;
             MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
             MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
+            MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
             if (rreq->comm == NULL) {
                 rreq->comm = comm;
@@ -302,9 +297,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 #endif
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
     } else {
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = NULL;
-        MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = NULL;
     }
 
     if (rreq->comm == NULL) {

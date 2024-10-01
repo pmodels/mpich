@@ -11,16 +11,39 @@
 #include "ofi_am_events.h"
 #include "utlist.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+cvars:
+    - name        : MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE
+      category    : CH4_OFI
+      type        : enum
+      default     : copy_low_latency
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : |-
+        Specifies GPU engine type for GPU pt2pt on the receiver side.
+        compute - use a compute engine
+        copy_high_bandwidth - use a high-bandwidth copy engine
+        copy_low_latency - use a low-latency copy engine
+        yaksa - use Yaksa
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 int MPIDI_OFI_rma_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
 int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 
-MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_recv_engine_type(int cvar)
+MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_recv_engine_type(void)
 {
-    if (cvar == MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_compute) {
+    if (MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE ==
+        MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_compute) {
         return MPL_GPU_ENGINE_TYPE_COMPUTE;
-    } else if (cvar == MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_copy_high_bandwidth) {
+    } else if (MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE ==
+               MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_copy_high_bandwidth) {
         return MPL_GPU_ENGINE_TYPE_COPY_HIGH_BANDWIDTH;
-    } else if (cvar == MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_copy_low_latency) {
+    } else if (MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE ==
+               MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE_copy_low_latency) {
         return MPL_GPU_ENGINE_TYPE_COPY_LOW_LATENCY;
     } else {
         return MPL_GPU_ENGINE_TYPE_LAST;
@@ -50,9 +73,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
         (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer))) {
         MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
     } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_SEND_NOPACK)) {
-        MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
+        MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack.iovs));
     }
-    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
 
     MPIDI_Request_complete_fast(sreq);
     MPIR_FUNC_EXIT;
@@ -93,53 +115,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
 #endif
     if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer))) {
-        MPI_Aint actual_unpack_bytes;
-        int is_contig;
-        MPL_pointer_attr_t attr;
-        MPI_Aint true_lb, true_extent;
-        MPIR_Type_get_true_extent_impl(MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), &true_lb,
-                                       &true_extent);
-        MPIR_Datatype_is_contig(MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), &is_contig);
-        void *recv_buf = MPIR_get_contig_ptr(MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf), true_lb);
-        MPIR_GPU_query_pointer_attr(recv_buf, &attr);
-        MPL_gpu_engine_type_t engine =
-            MPIDI_OFI_gpu_get_recv_engine_type(MPIR_CVAR_CH4_OFI_GPU_RECEIVE_ENGINE_TYPE);
-        if (is_contig && engine != MPL_GPU_ENGINE_TYPE_LAST &&
-            MPL_gpu_query_pointer_is_dev(recv_buf, &attr)) {
-            actual_unpack_bytes = wc->len;
-            mpi_errno =
-                MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
-                                   MPI_BYTE, 0, NULL, recv_buf, count, MPI_BYTE, 0, &attr,
-                                   MPL_GPU_COPY_DIRECTION_NONE, engine, true);
-            MPIR_ERR_CHECK(mpi_errno);
-        } else {
-            MPIR_Typerep_unpack(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
-                                MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf),
-                                MPIDI_OFI_REQUEST(rreq, noncontig.pack.count),
-                                MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0,
-                                &actual_unpack_bytes, MPIR_TYPEREP_FLAG_NONE);
-        }
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
-        if (actual_unpack_bytes != (MPI_Aint) count) {
-            rreq->status.MPI_ERROR =
-                MPIR_Err_create_code(MPI_SUCCESS,
-                                     MPIR_ERR_RECOVERABLE,
-                                     __FUNCTION__, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
-        }
-    } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) &&
-               (MPIDI_OFI_REQUEST(rreq, noncontig.nopack))) {
-        MPI_Count elements;
-
-        /* Check to see if there are any bytes that don't fit into the datatype basic elements */
-        MPI_Count count_x = count;      /* need a MPI_Count variable (consider 32-bit OS) */
-        MPIR_Get_elements_x_impl(&count_x, MPIDI_OFI_REQUEST(rreq, datatype), &elements);
-        if (count_x)
+        mpi_errno = MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
+                                       MPI_BYTE, 0, NULL,
+                                       MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf),
+                                       MPIDI_OFI_REQUEST(rreq, noncontig.pack.count),
+                                       MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0, NULL,
+                                       MPL_GPU_COPY_DIRECTION_NONE,
+                                       MPIDI_OFI_gpu_get_recv_engine_type(), true);
+        if (mpi_errno) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
+        }
+        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype));
+        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
+    } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
+        MPI_Count elements;
+        MPI_Count count_x = count;
+        MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype);
+        MPIR_Get_elements_x_impl(&count_x, datatype, &elements);
+        if (count_x) {
+            MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
+        }
 
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
+        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype));
+        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs));
     }
-
-    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
 
     /* If synchronous, ack and complete when the ack is done */
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {

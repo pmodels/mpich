@@ -215,7 +215,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                         int map_dev_id = MPIDI_GPU_ipc_get_map_dev(handle.global_dev_id, dev_id,
                                                                    MPI_BYTE);
                         int fast_copy = 0;
-                        if (shared_table[i].size <= MPIR_CVAR_CH4_IPC_GPU_FAST_COPY_MAX_SIZE) {
+                        if (shared_table[i].size <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
                             mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,
                                                                  map_dev_id,
                                                                  &shared_table[i].shm_base_addr,

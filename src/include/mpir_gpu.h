@@ -63,6 +63,10 @@ cvars:
 extern int MPIR_CVAR_ENABLE_GPU;
 extern MPL_TLS bool MPIR_disable_gpu;   /* per-thread level locally disable gpu */
 
+/* define a constant for host buffer attribute */
+extern MPL_pointer_attr_t MPIR_static_host_attr;
+#define MPIR_GPU_ATTR_HOST &MPIR_static_host_attr
+
 #undef ENABLE_GPU
 
 #ifdef MPL_HAVE_GPU

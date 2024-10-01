@@ -365,6 +365,7 @@ typedef struct MPIDI_OFI_gpu_pending_recv {
 typedef struct MPIDI_OFI_gpu_pending_send {
     MPIR_Request *sreq;
     void *send_buf;
+    MPI_Datatype datatype;
     MPL_pointer_attr_t attr;
     MPI_Aint offset;
     uint32_t n_chunks;

@@ -195,7 +195,6 @@ typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPL_atomic_int_t util_id;
-    MPI_Datatype datatype;
     int nic_num;                /* Store the nic number so we can use it to cancel a request later
                                  * if needed. */
     enum MPIDI_OFI_req_kind kind;
@@ -210,7 +209,10 @@ typedef struct {
             MPI_Datatype datatype;
             char *pack_buffer;
         } pack;
-        struct iovec *nopack;
+        struct {
+            MPI_Datatype datatype;      /* used in iov recv for verifying type matching */
+            struct iovec *iovs;
+        } nopack;
     } noncontig;
     union {
         struct iovec iov;
