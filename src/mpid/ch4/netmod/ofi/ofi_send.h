@@ -394,8 +394,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_pipeline(const void *buf, MPI_Aint c
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(dt_contig);
-
     int sender_nic =
         MPIDI_OFI_multx_sender_nic_index(comm, comm->context_id, comm->rank, dst_rank, tag);
     int receiver_nic =
@@ -579,7 +577,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
             }
         }
 
-        if (need_pack && dt_contig && MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE &&
+        if (need_pack && MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE &&
             data_sz >= MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD) {
             do_gpu_pipelining = true;
             need_pack = false;
