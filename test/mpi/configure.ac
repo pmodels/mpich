@@ -1904,5 +1904,6 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/ulfm/Makefile \
           impls/mpich/info/Makefile \
           impls/mpich/info/testlist \
+          bench/Makefile \
           )
 
