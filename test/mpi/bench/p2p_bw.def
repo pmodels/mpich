@@ -1,5 +1,6 @@
 include: macros/bench_frame.def
 include: macros/bench_p2p.def
+include: macros/mtest.def
 
 subcode: _autoload
     $define WINDOW_SIZE 64
