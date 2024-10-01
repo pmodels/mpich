@@ -9,10 +9,16 @@
 subcode: bench_frame
     $include stdio
     $include stdlib
-    $include mpi
+    $(if:HAS_MTEST)
+        $include mpitest.h
+    $(else)
+        $include mpi
 
     $function main
-        MPI_Init(NULL, NULL);
+        $(if:HAS_MTEST)
+            MTest_Init(NULL, NULL);
+        $(else)
+            MPI_Init(NULL, NULL);
 
         $my grank, gsize: int
         MPI_Comm_rank(MPI_COMM_WORLD, &grank);
@@ -23,7 +29,12 @@ subcode: bench_frame
                 return 1
 
         MPI_Comm comm = MPI_COMM_WORLD;
-        char *buf = malloc(MAX_BUFSIZE)
+
+        $my void *buf
+        $(if:HAS_MTEST)
+            $call mtest_malloc, MAX_BUFSIZE
+        $(else)
+            buf = malloc(MAX_BUFSIZE)
         $if !buf
             printf("! Failed to allocate buffer (size=%d)\n", MAX_BUFSIZE)
             return 1
@@ -35,7 +46,10 @@ subcode: bench_frame
         $if grank == 0
             printf("\n")
 
-        MPI_Finalize();
+        $(if:HAS_MTEST)
+            MTest_Finalize(0);
+        $(else)
+            MPI_Finalize();
 
 macros:
     use_double: 1
