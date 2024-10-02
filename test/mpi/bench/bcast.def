@@ -1,0 +1,10 @@
+include: macros/bench_frame.def
+include: macros/bench_coll.def
+include: macros/mtest.def
+
+page: bcast, bench_frame
+    data: buf, size, MPI_CHAR
+
+    &call measure_with_barrier
+        MPI_Bcast($(data), 0, comm)
+
