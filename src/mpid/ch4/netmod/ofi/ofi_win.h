@@ -20,6 +20,34 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_win_read_issued_cntr(MPIR_Win * win)
 #endif
 }
 
+#ifdef MPICH_DEBUG_PROGRESS
+#define OFI_PROGRESS_START \
+    bool progress_timed_out = false; \
+    MPL_time_t time_start; \
+    if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
+        MPL_wtime(&time_start); \
+    }
+
+#define OFI_PROGRESS_CHECK(tcount, donecount) \
+    if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
+        double time_diff = 0.0; \
+        MPL_time_t time_cur; \
+        MPL_wtime(&time_cur); \
+        MPL_wtime_diff(&time_start, &time_cur, &time_diff); \
+        if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT && !progress_timed_out) { \
+            printf("MPIDI_OFI_win_do_progress: current cntr %ld, expect cntr %ld\n", tcount, donecount); \
+            MPL_backtrace_show(stdout); \
+            progress_timed_out = true; \
+        } else if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT * 2) { \
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**timeout"); \
+        } \
+    }
+
+#else
+#define OFI_PROGRESS_START do {} while (0)
+#define OFI_PROGRESS_CHECK(tcount, donecount) do {} while (0)
+#endif
+
 /*
  * Blocking progress function to complete outstanding RMA operations on the input window.
  */
@@ -33,6 +61,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_do_progress(MPIR_Win * win, int vci)
 
     MPIR_FUNC_ENTER;
 
+    OFI_PROGRESS_START;
     while (1) {
         tcount = MPIDI_OFI_win_read_issued_cntr(win);
         donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
@@ -55,6 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_do_progress(MPIR_Win * win, int vci)
                                      "**ofid_cntr_wait", "**ofid_cntr_wait %s %d %s %s",
                                      __SHORT_FILE__, __LINE__, __func__, fi_strerror(-ret));
                 itercount = 0;
+                OFI_PROGRESS_CHECK(tcount, donecount);
             }
         }
 
