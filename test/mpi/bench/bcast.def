@@ -1,0 +1,20 @@
+include: macros/bench_frame.def
+include: macros/bench_coll.def
+include: macros/mtest.def
+
+page: bcast, bench_frame
+    data: buf, size, MPI_CHAR
+
+    tf_barrier = bench_barrier(comm)
+    $for int size = 1; size < MAX_BUFSIZE; size *= 2
+        &call coll_warmup, 0
+            MPI_Bcast($(data), 0, comm)
+            MPI_Barrier(comm)
+        &call run_stat, NUM_REPEAT, tf_latency
+            &call measure, iter
+                MPI_Bcast($(data), 0, comm)
+                MPI_Barrier(comm)
+            tf_latency = (tf_dur / iter) - tf_barrier
+        $if grank == 0
+            $call report_latency, size, 1
+
