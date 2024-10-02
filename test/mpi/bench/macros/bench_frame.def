@@ -20,7 +20,7 @@ subcode: bench_frame
         $(else)
             MPI_Init(NULL, NULL);
 
-        $my grank, gsize: int
+        $global grank, gsize: int
         MPI_Comm_rank(MPI_COMM_WORLD, &grank);
         MPI_Comm_size(MPI_COMM_WORLD, &gsize);
         $(if:MIN_PROCS)
@@ -54,21 +54,28 @@ subcode: bench_frame
 macros:
     use_double: 1
 
+macros:
+    MAX_BUFSIZE: 5000000  # 5 MB
+
 #----------------------------------------
 subcode: _autoload
     $register_prefix(comm) MPI_Comm
+    $define MAX_BUFSIZE 5000000
+    $define NUM_REPEAT 20
 
 subcode: foreach_size
-    $for int size = 0; size < $(MAX_MSG); size = (size==0)?1:size*2
+    $for int size = 0; size < $(MAX_BUFSIZE); size = (size==0)?1:size*2
         $(set:MSG_SIZE=size)
         BLOCK
 
+# measure tf_dur over iter
 subcode: measure(iter)
     tf_start = MPI_Wtime()
     $for 0:$(iter)
         BLOCK
     tf_dur = MPI_Wtime() - tf_start
 
+# repeat N times and calc avg in sum1 and std in sum2
 subcode: run_stat(N, var)
     $my double sum1=0, double sum2=0
     $for 0:$(N)
@@ -77,17 +84,28 @@ subcode: run_stat(N, var)
         sum2 += $(var) * $(var)
     sum1 /= $(N)
     sum2 /= $(N)
-    sum2 = sqrt(sum2 - sum1 * sum1)
+    $(if:RUN_STAT_VARIANCE)
+        sum2 = (sum2 - sum1 * sum1)
+    $(else)
+        sum2 = sqrt(sum2 - sum1 * sum1)
 
+# repeat until dur stabilize and iter adjusted to last minimum of 1ms
 subcode: warm_up(iter, dur)
-    $(set:MIN_ITER=(int) ($(iter) * 0.001 / $(dur)))
+    # minimum iteration to fill the duration to 1 ms
+    $(if:!WARM_UP_NUM_BEST)
+        $(set:NUM_BEST=10)
+    $(else)
+        $(set:NUM_BEST=$(WARM_UP_NUM_BEST))
+    $(if:!MIN_ITER)
+        $(set:MIN_ITER=(int) ($(iter) * 0.001 / $(dur)))
     $(iter) = 2
     $my double last_dur = 1.0
     $my int num_best = 0
-    $while num_best < 10
+    $while num_best < $(NUM_BEST)
         BLOCK
-        $if $(iter) < $(MIN_ITER)
-            $(iter) = $(MIN_ITER)
+        $my int min_iter = $(MIN_ITER)
+        $if $(iter) < 10000 && $(iter) < min_iter
+            $(iter) = min_iter
             num_best = 0
             continue
         # check that t_dur is no longer monotonically decreasing
