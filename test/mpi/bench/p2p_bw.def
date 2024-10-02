@@ -9,7 +9,7 @@ page: p2p_bw, bench_frame
     MULTIPLICITY: WINDOW_SIZE
     data: buf, size, MPI_CHAR
 
-    $for int size = 1; size < MAX_BUFSIZE; size *= 2
+    &call foreach_size
         bench_p2p(comm, 0, 1, buf, size)
 
     subcode: send_side
