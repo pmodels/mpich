@@ -65,6 +65,7 @@ do_hydra=yes
 do_romio=yes
 do_pmi=yes
 do_doc=no
+do_mydef=yes
 
 yaksa_depth=
 
@@ -536,6 +537,14 @@ fn_json_gen() {
     echo "done"
 }
 
+fn_mydef() {
+    MYDEF_BOOT=$PWD/modules/mydef_boot
+    export PATH=$MYDEF_BOOT/bin:$PATH
+    export PERL5LIB=$MYDEF_BOOT/lib/perl5
+    export MYDEFLIB=$MYDEF_BOOT/lib/MyDef
+    (cd test/mpi/bench && ./autogen.sh)
+}
+
 # internal
 _patch_libtool() {
     _file=$1
@@ -731,9 +740,9 @@ EOF
             echo ">= $ver"
         else
             echo "bad autoconf installation"
-            echo "--- autoreconf diagnositcs ---"
+            echo "--- autoreconf diagnostics ---"
             $(cat autoreconf.err)
-            echo "--- autoreconf diagnositcs ---"
+            echo "--- autoreconf diagnostics ---"
             cat <<EOF
 You either do not have autoconf in your path or it is too old (version
 $ver or higher required). You may be able to use
@@ -1102,3 +1111,5 @@ fn_build_configure
 fn_ch4_api
 
 fn_json_gen
+
+fn_mydef

@@ -14,3 +14,6 @@
 [submodule "modules/yaksa"]
 	path = modules/yaksa
 	url = https://github.com/pmodels/yaksa
+[submodule "modules/mydef_boot"]
+	path = modules/mydef_boot
+	url = https://github.com/pmodels/mydef_boot

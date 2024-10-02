@@ -1,0 +1,27 @@
+include: macros/bench_frame.def
+include: macros/bench_p2p.def
+include: macros/mtest.def
+
+subcode: _autoload
+    $define WINDOW_SIZE 64
+
+page: p2p_bw, bench_frame
+    MULTIPLICITY: WINDOW_SIZE
+    data: buf, size, MPI_CHAR
+
+    $for int size = 1; size < MAX_BUFSIZE; size *= 2
+        bench_p2p(comm, 0, 1, buf, size)
+
+    subcode: send_side
+        $my MPI_Request reqs[WINDOW_SIZE]
+        $for j=0:WINDOW_SIZE
+            MPI_Isend($(data), dst, TAG, comm, &reqs[j])
+        MPI_Waitall(WINDOW_SIZE, reqs, MPI_STATUSES_IGNORE)
+        MPI_Recv(NULL, 0, MPI_DATATYPE_NULL, dst, TAG, comm, MPI_STATUS_IGNORE)
+
+    subcode: recv_side
+        $my MPI_Request reqs[WINDOW_SIZE]
+        $for j=0:WINDOW_SIZE
+            MPI_Irecv($(data), src, TAG, comm, &reqs[j])
+        MPI_Waitall(WINDOW_SIZE, reqs, MPI_STATUSES_IGNORE)
+        MPI_Send(NULL, 0, MPI_DATATYPE_NULL, src, TAG, comm)
