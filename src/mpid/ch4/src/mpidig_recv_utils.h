@@ -21,11 +21,8 @@
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_set_buffer_attr(MPIR_Request * rreq)
 {
-    MPL_pointer_attr_t attr;
-    MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
-
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
-    p->is_device_buffer = (attr.type == MPL_GPU_POINTER_DEV);
+    p->is_device_buffer = MPIR_GPU_query_pointer_is_dev(MPIDIG_REQUEST(rreq, buffer));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_check_rndv_cb(MPIR_Request * rreq)

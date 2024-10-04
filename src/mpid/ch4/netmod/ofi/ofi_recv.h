@@ -171,12 +171,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     if (MPIDI_OFI_ENABLE_HMEM && data_sz >= MPIR_CVAR_CH4_OFI_GPU_RDMA_THRESHOLD &&
         MPIDI_OFI_ENABLE_MR_HMEM && dt_contig) {
-        if (attr.type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_strict_dev(&attr)) {
             register_mem = true;
         }
     }
 
-    if (data_sz && MPL_gpu_query_pointer_is_dev(recv_buf, &attr)) {
+    if (data_sz && MPL_gpu_attr_is_dev(&attr)) {
         MPIDI_OFI_register_am_bufs();
         if (!MPIDI_OFI_ENABLE_HMEM || !dt_contig || (MPIDI_OFI_ENABLE_MR_HMEM && !register_mem)) {
             /* FIXME: at this point, GPU data takes host-buffer staging
@@ -287,16 +287,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer);
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = buf;
-#ifdef MPL_HAVE_ZE
-        if (dt_contig && attr.type == MPL_GPU_POINTER_DEV) {
-            int mpl_err = MPL_SUCCESS;
-            void *ptr;
-            mpl_err = MPL_ze_mmap_device_pointer(buf, &attr.device_attr, attr.device, &ptr);
-            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                "**mpl_ze_mmap_device_ptr");
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = ptr;
-        }
-#endif
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
@@ -472,7 +462,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
     fi_cancel((fid_t) MPIDI_OFI_global.ctx[ctx_idx].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
 
     if (is_blocking) {
-        /* progress until the rreq complets, either with cancel-bit set,
+        /* progress until the rreq completes, either with cancel-bit set,
          * or with message received */
         while (!MPIR_cc_is_complete(&rreq->cc)) {
             mpi_errno = MPIDI_OFI_progress_uninlined(vci);

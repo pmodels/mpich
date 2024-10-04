@@ -120,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
                                        MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf),
                                        MPIDI_OFI_REQUEST(rreq, noncontig.pack.count),
                                        MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0, NULL,
-                                       MPL_GPU_COPY_DIRECTION_NONE,
+                                       MPL_GPU_COPY_H2D,
                                        MPIDI_OFI_gpu_get_recv_engine_type(), true);
         if (mpi_errno) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");

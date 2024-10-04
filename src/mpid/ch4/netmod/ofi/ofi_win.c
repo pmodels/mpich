@@ -183,10 +183,10 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
             len = (size_t) win->size;
         }
 
-        if (MPIR_GPU_query_pointer_is_strict_dev(base, NULL)) {
-            if (MPIDI_OFI_ENABLE_HMEM) {
-                MPL_pointer_attr_t attr;
-                MPIR_GPU_query_pointer_attr(base, &attr);
+        MPL_pointer_attr_t attr;
+        MPIR_GPU_query_pointer_attr(base, &attr);
+        if (MPL_gpu_attr_is_dev(&attr)) {
+            if (MPIDI_OFI_ENABLE_HMEM && MPL_gpu_attr_is_strict_dev(&attr)) {
                 mpi_errno =
                     MPIDI_OFI_register_memory(base, len, &attr, ctx_idx, MPIDI_OFI_WIN(win).mr_key,
                                               &MPIDI_OFI_WIN(win).mr);

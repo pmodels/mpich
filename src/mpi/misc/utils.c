@@ -15,8 +15,19 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If a send message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE (in
-        bytes), then enable GPU-basedfast memcpy. The environment variable is valid only when then
+        bytes), then enable GPU-based fast memcpy. The environment variable is valid only when then
         GPU IPC shmmod is enabled.
+
+    - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D
+      category    : CH4
+      type        : int
+      default     : 1048576
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If a receive message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D (in
+        bytes), then enable GPU-based fast memcpy.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -134,9 +145,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         MPIR_GPU_query_pointer_attr(sendbuf, &send_attr);
         MPIR_GPU_query_pointer_attr(recvbuf, &recv_attr);
 
-        if (send_attr.type == MPL_GPU_POINTER_DEV && recv_attr.type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_strict_dev(&send_attr) && MPL_gpu_attr_is_strict_dev(&recv_attr)) {
             MPL_gpu_malloc((void **) &buf, COPY_BUFFER_SZ, recv_attr.device);
-        } else if (send_attr.type == MPL_GPU_POINTER_DEV || recv_attr.type == MPL_GPU_POINTER_DEV) {
+        } else if (MPL_gpu_attr_is_strict_dev(&send_attr) || MPL_gpu_attr_is_strict_dev(&recv_attr)) {
             MPL_gpu_malloc_host((void **) &buf, COPY_BUFFER_SZ);
         } else {
             MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf", MPL_MEM_BUFFER);
@@ -179,9 +190,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
             }
         }
 
-        if (send_attr.type == MPL_GPU_POINTER_DEV && recv_attr.type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_strict_dev(&send_attr) && MPL_gpu_attr_is_strict_dev(&recv_attr)) {
             MPL_gpu_free(buf);
-        } else if (send_attr.type == MPL_GPU_POINTER_DEV || recv_attr.type == MPL_GPU_POINTER_DEV) {
+        } else if (MPL_gpu_attr_is_strict_dev(&send_attr) || MPL_gpu_attr_is_strict_dev(&recv_attr)) {
             MPL_gpu_free_host(buf);
         }
     }
@@ -192,9 +203,9 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     return mpi_errno;
   fn_fail:
     if (buf) {
-        if (send_attr.type == MPL_GPU_POINTER_DEV && recv_attr.type == MPL_GPU_POINTER_DEV) {
+        if (MPL_gpu_attr_is_strict_dev(&send_attr) && MPL_gpu_attr_is_strict_dev(&recv_attr)) {
             MPL_gpu_free(buf);
-        } else if (send_attr.type == MPL_GPU_POINTER_DEV || recv_attr.type == MPL_GPU_POINTER_DEV) {
+        } else if (MPL_gpu_attr_is_strict_dev(&send_attr) || MPL_gpu_attr_is_strict_dev(&recv_attr)) {
             MPL_gpu_free_host(buf);
         }
     }
@@ -267,7 +278,15 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             if (gpu_req) {
                 gpu_req->type = MPIR_NULL_REQUEST;
             }
-        } else if (copy_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
+            goto fn_exit;
+        }
+
+        int fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE;
+        if (dir == MPL_GPU_COPY_H2D) {
+            /* Used in ofi_events.h when unpacking from received pack_buffer to original device buffer */
+            fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D;
+        }
+        if (copy_sz <= fast_copy_threshold) {
             mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
             MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_fast_memcpy");
@@ -275,12 +294,12 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
                 gpu_req->type = MPIR_NULL_REQUEST;
             }
         } else {
-            if (send_attr && send_attr->type == MPL_GPU_POINTER_DEV) {
+            if (MPL_gpu_attr_is_strict_dev(send_attr)) {
                 dev_id = MPL_gpu_get_dev_id_from_attr(send_attr);
             }
 
             if (dev_id == -1) {
-                if (recv_attr->type == MPL_GPU_POINTER_DEV) {
+                if (MPL_gpu_attr_is_strict_dev(recv_attr)) {
                     dev_id = MPL_gpu_get_dev_id_from_attr(recv_attr);
                 } else {
                     /* fallback to do_localcopy */

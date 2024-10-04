@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     struct dtp_args dtp_args;
     dtp_args_init(&dtp_args, MTEST_COLL_NOCOUNT, argc, argv);
     while (dtp_args_get_next(&dtp_args)) {
-        errs += test_allgather(dtp_args.u.coll.evenmem, dtp_args.u.coll.oddmem);
+        errs += test_allgather(dtp_args.u.coll.oddmem, dtp_args.u.coll.evenmem);
     }
     dtp_args_finalize(&dtp_args);
 
