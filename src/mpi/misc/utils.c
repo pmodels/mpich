@@ -15,8 +15,19 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If a send message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE (in
-        bytes), then enable GPU-basedfast memcpy. The environment variable is valid only when then
+        bytes), then enable GPU-based fast memcpy. The environment variable is valid only when then
         GPU IPC shmmod is enabled.
+
+    - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D
+      category    : CH4
+      type        : int
+      default     : 1048576
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If a receive message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D (in
+        bytes), then enable GPU-based fast memcpy.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -267,7 +278,15 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
             if (gpu_req) {
                 gpu_req->type = MPIR_NULL_REQUEST;
             }
-        } else if (copy_sz <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
+            goto fn_exit;
+        }
+
+        int fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE;
+        if (dir == MPL_GPU_COPY_H2D) {
+            /* Used in ofi_events.h when unpacking from received pack_buffer to original device buffer */
+            fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D;
+        }
+        if (copy_sz <= fast_copy_threshold) {
             mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
             MPIR_ERR_CHKANDJUMP(mpl_errno != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                 "**mpl_gpu_fast_memcpy");
