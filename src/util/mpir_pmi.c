@@ -315,6 +315,13 @@ int MPIR_pmi_kvs_parent_get(const char *key, char *val, int val_size)
 char *MPIR_pmi_get_jobattr(const char *key)
 {
     char *valbuf = NULL;
+
+#ifdef PMI_FROM_3RD_PARTY
+    /* assume 3rd party pmi (e.g. Cray, Slurm, OpenPMIx) does not support special keys */
+    /* FIXME: add exceptions such as PMI_process_mapping */
+    goto fn_exit;
+#endif
+
     valbuf = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
     if (!valbuf) {
         goto fn_exit;
