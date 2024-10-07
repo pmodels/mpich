@@ -570,7 +570,7 @@ def process_func_parameters(func):
                 if p['length']:
                     length = p['length']
                     if length == '*':
-                        if RE.match(r'MPI_(Test|Wait|Request_get_status_)all', func_name, re.IGNORECASE):
+                        if RE.match(r'MPI_(Test|Wait|Request_get_status_|Continue)all', func_name, re.IGNORECASE):
                             length = "count"
                         elif RE.match(r'MPI_(Test|Wait|Request_get_status_)some', func_name, re.IGNORECASE):
                             length = "incount"
@@ -595,7 +595,7 @@ def process_func_parameters(func):
             if kind == "REQUEST":
                 if RE.match(r'mpi_startall', func_name, re.IGNORECASE):
                     do_handle_ptr = 3
-                elif RE.match(r'mpix?_(wait|test|request_get_status)', func_name, re.IGNORECASE):
+                elif RE.match(r'mpix?_(wait|test|request_get_status|continue)', func_name, re.IGNORECASE):
                     do_handle_ptr = 3
             elif kind == "RANK":
                 validation_list.append({'kind': "RANK-ARRAY", 'name': name})
@@ -651,6 +651,8 @@ def process_func_parameters(func):
             if kind == "INFO" and not RE.match(r'mpi_(info_.*|.*_set_info)$', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_INFO_NULL"
             elif kind == "REQUEST" and RE.match(r'mpix?_(wait|test|request_get_status|parrived)', func_name, re.IGNORECASE):
+                p['can_be_null'] = "MPI_REQUEST_NULL"
+            elif kind == "REQUEST" and RE.match(r'mpix_(continue|continueall)', func_name, re.IGNORECASE) and name == "cont_request":
                 p['can_be_null'] = "MPI_REQUEST_NULL"
             elif kind == "STREAM" and RE.match(r'mpix?_(stream_(comm_create|progress)|async_(start|spawn))', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPIX_STREAM_NULL"
@@ -740,7 +742,6 @@ def process_func_parameters(func):
             validation_list.append({'kind': "ARGNULL", 'name': name})
         else:
             print("Missing error checking: func=%s, name=%s, kind=%s" % (func_name, name, kind), file=sys.stderr)
-
         if do_handle_ptr == 1:
             if p['param_direction'] == 'inout':
                 # assume only one such parameter
@@ -762,7 +763,7 @@ def process_func_parameters(func):
             if kind == "REQUEST":
                 ptrs_name = "request_ptrs"
                 p['_ptrs_name'] = ptrs_name
-                if RE.match(r'mpi_startall', func['name'], re.IGNORECASE):
+                if RE.match(r'mpix?_(start|continue)all', func['name'], re.IGNORECASE):
                     impl_arg_list.append(ptrs_name)
                     impl_param_list.append("MPIR_Request **%s" % ptrs_name)
                 else:

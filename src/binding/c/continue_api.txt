@@ -1,0 +1,46 @@
+# vim: set ft=c:
+
+MPIX_Continue_cb_function:
+    .return: NOTHING
+    error_code: ERROR_CODE
+    user_data: BUFFER
+
+MPIX_Continue_init:
+    .desc: Creates a new continuation request
+    flags: ARRAY_LENGTH [flags]
+    max_poll: ARRAY_LENGTH_NNI [maximum number of continuations to execute when
+                                testing, or 0 for no limit]
+    info: INFO, [info argument]
+    cont_req: REQUEST, direction=out, [continuation request created]
+
+MPIX_Continue:
+    .desc: Attach a continuation to the operation represented by the request
+           op_request and register it with the continuation request cont_request
+    op_request: REQUEST, direction=inout, [the request associated with the active operation]
+    cb: FUNCTION, func_type=MPIX_Continue_cb_function, [callback to be invoked once the operation is complete]
+    cb_data: BUFFER, [pointer to a user-controlled buffer]
+    flags: ARRAY_LENGTH, [flags controlling aspects of the continuation]
+    status: STATUS, direction=inout, [status object]
+    cont_request: REQUEST, [continuation request]
+
+MPIX_Continueall:
+    .desc: Attach a continuation callback to a set of operation requests
+    count: ARRAY_LENGTH_NNI, [lists length]
+    array_of_op_requests: REQUEST, direction=inout, length=count, [array of requests]
+    cb: FUNCTION, func_type=MPIX_Continue_cb_function, [the continuation callback function]
+    cb_data: BUFFER, [the argument passed to the callback]
+    flags: ARRAY_LENGTH, [flags controlling aspects of the continuation]
+    array_of_statuses: STATUS, direction=inout, length=*, pointer=False, [array of status objects]
+    cont_request: REQUEST, [the continuation request]
+{
+    mpi_errno = MPIR_Continueall_impl(count, request_ptrs, cb, cb_data, flags, array_of_statuses,
+                                      cont_request_ptr);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+    if (!(flags & MPIX_CONT_REQBUF_VOLATILE)) {
+        for (int i = 0; i < count; ++i) {
+            array_of_op_requests[i] = MPI_REQUEST_NULL;
+        }
+    }
+}
