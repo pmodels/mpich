@@ -62,6 +62,17 @@ check_copy() {
     fi
 }
 
+generate_benchmarks() {
+    MYDEF_BOOT=$PWD/../../modules/mydef_boot
+    if test -d $MYDEF_BOOT ; then
+        echo "Generating benchmark tests"
+        export PATH=$MYDEF_BOOT/bin:$PATH
+        export PERL5LIB=$MYDEF_BOOT/lib/perl5
+        export MYDEFLIB=$MYDEF_BOOT/lib/MyDef
+        (cd bench && ./autogen.sh)
+    fi
+}
+
 check_copy version.m4     ../../maint/version.m4
 check_copy confdb         ../../confdb
 check_copy dtpools/confdb ../../confdb
@@ -77,6 +88,9 @@ check_copy dtpools/confdb ../../confdb
 if test ! -e include/mtest_mpix.h ; then
     touch include/mtest_mpix.h
 fi
+
+# Generate the benchmark tests
+generate_benchmarks
 
 echo "Running autoreconf in dtpools"
 (cd dtpools && autoreconf -ivf)
