@@ -170,7 +170,8 @@ int MPIDU_Init_shm_init(void)
     /* All processes need call MPIR_pmi_bcast. This is because we may need call MPIR_pmi_barrier
      * inside depend on PMI versions, and all processes need participate.
      */
-    MPIR_pmi_bcast(serialized_hnd, serialized_hnd_size, MPIR_PMI_DOMAIN_LOCAL);
+    mpi_errno = MPIR_pmi_bcast(serialized_hnd, serialized_hnd_size, MPIR_PMI_DOMAIN_LOCAL);
+    MPIR_ERR_CHECK(mpi_errno);
     if (local_size != 1) {
         MPIR_Assert(local_size > 1);
         if (my_local_rank > 0) {
