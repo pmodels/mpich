@@ -229,6 +229,11 @@ static bool pmix_get_jobattr(const char *key, char *valbuf)
     bool found = false;
     pmix_value_t *pvalue;
 
+    /* translate MPICH key to PMIx standard format */
+    if (strcmp(key, "PMI_process_mapping") == 0) {
+        key = PMIX_ANL_MAP;
+    }
+
     /* if this is a non-reserved key, we want to make sure not to block
      * by using PMIX_IMMEDIATE */
     pmix_info_t *info;
@@ -1032,16 +1037,6 @@ static int pmix_build_nodemap(int *nodemap, int sz)
     char *nodelist = NULL, *node = NULL;
     pmix_proc_t *procs = NULL;
     size_t nprocs, node_id = 0;
-
-    pmix_value_t *pvalue;
-    pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_ANL_MAP, NULL, 0, &pvalue);
-    if (pmi_errno == PMIX_SUCCESS) {
-        int mpl_err = MPL_rankmap_str_to_array(pvalue->data.string, sz, nodemap);
-        MPIR_ERR_CHKINTERNAL(mpl_err, mpi_errno,
-                             "unable to populate node ids from PMI_process_mapping");
-        PMIX_VALUE_RELEASE(pvalue);
-        goto fn_exit;
-    }
 
     pmi_errno = PMIx_Resolve_nodes(pmix_proc.nspace, &nodelist);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
