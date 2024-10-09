@@ -1661,6 +1661,7 @@ elif test "$with_pmilib" = "default" -o "$with_pmilib" = "mpich" -o "$with_pmili
 fi
 
 if test "$pac_3rd_party_pmi" = "yes" ; then
+    AC_DEFINE([PMI_FROM_3RD_PARTY], 1, [define if PMI is supplied from 3rd party (thus we should limit usage of MPICH extensions)])
     # detect
     PAC_PUSH_FLAG([LIBS])
     LIBS=$WRAPPER_LIBS

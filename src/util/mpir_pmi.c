@@ -315,6 +315,13 @@ int MPIR_pmi_kvs_parent_get(const char *key, char *val, int val_size)
 char *MPIR_pmi_get_jobattr(const char *key)
 {
     char *valbuf = NULL;
+
+#ifdef PMI_FROM_3RD_PARTY
+    /* assume 3rd party pmi (e.g. Cray, Slurm, OpenPMIx) does not support special keys */
+    /* FIXME: add exceptions such as PMI_process_mapping */
+    goto fn_exit;
+#endif
+
     valbuf = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
     if (!valbuf) {
         goto fn_exit;
@@ -336,20 +343,18 @@ char *MPIR_pmi_get_jobattr(const char *key)
 int MPIR_pmi_build_nodemap(int *nodemap, int sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
+    char *process_mapping = MPIR_pmi_get_jobattr("PMI_process_mapping");
+    if (process_mapping) {
+        int mpl_err = MPL_rankmap_str_to_array(process_mapping, sz, nodemap);
+        MPIR_ERR_CHKINTERNAL(mpl_err, mpi_errno,
+                             "unable to populate node ids from PMI_process_mapping");
+        MPL_free(process_mapping);
+    } else if (MPIR_CVAR_PMI_VERSION == MPIR_CVAR_PMI_VERSION_x) {
         mpi_errno = pmix_build_nodemap(nodemap, sz);
     } else {
-        char *process_mapping = MPIR_pmi_get_jobattr("PMI_process_mapping");
-        if (process_mapping) {
-            int mpl_err = MPL_rankmap_str_to_array(process_mapping, sz, nodemap);
-            MPIR_ERR_CHKINTERNAL(mpl_err, mpi_errno,
-                                 "unable to populate node ids from PMI_process_mapping");
-            MPL_free(process_mapping);
-        } else {
-            /* build nodemap based on allgather hostnames */
-            mpi_errno = MPIR_pmi_build_nodemap_fallback(sz, MPIR_Process.rank, nodemap);
-        };
-    }
+        /* build nodemap based on allgather hostnames */
+        mpi_errno = MPIR_pmi_build_nodemap_fallback(sz, MPIR_Process.rank, nodemap);
+    };
   fn_exit:
     return mpi_errno;
   fn_fail:
