@@ -207,15 +207,15 @@ void execute_continue(MPIR_Continue *continue_ptr, bool in_cs, int which_cs)
     continue_ptr->cb(MPI_SUCCESS, continue_ptr->cb_data);
     MPL_free(continue_ptr);
     /* Signal the continuation request */
-    /* TODO: Find a suitable request complete function */
+    /* TODO: Find a suitable request complete function for continuation requests */
     if (cont_req_ptr) {
         int incomplete;
         MPIR_cc_decr(cont_req_ptr->cc_ptr, &incomplete);
         if (!incomplete) {
             /* All the continue callbacks associated with this continuation request have completed */
-            /* TODO: reason about how to invoke the callback for continuation request */
-//        MPIR_Invoke_callback(cont_req_ptr, false);
-            MPIR_Request_free_with_safety(cont_req_ptr, !(in_cs && MPIR_REQUEST_POOL(cont_req_ptr) == which_cs));
+            /* TODO: reason about the safety of invoking the callback for continuation request here*/
+            MPIR_Invoke_callback(cont_req_ptr, false);
+            MPIR_Request_free_with_safety(cont_req_ptr, !(in_cs && MPIR_REQUEST_POOL(cont_req_ptr) == which_cs), NULL);
         }
     }
 }
@@ -232,7 +232,7 @@ void complete_op_request(MPIR_Request *op_request, bool in_cs, void *cb_context,
     if (context_ptr->status_ptr != MPI_STATUS_IGNORE)
         context_ptr->status_ptr->MPI_ERROR = rc;
     if (!MPIR_Request_is_persistent(op_request)) {
-        MPIR_Request_free_with_safety(op_request, !in_cs);
+        MPIR_Request_free_with_safety(op_request, !in_cs, NULL);
     }
     MPL_free(context_ptr);
     /* Signal the continue callback */

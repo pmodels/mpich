@@ -701,7 +701,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Request_cb_init(MPIR_Request * req)
 MPL_STATIC_INLINE_PREFIX void MPIR_Request_cb_free(MPIR_Request * req)
 {
     int err;
-    MPID_Thread_mutex_destroy(&req->cbs_lock, &err)
+    MPID_Thread_mutex_destroy(&req->cbs_lock, &err);
     MPIR_Assert(!err);
     // free all the persistent callbacks
     while (req->cbs.head) {
