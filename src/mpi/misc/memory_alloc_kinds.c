@@ -5,14 +5,19 @@
 
 #include "mpiimpl.h"
 
-static const char *memory_alloc_kinds[3][5] = {
+static const char *memory_alloc_kinds[6][5] = {
     /* mpi 4.1 kinds */
     {"mpi", "alloc_mem", "win_allocate", "win_allocate_shared", NULL},
     {"system", NULL},
+    /* memory allocation kinds 1.0 */
+    {"cuda", "host", "device", "managed", NULL},
+    {"rocm", "host", "device", "managed", NULL},
+    {"level_zero", "host", "device", "shared", NULL},
     {NULL}
 };
 
 static bool is_supported(const char *kind);
+static void add_gpu_kinds(char *tmp_strs[], int *num);
 
 int MPIR_get_supported_memory_kinds(char *requested_kinds, char **out_kinds)
 {
@@ -38,6 +43,9 @@ int MPIR_get_supported_memory_kinds(char *requested_kinds, char **out_kinds)
         MPL_free(save_tmp);
     }
 
+    /* make sure GPU kinds are included, if supported */
+    add_gpu_kinds(tmp_strs, &num);
+
     /* build return string */
     *out_kinds = MPL_strjoin(tmp_strs, num, ',');
 
@@ -50,6 +58,26 @@ int MPIR_get_supported_memory_kinds(char *requested_kinds, char **out_kinds)
 
 /*** static functions ***/
 
+/* return true if the input kind is an unsupported GPU kind */
+static bool is_unsupported_gpu(const char *kind)
+{
+    int gpu_type;
+    int gpu_supported;
+
+    if (strcmp(kind, "cuda") == 0) {
+        gpu_type = MPIX_GPU_SUPPORT_CUDA;
+    } else if (strcmp(kind, "rocm") == 0) {
+        gpu_type = MPIX_GPU_SUPPORT_HIP;
+    } else if (strcmp(kind, "level_zero") == 0) {
+        gpu_type = MPIX_GPU_SUPPORT_ZE;
+    } else {
+        return false;
+    }
+
+    (void) MPIR_GPU_query_support_impl(gpu_type, &gpu_supported);
+    return !gpu_supported;
+}
+
 static bool is_supported(const char *kind)
 {
     bool ret = false;
@@ -57,6 +85,11 @@ static bool is_supported(const char *kind)
     char *save_tmp = tmp;
 
     char *k = MPL_strsep(&tmp, ":");
+
+    if (is_unsupported_gpu(k)) {
+        goto fn_exit;
+    }
+
     for (int i = 0; memory_alloc_kinds[i][0]; i++) {
         if (!MPL_stricmp(k, memory_alloc_kinds[i][0])) {
             ret = true;
@@ -77,6 +110,34 @@ static bool is_supported(const char *kind)
         }
     }
 
+fn_exit:
     MPL_free(save_tmp);
     return ret;
+}
+
+void add_gpu_kinds(char *tmp_strs[], int *num)
+{
+    if (MPIR_CVAR_ENABLE_GPU) {
+        MPL_gpu_type_t type;
+        MPL_gpu_query_support(&type);
+
+        const char *kind;
+        if (type == MPL_GPU_TYPE_CUDA) {
+            kind = "cuda";
+        } else if (type == MPL_GPU_TYPE_HIP) {
+            kind = "rocm";
+        } else if (type == MPL_GPU_TYPE_ZE) {
+            kind = "level_zero";
+        } else {
+            return;
+        }
+
+        for (int i = 0; i < *num; i++) {
+            if (strcmp(tmp_strs[i], kind) == 0) {
+                return;
+            }
+        }
+        tmp_strs[(*num)++] = MPL_strdup(kind);
+        MPIR_Assert(*num < 1024);
+    }
 }
