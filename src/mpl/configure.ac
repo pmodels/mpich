@@ -365,6 +365,38 @@ if test "$enable_fast_avx512f_instr" = "yes" ; then
         if test "$pac_cv_found__mm512_storeu_si512" = "yes" ; then
             AC_DEFINE(HAVE__MM512_STOREU_SI512,1,[Define if _mm512_storeu_si512 is available])
         fi
+
+        AC_CACHE_CHECK([whether _mm512_stream_si512 is supported], pac_cv_found__mm512_stream_si512,[
+                        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+                                       #include <immintrin.h>
+                                       #include <stdlib.h>
+
+                                       int main(int argc, char **argv) {
+                                           int ret = 0;
+                                           char *source = NULL, *dest = NULL;
+                                           posix_memalign((void **)&source, 64, 64);
+                                           posix_memalign((void **)&dest, 64, 64);
+                                           for (int i = 0; i < 64; i++) source[i] = 'a';
+
+                                           __m512i ymm0 = _mm512_loadu_si512((__m512i const *) source);
+                                           _mm512_stream_si512((__m512i *) dest, ymm0);
+                                           _mm_sfence();
+
+                                           if (dest[0] == source[0]) ret = 0;
+                                           else ret = 1;
+
+                                           free(source);
+                                           free(dest);
+
+                                           return ret;
+                                       }
+                                       ]])], pac_cv_found__mm512_stream_si512="yes",
+                                       pac_cv_found__mm512_stream_si512="no",
+                                       pac_cv_found__mm512_stream_si512="unknown")
+                        ])
+        if test "$pac_cv_found__mm512_stream_si512" = "yes" ; then
+            AC_DEFINE(HAVE__MM512_STREAM_SI512,1,[Define if _mm512_stream_si512 is available])
+        fi
     fi
 fi
 
