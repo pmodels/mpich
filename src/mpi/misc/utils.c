@@ -9,7 +9,7 @@ cvars:
     - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE
       category    : CH4
       type        : int
-      default     : 1024
+      default     : 4096
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -29,6 +29,16 @@ cvars:
         If a receive message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D (in
         bytes), then enable GPU-based fast memcpy.
 
+    - name        : MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H
+      category    : CH4
+      type        : int
+      default     : 32768
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If a send message size is less than or equal to MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H (in
+        bytes), then enable GPU-based fast memcpy.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -285,6 +295,8 @@ static int do_localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatyp
         if (dir == MPL_GPU_COPY_H2D) {
             /* Used in ofi_events.h when unpacking from received pack_buffer to original device buffer */
             fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_H2D;
+        } else if (dir == MPL_GPU_COPY_D2H) {
+            fast_copy_threshold = MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE_D2H;
         }
         if (copy_sz <= fast_copy_threshold) {
             mpl_errno = MPL_gpu_fast_memcpy(send_ptr, send_attr, recv_ptr, recv_attr, copy_sz);
