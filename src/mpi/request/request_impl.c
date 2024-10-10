@@ -227,6 +227,8 @@ int MPIR_Request_free_impl(MPIR_Request * request_ptr)
                 MPIR_Request_free(request_ptr->u.persist_coll.real_request);
             }
             break;
+        case MPIR_REQUEST_KIND__CONTINUE:
+            break;
         default:
             break;
     }
@@ -245,6 +247,7 @@ int MPIR_Test_state(MPIR_Request * request_ptr, int *flag, MPI_Status * status,
     if (!MPIR_Request_is_complete(request_ptr)) {
         mpi_errno = MPID_Progress_test(state);
         MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Continue_progress(request_ptr);
     }
 
   fn_exit:
@@ -307,6 +310,7 @@ int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
             if (request_ptrs[i] == NULL || MPIR_Request_is_complete(request_ptrs[i])) {
                 n_completed++;
             } else {
+                MPIR_Continue_progress(request_ptrs[i]);
                 break;
             }
         }
@@ -319,6 +323,8 @@ int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
                 }
                 if (MPIR_Request_is_complete(request_ptrs[i])) {
                     n_completed++;
+                } else {
+                    MPIR_Continue_progress(request_ptrs[i]);
                 }
             } else {
                 n_completed++;
@@ -342,6 +348,21 @@ int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
     *flag = FALSE;
 
   fn_exit:
+    if (n_completed == count) {
+        *flag = TRUE;
+        goto fn_exit;
+    }
+
+    if (need_progress > 0) {
+        mpi_errno = MPID_Progress_test(state);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        need_progress--;
+        goto fn_check_requests;
+    }
+
+    *flag = FALSE;
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -497,6 +518,7 @@ int MPIR_Testany_state(int count, MPIR_Request * request_ptrs[],
         if (!request_ptrs[i]) {
             continue;
         }
+
         if (MPIR_Request_has_poll_fn(request_ptrs[i])) {
             mpi_errno = MPIR_Grequest_poll(request_ptrs[i], status);
             MPIR_ERR_CHECK(mpi_errno);
@@ -506,6 +528,7 @@ int MPIR_Testany_state(int count, MPIR_Request * request_ptrs[],
             *indx = i;
             goto fn_exit;
         }
+        MPIR_Continue_progress(request_ptrs[i]);
     }
 
     if (need_progress > 0) {
@@ -623,6 +646,7 @@ int MPIR_Testsome_state(int incount, MPIR_Request * request_ptrs[],
         if (!request_ptrs[i]) {
             continue;
         }
+
         if (MPIR_Request_has_poll_fn(request_ptrs[i])) {
             mpi_errno = MPIR_Grequest_poll(request_ptrs[i], &array_of_statuses[i]);
             MPIR_ERR_CHECK(mpi_errno);
@@ -630,7 +654,9 @@ int MPIR_Testsome_state(int incount, MPIR_Request * request_ptrs[],
         if (MPIR_Request_is_complete(request_ptrs[i])) {
             array_of_indices[*outcount] = i;
             *outcount += 1;
+            continue;
         }
+        MPIR_Continue_progress(request_ptrs[i]);
     }
 
     if (*outcount) {
@@ -739,6 +765,8 @@ int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progre
     while (!MPIR_Request_is_complete(request_ptr)) {
         mpi_errno = MPID_Progress_wait(state);
         MPIR_ERR_CHECK(mpi_errno);
+
+        MPIR_Continue_progress(request_ptr);
         PROGRESS_CHECK;
 
         if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
@@ -806,6 +834,7 @@ int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status arra
             while (!MPIR_Request_is_complete(request_ptrs[i])) {
                 mpi_errno = MPID_Progress_wait(state);
                 MPIR_ERR_CHECK(mpi_errno);
+                MPIR_Continue_progress(request_ptrs[i]);
                 PROGRESS_CHECK;
             }
         }
@@ -821,6 +850,7 @@ int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status arra
 
                 mpi_errno = MPID_Progress_wait(state);
                 MPIR_ERR_CHECK(mpi_errno);
+                MPIR_Continue_progress(request_ptrs[i]);
                 PROGRESS_CHECK;
             }
         }
@@ -1016,6 +1046,7 @@ int MPIR_Waitany_state(int count, MPIR_Request * request_ptrs[], int *indx, MPI_
                 *indx = i;
                 goto fn_exit;
             }
+            MPIR_Continue_progress(request_ptrs[i]);
         }
 
         mpi_errno = MPID_Progress_test(state);
@@ -1145,7 +1176,9 @@ int MPIR_Waitsome_state(int incount, MPIR_Request * request_ptrs[],
                 if (MPIR_Request_is_complete(request_ptrs[i])) {
                     array_of_indices[n_active] = i;
                     n_active += 1;
+                    continue;
                 }
+                MPIR_Continue_progress(request_ptrs[i]);
             }
         }
 

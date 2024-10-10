@@ -6,6 +6,7 @@
 include $(top_srcdir)/src/mpi/attr/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/Makefile.mk
 include $(top_srcdir)/src/mpi/comm/Makefile.mk
+include $(top_srcdir)/src/mpi/continue/Makefile.mk
 include $(top_srcdir)/src/mpi/datatype/Makefile.mk
 include $(top_srcdir)/src/mpi/debugger/Makefile.mk
 include $(top_srcdir)/src/mpi/errhan/Makefile.mk
