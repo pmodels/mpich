@@ -441,6 +441,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
 MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci);
 
 #define MPIDIU_PROGRESS_WHILE(cond, vci)         \
+do { \
     MPIDIU_PROGRESS_START; \
     while (cond) {                          \
         mpi_errno = MPIDI_progress_test_vci(vci);   \
@@ -448,9 +449,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci);
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
         MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI(vci).lock);                 \
         MPIDIU_PROGRESS_CHECK; \
-    }
+    } \
+} while (0)
 
 #define MPIDIU_PROGRESS_DO_WHILE(cond, vci) \
+do { \
     MPIDIU_PROGRESS_START; \
     do { \
         mpi_errno = MPIDI_progress_test_vci(vci); \
@@ -458,7 +461,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test_vci(int vci);
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
         MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI(vci).lock);                 \
         MPIDIU_PROGRESS_CHECK; \
-    } while (cond)
+    } while (cond); \
+} while (0)
 
 #ifdef HAVE_ERROR_CHECKING
 #define MPIDIG_EPOCH_CHECK_SYNC(win, mpi_errno, stmt)               \
