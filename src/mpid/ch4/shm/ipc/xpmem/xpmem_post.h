@@ -26,7 +26,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD
       category    : CH4
       type        : int
-      default     : 16384
+      default     : 1024
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -52,7 +52,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint 
     int dt_contig;
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, true_lb);
 
-    if (!MPIR_CVAR_CH4_XPMEM_ENABLE || buf == MPI_BOTTOM) {
+    if (!MPIR_CVAR_CH4_XPMEM_ENABLE || buf == MPI_BOTTOM ||
+        data_sz < MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD) {
         goto fn_exit;
     } else {
         ipc_attr->ipc_type = MPIDI_IPCI_TYPE__XPMEM;
