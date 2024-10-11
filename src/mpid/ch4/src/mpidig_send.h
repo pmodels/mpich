@@ -83,6 +83,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     am_hdr.data_sz = data_sz;
     am_hdr.rndv_hdr_sz = 0;
 
+    MPIR_REQUEST_SET_INFO(sreq, "MPIDIG_isend_impl: rank=%d, tag=%d, data_sz=%ld\n", rank, tag,
+                          data_sz);
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIDIG_REQUEST(sreq, datatype) = datatype;
     MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
