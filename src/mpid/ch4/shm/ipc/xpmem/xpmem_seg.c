@@ -83,7 +83,8 @@ int MPIDI_XPMEMI_seg_regist(int node_rank, uintptr_t size,
         xpmem_addr.apid = segmap->apid;
         xpmem_addr.offset = seg_low;
         att_vaddr = xpmem_attach(xpmem_addr, seg_size, NULL);
-        MPIR_ERR_CHKANDJUMP(att_vaddr == (void *) -1, mpi_errno, MPI_ERR_OTHER, "**xpmem_attach");
+        MPIR_ERR_CHKANDJUMP2(att_vaddr == (void *) -1, mpi_errno, MPI_ERR_OTHER, "**xpmem_attach",
+                             "**xpmem_attach %p %d", remote_vaddr, (int) size);
         seg->remote_align_addr = seg_low;
         seg->att_vaddr = (uintptr_t) att_vaddr;
         MPL_gavl_tree_insert(segcache, (void *) seg_low, seg_size, (void *) seg);
