@@ -20,11 +20,13 @@ extern MPL_shm_hnd_t shm_limit_handle;
 #define MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN(ptr, value)                           \
     do {                                                           \
         int spin_count = 0;                                        \
+        DEBUG_PROGRESS_START; \
         while (MPL_atomic_acquire_load_uint64(ptr) < (value))    { \
             if (++spin_count >= MPIR_CVAR_POSIX_POLL_FREQUENCY) {    \
                 /* Call progress only after waiting for a while */ \
                 MPID_Progress_test(NULL);                              \
                 spin_count = 0;                                    \
+                DEBUG_PROGRESS_CHECK; \
             }                                                      \
         }                                                          \
     }                                                              \
