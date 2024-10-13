@@ -1469,6 +1469,16 @@ def dump_function_normal(func):
     # ----
     def dump_body_of_routine():
         do_threadcomm = False
+        if RE.search(r'streamsync', func['extra'], re.IGNORECASE):
+            if '_has_comm' in func:
+                G.out.append("MPIR_Stream *stream = MPIR_stream_comm_get_local_stream(%s_ptr);" % func['_has_comm'])
+            elif '_has_win' in func:
+                G.out.append("MPIR_Stream *stream = MPIR_stream_comm_get_local_stream(%s_ptr->comm_ptr);" % func['_has_win'])
+            else:
+                raise Exception("streamsync not supported in %s" % func['name'])
+            dump_if_open("stream && stream->type == MPIR_STREAM_GPU")
+            G.out.append("MPL_gpu_stream_synchronize(stream->u.gpu_stream);")
+            dump_if_close()
         if RE.search(r'threadcomm', func['extra'], re.IGNORECASE):
             do_threadcomm = True
             G.out.append("#ifdef ENABLE_THREADCOMM")
@@ -1501,6 +1511,7 @@ def dump_function_normal(func):
 
         if do_threadcomm:
             dump_if_close()
+
     # ----
     G.out.append("/* ... body of routine ... */")
 

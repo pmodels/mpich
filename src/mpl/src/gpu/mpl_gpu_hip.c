@@ -560,6 +560,13 @@ int MPL_gpu_launch_hostfn(hipStream_t stream, MPL_gpu_hostfn fn, void *data)
     return result;
 }
 
+int MPL_gpu_stream_synchronize(hipStream_t stream)
+{
+    hipError_t result;
+    result = hipStreamSynchronize(stream);
+    return result;
+}
+
 /* ---- */
 bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
 {
