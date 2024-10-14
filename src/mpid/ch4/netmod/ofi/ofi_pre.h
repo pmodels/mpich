@@ -197,6 +197,10 @@ typedef struct {
     MPL_atomic_int_t util_id;
     int nic_num;                /* Store the nic number so we can use it to cancel a request later
                                  * if needed. */
+    /* for am_tag_send and am_tag_recv */
+    int am_handler_id;
+    MPIR_Request *am_req;
+
     enum MPIDI_OFI_req_kind kind;
     union {
         struct fid_mr **send_mrs;
