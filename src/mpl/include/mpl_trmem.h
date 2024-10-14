@@ -317,11 +317,14 @@ MPL_STATIC_INLINE_PREFIX void *MPL_aligned_alloc(size_t alignment, size_t size,
                                                  MPL_memory_class class)
 {
 #if defined (MPL_HAVE_ALIGNED_ALLOC)
-    return aligned_alloc(alignment, size);
+    /* aligned_alloc requires size to be multiples of alignment, we round it up here */
+    return aligned_alloc(alignment, MPL_ROUND_UP_ALIGN(size, alignment));
 #elif defined (MPL_HAVE_POSIX_MEMALIGN)
     void *ptr;
     int ret;
 
+    /* posix_memalign requires alignment to be multiples of sizeof(void *) */
+    assert(alignment % sizeof(void *) == 0);
     ret = posix_memalign(&ptr, alignment, size);
     if (ret != 0)
         return NULL;
