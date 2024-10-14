@@ -268,6 +268,12 @@ static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request 
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
         }
 
+        if (MPIDI_OFI_REQUEST(sreq, am_req)) {
+            MPIR_Request *am_sreq = MPIDI_OFI_REQUEST(sreq, am_req);
+            int handler_id = MPIDI_OFI_REQUEST(sreq, am_handler_id);
+            mpi_errno = MPIDIG_global.origin_cbs[handler_id] (am_sreq);
+        }
+
         MPIDI_CH4_REQUEST_FREE(sreq);
     }
     /* c != 0, ssend */
