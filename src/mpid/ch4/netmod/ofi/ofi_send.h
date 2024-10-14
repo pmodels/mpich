@@ -465,7 +465,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                             int dst_rank, int tag, MPIR_Comm * comm,
                                             int context_offset, MPIDI_av_entry_t * addr,
                                             int vci_src, int vci_dst,
-                                            MPIR_Request ** request, bool syncflag)
+                                            MPIR_Request ** request, bool is_am, bool syncflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -569,7 +569,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     uint64_t match_bits;
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag);
 
-    if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag &&
+    if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag && !is_am &&
         (data_sz <= MPIDI_OFI_global.max_buffered_send)) {
         /* inject path */
         void *pack_buf = NULL;
@@ -602,6 +602,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
             mpi_errno = MPIDI_OFI_issue_sync_recv(sreq, comm, context_offset, dst_rank, tag, addr,
                                                   vci_src, vci_dst, sender_nic, receiver_nic);
             MPIR_ERR_CHECK(mpi_errno);
+        } else if (is_am) {
+            MPIR_Assert(!syncflag);
+            match_bits |= MPIDI_OFI_AM_SEND;
         }
 
         void *data = NULL;
@@ -708,19 +711,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
         bool syncflag = (bool) MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
         mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                      vci_src, vci_dst, request, syncflag, errflag);
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (!MPIDI_global.is_initialized) {
         MPIR_Assert(!MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr));
         mpi_errno = MPIDI_OFI_send_fallback(buf, count, datatype, rank, tag, comm,
                                             context_offset, addr, vci_src, vci_dst, request);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIDI_OFI_REQUEST(*request, am_req) = NULL;
     } else {
         bool syncflag = (bool) MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, vci_src, vci_dst, request, syncflag);
+                                   context_offset, addr, vci_src, vci_dst, request,
+                                   false /* is_am */ , syncflag);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIDI_OFI_REQUEST(*request, am_req) = NULL;
     }
-    MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_src);
 
+  fn_exit:
+    MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_src);
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
@@ -740,8 +752,37 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_send(int rank, MPIR_Comm * comm,
                                                   MPI_Datatype datatype,
                                                   int vci_src, int vci_dst, MPIR_Request * sreq)
 {
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* am_tag_send is similar to normal send with -
+     * * already inside VCI critical section
+     * * match_bits need have MPIDI_OFI_AM_SEND protocol bit set
+     */
+    MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
+
+    /* NOTE: it is possible to reuse sreq, but then we need check and handle am path inside
+     *       the native paths. To reduce complexity, let's simply ask for a new request.
+     *       The overhead should be negligible since am_tag_send should be used for large-ish messages.
+     */
+    MPIR_Request *ofi_req = NULL;
+    MPIDI_av_entry_t *addr = MPIDIU_comm_rank_to_av(comm, rank);
+    mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
+                               0 /* context_offset */ , addr, vci_src, vci_dst, &ofi_req,
+                               true /* is_am */ , false /* syncflag */);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_OFI_REQUEST(ofi_req, am_req) = sreq;
+    MPIDI_OFI_REQUEST(ofi_req, am_handler_id) = handler_id;
+
+    /* This is an internal am step that user do not need to track */
+    MPIR_Request_free_unsafe(ofi_req);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* OFI_SEND_H_INCLUDED */
