@@ -66,6 +66,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
                                                   struct fi_cq_tagged_entry *wc /* unused */ ,
                                                   MPIR_Request * sreq, int event_id)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
     /* free the packing buffers and datatype */
@@ -76,9 +77,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
         MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack.iovs));
     }
 
+    if (MPIDI_OFI_REQUEST(sreq, am_req)) {
+        MPIR_Request *am_sreq = MPIDI_OFI_REQUEST(sreq, am_req);
+        int handler_id = MPIDI_OFI_REQUEST(sreq, am_handler_id);
+        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (am_sreq);
+    }
+
     MPIDI_Request_complete_fast(sreq);
     MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_entry *wc,
@@ -168,6 +175,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         }
     }
 
+    if (MPIDI_OFI_REQUEST(rreq, am_req) != NULL) {
+        MPI_Status *status = &rreq->status;
+        MPIR_Request *am_req = MPIDI_OFI_REQUEST(rreq, am_req);
+        int am_recv_id = MPIDI_OFI_REQUEST(rreq, am_handler_id);
+        mpi_errno = MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, status);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPIDI_Request_complete_fast(rreq);
 
   fn_exit:

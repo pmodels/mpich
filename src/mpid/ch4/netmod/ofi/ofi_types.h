@@ -98,11 +98,12 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
     return (idata >> MPIDI_OFI_IDATA_GPUCHUNK_OFFSET);
 }
 
-#define MPIDI_OFI_PROTOCOL_BITS (5)
+#define MPIDI_OFI_PROTOCOL_BITS (6)
 /* define protocol bits without MPIDI_OFI_PROTOCOL_SHIFT */
 #define MPIDI_OFI_SYNC_SEND_ACK_0      1ULL
 #define MPIDI_OFI_DYNPROC_SEND_0       2ULL
 #define MPIDI_OFI_GPU_PIPELINE_SEND_0  4ULL
+#define MPIDI_OFI_AM_SEND_0           32ULL
 /* the above defines separate tag spaces */
 #define MPIDI_OFI_SYNC_SEND_0          8ULL
 #define MPIDI_OFI_HUGE_SEND_0         16ULL
@@ -119,7 +120,7 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 /* without CQ data */
 #define MPIDI_OFI_CONTEXT_BITS_b 16
 #define MPIDI_OFI_SOURCE_BITS_b  23
-#define MPIDI_OFI_TAG_BITS_b     20
+#define MPIDI_OFI_TAG_BITS_b     19
 
 /* MPIDI_OFI_CONTEXT_BITS, MPIDI_OFI_SOURCE_BITS, and MPIDI_OFI_TAG_BITS are defined in ofi_capability_sets.h.
  * When these 3 are defined as compile-time constants, all the following macros are constants as well.
@@ -130,6 +131,7 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 #define MPIDI_OFI_GPU_PIPELINE_SEND  (MPIDI_OFI_GPU_PIPELINE_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_SYNC_SEND          (MPIDI_OFI_SYNC_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_HUGE_SEND          (MPIDI_OFI_HUGE_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_AM_SEND            (MPIDI_OFI_AM_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 
 #define MPIDI_OFI_PROTOCOL_MASK      (MPIDI_OFI_PROTOCOL_MASK_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_CONTEXT_MASK       (((1ULL << MPIDI_OFI_CONTEXT_BITS) - 1) << (MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
