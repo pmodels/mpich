@@ -25,8 +25,9 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     MPIDI_OFI_dynamic_process_request_t req;
     req.done = 0;
     req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-    uint64_t match_bits;
-    match_bits = MPIDI_OFI_init_sendtag(0, 0, tag, MPIDI_OFI_DYNPROC_SEND);
+
+    uint64_t match_bits = MPIDI_OFI_init_sendtag(0, 0, tag);
+    match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     MPL_time_t time_start, time_now;
     double time_gap;
