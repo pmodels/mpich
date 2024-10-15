@@ -103,17 +103,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
  * MPIDI_OFI_MINOR_VERSION             The minor API version of libfabric required
  *
  * === Compile time only ===
- * The first four values an optimization to avoid calculating this value every time they are needed.
- * They can be calculated from the bits above.
- * MPIDI_OFI_PROTOCOL_MASK             The bitmask used to extract the protocol from the match_bits in an OFI message
- * MPIDI_OFI_CONTEXT_MASK              The bitmask used to extract the context ID from the match_bits in an OFI message
- * MPIDI_OFI_SOURCE_MASK               The bitmask used to extract the source rank from the match_bits in an OFI message
- * MPIDI_OFI_TAG_MASK                  The bitmask used to extract the tag from the match_bits in an OFI message
- * Protocol bits
- * MPIDI_OFI_SYNC_SEND                 The bit to indicate a sync send
- * MPIDI_OFI_SYNC_SEND_ACK             The bit to indicate a sync send ack
- * MPIDI_OFI_DYNPROC_SEND              The bit to indicate a dynamic process send
- * MPIDI_OFI_HUGE_SEND                 The bit to indicate a huge message
  * MPIDI_OFI_CONTEXT_STRUCTS           The number of fi_context structs needed for the provider
  */
 
@@ -170,20 +159,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_TRIGGERED          MPIDI_OFI_ENABLE_TRIGGERED_PSM2
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_PSM2
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_PSM2
-#define MPIDI_OFI_PROTOCOL_MASK             (0x00C0000000000000ULL)
-#define MPIDI_OFI_CONTEXT_MASK              (0x000FFFFF00000000ULL)
-#define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* PSM2 does support immediate data
-                                                                         * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                  (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_PSM2
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_PSM2
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_PSM2
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS      MPIDI_OFI_COUNTER_WAIT_OBJECTS_PSM2
-#define MPIDI_OFI_SYNC_SEND_ACK             (0x0010000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND              (0x0020000000000000ULL)
-#define MPIDI_OFI_GPU_PIPELINE_SEND         (0x0040000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND                 (0x0080000000000000ULL)
-#define MPIDI_OFI_HUGE_SEND                 (0x0100000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_PSM2
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_PSM2
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
@@ -242,20 +221,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_TRIGGERED          MPIDI_OFI_ENABLE_TRIGGERED_PSM3
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_PSM3
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_PSM3
-#define MPIDI_OFI_PROTOCOL_MASK             (0x00C0000000000000ULL)
-#define MPIDI_OFI_CONTEXT_MASK              (0x000FFFFF00000000ULL)
-#define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* PSM3 does support immediate data
-                                                                         * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                  (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_PSM3
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_PSM3
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_PSM3
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS      MPIDI_OFI_COUNTER_WAIT_OBJECTS_PSM3
-#define MPIDI_OFI_SYNC_SEND_ACK             (0x0010000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND              (0x0020000000000000ULL)
-#define MPIDI_OFI_GPU_PIPELINE_SEND         (0x0040000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND                 (0x0080000000000000ULL)
-#define MPIDI_OFI_HUGE_SEND                 (0x0100000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_PSM3
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_PSM3
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
@@ -314,20 +283,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_TRIGGERED          MPIDI_OFI_ENABLE_TRIGGERED_SOCKETS
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_SOCKETS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_SOCKETS
-#define MPIDI_OFI_PROTOCOL_MASK             (0x00C0000000000000ULL)
-#define MPIDI_OFI_CONTEXT_MASK              (0x000FFFFF00000000ULL)
-#define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* Sockets does support immediate data
-                                                                         * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                  (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_SOCKETS
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_SOCKETS
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_SOCKETS
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS      MPIDI_OFI_COUNTER_WAIT_OBJECTS_SOCKETS
-#define MPIDI_OFI_SYNC_SEND_ACK             (0x0010000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND              (0x0020000000000000ULL)
-#define MPIDI_OFI_GPU_PIPELINE_SEND         (0x0040000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND                 (0x0080000000000000ULL)
-#define MPIDI_OFI_HUGE_SEND                 (0x0100000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_SOCKETS
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_SOCKETS
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
@@ -386,20 +345,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_TRIGGERED          MPIDI_OFI_ENABLE_TRIGGERED_BGQ
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_BGQ
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_BGQ
-#define MPIDI_OFI_PROTOCOL_MASK             (0x00C0000000000000ULL)
-#define MPIDI_OFI_CONTEXT_MASK              (0x000FFFFF00000000ULL)
-#define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* BGQ does support immediate data
-                                                                         * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                  (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_BGQ
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_BGQ
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_BGQ
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS      MPIDI_OFI_COUNTER_WAIT_OBJECTS_BGQ
-#define MPIDI_OFI_SYNC_SEND_ACK             (0x0010000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND              (0x0020000000000000ULL)
-#define MPIDI_OFI_GPU_PIPELINE_SEND         (0x0040000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND                 (0x0080000000000000ULL)
-#define MPIDI_OFI_HUGE_SEND                 (0x0100000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_BGQ
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_BGQ
 #define MPIDI_OFI_CONTEXT_STRUCTS           2
@@ -469,23 +418,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_TRIGGERED              MPIDI_OFI_ENABLE_TRIGGERED_CXI
 #define MPIDI_OFI_NUM_AM_BUFFERS                MPIDI_OFI_NUM_AM_BUFFERS_CXI
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_CXI
-#define MPIDI_OFI_PROTOCOL_MASK                 (0x00000C0000000000ULL) /* This is set to 2 (C) even though we actually use 4 (F). The
-                                                                         * ssend ack bit and dynproc bit need to live outside the protocol
-                                                                         * bit space to avoid accidentally matching unintended messages.
-                                                                         * Because of this, we shift the PROTOCOL_MASK two extra bits
-                                                                         * to the left. */
-#define MPIDI_OFI_CONTEXT_MASK                  (0x000000FFFFF00000ULL)
-#define MPIDI_OFI_SOURCE_MASK                   (0x0000000000000000ULL) /* CXI does support immediate data so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                      (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS                  MPIDI_OFI_CONTEXT_BITS_CXI
 #define MPIDI_OFI_SOURCE_BITS                   MPIDI_OFI_SOURCE_BITS_CXI
 #define MPIDI_OFI_TAG_BITS                      MPIDI_OFI_TAG_BITS_CXI
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS          MPIDI_OFI_COUNTER_WAIT_OBJECTS_CXI
-#define MPIDI_OFI_SYNC_SEND_ACK                 (0x0000010000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND                  (0x0000020000000000ULL)
-#define MPIDI_OFI_GPU_PIPELINE_SEND             (0x0000040000000000ULL)
-#define MPIDI_OFI_SYNC_SEND                     (0x0000080000000000ULL)
-#define MPIDI_OFI_HUGE_SEND                     (0x0000100000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION                 MPIDI_OFI_MAJOR_VERSION_CXI
 #define MPIDI_OFI_MINOR_VERSION                 MPIDI_OFI_MINOR_VERSION_CXI
 #define MPIDI_OFI_CONTEXT_STRUCTS               2
@@ -543,20 +479,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_TRIGGERED          	MPIDI_OFI_ENABLE_TRIGGERED_RXM
 #define MPIDI_OFI_NUM_AM_BUFFERS                MPIDI_OFI_NUM_AM_BUFFERS_RXM
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_RXM
-#define MPIDI_OFI_PROTOCOL_MASK                 (0x00C0000000000000ULL)
-#define MPIDI_OFI_CONTEXT_MASK                  (0x000FFFFF00000000ULL)
-#define MPIDI_OFI_SOURCE_MASK                   (0x0000000000000000ULL) /* RxM does support immediate data
-                                                                         * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                      (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS                  MPIDI_OFI_CONTEXT_BITS_RXM
 #define MPIDI_OFI_SOURCE_BITS                   MPIDI_OFI_SOURCE_BITS_RXM
 #define MPIDI_OFI_TAG_BITS                      MPIDI_OFI_TAG_BITS_RXM
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS          MPIDI_OFI_COUNTER_WAIT_OBJECTS_RXM
-#define MPIDI_OFI_SYNC_SEND_ACK                 (0x0010000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND                  (0x0020000000000000ULL)
-#define MPIDI_OFI_GPU_PIPELINE_SEND             (0x0040000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND                     (0x0080000000000000ULL)
-#define MPIDI_OFI_HUGE_SEND                     (0x0100000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION                 MPIDI_OFI_MAJOR_VERSION_RXM
 #define MPIDI_OFI_MINOR_VERSION                 MPIDI_OFI_MINOR_VERSION_RXM
 #define MPIDI_OFI_CONTEXT_STRUCTS                1
@@ -616,20 +542,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_TRIGGERED	    MPIDI_OFI_ENABLE_TRIGGERED_VERBS_RXM
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_VERBS_RXM
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_VERBS_RXM
-#define MPIDI_OFI_PROTOCOL_MASK             (0x00C0000000000000ULL)
-#define MPIDI_OFI_CONTEXT_MASK              (0x000FFFF000000000ULL)
-#define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* verbs;ofi_rxm does support immediate data
-                                                                         * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK                  (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_VERBS_RXM
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_VERBS_RXM
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_VERBS_RXM
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS      MPIDI_OFI_COUNTER_WAIT_OBJECTS_VERBS_RXM
-#define MPIDI_OFI_SYNC_SEND_ACK             (0x0010000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND              (0x0020000000000000ULL)
-#define MPIDI_OFI_GPU_PIPELINE_SEND         (0x0040000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND                 (0x0080000000000000ULL)
-#define MPIDI_OFI_HUGE_SEND                 (0x0100000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_VERBS_RXM
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_VERBS_RXM
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
@@ -689,20 +605,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_TRIGGERED          MPIDI_OFI_ENABLE_TRIGGERED_GNI
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_GNI
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS  MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_GNI
-#define MPIDI_OFI_PROTOCOL_MASK             (0xC000000000000000ULL)
-#define MPIDI_OFI_CONTEXT_MASK              (0x0FFFF00000000000ULL)
-#define MPIDI_OFI_SOURCE_MASK               (0x00000FFFFFF00000ULL)     /* GNI does not support immediate data
-                                                                         * so this field needs to be available */
-#define MPIDI_OFI_TAG_MASK                  (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_GNI
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_GNI
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_GNI
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS      MPIDI_OFI_COUNTER_WAIT_OBJECTS_GNI
-#define MPIDI_OFI_SYNC_SEND_ACK             (0x1000000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND              (0x2000000000000000ULL)
-#define MPIDI_OFI_GPU_PIPELINE_SEND         (0x0000000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND                 (0x4000000000000000ULL)
-#define MPIDI_OFI_HUGE_SEND                 (0x8000000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_GNI
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_GNI
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
@@ -732,20 +638,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_HMEM_DEFAULT               MPIDI_OFI_ON
 #define MPIDI_OFI_NUM_AM_BUFFERS_DEFAULT            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_DEFAULT  0
-#define MPIDI_OFI_PROTOCOL_MASK_DEFAULT             (0x00C0000000000000ULL)
-#define MPIDI_OFI_CONTEXT_MASK_DEFAULT              (0x000FFFFF00000000ULL)
-#define MPIDI_OFI_SOURCE_MASK_DEFAULT               (0x0000000000000000ULL)     /* We require support for immediate data
-                                                                                 * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK_DEFAULT                  (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS_DEFAULT              MPIDI_OFI_CONTEXT_BITS_a
 #define MPIDI_OFI_SOURCE_BITS_DEFAULT               MPIDI_OFI_SOURCE_BITS_a
 #define MPIDI_OFI_TAG_BITS_DEFAULT                  MPIDI_OFI_TAG_BITS_a
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_DEFAULT      MPIDI_OFI_ON
-#define MPIDI_OFI_SYNC_SEND_ACK_DEFAULT             (0x0010000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND_DEFAULT              (0x0020000000000000ULL)
-#define MPIDI_OFI_GPU_PIPELINE_SEND_DEFAULT         (0x0040000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND_DEFAULT                 (0x0080000000000000ULL)
-#define MPIDI_OFI_HUGE_SEND_DEFAULT                 (0x0100000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION_DEFAULT             FI_MAJOR_VERSION
 #define MPIDI_OFI_MINOR_VERSION_DEFAULT             FI_MINOR_VERSION
 
@@ -772,20 +668,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_HMEM_MINIMAL               MPIDI_OFI_OFF
 #define MPIDI_OFI_NUM_AM_BUFFERS_MINIMAL            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_NUM_OPTIMIZED_MEMORY_REGIONS_MINIMAL  0
-#define MPIDI_OFI_PROTOCOL_MASK_MINIMAL             (0xC000000000000000ULL)     /* This will be a problem for providers that require all 64 match bits. */
-#define MPIDI_OFI_CONTEXT_MASK_MINIMAL              (0x0FFFF00000000000ULL)
-#define MPIDI_OFI_SOURCE_MASK_MINIMAL               (0x00000FFFFFF00000ULL)     /* assume that provider does not support immediate data
-                                                                                 * so this field needs to be available */
-#define MPIDI_OFI_TAG_MASK_MINIMAL                  (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS_MINIMAL              MPIDI_OFI_CONTEXT_BITS_b
 #define MPIDI_OFI_SOURCE_BITS_MINIMAL               MPIDI_OFI_SOURCE_BITS_b
 #define MPIDI_OFI_TAG_BITS_MINIMAL                  MPIDI_OFI_SOURCE_BITS_b
 #define MPIDI_OFI_COUNTER_WAIT_OBJECTS_MINIMAL      MPIDI_OFI_ON
-#define MPIDI_OFI_SYNC_SEND_MINIMAL                 (0x1000000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND_MINIMAL              (0x2000000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND_ACK_MINIMAL             (0x4000000000000000ULL)
-#define MPIDI_OFI_GPU_PIPELINE_SEND_MINIMAL         (0x0000000000000000ULL)
-#define MPIDI_OFI_HUGE_SEND_MINIMAL                 (0x8000000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION_MINIMAL             FI_MAJOR_VERSION
 #define MPIDI_OFI_MINOR_VERSION_MINIMAL             FI_MINOR_VERSION
 
