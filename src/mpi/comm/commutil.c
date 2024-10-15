@@ -305,6 +305,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
 
     /* abstractions bleed a bit here... :(*/
     comm_p->next_sched_tag = MPIR_FIRST_NBC_TAG;
+    comm_p->next_am_tag = 0;
 
     /* Initialize the revoked flag as false */
     comm_p->revoked = 0;

@@ -10,21 +10,42 @@
 static int handle_unexp_cmpl(MPIR_Request * rreq);
 static int recv_target_cmpl_cb(MPIR_Request * rreq);
 
+static int can_do_tag(MPIR_Request * rreq)
+{
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    return MPIDI_NM_am_can_do_tag();
+#else
+    return MPIDI_REQUEST(rreq, is_local) ? MPIDI_SHM_am_can_do_tag() : MPIDI_NM_am_can_do_tag();
+#endif
+}
+
 int MPIDIG_do_cts(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
+    int source_rank = rreq->status.MPI_SOURCE;
+
     MPIDIG_send_cts_msg_t am_hdr;
     am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr));
     am_hdr.rreq_ptr = rreq;
+    if (can_do_tag(rreq)) {
+        am_hdr.tag = MPIDIG_get_next_am_tag(rreq->comm);
+        CH4_CALL(am_tag_recv(source_rank, rreq->comm,
+                             MPIDIG_TAG_RECV_COMPLETE, am_hdr.tag,
+                             MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                             MPIDIG_REQUEST(rreq, datatype), remote_vci, local_vci, rreq),
+                 MPIDI_REQUEST(rreq, is_local), mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        am_hdr.tag = -1;
+    }
     MPIR_Assert((void *) am_hdr.sreq_ptr != NULL);
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "do cts req %p handle=0x%x", rreq, rreq->handle));
 
-    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
-    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    int source_rank = rreq->status.MPI_SOURCE;
     CH4_CALL(am_send_hdr_reply(rreq->comm, source_rank, MPIDIG_SEND_CTS,
                                &am_hdr, sizeof(am_hdr), local_vci, remote_vci),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
@@ -34,6 +55,23 @@ int MPIDIG_do_cts(MPIR_Request * rreq)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIDIG_tag_recv_complete(MPIR_Request * rreq, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* MPI_TAG and MPI_SOURCE are set at the time of matching,
+     * we only update the count and MPI_ERROR here */
+    rreq->status.MPI_ERROR = status->MPI_ERROR;
+    MPIR_STATUS_COPY_COUNT(rreq->status, *status);
+
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+    MPID_Request_complete(rreq);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
 }
 
 static int handle_unexp_cmpl(MPIR_Request * rreq)
@@ -478,15 +516,26 @@ int MPIDIG_send_cts_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     int local_vci = MPIDIG_REQUEST(sreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(sreq, req->remote_vci);
     /* Start the main data transfer */
-    send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
-    CH4_CALL(am_isend_reply(sreq->comm,
-                            MPIDIG_REQUEST(sreq, u.send.dest), MPIDIG_SEND_DATA,
-                            &send_hdr, sizeof(send_hdr),
-                            MPIDIG_REQUEST(sreq, buffer),
-                            MPIDIG_REQUEST(sreq, count),
-                            MPIDIG_REQUEST(sreq, datatype), local_vci, remote_vci, sreq),
-             MPIDI_REQUEST(sreq, is_local), mpi_errno);
-    MPIR_ERR_CHECK(mpi_errno);
+
+    if (msg_hdr->tag >= 0) {
+        CH4_CALL(am_tag_send(MPIDIG_REQUEST(sreq, u.send.dest), sreq->comm,
+                             MPIDIG_SEND_DATA, msg_hdr->tag,
+                             MPIDIG_REQUEST(sreq, buffer),
+                             MPIDIG_REQUEST(sreq, count),
+                             MPIDIG_REQUEST(sreq, datatype), local_vci, remote_vci, sreq),
+                 MPIDI_REQUEST(sreq, is_local), mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
+        CH4_CALL(am_isend_reply(sreq->comm,
+                                MPIDIG_REQUEST(sreq, u.send.dest), MPIDIG_SEND_DATA,
+                                &send_hdr, sizeof(send_hdr),
+                                MPIDIG_REQUEST(sreq, buffer),
+                                MPIDIG_REQUEST(sreq, count),
+                                MPIDIG_REQUEST(sreq, datatype), local_vci, remote_vci, sreq),
+                 MPIDI_REQUEST(sreq, is_local), mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     MPIR_FUNC_EXIT;
 
