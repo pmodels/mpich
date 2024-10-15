@@ -175,6 +175,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         }
     }
 
+    if (MPIDI_OFI_REQUEST(rreq, am_req) != NULL) {
+        MPI_Status *status = &rreq->status;
+        MPIR_Request *am_req = MPIDI_OFI_REQUEST(rreq, am_req);
+        int am_recv_id = MPIDI_OFI_REQUEST(rreq, am_handler_id);
+        mpi_errno = MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, status);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
     MPIDI_Request_complete_fast(rreq);
 
   fn_exit:
