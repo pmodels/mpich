@@ -306,10 +306,40 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
             printf("    %x: %s\n", (req)->handle, (req)->info); \
         } \
     } while (0)
+
+#define DEBUG_PROGRESS_START \
+    int iter = 0; \
+    bool progress_timed_out = false; \
+    MPL_time_t time_start; \
+    if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
+        MPL_wtime(&time_start); \
+    }
+
+#define DEBUG_PROGRESS_CHECK \
+    if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
+        iter++; \
+        if (iter == 0xffff) {\
+            double time_diff = 0.0; \
+            MPL_time_t time_cur; \
+            MPL_wtime(&time_cur); \
+            MPL_wtime_diff(&time_start, &time_cur, &time_diff); \
+            if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT && !progress_timed_out) { \
+                MPIR_Request_debug(); \
+                MPL_backtrace_show(stdout); \
+                progress_timed_out = true; \
+            } else if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT * 2) { \
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**timeout"); \
+            } \
+            iter = 0; \
+        } \
+    }
+
 #else
 
 #define MPIR_REQUEST_SET_INFO(req, ...) do { } while (0)
 #define MPIR_REQUEST_DEBUG(req) do { } while (0)
+#define DEBUG_PROGRESS_START do {} while (0)
+#define DEBUG_PROGRESS_CHECK do {} while (0)
 #endif
 
 void MPII_init_request(void);

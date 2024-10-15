@@ -128,6 +128,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     CH4_CALL(am_send_hdr(rank, comm, MPIDIG_SEND, hdr, hdr_sz, vci_src, vci_dst),
              is_local, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
+    MPIR_REQUEST_SET_INFO(sreq, "MPIDI_IPCI_send_lmt: rank=%d, tag=%d, data_sz=%ld\n", rank, tag,
+                          data_sz);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();

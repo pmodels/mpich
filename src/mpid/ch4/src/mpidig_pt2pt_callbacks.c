@@ -387,6 +387,9 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 
         MPIDIG_recv_type_init(hdr->data_sz, rreq);
 
+        MPIR_REQUEST_SET_INFO(rreq, "matched rreq: source=%d, tag=%d, data_sz=%ld, msg_mode=%d",
+                              MPIDIG_REQUEST(rreq, u.recv.source), MPIDIG_REQUEST(rreq, u.recv.tag),
+                              hdr->data_sz, msg_mode);
         if (msg_mode == MSG_MODE_EAGER) {
             /* either we or transport will finish recv_copy depending on ASYNC attr */
         } else if (msg_mode == MSG_MODE_RNDV_RTS) {
