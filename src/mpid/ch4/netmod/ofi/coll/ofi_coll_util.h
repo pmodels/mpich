@@ -131,8 +131,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
 
     if (!is_root) {     /* Non-root nodes send RTR to parents */
         uint64_t match_bits =
-            MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag,
-                                   0);
+            MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag);
         MPIDI_OFI_CALL_RETRY(fi_tinject
                              (MPIDI_OFI_global.ctx[0].tx, NULL, 0,
                               MPIDI_OFI_comm_to_phys(comm_ptr, parent, 0, 0), match_bits), 0,
@@ -281,8 +280,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_tagged(void *buffer
 
     if (!is_root) {     /* Non-root nodes send RTR to parents */
         s_match_bits =
-            MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag,
-                                   0);
+            MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag);
         MPIDI_OFI_CALL_RETRY(fi_tinject
                              (MPIDI_OFI_global.ctx[0].tx, NULL, 0,
                               MPIDI_OFI_comm_to_phys(comm_ptr, parent, 0, 0), s_match_bits), 0,
@@ -444,8 +442,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
 
     if (!is_root) {     /* Non-root nodes send RTR to parents */
         s_match_bits =
-            MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag,
-                                   0);
+            MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag);
         MPIDI_OFI_CALL_RETRY(fi_tinject
                              (MPIDI_OFI_global.ctx[0].tx, NULL, 0,
                               MPIDI_OFI_comm_to_phys(comm_ptr, parent, 0, 0), s_match_bits), 0,
@@ -589,8 +586,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_rma(void *buffer, i
 
     if (!is_root) {     /* Non-root nodes send RTR to parents; this is needed to avoid unexpected messages */
         s_match_bits =
-            MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag,
-                                   0);
+            MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag);
         MPIDI_OFI_CALL_RETRY(fi_tinject
                              (MPIDI_OFI_global.ctx[0].tx, NULL, 0,
                               MPIDI_OFI_comm_to_phys(comm_ptr, parent, 0, 0), s_match_bits), 0,

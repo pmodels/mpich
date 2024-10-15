@@ -421,7 +421,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint c
     uint64_t cq_data = comm->rank;
 
     uint64_t match_bits
-        = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
+        = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag);
 
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
 
@@ -567,7 +567,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, comm->rank, dst_rank, tag);
 
     uint64_t match_bits;
-    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
+    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag);
 
     if (MPIR_CVAR_CH4_OFI_ENABLE_INJECT && !syncflag &&
         (data_sz <= MPIDI_OFI_global.max_buffered_send)) {
