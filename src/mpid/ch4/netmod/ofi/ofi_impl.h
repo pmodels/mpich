@@ -475,7 +475,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
-                                                         int source, int tag, uint64_t type)
+                                                         int source, int tag)
 {
     uint64_t match_bits;
     match_bits = contextid;
@@ -486,7 +486,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
     }
 
     match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
-    match_bits |= (MPIDI_OFI_TAG_MASK & tag) | type;
+    match_bits |= (MPIDI_OFI_TAG_MASK & tag);
     return match_bits;
 }
 
@@ -1087,8 +1087,8 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
                         uint64_t ss_bits =
                             MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int
                                                    (&MPIDI_OFI_REQUEST(request, util_id)),
-                                                   MPIR_Comm_rank(comm), request->status.MPI_TAG,
-                                                   MPIDI_OFI_SYNC_SEND_ACK);
+                                                   MPIR_Comm_rank(comm), request->status.MPI_TAG);
+                        ss_bits |= MPIDI_OFI_SYNC_SEND_ACK;
                         int r = request->status.MPI_SOURCE;
                         int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, comm, r, comm->rank,
                                                     request->status.MPI_TAG);
