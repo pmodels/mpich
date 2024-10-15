@@ -625,10 +625,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         /* inject path */
         void *pack_buf = NULL;
         if (need_pack) {
-            pack_buf = MPL_malloc(data_sz, MPL_MEM_OTHER);
+            pack_buf = MPL_aligned_alloc(64, data_sz, MPL_MEM_OTHER);
             mpi_errno = MPIR_Localcopy_gpu(buf, count, datatype, 0, &attr,
                                            pack_buf, data_sz, MPI_BYTE, 0, MPIR_GPU_ATTR_HOST,
-                                           MPL_GPU_COPY_DIRECTION_NONE,
+                                           MPL_GPU_COPY_D2H,
                                            MPIDI_OFI_gpu_get_send_engine_type(), true);
             MPIR_ERR_CHECK(mpi_errno);
             send_buf = pack_buf;
@@ -649,13 +649,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
         void *data = NULL;
         if (need_pack) {
-            void *pack_buf = MPL_malloc(data_sz, MPL_MEM_OTHER);
+            void *pack_buf = MPL_aligned_alloc(64, data_sz, MPL_MEM_OTHER);
             MPIR_ERR_CHKANDJUMP1(pack_buf == NULL, mpi_errno,
                                  MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
             mpi_errno = MPIR_Localcopy_gpu(buf, count, datatype, 0, &attr,
                                            pack_buf, data_sz, MPI_BYTE, 0, MPIR_GPU_ATTR_HOST,
-                                           MPL_GPU_COPY_DIRECTION_NONE,
+                                           MPL_GPU_COPY_D2H,
                                            MPIDI_OFI_gpu_get_send_engine_type(), true);
             MPIR_ERR_CHECK(mpi_errno);
 
