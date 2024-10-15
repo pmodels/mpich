@@ -64,7 +64,12 @@ int MPIDIG_tag_recv_complete(MPIR_Request * rreq, MPI_Status * status)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    /* status contains count and truncation (error) information */
     rreq->status = *status;
+    /* but tag and source are obtained at matching */
+    rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, u.recv.source);
+    rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
+
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
     MPID_Request_complete(rreq);
 
