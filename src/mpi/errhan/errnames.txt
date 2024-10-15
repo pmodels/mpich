@@ -953,6 +953,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **xpmem_segid: xpmem remote segid is unset
 **xpmem_get: xpmem_get failed
 **xpmem_attach: xpmem_attach failed
+**xpmem_attach %p %d: xpmem_attach failed (remote_addr=%p, size=%d)
 **xpmem_detach: xpmem_detach failed
 **xpmem_release: xpmem_release failed
 **xpmem_remove: xpmem_remove failed
