@@ -477,4 +477,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_recv(int rank, MPIR_Comm * comm,
+                                                  int handler_id, int tag,
+                                                  void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                                  int vci_src, int vci_dst, MPIR_Request * rreq)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
 #endif /* OFI_RECV_H_INCLUDED */

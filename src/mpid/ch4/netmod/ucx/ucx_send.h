@@ -168,4 +168,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
     return MPI_SUCCESS;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_send(int rank, MPIR_Comm * comm,
+                                                  int handler_id, int tag,
+                                                  const void *data, MPI_Aint count,
+                                                  MPI_Datatype datatype,
+                                                  int vci_src, int vci_dst, MPIR_Request * sreq)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
 #endif /* UCX_SEND_H_INCLUDED */
