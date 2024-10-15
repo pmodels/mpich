@@ -98,16 +98,16 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
     return (idata >> MPIDI_OFI_IDATA_GPUCHUNK_OFFSET);
 }
 
-/* There are 4 protocol bits:
- * - MPIDI_DYNPROC_SEND
- * - MPIDI_OFI_HUGE_SEND
- * - MPIDI_OFI_SYNC_SEND
- * - MPIDI_OFI_SYNC_SEND_ACK
- * The ssend ack and dynproc send bits need to be included in matching
- * to avoid matching with user messages. Because of this, we only mask
- * the ssend and huge bits. */
 #define MPIDI_OFI_PROTOCOL_BITS (5)
-#define MPIDI_OFI_PROTOCOL_MASK_BITS (2)
+/* define protocol bits without MPIDI_OFI_PROTOCOL_SHIFT */
+#define MPIDI_OFI_SYNC_SEND_ACK_0      1ULL
+#define MPIDI_OFI_DYNPROC_SEND_0       2ULL
+#define MPIDI_OFI_GPU_PIPELINE_SEND_0  4ULL
+/* the above defines separate tag spaces */
+#define MPIDI_OFI_SYNC_SEND_0          8ULL
+#define MPIDI_OFI_HUGE_SEND_0         16ULL
+/* these two are really tag-carried meta data, thus require to be masked in receive */
+#define MPIDI_OFI_PROTOCOL_MASK_0     (MPIDI_OFI_SYNC_SEND_0 | MPIDI_OFI_HUGE_SEND_0)
 
 /* Define constants for default bits allocation. The actual bits are defined in
  * ofi_capability_sets.h, which may use these defaults or define its own.
@@ -121,27 +121,35 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 #define MPIDI_OFI_SOURCE_BITS_b  23
 #define MPIDI_OFI_TAG_BITS_b     20
 
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS == MPIDI_OFI_ON
-#define MPIDI_OFI_SYNC_SEND_ACK      (1ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
-#define MPIDI_OFI_DYNPROC_SEND       (2ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
-#define MPIDI_OFI_GPU_PIPELINE_SEND  (4ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
-#define MPIDI_OFI_SYNC_SEND          (8ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
-#define MPIDI_OFI_HUGE_SEND          (16ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
-#define MPIDI_OFI_PROTOCOL_MASK      (((1ULL << MPIDI_OFI_PROTOCOL_MASK_BITS) - 1) << (MPIDI_OFI_PROTOCOL_BITS - MPIDI_OFI_PROTOCOL_MASK_BITS) << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
+/* MPIDI_OFI_CONTEXT_BITS, MPIDI_OFI_SOURCE_BITS, and MPIDI_OFI_TAG_BITS are defined in ofi_capability_sets.h.
+ * When these 3 are defined as compile-time constants, all the following macros are constants as well.
+ * With MPIDI_OFI_ENABLE_RUNTIME_CHECKS, there may be some runtime bit-calculation cost */
+#define MPIDI_OFI_PROTOCOL_SHIFT     (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS)
+#define MPIDI_OFI_SYNC_SEND_ACK      (MPIDI_OFI_SYNC_SEND_ACK_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_DYNPROC_SEND       (MPIDI_OFI_DYNPROC_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_GPU_PIPELINE_SEND  (MPIDI_OFI_GPU_PIPELINE_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_SYNC_SEND          (MPIDI_OFI_SYNC_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_HUGE_SEND          (MPIDI_OFI_HUGE_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+
+#define MPIDI_OFI_PROTOCOL_MASK      (MPIDI_OFI_PROTOCOL_MASK_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_CONTEXT_MASK       (((1ULL << MPIDI_OFI_CONTEXT_BITS) - 1) << (MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
-#define MPIDI_OFI_SOURCE_MASK        (((1ULL << MPIDI_OFI_SOURCE_BITS) - 1) << MPIDI_OFI_TAG_BITS)
 #define MPIDI_OFI_TAG_MASK           ((1ULL << MPIDI_OFI_TAG_BITS) - 1)
+
+#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS == MPIDI_OFI_ON
 /* This value comes from the fact that we use a uint32_t in
  * MPIDI_OFI_send_handler to define the dest and that is the size we expect
  * from the OFI provider for its immediate data field. */
+#define MPIDI_OFI_SOURCE_MASK        (MPIDI_OFI_SOURCE_BITS > 0 ? (((1ULL << MPIDI_OFI_SOURCE_BITS) - 1) << MPIDI_OFI_TAG_BITS) : 0x0ULL)
 #define MPIDI_OFI_MAX_RANK_BITS      (MPIDI_OFI_SOURCE_BITS > 0 ? MPIDI_OFI_SOURCE_BITS : 32)
 #else
 #if MPIDI_OFI_SOURCE_BITS == 0
 /* This value comes from the fact that we use a uint32_t in
  * MPIDI_OFI_send_handler to define the dest and that is the size we expect
  * from the OFI provider for its immediate data field. */
+#define MPIDI_OFI_SOURCE_MASK        0
 #define MPIDI_OFI_MAX_RANK_BITS      32
 #else
+#define MPIDI_OFI_SOURCE_MASK        (((1ULL << MPIDI_OFI_SOURCE_BITS) - 1) << MPIDI_OFI_TAG_BITS)
 #define MPIDI_OFI_MAX_RANK_BITS      MPIDI_OFI_SOURCE_BITS
 #endif
 #endif
