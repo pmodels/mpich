@@ -99,7 +99,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vci, int *made_progre
     MPIR_FUNC_ENTER;
 
     if (MPIDI_POSIX_global.per_vci[vci].postponed_queue) {
-        *made_progress = 1;
         /* Drain postponed queue */
         curr_sreq_hdr = MPIDI_POSIX_global.per_vci[vci].postponed_queue;
 
@@ -129,6 +128,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int vci, int *made_progre
                 MPIR_Assert(0);
         }
 
+        if (curr_sreq_hdr != MPIDI_POSIX_global.per_vci[vci].postponed_queue) {
+            *made_progress = 1;
+        }
     }
 
     MPIR_FUNC_EXIT;
