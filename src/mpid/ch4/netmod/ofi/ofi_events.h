@@ -146,8 +146,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         MPIR_Comm *c = rreq->comm;
         uint64_t ss_bits =
             MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int(&MPIDI_OFI_REQUEST(rreq, util_id)),
-                                   MPIR_Comm_rank(c), rreq->status.MPI_TAG,
-                                   MPIDI_OFI_SYNC_SEND_ACK);
+                                   MPIR_Comm_rank(c), rreq->status.MPI_TAG);
+        ss_bits |= MPIDI_OFI_SYNC_SEND_ACK;
         int r = rreq->status.MPI_SOURCE;
         /* NOTE: use target rank, reply to src */
         int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);

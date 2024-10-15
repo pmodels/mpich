@@ -105,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_prepare_tagged_control_cmd(struct fid_dom
     context_offset = MPIR_CONTEXT_COLL_OFFSET;
 
     if (cmd_type == MPIDI_OFI_TRIGGERED_TAGGED_SEND) {
-        match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
+        match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag);
         msg->tag = match_bits;
         msg->ignore = 0;
         work->op_type = FI_OP_TSEND;
@@ -285,7 +285,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_prepare_atomic_tagged_control_cmd(struct 
     rma_iov.count = count;
 
     context_offset = MPIR_CONTEXT_COLL_OFFSET;
-    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
+    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag);
     rma_iov.key = match_bits;
 
     if (is_persistent) {

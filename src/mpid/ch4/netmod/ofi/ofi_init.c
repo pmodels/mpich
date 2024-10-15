@@ -945,8 +945,9 @@ static int flush_send(int dst, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 
     fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, dst), nic, vci);
     static int data = 0;
-    uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0,
-                                                 MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
+    uint64_t match_bits =
+        MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0, MPIDI_OFI_FLUSH_TAG);
+    match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     /* Use the same direct send method as used in establishing dynamic processes */
     req->done = 0;
@@ -975,8 +976,9 @@ static int flush_recv(int src, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 
     fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, src), nic, vci);
     uint64_t mask_bits = 0;
-    uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0,
-                                                 MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
+    uint64_t match_bits =
+        MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0, MPIDI_OFI_FLUSH_TAG);
+    match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     /* Use the same direct recv method as used in establishing dynamic processes */
     req->done = 0;
