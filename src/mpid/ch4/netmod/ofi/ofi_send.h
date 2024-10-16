@@ -718,6 +718,39 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
                                             context_offset, addr, vci_src, vci_dst, request);
         MPIR_ERR_CHECK(mpi_errno);
         MPIDI_OFI_REQUEST(*request, am_req) = NULL;
+    } else if (MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr) && MPIDI_OFI_ENABLE_DATA) {
+        /* send rts and drop to mpidig, ref. mpidig_send.h - RNDV send */
+        MPIR_Request *sreq;
+        sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2, src_vci, dst_vci);
+        MPIR_ERR_CHKANDJUMP(!(*request), mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+        *request = sreq;
+        sreq->comm = comm;
+        MPIR_Comm_add_ref(comm);
+        MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
+        MPIDIG_REQUEST(sreq, count) = count;
+        MPIDIG_REQUEST(sreq, datatype) = datatype;
+        MPIDIG_REQUEST(sreq, u.send.dest) = rank;
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
+        MPIDIG_AM_SEND_SET_RNDV(am_hdr.flags, MPIDIG_RNDV_GENERIC);
+
+        int sender_nic, receiver_nic;
+        sender_nic =
+            MPIDI_OFI_multx_sender_nic_index(comm, comm->context_id, comm->rank, rank, tag);
+        receiver_nic =
+            MPIDI_OFI_multx_receiver_nic_index(comm, comm->context_id, comm->rank, rank, tag);
+
+        uint64_t match_bits;
+        match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag);
+        match_bits |= MPIDI_OFI_RNDV_SEND;
+
+        int ctx_idx = MPIDI_OFI_get_ctx_index(vci_src, sender_nic);
+        fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(MPIDIU_comm_rank_to_av(comm, rank),
+                                                   receiver_nic, vci_dst);
+        /* need tell receiver about sreq */
+        uint64_t cq_data = sreq->handle;
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                            NULL, 0, cq_data, dest_addr, match_bits),
+                             vci_src, tinject);
     } else {
         bool syncflag = (bool) MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
