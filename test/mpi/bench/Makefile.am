@@ -11,7 +11,8 @@ LDADD += -lm
 ## correctly
 noinst_PROGRAMS = \
     p2p_latency \
-    p2p_bw
+    p2p_bw \
+    bcast
 
 .def.c:
 	mydef_page $<
