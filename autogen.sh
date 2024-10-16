@@ -65,7 +65,6 @@ do_hydra=yes
 do_romio=yes
 do_pmi=yes
 do_doc=no
-do_mydef=yes
 
 yaksa_depth=
 
@@ -535,14 +534,6 @@ fn_json_gen() {
     echo_n "generating json char arrays... "
     ./maint/tuning/coll/json_gen.sh
     echo "done"
-}
-
-fn_mydef() {
-    MYDEF_BOOT=$PWD/modules/mydef_boot
-    export PATH=$MYDEF_BOOT/bin:$PATH
-    export PERL5LIB=$MYDEF_BOOT/lib/perl5
-    export MYDEFLIB=$MYDEF_BOOT/lib/MyDef
-    (cd test/mpi/bench && ./autogen.sh)
 }
 
 # internal
@@ -1111,5 +1102,3 @@ fn_build_configure
 fn_ch4_api
 
 fn_json_gen
-
-fn_mydef
