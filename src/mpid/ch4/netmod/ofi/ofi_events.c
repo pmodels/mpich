@@ -32,7 +32,10 @@ static int peek_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rre
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_OFI_HUGE_SEND & wc->tag) {
+    if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
+        mpi_errno = MPIDI_OFI_peek_rndv_event(vci, wc, rreq);
+        goto fn_exit;
+    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
         mpi_errno = MPIDI_OFI_peek_huge_event(vci, wc, rreq);
         goto fn_exit;
     }
@@ -75,6 +78,19 @@ static int peek_empty_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request
             MPIR_Assert(0);
             break;
     }
+
+    MPIR_FUNC_EXIT;
+    return MPI_SUCCESS;
+}
+
+int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* At this point, rreq is an OFI native request, already matched.
+     * We need convert it to an MPIDIG request, then call MPIDIG_do_cts
+     */
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
@@ -643,7 +659,10 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
                 break;
 
             case MPIDI_OFI_EVENT_RECV_HUGE:
-                if (wc->tag & MPIDI_OFI_HUGE_SEND) {
+                if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
+                    mpi_errno = MPIDI_OFI_recv_rndv_event(vci, wc, req);
+                    goto fn_exit;
+                } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
                     mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, req);
                 } else {
                     mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_HUGE);
