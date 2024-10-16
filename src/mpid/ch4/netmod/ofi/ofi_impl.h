@@ -472,7 +472,17 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int 
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 {
-    return (0 != (MPIDI_OFI_SYNC_SEND & match_bits));
+    return ((match_bits & MPIDI_OFI_PROTOCOL_MASK) == MPIDI_OFI_SYNC_SEND);
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_huge(uint64_t match_bits)
+{
+    return ((match_bits & MPIDI_OFI_PROTOCOL_MASK) == MPIDI_OFI_HUGE_SEND);
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_rndv(uint64_t match_bits)
+{
+    return ((match_bits & MPIDI_OFI_PROTOCOL_MASK) == MPIDI_OFI_RNDV_SEND);
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,

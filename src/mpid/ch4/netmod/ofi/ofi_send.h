@@ -37,6 +37,16 @@ cvars:
         copy_low_latency - use a low-latency copy engine
         yaksa - use Yaksa
 
+    - name        : MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD
+      category    : CH4_OFI
+      type        : int
+      default     : 16384
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Message below MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD will be sent eagerly.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -60,7 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_issue_ack_recv(MPIR_Request * sreq, MPIR_
                                                       int tag, MPIDI_av_entry_t * addr,
                                                       int vci_local, int vci_remote,
                                                       int sender_nic, int receiver_nic,
-                                                      int event_id, void *hdr)
+                                                      int event_id, int hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -70,8 +80,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_issue_ack_recv(MPIR_Request * sreq, MPIR_
                          "**nomem %s", "OFI ack request alloc");
     ackreq->event_id = event_id;
     ackreq->signal_req = sreq;
-    ackreq->ack_hdr = hdr;
-    MPIR_cc_inc(sreq->cc_ptr);
+    if (hdr_sz > 0) {
+        void *hdr = MPL_malloc(hdr_sz, MPL_MEM_OTHER);
+        MPIR_Assert(hdr);
+        ackreq->ack_hdr = hdr;
+    } else {
+        ackreq->ack_hdr = NULL;
+    }
 
     uint64_t ssend_match, ssend_mask;
     /* NOTE: for reply, we don't need rank in the match_bits */
@@ -79,7 +94,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_issue_ack_recv(MPIR_Request * sreq, MPIR_
     ssend_match |= MPIDI_OFI_ACK_SEND;
 
     struct fid_ep *rx = MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vci_local, receiver_nic)].rx;
-    MPIDI_OFI_CALL_RETRY(fi_trecv(rx, NULL, 0, NULL,
+    MPIDI_OFI_CALL_RETRY(fi_trecv(rx, ackreq->ack_hdr, hdr_sz, NULL,
                                   MPIDI_OFI_av_to_phys(addr, sender_nic, vci_remote),
                                   ssend_match, 0ULL, (void *) &(ackreq->context)),
                          vci_local, trecvsync);
@@ -593,6 +608,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
         *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         MPIR_ERR_CHECK(mpi_errno);
+    } else if (syncflag && data_sz > MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD) {
+        /* RNDV path - TODO: always do RNDV if (!is_am && data_sz > EAGER_THRESHOLD) */
+        MPIR_Request *sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2,
+                                                   vci_src /* local */ , vci_dst /* remote */);
+        MPIR_ERR_CHKANDJUMP(!sreq, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+        *request = sreq;
+        sreq->comm = comm;
+        MPIR_Comm_add_ref(comm);
+        MPIDIG_REQUEST(sreq, req->local_vci) = vci_src;
+        MPIDIG_REQUEST(sreq, req->remote_vci) = vci_dst;
+        MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
+        MPIDIG_REQUEST(sreq, count) = count;
+        MPIDIG_REQUEST(sreq, datatype) = datatype;
+        MPIDIG_REQUEST(sreq, u.send.dest) = dst_rank;
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
+
+        mpi_errno = MPIDI_OFI_issue_ack_recv(sreq, comm, context_offset, dst_rank, tag, addr,
+                                             vci_src, vci_dst, sender_nic, receiver_nic,
+                                             MPIDI_OFI_EVENT_RNDV_CTS, sizeof(int));
+        MPIR_ERR_CHECK(mpi_errno);
+        /* inject a zero-size message with MPIDI_OFI_RNDV_SEND in match_bits */
+        match_bits |= MPIDI_OFI_RNDV_SEND;
+        mpi_errno = MPIDI_OFI_send_lightweight(NULL, 0, cq_data, dst_rank, tag, comm,
+                                               match_bits, addr,
+                                               vci_src, vci_dst, sender_nic, receiver_nic);
+
     } else {
         /* normal path */
         MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vci_src);
@@ -600,10 +641,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
         if (syncflag) {
             match_bits |= MPIDI_OFI_SYNC_SEND;
-
+            MPIR_cc_inc(sreq->cc_ptr);
             mpi_errno = MPIDI_OFI_issue_ack_recv(sreq, comm, context_offset, dst_rank, tag, addr,
                                                  vci_src, vci_dst, sender_nic, receiver_nic,
-                                                 MPIDI_OFI_EVENT_SSEND_ACK, NULL);
+                                                 MPIDI_OFI_EVENT_SSEND_ACK, 0);
             MPIR_ERR_CHECK(mpi_errno);
         } else if (is_am) {
             MPIR_Assert(!syncflag);
