@@ -32,7 +32,10 @@ static int peek_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rre
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_OFI_HUGE_SEND & wc->tag) {
+    if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
+        mpi_errno = MPIDI_OFI_peek_rndv_event(vci, wc, rreq);
+        goto fn_exit;
+    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
         mpi_errno = MPIDI_OFI_peek_huge_event(vci, wc, rreq);
         goto fn_exit;
     }
@@ -290,6 +293,7 @@ static int ssend_ack_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request 
     MPIR_FUNC_ENTER;
     /* no need to cleanup the packed data buffer, it's done when the main send completes */
     MPIDI_Request_complete_fast(req->signal_req);
+    /* req->ack_hdr should be NULL */
     MPL_free(req);
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
@@ -651,7 +655,8 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
                 break;
 
             case MPIDI_OFI_EVENT_RECV_HUGE:
-                if (wc->tag & MPIDI_OFI_HUGE_SEND) {
+                /* ignoring the RNDV path for now */
+                if (MPIDI_OFI_is_tag_huge(wc->tag)) {
                     mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, req);
                 } else {
                     mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_HUGE);
@@ -680,6 +685,10 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
 
             case MPIDI_OFI_EVENT_SSEND_ACK:
                 mpi_errno = ssend_ack_event(vci, wc, req);
+                break;
+
+            case MPIDI_OFI_EVENT_RNDV_CTS:
+                mpi_errno = MPIDI_OFI_rndv_cts_event(vci, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_CHUNK_DONE:

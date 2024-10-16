@@ -33,6 +33,9 @@ cvars:
 
 int MPIDI_OFI_rma_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
 int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
+int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+int MPIDI_OFI_peek_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+int MPIDI_OFI_rndv_cts_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 
 MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_recv_engine_type(void)
 {
@@ -99,7 +102,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
     rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
 
-    if (wc->tag & MPIDI_OFI_HUGE_SEND) {
+    if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
+        mpi_errno = MPIDI_OFI_recv_rndv_event(vci, wc, rreq);
+        goto fn_exit;
+    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
         mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
         goto fn_exit;
     }
