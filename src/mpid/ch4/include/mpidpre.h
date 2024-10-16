@@ -57,6 +57,15 @@ typedef struct {
     uint8_t vci[MPIDI_CH4_MAX_VCIS];    /* list of vcis that need progress */
 } MPID_Progress_state;
 
+typedef struct {
+    MPL_atomic_int64_t val;
+    char padding[56];
+} MPL_padded_atomic_int64_t;
+
+typedef struct {
+    MPL_padded_atomic_int64_t vci_refcount[MPIDI_CH4_MAX_VCIS];    /* list of vcis that need progress */
+} MPID_Progress_state_cnt;
+
 typedef enum {
     MPIDI_PTYPE_RECV,
     MPIDI_PTYPE_SEND,

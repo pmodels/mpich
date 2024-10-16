@@ -27,7 +27,7 @@ noinst_HEADERS +=                   \
     src/include/mpir_refcount_global.h \
     src/include/mpir_refcount_vci.h \
     src/include/mpir_refcount_single.h \
-    src/include/mpir_refcount.h     \
+    src/include/mpir_atomic_flag.h  \
     src/include/mpir_assert.h       \
     src/include/mpir_misc_post.h    \
     src/include/mpir_type_defs.h    \

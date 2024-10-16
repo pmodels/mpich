@@ -763,6 +763,14 @@ enum MPIR_Combiner_enum {
 #define MPIX_GPU_SUPPORT_ZE    (1)
 #define MPIX_GPU_SUPPORT_HIP   (2)
 
+/* Continue flags */
+#define MPIX_CONT_REQBUF_VOLATILE 1<<0
+#define MPIX_CONT_PERSISTENT 1<<1
+#define MPIX_CONT_POLL_ONLY 1<<2
+#define MPIX_CONT_DEFER_COMPLETE 1<<3
+#define MPIX_CONT_INVOKE_FAILED 1<<4
+#define MPIX_CONT_IMMEDIATE 1<<5
+
 /* feature advertisement */
 #define MPIIMPL_ADVERTISES_FEATURES 1
 #define MPIIMPL_HAVE_MPI_INFO 1
@@ -842,6 +850,9 @@ typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
                       void *);
 typedef int (MPI_Datarep_conversion_function_c)(void *, MPI_Datatype, MPI_Count,
              void *, MPI_Offset, void *);
+
+/* Typedefs for continuation callback */
+typedef int (MPIX_Continue_cb_function)(int error_code, void *user_data);
 
 /* Make the C names for the dup function mixed case.
    This is required for systems that use all uppercase names for Fortran

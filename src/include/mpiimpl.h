@@ -163,6 +163,7 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_assert.h"
 #include "mpir_pointers.h"
 #include "mpir_refcount.h"
+#include "mpir_atomic_flag.h"
 #include "mpir_mem.h"
 #include "mpir_info.h"
 #include "mpir_errcodes.h"

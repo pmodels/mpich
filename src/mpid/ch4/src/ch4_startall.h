@@ -89,6 +89,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
 
     for (i = 0; i < count; i++) {
         MPIR_Request *const preq = requests[i];
+        MPIR_Request_start(preq);
         switch (preq->kind) {
             case MPIR_REQUEST_KIND__PREQUEST_SEND:
             case MPIR_REQUEST_KIND__PREQUEST_RECV:
@@ -102,6 +103,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
             case MPIR_REQUEST_KIND__PART_SEND:
             case MPIR_REQUEST_KIND__PART_RECV:
                 mpi_errno = MPIDI_part_start(preq);
+                break;
+
+            case MPIR_REQUEST_KIND__CONTINUE:
+                mpi_errno = MPIR_Continue_start(preq);
                 break;
 
             default:
