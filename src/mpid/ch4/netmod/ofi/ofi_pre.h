@@ -201,6 +201,11 @@ typedef struct {
     int am_handler_id;
     MPIR_Request *am_req;
 
+    /* always save these in case we need switch to am */
+    void *buf;
+    size_t count;
+    MPI_Datatype datatype;
+
     enum MPIDI_OFI_req_kind kind;
     union {
         struct fid_mr **send_mrs;
@@ -208,13 +213,9 @@ typedef struct {
     } huge;
     union {
         struct {
-            void *buf;
-            size_t count;
-            MPI_Datatype datatype;
             char *pack_buffer;
         } pack;
         struct {
-            MPI_Datatype datatype;      /* used in iov recv for verifying type matching */
             struct iovec *iovs;
         } nopack;
     } noncontig;
