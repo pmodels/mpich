@@ -1110,8 +1110,7 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
                     MPIR_STATUS_SET_COUNT(request->status,
                                           MPIDI_OFI_REQUEST(request, pipeline_info.offset));
 
-                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST
-                                                         (request, noncontig.pack.datatype));
+                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(request, datatype));
                     MPIR_Request_free(request);
                 }
 

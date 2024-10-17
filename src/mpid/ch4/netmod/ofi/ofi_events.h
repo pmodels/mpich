@@ -95,15 +95,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
     size_t count;
     MPIR_FUNC_ENTER;
 
+    /* update status from matched information */
+    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+    rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
+
     if (wc->tag & MPIDI_OFI_HUGE_SEND) {
         mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
         goto fn_exit;
     }
-    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
     if (!rreq->status.MPI_ERROR) {
         rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
     }
-    rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
     count = wc->len;
     MPIR_STATUS_SET_COUNT(rreq->status, count);
 
@@ -124,26 +126,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer))) {
         mpi_errno = MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
                                        MPI_BYTE, 0, NULL,
-                                       MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf),
-                                       MPIDI_OFI_REQUEST(rreq, noncontig.pack.count),
-                                       MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0, NULL,
+                                       MPIDI_OFI_REQUEST(rreq, buf),
+                                       MPIDI_OFI_REQUEST(rreq, count),
+                                       MPIDI_OFI_REQUEST(rreq, datatype), 0, NULL,
                                        MPL_GPU_COPY_H2D,
                                        MPIDI_OFI_gpu_get_recv_engine_type(), true);
         if (mpi_errno) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
         }
-        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype));
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
     } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
         MPI_Count elements;
         MPI_Count count_x = count;
-        MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype);
+        MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, datatype);
         MPIR_Get_elements_x_impl(&count_x, datatype, &elements);
         if (count_x) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
         }
 
-        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype));
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs));
     }
 
@@ -182,6 +182,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         mpi_errno = MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, status);
         MPIR_ERR_CHECK(mpi_errno);
     }
+    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
     MPIDI_Request_complete_fast(rreq);
 
   fn_exit:

@@ -59,17 +59,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, MPI_D
     struct iovec *iovs;
     iovs = MPL_malloc(num_contig * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs) = iovs;
-    MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype) = datatype;
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     MPI_Aint actual_iov_len;
     MPIR_Typerep_to_iov_offset(buf, count, datatype, 0, iovs, num_contig, &actual_iov_len);
     assert(num_contig == actual_iov_len);
 
-    if (rreq->comm == NULL) {
-        rreq->comm = comm;
-        MPIR_Comm_add_ref(comm);
-    }
     /* Read ordering unnecessary for context_id, so use relaxed load */
     MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
 
@@ -161,6 +155,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     *request = rreq;
     MPIDI_OFI_REQUEST(rreq, kind) = MPIDI_OFI_req_kind__any;
+
+    MPIDI_OFI_REQUEST(rreq, buf) = buf;
+    MPIDI_OFI_REQUEST(rreq, count) = count;
+    MPIDI_OFI_REQUEST(rreq, datatype) = datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+
+    if (rreq->comm == NULL) {
+        rreq->comm = comm;
+        MPIR_Comm_add_ref(comm);
+    }
+
     if (!flags) {
         MPIDI_OFI_REQUEST(rreq, huge.remote_info) = NULL;       /* for huge recv remote info */
     }
@@ -257,15 +262,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
             /* Save original buf, datatype and count */
             MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = host_buf;
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = buf;
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
-            MPIR_Datatype_add_ref_if_not_builtin(datatype);
-
-            if (rreq->comm == NULL) {
-                rreq->comm = comm;
-                MPIR_Comm_add_ref(comm);
-            }
 
             MPIDI_OFI_gpu_pipeline_request *chunk_req;
             chunk_req = (MPIDI_OFI_gpu_pipeline_request *)
@@ -290,18 +286,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer);
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = buf;
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
     } else {
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = NULL;
     }
 
-    if (rreq->comm == NULL) {
-        rreq->comm = comm;
-        MPIR_Comm_add_ref(comm);
-    }
     /* Read ordering unnecessary for context_id, so use relaxed load */
     MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
     MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
