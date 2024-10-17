@@ -125,9 +125,9 @@ static int pipeline_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * r, 
     wc_buf = req->buf;
     MPL_free(r);
 
-    void *recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf);
-    size_t recv_count = MPIDI_OFI_REQUEST(rreq, noncontig.pack.count);
-    MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype);
+    void *recv_buf = MPIDI_OFI_REQUEST(rreq, buf);
+    size_t recv_count = MPIDI_OFI_REQUEST(rreq, count);
+    MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, datatype);
 
     fi_addr_t remote_addr = MPIDI_OFI_REQUEST(rreq, pipeline_info.remote_addr);
     vci_local = MPIDI_OFI_REQUEST(rreq, pipeline_info.vci_local);
@@ -768,24 +768,29 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                      * NOTE: assuming only the receive request can be cancelled and reach here
                      */
                     int event_id = MPIDI_OFI_REQUEST(req, event_id);
-                    if (event_id == MPIDI_OFI_EVENT_DYNPROC_DONE) {
-                        dynproc_done_event(vci, e.op_context, req);
-                    } else {
-                        /* assume it is a pending recv */
-                        MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
-                        MPIR_STATUS_SET_COUNT(req->status, 0);
-                        if ((event_id == MPIDI_OFI_EVENT_RECV_PACK ||
-                             event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
-                            MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
-                            MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST
-                                                                 (req, noncontig.pack.datatype));
-                            MPL_free(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
-                        } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
-                            MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST
-                                                                 (req, noncontig.nopack.datatype));
-                            MPL_free(MPIDI_OFI_REQUEST(req, noncontig.nopack.iovs));
-                        }
-                        MPIDI_Request_complete_fast(req);
+                    switch (event_id) {
+                        case MPIDI_OFI_EVENT_DYNPROC_DONE:
+                            dynproc_done_event(vci, e.op_context, req);
+                            break;
+                        case MPIDI_OFI_EVENT_RECV:
+                        case MPIDI_OFI_EVENT_RECV_PACK:
+                        case MPIDI_OFI_EVENT_RECV_NOPACK:
+                        case MPIDI_OFI_EVENT_RECV_HUGE:
+                            MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
+                            MPIR_STATUS_SET_COUNT(req->status, 0);
+                            MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(req, datatype));
+                            if ((event_id == MPIDI_OFI_EVENT_RECV_PACK ||
+                                 event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
+                                MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer)) {
+                                MPL_free(MPIDI_OFI_REQUEST(req, noncontig.pack.pack_buffer));
+                            } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
+                                MPL_free(MPIDI_OFI_REQUEST(req, noncontig.nopack.iovs));
+                            }
+                            MPIDI_Request_complete_fast(req);
+                            break;
+                        default:
+                            /* Assert? */
+                            break;
                     }
                     break;
 
