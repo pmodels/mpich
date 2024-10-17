@@ -626,7 +626,7 @@ def dump_f77_c_func(func, is_cptr=False):
                 if p['param_direction'] == 'out':
                     if p['length'] is None:
                         dump_status(p['name'], False, True)
-                    elif RE.match(r'mpix?_(wait|test|request_get_status_)all', func['name'], re.IGNORECASE):
+                    elif RE.match(r'mpix?_(wait|test|request_get_status_|continue)all', func['name'], re.IGNORECASE):
                         dump_statuses(p['name'], "(*count)", "(*count)", False, True)
                     elif RE.match(r'mpix?_(wait|test|request_get_status_)some', func['name'], re.IGNORECASE):
                         dump_statuses(p['name'], "(*incount)", "(*outcount)", False, True)

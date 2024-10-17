@@ -36,6 +36,7 @@ typedef enum MPIR_Request_kind_t {
     MPIR_REQUEST_KIND__COLL,
     MPIR_REQUEST_KIND__MPROBE,  /* see NOTE-R1 */
     MPIR_REQUEST_KIND__RMA,
+    MPIR_REQUEST_KIND__CONTINUE,
     MPIR_REQUEST_KIND__LAST
 #ifdef MPID_REQUEST_KIND_DECL
         , MPID_REQUEST_KIND_DECL
@@ -59,6 +60,15 @@ typedef enum MPIR_Request_kind_t {
 typedef void (MPIR_Grequest_f77_cancel_function) (void *, MPI_Fint *, MPI_Fint *);
 typedef void (MPIR_Grequest_f77_free_function) (void *, MPI_Fint *);
 typedef void (MPIR_Grequest_f77_query_function) (void *, MPI_Fint *, MPI_Fint *);
+
+/* Typedefs for request callback */
+typedef void (MPIR_Request_callback_function) (MPIR_Request *, bool, void *);
+struct MPIR_Request_cb_t {
+    MPIR_Request_callback_function *fn;
+    void *arg;
+    bool is_persistent;
+    struct MPIR_Request_cb_t *next;
+};
 
 /* vtable-ish structure holding generalized request function pointers and other
  * state.  Saves ~48 bytes in pt2pt requests on many platforms. */
@@ -139,6 +149,13 @@ enum MPIR_sched_type {
     MPIR_SCHED_GENTRAN
 };
 
+/* Declaration for continue */
+struct MPIR_Continue_context;
+struct MPIR_Continue;
+int MPIR_Continue_start(MPIR_Request * request);
+void MPIR_Continue_progress(MPIR_Request *request);
+int MPIR_Continue_progress_tls();
+
 /*S
   MPIR_Request - Description of the Request data structure
 
@@ -173,6 +190,13 @@ struct MPIR_Request {
     MPIR_Comm *comm;
     /* Status is needed for wait/test/recv */
     MPI_Status status;
+    /* Callback */
+    MPID_Thread_mutex_t cbs_lock;
+    bool cbs_invoked;
+    struct {
+        struct MPIR_Request_cb_t *head;
+        struct MPIR_Request_cb_t *tail;
+    } cbs;
 
     union {
         struct {
@@ -207,6 +231,21 @@ struct MPIR_Request {
         struct {
             MPIR_Win *win;
         } rma;                  /* kind : MPIR_REQUEST_KIND__RMA */
+        struct {
+            MPL_atomic_int_t active_flag;       /* flag indicating whether in a start-complete active period.
+                                                 * Value is 0 or 1. */
+            struct {
+                struct MPIR_Continue_context *head, *tail;
+                MPID_Thread_mutex_t lock;
+            } cont_context_on_hold_list;
+            bool is_pool_only;
+            int max_poll;
+            struct {
+                struct MPIR_Continue *head, *tail;
+                MPID_Thread_mutex_t lock;
+            } ready_poll_only_cont_list;
+            MPID_Progress_state_cnt *state;
+        } cont;
         /* Reserve space for local usages. For example, threadcomm, the actual struct
          * is defined locally and is used via casting */
         char dummy[MPIR_REQUEST_UNION_SIZE];
@@ -359,7 +398,8 @@ static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
             req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_RECV ||
             req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_COLL ||
             req_ptr->kind == MPIR_REQUEST_KIND__PART_SEND ||
-            req_ptr->kind == MPIR_REQUEST_KIND__PART_RECV);
+            req_ptr->kind == MPIR_REQUEST_KIND__PART_RECV ||
+            req_ptr->kind == MPIR_REQUEST_KIND__CONTINUE);
 }
 
 static inline int MPIR_Part_request_is_active(MPIR_Request * req_ptr)
@@ -375,6 +415,21 @@ static inline void MPIR_Part_request_inactivate(MPIR_Request * req_ptr)
 static inline void MPIR_Part_request_activate(MPIR_Request * req_ptr)
 {
     MPL_atomic_store_int(&req_ptr->u.part.active_flag, 1);
+}
+
+static inline int MPIR_Cont_request_is_active(MPIR_Request * req_ptr)
+{
+    return MPL_atomic_load_int(&req_ptr->u.cont.active_flag);
+}
+
+static inline void MPIR_Cont_request_inactivate(MPIR_Request * req_ptr)
+{
+    MPL_atomic_store_int(&req_ptr->u.cont.active_flag, 0);
+}
+
+static inline void MPIR_Cont_request_activate(MPIR_Request * req_ptr)
+{
+    MPL_atomic_store_int(&req_ptr->u.cont.active_flag, 1);
 }
 
 /* Return whether a request is active.
@@ -395,6 +450,8 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
             case MPIR_REQUEST_KIND__PART_SEND:
             case MPIR_REQUEST_KIND__PART_RECV:
                 return MPIR_Part_request_is_active(req_ptr);
+            case MPIR_REQUEST_KIND__CONTINUE:
+                return MPIR_Cont_request_is_active(req_ptr);
             default:
                 return 1;       /* regular request is always active */
         }
@@ -408,6 +465,7 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
                                          | MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   \
                                          | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
 
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_cb_init(MPIR_Request * req);
 /* NOTE: Pool-specific request creation is unsafe unless under global thread granularity.
  */
 static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t kind, int pool,
@@ -456,6 +514,7 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
     MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
 
     req->comm = NULL;
+    MPIR_Request_cb_init(req);
 
     switch (kind) {
         case MPIR_REQUEST_KIND__COLL:
@@ -530,6 +589,10 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_null_recv(void)
     return get_builtin_req(HANDLE_INDEX(MPIR_REQUEST_NULL_RECV), MPIR_REQUEST_KIND__RECV);
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIR_Invoke_callback(MPIR_Request * req, bool in_cs);
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_cb_free(MPIR_Request * req);
+void MPIR_Continue_destroy_impl(MPIR_Request *cont_req);
+
 int MPIR_Grequest_free(MPIR_Request * request_ptr);
 static inline void MPIR_Request_free_with_safety(MPIR_Request * req,
                                                  int need_safety, int *errno_out)
@@ -600,6 +663,9 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req,
                     *errno_out = mpi_errno;
                 }
                 break;
+            case MPIR_REQUEST_KIND__CONTINUE:
+                MPIR_Continue_destroy_impl(req);
+                break;
             default:
                 break;
         }
@@ -609,6 +675,7 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req,
          * when we destroy a request */
         /* FIXME: We need a way to call these routines ONLY when the
          * related ref count has become zero. */
+        MPIR_Request_cb_free(req);
         if (req->comm != NULL) {
             if (MPIR_Request_is_persistent(req)) {
                 MPIR_Comm_delete_inactive_request(req->comm, req);
@@ -652,6 +719,76 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_free_return(MPIR_Request * req)
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_cb_init(MPIR_Request * req)
+{
+    req->cbs_invoked = false;
+    req->cbs.head = NULL;
+    req->cbs.tail = NULL;
+    int err;
+    MPID_Thread_mutex_create(&req->cbs_lock, &err);
+    MPIR_Assert(!err);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_cb_free(MPIR_Request * req)
+{
+    int err;
+    MPID_Thread_mutex_destroy(&req->cbs_lock, &err);
+    MPIR_Assert(!err);
+    // free all the persistent callbacks
+    while (req->cbs.head) {
+        struct MPIR_Request_cb_t *cb = req->cbs.head;
+        MPIR_Assert(cb->is_persistent);
+        LL_DELETE(req->cbs.head, req->cbs.tail, cb);
+        MPL_free(cb);
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIR_Register_callback(MPIR_Request * req,
+                                                     MPIR_Request_callback_function *cb_fn,
+                                                     void *cb_arg,
+                                                     bool is_persistent)
+{
+    if (MPIR_Request_is_complete(req))
+        return false;
+    MPID_THREAD_CS_ENTER(VCI, req->cbs_lock);
+    bool succeed = !req->cbs_invoked;
+    if (succeed) {
+        struct MPIR_Request_cb_t *cb = MPL_malloc(sizeof(struct MPIR_Request_cb_t), MPL_MEM_OTHER);
+        cb->fn = cb_fn;
+        cb->arg = cb_arg;
+        cb->is_persistent = is_persistent;
+        LL_APPEND(req->cbs.head, req->cbs.tail, cb);
+    }
+    MPID_THREAD_CS_EXIT(VCI, req->cbs_lock);
+    return succeed;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIR_Invoke_callback(MPIR_Request * req, bool in_cs)
+{
+    /* At this point, for each req, only one thread should execute this code. */
+    MPIR_Assert(!req->cbs_invoked);
+    MPID_THREAD_CS_ENTER(VCI, req->cbs_lock);
+    req->cbs_invoked = true;
+    MPID_THREAD_CS_EXIT(VCI, req->cbs_lock);
+    /* So we do not need to protect this check */
+    if (!req->cbs.head) {
+        return;
+    }
+    while (req->cbs.head) {
+        struct MPIR_Request_cb_t *cb = req->cbs.head;
+        cb->fn(req, in_cs, cb->arg);
+        if (!cb->is_persistent) {
+            LL_DELETE(req->cbs.head, req->cbs.tail, cb);
+            MPL_free(cb);
+        }
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_start(MPIR_Request * req)
+{
+    req->cbs_invoked = false;
+}
+
 /* Requests that are not created inside device (general requests, nonblocking collective
  * requests such as sched, tsp, hcoll) should call MPIR_Request_complete.
  * MPID_Request_complete are called inside device critical section, therefore, potentially
@@ -660,7 +797,13 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_free_return(MPIR_Request * req)
 MPL_STATIC_INLINE_PREFIX void MPIR_Request_complete(MPIR_Request * req)
 {
     MPIR_cc_set(&req->cc, 0);
+    MPIR_Invoke_callback(req, false);
     MPIR_Request_free(req);
+}
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_complete_nofree(MPIR_Request * req)
+{
+    MPIR_cc_set(&req->cc, 0);
+    MPIR_Invoke_callback(req, false);
 }
 
 /* The "fastpath" version of MPIR_Request_completion_processing.  It only handles
@@ -801,6 +944,9 @@ int MPIR_Waitany(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status
 int MPIR_Waitsome(int incount, MPIR_Request * request_ptrs[],
                   int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
 int MPIR_Parrived(MPIR_Request * request_ptr, int partition, int *flag);
+int MPIR_Continueall_impl(int count, MPIR_Request *request_ptrs[],
+                          MPIX_Continue_cb_function *cb, void *cb_data, int flags,
+                          MPI_Status *array_of_statuses, MPIR_Request *cont_request_ptr);
 
 void MPIR_Request_debug(void);
 
