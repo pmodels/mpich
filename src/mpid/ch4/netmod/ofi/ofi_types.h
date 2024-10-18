@@ -100,7 +100,7 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 
 #define MPIDI_OFI_PROTOCOL_BITS (6)
 /* define protocol bits without MPIDI_OFI_PROTOCOL_SHIFT */
-#define MPIDI_OFI_SYNC_SEND_ACK_0      1ULL
+#define MPIDI_OFI_ACK_SEND_0      1ULL
 #define MPIDI_OFI_DYNPROC_SEND_0       2ULL
 #define MPIDI_OFI_GPU_PIPELINE_SEND_0  4ULL
 #define MPIDI_OFI_AM_SEND_0           32ULL
@@ -126,7 +126,7 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
  * When these 3 are defined as compile-time constants, all the following macros are constants as well.
  * With MPIDI_OFI_ENABLE_RUNTIME_CHECKS, there may be some runtime bit-calculation cost */
 #define MPIDI_OFI_PROTOCOL_SHIFT     (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS)
-#define MPIDI_OFI_SYNC_SEND_ACK      (MPIDI_OFI_SYNC_SEND_ACK_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_ACK_SEND           (MPIDI_OFI_ACK_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_DYNPROC_SEND       (MPIDI_OFI_DYNPROC_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_GPU_PIPELINE_SEND  (MPIDI_OFI_GPU_PIPELINE_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_SYNC_SEND          (MPIDI_OFI_SYNC_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
@@ -253,7 +253,8 @@ typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIR_Request *signal_req;
-} MPIDI_OFI_ssendack_request_t;
+    void *ack_hdr;              /* can be NULL */
+} MPIDI_OFI_ack_request_t;
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
