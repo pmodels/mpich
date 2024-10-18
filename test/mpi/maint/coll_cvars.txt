@@ -236,6 +236,7 @@ algorithms:
             composition:4
             smp
             recursive_doubling
+            recursive_multiplying
             reduce_scatter_allgather
 	    tree
                 .MPIR_CVAR_ALLREDUCE_TREE_TYPE=knomial_1,knomial_2,kary
