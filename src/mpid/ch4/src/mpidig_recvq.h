@@ -79,7 +79,7 @@ enum MPIDIG_queue_type {
         if (qtype_ == MPIDIG_PT2PT_UNEXP) {                  \
             MPIR_T_DO_EVENT(unexp_message_indices[0],        \
                             MPI_T_CB_REQUIRE_MPI_RESTRICTED, \
-                            &MPIDIG_REQUEST(req, u.recv.source));     \
+                            &(req->status.MPI_SOURCE));      \
         }                                                    \
     } while (0)
 
@@ -88,7 +88,7 @@ enum MPIDIG_queue_type {
         if (qtype_ == MPIDIG_PT2PT_UNEXP) {                  \
             MPIR_T_DO_EVENT(unexp_message_indices[1],        \
                             MPI_T_CB_REQUIRE_MPI_RESTRICTED, \
-                            &MPIDIG_REQUEST(req, u.recv.source));     \
+                            &(req->status.MPI_SOURCE));      \
         }                                                    \
     } while (0)
 
@@ -98,18 +98,15 @@ MPL_STATIC_INLINE_PREFIX bool MPIDIG_match_request(int rank, int tag,
                                                    enum MPIDIG_queue_type qtype)
 {
     if (qtype == MPIDIG_PT2PT_POSTED) {
-        return (rank == MPIDIG_REQUEST(req, u.recv.source) ||
-                MPIDIG_REQUEST(req, u.recv.source) == MPI_ANY_SOURCE) &&
-            (tag == MPIR_TAG_MASK_ERROR_BITS(MPIDIG_REQUEST(req, u.recv.tag)) ||
-             MPIDIG_REQUEST(req, u.recv.tag) == MPI_ANY_TAG) &&
+        return (rank == req->status.MPI_SOURCE || req->status.MPI_SOURCE == MPI_ANY_SOURCE) &&
+            (tag == req->status.MPI_TAG || req->status.MPI_TAG == MPI_ANY_TAG) &&
             context_id == MPIDIG_REQUEST(req, u.recv.context_id);
     } else if (qtype == MPIDIG_PT2PT_UNEXP) {
-        return (rank == MPIDIG_REQUEST(req, u.recv.source) || rank == MPI_ANY_SOURCE) &&
-            (tag == MPIR_TAG_MASK_ERROR_BITS(MPIDIG_REQUEST(req, u.recv.tag)) ||
-             tag == MPI_ANY_TAG) && context_id == MPIDIG_REQUEST(req, u.recv.context_id);
+        return (rank == req->status.MPI_SOURCE || rank == MPI_ANY_SOURCE) &&
+            (tag == req->status.MPI_TAG || tag == MPI_ANY_TAG) &&
+            context_id == MPIDIG_REQUEST(req, u.recv.context_id);
     } else if (qtype == MPIDIG_PART) {
-        return rank == MPIDI_PART_REQUEST(req, u.recv.source) &&
-            tag == MPIR_TAG_MASK_ERROR_BITS(MPIDI_PART_REQUEST(req, u.recv.tag)) &&
+        return rank == req->status.MPI_SOURCE && tag == req->status.MPI_TAG &&
             context_id == MPIDI_PART_REQUEST(req, u.recv.context_id);
     } else {
         /* unknown queue type */
