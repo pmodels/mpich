@@ -159,6 +159,17 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
             }
             break;
 
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_recursive_multiplying:
+            {
+                json_object_object_foreach(obj, key, val) {
+                    ckey = MPL_strdup_no_spaces(key);
+                    if (!strncmp(ckey, "k=", strlen("k=")))
+                        cnt->u.allreduce.intra_recursive_multiplying.k = atoi(ckey + strlen("k="));
+                    MPL_free(ckey);
+                }
+            }
+            break;
+
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_tree:
             {
                 json_object_object_foreach(obj, key, val) {
@@ -384,6 +395,8 @@ void *MPII_Create_container(struct json_object *obj)
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allgatherv_allcomm_nb;
         else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_intra_recursive_doubling"))
             cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_recursive_doubling;
+        else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_intra_recursive_multiplying"))
+            cnt->id = MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_recursive_multiplying;
         else if (!strcmp(ckey, "algorithm=MPIR_Allreduce_intra_reduce_scatter_allgather"))
             cnt->id =
                 MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_reduce_scatter_allgather;
