@@ -534,11 +534,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
     /* check striping path */
     if (MPIDI_OFI_COMM(comm).enable_striping && data_sz >= MPIDI_OFI_global.stripe_threshold) {
+        syncflag = false;
         do_striping = true;
     }
 
     /* check striping path */
     if (!do_striping && data_sz >= MPIDI_OFI_global.max_msg_size) {
+        syncflag = false;
         do_huge = true;
     }
 
