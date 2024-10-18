@@ -819,3 +819,30 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
   fn_fail:
     goto fn_exit;
 }
+
+int MPIDI_OFI_send_ack(MPIR_Request * rreq, int context_id, void *hdr, int hdr_sz)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Comm *comm = rreq->comm;
+    int tag = rreq->status.MPI_TAG;
+    /* NOTE: we are dst_rank, reply to src_rank */
+    int src_rank = rreq->status.MPI_SOURCE;
+    int dst_rank = comm->rank;
+
+    /* NOTE: this is a reply, we don't need rank in the match bits */
+    uint64_t match_bits = MPIDI_OFI_init_sendtag(context_id, 0, tag);
+    match_bits |= MPIDI_OFI_SYNC_SEND_ACK;
+
+    int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, comm, src_rank, dst_rank, tag);
+    int vci_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, src_rank, dst_rank, tag);
+    int nic = 0;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vci_dst, nic);
+    fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(comm, src_rank, nic, vci_src);
+    MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx, hdr, hdr_sz,
+                                    dest_addr, match_bits), vci_dst, tinject);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}

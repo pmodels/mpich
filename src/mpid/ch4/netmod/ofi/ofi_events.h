@@ -147,31 +147,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs));
     }
 
-    /* If synchronous, ack and complete when the ack is done */
+    /* If synchronous, send ack */
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
-        MPIR_Comm *c = rreq->comm;
         int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
-        uint64_t ss_bits =
-            MPIDI_OFI_init_sendtag(context_id, MPIR_Comm_rank(c), rreq->status.MPI_TAG);
-        ss_bits |= MPIDI_OFI_SYNC_SEND_ACK;
-        int r = rreq->status.MPI_SOURCE;
-        /* NOTE: use target rank, reply to src */
-        int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
-        int vci_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
-        int vci_local = vci_dst;
-        int vci_remote = vci_src;
-        MPIR_Assert(vci_local == vci);
-        int nic = 0;
-        int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
-        fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(c, r, nic, vci_remote);
-        if (MPIDI_OFI_ENABLE_DATA) {
-            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
-                                                MPIR_Comm_rank(c), dest_addr, ss_bits),
-                                 vci_local, tinjectdata);
-        } else {
-            MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
-                                            dest_addr, ss_bits), vci_local, tinject);
-        }
+        mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, NULL, 0);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (MPIDI_OFI_REQUEST(rreq, am_req) != NULL) {
