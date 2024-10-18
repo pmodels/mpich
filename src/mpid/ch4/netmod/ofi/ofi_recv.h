@@ -64,9 +64,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, MPI_D
     MPIR_Typerep_to_iov_offset(buf, count, datatype, 0, iovs, num_contig, &actual_iov_len);
     assert(num_contig == actual_iov_len);
 
-    /* Read ordering unnecessary for context_id, so use relaxed load */
-    MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
-
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_NOPACK;
 
     msg.msg_iov = iovs;
@@ -156,6 +153,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     *request = rreq;
     MPIDI_OFI_REQUEST(rreq, kind) = MPIDI_OFI_req_kind__any;
 
+    MPIDI_OFI_REQUEST(rreq, context_id) = context_id;
+
     MPIDI_OFI_REQUEST(rreq, buf) = buf;
     MPIDI_OFI_REQUEST(rreq, count) = count;
     MPIDI_OFI_REQUEST(rreq, datatype) = datatype;
@@ -230,7 +229,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         if (force_gpu_pack && MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE &&
             data_sz >= MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD) {
             /* Pipeline path */
-            MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
             MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT;
             /* Only post first recv with pipeline chunk size. */
             char *host_buf = NULL;
@@ -291,7 +289,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
 
     /* Read ordering unnecessary for context_id, so use relaxed load */
-    MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
     MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
     MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
 

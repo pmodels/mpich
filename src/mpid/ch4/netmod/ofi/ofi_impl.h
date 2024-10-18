@@ -1085,8 +1085,7 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
                     if (unlikely(MPIDI_OFI_REQUEST(request, pipeline_info.is_sync))) {
                         MPIR_Comm *comm = request->comm;
                         uint64_t ss_bits =
-                            MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int
-                                                   (&MPIDI_OFI_REQUEST(request, util_id)),
+                            MPIDI_OFI_init_sendtag(MPIDI_OFI_REQUEST(request, context_id),
                                                    MPIR_Comm_rank(comm), request->status.MPI_TAG);
                         ss_bits |= MPIDI_OFI_SYNC_SEND_ACK;
                         int r = request->status.MPI_SOURCE;
