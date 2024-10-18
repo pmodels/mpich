@@ -286,7 +286,7 @@ static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request 
 
 static int ssend_ack_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
-    MPIDI_OFI_ssendack_request_t *req = (MPIDI_OFI_ssendack_request_t *) sreq;
+    MPIDI_OFI_ack_request_t *req = (MPIDI_OFI_ack_request_t *) sreq;
     MPIR_FUNC_ENTER;
     /* no need to cleanup the packed data buffer, it's done when the main send completes */
     MPIDI_Request_complete_fast(req->signal_req);
@@ -832,7 +832,7 @@ int MPIDI_OFI_send_ack(MPIR_Request * rreq, int context_id, void *hdr, int hdr_s
 
     /* NOTE: this is a reply, we don't need rank in the match bits */
     uint64_t match_bits = MPIDI_OFI_init_sendtag(context_id, 0, tag);
-    match_bits |= MPIDI_OFI_SYNC_SEND_ACK;
+    match_bits |= MPIDI_OFI_ACK_SEND;
 
     int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, comm, src_rank, dst_rank, tag);
     int vci_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, src_rank, dst_rank, tag);
