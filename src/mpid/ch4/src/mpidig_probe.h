@@ -24,9 +24,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
 
     if (unexp_req) {
         *flag = 1;
+        /* MPI_SOURCE and MPI_TAG should be already set */
         unexp_req->status.MPI_ERROR = MPI_SUCCESS;
-        unexp_req->status.MPI_SOURCE = MPIDIG_REQUEST(unexp_req, u.recv.source);
-        unexp_req->status.MPI_TAG = MPIDIG_REQUEST(unexp_req, u.recv.tag);
         MPIR_STATUS_SET_COUNT(unexp_req->status, MPIDIG_REQUEST(unexp_req, count));
 
         MPIR_Request_extract_status(unexp_req, status);
@@ -62,9 +61,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
         (*message)->comm = comm;
         MPIR_Comm_add_ref(comm);
 
+        /* MPI_SOURCE and MPI_TAG should be already set */
         unexp_req->status.MPI_ERROR = MPI_SUCCESS;
-        unexp_req->status.MPI_SOURCE = MPIDIG_REQUEST(unexp_req, u.recv.source);
-        unexp_req->status.MPI_TAG = MPIDIG_REQUEST(unexp_req, u.recv.tag);
         MPIR_STATUS_SET_COUNT(unexp_req->status, MPIDIG_REQUEST(unexp_req, count));
         MPIDIG_REQUEST(unexp_req, req->status) |= MPIDIG_REQ_UNEXP_DQUED;
 

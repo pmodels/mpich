@@ -10,6 +10,11 @@
 
 static void part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_msg_t * msg_hdr)
 {
+    rreq->status.MPI_SOURCE = msg_hdr->src_rank;
+    rreq->status.MPI_TAG = msg_hdr->tag;
+    rreq->status.MPI_ERROR = MPI_SUCCESS;
+    MPIR_STATUS_SET_COUNT(rreq->status, msg_hdr->data_sz);
+
     MPIDIG_PART_REQUEST(rreq, u.recv).sdata_size = msg_hdr->data_sz;
     MPIDIG_PART_REQUEST(rreq, peer_req_ptr) = msg_hdr->sreq_ptr;
 }
@@ -79,8 +84,6 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
         MPIR_ERR_CHKANDSTMT(unexp_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
 
-        MPIDI_PART_REQUEST(unexp_req, u.recv.source) = msg_hdr->src_rank;
-        MPIDI_PART_REQUEST(unexp_req, u.recv.tag) = msg_hdr->tag;
         MPIDI_PART_REQUEST(unexp_req, u.recv.context_id) = msg_hdr->context_id;
         part_rreq_update_sinfo(unexp_req, msg_hdr);
 
