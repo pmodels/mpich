@@ -338,6 +338,10 @@ allreduce-intra:
     smp
         restrictions: commutative, parent-comm
     recursive_doubling
+    recursive_multiplying
+        extra_params: k
+        cvar_params: RECURSIVE_MULTIPLYING_KVAL
+        restrictions: commutative
     reduce_scatter_allgather
         restrictions: size-ge-pof2, builtin-op
     tree
