@@ -286,8 +286,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge(const void *data, MPI_Aint data
      * MPIDI_OFI_global.max_msg_size */
     sreq->comm = comm;
     MPIR_Comm_add_ref(comm);
-    /* Store ordering unnecessary for dst_rank, so use relaxed store */
-    MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(sreq, util_id), dst_rank);
 
     /* send ctrl message first */
     MPIDI_OFI_send_control_t ctrl;
