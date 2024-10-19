@@ -316,15 +316,6 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
 
     if (status == MPI_STATUS_IGNORE)
         status = &mystatus;
-    switch (errflag) {
-        case MPIR_ERR_NONE:
-            break;
-        case MPIR_ERR_PROC_FAILED:
-            MPIR_TAG_SET_PROC_FAILURE_BIT(sendtag);
-            /* fall through */
-        default:
-            MPIR_TAG_SET_ERROR_BIT(sendtag);
-    }
 
     MPIR_PT2PT_ATTR_SET_CONTEXT_OFFSET(attr, MPIR_CONTEXT_COLL_OFFSET);
 
