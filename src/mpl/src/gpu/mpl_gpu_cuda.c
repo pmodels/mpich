@@ -587,3 +587,10 @@ bool MPL_gpu_stream_is_valid(MPL_gpu_stream_t stream)
     result = cudaStreamQuery(stream);
     return (result != cudaErrorInvalidResourceHandle);
 }
+
+int MPL_gpu_stream_synchronize(cudaStream_t stream)
+{
+    cudaError_t result;
+    result = cudaStreamSynchronize(stream);
+    return result;
+}
