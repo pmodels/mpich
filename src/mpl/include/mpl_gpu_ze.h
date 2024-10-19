@@ -26,7 +26,6 @@ typedef struct _MPL_gpu_ipc_mem_handle_t {
     fd_pid_t data;
 } MPL_gpu_ipc_mem_handle_t;
 
-typedef ze_device_handle_t MPL_gpu_device_handle_t;
 typedef ze_alloc_attr_t MPL_gpu_device_attr;
 
 typedef struct MPL_cmdlist_pool {
@@ -52,7 +51,7 @@ typedef int MPL_gpu_stream_t;
 typedef volatile int MPL_gpu_event_t;
 
 #define MPL_GPU_STREAM_DEFAULT 0
-#define MPL_GPU_DEVICE_INVALID NULL
+#define MPL_GPU_DEVICE_INVALID -1
 
 #define MPL_GPU_DEV_AFFINITY_ENV "ZE_AFFINITY_MASK"
 
@@ -67,7 +66,7 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int is_shared_h
 int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * ipc_handle, int shared_handle,
                                 int dev_id, size_t size, void **ptr);
 int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
-                               MPL_gpu_device_handle_t device, void **mmaped_ptr);
+                               int device, void **mmaped_ptr);
 int MPL_ze_mmap_handle_unmap(void *ptr, int dev_id);
 
 #endif /* ifndef MPL_GPU_ZE_H_INCLUDED */

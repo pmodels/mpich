@@ -22,6 +22,7 @@
 #include "mpl_gpu_fallback.h"
 #endif
 
+/* NOTE: must agree with MPIX_Pointer_type in mpi.h */
 typedef enum {
     MPL_GPU_POINTER_UNREGISTERED_HOST = 0,
     MPL_GPU_POINTER_REGISTERED_HOST,
@@ -36,7 +37,7 @@ typedef enum {
 
 typedef struct {
     MPL_pointer_type_t type;
-    MPL_gpu_device_handle_t device;
+    int device;
     MPL_gpu_device_attr device_attr;
 } MPL_pointer_attr_t;
 
@@ -125,7 +126,7 @@ int MPL_gpu_free_host(void *ptr);
 int MPL_gpu_register_host(const void *ptr, size_t size);
 int MPL_gpu_unregister_host(const void *ptr);
 
-int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device);
+int MPL_gpu_malloc(void **ptr, size_t size, int h_device);
 int MPL_gpu_free(void *ptr);
 
 int MPL_gpu_init(int debug_summary);
