@@ -92,11 +92,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_issue_ack_recv(MPIR_Request * sreq, MPIR_
     match_bits |= MPIDI_OFI_ACK_SEND;
 
     int nic = 0;                /* sync message always use nic 0 */
-    struct fid_ep *rx = MPIDI_OFI_global.ctx[MPIDI_OFI_get_ctx_index(vci_local, nic)].rx;
-    MPIDI_OFI_CALL_RETRY(fi_trecv(rx, ackreq->ack_hdr, hdr_sz, NULL,
-                                  MPIDI_OFI_av_to_phys(addr, nic, vci_remote),
-                                  ssend_match, 0ULL, (void *) &(ackreq->context)),
-                         vci_local, trecvsync);
+    /* save enough field so that we can re-issue ack_recv if needed */
+    ackreq->ack_hdr_sz = hdr_sz;
+    ackreq->ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
+    ackreq->vci_local = vci_local;
+    ackreq->remote_addr = MPIDI_OFI_av_to_phys(addr, nic, vci_remote);
+    ackreq->match_bits = match_bits;
+
+    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ackreq->ctx_idx].rx,
+                                  ackreq->ack_hdr, ackreq->ack_hdr_sz, NULL, ackreq->remote_addr,
+                                  ackreq->match_bits, 0ULL, (void *) &(ackreq->context)),
+                         ackreq->vci_local, trecvsync);
 
   fn_exit:
     return mpi_errno;

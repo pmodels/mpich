@@ -10,10 +10,18 @@
 #define MPIDI_OFI_CTS_FLAG__NONE   0
 #define MPIDI_OFI_CTS_FLAG__PROBE  1
 
+/* receiver -> sender */
 struct rndv_cts {
     MPIR_Request *rreq;
     int am_tag;
     int flag;
+};
+
+/* sender -> receiver */
+struct rndv_info_hdr {
+    MPIR_Request *sreq;
+    MPIR_Request *rreq;
+    MPI_Aint data_sz;
 };
 
 /* ---- receiver side ---- */
@@ -47,7 +55,6 @@ static int rndv_event_common(int vci, MPIR_Request * rreq, int *vci_src_out, int
     int vci_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, src_rank, comm->rank, tag);
     MPIR_Assert(vci == vci_dst);
 
-
     /* TODO: optimize - since we are going to use am_tag_recv, we won't need most of the MPIDIG request fields */
     mpi_errno = MPIDIG_request_init_internal(rreq, vci_dst /* local */ , vci_src /* remote */);
     MPIR_ERR_CHECK(mpi_errno);
@@ -69,6 +76,9 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    /* save context_offset for MPIDI_OFI_send_ack */
+    int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
+
     /* Convert rreq to an MPIDIG request */
     int vci_src, vci_dst;
     mpi_errno = rndv_event_common(vci, rreq, &vci_src, &vci_dst);
@@ -89,7 +99,7 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     MPIR_ERR_CHECK(mpi_errno);
 
     /* send cts */
-    mpi_errno = MPIDI_OFI_send_ack(rreq, &hdr, sizeof(hdr));
+    mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, &hdr, sizeof(hdr));
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -99,9 +109,56 @@ int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     goto fn_exit;
 }
 
+/* if we probe an rndv message, we need ask sender for additional info (message size) */
 int MPIDI_OFI_peek_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
-    MPIR_Assert(0);
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* save context_offset for MPIDI_OFI_send_ack */
+    int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
+
+    /* Convert rreq to an MPIDIG request */
+    int vci_src, vci_dst;
+    mpi_errno = rndv_event_common(vci, rreq, &vci_src, &vci_dst);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* prepare rndv_cts */
+    struct rndv_cts hdr;
+    hdr.rreq = rreq;
+    hdr.am_tag = -1;    /* don't issue am_tag_recv yet */
+    hdr.flag = MPIDI_OFI_CTS_FLAG__PROBE;
+
+    /* send cts */
+    mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, &hdr, sizeof(hdr));
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* received the additional info that we asked for (from probe), continue  */
+int MPIDI_OFI_rndv_info_handler(void *am_hdr, void *data, MPI_Aint in_data_sz, uint32_t attr,
+                                MPIR_Request ** req)
+{
+    MPIR_FUNC_ENTER;
+
+    if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
+        *req = NULL;
+    }
+
+    struct rndv_info_hdr *hdr = am_hdr;
+    MPIR_Request *rreq = hdr->rreq;
+
+    /* complete probe */
+    MPIR_STATUS_SET_COUNT(rreq->status, hdr->data_sz);
+
+    MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, peek_status)), MPIDI_OFI_PEEK_FOUND);
+
+    MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
 
@@ -131,9 +188,28 @@ int MPIDI_OFI_rndv_cts_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reques
         MPL_free(ack_req->ack_hdr);
         MPL_free(ack_req);
     } else {
-        MPIR_Assert(0);
+        MPIR_Assert(hdr->flag == MPIDI_OFI_CTS_FLAG__PROBE);
+        /* re-issue the ack recv */
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ack_req->ctx_idx].rx,
+                                      ack_req->ack_hdr, ack_req->ack_hdr_sz, NULL,
+                                      ack_req->remote_addr, ack_req->match_bits, 0ULL,
+                                      (void *) &(ack_req->context)), ack_req->vci_local, trecvsync);
+
+        /* just reply with data_sz. Receiver will send another CTS */
+        struct rndv_info_hdr rndv_info;
+        rndv_info.sreq = sreq;
+        rndv_info.rreq = hdr->rreq;
+        MPIDI_Datatype_check_size(MPIDIG_REQUEST(sreq, datatype), MPIDIG_REQUEST(sreq, count),
+                                  rndv_info.data_sz);
+        mpi_errno = MPIDI_NM_am_send_hdr_reply(sreq->comm, MPIDIG_REQUEST(sreq, u.send.dest),
+                                               MPIDI_OFI_RNDV_INFO, &rndv_info, sizeof(rndv_info),
+                                               MPIDIG_REQUEST(sreq, req->local_vci),
+                                               MPIDIG_REQUEST(sreq, req->remote_vci));
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
