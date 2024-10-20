@@ -257,6 +257,12 @@ typedef struct {
     int event_id;               /* fixed field, do not move */
     MPIR_Request *signal_req;
     void *ack_hdr;              /* can be NULL */
+    /* save enough info in case we need re-issue (in the case of RNDV probe reply) */
+    int ack_hdr_sz;
+    int ctx_idx;
+    int vci_local;
+    fi_addr_t remote_addr;
+    uint64_t match_bits;
 } MPIDI_OFI_ack_request_t;
 
 typedef struct {

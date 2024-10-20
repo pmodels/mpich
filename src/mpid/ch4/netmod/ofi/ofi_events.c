@@ -32,6 +32,10 @@ static int peek_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rre
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+    rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
+    rreq->status.MPI_ERROR = MPI_SUCCESS;
+
     if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
         mpi_errno = MPIDI_OFI_peek_rndv_event(vci, wc, rreq);
         goto fn_exit;
@@ -40,9 +44,6 @@ static int peek_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rre
         goto fn_exit;
     }
 
-    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
-    rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
-    rreq->status.MPI_ERROR = MPI_SUCCESS;
     MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
     /* peek_status should be the last thing to change in rreq. Reason is
      * we use peek_status to indicate peek_event has completed and all the

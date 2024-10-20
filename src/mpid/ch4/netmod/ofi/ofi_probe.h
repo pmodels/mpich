@@ -50,11 +50,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
         MPIDI_OFI_REQUEST(rreq, kind) = MPIDI_OFI_req_kind__probe;
     }
     MPIDI_OFI_REQUEST(rreq, huge.remote_info) = NULL;
+    MPIDI_OFI_REQUEST(rreq, context_id) = comm->recvcontext_id + context_offset;
     rreq->comm = comm;
     MPIR_Comm_add_ref(comm);
 
     match_bits =
-        MPIDI_OFI_init_recvtag(&mask_bits, comm->recvcontext_id + context_offset, source, tag);
+        MPIDI_OFI_init_recvtag(&mask_bits, MPIDI_OFI_REQUEST(rreq, context_id), source, tag);
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_PEEK;
     MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, peek_status)), MPIDI_OFI_PEEK_START);
