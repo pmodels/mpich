@@ -18,7 +18,6 @@ static int send_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request 
 static int ssend_ack_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
 static int chunk_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 static int inject_emu_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
-static int accept_probe_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int dynproc_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int am_isend_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
 static int am_isend_rdma_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
@@ -58,7 +57,6 @@ static int peek_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rre
 static int peek_empty_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     MPIR_FUNC_ENTER;
-    MPIDI_OFI_dynamic_process_request_t *ctrl;
 
     switch (MPIDI_OFI_REQUEST(rreq, event_id)) {
         case MPIDI_OFI_EVENT_PEEK:
@@ -68,11 +66,6 @@ static int peek_empty_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request
              * relevant values have been copied to rreq. */
             MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, peek_status)),
                                          MPIDI_OFI_PEEK_NOT_FOUND);
-            break;
-
-        case MPIDI_OFI_EVENT_ACCEPT_PROBE:
-            ctrl = (MPIDI_OFI_dynamic_process_request_t *) rreq;
-            ctrl->done = MPIDI_OFI_PEEK_NOT_FOUND;
             break;
 
         default:
@@ -329,18 +322,6 @@ static int inject_emu_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request
         MPIDI_OFI_global.per_vci[vci].am_inflight_inject_emus -= 1;
     }
 
-    MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
-}
-
-static int accept_probe_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
-{
-    MPIR_FUNC_ENTER;
-    MPIDI_OFI_dynamic_process_request_t *ctrl = (MPIDI_OFI_dynamic_process_request_t *) rreq;
-    ctrl->source = MPIDI_OFI_cqe_get_source(wc, false);
-    ctrl->tag = MPIDI_OFI_init_get_tag(wc->tag);
-    ctrl->msglen = wc->len;
-    ctrl->done = MPIDI_OFI_PEEK_FOUND;
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
 }
@@ -701,10 +682,6 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
 
             case MPIDI_OFI_EVENT_DYNPROC_DONE:
                 mpi_errno = dynproc_done_event(vci, wc, req);
-                break;
-
-            case MPIDI_OFI_EVENT_ACCEPT_PROBE:
-                mpi_errno = accept_probe_event(vci, wc, req);
                 break;
 
             case MPIDI_OFI_EVENT_ABORT:
