@@ -92,7 +92,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
             void **indirect = (void **) objmem->indirect;
             for (i = 0; i < objmem->indirect_size; i++) {
                 char *start = indirect[i];
-                char *end = start + HANDLE_NUM_INDICES * objmem->size;
+                char *end = start + objmem->indirect_block_size * objmem->size;
                 if ((char *) ptr >= start && (char *) ptr < end) {
                     nIndirect[i]++;
                     break;
@@ -106,7 +106,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
                 printf("direct block is [%p,%p]\n", direct, directEnd);
                 if (objmem->indirect_size) {
                     printf("indirect block is [%p,%p]\n", indirect[0],
-                           (char *) indirect[0] + HANDLE_NUM_INDICES * objmem->size);
+                           (char *) indirect[0] + objmem->indirect_block_size * objmem->size);
                 }
             }
         }
@@ -124,11 +124,12 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
                MPIR_Handle_get_kind_str(objmem->kind), directSize - nDirect);
     }
     for (i = 0; i < objmem->indirect_size; i++) {
-        if (nIndirect[i] != HANDLE_NUM_INDICES) {
+        if (nIndirect[i] != objmem->indirect_block_size) {
             leaked_handles = TRUE;
             printf
                 ("In indirect memory block %d for handle type %s, %d handles are still allocated\n",
-                 i, MPIR_Handle_get_kind_str(objmem->kind), HANDLE_NUM_INDICES - nIndirect[i]);
+                 i, MPIR_Handle_get_kind_str(objmem->kind),
+                 objmem->indirect_block_size - nIndirect[i]);
         }
     }
 
