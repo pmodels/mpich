@@ -517,6 +517,7 @@ typedef struct MPIR_Object_alloc_t {
     int initialized;            /* */
     void **indirect;            /* Pointer to indirect object blocks */
     int indirect_size;          /* Number of allocated indirect blocks */
+    int indirect_block_size;    /* Number of objects in each indirect block */
     int num_allocated;          /* Total capacity of this allocator including both
                                  * direct and indirect */
     int num_avail;              /* Number of available objects including both direct and indirect */
