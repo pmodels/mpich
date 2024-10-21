@@ -473,6 +473,7 @@ typedef struct {
     uint64_t max_mr_key_size;
     uint64_t max_rma_key_bits;
     uint64_t max_huge_rmas;
+    int cq_data_size;
     int rma_key_type_bits;
     int context_shift;
     MPI_Aint tx_iov_limit;

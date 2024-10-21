@@ -1603,6 +1603,7 @@ static int update_global_limits(struct fi_info *prov)
     } else {
         MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
     }
+    MPIDI_OFI_global.cq_data_size = prov->domain_attr->cq_data_size;
     MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_MULTI_NIC_STRIPING_THRESHOLD;
     if (prov->ep_attr->max_order_raw_size > MPIR_AINT_MAX) {
         MPIDI_OFI_global.max_order_raw = -1;
