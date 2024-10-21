@@ -123,15 +123,23 @@ int MPIDI_OFI_peek_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     mpi_errno = rndv_event_common(vci, rreq, &vci_src, &vci_dst);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* prepare rndv_cts */
-    struct rndv_cts hdr;
-    hdr.rreq = rreq;
-    hdr.am_tag = -1;    /* don't issue am_tag_recv yet */
-    hdr.flag = MPIDI_OFI_CTS_FLAG__PROBE;
+    MPI_Aint data_sz;
+    data_sz = MPIDI_OFI_idata_get_size(wc->data);
 
-    /* send cts */
-    mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, &hdr, sizeof(hdr));
-    MPIR_ERR_CHECK(mpi_errno);
+    if (data_sz > 0) {
+        /* complete probe */
+        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
+        MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, peek_status)), MPIDI_OFI_PEEK_FOUND);
+    } else {
+        /* ask sender for data_sz */
+        struct rndv_cts hdr;
+        hdr.rreq = rreq;
+        hdr.am_tag = -1;        /* don't issue am_tag_recv yet */
+        hdr.flag = MPIDI_OFI_CTS_FLAG__PROBE;
+
+        mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, &hdr, sizeof(hdr));
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
