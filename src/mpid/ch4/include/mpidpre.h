@@ -216,9 +216,7 @@ typedef struct MPIDIG_req_t {
             int dest;
         } send;
         struct {
-            int source;
             MPIR_Context_id_t context_id;
-            int tag;
         } recv;
         struct {
             int target_rank;
@@ -270,9 +268,7 @@ typedef struct MPIDI_part_request {
             int dest;
         } send;
         struct {
-            int source;
             MPIR_Context_id_t context_id;
-            int tag;
         } recv;
     } u;
     union {

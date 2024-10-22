@@ -204,6 +204,7 @@ struct MPIR_Comm {
     struct MPII_BsendBuffer *bsendbuffer;       /* for MPI_Comm_attach_buffer */
 
     int next_sched_tag;         /* used by the NBC schedule code to allocate tags */
+    int next_am_tag;            /* for ch4 am_tag_send and am_tag_recv */
 
     int revoked;                /* Flag to track whether the communicator
                                  * has been revoked */
@@ -364,7 +365,6 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
   fn_fail:
     goto fn_exit;
 }
-
 
 int MPIR_Comm_create(MPIR_Comm **);
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);

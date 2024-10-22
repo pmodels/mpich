@@ -69,6 +69,7 @@ typedef struct MPIDIG_hdr_t {
 typedef struct MPIDIG_send_cts_msg_t {
     MPIR_Request *sreq_ptr;
     MPIR_Request *rreq_ptr;
+    int tag;
 } MPIDIG_send_cts_msg_t;
 
 typedef struct MPIDIG_send_data_msg_t {

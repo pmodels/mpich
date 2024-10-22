@@ -18,12 +18,14 @@
 #include "ofi_coll.h"
 #include "coll/ofi_coll_triggered.h"
 #include "ofi_probe.h"
-#include "ofi_recv.h"
-#include "ofi_send.h"
 #include "ofi_win.h"
 #include "ofi_rma.h"
 #include "ofi_part.h"
 #endif
+
+/* partial inclusion with MPIDI_ENABLE_AM_ONLY - MPIDI_NM_am_tag_{send,recv} */
+#include "ofi_recv.h"
+#include "ofi_send.h"
 
 /* Not-inlined OFI netmod functions */
 #include "ofi_noinline.h"

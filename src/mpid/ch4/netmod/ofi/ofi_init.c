@@ -663,7 +663,7 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_am_repost_request_t, context));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
-                            offsetof(MPIDI_OFI_ssendack_request_t, context));
+                            offsetof(MPIDI_OFI_ack_request_t, context));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_dynamic_process_request_t, context));
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.am.netmod_am.ofi.context) ==
@@ -945,8 +945,9 @@ static int flush_send(int dst, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 
     fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, dst), nic, vci);
     static int data = 0;
-    uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0,
-                                                 MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
+    uint64_t match_bits =
+        MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0, MPIDI_OFI_FLUSH_TAG);
+    match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     /* Use the same direct send method as used in establishing dynamic processes */
     req->done = 0;
@@ -975,8 +976,9 @@ static int flush_recv(int src, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 
     fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, src), nic, vci);
     uint64_t mask_bits = 0;
-    uint64_t match_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0,
-                                                 MPIDI_OFI_FLUSH_TAG, MPIDI_OFI_DYNPROC_SEND);
+    uint64_t match_bits =
+        MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0, MPIDI_OFI_FLUSH_TAG);
+    match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     /* Use the same direct recv method as used in establishing dynamic processes */
     req->done = 0;
@@ -1601,6 +1603,7 @@ static int update_global_limits(struct fi_info *prov)
     } else {
         MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
     }
+    MPIDI_OFI_global.cq_data_size = prov->domain_attr->cq_data_size;
     MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_MULTI_NIC_STRIPING_THRESHOLD;
     if (prov->ep_attr->max_order_raw_size > MPIR_AINT_MAX) {
         MPIDI_OFI_global.max_order_raw = -1;
@@ -1765,6 +1768,7 @@ int ofi_am_init(int vci)
         if (vci == 0) {
             MPIDIG_am_reg_cb(MPIDI_OFI_INTERNAL_HANDLER_CONTROL, NULL, &MPIDI_OFI_control_handler);
             MPIDIG_am_reg_cb(MPIDI_OFI_AM_RDMA_READ_ACK, NULL, &MPIDI_OFI_am_rdma_read_ack_handler);
+            MPIDIG_am_reg_cb(MPIDI_OFI_RNDV_INFO, NULL, &MPIDI_OFI_rndv_info_handler);
         }
     }
 

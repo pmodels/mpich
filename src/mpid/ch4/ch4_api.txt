@@ -10,7 +10,7 @@
 #   - src/mpid/ch4/shm/src/shm_noinline.h
 #   - src/mpid/ch4/shm/posix/posix_noinline.h
 #   - src/mpid/ch4/shm/stubshm/shm_noinline.h
-# It also gnerates the stub codes in 
+# It also generates the stub codes in 
 #   - src/mpid/ch4/netmod/stubnm
 #   - src/mpid/ch4/shm/stubshm
 #
@@ -78,6 +78,15 @@ Non Native API:
   am_check_eager: bool
       NM*: am_hdr_sz, data_sz, data, count, datatype, sreq
      SHM*: am_hdr_sz, data_sz, data, count, datatype, sreq
+  am_can_do_tag: bool
+      NM*: void
+     SHM*: void
+  am_tag_send : int
+      NM*: rank, comm, handler_id, tag, buf, count, datatype, src_vci, dst_vci, sreq
+     SHM*: rank, comm, handler_id, tag, buf, count, datatype, src_vci, dst_vci, sreq
+  am_tag_recv : int
+      NM*: rank, comm, handler_id, tag, buf-2, count, datatype, src_vci, dst_vci, rreq
+     SHM*: rank, comm, handler_id, tag, buf-2, count, datatype, src_vci, dst_vci, rreq
   comm_get_gpid : int
       NM*: comm_ptr, idx, gpid_ptr, is_remote
   get_local_upids : int

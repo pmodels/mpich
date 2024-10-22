@@ -10,6 +10,7 @@
 
 #define MPIDI_OFI_ON_HEAP      0
 #define MPIDI_OFI_USE_EXISTING 1
+#define MPIDI_OFI_AM_TAG_RECV  2
 
 #define MPIDI_OFI_RECV_NEEDS_UNPACK (-1)
 /*
@@ -58,19 +59,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, MPI_D
     struct iovec *iovs;
     iovs = MPL_malloc(num_contig * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs) = iovs;
-    MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype) = datatype;
-    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     MPI_Aint actual_iov_len;
     MPIR_Typerep_to_iov_offset(buf, count, datatype, 0, iovs, num_contig, &actual_iov_len);
     assert(num_contig == actual_iov_len);
-
-    if (rreq->comm == NULL) {
-        rreq->comm = comm;
-        MPIR_Comm_add_ref(comm);
-    }
-    /* Read ordering unnecessary for context_id, so use relaxed load */
-    MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_NOPACK;
 
@@ -117,7 +109,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
-    uint64_t match_bits, mask_bits;
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
     size_t data_sz;
     int dt_contig;
@@ -136,6 +127,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     MPIR_FUNC_ENTER;
 
+    uint64_t match_bits, mask_bits;
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, rank, tag);
+
     if (mode == MPIDI_OFI_ON_HEAP) {    /* Branch should compile out */
         MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vci_dst);
         rreq = *request;
@@ -144,6 +138,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         rreq->status.MPI_SOURCE = MPI_UNDEFINED;
     } else if (mode == MPIDI_OFI_USE_EXISTING) {
         rreq = *request;
+    } else if (mode == MPIDI_OFI_AM_TAG_RECV) {
+        MPIR_Assert(flags == 0);
+
+        match_bits |= MPIDI_OFI_AM_SEND;
+        mask_bits = 0;
+
+        MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vci_dst);
+        rreq = *request;
     } else {
         MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nullptr");
         goto fn_fail;
@@ -151,6 +153,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     *request = rreq;
     MPIDI_OFI_REQUEST(rreq, kind) = MPIDI_OFI_req_kind__any;
+
+    MPIDI_OFI_REQUEST(rreq, context_offset) = context_offset;
+
+    MPIDI_OFI_REQUEST(rreq, buf) = buf;
+    MPIDI_OFI_REQUEST(rreq, count) = count;
+    MPIDI_OFI_REQUEST(rreq, datatype) = datatype;
+    MPIR_Datatype_release_if_not_builtin(datatype);
+
+    if (rreq->comm == NULL) {
+        rreq->comm = comm;
+        MPIR_Comm_add_ref(comm);
+    }
+
     if (!flags) {
         MPIDI_OFI_REQUEST(rreq, huge.remote_info) = NULL;       /* for huge recv remote info */
     }
@@ -160,8 +175,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank, comm->rank, tag);
     MPIDI_OFI_REQUEST(rreq, nic_num) = receiver_nic;
     ctx_idx = MPIDI_OFI_get_ctx_index(vci_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
-
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, rank, tag);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
@@ -217,7 +230,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         if (force_gpu_pack && MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE &&
             data_sz >= MPIR_CVAR_CH4_OFI_GPU_PIPELINE_THRESHOLD) {
             /* Pipeline path */
-            MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
             MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT;
             /* Only post first recv with pipeline chunk size. */
             char *host_buf = NULL;
@@ -249,15 +261,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
             /* Save original buf, datatype and count */
             MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = host_buf;
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = buf;
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
-            MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
-            MPIR_Datatype_add_ref_if_not_builtin(datatype);
-
-            if (rreq->comm == NULL) {
-                rreq->comm = comm;
-                MPIR_Comm_add_ref(comm);
-            }
 
             MPIDI_OFI_gpu_pipeline_request *chunk_req;
             chunk_req = (MPIDI_OFI_gpu_pipeline_request *)
@@ -287,20 +290,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer);
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = buf;
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype) = datatype;
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
     } else {
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = NULL;
     }
 
-    if (rreq->comm == NULL) {
-        rreq->comm = comm;
-        MPIR_Comm_add_ref(comm);
-    }
     /* Read ordering unnecessary for context_id, so use relaxed load */
-    MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
     MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
     MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
 
@@ -367,6 +361,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         } \
     } while (0)
 
+#ifndef MPIDI_ENABLE_AM_ONLY
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
                                                  MPI_Datatype datatype, MPIR_Request * message)
@@ -434,6 +429,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                        context_offset, addr, vci_src, vci_dst, request,
                                        MPIDI_OFI_ON_HEAP, 0ULL);
         MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
+        MPIDI_OFI_REQUEST(*request, am_req) = NULL;
     }
     if (need_cs) {
         MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_dst);
@@ -480,6 +476,38 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+#endif /* ifndef MPIDI_ENABLE_AM_ONLY */
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_recv(int rank, MPIR_Comm * comm,
+                                                  int handler_id, int tag,
+                                                  void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                                  int vci_src, int vci_dst, MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* am_tag_recv is similar to normal recv with -
+     * * already inside VCI critical section
+     * * match_bits need have MPIDI_OFI_AM_SEND protocol bit set
+     */
+    MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
+
+    MPIR_Request *ofi_req = NULL;
+    MPIDI_av_entry_t *addr = MPIDIU_comm_rank_to_av(comm, rank);
+    mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
+                                   0 /* context_offset */ , addr, vci_src, vci_dst, &ofi_req,
+                                   MPIDI_OFI_AM_TAG_RECV, 0ULL);
+    MPIDI_REQUEST_SET_LOCAL(ofi_req, 0, NULL);
+
+    MPIDI_OFI_REQUEST(ofi_req, am_req) = rreq;
+    MPIDI_OFI_REQUEST(ofi_req, am_handler_id) = handler_id;
+
+    /* This is an internal am step that user do not need to track */
+    MPIR_Request_free(ofi_req);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
 }
 
 #endif /* OFI_RECV_H_INCLUDED */
