@@ -362,6 +362,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         } \
     } while (0)
 
+#ifndef MPIDI_ENABLE_AM_ONLY
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
                                                  MPI_Datatype datatype, MPIR_Request * message)
@@ -476,6 +477,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
   fn_fail:
     goto fn_exit;
 }
+#endif /* ifndef MPIDI_ENABLE_AM_ONLY */
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_recv(int rank, MPIR_Comm * comm,
                                                   int handler_id, int tag,
