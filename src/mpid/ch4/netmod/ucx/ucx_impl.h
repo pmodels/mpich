@@ -48,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_init_tag(MPIR_Context_id_t contextid
     ucp_tag = contextid;
     ucp_tag = (ucp_tag << MPIDI_UCX_RANK_BITS);
     ucp_tag |= source;
-    ucp_tag = (ucp_tag << MPIDI_UCX_TAG_BITS);
+    ucp_tag = (ucp_tag << MPIDI_UCX_RANK_SHIFT);
     ucp_tag |= (MPIDI_UCX_TAG_MASK & tag);
     return ucp_tag;
 }
@@ -74,7 +74,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_recv_tag(int mpi_tag, int src,
     ucp_tag = (ucp_tag << MPIDI_UCX_RANK_BITS);
     if (src != MPI_ANY_SOURCE)
         ucp_tag |= (src & UCS_MASK(MPIDI_UCX_RANK_BITS));
-    ucp_tag = ucp_tag << MPIDI_UCX_TAG_BITS;
+    ucp_tag = ucp_tag << MPIDI_UCX_RANK_SHIFT;
     if (mpi_tag != MPI_ANY_TAG)
         ucp_tag |= (mpi_tag & UCS_MASK(MPIDI_UCX_TAG_BITS));
     return ucp_tag;
@@ -87,7 +87,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_tag(uint64_t match_bits)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
 {
-    return ((int) ((match_bits & MPIDI_UCX_RANK_MASK) >> MPIDI_UCX_TAG_BITS));
+    return ((int) ((match_bits & MPIDI_UCX_RANK_MASK) >> MPIDI_UCX_RANK_SHIFT));
 }
 
 #define MPIDI_UCX_CHK_STATUS(STATUS)                                    \

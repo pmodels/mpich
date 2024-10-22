@@ -38,6 +38,11 @@ typedef union {
     ucp_tag_message_h message_handler;
     struct {
         MPIDI_UCX_ucp_request_t *ucp_request;
+
+        /* for am_tag_send and am_tag_recv */
+        int am_handler_id;
+        MPIR_Request *am_req;
+
         enum MPIDI_UCX_reqtype type;
         union {
             struct {
