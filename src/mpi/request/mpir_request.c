@@ -37,9 +37,9 @@ void MPII_init_request(void)
 #endif
 
     /* *INDENT-OFF* */
-    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, lock_ptr, {0}};
+    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, lock_ptr, {0}};
     for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
-        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, lock_ptr, {0}};
+        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, lock_ptr, {0}};
     }
     /* *INDENT-ON* */
 
