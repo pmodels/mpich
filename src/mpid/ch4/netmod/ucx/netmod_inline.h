@@ -9,14 +9,16 @@
 #ifdef MPIDI_ENABLE_AM_ONLY
 #include "netmod_am_fallback.h"
 #else
-#include "ucx_send.h"
-#include "ucx_recv.h"
 #include "ucx_probe.h"
 #include "ucx_win.h"
 #include "ucx_rma.h"
 #include "ucx_coll.h"
 #include "ucx_part.h"
 #endif
+
+/* partial inclusion with MPIDI_ENABLE_AM_ONLY - MPIDI_NM_am_tag_{send,recv} */
+#include "ucx_send.h"
+#include "ucx_recv.h"
 
 #include "ucx_progress.h"
 #include "ucx_request.h"

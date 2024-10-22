@@ -729,6 +729,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         } \
     } while (0)
 
+#ifndef MPIDI_ENABLE_AM_ONLY
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int attr,
@@ -774,6 +775,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
+#endif /* ifndef MPIDI_ENABLE_AM_ONLY */
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_send(int rank, MPIR_Comm * comm,
                                                   int handler_id, int tag,
