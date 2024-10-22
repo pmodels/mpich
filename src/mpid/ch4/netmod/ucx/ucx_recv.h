@@ -79,6 +79,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
 #endif
     }
 
+    if (MPIDI_UCX_REQ(rreq).s.am_req) {
+        MPIR_Request *am_req = MPIDI_UCX_REQ(rreq).s.am_req;
+        int am_recv_id = MPIDI_UCX_REQ(rreq).s.am_handler_id;
+        MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, &rreq->status);
+    }
+
     MPIDI_Request_complete_fast(rreq);
     ucp_request->req = NULL;
     ucp_request_release(ucp_request);
@@ -120,7 +126,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
                                             int tag, MPIR_Comm * comm,
                                             int context_offset,
                                             MPIDI_av_entry_t * addr,
-                                            int vci_dst, MPIR_Request ** request)
+                                            int vci_dst, MPIR_Request ** request,
+                                            MPIR_Request * am_req, int am_handler_id)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
@@ -130,6 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     uint64_t ucp_tag, tag_mask;
     MPIR_Request *req = *request;
     MPIDI_UCX_ucp_request_t *ucp_request;
+    bool is_am = (am_req != NULL);
 
     MPIR_FUNC_ENTER;
 
@@ -141,6 +149,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     } else {
         MPIR_Request_add_ref(req);
     }
+    MPIDI_UCX_REQ(req).s.am_req = am_req;
+    MPIDI_UCX_REQ(req).s.am_handler_id = am_handler_id;
 
     ucp_request_param_t param = {
         .op_attr_mask =
@@ -151,6 +161,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
 
     tag_mask = MPIDI_UCX_tag_mask(tag, rank);
     ucp_tag = MPIDI_UCX_recv_tag(tag, rank, comm->recvcontext_id + context_offset);
+    if (is_am) {
+        ucp_tag |= MPIDI_UCX_TAG_AM;
+    }
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     void *recv_buf;
@@ -269,8 +282,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                          &param);
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
-    MPIDI_UCX_REQ(message).s.ucp_request = ucp_request;
-
   fn_exit:
     MPIDI_UCX_THREAD_CS_EXIT_VCI(vci);
     MPIR_FUNC_EXIT;
@@ -308,8 +319,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     }
     mpi_errno =
         MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vci_dst,
-                       request);
+                       request, NULL, -1);
     MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
+    MPIDI_UCX_REQ(*request).s.am_req = NULL;
     if (need_cs) {
         MPIDI_UCX_THREAD_CS_EXIT_VCI(vci_dst);
     }
@@ -337,8 +349,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_recv(int rank, MPIR_Comm * comm,
                                                   void *buf, MPI_Aint count, MPI_Datatype datatype,
                                                   int vci_src, int vci_dst, MPIR_Request * rreq)
 {
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    MPIR_Request *ucx_req = NULL;
+    MPIDI_av_entry_t *addr = MPIDIU_comm_rank_to_av(comm, rank);
+    mpi_errno = MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm,
+                               0 /* context_offset */ , addr, vci_dst, &ucx_req, rreq, handler_id);
+
+    /* This is an internal am step that user do not need to track */
+    MPIR_Request_free_unsafe(ucx_req);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
 }
 
 #endif /* UCX_RECV_H_INCLUDED */
