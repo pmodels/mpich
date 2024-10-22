@@ -36,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
                                             int context_offset,
                                             MPIDI_av_entry_t * addr,
                                             MPIR_Request ** request,
-                                            int vci_src, int vci_dst, int have_request, int is_sync)
+                                            int vci_src, int vci_dst, int is_sync)
 {
     int dt_contig;
     size_t data_sz;
@@ -95,7 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
         MPIDI_UCX_REQ(req).s.ucp_request = ucp_request;
     } else if (req != NULL) {
         MPIR_cc_set(&req->cc, 0);
-    } else if (have_request) {
+    } else {
         req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
     }
     *request = req;
@@ -147,7 +147,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
 
     MPIDI_UCX_THREAD_CS_ENTER_VCI(vci_src);
     mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
-                               addr, request, vci_src, vci_dst, 1, is_sync);
+                               addr, request, vci_src, vci_dst, is_sync);
     MPIDI_UCX_THREAD_CS_EXIT_VCI(vci_src);
 
     MPIR_FUNC_EXIT;
