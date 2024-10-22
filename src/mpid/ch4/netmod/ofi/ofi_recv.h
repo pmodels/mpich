@@ -267,16 +267,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             chunk_req->event_id = MPIDI_OFI_EVENT_RECV_GPU_PIPELINE_INIT;
             chunk_req->parent = rreq;
             chunk_req->buf = host_buf;
-            int ret = 0;
-            ret = fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
-                           host_buf,
-                           MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ,
-                           NULL, remote_addr, match_bits, mask_bits, (void *) &chunk_req->context);
-            if (MPIDI_OFI_global.gpu_recv_queue || !host_buf || ret != 0) {
-                MPIDI_OFI_gpu_pending_recv_t *recv_task =
-                    MPIDI_OFI_create_recv_task(chunk_req, 0, -1);
-                DL_APPEND(MPIDI_OFI_global.gpu_recv_queue, recv_task);
-            }
+            MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
+                                          host_buf,
+                                          MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ,
+                                          NULL, remote_addr, match_bits, mask_bits,
+                                          (void *) &chunk_req->context), vci_local, trecv);
             goto fn_exit;
         }
 
