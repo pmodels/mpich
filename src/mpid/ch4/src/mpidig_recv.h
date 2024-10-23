@@ -16,8 +16,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
 {
     MPIR_FUNC_ENTER;
 
-    MPIDIG_REQUEST(rreq, u.recv.source) = rank;
-    MPIDIG_REQUEST(rreq, u.recv.tag) = tag;
+    rreq->status.MPI_SOURCE = rank;
+    rreq->status.MPI_TAG = tag;
     MPIDIG_REQUEST(rreq, u.recv.context_id) = context_id;
     MPIDIG_REQUEST(rreq, datatype) = datatype;
     MPIDIG_REQUEST(rreq, buffer) = buf;
@@ -105,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_reply_ssend(MPIR_Request * rreq)
 
     int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    CH4_CALL(am_send_hdr_reply(rreq->comm, MPIDIG_REQUEST(rreq, u.recv.source), MPIDIG_SSEND_ACK,
+    CH4_CALL(am_send_hdr_reply(rreq->comm, rreq->status.MPI_SOURCE, MPIDIG_SSEND_ACK,
                                &ack_msg, (MPI_Aint) sizeof(ack_msg), local_vci, remote_vci),
              MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
@@ -127,9 +127,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
         /* if we have an unexp buffer, we just need to copy the data in it to the user buffer */
         /* This is the fast path and we can avoid calling the target_cmpl_cb and complete the
          * request here */
-        rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, u.recv.source);
-        rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
-
         mpi_errno = MPIDIG_copy_from_unexp_req(rreq, buf, datatype, count);
         MPIR_ERR_CHECK(mpi_errno);
         MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
@@ -241,6 +238,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
 #endif
             MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
             MPIDIG_REQUEST(*request, req->remote_vci) = MPIDIG_REQUEST(unexp_req, req->remote_vci);
+            /* the tag and source in status are set at the time of receiving RTS, copy it from unexp_req */
+            (*request)->status = unexp_req->status;
         }
         MPIDIG_REQUEST(unexp_req, req->status) |= MPIDIG_REQ_MATCHED;
         MPIDIG_REQUEST(*request, req->status) |= MPIDIG_REQ_IN_PROGRESS;
@@ -263,7 +262,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
             MPIR_ERR_CHECK(mpi_errno);
 
             if (has_request) {
-                (*request)->status = unexp_req->status;
                 MPID_Request_complete(*request);
                 /* Need to free here because we don't return this to user */
                 MPIDI_CH4_REQUEST_FREE(unexp_req);
