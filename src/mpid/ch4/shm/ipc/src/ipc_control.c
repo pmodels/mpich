@@ -52,7 +52,7 @@ int MPIDI_IPC_complete(MPIR_Request * rreq, MPIDI_IPCI_type_t ipc_type)
 
     int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    CH4_CALL(am_send_hdr(MPIDIG_REQUEST(rreq, u.recv.source), rreq->comm, MPIDI_IPC_ACK,
+    CH4_CALL(am_send_hdr(rreq->status.MPI_SOURCE, rreq->comm, MPIDI_IPC_ACK,
                          &am_hdr, sizeof(am_hdr), local_vci, remote_vci), 1, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 

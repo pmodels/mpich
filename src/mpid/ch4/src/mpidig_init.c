@@ -69,6 +69,15 @@ void MPIDIG_am_rndv_reg_cb(int rndv_id, MPIDIG_am_rndv_cb rndv_cb)
     MPIR_FUNC_EXIT;
 }
 
+void MPIDIG_am_tag_recv_reg_cb(int tag_recv_id, MPIDIG_am_tag_recv_cb tag_recv_cb)
+{
+    MPIR_FUNC_ENTER;
+
+    MPIR_Assert(tag_recv_id < MPIDIG_TAG_RECV_STATIC_MAX);
+    MPIDIG_global.tag_recv_cbs[tag_recv_id] = tag_recv_cb;
+
+    MPIR_FUNC_EXIT;
+}
 
 int MPIDIG_am_init(void)
 {
@@ -148,6 +157,7 @@ int MPIDIG_am_init(void)
                      &MPIDIG_get_acc_data_origin_cb, &MPIDIG_get_acc_data_target_msg_cb);
 
     MPIDIG_am_rndv_reg_cb(MPIDIG_RNDV_GENERIC, &MPIDIG_do_cts);
+    MPIDIG_am_tag_recv_reg_cb(MPIDIG_TAG_RECV_COMPLETE, &MPIDIG_tag_recv_complete);
 
     MPIDIG_am_comm_abort_init();
 

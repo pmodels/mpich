@@ -18,7 +18,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_issue_cts(MPIR_Request * rreq_ptr)
     am_hdr.sreq_ptr = MPIDIG_PART_REQUEST(rreq_ptr, peer_req_ptr);
     am_hdr.rreq_ptr = rreq_ptr;
 
-    int source = MPIDI_PART_REQUEST(rreq_ptr, u.recv.source);
+    int source = rreq_ptr->status.MPI_SOURCE;
     CH4_CALL(am_send_hdr_reply(rreq_ptr->comm, source, MPIDIG_PART_CTS, &am_hdr, sizeof(am_hdr),
                                0, 0), MPIDI_REQUEST(rreq_ptr, is_local), mpi_errno);
 

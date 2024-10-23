@@ -36,6 +36,14 @@
 
 #define MPIR_STATUS_GET_CANCEL_BIT(status_) ((status_).count_hi_and_cancelled & 1)
 
+#define MPIR_STATUS_COPY_COUNT(status_to, status_from) \
+    do { \
+        bool was_cancelled = ((status_to).count_hi_and_cancelled & 1); \
+        (status_to).count_lo = (status_from).count_lo; \
+        (status_to).count_hi_and_cancelled = ((status_from).count_hi_and_cancelled & ~1); \
+        (status_to).count_hi_and_cancelled |= was_cancelled; \
+    } while (0)
+
 /* Same as MPIR_STATUS_SET_CANCEL_BIT, but check MPI_STATUS_IGNORE as its family. */
 #define MPIR_Status_set_cancel_bit(status_, cancelled_)         \
     {                                                           \

@@ -228,10 +228,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
     if (src_data_sz > data_sz)
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
 
-    /* Set receive status */
+    /* Set receive status. NOTE: MPI_SOURCE/TAG already set at time of matching */
     MPIR_STATUS_SET_COUNT(rreq->status, recv_data_sz);
-    rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, u.recv.source);
-    rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, u.recv.tag);
 
     MPIDIG_REQUEST(rreq, req->rreq.u.ipc.src_dt_ptr) = NULL;
 
@@ -272,7 +270,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
 
     IPC_TRACE("handle_lmt_recv: handle matched rreq %p [source %d, tag %d, "
               " context_id 0x%x], copy dst %p, bytes %ld\n", rreq,
-              MPIDIG_REQUEST(rreq, u.recv.source), MPIDIG_REQUEST(rreq, u.recv.tag),
+              rreq->status.MPI_SOURCE, rreq->status.MPI_TAG,
               MPIDIG_REQUEST(rreq, u.recv.context_id), (char *) MPIDIG_REQUEST(rreq, buffer),
               recv_data_sz);
 

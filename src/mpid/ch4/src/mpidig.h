@@ -8,6 +8,7 @@
 
 #define MPIDI_AM_HANDLERS_MAX (64)
 #define MPIDI_AM_RNDV_CB_MAX  (10)
+#define MPIDI_AM_TAG_RECV_CB_MAX  (10)
 
 enum {
     MPIDIG_SEND = 0,
@@ -73,6 +74,12 @@ enum {
     MPIDIG_RNDV_STATIC_MAX
 };
 
+enum {
+    MPIDIG_TAG_RECV_COMPLETE = 0,
+
+    MPIDIG_TAG_RECV_STATIC_MAX
+};
+
 typedef int (*MPIDIG_am_target_cmpl_cb) (MPIR_Request * req);
 typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
 
@@ -110,11 +117,13 @@ typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
 typedef int (*MPIDIG_am_target_msg_cb) (void *am_hdr, void *data, MPI_Aint data_sz,
                                         uint32_t attr, MPIR_Request ** req);
 typedef int (*MPIDIG_am_rndv_cb) (MPIR_Request * rreq);
+typedef int (*MPIDIG_am_tag_recv_cb) (MPIR_Request * rreq, MPI_Status * status);
 
 typedef struct MPIDIG_global_t {
     MPIDIG_am_target_msg_cb target_msg_cbs[MPIDI_AM_HANDLERS_MAX];
     MPIDIG_am_origin_cb origin_cbs[MPIDI_AM_HANDLERS_MAX];
     MPIDIG_am_rndv_cb rndv_cbs[MPIDI_AM_RNDV_CB_MAX];
+    MPIDIG_am_tag_recv_cb tag_recv_cbs[MPIDI_AM_TAG_RECV_CB_MAX];
     /* Control parameters for global progress of RMA target-side active messages.
      * TODO: performance loss need be studied since we add atomic operations
      * in RMA sync and callback routines.*/
@@ -125,10 +134,20 @@ typedef struct MPIDIG_global_t {
 } MPIDIG_global_t;
 extern MPIDIG_global_t MPIDIG_global;
 
+MPL_STATIC_INLINE_PREFIX int MPIDIG_get_next_am_tag(MPIR_Comm * comm)
+{
+    int tag = comm->next_am_tag++;
+    if (comm->next_am_tag >= MPIR_Process.attrs.tag_ub) {
+        comm->next_am_tag = 0;
+    }
+    return tag;
+}
+
 void MPIDIG_am_reg_cb(int handler_id,
                       MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
 int MPIDIG_am_reg_cb_dynamic(MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
 void MPIDIG_am_rndv_reg_cb(int rndv_id, MPIDIG_am_rndv_cb rndv_cb);
+void MPIDIG_am_tag_recv_reg_cb(int tag_recv_id, MPIDIG_am_tag_recv_cb tag_recv_cb);
 
 int MPIDIG_am_init(void);
 void MPIDIG_am_finalize(void);

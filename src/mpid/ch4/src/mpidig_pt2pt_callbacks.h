@@ -14,6 +14,7 @@
 #include "mpidig.h"
 
 int MPIDIG_do_cts(MPIR_Request * rreq);
+int MPIDIG_tag_recv_complete(MPIR_Request * rreq, MPI_Status * status);
 int MPIDIG_send_origin_cb(MPIR_Request * sreq);
 int MPIDIG_send_data_origin_cb(MPIR_Request * sreq);
 int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req);
