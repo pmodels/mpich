@@ -692,7 +692,7 @@ static int get_physical_device(int dev_id)
 }
 
 /* Get dev_id from device handle */
-MPL_STATIC_INLINE_PREFIX int device_to_dev_id(MPL_gpu_device_handle_t device)
+MPL_STATIC_INLINE_PREFIX int device_to_dev_id(ze_device_handle_t device)
 {
     int dev_id = -1;
     for (int d = 0; d < local_ze_device_count; d++) {
@@ -706,7 +706,7 @@ MPL_STATIC_INLINE_PREFIX int device_to_dev_id(MPL_gpu_device_handle_t device)
 }
 
 /* Get device from dev_id */
-MPL_STATIC_INLINE_PREFIX int dev_id_to_device(int dev_id, MPL_gpu_device_handle_t * device)
+MPL_STATIC_INLINE_PREFIX int dev_id_to_device(int dev_id, ze_device_handle_t * device)
 {
     int mpl_err = MPL_SUCCESS;
 
@@ -1774,7 +1774,7 @@ int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
     }
 
     if (likely(MPL_gpu_info.specialized_cache)) {
-        dev_id = device_to_dev_id(gpu_attr->device);
+        dev_id = gpu_attr->device;
         if (dev_id == -1) {
             goto fn_fail;
         }
@@ -2053,7 +2053,7 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     ret = zeMemGetAllocProperties(ze_context, ptr,
                                   &attr->device_attr.prop, &attr->device_attr.device);
     ZE_ERR_CHECK(ret);
-    attr->device = attr->device_attr.device;
+    attr->device = device_to_dev_id(attr->device_attr.device);
     switch (attr->device_attr.prop.type) {
         case ZE_MEMORY_TYPE_UNKNOWN:
             attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
@@ -2127,7 +2127,7 @@ int MPL_gpu_query_is_same_dev(int global_dev1, int global_dev2)
 #endif
 }
 
-int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
+int MPL_gpu_malloc(void **ptr, size_t size, int h_device)
 {
     int mpl_err = MPL_SUCCESS;
     int ret;
@@ -2138,10 +2138,16 @@ int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
         .flags = 0,
         .ordinal = 0,   /* We currently support a single memory type */
     };
+
+    ze_device_handle_t device_handle;
+    ret = dev_id_to_device(h_device, &device_handle);
+    if (ret) {
+        goto fn_fail;
+    }
     /* Currently ZE ignores this argument and uses an internal alignment
      * value. However, this behavior can change in the future. */
     mem_alignment = 1;
-    ret = zeMemAllocDevice(ze_context, &device_desc, size, mem_alignment, h_device, ptr);
+    ret = zeMemAllocDevice(ze_context, &device_desc, size, mem_alignment, device_handle, ptr);
 
     ZE_ERR_CHECK(ret);
 
@@ -2238,11 +2244,7 @@ int MPL_gpu_unregister_host(const void *ptr)
 
 int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr)
 {
-    int dev_id = -1;
-
-    dev_id = device_to_dev_id(attr->device);
-
-    return dev_id;
+    return attr->device;
 }
 
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
@@ -3044,7 +3046,7 @@ int MPL_ze_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int is_shar
     ze_result_t ret;
     int status;
     uint32_t nfds;
-    MPL_gpu_device_handle_t dev_handle;
+    ze_device_handle_t dev_handle;
 
     fd_pid_t h;
     h = mpl_ipc_handle->data;
@@ -3210,7 +3212,7 @@ int MPL_ze_ipc_handle_mmap_host(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int i
 
 /* this function takes a local device pointer and mmap to host */
 int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
-                               MPL_gpu_device_handle_t device, void **mmaped_ptr)
+                               int device, void **mmaped_ptr)
 {
     ze_result_t ret;
     int mpl_err = MPL_SUCCESS;
@@ -3228,7 +3230,7 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     offset = (char *) dptr - (char *) pbase;
 
     mem_id = attr->prop.id;
-    local_dev_id = device_to_dev_id(device);
+    local_dev_id = device;
     if (local_dev_id == -1) {
         goto fn_fail;
     }
