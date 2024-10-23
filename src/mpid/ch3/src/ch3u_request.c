@@ -545,6 +545,7 @@ int MPID_Request_complete(MPIR_Request *req)
 
     MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
     if (!incomplete) {
+      MPIR_Invoke_callback(req, false);
 	MPIR_Request_free(req);
     }
 
