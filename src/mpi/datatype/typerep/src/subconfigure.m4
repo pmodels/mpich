@@ -47,7 +47,7 @@ m4_define([yaksa_embedded_dir],[modules/yaksa])
 PAC_CHECK_HEADER_LIB_EXPLICIT([yaksa],[yaksa.h],[$YAKSALIBNAME],[yaksa_init])
 if test "$with_yaksa" = "embedded" ; then
     yaksalib="modules/yaksa/lib${YAKSALIBNAME}.la"
-    if test ! -e "${use_top_srcdir}/modules/PREBUILT" -o ! -e "$yaksalib"; then
+    if test ! -e "${use_top_srcdir}/modules/PREBUILT"; then
         PAC_PUSH_ALL_FLAGS()
         PAC_RESET_ALL_FLAGS()
         # no need for libtool versioning when embedding YAKSA
