@@ -34,10 +34,6 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
         MPIR_Session_get_strict_finalize_from_info(info_ptr, &strict_finalize);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Get memory allocation kinds requested by the user (if any) */
-    mpi_errno = MPIR_Session_get_memory_kinds_from_info(info_ptr, &memory_alloc_kinds);
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Remark on MPI_THREAD_SINGLE: Multiple sessions may run in threads
      * concurrently, so significant work is needed to support per-session MPI_THREAD_SINGLE.
      * For now, it probably still works with MPI_THREAD_SINGLE since we use MPL_Initlock_lock
@@ -60,6 +56,10 @@ int MPIR_Session_init_impl(MPIR_Info * info_ptr, MPIR_Errhandler * errhandler_pt
     session_ptr->requested_thread_level = thread_level;
     session_ptr->strict_finalize = strict_finalize;
 
+    /* Get memory allocation kinds requested by the user (if any). This depends on CVAR
+     * infrastructure, so it must run after MPII_Init_thread. */
+    mpi_errno = MPIR_Session_get_memory_kinds_from_info(info_ptr, &memory_alloc_kinds);
+    MPIR_ERR_CHECK(mpi_errno);
     if (memory_alloc_kinds) {
         session_ptr->memory_alloc_kinds = memory_alloc_kinds;
     } else {
