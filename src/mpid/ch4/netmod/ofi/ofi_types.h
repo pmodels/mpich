@@ -343,6 +343,7 @@ typedef struct {
     int event_id;               /* fixed field, do not move */
     MPIR_Request *parent;       /* Parent request           */
     void *buf;
+    size_t offset;
 } MPIDI_OFI_gpu_pipeline_request;
 
 typedef struct MPIDI_OFI_gpu_task {
