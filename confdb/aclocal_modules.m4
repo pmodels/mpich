@@ -69,6 +69,14 @@ AC_DEFUN([PAC_CONFIG_HWLOC_EMBEDDED],[
     hwloc_config_args="$hwloc_config_args --disable-cuda"
     hwloc_config_args="$hwloc_config_args --disable-opencl"
     hwloc_config_args="$hwloc_config_args --disable-rsmi"
+    # disable GPU support in embedded hwloc if explicitly disabled in MPICH
+    # NOTE: there is no --disable-rocm option for the hwloc configure
+    if test $with_ze = "no" ; then
+        hwloc_config_args="$hwloc_config_args --disable-levelzero"
+    fi
+    if test $with_cuda = "no" ; then
+        hwloc_config_args="$hwloc_config_args --disable-cuda"
+    fi
     PAC_CONFIG_SUBDIR_ARGS(hwloc_embedded_dir, [$hwloc_config_args],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
     PAC_POP_FLAG([CFLAGS])
 ])
