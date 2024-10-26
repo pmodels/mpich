@@ -200,11 +200,11 @@ int MPIDIG_send_data_origin_cb(MPIR_Request * sreq)
  */
 
 static int match_posted_rreq(int rank, int tag, MPIR_Context_id_t context_id, int vci,
-                             MPIR_Request ** req)
+                             bool is_local, MPIR_Request ** req)
 {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    *req = MPIDIG_rreq_dequeue(rank, tag, context_id,
-                               &MPIDI_global.per_vci[vci].posted_list, MPIDIG_PT2PT_POSTED);
+    *req = MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.per_vci[vci].posted_list,
+                               is_local, MPIDIG_PT2PT_POSTED);
     return MPI_SUCCESS;
 #else
     int mpi_errno = MPI_SUCCESS;
@@ -212,8 +212,8 @@ static int match_posted_rreq(int rank, int tag, MPIR_Context_id_t context_id, in
 
     *req = NULL;
     while (TRUE) {
-        *req = MPIDIG_rreq_dequeue(rank, tag, context_id,
-                                   &MPIDI_global.per_vci[vci].posted_list, MPIDIG_PT2PT_POSTED);
+        *req = MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.per_vci[vci].posted_list,
+                                   is_local, MPIDIG_PT2PT_POSTED);
         if (*req) {
             int is_cancelled;
             mpi_errno = MPIDI_anysrc_try_cancel_partner(*req, &is_cancelled);
@@ -375,7 +375,8 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         msg_mode = MSG_MODE_EAGER;
     }
 
-    mpi_errno = match_posted_rreq(hdr->src_rank, hdr->tag, hdr->context_id, local_vci, &rreq);
+    mpi_errno = match_posted_rreq(hdr->src_rank, hdr->tag, hdr->context_id,
+                                  local_vci, is_local, &rreq);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (rreq == NULL) {

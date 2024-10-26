@@ -182,7 +182,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                              int rank, int tag, MPIR_Comm * comm,
                                              int context_offset, int vci, MPIR_Request ** request,
-                                             uint64_t flags)
+                                             bool is_local, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
@@ -200,7 +200,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
 
     unexp_req =
         MPIDIG_rreq_dequeue(rank, tag, context_id, &MPIDI_global.per_vci[vci].unexp_list,
-                            MPIDIG_PT2PT_UNEXP);
+                            is_local, MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
         MPII_UNEXPQ_FORGET(unexp_req);
@@ -351,7 +351,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
     MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, vci,
-                                request, 0ULL);
+                                request, is_local, 0ULL);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_REQUEST_SET_LOCAL(*request, is_local, partner);

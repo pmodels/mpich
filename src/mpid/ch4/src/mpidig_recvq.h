@@ -95,8 +95,14 @@ enum MPIDIG_queue_type {
 /* match and search functions */
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_match_request(int rank, int tag,
                                                    MPIR_Context_id_t context_id, MPIR_Request * req,
-                                                   enum MPIDIG_queue_type qtype)
+                                                   bool is_local, enum MPIDIG_queue_type qtype)
 {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    /* NOTE: extra negation to force logical comparisons */
+    if (!MPIDI_REQUEST(req, is_local) != !is_local) {
+        return false;
+    }
+#endif
     if (qtype == MPIDIG_PT2PT_POSTED) {
         return (rank == req->status.MPI_SOURCE || req->status.MPI_SOURCE == MPI_ANY_SOURCE) &&
             (tag == req->status.MPI_TAG || req->status.MPI_TAG == MPI_ANY_TAG) &&
@@ -129,6 +135,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_request(MPIR_Request * req, MPIR_Re
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_recvq_search(int rank, int tag,
                                                            MPIR_Context_id_t context_id,
                                                            MPIR_Request ** list,
+                                                           bool is_local,
                                                            enum MPIDIG_queue_type qtype,
                                                            bool dequeue)
 {
@@ -139,7 +146,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_recvq_search(int rank, int tag,
     MPIDIG_PVAR_QUEUE_TIMER_START(qtype);
     DL_FOREACH_SAFE(*list, curr, tmp) {
         MPIDIG_PVAR_QUEUE_COUNTER_INC(qtype);
-        if (MPIDIG_match_request(rank, tag, context_id, curr, qtype)) {
+        if (MPIDIG_match_request(rank, tag, context_id, curr, is_local, qtype)) {
             if (dequeue == true) {
                 DL_DELETE(*list, curr);
                 MPIDIG_DO_DEQUEUE_EVENT(qtype);
@@ -157,17 +164,18 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_recvq_search(int rank, int tag,
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_rreq_find(int rank, int tag,
                                                         MPIR_Context_id_t context_id,
                                                         MPIR_Request ** list,
-                                                        enum MPIDIG_queue_type qtype)
+                                                        bool is_local, enum MPIDIG_queue_type qtype)
 {
-    return MPIDIG_recvq_search(rank, tag, context_id, list, qtype, false);
+    return MPIDIG_recvq_search(rank, tag, context_id, list, is_local, qtype, false);
 }
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_rreq_dequeue(int rank, int tag,
                                                            MPIR_Context_id_t context_id,
                                                            MPIR_Request ** list,
+                                                           bool is_local,
                                                            enum MPIDIG_queue_type qtype)
 {
-    return MPIDIG_recvq_search(rank, tag, context_id, list, qtype, true);
+    return MPIDIG_recvq_search(rank, tag, context_id, list, is_local, qtype, true);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_delete_posted(MPIR_Request * req, MPIR_Request ** list)
