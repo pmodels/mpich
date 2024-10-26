@@ -131,6 +131,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
         MPIR_ERR_CHECK(mpi_errno);
         MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_anysrc_free_partner(rreq);
+#endif
         MPID_Request_complete(rreq);
     } else {
         /* This is the path for async data copy still need to happen. The request will be completed
@@ -182,7 +185,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                              int rank, int tag, MPIR_Comm * comm,
                                              int context_offset, int vci, MPIR_Request ** request,
-                                             bool is_local, uint64_t flags)
+                                             bool is_local, MPIR_Request * partner, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
@@ -225,17 +228,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
              * Record the passed `*request` to `match_req` so that we can complete it
              * later when `unexp_req` completes.
              * See MPIDI_recv_target_cmpl_cb for actual completion handler. */
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-            MPIR_Request *match_req = *request;
-            int is_cancelled;
-            mpi_errno = MPIDI_anysrc_try_cancel_partner(match_req, &is_cancelled);
-            MPIR_ERR_CHECK(mpi_errno);
-            /* since we will always progress shm first, when unexpected
-             * message match, the NM partner wouldn't have progressed yet, so the cancel
-             * should always succeed. */
-            MPIR_Assert(is_cancelled);
-            MPIDI_anysrc_free_partner(match_req);
-#endif
             MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
             MPIDIG_REQUEST(*request, req->remote_vci) = MPIDIG_REQUEST(unexp_req, req->remote_vci);
             /* the tag and source in status are set at the time of receiving RTS, copy it from unexp_req */
@@ -243,6 +235,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         }
         MPIDIG_REQUEST(unexp_req, req->status) |= MPIDIG_REQ_MATCHED;
         MPIDIG_REQUEST(*request, req->status) |= MPIDIG_REQ_IN_PROGRESS;
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        rreq = *request;
+        MPIDI_REQUEST_SET_LOCAL(rreq, is_local, partner);
+
+        int is_cancelled;
+        mpi_errno = MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* since we will always progress shm first, when unexpected
+         * message match, the NM partner wouldn't have progressed yet, so the cancel
+         * should always succeed. */
+        MPIR_Assert(is_cancelled);
+#endif
 
         if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_BUSY) {
             /* Nothing to do here. MPIDIG_handle_unexpected etc. in mpidig_pt2pt_callbacks.c */
@@ -279,6 +284,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         }
 
         *request = rreq;
+        MPIDI_REQUEST_SET_LOCAL(rreq, is_local, partner);
 
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
@@ -351,10 +357,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
     MPIR_FUNC_ENTER;
 
     mpi_errno = MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, vci,
-                                request, is_local, 0ULL);
+                                request, is_local, partner, 0ULL);
     MPIR_ERR_CHECK(mpi_errno);
-
-    MPIDI_REQUEST_SET_LOCAL(*request, is_local, partner);
 
   fn_exit:
     MPIR_FUNC_EXIT;
