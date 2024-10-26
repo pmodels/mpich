@@ -149,8 +149,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 
     MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_dst);
     if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, vci_dst, flag, message,
-                                       status);
+        mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, vci_dst, flag,
+                                       false /* is_local */ , message, status);
     } else {
         /* Set flags for mprobe peek, when ready */
         mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, vci_src, vci_dst,
@@ -177,7 +177,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
 
     MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_dst);
     if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, vci_dst, flag, status);
+        mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, vci_dst, flag,
+                                      false /* is_local */ , status);
     } else {
         mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr,
                                         vci_src, vci_dst, flag, status, NULL);
