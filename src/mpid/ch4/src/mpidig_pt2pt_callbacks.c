@@ -68,6 +68,9 @@ int MPIDIG_tag_recv_complete(MPIR_Request * rreq, MPI_Status * status)
     MPIR_STATUS_COPY_COUNT(rreq->status, *status);
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_anysrc_free_partner(rreq);
+#endif
     MPID_Request_complete(rreq);
 
     MPIR_FUNC_EXIT;
@@ -161,6 +164,9 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
         /* Free the unexpected request on behalf of the user */
         MPIDI_CH4_REQUEST_FREE(rreq);
     }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_anysrc_free_partner(rreq);
+#endif
     MPID_Request_complete(rreq);
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -422,9 +428,6 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
             mpi_errno = MPIDIG_reply_ssend(rreq);
             MPIR_ERR_CHECK(mpi_errno);
         }
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        MPIDI_anysrc_free_partner(rreq);
-#endif
 
         MPIDIG_recv_type_init(hdr->data_sz, rreq);
 

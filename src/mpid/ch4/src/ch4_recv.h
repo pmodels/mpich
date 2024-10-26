@@ -38,18 +38,9 @@ MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Data
         mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, attr,
                                        av, &nm_rreq, *request);
         MPIR_ERR_CHECK(mpi_errno);
-        (*request)->dev.anysrc_partner = nm_rreq;
-
-        /* cancel the shm request if netmod/am handles the request from unexpected queue. */
-        if (MPIR_Request_is_complete(nm_rreq)) {
-            mpi_errno = MPIDI_SHM_mpi_cancel_recv(*request);
-            if (MPIR_STATUS_GET_CANCEL_BIT((*request)->status)) {
-                (*request)->status = nm_rreq->status;
-            }
-            /* nm_rreq will be freed here. User-layer will have a completed (cancelled)
-             * request with correct status. */
-            MPIDI_CH4_REQUEST_FREE(nm_rreq);
-            goto fn_exit;
+        /* if netmod recv is not matched yet, attach it to the shm request's partner */
+        if (nm_rreq->dev.anysrc_partner) {
+            (*request)->dev.anysrc_partner = nm_rreq;
         }
     }
   fn_exit:
