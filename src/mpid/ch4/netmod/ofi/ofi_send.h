@@ -40,7 +40,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD
       category    : CH4_OFI
       type        : int
-      default     : -1
+      default     : 16384
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
