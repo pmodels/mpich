@@ -655,12 +655,7 @@ int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Req
                 break;
 
             case MPIDI_OFI_EVENT_RECV_HUGE:
-                /* ignoring the RNDV path for now */
-                if (MPIDI_OFI_is_tag_huge(wc->tag)) {
-                    mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, req);
-                } else {
-                    mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_HUGE);
-                }
+                mpi_errno = MPIDI_OFI_recv_event(vci, wc, req, MPIDI_OFI_EVENT_RECV_HUGE);
                 break;
 
             case MPIDI_OFI_EVENT_RECV_PACK:

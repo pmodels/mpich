@@ -91,45 +91,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_entry *wc,
-                                                  MPIR_Request * rreq, int event_id)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int event_id)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t count;
     MPIR_FUNC_ENTER;
 
-    /* update status from matched information */
-    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
-    rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
-
-    if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
-        mpi_errno = MPIDI_OFI_recv_rndv_event(vci, wc, rreq);
-        goto fn_exit;
-    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
-        mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
-        goto fn_exit;
-    }
-    if (!rreq->status.MPI_ERROR) {
-        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
-    }
-    count = wc->len;
-    MPIR_STATUS_SET_COUNT(rreq->status, count);
-
-    /* If striping is enabled, this data will be counted elsewhere. */
-    if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_HUGE ||
-        !MPIDI_OFI_COMM(rreq->comm).enable_striping) {
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
-                                wc->len);
-    }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    int is_cancelled;
-    MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
-    /* Cancel SHM partner is always successful */
-    MPIR_Assert(is_cancelled);
     MPIDI_anysrc_free_partner(rreq);
 #endif
     if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer))) {
+        MPI_Aint count = MPIR_STATUS_GET_COUNT(rreq->status);
         mpi_errno = MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
                                        MPI_BYTE, 0, NULL,
                                        MPIDI_OFI_REQUEST(rreq, buf),
@@ -142,22 +114,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         }
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
     } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
+#ifdef HAVE_ERROR_CHECKING
         MPI_Count elements;
-        MPI_Count count_x = count;
+        MPI_Count count_x = MPIR_STATUS_GET_COUNT(rreq->status);
         MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, datatype);
         MPIR_Get_elements_x_impl(&count_x, datatype, &elements);
         if (count_x) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
         }
-
+#endif
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs));
-    }
-
-    /* If synchronous, send ack */
-    if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
-        int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
-        mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, NULL, 0);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (MPIDI_OFI_REQUEST(rreq, am_req) != NULL) {
@@ -175,6 +141,57 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
     return mpi_errno;
   fn_fail:
     rreq->status.MPI_ERROR = mpi_errno;
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_entry *wc,
+                                                  MPIR_Request * rreq, int event_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* update status from matched information */
+    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+    rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
+    if (!rreq->status.MPI_ERROR) {
+        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+    }
+    MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    int is_cancelled;
+    MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+    /* Cancel SHM partner is always successful */
+    MPIR_Assert(is_cancelled);
+#endif
+
+    if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
+        mpi_errno = MPIDI_OFI_recv_rndv_event(vci, wc, rreq);
+        goto fn_exit;
+    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
+        mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
+        goto fn_exit;
+    }
+
+    /* If synchronous, send ack */
+    if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
+        int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
+        mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, NULL, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    /* If striping is enabled, this data will be counted elsewhere. */
+    if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_HUGE ||
+        !MPIDI_OFI_COMM(rreq->comm).enable_striping) {
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
+                                wc->len);
+    }
+    mpi_errno = MPIDI_OFI_recv_complete(rreq, event_id);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
     goto fn_exit;
 }
 
