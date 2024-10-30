@@ -80,7 +80,8 @@ int main(int argc, char *argv[])
 
 static int check_value(const char *value, const char *expected)
 {
-    if (strcmp(value, expected)) {
+    /* MPICH may add GPU kinds after the mpi,system related kinds, which we ignore here */
+    if (strncmp(value, expected, strlen(expected))) {
         printf("mpi_memory_alloc_kinds value is \"%s\", expected \"%s\"\n", value, expected);
         return 1;
     }
