@@ -16,7 +16,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_improbe(int source,
     int mpi_errno = MPI_SUCCESS;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, 0, flag, message, status);
+    mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, 0, flag,
+                                   true /* is_local */ , message, status);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     return mpi_errno;
@@ -31,7 +32,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iprobe(int source,
     int mpi_errno = MPI_SUCCESS;
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, 0, flag, status);
+    mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, 0, flag,
+                                  true /* is_local */ , status);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     return mpi_errno;

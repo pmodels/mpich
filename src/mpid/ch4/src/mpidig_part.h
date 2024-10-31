@@ -15,7 +15,8 @@ int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count,
                           MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
 int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
                           MPI_Datatype datatype, int source, int tag,
-                          MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request);
+                          MPIR_Comm * comm, MPIR_Info * info,
+                          bool is_local, MPIR_Request ** request);
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
 {

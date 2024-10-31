@@ -17,7 +17,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, 0, flag, message, status);
+    mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, 0, flag,
+                                   false /* is_local */ , message, status);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     return mpi_errno;
@@ -33,7 +34,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, 0, flag, status);
+    mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, 0, flag,
+                                  false /* is_local */ , status);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     return mpi_errno;

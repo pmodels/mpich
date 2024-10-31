@@ -10,6 +10,7 @@
 
 #define MPIDI_OFI_ON_HEAP      0
 #define MPIDI_OFI_USE_EXISTING 1
+#define MPIDI_OFI_AM_TAG_RECV  2
 
 #define MPIDI_OFI_RECV_NEEDS_UNPACK (-1)
 /*
@@ -117,7 +118,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
-    uint64_t match_bits, mask_bits;
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
     size_t data_sz;
     int dt_contig;
@@ -136,6 +136,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     MPIR_FUNC_ENTER;
 
+    uint64_t match_bits, mask_bits;
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, rank, tag);
+
     if (mode == MPIDI_OFI_ON_HEAP) {    /* Branch should compile out */
         MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vci_dst);
         rreq = *request;
@@ -143,6 +146,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         /* Need to set the source to UNDEFINED for anysource matching */
         rreq->status.MPI_SOURCE = MPI_UNDEFINED;
     } else if (mode == MPIDI_OFI_USE_EXISTING) {
+        rreq = *request;
+    } else if (mode == MPIDI_OFI_AM_TAG_RECV) {
+        MPIR_Assert(flags == 0);
+
+        match_bits |= MPIDI_OFI_AM_SEND;
+
+        MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vci_dst);
         rreq = *request;
     } else {
         MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nullptr");
@@ -160,8 +170,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_multx_receiver_nic_index(comm, comm->recvcontext_id, rank, comm->rank, tag);
     MPIDI_OFI_REQUEST(rreq, nic_num) = receiver_nic;
     ctx_idx = MPIDI_OFI_get_ctx_index(vci_dst, MPIDI_OFI_REQUEST(rreq, nic_num));
-
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, rank, tag);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
@@ -362,6 +370,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         } \
     } while (0)
 
+#ifndef MPIDI_ENABLE_AM_ONLY
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
                                                  MPI_Datatype datatype, MPIR_Request * message)
@@ -382,6 +391,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
         mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, message->status.MPI_SOURCE,
                                        message->status.MPI_TAG, rreq->comm, 0, av, 0, vci,
                                        &rreq, MPIDI_OFI_USE_EXISTING, FI_CLAIM | FI_COMPLETION);
+        MPIDI_OFI_REQUEST(rreq, am_req) = NULL;
     }
     MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);
 
@@ -429,6 +439,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                        context_offset, addr, vci_src, vci_dst, request,
                                        MPIDI_OFI_ON_HEAP, 0ULL);
         MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
+        MPIDI_OFI_REQUEST(*request, am_req) = NULL;
     }
     if (need_cs) {
         MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_dst);
@@ -475,6 +486,38 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq, bool 
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+#endif /* ifndef MPIDI_ENABLE_AM_ONLY */
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_recv(int rank, MPIR_Comm * comm,
+                                                  int handler_id, int tag,
+                                                  void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                                  int vci_src, int vci_dst, MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* am_tag_recv is similar to normal recv with -
+     * * already inside VCI critical section
+     * * match_bits need have MPIDI_OFI_AM_SEND protocol bit set
+     */
+    MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
+
+    MPIR_Request *ofi_req = NULL;
+    MPIDI_av_entry_t *addr = MPIDIU_comm_rank_to_av(comm, rank);
+    mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
+                                   0 /* context_offset */ , addr, vci_src, vci_dst, &ofi_req,
+                                   MPIDI_OFI_AM_TAG_RECV, 0ULL);
+    MPIDI_REQUEST_SET_LOCAL(ofi_req, 0, NULL);
+
+    MPIDI_OFI_REQUEST(ofi_req, am_req) = rreq;
+    MPIDI_OFI_REQUEST(ofi_req, am_handler_id) = handler_id;
+
+    /* This is an internal am step that user do not need to track */
+    MPIR_Request_free_unsafe(ofi_req);
+
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
 }
 
 #endif /* OFI_RECV_H_INCLUDED */

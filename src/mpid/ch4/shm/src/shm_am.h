@@ -117,6 +117,30 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_am_check_eager(MPI_Aint am_hdr_sz, MPI_A
     return (am_hdr_sz + data_sz) <= MPIDI_POSIX_am_eager_limit();
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_am_can_do_tag(void)
+{
+    return false;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_tag_send(int rank, MPIR_Comm * comm,
+                                                   int handler_id, int tag,
+                                                   const void *buf, MPI_Aint count,
+                                                   MPI_Datatype datatype, int vci_src, int vci_dst,
+                                                   MPIR_Request * sreq)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_tag_recv(int rank, MPIR_Comm * comm,
+                                                   int handler_id, int tag,
+                                                   void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                                   int vci_src, int vci_dst, MPIR_Request * rreq)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
 MPL_STATIC_INLINE_PREFIX MPIDIG_recv_data_copy_cb MPIDI_SHM_am_get_data_copy_cb(uint32_t attr)
 {
     return NULL;

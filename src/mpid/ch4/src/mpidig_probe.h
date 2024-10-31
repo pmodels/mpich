@@ -10,7 +10,7 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * comm,
                                                int context_offset, int vci, int *flag,
-                                               MPI_Status * status)
+                                               bool is_local, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *unexp_req;
@@ -20,7 +20,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
 
     unexp_req =
         MPIDIG_rreq_find(source, tag, context_id, &MPIDI_global.per_vci[vci].unexp_list,
-                         MPIDIG_PT2PT_UNEXP);
+                         is_local, MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
         *flag = 1;
@@ -39,6 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm * comm,
                                                 int context_offset, int vci, int *flag,
+                                                bool is_local,
                                                 MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -50,7 +51,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
 
     unexp_req =
         MPIDIG_rreq_dequeue(source, tag, context_id, &MPIDI_global.per_vci[vci].unexp_list,
-                            MPIDIG_PT2PT_UNEXP);
+                            is_local, MPIDIG_PT2PT_UNEXP);
 
     if (unexp_req) {
         MPII_UNEXPQ_FORGET(unexp_req);
