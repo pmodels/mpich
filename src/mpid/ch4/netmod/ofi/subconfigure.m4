@@ -278,10 +278,12 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     if test "$pac_have_libfabric" = "no" ; then
         with_libfabric=embedded
     fi
-    if test "$with_libfabric" = "embedded" ; then
+    if test "$with_libfabric" = "embedded" || test "$with_libfabric" = "install"; then
         ofi_embedded="yes"
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an embedded libfabric])
-        ofi_subdir_args="--enable-embedded"
+        if test "$with_libfabric" = "embedded" ; then
+            ofi_subdir_args="--enable-embedded"
+        fi
 
         prov_config=""
         if test "x${netmod_args}" != "x" ; then
@@ -338,7 +340,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         PAC_LIBS_ADD([-lfabric])
     fi
 
-    # check for libfabric depedence libs
+    # check for libfabric dependence libs
     pcdir=""
     if test "${ofi_embedded}" = "yes" ; then
         pcdir="${main_top_builddir}/modules/libfabric"

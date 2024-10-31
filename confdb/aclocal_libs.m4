@@ -44,7 +44,7 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     # taking priority
 
     case "${with_$1}" in
-        embedded)
+        embedded|install)
             m4_ifndef([$1_embedded_dir],[AC_MSG_ERROR([embedded $1 is requested but we do not have the embedded version])])
             ;;
         yes|no)
@@ -108,7 +108,7 @@ dnl PAC_CHECK_HEADER_LIB_OPTIONAL(with_option, header.h, libname, function)
 dnl Check optional library. The results are in $pac_have_$1.
 AC_DEFUN([PAC_CHECK_HEADER_LIB_OPTIONAL],[
     PAC_SET_HEADER_LIB_PATH($1)
-    if test "${with_$1}" = "embedded" ; then
+    if test "${with_$1}" = "embedded" || test "${with_$1}" = "install"; then
         dnl Caller still need configure the embedded version
         pac_have_$1=yes
     elif test "${with_$1}" = "no" ; then
@@ -143,7 +143,7 @@ dnl This is used in more complex situation, e.g. checking libfabric
 dnl to decide default netmod options
 AC_DEFUN([PAC_PROBE_HEADER_LIB],[
     PAC_SET_HEADER_LIB_PATH($1)
-    if test "${with_$1}" = "embedded" ; then
+    if test "${with_$1}" = "embedded" || test "${with_$1}" = "install"; then
         dnl Caller still need configure the embedded version
         pac_have_$1=yes
     elif test "${with_$1}" = "no" ; then
