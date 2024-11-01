@@ -331,8 +331,10 @@ MPL_STATIC_INLINE_PREFIX int do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_Re
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq, bool * done)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIDI_OFI_lmt_unpack_t *p = &MPIDI_OFI_AM_RREQ_HDR(rreq, lmt_u.unpack);
     int ret = MPIDIG_recv_copy_seg(p->unpack_buffer, p->pack_size, rreq);
     MPI_Aint remain = MPIDIG_REQUEST(rreq, req->recv_async).in_data_sz;
@@ -344,14 +346,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
             p->pack_size = remain;
         }
 
-        MPIDI_OFI_do_rdma_read(p->unpack_buffer, p->src_offset + offset, p->pack_size,
-                               p->src_rank, rreq, p->rma_key);
-        return FALSE;
+        mpi_errno = MPIDI_OFI_do_rdma_read(p->unpack_buffer, p->src_offset + offset, p->pack_size,
+                                           p->src_rank, rreq, p->rma_key);
+        *done = false;
     } else {
         /* all done. */
         MPL_free(p->unpack_buffer);
-        return TRUE;
+        *done = true;
     }
+
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request * rreq,
