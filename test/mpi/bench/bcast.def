@@ -5,6 +5,28 @@ include: macros/mtest.def
 page: bcast, bench_frame
     data: buf, size, MPI_CHAR
 
-    &call measure_with_barrier
-        MPI_Bcast($(data), 0, comm)
+    $global root=0
+    $(if:0)
+        &call measure_with_barrier
+            MPI_Bcast($(data), root, comm)
+    $(else)
+        $if grank == 0
+            $call header_coll_latency
+        &call foreach_size
+            $my tf_min, tf_max, tf_avg, tf_sigma
+            $(set:MIN_ITER=0.001/tf_max)
+            &call coll_warmup
+                measure_bcast(iter, root, comm, buf, size, &tf_min, &tf_max, &tf_avg, &tf_sigma)
+                tf_dur = tf_max
+            $if iter < 100
+                iter = 100
+            measure_bcast(iter, root, comm, buf, size, &tf_min, &tf_max, &tf_avg, &tf_sigma)
+            $if grank == 0
+                $call report_coll_latency, size
+
+fncode: measure_bcast(int iter, int root, comm, buf, size, pf_min, pf_max, pf_avg, pf_sigma)
+    &call measure_coll_latency, iter
+        MPI_Bcast($(data), root, comm)
+    $(for:min,max,avg,sigma)
+        *pf_$1 = tf_$1
 
