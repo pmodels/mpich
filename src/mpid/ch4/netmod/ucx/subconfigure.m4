@@ -34,7 +34,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
     if test "$pac_have_ucx" = "no" ; then
         with_ucx=embedded
     fi
-    if test "$with_ucx" = "embedded" ; then
+    if test "$with_ucx" = "embedded" || test "$with_ucx" = "install"; then
         ucxlib="modules/ucx/src/ucp/libucp.la"
         if test -e "${use_top_srcdir}/modules/PREBUILT" -a -e "$ucxlib"; then
             ucxdir=""
@@ -47,7 +47,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
             else
                 ucx_opt_flags=""
             fi
-            PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --enable-embedded --with-java=no --with-go=no $ucx_opt_flags],[],[AC_MSG_ERROR(ucx configure failed)])
+            if test "$with_ucx" = "embedded" ; then
+                ucx_opt_flags="$ucx_opt_flags --enable-embedded"
+            fi
+            PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --with-java=no --with-go=no $ucx_opt_flags],[],[AC_MSG_ERROR(ucx configure failed)])
             PAC_POP_ALL_FLAGS()
             ucxdir="modules/ucx"
         fi

@@ -44,7 +44,7 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     # taking priority
 
     case "${with_$1}" in
-        embedded)
+        embedded|install)
             m4_ifndef([$1_embedded_dir],[AC_MSG_ERROR([embedded $1 is requested but we do not have the embedded version])])
             ;;
         yes|no)
@@ -108,7 +108,7 @@ dnl PAC_CHECK_HEADER_LIB_OPTIONAL(with_option, header.h, libname, function)
 dnl Check optional library. The results are in $pac_have_$1.
 AC_DEFUN([PAC_CHECK_HEADER_LIB_OPTIONAL],[
     PAC_SET_HEADER_LIB_PATH($1)
-    if test "${with_$1}" = "embedded" ; then
+    if test "${with_$1}" = "embedded" || test "${with_$1}" = "install"; then
         dnl Caller still need configure the embedded version
         pac_have_$1=yes
     elif test "${with_$1}" = "no" ; then
@@ -143,7 +143,7 @@ dnl This is used in more complex situation, e.g. checking libfabric
 dnl to decide default netmod options
 AC_DEFUN([PAC_PROBE_HEADER_LIB],[
     PAC_SET_HEADER_LIB_PATH($1)
-    if test "${with_$1}" = "embedded" ; then
+    if test "${with_$1}" = "embedded" || test "${with_$1}" = "install"; then
         dnl Caller still need configure the embedded version
         pac_have_$1=yes
     elif test "${with_$1}" = "no" ; then
@@ -183,32 +183,6 @@ AC_DEFUN([PAC_CHECK_HEADER_LIB_FATAL],[
     fi
     PAC_LIBS_ADD(-l$3)
 ])
-
-dnl PAC_CHECK_PREFIX(with_option,prefixvar)
-AC_DEFUN([PAC_CHECK_PREFIX],[
-	AC_ARG_WITH([$1-prefix],
-            [AS_HELP_STRING([[--with-$1-prefix[=DIR]]], [use the $1
-                            library installed in DIR, rather than the
-                            one included in the distribution.  Pass
-                            "embedded" to force usage of the included
-                            $1 source.])],
-            [if test "$withval" = "system" ; then
-                 :
-             elif test "$withval" = "embedded" ; then
-                 :
-             elif test "$withval" = "no" ; then
-                 :
-             else
-                 PAC_APPEND_FLAG([-I${with_$1_prefix}/include],[CPPFLAGS])
-                 if test -d "${with_$1_prefix}/lib64" ; then
-                     PAC_APPEND_FLAG([-L${with_$1_prefix}/lib64],[LDFLAGS])
-                 fi
-                 PAC_APPEND_FLAG([-L${with_$1_prefix}/lib],[LDFLAGS])
-             fi
-             ],
-            [with_$1_prefix="embedded"])
-	]
-)
 
 dnl PAC_LIB_DEPS(library_name, library_pc_path)
 dnl library_pc_path is the path to the library pkg-config directory
