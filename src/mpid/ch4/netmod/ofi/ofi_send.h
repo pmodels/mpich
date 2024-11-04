@@ -40,12 +40,17 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD
       category    : CH4_OFI
       type        : int
-      default     : 16384
+      default     : -1
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        Message below MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD will be sent eagerly.
+        Messages below MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD will be sent eagerly using
+        fi_tagged interfaces. Messages above the threshold will perform an MPICH-level
+        rendezvous handshake before sending the data. If set to -1, MPICH will only
+        perform rendezvous for messages larger than the provider max_msg_size.
+        Note the MPICH eager/rendezvous threshold is independent of any internal
+        libfabric provider threshold.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -481,6 +486,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_fallback(const void *buf, MPI_Aint c
     goto fn_exit;
 }
 
+#define EAGER_THRESH (MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD == -1 ? MPIDI_OFI_global.max_msg_size : MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD)
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                             int dst_rank, int tag, MPIR_Comm * comm,
                                             int context_offset, MPIDI_av_entry_t * addr,
@@ -613,7 +620,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
         *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         MPIR_ERR_CHECK(mpi_errno);
-    } else if (syncflag && data_sz > MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD) {
+    } else if (!is_am && data_sz > EAGER_THRESH) {
         MPIR_Request *sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2,
                                                    vci_src /* local */ , vci_dst /* remote */);
         MPIR_ERR_CHKANDJUMP(!sreq, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
@@ -720,6 +727,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
   fn_fail:
     goto fn_exit;
 }
+
+#undef EAGER_THRESH
 
 /* Common macro used by all MPIDI_NM_mpi_send routines to facilitate tuning */
 #define MPIDI_OFI_SEND_VNIS(vci_src_, vci_dst_) \
