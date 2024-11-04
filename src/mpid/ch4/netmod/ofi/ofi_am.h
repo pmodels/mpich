@@ -201,7 +201,10 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Ai
         MPIDI_OFI_AMREQUEST(sreq, am_type_choice) = MPIDI_AMTYPE_SHORT;
         return true;
     } else {
-        if (MPIDI_OFI_ENABLE_RMA && !MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE) {
+        if (MPIDI_OFI_ENABLE_TAGGED) {
+            /* We can support RNDV data using MPIDI_NM_am_tag_{send,recv} */
+            return false;
+        } else if (MPIDI_OFI_ENABLE_RMA && !MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE) {
             MPIDI_OFI_AMREQUEST(sreq, am_type_choice) = MPIDI_AMTYPE_RDMA_READ;
             return true;
         } else {
@@ -210,6 +213,11 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Ai
             return false;
         }
     }
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_can_do_tag(void)
+{
+    return MPIDI_OFI_ENABLE_TAGGED;
 }
 
 MPL_STATIC_INLINE_PREFIX MPIDIG_recv_data_copy_cb MPIDI_NM_am_get_data_copy_cb(uint32_t attr)

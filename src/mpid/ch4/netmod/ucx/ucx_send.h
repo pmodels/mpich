@@ -20,6 +20,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t
 
     if (unlikely(status == UCS_ERR_CANCELED))
         MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
+
+    if (MPIDI_UCX_REQ(req).s.am_req) {
+        /* FIXME: error handling? */
+        MPIR_Request *am_req = MPIDI_UCX_REQ(req).s.am_req;
+        int handler_id = MPIDI_UCX_REQ(req).s.am_handler_id;
+        MPIDIG_global.origin_cbs[handler_id] (am_req);
+    }
+
     MPIDI_Request_complete_fast(req);
     ucp_request->req = NULL;
     ucp_request_release(ucp_request);
@@ -36,7 +44,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
                                             int context_offset,
                                             MPIDI_av_entry_t * addr,
                                             MPIR_Request ** request,
-                                            int vci_src, int vci_dst, int have_request, int is_sync)
+                                            int vci_src, int vci_dst, int is_sync, bool is_am)
 {
     int dt_contig;
     size_t data_sz;
@@ -57,6 +65,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
 
     ep = MPIDI_UCX_AV_TO_EP(addr, vci_src, vci_dst);
     ucx_tag = MPIDI_UCX_init_tag(comm->context_id + context_offset, comm->rank, tag);
+    if (is_am) {
+        ucx_tag |= MPIDI_UCX_TAG_AM;
+    }
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     const void *send_buf;
@@ -95,7 +106,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
         MPIDI_UCX_REQ(req).s.ucp_request = ucp_request;
     } else if (req != NULL) {
         MPIR_cc_set(&req->cc, 0);
-    } else if (have_request) {
+    } else {
         req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
     }
     *request = req;
@@ -116,6 +127,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
         } \
     } while (0)
 
+#ifndef MPIDI_ENABLE_AM_ONLY
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,
@@ -146,8 +158,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
 
     MPIDI_UCX_THREAD_CS_ENTER_VCI(vci_src);
     mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
-                               addr, request, vci_src, vci_dst, 1, is_sync);
+                               addr, request, vci_src, vci_dst, is_sync, 0 /* is_am */);
+    MPIDI_UCX_REQ(*request).s.am_req = NULL;
     MPIDI_UCX_THREAD_CS_EXIT_VCI(vci_src);
+
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -166,6 +180,40 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
+}
+#endif /* ifndef MPIDI_ENABLE_AM_ONLY */
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_tag_send(int rank, MPIR_Comm * comm,
+                                                  int handler_id, int tag,
+                                                  const void *buf, MPI_Aint count,
+                                                  MPI_Datatype datatype,
+                                                  int vci_src, int vci_dst, MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    MPIR_Request *ucx_req = NULL;
+    MPIDI_av_entry_t *addr = MPIDIU_comm_rank_to_av(comm, rank);
+    mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, 0 /* attr */ , addr, &ucx_req,
+                               vci_src, vci_dst, 0 /* is_async */ , 1 /* is_am */);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIR_Request_is_complete(ucx_req)) {
+        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        MPIDI_UCX_REQ(ucx_req).s.am_req = sreq;
+        MPIDI_UCX_REQ(ucx_req).s.am_handler_id = handler_id;
+    }
+
+    /* This is an internal am step that user do not need to track */
+    MPIR_Request_free_unsafe(ucx_req);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* UCX_SEND_H_INCLUDED */

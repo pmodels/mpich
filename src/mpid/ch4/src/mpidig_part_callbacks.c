@@ -10,6 +10,11 @@
 
 static void part_rreq_update_sinfo(MPIR_Request * rreq, MPIDIG_part_send_init_msg_t * msg_hdr)
 {
+    rreq->status.MPI_SOURCE = msg_hdr->src_rank;
+    rreq->status.MPI_TAG = msg_hdr->tag;
+    rreq->status.MPI_ERROR = MPI_SUCCESS;
+    MPIR_STATUS_SET_COUNT(rreq->status, msg_hdr->data_sz);
+
     MPIDIG_PART_REQUEST(rreq, u.recv).sdata_size = msg_hdr->data_sz;
     MPIDIG_PART_REQUEST(rreq, peer_req_ptr) = msg_hdr->sreq_ptr;
 }
@@ -56,10 +61,11 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    int is_local = (attr & MPIDIG_AM_ATTR__IS_LOCAL) ? 1 : 0;
     MPIDIG_part_send_init_msg_t *msg_hdr = (MPIDIG_part_send_init_msg_t *) am_hdr;
     MPIR_Request *posted_req = NULL;
     posted_req = MPIDIG_rreq_dequeue(msg_hdr->src_rank, msg_hdr->tag, msg_hdr->context_id,
-                                     &MPIDI_global.part_posted_list, MPIDIG_PART);
+                                     &MPIDI_global.part_posted_list, is_local, MPIDIG_PART);
     if (posted_req) {
         part_rreq_update_sinfo(posted_req, msg_hdr);
         MPIDIG_precv_matched(posted_req);
@@ -79,8 +85,6 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
         MPIR_ERR_CHKANDSTMT(unexp_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
 
-        MPIDI_PART_REQUEST(unexp_req, u.recv.source) = msg_hdr->src_rank;
-        MPIDI_PART_REQUEST(unexp_req, u.recv.tag) = msg_hdr->tag;
         MPIDI_PART_REQUEST(unexp_req, u.recv.context_id) = msg_hdr->context_id;
         part_rreq_update_sinfo(unexp_req, msg_hdr);
 

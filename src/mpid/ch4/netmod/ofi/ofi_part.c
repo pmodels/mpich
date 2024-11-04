@@ -21,5 +21,5 @@ int MPIDI_OFI_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
                              MPIDI_av_entry_t * av, MPIR_Request ** request)
 {
     return MPIDIG_mpi_precv_init(buf, partitions, count, datatype, source, tag, comm,
-                                 info, request);
+                                 info, false /* is_local */ , request);
 }

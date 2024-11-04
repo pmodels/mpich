@@ -475,7 +475,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
-                                                         int source, int tag, uint64_t type)
+                                                         int source, int tag)
 {
     uint64_t match_bits;
     match_bits = contextid;
@@ -486,7 +486,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
     }
 
     match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
-    match_bits |= (MPIDI_OFI_TAG_MASK & tag) | type;
+    match_bits |= (MPIDI_OFI_TAG_MASK & tag);
     return match_bits;
 }
 
@@ -1064,16 +1064,16 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
                 chunk_req->parent = request;
                 chunk_req->event_id = MPIDI_OFI_EVENT_SEND_GPU_PIPELINE;
                 chunk_req->buf = task->buf;
-                MPIDI_OFI_CALL_RETRY(fi_tsenddata
-                                     (MPIDI_OFI_global.ctx
-                                      [MPIDI_OFI_REQUEST(request, pipeline_info.ctx_idx)].tx,
-                                      task->buf, task->len, NULL /* desc */ ,
-                                      MPIDI_OFI_REQUEST(request, pipeline_info.cq_data),
-                                      MPIDI_OFI_REQUEST(request, pipeline_info.remote_addr),
-                                      MPIDI_OFI_REQUEST(request,
-                                                        pipeline_info.match_bits) |
-                                      MPIDI_OFI_GPU_PIPELINE_SEND, (void *) &chunk_req->context),
-                                     vni, fi_tsenddata);
+                MPIDI_OFI_CALL(fi_tsenddata
+                               (MPIDI_OFI_global.ctx
+                                [MPIDI_OFI_REQUEST(request, pipeline_info.ctx_idx)].tx,
+                                task->buf, task->len, NULL /* desc */ ,
+                                MPIDI_OFI_REQUEST(request, pipeline_info.cq_data),
+                                MPIDI_OFI_REQUEST(request, pipeline_info.remote_addr),
+                                MPIDI_OFI_REQUEST(request,
+                                                  pipeline_info.match_bits) |
+                                MPIDI_OFI_GPU_PIPELINE_SEND, (void *) &chunk_req->context),
+                               tsenddata);
                 DL_DELETE(gpu_queue[vni], task);
                 MPL_free(task);
             } else {
@@ -1087,8 +1087,8 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
                         uint64_t ss_bits =
                             MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int
                                                    (&MPIDI_OFI_REQUEST(request, util_id)),
-                                                   MPIR_Comm_rank(comm), request->status.MPI_TAG,
-                                                   MPIDI_OFI_SYNC_SEND_ACK);
+                                                   MPIR_Comm_rank(comm), request->status.MPI_TAG);
+                        ss_bits |= MPIDI_OFI_SYNC_SEND_ACK;
                         int r = request->status.MPI_SOURCE;
                         int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, comm, r, comm->rank,
                                                     request->status.MPI_TAG);

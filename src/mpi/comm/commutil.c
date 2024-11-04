@@ -18,14 +18,7 @@
 MPIR_Comm MPIR_Comm_builtin[MPIR_COMM_N_BUILTIN];
 MPIR_Comm MPIR_Comm_direct[MPIR_COMM_PREALLOC];
 
-MPIR_Object_alloc_t MPIR_Comm_mem = {
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    MPIR_COMM,
+MPIR_Object_alloc_t MPIR_Comm_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_COMM,
     sizeof(MPIR_Comm),
     MPIR_Comm_direct,
     MPIR_COMM_PREALLOC,
@@ -312,6 +305,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
 
     /* abstractions bleed a bit here... :(*/
     comm_p->next_sched_tag = MPIR_FIRST_NBC_TAG;
+    comm_p->next_am_tag = 0;
 
     /* Initialize the revoked flag as false */
     comm_p->revoked = 0;

@@ -172,6 +172,7 @@ static inline void *MPIR_Handle_indirect_init(MPIR_Object_alloc_t * objmem,
             return 0;
         }
         objmem->indirect_size = 0;
+        objmem->indirect_block_size = indirect_num_indices;
     }
 
     /* See if we can allocate another block */

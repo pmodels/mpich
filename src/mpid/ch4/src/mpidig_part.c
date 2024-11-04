@@ -32,8 +32,8 @@ static int part_req_create(void *buf, int partitions, MPI_Aint count,
     if (kind == MPIR_REQUEST_KIND__PART_SEND) {
         MPIDI_PART_REQUEST(req, u.send.dest) = rank;
     } else {
-        MPIDI_PART_REQUEST(req, u.recv.source) = rank;
-        MPIDI_PART_REQUEST(req, u.recv.tag) = tag;
+        req->status.MPI_SOURCE = rank;
+        req->status.MPI_TAG = tag;
         MPIDI_PART_REQUEST(req, u.recv.context_id) = comm->context_id;
     }
 
@@ -74,8 +74,6 @@ void MPIDIG_precv_matched(MPIR_Request * part_req)
 
     /* Set status for partitioned req */
     MPIR_STATUS_SET_COUNT(part_req->status, sdata_size);
-    part_req->status.MPI_SOURCE = MPIDI_PART_REQUEST(part_req, u.recv.source);
-    part_req->status.MPI_TAG = MPIDI_PART_REQUEST(part_req, u.recv.tag);
     part_req->status.MPI_ERROR = MPI_SUCCESS;
 
     /* Additional check for partitioned pt2pt: require identical buffer size */
@@ -134,7 +132,8 @@ int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count,
 
 int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
                           MPI_Datatype datatype, int source, int tag,
-                          MPIR_Comm * comm, MPIR_Info * info, MPIR_Request ** request)
+                          MPIR_Comm * comm, MPIR_Info * info,
+                          bool is_local, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -151,9 +150,8 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
 
     /* Try matching a request or post a new one */
     MPIR_Request *unexp_req = NULL;
-    unexp_req =
-        MPIDIG_rreq_dequeue(source, tag, comm->context_id, &MPIDI_global.part_unexp_list,
-                            MPIDIG_PART);
+    unexp_req = MPIDIG_rreq_dequeue(source, tag, comm->context_id, &MPIDI_global.part_unexp_list,
+                                    is_local, MPIDIG_PART);
     if (unexp_req) {
         /* Copy sender info from unexp_req to local part_rreq */
         MPIDIG_PART_REQUEST(*request, u.recv).sdata_size =

@@ -243,24 +243,32 @@ void MPIR_Persist_coll_free_cb(MPIR_Request * request);
  * MPIR_Request_create_from_pool is used to create request objects from a specific pool.
  * MPIR_Request_create is a wrapper to create request from pool 0.
  */
-/* Handle Bits - 2+4+6+8+12 - Type, Kind, Pool_idx, Block_idx, Object_idx */
-#define REQUEST_POOL_MASK    0x03f00000
-#define REQUEST_POOL_SHIFT   20
+/* Handle Bits - 2+4+1+6+7+12 - Type, Kind, NonZeroVCI, Pool_idx, Block_idx, Object_idx */
+/* UPDATE: If the 6th bit (NonZeroVCI) is 0, it allocated from Pool 0, Block_idx extends to 13 bits (taking over Pool_idx).
+ *         If the 6th bit is 1, BLOCK_idx shrinks to 7 bits.
+ */
+#define REQUEST_POOL_FLAG    0x02000000
+#define REQUEST_POOL_MASK    0x01f80000
+#define REQUEST_POOL_SHIFT   19
 #define REQUEST_POOL_MAX     64
-#define REQUEST_BLOCK_MASK   0x000ff000
+#define REQUEST_BLOCK_MASK0  0x01fff000
+#define REQUEST_BLOCK_MASK   0x0007f000
 #define REQUEST_BLOCK_SHIFT  12
-#define REQUEST_BLOCK_MAX    256
+#define REQUEST_BLOCK_MAX    128
 #define REQUEST_OBJECT_MASK  0x00000fff
 #define REQUEST_OBJECT_SHIFT 0
 #define REQUEST_OBJECT_MAX   4096
 
-#define REQUEST_NUM_BLOCKS   256
-#define REQUEST_NUM_INDICES  1024
+#define REQUEST_NUM_BLOCKS0  8192
+#define REQUEST_NUM_BLOCKS   128
+#define REQUEST_NUM_INDICES  4096
 
 #define MPIR_MAX_VCIS REQUEST_POOL_MAX
 #define MPIR_REQUEST_NUM_POOLS REQUEST_POOL_MAX
 
-#define MPIR_REQUEST_POOL(req_) (((req_)->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT)
+#define MPIR_REQUEST_POOL_FROM_HANDLE(handle) (((handle) & REQUEST_POOL_FLAG) ? \
+    (((handle) & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT) : 0)
+#define MPIR_REQUEST_POOL(req_) MPIR_REQUEST_POOL_FROM_HANDLE((req_)->handle)
 
 extern MPIR_Request MPIR_Request_builtin[MPIR_REQUEST_N_BUILTIN];
 extern MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
@@ -269,7 +277,7 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 #define MPIR_Request_get_ptr(a, ptr) \
     do { \
         int pool, blk, idx; \
-        pool = ((a) & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT; \
+        pool = MPIR_REQUEST_POOL_FROM_HANDLE(a); \
         switch (HANDLE_GET_KIND(a)) { \
         case HANDLE_KIND_BUILTIN: \
             if (a == MPI_MESSAGE_NO_PROC) { \
@@ -284,7 +292,11 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
             ptr = MPIR_Request_direct + HANDLE_INDEX(a); \
             break; \
         case HANDLE_KIND_INDIRECT: \
-            blk = ((a) & REQUEST_BLOCK_MASK) >> REQUEST_BLOCK_SHIFT; \
+            if (pool == 0) { \
+                blk = ((a) & REQUEST_BLOCK_MASK0) >> REQUEST_BLOCK_SHIFT; \
+            } else { \
+                blk = ((a) & REQUEST_BLOCK_MASK) >> REQUEST_BLOCK_SHIFT; \
+            } \
             idx = ((a) & REQUEST_OBJECT_MASK) >> REQUEST_OBJECT_SHIFT; \
             ptr = ((MPIR_Request *) MPIR_Request_mem[pool].indirect[blk]) + idx; \
             break; \
@@ -419,13 +431,15 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
 #ifdef MPICH_DEBUG_MUTEX
     MPID_THREAD_ASSERT_IN_CS(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
 #endif
-    req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool],
-                                       REQUEST_NUM_BLOCKS, REQUEST_NUM_INDICES);
+    int max_blocks = (pool == 0) ? REQUEST_NUM_BLOCKS0 : REQUEST_NUM_BLOCKS;
+    req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool], max_blocks, REQUEST_NUM_INDICES);
     if (req == NULL)
         goto fn_fail;
 
     /* Patch the handle for pool index. */
-    req->handle |= (pool << REQUEST_POOL_SHIFT);
+    if (pool > 0) {
+        req->handle |= (REQUEST_POOL_FLAG | (pool << REQUEST_POOL_SHIFT));
+    }
 
     MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "allocated request, handle=0x%08x", req->handle);
 #ifdef MPICH_DBG_OUTPUT
