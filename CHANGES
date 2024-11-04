@@ -11,6 +11,8 @@
   hint "port_name_size" that may be larger than MPI_MAX_PORT_NAME. If the port
   name does not fit in "port_name_size", it will return a trunction error.
 
+# Autogen default to use -yaksa-depth=2.
+
 ===============================================================================
                                Changes in 4.2
 ===============================================================================

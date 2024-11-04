@@ -66,7 +66,7 @@ do_romio=yes
 do_pmi=yes
 do_doc=no
 
-yaksa_depth=
+yaksa_depth=2
 
 do_quick=no
 # Check -quick option. When enabled, skip as much as we can.
