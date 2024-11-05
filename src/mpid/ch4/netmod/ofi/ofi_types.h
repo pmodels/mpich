@@ -100,13 +100,14 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
 
 #define MPIDI_OFI_PROTOCOL_BITS (6)
 /* define protocol bits without MPIDI_OFI_PROTOCOL_SHIFT */
-#define MPIDI_OFI_SYNC_SEND_ACK_0      1ULL
+#define MPIDI_OFI_ACK_SEND_0      1ULL
 #define MPIDI_OFI_DYNPROC_SEND_0       2ULL
 #define MPIDI_OFI_GPU_PIPELINE_SEND_0  4ULL
 #define MPIDI_OFI_AM_SEND_0           32ULL
 /* the above defines separate tag spaces */
 #define MPIDI_OFI_SYNC_SEND_0          8ULL
 #define MPIDI_OFI_HUGE_SEND_0         16ULL
+#define MPIDI_OFI_RNDV_SEND_0         24ULL
 /* these two are really tag-carried meta data, thus require to be masked in receive */
 #define MPIDI_OFI_PROTOCOL_MASK_0     (MPIDI_OFI_SYNC_SEND_0 | MPIDI_OFI_HUGE_SEND_0)
 
@@ -126,12 +127,13 @@ static inline uint32_t MPIDI_OFI_idata_get_gpuchunk_bits(uint64_t idata)
  * When these 3 are defined as compile-time constants, all the following macros are constants as well.
  * With MPIDI_OFI_ENABLE_RUNTIME_CHECKS, there may be some runtime bit-calculation cost */
 #define MPIDI_OFI_PROTOCOL_SHIFT     (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS)
-#define MPIDI_OFI_SYNC_SEND_ACK      (MPIDI_OFI_SYNC_SEND_ACK_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_ACK_SEND           (MPIDI_OFI_ACK_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_DYNPROC_SEND       (MPIDI_OFI_DYNPROC_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_GPU_PIPELINE_SEND  (MPIDI_OFI_GPU_PIPELINE_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_SYNC_SEND          (MPIDI_OFI_SYNC_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_HUGE_SEND          (MPIDI_OFI_HUGE_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_AM_SEND            (MPIDI_OFI_AM_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
+#define MPIDI_OFI_RNDV_SEND          (MPIDI_OFI_RNDV_SEND_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 
 #define MPIDI_OFI_PROTOCOL_MASK      (MPIDI_OFI_PROTOCOL_MASK_0 << MPIDI_OFI_PROTOCOL_SHIFT)
 #define MPIDI_OFI_CONTEXT_MASK       (((1ULL << MPIDI_OFI_CONTEXT_BITS) - 1) << (MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
@@ -202,6 +204,7 @@ enum {
     MPIDI_OFI_EVENT_SEND_PACK,
     MPIDI_OFI_EVENT_SEND_NOPACK,
     MPIDI_OFI_EVENT_SSEND_ACK,
+    MPIDI_OFI_EVENT_RNDV_CTS,
     MPIDI_OFI_EVENT_GET_HUGE,
     MPIDI_OFI_EVENT_CHUNK_DONE,
     MPIDI_OFI_EVENT_HUGE_CHUNK_DONE,
@@ -253,7 +256,14 @@ typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIR_Request *signal_req;
-} MPIDI_OFI_ssendack_request_t;
+    void *ack_hdr;              /* can be NULL */
+    /* save enough info in case we need re-issue (in the case of RNDV probe reply) */
+    int ack_hdr_sz;
+    int ctx_idx;
+    int vci_local;
+    fi_addr_t remote_addr;
+    uint64_t match_bits;
+} MPIDI_OFI_ack_request_t;
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];

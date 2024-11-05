@@ -194,12 +194,20 @@ enum MPIDI_OFI_req_kind {
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    MPL_atomic_int_t util_id;
     int nic_num;                /* Store the nic number so we can use it to cancel a request later
                                  * if needed. */
     /* for am_tag_send and am_tag_recv */
     int am_handler_id;
     MPIR_Request *am_req;
+
+    /* always save these in case we need switch to am */
+    void *buf;
+    size_t count;
+    MPI_Datatype datatype;
+
+    /* for recv request */
+    MPL_atomic_int_t peek_status;
+    MPIR_Context_id_t context_id;
 
     enum MPIDI_OFI_req_kind kind;
     union {
@@ -208,13 +216,9 @@ typedef struct {
     } huge;
     union {
         struct {
-            void *buf;
-            size_t count;
-            MPI_Datatype datatype;
             char *pack_buffer;
         } pack;
         struct {
-            MPI_Datatype datatype;      /* used in iov recv for verifying type matching */
             struct iovec *iovs;
         } nopack;
     } noncontig;

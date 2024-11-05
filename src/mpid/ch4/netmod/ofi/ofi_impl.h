@@ -309,6 +309,8 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
                               uint32_t attr, MPIR_Request ** req);
 int MPIDI_OFI_am_rdma_read_ack_handler(void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, uint32_t attr, MPIR_Request ** req);
+int MPIDI_OFI_rndv_info_handler(void *am_hdr, void *data, MPI_Aint data_sz,
+                                uint32_t attr, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(struct fid_ep *ep);
 int MPIDI_OFI_mr_key_allocator_init(void);
@@ -387,6 +389,7 @@ int MPIDI_OFI_pack_get(void *origin_addr, MPI_Aint origin_count,
                        MPI_Aint target_count, MPI_Datatype target_datatype,
                        MPIDI_OFI_target_mr_t target_mr, MPIR_Win * win,
                        MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
+int MPIDI_OFI_send_ack(MPIR_Request * rreq, int context_id, void *hdr, int hdr_sz);
 
 /* Common Utility functions used by the
  * C and C++ components
@@ -471,7 +474,17 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int 
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 {
-    return (0 != (MPIDI_OFI_SYNC_SEND & match_bits));
+    return ((match_bits & MPIDI_OFI_PROTOCOL_MASK) == MPIDI_OFI_SYNC_SEND);
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_huge(uint64_t match_bits)
+{
+    return ((match_bits & MPIDI_OFI_PROTOCOL_MASK) == MPIDI_OFI_HUGE_SEND);
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_rndv(uint64_t match_bits)
+{
+    return ((match_bits & MPIDI_OFI_PROTOCOL_MASK) == MPIDI_OFI_RNDV_SEND);
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
@@ -1081,37 +1094,17 @@ static int MPIDI_OFI_gpu_progress_task(MPIDI_OFI_gpu_task_t * gpu_queue[], int v
                 int c;
                 MPIR_cc_decr(request->cc_ptr, &c);
                 if (c == 0) {
-                    /* If synchronous, ack and complete when the ack is done */
+                    /* If synchronous, send ack */
                     if (unlikely(MPIDI_OFI_REQUEST(request, pipeline_info.is_sync))) {
-                        MPIR_Comm *comm = request->comm;
-                        uint64_t ss_bits =
-                            MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int
-                                                   (&MPIDI_OFI_REQUEST(request, util_id)),
-                                                   MPIR_Comm_rank(comm), request->status.MPI_TAG);
-                        ss_bits |= MPIDI_OFI_SYNC_SEND_ACK;
-                        int r = request->status.MPI_SOURCE;
-                        int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, comm, r, comm->rank,
-                                                    request->status.MPI_TAG);
-                        int vci_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, r, comm->rank,
-                                                    request->status.MPI_TAG);
-                        int vci_local = vci_dst;
-                        int vci_remote = vci_src;
-                        int nic = 0;
-                        int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
-                        fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(comm, r, nic, vci_remote);
-                        MPIDI_OFI_CALL_RETRY(fi_tinjectdata
-                                             (MPIDI_OFI_global.ctx[ctx_idx].tx, NULL /* buf */ ,
-                                              0 /* len */ ,
-                                              MPIR_Comm_rank(comm), dest_addr, ss_bits),
-                                             vci_local, tinjectdata);
+                        int context_id = MPIDI_OFI_REQUEST(request, context_id);
+                        mpi_errno = MPIDI_OFI_send_ack(request, context_id, NULL, 0);
+                        MPIR_ERR_CHECK(mpi_errno);
                     }
-
                     /* Set number of bytes in status. */
                     MPIR_STATUS_SET_COUNT(request->status,
                                           MPIDI_OFI_REQUEST(request, pipeline_info.offset));
 
-                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST
-                                                         (request, noncontig.pack.datatype));
+                    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(request, datatype));
                     MPIR_Request_free(request);
                 }
 

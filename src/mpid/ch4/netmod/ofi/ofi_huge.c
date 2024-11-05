@@ -148,14 +148,11 @@ static int get_huge_complete(MPIR_Request * rreq)
     int vci_remote = info->vci_src;
     int vci_local = info->vci_dst;
 
-    /* important: save comm_ptr because MPIDI_OFI_recv_event may free the request. */
+    /* important: save comm_ptr because MPIDI_OFI_recv_complete may free the request. */
     MPIR_Comm *comm_ptr = rreq->comm;
+    MPIR_STATUS_SET_COUNT(rreq->status, info->msgsize);
 
-    struct fi_cq_tagged_entry wc;
-    wc.len = info->msgsize;
-    wc.data = info->origin_rank;
-    wc.tag = info->tag;
-    MPIDI_OFI_recv_event(vci_local, &wc, rreq, MPIDI_OFI_EVENT_GET_HUGE);
+    mpi_errno = MPIDI_OFI_recv_complete(rreq, MPIDI_OFI_EVENT_GET_HUGE);
 
     MPIDI_OFI_send_control_t ctrl;
     ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
@@ -289,7 +286,7 @@ int MPIDI_OFI_recv_huge_control(int vci, MPIR_Context_id_t comm_id, int rank, in
         /* attach info and finish the mprobe */
         MPIDI_OFI_REQUEST(rreq, huge.remote_info) = info;
         MPIR_STATUS_SET_COUNT(rreq->status, info->msgsize);
-        MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_FOUND);
+        MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, peek_status)), MPIDI_OFI_PEEK_FOUND);
     } else {
         /* attach info and finish recv */
         MPIDI_OFI_REQUEST(rreq, huge.remote_info) = info;
@@ -333,22 +330,17 @@ int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
                       MPIDI_OFI_global.per_vci[vci].huge_ctrl_tail, list_ptr);
             MPL_free(list_ptr);
         }
-        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
-        rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
-        rreq->status.MPI_ERROR = MPI_SUCCESS;
         MPIR_STATUS_SET_COUNT(rreq->status, count);
-        /* util_id should be the last thing to change in rreq. Reason is
-         * we use util_id to indicate peek_event has completed and all the
+        /* peek_status should be the last thing to change in rreq. Reason is
+         * we use peek_status to indicate peek_event has completed and all the
          * relevant values have been copied to rreq. */
-        MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_FOUND);
+        MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, peek_status)), MPIDI_OFI_PEEK_FOUND);
     } else if (MPIDI_OFI_REQUEST(rreq, kind) == MPIDI_OFI_req_kind__probe) {
         /* return not found for this probe. User can probe again. */
-        MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_NOT_FOUND);
+        MPL_atomic_release_store_int(&(MPIDI_OFI_REQUEST(rreq, peek_status)),
+                                     MPIDI_OFI_PEEK_NOT_FOUND);
     } else if (MPIDI_OFI_REQUEST(rreq, kind) == MPIDI_OFI_req_kind__mprobe) {
         /* fill the status with wc info. Count is still missing */
-        rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
-        rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
-        rreq->status.MPI_ERROR = MPI_SUCCESS;
 
         /* post the rreq to list and let control handler handle it */
         MPIDI_OFI_huge_recv_list_t *huge_list_ptr;

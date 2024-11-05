@@ -33,6 +33,9 @@ cvars:
 
 int MPIDI_OFI_rma_done_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
 int MPIDI_OFI_dispatch_function(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
+int MPIDI_OFI_recv_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+int MPIDI_OFI_peek_rndv_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+int MPIDI_OFI_rndv_cts_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 
 MPL_STATIC_INLINE_PREFIX MPL_gpu_engine_type_t MPIDI_OFI_gpu_get_recv_engine_type(void)
 {
@@ -88,91 +91,39 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(int vci,
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_entry *wc,
-                                                  MPIR_Request * rreq, int event_id)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int event_id)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t count;
     MPIR_FUNC_ENTER;
 
-    if (wc->tag & MPIDI_OFI_HUGE_SEND) {
-        mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
-        goto fn_exit;
-    }
-    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, true);
-    if (!rreq->status.MPI_ERROR) {
-        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
-    }
-    rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
-    count = wc->len;
-    MPIR_STATUS_SET_COUNT(rreq->status, count);
-
-    /* If striping is enabled, this data will be counted elsewhere. */
-    if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_HUGE ||
-        !MPIDI_OFI_COMM(rreq->comm).enable_striping) {
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
-                                wc->len);
-    }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    int is_cancelled;
-    MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
-    /* Cancel SHM partner is always successful */
-    MPIR_Assert(is_cancelled);
     MPIDI_anysrc_free_partner(rreq);
 #endif
     if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer))) {
+        MPI_Aint count = MPIR_STATUS_GET_COUNT(rreq->status);
         mpi_errno = MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
                                        MPI_BYTE, 0, NULL,
-                                       MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf),
-                                       MPIDI_OFI_REQUEST(rreq, noncontig.pack.count),
-                                       MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0, NULL,
+                                       MPIDI_OFI_REQUEST(rreq, buf),
+                                       MPIDI_OFI_REQUEST(rreq, count),
+                                       MPIDI_OFI_REQUEST(rreq, datatype), 0, NULL,
                                        MPL_GPU_COPY_H2D,
                                        MPIDI_OFI_gpu_get_recv_engine_type(), true);
         if (mpi_errno) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
         }
-        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype));
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
     } else if (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) {
+#ifdef HAVE_ERROR_CHECKING
         MPI_Count elements;
-        MPI_Count count_x = count;
-        MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype);
+        MPI_Count count_x = MPIR_STATUS_GET_COUNT(rreq->status);
+        MPI_Datatype datatype = MPIDI_OFI_REQUEST(rreq, datatype);
         MPIR_Get_elements_x_impl(&count_x, datatype, &elements);
         if (count_x) {
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
         }
-
-        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.datatype));
+#endif
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack.iovs));
-    }
-
-    /* If synchronous, ack and complete when the ack is done */
-    if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
-        /* Read ordering unnecessary for context_id stored in util_id here, so use relaxed load */
-        MPIR_Comm *c = rreq->comm;
-        uint64_t ss_bits =
-            MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int(&MPIDI_OFI_REQUEST(rreq, util_id)),
-                                   MPIR_Comm_rank(c), rreq->status.MPI_TAG);
-        ss_bits |= MPIDI_OFI_SYNC_SEND_ACK;
-        int r = rreq->status.MPI_SOURCE;
-        /* NOTE: use target rank, reply to src */
-        int vci_src = MPIDI_get_vci(SRC_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
-        int vci_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
-        int vci_local = vci_dst;
-        int vci_remote = vci_src;
-        MPIR_Assert(vci_local == vci);
-        int nic = 0;
-        int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
-        fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(c, r, nic, vci_remote);
-        if (MPIDI_OFI_ENABLE_DATA) {
-            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
-                                                MPIR_Comm_rank(c), dest_addr, ss_bits),
-                                 vci_local, tinjectdata);
-        } else {
-            MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx, NULL, 0,
-                                            dest_addr, ss_bits), vci_local, tinject);
-        }
     }
 
     if (MPIDI_OFI_REQUEST(rreq, am_req) != NULL) {
@@ -182,6 +133,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
         mpi_errno = MPIDIG_global.tag_recv_cbs[am_recv_id] (am_req, status);
         MPIR_ERR_CHECK(mpi_errno);
     }
+    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
     MPIDI_Request_complete_fast(rreq);
 
   fn_exit:
@@ -189,6 +141,57 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_e
     return mpi_errno;
   fn_fail:
     rreq->status.MPI_ERROR = mpi_errno;
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(int vci, struct fi_cq_tagged_entry *wc,
+                                                  MPIR_Request * rreq, int event_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    /* update status from matched information */
+    rreq->status.MPI_SOURCE = MPIDI_OFI_cqe_get_source(wc, false);
+    rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
+    if (!rreq->status.MPI_ERROR) {
+        rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
+    }
+    MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    int is_cancelled;
+    MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+    /* Cancel SHM partner is always successful */
+    MPIR_Assert(is_cancelled);
+#endif
+
+    if (MPIDI_OFI_is_tag_rndv(wc->tag)) {
+        mpi_errno = MPIDI_OFI_recv_rndv_event(vci, wc, rreq);
+        goto fn_exit;
+    } else if (MPIDI_OFI_is_tag_huge(wc->tag)) {
+        mpi_errno = MPIDI_OFI_recv_huge_event(vci, wc, rreq);
+        goto fn_exit;
+    }
+
+    /* If synchronous, send ack */
+    if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
+        int context_id = MPIDI_OFI_REQUEST(rreq, context_id);
+        mpi_errno = MPIDI_OFI_send_ack(rreq, context_id, NULL, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    /* If striping is enabled, this data will be counted elsewhere. */
+    if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_HUGE ||
+        !MPIDI_OFI_COMM(rreq->comm).enable_striping) {
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[MPIDI_OFI_REQUEST(rreq, nic_num)],
+                                wc->len);
+    }
+    mpi_errno = MPIDI_OFI_recv_complete(rreq, event_id);
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
     goto fn_exit;
 }
 
