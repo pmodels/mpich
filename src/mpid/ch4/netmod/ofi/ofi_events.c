@@ -567,7 +567,9 @@ static int am_read_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * 
             goto fn_exit;
         }
     } else if (ofi_req->rreq_hdr->lmt_type == MPIDI_OFI_AM_LMT_UNPACK) {
-        int done = MPIDI_OFI_am_lmt_unpack_event(rreq);
+        bool done;
+        mpi_errno = MPIDI_OFI_am_lmt_unpack_event(rreq, &done);
+        MPIR_ERR_CHECK(mpi_errno);
         if (!done) {
             goto fn_exit;
         }
