@@ -135,6 +135,15 @@ typedef struct MPIDIG_global_t {
 } MPIDIG_global_t;
 extern MPIDIG_global_t MPIDIG_global;
 
+MPL_STATIC_INLINE_PREFIX int MPIDIG_can_do_tag(bool is_local)
+{
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    return MPIDI_NM_am_can_do_tag();
+#else
+    return is_local ? MPIDI_SHM_am_can_do_tag() : MPIDI_NM_am_can_do_tag();
+#endif
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDIG_get_next_am_tag(MPIR_Comm * comm)
 {
     int tag = comm->next_am_tag++;
