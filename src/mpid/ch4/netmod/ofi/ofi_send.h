@@ -40,7 +40,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD
       category    : CH4_OFI
       type        : int
-      default     : -1
+      default     : 16384
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -641,6 +641,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         MPIR_ERR_CHECK(mpi_errno);
         /* inject a zero-size message with MPIDI_OFI_RNDV_SEND in match_bits */
         match_bits |= MPIDI_OFI_RNDV_SEND;
+        MPIDI_OFI_idata_set_size(&cq_data, data_sz);    /* optionally use cq_data to carry data_sz */
         mpi_errno = MPIDI_OFI_send_lightweight(NULL, 0, cq_data, dst_rank, tag, comm,
                                                match_bits, addr,
                                                vci_src, vci_dst, sender_nic, receiver_nic);

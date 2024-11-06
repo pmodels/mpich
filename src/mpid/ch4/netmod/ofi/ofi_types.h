@@ -210,7 +210,6 @@ enum {
     MPIDI_OFI_EVENT_HUGE_CHUNK_DONE,
     MPIDI_OFI_EVENT_INJECT_EMU,
     MPIDI_OFI_EVENT_DYNPROC_DONE,
-    MPIDI_OFI_EVENT_ACCEPT_PROBE
 };
 
 enum {
@@ -474,6 +473,7 @@ typedef struct {
     uint64_t max_mr_key_size;
     uint64_t max_rma_key_bits;
     uint64_t max_huge_rmas;
+    int cq_data_size;
     int rma_key_type_bits;
     int context_shift;
     MPI_Aint tx_iov_limit;
@@ -674,5 +674,22 @@ typedef struct MPIDI_OFI_huge_recv_list {
 extern MPIDI_OFI_global_t MPIDI_OFI_global;
 
 extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
+
+static inline void MPIDI_OFI_idata_set_size(uint64_t * data_field, MPI_Aint data_sz)
+{
+    *data_field &= 0xffffffff;
+    if (MPIDI_OFI_global.cq_data_size == 8 && data_sz <= INT32_MAX) {
+        *data_field |= (data_sz << 32);
+    }
+}
+
+static inline uint32_t MPIDI_OFI_idata_get_size(uint64_t idata)
+{
+    if (MPIDI_OFI_global.cq_data_size == 8) {
+        return idata >> 32;
+    } else {
+        return 0;
+    }
+}
 
 #endif /* OFI_TYPES_H_INCLUDED */
