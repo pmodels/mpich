@@ -106,9 +106,10 @@ static int initial_address_exchange(void)
             MPIDI_UCX_CHK_STATUS(ucx_status);
             MPIDIU_upidhash_add(ep_params.address, recv_bc_len, 0, node_roots[i]);
         }
-        MPIDU_bc_allgather(init_comm, MPIDI_UCX_global.ctx[0].if_address,
-                           (int) MPIDI_UCX_global.ctx[0].addrname_len, FALSE,
-                           (void **) &table, &rank_map, &recv_bc_len);
+        mpi_errno = MPIDU_bc_allgather(init_comm, MPIDI_UCX_global.ctx[0].if_address,
+                                       (int) MPIDI_UCX_global.ctx[0].addrname_len, FALSE,
+                                       (void **) &table, &rank_map, &recv_bc_len);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* insert new addresses, skipping over node roots */
         for (int i = 0; i < MPIR_Process.size; i++) {
@@ -121,7 +122,8 @@ static int initial_address_exchange(void)
                 MPIDIU_upidhash_add(ep_params.address, recv_bc_len, 0, i);
             }
         }
-        MPIDU_bc_table_destroy();
+        mpi_errno = MPIDU_bc_table_destroy();
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         for (int i = 0; i < size; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
@@ -132,11 +134,12 @@ static int initial_address_exchange(void)
             MPIDI_UCX_CHK_STATUS(ucx_status);
             MPIDIU_upidhash_add(ep_params.address, recv_bc_len, 0, i);
         }
-        MPIDU_bc_table_destroy();
+        mpi_errno = MPIDU_bc_table_destroy();
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:
-    if (init_comm) {
+    if (init_comm && !mpi_errno) {
         MPIDI_destroy_init_comm(&init_comm);
     }
     return mpi_errno;
