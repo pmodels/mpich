@@ -896,42 +896,37 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
     get_ack.greq_ptr = MPIDIG_REQUEST(rreq, req->greq.greq_ptr);
     win = rreq->u.rma.win;
 
-    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
-    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    if (MPIDIG_REQUEST(rreq, req->greq.flattened_dt) == NULL) {
+    if (MPIDIG_REQUEST(rreq, req->greq.flattened_dt)) {
+        /* FIXME: MPIR_Typerep_unflatten should allocate the new object */
+        MPIR_Datatype *dt = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
+        if (!dt) {
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                                 "MPIR_Datatype_mem");
+        }
+        MPIR_Object_set_ref(dt, 1);
+        MPIR_Typerep_unflatten(dt, MPIDIG_REQUEST(rreq, req->greq.flattened_dt));
+        MPIDIG_REQUEST(rreq, datatype) = dt->handle;
+        /* count is still target_data_sz now, use it for reply */
+        get_ack.target_data_sz = MPIDIG_REQUEST(rreq, count);
+        MPIDIG_REQUEST(rreq, count) /= dt->size;
+    } else {
         MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype),
                                   MPIDIG_REQUEST(rreq, count), get_ack.target_data_sz);
+    }
+
+    int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
+    int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
+    if (true) {
         CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(rreq, u.target.origin_rank),
                                 MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
                                 MPIDIG_REQUEST(rreq, buffer),
                                 MPIDIG_REQUEST(rreq, count),
                                 MPIDIG_REQUEST(rreq, datatype), local_vci, remote_vci,
                                 rreq), MPIDI_REQUEST(rreq, is_local), mpi_errno);
-        MPID_Request_complete(rreq);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
     }
-
-    /* FIXME: MPIR_Typerep_unflatten should allocate the new object */
-    MPIR_Datatype *dt = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-    if (!dt) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "MPIR_Datatype_mem");
-    }
-    MPIR_Object_set_ref(dt, 1);
-    MPIR_Typerep_unflatten(dt, MPIDIG_REQUEST(rreq, req->greq.flattened_dt));
-    MPIDIG_REQUEST(rreq, datatype) = dt->handle;
-    /* count is still target_data_sz now, use it for reply */
-    get_ack.target_data_sz = MPIDIG_REQUEST(rreq, count);
-    MPIDIG_REQUEST(rreq, count) /= dt->size;
-
-    CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(rreq, u.target.origin_rank),
-                            MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
-                            MPIDIG_REQUEST(rreq, buffer),
-                            MPIDIG_REQUEST(rreq, count), dt->handle, local_vci,
-                            remote_vci, rreq), MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPID_Request_complete(rreq);
     MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
