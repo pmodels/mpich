@@ -916,7 +916,15 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
 
     int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
-    if (true) {
+    if (MPIDIG_REQUEST(rreq, req->greq.am_tag) >= 0) {
+        int src_rank = MPIDIG_REQUEST(rreq, u.target.origin_rank);
+        CH4_CALL(am_tag_send(src_rank, win->comm_ptr, MPIDIG_GET_ACK,
+                             MPIDIG_REQUEST(rreq, req->greq.am_tag),
+                             MPIDIG_REQUEST(rreq, buffer),
+                             MPIDIG_REQUEST(rreq, count),
+                             MPIDIG_REQUEST(rreq, datatype), local_vci, remote_vci, rreq),
+                 MPIDI_REQUEST(rreq, is_local), mpi_errno);
+    } else {
         CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(rreq, u.target.origin_rank),
                                 MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
                                 MPIDIG_REQUEST(rreq, buffer),
@@ -2099,6 +2107,7 @@ int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIDIG_REQUEST(rreq, req->greq.flattened_dt) = NULL;
     MPIDIG_REQUEST(rreq, req->greq.greq_ptr) = msg_hdr->greq_ptr;
     MPIDIG_REQUEST(rreq, u.target.origin_rank) = msg_hdr->src_rank;
+    MPIDIG_REQUEST(rreq, req->greq.am_tag) = msg_hdr->am_tag;
 
     if (msg_hdr->flattened_sz) {
         void *flattened_dt = MPL_malloc(msg_hdr->flattened_sz, MPL_MEM_BUFFER);
@@ -2157,5 +2166,14 @@ int MPIDIG_get_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     MPIDIG_rma_set_am_flag();
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_ack);
     MPIR_FUNC_EXIT;
+    return mpi_errno;
+}
+
+int MPIDIG_tag_get_complete(MPIR_Request * req, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = get_ack_target_cmpl_cb(req);
+
     return mpi_errno;
 }

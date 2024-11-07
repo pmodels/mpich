@@ -142,6 +142,7 @@ typedef struct MPIDIG_get_msg_t {
     MPI_Aint target_datatype;
     MPI_Aint target_true_lb;
     int flattened_sz;
+    int am_tag;
 } MPIDIG_get_msg_t;
 
 typedef struct MPIDIG_get_ack_msg_t {
