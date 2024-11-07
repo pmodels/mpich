@@ -137,8 +137,10 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
         }
         MPL_free(mapped_table);
         /* Then, allgather all address names using init_comm */
-        MPIDU_bc_allgather(init_comm, MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
-                           TRUE, &table, &rank_map, &recv_bc_len);
+        mpi_errno =
+            MPIDU_bc_allgather(init_comm, MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
+                               TRUE, &table, &rank_map, &recv_bc_len);
+        MPIR_ERR_CHECK(mpi_errno);
 
         /* Insert the rest of the addresses */
         for (int i = 0; i < MPIR_Process.size; i++) {
@@ -150,7 +152,8 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
                 MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = addr;
             }
         }
-        MPIDU_bc_table_destroy();
+        mpi_errno = MPIDU_bc_table_destroy();
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* not "ROOTS_ONLY", we already have everyone's address name, insert all of them */
         fi_addr_t *mapped_table;
@@ -163,7 +166,8 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
         }
         MPL_free(mapped_table);
-        MPIDU_bc_table_destroy();
+        mpi_errno = MPIDU_bc_table_destroy();
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* check */
@@ -175,7 +179,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
     }
 
   fn_exit:
-    if (init_comm) {
+    if (init_comm && !mpi_errno) {
         MPIDI_destroy_init_comm(&init_comm);
     }
     return mpi_errno;
