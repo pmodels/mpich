@@ -975,6 +975,21 @@ static int put_dt_target_cmpl_cb(MPIR_Request * rreq)
 
     int local_vci = MPIDIG_REQUEST(rreq, req->local_vci);
     int remote_vci = MPIDIG_REQUEST(rreq, req->remote_vci);
+    MPIR_Comm *comm = rreq->u.rma.win->comm_ptr;
+
+    if (MPIDIG_can_do_tag(rreq)) {
+        ack_msg.am_tag = MPIDIG_get_next_am_tag(comm, ack_msg.src_rank);
+        CH4_CALL(am_tag_recv(ack_msg.src_rank, comm, MPIDIG_TAG_PUT_COMPLETE, ack_msg.am_tag,
+                             MPIDIG_REQUEST(rreq, buffer),
+                             MPIDIG_REQUEST(rreq, count),
+                             MPIDIG_REQUEST(rreq, datatype),
+                             local_vci, remote_vci, rreq),
+                 MPIDI_REQUEST(rreq, is_local), mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        ack_msg.am_tag = -1;
+    }
+
     CH4_CALL(am_send_hdr_reply
              (rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, u.target.origin_rank),
               MPIDIG_PUT_DT_ACK, &ack_msg, sizeof(ack_msg), local_vci, remote_vci),
@@ -1593,13 +1608,25 @@ int MPIDIG_put_dt_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_s
     /* origin datatype to be released in MPIDIG_put_data_origin_cb */
     MPIDIG_REQUEST(rreq, datatype) = MPIDIG_REQUEST(origin_req, datatype);
 
-    CH4_CALL(am_isend_reply(win->comm_ptr, MPIDIG_REQUEST(origin_req, u.origin.target_rank),
-                            MPIDIG_PUT_DAT_REQ, &dat_msg, sizeof(dat_msg),
-                            MPIDIG_REQUEST(origin_req, buffer),
-                            MPIDIG_REQUEST(origin_req, count),
-                            MPIDIG_REQUEST(origin_req, datatype),
-                            local_vci, remote_vci, rreq),
-             (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
+    int target_rank = MPIDIG_REQUEST(origin_req, u.origin.target_rank);
+    if (msg_hdr->am_tag >= 0) {
+        CH4_CALL(am_tag_send(target_rank, win->comm_ptr, MPIDIG_PUT_DAT_REQ,
+                             msg_hdr->am_tag,
+                             MPIDIG_REQUEST(origin_req, buffer),
+                             MPIDIG_REQUEST(origin_req, count),
+                             MPIDIG_REQUEST(origin_req, datatype),
+                             local_vci, remote_vci, rreq),
+                 (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
+
+    } else {
+        CH4_CALL(am_isend_reply(win->comm_ptr, target_rank,
+                                MPIDIG_PUT_DAT_REQ, &dat_msg, sizeof(dat_msg),
+                                MPIDIG_REQUEST(origin_req, buffer),
+                                MPIDIG_REQUEST(origin_req, count),
+                                MPIDIG_REQUEST(origin_req, datatype),
+                                local_vci, remote_vci, rreq),
+                 (attr & MPIDIG_AM_ATTR__IS_LOCAL), mpi_errno);
+    }
     MPIR_ERR_CHECK(mpi_errno);
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
@@ -1718,7 +1745,8 @@ int MPIDIG_put_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     rreq = (MPIR_Request *) msg_hdr->preq_ptr;
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_target_cmpl_cb;
-    MPIDIG_recv_type_init(MPIDIG_REQUEST(rreq, req->preq.origin_data_sz), rreq);
+    mpi_errno = MPIDIG_recv_type_init(MPIDIG_REQUEST(rreq, req->preq.origin_data_sz), rreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = rreq;
@@ -2172,6 +2200,15 @@ int MPIDIG_tag_get_complete(MPIR_Request * req, MPI_Status * status)
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = get_ack_target_cmpl_cb(req);
+
+    return mpi_errno;
+}
+
+int MPIDIG_tag_put_complete(MPIR_Request * req, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = put_target_cmpl_cb(req);
 
     return mpi_errno;
 }

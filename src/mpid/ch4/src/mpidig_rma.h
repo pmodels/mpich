@@ -238,7 +238,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
         CH4_CALL(am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
-                          NULL, 0, MPI_DATATYPE_NULL, vci, vci_target, sreq), is_local, mpi_errno);
+                          NULL, 0, MPI_DATATYPE_NULL, vci, vci_target, sreq),
+                 MPIDI_REQUEST(sreq, is_local), mpi_errno);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
@@ -251,7 +252,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
 
     CH4_CALL(am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
                       flattened_dt, flattened_sz, MPIR_BYTE_INTERNAL, vci, vci_target, sreq),
-             is_local, mpi_errno);
+             MPIDI_REQUEST(sreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
