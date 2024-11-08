@@ -117,6 +117,7 @@ typedef struct MPIDIG_put_msg_t {
 
 typedef struct MPIDIG_put_dt_ack_msg_t {
     int src_rank;
+    int am_tag;
     MPIR_Request *target_preq_ptr;
     MPIR_Request *origin_preq_ptr;
 } MPIDIG_put_dt_ack_msg_t;

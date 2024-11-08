@@ -113,5 +113,6 @@ int MPIDIG_get_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 int MPIDIG_get_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
                                  uint32_t attr, MPIR_Request ** req);
 int MPIDIG_tag_get_complete(MPIR_Request * req, MPI_Status * status);
+int MPIDIG_tag_put_complete(MPIR_Request * req, MPI_Status * status);
 
 #endif /* MPIDIG_RMA_CALLBACKS_H_INCLUDED */
