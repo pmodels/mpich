@@ -34,7 +34,7 @@ ATTRIBUTE((unused));
 #define MPIDI_OFI_COMM_TO_INDEX(comm,rank) \
     MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
 #define MPIDI_OFI_TO_PHYS(avtid, lpid, _nic) \
-    MPIDI_OFI_AV(MPIDIU_get_av((avtid), (lpid))).dest[_nic][0]
+    MPIDI_OFI_AV_ADDR(MPIDIU_get_av((avtid), (lpid)), _nic, 0)
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
@@ -451,16 +451,16 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, i
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][vci], 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV_ADDR(av, nic, vci), 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        return MPIDI_OFI_AV(av).dest[nic][vci];
+        return MPIDI_OFI_AV_ADDR(av, nic, vci);
     }
 #else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][0], vci, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV_ADDR(av, nic, 0), vci, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         MPIR_Assert(vci == 0);
-        return MPIDI_OFI_AV(av).dest[nic][0];
+        return MPIDI_OFI_AV_ADDR(av, nic, 0);
     }
 #endif
 }

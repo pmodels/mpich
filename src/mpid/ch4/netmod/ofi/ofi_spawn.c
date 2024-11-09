@@ -210,7 +210,7 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
             MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av, addrname,
                                             1, &addr, 0ULL, NULL), 0, avmap);
             MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV(MPIDIU_get_av(avtid, i)).dest[nic][0] = addr;
+            MPIDI_OFI_AV_ADDR(MPIDIU_get_av(avtid, i), nic, 0) = addr;
 
             int node_id;
             mpi_errno = MPIR_nodeid_lookup(hostname, &node_id);
@@ -265,8 +265,8 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
         idx += hostname_len + 1;
 
         size_t sz = MPIDI_OFI_global.addrnamelen;;
-        MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, i));
-        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av, av->dest[nic][0],
+        fi_addr_t addr = MPIDI_OFI_AV_ADDR(MPIDIU_comm_rank_to_av(comm, i), nic, 0);
+        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av, addr,
                                         temp_buf + idx, &sz), 0, avlookup);
         idx += (int) sz;
 

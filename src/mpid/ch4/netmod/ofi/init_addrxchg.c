@@ -133,7 +133,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
 
         for (int i = 0; i < num_nodes; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV(MPIDIU_get_av(0, node_roots[i])).dest[0][0] = mapped_table[i];
+            MPIDI_OFI_AV_ADDR(MPIDIU_get_av(0, node_roots[i]), 0, 0) = mapped_table[i];
         }
         MPL_free(mapped_table);
         /* Then, allgather all address names using init_comm */
@@ -149,7 +149,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
                 char *addrname = (char *) table + recv_bc_len * rank_map[i];
                 MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av,
                                             addrname, 1, &addr, 0ULL, NULL), avmap);
-                MPIDI_OFI_AV(MPIDIU_get_av(0, i)).dest[0][0] = addr;
+                MPIDI_OFI_AV_ADDR(MPIDIU_get_av(0, i), 0, 0) = addr;
             }
         }
         mpi_errno = MPIDU_bc_table_destroy();
@@ -163,7 +163,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
 
         for (int i = 0; i < size; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV(MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
+            MPIDI_OFI_AV_ADDR(MPIDIU_get_av(0, i), 0, 0) = mapped_table[i];
         }
         MPL_free(mapped_table);
         mpi_errno = MPIDU_bc_table_destroy();
@@ -173,8 +173,8 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
     /* check */
     if (MPIDI_OFI_ENABLE_AV_TABLE) {
         for (int r = 0; r < size; r++) {
-            MPIDI_OFI_addr_t *av ATTRIBUTE((unused)) = &MPIDI_OFI_AV(MPIDIU_get_av(0, r));
-            MPIR_Assert(av->dest[0][0] == get_root_av_table_index(r));
+            MPIDI_av_entry_t *av ATTRIBUTE((unused)) = MPIDIU_get_av(0, r);
+            MPIR_Assert(MPIDI_OFI_AV_ADDR(av, 0, 0) == get_root_av_table_index(r));
         }
     }
 
@@ -192,7 +192,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
 /* Macros to reduce clutter, so we can focus on the ordering logics.
  * Note: they are not perfectly wrapped, but tolerable since only used here. */
 #define GET_AV_AND_ADDRNAMES(rank) \
-    MPIDI_OFI_addr_t *av ATTRIBUTE((unused)) = &MPIDI_OFI_AV(MPIDIU_get_av(0, rank)); \
+    MPIDI_av_entry_t *av ATTRIBUTE((unused)) = MPIDIU_get_av(0, rank); \
     char *r_names = all_names + rank * max_vcis * num_nics * name_len;
 
 #define DO_AV_INSERT(ctx_idx, nic, vci) \
@@ -275,7 +275,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
             for (int vci = 0; vci < NUM_VCIS_FOR_RANK(r); vci++) {
                 SKIP_ROOT(nic, vci);
                 DO_AV_INSERT(root_ctx_idx, nic, vci);
-                av->dest[nic][vci] = addr;
+                MPIDI_OFI_AV_ADDR(av, nic, vci) = addr;
             }
         }
     }
@@ -306,7 +306,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
                     if (is_node_roots[r]) {
                         GET_AV_AND_ADDRNAMES(r);
                         DO_AV_INSERT(ctx_idx, 0, 0);
-                        MPIR_Assert(av->dest[0][0] == addr);
+                        MPIR_Assert(MPIDI_OFI_AV_ADDR(av, 0, 0) == addr);
                     }
                 }
                 /* non-node-root */
@@ -314,7 +314,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
                     if (!is_node_roots[r]) {
                         GET_AV_AND_ADDRNAMES(r);
                         DO_AV_INSERT(ctx_idx, 0, 0);
-                        MPIR_Assert(av->dest[0][0] == addr);
+                        MPIR_Assert(MPIDI_OFI_AV_ADDR(av, 0, 0) == addr);
                     }
                 }
             } else {
@@ -322,7 +322,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
                 for (int r = 0; r < size; r++) {
                     GET_AV_AND_ADDRNAMES(r);
                     DO_AV_INSERT(ctx_idx, 0, 0);
-                    MPIR_Assert(av->dest[0][0] == addr);
+                    MPIR_Assert(MPIDI_OFI_AV_ADDR(av, 0, 0) == addr);
                 }
             }
 
@@ -333,7 +333,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
                     for (int vci = 0; vci < NUM_VCIS_FOR_RANK(r); vci++) {
                         SKIP_ROOT(nic, vci);
                         DO_AV_INSERT(ctx_idx, nic, vci);
-                        MPIR_Assert(av->dest[nic][vci] == addr);
+                        MPIR_Assert(MPIDI_OFI_AV_ADDR(av, nic, vci) == addr);
                     }
                 }
             }
@@ -346,11 +346,11 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
 #if MPIDI_CH4_MAX_VCIS > 1
     if (MPIDI_OFI_ENABLE_AV_TABLE) {
         for (int r = 0; r < size; r++) {
-            MPIDI_OFI_addr_t *av ATTRIBUTE((unused)) = &MPIDI_OFI_AV(MPIDIU_get_av(0, r));
+            MPIDI_av_entry_t *av ATTRIBUTE((unused)) = MPIDIU_get_av(0, r);
             for (int nic = 0; nic < num_nics; nic++) {
                 for (int vci = 0; vci < NUM_VCIS_FOR_RANK(r); vci++) {
-                    MPIR_Assert(av->dest[nic][vci] == get_av_table_index(r, nic, vci,
-                                                                         all_num_vcis));
+                    MPIR_Assert(MPIDI_OFI_AV_ADDR(av, nic, vci) == get_av_table_index(r, nic, vci,
+                                                                                      all_num_vcis));
                 }
             }
         }
