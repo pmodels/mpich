@@ -198,8 +198,9 @@ typedef struct {
     MPIDI_av_table_t **av_tables;
 } MPIDIU_avt_manager;
 
-#define MPIDIU_get_av_table(avtid) (MPIDI_global.avt_mgr.av_tables[(avtid)])
-#define MPIDIU_get_av(avtid, lpid) (MPIDI_global.avt_mgr.av_tables[(avtid)]->table[(lpid)])
+#define MPIDIU_av_table(avtid) (MPIDI_global.avt_mgr.av_tables[(avtid)])
+#define MPIDIU_av_entry(avt, lpid) ((MPIDI_av_entry_t *) ((char *) (avt)->table + (lpid) * MPIDI_global.av_entry_size))
+#define MPIDIU_get_av(avtid, lpid) MPIDIU_av_entry(MPIDIU_av_table(avtid), lpid)
 
 typedef struct {
     uint64_t key;
@@ -262,6 +263,7 @@ typedef struct MPIDI_CH4_Global_t {
     char parent_port[MPIDI_MAX_KVS_VALUE_LEN];
     int is_initialized;
     MPIDIU_avt_manager avt_mgr;
+    int av_entry_size;
     MPIR_Commops MPIR_Comm_fns_store;
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;

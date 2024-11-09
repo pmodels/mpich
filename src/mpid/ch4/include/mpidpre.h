@@ -692,13 +692,13 @@ typedef struct {
 #endif
 
 typedef struct MPIDI_av_entry {
-    union {
-    MPIDI_NM_ADDR_DECL} netmod;
     MPIDI_locality_t is_local;
     int node_id;
 #ifdef MPIDI_BUILD_CH4_UPID_HASH
     MPIDI_upid_hash *hash;
 #endif
+    union {
+    MPIDI_NM_ADDR_DECL} netmod;
 } MPIDI_av_entry_t;
 
 #define HAVE_DEV_COMM_HOOK

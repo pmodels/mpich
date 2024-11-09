@@ -31,7 +31,7 @@ int MPIDI_UCX_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
 
     int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
     int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(&MPIDIU_get_av(avtid, lpid), vci, vci);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(MPIDIU_get_av(avtid, lpid), vci, vci);
 
     bool done = false;
     ucp_request_param_t param = {
@@ -189,7 +189,7 @@ int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
             ep_params.address = (ucp_address_t *) new_upids[i];
             ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[vci].worker, &ep_params,
-                                       &MPIDI_UCX_AV(&MPIDIU_get_av(avtid, i)).dest[0][0]);
+                                       &MPIDI_UCX_AV(MPIDIU_get_av(avtid, i)).dest[0][0]);
             MPIDI_UCX_CHK_STATUS(ucx_status);
             MPIDIU_upidhash_add(new_upids[i], remote_upid_size[new_avt_procs[i]], avtid, i);
 
