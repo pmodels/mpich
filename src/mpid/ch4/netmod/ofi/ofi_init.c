@@ -779,7 +779,8 @@ int MPIDI_OFI_init_local(int *tag_bits)
     ofi_am_init(0);
     ofi_am_post_recv(0, 0);
 
-    MPIDI_global.av_entry_size = sizeof(MPIDI_av_entry_t);
+    MPIDI_global.av_entry_size = sizeof(MPIDI_av_entry_t) +
+        sizeof(fi_addr_t) * (MPIDI_OFI_global.num_nics * MPIDI_OFI_global.max_vcis - 1);
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
