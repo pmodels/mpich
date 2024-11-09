@@ -1757,7 +1757,8 @@ int MPIDIG_put_data_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
     rreq = (MPIR_Request *) msg_hdr->preq_ptr;
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_target_cmpl_cb;
-    MPIDIG_recv_type_init(MPIDIG_REQUEST(rreq, req->preq.origin_data_sz), rreq);
+    mpi_errno = MPIDIG_recv_type_init(MPIDIG_REQUEST(rreq, req->preq.origin_data_sz), rreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = rreq;
