@@ -383,7 +383,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_MAX_NICS
       category    : CH4
       type        : int
-      default     : -1
+      default     : 1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -391,7 +391,7 @@ cvars:
         If set to positive number, this cvar determines the maximum number of physical nics
         to use (if more than one is available). If the number is -1, underlying netmod or
         shmmod automatically uses an optimal number depending on what is detected on the
-        system up to the limit determined by MPIDI_MAX_NICS (in ofi_types.h).
+        system.
 
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING
       category    : CH4
