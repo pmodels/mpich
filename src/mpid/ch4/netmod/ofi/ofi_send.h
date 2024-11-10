@@ -104,6 +104,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_issue_ack_recv(MPIR_Request * sreq, MPIR_
     ackreq->remote_addr = MPIDI_OFI_av_to_phys(addr, nic, vci_remote);
     ackreq->match_bits = match_bits;
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    /* set is_local in case we go into active messages later */
+    MPIDI_REQUEST(sreq, is_local) = 0;
+#endif
     MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ackreq->ctx_idx].rx,
                                   ackreq->ack_hdr, ackreq->ack_hdr_sz, NULL, ackreq->remote_addr,
                                   ackreq->match_bits, 0ULL, (void *) &(ackreq->context)),

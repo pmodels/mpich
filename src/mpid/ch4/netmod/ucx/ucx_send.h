@@ -161,7 +161,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf,
                                addr, request, vci_src, vci_dst, is_sync, 0 /* is_am */);
     MPIDI_UCX_REQ(*request).s.am_req = NULL;
     MPIDI_UCX_THREAD_CS_EXIT_VCI(vci_src);
-
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_REQUEST(*request, is_local) = 0;
+#endif
 
     MPIR_FUNC_EXIT;
     return mpi_errno;
