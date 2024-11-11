@@ -123,3 +123,77 @@ int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77
 
     return ret;
 }
+
+/* For use by MPI_F08 */
+int MPII_Comm_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler)
+{
+    struct F77_errhan_state *p = malloc(sizeof(struct F77_errhan_state));
+    p->err_fn = err_fn;
+
+    MPI_Errhandler errhandler_i;
+    int ret = MPI_SUCCESS;
+
+    ret = MPIX_Comm_create_errhandler_x(F77_comm_errhan_proxy, F77_errhan_free, p, &errhandler_i);
+    if (ret == MPI_SUCCESS) {
+        *errhandler = MPI_Errhandler_c2f(errhandler_i);
+    } else {
+        free(p);
+    }
+
+    return ret;
+}
+
+int MPII_File_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler)
+{
+    struct F77_errhan_state *p = malloc(sizeof(struct F77_errhan_state));
+    p->err_fn = err_fn;
+
+    MPI_Errhandler errhandler_i;
+    int ret = MPI_SUCCESS;
+
+    ret = MPIX_File_create_errhandler_x(F77_file_errhan_proxy, F77_errhan_free, p, &errhandler_i);
+    if (ret == MPI_SUCCESS) {
+        *errhandler = MPI_Errhandler_c2f(errhandler_i);
+    } else {
+        free(p);
+    }
+
+    return ret;
+}
+
+int MPII_Win_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler)
+{
+    struct F77_errhan_state *p = malloc(sizeof(struct F77_errhan_state));
+    p->err_fn = err_fn;
+
+    MPI_Errhandler errhandler_i;
+    int ret = MPI_SUCCESS;
+
+    ret = MPIX_Win_create_errhandler_x(F77_win_errhan_proxy, F77_errhan_free, p, &errhandler_i);
+    if (ret == MPI_SUCCESS) {
+        *errhandler = MPI_Errhandler_c2f(errhandler_i);
+    } else {
+        free(p);
+    }
+
+    return ret;
+}
+
+int MPII_Session_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler)
+{
+    struct F77_errhan_state *p = malloc(sizeof(struct F77_errhan_state));
+    p->err_fn = err_fn;
+
+    MPI_Errhandler errhandler_i;
+    int ret = MPI_SUCCESS;
+
+    ret = MPIX_Session_create_errhandler_x(F77_session_errhan_proxy, F77_errhan_free,
+                                           p, &errhandler_i);
+    if (ret == MPI_SUCCESS) {
+        *errhandler = MPI_Errhandler_c2f(errhandler_i);
+    } else {
+        free(p);
+    }
+
+    return ret;
+}
