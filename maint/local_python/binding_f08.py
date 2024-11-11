@@ -17,6 +17,8 @@ def get_cdesc_name(func, is_large):
 
 def get_f08_c_name(func, is_large):
     name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_c')
+    if RE.match(r'mpi_(comm|type|win|file)_create_errhandler', func['name'], re.IGNORECASE):
+        name = re.sub(r'MPIR_', r'MPII_', name)
     if is_large:
         name += "_large"
     return name
@@ -791,6 +793,8 @@ def dump_mpi_c_interface_nobuf(func, is_large):
         c_name = re.sub(r'MPIX?_', r'MPII_', func['name'])
         if is_large:
             c_name += "_large"
+    elif RE.match(r'mpi_(comm|type|win|file)_create_errhandler', func['name'], re.IGNORECASE):
+        c_name = re.sub(r'MPI_', r'MPII_', func['name'])
     elif RE.match(r'mpi_comm_spawn(_multiple)?$', func['name'], re.IGNORECASE):
         # use wrapper c functions
         c_name = name
