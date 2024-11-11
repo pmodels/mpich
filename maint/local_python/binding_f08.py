@@ -225,6 +225,9 @@ def dump_f08_wrappers_f(func, is_large):
             if re.match(r'mpi_i?alltoallw', func['name'], re.IGNORECASE):
                 G.out.append("sendtypes_c = sendtypes(1:1)%MPI_VAL")
                 G.out.append("recvtypes_c = recvtypes(1:length)%MPI_VAL")
+            else:
+                G.out.append("sendtype_c = sendtype%MPI_VAL")
+                G.out.append("recvtype_c = recvtype%MPI_VAL")
             dump_fortran_line("ierror_c = %s(%s)" % (c_func_name, args2))
             G.out.extend(convert_list_2)
 
@@ -520,8 +523,8 @@ def dump_f08_wrappers_f(func, is_large):
             if p['_array_length'] == 'comm_size':
                 need_check_int_kind = True
                 if not has_comm_size:
-                    if RE.search(r'alltoallw', func['name'], re.IGNORECASE):
-                        # always need the length for types array
+                    if RE.search(r'alltoall[vw]', func['name'], re.IGNORECASE):
+                        # always need the length for types or counts array
                         use_list = convert_list_pre
                     else:
                         use_list = convert_list_1
@@ -743,13 +746,17 @@ def dump_f08_wrappers_f(func, is_large):
     else:
         ret = 'res'
 
-    if is_alltoallvw:
-        dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
-        dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2)
-        dump_F_else()
     if need_check_int_kind and G.opts['fint-size'] == G.opts['cint-size']:
+        if is_alltoallvw:
+            dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
+            dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2)
+            dump_F_else()
         dump_call("%s = %s(%s)" % (ret, c_func_name, ', '.join(arg_list_1)), False)
     else:
+        if is_alltoallvw:
+            dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
+            dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2)
+            dump_F_else()
         G.out.extend(convert_list_1)
         dump_call("%s = %s(%s)" % (ret, c_func_name, ', '.join(arg_list_2)), True)
         G.out.extend(convert_list_2)
