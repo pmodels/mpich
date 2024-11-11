@@ -1,4 +1,66 @@
 ===============================================================================
+                               Changes in 4.3
+===============================================================================
+# Support MPI memory allocation kinds side document.
+
+# Support MPI ABI Proposal. Configure with --enable-mpi-abi and build with
+  mpicc_abi. By default, mpicc still builds and links with MPICH ABI.
+
+# Experimental API MPIX_Op_create_x. It supports user callback function with
+  extra_state context and op destructor callback. It supports language bindings
+  to use proxy function for language-specific user callbacks.
+
+# Experimental API MPIX_{Comm,File,Session,Win}_create_errhandler_x. They allow
+  user error handlers to have extra_state context and corresponding destructor.
+  This allows language bindings to implement user error handlers via proxy.
+
+# Experimental API MPIX_Request_is_complete. This is a pure request state query
+  function that will not invoke progress, nor will free the request. This should
+  help applications that want separate task dependency checking from progress
+  engine to avoid progress contentions, especially in multi-threaded context.
+  It is also useful for tools to profile non-deterministic calls such as
+  MPI_Test.
+
+# Experimental API MPIX_Async_start. This function let applications to inject
+  progress hooks to MPI progress. It allows application to implement custom
+  asynchronous operations that will be progressed by MPI. It avoids having to
+  implement separate progress mechanisms that may either take additional
+  resource or contend with MPI progress and negatively impact performance. It
+  also allows applications to create custom MPI operations, such as MPI
+  nonblocking collectives, and achieve near native performance.
+
+# Added benchmark tests test/mpi/bench/p2p_{latency,bw}. 
+
+# Added CMA support in CH4 IPC.
+
+# Added IPC read algorithm for intranode Allgather and Allgatherv.
+
+# Added CVAR MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE to enable non-temporal memcpy
+  for inter-numa shm communication.
+
+# Added CVAR MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT for debugging MPI deadlock issues.  
+
+# ch4:ucx now supports dynamic processes. MPI_Comm_spawn{_multiple} will work.
+  MPI_Open_port will fail due to ucx port name exceeds current MPI_MAX_PORT_NAME
+  of 256. One can work around by use an info hint "port_name_size" and use a
+  larger port name buffer.
+
+# PMI-1 defines PMI_MAX_PORT_NAME, which may be different from MPI_MAX_PORT_NAME.
+  This is used by "PMI_Lookup_name". Consequently, MPI_Lookup_name accepts info
+  hint "port_name_size" that may be larger than MPI_MAX_PORT_NAME. If the port
+  name does not fit in "port_name_size", it will return a truncation error.
+
+# Autogen default to use -yaksa-depth=2.
+
+# Default MPIR_CVAR_CH4_ROOTS_ONLY_PMI to on.
+
+# Added ch4 netmod API am_tag_send and am_tag_recv.
+
+# Added MPIR_CVAR_CH4_OFI_EAGER_THRESHOLD to force RNDV send mode.
+
+# Make check target will run ROMIO tests.
+
+===============================================================================
                                Changes in 4.2.2
 ===============================================================================
 
