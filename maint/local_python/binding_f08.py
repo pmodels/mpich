@@ -437,6 +437,7 @@ def dump_f08_wrappers_f(func, is_large):
 
             c_decl_list.append("INTEGER(c_int), TARGET :: %s_c(%s)" % (p['name'], length))
             convert_list_1.append("IF (has_%s) THEN" % p['name'])
+            convert_list_1.append("    %s_c(1:%s) = %s(1:%s)" % (p['name'], length, p['name'], length))
             convert_list_1.append("    %s_cptr = c_loc(%s_c)" % (p['name'], p['name']))
             convert_list_1.append("END IF")
             # output conversion for MPI_Dist_graph_neighbors
