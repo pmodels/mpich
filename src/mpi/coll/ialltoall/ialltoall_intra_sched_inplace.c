@@ -19,7 +19,8 @@
  * scenario. */
 int MPIR_Ialltoall_intra_sched_inplace(const void *sendbuf, MPI_Aint sendcount,
                                        MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                                       MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     void *tmp_buf = NULL;
@@ -33,8 +34,8 @@ int MPIR_Ialltoall_intra_sched_inplace(const void *sendbuf, MPI_Aint sendcount,
     MPIR_Assert(sendbuf == MPI_IN_PLACE);
 #endif
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
+
     MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     nbytes = recvtype_size * recvcount;
@@ -60,10 +61,11 @@ int MPIR_Ialltoall_intra_sched_inplace(const void *sendbuf, MPI_Aint sendcount,
                 MPIR_SCHED_BARRIER(s);
 
                 /* now simultaneously send from tmp_buf and recv to recvbuf */
-                mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, peer, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, peer, comm_ptr, coll_group, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_recv(((char *) recvbuf + peer * recvcount * recvtype_extent),
-                                            recvcount, recvtype, peer, comm_ptr, s);
+                                            recvcount, recvtype, peer, comm_ptr, coll_group, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }

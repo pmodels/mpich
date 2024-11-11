@@ -94,6 +94,8 @@ def dump_allcomm_auto_blocking(name):
     dump_open("MPIR_Csel_coll_sig_s coll_sig = {")
     G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__%s," % NAME)
     G.out.append(".comm_ptr = comm_ptr,")
+    if not re.match(r'i?neighbor_', func_name, re.IGNORECASE):
+        G.out.append(".coll_group = coll_group,")
     for p in func['parameters']:
         if not re.match(r'comm$', p['name']):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
@@ -163,12 +165,16 @@ def dump_allcomm_sched_auto(name):
     dump_split(0, "int MPIR_%s_allcomm_sched_auto(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
+    if re.match(r'Ineighbor_', Name):
+        G.out.append("int coll_group = MPIR_SUBGROUP_NONE;")
     G.out.append("")
 
     # -- Csel_search
     dump_open("MPIR_Csel_coll_sig_s coll_sig = {")
     G.out.append(".coll_type = MPIR_CSEL_COLL_TYPE__%s," % NAME)
     G.out.append(".comm_ptr = comm_ptr,")
+    if not re.match(r'i?neighbor_', func_name, re.IGNORECASE):
+        G.out.append(".coll_group = coll_group,")
     for p in func['parameters']:
         if not re.match(r'comm$', p['name']):
             G.out.append(".u.%s.%s = %s," % (func_name, p['name'], p['name']))
@@ -363,6 +369,8 @@ def dump_sched_impl(name):
     dump_split(0, "int MPIR_%s_sched_impl(%s)" % (Name, func_params))
     dump_open('{')
     G.out.append("int mpi_errno = MPI_SUCCESS;")
+    if re.match(r'Ineighbor_', Name):
+        G.out.append("int coll_group = MPIR_SUBGROUP_NONE;")
     G.out.append("")
 
     dump_open("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {")
@@ -552,20 +560,22 @@ def dump_fallback(algo):
         elif a == "noinplace":
             cond_list.append("sendbuf != MPI_IN_PLACE")
         elif a == "power-of-two":
-            cond_list.append("comm_ptr->local_size == comm_ptr->coll.pof2")
+            cond_list.append("MPL_is_pof2(MPIR_Coll_size(comm_ptr, coll_group))")
         elif a == "size-ge-pof2":
-            cond_list.append("count >= comm_ptr->coll.pof2")
+            cond_list.append("count >= MPL_pof2(MPIR_Coll_size(comm_ptr, coll_group))")
         elif a == "commutative":
             cond_list.append("MPIR_Op_is_commutative(op)")
         elif a== "builtin-op":
             cond_list.append("HANDLE_IS_BUILTIN(op)")
         elif a == "parent-comm":
-            cond_list.append("MPIR_Comm_is_parent_comm(comm_ptr)")
+            cond_list.append("MPIR_Comm_is_parent_comm(comm_ptr, coll_group)")
         elif a == "node-consecutive":
             cond_list.append("MPII_Comm_is_node_consecutive(comm_ptr)")
         elif a == "displs-ordered":
             # assume it's allgatherv
             cond_list.append("MPII_Iallgatherv_is_displs_ordered(comm_ptr->local_size, recvcounts, displs)")
+        elif a == "nogroup":
+            cond_list.append("coll_group == MPIR_SUBGROUP_NONE")
         else:
             raise Exception("Unsupported restrictions - %s" % a)
     (func_name, commkind) = algo['func-commkind'].split('-')
@@ -644,6 +654,9 @@ def get_algo_extra_params(algo):
 # additional wrappers
 def get_algo_args(args, algo, kind):
     algo_args = args
+    if not re.match(r'i?neighbor_', algo['func-commkind']):
+        algo_args += ", coll_group"
+
     if 'extra_params' in algo:
         algo_args += ", " + get_algo_extra_args(algo, kind)
 
@@ -658,6 +671,9 @@ def get_algo_args(args, algo, kind):
 
 def get_algo_params(params, algo):
     algo_params = params
+    if not re.match(r'i?neighbor_', algo['func-commkind']):
+        algo_params += ", int coll_group"
+
     if 'extra_params' in algo:
         algo_params += ", " + get_algo_extra_params(algo)
 
@@ -681,6 +697,8 @@ def get_algo_name(algo):
 
 def get_func_params(params, name, kind):
     func_params = params
+    if not name.startswith('neighbor_'):
+        func_params += ", int coll_group"
     if kind == "blocking":
         if not name.startswith('neighbor_'):
             func_params += ", MPIR_Errflag_t errflag"
@@ -701,6 +719,8 @@ def get_func_params(params, name, kind):
 
 def get_func_args(args, name, kind):
     func_args = args
+    if not name.startswith('neighbor_'):
+        func_args += ", coll_group"
     if kind == "blocking":
         if not name.startswith('neighbor_'):
             func_args += ", errflag"

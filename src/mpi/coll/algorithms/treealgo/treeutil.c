@@ -472,8 +472,8 @@ static void MPII_Treeutil_hierarchy_reorder(UT_array * hierarchy, int rank)
 }
 
 /* tree init function is for building hierarchy of MPIR_Process::coords_dims */
-static int MPII_Treeutil_hierarchy_populate(MPIR_Comm * comm, int rank, int nranks, int root,
-                                            bool enable_reorder, UT_array * hierarchy)
+static int MPII_Treeutil_hierarchy_populate(MPIR_Comm * comm, int coll_group, int rank, int nranks,
+                                            int root, bool enable_reorder, UT_array * hierarchy)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -504,8 +504,12 @@ static int MPII_Treeutil_hierarchy_populate(MPIR_Comm * comm, int rank, int nran
         MPIR_Assert(upper_level != NULL);
 
         /* Get wrank from the communicator as the coords are stored with wrank */
+        int comm_rank = r;
+        if (coll_group > 0) {
+            comm_rank = comm->subgroups[coll_group].proc_table[r];
+        }
         uint64_t temp = 0;
-        MPID_Comm_get_lpid(comm, r, &temp, FALSE);
+        MPID_Comm_get_lpid(comm, comm_rank, &temp, FALSE);
         int wrank = (int) temp;
         if (wrank < 0)
             goto fn_fail;
@@ -600,12 +604,13 @@ static int MPII_Treeutil_hierarchy_populate(MPIR_Comm * comm, int rank, int nran
  * build the hierarchy of the topology-aware tree.
  * For the mentioned cases  see tags 'goto fn_fallback;'. */
 
-int MPII_Treeutil_tree_topology_aware_init(MPIR_Comm * comm, int k, int root, bool enable_reorder,
-                                           MPIR_Treealgo_tree_t * ct)
+int MPII_Treeutil_tree_topology_aware_init(MPIR_Comm * comm, int coll_group, int k, int root,
+                                           bool enable_reorder, MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank = comm->rank;
-    int nranks = comm->local_size;
+
+    int rank, nranks;
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     UT_array hierarchy[MAX_HIERARCHY_DEPTH];
     int dim = MPIR_Process.coords_dims - 1;
@@ -613,7 +618,8 @@ int MPII_Treeutil_tree_topology_aware_init(MPIR_Comm * comm, int k, int root, bo
         tree_ut_hierarchy_init(&hierarchy[dim]);
 
     if (k <= 0 ||
-        0 != MPII_Treeutil_hierarchy_populate(comm, rank, nranks, root, enable_reorder, hierarchy))
+        0 != MPII_Treeutil_hierarchy_populate(comm, coll_group, rank, nranks, root, enable_reorder,
+                                              hierarchy))
         goto fn_fallback;
 
     ct->rank = rank;
@@ -695,16 +701,18 @@ int MPII_Treeutil_tree_topology_aware_init(MPIR_Comm * comm, int k, int root, bo
 }
 
 /* Implementation of 'Topology aware' algorithm with the branching factor k */
-int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, bool enable_reorder,
-                                             MPIR_Treealgo_tree_t * ct)
+int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int coll_group, int k, int root,
+                                             bool enable_reorder, MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank = comm->rank;
-    int nranks = comm->local_size;
+
+    int rank, nranks;
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     /* fall back to MPII_Treeutil_tree_topology_aware_init if k is less or equal to 2 */
     if (k <= 2) {
-        return MPII_Treeutil_tree_topology_aware_init(comm, k, root, enable_reorder, ct);
+        return MPII_Treeutil_tree_topology_aware_init(comm, coll_group, k, root, enable_reorder,
+                                                      ct);
     }
 
     int *num_childrens = NULL;
@@ -719,7 +727,9 @@ int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, 
     for (dim = MPIR_Process.coords_dims - 1; dim >= 0; --dim)
         tree_ut_hierarchy_init(&hierarchy[dim]);
 
-    if (0 != MPII_Treeutil_hierarchy_populate(comm, rank, nranks, root, enable_reorder, hierarchy))
+    if (0 !=
+        MPII_Treeutil_hierarchy_populate(comm, coll_group, rank, nranks, root, enable_reorder,
+                                         hierarchy))
         goto fn_fallback;
 
     ct->rank = rank;
@@ -758,7 +768,7 @@ int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, 
                 /* Do an allgather to know the current num_children on each rank */
                 MPIR_Errflag_t errflag = MPIR_ERR_NONE;
                 MPIR_Allgather_impl(&(ct->num_children), 1, MPI_INT, num_childrens, 1, MPI_INT,
-                                    comm, errflag);
+                                    comm, coll_group, errflag);
                 if (mpi_errno) {
                     goto fn_fail;
                 }
@@ -1111,13 +1121,12 @@ static int init_root_switch(const UT_array * hierarchy, heap_vector * minHeaps, 
 }
 
 /* 'Topology Wave' implementation */
-int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int k, int root, bool enable_reorder,
-                                          int overhead, int lat_diff_groups, int lat_diff_switches,
-                                          int lat_same_switches, MPIR_Treealgo_tree_t * ct)
+int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int coll_group, int k, int root,
+                                          bool enable_reorder, int overhead, int lat_diff_groups,
+                                          int lat_diff_switches, int lat_same_switches,
+                                          MPIR_Treealgo_tree_t * ct)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank = comm->rank;
-    int nranks = comm->local_size;
     int root_gr_sorted_idx = 0;
     int root_sw_sorted_idx = 0;
     int group_offset = 0;
@@ -1125,6 +1134,9 @@ int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int k, int root, boo
     int size_comm = 0;
     UT_array hierarchy[MAX_HIERARCHY_DEPTH];
     UT_array *unv_set = NULL;
+
+    int rank, nranks;
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     heap_vector minHeaps;
     heap_vector_init(&minHeaps);
@@ -1135,7 +1147,8 @@ int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int k, int root, boo
         tree_ut_hierarchy_init(&hierarchy[dim]);
 
     if (overhead <= 0 || lat_diff_groups <= 0 || lat_diff_switches <= 0 || lat_same_switches <= 0 ||
-        0 != MPII_Treeutil_hierarchy_populate(comm, rank, nranks, root, enable_reorder, hierarchy))
+        0 != MPII_Treeutil_hierarchy_populate(comm, coll_group, rank, nranks, root, enable_reorder,
+                                              hierarchy))
         goto fn_fallback;
 
     UT_icd intpair_icd = { sizeof(pair), NULL, NULL, NULL };

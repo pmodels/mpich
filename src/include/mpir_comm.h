@@ -101,6 +101,51 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };
 
+/* MPIR_Subgroup is similar to MPIR_Group, but only used to describe subgroups within
+ * an intra communicator. The proc_table refers to ranks within the communicator.
+ * It is only used internally for group collectives.
+ */
+typedef struct MPIR_Subgroup {
+    int size;
+    int rank;
+    int *proc_table;            /* can be NULL if the group is trivial */
+} MPIR_Subgroup;
+
+#define MPIR_MAX_SUBGROUPS 16
+
+/* reserved subgroup indexes */
+enum {
+    MPIR_SUBGROUP_THREADCOMM = -1,
+    MPIR_SUBGROUP_NONE = 0,
+    MPIR_SUBGROUP_NODE, /* i.e. nodecomm */
+    MPIR_SUBGROUP_NODE_CROSS,   /* node_roots_comm, node_rank_1_comm, ... */
+    MPIR_SUBGROUP_NUMA1,        /* 1-level below node in topology */
+    MPIR_SUBGROUP_NUMA1_CROSS,  /* cross-link group at NUMA1 within NODE */
+    MPIR_SUBGROUP_NUMA2,        /* and so on */
+    MPIR_SUBGROUP_NUMA2_CROSS,
+    MPIR_SUBGROUP_NUM_RESERVED,
+};
+
+/* macros to create dynamic subgroups.
+ * It is expected to fillout the proc_table after MPIR_COMM_PUSH_SUBGROUP.
+ */
+#define MPIR_COMM_PUSH_SUBGROUP(comm, _size, _rank, newgrp, proc_table_out) \
+    do { \
+        (newgrp) = (comm)->num_subgroups++; \
+        MPIR_Assert((comm)->num_subgroups < MPIR_MAX_SUBGROUPS); \
+        (comm)->subgroups[newgrp].size = _size; \
+        (comm)->subgroups[newgrp].rank = _rank; \
+        (proc_table_out) = MPL_malloc((_size) * sizeof(int), MPL_MEM_OTHER); \
+        (comm)->subgroups[newgrp].proc_table = (proc_table_out); \
+    } while (0)
+
+#define MPIR_COMM_POP_SUBGROUP(comm) \
+    do { \
+        int i = --(comm)->num_subgroups; \
+        MPIR_Assert(i > 0); \
+        MPL_free((comm)->subgroups[i].proc_table); \
+    } while (0)
+
 /*S
   MPIR_Comm - Description of the Communicator data structure
 
@@ -187,7 +232,8 @@ struct MPIR_Comm {
     int *internode_table;       /* internode_table[i] gives the rank in
                                  * node_roots_comm of rank i in this comm.
                                  * It is of size 'local_size'. */
-    int node_count;             /* number of nodes this comm is spread over */
+    int num_local;              /* number of procs in this comm on local node */
+    int num_external;           /* number of nodes this comm is spread over */
 
     int is_low_group;           /* For intercomms only, this boolean is
                                  * set for all members of one of the
@@ -196,6 +242,8 @@ struct MPIR_Comm {
                                  * intercommunicator collective operations
                                  * that wish to use half-duplex operations
                                  * to implement a full-duplex operation */
+    MPIR_Subgroup subgroups[MPIR_MAX_SUBGROUPS];
+    int num_subgroups;
 
     struct MPIR_Comm *comm_next;        /* Provides a chain through all active
                                          * communicators */
@@ -223,9 +271,6 @@ struct MPIR_Comm {
                                          * use int array for fast access */
 
     struct {
-        int pof2;               /* Nearest (smaller than or equal to) power of 2
-                                 * to the number of ranks in the communicator.
-                                 * To be used during collective communication */
         int pofk[MAX_RADIX - 1];
         int k[MAX_RADIX - 1];
         int step1_sendto[MAX_RADIX - 1];
@@ -235,18 +280,9 @@ struct MPIR_Comm {
         int **step2_nbrs[MAX_RADIX - 1];
         int nbrs_defined[MAX_RADIX - 1];
         void **recexch_allreduce_nbr_buffer;
-        int topo_aware_tree_root;
-        int topo_aware_tree_k;
-        MPIR_Treealgo_tree_t *topo_aware_tree;
-        int topo_aware_k_tree_root;
-        int topo_aware_k_tree_k;
-        MPIR_Treealgo_tree_t *topo_aware_k_tree;
-        int topo_wave_tree_root;
-        int topo_wave_tree_overhead;
-        int topo_wave_tree_lat_diff_groups;
-        int topo_wave_tree_lat_diff_switches;
-        int topo_wave_tree_lat_same_switches;
-        MPIR_Treealgo_tree_t *topo_wave_tree;
+
+        MPIR_Treealgo_tree_t *cached_tree;
+        MPIR_Treealgo_param_t cached_tree_param;
     } coll;
 
     void *csel_comm;            /* collective selector handle */
@@ -375,7 +411,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
 
-int MPIR_Comm_is_parent_comm(MPIR_Comm *);
+int MPIR_Comm_is_parent_comm(MPIR_Comm * comm, int coll_group);
 
 /* peer intercomm is an internal 1-to-1 intercomm used for connecting dynamic processes */
 int MPIR_peer_intercomm_create(MPIR_Context_id_t context_id, MPIR_Context_id_t recvcontext_id,

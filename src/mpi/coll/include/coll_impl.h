@@ -75,7 +75,7 @@ int MPII_Coll_finalize(void);
         mpi_errno = MPIR_Sched_create(&s, sched_kind); \
         MPIR_ERR_CHECK(mpi_errno); \
         int tag = -1; \
-        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag); \
+        mpi_errno = MPIR_Sched_next_tag(comm_ptr, coll_group, &tag); \
         MPIR_ERR_CHECK(mpi_errno); \
         MPIR_Sched_set_tag(s, tag); \
         *sched_type_p = MPIR_SCHED_NORMAL; \

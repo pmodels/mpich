@@ -10,9 +10,9 @@
 /* Routine to schedule a scatter followed by recursive exchange based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count,
                                                     MPI_Datatype datatype, int root,
-                                                    MPIR_Comm * comm, int allgatherv_algo,
-                                                    int scatterv_k, int allgatherv_k,
-                                                    MPIR_TSP_sched_t sched)
+                                                    MPIR_Comm * comm, int coll_group,
+                                                    int allgatherv_algo, int scatterv_k,
+                                                    int allgatherv_k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t extent, type_size;
@@ -32,19 +32,18 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_FUNC_ENTER;
 
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
+    lrank = (rank - root + size) % size;        /* logical rank when root is non-zero */
+
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST,
                      "Scheduling scatter followed by recursive exchange allgather based broadcast on %d ranks, root=%d\n",
-                     MPIR_Comm_size(comm), root));
-
-    size = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
-    lrank = (rank - root + size) % size;        /* logical rank when root is non-zero */
+                     size, root));
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
@@ -150,14 +149,14 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
         ibcast_state->n_bytes = recv_size;
         mpi_errno =
             MPIR_TSP_sched_irecv_status((char *) tmp_buf + displs[rank], recv_size, MPI_BYTE,
-                                        my_tree.parent, tag, comm, &ibcast_state->status, sched, 0,
-                                        NULL, &recv_id);
+                                        my_tree.parent, tag, comm, coll_group,
+                                        &ibcast_state->status, sched, 0, NULL, &recv_id);
         MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
                           &vtx_id);
 #else
         mpi_errno =
             MPIR_TSP_sched_irecv((char *) tmp_buf + displs[rank], recv_size, MPI_BYTE,
-                                 my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
+                                 my_tree.parent, tag, comm, coll_group, sched, 0, NULL, &recv_id);
 #endif
         MPIR_ERR_CHECK(mpi_errno);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv", rank));
@@ -174,8 +173,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
         mpi_errno = MPIR_TSP_sched_isend((char *) tmp_buf + displs[child],
                                          child_subtree_size[i], MPI_BYTE,
-                                         child, tag, comm, sched, num_send_dependencies, &recv_id,
-                                         &vtx_id);
+                                         child, tag, comm, coll_group, sched, num_send_dependencies,
+                                         &recv_id, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -188,13 +187,13 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
         /* Schedule Allgatherv ring */
         mpi_errno =
             MPIR_TSP_Iallgatherv_sched_intra_ring(MPI_IN_PLACE, cnts[rank], MPI_BYTE, tmp_buf,
-                                                  cnts, displs, MPI_BYTE, comm, sched);
+                                                  cnts, displs, MPI_BYTE, comm, coll_group, sched);
     else
         /* Schedule Allgatherv recexch */
         mpi_errno =
             MPIR_TSP_Iallgatherv_sched_intra_recexch(MPI_IN_PLACE, cnts[rank], MPI_BYTE, tmp_buf,
-                                                     cnts, displs, MPI_BYTE, comm, 0, allgatherv_k,
-                                                     sched);
+                                                     cnts, displs, MPI_BYTE, comm, coll_group, 0,
+                                                     allgatherv_k, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!is_contig) {

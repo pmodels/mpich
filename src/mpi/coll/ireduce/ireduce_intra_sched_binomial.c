@@ -7,7 +7,7 @@
 
 int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
-                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                      MPIR_Comm * comm_ptr, int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, is_commutative;
@@ -17,8 +17,7 @@ int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Ai
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     /* Create a temporary buffer */
 
@@ -93,7 +92,8 @@ int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Ai
             source = (relrank | mask);
             if (source < comm_size) {
                 source = (source + lroot) % comm_size;
-                mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, source, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_recv(tmp_buf, count, datatype, source, comm_ptr, coll_group, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_barrier(s);
                 MPIR_ERR_CHECK(mpi_errno);
@@ -119,7 +119,7 @@ int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Ai
             /* I've received all that I'm going to.  Send my result to
              * my parent */
             source = ((relrank & (~mask)) + lroot) % comm_size;
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, source, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, source, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIR_Sched_barrier(s);
             MPIR_ERR_CHECK(mpi_errno);
@@ -131,12 +131,12 @@ int MPIR_Ireduce_intra_sched_binomial(const void *sendbuf, void *recvbuf, MPI_Ai
 
     if (!is_commutative && (root != 0)) {
         if (rank == 0) {
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, root, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIR_Sched_barrier(s);
             MPIR_ERR_CHECK(mpi_errno);
         } else if (rank == root) {
-            mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, 0, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, 0, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIR_Sched_barrier(s);
             MPIR_ERR_CHECK(mpi_errno);

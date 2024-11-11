@@ -22,15 +22,15 @@
  */
 int MPIR_Iallgather_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype
                                      sendtype, void *recvbuf, MPI_Aint recvcount,
-                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                     MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                                     MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
     int i, j, jnext, left, right;
     MPI_Aint recvtype_extent;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
@@ -52,11 +52,11 @@ int MPIR_Iallgather_intra_sched_ring(const void *sendbuf, MPI_Aint sendcount, MP
     jnext = left;
     for (i = 1; i < comm_size; i++) {
         mpi_errno = MPIR_Sched_send(((char *) recvbuf + j * recvcount * recvtype_extent),
-                                    recvcount, recvtype, right, comm_ptr, s);
+                                    recvcount, recvtype, right, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         /* concurrent, no barrier here */
         mpi_errno = MPIR_Sched_recv(((char *) recvbuf + jnext * recvcount * recvtype_extent),
-                                    recvcount, recvtype, left, comm_ptr, s);
+                                    recvcount, recvtype, left, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 

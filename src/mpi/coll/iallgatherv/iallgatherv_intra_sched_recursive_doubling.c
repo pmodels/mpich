@@ -9,7 +9,8 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     const MPI_Aint recvcounts[],
                                                     const MPI_Aint displs[], MPI_Datatype recvtype,
-                                                    MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                                    MPIR_Comm * comm_ptr, int coll_group,
+                                                    MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, i, j, k;
@@ -17,8 +18,7 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
     MPI_Aint recvtype_extent, recvtype_sz, position, offset;
     void *tmp_buf = NULL;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
 #ifdef HAVE_ERROR_CHECKING
     /* Currently this algorithm can only handle power-of-2 comm_size.
@@ -108,11 +108,13 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
                 incoming_count += recvcounts[j];
 
             mpi_errno = MPIR_Sched_send(((char *) tmp_buf + send_offset * recvtype_sz),
-                                        curr_count * recvtype_sz, MPI_BYTE, dst, comm_ptr, s);
+                                        curr_count * recvtype_sz, MPI_BYTE, dst, comm_ptr,
+                                        coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             /* sendrecv, no barrier here */
             mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + recv_offset * recvtype_sz),
-                                        incoming_count * recvtype_sz, MPI_BYTE, dst, comm_ptr, s);
+                                        incoming_count * recvtype_sz, MPI_BYTE, dst, comm_ptr,
+                                        coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -177,7 +179,7 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
                      * sent now. */
                     mpi_errno = MPIR_Sched_send(((char *) tmp_buf + offset),
                                                 incoming_count * recvtype_sz, MPI_BYTE,
-                                                dst, comm_ptr, s);
+                                                dst, comm_ptr, coll_group, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 }
@@ -199,7 +201,7 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
 
                     mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + offset * recvtype_sz),
                                                 incoming_count * recvtype_sz, MPI_BYTE,
-                                                dst, comm_ptr, s);
+                                                dst, comm_ptr, coll_group, s);
                     MPIR_ERR_CHECK(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                     curr_count += incoming_count;

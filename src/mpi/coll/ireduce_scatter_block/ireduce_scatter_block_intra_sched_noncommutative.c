@@ -12,11 +12,10 @@
 int MPIR_Ireduce_scatter_block_intra_sched_noncommutative(const void *sendbuf, void *recvbuf,
                                                           MPI_Aint recvcount, MPI_Datatype datatype,
                                                           MPI_Op op, MPIR_Comm * comm_ptr,
-                                                          MPIR_Sched_t s)
+                                                          int coll_group, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size = comm_ptr->local_size;
-    int rank = comm_ptr->rank;
+    int comm_size, rank;
     int log2_comm_size;
     int i, k;
     MPI_Aint true_extent, true_lb;
@@ -24,6 +23,8 @@ int MPIR_Ireduce_scatter_block_intra_sched_noncommutative(const void *sendbuf, v
     void *tmp_buf0;
     void *tmp_buf1;
     void *result_ptr;
+
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
@@ -84,10 +85,10 @@ int MPIR_Ireduce_scatter_block_intra_sched_noncommutative(const void *sendbuf, v
         }
 
         mpi_errno = MPIR_Sched_send((outgoing_data + send_offset * true_extent),
-                                    size, datatype, peer, comm_ptr, s);
+                                    size, datatype, peer, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Sched_recv((incoming_data + recv_offset * true_extent),
-                                    size, datatype, peer, comm_ptr, s);
+                                    size, datatype, peer, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 

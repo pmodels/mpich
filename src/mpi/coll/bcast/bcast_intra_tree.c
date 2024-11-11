@@ -12,10 +12,10 @@
 int MPIR_Bcast_intra_tree(void *buffer,
                           MPI_Aint count,
                           MPI_Datatype datatype,
-                          int root, MPIR_Comm * comm_ptr, int tree_type,
+                          int root, MPIR_Comm * comm_ptr, int coll_group, int tree_type,
                           int branching_factor, int is_nb, MPIR_Errflag_t errflag)
 {
-    int rank, comm_size, src, dst, *p, j, k, lrank = -1, is_contig;
+    int rank, comm_size, src, dst, *p, j, k, is_contig;
     int parent = -1, num_children = 0, num_req = 0, is_root = 0;
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint nbytes = 0, type_size, actual_packed_unpacked_bytes, recvd_size;
@@ -29,8 +29,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
     MPIR_Treealgo_tree_t my_tree;
     MPIR_CHKLMEM_DECL(3);
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     /* If there is only one process, return */
     if (comm_size == 1)
@@ -64,6 +63,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         dtype = MPI_BYTE;
     }
 
+    int lrank = 0;
     if (tree_type == MPIR_TREE_TYPE_KARY) {
         if (rank == root)
             is_root = 1;
@@ -76,12 +76,14 @@ int MPIR_Bcast_intra_tree(void *buffer,
         if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE ||
             tree_type == MPIR_TREE_TYPE_TOPOLOGY_AWARE_K) {
             mpi_errno =
-                MPIR_Treealgo_tree_create_topo_aware(comm_ptr, tree_type, branching_factor, root,
+                MPIR_Treealgo_tree_create_topo_aware(comm_ptr, coll_group, tree_type,
+                                                     branching_factor, root,
                                                      MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE, &my_tree);
         } else if (tree_type == MPIR_TREE_TYPE_TOPOLOGY_WAVE) {
             MPIR_Csel_coll_sig_s coll_sig = {
                 .coll_type = MPIR_CSEL_COLL_TYPE__BCAST,
                 .comm_ptr = comm_ptr,
+                .coll_group = coll_group,
                 .u.bcast.buffer = buffer,
                 .u.bcast.count = count,
                 .u.bcast.datatype = datatype,
@@ -104,7 +106,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
             }
 
             mpi_errno =
-                MPIR_Treealgo_tree_create_topo_wave(comm_ptr, branching_factor, root,
+                MPIR_Treealgo_tree_create_topo_wave(comm_ptr, coll_group, branching_factor, root,
                                                     MPIR_CVAR_BCAST_TOPO_REORDER_ENABLE,
                                                     overhead, lat_diff_groups, lat_diff_switches,
                                                     lat_same_switches, &my_tree);
@@ -129,7 +131,8 @@ int MPIR_Bcast_intra_tree(void *buffer,
     if ((parent != -1 && tree_type != MPIR_TREE_TYPE_KARY)
         || (!is_root && tree_type == MPIR_TREE_TYPE_KARY)) {
         src = parent;
-        mpi_errno = MPIC_Recv(send_buf, count, dtype, src, MPIR_BCAST_TAG, comm_ptr, &status);
+        mpi_errno = MPIC_Recv(send_buf, count, dtype, src, MPIR_BCAST_TAG,
+                              comm_ptr, coll_group, &status);
         MPIR_ERR_CHECK(mpi_errno);
         /* check that we received as much as we expected */
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
@@ -147,10 +150,12 @@ int MPIR_Bcast_intra_tree(void *buffer,
 
             if (!is_nb) {
                 mpi_errno =
-                    MPIC_Send(send_buf, count, dtype, dst, MPIR_BCAST_TAG, comm_ptr, errflag);
+                    MPIC_Send(send_buf, count, dtype, dst, MPIR_BCAST_TAG, comm_ptr, coll_group,
+                              errflag);
             } else {
                 mpi_errno = MPIC_Isend(send_buf, count, dtype, dst,
-                                       MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
+                                       MPIR_BCAST_TAG, comm_ptr, coll_group, &reqs[num_req++],
+                                       errflag);
             }
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -161,10 +166,12 @@ int MPIR_Bcast_intra_tree(void *buffer,
 
             if (!is_nb) {
                 mpi_errno =
-                    MPIC_Send(send_buf, count, dtype, dst, MPIR_BCAST_TAG, comm_ptr, errflag);
+                    MPIC_Send(send_buf, count, dtype, dst, MPIR_BCAST_TAG, comm_ptr, coll_group,
+                              errflag);
             } else {
                 mpi_errno = MPIC_Isend(send_buf, count, dtype, dst,
-                                       MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
+                                       MPIR_BCAST_TAG, comm_ptr, coll_group, &reqs[num_req++],
+                                       errflag);
             }
             MPIR_ERR_CHECK(mpi_errno);
         }

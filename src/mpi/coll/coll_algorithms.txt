@@ -174,10 +174,12 @@ allgather-intra:
         func_name: recexch
         extra_params: recexch_type=MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING, k, single_phase_recv
         cvar_params: -, RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+        restrictions: nogroup
     recexch_halving
         func_name: recexch
         extra_params: recexch_type=MPIR_ALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING, k, single_phase_recv
         cvar_params: -, RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+        restrictions: nogroup
 allgather-inter:
     local_gather_remote_bcast
 iallgather-intra:
@@ -350,10 +352,11 @@ allreduce-intra:
     recexch
         extra_params: k, single_phase_recv
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
+        restrictions: nogroup
     ring
         restrictions: commutative
     k_reduce_scatter_allgather
-        restrictions: commutative
+        restrictions: commutative, nogroup
         extra_params: k, single_phase_recv
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
 allreduce-inter:

@@ -39,6 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
                                                                   MPI_Aint count,
                                                                   MPI_Datatype datatype,
                                                                   int root, MPIR_Comm * comm_ptr,
+                                                                  int coll_group,
                                                                   MPIR_Errflag_t errflag)
 {
     MPIR_FUNC_ENTER;
@@ -152,7 +153,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     goto fn_exit;
   fallback:
     /* Fall back to other algo as release_gather based bcast cannot be used */
-    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, coll_group, errflag);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }
@@ -168,6 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
                                                                    MPI_Datatype datatype,
                                                                    MPI_Op op, int root,
                                                                    MPIR_Comm * comm_ptr,
+                                                                   int coll_group,
                                                                    MPIR_Errflag_t errflag)
 {
     int i;
@@ -251,7 +253,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     goto fn_exit;
   fallback:
     /* Fall back to other algo as release_gather algo cannot be used */
-    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+                                 coll_group, errflag);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }
@@ -266,6 +269,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
                                                                       MPI_Datatype datatype,
                                                                       MPI_Op op,
                                                                       MPIR_Comm * comm_ptr,
+                                                                      int coll_group,
                                                                       MPIR_Errflag_t errflag)
 {
     int i;
@@ -346,7 +350,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     goto fn_exit;
 
   fallback:
-    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                    coll_group, errflag);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }
@@ -355,6 +360,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
  * framework.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * comm_ptr,
+                                                                    int coll_group,
                                                                     MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -395,7 +401,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * 
     goto fn_exit;
 
   fallback:
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_impl(comm_ptr, coll_group, errflag);
     MPIR_ERR_CHECK(mpi_errno);
     goto fn_exit;
 }

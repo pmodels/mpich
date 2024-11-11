@@ -55,7 +55,7 @@ int MPIR_EQUAL_check_dtype(MPI_Datatype type)
     MPIR_Assert(actual_pack_bytes == count * type_sz)
 
 int MPIR_Reduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datatype,
-                      int *is_equal, int root, MPIR_Comm * comm_ptr)
+                      int *is_equal, int root, MPIR_Comm * comm_ptr, int coll_group)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -64,10 +64,12 @@ int MPIR_Reduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datatype
     /* Not all algorithm will work. In particular, we can't split the message */
     if (comm_ptr->rank == root) {
         mpi_errno = MPIR_Reduce_intra_binomial(MPI_IN_PLACE, local_buf, byte_count, MPI_BYTE,
-                                               MPIX_EQUAL, root, comm_ptr, MPIR_ERR_NONE);
+                                               MPIX_EQUAL, root, comm_ptr, coll_group,
+                                               MPIR_ERR_NONE);
     } else {
         mpi_errno = MPIR_Reduce_intra_binomial(local_buf, NULL, byte_count, MPI_BYTE,
-                                               MPIX_EQUAL, root, comm_ptr, MPIR_ERR_NONE);
+                                               MPIX_EQUAL, root, comm_ptr, coll_group,
+                                               MPIR_ERR_NONE);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -84,7 +86,7 @@ int MPIR_Reduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datatype
 
 
 int MPIR_Allreduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datatype,
-                         int *is_equal, MPIR_Comm * comm_ptr)
+                         int *is_equal, MPIR_Comm * comm_ptr, int coll_group)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -93,7 +95,8 @@ int MPIR_Allreduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datat
     /* Not all algorithm will work. In particular, we can't split the message */
     mpi_errno = MPIR_Allreduce_intra_recursive_doubling(MPI_IN_PLACE, local_buf,
                                                         byte_count, MPI_BYTE,
-                                                        MPIX_EQUAL, comm_ptr, MPIR_ERR_NONE);
+                                                        MPIX_EQUAL, comm_ptr, coll_group,
+                                                        MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     *is_equal = local_buf->is_equal;

@@ -22,16 +22,17 @@
 int
 MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
                               MPI_Datatype sendtype, void *recvbuf,
-                              MPI_Aint recvcount, MPI_Datatype recvtype, MPIR_Comm * comm, int k,
-                              MPIR_Errflag_t errflag)
+                              MPI_Aint recvcount, MPI_Datatype recvtype, MPIR_Comm * comm,
+                              int coll_group, int k, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
     int nphases = 0;
     int src, dst, p_of_k = 0;   /* Largest power of k that is smaller than 'size' */
 
-    int rank = MPIR_Comm_rank(comm);
-    int size = MPIR_Comm_size(comm);
+    int rank, size;
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
+
     int is_inplace = (sendbuf == MPI_IN_PLACE);
     int max = size - 1;
     MPIR_Request **reqs;
@@ -140,7 +141,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
 
             /* Receive at the exact location. */
             mpi_errno = MPIC_Irecv((char *) tmp_recvbuf + j * recvcount * delta * recvtype_extent,
-                                   count, recvtype, src, MPIR_ALLGATHER_TAG, comm,
+                                   count, recvtype, src, MPIR_ALLGATHER_TAG, comm, coll_group,
                                    &reqs[num_reqs++]);
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -152,7 +153,7 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
 
             /* Send from the start of recv till `count` amount of data. */
             mpi_errno =
-                MPIC_Isend(tmp_recvbuf, count, recvtype, dst, MPIR_ALLGATHER_TAG, comm,
+                MPIC_Isend(tmp_recvbuf, count, recvtype, dst, MPIR_ALLGATHER_TAG, comm, coll_group,
                            &reqs[num_reqs++], errflag);
             MPIR_ERR_CHECK(mpi_errno);
 

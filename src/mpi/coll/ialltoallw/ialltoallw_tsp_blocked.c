@@ -12,7 +12,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                                             const MPI_Datatype sendtypes[], void *recvbuf,
                                             const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
                                             const MPI_Datatype recvtypes[], MPIR_Comm * comm,
-                                            int bblock, MPIR_TSP_sched_t sched)
+                                            int coll_group, int bblock, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag, vtx_id;
@@ -25,15 +25,14 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
 
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
 
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     if (bblock == 0)
         bblock = nranks;
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
@@ -48,7 +47,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                 if (recvtype_size) {
                     mpi_errno = MPIR_TSP_sched_irecv((char *) recvbuf + rdispls[dst],
                                                      recvcounts[dst], recvtypes[dst], dst, tag,
-                                                     comm, sched, 0, NULL, &vtx_id);
+                                                     comm, coll_group, sched, 0, NULL, &vtx_id);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
             }
@@ -61,7 +60,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const MPI_Aint 
                 if (sendtype_size) {
                     mpi_errno = MPIR_TSP_sched_isend((char *) sendbuf + sdispls[dst],
                                                      sendcounts[dst], sendtypes[dst], dst, tag,
-                                                     comm, sched, 0, NULL, &vtx_id);
+                                                     comm, coll_group, sched, 0, NULL, &vtx_id);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
             }

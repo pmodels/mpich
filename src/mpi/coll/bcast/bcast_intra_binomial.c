@@ -13,7 +13,8 @@
 int MPIR_Bcast_intra_binomial(void *buffer,
                               MPI_Aint count,
                               MPI_Datatype datatype,
-                              int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                              int root, MPIR_Comm * comm_ptr, int coll_group,
+                              MPIR_Errflag_t errflag)
 {
     int rank, comm_size, src, dst;
     int relative_rank, mask;
@@ -32,7 +33,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     void *tmp_buf = NULL;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     if (HANDLE_IS_BUILTIN(datatype))
         is_contig = 1;
@@ -91,10 +92,10 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 src += comm_size;
             if (!is_contig)
                 mpi_errno = MPIC_Recv(tmp_buf, nbytes, MPI_BYTE, src,
-                                      MPIR_BCAST_TAG, comm_ptr, status_p);
+                                      MPIR_BCAST_TAG, comm_ptr, coll_group, status_p);
             else
                 mpi_errno = MPIC_Recv(buffer, count, datatype, src,
-                                      MPIR_BCAST_TAG, comm_ptr, status_p);
+                                      MPIR_BCAST_TAG, comm_ptr, coll_group, status_p);
             MPIR_ERR_CHECK(mpi_errno);
 #ifdef HAVE_ERROR_CHECKING
             /* check that we received as much as we expected */
@@ -128,10 +129,10 @@ int MPIR_Bcast_intra_binomial(void *buffer,
                 dst -= comm_size;
             if (!is_contig)
                 mpi_errno = MPIC_Send(tmp_buf, nbytes, MPI_BYTE, dst,
-                                      MPIR_BCAST_TAG, comm_ptr, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr, coll_group, errflag);
             else
                 mpi_errno = MPIC_Send(buffer, count, datatype, dst,
-                                      MPIR_BCAST_TAG, comm_ptr, errflag);
+                                      MPIR_BCAST_TAG, comm_ptr, coll_group, errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
         mask >>= 1;

@@ -23,7 +23,8 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
                                MPI_Datatype sendtype,
                                void *recvbuf,
                                MPI_Aint recvcount,
-                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                               MPIR_Errflag_t errflag)
 {
     int comm_size, i, pof2;
     MPI_Aint sendtype_extent, recvtype_extent;
@@ -36,7 +37,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     void *tmp_buf;
     MPIR_CHKLMEM_DECL(6);
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(sendbuf != MPI_IN_PLACE);
@@ -106,7 +107,8 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
 
         mpi_errno = MPIC_Sendrecv(tmp_buf, newtype_sz, MPI_BYTE, dst,
                                   MPIR_ALLTOALL_TAG, recvbuf, 1, newtype,
-                                  src, MPIR_ALLTOALL_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  src, MPIR_ALLTOALL_TAG, comm_ptr, coll_group, MPI_STATUS_IGNORE,
+                                  errflag);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_Type_free_impl(&newtype);

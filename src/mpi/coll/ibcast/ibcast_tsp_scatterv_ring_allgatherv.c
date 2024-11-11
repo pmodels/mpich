@@ -9,15 +9,15 @@
 /* Routine to schedule a scatter followed by ring based broadcast */
 int MPIR_TSP_Ibcast_sched_intra_scatterv_ring_allgatherv(void *buffer, MPI_Aint count,
                                                          MPI_Datatype datatype, int root,
-                                                         MPIR_Comm * comm, int scatterv_k,
-                                                         MPIR_TSP_sched_t sched)
+                                                         MPIR_Comm * comm, int coll_group,
+                                                         int scatterv_k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
     mpi_errno = MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(buffer, count, datatype, root,
-                                                                comm,
+                                                                comm, coll_group,
                                                                 MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_ring,
                                                                 scatterv_k, 0, sched);
     MPIR_ERR_CHECK(mpi_errno);

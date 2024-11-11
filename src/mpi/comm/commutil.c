@@ -302,6 +302,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->node_roots_comm = NULL;
     comm_p->intranode_table = NULL;
     comm_p->internode_table = NULL;
+    comm_p->num_subgroups = 0;
 
     /* abstractions bleed a bit here... :(*/
     comm_p->next_sched_tag = MPIR_FIRST_NBC_TAG;
@@ -517,58 +518,6 @@ int MPIR_Comm_map_free(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-static int get_node_count(MPIR_Comm * comm, int *node_count)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct uniq_nodes {
-        int id;
-        UT_hash_handle hh;
-    } *node_list = NULL;
-    struct uniq_nodes *s, *tmp;
-
-    if (comm->comm_kind != MPIR_COMM_KIND__INTRACOMM) {
-        *node_count = comm->local_size;
-        goto fn_exit;
-    } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        *node_count = 1;
-        goto fn_exit;
-    } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS) {
-        *node_count = comm->local_size;
-        goto fn_exit;
-    }
-
-    /* go through the list of ranks and add the unique ones to the
-     * node_list array */
-    for (int i = 0; i < comm->local_size; i++) {
-        int node;
-
-        mpi_errno = MPID_Get_node_id(comm, i, &node);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        HASH_FIND_INT(node_list, &node, s);
-        if (s == NULL) {
-            s = (struct uniq_nodes *) MPL_malloc(sizeof(struct uniq_nodes), MPL_MEM_COLL);
-            MPIR_Assert(s);
-            s->id = node;
-            HASH_ADD_INT(node_list, id, s, MPL_MEM_COLL);
-        }
-    }
-
-    /* the final size of our hash table is our node count */
-    *node_count = HASH_COUNT(node_list);
-
-    /* free up everything */
-    HASH_ITER(hh, node_list, s, tmp) {
-        HASH_DEL(node_list, s);
-        MPL_free(s);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -576,9 +525,6 @@ static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
 
     /* Notify device of communicator creation */
     mpi_errno = MPID_Comm_commit_pre_hook(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = get_node_count(comm, &comm->node_count);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Comm_map_free(comm);
@@ -658,6 +604,25 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
     MPIR_Assert(num_local > 0);
     MPIR_Assert(num_local > 1 || external_rank >= 0);
     MPIR_Assert(external_rank < 0 || external_procs != NULL);
+
+    comm->num_local = num_local;
+    comm->num_external = num_external;
+
+    /* node */
+#define NODE_GROUP(field) comm->subgroups[MPIR_SUBGROUP_NODE].field
+    NODE_GROUP(rank) = local_rank;
+    NODE_GROUP(size) = num_local;
+    NODE_GROUP(proc_table) = MPL_malloc(num_local * sizeof(int), MPL_MEM_OTHER);
+    for (int i = 0; i < num_local; i++) {
+        NODE_GROUP(proc_table)[i] = local_procs[i];
+    }
+#define NODE_CROSS_GROUP(field) comm->subgroups[MPIR_SUBGROUP_NODE_CROSS].field
+    NODE_CROSS_GROUP(rank) = external_rank;
+    NODE_CROSS_GROUP(size) = num_external;
+    NODE_CROSS_GROUP(proc_table) = MPL_malloc(num_external * sizeof(int), MPL_MEM_OTHER);
+    for (int i = 0; i < num_external; i++) {
+        NODE_CROSS_GROUP(proc_table)[i] = external_procs[i];
+    }
 
     /* if the node_roots_comm and comm would be the same size, then creating
      * the second communicator is useless and wasteful. */
@@ -752,7 +717,8 @@ static int init_comm_seq(MPIR_Comm * comm)
         /* Every rank need share the same seq from root. NOTE: it is possible for
          * different communicators to have the same seq. It is only used as an
          * opportunistic optimization */
-        mpi_errno = MPIR_Bcast_allcomm_auto(&tmp, 1, MPI_INT, 0, comm, MPIR_ERR_NONE);
+        mpi_errno =
+            MPIR_Bcast_allcomm_auto(&tmp, 1, MPI_INT, 0, comm, MPIR_SUBGROUP_NONE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         comm->seq = tmp;
@@ -782,6 +748,14 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+
+    /* preset reserved subgroups */
+    comm->num_subgroups = MPIR_SUBGROUP_NUM_RESERVED;
+    for (int i = 0; i < comm->num_subgroups; i++) {
+        comm->subgroups[i].rank = -1;
+        comm->subgroups[i].size = 0;
+        comm->subgroups[i].proc_table = NULL;
+    }
 
     /* It's OK to relax these assertions, but we should do so very
      * intentionally.  For now this function is the only place that we create
@@ -841,9 +815,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 /* Returns true if the given communicator is aware of node topology information,
    false otherwise.  Such information could be used to implement more efficient
    collective communication, for example. */
-int MPIR_Comm_is_parent_comm(MPIR_Comm * comm)
+int MPIR_Comm_is_parent_comm(MPIR_Comm * comm, int coll_group)
 {
-    return (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
+    return (coll_group == MPIR_SUBGROUP_NONE &&
+            comm->num_external > 1 && comm->num_external != comm->remote_size &&
+            comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
 }
 
 /* Returns true if the communicator is node-aware and processes in all the nodes
@@ -854,7 +830,7 @@ int MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
     int i = 0, curr_nodeidx = 0;
     int *internode_table = comm->internode_table;
 
-    if (!MPIR_Comm_is_parent_comm(comm))
+    if (!MPIR_Comm_is_parent_comm(comm, MPIR_SUBGROUP_NONE))
         return 0;
 
     for (; i < comm->local_size; i++) {
@@ -1214,6 +1190,12 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         MPL_free(comm_ptr->intranode_table);
         MPL_free(comm_ptr->internode_table);
 
+        /* free subgroups */
+        for (int i = 0; i < comm_ptr->num_subgroups; i++) {
+            MPL_free(comm_ptr->subgroups[i].proc_table);
+        }
+        comm_ptr->num_subgroups = 0;
+
         MPIR_stream_comm_free(comm_ptr);
 
         /* Free the context value.  This should come after freeing the
@@ -1297,11 +1279,14 @@ int MPII_collect_info_key(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, const char
     }
 
     int is_equal;
-    mpi_errno = MPIR_Allreduce_equal(&hint_str_size, 1, MPI_INT, &is_equal, comm_ptr);
+    mpi_errno =
+        MPIR_Allreduce_equal(&hint_str_size, 1, MPI_INT, &is_equal, comm_ptr, MPIR_SUBGROUP_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (is_equal && hint_str_size > 0) {
-        mpi_errno = MPIR_Allreduce_equal(hint_str, hint_str_size, MPI_CHAR, &is_equal, comm_ptr);
+        mpi_errno =
+            MPIR_Allreduce_equal(hint_str, hint_str_size, MPI_CHAR, &is_equal, comm_ptr,
+                                 MPIR_SUBGROUP_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -1328,7 +1313,7 @@ int MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_bal
 
     MPIR_CHKPMEM_DECL(1);
 
-    if (!MPIR_Comm_is_parent_comm(comm)) {
+    if (!MPIR_Comm_is_parent_comm(comm, MPIR_SUBGROUP_NONE)) {
         *node_balanced = false;
         goto fn_exit;
     }

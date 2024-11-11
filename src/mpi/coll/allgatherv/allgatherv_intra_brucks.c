@@ -23,7 +23,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                  const MPI_Aint * recvcounts,
                                  const MPI_Aint * displs,
                                  MPI_Datatype recvtype,
-                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                 MPIR_Comm * comm_ptr, int coll_group, MPIR_Errflag_t errflag)
 {
     int comm_size, rank, j, i;
     int mpi_errno = MPI_SUCCESS;
@@ -34,7 +34,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
     void *tmp_buf;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     total_count = 0;
     for (i = 0; i < comm_size; i++)
@@ -76,7 +76,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                   MPIR_ALLGATHERV_TAG,
                                   ((char *) tmp_buf + curr_cnt * recvtype_sz),
                                   (total_count - curr_cnt) * recvtype_sz, MPI_BYTE,
-                                  src, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
+                                  src, MPIR_ALLGATHERV_TAG, comm_ptr, coll_group, &status, errflag);
         MPIR_ERR_CHECK(mpi_errno);
         if (mpi_errno) {
             recv_cnt = 0;
@@ -103,7 +103,8 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                   dst, MPIR_ALLGATHERV_TAG,
                                   ((char *) tmp_buf + curr_cnt * recvtype_sz),
                                   (total_count - curr_cnt) * recvtype_sz, MPI_BYTE,
-                                  src, MPIR_ALLGATHERV_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  src, MPIR_ALLGATHERV_TAG, comm_ptr, coll_group, MPI_STATUS_IGNORE,
+                                  errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

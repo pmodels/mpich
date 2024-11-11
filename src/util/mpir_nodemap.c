@@ -436,14 +436,14 @@ int MPIR_nodeid_init(void)
     utarray_resize(MPIR_Process.node_hostnames, MPIR_Process.num_nodes, MPL_MEM_OTHER);
     char *allhostnames = (char *) utarray_eltptr(MPIR_Process.node_hostnames, 0);
 
-    if (MPIR_Process.local_rank == 0) {
-        MPIR_Comm *node_roots_comm = MPIR_Process.comm_world->node_roots_comm;
-        if (node_roots_comm == NULL) {
-            /* num_external == comm->remote_size */
-            node_roots_comm = MPIR_Process.comm_world;
-        }
+    MPIR_Comm *world_comm = MPIR_Process.comm_world;
+    int local_rank = world_comm->subgroups[MPIR_SUBGROUP_NODE].rank;
+    int local_size = world_comm->subgroups[MPIR_SUBGROUP_NODE].size;
 
-        char *my_hostname = allhostnames + MAX_HOSTNAME_LEN * node_roots_comm->rank;
+    if (local_rank == 0) {
+        int inter_rank = world_comm->subgroups[MPIR_SUBGROUP_NODE_CROSS].rank;
+
+        char *my_hostname = allhostnames + MAX_HOSTNAME_LEN * inter_rank;
         int ret = gethostname(my_hostname, MAX_HOSTNAME_LEN);
         char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
         MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER,
@@ -453,14 +453,13 @@ int MPIR_nodeid_init(void)
 
         mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, MAX_HOSTNAME_LEN, MPI_CHAR,
                                         allhostnames, MAX_HOSTNAME_LEN, MPI_CHAR,
-                                        node_roots_comm, MPIR_ERR_NONE);
+                                        world_comm, MPIR_SUBGROUP_NODE_CROSS, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    MPIR_Comm *node_comm = MPIR_Process.comm_world->node_comm;
-    if (node_comm) {
+    if (local_size > 1) {
         mpi_errno = MPIR_Bcast_impl(allhostnames, MAX_HOSTNAME_LEN * MPIR_Process.num_nodes,
-                                    MPI_CHAR, 0, node_comm, MPIR_ERR_NONE);
+                                    MPI_CHAR, 0, world_comm, MPIR_SUBGROUP_NODE, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

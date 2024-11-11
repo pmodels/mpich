@@ -117,7 +117,7 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, MPI_Ain
 int
 MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                                       MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                      MPI_Datatype recvtype, MPIR_Comm * comm,
+                                      MPI_Datatype recvtype, MPIR_Comm * comm, int coll_group,
                                       int k, int buffer_per_phase, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -146,7 +146,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_CHKLMEM_MALLOC(pack_invtcs, int *, sizeof(int) * k, mpi_errno, "pack_invtcs",
@@ -159,8 +159,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
 
-    rank = MPIR_Comm_rank(comm);
-    size = MPIR_Comm_size(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, size);
 
     max = size - 1;
 
@@ -287,7 +286,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
             mpi_errno =
                 MPIR_TSP_sched_isend(tmp_sbuf[i][j - 1], packsize, MPI_BYTE, dst, tag,
-                                     comm, sched, 1, &packids[j - 1], &sendids[j - 1]);
+                                     comm, coll_group, sched, 1, &packids[j - 1], &sendids[j - 1]);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (i != 0 && buffer_per_phase == 0) {      /* this dependency holds only when we don't have dedicated recv buffer per phase */
@@ -296,7 +295,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             }
             mpi_errno =
                 MPIR_TSP_sched_irecv(tmp_rbuf[i][j - 1], packsize, MPI_BYTE,
-                                     src, tag, comm, sched, recv_ninvtcs, recv_invtcs,
+                                     src, tag, comm, coll_group, sched, recv_ninvtcs, recv_invtcs,
                                      &recvids[j - 1]);
             MPIR_ERR_CHECK(mpi_errno);
 

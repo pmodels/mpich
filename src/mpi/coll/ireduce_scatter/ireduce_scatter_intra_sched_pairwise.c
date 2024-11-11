@@ -14,7 +14,8 @@
  */
 int MPIR_Ireduce_scatter_intra_sched_pairwise(const void *sendbuf, void *recvbuf,
                                               const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                              MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+                                              MPI_Op op, MPIR_Comm * comm_ptr, int coll_group,
+                                              MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
@@ -23,8 +24,7 @@ int MPIR_Ireduce_scatter_intra_sched_pairwise(const void *sendbuf, void *recvbuf
     void *tmp_recvbuf;
     int src, dst;
 
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -72,14 +72,15 @@ int MPIR_Ireduce_scatter_intra_sched_pairwise(const void *sendbuf, void *recvbuf
          * needs from src into tmp_recvbuf */
         if (sendbuf != MPI_IN_PLACE) {
             mpi_errno = MPIR_Sched_send(((char *) sendbuf + disps[dst] * extent),
-                                        recvcounts[dst], datatype, dst, comm_ptr, s);
+                                        recvcounts[dst], datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             mpi_errno = MPIR_Sched_send(((char *) recvbuf + disps[dst] * extent),
-                                        recvcounts[dst], datatype, dst, comm_ptr, s);
+                                        recvcounts[dst], datatype, dst, comm_ptr, coll_group, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
-        mpi_errno = MPIR_Sched_recv(tmp_recvbuf, recvcounts[rank], datatype, src, comm_ptr, s);
+        mpi_errno =
+            MPIR_Sched_recv(tmp_recvbuf, recvcounts[rank], datatype, src, comm_ptr, coll_group, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 

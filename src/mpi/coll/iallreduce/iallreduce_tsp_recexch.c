@@ -11,8 +11,8 @@
 /* Routine to schedule a recursive exchange based allreduce */
 int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                             MPI_Datatype datatype, MPI_Op op,
-                                            MPIR_Comm * comm, int per_nbr_buffer, int k,
-                                            MPIR_TSP_sched_t sched)
+                                            MPIR_Comm * comm, int coll_group, int per_nbr_buffer,
+                                            int k, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_inplace, i, j;
@@ -39,8 +39,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     MPIR_FUNC_ENTER;
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
-    nranks = MPIR_Comm_size(comm);
-    rank = MPIR_Comm_rank(comm);
+    MPIR_COLL_RANK_SIZE(comm, coll_group, rank, nranks);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
@@ -51,7 +50,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, coll_group, &tag);
 
     /* get the neighbors, the function allocates the required memory */
     MPII_Recexchalgo_get_neighbors(rank, nranks, &k, &step1_sendto,
@@ -76,7 +75,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                                                   tag, extent, dtcopy_id, recv_id, reduce_id, vtcs,
                                                   is_inplace, step1_sendto, in_step2, step1_nrecvs,
                                                   step1_recvfrom, per_nbr_buffer, &step1_recvbuf,
-                                                  comm, sched);
+                                                  comm, coll_group, sched);
 
     mpi_errno = MPIR_TSP_sched_sink(sched, &step1_id);  /* sink for all the tasks up to end of Step 1 */
     if (mpi_errno)
@@ -152,8 +151,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
 
             nbr = step2_nbrs[phase][i];
             mpi_errno =
-                MPIR_TSP_sched_isend(tmp_buf, count, datatype, nbr, tag, comm, sched, nvtcs, vtcs,
-                                     &send_id[i]);
+                MPIR_TSP_sched_isend(tmp_buf, count, datatype, nbr, tag, comm, coll_group, sched,
+                                     nvtcs, vtcs, &send_id[i]);
             MPIR_ERR_CHECK(mpi_errno);
             if (rank > nbr) {
                 myidx = i + 1;
@@ -168,8 +167,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                 vtcs[nvtcs++] = (counter == 0) ? reduce_id[k - 2] : reduce_id[counter - 1];
             }
             mpi_errno =
-                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, sched, nvtcs,
-                                     vtcs, &recv_id[buf]);
+                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, coll_group,
+                                     sched, nvtcs, vtcs, &recv_id[buf]);
             MPIR_ERR_CHECK(mpi_errno);
 
             if (count != 0) {
@@ -196,8 +195,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                 vtcs[nvtcs++] = (counter == 0) ? reduce_id[k - 2] : reduce_id[counter - 1];
             }
             mpi_errno =
-                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, sched, nvtcs,
-                                     vtcs, &recv_id[buf]);
+                MPIR_TSP_sched_irecv(nbr_buffer[buf], count, datatype, nbr, tag, comm, coll_group,
+                                     sched, nvtcs, vtcs, &recv_id[buf]);
 
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -233,8 +232,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
      * send the data to non-partcipating ranks */
     if (step1_sendto != -1) {   /* I am a Step 2 non-participating rank */
         mpi_errno =
-            MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, tag, comm, sched, 0, NULL,
-                                 &vtx_id);
+            MPIR_TSP_sched_irecv(recvbuf, count, datatype, step1_sendto, tag, comm, coll_group,
+                                 sched, 0, NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         for (i = 0; i < step1_nrecvs; i++) {
@@ -253,8 +252,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                 vtcs[0] = reduce_id[k - 2];
             }
             mpi_errno =
-                MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], tag, comm, sched,
-                                     nvtcs, vtcs, &vtx_id);
+                MPIR_TSP_sched_isend(recvbuf, count, datatype, step1_recvfrom[i], tag, comm,
+                                     coll_group, sched, nvtcs, vtcs, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

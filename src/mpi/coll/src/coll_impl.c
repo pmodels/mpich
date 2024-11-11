@@ -224,8 +224,6 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    comm->coll.pof2 = MPL_pof2(comm->local_size);
-
     /* initialize any stub algo related data structures */
     mpi_errno = MPII_Stubalgo_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);

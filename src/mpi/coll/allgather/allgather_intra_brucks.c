@@ -19,7 +19,8 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
                                 MPI_Datatype sendtype,
                                 void *recvbuf,
                                 MPI_Aint recvcount,
-                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
+                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr, int coll_group,
+                                MPIR_Errflag_t errflag)
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
@@ -33,7 +34,7 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
     if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
         goto fn_exit;
 
-    MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
+    MPIR_COLL_RANK_SIZE(comm_ptr, coll_group, rank, comm_size);
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
@@ -66,7 +67,8 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
                                   MPIR_ALLGATHER_TAG,
                                   ((char *) tmp_buf + curr_cnt * recvtype_sz),
                                   curr_cnt * recvtype_sz, MPI_BYTE,
-                                  src, MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  src, MPIR_ALLGATHER_TAG, comm_ptr, coll_group, MPI_STATUS_IGNORE,
+                                  errflag);
         MPIR_ERR_CHECK(mpi_errno);
         curr_cnt *= 2;
         pof2 *= 2;
@@ -83,7 +85,8 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
                                   dst, MPIR_ALLGATHER_TAG,
                                   ((char *) tmp_buf + curr_cnt * recvtype_sz),
                                   rem * recvcount * recvtype_sz, MPI_BYTE,
-                                  src, MPIR_ALLGATHER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
+                                  src, MPIR_ALLGATHER_TAG, comm_ptr, coll_group, MPI_STATUS_IGNORE,
+                                  errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

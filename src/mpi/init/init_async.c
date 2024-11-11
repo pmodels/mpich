@@ -179,17 +179,14 @@ static int get_thread_affinity(bool * apply_affinity, int **p_thread_affinity, i
         }
 
         global_rank = MPIR_Process.rank;
-        local_rank =
-            (MPIR_Process.comm_world->node_comm) ? MPIR_Process.comm_world->node_comm->rank : 0;
+        local_rank = MPIR_Process.local_rank;
         if (have_cliques) {
-            /* If local cliques > 1, using local_size from node_comm will have conflict on thread idx.
+            /* If local cliques > 1, using local_size will have conflict on thread idx.
              * In multiple nodes case, this would cost extra memory for allocating thread affinity on every
              * node, but it is okay to solve progress thread oversubscription. */
             local_size = MPIR_Process.comm_world->local_size;
         } else {
-            local_size =
-                (MPIR_Process.comm_world->node_comm) ? MPIR_Process.comm_world->
-                node_comm->local_size : 1;
+            local_size = MPIR_Process.local_size;
         }
 
         async_threads_per_node = local_size;

@@ -100,6 +100,7 @@ cvars:
 */
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_allcomm_composition_json(MPIR_Comm * comm,
+                                                                    int coll_group,
                                                                     MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -108,28 +109,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_allcomm_composition_json(MPIR_Comm * 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__BARRIER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
     };
 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Barrier_impl(comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_alpha:
-            mpi_errno = MPIDI_Barrier_intra_composition_alpha(comm, errflag);
+            mpi_errno = MPIDI_Barrier_intra_composition_alpha(comm, coll_group, errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_beta:
-            mpi_errno = MPIDI_Barrier_intra_composition_beta(comm, errflag);
+            mpi_errno = MPIDI_Barrier_intra_composition_beta(comm, coll_group, errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Barrier_impl(comm, coll_group, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -137,30 +141,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_allcomm_composition_json(MPIR_Comm * 
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, int coll_group, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     switch (MPIR_CVAR_BARRIER_COMPOSITION) {
         case 1:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
-                                           (comm->hierarchy_kind ==
-                                            MPIR_COMM_HIERARCHY_KIND__PARENT), mpi_errno,
+                                           MPIR_Comm_is_parent_comm(comm, coll_group), mpi_errno,
                                            "Barrier composition alpha cannot be applied.\n");
-            mpi_errno = MPIDI_Barrier_intra_composition_alpha(comm, errflag);
+            mpi_errno = MPIDI_Barrier_intra_composition_alpha(comm, coll_group, errflag);
             break;
         case 2:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            comm->comm_kind == MPIR_COMM_KIND__INTRACOMM, mpi_errno,
                                            "Barrier composition beta cannot be applied.\n");
-            mpi_errno = MPIDI_Barrier_intra_composition_beta(comm, errflag);
+            mpi_errno = MPIDI_Barrier_intra_composition_beta(comm, coll_group, errflag);
             break;
         default:
-            mpi_errno = MPIDI_Barrier_allcomm_composition_json(comm, errflag);
+            mpi_errno = MPIDI_Barrier_allcomm_composition_json(comm, coll_group, errflag);
             break;
     }
 
@@ -168,10 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t errfl
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno = MPIR_Barrier_impl(comm, errflag);
-    else
-        mpi_errno = MPIDI_Barrier_intra_composition_beta(comm, errflag);
+    mpi_errno = MPIR_Barrier_impl(comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -182,13 +185,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t errfl
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, MPI_Aint count,
                                                                   MPI_Datatype datatype, int root,
-                                                                  MPIR_Comm * comm,
+                                                                  MPIR_Comm * comm, int coll_group,
                                                                   MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__BCAST,
         .comm_ptr = comm,
+        .coll_group = coll_group,
         .u.bcast.buffer = buffer,
         .u.bcast.count = count,
         .u.bcast.datatype = datatype,
@@ -210,33 +214,39 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
         }
     }
     if (cnt == NULL) {
-        mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_alpha:
             mpi_errno =
-                MPIDI_Bcast_intra_composition_alpha(buffer, count, datatype, root, comm, errflag);
+                MPIDI_Bcast_intra_composition_alpha(buffer, count, datatype, root, comm, coll_group,
+                                                    errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_beta:
             mpi_errno =
-                MPIDI_Bcast_intra_composition_beta(buffer, count, datatype, root, comm, errflag);
+                MPIDI_Bcast_intra_composition_beta(buffer, count, datatype, root, comm, coll_group,
+                                                   errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma:
             mpi_errno =
-                MPIDI_Bcast_intra_composition_gamma(buffer, count, datatype, root, comm, errflag);
+                MPIDI_Bcast_intra_composition_gamma(buffer, count, datatype, root, comm, coll_group,
+                                                    errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_delta:
             mpi_errno =
-                MPIDI_Bcast_intra_composition_delta(buffer, count, datatype, root, comm, errflag);
+                MPIDI_Bcast_intra_composition_delta(buffer, count, datatype, root, comm, coll_group,
+                                                    errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, coll_group, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -245,50 +255,57 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_allcomm_composition_json(void *buffer, 
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                        int root, MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                                        int root, MPIR_Comm * comm, int coll_group,
+                                        MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     switch (MPIR_CVAR_BCAST_COMPOSITION) {
         case 1:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
-                                           (comm->hierarchy_kind ==
-                                            MPIR_COMM_HIERARCHY_KIND__PARENT), mpi_errno,
+                                           MPIR_Comm_is_parent_comm(comm, coll_group), mpi_errno,
                                            "Bcast composition alpha cannot be applied.\n");
             mpi_errno =
-                MPIDI_Bcast_intra_composition_alpha(buffer, count, datatype, root, comm, errflag);
+                MPIDI_Bcast_intra_composition_alpha(buffer, count, datatype, root, comm, coll_group,
+                                                    errflag);
             break;
         case 2:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
-                                           (comm->hierarchy_kind ==
-                                            MPIR_COMM_HIERARCHY_KIND__PARENT), mpi_errno,
+                                           MPIR_Comm_is_parent_comm(comm, coll_group), mpi_errno,
                                            "Bcast composition beta cannot be applied.\n");
             mpi_errno =
-                MPIDI_Bcast_intra_composition_beta(buffer, count, datatype, root, comm, errflag);
+                MPIDI_Bcast_intra_composition_beta(buffer, count, datatype, root, comm, coll_group,
+                                                   errflag);
             break;
         case 3:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            comm->comm_kind == MPIR_COMM_KIND__INTRACOMM, mpi_errno,
                                            "Bcast composition gamma cannot be applied.\n");
             mpi_errno =
-                MPIDI_Bcast_intra_composition_gamma(buffer, count, datatype, root, comm, errflag);
+                MPIDI_Bcast_intra_composition_gamma(buffer, count, datatype, root, comm, coll_group,
+                                                    errflag);
             break;
         case 4:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
-                                           (comm->hierarchy_kind ==
-                                            MPIR_COMM_HIERARCHY_KIND__PARENT), mpi_errno,
+                                           MPIR_Comm_is_parent_comm(comm, coll_group), mpi_errno,
                                            "Bcast composition delta cannot be applied.\n");
             mpi_errno =
-                MPIDI_Bcast_intra_composition_delta(buffer, count, datatype, root, comm, errflag);
+                MPIDI_Bcast_intra_composition_delta(buffer, count, datatype, root, comm, coll_group,
+                                                    errflag);
             break;
         default:
             mpi_errno =
-                MPIDI_Bcast_allcomm_composition_json(buffer, count, datatype, root, comm, errflag);
+                MPIDI_Bcast_allcomm_composition_json(buffer, count, datatype, root, comm,
+                                                     coll_group, errflag);
             break;
     }
 
@@ -296,11 +313,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
-    else
-        mpi_errno =
-            MPIDI_Bcast_intra_composition_gamma(buffer, count, datatype, root, comm, errflag);
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -309,7 +322,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, MPI_Aint count, MPI_Dataty
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_Allreduce_fill_multi_leads_info(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX void MPIDI_Allreduce_fill_multi_leads_info(MPIR_Comm * comm,
+                                                                    int coll_group)
 {
     int node_comm_size = 0, num_nodes;
     bool node_balanced = false;
@@ -344,6 +358,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
                                                                       void *recvbuf, MPI_Aint count,
                                                                       MPI_Datatype datatype,
                                                                       MPI_Op op, MPIR_Comm * comm,
+                                                                      int coll_group,
                                                                       MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -353,6 +368,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLREDUCE,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.allreduce.sendbuf = sendbuf,
         .u.allreduce.recvbuf = recvbuf,
@@ -364,30 +380,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Allreduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op,
-                                                        comm, errflag);
+                                                        comm, coll_group, errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_beta:
             mpi_errno =
                 MPIDI_Allreduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op,
-                                                       comm, errflag);
+                                                       comm, coll_group, errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_gamma:
             mpi_errno =
                 MPIDI_Allreduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op,
-                                                        comm, errflag);
+                                                        comm, coll_group, errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_delta:
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-                MPIDI_Allreduce_fill_multi_leads_info(comm);
+                MPIDI_Allreduce_fill_multi_leads_info(comm, coll_group);
                 if (comm->node_comm)
                     node_comm_size = MPIR_Comm_size(comm->node_comm);
                 /* Reset number of leaders, so that (node_comm_size % num_leads) is zero. The new number of
@@ -402,16 +416,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
                 count >= num_leads && MPIR_Op_is_commutative(op)) {
                 mpi_errno =
                     MPIDI_Allreduce_intra_composition_delta(sendbuf, recvbuf, count, datatype, op,
-                                                            num_leads, comm, errflag);
+                                                            num_leads, comm, coll_group, errflag);
             } else
                 mpi_errno =
-                    MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+                    MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group,
+                                        errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op,
+                                    comm, coll_group, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -421,7 +441,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_allcomm_composition_json(const void
 
 MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                            MPIR_Errflag_t errflag)
+                                            int coll_group, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative = -1;
@@ -429,19 +449,22 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     is_commutative = MPIR_Op_is_commutative(op);
 
     switch (MPIR_CVAR_ALLREDUCE_COMPOSITION) {
         case 1:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) &&
-                                           (comm->hierarchy_kind ==
-                                            MPIR_COMM_HIERARCHY_KIND__PARENT) &&
+                                           MPIR_Comm_is_parent_comm(comm, coll_group) &&
                                            is_commutative, mpi_errno,
                                            "Allreduce composition alpha cannot be applied.\n");
             mpi_errno =
                 MPIDI_Allreduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op, comm,
-                                                        errflag);
+                                                        coll_group, errflag);
             break;
         case 2:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
@@ -449,7 +472,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
                                            "Allreduce composition beta cannot be applied.\n");
             mpi_errno =
                 MPIDI_Allreduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op, comm,
-                                                       errflag);
+                                                       coll_group, errflag);
             break;
         case 3:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
@@ -460,11 +483,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
                                            "Allreduce composition gamma cannot be applied.\n");
             mpi_errno =
                 MPIDI_Allreduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op, comm,
-                                                        errflag);
+                                                        coll_group, errflag);
             break;
         case 4:
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-                MPIDI_Allreduce_fill_multi_leads_info(comm);
+                MPIDI_Allreduce_fill_multi_leads_info(comm, coll_group);
                 if (comm->node_comm)
                     node_comm_size = MPIR_Comm_size(comm->node_comm);
                 /* Reset number of leaders, so that (node_comm_size % num_leads) is zero. The new number of
@@ -485,13 +508,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
 
             mpi_errno =
                 MPIDI_Allreduce_intra_composition_delta(sendbuf, recvbuf, count, datatype, op,
-                                                        num_leads, comm, errflag);
+                                                        num_leads, comm, coll_group, errflag);
             break;
 
         default:
             mpi_errno =
                 MPIDI_Allreduce_allcomm_composition_json(sendbuf, recvbuf, count, datatype, op,
-                                                         comm, errflag);
+                                                         comm, coll_group, errflag);
             break;
     }
 
@@ -500,11 +523,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
 
   fallback:
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+        mpi_errno =
+            MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, errflag);
     else
         mpi_errno =
             MPIDI_Allreduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op, comm,
-                                                   errflag);
+                                                   coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -513,7 +537,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_Allgather_fill_multi_leads_info(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX void MPIDI_Allgather_fill_multi_leads_info(MPIR_Comm * comm,
+                                                                    int coll_group)
 {
     int node_comm_size = 0, num_nodes;
     bool node_balanced = false;
@@ -548,6 +573,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
                                                                       MPI_Aint recvcount,
                                                                       MPI_Datatype recvtype,
                                                                       MPIR_Comm * comm,
+                                                                      int coll_group,
                                                                       MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -565,6 +591,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLGATHER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.allgather.sendbuf = sendbuf,
         .u.allgather.sendcount = sendcount,
@@ -577,18 +604,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
-                                errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha:
             /* make sure that the algo can be run */
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-                MPIDI_Allgather_fill_multi_leads_info(comm);
+                MPIDI_Allgather_fill_multi_leads_info(comm, coll_group);
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            MPIDI_COMM_ALLGATHER(comm, use_multi_leads) == 1 &&
                                            data_size <= MPIR_CVAR_ALLGATHER_SHM_PER_RANK, mpi_errno,
@@ -596,7 +619,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
             mpi_errno =
                 MPIDI_Allgather_intra_composition_alpha(sendbuf, sendcount, sendtype,
                                                         recvbuf, recvcount, recvtype,
-                                                        comm, errflag);
+                                                        comm, coll_group, errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_beta:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
@@ -604,7 +627,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
                                            "Allgather composition beta cannot be applied.\n");
             mpi_errno =
                 MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype,
-                                                       recvbuf, recvcount, recvtype, comm, errflag);
+                                                       recvbuf, recvcount, recvtype, comm,
+                                                       coll_group, errflag);
             break;
         default:
             MPIR_Assert(0);
@@ -614,14 +638,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno =
-            MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
-                                errflag);
-    else
-        mpi_errno =
-            MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                                   recvtype, comm, errflag);
+    mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                    comm, coll_group, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -632,12 +650,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_allcomm_composition_json(const void
 MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendcount,
                                             MPI_Datatype sendtype, void *recvbuf,
                                             MPI_Aint recvcount, MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                                            MPIR_Comm * comm, int coll_group,
+                                            MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size, data_size;
 
     MPIR_FUNC_ENTER;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     if (sendbuf != MPI_IN_PLACE) {
         MPIR_Datatype_get_size_macro(sendtype, type_size);
@@ -650,7 +673,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
     switch (MPIR_CVAR_ALLGATHER_COMPOSITION) {
         case 1:
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-                MPIDI_Allgather_fill_multi_leads_info(comm);
+                MPIDI_Allgather_fill_multi_leads_info(comm, coll_group);
 
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
                                            MPIDI_COMM_ALLGATHER(comm, use_multi_leads) == 1 &&
@@ -664,7 +687,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
             mpi_errno =
                 MPIDI_Allgather_intra_composition_alpha(sendbuf, sendcount, sendtype,
                                                         recvbuf, recvcount, recvtype,
-                                                        comm, errflag);
+                                                        comm, coll_group, errflag);
             break;
         case 2:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
@@ -672,12 +695,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
                                            "Allgather composition beta cannot be applied.\n");
             mpi_errno =
                 MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
-                                                       recvcount, recvtype, comm, errflag);
+                                                       recvcount, recvtype, comm, coll_group,
+                                                       errflag);
             break;
         default:
             mpi_errno = MPIDI_Allgather_allcomm_composition_json(sendbuf, sendcount, sendtype,
                                                                  recvbuf, recvcount, recvtype, comm,
-                                                                 errflag);
+                                                                 coll_group, errflag);
             break;
     }
 
@@ -685,14 +709,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, MPI_Aint sendco
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno =
-            MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
-                                errflag);
-    else
-        mpi_errno =
-            MPIDI_Allgather_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                                   recvtype, comm, errflag);
+    mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                    comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_ENTER;
@@ -705,14 +723,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
                                              MPI_Datatype sendtype, void *recvbuf,
                                              const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                              MPI_Datatype recvtype, MPIR_Comm * comm,
-                                             MPIR_Errflag_t errflag)
+                                             int coll_group, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLGATHERV,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.allgatherv.sendbuf = sendbuf,
         .u.allgatherv.sendcount = sendcount,
@@ -728,11 +751,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                 recvtype, comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -740,14 +759,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
             mpi_errno =
                 MPIDI_Allgatherv_intra_composition_alpha(sendbuf, sendcount, sendtype,
                                                          recvbuf, recvcounts, displs,
-                                                         recvtype, comm, errflag);
+                                                         recvtype, comm, coll_group, errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
 
+  fallback:
+    mpi_errno = MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                     displs, recvtype, comm, coll_group, errflag);
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -758,14 +781,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, MPI_Aint sendc
 MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcount,
                                           MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                           MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                          MPIR_Errflag_t errflag)
+                                          int coll_group, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCATTER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.scatter.sendbuf = sendbuf,
         .u.scatter.sendcount = sendcount,
@@ -781,23 +809,26 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        MPIR_Scatter_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm,
-                          errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatter_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Scatter_intra_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
-                                                      recvcount, recvtype, root, comm, errflag);
+                                                      recvcount, recvtype, root, comm, coll_group,
+                                                      errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Scatter_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root,
+                                  comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -809,14 +840,20 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, MPI_Aint sendcoun
 MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint * sendcounts,
                                            const MPI_Aint * displs, MPI_Datatype sendtype,
                                            void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
-                                           int root, MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                                           int root, MPIR_Comm * comm, int coll_group,
+                                           MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCATTERV,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.scatterv.sendbuf = sendbuf,
         .u.scatterv.sendcounts = sendcounts,
@@ -833,10 +870,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        MPIR_Scatterv_impl(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
-                           root, comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -844,13 +878,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
             mpi_errno =
                 MPIDI_Scatterv_intra_composition_alpha(sendbuf, sendcounts, displs, sendtype,
                                                        recvbuf, recvcount, recvtype, root,
-                                                       comm, errflag);
+                                                       comm, coll_group, errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Scatterv_impl(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                   recvtype, root, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -862,14 +901,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const MPI_Aint *
 MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount,
                                          MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                          MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                         MPIR_Errflag_t errflag)
+                                         int coll_group, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__GATHER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.gather.sendbuf = sendbuf,
         .u.gather.sendcount = sendcount,
@@ -885,24 +929,26 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, MPI_Aint sendcount
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Gather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm,
-                             errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gather_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Gather_intra_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
-                                                     recvcount, recvtype, root, comm, errflag);
+                                                     recvcount, recvtype, root, comm, coll_group,
+                                                     errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Gather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root,
+                                 comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -915,14 +961,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
                                           MPI_Datatype sendtype, void *recvbuf,
                                           const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                           MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                          MPIR_Errflag_t errflag)
+                                          int coll_group, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__GATHERV,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.gatherv.sendbuf = sendbuf,
         .u.gatherv.sendcount = sendcount,
@@ -939,10 +990,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                      displs, recvtype, root, comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -950,13 +998,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
             mpi_errno =
                 MPIDI_Gatherv_intra_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
                                                       recvcounts, displs, recvtype, root,
-                                                      comm, errflag);
+                                                      comm, coll_group, errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                  displs, recvtype, root, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -965,7 +1018,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, MPI_Aint sendcoun
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_Alltoall_fill_multi_leads_info(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX void MPIDI_Alltoall_fill_multi_leads_info(MPIR_Comm * comm, int coll_group)
 {
     int node_comm_size = 0, num_nodes;
     bool node_balanced = false;
@@ -1000,6 +1053,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
                                                                      MPI_Aint recvcount,
                                                                      MPI_Datatype recvtype,
                                                                      MPIR_Comm * comm,
+                                                                     int coll_group,
                                                                      MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1018,6 +1072,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALL,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.alltoall.sendbuf = sendbuf,
         .u.alltoall.sendcount = sendcount,
@@ -1030,23 +1085,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype,
-                                       recvbuf, recvcount, recvtype, comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_alpha:
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-                MPIDI_Alltoall_fill_multi_leads_info(comm);
+                MPIDI_Alltoall_fill_multi_leads_info(comm, coll_group);
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, comm->comm_kind == MPIR_COMM_KIND__INTRACOMM
                                            && MPIDI_COMM_ALLTOALL(comm, use_multi_leads) == 1 &&
                                            data_size <= MPIR_CVAR_ALLTOALL_SHM_PER_RANK, mpi_errno,
                                            "Alltoall composition alpha cannot be applied.\n");
             mpi_errno =
                 MPIDI_Alltoall_intra_composition_alpha(sendbuf, sendcount, sendtype,
-                                                       recvbuf, recvcount, recvtype, comm, errflag);
+                                                       recvbuf, recvcount, recvtype,
+                                                       comm, coll_group, errflag);
             break;
 
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_beta:
@@ -1055,7 +1108,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
                                            "Alltoall composition beta cannot be applied.\n");
             mpi_errno =
                 MPIDI_Alltoall_intra_composition_beta(sendbuf, sendcount, sendtype,
-                                                      recvbuf, recvcount, recvtype, comm, errflag);
+                                                      recvbuf, recvcount, recvtype, comm,
+                                                      coll_group, errflag);
             break;
 
         default:
@@ -1066,13 +1120,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno =
-            MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
-                               errflag);
-    else
-        mpi_errno = MPIDI_Alltoall_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
-                                                          recvcount, recvtype, comm, errflag);
+    mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                   comm, coll_group, errflag);
 
   fn_exit:
     return mpi_errno;
@@ -1082,13 +1131,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_allcomm_composition_json(const void 
 
 MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcount,
                                            MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
-                                           MPI_Datatype recvtype, MPIR_Comm * comm,
+                                           MPI_Datatype recvtype, MPIR_Comm * comm, int coll_group,
                                            MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size, data_size;
 
     MPIR_FUNC_ENTER;
+
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
 
     if (sendbuf != MPI_IN_PLACE) {
         MPIR_Datatype_get_size_macro(sendtype, type_size);
@@ -1101,7 +1154,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcou
     switch (MPIR_CVAR_ALLTOALL_COMPOSITION) {
         case 1:
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-                MPIDI_Alltoall_fill_multi_leads_info(comm);
+                MPIDI_Alltoall_fill_multi_leads_info(comm, coll_group);
 
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, comm->comm_kind == MPIR_COMM_KIND__INTRACOMM
                                            && MPIDI_COMM_ALLTOALL(comm, use_multi_leads) == 1 &&
@@ -1114,7 +1167,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcou
 
             mpi_errno =
                 MPIDI_Alltoall_intra_composition_alpha(sendbuf, sendcount, sendtype,
-                                                       recvbuf, recvcount, recvtype, comm, errflag);
+                                                       recvbuf, recvcount, recvtype, comm,
+                                                       coll_group, errflag);
             break;
         case 2:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
@@ -1122,12 +1176,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcou
                                            "Alltoall composition beta cannot be applied.\n");
             mpi_errno =
                 MPIDI_Alltoall_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
-                                                      recvcount, recvtype, comm, errflag);
+                                                      recvcount, recvtype, comm, coll_group,
+                                                      errflag);
             break;
         default:
             mpi_errno = MPIDI_Alltoall_allcomm_composition_json(sendbuf, sendcount, sendtype,
                                                                 recvbuf, recvcount, recvtype, comm,
-                                                                errflag);
+                                                                coll_group, errflag);
             break;
     }
 
@@ -1135,13 +1190,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, MPI_Aint sendcou
     goto fn_exit;
 
   fallback:
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno =
-            MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm,
-                               errflag);
-    else
-        mpi_errno = MPIDI_Alltoall_intra_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
-                                                          recvcount, recvtype, comm, errflag);
+    mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                   comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_ENTER;
@@ -1154,14 +1204,20 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
                                             const MPI_Aint * sdispls, MPI_Datatype sendtype,
                                             void *recvbuf, const MPI_Aint * recvcounts,
                                             const MPI_Aint * rdispls, MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                                            MPIR_Comm * comm, int coll_group,
+                                            MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALLV,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.alltoallv.sendbuf = sendbuf,
         .u.alltoallv.sendcounts = sendcounts,
@@ -1178,11 +1234,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls,
-                                        sendtype, recvbuf, recvcounts,
-                                        rdispls, recvtype, comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -1190,13 +1242,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const MPI_Aint 
             mpi_errno =
                 MPIDI_Alltoallv_intra_composition_alpha(sendbuf, sendcounts, sdispls,
                                                         sendtype, recvbuf, recvcounts,
-                                                        rdispls, recvtype, comm, errflag);
+                                                        rdispls, recvtype, comm, coll_group,
+                                                        errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
+                                    rdispls, recvtype, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1210,14 +1268,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
                                             const MPI_Datatype sendtypes[], void *recvbuf,
                                             const MPI_Aint recvcounts[], const MPI_Aint rdispls[],
                                             const MPI_Datatype recvtypes[], MPIR_Comm * comm,
-                                            MPIR_Errflag_t errflag)
+                                            int coll_group, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__ALLTOALLW,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.alltoallw.sendbuf = sendbuf,
         .u.alltoallw.sendcounts = sendcounts,
@@ -1234,11 +1297,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Alltoallw_impl(sendbuf, sendcounts, sdispls,
-                                        sendtypes, recvbuf, recvcounts,
-                                        rdispls, recvtypes, comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
@@ -1246,13 +1305,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const MPI_Aint 
             mpi_errno =
                 MPIDI_Alltoallw_intra_composition_alpha(sendbuf, sendcounts, sdispls,
                                                         sendtypes, recvbuf, recvcounts,
-                                                        rdispls, recvtypes, comm, errflag);
+                                                        rdispls, recvtypes, comm, coll_group,
+                                                        errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Alltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts,
+                                    rdispls, recvtypes, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1265,6 +1330,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_allcomm_composition_json(const void *s
                                                                    void *recvbuf, MPI_Aint count,
                                                                    MPI_Datatype datatype, MPI_Op op,
                                                                    int root, MPIR_Comm * comm,
+                                                                   int coll_group,
                                                                    MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1273,6 +1339,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_allcomm_composition_json(const void *s
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.reduce.sendbuf = sendbuf,
         .u.reduce.recvbuf = recvbuf,
@@ -1285,7 +1352,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_allcomm_composition_json(const void *s
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, errflag);
+        mpi_errno =
+            MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, coll_group,
+                             errflag);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
@@ -1294,17 +1363,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_allcomm_composition_json(const void *s
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Reduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op,
-                                                     root, comm, errflag);
+                                                     root, comm, coll_group, errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_beta:
             mpi_errno =
                 MPIDI_Reduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op,
-                                                    root, comm, errflag);
+                                                    root, comm, coll_group, errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_gamma:
             mpi_errno =
                 MPIDI_Reduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op,
-                                                     root, comm, errflag);
+                                                     root, comm, coll_group, errflag);
             break;
         default:
             MPIR_Assert(0);
@@ -1320,32 +1389,35 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_allcomm_composition_json(const void *s
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
                                          MPI_Aint count, MPI_Datatype datatype, MPI_Op op,
-                                         int root, MPIR_Comm * comm, MPIR_Errflag_t errflag)
+                                         int root, MPIR_Comm * comm, int coll_group,
+                                         MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     switch (MPIR_CVAR_REDUCE_COMPOSITION) {
         case 1:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, comm->comm_kind == MPIR_COMM_KIND__INTRACOMM
-                                           && comm->hierarchy_kind ==
-                                           MPIR_COMM_HIERARCHY_KIND__PARENT &&
+                                           && MPIR_Comm_is_parent_comm(comm, coll_group) &&
                                            MPIR_Op_is_commutative(op), mpi_errno,
                                            "Reduce composition alpha cannot be applied.\n");
             mpi_errno =
                 MPIDI_Reduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op, root,
-                                                     comm, errflag);
+                                                     comm, coll_group, errflag);
             break;
         case 2:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, comm->comm_kind == MPIR_COMM_KIND__INTRACOMM
-                                           && comm->hierarchy_kind ==
-                                           MPIR_COMM_HIERARCHY_KIND__PARENT &&
+                                           && MPIR_Comm_is_parent_comm(comm, coll_group) &&
                                            MPIR_Op_is_commutative(op), mpi_errno,
                                            "Reduce composition beta cannot be applied.\n");
             mpi_errno =
                 MPIDI_Reduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op, root,
-                                                    comm, errflag);
+                                                    comm, coll_group, errflag);
             break;
         case 3:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank,
@@ -1353,12 +1425,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
                                            "Reduce composition gamma cannot be applied.\n");
             mpi_errno =
                 MPIDI_Reduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op, root,
-                                                     comm, errflag);
+                                                     comm, coll_group, errflag);
             break;
         default:
             mpi_errno =
                 MPIDI_Reduce_allcomm_composition_json(sendbuf, recvbuf, count, datatype, op,
-                                                      root, comm, errflag);
+                                                      root, comm, coll_group, errflag);
             break;
     }
 
@@ -1367,11 +1439,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
 
   fallback:
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, errflag);
+        mpi_errno =
+            MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, coll_group,
+                             errflag);
     else
         mpi_errno =
             MPIDI_Reduce_intra_composition_gamma(sendbuf, recvbuf, count, datatype, op, root, comm,
-                                                 errflag);
+                                                 coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1382,15 +1456,20 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recvbuf,
                                                  const MPI_Aint recvcounts[], MPI_Datatype datatype,
-                                                 MPI_Op op, MPIR_Comm * comm,
+                                                 MPI_Op op, MPIR_Comm * comm, int coll_group,
                                                  MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.reduce_scatter.sendbuf = sendbuf,
         .u.reduce_scatter.recvbuf = recvbuf,
@@ -1404,23 +1483,26 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Reduce_scatter_impl(sendbuf, recvbuf, recvcounts, datatype, op, comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Reduce_scatter_intra_composition_alpha(sendbuf, recvbuf, recvcounts,
-                                                             datatype, op, comm, errflag);
+                                                             datatype, op, comm, coll_group,
+                                                             errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Reduce_scatter_impl(sendbuf, recvbuf, recvcounts, datatype, op,
+                                         comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1431,15 +1513,20 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                        MPI_Aint recvcount, MPI_Datatype datatype,
-                                                       MPI_Op op, MPIR_Comm * comm,
+                                                       MPI_Op op, MPIR_Comm * comm, int coll_group,
                                                        MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER_BLOCK,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.reduce_scatter_block.sendbuf = sendbuf,
         .u.reduce_scatter_block.recvbuf = recvbuf,
@@ -1453,24 +1540,26 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno =
-            MPIR_Reduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op, comm,
-                                           errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_block_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Reduce_scatter_block_intra_composition_alpha(sendbuf, recvbuf, recvcount,
-                                                                   datatype, op, comm, errflag);
+                                                                   datatype, op, comm, coll_group,
+                                                                   errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Reduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op,
+                                               comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1481,14 +1570,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
 
 MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                       MPIR_Errflag_t errflag)
+                                       int coll_group, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__SCAN,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.scan.sendbuf = sendbuf,
         .u.scan.recvbuf = recvbuf,
@@ -1502,27 +1596,29 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_A
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Scan_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Scan_intra_composition_alpha(sendbuf, recvbuf, count,
-                                                   datatype, op, comm, errflag);
+                                                   datatype, op, comm, coll_group, errflag);
             break;
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta:
             mpi_errno =
                 MPIDI_Scan_intra_composition_beta(sendbuf, recvbuf, count,
-                                                  datatype, op, comm, errflag);
+                                                  datatype, op, comm, coll_group, errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Scan_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1533,14 +1629,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, MPI_A
 
 MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                         MPIR_Errflag_t errflag)
+                                         int coll_group, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     const MPIDI_Csel_container_s *cnt = NULL;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     MPIR_Csel_coll_sig_s coll_sig = {
         .coll_type = MPIR_CSEL_COLL_TYPE__EXSCAN,
         .comm_ptr = comm,
+        .coll_group = coll_group,
 
         .u.exscan.sendbuf = sendbuf,
         .u.exscan.recvbuf = recvbuf,
@@ -1554,22 +1655,24 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, MPI
     cnt = MPIR_Csel_search(MPIDI_COMM(comm, csel_comm), coll_sig);
 
     if (cnt == NULL) {
-        mpi_errno = MPIR_Exscan_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);;
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fallback;
     }
 
     switch (cnt->id) {
         case MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha:
             mpi_errno =
                 MPIDI_Exscan_intra_composition_alpha(sendbuf, recvbuf, count,
-                                                     datatype, op, comm, errflag);
+                                                     datatype, op, comm, coll_group, errflag);
             break;
         default:
             MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Exscan_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, errflag);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -1758,109 +1861,163 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ineighbor_alltoallw(const void *sendbuf,
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Ibarrier(MPIR_Comm * comm, MPIR_Request ** req)
+MPL_STATIC_INLINE_PREFIX int MPID_Ibarrier(MPIR_Comm * comm, int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_ibarrier(comm, req);
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
+    ret = MPIDI_NM_mpi_ibarrier(comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ibarrier_impl(comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ibcast(void *buffer, MPI_Aint count, MPI_Datatype datatype,
-                                         int root, MPIR_Comm * comm, MPIR_Request ** req)
+                                         int root, MPIR_Comm * comm, int coll_group,
+                                         MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_ibcast(buffer, count, datatype, root, comm, req);
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
+    ret = MPIDI_NM_mpi_ibcast(buffer, count, datatype, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ibcast_impl(buffer, count, datatype, root, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iallgather(const void *sendbuf, MPI_Aint sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
                                              MPI_Aint recvcount, MPI_Datatype recvtype,
-                                             MPIR_Comm * comm, MPIR_Request ** req)
+                                             MPIR_Comm * comm, int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iallgather(sendbuf, sendcount, sendtype, recvbuf,
-                                  recvcount, recvtype, comm, req);
+                                  recvcount, recvtype, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iallgather_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                recvcount, recvtype, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iallgatherv(const void *sendbuf, MPI_Aint sendcount,
                                               MPI_Datatype sendtype, void *recvbuf,
                                               const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                               MPI_Datatype recvtype, MPIR_Comm * comm,
-                                              MPIR_Request ** req)
+                                              int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iallgatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                   recvcounts, displs, recvtype, comm, req);
+                                   recvcounts, displs, recvtype, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iallgatherv_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                 recvcounts, displs, recvtype, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iallreduce(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                             MPIR_Request ** req)
+                                             int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_iallreduce(sendbuf, recvbuf, count, datatype, op, comm, req);
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
+    ret = MPIDI_NM_mpi_iallreduce(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iallreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ialltoall(const void *sendbuf, MPI_Aint sendcount,
                                             MPI_Datatype sendtype, void *recvbuf,
                                             MPI_Aint recvcount, MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, MPIR_Request ** req)
+                                            MPIR_Comm * comm, int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_ialltoall(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcount, recvtype, comm, req);
+                                 recvcount, recvtype, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ialltoall_impl(sendbuf, sendcount, sendtype, recvbuf,
+                               recvcount, recvtype, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallv(const void *sendbuf, const MPI_Aint * sendcounts,
                                              const MPI_Aint * sdispls, MPI_Datatype sendtype,
                                              void *recvbuf, const MPI_Aint * recvcounts,
                                              const MPI_Aint * rdispls, MPI_Datatype recvtype,
-                                             MPIR_Comm * comm, MPIR_Request ** req)
+                                             MPIR_Comm * comm, int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_ialltoallv(sendbuf, sendcounts, sdispls, sendtype,
-                                  recvbuf, recvcounts, rdispls, recvtype, comm, req);
+                                  recvbuf, recvcounts, rdispls, recvtype, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ialltoallv_impl(sendbuf, sendcounts, sdispls, sendtype,
+                                recvbuf, recvcounts, rdispls, recvtype, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallw(const void *sendbuf, const MPI_Aint * sendcounts,
@@ -1868,155 +2025,237 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ialltoallw(const void *sendbuf, const MPI_Aint
                                              const MPI_Datatype * sendtypes, void *recvbuf,
                                              const MPI_Aint * recvcounts, const MPI_Aint * rdispls,
                                              const MPI_Datatype * recvtypes, MPIR_Comm * comm,
-                                             MPIR_Request ** req)
+                                             int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_ialltoallw(sendbuf, sendcounts, sdispls, sendtypes,
-                                  recvbuf, recvcounts, rdispls, recvtypes, comm, req);
+                                  recvbuf, recvcounts, rdispls, recvtypes, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes,
+                           recvbuf, recvcounts, rdispls, recvtypes, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iexscan(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                          MPIR_Request ** req)
+                                          int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_iexscan(sendbuf, recvbuf, count, datatype, op, comm, req);
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
+    ret = MPIDI_NM_mpi_iexscan(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iexscan_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Igather(const void *sendbuf, MPI_Aint sendcount,
                                           MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                           MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                          MPIR_Request ** req)
+                                          int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_igather(sendbuf, sendcount, sendtype, recvbuf,
-                               recvcount, recvtype, root, comm, req);
+                               recvcount, recvtype, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Igather_impl(sendbuf, sendcount, sendtype, recvbuf,
+                             recvcount, recvtype, root, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Igatherv(const void *sendbuf, MPI_Aint sendcount,
                                            MPI_Datatype sendtype, void *recvbuf,
                                            const MPI_Aint * recvcounts, const MPI_Aint * displs,
                                            MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                           MPIR_Request ** req)
+                                           int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_igatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                recvcounts, displs, recvtype, root, comm, req);
+                                recvcounts, displs, recvtype, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Igatherv(sendbuf, sendcount, sendtype, recvbuf,
+                         recvcounts, displs, recvtype, root, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                         MPI_Aint recvcount, MPI_Datatype datatype,
-                                                        MPI_Op op, MPIR_Comm * comm,
+                                                        MPI_Op op, MPIR_Comm * comm, int coll_group,
                                                         MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm, req);
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
+    ret =
+        MPIDI_NM_mpi_ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm,
+                                           coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ireduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op,
+                                           comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ireduce_scatter(const void *sendbuf, void *recvbuf,
                                                   const MPI_Aint * recvcounts,
                                                   MPI_Datatype datatype, MPI_Op op,
-                                                  MPIR_Comm * comm, MPIR_Request ** req)
+                                                  MPIR_Comm * comm, int coll_group,
+                                                  MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm, req);
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
+    ret =
+        MPIDI_NM_mpi_ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm, coll_group,
+                                     req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ireduce_scatter_impl(sendbuf, recvbuf, recvcounts, datatype, op,
+                                     comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ireduce(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                           MPI_Datatype datatype, MPI_Op op, int root,
-                                          MPIR_Comm * comm, MPIR_Request ** req)
+                                          MPIR_Comm * comm, int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_ireduce(sendbuf, recvbuf, count, datatype, op, root, comm, req);
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
+    ret = MPIDI_NM_mpi_ireduce(sendbuf, recvbuf, count, datatype, op, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Ireduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iscan(const void *sendbuf, void *recvbuf, MPI_Aint count,
                                         MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                        MPIR_Request ** req)
+                                        int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_NM_mpi_iscan(sendbuf, recvbuf, count, datatype, op, comm, req);
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
+    ret = MPIDI_NM_mpi_iscan(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iscan_impl(sendbuf, recvbuf, count, datatype, op, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iscatter(const void *sendbuf, MPI_Aint sendcount,
                                            MPI_Datatype sendtype, void *recvbuf, MPI_Aint recvcount,
                                            MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                           MPIR_Request ** req)
+                                           int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iscatter(sendbuf, sendcount, sendtype, recvbuf,
-                                recvcount, recvtype, root, comm, req);
+                                recvcount, recvtype, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iscatter_impl(sendbuf, sendcount, sendtype, recvbuf,
+                              recvcount, recvtype, root, comm, coll_group, req);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *sendbuf, const MPI_Aint * sendcounts,
                                             const MPI_Aint * displs, MPI_Datatype sendtype,
                                             void *recvbuf, MPI_Aint recvcount,
                                             MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                            MPIR_Request ** req)
+                                            int coll_group, MPIR_Request ** req)
 {
     int ret;
 
     MPIR_FUNC_ENTER;
 
+    if (coll_group != MPIR_SUBGROUP_NONE) {
+        goto fallback;
+    }
+
     ret = MPIDI_NM_mpi_iscatterv(sendbuf, sendcounts, displs, sendtype,
-                                 recvbuf, recvcount, recvtype, root, comm, req);
+                                 recvbuf, recvcount, recvtype, root, comm, coll_group, req);
 
     MPIR_FUNC_EXIT;
     return ret;
+
+  fallback:
+    return MPIR_Iscatterv_impl(sendbuf, sendcounts, displs, sendtype,
+                               recvbuf, recvcount, recvtype, root, comm, coll_group, req);
 }
 
 #endif /* CH4_COLL_H_INCLUDED */

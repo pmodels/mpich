@@ -105,8 +105,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
         if (root != 0) {
             /* Root sends data to rank 0 */
             if (rank == root) {
-                mpi_errno =
-                    MPIC_Send(local_buf, count, datatype, 0, MPIR_BCAST_TAG, comm_ptr, errflag);
+                mpi_errno = MPIC_Send(local_buf, count, datatype, 0, MPIR_BCAST_TAG,
+                                      comm_ptr, MPIR_SUBGROUP_NONE, errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             } else if (rank == 0) {
 #ifdef HAVE_ERROR_CHECKING
@@ -118,8 +118,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 MPI_Aint recv_bytes;
                 mpi_errno =
                     MPIC_Recv((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
-                              datatype, root, MPIR_BCAST_TAG, comm_ptr, &status);
-                MPIR_ERR_CHECK(mpi_errno);
+                              datatype, root, MPIR_BCAST_TAG, comm_ptr, MPIR_SUBGROUP_NONE,
+                              &status);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recv_bytes);
                 MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(int),
                                   MPIR_TYPEREP_FLAG_NONE);
@@ -137,7 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                 /* When error checking is disabled, MPI_STATUS_IGNORE is used */
                 mpi_errno =
                     MPIC_Recv(bcast_data_addr, count, datatype, root, MPIR_BCAST_TAG, comm_ptr,
-                              MPI_STATUS_IGNORE);
+                              MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE);
                 MPIR_ERR_CHECK(mpi_errno);
 #endif
             }
@@ -373,13 +373,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
             if (rank == root) {
                 mpi_errno =
                     MPIC_Recv(outbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm_ptr,
-                              MPI_STATUS_IGNORE);
+                              MPIR_SUBGROUP_NONE, MPI_STATUS_IGNORE);
                 MPIR_ERR_CHECK(mpi_errno);
             } else if (rank == 0) {
                 MPIR_ERR_CHKANDJUMP(!reduce_data_addr, mpi_errno, MPI_ERR_OTHER, "**nomem");
                 mpi_errno =
                     MPIC_Send((void *) reduce_data_addr, count, datatype, root, MPIR_REDUCE_TAG,
-                              comm_ptr, errflag);
+                              comm_ptr, MPIR_SUBGROUP_NONE, errflag);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }

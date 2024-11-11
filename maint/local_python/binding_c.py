@@ -1686,6 +1686,8 @@ def push_impl_decl(func, impl_name=None):
     if func['_impl_param_list']:
         params = ', '.join(func['_impl_param_list'])
         if func['dir'] == 'coll':
+            if not RE.match(r'MPI_(Ineighbor|Neighbor)', func['name']):
+                params = params.replace('comm_ptr', 'comm_ptr, int coll_group')
             # block collective use an extra errflag
             if not RE.match(r'MPI_(I.*|Neighbor.*|.*_init)$', func['name']):
                 params = params + ", MPIR_Errflag_t errflag"
@@ -1726,6 +1728,8 @@ def dump_body_coll(func):
     mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
 
     args = ", ".join(func['_impl_arg_list'])
+    if not RE.match(r'MPI_(Ineighbor|Neighbor)', func['name']):
+        args = args.replace('comm_ptr', 'comm_ptr, MPIR_SUBGROUP_NONE')
 
     if RE.match(r'MPI_(I.*|.*_init)$', func['name'], re.IGNORECASE):
         # non-blocking collectives
@@ -1956,6 +1960,7 @@ def dump_body_reduce_equal(func):
     args = ", ".join(func['_impl_arg_list'])
     args = re.sub(r'recvbuf, ', '', args)
     args = re.sub(r'op, ', 'recvbuf, ', args)
+    args += ", MPIR_SUBGROUP_NONE"
     dump_line_with_break("mpi_errno = %s(%s);" % (impl, args))
     dump_error_check("")
 
