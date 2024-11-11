@@ -1263,7 +1263,8 @@ int ADIOI_Build_client_pre_req(ADIO_File fd,
                  ADIOI_Malloc(agg_ol_ct * sizeof(MPI_Count))) == NULL) {
                 ADIOI_Free(my_mem_view_state_p->pre_disp_arr);
                 fprintf(stderr, "ADIOI_Build_client_pre_req: malloc "
-                        "agg_blk_arr of size %lld failed\n", agg_ol_ct * sizeof(MPI_Count));
+                        "agg_blk_arr of size %lld failed\n",
+                        (long long) agg_ol_ct * sizeof(MPI_Count));
                 return -1;
             }
         }
