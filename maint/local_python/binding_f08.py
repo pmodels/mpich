@@ -794,6 +794,9 @@ def dump_mpi_c_interface_nobuf(func, is_large):
     elif RE.match(r'mpi_comm_spawn(_multiple)?$', func['name'], re.IGNORECASE):
         # use wrapper c functions
         c_name = name
+    elif RE.match(r'mpi_op_create', func['name'], re.IGNORECASE) and not is_large:
+        # defined in src/binding/fortran/mpif_h/user_proxy.c
+        c_name = "MPII_op_create"
     else:
         # uses PMPI c binding directly
         c_name = 'P' + get_function_name(func, is_large)
