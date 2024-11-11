@@ -387,6 +387,8 @@ def dump_f08_wrappers_f(func, is_large):
                 uses['MPIR_F08_get_MPI_STATUS_IGNORE_c'] = 1
                 arg_1 = ":STATUS:"
                 arg_2 = ":STATUS:"
+                # currently we preserve status%MPI_ERROR
+                p['_status_convert_in'] = "status_c = status"
                 p['_status_convert'] = "status = status_c"
             elif p['param_direction'] == 'inout':
                 convert_list_1.append("status_c = status")
@@ -722,6 +724,8 @@ def dump_f08_wrappers_f(func, is_large):
             dump_F_else()
             if check_int_kind:
                 s2 = re.sub(r':STATUS:', "c_loc(%s_c)" % p['name'], s)
+                if '_status_convert_in' in p:
+                    G.out.append(p['_status_convert_in'])
             else:
                 s2 = re.sub(r':STATUS:', "c_loc(%s)" % p['name'], s)
             dump_fortran_line(s2)
