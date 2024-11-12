@@ -149,10 +149,10 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 mpi_errno = MPIC_Wait(reqs[i]);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
-                MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                MPIR_ERR_CHKANDJUMP2(recvd_size != msgsize, mpi_errno, MPI_ERR_OTHER,
                                      "**collective_size_mismatch",
                                      "**collective_size_mismatch %d %d",
-                                     (int) recvd_size, (int) nbytes);
+                                     (int) recvd_size, (int) msgsize);
             }
         } else if (num_chunks > 3 && is_nb && i < 3 && !recv_pre_posted) {
             /* Wait to receive the chunk before it can be sent to the children */
@@ -160,10 +160,10 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 mpi_errno = MPIC_Wait(reqs[i]);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
-                MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                MPIR_ERR_CHKANDJUMP2(recvd_size != msgsize, mpi_errno, MPI_ERR_OTHER,
                                      "**collective_size_mismatch",
                                      "**collective_size_mismatch %d %d",
-                                     (int) recvd_size, (int) nbytes);
+                                     (int) recvd_size, (int) msgsize);
             }
         } else {
             /* Receive message from parent */
@@ -173,10 +173,10 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                               src, MPIR_BCAST_TAG, comm_ptr, &status);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
-                MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
+                MPIR_ERR_CHKANDJUMP2(recvd_size != msgsize, mpi_errno, MPI_ERR_OTHER,
                                      "**collective_size_mismatch",
                                      "**collective_size_mismatch %d %d",
-                                     (int) recvd_size, (int) nbytes);
+                                     (int) recvd_size, (int) msgsize);
             }
         }
         if (tree_type == MPIR_TREE_TYPE_KARY) {
