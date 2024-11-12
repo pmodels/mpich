@@ -105,6 +105,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
                  * ref count here to prevent free since here we will check
                  * the request status */
                 MPIR_Request_add_ref(anysrc_partner);
+                /* unset partner request to prevent recursive cancellation */
+                anysrc_partner->dev.anysrc_partner = NULL;
                 mpi_errno = MPIDI_NM_mpi_cancel_recv(anysrc_partner, true);     /* blocking */
                 MPIR_ERR_CHECK(mpi_errno);
                 if (!MPIR_STATUS_GET_CANCEL_BIT(anysrc_partner->status)) {
@@ -113,6 +115,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
                      */
                     MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
                     *is_cancelled = 0;
+                    if (MPIR_Request_is_complete(anysrc_partner)) {
+                        rreq->dev.anysrc_partner = NULL;
+                        rreq->status = anysrc_partner->status;
+                        MPIDI_CH4_REQUEST_FREE(anysrc_partner);
+                        MPID_Request_complete(rreq);
+                    } else {
+                        /* request not yet complete. reset partner for later free. */
+                        anysrc_partner->dev.anysrc_partner = rreq;
+                    }
                 } else {
                     /* NM partner is not user-visible, free it now, which means
                      * explicit SHM code can skip MPIDI_anysrc_free_partner
