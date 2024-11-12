@@ -38,8 +38,10 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
     virt_rank = rank;
 
     /* get nearest power-of-two less than or equal to comm_size */
-    int power = (int) (log(comm_size) / log(k));
-    int pofk = (int) lround(pow(k, power));
+    int pofk = 1;
+    while (pofk * k <= comm_size) {
+        pofk *= k;
+    }
 
     MPIR_CHKLMEM_DECL(2);
     void *tmp_buf;
@@ -56,7 +58,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPI_Aint single_node_data_size = extent * count - (extent - true_extent);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, (k - 1) * count * single_node_data_size, mpi_errno,
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, (k - 1) * single_node_data_size, mpi_errno,
                         "temporary buffer", MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
