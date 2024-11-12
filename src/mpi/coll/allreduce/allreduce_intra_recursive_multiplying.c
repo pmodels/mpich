@@ -56,9 +56,16 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
     MPI_Aint true_extent, true_lb, extent;
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
-    MPI_Aint single_node_data_size = extent * count - (extent - true_extent);
+    MPI_Aint single_size = extent * count - (extent - true_extent);
+    if (extent > true_extent) {
+        single_size -= (extent - true_extent);
+        /* prevent alignment problem */
+        if (single_size % MAX_ALIGNMENT) {
+            single_size += MAX_ALIGNMENT - single_size % MAX_ALIGNMENT;
+        }
+    }
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, (k - 1) * single_node_data_size, mpi_errno,
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, (k - 1) * single_size, mpi_errno,
                         "temporary buffer", MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
@@ -89,7 +96,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
         } else {
             /* Receive data from all those greater than pofk */
             for (int pre_src = (rank % pofk) + pofk; pre_src < comm_size; pre_src += pofk) {
-                mpi_errno = MPIC_Irecv(((char *) tmp_buf) + num_reqs * count * extent, count,
+                mpi_errno = MPIC_Irecv(((char *) tmp_buf) + num_reqs * single_size, count,
                                        datatype, pre_src, MPIR_ALLREDUCE_TAG, comm_ptr,
                                        &reqs[num_reqs]);
                 MPIR_ERR_CHECK(mpi_errno);
@@ -102,12 +109,12 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
             /* Reduce locally */
             for (int i = 0; i < num_reqs; i++) {
                 if (i == (num_reqs - 1)) {
-                    mpi_errno = MPIR_Reduce_local(((char *) tmp_buf) + i * count * extent,
+                    mpi_errno = MPIR_Reduce_local(((char *) tmp_buf) + i * single_size,
                                                   recvbuf, count, datatype, op);
                     MPIR_ERR_CHECK(mpi_errno);
                 } else {
-                    mpi_errno = MPIR_Reduce_local(((char *) tmp_buf) + i * count * extent,
-                                                  ((char *) tmp_buf) + (i + 1) * count * extent,
+                    mpi_errno = MPIR_Reduce_local(((char *) tmp_buf) + i * single_size,
+                                                  ((char *) tmp_buf) + (i + 1) * single_size,
                                                   count, datatype, op);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
@@ -133,7 +140,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
                     mpi_errno = MPIC_Isend(recvbuf, count, datatype, dst, MPIR_ALLREDUCE_TAG,
                                            comm_ptr, &reqs[num_reqs++], errflag);
                     MPIR_ERR_CHECK(mpi_errno);
-                    mpi_errno = MPIC_Irecv(((char *) tmp_buf) + exchanges * count * extent,
+                    mpi_errno = MPIC_Irecv(((char *) tmp_buf) + exchanges * single_size,
                                            count, datatype, dst, MPIR_ALLREDUCE_TAG, comm_ptr,
                                            &reqs[num_reqs++]);
                     MPIR_ERR_CHECK(mpi_errno);
@@ -150,7 +157,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
             int recvbuf_last = 0;
             for (int dst = rank_offset; dst < starting_rank + next_distance - distance;
                  dst += distance) {
-                void *dst_buf = ((char *) tmp_buf) + exchanges * count * extent;
+                void *dst_buf = ((char *) tmp_buf) + exchanges * single_size;
                 if (dst == rank - distance) {
                     mpi_errno = MPIR_Reduce_local(dst_buf, recvbuf, count, datatype, op);
                     MPIR_ERR_CHECK(mpi_errno);
@@ -161,7 +168,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
                     MPIR_ERR_CHECK(mpi_errno);
                     recvbuf_last = 0;
                 } else {
-                    mpi_errno = MPIR_Reduce_local(dst_buf, (char *) dst_buf + count * extent,
+                    mpi_errno = MPIR_Reduce_local(dst_buf, (char *) dst_buf + single_size,
                                                   count, datatype, op);
                     MPIR_ERR_CHECK(mpi_errno);
                     recvbuf_last = 0;
@@ -170,7 +177,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
             }
 
             if (!recvbuf_last) {
-                mpi_errno = MPIR_Localcopy((char *) tmp_buf + exchanges * count * extent,
+                mpi_errno = MPIR_Localcopy((char *) tmp_buf + exchanges * single_size,
                                            count, datatype, recvbuf, count, datatype);
                 MPIR_ERR_CHECK(mpi_errno);
             }
