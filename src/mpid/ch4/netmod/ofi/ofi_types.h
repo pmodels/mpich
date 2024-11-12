@@ -679,14 +679,14 @@ static inline void MPIDI_OFI_idata_set_size(uint64_t * data_field, MPI_Aint data
 {
     *data_field &= 0xffffffff;
     if (MPIDI_OFI_global.cq_data_size == 8 && data_sz <= INT32_MAX) {
-        *data_field |= (data_sz << 32);
+        *data_field |= ((uint64_t) data_sz << 32);
     }
 }
 
 static inline uint32_t MPIDI_OFI_idata_get_size(uint64_t idata)
 {
     if (MPIDI_OFI_global.cq_data_size == 8) {
-        return idata >> 32;
+        return (uint32_t) (idata >> 32);
     } else {
         return 0;
     }
