@@ -403,6 +403,10 @@ typedef void (FORT_CALL F77_ErrFunction) (MPI_Fint *, MPI_Fint *);
 void MPII_Keyval_set_f90_proxy(int keyval);
 int MPII_op_create(F77_OpFunction * opfn, MPI_Fint commute, MPI_Fint * op);
 int MPII_errhan_create(F77_ErrFunction * err_fn, MPI_Fint * errhandler, enum F77_handle_type type);
+int MPII_Comm_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
+int MPII_File_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
+int MPII_Win_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
+int MPII_Session_create_errhandler(F77_ErrFunction * err_fn, MPI_Fint * errhandler);
 
 extern FORT_DLL_SPEC void FORT_CALL mpi_alloc_mem_cptr_(MPI_Aint * size, MPI_Fint * info,
                                                         void **baseptr, MPI_Fint * ierr);
