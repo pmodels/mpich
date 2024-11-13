@@ -1103,8 +1103,13 @@ def dump_mpi_f08_types():
         def dump_convert_2(in_type, out_type, prefix):
             G.out.append("")
             mpi_name = "%s_Status_%s2%s" % (prefix, in_type, out_type)
-            in_name = "%s_status" % in_type
-            out_name = "%s_status" % out_type
+            if in_type == 'c' or out_type == 'c':
+                # the name c_status was taken (as a type)
+                in_name = "status_%s" % in_type
+                out_name = "status_%s" % out_type
+            else:
+                in_name = "%s_status" % in_type
+                out_name = "%s_status" % out_type
 
             G.out.append("SUBROUTINE %s(%s, %s, ierror)" % (mpi_name, in_name, out_name))
             G.out.append("INDENT")
@@ -1112,30 +1117,14 @@ def dump_mpi_f08_types():
             G.out.append("DEDENT")
             G.out.append("END SUBROUTINE")
 
-        # e.g. MPI_Status_f082c
-        def dump_convert_mpi(in_type, out_type, prefix):
-            G.out.append("")
-            # open
-            mpi_name = "%s_Status_%s2%s" % (prefix, in_type, out_type)
-            in_name = "status_%s" % in_type
-            out_name = "status_%s" % out_type
-
-            G.out.append("FUNCTION %s(%s, %s) &" % (mpi_name, in_name, out_name))
-            G.out.append("        bind(C, name=\"%s\") result (res)" % mpi_name)
-            G.out.append("INDENT")
-            G.out.append("USE, intrinsic :: iso_c_binding, ONLY: c_int")
-            dump_convert(in_type, in_name, out_type, out_name, "res")
-            G.out.append("DEDENT")
-            G.out.append("END FUNCTION %s" % mpi_name)
-
         # ----
         dump_convert_assign("f08", "c")
         dump_convert_assign("c", "f08")
         dump_convert_assign("f", "c")
         dump_convert_assign("c", "f")
         for prefix in ["MPI", "PMPI"]:
-            dump_convert_mpi("f08", "c", prefix)
-            dump_convert_mpi("c", "f08", prefix)
+            dump_convert_2("f08", "c", prefix)
+            dump_convert_2("c", "f08", prefix)
             dump_convert_2("f08", "f", prefix)
             dump_convert_2("f", "f08", prefix)
 
