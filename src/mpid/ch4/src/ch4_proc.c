@@ -11,6 +11,8 @@
  * Refer to comment in ch4_proc.h
  */
 
+#define MPIDI_CH4_AVTABLE_USE_DDR    1
+
 static int get_next_avtid(void);
 
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
@@ -164,6 +166,13 @@ int MPIDIU_avt_init(void)
     size_t table_size = sizeof(MPIDI_av_table_t) + size * sizeof(MPIDI_av_entry_t);
     MPIDI_global.avt_mgr.av_table0 = (MPIDI_av_table_t *) MPL_malloc(table_size, MPL_MEM_ADDRESS);
     MPIR_Assert(MPIDI_global.avt_mgr.av_table0);
+
+#if MPIDI_CH4_AVTABLE_USE_DDR
+    MPIR_hwtopo_gid_t mem_gid = MPIR_hwtopo_get_obj_by_type(MPIR_HWTOPO_TYPE__DDR);
+    if (mem_gid != MPIR_HWTOPO_GID_ROOT) {
+        MPIR_hwtopo_mem_bind(MPIDI_global.avt_mgr.av_table0, table_size, mem_gid);
+    }
+#endif
 
     MPIDI_global.avt_mgr.av_table0->size = size;
     MPIR_cc_set(&MPIDI_global.avt_mgr.av_table0->ref_count, 1);
