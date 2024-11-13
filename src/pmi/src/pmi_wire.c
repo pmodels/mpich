@@ -12,7 +12,7 @@
 
 #include <ctype.h>
 
-#define MAX_TMP_BUF_SIZE 1024
+#define MAX_TMP_BUF_SIZE 4096
 static char tmp_buf_for_output[MAX_TMP_BUF_SIZE];
 
 #define IS_SPACE(c) ((c) == ' ')
