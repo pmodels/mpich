@@ -23,10 +23,10 @@ program pt2pt_large
     else
         if (rank == 0) then
             call init_sendbuf(buf)
-            call MPI_Send(buf, cnt, MPI_INT, 1, tag, comm)
+            call MPI_Send(buf, cnt, MPI_INTEGER, 1, tag, comm)
         else
             call init_recvbuf(buf)
-            call MPI_Recv(buf, cnt, MPI_INT, 0, tag, comm, MPI_STATUS_IGNORE)
+            call MPI_Recv(buf, cnt, MPI_INTEGER, 0, tag, comm, MPI_STATUS_IGNORE)
             call check_recvbuf(buf, errs)
         endif
     endif
@@ -60,6 +60,7 @@ program pt2pt_large
         do i = 1,size(buf)
             if (buf(i) /= i) then
                 errs = errs + 1
+                print *, 'buf at ', i, '  got ', buf(i)
             endif
         enddo
     end subroutine

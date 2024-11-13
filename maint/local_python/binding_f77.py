@@ -475,6 +475,8 @@ def dump_f77_c_func(func, is_cptr=False):
             # Fortran errhandler does not do variadic (...); use MPI_Fint for handle
             # F77_ErrFunction is defined in mpi_fortimpl.h
             c_param_list.append("F77_ErrFunction %s" % v)
+        elif re.match(r'MPI_User_function', func_type, re.IGNORECASE):
+            c_param_list.append("F77_OpFunction *%s" % v)
         else:
             c_param_list.append("%s %s" % (func_type, v))
         c_arg_list_A.append(v)
@@ -1260,7 +1262,7 @@ def dump_fortran_line(s):
 def check_func_directives(func):
     if 'dir' in func and func['dir'] == "mpit":
         func['_skip_fortran'] = 1
-    elif RE.match(r'mpix_(grequest_|type_iov|async_)', func['name'], re.IGNORECASE):
+    elif RE.match(r'mpix_(grequest_|type_iov|async_|(comm|file|win|session)_create_errhandler_x|op_create_x)', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpi_\w+_(f|f08|c)2(f|f08|c)$', func['name'], re.IGNORECASE):
         # implemented in mpi_f08_types.f90

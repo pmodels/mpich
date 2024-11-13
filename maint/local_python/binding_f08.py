@@ -17,6 +17,8 @@ def get_cdesc_name(func, is_large):
 
 def get_f08_c_name(func, is_large):
     name = re.sub(r'MPIX?_', r'MPIR_', func['name'] + '_c')
+    if RE.match(r'mpi_(comm|type|win|file)_create_errhandler', func['name'], re.IGNORECASE):
+        name = re.sub(r'MPIR_', r'MPII_', name)
     if is_large:
         name += "_large"
     return name
@@ -223,6 +225,9 @@ def dump_f08_wrappers_f(func, is_large):
             if re.match(r'mpi_i?alltoallw', func['name'], re.IGNORECASE):
                 G.out.append("sendtypes_c = sendtypes(1:1)%MPI_VAL")
                 G.out.append("recvtypes_c = recvtypes(1:length)%MPI_VAL")
+            else:
+                G.out.append("sendtype_c = sendtype%MPI_VAL")
+                G.out.append("recvtype_c = recvtype%MPI_VAL")
             dump_fortran_line("ierror_c = %s(%s)" % (c_func_name, args2))
             G.out.extend(convert_list_2)
 
@@ -387,6 +392,8 @@ def dump_f08_wrappers_f(func, is_large):
                 uses['MPIR_F08_get_MPI_STATUS_IGNORE_c'] = 1
                 arg_1 = ":STATUS:"
                 arg_2 = ":STATUS:"
+                # currently we preserve status%MPI_ERROR
+                p['_status_convert_in'] = "status_c = status"
                 p['_status_convert'] = "status = status_c"
             elif p['param_direction'] == 'inout':
                 convert_list_1.append("status_c = status")
@@ -430,6 +437,7 @@ def dump_f08_wrappers_f(func, is_large):
 
             c_decl_list.append("INTEGER(c_int), TARGET :: %s_c(%s)" % (p['name'], length))
             convert_list_1.append("IF (has_%s) THEN" % p['name'])
+            convert_list_1.append("    %s_c(1:%s) = %s(1:%s)" % (p['name'], length, p['name'], length))
             convert_list_1.append("    %s_cptr = c_loc(%s_c)" % (p['name'], p['name']))
             convert_list_1.append("END IF")
             # output conversion for MPI_Dist_graph_neighbors
@@ -516,8 +524,8 @@ def dump_f08_wrappers_f(func, is_large):
             if p['_array_length'] == 'comm_size':
                 need_check_int_kind = True
                 if not has_comm_size:
-                    if RE.search(r'alltoallw', func['name'], re.IGNORECASE):
-                        # always need the length for types array
+                    if RE.search(r'alltoall[vw]', func['name'], re.IGNORECASE):
+                        # always need the length for types or counts array
                         use_list = convert_list_pre
                     else:
                         use_list = convert_list_1
@@ -722,6 +730,8 @@ def dump_f08_wrappers_f(func, is_large):
             dump_F_else()
             if check_int_kind:
                 s2 = re.sub(r':STATUS:', "c_loc(%s_c)" % p['name'], s)
+                if '_status_convert_in' in p:
+                    G.out.append(p['_status_convert_in'])
             else:
                 s2 = re.sub(r':STATUS:', "c_loc(%s)" % p['name'], s)
             dump_fortran_line(s2)
@@ -737,13 +747,17 @@ def dump_f08_wrappers_f(func, is_large):
     else:
         ret = 'res'
 
-    if is_alltoallvw:
-        dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
-        dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2)
-        dump_F_else()
     if need_check_int_kind and G.opts['fint-size'] == G.opts['cint-size']:
+        if is_alltoallvw:
+            dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
+            dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2)
+            dump_F_else()
         dump_call("%s = %s(%s)" % (ret, c_func_name, ', '.join(arg_list_1)), False)
     else:
+        if is_alltoallvw:
+            dump_F_if_open("c_associated(c_loc(sendbuf), c_loc(MPI_IN_PLACE))")
+            dump_alltoallvw_inplace(arg_list_1, arg_list_2, convert_list_2)
+            dump_F_else()
         G.out.extend(convert_list_1)
         dump_call("%s = %s(%s)" % (ret, c_func_name, ', '.join(arg_list_2)), True)
         G.out.extend(convert_list_2)
@@ -787,9 +801,14 @@ def dump_mpi_c_interface_nobuf(func, is_large):
         c_name = re.sub(r'MPIX?_', r'MPII_', func['name'])
         if is_large:
             c_name += "_large"
+    elif RE.match(r'mpi_(comm|type|win|file)_create_errhandler', func['name'], re.IGNORECASE):
+        c_name = re.sub(r'MPI_', r'MPII_', func['name'])
     elif RE.match(r'mpi_comm_spawn(_multiple)?$', func['name'], re.IGNORECASE):
         # use wrapper c functions
         c_name = name
+    elif RE.match(r'mpi_op_create', func['name'], re.IGNORECASE) and not is_large:
+        # defined in src/binding/fortran/mpif_h/user_proxy.c
+        c_name = "MPII_op_create"
     else:
         # uses PMPI c binding directly
         c_name = 'P' + get_function_name(func, is_large)
