@@ -55,7 +55,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 #define MPIDI_OFI_PROGRESS_WHILE(cond, vci) \
     while (cond) MPIDI_OFI_PROGRESS(vci)
 
-#define MPIDI_OFI_ERR  MPIR_ERR_CHKANDJUMP4
+#define MPIDI_OFI_ERR  MPIR_ERR_CHKANDJUMP1
 #define MPIDI_OFI_CALL(FUNC,STR)                                     \
     do {                                                    \
         ssize_t _ret = FUNC;                                \
@@ -63,10 +63,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                               mpi_errno,                    \
                               MPI_ERR_OTHER,                \
                               "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %d %s %s",  \
-                              __SHORT_FILE__,               \
-                              __LINE__,                     \
-                              __func__,                       \
+                              "**ofid_"#STR" %s",           \
                               fi_strerror(-_ret));          \
     } while (0)
 
@@ -81,10 +78,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                               mpi_errno,                    \
                               MPI_ERR_OTHER,                \
                               "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %d %s %s",  \
-                              __SHORT_FILE__,               \
-                              __LINE__,                     \
-                              __func__,                       \
+                              "**ofid_"#STR" %s",           \
                               fi_strerror(-_ret));          \
         if (_retry > 0) { \
             _retry--; \
@@ -125,10 +119,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                                    mpi_errno,                           \
                                    MPI_ERR_OTHER,                       \
                                    "**ofid_"#STR,                        \
-                                   "**ofid_"#STR" %s %d %s %s",          \
-                                   __SHORT_FILE__,                      \
-                                   __LINE__,                            \
-                                   __func__,                              \
+                                   "**ofid_"#STR" %s",                  \
                                    fi_strerror(-_ret));                 \
             mpi_errno = MPIDI_OFI_progress_do_queue(vci_);              \
             if (mpi_errno != MPI_SUCCESS)                                \
@@ -172,10 +163,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                               mpi_errno,                    \
                               MPI_ERR_OTHER,                \
                               "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %d %s %s",  \
-                              __SHORT_FILE__,               \
-                              __LINE__,                     \
-                              __func__,                     \
+                              "**ofid_"#STR" %s",           \
                               fi_strerror(-_ret));          \
     } while (0)
 
