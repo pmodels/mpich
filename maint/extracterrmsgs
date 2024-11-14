@@ -680,12 +680,12 @@ sub ProcessFile
                 # add longnames since we omit errnames.txt for these
                 $longnames{"**ofid_$name"} = "OFI call $name failed";
                 $longnamesDefined{"**ofid_$name"} = "$filename:$linecount";
-                $longnames{"**ofid_$name %s %d %s %s"} = "OFI call $name failed (%s:%d:%s:%s)";
-                $longnamesDefined{"**ofid_$name %s %d %s %s"} = "$filename:$linecount";
+                $longnames{"**ofid_$name %s"} = "OFI call $name failed (%s)";
+                $longnamesDefined{"**ofid_$name %s"} = "$filename:$linecount";
             }
 
             $generic_msgs{"**ofid_$name"}++;
-            $specific_msgs{"**ofid_$name %s %d %s %s"}++;
+            $specific_msgs{"**ofid_$name %s"}++;
 
             next;
         }
