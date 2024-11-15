@@ -85,6 +85,9 @@ int MPIDIG_part_send_init_target_msg_cb(void *am_hdr, void *data,
         MPIR_ERR_CHKANDSTMT(unexp_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_REQUEST(unexp_req, is_local) = is_local;
+#endif
         MPIDI_PART_REQUEST(unexp_req, u.recv.context_id) = msg_hdr->context_id;
         part_rreq_update_sinfo(unexp_req, msg_hdr);
 
