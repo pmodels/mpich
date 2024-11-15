@@ -99,6 +99,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
                           src_vci, dst_vci, sreq), is_local, mpi_errno);
     } else {
         /* RNDV send */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_REQUEST(sreq, is_local) = is_local;
+#endif
         MPIDIG_REQUEST(sreq, buffer) = (void *) buf;
         MPIDIG_REQUEST(sreq, count) = count;
         MPIDIG_REQUEST(sreq, datatype) = datatype;
