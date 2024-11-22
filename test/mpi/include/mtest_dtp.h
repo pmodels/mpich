@@ -166,11 +166,9 @@ static void set_memtypes(struct dtp_args *dtp_args)
 
 /* external static */
 
-static void dtp_args_init(struct dtp_args *dtp_args, mtest_dtp_arg_type_e dtp_arg_type,
-                          int argc, char *argv[])
+static void dtp_args_init_ArgList(struct dtp_args *dtp_args, mtest_dtp_arg_type_e dtp_arg_type,
+                                  MTestArgList * head)
 {
-    MTestArgList *head = MTestArgListCreate(argc, argv);
-
     dtp_args->dtp_arg_type = dtp_arg_type;
     dtp_args->idx = 0;
     dtp_args->num_counts = 0;
@@ -271,7 +269,21 @@ static void dtp_args_init(struct dtp_args *dtp_args, mtest_dtp_arg_type_e dtp_ar
     }
     dtp_args->num_repeats = MTestArgListGetInt_with_default(head, "repeat", 1);
     dtp_args->num_total_tests *= dtp_args->num_repeats;
+}
 
+static void dtp_args_init(struct dtp_args *dtp_args, mtest_dtp_arg_type_e dtp_arg_type,
+                          int argc, char *argv[])
+{
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    dtp_args_init_ArgList(dtp_args, dtp_arg_type, head);
+    MTestArgListDestroy(head);
+}
+
+static void dtp_args_init_arg(struct dtp_args *dtp_args, mtest_dtp_arg_type_e dtp_arg_type,
+                              const char *arg)
+{
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    dtp_args_init_ArgList(dtp_args, dtp_arg_type, head);
     MTestArgListDestroy(head);
 }
 

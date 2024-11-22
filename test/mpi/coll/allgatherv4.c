@@ -3,16 +3,18 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdio.h>
-#include <stdlib.h>
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #include <time.h>
 #include <math.h>
 #include <assert.h>
+
+#ifdef MULTI_TESTS
+#define run coll_allgatherv4
+int run(const char *arg);
+#endif
 
 /* FIXME: What is this test supposed to accomplish? */
 
@@ -23,9 +25,9 @@
 #define MAX_BUF   (128 * 1024 * 1024)
 #define LOOPS 10
 
-char *sbuf, *rbuf;
-int *recvcounts, *displs;
-int errs = 0;
+static char *sbuf, *rbuf;
+static int *recvcounts, *displs;
+static int errs = 0;
 
 typedef enum {
     REGULAR,
@@ -36,15 +38,14 @@ typedef enum {
     BELL_CURVE
 } test_t;
 
-void comm_tests(MPI_Comm comm);
-double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double *max_time);
+static void comm_tests(MPI_Comm comm);
+static double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double *max_time);
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int comm_size, comm_rank;
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
 
@@ -118,12 +119,10 @@ int main(int argc, char **argv)
     free(displs);
 
   fn_exit:
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }
 
-void comm_tests(MPI_Comm comm)
+static void comm_tests(MPI_Comm comm)
 {
     int comm_size, comm_rank;
     double rtime, max_time;
@@ -169,7 +168,7 @@ void comm_tests(MPI_Comm comm)
     }
 }
 
-double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double *max_time)
+static double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double *max_time)
 {
     int i, j;
     int comm_size, comm_rank;

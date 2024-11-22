@@ -3,17 +3,19 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "mpitest.h"
+#include <string.h>
+
+#ifdef MULTI_TESTS
+#define run coll_bcasttest
+int run(const char *arg);
+#endif
 
 #define ROOT      0
 #define NUM_REPS  5
 #define NUM_SIZES 4
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int *buf;
     int i, rank, reps, n;
@@ -21,13 +23,13 @@ int main(int argc, char **argv)
     int sizes[NUM_SIZES] = { 100, 64 * 1024, 128 * 1024, 1024 * 1024 };
     int errs = 0;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 1) {
-        if (strcmp(argv[1], "-novalidate") == 0 || strcmp(argv[1], "-noverify") == 0)
-            bVerify = 0;
+    MTestArgList *head = MTestArgListCreate_arg(arg);
+    if (MTestArgListGetInt_with_default(head, "noverify", 0)) {
+        bVerify = 0;
     }
+    MTestArgListDestroy(head);
 
     buf = (int *) malloc(sizes[NUM_SIZES - 1] * sizeof(int));
     memset(buf, 0, sizes[NUM_SIZES - 1] * sizeof(int));
@@ -81,6 +83,5 @@ int main(int argc, char **argv)
 
     free(buf);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

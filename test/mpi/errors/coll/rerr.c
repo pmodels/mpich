@@ -18,11 +18,19 @@ int main(int argc, char *argv[])
     char str[MPI_MAX_ERROR_STRING + 1];
     int slen;
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MTest_Init(&argc, &argv);
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-    ierr = MTest_Reduce(&a, &b, 1, MPI_BYTE, MPI_MAX, 0, MPI_COMM_WORLD);
+    ierr = MTest_Reduce(is_blocking, &a, &b, 1, MPI_BYTE, MPI_MAX, 0, MPI_COMM_WORLD);
     if (ierr == MPI_SUCCESS) {
         errs++;
         printf("Did not detect invalid type/op pair (byte,max) in Allreduce\n");

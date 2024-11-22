@@ -3,9 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run attr_fkeyval
+int run(const char *arg);
+#endif
 
 /*
 static char MTestDescrip[] = "Test freeing keyvals while still attached to \
@@ -13,14 +16,9 @@ a communicator, then make sure that the keyval delete and copy code are still \
 executed";
 */
 
-/* Function prototypes to keep compilers happy */
-int copy_fn(MPI_Comm oldcomm, int keyval, void *extra_state,
-            void *attribute_val_in, void *attribute_val_out, int *flag);
-int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state);
-
 /* Copy increments the attribute value */
-int copy_fn(MPI_Comm oldcomm, int keyval, void *extra_state,
-            void *attribute_val_in, void *attribute_val_out, int *flag)
+static int copy_fn(MPI_Comm oldcomm, int keyval, void *extra_state,
+                   void *attribute_val_in, void *attribute_val_out, int *flag)
 {
     /* Copy the address of the attribute */
     *(void **) attribute_val_out = attribute_val_in;
@@ -33,19 +31,18 @@ int copy_fn(MPI_Comm oldcomm, int keyval, void *extra_state,
 }
 
 /* Delete decrements the attribute value */
-int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
+static int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
 {
     *(int *) attribute_val = *(int *) attribute_val - 1;
     return MPI_SUCCESS;
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int attrval;
     int i, key[32], keyval, saveKeyval;
     MPI_Comm comm, dupcomm;
-    MTest_Init(&argc, &argv);
 
     while (MTestGetIntracomm(&comm, 1)) {
         if (comm == MPI_COMM_NULL)
@@ -94,10 +91,9 @@ int main(int argc, char *argv[])
             MPI_Keyval_free(&key[i]);
         }
     }
-    MTest_Finalize(errs);
 
     /* The attributes on comm self and world were deleted by finalize
      * (see separate test) */
 
-    return MTestReturnValue(errs);
+    return errs;
 }

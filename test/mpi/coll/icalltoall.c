@@ -21,6 +21,14 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Datatype datatype;
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MTest_Init(&argc, &argv);
 
     datatype = MPI_INT;
@@ -42,7 +50,8 @@ int main(int argc, char *argv[])
                         sendbuf[idx++] = i + rrank;
                     }
                 }
-                err = MTest_Alltoall(sendbuf, count, datatype, NULL, 0, datatype, comm);
+                err =
+                    MTest_Alltoall(is_blocking, sendbuf, count, datatype, NULL, 0, datatype, comm);
                 if (err) {
                     errs++;
                     MTestPrintError(err);
@@ -54,7 +63,8 @@ int main(int argc, char *argv[])
                 MPI_Comm_size(comm, &size);
 
                 /* In the right group */
-                err = MTest_Alltoall(NULL, 0, datatype, recvbuf, count, datatype, comm);
+                err =
+                    MTest_Alltoall(is_blocking, NULL, 0, datatype, recvbuf, count, datatype, comm);
                 if (err) {
                     errs++;
                     MTestPrintError(err);

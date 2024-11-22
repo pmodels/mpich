@@ -23,6 +23,14 @@ int main(int argc, char *argv[])
     int leftGroup;
     MPI_Comm comm;
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MTest_Init(&argc, &argv);
 
     /* Get an intercommunicator */
@@ -34,14 +42,14 @@ int main(int argc, char *argv[])
          * change the error handler to errors return */
         MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
         if (leftGroup) {
-            err = MTest_Barrier(comm);
+            err = MTest_Barrier(is_blocking, comm);
             if (err) {
                 errs++;
                 MTestPrintError(err);
             }
         } else {
             /* In the right group */
-            err = MTest_Barrier(comm);
+            err = MTest_Barrier(is_blocking, comm);
             if (err) {
                 errs++;
                 MTestPrintError(err);

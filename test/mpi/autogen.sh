@@ -127,5 +127,8 @@ for dir in errors/f77/* ; do
 done
 echo "done"
 
+check_PYTHON
+$PYTHON maint/gen_all_mpitests.py
+
 echo "Running autoreconf in ."
 autoreconf -ivf

@@ -12,13 +12,14 @@
  * Can be called with any number of processors.
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include "mpicolltest.h"
 #include "mpitest.h"
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run coll_p_redscat
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int err = 0;
     int *sendbuf, recvbuf, *recvcounts;
@@ -28,7 +29,6 @@ int main(int argc, char **argv)
     MPI_Request req;
     MPI_Info info;
 
-    MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
 
     MPI_Comm_size(comm, &size);
@@ -63,7 +63,6 @@ int main(int argc, char **argv)
 
     free(sendbuf);
     free(recvcounts);
-    MTest_Finalize(err);
 
-    return MTestReturnValue(err);
+    return err;
 }

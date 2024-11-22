@@ -5,6 +5,7 @@
 
 # mix in the "make testing" rule and other boilerplate
 include $(top_srcdir)/Makefile_single.mtest
+include $(top_srcdir)/Makefile_mpitests.mtest
 
 ACLOCAL_AMFLAGS = -I confdb
 
