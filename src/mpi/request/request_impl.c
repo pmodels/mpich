@@ -315,21 +315,6 @@ int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
     *flag = FALSE;
 
   fn_exit:
-    if (n_completed == count) {
-        *flag = TRUE;
-        goto fn_exit;
-    }
-
-    if (need_progress > 0) {
-        mpi_errno = MPID_Progress_test(state);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        need_progress--;
-        goto fn_check_requests;
-    }
-
-    *flag = FALSE;
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
