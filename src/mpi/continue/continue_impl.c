@@ -82,7 +82,7 @@ int MPIR_Continue_init_impl(int flags, int max_poll,
     cont_req->u.cont.max_poll = max_poll;
     cont_req->u.cont.state = (MPID_Progress_state_cnt *) MPL_malloc(sizeof(MPID_Progress_state_cnt), MPL_MEM_OTHER);
     for (int i = 0; i < MPIDI_CH4_MAX_VCIS; ++i) {
-        MPL_atomic_release_store_uint64(&cont_req->u.cont.state->vci_refcount[i].val, 0);
+        MPL_atomic_release_store_int64(&cont_req->u.cont.state->vci_refcount[i].val, 0);
     }
     *cont_req_ptr = cont_req;
     return MPI_SUCCESS;
@@ -130,7 +130,7 @@ void attach_continue_context(MPIR_Continue_context *context_ptr, bool defer_comp
     /* record the corresponding VCI for the continuation request to progress */
     if (context_ptr->continue_ptr->cont_req) {
         int vci = MPIDI_Request_get_vci(context_ptr->op_request);
-        MPL_atomic_fetch_add_int(&context_ptr->continue_ptr->cont_req->u.cont.state->vci_refcount[vci].val, 1);
+        MPL_atomic_fetch_add_int64(&context_ptr->continue_ptr->cont_req->u.cont.state->vci_refcount[vci].val, 1);
     }
     /* Attach the continue context to the op request */
     if (!MPIR_Register_callback(context_ptr->op_request, MPIR_Continue_callback, context_ptr, false)) {
@@ -234,7 +234,7 @@ void complete_op_request(MPIR_Request *op_request, bool in_cs, void *cb_context,
     MPIR_Request *cont_req_ptr = continue_ptr->cont_req;
     if (cont_req_ptr) {
         int vci = MPIDI_Request_get_vci(op_request);
-        MPL_atomic_fetch_sub_int(&cont_req_ptr->u.cont.state->vci_refcount[vci].val, 1);
+        MPL_atomic_fetch_sub_int64(&cont_req_ptr->u.cont.state->vci_refcount[vci].val, 1);
     }
     /* Complete this operation request */
     /* FIXME: MPIR_Request_completion_processing can call MPIR_Request_free,
