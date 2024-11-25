@@ -69,9 +69,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_tagged(void *buffer
         if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
             do {
                 ret = fi_cntr_wait(rcv_cntr, 1, 1);
-                MPIR_ERR_CHKANDJUMP1(ret < 0 && ret != -FI_ETIMEDOUT,
+                MPIR_ERR_CHKANDJUMP2(ret < 0 && ret != -FI_ETIMEDOUT,
                                      mpi_errno, MPI_ERR_RMA_RANGE,
-                                     "**ofid_cntr_wait", "**ofid_cntr_wait %s", fi_strerror(-ret));
+                                     "**ofid_cntr_wait", "**ofid_cntr_wait %s %s",
+                                     MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(-ret));
                 MPID_Progress_test(NULL);
             } while (ret == -FI_ETIMEDOUT);
         } else {
@@ -88,9 +89,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_intra_triggered_tagged(void *buffer
         if (0 != strcmp(MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name, "cxi")) {
             do {
                 ret = fi_cntr_wait(snd_cntr, num_children, 1);
-                MPIR_ERR_CHKANDJUMP1(ret < 0 && ret != -FI_ETIMEDOUT,
+                MPIR_ERR_CHKANDJUMP2(ret < 0 && ret != -FI_ETIMEDOUT,
                                      mpi_errno, MPI_ERR_RMA_RANGE,
-                                     "**ofid_cntr_wait", "**ofid_cntr_wait %s", fi_strerror(-ret));
+                                     "**ofid_cntr_wait", "**ofid_cntr_wait %s %s",
+                                     MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(-ret));
                 MPID_Progress_test(NULL);
             } while (ret == -FI_ETIMEDOUT);
         } else {
