@@ -10,14 +10,14 @@
 # Most of the libfabric call error names are generated from MPIDI_OFI_CALL macros,
 # some of them are explicitly used via MPIR_ERR_CHKANDJUMP4, they need be listed here.
 **ofid_cancel:OFI cancel failed
-**ofid_cancel %s:OFI cancel failed (%s)
+**ofid_cancel %s %s:OFI cancel failed (default nic=%s: %s)
 **ofid_cntr_open:OFI Counter open failed
-**ofid_cntr_open %s:OFI OFI Counter open failed (%s)
+**ofid_cntr_open %s %s:OFI OFI Counter open failed (default nic=%s: %s)
 **ofid_cntr_wait:OFI Counter wait failed
-**ofid_cntr_wait %s:OFI OFI Counter wait failed (%s)
+**ofid_cntr_wait %s %s:OFI OFI Counter wait failed (default nic=%s: %s)
 **ofid_enable_trigger:OFI triggered ops enable failed
-**ofid_enable_trigger %s:OFI triggered ops enable failed (%s)
+**ofid_enable_trigger %s %s:OFI triggered ops enable failed (default nic=%s: %s)
 **ofid_issue_trigger:OFI triggered ops issue failed
-**ofid_issue_trigger %s:OFI triggered ops issue failed (%s)
+**ofid_issue_trigger %s %s:OFI triggered ops issue failed (default nic=%s: %s)
 **ofid_poll:OFI poll failed
-**ofid_poll %s:OFI poll failed (%s)
+**ofid_poll %s %s:OFI poll failed (default nic=%s: %s)
