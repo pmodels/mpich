@@ -51,9 +51,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_do_progress(MPIR_Win * win, int vci)
 
             if (itercount == 1000 && MPIDI_OFI_COUNTER_WAIT_OBJECTS) {
                 ret = fi_cntr_wait(MPIDI_OFI_WIN(win).cmpl_cntr, tcount, 0);
-                MPIR_ERR_CHKANDJUMP1(ret < 0 && ret != -FI_ETIMEDOUT,
+                MPIR_ERR_CHKANDJUMP2(ret < 0 && ret != -FI_ETIMEDOUT,
                                      mpi_errno, MPI_ERR_RMA_RANGE,
-                                     "**ofid_cntr_wait", "**ofid_cntr_wait %s", fi_strerror(-ret));
+                                     "**ofid_cntr_wait", "**ofid_cntr_wait %s %s",
+                                     MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(-ret));
                 itercount = 0;
                 DEBUG_PROGRESS_CHECK;
             }
