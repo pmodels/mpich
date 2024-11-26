@@ -301,7 +301,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_mr_bind(struct fi_info *prov, struct fid_
 #define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
 int MPIDI_OFI_retry_progress(void);
 int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-int MPIDI_OFI_recv_huge_control(int vci, MPIR_Context_id_t comm_id, int rank, int tag,
+int MPIDI_OFI_recv_huge_control(int vci, int comm_id, int rank, int tag,
                                 MPIDI_OFI_huge_remote_info_t * info);
 int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 int MPIDI_OFI_huge_chunk_done_event(int vci, struct fi_cq_tagged_entry *wc, void *req);
@@ -487,8 +487,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_rndv(uint64_t match_bits)
     return ((match_bits & MPIDI_OFI_PROTOCOL_MASK) == MPIDI_OFI_RNDV_SEND);
 }
 
-MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
-                                                         int source, int tag)
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(int contextid, int source, int tag)
 {
     uint64_t match_bits;
     match_bits = contextid;
@@ -505,8 +504,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
 
 /* receive posting */
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
-                                                         MPIR_Context_id_t contextid,
-                                                         int source, int tag)
+                                                         int contextid, int source, int tag)
 {
     uint64_t match_bits = 0;
     *mask_bits = MPIDI_OFI_PROTOCOL_MASK;
@@ -568,7 +566,7 @@ struct MPIDI_OFI_contig_blocks_params {
  * tag - The tag of the message being sent.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_sender_nic_index(MPIR_Comm * comm,
-                                                              MPIR_Context_id_t ctxid_in_effect,
+                                                              int ctxid_in_effect,
                                                               int sender_rank, int receiver_rank,
                                                               int tag)
 {
@@ -596,7 +594,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_sender_nic_index(MPIR_Comm * comm,
  * tag - The tag of the message being sent.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm,
-                                                                MPIR_Context_id_t ctxid_in_effect,
+                                                                int ctxid_in_effect,
                                                                 int sender_rank, int receiver_rank,
                                                                 int tag)
 {

@@ -135,26 +135,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__IMPLICIT
 
 /* Map comm to vci_idx */
-MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_to_vci(MPIR_Context_id_t context_id)
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_to_vci(int context_id)
 {
     return MPIR_CONTEXT_READ_FIELD(PREFIX, context_id);
 }
 
 /* Map comm and rank to vci_idx */
-MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_rank_to_vci(MPIR_Context_id_t context_id, int rank)
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_rank_to_vci(int context_id, int rank)
 {
     return MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + rank;
 }
 
 /* Map comm and tag to vci_idx */
-MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_tag_to_vci(MPIR_Context_id_t context_id, int tag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_tag_to_vci(int context_id, int tag)
 {
     return MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + tag;
 }
 
 /* Map comm, rank, and tag to vci_idx */
-MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_rank_tag_to_vci(MPIR_Context_id_t context_id,
-                                                                 int rank, int tag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_rank_tag_to_vci(int context_id, int rank, int tag)
 {
     return MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + rank + tag;
 }
@@ -190,7 +189,7 @@ static bool is_vci_restricted_to_zero(MPIR_Comm * comm)
  * Otherwise (receiver side), it should be comm->recvcontext_id.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_get_sender_vci(MPIR_Comm * comm,
-                                                  MPIR_Context_id_t ctxid_in_effect,
+                                                  int ctxid_in_effect,
                                                   int sender_rank, int receiver_rank, int tag)
 {
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
@@ -232,7 +231,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_sender_vci(MPIR_Comm * comm,
  * Otherwise (receiver side), it should be comm->recvcontext_id.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
-                                                    MPIR_Context_id_t ctxid_in_effect,
+                                                    int ctxid_in_effect,
                                                     int sender_rank, int receiver_rank, int tag)
 {
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI

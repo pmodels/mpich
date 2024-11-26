@@ -41,8 +41,7 @@
         } \
     } while (0)
 
-MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_init_tag(MPIR_Context_id_t contextid, int source,
-                                                     uint64_t tag)
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_init_tag(int contextid, int source, uint64_t tag)
 {
     uint64_t ucp_tag = 0;
     ucp_tag = contextid;
@@ -66,8 +65,7 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_tag_mask(int mpi_tag, int src)
     return tag_mask;
 }
 
-MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_recv_tag(int mpi_tag, int src,
-                                                     MPIR_Context_id_t contextid)
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_recv_tag(int mpi_tag, int src, int contextid)
 {
     uint64_t ucp_tag = contextid;
 

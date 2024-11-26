@@ -532,7 +532,7 @@ typedef struct {
 } MPIDI_OFI_global_t;
 
 typedef struct {
-    MPIR_Context_id_t comm_id;
+    int comm_id;
     int origin_rank;
     int tag;
     MPIR_Request *ackreq;
@@ -660,7 +660,7 @@ typedef struct MPIDI_OFI_read_chunk {
  * data from the remote memory region and we need a way of matching up the
  * control messages with the "real" requests. */
 typedef struct MPIDI_OFI_huge_recv_list {
-    MPIR_Context_id_t comm_id;
+    int comm_id;
     int rank;
     int tag;
     union {

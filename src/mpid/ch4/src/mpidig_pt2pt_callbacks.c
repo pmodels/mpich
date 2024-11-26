@@ -205,7 +205,7 @@ int MPIDIG_send_data_origin_cb(MPIR_Request * sreq)
  *
  */
 
-static int match_posted_rreq(int rank, int tag, MPIR_Context_id_t context_id, int vci,
+static int match_posted_rreq(int rank, int tag, int context_id, int vci,
                              bool is_local, MPIR_Request ** req)
 {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
@@ -240,7 +240,7 @@ static int match_posted_rreq(int rank, int tag, MPIR_Context_id_t context_id, in
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
 }
 
-static int create_unexp_rreq(int rank, int tag, MPIR_Context_id_t context_id,
+static int create_unexp_rreq(int rank, int tag, int context_id,
                              MPI_Aint data_sz, int error_bits, int is_local,
                              int local_vci, int remote_vci, MPIR_Request ** req)
 {
@@ -326,8 +326,7 @@ static void call_rndv_cb(MPIR_Request * rreq, int flags)
 }
 
 static void set_matched_rreq_fields(MPIR_Request * rreq, int rank, int tag,
-                                    MPIR_Context_id_t context_id,
-                                    MPI_Aint data_sz, int error_bits, int is_local)
+                                    int context_id, MPI_Aint data_sz, int error_bits, int is_local)
 {
     MPIR_FUNC_ENTER;
     MPIDIG_REQUEST(rreq, u.recv.context_id) = context_id;

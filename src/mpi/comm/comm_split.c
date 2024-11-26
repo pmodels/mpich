@@ -88,7 +88,7 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
     int rank, size, remote_size, i, new_size, new_remote_size,
         first_entry = 0, first_remote_entry = 0, *last_ptr;
     int in_newcomm;             /* TRUE iff *newcomm should be populated */
-    MPIR_Context_id_t new_context_id, remote_context_id;
+    int new_context_id, remote_context_id;
     MPIR_Comm_map_t *mapper;
     MPIR_CHKLMEM_DECL(4);
 

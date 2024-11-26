@@ -58,7 +58,7 @@ enum {
 typedef struct MPIDIG_hdr_t {
     int src_rank;
     int tag;
-    MPIR_Context_id_t context_id;
+    int context_id;
     int error_bits;
     int flags;
     MPIR_Request *sreq_ptr;
@@ -83,7 +83,7 @@ typedef struct MPIDIG_ssend_ack_msg_t {
 typedef struct MPIDIG_part_send_init_msg_t {
     int src_rank;
     int tag;
-    MPIR_Context_id_t context_id;
+    int context_id;
     MPIR_Request *sreq_ptr;
     MPI_Aint data_sz;           /* size of entire send data */
 } MPIDIG_part_send_init_msg_t;

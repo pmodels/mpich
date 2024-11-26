@@ -106,7 +106,7 @@ typedef int32_t MPIDI_Rank_t;
 typedef struct MPIDI_Message_match_parts {
     int32_t tag;
     MPIDI_Rank_t rank;
-    MPIR_Context_id_t context_id;
+    int context_id;
 } MPIDI_Message_match_parts_t;
 typedef union {
     MPIDI_Message_match_parts_t parts;
