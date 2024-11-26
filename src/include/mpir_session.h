@@ -8,6 +8,9 @@
 
 #include "mpiimpl.h"
 
+#define MPIR_SESSION_WORLD_PSET_NAME "mpi://WORLD"
+#define MPIR_SESSION_SELF_PSET_NAME "mpi://SELF"
+
 /* Session structure */
 struct MPIR_Session {
     MPIR_OBJECT_HEADER;
