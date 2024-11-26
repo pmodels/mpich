@@ -1192,4 +1192,3 @@ void MPL_Memcpy_stream(void *dest, const void *src, size_t n)
 #endif /* HAVE_SSE2 */
 
 #endif
-
