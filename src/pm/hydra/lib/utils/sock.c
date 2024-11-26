@@ -38,12 +38,12 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
         port_str = strtok(port_range, ":");
         if (port_str == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "error parsing port range\n");
-        low_port = atoi(port_str);
+        low_port = (uint16_t) atoi(port_str);
 
         port_str = strtok(NULL, ":");
         if (port_str == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "error parsing port range\n");
-        high_port = atoi(port_str);
+        high_port = (uint16_t) atoi(port_str);
 
         if (high_port < low_port)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "high port < low port\n");
@@ -181,7 +181,7 @@ HYD_status HYDU_sock_accept(int listen_fd, int *fd)
 HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed,
                           enum HYDU_sock_comm_flag flag)
 {
-    int tmp;
+    ssize_t tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -208,7 +208,7 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed
             *closed = 1;
             goto fn_exit;
         } else {
-            *recvd += tmp;
+            *recvd += (int) tmp;
         }
 
         if (flag == HYDU_SOCK_COMM_NONE || *recvd == maxlen)
@@ -226,7 +226,7 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed
 HYD_status HYDU_sock_write(int fd, const void *buf, int maxlen, int *sent, int *closed,
                            enum HYDU_sock_comm_flag flag)
 {
-    int tmp;
+    ssize_t tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -249,7 +249,7 @@ HYD_status HYDU_sock_write(int fd, const void *buf, int maxlen, int *sent, int *
             }
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "write error (%s)\n", MPL_strerror(errno));
         } else {
-            *sent += tmp;
+            *sent += (int) tmp;
         }
 
         if (flag == HYDU_SOCK_COMM_NONE || *sent == maxlen)

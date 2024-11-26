@@ -89,6 +89,7 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 
     nnew = size1;
     while (g1_idx >= 0 && g2_idx >= 0) {
+        uint64_t l1_pid, l2_pid;
         l1_pid = group_ptr1->lrank_to_lpid[g1_idx].lpid;
         l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
         if (l1_pid < l2_pid) {
@@ -264,6 +265,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
 
     nnew = 0;
     while (g1_idx >= 0 && g2_idx >= 0) {
+        uint64_t l1_pid, l2_pid;
         l1_pid = group_ptr1->lrank_to_lpid[g1_idx].lpid;
         l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
         if (l1_pid < l2_pid) {
@@ -504,6 +506,7 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
             g2_idx = gp2->idx_of_first_lpid;
         }
         if (g2_idx >= 0) {
+            uint64_t l1_pid, l2_pid;
             /* g2_idx can be < 0 if the g2 group is empty */
             l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
             for (i = 0; i < n; i++) {
@@ -616,6 +619,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 
     /* Add members of group2 that are not in group 1 */
 
+    uint64_t mylpid;
     if (group_ptr1->rank == MPI_UNDEFINED && group_ptr2->rank >= 0) {
         mylpid = group_ptr2->lrank_to_lpid[group_ptr2->rank].lpid;
     } else {

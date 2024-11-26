@@ -18,7 +18,7 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_halving(const void *sendbuf
     void *tmp_recvbuf, *tmp_results;
     int dst;
     int mask;
-    int rem, newdst, send_idx, recv_idx, last_idx, send_cnt, recv_cnt;
+    int rem, newdst, send_idx, recv_idx, last_idx;
     int pof2, old_i, newrank;
 
     comm_size = comm_ptr->local_size;
@@ -136,7 +136,8 @@ int MPIR_Ireduce_scatter_block_intra_sched_recursive_halving(const void *sendbuf
             /* find real rank of dest */
             dst = (newdst < rem) ? newdst * 2 + 1 : newdst + rem;
 
-            send_cnt = recv_cnt = 0;
+            MPI_Aint send_cnt = 0;
+            MPI_Aint recv_cnt = 0;
             if (newrank < newdst) {
                 send_idx = recv_idx + mask;
                 for (i = send_idx; i < last_idx; i++)

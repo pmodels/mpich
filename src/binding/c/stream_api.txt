@@ -59,7 +59,7 @@ MPIX_Stream_send:
                                           source_stream_index, dest_stream_index, &attr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPID_Send(buf, count, datatype, dest, tag, comm_ptr, attr, &request_ptr);
+    mpi_errno = MPID_Send(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr, attr, &request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (request_ptr == NULL) {
@@ -90,11 +90,11 @@ MPIX_Stream_isend:
                                           source_stream_index, dest_stream_index, &attr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr,
+    mpi_errno = MPID_Isend(buf, (MPI_Aint) count, datatype, dest, tag, comm_ptr,
                            attr, &request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, count);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id, buf, (MPI_Aint) count);
 
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for isend, lower-level access is
@@ -122,7 +122,7 @@ MPIX_Stream_recv:
                                           source_stream_index, dest_stream_index, &attr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPID_Recv(buf, count, datatype, source, tag, comm_ptr,
+    mpi_errno = MPID_Recv(buf, (MPI_Aint) count, datatype, source, tag, comm_ptr,
                           attr, status, &request_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -154,7 +154,7 @@ MPIX_Stream_irecv:
                                           source_stream_index, dest_stream_index, &attr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr,
+    mpi_errno = MPID_Irecv(buf, (MPI_Aint) count, datatype, source, tag, comm_ptr,
                            attr, &request_ptr);
 
     *request = request_ptr->handle;

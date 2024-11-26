@@ -74,7 +74,7 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
                 count++;        /* We still need to wait */
 
                 gettimeofday(&now, NULL);
-                time_elapsed = (now.tv_sec - start.tv_sec);     /* Ignore microsec granularity */
+                time_elapsed = (int) (now.tv_sec - start.tv_sec);       /* Ignore microsec granularity */
 
                 time_left = -1;
                 if (timeout >= 0) {

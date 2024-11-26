@@ -52,7 +52,4 @@
 #define MPIR_PT2PT_ATTR_GET_SYNCFLAG(attr)  (((attr) & 0x8) ? 1 : 0)
 #define MPIR_PT2PT_ATTR_SET_SYNCFLAG(attr)  (attr) |= 0x8
 
-int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                     MPIR_Comm * comm_ptr, MPI_Request * request);
-
 #endif /* MPIR_PT2PT_H_INCLUDED */

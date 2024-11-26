@@ -59,7 +59,7 @@ HYD_status HYDU_str_alloc_and_join(char **strlist, char **strjoin)
     HYDU_FUNC_ENTER();
 
     for (i = 0; strlist[i] != NULL; i++) {
-        len += strlen(strlist[i]);
+        len += (int) strlen(strlist[i]);
     }
 
     HYDU_MALLOC_OR_JUMP(*strjoin, char *, len + 1, status);
@@ -68,7 +68,7 @@ HYD_status HYDU_str_alloc_and_join(char **strlist, char **strjoin)
 
     for (i = 0; strlist[i] != NULL; i++) {
         snprintf(*strjoin + count, len - count + 1, "%s", strlist[i]);
-        count += strlen(strlist[i]);
+        count += (int) strlen(strlist[i]);
     }
 
   fn_exit:

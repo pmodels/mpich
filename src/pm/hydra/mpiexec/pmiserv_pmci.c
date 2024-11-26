@@ -151,7 +151,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
          *       the pg pointer may not be persistent during the event loop */
         while (PMISERV_pg_by_id(i)->is_active) {
             gettimeofday(&now, NULL);
-            time_elapsed = (now.tv_sec - start.tv_sec);
+            time_elapsed = (int) (now.tv_sec - start.tv_sec);
             time_left = timeout;
             if (timeout > 0) {
                 if (time_elapsed > timeout) {
@@ -177,7 +177,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
     /* Either all application processes exited or we have timed out.
      * We now wait for all the proxies to terminate. */
     gettimeofday(&now, NULL);
-    time_elapsed = (now.tv_sec - start.tv_sec);
+    time_elapsed = (int) (now.tv_sec - start.tv_sec);
     if (timeout > 0) {
         time_left = timeout - time_elapsed;
         if (time_left < 0)

@@ -1049,7 +1049,7 @@ int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype oldtype, MPI_Datat
      * from now! */
     MPIR_Assert(count / INT_MAX == (int) (count / INT_MAX));
     int c = (int) (count / INT_MAX);    /* OK to cast until 'count' is 256 bits */
-    int r = count % INT_MAX;
+    int r = (int) (count % INT_MAX);
 
     mpi_errno = MPIR_Type_vector_impl(c, INT_MAX, INT_MAX, oldtype, &chunks);
     if (mpi_errno != MPI_SUCCESS)

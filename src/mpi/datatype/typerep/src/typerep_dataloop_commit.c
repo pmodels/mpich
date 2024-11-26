@@ -232,7 +232,8 @@ void MPIR_Typerep_commit(MPI_Datatype type)
                 MPL_free(blkls);
                 MPL_free(disps);
             } else {
-                int n = counts[0];
+                MPIR_Assert(counts[0] <= INT_MAX);
+                int n = (int) counts[0];
                 MPI_Aint *blkls = counts + 1;
                 MPI_Aint *disps = counts + 1 + n;
                 MPIR_Dataloop_create_indexed(n, blkls, disps, 0, types[0], (void **) dlp_p);
@@ -250,7 +251,8 @@ void MPIR_Typerep_commit(MPI_Datatype type)
 
                 MPL_free(blkls);
             } else {
-                int n = counts[0];
+                MPIR_Assert(counts[0] <= INT_MAX);
+                int n = (int) counts[0];
                 MPI_Aint *blkls = counts + 1;
                 MPI_Aint *disps = counts + 1 + n;
                 MPIR_Dataloop_create_indexed(n, blkls, disps, 1, types[0], (void **) dlp_p);
@@ -260,9 +262,11 @@ void MPIR_Typerep_commit(MPI_Datatype type)
             {
                 int n;
                 if (cp->nr_counts == 0) {
-                    n = ints[0];
+                    MPIR_Assert(ints[0] <= INT_MAX);
+                    n = (int) ints[0];
                 } else {
-                    n = counts[0];
+                    MPIR_Assert(counts[0] <= INT_MAX);
+                    n = (int) counts[0];
                 }
                 /* commit each subtypes */
                 for (MPI_Aint i = 1; i < n; i++) {

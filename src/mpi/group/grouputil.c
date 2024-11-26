@@ -355,7 +355,7 @@ int MPIR_Group_check_valid_ranges(MPIR_Group * group_ptr, int ranges[][3], int n
 int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int g1_idx, g2_idx, l1_pid, l2_pid, i;
+    int g1_idx, g2_idx, i;
     MPII_Group_pmap_t *vmap = 0;
     int vsize = comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM ? comm_ptr->local_size :
         comm_ptr->remote_size;
@@ -377,6 +377,7 @@ int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
     MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,
                                              "initial indices: %d %d\n", g1_idx, g2_idx));
     while (g1_idx >= 0 && g2_idx >= 0) {
+        uint64_t l1_pid, l2_pid;
         l1_pid = group_ptr->lrank_to_lpid[g1_idx].lpid;
         l2_pid = vmap[g2_idx].lpid;
         MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,

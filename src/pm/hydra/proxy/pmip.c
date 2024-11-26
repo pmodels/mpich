@@ -93,7 +93,7 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "error reading HYDI_CONTROL_FD environment\n");
     } else if (ret == 0) {
         status = HYDU_sock_connect(HYD_pmcd_pmip.upstream.server_name,
-                                   HYD_pmcd_pmip.upstream.server_port,
+                                   (uint16_t) HYD_pmcd_pmip.upstream.server_port,
                                    &HYD_pmcd_pmip.upstream.control,
                                    HYD_pmcd_pmip.local.retries, HYD_CONNECT_DELAY);
         HYDU_ERR_POP(status,

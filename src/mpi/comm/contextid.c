@@ -177,9 +177,10 @@ void MPIR_context_id_init(void)
 
 /* Return the context id corresponding to the first set bit in the mask.
    Return 0 if no bit found.  This function does _not_ alter local_mask. */
-static int locate_context_bit(uint32_t local_mask[])
+static MPIR_Context_id_t locate_context_bit(uint32_t local_mask[])
 {
-    int i, j, context_id = 0;
+    int i, j;
+    MPIR_Context_id_t context_id = 0;
     for (i = 0; i < MPIR_MAX_CONTEXT_MASK; i++) {
         if (local_mask[i]) {
             /* There is a bit set in this word. */
@@ -215,7 +216,8 @@ static int locate_context_bit(uint32_t local_mask[])
             if (val & 0xAAAAAAAA) {
                 j += 1;
             }
-            context_id = (MPIR_CONTEXT_INT_BITS * i + j) << MPIR_CONTEXT_PREFIX_SHIFT;
+            context_id =
+                (MPIR_Context_id_t) ((MPIR_CONTEXT_INT_BITS * i + j) << MPIR_CONTEXT_PREFIX_SHIFT);
             return context_id;
         }
     }
@@ -225,7 +227,7 @@ static int locate_context_bit(uint32_t local_mask[])
 /* Allocates a context ID from the given mask by clearing the bit
  * corresponding to the the given id.  Returns 0 on failure, id on
  * success. */
-static int allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
+static MPIR_Context_id_t allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
 {
     int raw_prefix, idx, bitpos;
     raw_prefix = MPIR_CONTEXT_READ_FIELD(PREFIX, id);
@@ -249,7 +251,7 @@ static int allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
  * context_mask if allocation was successful.
  *
  * Returns 0 on failure.  Returns the allocated context ID on success. */
-static int find_and_allocate_context_id(uint32_t local_mask[])
+static MPIR_Context_id_t find_and_allocate_context_id(uint32_t local_mask[])
 {
     MPIR_Context_id_t context_id;
     context_id = locate_context_bit(local_mask);

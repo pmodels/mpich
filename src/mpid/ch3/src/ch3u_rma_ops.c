@@ -154,7 +154,8 @@ int MPIDI_CH3I_Put(const void *origin_addr, MPI_Aint origin_count, MPI_Datatype
 
         put_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
             win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
-        put_pkt->count = target_count;
+        MPIR_Assert(target_count <= INT_MAX);
+        put_pkt->count = (int) target_count;
         put_pkt->datatype = target_datatype;
         put_pkt->info.flattened_type_size = 0;
         put_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
@@ -311,7 +312,8 @@ int MPIDI_CH3I_Get(void *origin_addr, MPI_Aint origin_count, MPI_Datatype
         MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
         get_pkt->addr = MPIR_get_contig_ptr(win_ptr->basic_info_table[target_rank].base_addr,
             win_ptr->basic_info_table[target_rank].disp_unit * target_disp);
-        get_pkt->count = target_count;
+        MPIR_Assert(target_count <= INT_MAX);
+        get_pkt->count = (int) target_count;
         get_pkt->datatype = target_datatype;
         get_pkt->info.flattened_type_size = 0;
         get_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
@@ -500,7 +502,8 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, MPI_Aint origin_count, MPI_Da
 
         accum_pkt->addr = MPIR_get_contig_ptr(win_ptr->basic_info_table[target_rank].base_addr,
             win_ptr->basic_info_table[target_rank].disp_unit * target_disp);
-        accum_pkt->count = target_count;
+        MPIR_Assert(target_count <= INT_MAX);
+        accum_pkt->count = (int) target_count;
         accum_pkt->datatype = target_datatype;
         accum_pkt->info.flattened_type_size = 0;
         accum_pkt->op = op;
@@ -736,7 +739,8 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, MPI_Aint origin_count,
 
         get_accum_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
             win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
-        get_accum_pkt->count = target_count;
+        MPIR_Assert(target_count <= INT_MAX);
+        get_accum_pkt->count = (int) target_count;
         get_accum_pkt->datatype = target_datatype;
         get_accum_pkt->info.flattened_type_size = 0;
         get_accum_pkt->op = op;

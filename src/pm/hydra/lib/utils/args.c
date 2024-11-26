@@ -408,7 +408,7 @@ HYD_status HYDU_send_strlist(int fd, char **strlist)
 
     /* Convert the string list to parseable data and send */
     for (i = 0; strlist[i]; i++) {
-        len = strlen(strlist[i]) + 1;
+        len = (int) strlen(strlist[i]) + 1;
 
         status = HYDU_sock_write(fd, &len, sizeof(int), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to write data to proxy\n");

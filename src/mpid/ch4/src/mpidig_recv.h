@@ -189,7 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
-    MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
+    MPIR_Context_id_t context_id = (MPIR_Context_id_t) (comm->recvcontext_id + context_offset);
     MPIR_FUNC_ENTER;
 
     if (*request) {

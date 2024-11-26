@@ -375,7 +375,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock(int lock_type, int rank, int as
     MPIDIG_win_cntrl_msg_t msg;
     msg.win_id = MPIDIG_WIN(win, win_id);
     msg.origin_rank = win->comm_ptr->rank;
-    msg.lock_type = lock_type;
+    msg.lock_type = (int16_t) lock_type;
 
     locked = slock->locked + 1;
     CH4_CALL(am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_LOCK, &msg, sizeof(msg), vci, vci_target),

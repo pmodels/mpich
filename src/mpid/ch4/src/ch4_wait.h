@@ -16,7 +16,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
     int vci = MPIDI_Request_get_vci(req);
 
     state->vci_count = 1;
-    state->vci[0] = vci;
+    state->vci[0] = (uint8_t) vci;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** reqs,
@@ -43,7 +43,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** re
             }
         }
         if (!found) {
-            state->vci[idx++] = vci;
+            state->vci[idx++] = (uint8_t) vci;
         }
     }
     state->vci_count = idx;

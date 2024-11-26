@@ -231,7 +231,7 @@ int MPL_strnapp(char *dest, const char *src, size_t n)
 static unsigned int xorshift_rand(void)
 {
     /* time returns long; keep the lower and most significant 32 bits */
-    unsigned int val = time(NULL) & 0xffffffff;
+    unsigned int val = (unsigned int) (time(NULL) & 0xffffffff);
 
     /* Marsaglia's xorshift random number generator */
     val ^= val << 13;

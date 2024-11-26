@@ -61,7 +61,7 @@ MPI_Allgatherv:
         if (sendbuf != MPI_IN_PLACE) {
             MPI_Aint recvtype_extent;
             MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
-            MPIR_Localcopy(sendbuf, sendcount, sendtype,
+            MPIR_Localcopy(sendbuf, (MPI_Aint) sendcount, sendtype,
                            (char *) recvbuf + displs[0] * recvtype_extent, recvcounts[0], recvtype);
         }
         goto fn_exit;
@@ -79,7 +79,7 @@ MPI_Allreduce:
 { -- early_return --
     if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
-            MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+            MPIR_Localcopy(sendbuf, (MPI_Aint) count, datatype, recvbuf, (MPI_Aint) count, datatype);
         }
         goto fn_exit;
     }
@@ -203,7 +203,7 @@ MPI_Iallgatherv:
         if (sendbuf != MPI_IN_PLACE) {
             MPI_Aint recvtype_extent;
             MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
-            MPIR_Localcopy(sendbuf, sendcount, sendtype,
+            MPIR_Localcopy(sendbuf, (MPI_Aint) sendcount, sendtype,
                            (char *) recvbuf + displs[0] * recvtype_extent, recvcounts[0], recvtype);
         }
         MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
@@ -217,7 +217,7 @@ MPI_Iallreduce:
 { -- early_return --
     if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
-            MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+            MPIR_Localcopy(sendbuf, (MPI_Aint) count, datatype, recvbuf, (MPI_Aint) count, datatype);
         }
         MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
         *request = request_ptr->handle;
@@ -319,7 +319,7 @@ MPI_Ireduce:
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (count == 0 || MPIR_is_self_comm(comm_ptr))) {
         if (sendbuf != MPI_IN_PLACE) {
-            MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+            MPIR_Localcopy(sendbuf, (MPI_Aint) count, datatype, recvbuf, (MPI_Aint) count, datatype);
         }
         MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
         *request = request_ptr->handle;
@@ -332,7 +332,7 @@ MPI_Ireduce_scatter:
 { -- early_return --
     if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
-            MPIR_Localcopy(sendbuf, recvcounts[0], datatype, recvbuf, recvcounts[0], datatype);
+            MPIR_Localcopy(sendbuf, (MPI_Aint) recvcounts[0], datatype, recvbuf, (MPI_Aint) recvcounts[0], datatype);
         }
         MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
         *request = request_ptr->handle;
@@ -345,7 +345,7 @@ MPI_Ireduce_scatter_block:
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (recvcount == 0 || MPIR_is_self_comm(comm_ptr))) {
         if (sendbuf != MPI_IN_PLACE) {
-            MPIR_Localcopy(sendbuf, recvcount, datatype, recvbuf, recvcount, datatype);
+            MPIR_Localcopy(sendbuf, (MPI_Aint) recvcount, datatype, recvbuf, (MPI_Aint) recvcount, datatype);
         }
         MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__COLL);
         *request = request_ptr->handle;
@@ -431,7 +431,7 @@ MPI_Reduce:
         if (sendbuf == MPI_IN_PLACE) {
             goto fn_exit;
         }
-        mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+        mpi_errno = MPIR_Localcopy(sendbuf, (MPI_Aint) count, datatype, recvbuf, (MPI_Aint) count, datatype);
         if (mpi_errno) {
             goto fn_fail;
         } else {
@@ -447,7 +447,7 @@ MPI_Reduce_local:
     .desc: Applies a reduction operator to local arguments.
     .docnotes: collops
 {
-    mpi_errno = MPIR_Reduce_local(inbuf, inoutbuf, count, datatype, op);
+    mpi_errno = MPIR_Reduce_local(inbuf, inoutbuf, (MPI_Aint) count, datatype, op);
     if (mpi_errno) {
         goto fn_fail;
     }
@@ -460,7 +460,7 @@ MPI_Reduce_scatter:
 { -- early_return --
     if (MPIR_is_self_comm(comm_ptr)) {
         if (sendbuf != MPI_IN_PLACE) {
-            MPIR_Localcopy(sendbuf, recvcounts[0], datatype, recvbuf, recvcounts[0], datatype);
+            MPIR_Localcopy(sendbuf, (MPI_Aint) recvcounts[0], datatype, recvbuf, (MPI_Aint) recvcounts[0], datatype);
         }
         goto fn_exit;
     }
@@ -476,7 +476,7 @@ MPI_Reduce_scatter_block:
 { -- early_return --
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && (recvcount == 0 || MPIR_is_self_comm(comm_ptr))) {
         if (sendbuf != MPI_IN_PLACE) {
-            MPIR_Localcopy(sendbuf, recvcount, datatype, recvbuf, recvcount, datatype);
+            MPIR_Localcopy(sendbuf, (MPI_Aint) recvcount, datatype, recvbuf, (MPI_Aint) recvcount, datatype);
         }
         goto fn_exit;
     }

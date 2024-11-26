@@ -199,7 +199,6 @@ HYD_status HYDT_dmx_finalize(void)
 
 HYD_status HYDT_dmxi_stdin_valid(int *out)
 {
-    int ret;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -242,6 +241,7 @@ HYD_status HYDT_dmxi_stdin_valid(int *out)
     HYDU_ERR_POP(status, "unable to set SIGTTIN\n");
 #endif /* SIGTTIN */
 
+    ssize_t ret;
     ret = read(STDIN_FILENO, NULL, 0);
     if (ret == 0)
         *out = 1;

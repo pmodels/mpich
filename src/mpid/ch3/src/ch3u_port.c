@@ -503,7 +503,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
      * up of uint32_t's. */
     int context_id;
     context_id = context_id_offset << MPIR_CONTEXT_PREFIX_SHIFT;
-    tmp_comm->context_id     = MPIR_CONTEXT_SET_FIELD(DYNAMIC_PROC, context_id, 1);
+    tmp_comm->context_id = (MPIR_Context_id_t) MPIR_CONTEXT_SET_FIELD(DYNAMIC_PROC, context_id, 1);
     tmp_comm->recvcontext_id = tmp_comm->context_id;
 
     /* sanity: the INVALID context ID value could potentially conflict with the
@@ -726,8 +726,8 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
     mpi_errno = MPIR_Comm_create(newcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    (*newcomm)->context_id     = context_id;
-    (*newcomm)->recvcontext_id = recvcontext_id;
+    (*newcomm)->context_id     = (MPIR_Context_id_t) context_id;
+    (*newcomm)->recvcontext_id = (MPIR_Context_id_t) recvcontext_id;
     (*newcomm)->is_low_group   = 1;
 
     mpi_errno = SetupNewIntercomm( comm_ptr, remote_comm_size, 
@@ -1258,7 +1258,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
 
     /* Now fill in newcomm */
     intercomm               = *newcomm;
-    intercomm->context_id   = context_id;
+    intercomm->context_id   = (MPIR_Context_id_t) context_id;
     intercomm->is_low_group = 0;
 
     mpi_errno = SetupNewIntercomm( comm_ptr, remote_comm_size, 

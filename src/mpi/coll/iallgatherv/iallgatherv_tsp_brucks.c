@@ -36,7 +36,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int nphases = 0;
     int n_invtcs = 0;
     int src, dst, p_of_k = 0;   /* largest power of k that is (strictly) smaller than 'size' */
-    int total_recvcount = 0;
+    MPI_Aint total_recvcount = 0;
     int delta = 1;
 
     int is_inplace, rank, size, max;
@@ -47,15 +47,12 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int tag;
     int *recv_id = NULL;
     MPI_Aint *recv_index = NULL;
-    int *scount_lookup = NULL;
+    MPI_Aint *scount_lookup = NULL;
     MPIR_CHKLMEM_DECL(3);
     void *tmp_recvbuf = NULL;
-    int **s_counts = NULL;
-    int **r_counts = NULL;
-    int tmp_sum = 0;
     int idx = 0, vtx_id;
     int prev_delta = 0;
-    int count_length, top_count, bottom_count, left_count;
+    MPI_Aint count_length, top_count, bottom_count, left_count;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
 
     MPIR_FUNC_ENTER;
@@ -98,8 +95,8 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     /* if nphases=0 then no recv_id needed */
     MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * nphases * (k - 1), mpi_errno, "recv_id",
                         MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(scount_lookup, int *, sizeof(int) * nphases, mpi_errno, "scount_lookup",
-                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(scount_lookup, MPI_Aint *, sizeof(MPI_Aint) * nphases, mpi_errno,
+                        "scount_lookup", MPL_MEM_COLL);
 
     /* To store the index to receive in various phases and steps within */
     MPIR_CHKLMEM_MALLOC(recv_index, MPI_Aint *, sizeof(MPI_Aint) * nphases * (k - 1), mpi_errno,
@@ -115,18 +112,20 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     MPIR_ERR_CHKANDJUMP(!tmp_recvbuf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
 
-    r_counts = (int **) MPL_malloc(sizeof(int *) * nphases, MPL_MEM_COLL);
+    MPI_Aint **s_counts = NULL;
+    MPI_Aint **r_counts = NULL;
+    r_counts = MPL_malloc(sizeof(MPI_Aint *) * nphases, MPL_MEM_COLL);
     if (nphases > 0)
         MPIR_ERR_CHKANDJUMP(!r_counts, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    s_counts = (int **) MPL_malloc(sizeof(int *) * nphases, MPL_MEM_COLL);
+    s_counts = MPL_malloc(sizeof(MPI_Aint *) * nphases, MPL_MEM_COLL);
     if (nphases > 0)
         MPIR_ERR_CHKANDJUMP(!s_counts, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     for (i = 0; i < nphases; i++) {
-        r_counts[i] = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
+        r_counts[i] = MPL_malloc(sizeof(MPI_Aint) * (k - 1), MPL_MEM_COLL);
         MPIR_ERR_CHKANDJUMP(!r_counts[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
-        s_counts[i] = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
+        s_counts[i] = MPL_malloc(sizeof(MPI_Aint) * (k - 1), MPL_MEM_COLL);
         MPIR_ERR_CHKANDJUMP(!s_counts[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
@@ -161,7 +160,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             }
             /* Calculate r_counts and s_counts for the data you'll receive and send in
              * the next steps(phase, [0, 1, ..,(k-1)]) */
-            tmp_sum = 0;
+            MPI_Aint tmp_sum = 0;
             /* XXX We use a temporary variable to hold the sum instead of directly
              * accumulating in r_counts[i][j-1]. Using r_counts[i][j-1] does not
              * compile properly for a certain build. The same issue happens with
@@ -239,14 +238,14 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     /* No shift required for rank 0 */
     if (rank != 0) {
-        idx = 0;
+        MPI_Aint cnt = 0;
         if (MPII_Iallgatherv_is_displs_ordered(size, recvcounts, displs)) {
-            /* Calculate idx(same as count) till 0th rank's data */
+            /* Calculate cnt(same as count) till 0th rank's data */
             for (i = 0; i < (size - rank); i++)
-                idx += recvcounts[(rank + i) % size];
+                cnt += recvcounts[(rank + i) % size];
 
-            bottom_count = idx;
-            top_count = total_recvcount - idx;
+            bottom_count = cnt;
+            top_count = total_recvcount - cnt;
             mpi_errno =
                 MPIR_TSP_sched_localcopy((char *) tmp_recvbuf + bottom_count * recvtype_extent,
                                          top_count, recvtype, recvbuf, top_count, recvtype, sched,
@@ -260,8 +259,8 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
         } else {
             for (i = 0; i < size; i++) {
                 src = (rank + i) % size;        /* Rank whose data it is copying */
-                idx += (i == 0) ? 0 : recvcounts[(rank + i - 1) % size];
-                mpi_errno = MPIR_TSP_sched_localcopy((char *) tmp_recvbuf + idx * recvtype_extent,
+                cnt += (i == 0) ? 0 : recvcounts[(rank + i - 1) % size];
+                mpi_errno = MPIR_TSP_sched_localcopy((char *) tmp_recvbuf + cnt * recvtype_extent,
                                                      recvcounts[src], recvtype,
                                                      (char *) recvbuf +
                                                      displs[src] * recvtype_extent, recvcounts[src],

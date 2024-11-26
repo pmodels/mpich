@@ -14,8 +14,8 @@
 int MPII_Iallgatherv_is_displs_ordered(int size, const MPI_Aint recvcounts[],
                                        const MPI_Aint displs[])
 {
-    int i, pos = 0;
-    for (i = 0; i < size; i++) {
+    MPI_Aint pos = 0;
+    for (int i = 0; i < size; i++) {
         if (pos != displs[i]) {
             return 0;
         }

@@ -167,7 +167,7 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
                 if ((dst > rank) &&
                     (rank < tree_root + nprocs_completed) &&
                     (dst >= tree_root + nprocs_completed)) {
-                    offset = 0;
+                    MPI_Aint offset = 0;
                     for (j = 0; j < (my_tree_root + mask); j++)
                         offset += recvcounts[j];
                     offset *= recvtype_sz;
@@ -187,7 +187,7 @@ int MPIR_Iallgatherv_intra_sched_recursive_doubling(const void *sendbuf, MPI_Ain
                          (dst < tree_root + nprocs_completed) &&
                          (rank >= tree_root + nprocs_completed)) {
 
-                    offset = 0;
+                    MPI_Aint offset = 0;
                     for (j = 0; j < (my_tree_root + mask); j++)
                         offset += recvcounts[j];
 

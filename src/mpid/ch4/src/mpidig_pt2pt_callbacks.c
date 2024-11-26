@@ -420,7 +420,7 @@ int MPIDIG_send_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         MPII_UNEXPQ_REMEMBER(rreq, hdr->src_rank, hdr->tag, hdr->context_id);
     } else {
         /* matched path */
-        MPIDIG_REQUEST(rreq, req->remote_vci) = remote_vci;
+        MPIDIG_REQUEST(rreq, req->remote_vci) = (uint8_t) remote_vci;
         set_matched_rreq_fields(rreq, hdr->src_rank, hdr->tag, hdr->context_id,
                                 hdr->data_sz, hdr->error_bits, is_local);
         set_rreq_common(rreq, hdr);

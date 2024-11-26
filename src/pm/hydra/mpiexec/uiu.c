@@ -302,7 +302,7 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
             if (buf[i] == '\n' || i == buflen - 1) {
                 if (prepend[0] != '\0') {       /* sock_write barfs on maxlen==0 */
                     status = HYDU_sock_write(fd, (const void *) prepend,
-                                             strlen(prepend), &sent, &closed,
+                                             (int) strlen(prepend), &sent, &closed,
                                              HYDU_SOCK_COMM_MSGWAIT);
                     HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
                 }

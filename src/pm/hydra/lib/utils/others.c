@@ -66,7 +66,8 @@ void HYDU_delay(unsigned long delay)
     gettimeofday(&start, NULL);
     while (1) {
         gettimeofday(&end, NULL);
-        if ((1000000.0 * (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec)) > delay)
+        if ((1000000.0 * (double) (end.tv_sec - start.tv_sec) +
+             (double) (end.tv_usec - start.tv_usec)) > (double) delay)
             break;
     }
 }

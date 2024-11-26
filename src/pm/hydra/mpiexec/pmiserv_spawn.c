@@ -306,8 +306,8 @@ static char *get_exec_path(const char *execname, const char *path)
         return MPL_strdup(execname);
     } else {
         char *buf;
-        int len_path = strlen(path);
-        int len_name = strlen(execname);
+        int len_path = (int) strlen(path);
+        int len_name = (int) strlen(execname);
         int len = len_path + len_name + 2;
         buf = MPL_malloc(len, MPL_MEM_OTHER);
         if (buf) {

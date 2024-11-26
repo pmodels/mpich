@@ -32,9 +32,9 @@ int MPIDI_CH3_RndvSend( MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
     sreq->dev.partner_request = NULL;
 	
     MPIDI_Pkt_init(rts_pkt, MPIDI_CH3_PKT_RNDV_REQ_TO_SEND);
-    rts_pkt->match.parts.rank	      = comm->rank;
+    rts_pkt->match.parts.rank	      = (MPIDI_Rank_t) comm->rank;
     rts_pkt->match.parts.tag	      = tag;
-    rts_pkt->match.parts.context_id = comm->context_id + context_offset;
+    rts_pkt->match.parts.context_id = (MPIR_Context_id_t) (comm->context_id + context_offset);
     rts_pkt->sender_req_id    = sreq->handle;
     rts_pkt->data_sz	      = data_sz;
 

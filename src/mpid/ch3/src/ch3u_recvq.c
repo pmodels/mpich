@@ -211,11 +211,13 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
 
     rreq = recvq_unexpected_head;
 
-    match.parts.context_id = context_id;
+    match.parts.context_id = (MPIR_Context_id_t) context_id;
     match.parts.tag = tag;
-    match.parts.rank = source;
+    match.parts.rank = (MPIDI_Rank_t) source;
 
-    mask.parts.context_id = mask.parts.rank = mask.parts.tag = ~0;
+    mask.parts.context_id = (MPIR_Context_id_t) ~0;
+    mask.parts.rank = (MPIDI_Rank_t) ~0;
+    mask.parts.tag = ~0;
     /* Mask the error bit that might be set on incoming messages. It is
      * assumed that the local receive operation won't have the error bit set
      * (or it is masked away at some other level). */
@@ -291,7 +293,9 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
     matching_cur_rreq = NULL;
     prev_rreq = NULL;
 
-    mask.parts.context_id = mask.parts.rank = mask.parts.tag = ~0;
+    mask.parts.context_id = (MPIR_Context_id_t) ~0;
+    mask.parts.rank = (MPIDI_Rank_t) ~0;
+    mask.parts.tag = ~0;
     /* Mask the error bit that might be set on incoming messages. It is
      * assumed that the local receive operation won't have the error bit set
      * (or it is masked away at some other level). */
@@ -371,11 +375,13 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
     if (rreq) {
         prev_rreq = NULL;
 
-        match.parts.context_id = context_id;
+        match.parts.context_id = (MPIR_Context_id_t) context_id;
         match.parts.tag = tag;
-        match.parts.rank = source;
+        match.parts.rank = (MPIDI_Rank_t) source;
 
-        mask.parts.context_id = mask.parts.rank = mask.parts.tag = ~0;
+        mask.parts.context_id = (MPIR_Context_id_t) ~0;
+        mask.parts.rank = (MPIDI_Rank_t) ~0;
+        mask.parts.tag = ~0;
         /* Mask the error bit that might be set on incoming messages. It is
          * assumed that the local receive operation won't have the error bit set
          * (or it is masked away at some other level). */
@@ -488,11 +494,13 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
     if (rreq) {
 	prev_rreq = NULL;
 
-	match.parts.context_id = context_id;
+	match.parts.context_id = (MPIR_Context_id_t) context_id;
 	match.parts.tag = tag;
-	match.parts.rank = source;
+	match.parts.rank = (MPIDI_Rank_t) source;
 
-    mask.parts.context_id = mask.parts.rank = mask.parts.tag = ~0;
+        mask.parts.context_id = (MPIR_Context_id_t) ~0;
+        mask.parts.rank = (MPIDI_Rank_t) ~0;
+        mask.parts.tag = ~0;
     /* Mask the error bit that might be set on incoming messages. It is
      * assumed that the local receive operation won't have the error bit set
      * (or it is masked away at some other level). */
@@ -578,8 +586,8 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 
 	MPIDI_Request_create_rreq( rreq, mpi_errno, goto lock_exit );
 	rreq->dev.match.parts.tag	   = tag;
-	rreq->dev.match.parts.rank	   = source;
-	rreq->dev.match.parts.context_id   = context_id;
+	rreq->dev.match.parts.rank	   = (MPIDI_Rank_t) source;
+	rreq->dev.match.parts.context_id   = (MPIR_Context_id_t) context_id;
 
 	/* Added a mask for faster search on 64-bit capable
 	 * platforms */
@@ -886,8 +894,9 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
     MPIR_ERR_SETSIMPLE(error, MPIX_ERR_REVOKED, "**revoked");
 
     rreq = recvq_unexpected_head;
-    mask.parts.context_id = ~0;
-    mask.parts.rank = mask.parts.tag = 0;
+    mask.parts.context_id = (MPIR_Context_id_t) ~0;
+    mask.parts.rank = 0;
+    mask.parts.tag = 0;
 
     /* Clear the error bit in the tag since we don't care about whether or
      * not we're trying to report an error anymore. */
@@ -897,7 +906,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
         /* We'll have to do this matching twice. Once for the pt2pt context id
          * and once for the collective context id */
         /* pt2pt */
-        match.parts.context_id = comm_ptr->recvcontext_id;
+        match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id;
 
         if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
             MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
@@ -908,7 +917,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
         }
 
         /* coll */
-        match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_COLL_OFFSET;
+        match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id + MPIR_CONTEXT_COLL_OFFSET;
 
         if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
             if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
@@ -923,7 +932,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
 
         if (MPIR_Comm_is_parent_comm(comm_ptr)) {
             /* node_comm pt2pt */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET;
+            match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
                 if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
@@ -937,7 +946,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
 
             /* node_comm coll */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
+            match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
                 if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
@@ -951,7 +960,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
 
             /* node_roots_comm pt2pt */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET;
+            match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
                 if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
@@ -965,7 +974,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
 
             /* node_roots_comm coll */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
+            match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
                 if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
@@ -990,7 +999,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
         /* We'll have to do this matching twice. Once for the pt2pt context id
          * and once for the collective context id */
         /* pt2pt */
-        match.parts.context_id = comm_ptr->recvcontext_id;
+        match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id;
 
         if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
             MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
@@ -1001,7 +1010,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
         }
 
         /* coll */
-        match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_COLL_OFFSET;
+        match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id + MPIR_CONTEXT_COLL_OFFSET;
 
         if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
             if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
@@ -1016,7 +1025,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
 
         if (MPIR_Comm_is_parent_comm(comm_ptr)) {
             /* node_comm coll */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET;
+            match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
                 if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
@@ -1030,7 +1039,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
 
             /* node_comm coll */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
+            match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id + MPIR_CONTEXT_INTRANODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
                 if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
@@ -1044,7 +1053,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
 
             /* node_roots_comm pt2pt */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET;
+            match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
                 if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
@@ -1058,7 +1067,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
             }
 
             /* node_roots_comm coll */
-            match.parts.context_id = comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
+            match.parts.context_id = (MPIR_Context_id_t) comm_ptr->recvcontext_id + MPIR_CONTEXT_INTERNODE_OFFSET + MPIR_CONTEXT_COLL_OFFSET;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
                 if (MPIR_TAG_MASK_ERROR_BITS(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&

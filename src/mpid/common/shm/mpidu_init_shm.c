@@ -155,7 +155,7 @@ int MPIDU_Init_shm_init(void)
 
             mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory.hnd, &serialized_hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
-            serialized_hnd_size = strlen(serialized_hnd) + 1;
+            serialized_hnd_size = (int) strlen(serialized_hnd) + 1;
             MPIR_Assert(serialized_hnd_size < MPIR_pmi_max_val_size());
 
             mpi_errno = Init_shm_barrier_init(TRUE);

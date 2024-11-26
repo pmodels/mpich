@@ -28,6 +28,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
     rank = comm_ptr->rank;
     local_size = comm_ptr->local_size;
 
+    MPI_Aint total_count;
     total_count = 0;
     for (i = 0; i < local_size; i++)
         total_count += recvcounts[i];
