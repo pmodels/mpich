@@ -847,7 +847,7 @@ typedef MPIDI_CH3_Pkt_conn_ack_t MPIDI_CH3_Pkt_accept_ack_t;
 
 typedef struct MPIDI_CH3_Pkt_revoke {
     MPIDI_CH3_Pkt_type_t type;
-    MPIR_Context_id_t revoked_comm;
+    int revoked_context_id;
 } MPIDI_CH3_Pkt_revoke_t;
 
 typedef union MPIDI_CH3_Pkt {

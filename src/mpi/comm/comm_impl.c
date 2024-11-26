@@ -313,7 +313,7 @@ int MPII_Comm_create_map(int local_n,
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t new_context_id = 0;
+    int new_context_id = 0;
     int *mapping = NULL;
     int n;
 
@@ -400,7 +400,7 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
 int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t new_context_id;
+    int new_context_id;
     int *mapping = NULL;
     int *remote_mapping = NULL;
     MPIR_Comm *mapping_comm = NULL;
@@ -581,7 +581,7 @@ int MPIR_Comm_create_group_impl(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, in
                                 MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t new_context_id = 0;
+    int new_context_id = 0;
     int *mapping = NULL;
     int n;
 
@@ -988,7 +988,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
                                MPIR_Comm ** new_intercomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t final_context_id, recvcontext_id;
+    int final_context_id, recvcontext_id;
     int remote_size = 0;
     uint64_t *remote_lpids = NULL;
     int comm_info[3];
@@ -1024,7 +1024,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     /* Leaders can now swap context ids and then broadcast the value
      * to the local group of processes */
     if (local_comm_ptr->rank == local_leader) {
-        MPIR_Context_id_t remote_context_id;
+        int remote_context_id;
 
         mpi_errno =
             MPIC_Sendrecv(&recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
@@ -1103,7 +1103,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
 /* Peer intercomm is a 1-to-1 intercomm, internally created by device layer
  * to facilitate connecting dynamic processes */
 
-int MPIR_peer_intercomm_create(MPIR_Context_id_t context_id, MPIR_Context_id_t recvcontext_id,
+int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
                                uint64_t remote_lpid, int is_low_group, MPIR_Comm ** newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1180,7 +1180,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
 {
     int mpi_errno = MPI_SUCCESS;
     int local_high, remote_high, new_size;
-    MPIR_Context_id_t new_context_id;
+    int new_context_id;
 
     MPIR_FUNC_ENTER;
     /* Make sure that we have a local intercommunicator */

@@ -1413,7 +1413,7 @@ int MPIDI_CH3U_Receive_data_unexpected(MPIR_Request * rreq, void *buf, intptr_t 
 int MPIDI_CH3I_Comm_init(void);
 
 int MPIDI_CH3I_Comm_handle_failed_procs(MPIR_Group *new_failed_procs);
-void MPIDI_CH3I_Comm_find(MPIR_Context_id_t context_id, MPIR_Comm **comm);
+void MPIDI_CH3I_Comm_find(int context_id, MPIR_Comm **comm);
 
 /* The functions below allow channels to register functions to be
    called immediately after a communicator has been created, and

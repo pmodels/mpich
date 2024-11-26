@@ -10,7 +10,7 @@
 #include "ch4_proc.h"
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
-                                                      MPIR_Context_id_t context_id, void *buf,
+                                                      int context_id, void *buf,
                                                       MPI_Aint count, MPI_Datatype datatype,
                                                       MPIR_Request * rreq)
 {
@@ -189,7 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
-    MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
+    int context_id = comm->recvcontext_id + context_offset;
     MPIR_FUNC_ENTER;
 
     if (*request) {

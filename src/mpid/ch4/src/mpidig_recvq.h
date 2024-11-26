@@ -94,7 +94,7 @@ enum MPIDIG_queue_type {
 
 /* match and search functions */
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_match_request(int rank, int tag,
-                                                   MPIR_Context_id_t context_id, MPIR_Request * req,
+                                                   int context_id, MPIR_Request * req,
                                                    bool is_local, enum MPIDIG_queue_type qtype)
 {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -133,7 +133,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_enqueue_request(MPIR_Request * req, MPIR_Re
 }
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_recvq_search(int rank, int tag,
-                                                           MPIR_Context_id_t context_id,
+                                                           int context_id,
                                                            MPIR_Request ** list,
                                                            bool is_local,
                                                            enum MPIDIG_queue_type qtype,
@@ -162,7 +162,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_recvq_search(int rank, int tag,
 }
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_rreq_find(int rank, int tag,
-                                                        MPIR_Context_id_t context_id,
+                                                        int context_id,
                                                         MPIR_Request ** list,
                                                         bool is_local, enum MPIDIG_queue_type qtype)
 {
@@ -170,7 +170,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_rreq_find(int rank, int tag,
 }
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_rreq_dequeue(int rank, int tag,
-                                                           MPIR_Context_id_t context_id,
+                                                           int context_id,
                                                            MPIR_Request ** list,
                                                            bool is_local,
                                                            enum MPIDIG_queue_type qtype)

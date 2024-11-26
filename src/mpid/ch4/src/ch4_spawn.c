@@ -280,7 +280,7 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
                                     MPIR_Comm ** newcomm);
 
 struct dynproc_conn_hdr {
-    MPIR_Context_id_t context_id;
+    int context_id;
     int addrname_len;
     char addrname[MPIDI_DYNPROC_NAME_MAX];
 };
@@ -289,7 +289,7 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
                                  int timeout, bool is_sender, MPIR_Comm ** newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t context_id, recvcontext_id;
+    int context_id, recvcontext_id;
     uint64_t remote_gpid;
 
     mpi_errno = MPIR_Get_contextid_sparse(MPIR_Process.comm_self, &recvcontext_id, FALSE);

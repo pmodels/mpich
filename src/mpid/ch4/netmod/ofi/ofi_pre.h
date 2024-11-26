@@ -66,7 +66,7 @@ typedef enum {
 typedef struct {
     /* context id and src rank so the target side can
      * issue RDMA read operation */
-    MPIR_Context_id_t context_id;
+    int context_id;
     int src_rank;
 
     uint64_t src_offset;
@@ -120,7 +120,7 @@ typedef struct {
     void *unpack_buffer;
     MPI_Aint pack_size;
     uint64_t src_offset;
-    MPIR_Context_id_t context_id;
+    int context_id;
     int src_rank;
 } MPIDI_OFI_lmt_unpack_t;
 
@@ -207,7 +207,7 @@ typedef struct {
 
     /* for recv request */
     MPL_atomic_int_t peek_status;
-    MPIR_Context_id_t context_id;
+    int context_id;
 
     enum MPIDI_OFI_req_kind kind;
     union {

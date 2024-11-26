@@ -40,7 +40,7 @@ const int ALL_OWN_MASK_FLAG = MPIR_MAX_CONTEXT_MASK;
 /* utility function to pretty print a context ID for debugging purposes, see
  * mpiimpl.h for more info on the various fields */
 #ifdef MPL_USE_DBG_LOGGING
-static void dump_context_id(MPIR_Context_id_t context_id, char *out_str, int len)
+static void dump_context_id(int context_id, char *out_str, int len)
 {
     int subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id);
     const char *subcomm_type_name = NULL;
@@ -225,7 +225,7 @@ static int locate_context_bit(uint32_t local_mask[])
 /* Allocates a context ID from the given mask by clearing the bit
  * corresponding to the the given id.  Returns 0 on failure, id on
  * success. */
-static int allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
+static int allocate_context_bit(uint32_t mask[], int id)
 {
     int raw_prefix, idx, bitpos;
     raw_prefix = MPIR_CONTEXT_READ_FIELD(PREFIX, id);
@@ -251,7 +251,7 @@ static int allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
  * Returns 0 on failure.  Returns the allocated context ID on success. */
 static int find_and_allocate_context_id(uint32_t local_mask[])
 {
-    MPIR_Context_id_t context_id;
+    int context_id;
     context_id = locate_context_bit(local_mask);
     if (context_id != 0) {
         context_id = allocate_context_bit(context_mask, context_id);
@@ -281,7 +281,7 @@ static volatile int mask_in_use = 0;
  * used.
  */
 
-int MPIR_Get_contextid_sparse(MPIR_Comm * comm_ptr, MPIR_Context_id_t * context_id, int ignore_id)
+int MPIR_Get_contextid_sparse(MPIR_Comm * comm_ptr, int *context_id, int ignore_id)
 {
     return MPIR_Get_contextid_sparse_group(comm_ptr, NULL /*group_ptr */ ,
                                            MPIR_Process.attrs.tag_ub /*tag */ ,
@@ -289,8 +289,8 @@ int MPIR_Get_contextid_sparse(MPIR_Comm * comm_ptr, MPIR_Context_id_t * context_
 }
 
 struct gcn_state {
-    MPIR_Context_id_t *ctx0;
-    MPIR_Context_id_t *ctx1;
+    int *ctx0;
+    int *ctx1;
     int own_mask;
     int own_eager_mask;
     int first_iter;
@@ -349,7 +349,7 @@ static void add_gcn_to_list(struct gcn_state *new_state)
  * the given group.
  */
 int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
-                                    MPIR_Context_id_t * context_id, int ignore_id)
+                                    int *context_id, int ignore_id)
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state st;
@@ -478,8 +478,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* There is a chance that we've found a context id */
             /* Find_and_allocate_context_id updates the context_mask if it finds a match */
             *context_id = find_and_allocate_context_id(st.local_mask);
-            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %" CONTEXT_ID_FMT,
-                          *context_id);
+            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %d", *context_id);
 
             st.own_eager_mask = 0;
             eager_in_use = 0;
@@ -498,8 +497,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* There is a chance that we've found a context id */
             /* Find_and_allocate_context_id updates the context_mask if it finds a match */
             *context_id = find_and_allocate_context_id(st.local_mask);
-            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %" CONTEXT_ID_FMT,
-                          *context_id);
+            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %d", *context_id);
 
             mask_in_use = 0;
 
@@ -686,7 +684,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state, *tmp;
-    MPIR_Context_id_t newctxid;
+    int newctxid;
     if (st->own_eager_mask) {
         newctxid = find_and_allocate_context_id(st->local_mask);
         if (st->ctx0)
@@ -887,7 +885,7 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
  * multi-threaded MPIR_Get_contextid_sparse_group.
  */
 static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
-                                  MPIR_Context_id_t * ctx0, MPIR_Context_id_t * ctx1,
+                                  int *ctx0, int *ctx1,
                                   MPIR_Sched_t s, MPIR_Comm_kind_t gcn_cid_kind)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1028,10 +1026,9 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
  * This uses the thread-safe (if necessary) routine to get a context id
  * and does not need its own thread-safe version.
  */
-int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * context_id,
-                                 MPIR_Context_id_t * recvcontext_id)
+int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, int *context_id, int *recvcontext_id)
 {
-    MPIR_Context_id_t mycontext_id, remote_context_id;
+    int mycontext_id, remote_context_id;
     int mpi_errno = MPI_SUCCESS;
     int tag = 31567;            /* FIXME  - we need an internal tag or
                                  * communication channel.  Can we use a different
@@ -1052,7 +1049,7 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
 
     /* MPIC routine uses an internal context id.  The local leads (process 0)
      * exchange data */
-    remote_context_id = (MPIR_Context_id_t) - 1;
+    remote_context_id = MPIR_INVALID_CONTEXT_ID;
     if (comm_ptr->rank == 0) {
         mpi_errno = MPIC_Sendrecv(&mycontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
                                   &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
@@ -1076,7 +1073,7 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
     return mpi_errno;
 }
 
-void MPIR_Free_contextid(MPIR_Context_id_t context_id)
+void MPIR_Free_contextid(int context_id)
 {
     int idx, bitpos, raw_prefix;
 

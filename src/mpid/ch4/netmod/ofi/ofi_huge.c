@@ -196,7 +196,7 @@ int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
     } else {
         /* Check for remote control info */
         MPIDI_OFI_huge_recv_list_t *list_ptr;
-        MPIR_Context_id_t comm_id = comm_ptr->recvcontext_id;
+        int comm_id = comm_ptr->recvcontext_id;
         int rank = MPIDI_OFI_cqe_get_source(wc, false);
         int tag = (MPIDI_OFI_TAG_MASK & wc->tag);
 
@@ -241,7 +241,7 @@ int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
 }
 
 /* This function is called when we receive a huge control message */
-int MPIDI_OFI_recv_huge_control(int vci, MPIR_Context_id_t comm_id, int rank, int tag,
+int MPIDI_OFI_recv_huge_control(int vci, int comm_id, int rank, int tag,
                                 MPIDI_OFI_huge_remote_info_t * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -314,7 +314,7 @@ int MPIDI_OFI_peek_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Reque
      * with this and return the size in that. */
     LL_FOREACH(MPIDI_OFI_global.per_vci[vci].huge_ctrl_head, list_ptr) {
         /* FIXME: fix the type of comm_id */
-        MPIR_Context_id_t comm_id = rreq->comm->recvcontext_id;
+        int comm_id = rreq->comm->recvcontext_id;
         int rank = MPIDI_OFI_cqe_get_source(wc, false);
         int tag = (int) (MPIDI_OFI_TAG_MASK & wc->tag);
         if (list_ptr->comm_id == comm_id && list_ptr->rank == rank && list_ptr->tag == tag) {

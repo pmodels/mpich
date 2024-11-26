@@ -566,7 +566,7 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPIR_Group *new_failed_procs)
     goto fn_exit;
 }
 
-void MPIDI_CH3I_Comm_find(MPIR_Context_id_t context_id, MPIR_Comm **comm)
+void MPIDI_CH3I_Comm_find(int context_id, MPIR_Comm **comm)
 {
     MPIR_FUNC_ENTER;
 

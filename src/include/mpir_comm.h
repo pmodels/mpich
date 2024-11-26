@@ -160,8 +160,8 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
 struct MPIR_Comm {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPID_Thread_mutex_t mutex;
-    MPIR_Context_id_t context_id;       /* Send context id.  See notes */
-    MPIR_Context_id_t recvcontext_id;   /* Recv context id (locally allocated).  See notes */
+    int context_id;             /* Send context id.  See notes */
+    int recvcontext_id;         /* Recv context id (locally allocated).  See notes */
     int remote_size;            /* Value of MPI_Comm_(remote)_size */
     int rank;                   /* Value of MPI_Comm_rank */
     MPIR_Attribute *attributes; /* List of attributes */
@@ -378,7 +378,7 @@ int MPIR_Comm_commit(MPIR_Comm *);
 int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
 /* peer intercomm is an internal 1-to-1 intercomm used for connecting dynamic processes */
-int MPIR_peer_intercomm_create(MPIR_Context_id_t context_id, MPIR_Context_id_t recvcontext_id,
+int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
                                uint64_t remote_lpid, int is_low_group, MPIR_Comm ** newcomm);
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)

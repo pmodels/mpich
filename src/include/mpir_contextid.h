@@ -6,21 +6,13 @@
 #ifndef MPIR_CONTEXTID_H_INCLUDED
 #define MPIR_CONTEXTID_H_INCLUDED
 
+#define MPIR_INVALID_CONTEXT_ID (-1)
+#define MPIR_CONTEXT_ID_T_DATATYPE MPI_INT
+
 #ifdef HAVE_EXTENDED_CONTEXT_BITS
-#define MPIR_CONTEXT_ID_T_DATATYPE MPI_UINT32_T
-typedef uint32_t MPIR_Context_id_t;
-#define MPIR_INVALID_CONTEXT_ID ((MPIR_Context_id_t)0xffffffff)
 #define MPIR_CONTEXT_ID_BITS (20)
-#define CONTEXT_ID_FMT PRIu32
 #else
-/* Default context id type is uint16_t. Instead of always using uint32_t, we take a conservative
- * approach to ensure the smallest possible packet header size for ch3 and ch4 active messages.
- */
-#define MPIR_CONTEXT_ID_T_DATATYPE MPI_UINT16_T
-typedef uint16_t MPIR_Context_id_t;
-#define MPIR_INVALID_CONTEXT_ID ((MPIR_Context_id_t)0xffff)
 #define MPIR_CONTEXT_ID_BITS (16)
-#define CONTEXT_ID_FMT PRIu16
 #endif
 
 /* The following preprocessor macros provide bitfield access information for
@@ -105,14 +97,14 @@ void MPIR_context_id_init(void);
    with the other comm routines (src/mpi/comm, in mpicomm.h).  However,
    to create a new communicator after a spawn or connect-accept operation,
    the device may need to create a new contextid */
-int MPIR_Get_contextid_sparse(MPIR_Comm * comm_ptr, MPIR_Context_id_t * context_id, int ignore_id);
+int MPIR_Get_contextid_sparse(MPIR_Comm * comm_ptr, int *context_id, int ignore_id);
 int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
-                                    MPIR_Context_id_t * context_id, int ignore_id);
+                                    int *context_id, int ignore_id);
 
 int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Request ** req);
 int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp,
                                           MPIR_Request ** req);
 
-void MPIR_Free_contextid(MPIR_Context_id_t);
+void MPIR_Free_contextid(int context_id);
 
 #endif /* MPIR_CONTEXTID_H_INCLUDED */

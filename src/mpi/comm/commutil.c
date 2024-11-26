@@ -917,7 +917,7 @@ int MPII_Comm_dup(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_p
 int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t new_context_id, new_recvcontext_id;
+    int new_context_id, new_recvcontext_id;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Comm_map_t *map = NULL;
 
