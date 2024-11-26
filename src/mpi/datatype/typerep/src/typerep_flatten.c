@@ -132,6 +132,8 @@ int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    MPID_Type_commit_hook(datatype_ptr);
+
   fn_exit:
     return mpi_errno;
 
