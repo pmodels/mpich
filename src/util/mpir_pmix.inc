@@ -51,6 +51,12 @@ static int pmix_prep_spawn(int count, char *commands[], char **argvs[], const in
                            size_t * njob_info);
 static int pmix_fence_nspace_proc(const char *nspace, const char *parent_nspace, int parent_rank);
 
+/* Array of PMIx process IDs for implicitly defining their unique MPIR_Process.rank
+ * via their position in the array (also across multiple namespaces) */
+static pmix_data_array_t *pmix_procs = NULL;
+static void pmix_id_to_mpi_rank(pmix_proc_t proc, int *rank, int *size);
+static void mpi_rank_to_pmix_id(int rank, pmix_proc_t * proc);
+
 static int pmix_pset_define_hdlr;
 static int pmix_pset_delete_hdlr;
 static int pmix_register_event_handlers(void);
@@ -85,13 +91,30 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
         pmi_kvs_name = MPL_strdup(pmix_proc.nspace);
     }
 
-    *rank = pmix_proc.rank;
-
     pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_JOB_SIZE, NULL, 0, &pvalue);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_get", "**pmix_get %d", pmi_errno);
     *size = pvalue->data.uint32;
     PMIX_VALUE_RELEASE(pvalue);
+
+    /* Fill pmix_procs array with all processes
+     * Currently this is trivial for only one namespace, but once multiple
+     * namespaces and terminating processes are considered this will become
+     * more complicated and needs additional mechanisms such as PMIx Process
+     * Group and PMIx Connect to determine the size and the participating
+     * processes. */
+    if (pmix_procs != NULL) {
+        PMIX_DATA_ARRAY_FREE(pmix_procs);
+    }
+    PMIX_DATA_ARRAY_CREATE(pmix_procs, *size, PMIX_PROC);
+    pmix_proc_t *procs = (pmix_proc_t *) pmix_procs->array;
+    for (int i = 0; i < *size; i++) {
+        PMIX_LOAD_PROCID(&(procs[i]), pmix_proc.nspace, i);
+    }
+
+    /* Set the MPI rank based on the pmix_procs array
+     * For now this is trivial, *rank = pmix_proc.rank would do the same */
+    pmix_id_to_mpi_rank(pmix_proc, rank, NULL);
 
     /* sessions: pmi_kvs_name is freed during finalize, so we need to set it
      * again in the reinitialization case */
@@ -125,12 +148,8 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
     pmix_value_t value;
     pmix_value_t *val = &value;
 
-    pmix_proc_t proc;
-    PMIX_PROC_CONSTRUCT(&proc);
-    MPL_strncpy(proc.nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
     for (int i = 0; i < *size; i++) {
-        proc.rank = i;
-        pmi_errno = PMIx_Get(&proc, PMIX_FABRIC_COORDINATES, NULL, 0, &val);
+        pmi_errno = PMIx_Get(&(procs[i]), PMIX_FABRIC_COORDINATES, NULL, 0, &val);
         if (pmi_errno != PMIX_SUCCESS) {
             MPIR_Process.coords = NULL;
             break;
@@ -171,6 +190,9 @@ static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 
 static void pmix_exit(void)
 {
+    if (pmix_procs != NULL) {
+        PMIX_DATA_ARRAY_FREE(pmix_procs);
+    }
     PMIx_Finalize(NULL, 0);
 }
 
@@ -206,11 +228,13 @@ static int pmix_get(int src, const char *key, char *val, int val_size)
 
     pmix_value_t *pvalue;
     if (src < 0) {
+        /* TODO: We must not use pmix_wcproc here once we have cases where there can be
+         * multiple namespaces in pmix_procs */
         pmi_errno = PMIx_Get(&pmix_wcproc, key, NULL, 0, &pvalue);
     } else {
         pmix_proc_t proc;
         PMIX_PROC_CONSTRUCT(&proc);
-        proc.rank = src;
+        mpi_rank_to_pmix_id(src, &proc);
 
         pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
     }
@@ -263,6 +287,8 @@ static bool pmix_get_jobattr(const char *key, char *valbuf)
     int flag = 1;
     PMIx_Info_load(info, PMIX_IMMEDIATE, &flag, PMIX_BOOL);
 
+    /* TODO: check if pmix_wcproc is sufficient here if there are multiple
+     * namespaces in pmix_procs */
     int pmi_errno = PMIx_Get(&pmix_wcproc, key, info, 1, &pvalue);
     if (pmi_errno == PMIX_SUCCESS) {
         strncpy(valbuf, pvalue->data.string, pmi_max_val_size);
@@ -284,8 +310,7 @@ static int pmix_barrier(void)
     int flag = 1;
     PMIx_Info_load(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
 
-    /* use global wildcard proc set */
-    pmi_errno = PMIx_Fence(&pmix_wcproc, 1, info, 1);
+    pmi_errno = PMIx_Fence((pmix_proc_t *) pmix_procs->array, pmix_procs->size, info, 1);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_fence", "**pmix_fence %d", pmi_errno);
     PMIX_INFO_FREE(info, 1);
@@ -301,8 +326,7 @@ static int pmix_barrier_only(void)
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
 
-    /* use global wildcard proc set */
-    pmi_errno = PMIx_Fence(&pmix_wcproc, 1, NULL, 0);
+    pmi_errno = PMIx_Fence((pmix_proc_t *) pmix_procs->array, pmix_procs->size, NULL, 0);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_fence", "**pmix_fence %d", pmi_errno);
 
@@ -321,7 +345,7 @@ static int pmix_barrier_local(void)
     pmix_proc_t *procs = NULL;
     PMIX_PROC_CREATE(procs, local_size);
     for (int i = 0; i < local_size; i++) {
-        PMIX_LOAD_PROCID(&(procs[i]), pmix_proc.nspace, MPIR_Process.node_local_map[i]);
+        mpi_rank_to_pmix_id(MPIR_Process.node_local_map[i], &(procs[i]));
     }
 
     pmix_info_t *info;
@@ -397,11 +421,13 @@ static int pmix_get_binary(int src, const char *key, char *buf, int *p_size, int
     int bufsize ATTRIBUTE((unused)) = *p_size;
     pmix_value_t *pvalue;
     if (src < 0) {
+        /* TODO: We must not use pmix_wcproc here once we have cases where there can be
+         * multiple namespaces in pmix_procs */
         pmi_errno = PMIx_Get(&pmix_wcproc, key, NULL, 0, &pvalue);
     } else {
         pmix_proc_t proc;
         PMIX_PROC_CONSTRUCT(&proc);
-        proc.rank = src;
+        mpi_rank_to_pmix_id(src, &proc);
 
         pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
     }
@@ -436,6 +462,9 @@ static int pmix_get_universe_size(int *universe_size)
     int pmi_errno;
     pmix_value_t *pvalue = NULL;
 
+    /* TODO: Double-check if using pmix_wcproc here yields correct results for
+     * the PMIX_UNIV_SIZE if there are multiple namespaces in pmix_procs.
+     * Is this a case that must be supported here? */
     pmi_errno = PMIx_Get(&pmix_wcproc, PMIX_UNIV_SIZE, NULL, 0, &pvalue);
     if (pmi_errno == PMIX_ERR_NOT_FOUND) {
         *universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
@@ -995,30 +1024,22 @@ void pmix_pset_define_callback(size_t refid, pmix_status_t status, const pmix_pr
                 if (!PMIX_CHECK_NSPACE(proc.nspace, pmix_proc.nspace)) {
                     /* Currently PMIx process sets only work if all MPI processes
                      * are in one PMIx namespace due to a lack of consistent mapping
-                     * from PMIx process ID to MPI rank. For now, ignore the pset if
-                     * it includes a process from a different namespace */
+                     * from PMIx process ID to MPI rank across different namespaces.
+                     * See comments in pmix_init.
+                     *
+                     * For now, ignore the pset if it includes a process from a
+                     * different namespace.
+                     *
+                     * TODO: Remove this case here once multiple namespaces in
+                     * pmix_procs are supported */
                     MPL_DBG_MSG_FMT(MPIR_DBG_INIT, TYPICAL, (MPL_DBG_FDEST,
                                                              "PMIx pset define callback: \
                                                              pset '%s' includes process from different namespace: %s. \
                                                              This is not supported yet and the pset is ignored.", pset_name, proc.nspace));
                     goto fn_exit;
                 }
-                /* TODO: Use a global mapping of PMIx proc ID (namespace + rank) to MPI rank.
-                 * We plan to to this based on a PMIx Process Group that will be created upon
-                 * MPI_Session_init when previously no MPI session existed (first session or
-                 * re-init). The PMIx Process Group shall include all active (i.e., not
-                 * terminated, running, including spawned) processes. Based on the overall group
-                 * membership, the PMIx process ID will be mapped to an MPI rank. This mapping
-                 * will be used here instead of relying solely on the PMIx rank.
-                 *
-                 * Constraint for dynamic resources/ malleability operations: All MPI sessions
-                 * that exist when a resource change shall take place will have to undergo the
-                 * malleability operation. Meaning: All sessions have to be finalized to have a
-                 * clean re-init and update of global parameters when the PMIx Process Group is
-                 * re-created. There will be a (short) time during a malleability operation when
-                 * no session exists. MPI parameters such as rank, size, node map, etc. will be
-                 * updated during the re-init. */
-                members[k] = (MPIR_Pset_member) proc.rank;
+
+                pmix_id_to_mpi_rank(proc, (int *) &(members[k]), NULL);
             }
         }
 
@@ -1206,9 +1227,52 @@ int pmix_deregister_event_handlers(void)
 #endif
 }
 
+static
+void pmix_id_to_mpi_rank(pmix_proc_t proc, int *rank, int *size)
+{
+    size_t n = pmix_procs->size;
+    pmix_proc_t *procs = (pmix_proc_t *) pmix_procs->array;
+    size_t i;
+
+    /* Overflow check */
+    MPIR_Assert(n <= INT_MAX);
+    if (size) {
+        *size = (int) n;
+    }
+
+    if (!rank) {
+        return;
+    }
+
+    /* Find the proc in the array */
+    for (i = 0; i < n; i++) {
+        if (PMIX_CHECK_RANK(procs[i].rank, proc.rank) &&
+            PMIX_CHECK_NSPACE(procs[i].nspace, proc.nspace)) {
+            /* Overflow check */
+            MPIR_Assert(i <= INT_MAX);
+            *rank = (int) i;
+            break;
+        }
+    }
+}
+
+static
+void mpi_rank_to_pmix_id(int rank, pmix_proc_t * proc)
+{
+    /* Sanity check */
+    MPIR_Assert(rank < pmix_procs->size);
+
+    if (proc == NULL) {
+        PMIX_PROC_CREATE(proc, 1);
+    }
+
+    /* MPI rank is index of proc in the array */
+    pmix_proc_t *procs = (pmix_proc_t *) pmix_procs->array;
+    PMIX_LOAD_PROCID(proc, procs[rank].nspace, procs[rank].rank);
+}
 
 
-#else  /* ENABLE_PMIX */
+#else /* ENABLE_PMIX */
 
 static int pmix_init(int *has_parent, int *rank, int *size, int *appnum)
 {
@@ -1313,7 +1377,8 @@ static int pmix_unpublish(const char name[])
     return MPI_ERR_INTERN;
 }
 
-static int pmix_deregister_event_handlers(void) {
+static int pmix_deregister_event_handlers(void)
+{
     return MPI_ERR_INTERN;
 }
 
@@ -1327,31 +1392,93 @@ static int pmix_build_nodemap(int *nodemap, int sz)
 #else
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
-    char *nodelist = NULL, *node = NULL;
-    pmix_proc_t *procs = NULL;
-    size_t nprocs, node_id = 0;
+    UT_array *nspaces = NULL;
+    UT_array *nodelist = NULL;
+    pmix_proc_t *procs = (pmix_proc_t *) pmix_procs->array;
 
-    pmi_errno = PMIx_Resolve_nodes(pmix_proc.nspace, &nodelist);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                         "**pmix_resolve_nodes", "**pmix_resolve_nodes %d", pmi_errno);
-    MPIR_Assert(nodelist);
-
-    node = strtok(nodelist, ",");
-    while (node) {
-        pmi_errno = PMIx_Resolve_peers(node, pmix_proc.nspace, &procs, &nprocs);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                             "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
-        for (int i = 0; i < nprocs; i++) {
-            nodemap[procs[i].rank] = node_id;
+    /* STEP 1: Build list of namespaces
+     * This is trivial for cases with only one namespace, i.e. nspaces,
+     * will contain exactly one element in this case. */
+    utarray_new(nspaces, &ut_str_icd, MPL_MEM_OTHER);
+    for (size_t i = 0; i < pmix_procs->size; i++) {
+        /* Add non-duplicate nspaces to list */
+        bool is_duplicate = false;
+        char *nspace = procs[i].nspace;
+        for (unsigned u = 0; u < utarray_len(nspaces); u++) {
+            char *n = *(char **) utarray_eltptr(nspaces, u);
+            if (strncmp(nspace, n, MIN(strlen(nspace), strlen(n))) == 0) {
+                is_duplicate = true;
+                break;
+            }
         }
-        node_id++;
-        node = strtok(NULL, ",");
+        if (!is_duplicate) {
+            utarray_push_back(nspaces, &nspace, MPL_MEM_OTHER);
+        }
     }
-    /* PMIx latest adds pmix_free. We should switch to that at some point */
-    MPL_external_free(nodelist);
-    PMIX_PROC_FREE(procs, nprocs);
+
+    /* STEP 2: Build list of nodes, resolve nodes and processes for all namespaces */
+    utarray_new(nodelist, &ut_str_icd, MPL_MEM_OTHER);
+
+    for (unsigned i = 0; i < utarray_len(nspaces); i++) {
+        char *nspace = *(char **) utarray_eltptr(nspaces, i);
+        char *nodes = NULL, *node = NULL;
+
+        pmi_errno = PMIx_Resolve_nodes(nspace, &nodes);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_resolve_nodes", "**pmix_resolve_nodes %d", pmi_errno);
+        MPIR_Assert(nodes);
+
+        node = strtok(nodes, ",");
+        while (node) {
+            /* Add non-duplicate nodes to list */
+            bool is_duplicate = false;
+            unsigned node_id = 0;
+            for (node_id = 0; node_id < utarray_len(nodelist); node_id++) {
+                char *n = *(char **) utarray_eltptr(nodelist, node_id);
+                if (strncmp(node, n, MIN(strlen(node), strlen(n))) == 0) {
+                    is_duplicate = true;
+                    break;
+                }
+            }
+            if (!is_duplicate) {
+                utarray_push_back(nodelist, &node, MPL_MEM_OTHER);
+            }
+
+            /* Resolve processes of this nspace on node */
+            pmix_proc_t *node_procs = NULL;
+            size_t nnode_procs = 0;
+            pmi_errno = PMIx_Resolve_peers(node, nspace, &node_procs, &nnode_procs);
+            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                 "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
+
+            if (nnode_procs > 0) {
+                /* Iterate over peers to set their node id (outer loop) */
+                for (size_t j = 0; j < nnode_procs; j++) {
+                    int rank = -1;
+                    pmix_id_to_mpi_rank(node_procs[j], &rank, NULL);
+                    MPIR_Assert(rank < MPIR_Process.size);
+                    /* rank == -1 means that node_procs[j] is not participating in pmix_procs => terminated */
+                    if (rank != -1) {
+                        /* node_id is determined above where this node is compared to
+                         * the content of the nodelist and eventually added to it */
+                        nodemap[rank] = node_id;
+                    }
+                }
+                PMIX_PROC_FREE(node_procs, nnode_procs);
+            }
+            node = strtok(NULL, ",");
+        }
+        /* PMIx latest adds pmix_free. We should switch to that at some point */
+        MPL_external_free(nodes);
+    }
 
   fn_exit:
+    if (nodelist) {
+        utarray_free(nodelist);
+    }
+    if (nspaces) {
+        utarray_free(nspaces);
+    }
     return mpi_errno;
   fn_fail:
     goto fn_exit;
