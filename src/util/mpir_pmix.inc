@@ -5,6 +5,22 @@
 
 #ifdef ENABLE_PMIX
 
+/* Assumption: We are using OpenPMIx if all of
+ * - PMIX_VERSION_{MAJOR, MINOR, RELEASE}
+ * - PMIX_NUMERIC_VERSION
+ * are defined. These are not part of the PMIx standard but are
+ * provided by OpenPMIx in pmix_version.h. Macros for checks about
+ * specific versions only work for OpenPMIx. If we are not using
+ * OpenPMIx: Enable features and rely on compiler and PMIx runtime
+ * environment to detect unsupported features or APIs. */
+#if defined (PMIX_VERSION_MAJOR) && defined (PMIX_VERSION_MINOR) && \
+    defined (PMIX_VERSION_RELEASE) && defined (PMIX_NUMERIC_VERSION)
+/* PMIx Process Sets are supported since OpenPMIx major version 4 */
+#define HAVE_PMIX_MIN_VERSION_4 (PMIX_VERSION_MAJOR >= 4)
+#else
+#define HAVE_PMIX_MIN_VERSION_4 1
+#endif
+
 /* PMIx_Info_load is only in OpenPMIx >= 5.0. Previous versions provide a macro. */
 #ifdef NEED_PMIX_INFO_LOAD
 #define PMIx_Info_load PMIX_INFO_LOAD
@@ -940,7 +956,7 @@ void pmix_pset_define_callback(size_t refid, pmix_status_t status, const pmix_pr
                           pmix_event_notification_cbfunc_fn_t cbfunc, void *cbdata)
 {
     pmix_status_t cb_status = PMIX_EVENT_ACTION_COMPLETE;
-#if PMIX_VERSION_MAJOR >= 4
+#if HAVE_PMIX_MIN_VERSION_4
     char *pset_name = NULL;
     pmix_proc_t *membership = NULL;
     int *members = NULL;
@@ -1080,7 +1096,7 @@ void pmix_pset_delete_callback(size_t refid, pmix_status_t status, const pmix_pr
                           pmix_event_notification_cbfunc_fn_t cbfunc, void *cbdata)
 {
     pmix_status_t cb_status = PMIX_EVENT_ACTION_COMPLETE;
-#if PMIX_VERSION_MAJOR >= 4
+#if HAVE_PMIX_MIN_VERSION_4
     char *pset_name = NULL;
     bool key_found = false;
 
@@ -1119,7 +1135,7 @@ void pmix_pset_delete_callback(size_t refid, pmix_status_t status, const pmix_pr
 static
 int pmix_register_event_handlers(void)
 {
-#if PMIX_VERSION_MAJOR >= 4
+#if HAVE_PMIX_MIN_VERSION_4
     int mpi_errno = MPI_SUCCESS;
     /* Set the PMIX codes of the events for which handlers shall be registered */
     pmix_status_t code_pset_define[1] = { PMIX_PROCESS_SET_DEFINE };
@@ -1167,7 +1183,7 @@ int pmix_register_event_handlers(void)
 static
 int pmix_deregister_event_handlers(void)
 {
-#if PMIX_VERSION_MAJOR >= 4
+#if HAVE_PMIX_MIN_VERSION_4
     int mpi_errno = MPI_SUCCESS;
     /* Deregister PMIx event handler for pset define and delete events
      * in a blocking way (last two parameters are NULL) and treat errors */
