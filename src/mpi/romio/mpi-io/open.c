@@ -60,11 +60,6 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
     MPI_Comm dupcomm = MPI_COMM_NULL;
     ADIOI_Fns *fsops;
     static char myname[] = "MPI_FILE_OPEN";
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_OPEN_START(fl_xmpi, comm);
-#endif /* MPI_hpux */
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -187,9 +182,6 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
             MPI_Barrier(dupcomm);
         }
     }
-#ifdef MPI_hpux
-    HPMP_IO_OPEN_END(fl_xmpi, *fh, comm);
-#endif /* MPI_hpux */
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();

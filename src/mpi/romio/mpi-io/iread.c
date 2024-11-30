@@ -61,11 +61,6 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
 {
     int error_code = MPI_SUCCESS;
     static char myname[] = "MPI_FILE_IREAD";
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEIREAD, TRDTSYSTEM, fh, datatype, count);
-#endif /* MPI_hpux */
 
 
     error_code = MPIOI_File_iread(fh, (MPI_Offset) 0, ADIO_INDIVIDUAL,
@@ -76,9 +71,6 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
         error_code = MPIO_Err_return_file(fh, error_code);
     /* --END ERROR HANDLING-- */
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count);
-#endif /* MPI_hpux */
 
     return error_code;
 }
@@ -109,11 +101,6 @@ int MPI_File_iread_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datat
 {
     int error_code = MPI_SUCCESS;
     static char myname[] = "MPI_FILE_IREAD";
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEIREAD, TRDTSYSTEM, fh, datatype, count);
-#endif /* MPI_hpux */
 
 
     error_code = MPIOI_File_iread(fh, (MPI_Offset) 0, ADIO_INDIVIDUAL,
@@ -124,9 +111,6 @@ int MPI_File_iread_c(MPI_File fh, void *buf, MPI_Count count, MPI_Datatype datat
         error_code = MPIO_Err_return_file(fh, error_code);
     /* --END ERROR HANDLING-- */
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count);
-#endif /* MPI_hpux */
 
     return error_code;
 }

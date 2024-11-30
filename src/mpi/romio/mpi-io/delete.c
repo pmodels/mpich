@@ -38,11 +38,6 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
     int error_code, file_system, known_fstype;
     char *tmp;
     ADIOI_Fns *fsops;
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEDELETE, TRDTBLOCK, MPI_FILE_NULL, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
     MPL_UNREFERENCED_ARG(info);
 
@@ -85,9 +80,6 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
         error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
     /* --END ERROR HANDLING-- */
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, MPI_FILE_NULL, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();

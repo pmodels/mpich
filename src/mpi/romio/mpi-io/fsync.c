@@ -37,11 +37,6 @@ int MPI_File_sync(MPI_File fh)
     int error_code;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_SYNC";
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILESYNC, TRDTBLOCK, adio_fh, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
     ROMIO_THREAD_CS_ENTER();
 
     adio_fh = MPIO_File_resolve(fh);
@@ -61,9 +56,6 @@ int MPI_File_sync(MPI_File fh)
         error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, adio_fh, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();

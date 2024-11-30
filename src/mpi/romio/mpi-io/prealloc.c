@@ -40,11 +40,6 @@ int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_PREALLOCATE";
     MPI_Offset tmp_sz, max_sz, min_sz;
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEPREALLOCATE, TRDTBLOCK, adio_fh, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -90,9 +85,6 @@ int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
     }
     MPI_Barrier(adio_fh->comm);
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, adio_fh, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
 
   fn_exit:

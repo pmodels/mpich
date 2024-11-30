@@ -62,18 +62,10 @@ int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void *buf,
 {
     int error_code;
     static char myname[] = "MPI_FILE_IREAD_AT";
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEREADATALL, TRDTBLOCK, fh, datatype, count);
-#endif /* MPI_hpux */
 
     error_code = MPIOI_File_read_all(fh, offset, ADIO_EXPLICIT_OFFSET, buf,
                                      count, datatype, myname, status);
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count);
-#endif /* MPI_hpux */
 
     return error_code;
 }
@@ -102,18 +94,10 @@ int MPI_File_read_at_all_c(MPI_File fh, MPI_Offset offset, void *buf,
 {
     int error_code;
     static char myname[] = "MPI_FILE_IREAD_AT";
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEREADATALL, TRDTBLOCK, fh, datatype, count);
-#endif /* MPI_hpux */
 
     error_code = MPIOI_File_read_all(fh, offset, ADIO_EXPLICIT_OFFSET, buf,
                                      count, datatype, myname, status);
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count);
-#endif /* MPI_hpux */
 
     return error_code;
 }

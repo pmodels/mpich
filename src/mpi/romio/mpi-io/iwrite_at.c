@@ -66,11 +66,6 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_IWRITE_AT";
 
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEIWRITEAT, TRDTSYSTEM, fh, datatype, count);
-#endif /* MPI_hpux */
 
 
     adio_fh = MPIO_File_resolve(fh);
@@ -83,10 +78,7 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
         error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count)
-#endif /* MPI_hpux */
-        return error_code;
+    return error_code;
 }
 
 /* large count function */
@@ -118,11 +110,6 @@ int MPI_File_iwrite_at_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_IWRITE_AT";
 
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEIWRITEAT, TRDTSYSTEM, fh, datatype, count);
-#endif /* MPI_hpux */
 
 
     adio_fh = MPIO_File_resolve(fh);
@@ -135,8 +122,5 @@ int MPI_File_iwrite_at_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
         error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count)
-#endif /* MPI_hpux */
-        return error_code;
+    return error_code;
 }

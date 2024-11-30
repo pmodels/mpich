@@ -36,11 +36,6 @@ int MPI_File_close(MPI_File * fh)
     int error_code;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_CLOSE";
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_WSTART(fl_xmpi, BLKMPIFILECLOSE, TRDTBLOCK, *adio_fh);
-#endif /* MPI_hpux */
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -85,9 +80,6 @@ int MPI_File_close(MPI_File * fh)
         goto fn_fail;
     /* --END ERROR HANDLING-- */
 
-#ifdef MPI_hpux
-    HPMP_IO_WEND(fl_xmpi);
-#endif /* MPI_hpux */
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
