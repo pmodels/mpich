@@ -99,7 +99,7 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
         error_code = MPIO_Err_return_file(adio_fh, error_code);
         goto fn_exit;
     }
-    MPIO_CHECK_INFO_ALL(info, error_code, adio_fh->comm);
+    MPIO_CHECK_INFO_ALL(info, myname, error_code, adio_fh->comm);
     /* --END ERROR HANDLING-- */
 
     MPI_Type_size_x(filetype, &filetype_size);
