@@ -42,11 +42,6 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
     static char myname[] = "MPI_FILE_SEEK";
     MPI_Offset curr_offset, eof_offset;
 
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILESEEK, TRDTBLOCK, adio_fh, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -122,9 +117,6 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
         error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, adio_fh, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
     error_code = MPI_SUCCESS;
 

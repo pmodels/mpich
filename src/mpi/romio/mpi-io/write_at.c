@@ -62,19 +62,11 @@ int MPI_File_write_at(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
 {
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_AT";
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEWRITEAT, TRDTBLOCK, fh, datatype, count);
-#endif /* MPI_hpux */
 
     /* MPIOI_File_write() defined in mpi-io/write.c */
     error_code = MPIOI_File_write(fh, offset, ADIO_EXPLICIT_OFFSET, buf,
                                   count, datatype, myname, status);
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count);
-#endif /* MPI_hpux */
 
     return error_code;
 }
@@ -103,19 +95,11 @@ int MPI_File_write_at_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
 {
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_AT";
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEWRITEAT, TRDTBLOCK, fh, datatype, count);
-#endif /* MPI_hpux */
 
     /* MPIOI_File_write() defined in mpi-io/write.c */
     error_code = MPIOI_File_write(fh, offset, ADIO_EXPLICIT_OFFSET, buf,
                                   count, datatype, myname, status);
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count);
-#endif /* MPI_hpux */
 
     return error_code;
 }

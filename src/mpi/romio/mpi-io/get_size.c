@@ -41,11 +41,6 @@ int MPI_File_get_size(MPI_File fh, MPI_Offset * size)
     ADIO_File adio_fh;
     ADIO_Fcntl_t *fcntl_struct;
     static char myname[] = "MPI_FILE_GET_SIZE";
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEGETSIZE, TRDTBLOCK, adio_fh, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -70,9 +65,6 @@ int MPI_File_get_size(MPI_File fh, MPI_Offset * size)
     *size = fcntl_struct->fsize;
     ADIOI_Free(fcntl_struct);
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, adio_fh, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
   fn_exit:
     return error_code;

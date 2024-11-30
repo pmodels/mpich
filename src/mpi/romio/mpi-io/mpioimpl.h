@@ -88,8 +88,5 @@ void MPIR_MPIOInit(int *error_code);
 #include "mpioprof.h"
 #endif /* MPIO_BUILD_PROFILING */
 
-#ifdef MPI_hpux
-#include "mpioinst.h"
-#endif /* MPI_hpux */
 
 #endif /* MPIOIMPL_H_INCLUDED */

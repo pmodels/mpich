@@ -40,11 +40,6 @@ int MPI_File_set_size(MPI_File fh, MPI_Offset size)
     static char myname[] = "MPI_FILE_SET_SIZE";
     MPI_Offset tmp_sz, max_sz, min_sz;
 
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    HPMP_IO_START(fl_xmpi, BLKMPIFILESETSIZE, TRDTBLOCK, adio_fh, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -90,9 +85,6 @@ int MPI_File_set_size(MPI_File fh, MPI_Offset size)
         error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, adio_fh, MPI_DATATYPE_NULL, -1);
-#endif /* MPI_hpux */
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
