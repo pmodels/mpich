@@ -65,7 +65,7 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
 
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_COMM(comm, myname, error_code);
-    MPIO_CHECK_INFO_ALL(info, error_code, comm);
+    MPIO_CHECK_INFO_ALL(info, myname, error_code, comm);
     /* --END ERROR HANDLING-- */
 
     error_code = MPI_Comm_test_inter(comm, &flag);

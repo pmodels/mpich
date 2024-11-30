@@ -165,7 +165,7 @@
 /* Check MPI_Info object by calling MPI_Info_dup, if the info object is valid
 then the dup operation will succeed */
 /* a collective check for error makes this macro collective */
-#define MPIO_CHECK_INFO_ALL(info, error_code, comm) {                   \
+#define MPIO_CHECK_INFO_ALL(info, myname, error_code, comm) {                   \
         MPI_Info dupinfo;                                               \
         int tmp_err = MPI_SUCCESS;                                      \
         if (info == MPI_INFO_NULL) {                                    \
