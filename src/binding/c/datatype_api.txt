@@ -201,15 +201,6 @@ MPI_Unpack_external:
     }
 }
 
-MPI_Register_datarep: not_implemented
-    .desc: Register a set of user-provided data conversion
-{
-    /* FIXME UNIMPLEMENTED */
-    mpi_errno =
-        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                             "**notimpl", 0);
-}
-
 MPI_Status_set_elements:
     .desc: Set the number of elements in a status
 {
