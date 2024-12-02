@@ -17,10 +17,6 @@ def main():
     f90_dir = "src/binding/fortran/use_mpi"
     G.check_write_path("%s/" % f90_dir)
     func_list = load_C_func_list(binding_dir, True) # suppress noise
-    if "no-mpiio" in G.opts:
-        func_list = [f for f in func_list if not f['name'].startswith('MPI_File_')]
-    else:
-        func_list.extend(get_mpiio_func_list())
     func_list.extend(get_f77_dummy_func_list())
 
     def has_cptr(func):
