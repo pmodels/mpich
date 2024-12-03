@@ -15,13 +15,16 @@
 cvars:
     - name        : MPIR_CVAR_CH4_GLOBAL_PROGRESS
       category    : CH4
-      type        : boolean
-      default     : 1
+      type        : enum
+      default     : normal
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If on, poll global progress every once a while. With per-vci configuration, turning global progress off may improve the threading performance.
+      description : |-
+        Sets the frequency of polling global progress. It is only relevant when multiple VCIs are enabled.
+        low - only poll global progress very infrequently
+        normal - the default frequency for typical applications
+        high - always poll global progress
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -29,17 +32,27 @@ cvars:
 /* Global progress (polling every vci) is required for correctness. Currently we adopt the
  * simple approach to do global progress every MPIDI_CH4_PROG_POLL_MASK.
  */
-#define MPIDI_CH4_PROG_POLL_MASK 0xff
+#define MPIDI_CH4_PROG_POLL_NORMAL_MASK 0xff    /* 256 x 1us = 1/4 ms */
+#define MPIDI_CH4_PROG_POLL_LOW_MASK 0xfffffff  /* 268435456 x 1us = 4.5 min. */
+#define MPIDI_CH4_PROG_POLL_HIGH_MASK 0x1       /* always global progress */
 
 extern MPL_TLS int global_vci_poll_count;
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_do_global_progress(void)
 {
-    if (MPIDI_global.n_vcis == 1 || !MPIDI_global.is_initialized || !MPIR_CVAR_CH4_GLOBAL_PROGRESS) {
+    if (MPIDI_global.n_vcis == 1 || !MPIDI_global.is_initialized) {
         return 0;
     } else {
         global_vci_poll_count++;
-        return ((global_vci_poll_count & MPIDI_CH4_PROG_POLL_MASK) == 0);
+        if (MPIR_CVAR_CH4_GLOBAL_PROGRESS == MPIR_CVAR_CH4_GLOBAL_PROGRESS_normal) {
+            return ((global_vci_poll_count & MPIDI_CH4_PROG_POLL_NORMAL_MASK) == 0);
+        } else if (MPIR_CVAR_CH4_GLOBAL_PROGRESS == MPIR_CVAR_CH4_GLOBAL_PROGRESS_low) {
+            return ((global_vci_poll_count & MPIDI_CH4_PROG_POLL_LOW_MASK) == 0);
+        } else if (MPIR_CVAR_CH4_GLOBAL_PROGRESS == MPIR_CVAR_CH4_GLOBAL_PROGRESS_high) {
+            return ((global_vci_poll_count & MPIDI_CH4_PROG_POLL_HIGH_MASK) == 0);
+        } else {
+            return 1;
+        }
     }
 }
 
