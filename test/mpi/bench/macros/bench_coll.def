@@ -1,0 +1,77 @@
+subcode: coll_warmup
+    $if grank == 0
+        &call warm_up, iter, tf_dur
+            MPI_Bcast(&iter, 1, MPI_INT, 0, comm)
+            BLOCK
+            # $dump tf_dur, iter, num_best
+        $my tn_zero = 0
+        MPI_Bcast(&tn_zero, 1, MPI_INT, 0, comm)
+    $else
+        $while 1
+            MPI_Bcast(&iter, 1, MPI_INT, 0, comm)
+            $if iter == 0 
+                break
+            BLOCK
+
+    MPI_Bcast(&iter, 1, MPI_INT, 0, comm)
+
+subcode: measure_with_barrier
+    tf_barrier = bench_barrier(comm)
+    $if grank == 0
+        $call header_latency
+    &call foreach_size
+        &call coll_warmup
+            &call measure, iter
+                BLOCK
+                MPI_Barrier(comm)
+        &call run_stat, NUM_REPEAT, tf_latency
+            &call measure, iter
+                BLOCK
+                MPI_Barrier(comm)
+            tf_latency = (tf_dur / iter) - tf_barrier
+        $if grank == 0
+            $call report_latency, size, 1
+
+# Measure individual latency after a barrier (as osu_bcast)
+subcode: measure_coll_latency(iter)
+    $my tf_max, tf_min, tf_avg, tf_sigma # output variables
+
+    $(set:RUN_STAT_VARIANCE=1)
+    &call run_stat, $(iter), tf_latency
+        MPI_Barrier(comm)
+        tf_start = MPI_Wtime()
+        BLOCK
+        tf_latency = (MPI_Wtime() - tf_start)
+
+    $(for:max,min,avg and MAX,MIN,SUM)
+        MPI_Reduce(&sum1, &tf_$1, 1, MPI_DOUBLE, MPI_$2, 0, comm)
+    $(for:sigma and SUM)
+        MPI_Reduce(&sum2, &tf_$1, 1, MPI_DOUBLE, MPI_$2, 0, comm)
+    $(if:1)
+        # only for rank 0, but do it collective for simplicity
+        tf_avg /= gsize
+        tf_sigma = sqrt(tf_sigma / gsize)
+
+# Barrier latency is measured cumulatively (as p2p_latency)
+fncode: bench_barrier(comm)
+    $(set:WARM_UP_NUM_BEST=20)
+    $local int iter
+    &call coll_warmup
+        &call measure, iter
+            MPI_Barrier(comm)
+
+    &call run_stat, NUM_REPEAT, tf_latency
+        &call measure, iter
+            MPI_Barrier(comm)
+        tf_latency = (tf_dur / iter)
+
+    $if grank == 0
+        printf("Barrier latency %.3f +/- %.3f us\n", sum1 * 1e6, sum2 * 1e6)
+    return sum1
+
+subcode: header_coll_latency
+    printf("%12s %8s %8s %8s     %6s  (in microseconds)\n", "msgsize", "min", "max", "avg", "sigma")
+
+subcode: report_coll_latency(MSGSIZE)
+    printf("%12d %8.3f %8.3f %8.3f     %6.3f\n", $(MSGSIZE), tf_min*1e6, tf_max*1e6, tf_avg*1e6, tf_sigma*1e6)
+
