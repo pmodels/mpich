@@ -22,30 +22,5 @@ include $(top_srcdir)/src/mpi/topo/Makefile.mk
 include $(top_srcdir)/src/mpi/stream/Makefile.mk
 include $(top_srcdir)/src/mpi/threadcomm/Makefile.mk
 
-if BUILD_ROMIO
-SUBDIRS += src/mpi/romio
-DIST_SUBDIRS += src/mpi/romio
-MANDOC_SUBDIRS += src/mpi/romio
-HTMLDOC_SUBDIRS += src/mpi/romio
-
-# This was previously a hard copy (not a symlink) performed by config.status
-# (specified via AC_CONFIG_COMMANDS).  Ideally we would eliminate this "copy"
-# altogether and just set -Iromio_include_dir, but MPE2's build system uses
-# $(top_builddir)/bin/mpicc that can't handle more than one include dir.
-#
-# Using a symlink allows us to avoid trying to capture the full dependency chain
-# of MPICH/mpio.h --> ROMIO/mpio.h --> ROMIO/mpio.h.in --> ROMIO/config.status --> ...MORE_AUTOTOOLS...
-BUILT_SOURCES += $(top_builddir)/src/include/mpio.h
-$(top_builddir)/src/include/mpio.h: $(top_builddir)/src/mpi/romio/include/mpio.h
-	if test ! -h $(top_builddir)/src/include/mpio.h ; then \
-	    rm -f $(top_builddir)/src/include/mpio.h ; \
-	    ( cd $(top_builddir)/src/include &&       \
-	        $(LN_S) ../mpi/romio/include/mpio.h ) ; \
-	fi
-
-DISTCLEANFILES += $(top_builddir)/src/include/mpio.h
-
-endif BUILD_ROMIO
-
 # dir is present but currently intentionally unbuilt
 #include $(top_srcdir)/src/mpi/io/Makefile.mk
