@@ -291,7 +291,7 @@ int MPL_gpu_unregister_host(const void *ptr)
     goto fn_exit;
 }
 
-int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
+int MPL_gpu_malloc(void **ptr, size_t size, int h_device)
 {
     int mpl_err = MPL_SUCCESS;
     int prev_devid;
