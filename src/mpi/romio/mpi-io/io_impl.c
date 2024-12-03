@@ -1238,6 +1238,16 @@ int MPIR_Register_datarep_large_impl(ROMIO_CONST char *datarep,
                                   dtype_file_extent_fn, extra_state, is_large);
 }
 
+MPI_Fint MPIR_File_c2f_impl(MPI_File fh)
+{
+    return MPIO_File_c2f(fh);
+}
+
+MPI_File MPIR_File_f2c_impl(MPI_Fint fh)
+{
+    return MPIO_File_f2c(fh);
+}
+
 /* internal routines */
 
 static int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type,
