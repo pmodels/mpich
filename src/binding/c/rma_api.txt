@@ -47,6 +47,7 @@ MPI_Free_mem:
 
 MPI_Accumulate:
     .desc: Accumulate data into the target process using remote memory access
+    .extra: streamsync
     .skip: ThreadSafe
     .seealso: MPI_Raccumulate
     .impl: mpid
@@ -64,6 +65,7 @@ MPI_Accumulate:
 
 MPI_Compare_and_swap:
     .desc: Perform one-sided atomic compare-and-swap.
+    .extra: streamsync
     .skip: ThreadSafe, validate-DATATYPE
     .impl: mpid
     .earlyreturn: pt2pt_proc_null
@@ -85,6 +87,7 @@ MPI_Compare_and_swap:
 
 MPI_Fetch_and_op:
     .desc: Perform one-sided read-modify-write.
+    .extra: streamsync
     .skip: ThreadSafe, validate-BUFFER
     .seealso: MPI_Get_accumulate
     .impl: mpid
@@ -121,12 +124,14 @@ MPI_Fetch_and_op:
 
 MPI_Get:
     .desc: Get data from a memory window on a remote process
+    .extra: streamsync
     .seealso: MPI_Rget
     .impl: mpid
     .earlyreturn: pt2pt_proc_null
 
 MPI_Get_accumulate:
     .desc: Perform an atomic, one-sided read-and-accumulate operation
+    .extra: streamsync
     .skip: ThreadSafe
     .seealso: MPI_Rget_accumulate MPI_Fetch_and_op
     .impl: mpid
@@ -160,12 +165,14 @@ MPI_Get_accumulate:
 
 MPI_Put:
     .desc: Put data into a memory window on a remote process
+    .extra: streamsync
     .seealso: MPI_Rput
     .impl: mpid
     .earlyreturn: pt2pt_proc_null
 
 MPI_Raccumulate:
     .desc: Accumulate data into the target process using remote memory access
+    .extra: streamsync
     .skip: ThreadSafe
     .seealso: MPI_Accumulate
     .impl: mpid
@@ -178,12 +185,14 @@ MPI_Raccumulate:
 
 MPI_Rget:
     .desc: Get data from a memory window on a remote process
+    .extra: streamsync
     .seealso: MPI_Get
     .impl: mpid
     .earlyreturn: pt2pt_proc_null
 
 MPI_Rget_accumulate:
     .desc: Perform an atomic, one-sided read-and-accumulate
+    .extra: streamsync
     .skip: ThreadSafe
     .seealso: MPI_Get_accumulate MPI_Fetch_and_op
     .impl: mpid
@@ -202,6 +211,7 @@ MPI_Rget_accumulate:
 
 MPI_Rput:
     .desc: Put data into a memory window on a remote process and return a request
+    .extra: streamsync
     .seealso: MPI_Put
     .impl: mpid
     .earlyreturn: pt2pt_proc_null
