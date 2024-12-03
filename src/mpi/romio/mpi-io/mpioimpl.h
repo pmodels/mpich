@@ -183,5 +183,7 @@ int MPIR_Register_datarep_large_impl(const char *datarep,
                                      MPI_Datarep_conversion_function_c * write_conversion_fn,
                                      MPI_Datarep_extent_function * dtype_file_extent_fn,
                                      void *extra_state);
+MPI_Fint MPIR_File_c2f_impl(MPI_File fh);
+MPI_File MPIR_File_f2c_impl(MPI_Fint fh);
 
 #endif /* MPIOIMPL_H_INCLUDED */
