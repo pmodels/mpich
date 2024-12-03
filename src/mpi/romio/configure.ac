@@ -105,6 +105,8 @@ AC_ARG_VAR([FROM_OMPI],[set to "yes" if building ROMIO inside of Open MPI])
 FROM_OMPI=${FROM_OMPI:-no}
 if test "$FROM_OMPI" = 1 ; then FROM_OMPI=yes ; fi
 
+AM_CONDITIONAL([BUILD_BINDING], [test "$FROM_MPICH" != "yes"])
+
 # MPL
 AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
 MPLLIBNAME=${MPLLIBNAME:-"mpl"}
@@ -691,7 +693,9 @@ AM_CONDITIONAL([BUILD_MPIO_ERRHAN],[false])
 
 # if we don't have weak symbol support, we must build a separate convenience
 # library in order to provide the "PMPI_" symbols
-AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "x$HAVE_WEAK_SYMBOLS" = "x0"])
+# MPICH will generate separate binding layer, thus we can skip PROFILING LIB
+# if build inside MPICH
+AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "x$HAVE_WEAK_SYMBOLS" = "x0" -a "$FROM_MPICH" != "yes"])
 # disable visibility if building profiling library
 if test "x$HAVE_WEAK_SYMBOLS" = "x0" ; then
     VISIBILITY_CFLAGS=""
