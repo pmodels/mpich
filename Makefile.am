@@ -51,12 +51,20 @@ errnames_txt_files =
 external_subdirs = @mplsrcdir@ @hwlocsrcdir@ @jsonsrcdir@ @yaksasrcdir@ @pmisrcdir@
 external_ldflags = @mpllibdir@ @yaksalibdir@
 external_libs = @WRAPPER_LIBS@
-mpi_convenience_libs =
+
+# convenience libs that do not depend on MPI
 pmpi_convenience_libs = @mpllib@ @hwloclib@ @jsonlib@ @yaksalib@ @pmilib@
+
+# convenience libs that depend on MPI (either MPI functions or MPI constants)
+mpi_convenience_libs =
+abi_convenience_libs =
 
 if BUILD_ROMIO
     external_subdirs += src/mpi/romio
-    pmpi_convenience_libs += src/mpi/romio/libromio.la
+    mpi_convenience_libs += src/mpi/romio/libromio.la
+if BUILD_ABI_LIB
+    abi_convenience_libs += src/mpi/romio/libromio_abi.la
+endif
 endif
 
 # NOTE on our semi-unconventional usage of DIST_SUBDIRS:
@@ -129,8 +137,8 @@ if BUILD_PROFILING_LIB
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_core_sources)
 lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
-lib_lib@PMPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs)
-EXTRA_lib_lib@PMPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs)
+lib_lib@PMPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
+EXTRA_lib_lib@PMPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
 
 # lib@MPILIBNAME@.la might depend on lib@PMPILIBNAME@.la.  We add them
 # in that order to lib_LTLIBRARIES so libtool doesn't get
@@ -139,7 +147,7 @@ lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
 lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_sources)
 lib_lib@MPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI
-lib_lib@MPILIBNAME@_la_LIBADD = lib/lib@PMPILIBNAME@.la $(mpi_convenience_libs)
+lib_lib@MPILIBNAME@_la_LIBADD = lib/lib@PMPILIBNAME@.la
 
 else !BUILD_PROFILING_LIB
 
@@ -161,8 +169,8 @@ lib_LTLIBRARIES += lib/lib@PMPIABILIBNAME@.la
 lib_lib@PMPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_f77_sources) $(mpi_core_sources)
 lib_lib@PMPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
 lib_lib@PMPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI $(abi_cppflags)
-lib_lib@PMPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs)
-EXTRA_lib_lib@PMPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs)
+lib_lib@PMPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(abi_convenience_libs)
+EXTRA_lib_lib@PMPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(abi_convenience_libs)
 
 # lib@MPIABILIBNAME@.la might depend on lib@PMPIABILIBNAME@.la.  We add them
 # in that order to lib_LTLIBRARIES so libtool doesn't get
@@ -171,7 +179,7 @@ lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
 lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources)
 lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI $(abi_cppflags)
-lib_lib@MPIABILIBNAME@_la_LIBADD = lib/lib@PMPIABILIBNAME@.la $(mpi_convenience_libs)
+lib_lib@MPIABILIBNAME@_la_LIBADD = lib/lib@PMPIABILIBNAME@.la
 
 else !BUILD_PROFILING_LIB
 
@@ -179,8 +187,8 @@ lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
 lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_core_sources)
 lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
 lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) $(abi_cppflags)
-lib_lib@MPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
-EXTRA_lib_lib@MPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
+lib_lib@MPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(abi_convenience_libs)
+EXTRA_lib_lib@MPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(abi_convenience_libs)
 
 endif !BUILD_PROFILING_LIB
 endif BUILD_ABI_LIB
