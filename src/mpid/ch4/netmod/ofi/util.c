@@ -7,12 +7,20 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
-int MPIDI_OFI_retry_progress(void)
+int MPIDI_OFI_retry_progress(int vci, int retry)
 {
     /* We do not call progress on hooks form netmod level
      * because it is not reentrant safe.
      */
-    return MPID_Progress_test(NULL);
+    int mpi_errno;
+    if (abs(retry) % 1000 == 0) {
+        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);
+        mpi_errno = MPID_Progress_test(NULL);
+        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci);
+    } else {
+        mpi_errno = MPIDI_OFI_progress_uninlined(vci);
+    }
+    return mpi_errno;
 }
 
 typedef struct MPIDI_OFI_mr_key_allocator_t {
