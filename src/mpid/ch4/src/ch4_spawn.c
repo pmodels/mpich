@@ -40,7 +40,6 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
     memset(port_name, 0, sizeof(port_name));
 
     int total_num_processes = 0;
-    int spawn_error = 0;
     int *pmi_errcodes = NULL;
 
     if (comm_ptr->rank == root) {
@@ -63,29 +62,30 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
             mpi_errno = MPIR_pmi_spawn_multiple(count, commands, argvs, maxprocs, info_ptrs,
                                                 1, &preput_keyval_vector, pmi_errcodes);
             MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_PMI_MUTEX);
-            if (mpi_errno != MPI_SUCCESS) {
-                spawn_error = 1;
-            }
-        } else {
-            spawn_error = 1;
         }
     }
 
     int bcast_ints[2];
     if (comm_ptr->rank == root) {
         bcast_ints[0] = total_num_processes;
-        bcast_ints[1] = spawn_error;
+        bcast_ints[1] = mpi_errno;
     }
     mpi_errno = MPIR_Bcast(bcast_ints, 2, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     if (comm_ptr->rank != root) {
         total_num_processes = bcast_ints[0];
-        spawn_error = bcast_ints[1];
+        if (bcast_ints[1]) {
+            /* root spawn encountered error */
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**spawn");
+        }
         pmi_errcodes = (int *) MPL_calloc(total_num_processes, sizeof(int), MPL_MEM_OTHER);
         MPIR_Assert(pmi_errcodes);
+    } else {
+        /* restore the potential mpi_errno from MPID_Open_port and MPIR_pmi_spawn_multiple */
+        mpi_errno = bcast_ints[1];
     }
 
-    MPIR_ERR_CHKANDJUMP(spawn_error, mpi_errno, MPI_ERR_OTHER, "**spawn");
+    MPIR_ERR_CHECK(mpi_errno);
 
     int should_accept = 1;
     if (errcodes != MPI_ERRCODES_IGNORE) {
