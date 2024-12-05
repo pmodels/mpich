@@ -75,10 +75,12 @@ typedef unsigned long MPID_Seqnum_t;
 
 #include "mpichconf.h"
 
-#if CH3_RANK_BITS == 16
+#if CH3_RANK_BITS == 16 && !defined(HAVE_EXTENDED_CONTEXT_BITS)
 typedef int16_t MPIDI_Rank_t;
-#elif CH3_RANK_BITS == 32
+typedef int16_t MPIDI_Context_id_t;
+#else
 typedef int32_t MPIDI_Rank_t;
+typedef int32_t MPIDI_Context_id_t;
 #endif /* CH3_RANK_BITS */
 
 /* For the typical communication system for which the ch3 channel is
@@ -106,7 +108,7 @@ typedef int32_t MPIDI_Rank_t;
 typedef struct MPIDI_Message_match_parts {
     int32_t tag;
     MPIDI_Rank_t rank;
-    MPIR_Context_id_t context_id;
+    MPIDI_Context_id_t context_id;
 } MPIDI_Message_match_parts_t;
 typedef union {
     MPIDI_Message_match_parts_t parts;

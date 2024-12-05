@@ -24,7 +24,7 @@
 */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, MPI_Datatype datatype, size_t data_sz,       /* data_sz passed in here for reusing */
                                                 int rank, uint64_t match_bits, uint64_t mask_bits,
-                                                MPIR_Comm * comm, MPIR_Context_id_t context_id,
+                                                MPIR_Comm * comm, int context_id,
                                                 MPIDI_av_entry_t * addr, int vci_src, int vci_dst,
                                                 MPIR_Request * rreq,
                                                 MPIR_Datatype * dt_ptr, uint64_t flags)
@@ -109,7 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
-    MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
+    int context_id = comm->recvcontext_id + context_offset;
     size_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;

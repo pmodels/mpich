@@ -56,29 +56,29 @@ uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
 /* Static inlines */
 
-MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win_id)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_win_id_to_context(uint64_t win_id)
 {
-    MPIR_Context_id_t ret;
+    int context_id;
 
     MPIR_FUNC_ENTER;
 
     /* pick the lower 32-bit to extract context id */
-    ret = (win_id - 1) & 0xffffffff;
+    context_id = (win_id - 1) & 0xffffffff;
 
     MPIR_FUNC_EXIT;
-    return ret;
+    return context_id;
 }
 
-MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_to_context(const MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_win_to_context(const MPIR_Win * win)
 {
-    MPIR_Context_id_t ret;
+    int context_id;
 
     MPIR_FUNC_ENTER;
 
-    ret = MPIDIG_win_id_to_context(MPIDIG_WIN(win, win_id));
+    context_id = MPIDIG_win_id_to_context(MPIDIG_WIN(win, win_id));
 
     MPIR_FUNC_EXIT;
-    return ret;
+    return context_id;
 }
 
 MPL_STATIC_INLINE_PREFIX MPIDIG_win_target_t *MPIDIG_win_target_add(MPIR_Win * win, int rank)

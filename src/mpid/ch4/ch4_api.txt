@@ -452,7 +452,7 @@ PARAM:
     comm: MPIR_Comm *
     comm_ptr: MPIR_Comm *
     compare_addr: const void *
-    context_id: MPIR_Context_id_t
+    context_id: int
     count: MPI_Aint
     data: const void *
     data_sz: MPI_Aint

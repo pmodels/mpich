@@ -585,7 +585,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
     pg_translation *local_translation = NULL, *remote_translation = NULL;
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
-    MPIR_Context_id_t recvcontext_id = MPIR_INVALID_CONTEXT_ID;
+    int recvcontext_id = MPIR_INVALID_CONTEXT_ID;
     MPIR_CHKLMEM_DECL(3);
 
     MPIR_FUNC_ENTER;

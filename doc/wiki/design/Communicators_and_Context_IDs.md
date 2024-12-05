@@ -32,9 +32,6 @@ fields of the context ID indicated by letter and color:
   (`MPI_Send/MPI_Recv`) occur in a different context than collective
   messages (`MPI_Bcast, etc`). This also [explained further below](#context-type-suffix).
 
-The actual type of a context ID is `MPIR_Context_id_t`, which is
-`typedef`ed to `uint16_t`.
-
 All members of a communicator use the same context ID for that
 communicator, but a context ID is not a globally unique ID. That is, the
 communicator's group information combined with the context ID constitute
@@ -155,7 +152,7 @@ Finds the highest bit of the lowest word that is set in the given mask
 and returns the corresponding context ID.
 
 ```
-static int MPIR_Allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
+static int MPIR_Allocate_context_bit(uint32_t mask[], int id)
 ```
 
 Clears the bit in `mask` corresponding to the given context `id`.
@@ -169,7 +166,7 @@ It resets that bit **in the `context_mask`** and returns the found ID
 prefix.
 
 ```
-int MPIR_Get_contextid(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id)
+int MPIR_Get_contextid(MPID_Comm *comm_ptr, int *context_id)
 ```
 
 Allocates a new context ID prefix collectively over the given
@@ -182,7 +179,7 @@ participating processes. The result of this reduction is fed to
 prefix.
 
 ```
-int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, MPIR_Context_id_t *recvcontext_id)
+int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, int *context_id, int *recvcontext_id)
 ```
 
 Called by `MPIR_Comm_copy` to get context IDs for a new
