@@ -54,9 +54,6 @@ def main():
 
 
     # -- Generating code --
-    G.out = []
-    G.out.append("#include \"mpiimpl.h\"")
-    G.out.append("")
     G.doc3_src_txt = []
     G.poly_aliases = [] # large-count mansrc aliases
     G.need_dump_romio_reference = True
@@ -67,9 +64,6 @@ def main():
         dump_c_file(file_path, G.out)
         # add to mpi_sources for dump_Makefile_mk()
         G.mpi_sources.append(file_path)
-        G.out = []
-        G.out.append("#include \"mpiimpl.h\"")
-        G.out.append("")
         G.need_dump_romio_reference = True
 
     def dump_func(func, manpage_out):
@@ -98,52 +92,61 @@ def main():
             dump_mpi_c(func, True)
         del func['_is_abi']
 
-    # ----
-    for func in func_list:
-        G.err_codes = {}
-        manpage_out = []
+    def dump_c_binding():
+        G.out = []
+        G.out.append("#include \"mpiimpl.h\"")
+        G.out.append("")
+        for func in func_list:
+            G.err_codes = {}
+            manpage_out = []
 
-        if 'replace' in func and 'body' not in func:
-            continue
-
-        dump_func(func, manpage_out)
-        if '_replaces' in func:
-            for t_func in func['_replaces']:
-                dump_func(t_func, manpage_out)
-
-        if 'single-source' not in G.opts:
-            # dump individual functions in separate source files
-            dump_out(get_func_file_path(func, c_dir))
-
-    if 'single-source' in G.opts:
-        # otherwise, dump all functions in binding.c
-        dump_out(c_dir + "/c_binding.c")
-
-    # ---- dump c_binding_abi.c
-    G.out = []
-    G.out.append("#include \"mpiimpl.h\"")
-    G.out.append("#include \"mpi_abi_util.h\"")
-    G.out.append("")
-
-    for func in func_list:
-        if 'replace' in func and 'body' not in func:
-            continue
-
-        if re.match(r'MPIX_', func['name']):
-            if re.match(r'MPIX_(Grequest_|Type_iov)', func['name']):
-                # needed by ROMIO
-                pass
-            else:
+            if 'replace' in func and 'body' not in func:
                 continue
-        dump_func_abi(func)
-        if '_replaces' in func:
-            for t_func in func['_replaces']:
-                dump_func_abi(t_func)
 
-    abi_file_path = abi_dir + "/c_binding_abi.c"
-    G.check_write_path(abi_file_path)
-    dump_c_file(abi_file_path, G.out)
-    G.out = []
+            dump_func(func, manpage_out)
+            if '_replaces' in func:
+                for t_func in func['_replaces']:
+                    dump_func(t_func, manpage_out)
+
+            if 'single-source' not in G.opts:
+                # dump individual functions in separate source files
+                dump_out(get_func_file_path(func, c_dir))
+                G.out = []
+                G.out.append("#include \"mpiimpl.h\"")
+                G.out.append("")
+
+        if 'single-source' in G.opts:
+            # otherwise, dump all functions in binding.c
+            dump_out(c_dir + "/c_binding.c")
+
+    def dump_c_binding_abi():
+        G.out = []
+        G.out.append("#include \"mpiimpl.h\"")
+        G.out.append("#include \"mpi_abi_util.h\"")
+        G.out.append("")
+
+        for func in func_list:
+            if 'replace' in func and 'body' not in func:
+                continue
+
+            if re.match(r'MPIX_', func['name']):
+                if re.match(r'MPIX_(Grequest_|Type_iov)', func['name']):
+                    # needed by ROMIO
+                    pass
+                else:
+                    continue
+            dump_func_abi(func)
+            if '_replaces' in func:
+                for t_func in func['_replaces']:
+                    dump_func_abi(t_func)
+
+        abi_file_path = abi_dir + "/c_binding_abi.c"
+        G.check_write_path(abi_file_path)
+        dump_c_file(abi_file_path, G.out)
+
+    # ----
+    dump_c_binding()
+    dump_c_binding_abi()
 
     if 'output-mansrc' in G.opts:
         f = c_dir + '/mansrc/' + 'poly_aliases.lst'
