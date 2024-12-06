@@ -158,10 +158,26 @@ def main():
 
         dump_out(c_dir + "/io.c")
 
+    def dump_io_funcs_abi():
+        G.out = []
+        G.out.append("#include \"mpichconf.h\"")
+        G.out.append("#include \"io_abi_internal.h\"")
+        G.out.append("#include \"mpir_io_impl.h\"")
+        G.out.append("#include <limits.h>")
+        G.out.append("")
+
+        for func in io_func_list:
+            dump_func_abi(func)
+
+        abi_file_path = abi_dir + "/io_abi.c"
+        G.check_write_path(abi_file_path)
+        dump_c_file(abi_file_path, G.out)
+
     # ----
     dump_c_binding()
     dump_c_binding_abi()
     dump_io_funcs()
+    dump_io_funcs_abi()
 
     if 'output-mansrc' in G.opts:
         f = c_dir + '/mansrc/' + 'poly_aliases.lst'
