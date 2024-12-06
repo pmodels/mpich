@@ -63,30 +63,19 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
                        int count, MPI_Datatype datatype, MPIO_Request * request)
 {
     int error_code;
-    ADIO_File adio_fh;
-    static char myname[] = "MPI_FILE_IWRITE_AT";
+    ROMIO_THREAD_CS_ENTER();
 
-#ifdef MPI_hpux
-    int fl_xmpi;
+    error_code = MPIR_File_iwrite_at_impl(fh, offset, buf, count, datatype, request);
+    if (error_code) {
+        goto fn_fail;
+    }
 
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEIWRITEAT, TRDTSYSTEM, fh, datatype, count);
-#endif /* MPI_hpux */
-
-
-    adio_fh = MPIO_File_resolve(fh);
-
-    error_code = MPIOI_File_iwrite(adio_fh, offset, ADIO_EXPLICIT_OFFSET, buf,
-                                   count, datatype, myname, request);
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (error_code != MPI_SUCCESS)
-        error_code = MPIO_Err_return_file(adio_fh, error_code);
-    /* --END ERROR HANDLING-- */
-
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count)
-#endif /* MPI_hpux */
-        return error_code;
+  fn_exit:
+    ROMIO_THREAD_CS_EXIT();
+    return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }
 
 /* large count function */
@@ -115,28 +104,17 @@ int MPI_File_iwrite_at_c(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
                          MPI_Count count, MPI_Datatype datatype, MPIO_Request * request)
 {
     int error_code;
-    ADIO_File adio_fh;
-    static char myname[] = "MPI_FILE_IWRITE_AT";
+    ROMIO_THREAD_CS_ENTER();
 
-#ifdef MPI_hpux
-    int fl_xmpi;
+    error_code = MPIR_File_iwrite_at_impl(fh, offset, buf, count, datatype, request);
+    if (error_code) {
+        goto fn_fail;
+    }
 
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEIWRITEAT, TRDTSYSTEM, fh, datatype, count);
-#endif /* MPI_hpux */
-
-
-    adio_fh = MPIO_File_resolve(fh);
-
-    error_code = MPIOI_File_iwrite(adio_fh, offset, ADIO_EXPLICIT_OFFSET, buf,
-                                   count, datatype, myname, request);
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (error_code != MPI_SUCCESS)
-        error_code = MPIO_Err_return_file(adio_fh, error_code);
-    /* --END ERROR HANDLING-- */
-
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count)
-#endif /* MPI_hpux */
-        return error_code;
+  fn_exit:
+    ROMIO_THREAD_CS_EXIT();
+    return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }

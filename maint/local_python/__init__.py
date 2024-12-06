@@ -62,6 +62,7 @@ class MPI_API_Global:
     mpi_sources = []
     mpi_declares = []
     impl_declares = []
+    io_impl_declares = []
     mpi_errnames = []
     mpix_symbols = {}
 

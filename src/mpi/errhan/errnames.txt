@@ -923,8 +923,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_attr_get %C %d %p %p:MPI_Attr_get(%C, keyval=%d, attr_value=%p, flag=%p) failed
 **mpi_attr_delete:MPI_Attr_delete failed
 **mpi_attr_delete %C %d:MPI_Attr_delete(%C, keyval=%d) failed
-**mpi_register_datarep:MPI_Register_datarep failed
-**mpi_register_datarep %s %p %p %p %p:MPI_Register_datarep(datarep=%s, read_conversion_fn=%p, write_conversion_fn=%p, dtype_file_extent_fn=%p, extra_state=%p) failed
 
 # MPIR functions
 

@@ -9,6 +9,7 @@ include $(top_srcdir)/mpi-io/fortran/Makefile.mk
 AM_CPPFLAGS += -I$(top_builddir)/mpi-io -I$(top_srcdir)/mpi-io
 noinst_HEADERS += mpi-io/mpioimpl.h mpi-io/mpioprof.h
 
+if BUILD_BINDING
 romio_mpi_sources +=          \
     mpi-io/close.c            \
     mpi-io/delete.c           \
@@ -68,10 +69,12 @@ romio_mpi_sources +=          \
     mpi-io/write_ordb.c       \
     mpi-io/write_orde.c       \
     mpi-io/write_sh.c
+endif BUILD_BINDING
 
 
 # non-MPI/PMPI sources that will be included in libromio
 romio_other_sources +=       \
+    mpi-io/io_impl.c         \
     mpi-io/mpich_fileutil.c \
     mpi-io/mpir-mpioinit.c   \
     mpi-io/mpiu_greq.c \

@@ -81,14 +81,18 @@ def dump_mpi_c(func, is_large=False):
 
     dump_profiling(func)
 
-    if 'polymorph' in func:
+    skip_wrappers = False
+    if func['dir'] == 'io' and '_is_abi' in func:
+        # The mpi-abi version of io bindings does not have access to MPICH internals (i.e. mpiimpl.h)
+        dump_function_io(func)
+        skip_wrappers = True
+    elif 'polymorph' in func:
         # MPII_ function to support C/Fortran Polymorphism, eg MPI_Comm_get_attr
         G.out.append("#ifndef MPICH_MPI_FROM_PMPI")
         dump_function_internal(func, kind="polymorph")
         G.out.append("#endif /* MPICH_MPI_FROM_PMPI */")
         G.out.append("")
 
-    if 'polymorph' in func:
         dump_function_internal(func, kind="call-polymorph")
     elif 'replace' in func and 'body' not in func:
         pass
@@ -96,7 +100,9 @@ def dump_mpi_c(func, is_large=False):
         dump_function_internal(func, kind="normal")
     G.out.append("")
 
-    if '_is_abi' in func:
+    if skip_wrappers:
+        pass
+    elif '_is_abi' in func:
         dump_abi_wrappers(func, func['_is_large'])
     else:
         # Create the MPI and QMPI wrapper functions that will call the above, "real" version of the
@@ -207,6 +213,40 @@ def dump_mpir_impl_h(f):
             print(l, file=Out)
         print("", file=Out)
         print("#endif /* MPIR_IMPL_H_INCLUDED */", file=Out)
+
+def dump_mpir_io_impl_h(f):
+    print("  --> [%s]" %f)
+    with open(f, "w") as Out:
+        for l in G.copyright_c:
+            print(l, file=Out)
+        print("#ifndef MPIR_IO_IMPL_H_INCLUDED", file=Out)
+        print("#define MPIR_IO_IMPL_H_INCLUDED", file=Out)
+        print("", file=Out)
+
+        # io_abi.c doesn't have access to MPICH internal
+        print("#ifdef BUILD_MPI_ABI", file=Out)
+        print("#define MPIR_ERR_RECOVERABLE 0", file=Out)
+        print("#define MPIR_ERR_FATAL 1", file=Out)
+        print("int MPIR_Err_create_code(int, int, const char[], int, int, const char[], const char[], ...);", file=Out)
+        print("int MPIR_Err_return_comm(void *, const char[], int);", file=Out)
+        print("#endif", file=Out)
+        print("", file=Out)
+
+        print("void MPIR_Ext_cs_enter(void);", file=Out)
+        print("void MPIR_Ext_cs_exit(void);", file=Out)
+        print("#ifndef HAVE_ROMIO", file=Out)
+        print("#define MPIO_Err_return_file(fh, errorcode) MPIR_Err_return_comm((void *)0, __func__, errorcode)", file=Out)
+        print("#else", file=Out)
+        print("MPI_Fint MPIR_File_c2f_impl(MPI_File fh);", file=Out)
+        print("MPI_File MPIR_File_f2c_impl(MPI_Fint fh);", file=Out)
+        print("int MPIO_Err_return_file(MPI_File fh, int errorcode);", file=Out)
+        print("#endif", file=Out)
+
+        print("", file=Out)
+        for l in G.io_impl_declares:
+            print(l, file=Out)
+        print("", file=Out)
+        print("#endif /* MPIR_IO_IMPL_H_INCLUDED */", file=Out)
 
 def filter_out_abi():
     funcname = None
@@ -552,8 +592,10 @@ def process_func_parameters(func):
 
         do_handle_ptr = 0
         (kind, name) = (p['kind'], p['name'])
-        if '_has_comm' not in func and kind == "COMMUNICATOR" and p['param_direction'] == 'in':
+        if '_has_comm' not in func and kind == "COMMUNICATOR" and p['param_direction'] == 'in' and func['name'] != "MPI_File_open":
             func['_has_comm'] = name
+        elif kind == "FILE" and p['param_direction'] == 'in' and func['dir'] == 'io':
+            func['_has_file'] = name
         elif name == "win":
             func['_has_win'] = name
         elif name == "session":
@@ -733,7 +775,7 @@ def process_func_parameters(func):
         elif RE.match(r'F90_(COMM|ERRHANDLER|FILE|GROUP|INFO|MESSAGE|OP|REQUEST|SESSION|DATATYPE|WIN)', kind):
             # no validation for these kinds
             pass
-        elif RE.match(r'(POLY)?(DTYPE_STRIDE_BYTES|DISPLACEMENT_AINT_COUNT)$', kind):
+        elif RE.match(r'(POLY)?(DTYPE_STRIDE_BYTES|DISPLACEMENT_AINT_COUNT|OFFSET)$', kind):
             # e.g. stride in MPI_Type_vector, MPI_Type_create_resized
             pass
         elif is_pointer_type(p):
@@ -741,7 +783,11 @@ def process_func_parameters(func):
         else:
             print("Missing error checking: func=%s, name=%s, kind=%s" % (func_name, name, kind), file=sys.stderr)
 
-        if do_handle_ptr == 1:
+        if func['dir'] == 'io':
+            # pass io function parameters as is
+            impl_arg_list.append(name)
+            impl_param_list.append(get_impl_param(func, p))
+        elif do_handle_ptr == 1:
             if p['param_direction'] == 'inout':
                 # assume only one such parameter
                 func['_has_handle_inout'] = p
@@ -808,6 +854,48 @@ def dump_copy_right():
     G.out.append(" * Copyright (C) by Argonne National Laboratory")
     G.out.append(" *     See COPYRIGHT in top-level directory")
     G.out.append(" */")
+    G.out.append("")
+
+def dump_function_io(func):
+    is_large = func['_is_large']
+    parameters = ""
+    for p in func['c_parameters']:
+        parameters = parameters + ", " + p['name']
+
+    func_decl = get_declare_function(func, is_large)
+
+    dump_line_with_break(func_decl)
+    G.out.append("{")
+    G.out.append("INDENT")
+    if "impl" in func and func['impl'] == "direct":
+        dump_function_direct(func)
+    else:
+        G.out.append("int mpi_errno = MPI_SUCCESS;")
+        if not '_skip_global_cs' in func:
+            G.out.append("MPIR_Ext_cs_enter();")
+        G.out.append("")
+        G.out.append("#ifndef HAVE_ROMIO")
+        if not '_is_abi' in func:
+            G.out.append("mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER, \"**notimpl\", 0);")
+        else:
+            G.out.append("mpi_errno = MPI_ERR_INTERN;")
+        G.out.append("goto fn_fail;");
+        G.out.append("#else")
+        dump_body_of_routine(func)
+        G.out.append("#endif")
+        G.out.append("")
+        G.out.append("fn_exit:")
+        if not '_skip_global_cs' in func:
+            G.out.append("MPIR_Ext_cs_exit();")
+        G.out.append("return mpi_errno;")
+        G.out.append("fn_fail:")
+        if '_has_file' in func:
+            G.out.append("mpi_errno = MPIO_Err_return_file(%s, mpi_errno);" % func['_has_file'])
+        else:
+            G.out.append("mpi_errno = MPIO_Err_return_file(MPI_FILE_NULL, mpi_errno);")
+        G.out.append("goto fn_exit;")
+    G.out.append("DEDENT")
+    G.out.append("}")
     G.out.append("")
 
 def dump_qmpi_wrappers(func, is_large):
@@ -1387,6 +1475,25 @@ def check_large_parameters(func):
                 func['_poly_in_list'].append(p)
 
 def dump_function_normal(func):
+    def dump_global_cs_enter():
+        if not '_skip_global_cs' in func:
+            G.out.append("")
+            if func['dir'] == 'mpit':
+                G.out.append("MPIR_T_THREAD_CS_ENTER();")
+            elif func['dir'] == 'io':
+                G.out.append("MPIR_Ext_cs_enter();")
+            else:
+                G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
+    def dump_global_cs_exit():
+        if not '_skip_global_cs' in func:
+            G.out.append("")
+            if func['dir'] == 'mpit':
+                G.out.append("MPIR_T_THREAD_CS_EXIT();")
+            elif func['dir'] == 'io':
+                G.out.append("MPIR_Ext_cs_exit();")
+            else:
+                G.out.append("MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
+    # ----
     G.out.append("int mpi_errno = MPI_SUCCESS;")
     if '_handle_ptr_list' in func:
         for p in func['_handle_ptr_list']:
@@ -1405,12 +1512,7 @@ def dump_function_normal(func):
         else:
             G.out.append("MPIR_ERRTEST_INITIALIZED_ORDIE();")
 
-    if not '_skip_global_cs' in func:
-        G.out.append("")
-        if func['dir'] == 'mpit':
-            G.out.append("MPIR_T_THREAD_CS_ENTER();")
-        else:
-            G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
+    dump_global_cs_enter()
     G.out.append("MPIR_FUNC_TERSE_ENTER;")
 
     if '_handle_ptr_list' in func:
@@ -1467,41 +1569,6 @@ def dump_function_normal(func):
     G.out.append("")
 
     # ----
-    def dump_body_of_routine():
-        do_threadcomm = False
-        if RE.search(r'threadcomm', func['extra'], re.IGNORECASE):
-            do_threadcomm = True
-            G.out.append("#ifdef ENABLE_THREADCOMM")
-            dump_if_open("comm_ptr->threadcomm")
-            dump_body_threadcomm(func)
-            dump_else_open()
-            G.out.append("#endif")
-            dump_else_close()
-
-        if 'body' in func:
-            if func['_is_large'] and func['_poly_impl'] == "separate":
-                if 'code-large_count' not in func:
-                    raise Exception("%s missing large count code block." % func['name'])
-                for l in func['code-large_count']:
-                    G.out.append(l)
-            else:
-                for l in func['body']:
-                    G.out.append(l)
-        elif 'impl' in func:
-            if RE.match(r'mpid', func['impl'], re.IGNORECASE):
-                dump_body_impl(func, "mpid")
-            elif RE.match(r'topo_fns->(\w+)', func['impl'], re.IGNORECASE):
-                dump_body_topo_fns(func, RE.m.group(1))
-            else:
-                print("Error: unhandled special impl: [%s]" % func['impl'])
-        elif func['dir'] == 'coll':
-            dump_body_coll(func)
-        else:
-            dump_body_impl(func, "mpir")
-
-        if do_threadcomm:
-            dump_if_close()
-    # ----
     G.out.append("/* ... body of routine ... */")
 
     # hijack MPIX_EQUAL
@@ -1511,34 +1578,18 @@ def dump_function_normal(func):
         G.out.append("goto fn_exit;")
         dump_if_close()
 
-    if func['_is_large'] and 'code-large_count' not in func:
-        # BIG but internally is using MPI_Aint
-        impl_args_save = copy.copy(func['_impl_arg_list'])
+    need_endif = False
+    if func['dir'] == 'io' and not 'return' in func:
+        G.out.append("#ifndef HAVE_ROMIO")
+        G.out.append("mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER, \"**notimpl\", 0);")
+        G.out.append("goto fn_fail;")
+        G.out.append("#else")
+        need_endif = True
 
-        dump_if_open("sizeof(MPI_Count) == sizeof(MPI_Aint)")
-        # Same size, just casting the _impl_arg_list
-        add_poly_impl_cast(func)
-        dump_body_of_routine()
+    dump_body_of_routine(func)
 
-        dump_else()
-        # Need filter to check limits and potentially swap args
-        func['_impl_arg_list'] = copy.copy(impl_args_save)
-        G.out.append("/* MPI_Count is bigger than MPI_Aint */")
-        dump_poly_pre_filter(func)
-        dump_body_of_routine()
-        dump_poly_post_filter(func)
-
-        dump_if_close()
-
-    elif not func['_is_large'] and func['_has_poly'] and func['_poly_impl'] != "separate":
-        # SMALL but internally is using MPI_Aint
-        dump_poly_pre_filter(func)
-        dump_body_of_routine()
-        dump_poly_post_filter(func)
-
-    else:
-        # normal
-        dump_body_of_routine()
+    if need_endif:
+        G.out.append("#endif")
 
     G.out.append("/* ... end of body of routine ... */")
 
@@ -1548,12 +1599,8 @@ def dump_function_normal(func):
     for l in func['_clean_up']:
         G.out.append(l)
     G.out.append("MPIR_FUNC_TERSE_EXIT;")
+    dump_global_cs_exit()
 
-    if not '_skip_global_cs' in func:
-        if func['dir'] == 'mpit':
-            G.out.append("MPIR_T_THREAD_CS_EXIT();")
-        else:
-            G.out.append("MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
     G.out.append("return mpi_errno;")
     G.out.append("")
     G.out.append("fn_fail:")
@@ -1697,7 +1744,10 @@ def push_impl_decl(func, impl_name=None):
         mpir_name = re.sub(r'^MPIX?_', 'MPIR_', func['name'])
         G.impl_declares.append("int %s(%s);" % (mpir_name, params))
     # dump MPIR_Xxx_impl(...)
-    G.impl_declares.append("int %s(%s);" % (impl_name, params))
+    if func['dir'] == 'io':
+        G.io_impl_declares.append("int %s(%s);" % (impl_name, params))
+    else:
+        G.impl_declares.append("int %s(%s);" % (impl_name, params))
 
 def push_threadcomm_impl_decl(func):
     impl_name = re.sub(r'^mpix?_(comm_)?', 'MPIR_Threadcomm_', func['name'].lower())
@@ -1959,6 +2009,75 @@ def dump_body_reduce_equal(func):
     dump_line_with_break("mpi_errno = %s(%s);" % (impl, args))
     dump_error_check("")
 
+def dump_body_of_routine(func):
+    def dump_body_normal():
+        if 'body' in func:
+            if func['_is_large'] and func['_poly_impl'] == "separate":
+                if 'code-large_count' not in func:
+                    raise Exception("%s missing large count code block." % func['name'])
+                for l in func['code-large_count']:
+                    G.out.append(l)
+            else:
+                for l in func['body']:
+                    G.out.append(l)
+        elif 'impl' in func:
+            if RE.match(r'mpid', func['impl'], re.IGNORECASE):
+                dump_body_impl(func, "mpid")
+            elif RE.match(r'topo_fns->(\w+)', func['impl'], re.IGNORECASE):
+                dump_body_topo_fns(func, RE.m.group(1))
+            else:
+                print("Error: unhandled special impl: [%s]" % func['impl'])
+        elif func['dir'] == 'coll':
+            dump_body_coll(func)
+        else:
+            dump_body_impl(func, "mpir")
+
+    def dump_body_internal():
+        do_threadcomm = False
+        if RE.search(r'threadcomm', func['extra'], re.IGNORECASE):
+            do_threadcomm = True
+            G.out.append("#ifdef ENABLE_THREADCOMM")
+            dump_if_open("comm_ptr->threadcomm")
+            dump_body_threadcomm(func)
+            dump_else_open()
+            G.out.append("#endif")
+            dump_else_close()
+
+        dump_body_normal()
+
+        if do_threadcomm:
+            dump_if_close()
+
+    # ----
+    if func['_is_large'] and 'code-large_count' not in func:
+        # BIG but internally is using MPI_Aint
+        impl_args_save = copy.copy(func['_impl_arg_list'])
+
+        dump_if_open("sizeof(MPI_Count) == sizeof(MPI_Aint)")
+        # Same size, just casting the _impl_arg_list
+        add_poly_impl_cast(func)
+        dump_body_internal()
+
+        dump_else()
+        # Need filter to check limits and potentially swap args
+        func['_impl_arg_list'] = copy.copy(impl_args_save)
+        G.out.append("/* MPI_Count is bigger than MPI_Aint */")
+        dump_poly_pre_filter(func)
+        dump_body_internal()
+        dump_poly_post_filter(func)
+
+        dump_if_close()
+
+    elif not func['_is_large'] and func['_has_poly'] and func['_poly_impl'] != "separate":
+        # SMALL but internally is using MPI_Aint
+        dump_poly_pre_filter(func)
+        dump_body_internal()
+        dump_poly_post_filter(func)
+
+    else:
+        # normal
+        dump_body_internal()
+
 def dump_function_replace(func, repl_call):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
 
@@ -1995,6 +2114,8 @@ def dump_mpi_fn_fail(func):
             G.out.append("mpi_errno = MPIR_Err_return_comm(%s_ptr, __func__, mpi_errno);" % func['_has_comm'])
         elif '_has_win' in func:
             G.out.append("mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);")
+        elif '_has_file' in func:
+            G.out.append("mpi_errno = MPIO_Err_return_file(%s, mpi_errno);" % func['_has_file'])
         elif RE.match(r'mpi_session_init', func['name'], re.IGNORECASE):
             G.out.append("mpi_errno = MPIR_Err_return_session_init(errhandler_ptr, __func__, mpi_errno);")
         elif '_has_session' in func:
@@ -2003,6 +2124,8 @@ def dump_mpi_fn_fail(func):
             G.out.append("mpi_errno = MPIR_Err_return_comm_create_from_group(errhandler_ptr, __func__, mpi_errno);")
         elif '_has_group' in func:
             G.out.append("mpi_errno = MPIR_Err_return_group(%s_ptr, __func__, mpi_errno);" % func['_has_group'])
+        elif re.match(r'MPI_File_(delete|open|close)', func['name']):
+            G.out.append("mpi_errno = MPIO_Err_return_file(MPI_FILE_NULL, mpi_errno);")
         else:
             G.out.append("mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);")
 
@@ -2027,9 +2150,9 @@ def get_fn_fail_create_code(func):
             fmt = 'p'
         elif kind in fmt_codes:
             fmt = fmt_codes[kind]
-        elif mapping[kind] == "int":
+        elif mapping[kind] == "int" or mapping[kind] == "MPI_Fint":
             fmt = 'd'
-        elif mapping[kind] == "MPI_Aint":
+        elif mapping[kind] == "MPI_Aint" or mapping[kind] == "MPI_Offset":
             fmt = 'L'
         elif mapping[kind] == "MPI_Count":
             fmt = 'c'

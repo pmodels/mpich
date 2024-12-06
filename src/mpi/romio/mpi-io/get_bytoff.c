@@ -42,27 +42,15 @@ Output Parameters:
 int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset * disp)
 {
     int error_code;
-    ADIO_File adio_fh;
-    static char myname[] = "MPI_FILE_GET_BYTE_OFFSET";
 
-    adio_fh = MPIO_File_resolve(fh);
-
-    /* --BEGIN ERROR HANDLING-- */
-    MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
-
-    if (offset < 0) {
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, __LINE__, MPI_ERR_ARG, "**iobadoffset", 0);
-        error_code = MPIO_Err_return_file(adio_fh, error_code);
-        goto fn_exit;
+    error_code = MPIR_File_get_byte_offset_impl(fh, offset, disp);
+    if (error_code) {
+        goto fn_fail;
     }
 
-    MPIO_CHECK_NOT_SEQUENTIAL_MODE(adio_fh, myname, error_code);
-    /* --END ERROR HANDLING-- */
-
-    ADIOI_Get_byte_offset(adio_fh, offset, disp);
-
   fn_exit:
-
-    return MPI_SUCCESS;
+    return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }

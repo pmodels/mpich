@@ -119,7 +119,9 @@ def get_C_param(param, func, mapping):
     if param['func_type']:
         param_type = param['func_type']
         if mapping['_name'].startswith("BIG_"):
-            param_type += "_c"
+            # hard list the limited number of large count function types
+            if re.match(r'MPI_User_function|MPI_Datarep_conversion_function', param_type):
+                param_type += "_c"
 
     if param_type in G.mpix_symbols:
         param_type = re.sub(r'MPI_', 'MPIX_', param_type)

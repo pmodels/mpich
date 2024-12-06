@@ -21,7 +21,7 @@ dnl AC_CONFIG_AUX_DIR(../../../confdb)
 dnl Set the directory that contains the required install-sh, config.sub,
 dnl and config.guess .  Make sure that these are updated (in MPICH, use
 dnl the top-level confdb files).  This separate directory is used for
-dnl the moment to allow ROMIO to be separatedly distributed.
+dnl the moment to allow ROMIO to be separately distributed.
 dnl scripts.
 AC_CONFIG_AUX_DIR([confdb])
 AC_CONFIG_MACRO_DIR([confdb])
@@ -104,6 +104,8 @@ if test "$FROM_LAM" = 1 ; then FROM_LAM=yes ; fi
 AC_ARG_VAR([FROM_OMPI],[set to "yes" if building ROMIO inside of Open MPI])
 FROM_OMPI=${FROM_OMPI:-no}
 if test "$FROM_OMPI" = 1 ; then FROM_OMPI=yes ; fi
+
+AM_CONDITIONAL([BUILD_BINDING], [test "$FROM_MPICH" != "yes"])
 
 # MPL
 AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
@@ -516,8 +518,6 @@ fi
 ])
 if test "$pac_cv_int_hold_pointer" != yes ; then
     AC_DEFINE(INT_LT_POINTER,1,[Define if int smaller than pointer])
-    dnl Switch to a conforming name (start with HAVE or USE)
-    AC_DEFINE(HAVE_INT_LT_POINTER,1,[Define if int smaller than pointer])
 fi
 
 # LL is the printf-style format name for output of a MPI_Offset.
@@ -693,7 +693,9 @@ AM_CONDITIONAL([BUILD_MPIO_ERRHAN],[false])
 
 # if we don't have weak symbol support, we must build a separate convenience
 # library in order to provide the "PMPI_" symbols
-AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "x$HAVE_WEAK_SYMBOLS" = "x0"])
+# MPICH will generate separate binding layer, thus we can skip PROFILING LIB
+# if build inside MPICH
+AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "x$HAVE_WEAK_SYMBOLS" = "x0" -a "$FROM_MPICH" != "yes"])
 # disable visibility if building profiling library
 if test "x$HAVE_WEAK_SYMBOLS" = "x0" ; then
     VISIBILITY_CFLAGS=""

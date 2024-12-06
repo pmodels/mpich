@@ -1736,14 +1736,7 @@ sub print_call_args {
 		if (defined($mytopclass{$lctype})) {
 		    $lctype = $mytopclass{$lctype};
 		}
-		# Handle the MPIO_Request problem (temp until ROMIO uses
-		# MPI_Requests)
-		$cast = "";
-		if ($parm =~ /MPI_Request/ &&
-		    $class eq "file") {
-		    $cast = "(MPIO_Request *)";
-		}
-		print $OUTFD "$cast&(v$count.the_real_$lctype)";
+		print $OUTFD "&(v$count.the_real_$lctype)";
 	    }
 	    else {
 		print $OUTFD "&v$count";

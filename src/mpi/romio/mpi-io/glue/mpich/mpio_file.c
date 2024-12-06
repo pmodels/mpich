@@ -39,7 +39,7 @@ void MPIO_File_free(MPI_File * mpi_fh)
 MPI_File MPIO_File_f2c(MPI_Fint fh)
 {
 #ifndef INT_LT_POINTER
-    return (MPI_File) ((void *) fh);
+    return (MPI_File) ((void *) (intptr_t) fh);
     /* the extra cast is to get rid of a compiler warning on Exemplar.
      * The warning is because MPI_File points to a structure containing
      * longlongs, which may be 8-byte aligned. But MPI_Fint itself
@@ -58,7 +58,7 @@ MPI_File MPIO_File_f2c(MPI_Fint fh)
 MPI_Fint MPIO_File_c2f(MPI_File fh)
 {
 #ifndef INT_LT_POINTER
-    return (MPI_Fint) fh;
+    return (MPI_Fint) (intptr_t) fh;
 #else
     int i;
 
