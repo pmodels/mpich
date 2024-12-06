@@ -1467,41 +1467,6 @@ def dump_function_normal(func):
     G.out.append("")
 
     # ----
-    def dump_body_of_routine():
-        do_threadcomm = False
-        if RE.search(r'threadcomm', func['extra'], re.IGNORECASE):
-            do_threadcomm = True
-            G.out.append("#ifdef ENABLE_THREADCOMM")
-            dump_if_open("comm_ptr->threadcomm")
-            dump_body_threadcomm(func)
-            dump_else_open()
-            G.out.append("#endif")
-            dump_else_close()
-
-        if 'body' in func:
-            if func['_is_large'] and func['_poly_impl'] == "separate":
-                if 'code-large_count' not in func:
-                    raise Exception("%s missing large count code block." % func['name'])
-                for l in func['code-large_count']:
-                    G.out.append(l)
-            else:
-                for l in func['body']:
-                    G.out.append(l)
-        elif 'impl' in func:
-            if RE.match(r'mpid', func['impl'], re.IGNORECASE):
-                dump_body_impl(func, "mpid")
-            elif RE.match(r'topo_fns->(\w+)', func['impl'], re.IGNORECASE):
-                dump_body_topo_fns(func, RE.m.group(1))
-            else:
-                print("Error: unhandled special impl: [%s]" % func['impl'])
-        elif func['dir'] == 'coll':
-            dump_body_coll(func)
-        else:
-            dump_body_impl(func, "mpir")
-
-        if do_threadcomm:
-            dump_if_close()
-    # ----
     G.out.append("/* ... body of routine ... */")
 
     # hijack MPIX_EQUAL
@@ -1511,34 +1476,7 @@ def dump_function_normal(func):
         G.out.append("goto fn_exit;")
         dump_if_close()
 
-    if func['_is_large'] and 'code-large_count' not in func:
-        # BIG but internally is using MPI_Aint
-        impl_args_save = copy.copy(func['_impl_arg_list'])
-
-        dump_if_open("sizeof(MPI_Count) == sizeof(MPI_Aint)")
-        # Same size, just casting the _impl_arg_list
-        add_poly_impl_cast(func)
-        dump_body_of_routine()
-
-        dump_else()
-        # Need filter to check limits and potentially swap args
-        func['_impl_arg_list'] = copy.copy(impl_args_save)
-        G.out.append("/* MPI_Count is bigger than MPI_Aint */")
-        dump_poly_pre_filter(func)
-        dump_body_of_routine()
-        dump_poly_post_filter(func)
-
-        dump_if_close()
-
-    elif not func['_is_large'] and func['_has_poly'] and func['_poly_impl'] != "separate":
-        # SMALL but internally is using MPI_Aint
-        dump_poly_pre_filter(func)
-        dump_body_of_routine()
-        dump_poly_post_filter(func)
-
-    else:
-        # normal
-        dump_body_of_routine()
+    dump_body_of_routine(func)
 
     G.out.append("/* ... end of body of routine ... */")
 
@@ -1958,6 +1896,75 @@ def dump_body_reduce_equal(func):
     args = re.sub(r'op, ', 'recvbuf, ', args)
     dump_line_with_break("mpi_errno = %s(%s);" % (impl, args))
     dump_error_check("")
+
+def dump_body_of_routine(func):
+    def dump_body_normal():
+        if 'body' in func:
+            if func['_is_large'] and func['_poly_impl'] == "separate":
+                if 'code-large_count' not in func:
+                    raise Exception("%s missing large count code block." % func['name'])
+                for l in func['code-large_count']:
+                    G.out.append(l)
+            else:
+                for l in func['body']:
+                    G.out.append(l)
+        elif 'impl' in func:
+            if RE.match(r'mpid', func['impl'], re.IGNORECASE):
+                dump_body_impl(func, "mpid")
+            elif RE.match(r'topo_fns->(\w+)', func['impl'], re.IGNORECASE):
+                dump_body_topo_fns(func, RE.m.group(1))
+            else:
+                print("Error: unhandled special impl: [%s]" % func['impl'])
+        elif func['dir'] == 'coll':
+            dump_body_coll(func)
+        else:
+            dump_body_impl(func, "mpir")
+
+    def dump_body_internal():
+        do_threadcomm = False
+        if RE.search(r'threadcomm', func['extra'], re.IGNORECASE):
+            do_threadcomm = True
+            G.out.append("#ifdef ENABLE_THREADCOMM")
+            dump_if_open("comm_ptr->threadcomm")
+            dump_body_threadcomm(func)
+            dump_else_open()
+            G.out.append("#endif")
+            dump_else_close()
+
+        dump_body_normal()
+
+        if do_threadcomm:
+            dump_if_close()
+
+    # ----
+    if func['_is_large'] and 'code-large_count' not in func:
+        # BIG but internally is using MPI_Aint
+        impl_args_save = copy.copy(func['_impl_arg_list'])
+
+        dump_if_open("sizeof(MPI_Count) == sizeof(MPI_Aint)")
+        # Same size, just casting the _impl_arg_list
+        add_poly_impl_cast(func)
+        dump_body_internal()
+
+        dump_else()
+        # Need filter to check limits and potentially swap args
+        func['_impl_arg_list'] = copy.copy(impl_args_save)
+        G.out.append("/* MPI_Count is bigger than MPI_Aint */")
+        dump_poly_pre_filter(func)
+        dump_body_internal()
+        dump_poly_post_filter(func)
+
+        dump_if_close()
+
+    elif not func['_is_large'] and func['_has_poly'] and func['_poly_impl'] != "separate":
+        # SMALL but internally is using MPI_Aint
+        dump_poly_pre_filter(func)
+        dump_body_internal()
+        dump_poly_post_filter(func)
+
+    else:
+        # normal
+        dump_body_internal()
 
 def dump_function_replace(func, repl_call):
     G.out.append("int mpi_errno = MPI_SUCCESS;")
