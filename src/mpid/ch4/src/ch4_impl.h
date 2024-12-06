@@ -896,7 +896,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_win_rank_to_av(MPIR_Win * win,
     MPIDI_av_entry_t *av = NULL;
 
     if (winattr & MPIDI_WINATTR_DIRECT_INTRA_COMM) {
-        av = &MPIDI_global.avt_mgr.av_table0->table[rank];
+        av = MPIDIU_av_entry(MPIDI_global.avt_mgr.av_table0, rank);
     } else
         av = MPIDIU_comm_rank_to_av(win->comm_ptr, rank);
     return av;
