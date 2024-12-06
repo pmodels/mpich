@@ -51,7 +51,18 @@ int main(int argc, char **argv)
         strcpy(filename, *argv);
     }
 
-    MPI_File_delete(filename, MPI_INFO_NULL);
+    /* delete the file in case it exists. If it exists, it should return MPI_ERR_NO_SUCH_FILE */
+    mpi_errno = MPI_File_delete(filename, MPI_INFO_NULL);
+    if (mpi_errno != MPI_SUCCESS) {
+        int error_class = 0;
+        MPI_Error_class(mpi_errno, &error_class);
+        if (error_class != MPI_ERR_NO_SUCH_FILE) {
+            printf
+                ("MPI_File_delete returned error code %x, error class %x, expect error class MPI_ERR_NO_SUCH_FILE\n",
+                 mpi_errno, error_class);
+            errs++;
+        }
+    }
 
     /* create a resized type comprising an integer with an lb at sizeof(int) and extent = 3*sizeof(int) */
     lb = sizeof(int);
