@@ -2,6 +2,7 @@
 
 MPI_File_open:
     .desc: Opens a file
+    .skip: validate-amode
 
 MPI_File_close:
     .desc: Closes a file
@@ -143,9 +144,11 @@ MPI_File_read_shared:
 
 MPI_File_seek:
     .desc: Updates the individual file pointer
+    .skip: validate-whence
 
 MPI_File_seek_shared:
     .desc: Updates the shared file pointer
+    .skip: validate-whence
 
 MPI_File_set_atomicity:
     .desc: Sets the atomicity mode
