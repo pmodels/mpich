@@ -81,14 +81,18 @@ def dump_mpi_c(func, is_large=False):
 
     dump_profiling(func)
 
-    if 'polymorph' in func:
+    skip_wrappers = False
+    if func['dir'] == 'io' and '_is_abi' in func:
+        # The mpi-abi version of io bindings does not have access to MPICH internals (i.e. mpiimpl.h)
+        dump_function_io(func)
+        skip_wrappers = True
+    elif 'polymorph' in func:
         # MPII_ function to support C/Fortran Polymorphism, eg MPI_Comm_get_attr
         G.out.append("#ifndef MPICH_MPI_FROM_PMPI")
         dump_function_internal(func, kind="polymorph")
         G.out.append("#endif /* MPICH_MPI_FROM_PMPI */")
         G.out.append("")
 
-    if 'polymorph' in func:
         dump_function_internal(func, kind="call-polymorph")
     elif 'replace' in func and 'body' not in func:
         pass
@@ -96,7 +100,9 @@ def dump_mpi_c(func, is_large=False):
         dump_function_internal(func, kind="normal")
     G.out.append("")
 
-    if '_is_abi' in func:
+    if skip_wrappers:
+        pass
+    elif '_is_abi' in func:
         dump_abi_wrappers(func, func['_is_large'])
     else:
         # Create the MPI and QMPI wrapper functions that will call the above, "real" version of the
@@ -215,15 +221,20 @@ def dump_mpir_io_impl_h(f):
             print(l, file=Out)
         print("#ifndef MPIR_IO_IMPL_H_INCLUDED", file=Out)
         print("#define MPIR_IO_IMPL_H_INCLUDED", file=Out)
-
         print("", file=Out)
+
+        # io_abi.c doesn't have access to MPICH internal
+        print("#ifdef BUILD_MPI_ABI", file=Out)
         print("#define MPIR_ERR_RECOVERABLE 0", file=Out)
         print("#define MPIR_ERR_FATAL 1", file=Out)
         print("int MPIR_Err_create_code(int, int, const char[], int, int, const char[], const char[], ...);", file=Out)
+        print("int MPIR_Err_return_comm(void *, const char[], int);", file=Out)
+        print("#endif", file=Out)
+        print("", file=Out)
+
         print("void MPIR_Ext_cs_enter(void);", file=Out)
         print("void MPIR_Ext_cs_exit(void);", file=Out)
         print("#ifndef HAVE_ROMIO", file=Out)
-        print("int MPIR_Err_return_comm(void *, const char[], int);", file=Out)
         print("#define MPIO_Err_return_file(fh, errorcode) MPIR_Err_return_comm((void *)0, __func__, errorcode)", file=Out)
         print("#else", file=Out)
         print("MPI_Fint MPIR_File_c2f_impl(MPI_File fh);", file=Out)
@@ -843,6 +854,48 @@ def dump_copy_right():
     G.out.append(" * Copyright (C) by Argonne National Laboratory")
     G.out.append(" *     See COPYRIGHT in top-level directory")
     G.out.append(" */")
+    G.out.append("")
+
+def dump_function_io(func):
+    is_large = func['_is_large']
+    parameters = ""
+    for p in func['c_parameters']:
+        parameters = parameters + ", " + p['name']
+
+    func_decl = get_declare_function(func, is_large)
+
+    dump_line_with_break(func_decl)
+    G.out.append("{")
+    G.out.append("INDENT")
+    if "impl" in func and func['impl'] == "direct":
+        dump_function_direct(func)
+    else:
+        G.out.append("int mpi_errno = MPI_SUCCESS;")
+        if not '_skip_global_cs' in func:
+            G.out.append("MPIR_Ext_cs_enter();")
+        G.out.append("")
+        G.out.append("#ifndef HAVE_ROMIO")
+        if not '_is_abi' in func:
+            G.out.append("mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER, \"**notimpl\", 0);")
+        else:
+            G.out.append("mpi_errno = MPI_ERR_INTERN;")
+        G.out.append("goto fn_fail;");
+        G.out.append("#else")
+        dump_body_of_routine(func)
+        G.out.append("#endif")
+        G.out.append("")
+        G.out.append("fn_exit:")
+        if not '_skip_global_cs' in func:
+            G.out.append("MPIR_Ext_cs_exit();")
+        G.out.append("return mpi_errno;")
+        G.out.append("fn_fail:")
+        if '_has_file' in func:
+            G.out.append("mpi_errno = MPIO_Err_return_file(%s, mpi_errno);" % func['_has_file'])
+        else:
+            G.out.append("mpi_errno = MPIO_Err_return_file(MPI_FILE_NULL, mpi_errno);")
+        G.out.append("goto fn_exit;")
+    G.out.append("DEDENT")
+    G.out.append("}")
     G.out.append("")
 
 def dump_qmpi_wrappers(func, is_large):

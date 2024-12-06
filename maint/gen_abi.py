@@ -25,6 +25,7 @@ class RE:
 def main():
     load_mpi_abi_h("src/binding/abi/mpi_abi.h")
     dump_mpi_abi_internal_h("src/binding/abi/mpi_abi_internal.h")
+    dump_io_abi_internal_h("src/binding/abi/io_abi_internal.h")
     dump_romio_abi_internal_h("src/mpi/romio/include/romio_abi_internal.h")
     dump_mpi_abi_util_c("src/binding/abi/mpi_abi_util.c")
 
@@ -101,7 +102,7 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
         for line in output_lines:
             print(line, file=Out)
         print("", file=Out)
-        
+
         print("#endif /* MPI_ABI_INTERNAL_H_INCLUDED */", file=Out)
 
 def dump_romio_abi_internal_h(romio_abi_internal_h):
@@ -176,6 +177,52 @@ def dump_romio_abi_internal_h(romio_abi_internal_h):
 
     print(" --> [%s]" % romio_abi_internal_h)
     with open(romio_abi_internal_h, "w") as Out:
+        dump_copyright(Out)
+        print("#ifndef ROMIO_ABI_INTERNAL_H_INCLUDED", file=Out)
+        print("#define ROMIO_ABI_INTERNAL_H_INCLUDED", file=Out)
+        print("", file=Out)
+
+        for line in output_lines:
+            print(line, file=Out)
+        print("", file=Out)
+
+        print("#endif /* ROMIO_ABI_INTERNAL_H_INCLUDED */", file=Out)
+
+# similar to romio_abi_internal.h but for use in the mpich io binding
+def dump_io_abi_internal_h(io_abi_internal_h):
+    def gen_io_abi_internal_h(out):
+        for line in G.abi_h_lines:
+            if RE.search(r'MPI_ABI_H_INCLUDED', line):
+                # skip the include guard, harmless
+                pass
+            elif RE.match(r'typedef struct.*\bMPI_File;\s*$', line):
+                out.append("typedef struct ADIOI_FileD *MPI_File;")
+            elif RE.match(r'(int|double|MPI_\w+) (P?MPI\w+)\((.*)\);', line):
+                # prototypes, rename param prefix, add MPICH_API_PUBLIC
+                (T, name, param) = RE.m.group(1,2,3)
+                if RE.match(r'P?MPI_(File_\w+|Register_datarep\w*)', name):
+                    out.append("%s %s(%s) MPICH_API_PUBLIC;" % (T, name, param))
+                else:
+                    out.append("%s %s(%s);" % (T, name, param))
+            else:
+                # replace param prefix
+                out.append(line.rstrip())
+
+    def add_mpich_visibility(out):
+        out.append("#if defined(HAVE_VISIBILITY)")
+        out.append("#define MPICH_API_PUBLIC __attribute__((visibility (\"default\")))")
+        out.append("#else")
+        out.append("#define MPICH_API_PUBLIC")
+        out.append("#endif")
+        out.append("")
+
+    # ----
+    output_lines = []
+    add_mpich_visibility(output_lines)
+    gen_io_abi_internal_h(output_lines)
+
+    print(" --> [%s]" % io_abi_internal_h)
+    with open(io_abi_internal_h, "w") as Out:
         dump_copyright(Out)
         print("#ifndef ROMIO_ABI_INTERNAL_H_INCLUDED", file=Out)
         print("#define ROMIO_ABI_INTERNAL_H_INCLUDED", file=Out)
