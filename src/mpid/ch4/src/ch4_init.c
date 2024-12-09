@@ -1219,3 +1219,21 @@ int MPID_Op_free_hook(MPIR_Op * op)
   fn_fail:
     goto fn_exit;
 }
+
+int MPID_Pset_member_get_lpid(MPIR_Pset_member * member_ptr, uint64_t * lpid_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    if (!member_ptr || !lpid_ptr) {
+        mpi_errno = MPI_ERR_OTHER;
+        goto fn_exit;
+    }
+
+    /* As long as MPIR_Pset_member is an int we can use a type cast here */
+    *lpid_ptr = (uint64_t) * member_ptr;
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+}

@@ -418,6 +418,7 @@ int MPID_Waitall_enqueue(int count, MPI_Request * array_of_requests,
                          MPI_Status * array_of_statuses);
 int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg);
 
+int MPID_Pset_member_get_lpid(MPIR_Pset_member * member_ptr, uint64_t * lpid_ptr);
 /* This function is not exposed to the upper layers but functions in a way
  * similar to the functions above. Other CH4-level functions should call this
  * function to query locality. This function will determine whether to call the
