@@ -94,6 +94,97 @@ int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
     return mpi_errno;
 }
 
+int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_Lpid * map,
+                          MPIR_Group ** new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (size == 0) {
+        /* See 5.3.2, Group Constructors.  For many group routines,
+         * the standard explicitly says to return MPI_GROUP_EMPTY;
+         * for others it is implied */
+        MPL_free(map);
+        *new_group_ptr = MPIR_Group_empty;
+    } else {
+        MPIR_Group *newgrp;
+        mpi_errno = MPIR_Group_create(size, &newgrp);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        newgrp->rank = rank;
+        MPIR_Group_set_session_ptr(newgrp, session_ptr);
+
+        for (int i = 0; i < size; i++) {
+            newgrp->lrank_to_lpid[i].lpid = map[i];
+        }
+
+        MPL_free(map);
+        *new_group_ptr = newgrp;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
+                             MPIR_Lpid offset, MPIR_Lpid stride, MPIR_Lpid blocksize,
+                             MPIR_Group ** new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (size == 0) {
+        /* See 5.3.2, Group Constructors.  For many group routines,
+         * the standard explicitly says to return MPI_GROUP_EMPTY;
+         * for others it is implied */
+        *new_group_ptr = MPIR_Group_empty;
+    } else {
+        MPIR_Assert(stride > 0 && blocksize > 0);
+
+        MPIR_Group *newgrp;
+        mpi_errno = MPIR_Group_create(size, &newgrp);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        newgrp->rank = rank;
+        MPIR_Group_set_session_ptr(newgrp, session_ptr);
+
+        MPIR_Lpid lpid = offset;
+        int i = 0;
+        while (i < size) {
+            for (int j = 0; j < blocksize; j++) {
+                newgrp->lrank_to_lpid[i + j].lpid = lpid + j;
+            }
+            i += blocksize;
+            lpid += stride;
+        }
+
+        *new_group_ptr = newgrp;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank)
+{
+    return group->lrank_to_lpid[rank].lpid;
+}
+
+int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid)
+{
+    /* Use linear search for now.
+     * Optimization, build hash map in MPIR_Group_create_map and do O(1) hash lookup
+     */
+    for (int i = 0; i < group->size; i++) {
+        if (lpid == group->lrank_to_lpid[i].lpid) {
+            return i;
+        }
+    }
+    return MPI_UNDEFINED;
+}
+
 /*
  * return value is the first index in the list
  *
