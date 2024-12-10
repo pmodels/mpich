@@ -12,24 +12,6 @@
  * MPI_Group_intersection) and for the scalable RMA synchronization
  *---------------------------------------------------------------------------*/
 
-/* Abstract the integer type for lpid (process id). It is possible to use 32-bit
- * in principle, but 64-bit is simpler since we can trivially combine
- * (world_idx, world_rank).
- */
-typedef uint64_t MPIR_Lpid;
-
-/* This structure is used to implement the group operations such as
-   MPI_Group_translate_ranks */
-/* note: next_lpid (with idx_of_first_lpid in MPIR_Group) gives a linked list
- * in a sorted lpid ascending order */
-typedef struct MPII_Group_pmap_t {
-    MPIR_Lpid lpid;             /* local process id, from VCONN */
-    int next_lpid;              /* Index of next lpid (in lpid order) */
-} MPII_Group_pmap_t;
-
-/* Any changes in the MPIR_Group structure must be made to the
-   predefined value in MPIR_Group_builtin for MPI_GROUP_EMPTY in
-   src/mpi/group/grouputil.c */
 /*S
  MPIR_Group - Description of the Group data structure
 
@@ -60,22 +42,35 @@ typedef struct MPII_Group_pmap_t {
  Group-DS
 
  S*/
+
+/* Abstract the integer type for lpid (process id). It is possible to use 32-bit
+ * in principle, but 64-bit is simpler since we can trivially combine
+ * (world_idx, world_rank).
+ */
+typedef uint64_t MPIR_Lpid;
+
+struct MPIR_Pmap {
+    int size;                   /* same as group->size, duplicate here so Pmap is logically complete */
+    bool use_map;
+    union {
+        MPIR_Lpid *map;
+        struct {
+            MPIR_Lpid offset;
+            MPIR_Lpid stride;
+            MPIR_Lpid blocksize;
+        } stride;
+    } u;
+};
+
 struct MPIR_Group {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     int size;                   /* Size of a group */
-    int rank;                   /* rank of this process relative to this
-                                 * group */
-    int idx_of_first_lpid;
-    MPII_Group_pmap_t *lrank_to_lpid;   /* Array mapping a local rank to local
-                                         * process number */
-    int is_local_dense_monotonic;       /* see NOTE-G1 */
-
-    /* We may want some additional data for the RMA syncrhonization calls */
-    /* Other, device-specific information */
+    int rank;                   /* rank of this process relative to this group */
+    struct MPIR_Pmap pmap;
+    MPIR_Session *session_ptr;  /* Pointer to session to which this group belongs */
 #ifdef MPID_DEV_GROUP_DECL
      MPID_DEV_GROUP_DECL
 #endif
-     MPIR_Session * session_ptr;        /* Pointer to session to which this group belongs */
 };
 
 /* NOTE-G1: is_local_dense_monotonic will be true iff the group meets the
@@ -104,10 +99,8 @@ extern MPIR_Group *const MPIR_Group_empty;
 #define MPIR_Group_release_ref(_group, _inuse) \
      do { MPIR_Object_release_ref(_group, _inuse); } while (0)
 
-void MPII_Group_setup_lpid_list(MPIR_Group *);
 int MPIR_Group_check_valid_ranks(MPIR_Group *, const int[], int);
 int MPIR_Group_check_valid_ranges(MPIR_Group *, int[][3], int);
-void MPIR_Group_setup_lpid_pairs(MPIR_Group *, MPIR_Group *);
 int MPIR_Group_create(int, MPIR_Group **);
 int MPIR_Group_release(MPIR_Group * group_ptr);
 
@@ -122,8 +115,5 @@ int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid);
 int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr);
 void MPIR_Group_set_session_ptr(MPIR_Group * group_ptr, MPIR_Session * session_out);
 int MPIR_Group_init(void);
-
-/* internal functions */
-void MPII_Group_setup_lpid_list(MPIR_Group *);
 
 #endif /* MPIR_GROUP_H_INCLUDED */
