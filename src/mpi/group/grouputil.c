@@ -28,10 +28,9 @@ int MPIR_Group_init(void)
     MPIR_Object_set_ref(&MPIR_Group_builtin[0], 1);
     MPIR_Group_builtin[0].size = 0;
     MPIR_Group_builtin[0].rank = MPI_UNDEFINED;
-    MPIR_Group_builtin[0].idx_of_first_lpid = -1;
-    MPIR_Group_builtin[0].lrank_to_lpid = NULL;
+    MPIR_Group_builtin[0].session_ptr = NULL;
+    memset(&MPIR_Group_builtin[0].pmap, 0, sizeof(struct MPIR_Pmap));
 
-    /* TODO hook for device here? */
     return mpi_errno;
 }
 
@@ -44,7 +43,9 @@ int MPIR_Group_release(MPIR_Group * group_ptr)
     MPIR_Group_release_ref(group_ptr, &inuse);
     if (!inuse) {
         /* Only if refcount is 0 do we actually free. */
-        MPL_free(group_ptr->lrank_to_lpid);
+        if (group_ptr->pmap.use_map) {
+            MPL_free(group_ptr->pmap.u.map);
+        }
         if (group_ptr->session_ptr != NULL) {
             /* Release session */
             MPIR_Session_release(group_ptr->session_ptr);
@@ -73,24 +74,14 @@ int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
     }
     /* --END ERROR HANDLING-- */
     MPIR_Object_set_ref(*new_group_ptr, 1);
-    (*new_group_ptr)->lrank_to_lpid =
-        (MPII_Group_pmap_t *) MPL_calloc(nproc, sizeof(MPII_Group_pmap_t), MPL_MEM_GROUP);
-    /* --BEGIN ERROR HANDLING-- */
-    if (!(*new_group_ptr)->lrank_to_lpid) {
-        MPIR_Handle_obj_free(&MPIR_Group_mem, *new_group_ptr);
-        *new_group_ptr = NULL;
-        MPIR_CHKMEM_SETERR(mpi_errno, nproc * sizeof(MPII_Group_pmap_t), "newgroup->lrank_to_lpid");
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
+
+    /* initialize fields */
     (*new_group_ptr)->size = nproc;
-    /* Make sure that there is no question that the list of ranks sorted
-     * by pids is marked as uninitialized */
-    (*new_group_ptr)->idx_of_first_lpid = -1;
-
-    (*new_group_ptr)->is_local_dense_monotonic = FALSE;
-
+    (*new_group_ptr)->rank = MPI_UNDEFINED;
     (*new_group_ptr)->session_ptr = NULL;
+    memset(&(*new_group_ptr)->pmap, 0, sizeof(struct MPIR_Pmap));
+    (*new_group_ptr)->pmap.size = nproc;
+
     return mpi_errno;
 }
 
@@ -113,11 +104,10 @@ int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_L
         newgrp->rank = rank;
         MPIR_Group_set_session_ptr(newgrp, session_ptr);
 
-        for (int i = 0; i < size; i++) {
-            newgrp->lrank_to_lpid[i].lpid = map[i];
-        }
+        newgrp->pmap.use_map = true;
+        newgrp->pmap.u.map = map;
 
-        MPL_free(map);
+        /* TODO: build hash to accelerate MPIR_Group_lpid_to_rank */
         *new_group_ptr = newgrp;
     }
 
@@ -148,15 +138,10 @@ int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
         newgrp->rank = rank;
         MPIR_Group_set_session_ptr(newgrp, session_ptr);
 
-        MPIR_Lpid lpid = offset;
-        int i = 0;
-        while (i < size) {
-            for (int j = 0; j < blocksize; j++) {
-                newgrp->lrank_to_lpid[i + j].lpid = lpid + j;
-            }
-            i += blocksize;
-            lpid += stride;
-        }
+        newgrp->pmap.use_map = false;
+        newgrp->pmap.u.stride.offset = offset;
+        newgrp->pmap.u.stride.stride = stride;
+        newgrp->pmap.u.stride.blocksize = blocksize;
 
         *new_group_ptr = newgrp;
     }
@@ -167,148 +152,59 @@ int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
     goto fn_exit;
 }
 
-MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank)
+static MPIR_Lpid pmap_rank_to_lpid(struct MPIR_Pmap *pmap, int rank)
 {
-    return group->lrank_to_lpid[rank].lpid;
+    if (rank < 0 || rank >= pmap->size) {
+        return MPI_UNDEFINED;
+    }
+
+    if (pmap->use_map) {
+        return pmap->u.map[rank];
+    } else {
+        MPIR_Lpid i_blk = rank / pmap->u.stride.blocksize;
+        MPIR_Lpid r_blk = rank % pmap->u.stride.blocksize;
+        return pmap->u.stride.offset + i_blk * pmap->u.stride.stride + r_blk;
+    }
+}
+
+static int pmap_lpid_to_rank(struct MPIR_Pmap *pmap, MPIR_Lpid lpid)
+{
+    if (pmap->use_map) {
+        /* Use linear search for now.
+         * Optimization: build hash map in MPIR_Group_create_map and do O(1) hash lookup
+         */
+        for (int rank = 0; rank < pmap->size; rank++) {
+            if (pmap->u.map[rank] == lpid) {
+                return rank;
+            }
+        }
+        return MPI_UNDEFINED;
+    } else {
+        lpid -= pmap->u.stride.offset;
+        MPIR_Lpid i_blk = lpid / pmap->u.stride.stride;
+        MPIR_Lpid r_blk = lpid % pmap->u.stride.stride;
+
+        if (r_blk >= pmap->u.stride.blocksize) {
+            return MPI_UNDEFINED;
+        }
+
+        int rank = i_blk * pmap->u.stride.blocksize + r_blk;
+        if (rank >= 0 && rank < pmap->size) {
+            return rank;
+        } else {
+            return MPI_UNDEFINED;
+        }
+    }
 }
 
 int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid)
 {
-    /* Use linear search for now.
-     * Optimization, build hash map in MPIR_Group_create_map and do O(1) hash lookup
-     */
-    for (int i = 0; i < group->size; i++) {
-        if (lpid == group->lrank_to_lpid[i].lpid) {
-            return i;
-        }
-    }
-    return MPI_UNDEFINED;
+    return pmap_lpid_to_rank(&group->pmap, lpid);
 }
 
-/*
- * return value is the first index in the list
- *
- * This "sorts" an lpid array by lpid value, using a simple merge sort
- * algorithm.
- *
- * In actuality, it does not reorder the elements of maparray (these must remain
- * in group rank order).  Instead it builds the traversal order (in increasing
- * lpid order) through the maparray given by the "next_lpid" fields.
- */
-static int mergesort_lpidarray(MPII_Group_pmap_t maparray[], int n)
+MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank)
 {
-    int idx1, idx2, first_idx, cur_idx, next_lpid, idx2_offset;
-
-    if (n == 2) {
-        if (maparray[0].lpid > maparray[1].lpid) {
-            first_idx = 1;
-            maparray[0].next_lpid = -1;
-            maparray[1].next_lpid = 0;
-        } else {
-            first_idx = 0;
-            maparray[0].next_lpid = 1;
-            maparray[1].next_lpid = -1;
-        }
-        return first_idx;
-    }
-    if (n == 1) {
-        maparray[0].next_lpid = -1;
-        return 0;
-    }
-    if (n == 0)
-        return -1;
-
-    /* Sort each half */
-    idx2_offset = n / 2;
-    idx1 = mergesort_lpidarray(maparray, n / 2);
-    idx2 = mergesort_lpidarray(maparray + idx2_offset, n - n / 2) + idx2_offset;
-    /* merge the results */
-    /* There are three lists:
-     * first_idx - points to the HEAD of the sorted, merged list
-     * cur_idx - points to the LAST element of the sorted, merged list
-     * idx1    - points to the HEAD of one sorted list
-     * idx2    - points to the HEAD of the other sorted list
-     *
-     * We first identify the head element of the sorted list.  We then
-     * take elements from the remaining lists.  When one list is empty,
-     * we add the other list to the end of sorted list.
-     *
-     * The last wrinkle is that the next_lpid fields in maparray[idx2]
-     * are relative to n/2, not 0 (that is, a next_lpid of 1 is
-     * really 1 + n/2, relative to the beginning of maparray).
-     */
-    /* Find the head element */
-    if (maparray[idx1].lpid > maparray[idx2].lpid) {
-        first_idx = idx2;
-        idx2 = maparray[idx2].next_lpid + idx2_offset;
-    } else {
-        first_idx = idx1;
-        idx1 = maparray[idx1].next_lpid;
-    }
-
-    /* Merge the lists until one is empty */
-    cur_idx = first_idx;
-    while (idx1 >= 0 && idx2 >= 0) {
-        if (maparray[idx1].lpid > maparray[idx2].lpid) {
-            next_lpid = maparray[idx2].next_lpid;
-            if (next_lpid >= 0)
-                next_lpid += idx2_offset;
-            maparray[cur_idx].next_lpid = idx2;
-            cur_idx = idx2;
-            idx2 = next_lpid;
-        } else {
-            next_lpid = maparray[idx1].next_lpid;
-            maparray[cur_idx].next_lpid = idx1;
-            cur_idx = idx1;
-            idx1 = next_lpid;
-        }
-    }
-    /* Add whichever list remains */
-    if (idx1 >= 0) {
-        maparray[cur_idx].next_lpid = idx1;
-    } else {
-        maparray[cur_idx].next_lpid = idx2;
-        /* Convert the rest of these next_lpid values to be
-         * relative to the beginning of maparray */
-        while (idx2 >= 0) {
-            next_lpid = maparray[idx2].next_lpid;
-            if (next_lpid >= 0) {
-                next_lpid += idx2_offset;
-                maparray[idx2].next_lpid = next_lpid;
-            }
-            idx2 = next_lpid;
-        }
-    }
-
-    return first_idx;
-}
-
-/*
- * Create a list of the lpids, in lpid order.
- *
- * Called by group_compare, group_translate_ranks, group_union
- *
- * In the case of a single main thread lock, the lock must
- * be held on entry to this routine.  This forces some of the routines
- * noted above to hold the SINGLE_CS; which would otherwise not be required.
- */
-void MPII_Group_setup_lpid_list(MPIR_Group * group_ptr)
-{
-    if (group_ptr->idx_of_first_lpid == -1) {
-        group_ptr->idx_of_first_lpid =
-            mergesort_lpidarray(group_ptr->lrank_to_lpid, group_ptr->size);
-    }
-}
-
-void MPIR_Group_setup_lpid_pairs(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2)
-{
-    /* If the lpid list hasn't been created, do it now */
-    if (group_ptr1->idx_of_first_lpid < 0) {
-        MPII_Group_setup_lpid_list(group_ptr1);
-    }
-    if (group_ptr2->idx_of_first_lpid < 0) {
-        MPII_Group_setup_lpid_list(group_ptr2);
-    }
+    return pmap_rank_to_lpid(&group->pmap, rank);
 }
 
 #ifdef HAVE_ERROR_CHECKING
@@ -446,53 +342,45 @@ int MPIR_Group_check_valid_ranges(MPIR_Group * group_ptr, int ranges[][3], int n
 int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int g1_idx, g2_idx, l1_pid, l2_pid, i;
-    MPII_Group_pmap_t *vmap = 0;
-    int vsize = comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM ? comm_ptr->local_size :
-        comm_ptr->remote_size;
     MPIR_CHKLMEM_DECL();
 
     MPIR_Assert(group_ptr != NULL);
 
-    MPIR_CHKLMEM_MALLOC(vmap, vsize * sizeof(MPII_Group_pmap_t));
+    int vsize = comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM ? comm_ptr->local_size :
+        comm_ptr->remote_size;
+
     /* Initialize the vmap */
-    for (i = 0; i < vsize; i++) {
-        MPID_Comm_get_lpid(comm_ptr, i, &vmap[i].lpid, FALSE);
-        vmap[i].next_lpid = 0;
+    MPIR_Lpid *vmap;
+    MPIR_CHKLMEM_MALLOC(vmap, vsize * sizeof(MPIR_Lpid));
+    for (int i = 0; i < vsize; i++) {
+        /* FIXME: MPID_Comm_get_lpid to be removed */
+        uint64_t dev_lpid;
+        MPID_Comm_get_lpid(comm_ptr, i, &dev_lpid, FALSE);
+        MPIR_Assert((dev_lpid >> 32) == 0);
+        vmap[i] = dev_lpid;
     }
 
-    MPII_Group_setup_lpid_list(group_ptr);
-    g1_idx = group_ptr->idx_of_first_lpid;
-    g2_idx = mergesort_lpidarray(vmap, vsize);
-    MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,
-                                             "initial indices: %d %d\n", g1_idx, g2_idx));
-    while (g1_idx >= 0 && g2_idx >= 0) {
-        l1_pid = group_ptr->lrank_to_lpid[g1_idx].lpid;
-        l2_pid = vmap[g2_idx].lpid;
-        MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,
-                                                 "Lpids are %d, %d\n", l1_pid, l2_pid));
-        if (l1_pid < l2_pid) {
-            /* If we have to advance g1, we didn't find a match, so
-             * that's an error. */
-            break;
-        } else if (l1_pid > l2_pid) {
-            g2_idx = vmap[g2_idx].next_lpid;
-        } else {
-            /* Equal */
-            g1_idx = group_ptr->lrank_to_lpid[g1_idx].next_lpid;
-            g2_idx = vmap[g2_idx].next_lpid;
+    for (int rank = 0; rank < group_ptr->size; rank++) {
+        MPIR_Lpid lpid = MPIR_Group_rank_to_lpid(group_ptr, rank);
+        bool found = false;
+        for (int i = 0; i < vsize; i++) {
+            if (vmap[i] == lpid) {
+                found = true;
+                break;
+            }
         }
-        MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,
-                                                 "g1 = %d, g2 = %d\n", g1_idx, g2_idx));
+        if (!found) {
+            MPIR_ERR_SET1(mpi_errno, MPI_ERR_GROUP, "**groupnotincomm",
+                          "**groupnotincomm %d", rank);
+            goto fn_fail;
+        }
     }
 
-    if (g1_idx >= 0) {
-        MPIR_ERR_SET1(mpi_errno, MPI_ERR_GROUP, "**groupnotincomm", "**groupnotincomm %d", g1_idx);
-    }
-
-  fn_fail:
+  fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* HAVE_ERROR_CHECKING */
