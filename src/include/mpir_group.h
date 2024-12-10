@@ -11,12 +11,19 @@
  * only because they are required for the group operations (e.g.,
  * MPI_Group_intersection) and for the scalable RMA synchronization
  *---------------------------------------------------------------------------*/
+
+/* Abstract the integer type for lpid (process id). It is possible to use 32-bit
+ * in principle, but 64-bit is simpler since we can trivially combine
+ * (world_idx, world_rank).
+ */
+typedef uint64_t MPIR_Lpid;
+
 /* This structure is used to implement the group operations such as
    MPI_Group_translate_ranks */
 /* note: next_lpid (with idx_of_first_lpid in MPIR_Group) gives a linked list
  * in a sorted lpid ascending order */
 typedef struct MPII_Group_pmap_t {
-    uint64_t lpid;              /* local process id, from VCONN */
+    MPIR_Lpid lpid;             /* local process id, from VCONN */
     int next_lpid;              /* Index of next lpid (in lpid order) */
 } MPII_Group_pmap_t;
 
@@ -103,6 +110,14 @@ int MPIR_Group_check_valid_ranges(MPIR_Group *, int[][3], int);
 void MPIR_Group_setup_lpid_pairs(MPIR_Group *, MPIR_Group *);
 int MPIR_Group_create(int, MPIR_Group **);
 int MPIR_Group_release(MPIR_Group * group_ptr);
+
+int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_Lpid * map,
+                          MPIR_Group ** new_group_ptr);
+int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
+                             MPIR_Lpid offset, MPIR_Lpid stride, MPIR_Lpid blocksize,
+                             MPIR_Group ** new_group_ptr);
+MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank);
+int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid);
 
 int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr);
 void MPIR_Group_set_session_ptr(MPIR_Group * group_ptr, MPIR_Session * session_out);
