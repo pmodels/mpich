@@ -18,6 +18,22 @@ int MPIR_Group_size_impl(MPIR_Group * group_ptr, int *size)
     return MPI_SUCCESS;
 }
 
+int MPIR_Group_free_impl(MPIR_Group * group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Do not free MPI_GROUP_EMPTY */
+    if (group_ptr->handle != MPI_GROUP_EMPTY) {
+        mpi_errno = MPIR_Group_release(group_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Group_compare_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2, int *result)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -67,77 +83,76 @@ int MPIR_Group_compare_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2, in
     return mpi_errno;
 }
 
-int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
-                               MPIR_Group ** new_group_ptr)
+int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
+                                    MPIR_Group * gp2, int ranks2[])
 {
     int mpi_errno = MPI_SUCCESS;
-    int size1, i, k, g1_idx, g2_idx, nnew;
+    int i, g2_idx;
     uint64_t l1_pid, l2_pid;
-    int *flags = NULL;
 
-    MPIR_FUNC_ENTER;
-    /* Return a group consisting of the members of group1 that are *not*
-     * in group2 */
-    size1 = group_ptr1->size;
-    /* Insure that the lpid lists are setup */
-    MPIR_Group_setup_lpid_pairs(group_ptr1, group_ptr2);
+    MPL_DBG_MSG_S(MPIR_DBG_OTHER, VERBOSE, "gp2->is_local_dense_monotonic=%s",
+                  (gp2->is_local_dense_monotonic ? "TRUE" : "FALSE"));
 
-    flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
+    /* Initialize the output ranks */
+    for (i = 0; i < n; i++)
+        ranks2[i] = MPI_UNDEFINED;
 
-    g1_idx = group_ptr1->idx_of_first_lpid;
-    g2_idx = group_ptr2->idx_of_first_lpid;
+    if (gp2->size > 0 && gp2->is_local_dense_monotonic) {
+        /* g2 probably == group_of(MPI_COMM_WORLD); use fast, constant-time lookup */
+        uint64_t lpid_offset = gp2->lrank_to_lpid[0].lpid;
 
-    nnew = size1;
-    while (g1_idx >= 0 && g2_idx >= 0) {
-        l1_pid = group_ptr1->lrank_to_lpid[g1_idx].lpid;
-        l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
-        if (l1_pid < l2_pid) {
-            g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
-        } else if (l1_pid > l2_pid) {
-            g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-        } else {
-            /* Equal */
-            flags[g1_idx] = 1;
-            g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
-            g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-            nnew--;
+        for (i = 0; i < n; ++i) {
+            uint64_t g1_lpid;
+
+            if (ranks1[i] == MPI_PROC_NULL) {
+                ranks2[i] = MPI_PROC_NULL;
+                continue;
+            }
+            /* "adjusted" lpid from g1 */
+            g1_lpid = gp1->lrank_to_lpid[ranks1[i]].lpid - lpid_offset;
+            if (g1_lpid < gp2->size) {
+                ranks2[i] = g1_lpid;
+            }
+            /* else leave UNDEFINED */
         }
-    }
-    /* Create the group */
-    if (nnew == 0) {
-        /* See 5.3.2, Group Constructors.  For many group routines,
-         * the standard explicitly says to return MPI_GROUP_EMPTY;
-         * for others it is implied */
-        *new_group_ptr = MPIR_Group_empty;
-        goto fn_exit;
     } else {
-        mpi_errno = MPIR_Group_create(nnew, new_group_ptr);
-        /* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno) {
-            goto fn_fail;
+        /* general, slow path; lookup time is dependent on the user-provided rank values! */
+        g2_idx = gp2->idx_of_first_lpid;
+        if (g2_idx < 0) {
+            MPII_Group_setup_lpid_list(gp2);
+            g2_idx = gp2->idx_of_first_lpid;
         }
-        /* --END ERROR HANDLING-- */
-        (*new_group_ptr)->rank = MPI_UNDEFINED;
-        k = 0;
-        for (i = 0; i < size1; i++) {
-            if (!flags[i]) {
-                (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr1->lrank_to_lpid[i].lpid;
-                if (i == group_ptr1->rank)
-                    (*new_group_ptr)->rank = k;
-                k++;
+        if (g2_idx >= 0) {
+            /* g2_idx can be < 0 if the g2 group is empty */
+            l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
+            for (i = 0; i < n; i++) {
+                if (ranks1[i] == MPI_PROC_NULL) {
+                    ranks2[i] = MPI_PROC_NULL;
+                    continue;
+                }
+                l1_pid = gp1->lrank_to_lpid[ranks1[i]].lpid;
+                /* Search for this l1_pid in group2.  Use the following
+                 * optimization: start from the last position in the lpid list
+                 * if possible.  A more sophisticated version could use a
+                 * tree based or even hashed search to speed the translation. */
+                if (l1_pid < l2_pid || g2_idx < 0) {
+                    /* Start over from the beginning */
+                    g2_idx = gp2->idx_of_first_lpid;
+                    l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
+                }
+                while (g2_idx >= 0 && l1_pid > l2_pid) {
+                    g2_idx = gp2->lrank_to_lpid[g2_idx].next_lpid;
+                    if (g2_idx >= 0)
+                        l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
+                    else
+                        l2_pid = (uint64_t) - 1;
+                }
+                if (l1_pid == l2_pid)
+                    ranks2[i] = g2_idx;
             }
         }
-        /* TODO calculate is_local_dense_monotonic */
     }
-
-    MPIR_Group_set_session_ptr(*new_group_ptr, group_ptr1->session_ptr);
-
-  fn_exit:
-    MPL_free(flags);
-    MPIR_FUNC_EXIT;
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
@@ -188,22 +203,6 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
     goto fn_exit;
 }
 
-int MPIR_Group_free_impl(MPIR_Group * group_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* Do not free MPI_GROUP_EMPTY */
-    if (group_ptr->handle != MPI_GROUP_EMPTY) {
-        mpi_errno = MPIR_Group_release(group_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIR_Group_incl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
                          MPIR_Group ** new_group_ptr)
 {
@@ -236,79 +235,6 @@ int MPIR_Group_incl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 
 
   fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
-                                 MPIR_Group ** new_group_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int size1, i, k, g1_idx, g2_idx, nnew;
-    uint64_t l1_pid, l2_pid;
-    int *flags = NULL;
-
-    MPIR_FUNC_ENTER;
-    /* Return a group consisting of the members of group1 that are
-     * in group2 */
-    size1 = group_ptr1->size;
-    /* Insure that the lpid lists are setup */
-    MPIR_Group_setup_lpid_pairs(group_ptr1, group_ptr2);
-
-    flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
-
-    g1_idx = group_ptr1->idx_of_first_lpid;
-    g2_idx = group_ptr2->idx_of_first_lpid;
-
-    nnew = 0;
-    while (g1_idx >= 0 && g2_idx >= 0) {
-        l1_pid = group_ptr1->lrank_to_lpid[g1_idx].lpid;
-        l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
-        if (l1_pid < l2_pid) {
-            g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
-        } else if (l1_pid > l2_pid) {
-            g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-        } else {
-            /* Equal */
-            flags[g1_idx] = 1;
-            g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
-            g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-            nnew++;
-        }
-    }
-    /* Create the group.  Handle the trivial case first */
-    if (nnew == 0) {
-        *new_group_ptr = MPIR_Group_empty;
-        goto fn_exit;
-    }
-
-    mpi_errno = MPIR_Group_create(nnew, new_group_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    (*new_group_ptr)->rank = MPI_UNDEFINED;
-    (*new_group_ptr)->is_local_dense_monotonic = TRUE;
-    k = 0;
-    for (i = 0; i < size1; i++) {
-        if (flags[i]) {
-            uint64_t lpid = group_ptr1->lrank_to_lpid[i].lpid;
-            (*new_group_ptr)->lrank_to_lpid[k].lpid = lpid;
-            if (i == group_ptr1->rank)
-                (*new_group_ptr)->rank = k;
-            if (lpid > MPIR_Process.size ||
-                (k > 0 && (*new_group_ptr)->lrank_to_lpid[k - 1].lpid != (lpid - 1))) {
-                (*new_group_ptr)->is_local_dense_monotonic = FALSE;
-            }
-
-            k++;
-        }
-    }
-
-    MPIR_Group_set_session_ptr(*new_group_ptr, group_ptr1->session_ptr);
-
-  fn_exit:
-    MPL_free(flags);
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -464,76 +390,150 @@ int MPIR_Group_range_incl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
     goto fn_exit;
 }
 
-int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
-                                    MPIR_Group * gp2, int ranks2[])
+int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
+                               MPIR_Group ** new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, g2_idx;
+    int size1, i, k, g1_idx, g2_idx, nnew;
     uint64_t l1_pid, l2_pid;
+    int *flags = NULL;
 
-    MPL_DBG_MSG_S(MPIR_DBG_OTHER, VERBOSE, "gp2->is_local_dense_monotonic=%s",
-                  (gp2->is_local_dense_monotonic ? "TRUE" : "FALSE"));
+    MPIR_FUNC_ENTER;
+    /* Return a group consisting of the members of group1 that are *not*
+     * in group2 */
+    size1 = group_ptr1->size;
+    /* Insure that the lpid lists are setup */
+    MPIR_Group_setup_lpid_pairs(group_ptr1, group_ptr2);
 
-    /* Initialize the output ranks */
-    for (i = 0; i < n; i++)
-        ranks2[i] = MPI_UNDEFINED;
+    flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
 
-    if (gp2->size > 0 && gp2->is_local_dense_monotonic) {
-        /* g2 probably == group_of(MPI_COMM_WORLD); use fast, constant-time lookup */
-        uint64_t lpid_offset = gp2->lrank_to_lpid[0].lpid;
+    g1_idx = group_ptr1->idx_of_first_lpid;
+    g2_idx = group_ptr2->idx_of_first_lpid;
 
-        for (i = 0; i < n; ++i) {
-            uint64_t g1_lpid;
-
-            if (ranks1[i] == MPI_PROC_NULL) {
-                ranks2[i] = MPI_PROC_NULL;
-                continue;
-            }
-            /* "adjusted" lpid from g1 */
-            g1_lpid = gp1->lrank_to_lpid[ranks1[i]].lpid - lpid_offset;
-            if (g1_lpid < gp2->size) {
-                ranks2[i] = g1_lpid;
-            }
-            /* else leave UNDEFINED */
-        }
-    } else {
-        /* general, slow path; lookup time is dependent on the user-provided rank values! */
-        g2_idx = gp2->idx_of_first_lpid;
-        if (g2_idx < 0) {
-            MPII_Group_setup_lpid_list(gp2);
-            g2_idx = gp2->idx_of_first_lpid;
-        }
-        if (g2_idx >= 0) {
-            /* g2_idx can be < 0 if the g2 group is empty */
-            l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
-            for (i = 0; i < n; i++) {
-                if (ranks1[i] == MPI_PROC_NULL) {
-                    ranks2[i] = MPI_PROC_NULL;
-                    continue;
-                }
-                l1_pid = gp1->lrank_to_lpid[ranks1[i]].lpid;
-                /* Search for this l1_pid in group2.  Use the following
-                 * optimization: start from the last position in the lpid list
-                 * if possible.  A more sophisticated version could use a
-                 * tree based or even hashed search to speed the translation. */
-                if (l1_pid < l2_pid || g2_idx < 0) {
-                    /* Start over from the beginning */
-                    g2_idx = gp2->idx_of_first_lpid;
-                    l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
-                }
-                while (g2_idx >= 0 && l1_pid > l2_pid) {
-                    g2_idx = gp2->lrank_to_lpid[g2_idx].next_lpid;
-                    if (g2_idx >= 0)
-                        l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
-                    else
-                        l2_pid = (uint64_t) - 1;
-                }
-                if (l1_pid == l2_pid)
-                    ranks2[i] = g2_idx;
-            }
+    nnew = size1;
+    while (g1_idx >= 0 && g2_idx >= 0) {
+        l1_pid = group_ptr1->lrank_to_lpid[g1_idx].lpid;
+        l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
+        if (l1_pid < l2_pid) {
+            g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
+        } else if (l1_pid > l2_pid) {
+            g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
+        } else {
+            /* Equal */
+            flags[g1_idx] = 1;
+            g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
+            g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
+            nnew--;
         }
     }
+    /* Create the group */
+    if (nnew == 0) {
+        /* See 5.3.2, Group Constructors.  For many group routines,
+         * the standard explicitly says to return MPI_GROUP_EMPTY;
+         * for others it is implied */
+        *new_group_ptr = MPIR_Group_empty;
+        goto fn_exit;
+    } else {
+        mpi_errno = MPIR_Group_create(nnew, new_group_ptr);
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+        /* --END ERROR HANDLING-- */
+        (*new_group_ptr)->rank = MPI_UNDEFINED;
+        k = 0;
+        for (i = 0; i < size1; i++) {
+            if (!flags[i]) {
+                (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr1->lrank_to_lpid[i].lpid;
+                if (i == group_ptr1->rank)
+                    (*new_group_ptr)->rank = k;
+                k++;
+            }
+        }
+        /* TODO calculate is_local_dense_monotonic */
+    }
+
+    MPIR_Group_set_session_ptr(*new_group_ptr, group_ptr1->session_ptr);
+
+  fn_exit:
+    MPL_free(flags);
+    MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
+                                 MPIR_Group ** new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int size1, i, k, g1_idx, g2_idx, nnew;
+    uint64_t l1_pid, l2_pid;
+    int *flags = NULL;
+
+    MPIR_FUNC_ENTER;
+    /* Return a group consisting of the members of group1 that are
+     * in group2 */
+    size1 = group_ptr1->size;
+    /* Insure that the lpid lists are setup */
+    MPIR_Group_setup_lpid_pairs(group_ptr1, group_ptr2);
+
+    flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
+
+    g1_idx = group_ptr1->idx_of_first_lpid;
+    g2_idx = group_ptr2->idx_of_first_lpid;
+
+    nnew = 0;
+    while (g1_idx >= 0 && g2_idx >= 0) {
+        l1_pid = group_ptr1->lrank_to_lpid[g1_idx].lpid;
+        l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
+        if (l1_pid < l2_pid) {
+            g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
+        } else if (l1_pid > l2_pid) {
+            g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
+        } else {
+            /* Equal */
+            flags[g1_idx] = 1;
+            g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
+            g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
+            nnew++;
+        }
+    }
+    /* Create the group.  Handle the trivial case first */
+    if (nnew == 0) {
+        *new_group_ptr = MPIR_Group_empty;
+        goto fn_exit;
+    }
+
+    mpi_errno = MPIR_Group_create(nnew, new_group_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    (*new_group_ptr)->rank = MPI_UNDEFINED;
+    (*new_group_ptr)->is_local_dense_monotonic = TRUE;
+    k = 0;
+    for (i = 0; i < size1; i++) {
+        if (flags[i]) {
+            uint64_t lpid = group_ptr1->lrank_to_lpid[i].lpid;
+            (*new_group_ptr)->lrank_to_lpid[k].lpid = lpid;
+            if (i == group_ptr1->rank)
+                (*new_group_ptr)->rank = k;
+            if (lpid > MPIR_Process.size ||
+                (k > 0 && (*new_group_ptr)->lrank_to_lpid[k - 1].lpid != (lpid - 1))) {
+                (*new_group_ptr)->is_local_dense_monotonic = FALSE;
+            }
+
+            k++;
+        }
+    }
+
+    MPIR_Group_set_session_ptr(*new_group_ptr, group_ptr1->session_ptr);
+
+  fn_exit:
+    MPL_free(flags);
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
