@@ -198,9 +198,6 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
      * exactly the same as the ranks in comm world.
      */
 
-    /* we examine the group's lpids in both the intracomm and non-comm_world cases */
-    MPII_Group_setup_lpid_list(group_ptr);
-
     /* Optimize for groups contained within MPI_COMM_WORLD. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         int wsize;
