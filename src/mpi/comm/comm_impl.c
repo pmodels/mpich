@@ -68,36 +68,19 @@ int MPIR_Comm_test_threadcomm_impl(MPIR_Comm * comm_ptr, int *flag)
 static int comm_create_local_group(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Group *group_ptr;
+
     int n = comm_ptr->local_size;
+    MPIR_Lpid *map = MPL_malloc(n * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
 
-    mpi_errno = MPIR_Group_create(n, &group_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Group belongs to the same session as communicator */
-    MPIR_Group_set_session_ptr(group_ptr, comm_ptr->session_ptr);
-
-    group_ptr->is_local_dense_monotonic = TRUE;
-
-    int comm_world_size = MPIR_Process.size;
     for (int i = 0; i < n; i++) {
         uint64_t lpid;
         (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, FALSE);
-        group_ptr->lrank_to_lpid[i].lpid = lpid;
-        if (lpid > comm_world_size || (i > 0 && group_ptr->lrank_to_lpid[i - 1].lpid != (lpid - 1))) {
-            group_ptr->is_local_dense_monotonic = FALSE;
-        }
+        map[i] = lpid;
     }
 
-    group_ptr->size = n;
-    group_ptr->rank = comm_ptr->rank;
-    group_ptr->idx_of_first_lpid = -1;
-
-    comm_ptr->local_group = group_ptr;
-
-    /* FIXME : Add a sanity check that the size of the group is the same as
-     * the size of the communicator.  This helps catch corrupted
-     * communicators */
+    mpi_errno = MPIR_Group_create_map(n, comm_ptr->rank, comm_ptr->session_ptr, map,
+                                      &comm_ptr->local_group);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -926,31 +909,23 @@ int MPIR_Comm_idup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info,
 int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, n;
-
     MPIR_FUNC_ENTER;
+
     /* Create a group and populate it with the local process ids */
     if (!comm_ptr->remote_group) {
-        n = comm_ptr->remote_size;
-        mpi_errno = MPIR_Group_create(n, group_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
+        int n = comm_ptr->remote_size;
+        MPIR_Lpid *map = MPL_malloc(n * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
 
-        for (i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++) {
             uint64_t lpid;
             (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, TRUE);
-            (*group_ptr)->lrank_to_lpid[i].lpid = lpid;
-            /* TODO calculate is_local_dense_monotonic */
+            map[i] = lpid;
         }
-        (*group_ptr)->size = n;
-        (*group_ptr)->rank = MPI_UNDEFINED;
-        (*group_ptr)->idx_of_first_lpid = -1;
-
-        MPIR_Group_set_session_ptr(*group_ptr, comm_ptr->session_ptr);
-
-        comm_ptr->remote_group = *group_ptr;
-    } else {
-        *group_ptr = comm_ptr->remote_group;
+        mpi_errno = MPIR_Group_create_map(n, MPI_UNDEFINED, comm_ptr->session_ptr, map,
+                                          &comm_ptr->remote_group);
+        MPIR_ERR_CHECK(mpi_errno);
     }
+    *group_ptr = comm_ptr->remote_group;
     MPIR_Group_add_ref(comm_ptr->remote_group);
 
   fn_exit:
