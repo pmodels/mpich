@@ -48,7 +48,9 @@ int MPIR_Group_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(MPIR_GROUP_N_BUILTIN == 1);     /* update this func if this ever triggers */
+    MPIR_Assert(MPIR_GROUP_N_BUILTIN == 3);     /* update this func if this ever triggers */
+
+    struct MPIR_Pmap *pmap;
 
     MPIR_Group_builtin[0].handle = MPI_GROUP_EMPTY;
     MPIR_Object_set_ref(&MPIR_Group_builtin[0], 1);
@@ -61,6 +63,30 @@ int MPIR_Group_init(void)
     MPIR_Group_builtin[0].pmap.u.stride.offset = 0;
     MPIR_Group_builtin[0].pmap.u.stride.stride = 1;
     MPIR_Group_builtin[0].pmap.u.stride.blocksize = 1;
+
+    MPIR_Group_builtin[1].handle = MPIR_GROUP_WORLD;
+    MPIR_Object_set_ref(&MPIR_Group_builtin[1], 1);
+    MPIR_Group_builtin[1].size = MPIR_Process.size;
+    MPIR_Group_builtin[1].rank = MPIR_Process.rank;
+    MPIR_Group_builtin[1].session_ptr = NULL;
+    pmap = &MPIR_Group_builtin[1].pmap;
+    pmap->size = MPIR_Process.size;
+    pmap->use_map = false;
+    pmap->u.stride.offset = 0;
+    pmap->u.stride.stride = 1;
+    pmap->u.stride.blocksize = 1;
+
+    MPIR_Group_builtin[2].handle = MPIR_GROUP_SELF;
+    MPIR_Object_set_ref(&MPIR_Group_builtin[2], 1);
+    MPIR_Group_builtin[2].size = 1;
+    MPIR_Group_builtin[2].rank = 0;
+    MPIR_Group_builtin[2].session_ptr = NULL;
+    pmap = &MPIR_Group_builtin[2].pmap;
+    pmap->size = 1;
+    pmap->use_map = false;
+    pmap->u.stride.offset = MPIR_Process.rank;
+    pmap->u.stride.stride = 1;
+    pmap->u.stride.blocksize = 1;
 
     return mpi_errno;
 }
