@@ -387,7 +387,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank,
 
     MPIDI_NM_comm_get_gpid(comm, rank, &gpid, FALSE);
 
-    for (z = 0; z < size && gpid != grp->lrank_to_lpid[z].lpid; ++z) {
+    for (z = 0; z < size; ++z) {
+        if (gpid == MPIR_Group_rank_to_lpid(grp, z)) {
+            break;
+        }
     }
 
     ret = (z < size);

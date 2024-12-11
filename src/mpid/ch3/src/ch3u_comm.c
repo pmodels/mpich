@@ -512,7 +512,7 @@ static int nonempty_intersection(MPIR_Comm *comm, MPIR_Group *group, int *flag)
 
     for (i_g = 0; i_g < group->size; ++i_g) {
         /* FIXME: This won't work for dynamic procs */
-        MPIDI_PG_Get_vc(MPIDI_Process.my_pg, group->lrank_to_lpid[i_g].lpid, &vc_g);
+        MPIDI_PG_Get_vc(MPIDI_Process.my_pg, MPIR_Group_rank_to_lpid(group, i_g), &vc_g);
         for (i_c = 0; i_c < comm->remote_size; ++i_c) {
             MPIDI_Comm_get_vc(comm, i_c, &vc_c);
             if (vc_g == vc_c) {
