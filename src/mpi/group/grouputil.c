@@ -6,6 +6,32 @@
 #include "mpiimpl.h"
 #include "group.h"
 
+/* Global world list.
+ * world_idx, part of MPIR_Lpid, points to this array */
+#define MPIR_MAX_WORLDS 1024
+static int num_worlds = 0;
+struct MPIR_World MPIR_Worlds[MPIR_MAX_WORLDS];
+
+int MPIR_add_world(const char *namespace, int num_procs)
+{
+    int world_idx = num_worlds++;
+
+    MPL_strncpy(MPIR_Worlds[world_idx].namespace, namespace, MPIR_NAMESPACE_MAX);
+    MPIR_Worlds[world_idx].num_procs = num_procs;
+
+    return world_idx;
+}
+
+int MPIR_find_world(const char *namespace)
+{
+    for (int i = 0; i < num_worlds; i++) {
+        if (strncmp(MPIR_Worlds[i].namespace, namespace, MPIR_NAMESPACE_MAX) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 /* Preallocated group objects */
 MPIR_Group MPIR_Group_builtin[MPIR_GROUP_N_BUILTIN];
 MPIR_Group MPIR_Group_direct[MPIR_GROUP_PREALLOC];
@@ -39,6 +65,10 @@ int MPIR_Group_init(void)
     return mpi_errno;
 }
 
+void MPIR_Group_finalize(void)
+{
+    num_worlds = 0;
+}
 
 int MPIR_Group_release(MPIR_Group * group_ptr)
 {
