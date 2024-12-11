@@ -30,6 +30,10 @@ int MPIR_init_comm_world(void)
     MPIR_Process.comm_world->remote_size = MPIR_Process.size;
     MPIR_Process.comm_world->local_size = MPIR_Process.size;
 
+    MPIR_Process.comm_world->local_group = MPIR_GROUP_WORLD_PTR;
+    MPIR_Group_add_ref(MPIR_GROUP_WORLD_PTR);
+    MPIR_Process.comm_world->remote_group = NULL;
+
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -58,6 +62,10 @@ int MPIR_init_comm_self(void)
     MPIR_Process.comm_self->rank = 0;
     MPIR_Process.comm_self->remote_size = 1;
     MPIR_Process.comm_self->local_size = 1;
+
+    MPIR_Process.comm_self->local_group = MPIR_GROUP_SELF_PTR;
+    MPIR_Group_add_ref(MPIR_GROUP_SELF_PTR);
+    MPIR_Process.comm_self->remote_group = NULL;
 
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
     MPIR_ERR_CHECK(mpi_errno);
@@ -90,6 +98,10 @@ int MPIR_init_icomm_world(void)
     MPIR_Process.icomm_world->rank = MPIR_Process.rank;
     MPIR_Process.icomm_world->remote_size = MPIR_Process.size;
     MPIR_Process.icomm_world->local_size = MPIR_Process.size;
+
+    MPIR_Process.icomm_world->local_group = MPIR_GROUP_WORLD_PTR;
+    MPIR_Group_add_ref(MPIR_GROUP_WORLD_PTR);
+    MPIR_Process.icomm_world->remote_group = NULL;
 
     mpi_errno = MPIR_Comm_commit(MPIR_Process.icomm_world);
     MPIR_ERR_CHECK(mpi_errno);

@@ -166,9 +166,9 @@ struct MPIR_Comm {
     int rank;                   /* Value of MPI_Comm_rank */
     MPIR_Attribute *attributes; /* List of attributes */
     int local_size;             /* Value of MPI_Comm_size for local group */
-    MPIR_Group *local_group,    /* Groups in communicator. */
-    *remote_group;              /* The local and remote groups are the
-                                 * same for intra communicators */
+    MPIR_Group *local_group;    /* Groups in communicator. */
+    MPIR_Group *remote_group;   /* The remote group in a inter communicator.
+                                 * Must be NULL in a intra communicator. */
     MPIR_Comm_kind_t comm_kind; /* MPIR_COMM_KIND__INTRACOMM or MPIR_COMM_KIND__INTERCOMM */
     char name[MPI_MAX_OBJECT_NAME];     /* Required for MPI-2 */
     MPIR_Errhandler *errhandler;        /* Pointer to the error handler structure */

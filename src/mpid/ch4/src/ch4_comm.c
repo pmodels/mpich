@@ -781,6 +781,10 @@ int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
             MPIR_Comm_map_irregular(MPIDI_COMM(comm, multi_leads_comm), comm,
                                     external_procs, num_external, MPIR_COMM_MAP_DIR__L2L, NULL);
 
+            mpi_errno = MPIR_Group_incl_impl(comm->local_group, num_external, external_procs,
+                                             &MPIDI_COMM(comm, multi_leads_comm)->local_group);
+            MPIR_ERR_CHECK(mpi_errno);
+
             /* Notify device of communicator creation */
             mpi_errno = MPID_Comm_commit_pre_hook(MPIDI_COMM(comm, multi_leads_comm));
             if (mpi_errno)

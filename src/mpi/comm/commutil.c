@@ -382,6 +382,10 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     mpi_errno = MPII_Comm_init(localcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIR_Assert(intercomm_ptr->local_group);
+    localcomm_ptr->local_group = intercomm_ptr->local_group;
+    MPIR_Group_add_ref(intercomm_ptr->local_group);
+
     MPIR_Comm_set_session_ptr(localcomm_ptr, intercomm_ptr->session_ptr);
 
     /* use the parent intercomm's recv ctx as the basis for our ctx */
@@ -681,6 +685,14 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         /* Copy relevant hints to node_comm */
         propagate_hints_to_subcomm(comm, comm->node_comm);
 
+        /* construct local_group */
+        MPIR_Group *parent_group = comm->local_group;
+        MPIR_Assert(parent_group);
+        mpi_errno = MPIR_Group_incl_impl(parent_group, num_local, local_procs,
+                                         &comm->node_comm->local_group);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* mapper */
         MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs, num_local,
                                 MPIR_COMM_MAP_DIR__L2L, NULL);
         mpi_errno = MPIR_Comm_commit_internal(comm->node_comm);
@@ -708,6 +720,14 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         /* Copy relevant hints to node_roots_comm */
         propagate_hints_to_subcomm(comm, comm->node_roots_comm);
 
+        /* construct local_group */
+        MPIR_Group *parent_group = comm->local_group;
+        MPIR_Assert(parent_group);
+        mpi_errno = MPIR_Group_incl_impl(parent_group, num_external, external_procs,
+                                         &comm->node_roots_comm->local_group);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* mapper */
         MPIR_Comm_map_irregular(comm->node_roots_comm, comm, external_procs, num_external,
                                 MPIR_COMM_MAP_DIR__L2L, NULL);
         mpi_errno = MPIR_Comm_commit_internal(comm->node_roots_comm);
@@ -955,6 +975,13 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     newcomm_ptr->comm_kind = comm_ptr->comm_kind;
     newcomm_ptr->local_comm = 0;
 
+    newcomm_ptr->local_group = comm_ptr->local_group;
+    MPIR_Group_add_ref(comm_ptr->local_group);
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        newcomm_ptr->remote_group = comm_ptr->remote_group;
+        MPIR_Group_add_ref(comm_ptr->remote_group);
+    }
+
     MPIR_Comm_set_session_ptr(newcomm_ptr, comm_ptr->session_ptr);
 
     /* There are two cases here - size is the same as the old communicator,
@@ -1052,6 +1079,13 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** out
     /* Save the kind of the communicator */
     newcomm_ptr->comm_kind = comm_ptr->comm_kind;
     newcomm_ptr->local_comm = 0;
+
+    newcomm_ptr->local_group = comm_ptr->local_group;
+    MPIR_Group_add_ref(comm_ptr->local_group);
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        newcomm_ptr->remote_group = comm_ptr->remote_group;
+        MPIR_Group_add_ref(comm_ptr->remote_group);
+    }
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
         MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);

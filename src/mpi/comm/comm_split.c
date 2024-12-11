@@ -286,6 +286,10 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
                     (*newcomm_ptr)->rank = i;
             }
 
+            mpi_errno = MPIR_Group_incl_impl(comm_ptr->local_group, new_size, mapper->src_mapping,
+                                             &(*newcomm_ptr)->local_group);
+            MPIR_ERR_CHECK(mpi_errno);
+
             /* For the remote group, the situation is more complicated.
              * We need to find the size of our "partner" group in the
              * remote comm.  The easiest way (in terms of code) is for
@@ -307,6 +311,11 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
             for (i = 0; i < new_remote_size; i++)
                 mapper->src_mapping[i] = remotekeytable[i].color;
 
+            mpi_errno = MPIR_Group_incl_impl(comm_ptr->remote_group,
+                                             new_remote_size, mapper->src_mapping,
+                                             &(*newcomm_ptr)->remote_group);
+            MPIR_ERR_CHECK(mpi_errno);
+
             (*newcomm_ptr)->context_id = remote_context_id;
             (*newcomm_ptr)->remote_size = new_remote_size;
             (*newcomm_ptr)->local_comm = 0;
@@ -325,6 +334,10 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
                 if (keytable[i].color == comm_ptr->rank)
                     (*newcomm_ptr)->rank = i;
             }
+
+            mpi_errno = MPIR_Group_incl_impl(comm_ptr->local_group, new_size, mapper->src_mapping,
+                                             &(*newcomm_ptr)->local_group);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         /* Inherit the error handler (if any) */
