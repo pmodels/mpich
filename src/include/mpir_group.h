@@ -43,6 +43,31 @@
 
  S*/
 
+/* Worlds -
+ * We need a device-independent way of identifying processes. Assuming the concept of
+ * "worlds", we can describe a process with (world_idx, world_rank).
+ *
+ * The world_idx is a local id because each process may not see all worlds. Thus,
+ * each process only can maintain a list of worlds as it encounters them. Thus,
+ * a process id derived from (world_idx, world_rank) is referred as LPID, or
+ * "local process id".
+ *
+ * Each process should maintain a table of worlds with sufficient information so
+ * processes can match worlds upon connection or making address exchange.
+ */
+
+#define MPIR_NAMESPACE_MAX 128
+struct MPIR_World {
+    char namespace[MPIR_NAMESPACE_MAX];
+    /* other useful fields */
+    int num_procs;
+};
+
+extern struct MPIR_World MPIR_Worlds[];
+
+int MPIR_add_world(const char *namespace, int num_procs);
+int MPIR_find_world(const char *namespace);
+
 /* Abstract the integer type for lpid (process id). It is possible to use 32-bit
  * in principle, but 64-bit is simpler since we can trivially combine
  * (world_idx, world_rank).
@@ -115,5 +140,6 @@ int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid);
 int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr);
 void MPIR_Group_set_session_ptr(MPIR_Group * group_ptr, MPIR_Session * session_out);
 int MPIR_Group_init(void);
+void MPIR_Group_finalize(void);
 
 #endif /* MPIR_GROUP_H_INCLUDED */
