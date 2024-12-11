@@ -43,6 +43,13 @@
 
  S*/
 
+/* In addition to MPI_GROUP_EMPTY, internally we have a few more builtins */
+#define MPIR_GROUP_WORLD  ((MPI_Group)0x48000001)
+#define MPIR_GROUP_SELF   ((MPI_Group)0x48000002)
+
+#define MPIR_GROUP_WORLD_PTR (MPIR_Group_builtin + 1)
+#define MPIR_GROUP_SELF_PTR  (MPIR_Group_builtin + 2)
+
 /* Worlds -
  * We need a device-independent way of identifying processes. Assuming the concept of
  * "worlds", we can describe a process with (world_idx, world_rank).

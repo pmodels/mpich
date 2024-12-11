@@ -210,7 +210,7 @@ const char *MPIR_Handle_get_kind_str(int kind);
 #define MPIR_COMM_PREALLOC 8
 #endif
 
-#define MPIR_GROUP_N_BUILTIN 1
+#define MPIR_GROUP_N_BUILTIN 3
 #ifdef MPID_GROUP_PREALLOC
 #define MPIR_GROUP_PREALLOC MPID_GROUP_PREALLOC
 #else
