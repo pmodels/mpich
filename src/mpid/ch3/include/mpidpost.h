@@ -188,10 +188,11 @@ int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
                             int root );
 int MPID_Intercomm_exchange_map( MPIR_Comm *local_comm_ptr, int local_leader,
                                  MPIR_Comm *peer_comm_ptr, int remote_leader,
-                                 int *remote_size, uint64_t **remote_lpids,
+                                 int *remote_size, MPIR_Lpid **remote_lpids,
                                  int *is_low_group);
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
-                                      int size, const uint64_t lpids[] );
+                                      int size, const MPIR_Lpid lpids[] );
+int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, MPIR_Lpid *lpid_ptr, bool is_remote);
 
 #define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
 
