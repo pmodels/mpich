@@ -378,17 +378,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 /* We assume this routine is never called with rank=MPI_PROC_NULL. */
 MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
-    uint64_t gpid;
+    MPIR_Lpid lpid;
     int size = grp->size;
     int z;
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    MPIDI_NM_comm_get_gpid(comm, rank, &gpid, FALSE);
+    MPID_Comm_get_lpid(comm, rank, &lpid, FALSE);
 
     for (z = 0; z < size; ++z) {
-        if (gpid == MPIR_Group_rank_to_lpid(grp, z)) {
+        if (lpid == MPIR_Group_rank_to_lpid(grp, z)) {
             break;
         }
     }
