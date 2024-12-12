@@ -290,7 +290,7 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id, recvcontext_id;
-    uint64_t remote_gpid;
+    MPIR_Lpid remote_lpid;
 
     mpi_errno = MPIR_Get_contextid_sparse(MPIR_Process.comm_self, &recvcontext_id, FALSE);
     MPIR_ERR_CHECK(mpi_errno);
@@ -299,8 +299,8 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
     if (is_sender) {
         /* insert remote address */
         int addrname_len = len;
-        uint64_t *remote_gpids = &remote_gpid;
-        mpi_errno = MPIDIU_upids_to_gpids(1, &addrname_len, remote_addrname, remote_gpids);
+        MPIR_Lpid *remote_lpids = &remote_lpid;
+        mpi_errno = MPIDIU_upids_to_lpids(1, &addrname_len, remote_addrname, remote_lpids);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* fill hdr with context_id and addrname */
@@ -317,7 +317,7 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
         /* send remote context_id + addrname */
 
         int hdr_sz = sizeof(hdr) - MPIDI_DYNPROC_NAME_MAX + hdr.addrname_len;
-        mpi_errno = MPIDI_NM_dynamic_send(remote_gpid, tag, &hdr, hdr_sz, timeout);
+        mpi_errno = MPIDI_NM_dynamic_send(remote_lpid, tag, &hdr, hdr_sz, timeout);
         MPL_free(addrname);
         MPL_free(addrname_size);
         MPIR_ERR_CHECK(mpi_errno);
@@ -333,19 +333,19 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
 
         /* insert remote address */
         int addrname_len = hdr.addrname_len;
-        uint64_t *remote_gpids = &remote_gpid;
-        mpi_errno = MPIDIU_upids_to_gpids(1, &addrname_len, hdr.addrname, remote_gpids);
+        MPIR_Lpid *remote_lpids = &remote_lpid;
+        mpi_errno = MPIDIU_upids_to_lpids(1, &addrname_len, hdr.addrname, remote_lpids);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* send remote context_id */
         hdr.context_id = recvcontext_id;
-        mpi_errno = MPIDI_NM_dynamic_send(remote_gpid, tag, &hdr, sizeof(hdr.context_id), timeout);
+        mpi_errno = MPIDI_NM_dynamic_send(remote_lpid, tag, &hdr, sizeof(hdr.context_id), timeout);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* create peer intercomm */
     mpi_errno = MPIR_peer_intercomm_create(context_id, recvcontext_id,
-                                           remote_gpid, is_sender, newcomm);
+                                           remote_lpid, is_sender, newcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
