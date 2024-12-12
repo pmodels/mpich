@@ -23,15 +23,23 @@ int main(int argc, char *argv[])
 
     MTEST_VG_MEM_INIT(buf, 10 * sizeof(int));
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MTest_Init(&argc, &argv);
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (rank == 0) {
-        ierr = MTest_Allreduce(buf, recvbuf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+        ierr = MTest_Allreduce(is_blocking, buf, recvbuf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     } else {
-        ierr = MTest_Allreduce(buf, recvbuf, 10, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+        ierr = MTest_Allreduce(is_blocking, buf, recvbuf, 10, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     }
     if (ierr == MPI_SUCCESS) {
         if (rank != 0) {
@@ -49,9 +57,9 @@ int main(int argc, char *argv[])
     }
 
     if (rank == 0) {
-        ierr = MTest_Allreduce(buf, recvbuf, 10, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+        ierr = MTest_Allreduce(is_blocking, buf, recvbuf, 10, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     } else {
-        ierr = MTest_Allreduce(buf, recvbuf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+        ierr = MTest_Allreduce(is_blocking, buf, recvbuf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     }
     if (ierr == MPI_SUCCESS) {
         if (rank != 0) {

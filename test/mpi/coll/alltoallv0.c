@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdlib.h>
-#include <stdio.h>
+
+#ifdef MULTI_TESTS
+#define run coll_alltoallv0
+int run(const char *arg);
+#endif
 
 /*
   This program tests MPI_Alltoallv by having processor each process
@@ -20,7 +22,7 @@
   that use point-to-point operations
  */
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
 
     MPI_Comm comm;
@@ -30,7 +32,6 @@ int main(int argc, char **argv)
     int i, *p, errs;
     int left, right, length;
 
-    MTest_Init(&argc, &argv);
     errs = 0;
 
     while (MTestGetIntracommGeneral(&comm, 2, 1)) {
@@ -128,6 +129,5 @@ int main(int argc, char **argv)
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

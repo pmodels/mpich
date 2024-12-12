@@ -12,12 +12,14 @@
  * Can be called with any number of processes.
  */
 
-#include "mpi.h"
 #include "mpitest.h"
-#include <stdio.h>
-#include <stdlib.h>
 
-int main(int argc, char **argv)
+#ifdef MULTI_TESTS
+#define run coll_red_scat_block
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int err = 0;
     int size, rank, i, sumval;
@@ -25,7 +27,6 @@ int main(int argc, char **argv)
     int *recvbuf;
     MPI_Comm comm;
 
-    MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
 
     MPI_Comm_size(comm, &size);
@@ -68,7 +69,6 @@ int main(int argc, char **argv)
     }
     free(recvbuf);
 #endif
-    MTest_Finalize(err);
 
-    return MTestReturnValue(err);
+    return err;
 }

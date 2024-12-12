@@ -12,16 +12,17 @@
  * Can be called with any number of processors.
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
 
-int err = 0;
+#ifdef MULTI_TESTS
+#define run coll_red_scat_block2
+int run(const char *arg);
+#endif
+
+static int err = 0;
 
 /* left(x,y) ==> x */
-void left(void *a, void *b, int *count, MPI_Datatype * type);
-void left(void *a, void *b, int *count, MPI_Datatype * type)
+static void left(void *a, void *b, int *count, MPI_Datatype * type)
 {
     int *in = a;
     int *inout = b;
@@ -35,8 +36,7 @@ void left(void *a, void *b, int *count, MPI_Datatype * type)
 }
 
 /* right(x,y) ==> y */
-void right(void *a, void *b, int *count, MPI_Datatype * type);
-void right(void *a, void *b, int *count, MPI_Datatype * type)
+static void right(void *a, void *b, int *count, MPI_Datatype * type)
 {
     int *in = a;
     int *inout = b;
@@ -51,8 +51,7 @@ void right(void *a, void *b, int *count, MPI_Datatype * type)
 
 /* Just performs a simple sum but can be marked as non-commutative to
    potentially trigger different logic in the implementation. */
-void nc_sum(void *a, void *b, int *count, MPI_Datatype * type);
-void nc_sum(void *a, void *b, int *count, MPI_Datatype * type)
+static void nc_sum(void *a, void *b, int *count, MPI_Datatype * type)
 {
     int *in = a;
     int *inout = b;
@@ -65,7 +64,7 @@ void nc_sum(void *a, void *b, int *count, MPI_Datatype * type)
 
 #define MAX_BLOCK_SIZE 256
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
     int *sendbuf;
     int block_size;
@@ -74,7 +73,6 @@ int main(int argc, char **argv)
     MPI_Comm comm;
     MPI_Op left_op, right_op, nc_sum_op;
 
-    MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
 
     MPI_Comm_size(comm, &size);
@@ -121,8 +119,6 @@ int main(int argc, char **argv)
     MPI_Op_free(&right_op);
     MPI_Op_free(&nc_sum_op);
 #endif
-
-    MTest_Finalize(err);
 
     return err;
 }

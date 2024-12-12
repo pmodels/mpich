@@ -31,6 +31,14 @@ int main(int argc, char **argv)
     int i, j, *p, errs;
     int leftGroup;
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MTest_Init(&argc, &argv);
     errs = 0;
 
@@ -71,7 +79,7 @@ int main(int argc, char **argv)
             recvcounts[i] = rank;
             rdispls[i] = i * rank;
         }
-        MTest_Alltoallv(sbuf, sendcounts, sdispls, MPI_INT,
+        MTest_Alltoallv(is_blocking, sbuf, sendcounts, sdispls, MPI_INT,
                         rbuf, recvcounts, rdispls, MPI_INT, comm);
 
         /* Check rbuf */
