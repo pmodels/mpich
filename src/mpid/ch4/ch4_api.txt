@@ -89,10 +89,10 @@ Non Native API:
      SHM*: rank, comm, handler_id, tag, buf-2, count, datatype, src_vci, dst_vci, rreq
   get_local_upids : int
       NM : comm, local_upid_size, local_upids
-  upids_to_gpids : int
-      NM : size, remote_upid_size, remote_upids, remote_gpids
+  upids_to_lpids : int
+      NM : size, remote_upid_size, remote_upids, remote_lpids
   dynamic_send : int
-      NM : remote_gpid, tag, buf, size, timeout
+      NM : remote_lpid, tag, buf, size, timeout
   dynamic_recv : int
       NM : tag, buf-2, size, timeout
   mpi_comm_commit_pre_hook : int
@@ -499,8 +499,8 @@ PARAM:
     recvcounts: const MPI_Aint *
     recvtype: MPI_Datatype
     recvtypes: const MPI_Datatype[]
-    remote_gpid: uint64_t
-    remote_gpids: uint64_t *
+    remote_lpid: MPIR_Lpid
+    remote_lpids: MPIR_Lpid *
     remote_upid_size: int *
     remote_upids: char *
     req: MPIR_Request *
