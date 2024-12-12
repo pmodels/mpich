@@ -73,9 +73,8 @@ static int comm_create_local_group(MPIR_Comm * comm_ptr)
     MPIR_Lpid *map = MPL_malloc(n * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
 
     for (int i = 0; i < n; i++) {
-        uint64_t lpid;
-        (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, FALSE);
-        map[i] = lpid;
+        mpi_errno = MPID_Comm_get_lpid(comm_ptr, i, &map[i], FALSE);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     mpi_errno = MPIR_Group_create_map(n, comm_ptr->rank, comm_ptr->session_ptr, map,
@@ -239,7 +238,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
             /* FIXME : BUBBLE SORT */
             mapping[i] = -1;
             for (j = 0; j < comm_ptr->local_size; j++) {
-                uint64_t comm_lpid;
+                MPIR_Lpid comm_lpid;
                 MPID_Comm_get_lpid(comm_ptr, j, &comm_lpid, FALSE);
                 if (comm_lpid == MPIR_Group_rank_to_lpid(group_ptr, i)) {
                     mapping[i] = j;
@@ -914,9 +913,8 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
         MPIR_Lpid *map = MPL_malloc(n * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
 
         for (int i = 0; i < n; i++) {
-            uint64_t lpid;
-            (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, TRUE);
-            map[i] = lpid;
+            mpi_errno = MPID_Comm_get_lpid(comm_ptr, i, &map[i], TRUE);
+            MPIR_ERR_CHECK(mpi_errno);
         }
         mpi_errno = MPIR_Group_create_map(n, MPI_UNDEFINED, comm_ptr->session_ptr, map,
                                           &comm_ptr->remote_group);
@@ -929,7 +927,6 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
-
     goto fn_exit;
 }
 
@@ -957,7 +954,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     int mpi_errno = MPI_SUCCESS;
     int final_context_id, recvcontext_id;
     int remote_size = 0;
-    uint64_t *remote_lpids = NULL;
+    MPIR_Lpid *remote_lpids = NULL;
     int comm_info[3];
     int is_low_group = 0;
 
@@ -1071,7 +1068,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
  * to facilitate connecting dynamic processes */
 
 int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
-                               uint64_t remote_lpid, int is_low_group, MPIR_Comm ** newcomm)
+                               MPIR_Lpid remote_lpid, int is_low_group, MPIR_Comm ** newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
 
