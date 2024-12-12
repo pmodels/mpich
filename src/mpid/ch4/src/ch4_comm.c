@@ -140,6 +140,9 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     int mpi_errno;
     MPIR_FUNC_ENTER;
 
+    MPIR_Assert(comm->local_group);
+    MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM || comm->remote_group);
+
     if (comm == MPIR_Process.comm_world) {
         MPIDI_COMM(comm, map).mode = MPIDI_RANK_MAP_DIRECT_INTRA;
         MPIDI_COMM(comm, map).avtid = 0;
