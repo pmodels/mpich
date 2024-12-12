@@ -330,9 +330,7 @@ int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
     MPIR_CHKLMEM_MALLOC(vmap, vsize * sizeof(MPIR_Lpid));
     for (int i = 0; i < vsize; i++) {
         /* FIXME: MPID_Comm_get_lpid to be removed */
-        uint64_t dev_lpid;
-        MPID_Comm_get_lpid(comm_ptr, i, &dev_lpid, FALSE);
-        vmap[i] = dev_lpid;
+        MPID_Comm_get_lpid(comm_ptr, i, &vmap[i], FALSE);
     }
 
     for (int rank = 0; rank < group_ptr->size; rank++) {

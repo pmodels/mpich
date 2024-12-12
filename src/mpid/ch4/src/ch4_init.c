@@ -1073,7 +1073,7 @@ int MPID_Free_mem(void *user_buf)
     goto fn_exit;
 }
 
-int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr, int idx, uint64_t * lpid_ptr, bool is_remote)
+int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr, int idx, MPIR_Lpid * lpid_ptr, bool is_remote)
 {
     int mpi_errno = MPI_SUCCESS;
     int avtid = 0, lpid = 0;
