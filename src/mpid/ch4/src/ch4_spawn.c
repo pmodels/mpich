@@ -290,7 +290,7 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id, recvcontext_id;
-    uint64_t remote_gpid;
+    MPIR_Lpid remote_lpid;
 
     mpi_errno = MPIR_Get_contextid_sparse(MPIR_Process.comm_self, &recvcontext_id, FALSE);
     MPIR_ERR_CHECK(mpi_errno);
@@ -299,8 +299,8 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
     if (is_sender) {
         /* insert remote address */
         int addrname_len = len;
-        uint64_t *remote_gpids = &remote_gpid;
-        mpi_errno = MPIDIU_upids_to_gpids(1, &addrname_len, remote_addrname, remote_gpids);
+        MPIR_Lpid *remote_lpids = &remote_gpid;
+        mpi_errno = MPIDIU_upids_to_lpids(1, &addrname_len, remote_addrname, remote_lpids);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* fill hdr with context_id and addrname */
@@ -333,8 +333,8 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
 
         /* insert remote address */
         int addrname_len = hdr.addrname_len;
-        uint64_t *remote_gpids = &remote_gpid;
-        mpi_errno = MPIDIU_upids_to_gpids(1, &addrname_len, hdr.addrname, remote_gpids);
+        MPIR_Lpid *remote_lpids = &remote_gpid;
+        mpi_errno = MPIDIU_upids_to_lpids(1, &addrname_len, hdr.addrname, remote_lpids);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* send remote context_id */
