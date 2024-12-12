@@ -16,7 +16,7 @@
 int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
                                      int *is_low_group, int pure_intracomm,
                                      int *remote_upid_size, char *remote_upids,
-                                     uint64_t ** remote_gpids);
+                                     MPIR_Lpid ** remote_lpids);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
@@ -378,17 +378,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 /* We assume this routine is never called with rank=MPI_PROC_NULL. */
 MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
-    uint64_t gpid;
+    MPIR_Lpid lpid;
     int size = grp->size;
     int z;
     int ret;
 
     MPIR_FUNC_ENTER;
 
-    MPID_Comm_get_lpid(comm, rank, &gpid, FALSE);
+    MPID_Comm_get_lpid(comm, rank, &lpid, FALSE);
 
     for (z = 0; z < size; ++z) {
-        if (gpid == (uint64_t) MPIR_Group_rank_to_lpid(grp, z)) {
+        if (lpid == MPIR_Group_rank_to_lpid(grp, z)) {
             break;
         }
     }

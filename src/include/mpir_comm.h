@@ -379,7 +379,7 @@ int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
 /* peer intercomm is an internal 1-to-1 intercomm used for connecting dynamic processes */
 int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
-                               uint64_t remote_lpid, int is_low_group, MPIR_Comm ** newcomm);
+                               MPIR_Lpid remote_lpid, int is_low_group, MPIR_Comm ** newcomm);
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)

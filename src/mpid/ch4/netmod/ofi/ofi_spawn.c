@@ -7,7 +7,7 @@
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
 
-int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size, int timeout)
+int MPIDI_OFI_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -16,8 +16,8 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     int nic = 0;                /* dynamic process only use nic 0 */
     int vci = 0;                /* dynamic process only use vci 0 */
     int ctx_idx = 0;
-    int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
-    int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
+    int avtid = MPIDIU_GPID_GET_AVTID(remote_lpid);
+    int lpid = MPIDIU_GPID_GET_LPID(remote_lpid);
     fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
@@ -135,8 +135,8 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
 /* the following functions are "proc" functions, but because they are only used during dynamic
  * process spawning, having them here provides better context */
 
-int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
-                             uint64_t * remote_gpids)
+int MPIDI_OFI_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids,
+                             MPIR_Lpid * remote_lpids)
 {
     int i, mpi_errno = MPI_SUCCESS;
     int *new_avt_procs;
@@ -176,7 +176,7 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
                                                 MPIDI_OFI_TO_PHYS(k, j, nic), &tbladdr, &sz), 0,
                                    avlookup);
                 if (sz == addrname_len && !memcmp(tbladdr, addrname, addrname_len)) {
-                    remote_gpids[i] = MPIDIU_GPID_CREATE(k, j);
+                    remote_lpids[i] = MPIDIU_GPID_CREATE(k, j);
                     found = 1;
                     break;
                 }
@@ -215,7 +215,7 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
             MPIR_ERR_CHECK(mpi_errno);
             MPIDIU_get_av(avtid, i).node_id = node_id;
 
-            remote_gpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
+            remote_lpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
         }
     }
 

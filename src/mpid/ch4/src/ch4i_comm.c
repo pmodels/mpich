@@ -928,7 +928,7 @@ static uint64_t shrink(uint64_t x, int num_low_bits)
     return ((x >> 32) << num_low_bits) + (x & 0xffffffff);
 }
 
-int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int n2)
+int MPIDI_check_disjoint_lpids(MPIR_Lpid lpids1[], int n1, MPIR_Lpid lpids2[], int n2)
 {
     int mpi_errno = MPI_SUCCESS;
     uint32_t gpidmaskPrealloc[128];
@@ -944,12 +944,12 @@ int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int
     /* Find the max low-32-bit gpid */
     uint64_t max_lpid = 0;
     for (int i = 0; i < n1; i++) {
-        uint64_t n = gpids1[i] & 0xffffffff;
+        uint64_t n = lpids1[i] & 0xffffffff;
         if (n > max_lpid)
             max_lpid = n;
     }
     for (int i = 0; i < n2; i++) {
-        uint64_t n = gpids2[i] & 0xffffffff;
+        uint64_t n = lpids2[i] & 0xffffffff;
         if (n > max_lpid)
             max_lpid = n;
     }
@@ -958,12 +958,12 @@ int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int
 
     uint64_t max_gpid = 0;
     for (int i = 0; i < n1; i++) {
-        uint64_t n = shrink(gpids1[i], num_low_bits);
+        uint64_t n = shrink(lpids1[i], num_low_bits);
         if (n > max_gpid)
             max_gpid = n;
     }
     for (int i = 0; i < n2; i++) {
-        uint64_t n = shrink(gpids2[i], num_low_bits);
+        uint64_t n = shrink(lpids2[i], num_low_bits);
         if (n > max_gpid)
             max_gpid = n;
     }
@@ -980,7 +980,7 @@ int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int
 
     /* Set the bits for the first array */
     for (int i = 0; i < n1; i++) {
-        uint64_t n = shrink(gpids1[i], num_low_bits);
+        uint64_t n = shrink(lpids1[i], num_low_bits);
         int idx = n / 32;
         int bit = n % 32;
         gpidmask[idx] = gpidmask[idx] | (1 << bit);
@@ -989,12 +989,12 @@ int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int
 
     /* Look for any duplicates in the second array */
     for (int i = 0; i < n2; i++) {
-        uint64_t n = shrink(gpids2[i], num_low_bits);
+        uint64_t n = shrink(lpids2[i], num_low_bits);
         int idx = n / 32;
         int bit = n % 32;
         if (gpidmask[idx] & (1 << bit)) {
             MPIR_ERR_SET1(mpi_errno, MPI_ERR_COMM,
-                          "**dupprocesses", "**dupprocesses %d", gpids2[i]);
+                          "**dupprocesses", "**dupprocesses %d", (int) lpids2[i]);
             goto fn_fail;
         }
         /* Add a check on duplicates *within* group 2 */
