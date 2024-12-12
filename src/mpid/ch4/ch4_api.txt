@@ -87,8 +87,6 @@ Non Native API:
   am_tag_recv : int
       NM*: rank, comm, handler_id, tag, buf-2, count, datatype, src_vci, dst_vci, rreq
      SHM*: rank, comm, handler_id, tag, buf-2, count, datatype, src_vci, dst_vci, rreq
-  comm_get_gpid : int
-      NM*: comm_ptr, idx, gpid_ptr, is_remote
   get_local_upids : int
       NM : comm, local_upid_size, local_upids
   upids_to_gpids : int
@@ -477,8 +475,6 @@ PARAM:
     local_upid_size: int **
     local_upids: char **
     lock_type: int
-    gpid_ptr: uint64_t *
-    lpids: const int[]
     made_progress: int *
     message: MPIR_Request *
     message_p: MPIR_Request **
