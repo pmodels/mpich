@@ -37,18 +37,6 @@ MPI_Group_excl:
 
 MPI_Group_free:
     .desc: Frees a group
-{ -- error_check --
-    /* Cannot free the predefined groups, but allow GROUP_EMPTY
-     * because otherwise many tests fail */
-    if ((HANDLE_IS_BUILTIN(*group)) && *group != MPI_GROUP_EMPTY) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                         MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                         MPI_ERR_GROUP, "**groupperm", 0);
-    }
-    if (mpi_errno) {
-	goto fn_fail;
-    }
-}
 
 MPI_Group_incl:
     .desc: Produces a group by reordering an existing group and taking only listed members
