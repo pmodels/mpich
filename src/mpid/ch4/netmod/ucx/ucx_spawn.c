@@ -20,7 +20,7 @@ static void dynamic_recv_cb(void *request, ucs_status_t status,
     *done = true;
 }
 
-int MPIDI_UCX_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size, int timeout)
+int MPIDI_UCX_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -29,8 +29,8 @@ int MPIDI_UCX_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
-    int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
-    int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
+    int avtid = MPIDIU_GPID_GET_AVTID(remote_lpid);
+    int lpid = MPIDIU_GPID_GET_LPID(remote_lpid);
     ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(&MPIDIU_get_av(avtid, lpid), vci, vci);
 
     bool done = false;
@@ -144,8 +144,8 @@ int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     goto fn_exit;
 }
 
-int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
-                             uint64_t * remote_gpids)
+int MPIDI_UCX_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids,
+                             MPIR_Lpid * remote_lpids)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -162,7 +162,7 @@ int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
     for (int i = 0; i < size; i++) {
         MPIDI_upid_hash *t = MPIDIU_upidhash_find(curr_upid, remote_upid_size[i]);
         if (t) {
-            remote_gpids[i] = MPIDIU_GPID_CREATE(t->avtid, t->lpid);
+            remote_lpids[i] = MPIDIU_GPID_CREATE(t->avtid, t->lpid);
         } else {
             new_avt_procs[n_new_procs] = i;
             new_upids[n_new_procs] = curr_upid;
@@ -188,7 +188,7 @@ int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
             MPIDI_UCX_CHK_STATUS(ucx_status);
             MPIDIU_upidhash_add(new_upids[i], remote_upid_size[new_avt_procs[i]], avtid, i);
 
-            remote_gpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
+            remote_lpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
         }
     }
 
