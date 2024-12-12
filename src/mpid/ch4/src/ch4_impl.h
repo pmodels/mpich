@@ -16,7 +16,7 @@
 int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
                                      int *is_low_group, int pure_intracomm,
                                      int *remote_upid_size, char *remote_upids,
-                                     uint64_t ** remote_gpids);
+                                     MPIR_Lpid ** remote_lpids);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
