@@ -99,10 +99,16 @@ void MPIR_Group_finalize(void)
 int MPIR_Group_release(MPIR_Group * group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int inuse;
 
+    /* MPIR_Group_empty was not properly reference counted - FIXME */
+    if (group_ptr == MPIR_Group_empty) {
+        goto fn_exit;
+    }
+
+    int inuse;
     MPIR_Group_release_ref(group_ptr, &inuse);
     if (!inuse) {
+        MPIR_Assert(!HANDLE_IS_BUILTIN(group_ptr->handle));
         /* Only if refcount is 0 do we actually free. */
         if (group_ptr->pmap.use_map) {
             MPL_free(group_ptr->pmap.u.map);
@@ -113,6 +119,8 @@ int MPIR_Group_release(MPIR_Group * group_ptr)
         }
         MPIR_Handle_obj_free(&MPIR_Group_mem, group_ptr);
     }
+
+  fn_exit:
     return mpi_errno;
 }
 
