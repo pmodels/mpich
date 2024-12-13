@@ -270,8 +270,8 @@ int MPIDIU_insert_dynamic_upid(MPIR_Lpid * lpid_out, const char *upid, int upid_
     /* insert upid */
     *lpid_out = MPIR_LPID_DYNAMIC_MASK | idx;
 
-    /* mpi_errno = MPIDI_NM_insert_upid(*lpid_out, upid, upid_len); */
-    /* MPIR_ERR_CHECK(mpi_errno); */
+    mpi_errno = MPIDI_NM_insert_upid(*lpid_out, upid, upid_len);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return MPI_SUCCESS;

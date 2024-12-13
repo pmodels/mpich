@@ -11,6 +11,7 @@ static void dynamic_send_cb(void *request, ucs_status_t status, void *user_data)
 {
     bool *done = user_data;
     *done = true;
+    ucp_request_release(request);
 }
 
 static void dynamic_recv_cb(void *request, ucs_status_t status,
@@ -18,6 +19,7 @@ static void dynamic_recv_cb(void *request, ucs_status_t status,
 {
     bool *done = user_data;
     *done = true;
+    /* request always released in MPIDI_UCX_dynamic_recv due to its blocking design */
 }
 
 int MPIDI_UCX_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int size, int timeout)
@@ -27,11 +29,7 @@ int MPIDI_UCX_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
     uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
     int vci = 0;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
-
-    int avtid = MPIDIU_GPID_GET_AVTID(remote_lpid);
-    int lpid = MPIDIU_GPID_GET_LPID(remote_lpid);
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(&MPIDIU_get_av(avtid, lpid), vci, vci);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(MPIDIU_lpid_to_av_slow(remote_lpid), vci, vci);
 
     bool done = false;
     ucp_request_param_t param = {
@@ -68,7 +66,6 @@ int MPIDI_UCX_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     return mpi_errno;
 }
 
@@ -79,8 +76,6 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
     uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
     uint64_t tag_mask = 0xffffffffffffffff;
     int vci = 0;
-
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
 
     bool done = false;
     ucp_request_param_t param = {
@@ -117,7 +112,93 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
+    return mpi_errno;
+}
+
+int MPIDI_UCX_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
+                               const void *send_buf, int send_size, void *recv_buf, int recv_size,
+                               int timeout)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* NOTE: dynamic_sendrecv is always called inside CS of vci 0 */
+    int vci = 0;
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(vci));
+#endif
+
+    uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
+    uint64_t tag_mask = 0xffffffffffffffff;     /* for recv */
+    MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(remote_lpid);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(av, vci, vci);
+
+    ucs_status_ptr_t status = UCS_OK;
+
+    /* send */
+    bool send_done = false;
+    if (send_size > 0) {
+        ucp_request_param_t send_param = {
+            .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA,
+            .cb.send = dynamic_send_cb,
+            .user_data = &send_done,
+        };
+
+        status = ucp_tag_send_nbx(ep, send_buf, send_size, ucx_tag, &send_param);
+        if (status == UCS_OK) {
+            send_done = true;
+        } else if (UCS_PTR_IS_ERR(status)) {
+            /* FIXME: better error */
+            mpi_errno = MPI_ERR_PORT;
+            goto fn_exit;
+        }
+    } else {
+        send_done = true;
+    }
+
+    /* recv */
+    bool recv_done = false;
+    if (recv_size > 0) {
+        ucp_request_param_t recv_param = {
+            .op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK | UCP_OP_ATTR_FIELD_USER_DATA,
+            .cb.recv = dynamic_recv_cb,
+            .user_data = &recv_done,
+        };
+
+        status = ucp_tag_recv_nbx(MPIDI_UCX_global.ctx[vci].worker, recv_buf, recv_size,
+                                  ucx_tag, tag_mask, &recv_param);
+        if (status == UCS_OK) {
+            recv_done = true;
+        } else if (UCS_PTR_IS_ERR(status)) {
+            /* FIXME: better error */
+            mpi_errno = MPI_ERR_PORT;
+            goto fn_exit;
+        }
+    } else {
+        recv_done = true;
+    }
+
+    /* wait */
+    MPL_time_t time_start;
+    MPL_wtime(&time_start);
+    while (!send_done || !recv_done) {
+        ucp_worker_progress(MPIDI_UCX_global.ctx[vci].worker);
+
+        if (timeout > 0) {
+            MPL_time_t time_now;
+            double time_gap;
+            MPL_wtime(&time_now);
+            MPL_wtime_diff(&time_start, &time_now, &time_gap);
+            if (time_gap > (double) timeout) {
+                mpi_errno = MPIX_ERR_TIMEOUT;
+                break;
+            }
+        }
+    }
+
+  fn_exit:
+    if (status != UCS_OK) {
+        ucp_request_release(status);
+    }
     return mpi_errno;
 }
 
@@ -141,6 +222,48 @@ int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
+int MPIDI_UCX_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(lpid);
+
+    bool is_dynamic = (lpid & MPIR_LPID_DYNAMIC_MASK);
+    bool do_insert = false;
+    if (is_dynamic) {
+        do_insert = true;
+    } else if (!MPIDI_UCX_AV(av).dest[0][0]) {
+        MPIDI_av_entry_t *dynamic_av = MPIDIU_find_dynamic_av(upid, upid_len);
+        if (dynamic_av) {
+            /* just copy it over */
+            MPIDI_UCX_AV(av).dest[0][0] = MPIDI_UCX_AV(dynamic_av).dest[0][0];
+        } else {
+            do_insert = true;
+        }
+    }
+
+    if (do_insert) {
+        /* new entry */
+        ucp_ep_params_t ep_params;
+        ucs_status_t ucx_status;
+        ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+        ep_params.address = (ucp_address_t *) upid;
+        ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
+                                   &MPIDI_UCX_AV(av).dest[0][0]);
+        MPIDI_UCX_CHK_STATUS(ucx_status);
+    }
+
+    if (!is_dynamic) {
+        int avtid = MPIR_LPID_WORLD_INDEX(lpid);
+        int wrank = MPIR_LPID_WORLD_RANK(lpid);
+        MPIDIU_upidhash_add(upid, upid_len, avtid, wrank);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
     goto fn_exit;
 }
 
