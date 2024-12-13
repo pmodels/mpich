@@ -136,6 +136,7 @@ int MPIR_Group_check_valid_ranges(MPIR_Group *, int[][3], int);
 int MPIR_Group_create(int, MPIR_Group **);
 int MPIR_Group_release(MPIR_Group * group_ptr);
 
+int MPIR_Group_dup(MPIR_Group * old_group, MPIR_Session * session_ptr, MPIR_Group ** new_group_ptr);
 int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_Lpid * map,
                           MPIR_Group ** new_group_ptr);
 int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
