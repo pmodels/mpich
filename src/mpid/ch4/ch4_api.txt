@@ -90,12 +90,16 @@ Non Native API:
      SHM : comm, num_vcis
   get_local_upids : int
       NM : comm, local_upid_size, local_upids
+  insert_upid: int
+      NM : lpid, upid, upid_len
   upids_to_lpids : int
       NM : size, remote_upid_size, remote_upids, remote_lpids
   dynamic_send : int
       NM : remote_lpid, tag, buf, size, timeout
   dynamic_recv : int
       NM : tag, buf-2, size, timeout
+  dynamic_sendrecv : int
+      NM : remote_lpid, tag, send_buf, send_size, recv_buf, recv_size, timeout
   mpi_comm_commit_pre_hook : int
       NM : comm
      SHM : comm
@@ -476,6 +480,7 @@ PARAM:
     local_upid_size: int **
     local_upids: char **
     lock_type: int
+    lpid: MPIR_Lpid
     made_progress: int *
     message: MPIR_Request *
     message_p: MPIR_Request **
@@ -501,6 +506,8 @@ PARAM:
     recvcounts: const MPI_Aint *
     recvtype: MPI_Datatype
     recvtypes: const MPI_Datatype[]
+    recv_buf: void *
+    recv_size: int
     remote_lpid: MPIR_Lpid
     remote_lpids: MPIR_Lpid *
     remote_upid_size: int *
@@ -519,6 +526,8 @@ PARAM:
     sendcounts: const MPI_Aint *
     sendtype: MPI_Datatype
     sendtypes: const MPI_Datatype[]
+    send_buf: const void *
+    send_size: int
     size: int
     size_p: MPI_Aint *
     size-2: MPI_Aint
@@ -536,6 +545,8 @@ PARAM:
     target_rank: int
     timeout: int
     type: MPIR_Datatype *
+    upid: const char *
+    upid_len: int
     vci: int
     void: 
     win: MPIR_Win *
