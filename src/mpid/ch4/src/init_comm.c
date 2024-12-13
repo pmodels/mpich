@@ -78,6 +78,7 @@ void MPIDI_destroy_init_comm(MPIR_Comm ** comm_ptr)
     if (*comm_ptr != NULL) {
         comm = *comm_ptr;
         MPIDIU_release_lut(MPIDI_COMM(comm, map).irreg.lut.t);
+        MPIR_Group_release(comm->local_group);
         MPIDIG_destroy_comm(comm);
         MPIR_Object_release_ref(comm, &in_use);
         MPIR_Assertp(in_use == 0);
