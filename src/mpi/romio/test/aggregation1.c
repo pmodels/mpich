@@ -6,7 +6,7 @@
 /* Test case from John Bent (ROMIO req #835)
  * Aggregation code was not handling certain access patterns when collective
  * buffering forced */
-#define _XOPEN_SOURCE 500       /* strdup not in string.h otherwise */
+#define _XOPEN_SOURCE 600       /* strdup not in string.h otherwise */
 #include <unistd.h>
 #include <stdlib.h>
 #include <mpi.h>
