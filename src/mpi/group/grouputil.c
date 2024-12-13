@@ -146,6 +146,41 @@ int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
     return mpi_errno;
 }
 
+/* Internally the only reason to duplicate a group is to copy from NULL session to a new session.
+ * Otherwise, we can just use the same group and increment the reference count.
+ */
+int MPIR_Group_dup(MPIR_Group * old_group, MPIR_Session * session_ptr, MPIR_Group ** new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Group *new_group;
+
+    new_group = (MPIR_Group *) MPIR_Handle_obj_alloc(&MPIR_Group_mem);
+    if (!new_group) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPIR_Group_dup",
+                                         __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+        goto fn_fail;
+    }
+    MPIR_Object_set_ref(new_group, 1);
+
+    /* initialize fields */
+    new_group->size = old_group->size;
+    new_group->rank = old_group->rank;
+    MPIR_Group_set_session_ptr(new_group, session_ptr);
+    memcpy(&new_group->pmap, &old_group->pmap, sizeof(struct MPIR_Pmap));
+    if (old_group->pmap.use_map) {
+        new_group->pmap.u.map = MPL_malloc(old_group->size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
+        MPIR_ERR_CHKANDJUMP(!new_group->pmap.u.map, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        memcpy(new_group->pmap.u.map, old_group->pmap.u.map, old_group->size * sizeof(MPIR_Lpid));
+    }
+
+    *new_group_ptr = new_group;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static bool check_map_is_strided(int size, MPIR_Lpid * map,
                                  MPIR_Lpid * offset_out, MPIR_Lpid * stride_out,
                                  MPIR_Lpid * blocksize_out);
