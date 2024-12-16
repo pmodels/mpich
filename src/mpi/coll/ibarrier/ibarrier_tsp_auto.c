@@ -59,7 +59,6 @@ int MPIR_TSP_Ibarrier_sched_intra_tsp_auto(MPIR_Comm * comm, MPIR_TSP_sched_t sc
                 default:
                     /* Replace this call with MPIR_Assert(0) when json files have gentran algos */
                     goto fallback;
-                    break;
             }
     }
 

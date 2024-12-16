@@ -141,7 +141,6 @@ int MPIR_TSP_Ibcast_sched_intra_tsp_auto(void *buffer, MPI_Aint count, MPI_Datat
                 default:
                     /* Replace this call with MPIR_Assert(0) when json files have gentran algos */
                     goto fallback;
-                    break;
             }
     }
     MPIR_ERR_CHECK(mpi_errno);
