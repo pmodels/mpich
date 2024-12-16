@@ -244,8 +244,7 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
 int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
-    char *s;
-    if ((s = getenv("MPIX_SPLIT_DISABLE_HEURISTIC")) != NULL) {
+    if (getenv("MPIX_SPLIT_DISABLE_HEURISTIC") != NULL) {
         mpi_errno = comm_split_filesystem_exhaustive(comm, key, dirname, newcomm);
     } else {
         mpi_errno = comm_split_filesystem_heuristic(comm, key, dirname, newcomm);
