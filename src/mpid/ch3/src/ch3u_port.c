@@ -315,7 +315,6 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
         MPIDI_CH3I_PORT_CONNREQ_SET_STAT(connreq, REVOKE);
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_PORT, "**ch3|conntimeout",
                              "**ch3|conntimeout %d", timeout);
-        break;
 
     case MPIDI_CH3I_PORT_CONNREQ_ERR_CLOSE:
         /* Unexpected port closing on server.
@@ -329,12 +328,10 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 
         MPIDI_CH3I_PORT_CONNREQ_SET_STAT(connreq, FREE);
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_PORT, "**ch3|portclose");
-        break;
 
     default:
         /* Unexpected status, internal error. */
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_INTERN, "**unknown");
-        break;
     }
 
     mpi_errno = MPIDI_CH3I_Initialize_tmp_comm(&tmp_comm, connect_vc, 1, port_name_tag);
@@ -446,7 +443,6 @@ static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
             default:
                 /* report internal error -- unexpected state */
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_INTERN, "**unknown");
-                break;
             }
         }
 
