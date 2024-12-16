@@ -49,7 +49,6 @@ int MPIR_Dataloop_iov_len(void *dataloop, MPI_Aint * rem_iov_bytes, MPI_Aint * i
                     *iov_len += n;
                     goto fn_exit;
                 }
-                break;
             case MPII_DATALOOP_KIND_INDEXED:
                 for (MPI_Aint i = 0; i < dlp->loop_params.i_t.count; i++) {
                     MPI_Aint sub_size = dlp->loop_params.i_t.blocksize_array[i] * child_size;
