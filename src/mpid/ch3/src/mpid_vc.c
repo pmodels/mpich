@@ -440,23 +440,19 @@ static int check_disjoint_lpids(MPIR_Lpid lpids1[], int n1, MPIR_Lpid lpids2[], 
 #endif /* HAVE_ERROR_CHECKING */
 
 /*@
-  MPID_Intercomm_exchange_map - Exchange address mapping for intercomm creation.
+  MPID_Intercomm_exchange - Exchange remote info for intercomm creation.
  @*/
-int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
-                                MPIR_Comm *peer_comm_ptr, int remote_leader,
-                                int *remote_size, MPIR_Lpid **remote_lpids,
-                                int *is_low_group)
+int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
+                            MPIR_Comm *peer_comm_ptr, int remote_leader, int tag,
+                            int context_id, int *remote_context_id,
+                            int *remote_size, MPIR_Lpid **remote_lpids)
 {
     int mpi_errno = MPI_SUCCESS;
     int singlePG;
     int local_size;
     MPIR_Lpid *local_lpids=0;
     MPIDI_Gpid *local_gpids=NULL, *remote_gpids=NULL;
-    int comm_info[2];
-    int cts_tag;
     MPIR_CHKLMEM_DECL();
-
-    cts_tag = 0 | MPIR_TAG_COLL_BIT;
 
     if (local_comm_ptr->rank == local_leader) {
 
@@ -471,13 +467,17 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         /* printf( "About to sendrecv in intercomm_create\n" );fflush(stdout);*/
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,"rank %d sendrecv to rank %d", peer_comm_ptr->rank,
                                        remote_leader));
-        mpi_errno = MPIC_Sendrecv( &local_size,  1, MPIR_INT_INTERNAL,
-                                      remote_leader, cts_tag,
-                                      remote_size, 1, MPIR_INT_INTERNAL,
-                                      remote_leader, cts_tag,
-                                      peer_comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE );
+        int local_ints[2] = {local_size, context_id};
+        int remote_ints[2];
+        mpi_errno = MPIC_Sendrecv(local_ints, 2, MPIR_INT_INTERNAL,
+                                  remote_leader, tag,
+                                  remote_ints, 2, MPIR_INT_INTERNAL,
+                                  remote_leader, tag,
+                                  peer_comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
 
+        *remote_size = remote_ints[0];
+        *remote_context_id = remote_ints[1];
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST, "local size = %d, remote size = %d", local_size,
                                        *remote_size ));
         /* With this information, we can now send and receive the
@@ -492,9 +492,9 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
 
         /* Exchange the lpid arrays */
         mpi_errno = MPIC_Sendrecv( local_gpids, local_size*sizeof(MPIDI_Gpid), MPIR_BYTE_INTERNAL,
-                                      remote_leader, cts_tag,
+                                      remote_leader, tag,
                                       remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPIR_BYTE_INTERNAL,
-                                      remote_leader, cts_tag, peer_comm_ptr,
+                                      remote_leader, tag, peer_comm_ptr,
                                       MPI_STATUS_IGNORE, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -520,22 +520,18 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         }
 #       endif /* HAVE_ERROR_CHECKING */
 
-        /* Make an arbitrary decision about which group of process is
-           the low group.  The LEADERS do this by comparing the
-           local process ids of the 0th member of the two groups */
-        (*is_low_group) = local_lpids[0] < (*remote_lpids)[0];
-
         /* At this point, we're done with the local lpids; they'll
            be freed with the other local memory on exit */
 
     } /* End of the first phase of the leader communication */
     /* Leaders can now swap context ids and then broadcast the value
        to the local group of processes */
+    int comm_info[3];
     if (local_comm_ptr->rank == local_leader) {
         /* Now, send all of our local processes the remote_lpids,
            along with the final context id */
         comm_info[0] = *remote_size;
-        comm_info[1] = *is_low_group;
+        comm_info[1] = *remote_context_id;
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"About to bcast on local_comm");
         mpi_errno = MPIR_Bcast( comm_info, 2, MPIR_INT_INTERNAL, local_leader, local_comm_ptr, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
@@ -559,7 +555,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Extract the context and group sign information */
-        *is_low_group     = comm_info[1];
+        *remote_context_id = comm_info[1];
     }
 
     /* Finish up by giving the device the opportunity to update
