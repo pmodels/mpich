@@ -255,6 +255,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
     return ret;
 }
 
+/* used in fast path where we know the lpid has a valid av, such as from a committed communicator */
+MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_lpid_to_av(MPIR_Lpid lpid)
+{
+    int world_idx = MPIR_LPID_WORLD_INDEX(lpid);
+    int world_rank = MPIR_LPID_WORLD_RANK(lpid);
+    return &MPIDI_global.avt_mgr.av_tables[world_idx]->table[world_rank];
+}
+
+/* used in communicator creation paths when the av entry may not exist or inserted yet */
+MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_lpid_to_av_slow(MPIR_Lpid lpid)
+{
+    int world_idx = MPIR_LPID_WORLD_INDEX(lpid);
+    int world_rank = MPIR_LPID_WORLD_RANK(lpid);
+
+    MPIR_Assert(world_rank < MPIR_Worlds[world_idx].num_procs);
+
+    if (world_idx >= MPIDI_global.avt_mgr.n_avts) {
+        for (int i = MPIDI_global.avt_mgr.n_avts; i < world_idx + 1; i++) {
+            int avtid;
+            MPIDIU_new_avt(MPIR_Worlds[i].num_procs, &avtid);
+            MPIR_Assert(avtid == i);
+        }
+    }
+
+    return MPIDI_global.avt_mgr.av_tables[world_idx]->table[world_rank];
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
