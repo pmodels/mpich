@@ -153,6 +153,9 @@ int MPIDIU_avt_release_ref(int avtid)
     return MPI_SUCCESS;
 }
 
+static void init_dynamic_av_table(void);
+static void destroy_dynamic_av_table(void);
+
 int MPIDIU_avt_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -187,6 +190,8 @@ int MPIDIU_avt_init(void)
 
     MPIDI_global.avt_mgr.av_tables[0] = MPIDI_global.avt_mgr.av_table0;
 
+    init_dynamic_av_table();
+
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
@@ -202,6 +207,8 @@ int MPIDIU_avt_destroy(void)
         }
     }
 
+    destroy_dynamic_av_table();
+
     MPL_free(MPIDI_global.avt_mgr.av_tables);
     memset(&MPIDI_global.avt_mgr, 0, sizeof(MPIDI_global.avt_mgr));
 
@@ -209,21 +216,104 @@ int MPIDIU_avt_destroy(void)
     return MPI_SUCCESS;
 }
 
-/* used in communicator creation paths when the av entry may not exist or inserted yet */
+#define MPIDIU_DYN_AV_TABLE MPIDI_global.avt_mgr.dynamic_av_table
+#define MPIDIU_DYN_AV(idx) (MPIDI_av_entry_t *)((char *) MPIDI_global.avt_mgr.dynamic_av_table.table + (idx) * sizeof(MPIDI_av_entry_t))
+
+static void init_dynamic_av_table(void)
+{
+    /* allocate dynamic_av_table */
+    table_size = MPIDIU_DYNAMIC_AV_MAX * sizeof(MPIDI_av_entry_t);
+    MPIDIU_DYN_AV_TABLE.table = MPL_malloc(table_size, MPL_MEM_ADDRESS);
+    MPIDIU_DYN_AV_TABLE.size = 0;
+}
+
+static void destroy_dynamic_av_table(void)
+{
+    MPL_free(MPIDIU_DYN_AV_TABLE.table);
+}
+
+int MPIDIU_insert_dynamic_upid(MPIR_Lpid * lpid_out, const char *upid, int upid_len)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDIU_DYN_AV_TABLE.size + 1 >= MPIDIU_DYNAMIC_AV_MAX) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**intern");
+    }
+    int idx = MPIDIU_DYN_AV_TABLE.size;
+    *lpid_out = MPIR_LPID_DYNAMIC_MASK | idx;
+
+    MPIDI_av_entry_t *av = MPIDIU_DYN_AV(idx);
+    av->upid = upid;
+    av->upid_len = upid_len;
+
+    /* TODO: call MPIDI_NM_insert_upid to enable communication */
+
+    MPIDIU_DYN_AV_TABLE.size++;
+
+  fn_exit:
+    return MPI_SUCCESS;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDIU_free_dynamic_lpid(MPIR_Lpid lpid)
+{
+    MPIR_Assert(lpid & MPIR_LPID_DYNAMIC_MASK);
+    int idx = lpid & (~MPIR_LPID_DYNAMIC_MASK);
+    MPIR_Assert(idx >= 0 && idx < MPIDIU_DYN_AV_TABLE.size);
+
+    /* shift the tails. No-op if idx is the last entry (common case) */
+    if (idx < MPIDIU_DYN_AV_TABLE.size - 1) {
+        int num_tail = MPIDIU_DYN_AV_TABLE.size - idx - 1;
+        char *p = (char *) MPIDIU_DYN_AV_TABLE.table + i * sizeof(MPIDI_av_entry_t);
+        memmove(p, p + sizeof(MPIDI_av_entry_t), num_tail * sizeof(MPIDI_av_entry_t));
+
+        for (int i = idx; i < MPIDIU_DYN_AV_TABLE.size - 1; i++) {
+            MPIDIU_DYN_AV_TABLE.upids[i] = MPIDIU_DYN_AV_TABLE.upids[i + 1];
+            MPIDIU_DYN_AV_TABLE.upid_sizes[i] = MPIDIU_DYN_AV_TABLE.upid_sizes[i + 1];
+        }
+    }
+
+    MPIDIU_DYN_AV_TABLE.size--;
+
+    return MPI_SUCCESS;
+}
+
+MPIDI_av_entry_t *MPIDIU_find_dynamic_av(char *upid, int upid_len)
+{
+    for (int i = 0; i < MPIDIU_DYN_AV_TABLE.size; i++) {
+        if (MPIDIU_DYN_AV_TABLE.upid_sizes[i] == upid_len &&
+            memcmp(MPIDIU_DYN_AV_TABLE.upids[i], upid, upid_len) == 0) {
+            void *p = (char *) MPIDIU_DYN_AV_TABLE.table + i * sizeof(MPIDI_av_entry_t);
+            return (MPIDI_av_entry_t *) p;
+        }
+    }
+    return NULL;
+}
+
+/* this version handles dynamic av or av entries that are not allocated yet (e.g. new world)
+ */
 MPIDI_av_entry_t *MPIDIU_lpid_to_av_slow(MPIR_Lpid lpid)
 {
-    int world_idx = MPIR_LPID_WORLD_INDEX(lpid);
-    int world_rank = MPIR_LPID_WORLD_RANK(lpid);
+    if (lpid & MPIR_LPID_DYNAMIC_MASK) {
+        int idx = lpid & (~MPIR_LPID_DYNAMIC_MASK);
+        MPIR_Assert(idx >= 0 && idx < MPIDI_global.avt_mgr.num_dynamic_avs);
+        return &MPIDIU_DYN_AV_TABLE.table[idx];
+    } else {
+        int world_idx = MPIR_LPID_WORLD_INDEX(lpid);
+        int world_rank = MPIR_LPID_WORLD_RANK(lpid);
 
-    MPIR_Assert(world_rank < MPIR_Worlds[world_idx].num_procs);
+        MPIR_Assert(world_rank < MPIR_Worlds[world_idx].num_procs);
 
-    if (world_idx >= MPIDI_global.avt_mgr.n_avts) {
-        /* new world. Add av table for each new world */
-        for (int i = MPIDI_global.avt_mgr.n_avts; i < world_idx + 1; i++) {
-            int avtid;
-            MPIDIU_new_avt(MPIR_Worlds[i].num_procs, &avtid);
-            MPIR_Assert(avtid == i);
+        if (world_idx >= MPIDI_global.avt_mgr.n_avts) {
+            for (int i = MPIDI_global.avt_mgr.n_avts; i < world_idx + 1; i++) {
+                int avtid;
+                MPIDIU_new_avt(MPIR_Worlds[i].num_procs, &avtid);
+                MPIR_Assert(avtid == i);
+            }
         }
+
+        return &MPIDI_global.avt_mgr.av_tables[world_idx]->table[world_rank];
     }
 }
 
