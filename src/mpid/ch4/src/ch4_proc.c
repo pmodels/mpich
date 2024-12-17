@@ -104,6 +104,8 @@ int MPIDIU_new_avt(int size, int *avtid)
 
     MPIR_cc_set(&MPIDI_global.avt_mgr.av_tables[*avtid]->ref_count, 0);
 
+    /* TODO: to support dynamic processes and dynamic av insertions, we need device hooks to initialize table with invalid entries */
+
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
@@ -205,6 +207,24 @@ int MPIDIU_avt_destroy(void)
 
     MPIR_FUNC_EXIT;
     return MPI_SUCCESS;
+}
+
+/* used in communicator creation paths when the av entry may not exist or inserted yet */
+MPIDI_av_entry_t *MPIDIU_lpid_to_av_slow(MPIR_Lpid lpid)
+{
+    int world_idx = MPIR_LPID_WORLD_INDEX(lpid);
+    int world_rank = MPIR_LPID_WORLD_RANK(lpid);
+
+    MPIR_Assert(world_rank < MPIR_Worlds[world_idx].num_procs);
+
+    if (world_idx >= MPIDI_global.avt_mgr.n_avts) {
+        /* new world. Add av table for each new world */
+        for (int i = MPIDI_global.avt_mgr.n_avts; i < world_idx + 1; i++) {
+            int avtid;
+            MPIDIU_new_avt(MPIR_Worlds[i].num_procs, &avtid);
+            MPIR_Assert(avtid == i);
+        }
+    }
 }
 
 #ifdef MPIDI_BUILD_CH4_UPID_HASH
