@@ -213,25 +213,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_lpid_to_av(MPIR_Lpid lpid)
     return &MPIDI_global.avt_mgr.av_tables[world_idx]->table[world_rank];
 }
 
-/* used in communicator creation paths when the av entry may not exist or inserted yet */
-MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_lpid_to_av_slow(MPIR_Lpid lpid)
-{
-    int world_idx = MPIR_LPID_WORLD_INDEX(lpid);
-    int world_rank = MPIR_LPID_WORLD_RANK(lpid);
-
-    MPIR_Assert(world_rank < MPIR_Worlds[world_idx].num_procs);
-
-    if (world_idx >= MPIDI_global.avt_mgr.n_avts) {
-        for (int i = MPIDI_global.avt_mgr.n_avts; i < world_idx + 1; i++) {
-            int avtid;
-            MPIDIU_new_avt(MPIR_Worlds[i].num_procs, &avtid);
-            MPIR_Assert(avtid == i);
-        }
-    }
-
-    return MPIDI_global.avt_mgr.av_tables[world_idx]->table[world_rank];
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
@@ -264,5 +245,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av)
     MPIR_FUNC_EXIT;
     return ret;
 }
+
+int MPIDIU_insert_dynamic_upid(MPIR_Lpid * lpid_out, const char *upid, int upid_len);
+int MPIDIU_free_dynamic_lpid(MPIR_Lpid lpid);
+MPIDI_av_entry_t *MPIDIU_find_dynamic_av(const char *upid, int upid_len);
+/* used in communicator creation paths when the av entry may not exist or inserted yet */
+MPIDI_av_entry_t *MPIDIU_lpid_to_av_slow(MPIR_Lpid lpid);
 
 #endif /* CH4_PROC_H_INCLUDED */
