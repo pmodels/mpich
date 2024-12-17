@@ -81,6 +81,14 @@ int MPIR_find_world(const char *namespace);
  */
 typedef int64_t MPIR_Lpid;
 
+#define MPIR_LPID_WORLD_INDEX(lpid) ((lpid) >> 32)
+#define MPIR_LPID_WORLD_RANK(lpid)  ((lpid) & 0xffffffff)
+#define MPIR_LPID_FROM(world_idx, world_rank) (((uint64_t)(world_idx) << 32) | (world_rank))
+/* A dynamic mask is used for temporary lpid during establishing dynamic connections.
+ *     dynamic_lpid = MPIR_LPID_DYNAMIC_MASK | index_to_dynamic_av_table
+ */
+#define MPIR_LPID_DYNAMIC_MASK ((MPIR_Lpid)0x1 << 63)
+
 struct MPIR_Pmap {
     int size;                   /* same as group->size, duplicate here so Pmap is logically complete */
     bool use_map;
