@@ -77,6 +77,24 @@
 #define MPICH_CALC_VERSION(MAJOR, MINOR, REVISION, TYPE, PATCH) \
     (((MAJOR) * 10000000) + ((MINOR) * 100000) + ((REVISION) * 1000) + ((TYPE) * 100) + (PATCH))
 
+#if !defined(INT8_C)
+/* stdint.h was not included, see if we can get it */
+#  if defined(__cplusplus)
+#    if __cplusplus >= 201103
+#      include <cstdint>
+#    endif
+#  endif
+#endif
+
+#if !defined(INT8_C)
+/* stdint.h was not included, see if we can get it */
+#  if defined(__STDC_VERSION__)
+#    if __STDC_VERSION__ >= 199901
+#      include <stdint.h>
+#    endif
+#  endif
+#endif
+
 /* Keep C++ compilers from getting confused */
 #if defined(__cplusplus)
 extern "C" {
@@ -103,24 +121,6 @@ extern "C" {
 #  define MPICH_ATTR_TYPE_TAG(type)
 #  define MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(type)
 #  define MPICH_ATTR_TYPE_TAG_MUST_BE_NULL()
-#endif
-
-#if !defined(INT8_C)
-/* stdint.h was not included, see if we can get it */
-#  if defined(__cplusplus)
-#    if __cplusplus >= 201103
-#      include <cstdint>
-#    endif
-#  endif
-#endif
-
-#if !defined(INT8_C)
-/* stdint.h was not included, see if we can get it */
-#  if defined(__STDC_VERSION__)
-#    if __STDC_VERSION__ >= 199901
-#      include <stdint.h>
-#    endif
-#  endif
 #endif
 
 #if defined(INT8_C)
