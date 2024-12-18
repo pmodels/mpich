@@ -623,64 +623,8 @@ int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
 			    int size, const MPIR_Lpid lpids[] )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Comm *commworld_ptr;
-    int i;
-    MPIDI_PG_iterator iter;
 
-    commworld_ptr = MPIR_Process.comm_world;
-    /* Setup the communicator's vc table: remote group */
-    MPIDI_VCRT_Create( size, &newcomm_ptr->dev.vcrt );
-    for (i=0; i<size; i++) {
-	MPIDI_VC_t *vc = 0;
-
-	/* For rank i in the new communicator, find the corresponding
-	   virtual connection.  For lpids less than the size of comm_world,
-	   we can just take the corresponding entry from comm_world.
-	   Otherwise, we need to search through the process groups.
-	*/
-	/* printf( "[%d] Remote rank %d has lpid %d\n", 
-	   MPIR_Process.comm_world->rank, i, lpids[i] ); */
-	if (lpids[i] < commworld_ptr->remote_size) {
-	    vc = commworld_ptr->dev.vcrt->vcr_table[lpids[i]];
-	}
-	else {
-	    /* We must find the corresponding vcr for a given lpid */	
-	    /* For now, this means iterating through the process groups */
-	    MPIDI_PG_t *pg = 0;
-	    int j;
-
-	    MPIDI_PG_Get_iterator(&iter);
-	    /* Skip comm_world */
-	    MPIDI_PG_Get_next( &iter, &pg );
-	    do {
-		MPIDI_PG_Get_next( &iter, &pg );
-                MPIR_ERR_CHKINTERNAL(!pg, mpi_errno, "no pg");
-		/* FIXME: a quick check on the min/max values of the lpid
-		   for this process group could help speed this search */
-		for (j=0; j<pg->size; j++) {
-		    /*printf( "Checking lpid %d against %d in pg %s\n",
-			    lpids[i], pg->vct[j].lpid, (char *)pg->id );
-			    fflush(stdout); */
-		    if (pg->vct[j].lpid == lpids[i]) {
-			vc = &pg->vct[j];
-			/*printf( "found vc %x for lpid = %d in another pg\n", 
-			  (int)vc, lpids[i] );*/
-			break;
-		    }
-		}
-	    } while (!vc);
-	}
-
-	/* printf( "about to dup vc %x for lpid = %d in another pg\n", 
-	   (int)vc, lpids[i] ); */
-	/* Note that his will increment the ref count for the associate
-	   PG if necessary.  */
-	MPIDI_VCR_Dup( vc, &newcomm_ptr->dev.vcrt->vcr_table[i] );
-    }
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 /* The following is a temporary hook to ensure that all processes in 

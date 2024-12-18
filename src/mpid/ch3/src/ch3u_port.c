@@ -1326,20 +1326,6 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
     intercomm->comm_kind    = MPIR_COMM_KIND__INTERCOMM;
     intercomm->local_comm   = NULL;
 
-    /* Point local vcrt at those of incoming intracommunicator */
-    intercomm->dev.local_vcrt = comm_ptr->dev.vcrt;
-    MPIDI_VCRT_Add_ref(comm_ptr->dev.vcrt);
-
-    /* Set up VC reference table */
-    mpi_errno = MPIDI_VCRT_Create(intercomm->remote_size, &intercomm->dev.vcrt);
-    if (mpi_errno != MPI_SUCCESS) {
-	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**init_vcrt");
-    }
-    for (i=0; i < intercomm->remote_size; i++) {
-	MPIDI_PG_Dup_vcr(remote_pg[remote_translation[i].pg_index], 
-			 remote_translation[i].pg_rank, &intercomm->dev.vcrt->vcr_table[i]);
-    }
-
     intercomm->local_group  = comm_ptr->local_group;
     MPIR_Group_add_ref(comm_ptr->local_group);
 
