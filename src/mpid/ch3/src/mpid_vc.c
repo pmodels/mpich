@@ -423,7 +423,7 @@ static int check_disjoint_lpids(MPIR_Lpid lpids1[], int n1, MPIR_Lpid lpids2[], 
 int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
                             MPIR_Comm *peer_comm_ptr, int remote_leader, int tag,
                             int context_id, int *remote_context_id,
-                            int *remote_size, MPIR_Lpid **remote_lpids)
+                            int *remote_size, MPIR_Lpid **remote_lpids, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
     int singlePG;
