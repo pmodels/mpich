@@ -204,21 +204,6 @@ int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
     goto fn_exit;
 }
 
-static MPIR_Lpid pmap_rank_to_lpid(struct MPIR_Pmap *pmap, int rank)
-{
-    if (rank < 0 || rank >= pmap->size) {
-        return MPI_UNDEFINED;
-    }
-
-    if (pmap->use_map) {
-        return pmap->u.map[rank];
-    } else {
-        MPIR_Lpid i_blk = rank / pmap->u.stride.blocksize;
-        MPIR_Lpid r_blk = rank % pmap->u.stride.blocksize;
-        return pmap->u.stride.offset + i_blk * pmap->u.stride.stride + r_blk;
-    }
-}
-
 static int pmap_lpid_to_rank(struct MPIR_Pmap *pmap, MPIR_Lpid lpid)
 {
     if (pmap->use_map) {
@@ -252,11 +237,6 @@ static int pmap_lpid_to_rank(struct MPIR_Pmap *pmap, MPIR_Lpid lpid)
 int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid)
 {
     return pmap_lpid_to_rank(&group->pmap, lpid);
-}
-
-MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank)
-{
-    return pmap_rank_to_lpid(&group->pmap, rank);
 }
 
 #ifdef HAVE_ERROR_CHECKING
