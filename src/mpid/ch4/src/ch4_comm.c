@@ -891,9 +891,6 @@ int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
                 MPL_pof2(MPIDI_COMM(comm, multi_leads_comm)->local_size);
             MPIDI_COMM(comm, multi_leads_comm)->remote_size = num_external;
 
-            MPIR_Comm_map_irregular(MPIDI_COMM(comm, multi_leads_comm), comm,
-                                    external_procs, num_external, MPIR_COMM_MAP_DIR__L2L, NULL);
-
             mpi_errno = MPIR_Group_incl_impl(comm->local_group, num_external, external_procs,
                                              &MPIDI_COMM(comm, multi_leads_comm)->local_group);
             MPIR_ERR_CHECK(mpi_errno);
@@ -912,8 +909,6 @@ int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
             mpi_errno = MPID_Comm_commit_post_hook(MPIDI_COMM(comm, multi_leads_comm));
             if (mpi_errno)
                 MPIR_ERR_CHECK(mpi_errno);
-
-            MPIR_Comm_map_free(MPIDI_COMM(comm, multi_leads_comm));
         }
     }
 
