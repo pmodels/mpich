@@ -31,44 +31,6 @@ typedef enum MPIR_Comm_hierarchy_kind_t {
     MPIR_COMM_HIERARCHY_KIND__MULTI_LEADS = 4,  /* is the multi_leaders_comm for a node */
 } MPIR_Comm_hierarchy_kind_t;
 
-typedef enum {
-    MPIR_COMM_MAP_TYPE__DUP,
-    MPIR_COMM_MAP_TYPE__IRREGULAR
-} MPIR_Comm_map_type_t;
-
-/* direction of mapping: local to local, local to remote, remote to
- * local, remote to remote */
-typedef enum {
-    MPIR_COMM_MAP_DIR__L2L,
-    MPIR_COMM_MAP_DIR__L2R,
-    MPIR_COMM_MAP_DIR__R2L,
-    MPIR_COMM_MAP_DIR__R2R
-} MPIR_Comm_map_dir_t;
-
-typedef struct MPIR_Comm_map {
-    MPIR_Comm_map_type_t type;
-
-    struct MPIR_Comm *src_comm;
-
-    /* mapping direction for intercomms, which contain local and
-     * remote groups */
-    MPIR_Comm_map_dir_t dir;
-
-    /* only valid for irregular map type */
-    int src_mapping_size;
-    int *src_mapping;
-    int free_mapping;           /* we allocated the mapping */
-
-    struct MPIR_Comm_map *next;
-} MPIR_Comm_map_t;
-
-int MPIR_Comm_map_irregular(struct MPIR_Comm *newcomm, struct MPIR_Comm *src_comm,
-                            int *src_mapping, int src_mapping_size,
-                            MPIR_Comm_map_dir_t dir, MPIR_Comm_map_t ** map);
-int MPIR_Comm_map_dup(struct MPIR_Comm *newcomm, struct MPIR_Comm *src_comm,
-                      MPIR_Comm_map_dir_t dir);
-int MPIR_Comm_map_free(struct MPIR_Comm *comm);
-
 /* Communicator info hint */
 #define MPIR_COMM_HINT_TYPE_BOOL 0
 #define MPIR_COMM_HINT_TYPE_INT  1
@@ -253,12 +215,6 @@ struct MPIR_Comm {
 #if defined HAVE_HCOLL
     hcoll_comm_priv_t hcoll_priv;
 #endif                          /* HAVE_HCOLL */
-
-    /* the mapper is temporarily filled out in order to allow the
-     * device to setup its network addresses.  it will be freed after
-     * the device has initialized the comm. */
-    MPIR_Comm_map_t *mapper_head;
-    MPIR_Comm_map_t *mapper_tail;
 
     enum { MPIR_STREAM_COMM_NONE, MPIR_STREAM_COMM_SINGLE, MPIR_STREAM_COMM_MULTIPLEX }
         stream_comm_type;
