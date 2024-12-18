@@ -635,6 +635,8 @@ static int prepare_local_data(int local_size, int context_id, MPIR_Lpid * lpids,
     memcpy(s, lpids, local_size * sizeof(MPIR_Lpid));
     s += local_size * sizeof(MPIR_Lpid);
 
+    *(int *) (s) = num_worlds;
+    s += sizeof(int);
     for (int i = 0; i < num_worlds; i++) {
         strncpy(s, MPIR_Worlds[world_idx_array[i]].namespace, MPIR_NAMESPACE_MAX);
         s += MPIR_NAMESPACE_MAX;
