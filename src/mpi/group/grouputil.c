@@ -430,9 +430,7 @@ int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
     /* Initialize the vmap */
     MPIR_Lpid *vmap = MPL_malloc(vsize * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
     for (int i = 0; i < vsize; i++) {
-        /* FIXME: MPID_Comm_get_lpid to be removed */
-        uint64_t dev_lpid;
-        MPID_Comm_get_lpid(comm_ptr, i, &dev_lpid, FALSE);
+        MPIR_Lpid dev_lpid = MPIR_comm_rank_to_lpid(comm_ptr, i);
         MPIR_Assert((dev_lpid >> 32) == 0);
         vmap[i] = dev_lpid;
     }
