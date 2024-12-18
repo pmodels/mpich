@@ -309,8 +309,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
 
     /* Initialize the revoked flag as false */
     comm_p->revoked = 0;
-    comm_p->mapper_head = NULL;
-    comm_p->mapper_tail = NULL;
 
     comm_p->threadcomm = NULL;
     MPIR_stream_comm_init(comm_p);
@@ -407,10 +405,6 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     localcomm_ptr->local_size = intercomm_ptr->local_size;
     localcomm_ptr->rank = intercomm_ptr->rank;
 
-    MPIR_Comm_map_dup(localcomm_ptr, intercomm_ptr, MPIR_COMM_MAP_DIR__L2L);
-
-    /* TODO More advanced version: if the group is available, dup it by
-     * increasing the reference count instead of recreating it later */
     /* FIXME  : No local functions for the topology routines */
 
     intercomm_ptr->local_comm = localcomm_ptr;
@@ -422,93 +416,6 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
   fn_fail:
     MPIR_FUNC_EXIT;
 
-    return mpi_errno;
-}
-
-int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
-                            int *src_mapping, int src_mapping_size,
-                            MPIR_Comm_map_dir_t dir, MPIR_Comm_map_t ** map)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Comm_map_t *mapper;
-    MPIR_CHKPMEM_DECL();
-
-    MPIR_FUNC_ENTER;
-
-    MPIR_CHKPMEM_MALLOC(mapper, sizeof(MPIR_Comm_map_t), MPL_MEM_COMM);
-
-    mapper->type = MPIR_COMM_MAP_TYPE__IRREGULAR;
-    mapper->src_comm = src_comm;
-    mapper->dir = dir;
-    mapper->src_mapping_size = src_mapping_size;
-
-    if (src_mapping) {
-        mapper->src_mapping = src_mapping;
-        mapper->free_mapping = 0;
-    } else {
-        MPIR_CHKPMEM_MALLOC(mapper->src_mapping, src_mapping_size * sizeof(int), MPL_MEM_COMM);
-        mapper->free_mapping = 1;
-    }
-
-    mapper->next = NULL;
-
-    LL_APPEND(newcomm->mapper_head, newcomm->mapper_tail, mapper);
-
-    if (map)
-        *map = mapper;
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    MPIR_CHKPMEM_REAP();
-    goto fn_exit;
-}
-
-int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_dir_t dir)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Comm_map_t *mapper;
-    MPIR_CHKPMEM_DECL();
-
-    MPIR_FUNC_ENTER;
-
-    MPIR_CHKPMEM_MALLOC(mapper, sizeof(MPIR_Comm_map_t), MPL_MEM_COMM);
-
-    mapper->type = MPIR_COMM_MAP_TYPE__DUP;
-    mapper->src_comm = src_comm;
-    mapper->dir = dir;
-
-    mapper->next = NULL;
-
-    LL_APPEND(newcomm->mapper_head, newcomm->mapper_tail, mapper);
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    MPIR_CHKPMEM_REAP();
-    goto fn_exit;
-}
-
-
-int MPIR_Comm_map_free(MPIR_Comm * comm)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Comm_map_t *mapper, *tmp;
-
-    MPIR_FUNC_ENTER;
-
-    for (mapper = comm->mapper_head; mapper;) {
-        tmp = mapper->next;
-        if (mapper->type == MPIR_COMM_MAP_TYPE__IRREGULAR && mapper->free_mapping)
-            MPL_free(mapper->src_mapping);
-        MPL_free(mapper);
-        mapper = tmp;
-    }
-    comm->mapper_head = NULL;
-
-    MPIR_FUNC_EXIT;
     return mpi_errno;
 }
 
@@ -575,8 +482,6 @@ static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
 
     mpi_errno = get_node_count(comm, &comm->node_count);
     MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Comm_map_free(comm);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -689,9 +594,6 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
                                          &comm->node_comm->local_group);
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* mapper */
-        MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs, num_local,
-                                MPIR_COMM_MAP_DIR__L2L, NULL);
         mpi_errno = MPIR_Comm_commit_internal(comm->node_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -724,9 +626,6 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
                                          &comm->node_roots_comm->local_group);
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* mapper */
-        MPIR_Comm_map_irregular(comm->node_roots_comm, comm, external_procs, num_external,
-                                MPIR_COMM_MAP_DIR__L2L, NULL);
         mpi_errno = MPIR_Comm_commit_internal(comm->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -930,7 +829,6 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     int mpi_errno = MPI_SUCCESS;
     int new_context_id, new_recvcontext_id;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIR_Comm_map_t *map = NULL;
 
     MPIR_FUNC_ENTER;
 
@@ -980,37 +878,6 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     }
 
     MPIR_Comm_set_session_ptr(newcomm_ptr, comm_ptr->session_ptr);
-
-    /* There are two cases here - size is the same as the old communicator,
-     * or it is smaller.  If the size is the same, we can just add a reference.
-     * Otherwise, we need to create a new network address mapping.  Note that this is the
-     * test that matches the test on rank above. */
-    if (size == comm_ptr->local_size) {
-        /* Duplicate the network address mapping */
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
-        else
-            MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2R);
-    } else {
-        int i;
-
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            MPIR_Comm_map_irregular(newcomm_ptr, comm_ptr, NULL, size, MPIR_COMM_MAP_DIR__L2L,
-                                    &map);
-        else
-            MPIR_Comm_map_irregular(newcomm_ptr, comm_ptr, NULL, size, MPIR_COMM_MAP_DIR__R2R,
-                                    &map);
-        for (i = 0; i < size; i++) {
-            /* For rank i in the new communicator, find the corresponding
-             * rank in the input communicator */
-            map->src_mapping[i] = i;
-        }
-    }
-
-    /* If it is an intercomm, duplicate the local network address references */
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
-    }
 
     /* Set the sizes and ranks */
     newcomm_ptr->rank = comm_ptr->rank;
@@ -1082,16 +949,6 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** out
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         newcomm_ptr->remote_group = comm_ptr->remote_group;
         MPIR_Group_add_ref(comm_ptr->remote_group);
-    }
-
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
-    else
-        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2R);
-
-    /* If it is an intercomm, duplicate the network address mapping */
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
     }
 
     /* Set the sizes and ranks */
