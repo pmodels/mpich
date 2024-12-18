@@ -220,6 +220,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
      * counter in request, thus it can be decreased at request completion. */
     MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->dev.completion_notification);
 
+    bool is_local;
+    is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
+    if (MPIDIG_can_do_tag(is_local)) {
+        am_hdr.am_tag = MPIDIG_get_next_am_tag(win->comm_ptr);
+        CH4_CALL(am_tag_recv(target_rank, win->comm_ptr, MPIDIG_TAG_GET_COMPLETE, am_hdr.am_tag,
+                             origin_addr, origin_count, origin_datatype, vci_target, vci, sreq),
+                 is_local, mpi_errno);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        am_hdr.am_tag = -1;
+    }
+
     int is_contig;
     MPIR_Datatype_is_contig(target_datatype, &is_contig);
     if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype) || is_contig) {
@@ -228,8 +240,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
         CH4_CALL(am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
-                          NULL, 0, MPI_DATATYPE_NULL, vci, vci_target, sreq),
-                 MPIDI_rank_is_local(target_rank, win->comm_ptr), mpi_errno);
+                          NULL, 0, MPI_DATATYPE_NULL, vci, vci_target, sreq), is_local, mpi_errno);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
@@ -242,7 +253,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
 
     CH4_CALL(am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
                       flattened_dt, flattened_sz, MPI_BYTE, vci, vci_target, sreq),
-             MPIDI_rank_is_local(target_rank, win->comm_ptr), mpi_errno);
+             is_local, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
