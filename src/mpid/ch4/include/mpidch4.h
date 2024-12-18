@@ -26,7 +26,6 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *, MPIR_Group **, int);
 int MPID_Comm_revoke(MPIR_Comm *, int);
 int MPID_Comm_failure_ack(MPIR_Comm *);
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm *) MPL_STATIC_INLINE_SUFFIX;
-int MPID_Comm_get_lpid(MPIR_Comm *, int, MPIR_Lpid *, bool);
 int MPID_CS_finalize(void);
 int MPID_Finalize(void);
 int MPID_Get_universe_size(int *);

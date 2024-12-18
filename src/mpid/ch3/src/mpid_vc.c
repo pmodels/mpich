@@ -222,25 +222,6 @@ int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
     return MPI_SUCCESS;
 }
 
-/*@
-  MPID_Comm_get_lpid - Get the local process ID for a given VC reference
-  @*/
-int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, MPIR_Lpid *lpid_ptr, bool is_remote)
-{
-
-    MPIR_FUNC_ENTER;
-
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-        *lpid_ptr = comm_ptr->dev.vcrt->vcr_table[idx]->lpid;
-    else if (is_remote)
-        *lpid_ptr = comm_ptr->dev.vcrt->vcr_table[idx]->lpid;
-    else
-        *lpid_ptr = comm_ptr->dev.local_vcrt->vcr_table[idx]->lpid;
-
-    MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
-}
-
 /* 
  * The following routines convert to/from the global pids, which are 
  * represented as pairs of ints (process group id, rank in that process group)
@@ -363,13 +344,10 @@ int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid in_gpid[], MPIR_Lpid lpid[] )
 static inline int MPIDI_LPID_GetAllInComm(MPIR_Comm *comm_ptr, int local_size,
                                           MPIR_Lpid local_lpids[])
 {
-    int i;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Assert( comm_ptr->local_size == local_size );
-    for (i=0; i<comm_ptr->local_size; i++) {
-        MPIR_Lpid tmp_lpid;
-	mpi_errno |= MPID_Comm_get_lpid( comm_ptr, i, &tmp_lpid, FALSE );
-        local_lpids[i] = tmp_lpid;
+    for (int i=0; i<comm_ptr->local_size; i++) {
+        local_lpids[i] = comm_ptr->dev.vcrt->vcr_table[i]->lpid;
     }
     return mpi_errno;
 }

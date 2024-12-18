@@ -73,8 +73,7 @@ static int comm_create_local_group(MPIR_Comm * comm_ptr)
     MPIR_Lpid *map = MPL_malloc(n * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
 
     for (int i = 0; i < n; i++) {
-        mpi_errno = MPID_Comm_get_lpid(comm_ptr, i, &map[i], FALSE);
-        MPIR_ERR_CHECK(mpi_errno);
+        map[i] = MPIR_Group_rank_to_lpid(comm_ptr->local_group, i);
     }
 
     mpi_errno = MPIR_Group_create_map(n, comm_ptr->rank, comm_ptr->session_ptr, map,
@@ -238,8 +237,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
             /* FIXME : BUBBLE SORT */
             mapping[i] = -1;
             for (j = 0; j < comm_ptr->local_size; j++) {
-                MPIR_Lpid comm_lpid;
-                MPID_Comm_get_lpid(comm_ptr, j, &comm_lpid, FALSE);
+                MPIR_Lpid comm_lpid = MPIR_Group_rank_to_lpid(comm_ptr->local_group, j);
                 if (comm_lpid == MPIR_Group_rank_to_lpid(group_ptr, i)) {
                     mapping[i] = j;
                     break;
@@ -918,8 +916,7 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
         MPIR_Lpid *map = MPL_malloc(n * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
 
         for (int i = 0; i < n; i++) {
-            mpi_errno = MPID_Comm_get_lpid(comm_ptr, i, &map[i], TRUE);
-            MPIR_ERR_CHECK(mpi_errno);
+            map[i] = MPIR_Group_rank_to_lpid(comm_ptr->remote_group, i);
         }
         mpi_errno = MPIR_Group_create_map(n, MPI_UNDEFINED, comm_ptr->session_ptr, map,
                                           &comm_ptr->remote_group);
