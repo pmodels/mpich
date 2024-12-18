@@ -117,6 +117,9 @@ int MPIR_Group_release(MPIR_Group * group_ptr)
             /* Release session */
             MPIR_Session_release(group_ptr->session_ptr);
         }
+#ifdef MPID_DEV_GROUP_DECL
+        mpi_errno = MPID_Group_free_hook(group_ptr);
+#endif
         MPIR_Handle_obj_free(&MPIR_Group_mem, group_ptr);
     }
 
@@ -150,6 +153,9 @@ int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
     (*new_group_ptr)->session_ptr = NULL;
     memset(&(*new_group_ptr)->pmap, 0, sizeof(struct MPIR_Pmap));
     (*new_group_ptr)->pmap.size = nproc;
+#ifdef MPID_DEV_GROUP_DECL
+    mpi_errno = MPID_Group_init_hook(*new_group_ptr);
+#endif
 
     return mpi_errno;
 }
@@ -182,6 +188,9 @@ int MPIR_Group_dup(MPIR_Group * old_group, MPIR_Session * session_ptr, MPIR_Grou
     }
 
     *new_group_ptr = new_group;
+#ifdef MPID_DEV_GROUP_DECL
+    mpi_errno = MPID_Group_init_hook(*new_group_ptr);
+#endif
 
   fn_exit:
     return mpi_errno;

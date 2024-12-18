@@ -44,6 +44,12 @@ int MPIDI_PG_Init(MPIDI_PG_Compare_ids_fn_t compare_ids_fn,
     MPIDI_PG_Compare_ids_fn = compare_ids_fn;
     MPIDI_PG_Destroy_fn     = destroy_fn;
 
+    /* initialize the device fields in builtin groups */
+#ifdef MPID_DEV_GROUP_DECL
+    for (int i = 0; i < MPIR_GROUP_N_BUILTIN; i++) {
+        MPID_Group_init_hook(MPIR_Group_builtin + i);
+    }
+#endif
     return mpi_errno;
 }
 
@@ -63,6 +69,13 @@ int MPIDI_PG_Finalize(void)
     if (MPIR_CVAR_CH3_PG_VERBOSE) {
 	MPIU_PG_Printall( stdout );
     }
+
+    /* release the vcrt in builtin groups, since they don't really get freed */
+#ifdef MPID_DEV_GROUP_DECL
+    for (int i = 0; i < MPIR_GROUP_N_BUILTIN; i++) {
+        MPID_Group_free_hook(MPIR_Group_builtin + i);
+    }
+#endif
 
     /* Free the storage associated with the process groups */
     pg = MPIDI_PG_list;

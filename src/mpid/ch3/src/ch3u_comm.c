@@ -581,3 +581,22 @@ void MPIDI_CH3I_Comm_find(int context_id, MPIR_Comm **comm)
 
     MPIR_FUNC_EXIT;
 }
+
+int MPID_Group_init_hook(MPIR_Group * group_ptr)
+{
+    group_ptr->ch3_vcrt = NULL;
+    return MPI_SUCCESS;
+}
+
+int MPID_Group_free_hook(MPIR_Group * group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (group_ptr->ch3_vcrt) {
+        /* FIXME: setting TRUE so vc entries may get released.
+         *        Is there a case we don't want that?
+         */
+        mpi_errno = MPIDI_VCRT_Release(group_ptr->ch3_vcrt, TRUE);
+    }
+    return mpi_errno;
+}
