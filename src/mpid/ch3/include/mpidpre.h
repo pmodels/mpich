@@ -195,6 +195,11 @@ typedef struct MPIDI_CH3I_comm
 }
 MPIDI_CH3I_comm_t;
 
+/* add vcrt to MPIR_Group so we can inherit it whenever possible */
+#define MPID_DEV_GROUP_DECL  struct MPIDI_VCRT *ch3_vcrt;
+int MPID_Group_init_hook(MPIR_Group * group_ptr);
+int MPID_Group_free_hook(MPIR_Group * group_ptr);
+
 #define MPID_DEV_COMM_DECL MPIDI_CH3I_comm_t dev;
 
 #ifndef DEFINED_REQ
