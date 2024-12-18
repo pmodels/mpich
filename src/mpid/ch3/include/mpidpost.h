@@ -189,7 +189,7 @@ int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
 int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
                             MPIR_Comm *peer_comm_ptr, int remote_leader,
                             int tag, int context_id, int *remote_context_id,
-                            int *remote_size, MPIR_Lpid **remote_lpids);
+                            int *remote_size, MPIR_Lpid **remote_lpids, int timeout);
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
                                       int size, const MPIR_Lpid lpids[] );
 

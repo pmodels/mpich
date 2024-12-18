@@ -985,6 +985,14 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
                                MPIR_Comm * peer_comm_ptr, int remote_leader, int tag,
                                MPIR_Comm ** new_intercomm_ptr)
 {
+    return MPIR_Intercomm_create_timeout(local_comm_ptr, local_leader,
+                                         peer_comm_ptr, remote_leader, tag, 0, new_intercomm_ptr);
+}
+
+int MPIR_Intercomm_create_timeout(MPIR_Comm * local_comm_ptr, int local_leader,
+                                  MPIR_Comm * peer_comm_ptr, int remote_leader,
+                                  int tag, int timeout, MPIR_Comm ** new_intercomm_ptr)
+{
     int mpi_errno = MPI_SUCCESS;
     int remote_size = 0;
     MPIR_Lpid *remote_lpids = NULL;
@@ -1001,7 +1009,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
      * calling routine already holds the single critical section */
     /* TODO: Make sure this is tag-safe */
-    int recvcontext_id;
+    int recvcontext_id = MPIR_INVALID_CONTEXT_ID;
     mpi_errno = MPIR_Get_contextid_sparse(local_comm_ptr, &recvcontext_id, FALSE);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(recvcontext_id != 0);
@@ -1013,7 +1021,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     mpi_errno = MPID_Intercomm_exchange(local_comm_ptr, local_leader,
                                         peer_comm_ptr, remote_leader, tag,
                                         recvcontext_id, &remote_context_id,
-                                        &remote_size, &remote_lpids);
+                                        &remote_size, &remote_lpids, timeout);
     MPIR_ERR_CHECK(mpi_errno);
 
     bool is_low_group;
@@ -1091,62 +1099,13 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     mpi_errno = MPIR_Comm_commit(*new_intercomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
-    goto fn_exit;
-}
-
-/* Peer intercomm is a 1-to-1 intercomm, internally created by device layer
- * to facilitate connecting dynamic processes */
-
-int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
-                               MPIR_Lpid remote_lpid, int is_low_group, MPIR_Comm ** newcomm)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Comm_create(newcomm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    (*newcomm)->context_id = context_id;
-    (*newcomm)->recvcontext_id = recvcontext_id;
-    (*newcomm)->remote_size = 1;
-    (*newcomm)->local_size = 1;
-    (*newcomm)->rank = 0;
-    (*newcomm)->comm_kind = MPIR_COMM_KIND__INTERCOMM;
-    (*newcomm)->local_comm = 0;
-    (*newcomm)->is_low_group = is_low_group;
-
-    mpi_errno = MPID_Create_intercomm_from_lpids(*newcomm, 1, &remote_lpid);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Comm *comm_self = MPIR_Process.comm_self;
-    MPIR_Comm_map_dup(*newcomm, comm_self, MPIR_COMM_MAP_DIR__L2L);
-
-    /* Inherit the error handler  */
-    MPID_THREAD_CS_ENTER(VCI, comm_self->mutex);
-    (*newcomm)->errhandler = comm_self->errhandler;
-    if (comm_self->errhandler) {
-        MPIR_Errhandler_add_ref(comm_self->errhandler);
+    if (recvcontext_id != MPIR_INVALID_CONTEXT_ID) {
+        MPIR_Free_contextid(recvcontext_id);
     }
-    MPID_THREAD_CS_EXIT(VCI, comm_self->mutex);
-
-    MPIR_Session *session_ptr = NULL;   /* Can we just use NULL session since peer_intercomm is always temporary? */
-    MPIR_Lpid my_lpid = MPIR_Group_rank_to_lpid(comm_self->local_group, 0);
-    mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, my_lpid, 1, &(*newcomm)->local_group);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, remote_lpid, 1,
-                                         &(*newcomm)->remote_group);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Comm_commit(*newcomm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
     goto fn_exit;
 }
 
