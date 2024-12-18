@@ -503,7 +503,7 @@ int MPID_Intercomm_exchange(MPIR_Comm * local_comm, int local_leader,
 
     /* insert upids */
     char *upid = remote_upids;
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
     for (int i = 0; i < *remote_size_out; i++) {
         mpi_errno = MPIDI_NM_insert_upid(remote_lpids[i], upid, remote_upid_sizes[i]);
         if (mpi_errno) {
@@ -511,7 +511,7 @@ int MPID_Intercomm_exchange(MPIR_Comm * local_comm, int local_leader,
         }
         upid += remote_upid_sizes[i];
     }
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     MPIR_ERR_CHECK(mpi_errno);
 
     /* make a copy of remote_lpids (because it points to remote_data and it will freed) */
@@ -632,6 +632,8 @@ static int prepare_local_data(int local_size, int context_id, MPIR_Lpid * lpids,
     memcpy(s, lpids, local_size * sizeof(MPIR_Lpid));
     s += local_size * sizeof(MPIR_Lpid);
 
+    *(int *) (s) = num_worlds;
+    s += sizeof(int);
     for (int i = 0; i < num_worlds; i++) {
         strncpy(s, MPIR_Worlds[world_idx_array[i]].namespace, MPIR_NAMESPACE_MAX);
         s += MPIR_NAMESPACE_MAX;

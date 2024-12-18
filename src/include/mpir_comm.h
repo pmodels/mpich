@@ -383,10 +383,6 @@ int MPIR_Comm_commit(MPIR_Comm *);
 
 int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
-/* peer intercomm is an internal 1-to-1 intercomm used for connecting dynamic processes */
-int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
-                               MPIR_Lpid remote_lpid, int is_low_group, MPIR_Comm ** newcomm);
-
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 
@@ -425,6 +421,10 @@ int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Inf
 
 int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
                                       MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
+
+int MPIR_Intercomm_create_timeout(MPIR_Comm * local_comm_ptr, int local_leader,
+                                  MPIR_Comm * peer_comm_ptr, int remote_leader,
+                                  int tag, int timeout, MPIR_Comm ** new_intercomm_ptr);
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and
    a private (non-user accessible) dup of comm world that is provided
