@@ -753,7 +753,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
                  *      Therefore, we set tag_up as lower bound for the operation. tag_ub is used by
                  *      most of the other blocking operations, but tag is always >0, so this
                  *      should be fine.
-                 *  2.) We need odering between multiple idup operations on the same communicator.
+                 *  2.) We need ordering between multiple idup operations on the same communicator.
                  *       The problem here is that the iallreduce operations of the first iteration
                  *       are not necessarily completed in the same order as they are issued, also on the
                  *       same communicator. To avoid deadlocks, we cannot add the elements to the
@@ -790,7 +790,6 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
     /* In the case of failure, the new communicator was half created.
      * So we need to clean the memory allocated for it. */
     MPII_COMML_FORGET(st->new_comm);
-    MPIR_Comm_map_free(st->new_comm);
     MPIR_Handle_obj_free(&MPIR_Comm_mem, st->new_comm);
     MPL_free(st);
     goto fn_exit;
