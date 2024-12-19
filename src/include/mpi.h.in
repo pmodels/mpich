@@ -960,6 +960,55 @@ typedef struct MPIX_Iov {
 
 @HAVE_ROMIO@
 
+/* The f2c and c2f APIs exist as real functions, but these macros allows
+ * for backward MPICH ABI compatibility.
+ */
+/* exclude these macros from MPICH internal */
+#ifndef MPICHCONF_H_INCLUDED
+#define MPI_Comm_c2f(comm) (MPI_Fint)(comm)
+#define MPI_Comm_f2c(comm) (MPI_Comm)(comm)
+#define MPI_Type_c2f(datatype) (MPI_Fint)(datatype)
+#define MPI_Type_f2c(datatype) (MPI_Datatype)(datatype)
+#define MPI_Group_c2f(group) (MPI_Fint)(group)
+#define MPI_Group_f2c(group) (MPI_Group)(group)
+#define MPI_Info_c2f(info) (MPI_Fint)(info)
+#define MPI_Info_f2c(info) (MPI_Info)(info)
+#define MPI_Request_f2c(request) (MPI_Request)(request)
+#define MPI_Request_c2f(request) (MPI_Fint)(request)
+#define MPI_Op_c2f(op) (MPI_Fint)(op)
+#define MPI_Op_f2c(op) (MPI_Op)(op)
+#define MPI_Errhandler_c2f(errhandler) (MPI_Fint)(errhandler)
+#define MPI_Errhandler_f2c(errhandler) (MPI_Errhandler)(errhandler)
+#define MPI_Win_c2f(win)   (MPI_Fint)(win)
+#define MPI_Win_f2c(win)   (MPI_Win)(win)
+#define MPI_Message_c2f(msg) ((MPI_Fint)(msg))
+#define MPI_Message_f2c(msg) ((MPI_Message)(msg))
+#define MPI_Session_c2f(session) (MPI_Fint)(session)
+#define MPI_Session_f2c(session) (MPI_Session)(session)
+
+/* PMPI versions of the handle transfer functions.  See section 4.17 */
+#define PMPI_Comm_c2f(comm) (MPI_Fint)(comm)
+#define PMPI_Comm_f2c(comm) (MPI_Comm)(comm)
+#define PMPI_Type_c2f(datatype) (MPI_Fint)(datatype)
+#define PMPI_Type_f2c(datatype) (MPI_Datatype)(datatype)
+#define PMPI_Group_c2f(group) (MPI_Fint)(group)
+#define PMPI_Group_f2c(group) (MPI_Group)(group)
+#define PMPI_Info_c2f(info) (MPI_Fint)(info)
+#define PMPI_Info_f2c(info) (MPI_Info)(info)
+#define PMPI_Request_f2c(request) (MPI_Request)(request)
+#define PMPI_Request_c2f(request) (MPI_Fint)(request)
+#define PMPI_Op_c2f(op) (MPI_Fint)(op)
+#define PMPI_Op_f2c(op) (MPI_Op)(op)
+#define PMPI_Errhandler_c2f(errhandler) (MPI_Fint)(errhandler)
+#define PMPI_Errhandler_f2c(errhandler) (MPI_Errhandler)(errhandler)
+#define PMPI_Win_c2f(win)   (MPI_Fint)(win)
+#define PMPI_Win_f2c(win)   (MPI_Win)(win)
+#define PMPI_Message_c2f(msg) ((MPI_Fint)(msg))
+#define PMPI_Message_f2c(msg) ((MPI_Message)(msg))
+#define PMPI_Session_c2f(session) (MPI_Fint)(session)
+#define PMPI_Session_f2c(session) (MPI_Session)(session)
+#endif
+
 #if defined(__cplusplus)
 }
 /* Add the C++ bindings */
