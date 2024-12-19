@@ -1,15 +1,5 @@
 # vim: set ft=c:
 
-MPI_File_open:
-    .desc: Opens a file
-    .skip: validate-amode
-
-MPI_File_close:
-    .desc: Closes a file
-
-MPI_File_delete:
-    .desc: Deletes a file
-
 MPI_File_c2f:
     .desc: Translates a C file handle to a Fortran file handle
     .impl: direct
@@ -31,6 +21,42 @@ MPI_File_f2c:
     return MPIR_File_f2c_impl(file);
 #endif
 }
+
+MPI_File_toint:
+    .return: INTEGER
+    file: FILE, [file handle]
+    .desc: converts a MPI_File to an integer handle
+    .impl: direct
+{
+#ifndef HAVE_ROMIO
+    return 0;
+#else
+    return (int) MPIR_File_c2f_impl(file);
+#endif
+}
+
+MPI_File_fromint:
+    .return: FILE
+    file: INTEGER
+    .desc: converts an integer handle to MPI_File
+    .impl: direct
+{
+#ifndef HAVE_ROMIO
+    return 0;
+#else
+    return MPIR_File_f2c_impl(file);
+#endif
+}
+
+MPI_File_open:
+    .desc: Opens a file
+    .skip: validate-amode
+
+MPI_File_close:
+    .desc: Closes a file
+
+MPI_File_delete:
+    .desc: Deletes a file
 
 MPI_File_sync:
     .desc: Causes all previous writes to be transferred

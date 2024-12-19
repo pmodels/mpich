@@ -1338,7 +1338,7 @@ def check_func_directives(func):
         func['_skip_fortran'] = 1
     elif RE.match(r'mpi_attr_', func['name'], re.IGNORECASE):
         func['_skip_fortran'] = 1
-    elif RE.match(r'mpi_\w+_(f|f08|c)2(f|f08|c)$', func['name'], re.IGNORECASE):
+    elif RE.match(r'mpi_\w+_((f|f08|c)2(f|f08|c)|fromint|toint)$', func['name'], re.IGNORECASE):
         # implemented in mpi_f08_types.f90
         func['_skip_fortran'] = 1
     elif RE.match(r'mpi_.*_function$', func['name'], re.IGNORECASE):
