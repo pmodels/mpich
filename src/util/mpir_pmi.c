@@ -168,6 +168,9 @@ int MPIR_pmi_init(void)
         pmi_connected = true;
     }
 
+    int world_idx = MPIR_add_world(pmi_kvs_name, size);
+    MPIR_Assertp(world_idx == 0);
+
     MPIR_Process.has_parent = has_parent;
     MPIR_Process.rank = rank;
     MPIR_Process.size = size;
