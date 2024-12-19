@@ -1209,6 +1209,29 @@ MPI_Session MPI_Session_f2c(MPI_Fint session);
 MPI_Fint MPI_Win_c2f(MPI_Win win);
 MPI_Win MPI_Win_f2c(MPI_Fint win);
 
+int MPI_Comm_toint(MPI_Comm comm);
+MPI_Comm MPI_Comm_fromint(int comm);
+int MPI_Errhandler_toint(MPI_Errhandler errhandler);
+MPI_Errhandler MPI_Errhandler_fromint(int errhandler);
+int MPI_Type_toint(MPI_Datatype datatype);
+MPI_Datatype MPI_Type_fromint(int datatype);
+int MPI_File_toint(MPI_File file);
+MPI_File MPI_File_fromint(int file);
+int MPI_Group_toint(MPI_Group group);
+MPI_Group MPI_Group_fromint(int group);
+int MPI_Info_toint(MPI_Info info);
+MPI_Info MPI_Info_fromint(int info);
+int MPI_Message_toint(MPI_Message message);
+MPI_Message MPI_Message_fromint(int message);
+int MPI_Op_toint(MPI_Op op);
+MPI_Op MPI_Op_fromint(int op);
+int MPI_Request_toint(MPI_Request request);
+MPI_Request MPI_Request_fromint(int request);
+int MPI_Session_toint(MPI_Session session);
+MPI_Session MPI_Session_fromint(int session);
+int MPI_Win_toint(MPI_Win win);
+MPI_Win MPI_Win_fromint(int win);
+
 /* MPI_T functions */
 int MPI_T_category_changed(int *update_number);
 int MPI_T_category_get_categories(int cat_index, int len, int indices[]);
@@ -1880,6 +1903,29 @@ MPI_Fint PMPI_Session_c2f(MPI_Session session);
 MPI_Session PMPI_Session_f2c(MPI_Fint session);
 MPI_Fint PMPI_Win_c2f(MPI_Win win);
 MPI_Win PMPI_Win_f2c(MPI_Fint win);
+
+int PMPI_Comm_toint(MPI_Comm comm);
+MPI_Comm PMPI_Comm_fromint(int comm);
+int PMPI_Errhandler_toint(MPI_Errhandler errhandler);
+MPI_Errhandler PMPI_Errhandler_fromint(int errhandler);
+int PMPI_Type_toint(MPI_Datatype datatype);
+MPI_Datatype PMPI_Type_fromint(int datatype);
+int PMPI_File_toint(MPI_File file);
+MPI_File PMPI_File_fromint(int file);
+int PMPI_Group_toint(MPI_Group group);
+MPI_Group PMPI_Group_fromint(int group);
+int PMPI_Info_toint(MPI_Info info);
+MPI_Info PMPI_Info_fromint(int info);
+int PMPI_Message_toint(MPI_Message message);
+MPI_Message PMPI_Message_fromint(int message);
+int PMPI_Op_toint(MPI_Op op);
+MPI_Op PMPI_Op_fromint(int op);
+int PMPI_Request_toint(MPI_Request request);
+MPI_Request PMPI_Request_fromint(int request);
+int PMPI_Session_toint(MPI_Session session);
+MPI_Session PMPI_Session_fromint(int session);
+int PMPI_Win_toint(MPI_Win win);
+MPI_Win PMPI_Win_fromint(int win);
 
 /* PMPI_T functions */
 int PMPI_T_category_changed(int *update_number);
