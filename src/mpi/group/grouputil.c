@@ -160,28 +160,29 @@ int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
 int MPIR_Group_dup(MPIR_Group * old_group, MPIR_Session * session_ptr, MPIR_Group ** new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Group *new_group;
 
-    new_group = (MPIR_Group *) MPIR_Handle_obj_alloc(&MPIR_Group_mem);
-    if (!new_group) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPIR_Group_dup",
-                                         __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-        goto fn_fail;
-    }
-    MPIR_Object_set_ref(new_group, 1);
+    *new_group_ptr = (MPIR_Group *) MPIR_Handle_obj_alloc(&MPIR_Group_mem);
+    MPIR_ERR_CHKANDJUMP(!*new_group_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_Object_set_ref(*new_group_ptr, 1);
 
-    /* initialize fields */
-    new_group->size = old_group->size;
-    new_group->rank = old_group->rank;
-    MPIR_Group_set_session_ptr(new_group, session_ptr);
-    memcpy(&new_group->pmap, &old_group->pmap, sizeof(struct MPIR_Pmap));
+    (*new_group_ptr)->size = old_group->size;
+    (*new_group_ptr)->rank = old_group->rank;
+    MPIR_Group_set_session_ptr(*new_group_ptr, session_ptr);
+    memcpy(&(*new_group_ptr)->pmap, &old_group->pmap, sizeof(struct MPIR_Pmap));
+
     if (old_group->pmap.use_map) {
-        new_group->pmap.u.map = MPL_malloc(old_group->size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
-        MPIR_ERR_CHKANDJUMP(!new_group->pmap.u.map, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        memcpy(new_group->pmap.u.map, old_group->pmap.u.map, old_group->size * sizeof(MPIR_Lpid));
-    }
+        int size = old_group->size;
+        MPIR_Lpid *map = MPL_malloc(size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
+        MPIR_ERR_CHKANDJUMP(!map, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (int i = 0; i < size; i++) {
+            map[i] = old_group->pmap.u.map[i];
+        }
 
-    *new_group_ptr = new_group;
+        (*new_group_ptr)->pmap.u.map = map;
+    }
+#ifdef MPID_DEV_GROUP_DECL
+    mpi_errno = MPID_Group_init_hook(*new_group_ptr);
+#endif
 
   fn_exit:
     return mpi_errno;
