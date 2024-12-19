@@ -77,7 +77,7 @@ int MPIR_Group_init(void)
     MPIR_Group_builtin[2].rank = 0;
     MPIR_Group_builtin[2].session_ptr = NULL;
     pmap = &MPIR_Group_builtin[2].pmap;
-    pmap->size = MPIR_Process.size;
+    pmap->size = 1;
     pmap->use_map = false;
     pmap->u.stride.offset = MPIR_Process.rank;
     pmap->u.stride.stride = 1;
@@ -148,6 +148,7 @@ int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_L
          * for others it is implied */
         MPL_free(map);
         *new_group_ptr = MPIR_Group_empty;
+        MPIR_Group_add_ref(*new_group_ptr);
         goto fn_exit;
     } else {
         MPIR_Group *newgrp;
