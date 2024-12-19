@@ -142,6 +142,39 @@ int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
     return mpi_errno;
 }
 
+int MPIR_Group_dup(MPIR_Group * old_group, MPIR_Session * session_ptr, MPIR_Group ** new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *new_group_ptr = (MPIR_Group *) MPIR_Handle_obj_alloc(&MPIR_Group_mem);
+    MPIR_ERR_CHKANDJUMP(!*new_group_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_Object_set_ref(*new_group_ptr, 1);
+
+    (*new_group_ptr)->size = old_group->size;
+    (*new_group_ptr)->rank = old_group->rank;
+    MPIR_Group_set_session_ptr(*new_group_ptr, session_ptr);
+    memcpy(&(*new_group_ptr)->pmap, &old_group->pmap, sizeof(struct MPIR_Pmap));
+
+    if (old_group->pmap.use_map) {
+        int size = old_group->size;
+        MPIR_Lpid *map = MPL_malloc(size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
+        MPIR_ERR_CHKANDJUMP(!map, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (int i = 0; i < size; i++) {
+            map[i] = old_group->pmap.u.map[i];
+        }
+
+        (*new_group_ptr)->pmap.u.map = map;
+    }
+#ifdef MPID_DEV_GROUP_DECL
+    mpi_errno = MPID_Group_init_hook(*new_group_ptr);
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_Lpid * map,
                           MPIR_Group ** new_group_ptr)
 {
