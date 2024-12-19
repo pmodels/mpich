@@ -9,64 +9,58 @@
       MPI_Finalize.  This is useful for tools that want to perform the MPI
       equivalent of an "at_exit" action.
  */
-#include <stdio.h>
-#include "mpi.h"
+/* NOTE: we modified the test to check the delete attributes behavior at
+ * MPI_Comm_free. The behavior at MPI_Finalize for builtin-comms are covered
+ * in attrend2.
+ */
 #include "mpitest.h"
 
-int exit_key = MPI_KEYVAL_INVALID;
-int wasCalled = 0;
-int foundError = 0;
-/* #define DEBUG */
-int delete_fn(MPI_Comm, int, void *, void *);
-#ifdef DEBUG
-#define FFLUSH fflush(stdout);
-#else
-#define FFLUSH
+#ifdef MULTI_TESTS
+#define run attr_attrend
+int run(const char *arg);
 #endif
 
-int main(int argc, char **argv)
+static int wasCalled = 0;
+static int foundError = 0;
+static int delete_fn(MPI_Comm, int, void *, void *);
+
+int run(const char *arg)
 {
-    int errs = 0, wrank;
+    int errs = 0;
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    MPI_Init(&argc, &argv);
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
+    MPI_Comm comm_self;
+    MPI_Comm_dup(MPI_COMM_SELF, &comm_self);
 
     /* create the keyval for the exit handler */
+    int exit_key = MPI_KEYVAL_INVALID;
     MPI_Keyval_create(MPI_NULL_COPY_FN, delete_fn, &exit_key, (void *) 0);
 
     /* Attach to comm_self */
-    MPI_Attr_put(MPI_COMM_SELF, exit_key, (void *) 0);
+    MPI_Attr_put(comm_self, exit_key, (void *) 0);
     /* We can free the key now */
     MPI_Keyval_free(&exit_key);
 
-    /* Now, exit MPI */
-    MPI_Finalize();
+    MPI_Comm_free(&comm_self);
 
     /* Check that the exit handler was called, and without error */
-    if (wrank == 0) {
+    if (rank == 0) {
         /* In case more than one process exits MPI_Finalize */
         if (wasCalled != 1) {
             errs++;
-            printf("Attribute delete function on MPI_COMM_SELF was not called\n");
+            printf("Attribute delete function on comm_self was not called\n");
         }
         if (foundError != 0) {
             errs++;
-            printf("Found %d errors while executing delete function in MPI_COMM_SELF\n",
-                   foundError);
+            printf("Found %d errors while executing delete function in comm_self\n", foundError);
         }
-        if (errs == 0) {
-            printf(" No Errors\n");
-        } else {
-            printf(" Found %d errors\n", errs);
-        }
-        fflush(stdout);
     }
 
-    return MTestReturnValue(errs);
+    return errs;
 }
 
-int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
+static int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
 {
     int flag;
     wasCalled++;

@@ -34,6 +34,14 @@ int main(int argc, char **argv)
     MPI_Datatype *sendtypes, *recvtypes;
     int leftGroup;
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MTest_Init(&argc, &argv);
     errs = 0;
 
@@ -79,7 +87,7 @@ int main(int argc, char **argv)
             rdispls[i] = i * rank * sizeof(int);
             recvtypes[i] = MPI_INT;
         }
-        MTest_Alltoallw(sbuf, sendcounts, sdispls, sendtypes,
+        MTest_Alltoallw(is_blocking, sbuf, sendcounts, sdispls, sendtypes,
                         rbuf, recvcounts, rdispls, recvtypes, comm);
 
         /* Check rbuf */

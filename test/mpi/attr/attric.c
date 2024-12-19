@@ -11,33 +11,30 @@
   derived from a Fortran test program from ...
 
  */
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
 
+#ifdef MULTI_TESTS
+#define run attr_attric
+int run(const char *arg);
+#endif
+
 /* #define DEBUG */
-int test_communicators(void);
-int copy_fn(MPI_Comm, int, void *, void *, void *, int *);
-int delete_fn(MPI_Comm, int, void *, void *);
+static int test_communicators(void);
+static int copy_fn(MPI_Comm, int, void *, void *, void *, int *);
+static int delete_fn(MPI_Comm, int, void *, void *);
 #ifdef DEBUG
 #define FFLUSH fflush(stdout);
 #else
 #define FFLUSH
 #endif
 
-int main(int argc, char **argv)
+int run(const char *arg)
 {
-    int errs = 0;
-    MTest_Init(&argc, &argv);
-
-    errs = test_communicators();
-
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return test_communicators();
 }
 
-int copy_fn(MPI_Comm oldcomm, int keyval, void *extra_state,
-            void *attribute_val_in, void *attribute_val_out, int *flag)
+static int copy_fn(MPI_Comm oldcomm, int keyval, void *extra_state,
+                   void *attribute_val_in, void *attribute_val_out, int *flag)
 {
     /* Note that if (sizeof(int) < sizeof(void *), just setting the int
      * part of attribute_val_out may leave some dirty bits
@@ -47,7 +44,7 @@ int copy_fn(MPI_Comm oldcomm, int keyval, void *extra_state,
     return MPI_SUCCESS;
 }
 
-int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
+static int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
 {
     int world_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
@@ -58,7 +55,7 @@ int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
     return MPI_SUCCESS;
 }
 
-int test_communicators(void)
+static int test_communicators(void)
 {
     MPI_Comm dup_comm, comm;
     void *vvalue;

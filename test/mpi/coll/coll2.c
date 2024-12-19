@@ -17,6 +17,14 @@ int main(int argc, char **argv)
     int errors = 0;
     int participants;
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -49,7 +57,7 @@ int main(int argc, char **argv)
         /* inefficient allgather */
         for (i = 0; i < participants; i++) {
             void *sendbuf = (i == rank ? MPI_IN_PLACE : &table[begin_row][0]);
-            MTest_Gather(sendbuf, send_count, MPI_INT,
+            MTest_Gather(is_blocking, sendbuf, send_count, MPI_INT,
                          &table[0][0], recv_count, MPI_INT, i, MPI_COMM_WORLD);
         }
 

@@ -25,6 +25,14 @@ int main(int argc, char *argv[])
 
     MTEST_VG_MEM_INIT(buf, size * sizeof(int));
 
+    int is_blocking = 1;
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    if (MTestArgListGetInt_with_default(head, "nonblocking", 0)) {
+        is_blocking = 0;
+    }
+    MTestArgListDestroy(head);
+
     MTest_Init(&argc, &argv);
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
@@ -34,9 +42,9 @@ int main(int argc, char *argv[])
     }
 
     if (rank == 0) {
-        ierr = MTest_Reduce(buf, recvbuf, size, MPI_INT, MPI_PROD, 0, MPI_COMM_WORLD);
+        ierr = MTest_Reduce(is_blocking, buf, recvbuf, size, MPI_INT, MPI_PROD, 0, MPI_COMM_WORLD);
     } else {
-        ierr = MTest_Reduce(buf, recvbuf, size, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+        ierr = MTest_Reduce(is_blocking, buf, recvbuf, size, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     }
     if (ierr == MPI_SUCCESS) {
         if (rank != 0) {
