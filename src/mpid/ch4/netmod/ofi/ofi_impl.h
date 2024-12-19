@@ -94,9 +94,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
          * operation can be avoided since we are inside a finite loop. */ \
-        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_);			  \
-        mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_);			     \
+        mpi_errno = MPIDI_OFI_retry_progress(vci_, _retry); \
         MPIR_ERR_CHECK(mpi_errno);                               \
     } while (1);                                            \
     } while (0)
@@ -113,9 +111,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                 _retry--; \
                 MPIR_ERR_CHKANDJUMP(_retry == 0, mpi_errno, MPIX_ERR_EAGAIN, "**eagain"); \
             } \
-            MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_); \
-            mpi_errno = MPIDI_OFI_retry_progress(); \
-            MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_); \
+            mpi_errno = MPIDI_OFI_retry_progress(vci_, _retry); \
         } \
     } while (0)
 
@@ -299,7 +295,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_mr_bind(struct fi_info *prov, struct fid_
 #define MPIDI_OFI_LOCAL_MR_KEY 0
 #define MPIDI_OFI_COLL_MR_KEY 1
 #define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
-int MPIDI_OFI_retry_progress(void);
+int MPIDI_OFI_retry_progress(int vci, int retry);
 int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 int MPIDI_OFI_recv_huge_control(int vci, int comm_id, int rank, int tag,
                                 MPIDI_OFI_huge_remote_info_t * info);
