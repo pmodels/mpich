@@ -204,6 +204,8 @@ int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_L
          * for others it is implied */
         MPL_free(map);
         *new_group_ptr = MPIR_Group_empty;
+        MPIR_Group_add_ref(*new_group_ptr);
+        goto fn_exit;
     } else {
         MPIR_Group *newgrp;
         mpi_errno = MPIR_Group_create(size, &newgrp);
