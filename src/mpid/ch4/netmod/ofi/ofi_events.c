@@ -737,9 +737,10 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                             break;
 
                         default:
-                            MPIR_ERR_SETFATALANDJUMP4(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
-                                                      "**ofid_poll %s %d %s %s", __SHORT_FILE__,
-                                                      __LINE__, __func__, fi_strerror(e.err));
+                            MPIR_ERR_SETFATALANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
+                                                      "**ofid_poll %s %s",
+                                                      MPIDI_OFI_DEFAULT_NIC_NAME,
+                                                      fi_strerror(e.err));
                     }
 
                     break;
@@ -782,17 +783,17 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret)
                     break;
 
                 default:
-                    MPIR_ERR_SETFATALANDJUMP4(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
-                                              "**ofid_poll %s %d %s %s", __SHORT_FILE__,
-                                              __LINE__, __func__, fi_strerror(e.err));
+                    MPIR_ERR_SETFATALANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
+                                              "**ofid_poll %s %s",
+                                              MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(e.err));
             }
 
             break;
 
         default:
-            MPIR_ERR_SETFATALANDJUMP4(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
-                                      "**ofid_poll %s %d %s %s", __SHORT_FILE__, __LINE__,
-                                      __func__, fi_strerror(errno));
+            MPIR_ERR_SETFATALANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
+                                      "**ofid_poll %s %s",
+                                      MPIDI_OFI_DEFAULT_NIC_NAME, fi_strerror(errno));
     }
 
   fn_exit:
