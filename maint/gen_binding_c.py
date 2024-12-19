@@ -126,6 +126,10 @@ def main():
         if 'replace' in func and 'body' not in func:
             continue
 
+        # skip Fortran inter op functions
+        if re.match(r'.*_(f2c|c2f|f2f08|f082f|f082c|c2f08)', func['name']):
+            continue
+
         if re.match(r'MPIX_', func['name']):
             if re.match(r'MPIX_(Grequest_|Type_iov)', func['name']):
                 # needed by ROMIO
