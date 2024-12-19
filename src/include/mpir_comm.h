@@ -166,9 +166,9 @@ struct MPIR_Comm {
     int rank;                   /* Value of MPI_Comm_rank */
     MPIR_Attribute *attributes; /* List of attributes */
     int local_size;             /* Value of MPI_Comm_size for local group */
-    MPIR_Group *local_group,    /* Groups in communicator. */
-    *remote_group;              /* The local and remote groups are the
-                                 * same for intra communicators */
+    MPIR_Group *local_group;    /* Groups in communicator. */
+    MPIR_Group *remote_group;   /* The remote group in a inter communicator.
+                                 * Must be NULL in a intra communicator. */
     MPIR_Comm_kind_t comm_kind; /* MPIR_COMM_KIND__INTRACOMM or MPIR_COMM_KIND__INTERCOMM */
     char name[MPI_MAX_OBJECT_NAME];     /* Required for MPI-2 */
     MPIR_Errhandler *errhandler;        /* Pointer to the error handler structure */
@@ -295,6 +295,15 @@ void MPIR_stream_comm_init(MPIR_Comm * comm_ptr);
 void MPIR_stream_comm_free(MPIR_Comm * comm_ptr);
 int MPIR_Comm_copy_stream(MPIR_Comm * oldcomm, MPIR_Comm * newcomm);
 int MPIR_get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_stream);
+
+MPL_STATIC_INLINE_PREFIX MPIR_Lpid MPIR_comm_rank_to_lpid(MPIR_Comm * comm_ptr, int rank)
+{
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        return MPIR_Group_rank_to_lpid(comm_ptr->local_group, rank);
+    } else {
+        return MPIR_Group_rank_to_lpid(comm_ptr->remote_group, rank);
+    }
+}
 
 MPL_STATIC_INLINE_PREFIX MPIR_Stream *MPIR_stream_comm_get_local_stream(MPIR_Comm * comm_ptr)
 {

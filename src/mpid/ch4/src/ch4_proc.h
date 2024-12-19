@@ -33,8 +33,8 @@ void MPIDIU_upidhash_add(const void *upid, int upid_len, int avtid, int lpid);
 MPIDI_upid_hash *MPIDIU_upidhash_find(const void *upid, int upid_len);
 void MPIDIU_upidhash_free(void);
 #endif
-int MPIDIU_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
-                          uint64_t * remote_gpids);
+int MPIDIU_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids,
+                          MPIR_Lpid * remote_lpids);
 int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size);
 int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut);
 int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size);
@@ -255,6 +255,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
     return ret;
 }
 
+/* used in fast path where we know the lpid has a valid av, such as from a committed communicator */
+MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_lpid_to_av(MPIR_Lpid lpid)
+{
+    int world_idx = MPIR_LPID_WORLD_INDEX(lpid);
+    int world_rank = MPIR_LPID_WORLD_RANK(lpid);
+    return MPIDI_global.avt_mgr.av_tables[world_idx]->table[world_rank];
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
@@ -287,5 +295,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av)
     MPIR_FUNC_EXIT;
     return ret;
 }
+
+int MPIDIU_insert_dynamic_upid(MPIR_Lpid * lpid_out, const char *upid, int upid_len);
+int MPIDIU_free_dynamic_lpid(MPIR_Lpid lpid);
+MPIDI_av_entry_t *MPIDIU_find_dynamic_av(char *upid, int upid_len);
+/* used in communicator creation paths when the av entry may not exist or inserted yet */
+MPIDI_av_entry_t *MPIDIU_lpid_to_av_slow(MPIR_Lpid lpid);
 
 #endif /* CH4_PROC_H_INCLUDED */
