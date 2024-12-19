@@ -151,6 +151,7 @@ int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid);
 int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr);
 void MPIR_Group_set_session_ptr(MPIR_Group * group_ptr, MPIR_Session * session_out);
 int MPIR_Group_init(void);
+int MPIR_Group_finalize(void);
 
 MPL_STATIC_INLINE_PREFIX MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank)
 {
