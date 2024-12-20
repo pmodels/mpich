@@ -186,12 +186,12 @@ int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid gpid[], uint64_t lpid[] );
 int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
                             int nPGids, const MPIDI_Gpid gpids[],
                             int root );
-int MPID_Intercomm_exchange_map( MPIR_Comm *local_comm_ptr, int local_leader,
-                                 MPIR_Comm *peer_comm_ptr, int remote_leader,
-                                 int *remote_size, uint64_t **remote_lpids,
-                                 int *is_low_group);
+int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
+                            MPIR_Comm *peer_comm_ptr, int remote_leader,
+                            int tag, int context_id, int *remote_context_id,
+                            int *remote_size, MPIR_Lpid **remote_lpids);
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
-                                      int size, const uint64_t lpids[] );
+                                      int size, const MPIR_Lpid lpids[] );
 
 #define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
 

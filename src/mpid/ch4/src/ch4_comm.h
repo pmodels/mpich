@@ -15,6 +15,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_sender_vci(MPIR_Comm * comm, in
 MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_receiver_vci(MPIR_Comm * comm, int type,
                                                               int value);
 MPL_STATIC_INLINE_PREFIX int MPIDI_set_comm_hint_vci(MPIR_Comm * comm, int type, int value);
+int MPIDI_Intercomm_exchange(MPIR_Comm * local_comm, int local_leader,
+                             MPIDI_av_entry_t * dynamic_av, int tag, int context_id,
+                             int *remote_context_id, int *remote_size,
+                             MPIR_Lpid ** remote_lpids_out, bool * is_low_group_out);
 int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm);
 int MPIDI_Comm_create_multi_leader_subcomms(MPIR_Comm * comm, int num_leads);
 

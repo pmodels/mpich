@@ -7,7 +7,7 @@
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
 
-int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int size, int timeout)
+int MPIDI_OFI_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int size, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -16,8 +16,8 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     int nic = 0;                /* dynamic process only use nic 0 */
     int vci = 0;                /* dynamic process only use vci 0 */
     int ctx_idx = 0;
-    int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
-    int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
+    int avtid = MPIDIU_GPID_GET_AVTID(remote_lpid);
+    int lpid = MPIDIU_GPID_GET_LPID(remote_lpid);
     fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
@@ -132,11 +132,73 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     goto fn_exit;
 }
 
+int MPIDI_OFI_dynamic_sendrecv(MPIR_Lpid remote_lpid, int tag,
+                               const void *send_buf, int send_size, void *recv_buf, int recv_size)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* NOTE: dynamic_sendrecv is always called inside CS of vci 0 */
+    int vci = 0;
+    int nic = 0;
+    int ctx_idx = 0;
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[vci].lock));
+#endif
+
+    MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(remote_lpid);
+    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(av, nic, vci);
+
+    MPIDI_OFI_dynamic_process_request_t send_req;
+    send_req.done = 0;
+    send_req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+
+    if (send_size > 0) {
+        uint64_t match_bits = MPIDI_OFI_DYNPROC_SEND | tag;
+        if (MPIDI_OFI_ENABLE_DATA) {
+            MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[ctx_idx].tx,
+                                              send_buf, send_size, NULL, 0,
+                                              remote_addr, match_bits, (void *) &send_req.context),
+                                 vci, tsenddata);
+        } else {
+            MPIDI_OFI_CALL_RETRY(fi_tsend(MPIDI_OFI_global.ctx[ctx_idx].tx, buf, size, NULL,
+                                          remote_addr, match_bits, (void *) &send_req.context),
+                                 vci, tsend);
+        }
+    } else {
+        send_req.done = 1;
+    }
+
+    MPIDI_OFI_dynamic_process_request_t recv_req;
+    recv_req.done = 0;
+    recv_req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+
+    if (recv_size > 0) {
+        uint64_t mask_bits = 0;
+        uint64_t match_bits = MPIDI_OFI_DYNPROC_SEND | tag;
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
+                                      recv_buf, recv_size, NULL,
+                                      remote_addr, match_bits, mask_bits, &recv_req.context),
+                             vci, trecv);
+    } else {
+        recv_req.done = 1;
+    }
+
+    while (!send_req.done || !recv_req.done) {
+        mpi_errno = MPIDI_OFI_progress_uninlined(vci);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* the following functions are "proc" functions, but because they are only used during dynamic
  * process spawning, having them here provides better context */
 
-int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
-                             uint64_t * remote_gpids)
+int MPIDI_OFI_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids,
+                             MPIR_Lpid * remote_lpids)
 {
     int i, mpi_errno = MPI_SUCCESS;
     int *new_avt_procs;
@@ -178,7 +240,7 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
                                                 MPIDI_OFI_TO_PHYS(k, j, nic), &tbladdr, &sz), 0,
                                    avlookup);
                 if (sz == addrname_len && !memcmp(tbladdr, addrname, addrname_len)) {
-                    remote_gpids[i] = MPIDIU_GPID_CREATE(k, j);
+                    remote_lpids[i] = MPIDIU_GPID_CREATE(k, j);
                     found = 1;
                     break;
                 }
@@ -217,7 +279,7 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
             MPIR_ERR_CHECK(mpi_errno);
             MPIDIU_get_av(avtid, i).node_id = node_id;
 
-            remote_gpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
+            remote_lpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
         }
     }
 
@@ -280,5 +342,47 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
+int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    char *hostname = upid;
+    char *addrname = hostname + strlen(hostname) + 1;
+    MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(lpid);
+
+    bool is_dynamic = (lpid & MPIR_LPID_DYNAMIC_MASK);
+    bool do_insert;
+    if (is_dynamic) {
+        do_insert = true;
+    } else if (av->dest[0][0] == FI_ADDR_NOTAVAIL) {
+        MPIDI_av_entry_t *dynamic_av = MPIDIU_find_dynamic_av(upid, upid_len);
+        if (dynamic_av) {
+            /* just copy it over */
+            av->dest[0][0] = dynamic_av->dest[0][0];
+            do_insert = false;
+        } else {
+            do_insert = true;
+        }
+
+        /* set node_id */
+        int node_id;
+        mpi_errno = MPIR_nodeid_lookup(hostname, &node_id);
+        MPIR_ERR_CHECK(mpi_errno);
+        av->node_id = node_id;
+    }
+
+    if (do_insert) {
+        /* new entry */
+        MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, upid,
+                                        1, &av->dest[0][0], 0ULL, NULL), 0, avmap);
+        MPIR_Assert(av->dest[0][0] != FI_ADDR_NOTAVAIL);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
     goto fn_exit;
 }
