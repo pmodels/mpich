@@ -562,18 +562,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_win_shared_query_part(MPIR_Win * win, int ra
         *disp_unit = 0;
         *((void **) baseptr) = NULL;
     } else {
-        int shm_rank = -1;
         /* find shm_rank in node_comm. Q: can we rely on comm_ptr->intranode_table? */
-        int avtid, idx;
-        MPIDIU_comm_rank_to_pid(win->comm_ptr, rank, &idx, &avtid);
-        for (int i = 0; i < win->comm_ptr->node_comm->local_size; i++) {
-            int tmp_avtid, tmp_idx;
-            MPIDIU_comm_rank_to_pid(win->comm_ptr->node_comm, i, &tmp_idx, &tmp_avtid);
-            if (tmp_avtid == avtid && tmp_idx == idx) {
-                shm_rank = i;
-                break;
-            }
-        }
+        MPIR_Lpid lpid = MPIR_comm_rank_to_lpid(win->comm_ptr, rank);
+        int shm_rank = MPIR_Group_lpid_to_rank(win->comm_ptr->node_comm->local_group, lpid);
         MPIR_Assert(shm_rank >= 0);
 
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
