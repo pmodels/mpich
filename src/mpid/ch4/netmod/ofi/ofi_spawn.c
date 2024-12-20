@@ -55,8 +55,8 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
         int rc;
         rc = fi_cancel((fid_t) MPIDI_OFI_global.ctx[ctx_idx].tx, (void *) &req.context);
         if (rc && rc != -FI_ENOENT) {
-            MPIR_ERR_CHKANDJUMP4(rc < 0, mpi_errno, MPI_ERR_OTHER, "**ofid_cancel",
-                                 "**ofid_cancel %s %d %s %s", __SHORT_FILE__, __LINE__, __func__,
+            MPIR_ERR_CHKANDJUMP2(rc < 0, mpi_errno, MPI_ERR_OTHER, "**ofid_cancel",
+                                 "**ofid_cancel %s %s", MPIDI_OFI_DEFAULT_NIC_NAME,
                                  fi_strerror(-rc));
 
         }
@@ -112,8 +112,8 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
         int rc;
         rc = fi_cancel((fid_t) MPIDI_OFI_global.ctx[ctx_idx].rx, (void *) &req.context);
         if (rc && rc != -FI_ENOENT) {
-            MPIR_ERR_CHKANDJUMP4(rc < 0, mpi_errno, MPI_ERR_OTHER, "**ofid_cancel",
-                                 "**ofid_cancel %s %d %s %s", __SHORT_FILE__, __LINE__, __func__,
+            MPIR_ERR_CHKANDJUMP2(rc < 0, mpi_errno, MPI_ERR_OTHER, "**ofid_cancel",
+                                 "**ofid_cancel %s %s", MPIDI_OFI_DEFAULT_NIC_NAME,
                                  fi_strerror(-rc));
 
         }
