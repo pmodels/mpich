@@ -90,9 +90,9 @@ int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
     int *granks;
     MPIR_CHKLMEM_MALLOC(granks, nprocs * sizeof(int));
     for (int i = 0; i < nprocs; i++) {
-        int avtid;
-        MPIDIU_comm_rank_to_pid(comm, i, &granks[i], &avtid);
-        MPIR_Assert(avtid == 0);
+        MPIR_Lpid lpid = MPIR_comm_rank_to_lpid(comm, i);
+        MPIR_Assert(MPIR_LPID_WORLD_INDEX(lpid) == 0);
+        granks[i] = MPIR_LPID_WORLD_RANK(lpid);
     }
 
     /* for now, we only allow setup setup vcis for each remote once */
