@@ -490,7 +490,7 @@ typedef int (*MPIDI_PG_Destroy_fn_t)(MPIDI_PG_t * pg);
 
 int MPIDI_VCRT_Create(int size, struct MPIDI_VCRT **vcrt_ptr);
 int MPIDI_VCRT_Add_ref(struct MPIDI_VCRT *vcrt);
-int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect);
+int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt);
 int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr);
 
 int MPIDI_PG_Init(MPIDI_PG_Compare_ids_fn_t, MPIDI_PG_Destroy_fn_t);
