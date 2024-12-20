@@ -548,7 +548,7 @@ static int MPIDI_CH3I_Release_tmp_comm(MPIR_Comm *tmp_comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIDI_VCRT_Release(tmp_comm->dev.vcrt, FALSE);
+    mpi_errno = MPIDI_VCRT_Release(tmp_comm->dev.vcrt);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Free_contextid(tmp_comm->recvcontext_id);
