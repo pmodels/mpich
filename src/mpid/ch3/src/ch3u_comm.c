@@ -172,11 +172,6 @@ int MPIDI_CH3I_Comm_commit_pre_hook(MPIR_Comm *comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    /* initialize the is_disconnected variable to FALSE.  this will be
-     * set to TRUE if the communicator is freed by an
-     * MPI_COMM_DISCONNECT call. */
-    comm->dev.is_disconnected = 0;
-
     if (comm == MPIR_Process.comm_world) {
         comm->rank        = MPIR_Process.rank;
         comm->remote_size = MPIR_Process.size;
@@ -288,11 +283,11 @@ int MPIDI_CH3I_Comm_destroy_hook(MPIR_Comm *comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    mpi_errno = MPIDI_VCRT_Release(comm->dev.vcrt, comm->dev.is_disconnected);
+    mpi_errno = MPIDI_VCRT_Release(comm->dev.vcrt);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        mpi_errno = MPIDI_VCRT_Release(comm->dev.local_vcrt, comm->dev.is_disconnected);
+        mpi_errno = MPIDI_VCRT_Release(comm->dev.local_vcrt);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -522,10 +517,7 @@ int MPID_Group_free_hook(MPIR_Group * group_ptr)
     int mpi_errno = MPI_SUCCESS;
 
     if (group_ptr->ch3_vcrt) {
-        /* FIXME: setting TRUE so vc entries may get released.
-         *        Is there a case we don't want that?
-         */
-        mpi_errno = MPIDI_VCRT_Release(group_ptr->ch3_vcrt, TRUE);
+        mpi_errno = MPIDI_VCRT_Release(group_ptr->ch3_vcrt);
     }
     return mpi_errno;
 }

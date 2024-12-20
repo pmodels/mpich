@@ -106,7 +106,7 @@ int MPIDI_VCRT_Add_ref(struct MPIDI_VCRT *vcrt)
   Notes:
   
   @*/
-int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
+int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt)
 {
     int in_use;
     int mpi_errno = MPI_SUCCESS;
@@ -130,24 +130,8 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
 	    
 	    MPIDI_VC_release_ref(vc, &in_use);
 
-            /* Dynamic connections start with a refcount of 2 instead of 1.
-             * That way we can distinguish between an MPI_Free and an
-             * MPI_Comm_disconnect. */
-            /* XXX DJG FIXME-MT should we be checking this? */
-            /* probably not, need to do something like the following instead: */
-#if 0
-            if (isDisconnect) {
-                MPIR_Assert(in_use);
-                /* FIXME this is still bogus, the VCRT may contain a mix of
-                 * dynamic and non-dynamic VCs, so the ref_count isn't
-                 * guaranteed to have started at 2.  The best thing to do might
-                 * be to avoid overloading the reference counting this way and
-                 * use a separate check for dynamic VCs (another flag? compare
-                 * PGs?) */
-                MPIR_Object_release_ref(vc, &in_use);
-            }
-#endif
-	    if (isDisconnect && MPIR_Object_get_ref(vc) == 1) {
+	    if (vc->lpid >= MPIR_Process.size && MPIR_Object_get_ref(vc) == 1) {
+                /* release vc from dynamic process */
 		MPIDI_VC_release_ref(vc, &in_use);
 	    }
 
