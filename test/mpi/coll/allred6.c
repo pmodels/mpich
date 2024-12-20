@@ -3,10 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "mpi.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "mpitest.h"
+
+#ifdef MULTI_TESTS
+#define run coll_allred6
+int run(const char *arg);
+#endif
 
 /*
 static char MTEST_Descrip[] = "Test MPI_Allreduce with apparent non-commutative operators";
@@ -16,9 +18,7 @@ static char MTEST_Descrip[] = "Test MPI_Allreduce with apparent non-commutative 
    various message lengths.  Other tests check truly non-commutative
    operators */
 
-void mysum(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype);
-
-void mysum(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
+static void mysum(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
 {
     const int *cin = (const int *) cinPtr;
     int *cout = (int *) coutPtr;
@@ -27,7 +27,7 @@ void mysum(void *cinPtr, void *coutPtr, int *count, MPI_Datatype * dtype)
         cout[i] += cin[i];
 }
 
-int main(int argc, char *argv[])
+int run(const char *arg)
 {
     int errs = 0;
     int rank, size;
@@ -35,8 +35,6 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Op op;
     int *buf, i;
-
-    MTest_Init(&argc, &argv);
 
     MPI_Op_create(mysum, 0, &op);
 
@@ -68,6 +66,5 @@ int main(int argc, char *argv[])
     }
     MPI_Op_free(&op);
 
-    MTest_Finalize(errs);
-    return MTestReturnValue(errs);
+    return errs;
 }

@@ -1,0 +1,106 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
+# This file lists all tests that can be linked into run_mpitests. Each
+# file defineds a test function with signature of
+#
+#         int run(const char *arg)
+#
+# that runs a test. The function returns errors count, 0 if successful.
+#
+# The format of this file:
+#
+#         path/to/test [additional LDADD objects]
+#
+# Each line should start at the beginning of a line without leading spaces.
+# Specify additional LDADD objects, if any, following the test name. E.g.
+#
+#         coll/allgatherv4 -lm
+#
+
+attr/attrt
+attr/attrend
+attr/attric
+attr/attrerr
+attr/attrerrcomm
+attr/attrerrtype
+attr/attrdeleteget
+attr/attr2type
+attr/attrorder
+attr/attrordercomm
+attr/attrordertype
+attr/baseattr2
+attr/baseattrcomm
+attr/fkeyval
+attr/fkeyvalcomm
+attr/keyval_double_free
+attr/keyval_double_free_comm
+attr/keyval_double_free_type
+attr/keyval_double_free_win
+attr/fkeyvaltype
+
+coll/allgather2
+coll/allgather3
+coll/allgatherv2
+coll/allgatherv3
+coll/allgatherv4 -lm
+coll/allred
+coll/allred2
+coll/allred3
+coll/allred5
+coll/allred6
+coll/allredmany
+coll/alltoall1
+coll/alltoallv
+coll/alltoallv0
+coll/alltoallw1
+coll/alltoallw2
+coll/alltoallw_zeros
+coll/bcasttest
+coll/bcastzerotype
+coll/gather
+coll/gather2
+coll/gatherv
+coll/neighb_allgather
+coll/neighb_allgatherv
+coll/neighb_alltoall
+coll/neighb_alltoallv
+coll/neighb_alltoallw
+coll/op_coll
+coll/p_allgather
+coll/p_allgatherv
+coll/p_allred
+coll/p_alltoall
+coll/p_alltoallv
+coll/p_alltoallw
+coll/p_bcast
+coll/p_bcast2
+coll/p_gather
+coll/p_gatherv
+coll/p_neighb_allgather
+coll/p_neighb_allgatherv
+coll/p_neighb_alltoall
+coll/p_neighb_alltoallv
+coll/p_neighb_alltoallw
+coll/p_red
+coll/p_red_scat_block
+coll/p_redscat
+coll/p_scan
+coll/p_scatter
+coll/p_scatterv
+coll/red3
+coll/red4
+coll/red_scat_block
+coll/red_scat_block2
+coll/redscat
+coll/redscat2
+coll/redscat3
+coll/redscatblk3
+coll/reduce
+coll/scantst
+coll/scatter2
+coll/scatter3
+coll/scattern
+coll/scatterv

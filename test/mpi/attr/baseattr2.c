@@ -3,13 +3,16 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpitest.h"
 
-void MissingKeyval(int rc, const char keyname[]);
+#ifdef MULTI_TESTS
+#define run attr_baseattr2
+int run(const char *arg);
+#endif
 
-int main(int argc, char **argv)
+static void MissingKeyval(int rc, const char keyname[]);
+
+int run(const char *arg)
 {
     int errs = 0;
     int rc;
@@ -18,7 +21,6 @@ int main(int argc, char **argv)
     int vval;
     int rank, size;
 
-    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -144,12 +146,10 @@ int main(int argc, char **argv)
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 
-    MTest_Finalize(errs);
-
-    return MTestReturnValue(errs);
+    return errs;
 }
 
-void MissingKeyval(int errcode, const char keyname[])
+static void MissingKeyval(int errcode, const char keyname[])
 {
     int errclass, slen;
     char string[MPI_MAX_ERROR_STRING];

@@ -13,14 +13,14 @@
 /* TODO test intercommunicators as well */
 
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <mpi.h>
-
 #include "mpitest.h"
 
-int main(int argc, char *argv[])
+#ifdef MULTI_TESTS
+#define run coll_alltoallw_zeros
+int run(const char *arg);
+#endif
+
+int run(const char *arg)
 {
     int sendbuf, recvbuf;
     int *sendcounts;
@@ -34,8 +34,6 @@ int main(int argc, char *argv[])
     int size = -1;
     int i;
 
-
-    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -112,8 +110,6 @@ int main(int argc, char *argv[])
         free(recvtypes);
     if (sendtypes)
         free(sendtypes);
-
-    MTest_Finalize(0);
 
     return 0;
 }
