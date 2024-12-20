@@ -186,21 +186,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDIU_get_grank(int rank, MPIR_Comm * comm)
 {
-    int ret;
-    MPIR_FUNC_ENTER;
-
-    int avtid = 0, lpid = 0;
-    MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
-    if (avtid == 0) {
-        ret = lpid;
+    MPIR_Lpid lpid = MPIR_comm_rank_to_lpid(comm, rank);
+    if (MPIR_LPID_WORLD_INDEX(lpid) == 0) {
+        return (int) lpid;
     } else {
-        ret = -1;
+        return -1;
     }
-
-    MPIR_FUNC_EXIT;
-    return ret;
 }
 
 /* used in fast path where we know the lpid has a valid av, such as from a committed communicator */
