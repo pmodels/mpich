@@ -64,7 +64,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_isend(const void *buf, MPI_Aint cou
             am_hdr.data_sz = data_sz;
             am_hdr.rndv_hdr_sz = 0;
 
-            int grank = MPIDIU_rank_to_lpid(rank, comm);
+            int grank = MPIDIU_get_grank(rank, comm);
             MPI_Aint bytes_sent;
             int rc = MPIDI_POSIX_eager_send(grank, &msg_hdr, &am_hdr, sizeof(am_hdr),
                                             buf, count, datatype, 0, vci_src, vci_dst, &bytes_sent);
