@@ -71,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_hash_remote_vci(int raw_vci, MPIR_Comm * comm
         /* MPI_ANY_SOURCE, MPI_PROC_NULL, return a dummy, won't be used */
         return 0;
     } else {
-        int grank = MPIDIU_rank_to_lpid(rank, comm_ptr);
+        int grank = MPIDIU_get_grank(rank, comm_ptr);
         MPIR_Assert(grank >= 0);
         return raw_vci % MPIDI_global.all_num_vcis[grank];
     }
