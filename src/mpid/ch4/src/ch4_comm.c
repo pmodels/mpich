@@ -118,23 +118,6 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
     /* --END ERROR HANDLING-- */
 }
 
-static void mlut_update_avt_reference(int size, MPIDI_gpid_t * gpid, bool is_release)
-{
-    int n_avts = MPIDIU_get_n_avts();
-    int *uniq_avtids = (int *) MPL_calloc(n_avts, sizeof(int), MPL_MEM_ADDRESS);
-    for (int i = 0; i < size; i++) {
-        if (uniq_avtids[gpid[i].avtid] == 0) {
-            uniq_avtids[gpid[i].avtid] = 1;
-            if (is_release) {
-                MPIDIU_avt_release_ref(gpid[i].avtid);
-            } else {
-                MPIDIU_avt_add_ref(gpid[i].avtid);
-            }
-        }
-    }
-    MPL_free(uniq_avtids);
-}
-
 int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
@@ -144,45 +127,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM || comm->remote_group);
 
     if (comm == MPIR_Process.comm_world) {
-        MPIDI_COMM(comm, map).mode = MPIDI_RANK_MAP_DIRECT_INTRA;
-        MPIDI_COMM(comm, map).avtid = 0;
-        MPIDI_COMM(comm, map).size = MPIR_Process.size;
-        MPIDI_COMM(comm, local_map).mode = MPIDI_RANK_MAP_NONE;
-        MPIDIU_avt_add_ref(0);
-
         mpi_errno = MPIDI_world_pre_init();
         MPIR_ERR_CHECK(mpi_errno);
-    } else if (comm == MPIR_Process.comm_self) {
-        MPIDI_COMM(comm, map).mode = MPIDI_RANK_MAP_OFFSET_INTRA;
-        MPIDI_COMM(comm, map).avtid = 0;
-        MPIDI_COMM(comm, map).size = 1;
-        MPIDI_COMM(comm, map).reg.offset = MPIR_Process.rank;
-        MPIDI_COMM(comm, local_map).mode = MPIDI_RANK_MAP_NONE;
-        MPIDIU_avt_add_ref(0);
-    } else {
-        MPIDI_comm_create_rank_map(comm);
-        /* add ref to avts */
-        switch (MPIDI_COMM(comm, map).mode) {
-            case MPIDI_RANK_MAP_NONE:
-                break;
-            case MPIDI_RANK_MAP_MLUT:
-                mlut_update_avt_reference(MPIDI_COMM(comm, map).size,
-                                          MPIDI_COMM(comm, map).irreg.mlut.gpid, false);
-                break;
-            default:
-                MPIDIU_avt_add_ref(MPIDI_COMM(comm, map).avtid);
-        }
-
-        switch (MPIDI_COMM(comm, local_map).mode) {
-            case MPIDI_RANK_MAP_NONE:
-                break;
-            case MPIDI_RANK_MAP_MLUT:
-                mlut_update_avt_reference(MPIDI_COMM(comm, local_map).size,
-                                          MPIDI_COMM(comm, local_map).irreg.mlut.gpid, false);
-                break;
-            default:
-                MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).avtid);
-        }
     }
 
     MPIDI_COMM(comm, multi_leads_comm) = NULL;
@@ -320,46 +266,6 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
             }
         }
         MPL_free(MPIDI_COMM(comm, allreduce_comp_info));
-    }
-
-
-
-    /* release ref to avts */
-    switch (MPIDI_COMM(comm, map).mode) {
-        case MPIDI_RANK_MAP_NONE:
-            break;
-        case MPIDI_RANK_MAP_MLUT:
-            mlut_update_avt_reference(MPIDI_COMM(comm, map).size,
-                                      MPIDI_COMM(comm, map).irreg.mlut.gpid, true);
-            break;
-        default:
-            MPIDIU_avt_release_ref(MPIDI_COMM(comm, map).avtid);
-    }
-
-    switch (MPIDI_COMM(comm, local_map).mode) {
-        case MPIDI_RANK_MAP_NONE:
-            break;
-        case MPIDI_RANK_MAP_MLUT:
-            mlut_update_avt_reference(MPIDI_COMM(comm, local_map).size,
-                                      MPIDI_COMM(comm, local_map).irreg.mlut.gpid, true);
-            break;
-        default:
-            MPIDIU_avt_release_ref(MPIDI_COMM(comm, local_map).avtid);
-    }
-
-    if (MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT
-        || MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT_INTRA) {
-        MPIDIU_release_lut(MPIDI_COMM(comm, map).irreg.lut.t);
-    }
-    if (MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_LUT
-        || MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_LUT_INTRA) {
-        MPIDIU_release_lut(MPIDI_COMM(comm, local_map).irreg.lut.t);
-    }
-    if (MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_MLUT) {
-        MPIDIU_release_mlut(MPIDI_COMM(comm, map).irreg.mlut.t);
-    }
-    if (MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_MLUT) {
-        MPIDIU_release_mlut(MPIDI_COMM(comm, local_map).irreg.mlut.t);
     }
 
     mpi_errno = MPIDI_NM_mpi_comm_free_hook(comm);
@@ -786,32 +692,11 @@ static int leader_exchange(MPIR_Comm * local_comm, MPIR_Lpid remote_lpid, int ta
 /* ---- */
 int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const MPIR_Lpid lpids[])
 {
-    int mpi_errno = MPI_SUCCESS, i;
-    MPIR_FUNC_ENTER;
+    int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_rank_map_mlut_t *mlut = NULL;
-    MPIDI_COMM(newcomm_ptr, map).mode = MPIDI_RANK_MAP_MLUT;
-    MPIDI_COMM(newcomm_ptr, map).avtid = -1;
-    mpi_errno = MPIDIU_alloc_mlut(&mlut, size);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIDI_COMM(newcomm_ptr, map).size = size;
-    MPIDI_COMM(newcomm_ptr, map).irreg.mlut.t = mlut;
-    MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid = mlut->gpid;
+    /* Assuming MPID_Intercomm_exchange already called, nothing to do here. */
 
-    for (i = 0; i < size; i++) {
-        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid = MPIDIU_GPID_GET_AVTID(lpids[i]);
-        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid = MPIDIU_GPID_GET_LPID(lpids[i]);
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                        (MPL_DBG_FDEST, " remote rank=%d, avtid=%d, lpid=%d", i,
-                         MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid,
-                         MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid));
-    }
-
-  fn_exit:
-    MPIR_FUNC_EXIT;
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* Create multi-leaders communicator */
