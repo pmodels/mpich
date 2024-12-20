@@ -21,7 +21,6 @@ int MPIDI_create_init_comm(MPIR_Comm ** comm)
         int node_roots_comm_size = MPIR_Process.num_nodes;
         int node_roots_comm_rank = MPIR_Process.node_map[world_rank];
         MPIR_Comm *init_comm = NULL;
-        MPIDI_rank_map_lut_t *lut = NULL;
 
         mpi_errno = MPIR_Comm_create(&init_comm);
         MPIR_ERR_CHECK(mpi_errno);
@@ -66,7 +65,6 @@ void MPIDI_destroy_init_comm(MPIR_Comm ** comm_ptr)
     MPIR_Comm *comm = NULL;
     if (*comm_ptr != NULL) {
         comm = *comm_ptr;
-        MPIDIU_release_lut(MPIDI_COMM(comm, map).irreg.lut.t);
         MPIDIG_destroy_comm(comm);
         MPIR_Object_release_ref(comm, &in_use);
         MPIR_Assertp(in_use == 0);
