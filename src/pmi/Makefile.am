@@ -21,12 +21,12 @@ else
 include_HEADERS = \
     include/pmi.h \
     include/pmi2.h \
-    include/pmix.h \
-    include/pmix_abi_support.h \
-    include/pmix_abi_support_bottom.h \
-    include/pmix_fns.h \
-    include/pmix_macros.h \
-    include/pmix_types.h
+    include/pmix/pmix.h \
+    include/pmix/pmix_abi_support.h \
+    include/pmix/pmix_abi_support_bottom.h \
+    include/pmix/pmix_fns.h \
+    include/pmix/pmix_macros.h \
+    include/pmix/pmix_types.h
 
 lib_LTLIBRARIES = libpmi.la
 endif
