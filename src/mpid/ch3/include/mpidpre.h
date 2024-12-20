@@ -182,10 +182,6 @@ typedef struct MPIDI_CH3I_comm
                              * waiting for a revoke message before we can release
                              * the context id */
 
-    int is_disconnected;    /* set to TRUE if this communicator was
-                             * disconnected as a part of
-                             * MPI_COMM_DISCONNECT; FALSE otherwise. */
-
     struct MPIDI_VCRT *vcrt;          /* virtual connection reference table */
     struct MPIDI_VCRT *local_vcrt;    /* local virtual connection reference table */
 
