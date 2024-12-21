@@ -45,7 +45,7 @@
       }
 .ve
 
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   A multi-threaded implementation might save the current value of a request 
   completion counter in the state.
 @*/
@@ -66,7 +66,7 @@ void MPIDI_CH3_Progress_start(MPID_Progress_state * state);
   NOTE:
   MPIDI_CH3_Progress_start/end() need to be called.
   
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   A multi-threaded implementation would return immediately if the a request 
   had been completed between the call to
   MPIDI_CH3_Progress_start() and MPIDI_CH3_Progress_wait().  This could be 
@@ -110,7 +110,7 @@ int MPIDI_CH3_Progress_test(void);
   Return value:
   An mpi error code.
   
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   This routine is similar to MPIDI_CH3_Progress_test but may not be as 
   thorough in its attempt to satisfy all outstanding
   communication.

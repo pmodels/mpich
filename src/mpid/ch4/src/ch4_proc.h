@@ -9,7 +9,7 @@
 #include "ch4_types.h"
 
 /* There are 3 terms referencing processes:
- * upid, or "unversal process id", is netmod layer address (addrname)
+ * upid, or "universal process id", is netmod layer address (addrname)
  * lpid, or "local process id", is av entry index in an ch4-layer table
  * gpid, or "global process id", is av table index plus av entry index
  *
@@ -262,7 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rank_is_local(int rank, MPIR_Comm * comm)
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     /* Ask the netmod for locality information. If it decided not to build it,
-     * it will call back up to the MPIDIU function to get the infomration. */
+     * it will call back up to the MPIDIU function to get the information. */
     ret = MPIDI_NM_rank_is_local(rank, comm);
 #else
     ret = MPIDIU_av_is_local(MPIDIU_comm_rank_to_av(comm, rank));
