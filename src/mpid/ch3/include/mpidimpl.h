@@ -1134,7 +1134,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, MPI_Aint origin_count,
   MPIDI_CH3_Progress_signal_completion - Inform the progress engine that a 
   pending request has completed.
 
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   In a single-threaded environment, this routine can be implemented by
   incrementing a request completion counter.  In a
   multi-threaded environment, the request completion counter must be atomically
@@ -1235,10 +1235,10 @@ int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * );
  all processes in comm*/
 int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root );
 
-/* Channel defintitions */
+/* Channel definititions */
 /*@
-  MPIDI_CH3_iStartMsg - A non-blocking request to send a CH3 packet.  A r
-  equest object is allocated only if the send could not be completed 
+  MPIDI_CH3_iStartMsg - A non-blocking request to send a CH3 packet.  A
+  request object is allocated only if the send could not be completed 
   immediately.
 
   Input Parameters:
@@ -1288,7 +1288,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * pkt, intptr_t pkt_sz,
   packet structure and the vector may be allocated on
   the stack.
 
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   If the send can not be completed immediately, the CH3 packet structure and 
   the vector must be stored internally until the
   request is complete.
@@ -1352,7 +1352,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void * pkt,
   packet structure and the vector may be allocated on
   the stack.
 
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   If the send can not be completed immediately, the packet structure and the 
   vector must be stored internally until the request is
   complete.

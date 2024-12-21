@@ -480,7 +480,7 @@ typedef struct MPIDI_Request {
      *   4. The callback function can complete other requests, thus
      *      calling those requests' callback functions.  However, the
      *      recursion depth of request completion function is limited.
-     *      If we ever need deeper recurisve calls, we need to change
+     *      If we ever need deeper recursive calls, we need to change
      *      to an iterative design instead of a recursive design for
      *      request completion.
      *
