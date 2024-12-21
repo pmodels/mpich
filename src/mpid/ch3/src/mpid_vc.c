@@ -580,7 +580,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
     }
 
     /* Finish up by giving the device the opportunity to update
-       any other infomration among these processes.  Note that the
+       any other information among these processes.  Note that the
        new intercomm has not been set up; in fact, we haven't yet
        attempted to set up the connection tables.
 

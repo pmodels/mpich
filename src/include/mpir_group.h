@@ -63,7 +63,7 @@ struct MPIR_Group {
                                          * process number */
     int is_local_dense_monotonic;       /* see NOTE-G1 */
 
-    /* We may want some additional data for the RMA syncrhonization calls */
+    /* We may want some additional data for the RMA synchronization calls */
     /* Other, device-specific information */
 #ifdef MPID_DEV_GROUP_DECL
      MPID_DEV_GROUP_DECL
