@@ -27,10 +27,6 @@ int MPID_Comm_disconnect(MPIR_Comm *comm_ptr)
         MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 
-    /* it's more than a comm_release, but ok for now */
-    /* FIXME: Describe what more might be required */
-    /* MPIU_PG_Printall( stdout ); */
-    comm_ptr->dev.is_disconnected = 1;
     mpi_errno = MPIR_Comm_release(comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     /* If any of the VCs were released by this Comm_release, wait
