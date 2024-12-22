@@ -92,7 +92,10 @@ typedef int MPI_Fint;
 #define MPI_MODE_APPEND            128  /* ADIO_APPEND */
 #define MPI_MODE_SEQUENTIAL        256  /* ADIO_SEQUENTIAL */
 
-#define MPI_DISPLACEMENT_CURRENT   -54278278
+#define MPI_DISPLACEMENT_CURRENT    -2  /* Used in MPI_File_set_view when file
+                                         * mode is MPI_MODE_SEQUENTIAL. It is
+                                         * effectively a dummy argument, thus
+                                         * it is defined arbitrarily. */
 
 #ifndef MPICH
 /* FIXME: Make sure that we get a consistent definition of MPI_FILE_NULL
