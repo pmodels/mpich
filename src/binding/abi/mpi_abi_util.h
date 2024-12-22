@@ -137,6 +137,7 @@ static inline ABI_Datatype ABI_Datatype_from_mpi(MPI_Datatype in)
                 return (ABI_Datatype) ((intptr_t) ABI_DATATYPE_NULL + i);
             }
         }
+        MPIR_Assert(0);
     }
     MPIR_Datatype *ptr;
     MPIR_Datatype_get_ptr(in, ptr);
