@@ -425,7 +425,7 @@ enum {
 };
 
 /* File Operation Constants */
-#define MPI_DISPLACEMENT_CURRENT       ((MPI_Offset)-54278278)
+#define MPI_DISPLACEMENT_CURRENT       ((MPI_Offset)-1)
 
 /* Predefined Attribute Keys */
 enum {
