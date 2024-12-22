@@ -45,7 +45,7 @@
       }
 .ve
 
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   A multi-threaded implementation might save the current value of a request 
   completion counter in the state.
 @*/
@@ -66,7 +66,7 @@ void MPIDI_CH3_Progress_start(MPID_Progress_state * state);
   NOTE:
   MPIDI_CH3_Progress_start/end() need to be called.
   
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   A multi-threaded implementation would return immediately if the a request 
   had been completed between the call to
   MPIDI_CH3_Progress_start() and MPIDI_CH3_Progress_wait().  This could be 
@@ -110,7 +110,7 @@ int MPIDI_CH3_Progress_test(void);
   Return value:
   An mpi error code.
   
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   This routine is similar to MPIDI_CH3_Progress_test but may not be as 
   thorough in its attempt to satisfy all outstanding
   communication.
@@ -188,10 +188,11 @@ int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
                             int root );
 int MPID_Intercomm_exchange_map( MPIR_Comm *local_comm_ptr, int local_leader,
                                  MPIR_Comm *peer_comm_ptr, int remote_leader,
-                                 int *remote_size, uint64_t **remote_lpids,
+                                 int *remote_size, MPIR_Lpid **remote_lpids,
                                  int *is_low_group);
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
-                                      int size, const uint64_t lpids[] );
+                                      int size, const MPIR_Lpid lpids[] );
+int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, MPIR_Lpid *lpid_ptr, bool is_remote);
 
 #define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
 

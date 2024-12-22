@@ -204,7 +204,7 @@ static void cleanup_cvars(void)
 {
     for (int i = 0; i < num_cvars; i++) {
         if (cvar_list[i].num_enums > 0) {
-            for (int j = 0; j < num_cvars; j++) {
+            for (int j = 0; j < cvar_list[i].num_enums; j++) {
                 free(cvar_list[i].enum_list[j]);
             }
         }
