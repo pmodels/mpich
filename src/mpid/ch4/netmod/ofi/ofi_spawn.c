@@ -22,9 +22,7 @@ int MPIDI_OFI_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
 
     int vci = 0;                /* dynamic process only use vci 0 */
     int ctx_idx = 0;
-    int avtid = MPIDIU_GPID_GET_AVTID(remote_lpid);
-    int lpid = MPIDIU_GPID_GET_LPID(remote_lpid);
-    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys_root(&MPIDIU_get_av(avtid, lpid));
+    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys_root(MPIDIU_lpid_to_av_slow(remote_lpid));
 
     MPIDI_OFI_dynamic_process_request_t req;
     req.done = 0;
