@@ -92,8 +92,6 @@ Non Native API:
       NM : comm, local_upid_size, local_upids
   insert_upid: int
       NM : lpid, upid, upid_len
-  upids_to_lpids : int
-      NM : size, remote_upid_size, remote_upids, remote_lpids
   dynamic_send : int
       NM : remote_lpid, tag, buf, size, timeout
   dynamic_recv : int
@@ -509,9 +507,6 @@ PARAM:
     recv_buf: void *
     recv_size: int
     remote_lpid: MPIR_Lpid
-    remote_lpids: MPIR_Lpid *
-    remote_upid_size: int *
-    remote_upids: char *
     req: MPIR_Request *
     req_p: MPIR_Request **
     result_addr: void *
