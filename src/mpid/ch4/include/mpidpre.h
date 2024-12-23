@@ -620,8 +620,7 @@ typedef struct {
 typedef struct {
     void *upid;
     int upid_len;
-    int avtid;
-    int lpid;
+    MPIR_Lpid lpid;
     UT_hash_handle hh;
 } MPIDI_upid_hash;
 #endif

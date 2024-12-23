@@ -268,9 +268,7 @@ int MPIDI_UCX_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
     }
 
     if (!is_dynamic) {
-        int avtid = MPIR_LPID_WORLD_INDEX(lpid);
-        int wrank = MPIR_LPID_WORLD_RANK(lpid);
-        MPIDIU_upidhash_add(upid, upid_len, avtid, wrank);
+        MPIDIU_upidhash_add(upid, upid_len, lpid);
     }
 
   fn_exit:
