@@ -338,7 +338,7 @@ MPIDI_av_entry_t *MPIDIU_lpid_to_av_slow(MPIR_Lpid lpid)
 }
 
 #ifdef MPIDI_BUILD_CH4_UPID_HASH
-/* Store the upid, avtid, lpid in a hash to support get_local_upids and upids_to_lupids */
+/* Store the upid, avtid, lpid in a hash to support get_local_upids and insert_upid */
 static MPIDI_upid_hash *upid_hash = NULL;
 
 void MPIDIU_upidhash_add(const void *upid, int upid_len, MPIR_Lpid lpid)
@@ -371,24 +371,3 @@ void MPIDIU_upidhash_free(void)
     }
 }
 #endif
-
-/* convert upid to gpid by netmod.
- * For ofi netmod, it inserts the address and fills an av entry.
- */
-int MPIDIU_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids,
-                          MPIR_Lpid * remote_lpids)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
-    mpi_errno = MPIDI_NM_upids_to_lpids(size, remote_upid_size, remote_upids, remote_lpids);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
