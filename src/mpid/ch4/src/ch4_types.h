@@ -213,9 +213,6 @@ typedef struct {
     MPIDI_dyn_av_table_t dynamic_av_table;
 } MPIDIU_avt_manager;
 
-#define MPIDIU_get_av_table(avtid) (MPIDI_global.avt_mgr.av_tables[(avtid)])
-#define MPIDIU_get_av(avtid, lpid) (MPIDI_global.avt_mgr.av_tables[(avtid)]->table[(lpid)])
-
 typedef struct {
     uint64_t key;
     void *value;
