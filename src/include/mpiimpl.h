@@ -169,6 +169,7 @@ typedef struct MPIR_Stream MPIR_Stream;
 #include "mpir_errhandler.h"
 #include "mpir_attr_generic.h"
 #include "mpir_contextid.h"
+#include "mpir_lpid.h"
 #include "mpir_status.h"
 #include "mpir_debugger.h"
 #include "mpir_op.h"
