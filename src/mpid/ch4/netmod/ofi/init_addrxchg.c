@@ -81,7 +81,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
 
         for (int i = 0; i < num_nodes; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV_ADDR_ROOT(&MPIDIU_get_av(0, node_roots[i])) = mapped_table[i];
+            MPIDI_OFI_AV_ADDR_ROOT(MPIDIU_lpid_to_av(node_roots[i])) = mapped_table[i];
         }
         MPL_free(mapped_table);
         /* Then, allgather all address names using init_comm */
@@ -97,7 +97,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
                 char *addrname = (char *) table + recv_bc_len * rank_map[i];
                 MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av,
                                             addrname, 1, &addr, 0ULL, NULL), avmap);
-                MPIDI_OFI_AV_ADDR_ROOT(&MPIDIU_get_av(0, i)) = addr;
+                MPIDI_OFI_AV_ADDR_ROOT(MPIDIU_lpid_to_av(i)) = addr;
             }
         }
         mpi_errno = MPIDU_bc_table_destroy();
@@ -111,7 +111,7 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
 
         for (int i = 0; i < size; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV_ADDR_ROOT(&MPIDIU_get_av(0, i)) = mapped_table[i];
+            MPIDI_OFI_AV_ADDR_ROOT(MPIDIU_lpid_to_av(i)) = mapped_table[i];
         }
         MPL_free(mapped_table);
         mpi_errno = MPIDU_bc_table_destroy();
