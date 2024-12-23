@@ -338,7 +338,7 @@ MPIDI_av_entry_t *MPIDIU_lpid_to_av_slow(MPIR_Lpid lpid)
 }
 
 #ifdef MPIDI_BUILD_CH4_UPID_HASH
-/* Store the upid, avtid, lpid in a hash to support get_local_upids and upids_to_lupids */
+/* Store the upid, avtid, lpid in a hash to support get_local_upids and insert_upid */
 static MPIDI_upid_hash *upid_hash = NULL;
 
 void MPIDIU_upidhash_add(const void *upid, int upid_len, MPIR_Lpid lpid)
