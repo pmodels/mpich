@@ -341,20 +341,17 @@ MPIDI_av_entry_t *MPIDIU_lpid_to_av_slow(MPIR_Lpid lpid)
 /* Store the upid, avtid, lpid in a hash to support get_local_upids and upids_to_lupids */
 static MPIDI_upid_hash *upid_hash = NULL;
 
-void MPIDIU_upidhash_add(const void *upid, int upid_len, int avtid, int lpid)
+void MPIDIU_upidhash_add(const void *upid, int upid_len, MPIR_Lpid lpid)
 {
     MPIDI_upid_hash *t;
     t = MPL_malloc(sizeof(MPIDI_upid_hash), MPL_MEM_OTHER);
-    t->avtid = avtid;
     t->lpid = lpid;
     t->upid = MPL_malloc(upid_len, MPL_MEM_OTHER);
     memcpy(t->upid, upid, upid_len);
     t->upid_len = upid_len;
     HASH_ADD_KEYPTR(hh, upid_hash, t->upid, upid_len, t, MPL_MEM_OTHER);
 
-    MPIDIU_get_av(avtid, lpid).hash = t;
-    /* Do not free avt while we use upidhash - FIXME: improve it */
-    MPIDIU_avt_add_ref(avtid);
+    MPIDIU_lpid_to_av(lpid)->hash = t;
 }
 
 MPIDI_upid_hash *MPIDIU_upidhash_find(const void *upid, int upid_len)
@@ -369,7 +366,6 @@ void MPIDIU_upidhash_free(void)
     MPIDI_upid_hash *cur, *tmp;
     HASH_ITER(hh, upid_hash, cur, tmp) {
         HASH_DEL(upid_hash, cur);
-        MPIDIU_avt_release_ref(cur->avtid);
         MPL_free(cur->upid);
         MPL_free(cur);
     }

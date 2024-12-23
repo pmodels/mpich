@@ -29,7 +29,7 @@ int MPIDIU_avt_destroy(void);
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p);
 
 #ifdef MPIDI_BUILD_CH4_UPID_HASH
-void MPIDIU_upidhash_add(const void *upid, int upid_len, int avtid, int lpid);
+void MPIDIU_upidhash_add(const void *upid, int upid_len, MPIR_Lpid lpid);
 MPIDI_upid_hash *MPIDIU_upidhash_find(const void *upid, int upid_len);
 void MPIDIU_upidhash_free(void);
 #endif
