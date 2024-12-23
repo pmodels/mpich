@@ -19,8 +19,7 @@
                                           myname, __LINE__,             \
                                           MPI_ERR_FILE,                 \
                                           "**iobadfh", 0);              \
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);   \
-        goto fn_exit;                                                   \
+        goto fn_fail;                                                   \
     }
 
 /* TODO could add more glue code to help check for handle validity, or perhaps
@@ -33,8 +32,7 @@
                                               (myname_), __LINE__,      \
                                               MPI_ERR_COMM,             \
                                               "**commnull", 0);         \
-            error_code_ = MPIO_Err_return_file(MPI_FILE_NULL, (error_code_)); \
-            goto fn_exit;                                               \
+            goto fn_fail;                                               \
         }                                                               \
     } while (0)
 
@@ -45,8 +43,7 @@
                                           myname, __LINE__,     \
                                           MPI_ERR_COUNT,        \
                                           "**iobadcount", 0);   \
-        error_code = MPIO_Err_return_file(fh, error_code);      \
-        goto fn_exit;                                           \
+        goto fn_fail;                                           \
     }
 
 #define MPIO_CHECK_COUNT_SIZE(fh, count, datatype_size, myname, error_code) \
@@ -56,8 +53,7 @@
                                           myname, __LINE__,             \
                                           MPI_ERR_ARG,                  \
                                           "**iobadcount", 0);           \
-        error_code = MPIO_Err_return_file(fh, error_code);              \
-        goto fn_exit;                                                   \
+        goto fn_fail;                                                   \
     }
 
 #define MPIO_CHECK_DATATYPE(fh, datatype, myname, error_code)           \
@@ -74,8 +70,7 @@
             MPIO_DATATYPE_ISCOMMITTED(datatype, error_code);            \
         }                                                               \
         if (error_code != MPI_SUCCESS) {                                \
-            error_code = MPIO_Err_return_file(fh, error_code);          \
-            goto fn_exit;                                               \
+            goto fn_fail;                                               \
         }                                                               \
     } while (0)
 
@@ -86,8 +81,7 @@
                                           myname, __LINE__,     \
                                           MPI_ERR_ACCESS,       \
                                           "**iowronly", 0);     \
-        error_code = MPIO_Err_return_file(fh, error_code);      \
-        goto fn_exit;                                           \
+        goto fn_fail;                                           \
     }
 
 #define MPIO_CHECK_WRITABLE(fh, myname, error_code)             \
@@ -98,8 +92,7 @@
                                           MPI_ERR_READ_ONLY,    \
                                           "**iordonly",         \
                                           0);                   \
-        error_code = MPIO_Err_return_file(fh, error_code);      \
-        goto fn_exit;                                           \
+        goto fn_fail;                                           \
     }
 
 #define MPIO_CHECK_NOT_SEQUENTIAL_MODE(fh, myname, error_code)          \
@@ -109,8 +102,7 @@
                                           myname, __LINE__,             \
                                           MPI_ERR_UNSUPPORTED_OPERATION, \
                                           "**ioamodeseq", 0);           \
-        error_code = MPIO_Err_return_file(fh, error_code);              \
-        goto fn_exit;                                                   \
+        goto fn_fail;                                                   \
     }
 
 #define MPIO_CHECK_INTEGRAL_ETYPE(fh, count, dtype_size, myname, error_code) \
@@ -118,8 +110,7 @@
         error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, \
                                           myname, __LINE__, MPI_ERR_IO, \
                                           "**ioetype", 0);              \
-        error_code = MPIO_Err_return_file(fh, error_code);              \
-        goto fn_exit;                                                   \
+        goto fn_fail;                                                   \
     }
 
 #define MPIO_CHECK_FS_SUPPORTS_SHARED(fh, myname, error_code)           \
@@ -130,8 +121,7 @@
                                           myname, __LINE__,             \
                                           MPI_ERR_UNSUPPORTED_OPERATION, \
                                           "**iosharedunsupported", 0);  \
-        error_code = MPIO_Err_return_file(fh, error_code);              \
-        goto fn_exit;                                                   \
+        goto fn_fail;                                                   \
     }
 
 /* MPIO_ERR_CREATE_CODE_XXX macros are used to clean up creation of
@@ -165,7 +155,7 @@
 /* Check MPI_Info object by calling MPI_Info_dup, if the info object is valid
 then the dup operation will succeed */
 /* a collective check for error makes this macro collective */
-#define MPIO_CHECK_INFO_ALL(info, error_code, comm) {                   \
+#define MPIO_CHECK_INFO_ALL(info, myname, error_code, comm) {                   \
         MPI_Info dupinfo;                                               \
         int tmp_err = MPI_SUCCESS;                                      \
         if (info == MPI_INFO_NULL) {                                    \

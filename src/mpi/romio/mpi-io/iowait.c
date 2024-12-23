@@ -45,13 +45,6 @@ int MPIO_Wait(MPIO_Request * request, MPI_Status * status)
     int error_code;
     static char myname[] = "MPIO_WAIT";
 
-#ifdef MPI_hpux
-    int fl_xmpi;
-
-    if (*request != MPIO_REQUEST_NULL) {
-        HPMP_IO_WSTART(fl_xmpi, BLKMPIOWAIT, TRDTBLOCK, (*request)->fd);
-    }
-#endif /* MPI_hpux */
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -79,9 +72,6 @@ int MPIO_Wait(MPIO_Request * request, MPI_Status * status)
             break;
     }
 
-#ifdef MPI_hpux
-    HPMP_IO_WEND(fl_xmpi);
-#endif /* MPI_hpux */
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
