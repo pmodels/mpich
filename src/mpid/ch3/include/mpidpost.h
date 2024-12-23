@@ -194,8 +194,6 @@ int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
                                       int size, const MPIR_Lpid lpids[] );
 int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, MPIR_Lpid *lpid_ptr, bool is_remote);
 
-#define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
-
 /* ULFM support */
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm_ptr)
 {
