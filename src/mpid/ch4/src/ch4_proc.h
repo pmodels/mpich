@@ -33,8 +33,6 @@ void MPIDIU_upidhash_add(const void *upid, int upid_len, MPIR_Lpid lpid);
 MPIDI_upid_hash *MPIDIU_upidhash_find(const void *upid, int upid_len);
 void MPIDIU_upidhash_free(void);
 #endif
-int MPIDIU_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids,
-                          MPIR_Lpid * remote_lpids);
 
 MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
