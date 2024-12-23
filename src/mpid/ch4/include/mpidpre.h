@@ -637,17 +637,6 @@ typedef struct MPIDI_av_entry {
 
 #define HAVE_DEV_COMM_HOOK
 
-/*
- * operation for (avtid, lpid) to/from gpid
- */
-#define MPIDIU_LPID_BITS                     32
-#define MPIDIU_LPID_MASK                     0xFFFFFFFFU
-#define MPIDIU_GPID_CREATE(avtid, lpid)      (((uint64_t) (avtid) << MPIDIU_LPID_BITS) | (lpid))
-#define MPIDIU_GPID_GET_AVTID(gpid)          ((gpid) >> MPIDIU_LPID_BITS)
-#define MPIDIU_GPID_GET_LPID(gpid)           ((gpid) & MPIDIU_LPID_MASK)
-
-#define MPIDI_DYNPROC_MASK                 (0x80000000U)
-
 int MPIDI_check_for_failed_procs(void);
 
 #ifdef HAVE_SIGNAL
