@@ -192,7 +192,7 @@ static int setup_additional_vcis(void)
 #endif
 
 #define GET_AV_AND_ADDRNAMES(rank) \
-    MPIDI_av_entry_t *av ATTRIBUTE((unused)) = &MPIDIU_get_av(0, rank); \
+    MPIDI_av_entry_t *av ATTRIBUTE((unused)) = MPIDIU_lpid_to_av(rank); \
     char *r_names = all_names + rank * max_vcis * num_nics * name_len;
 
 #define DO_AV_INSERT(ctx_idx, nic, vci) \
