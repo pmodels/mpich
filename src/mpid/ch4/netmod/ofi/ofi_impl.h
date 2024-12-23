@@ -31,9 +31,6 @@ ATTRIBUTE((unused));
 #define MPIDI_OFI_DT(dt)         ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_OP(op)         ((op)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
-#define MPIDI_OFI_TO_PHYS(avtid, lpid, _nic) \
-    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest[_nic][0]
-
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
 #define MPIDI_OFI_NIC_NAME(nic)    (MPIDI_OFI_global.prov_use[nic] ? \
