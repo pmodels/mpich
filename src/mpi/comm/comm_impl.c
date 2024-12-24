@@ -1113,10 +1113,9 @@ int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
 
     MPIR_Session *session_ptr = NULL;   /* Can we just use NULL session since peer_intercomm is always temporary? */
     MPIR_Lpid my_lpid = MPIR_Group_rank_to_lpid(comm_self->local_group, 0);
-    mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, my_lpid, 1, 1,
-                                         &(*newcomm)->local_group);
+    mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, my_lpid, 1, &(*newcomm)->local_group);
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, remote_lpid, 1, 1,
+    mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, remote_lpid, 1,
                                          &(*newcomm)->remote_group);
     MPIR_ERR_CHECK(mpi_errno);
 
