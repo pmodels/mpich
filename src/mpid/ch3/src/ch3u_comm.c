@@ -156,7 +156,8 @@ static int create_vcrt_from_group(MPIR_Group *group, struct MPIDI_VCRT **vcrt_ou
                 }
                 pg = pg->next;
             }
-            MPIR_Assert(found_it);
+            MPIR_ERR_CHKANDJUMP1(!found_it, mpi_errno, MPI_ERR_OTHER, "**procnotfound",
+                                 "**procnotfound %d", i);
         }
     }
 
@@ -164,7 +165,6 @@ static int create_vcrt_from_group(MPIR_Group *group, struct MPIDI_VCRT **vcrt_ou
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-
 }
 
 int MPIDI_CH3I_Comm_commit_pre_hook(MPIR_Comm *comm)
