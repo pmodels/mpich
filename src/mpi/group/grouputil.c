@@ -193,6 +193,9 @@ int MPIR_Group_dup(MPIR_Group * old_group, MPIR_Session * session_ptr, MPIR_Grou
     goto fn_exit;
 }
 
+static bool check_map_is_strided(int size, MPIR_Lpid * map,
+                                 MPIR_Lpid * offset_out, MPIR_Lpid * stride_out,
+                                 MPIR_Lpid * blocksize_out);
 int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_Lpid * map,
                           MPIR_Group ** new_group_ptr)
 {
@@ -214,10 +217,16 @@ int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_L
         newgrp->rank = rank;
         MPIR_Group_set_session_ptr(newgrp, session_ptr);
 
-        newgrp->pmap.use_map = true;
-        newgrp->pmap.u.map = map;
+        if (check_map_is_strided(size, map, &newgrp->pmap.u.stride.offset,
+                                 &newgrp->pmap.u.stride.stride, &newgrp->pmap.u.stride.blocksize)) {
+            newgrp->pmap.use_map = false;
+            MPL_free(map);
+        } else {
+            newgrp->pmap.use_map = true;
+            newgrp->pmap.u.map = map;
+            /* TODO: build hash to accelerate MPIR_Group_lpid_to_rank */
+        }
 
-        /* TODO: build hash to accelerate MPIR_Group_lpid_to_rank */
         *new_group_ptr = newgrp;
     }
 
@@ -261,36 +270,7 @@ int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
     goto fn_exit;
 }
 
-static int pmap_lpid_to_rank(struct MPIR_Pmap *pmap, MPIR_Lpid lpid)
-{
-    if (pmap->use_map) {
-        /* Use linear search for now.
-         * Optimization: build hash map in MPIR_Group_create_map and do O(1) hash lookup
-         */
-        for (int rank = 0; rank < pmap->size; rank++) {
-            if (pmap->u.map[rank] == lpid) {
-                return rank;
-            }
-        }
-        return MPI_UNDEFINED;
-    } else {
-        lpid -= pmap->u.stride.offset;
-        MPIR_Lpid i_blk = lpid / pmap->u.stride.stride;
-        MPIR_Lpid r_blk = lpid % pmap->u.stride.stride;
-
-        if (r_blk >= pmap->u.stride.blocksize) {
-            return MPI_UNDEFINED;
-        }
-
-        int rank = i_blk * pmap->u.stride.blocksize + r_blk;
-        if (rank >= 0 && rank < pmap->size) {
-            return rank;
-        } else {
-            return MPI_UNDEFINED;
-        }
-    }
-}
-
+static int pmap_lpid_to_rank(struct MPIR_Pmap *pmap, MPIR_Lpid lpid);
 int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid)
 {
     return pmap_lpid_to_rank(&group->pmap, lpid);
@@ -432,36 +412,16 @@ int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int vsize = comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM ? comm_ptr->local_size :
-        comm_ptr->remote_size;
-    /* Initialize the vmap */
-    MPIR_Lpid *vmap = MPL_malloc(vsize * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
-    for (int i = 0; i < vsize; i++) {
-        /* FIXME: MPID_Comm_get_lpid to be removed */
-        uint64_t dev_lpid;
-        MPID_Comm_get_lpid(comm_ptr, i, &dev_lpid, FALSE);
-        MPIR_Assert((dev_lpid >> 32) == 0);
-        vmap[i] = dev_lpid;
-    }
-
     for (int rank = 0; rank < group_ptr->size; rank++) {
         MPIR_Lpid lpid = MPIR_Group_rank_to_lpid(group_ptr, rank);
-        bool found = false;
-        for (int i = 0; i < vsize; i++) {
-            if (vmap[i] == lpid) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            MPIR_ERR_SET1(mpi_errno, MPI_ERR_GROUP, "**groupnotincomm",
-                          "**groupnotincomm %d", rank);
-            goto fn_fail;
+        int r = MPIR_Group_lpid_to_rank(comm_ptr->local_group, lpid);
+        if (r == MPI_UNDEFINED) {
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_GROUP, "**groupnotincomm",
+                                 "**groupnotincomm %d", rank);
         }
     }
 
   fn_exit:
-    MPL_free(vmap);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -476,5 +436,88 @@ void MPIR_Group_set_session_ptr(MPIR_Group * group_ptr, MPIR_Session * session_p
     if (session_ptr != NULL) {
         group_ptr->session_ptr = session_ptr;
         MPIR_Session_add_ref(session_ptr);
+    }
+}
+
+/* internal static routines */
+
+static bool check_map_is_strided(int size, MPIR_Lpid * map,
+                                 MPIR_Lpid * offset_out, MPIR_Lpid * stride_out,
+                                 MPIR_Lpid * blocksize_out)
+{
+    MPIR_Assert(size > 0);
+    if (size == 1) {
+        *offset_out = map[0];
+        *stride_out = 1;
+        *blocksize_out = 1;
+        return true;
+    } else {
+        MPIR_Lpid offset, stride, blocksize;
+        offset = map[0];
+
+        blocksize = 1;
+        for (int i = 1; i < size; i++) {
+            if (map[i] - map[i - 1] == 1) {
+                blocksize++;
+            } else {
+                break;
+            }
+        }
+        if (blocksize == size) {
+            /* consecutive */
+            *offset_out = offset;
+            *stride_out = 1;
+            *blocksize_out = 1;
+            return true;
+        } else {
+            stride = map[blocksize] - map[0];
+            int n_strides = (size + blocksize - 1) / blocksize;
+            int k = 0;
+            for (int i = 0; i < n_strides; i++) {
+                for (int j = 0; j < blocksize; j++) {
+                    if (map[k] != offset + i * stride + j) {
+                        return false;
+                    }
+                    k++;
+                    if (k == size) {
+                        break;
+                    }
+                }
+            }
+            *offset_out = offset;
+            *stride_out = stride;
+            *blocksize_out = blocksize;
+            return true;
+        }
+    }
+}
+
+static int pmap_lpid_to_rank(struct MPIR_Pmap *pmap, MPIR_Lpid lpid)
+{
+    if (pmap->use_map) {
+        /* Use linear search for now.
+         * Optimization: build hash map in MPIR_Group_create_map and do O(1) hash lookup
+         */
+        for (int rank = 0; rank < pmap->size; rank++) {
+            if (pmap->u.map[rank] == lpid) {
+                return rank;
+            }
+        }
+        return MPI_UNDEFINED;
+    } else {
+        lpid -= pmap->u.stride.offset;
+        MPIR_Lpid i_blk = lpid / pmap->u.stride.stride;
+        MPIR_Lpid r_blk = lpid % pmap->u.stride.stride;
+
+        if (r_blk >= pmap->u.stride.blocksize) {
+            return MPI_UNDEFINED;
+        }
+
+        int rank = i_blk * pmap->u.stride.blocksize + r_blk;
+        if (rank >= 0 && rank < pmap->size) {
+            return rank;
+        } else {
+            return MPI_UNDEFINED;
+        }
     }
 }
