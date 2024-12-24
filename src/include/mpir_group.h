@@ -11,18 +11,7 @@
  * only because they are required for the group operations (e.g.,
  * MPI_Group_intersection) and for the scalable RMA synchronization
  *---------------------------------------------------------------------------*/
-/* This structure is used to implement the group operations such as
-   MPI_Group_translate_ranks */
-/* note: next_lpid (with idx_of_first_lpid in MPIR_Group) gives a linked list
- * in a sorted lpid ascending order */
-typedef struct MPII_Group_pmap_t {
-    uint64_t lpid;              /* local process id, from VCONN */
-    int next_lpid;              /* Index of next lpid (in lpid order) */
-} MPII_Group_pmap_t;
 
-/* Any changes in the MPIR_Group structure must be made to the
-   predefined value in MPIR_Group_builtin for MPI_GROUP_EMPTY in
-   src/mpi/group/grouputil.c */
 /*S
  MPIR_Group - Description of the Group data structure
 
@@ -53,22 +42,47 @@ typedef struct MPII_Group_pmap_t {
  Group-DS
 
  S*/
+
+/* In addition to MPI_GROUP_EMPTY, internally we have a few more builtins */
+#define MPIR_GROUP_WORLD  ((MPI_Group)0x48000001)
+#define MPIR_GROUP_SELF   ((MPI_Group)0x48000002)
+
+#define MPIR_GROUP_WORLD_PTR (MPIR_Group_builtin + 1)
+#define MPIR_GROUP_SELF_PTR  (MPIR_Group_builtin + 2)
+
+/* Worlds -
+ * We need a device-independent way of identifying processes. Assuming the concept of
+ * "worlds", we can describe a process with (world_idx, world_rank).
+ *
+ * The world_idx is a local id because each process may not see all worlds. Thus,
+ * each process only can maintain a list of worlds as it encounters them. Thus,
+ * a process id derived from (world_idx, world_rank) is referred as LPID, or
+ * "local process id".
+ *
+ * Each process should maintain a table of worlds with sufficient information so
+ * processes can match worlds upon connection or making address exchange.
+ */
+
+struct MPIR_Pmap {
+    bool use_map;
+    union {
+        MPIR_Lpid *map;
+        struct {
+            MPIR_Lpid offset;
+            MPIR_Lpid stride;
+        } stride;
+    } u;
+};
+
 struct MPIR_Group {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     int size;                   /* Size of a group */
-    int rank;                   /* rank of this process relative to this
-                                 * group */
-    int idx_of_first_lpid;
-    MPII_Group_pmap_t *lrank_to_lpid;   /* Array mapping a local rank to local
-                                         * process number */
-    int is_local_dense_monotonic;       /* see NOTE-G1 */
-
-    /* We may want some additional data for the RMA syncrhonization calls */
-    /* Other, device-specific information */
+    int rank;                   /* rank of this process relative to this group */
+    struct MPIR_Pmap pmap;
+    MPIR_Session *session_ptr;  /* Pointer to session to which this group belongs */
 #ifdef MPID_DEV_GROUP_DECL
      MPID_DEV_GROUP_DECL
 #endif
-     MPIR_Session * session_ptr;        /* Pointer to session to which this group belongs */
 };
 
 /* NOTE-G1: is_local_dense_monotonic will be true iff the group meets the
@@ -97,18 +111,34 @@ extern MPIR_Group *const MPIR_Group_empty;
 #define MPIR_Group_release_ref(_group, _inuse) \
      do { MPIR_Object_release_ref(_group, _inuse); } while (0)
 
-void MPII_Group_setup_lpid_list(MPIR_Group *);
 int MPIR_Group_check_valid_ranks(MPIR_Group *, const int[], int);
 int MPIR_Group_check_valid_ranges(MPIR_Group *, int[][3], int);
-void MPIR_Group_setup_lpid_pairs(MPIR_Group *, MPIR_Group *);
 int MPIR_Group_create(int, MPIR_Group **);
 int MPIR_Group_release(MPIR_Group * group_ptr);
+
+int MPIR_Group_dup(MPIR_Group * old_group, MPIR_Session * session_ptr, MPIR_Group ** new_group_ptr);
+int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_Lpid * map,
+                          MPIR_Group ** new_group_ptr);
+int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
+                             MPIR_Lpid offset, MPIR_Lpid stride, MPIR_Group ** new_group_ptr);
+int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid);
 
 int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr);
 void MPIR_Group_set_session_ptr(MPIR_Group * group_ptr, MPIR_Session * session_out);
 int MPIR_Group_init(void);
+int MPIR_Group_finalize(void);
 
-/* internal functions */
-void MPII_Group_setup_lpid_list(MPIR_Group *);
+MPL_STATIC_INLINE_PREFIX MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank)
+{
+    if (rank < 0 || rank >= group->size) {
+        return MPI_UNDEFINED;
+    }
+
+    if (group->pmap.use_map) {
+        return group->pmap.u.map[rank];
+    } else {
+        return group->pmap.u.stride.offset + rank * group->pmap.u.stride.stride;
+    }
+}
 
 #endif /* MPIR_GROUP_H_INCLUDED */

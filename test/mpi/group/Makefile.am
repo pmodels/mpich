@@ -16,7 +16,3 @@ noinst_PROGRAMS = \
     groupcreate   \
     gtranks       \
     groupnullincl
-
-# glpid is a whitebox test that uses mpiimpl.h; it is unlikely to build with the
-# current build system setup
-#EXTRA_PROGRAMS = glpid

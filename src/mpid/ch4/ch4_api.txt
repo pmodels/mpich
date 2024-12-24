@@ -87,16 +87,16 @@ Non Native API:
   am_tag_recv : int
       NM*: rank, comm, handler_id, tag, buf-2, count, datatype, src_vci, dst_vci, rreq
      SHM*: rank, comm, handler_id, tag, buf-2, count, datatype, src_vci, dst_vci, rreq
-  comm_get_gpid : int
-      NM*: comm_ptr, idx, gpid_ptr, is_remote
   get_local_upids : int
       NM : comm, local_upid_size, local_upids
-  upids_to_gpids : int
-      NM : size, remote_upid_size, remote_upids, remote_gpids
+  insert_upid: int
+      NM : lpid, upid, upid_len
   dynamic_send : int
-      NM : remote_gpid, tag, buf, size, timeout
+      NM : remote_lpid, tag, buf, size, timeout
   dynamic_recv : int
       NM : tag, buf-2, size, timeout
+  dynamic_sendrecv : int
+      NM : remote_lpid, tag, send_buf, send_size, recv_buf, recv_size
   mpi_comm_commit_pre_hook : int
       NM : comm
      SHM : comm
@@ -477,8 +477,7 @@ PARAM:
     local_upid_size: int **
     local_upids: char **
     lock_type: int
-    gpid_ptr: uint64_t *
-    lpids: const int[]
+    lpid: MPIR_Lpid
     made_progress: int *
     message: MPIR_Request *
     message_p: MPIR_Request **
@@ -503,10 +502,9 @@ PARAM:
     recvcounts: const MPI_Aint *
     recvtype: MPI_Datatype
     recvtypes: const MPI_Datatype[]
-    remote_gpid: uint64_t
-    remote_gpids: uint64_t *
-    remote_upid_size: int *
-    remote_upids: char *
+    recv_buf: void *
+    recv_size: int
+    remote_lpid: MPIR_Lpid
     req: MPIR_Request *
     req_p: MPIR_Request **
     result_addr: void *
@@ -521,6 +519,8 @@ PARAM:
     sendcounts: const MPI_Aint *
     sendtype: MPI_Datatype
     sendtypes: const MPI_Datatype[]
+    send_buf: const void *
+    send_size: int
     size: int
     size_p: MPI_Aint *
     size-2: MPI_Aint
@@ -538,6 +538,8 @@ PARAM:
     target_rank: int
     timeout: int
     type: MPIR_Datatype *
+    upid: const char *
+    upid_len: int
     vci: int
     void: 
     win: MPIR_Win *
