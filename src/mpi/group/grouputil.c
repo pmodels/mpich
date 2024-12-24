@@ -422,39 +422,18 @@ int MPIR_Group_check_valid_ranges(MPIR_Group * group_ptr, int ranges[][3], int n
 int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKLMEM_DECL();
-
     MPIR_Assert(group_ptr != NULL);
-
-    int vsize = comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM ? comm_ptr->local_size :
-        comm_ptr->remote_size;
-
-    /* Initialize the vmap */
-    MPIR_Lpid *vmap;
-    MPIR_CHKLMEM_MALLOC(vmap, vsize * sizeof(MPIR_Lpid));
-    for (int i = 0; i < vsize; i++) {
-        /* FIXME: MPID_Comm_get_lpid to be removed */
-        MPID_Comm_get_lpid(comm_ptr, i, &vmap[i], FALSE);
-    }
 
     for (int rank = 0; rank < group_ptr->size; rank++) {
         MPIR_Lpid lpid = MPIR_Group_rank_to_lpid(group_ptr, rank);
-        bool found = false;
-        for (int i = 0; i < vsize; i++) {
-            if (vmap[i] == lpid) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            MPIR_ERR_SET1(mpi_errno, MPI_ERR_GROUP, "**groupnotincomm",
-                          "**groupnotincomm %d", rank);
-            goto fn_fail;
+        int r = MPIR_Group_lpid_to_rank(comm_ptr->local_group, lpid);
+        if (r == MPI_UNDEFINED) {
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_GROUP, "**groupnotincomm",
+                                 "**groupnotincomm %d", rank);
         }
     }
 
   fn_exit:
-    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
