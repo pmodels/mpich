@@ -734,7 +734,7 @@ int MPID_Finalize(void)
 
     MPIDU_genq_private_pool_destroy(MPIDI_global.gpu_coll_pool);
 
-    MPIDIU_avt_destroy();
+    MPIDIU_avt_finalize();
 
     mpi_errno = MPIDU_Init_shm_finalize();
     MPIR_ERR_CHECK(mpi_errno);
