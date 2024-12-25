@@ -104,8 +104,6 @@ int MPIDIU_new_avt(int size, int *avtid)
 
     MPIR_cc_set(&MPIDI_global.avt_mgr.av_tables[*avtid]->ref_count, 0);
 
-    /* TODO: to support dynamic processes and dynamic av insertions, we need device hooks to initialize table with invalid entries */
-
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
