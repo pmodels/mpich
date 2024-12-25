@@ -79,6 +79,9 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
                        (MPIDI_OFI_global.ctx[0].av, table, num_nodes, mapped_table, 0ULL, NULL),
                        avmap);
 
+        if (mapped_table[0] == 0) {
+            MPIDI_OFI_global.lpid0 = node_roots[0];
+        }
         for (int i = 0; i < num_nodes; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV_ADDR_ROOT(MPIDIU_lpid_to_av(node_roots[i])) = mapped_table[i];
@@ -109,6 +112,9 @@ int MPIDI_OFI_addr_exchange_root_ctx(void)
         MPIDI_OFI_CALL(fi_av_insert
                        (MPIDI_OFI_global.ctx[0].av, table, size, mapped_table, 0ULL, NULL), avmap);
 
+        if (mapped_table[0] == 0) {
+            MPIDI_OFI_global.lpid0 = 0;
+        }
         for (int i = 0; i < size; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV_ADDR_ROOT(MPIDIU_lpid_to_av(i)) = mapped_table[i];
