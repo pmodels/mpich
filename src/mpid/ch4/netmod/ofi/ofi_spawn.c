@@ -294,7 +294,7 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
     bool do_insert = false;
     if (lpid & MPIR_LPID_DYNAMIC_MASK) {
         do_insert = true;
-    } else if (MPIDI_OFI_AV_ADDR_ROOT(av) == FI_ADDR_NOTAVAIL) {
+    } else if (MPIDI_OFI_AV_ADDR_ROOT(av) == 0 && lpid != MPIDI_OFI_global.lpid0) {
         MPIDI_av_entry_t *dynamic_av = MPIDIU_find_dynamic_av(upid, upid_len);
         if (dynamic_av) {
             /* just copy it over */
@@ -316,6 +316,10 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
         MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, addrname,
                                     1, &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
         MPIR_Assert(MPIDI_OFI_AV_ADDR_ROOT(av) != FI_ADDR_NOTAVAIL);
+    }
+
+    if (MPIDI_OFI_AV_ADDR_ROOT(av) == 0) {
+        MPIDI_OFI_global.lpid0 = lpid;
     }
 
   fn_exit:

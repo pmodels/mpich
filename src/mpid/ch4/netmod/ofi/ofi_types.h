@@ -526,6 +526,9 @@ typedef struct {
     size_t addrnamelen;         /* OFI uses the same name length within a provider. */
     char pname[MPI_MAX_PROCESSOR_NAME];
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
+    /* To support dynamic av tables, we need a way to tell which entries are empty.
+     * ch4 av tables are initialize to 0s. Thus we need know which "0" is valid. */
+    MPIR_Lpid lpid0;
 
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
