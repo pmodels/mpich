@@ -305,7 +305,7 @@ int MPIDI_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIDI_Gpid *in_gpid )
  * the GPIDs.  Note that this code requires that all processes
  * have information on the process groups.
  */
-int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid in_gpid[], uint64_t lpid[] )
+int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid in_gpid[], MPIR_Lpid lpid[] )
 {
     int i, mpi_errno = MPI_SUCCESS;
     int pgid;
@@ -361,7 +361,7 @@ int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid in_gpid[], uint64_t lpid[] )
 }
 
 static inline int MPIDI_LPID_GetAllInComm(MPIR_Comm *comm_ptr, int local_size,
-                                          uint64_t local_lpids[])
+                                          MPIR_Lpid local_lpids[])
 {
     int i;
     int mpi_errno = MPI_SUCCESS;
@@ -379,7 +379,7 @@ static inline int MPIDI_LPID_GetAllInComm(MPIR_Comm *comm_ptr, int local_size,
 /*@
   check_disjoint_lpids - Exchange address mapping for intercomm creation.
  @*/
-static int check_disjoint_lpids(uint64_t lpids1[], int n1, uint64_t lpids2[], int n2)
+static int check_disjoint_lpids(MPIR_Lpid lpids1[], int n1, MPIR_Lpid lpids2[], int n2)
 {
     int i, mask_size, idx, bit;
     uint64_t maxlpid = 0;
