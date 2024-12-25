@@ -22,10 +22,8 @@ int MPIDIU_get_n_avts(void);
 int MPIDIU_get_avt_size(int avtid);
 int MPIDIU_new_avt(int size, int *avtid);
 int MPIDIU_free_avt(int avtid);
-int MPIDIU_avt_add_ref(int avtid);
-int MPIDIU_avt_release_ref(int avtid);
 int MPIDIU_avt_init(void);
-int MPIDIU_avt_destroy(void);
+int MPIDIU_avt_finalize(void);
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p);
 
 #ifdef MPIDI_BUILD_CH4_UPID_HASH
