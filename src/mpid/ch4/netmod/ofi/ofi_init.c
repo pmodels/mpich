@@ -726,6 +726,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = ofi_pvar_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* A way to tell which av is empty */
+    MPIDI_OFI_global.lpid0 = MPIR_LPID_INVALID;
+
     /* -------------------------------- */
     /* Set up the libfabric provider(s) */
     /* -------------------------------- */
