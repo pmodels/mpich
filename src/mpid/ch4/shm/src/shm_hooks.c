@@ -198,3 +198,8 @@ int MPIDI_SHM_mpi_win_free_hook(MPIR_Win * win)
   fn_fail:
     goto fn_exit;
 }
+
+int MPIDI_SHM_comm_set_vcis(MPIR_Comm * comm, int num_vcis)
+{
+    return MPIDI_POSIX_comm_set_vcis(comm, num_vcis);
+}

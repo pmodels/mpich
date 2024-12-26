@@ -87,6 +87,9 @@ Non Native API:
   am_tag_recv : int
       NM*: rank, comm, handler_id, tag, buf-2, count, datatype, src_vci, dst_vci, rreq
      SHM*: rank, comm, handler_id, tag, buf-2, count, datatype, src_vci, dst_vci, rreq
+  comm_set_vcis : int
+      NM : comm, num_vcis, all_num_vcis
+     SHM : comm, num_vcis
   comm_get_gpid : int
       NM*: comm_ptr, idx, gpid_ptr, is_remote
   get_local_upids : int
@@ -485,6 +488,7 @@ PARAM:
     newcomm_ptr: MPIR_Comm **
     num_vcis: int
     num_vcis_actual: int *
+    all_num_vcis: int *
     op: MPI_Op
     op_p: MPIR_Op *
     origin_addr: const void *
