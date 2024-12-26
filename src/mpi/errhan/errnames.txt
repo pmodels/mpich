@@ -902,6 +902,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **iface_notfound %s:The network interface, \"%s\", specified in MPIR_CVAR_CH3_NETWORK_IFACE was not found.
 
 **procnamefailed:Failed to get processor name
+**procnotfound:Process not found
+**procnotfound %d:Process %d not found
 
 **notsuppmultithread:this functionality is not supported when the thread level is greater than MPI_THREAD_SINGLE
 **valuetoolarge:Value is too large to store
