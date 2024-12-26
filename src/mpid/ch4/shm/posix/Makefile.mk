@@ -34,6 +34,7 @@ mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
                     src/mpid/ch4/shm/posix/posix_datatype.c \
                     src/mpid/ch4/shm/posix/posix_win.c \
                     src/mpid/ch4/shm/posix/posix_part.c \
+                    src/mpid/ch4/shm/posix/posix_vci.c \
                     src/mpid/ch4/shm/posix/posix_eager_array.c
 
 include $(top_srcdir)/src/mpid/ch4/shm/posix/eager/Makefile.mk
