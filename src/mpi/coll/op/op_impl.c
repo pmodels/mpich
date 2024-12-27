@@ -13,7 +13,7 @@ MPIR_Object_alloc_t MPIR_Op_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_OP,
     sizeof(MPIR_Op),
     MPIR_Op_direct,
     MPIR_OP_PREALLOC,
-    NULL, {0}
+    {0}
 };
 
 int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPIR_Op ** p_op_ptr)

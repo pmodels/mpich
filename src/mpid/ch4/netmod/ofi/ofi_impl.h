@@ -139,9 +139,9 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 #define MPIDI_OFI_VCI_PROGRESS(vci_)                                    \
     do {                                                                \
         int made_progress = 0; \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_));                \
         mpi_errno = MPIDI_NM_progress(vci_, &made_progress); \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);                 \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_));                 \
         MPIR_ERR_CHECK(mpi_errno);                                      \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
@@ -149,23 +149,23 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 #define MPIDI_OFI_VCI_PROGRESS_WHILE(vci_, cond)                            \
     do {                                                                    \
         int made_progress = 0; \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                    \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_));                    \
         while (cond) {                                                      \
             mpi_errno = MPIDI_NM_progress(vci_, &made_progress);                        \
             if (mpi_errno) {                                                \
-                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);             \
+                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_));             \
                 MPIR_ERR_POP(mpi_errno);                                    \
             }                                                               \
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
         }                                                                   \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);                     \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_));                     \
     } while (0)
 
 #define MPIDI_OFI_VCI_CALL(FUNC,vci_,STR)                   \
     do {                                                    \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_));    \
         ssize_t _ret = FUNC;                                \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);     \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_));     \
         MPIDI_OFI_ERR(_ret<0,                               \
                               mpi_errno,                    \
                               MPI_ERR_OTHER,                \
@@ -178,14 +178,14 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 #define MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_)            \
     do {                                                        \
         if (!MPIDI_VCI_IS_EXPLICIT(vci_) && MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {      \
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_));    \
         }                                                       \
     } while (0)
 
 #define MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_)         \
     do {                                                    \
         if (!MPIDI_VCI_IS_EXPLICIT(vci_) && MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {  \
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock); \
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_)); \
         }                                                   \
     } while (0)
 
