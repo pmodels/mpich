@@ -348,7 +348,7 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         }
         MPID_THREAD_CS_EXIT(VCI, comm_ptr->mutex);
 
-        (*newcomm_ptr)->tainted = comm_ptr->tainted;
+        (*newcomm_ptr)->vcis_enabled = comm_ptr->vcis_enabled;
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
