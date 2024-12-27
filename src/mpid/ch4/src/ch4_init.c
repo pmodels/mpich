@@ -716,6 +716,7 @@ int MPIDI_world_post_init(void)
     mpi_errno = MPIDI_NM_post_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIR_Process.comm_world->vcis_enabled = true;
     MPIDI_global.is_initialized = 1;
 
   fn_exit:
