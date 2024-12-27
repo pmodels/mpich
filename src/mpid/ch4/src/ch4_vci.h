@@ -47,7 +47,7 @@
 /* VCI hashing function (fast path) */
 
 /* For consistent hashing, we may need differentiate between src and dst vci and whether
- * it is being called from sender side or receiver side (consdier intercomm). We use an
+ * it is being called from sender side or receiver side (consider intercomm). We use an
  * integer flag to encode the information.
  *
  * The flag constants are designed as bit fields, so different hashing algorithm can easily
@@ -108,7 +108,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
 MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
                                            int src_rank, int dst_rank, int tag)
 {
-    return MPIDI_hash_vci(comm_ptr->seq, flag, comm_ptr, src_rank, dst_rank);
+    if (!comm_ptr->vcis_enabled) {
+        return 0;
+    } else {
+        return MPIDI_hash_vci(comm_ptr->seq, flag, comm_ptr, src_rank, dst_rank);
+    }
 }
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__TAG
@@ -121,7 +125,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
                                            int src_rank, int dst_rank, int tag)
 {
     int vci;
-    if (!(flag & 0x1)) {
+    if (!comm_ptr->vcis_enabled) {
+        return 0;
+    } else if (!(flag & 0x1)) {
         /* src */
         vci = (tag == MPI_ANY_TAG) ? 0 : ((tag >> 10) & 0x1f);
         return MPIDI_hash_vci(vci, flag, comm_ptr, src_rank, dst_rank);
@@ -158,20 +164,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_map_contextid_rank_tag_to_vci(int context_id,
     return MPIR_CONTEXT_READ_FIELD(PREFIX, context_id) + rank + tag;
 }
 
-static bool is_vci_restricted_to_zero(MPIR_Comm * comm)
-{
-    bool vci_restricted = false;
-    if (!(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !comm->tainted)) {
-        vci_restricted |= true;
-    }
-    if (!MPIDI_global.is_initialized) {
-        vci_restricted |= true;
-    }
-
-    return vci_restricted;
-}
-
-
 /* Return VCI index of a send transmit context.
  * Used for two purposes:
  *   1. For the sender side to determine which VCI index of a transmit context
@@ -198,9 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_sender_vci(MPIR_Comm * comm,
     bool use_user_defined_vci = (comm->hints[MPIR_COMM_HINT_SENDER_VCI] != MPIDI_VCI_INVALID);
     bool use_tag = comm->hints[MPIR_COMM_HINT_NO_ANY_TAG];
 
-    if (is_vci_restricted_to_zero(comm)) {
-        vci_idx = 0;
-    } else if (use_user_defined_vci) {
+    if (use_user_defined_vci) {
         vci_idx = comm->hints[MPIR_COMM_HINT_SENDER_VCI];
     } else {
         if (use_tag) {
@@ -241,9 +231,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
     bool use_tag = comm->hints[MPIR_COMM_HINT_NO_ANY_TAG];
     bool use_source = comm->hints[MPIR_COMM_HINT_NO_ANY_SOURCE];
 
-    if (is_vci_restricted_to_zero(comm)) {
-        vci_idx = 0;
-    } else if (use_user_defined_vci) {
+    if (use_user_defined_vci) {
         vci_idx = comm->hints[MPIR_COMM_HINT_RECEIVER_VCI] % MPIDI_global.n_vcis;
     } else {
         /* If mpi_any_tag and mpi_any_source can be used for recv, all messages
@@ -279,6 +267,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_receiver_vci(MPIR_Comm * comm,
 MPL_STATIC_INLINE_PREFIX int MPIDI_get_vci(int flag, MPIR_Comm * comm_ptr,
                                            int src_rank, int dst_rank, int tag)
 {
+    if (!comm_ptr->vcis_enabled) {
+        return 0;
+    }
+
     int ctxid_in_effect;
     if (!(flag & 0x2)) {
         /* called from sender */
