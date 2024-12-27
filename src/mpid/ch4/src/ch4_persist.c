@@ -20,9 +20,9 @@ static int psend_init(MPIDI_ptype ptype,
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vci = MPIDI_get_vci(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     MPIDI_CH4_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__PREQUEST_SEND, vci, 1);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *request = sreq;
 
@@ -137,9 +137,9 @@ int MPID_Recv_init(void *buf,
     int context_offset = MPIR_PT2PT_ATTR_CONTEXT_OFFSET(attr);
     int vci = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     MPIDI_CH4_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__PREQUEST_RECV, vci, 1);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *request = rreq;

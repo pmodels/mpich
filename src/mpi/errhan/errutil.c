@@ -120,7 +120,7 @@ MPIR_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_ERRHANDLER
     sizeof(MPIR_Errhandler),
     MPIR_Errhandler_direct,
     MPIR_ERRHANDLER_PREALLOC,
-    NULL, {0}
+    {0}
 };
 
 static void init_builtins(void)

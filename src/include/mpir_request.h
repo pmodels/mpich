@@ -372,15 +372,6 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 
 void MPII_init_request(void);
 
-/* To get the benefit of multiple request pool, device layer need register their per-vci lock
- * with each pool that they are going to use, typically a 1-1 vci-pool mapping.
- * NOTE: currently, only per-vci thread granularity utilizes multiple request pool.
- */
-static inline void MPIR_Request_register_pool_lock(int pool, MPID_Thread_mutex_t * lock)
-{
-    MPIR_Request_mem[pool].lock = lock;
-}
-
 static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
 {
     return (req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
@@ -445,7 +436,7 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
     MPIR_Request *req;
 
 #ifdef MPICH_DEBUG_MUTEX
-    MPID_THREAD_ASSERT_IN_CS(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[pool]);
 #endif
     int max_blocks = (pool == 0) ? REQUEST_NUM_BLOCKS0 : REQUEST_NUM_BLOCKS;
     req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool], max_blocks, REQUEST_NUM_INDICES);
@@ -520,9 +511,9 @@ static inline MPIR_Request *MPIR_Request_create_from_pool_safe(MPIR_Request_kind
 {
     MPIR_Request *req;
 
-    MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[pool]);
     req = MPIR_Request_create_from_pool(kind, pool, ref_count);
-    MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[pool]);
     return req;
 }
 
@@ -530,9 +521,9 @@ static inline MPIR_Request *MPIR_Request_create_from_pool_safe(MPIR_Request_kind
 static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
-    MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[0].lock));
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[0]);
     req = MPIR_Request_create_from_pool(kind, 0, 1);
-    MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[0].lock));
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[0]);
     return req;
 }
 
@@ -572,10 +563,10 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req,
     }
 
     if (need_safety) {
-        MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[pool]);
     }
 #ifdef MPICH_DEBUG_MUTEX
-    MPID_THREAD_ASSERT_IN_CS(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[pool]);
 #endif
     /* inform the device that we are decrementing the ref-count on
      * this request */
@@ -654,7 +645,7 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req,
         MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req, /* not info */ FALSE);
     }
     if (need_safety) {
-        MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[pool]);
     }
 }
 

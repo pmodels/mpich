@@ -336,7 +336,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     }
 
     mpi_errno = MPIR_Localcopy((char *) base + disp_unit * target_disp, target_count,
@@ -353,7 +353,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_UNLOCK(posix_win->shm_mutex_ptr);
     } else {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     }
 
   fn_exit:
@@ -404,7 +404,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     }
 
     mpi_errno = MPIDI_POSIX_compute_accumulate((void *) origin_addr, origin_count, origin_datatype,
@@ -413,7 +413,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_UNLOCK(posix_win->shm_mutex_ptr);
     } else {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     }
 
   fn_exit:
@@ -445,10 +445,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_put(const void *origin_addr,
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
         int vci = MPIDI_WIN(win, am_vci);
 #endif
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
         mpi_errno = MPIDI_POSIX_do_put(origin_addr, origin_count, origin_datatype, target_rank,
                                        target_disp, target_count, target_datatype, win, winattr);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     }
 
     MPIR_FUNC_EXIT;
@@ -477,10 +477,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get(void *origin_addr,
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
         int vci = MPIDI_WIN(win, am_vci);
 #endif
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
         mpi_errno = MPIDI_POSIX_do_get(origin_addr, origin_count, origin_datatype, target_rank,
                                        target_disp, target_count, target_datatype, win, winattr);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     }
 
     MPIR_FUNC_EXIT;
@@ -511,14 +511,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
     }
 
     int vci = MPIDI_WIN(win, am_vci);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     mpi_errno = MPIDI_POSIX_do_put(origin_addr, origin_count, origin_datatype,
                                    target_rank, target_disp, target_count, target_datatype, win,
                                    winattr);
     if (mpi_errno == MPI_SUCCESS) {
         *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
     }
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -575,7 +575,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     }
 
     MPIR_Typerep_copy(result_addr, target_addr, dtype_sz, MPIR_TYPEREP_FLAG_NONE);
@@ -586,7 +586,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_UNLOCK(posix_win->shm_mutex_ptr);
     } else {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     }
 
   fn_exit:
@@ -726,7 +726,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     }
 
     MPIR_Typerep_copy(result_addr, target_addr, dtype_sz, MPIR_TYPEREP_FLAG_NONE);
@@ -745,7 +745,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
     if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_UNLOCK(posix_win->shm_mutex_ptr);
     } else {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     }
 
   fn_exit:
@@ -779,14 +779,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
     }
 
     int vci = MPIDI_WIN(win, am_vci);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     mpi_errno = MPIDI_POSIX_do_get(origin_addr, origin_count, origin_datatype,
                                    target_rank, target_disp, target_count, target_datatype, win,
                                    winattr);
     if (mpi_errno == MPI_SUCCESS) {
         *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__RMA);
     }
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
 
   fn_exit:
     MPIR_FUNC_EXIT;

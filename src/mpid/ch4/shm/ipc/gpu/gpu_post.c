@@ -665,12 +665,12 @@ static int gpu_ipc_async_poll(MPIX_Async_thing thing)
     if (is_done) {
         int vci = MPIDIG_REQUEST(p->rreq, req->local_vci);
 
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
         err = MPIDI_GPU_ipc_handle_unmap(p->src_buf, p->gpu_handle, 0);
         MPIR_Assertp(err == MPI_SUCCESS);
         err = MPIDI_IPC_complete(p->rreq, MPIDI_IPCI_TYPE__GPU);
         MPIR_Assertp(err == MPI_SUCCESS);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
 
         MPL_free(p);
         return MPIX_ASYNC_DONE;

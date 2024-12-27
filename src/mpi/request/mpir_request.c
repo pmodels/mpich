@@ -31,15 +31,10 @@ static void init_builtin_request(MPIR_Request * req, int handle, MPIR_Request_ki
 
 void MPII_init_request(void)
 {
-    MPID_Thread_mutex_t *lock_ptr = NULL;
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    lock_ptr = &MPIR_THREAD_VCI_HANDLE_MUTEX;
-#endif
-
     /* *INDENT-OFF* */
-    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, lock_ptr, {0}};
+    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, {0}};
     for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
-        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, lock_ptr, {0}};
+        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, {0}};
     }
     /* *INDENT-ON* */
 

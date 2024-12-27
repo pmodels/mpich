@@ -14,9 +14,9 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPID_Request_create_from_comm(MPIR_Reques
 {
     MPIR_Request *req;
     int vci = MPIDI_get_comm_vci(comm);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     req = MPIR_Request_create_from_pool(kind, vci, 1);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     return req;
 }
 

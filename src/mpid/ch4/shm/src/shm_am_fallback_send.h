@@ -24,10 +24,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf,
     vci_src = 0;
     vci_dst = 0;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_src).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_src));
     mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                  vci_src, vci_dst, request, syncflag, errflag);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_src).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_src));
 
     return mpi_errno;
 }

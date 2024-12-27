@@ -413,7 +413,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
         MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_dst);
     } else {
 #ifdef MPICH_DEBUG_MUTEX
-        MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI(vci_dst).lock);
+        MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(vci_dst));
 #endif
     }
     if (!MPIDI_OFI_ENABLE_TAGGED) {
