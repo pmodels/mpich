@@ -524,17 +524,6 @@ int MPID_Init(int requested, int *provided)
     MPIR_Assert(MPIDI_global.n_total_vcis <= MPIR_REQUEST_NUM_POOLS);
 
     for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
-        int err;
-        MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
-        MPIR_Assert(err == 0);
-
-        /* NOTE: 1-1 vci-pool mapping */
-        /* For lockless, use a separate set of mutexes */
-        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS)
-            MPIR_Request_register_pool_lock(i, &MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[i]);
-        else
-            MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
-
         /* Initialize registered host buffer pool to be used as temporary unpack buffers */
         mpi_errno = MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_PACK_BUFFER_SIZE,
                                                    MPIR_CVAR_CH4_NUM_PACK_BUFFERS_PER_CHUNK,
@@ -838,10 +827,6 @@ int MPID_Finalize(void)
 
     for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
         MPIDU_genq_private_pool_destroy(MPIDI_global.per_vci[i].pack_buf_pool);
-
-        int err;
-        MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
-        MPIR_Assert(err == 0);
     }
 
     MPL_free(MPIDI_global.all_num_vcis);

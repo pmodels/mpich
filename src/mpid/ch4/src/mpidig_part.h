@@ -23,7 +23,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
 
     /* Indicate data transfer starts.
      * Decrease when am request completes on sender (via completion_notification),
@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_part_start(MPIR_Request * request)
 
     MPIR_Part_request_activate(request);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
@@ -55,9 +55,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_range(int partition_low, int part
         MPIR_cc_decr(&MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr, &incomplete);
 
     if (!incomplete) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
         mpi_errno = MPIDIG_part_issue_data(part_sreq, MPIDIG_PART_REGULAR);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     }
 
     MPIR_FUNC_EXIT;
@@ -75,9 +75,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_pready_list(int length, const int array_
         MPIR_cc_decr(&MPIDIG_PART_REQUEST(part_sreq, u.send).ready_cntr, &incomplete);
 
     if (!incomplete) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
         mpi_errno = MPIDIG_part_issue_data(part_sreq, MPIDIG_PART_REGULAR);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     }
 
     MPIR_FUNC_EXIT;
@@ -89,7 +89,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
 
     /* Do not maintain per-partition completion. Arrived when full data transfer is done.
      * An inactive request returns TRUE (same for NULL req, handled at MPIR layer). */
@@ -104,7 +104,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_parrived(MPIR_Request * request, int par
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:

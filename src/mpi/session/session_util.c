@@ -16,7 +16,7 @@ MPIR_Session MPIR_Session_direct[MPIR_SESSION_PREALLOC];
 MPIR_Object_alloc_t MPIR_Session_mem = { 0, 0, 0, 0, 0, 0, 0,
     MPIR_SESSION, sizeof(MPIR_Session),
     MPIR_Session_direct, MPIR_SESSION_PREALLOC,
-    NULL, {0}
+    {0}
 };
 
 int MPIR_Session_create(MPIR_Session ** p_session_ptr, int thread_level)
