@@ -254,6 +254,7 @@ typedef struct MPIDI_per_vci {
 } MPIDI_per_vci_t;
 
 #define MPIDI_VCI(i) MPIDI_global.per_vci[i]
+#define MPIDI_VCI_LOCK(i) MPIR_THREAD_VCI_REQUEST_POOL_MUTEXES[i]
 
 typedef struct MPIDI_CH4_Global_t {
     int pname_set;

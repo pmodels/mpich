@@ -60,7 +60,7 @@ MPIR_Stream MPIR_Stream_direct[MPIR_STREAM_PREALLOC];
 MPIR_Object_alloc_t MPIR_Stream_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_STREAM,
     sizeof(MPIR_Stream), MPIR_Stream_direct,
     MPIR_STREAM_PREALLOC,
-    NULL, {0}
+    {0}
 };
 
 /* utilities for managing streams in a communicator */
