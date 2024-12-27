@@ -526,12 +526,6 @@ typedef struct MPIR_Object_alloc_t {
     void *direct;               /* Pointer to direct block, used
                                  * for allocation */
     int direct_size;            /* Size of direct block */
-    void *lock;                 /* lower-layer may register a lock to use. This is
-                                 * mostly for multipool requests. For other objects
-                                 * or not per-vci thread granularity, this lock
-                                 * pointer is ignored. Ref. mpir_request.h.
-                                 * NOTE: it is `void *` because mutex type not defined yet.
-                                 */
     /* The following padding is to avoid cache line sharing with other MPIR_Object_alloc_t.  This
      * padding is particularly important for an array of per-vci MPI_Request pools. */
     char pad[MPL_CACHELINE_SIZE];

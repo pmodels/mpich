@@ -15,9 +15,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     int vci = MPIDI_Request_get_vci(message);
 #endif
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
     mpi_errno = MPIDIG_mpi_imrecv(buf, count, datatype, message);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
 
     return mpi_errno;
 }
@@ -43,17 +43,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     need_cs = (rank != MPI_ANY_SOURCE);
 #endif
     if (need_cs) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
     } else {
 #ifdef MPICH_DEBUG_MUTEX
-        MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI(0).lock);
+        MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
 #endif
     }
 
     mpi_errno = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, 0,
                                  request, 0, partner);
     if (need_cs) {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     }
 
     return mpi_errno;
