@@ -416,7 +416,7 @@ do { \
         mpi_errno = MPIDI_progress_test_vci(vci);   \
         MPIR_ERR_CHECK(mpi_errno); \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
-        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI(vci).lock);                 \
+        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI_LOCK(vci));                 \
         DEBUG_PROGRESS_CHECK; \
     } \
 } while (0)
@@ -428,7 +428,7 @@ do { \
         mpi_errno = MPIDI_progress_test_vci(vci); \
         MPIR_ERR_CHECK(mpi_errno); \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
-        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI(vci).lock);                 \
+        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI_LOCK(vci));                 \
         DEBUG_PROGRESS_CHECK; \
     } while (cond); \
 } while (0)

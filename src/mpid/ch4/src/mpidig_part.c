@@ -98,7 +98,7 @@ int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
 
     /* Create and initialize device-layer partitioned request */
     mpi_errno = part_req_create((void *) buf, partitions, count, datatype, dest, tag, comm,
@@ -123,7 +123,7 @@ int MPIDIG_mpi_psend_init(const void *buf, int partitions, MPI_Aint count,
              MPIDI_REQUEST(*request, is_local), mpi_errno);
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -138,7 +138,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
 
     /* Create and initialize device-layer partitioned request */
     mpi_errno = part_req_create(buf, partitions, count, datatype, source, tag, comm,
@@ -168,7 +168,7 @@ int MPIDIG_mpi_precv_init(void *buf, int partitions, MPI_Aint count,
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
