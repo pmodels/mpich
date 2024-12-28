@@ -551,7 +551,6 @@ cvars:
 
 static int update_global_limits(struct fi_info *prov);
 static void dump_global_settings(void);
-static int create_vci_context(int vci, int nic);
 static int destroy_vci_context(int vci, int nic);
 static int ofi_pvar_init(void);
 
@@ -772,12 +771,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* Create transport level communication contexts.                           */
     /* ------------------------------------------------------------------------ */
 
-    /* set rx_ctx_cnt and tx_ctx_cnt for nic 0 */
-    set_sep_counters(0);
-
     /* Creating the context for vci 0 and nic 0.
      * This code maybe moved to a later stage */
-    mpi_errno = create_vci_context(0, 0);
+    mpi_errno = MPIDI_OFI_create_vci_context(0, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* index datatypes for RMA atomics. */
@@ -813,120 +809,11 @@ int MPIDI_OFI_init_world(void)
     goto fn_exit;
 }
 
-static int check_num_nics(void);
-static int setup_additional_vcis(void);
-
-int MPIDI_OFI_init_vcis(int num_vcis, int *num_vcis_actual)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* Multiple vci without using domain require MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS */
-#ifndef MPIDI_OFI_VNI_USE_DOMAIN
-    MPIR_Assert(num_vcis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
-#endif
-
-    MPIDI_OFI_global.num_vcis = num_vcis;
-
-    /* All processes must have the same number of NICs */
-    mpi_errno = check_num_nics();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* may update MPIDI_OFI_global.num_vcis */
-    mpi_errno = setup_additional_vcis();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    *num_vcis_actual = MPIDI_OFI_global.num_vcis;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIDI_OFI_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
     return mpi_errno;
-}
-
-static int check_num_nics(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    int num_nics = MPIDI_OFI_global.num_nics;
-    int tmp_num_vcis = MPIDI_OFI_global.num_vcis;
-    int tmp_num_nics = MPIDI_OFI_global.num_nics;
-
-    /* Set the number of NICs and VNIs to 1 temporarily to avoid problems during the collective */
-    MPIDI_OFI_global.num_vcis = MPIDI_OFI_global.num_nics = 1;
-
-    /* Confirm that all processes have the same number of NICs */
-    mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPIR_INT_INTERNAL,
-                                            MPI_MIN, MPIR_Process.comm_world, MPIR_ERR_NONE);
-    MPIDI_OFI_global.num_vcis = tmp_num_vcis;
-    MPIDI_OFI_global.num_nics = tmp_num_nics;
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* If the user did not ask to fallback to fewer NICs, throw an error if someone is missing a
-     * NIC. */
-    if (tmp_num_nics != num_nics) {
-        if (MPIR_CVAR_OFI_USE_MIN_NICS) {
-            MPIDI_OFI_global.num_nics = num_nics;
-
-            /* If we fall down to 1 nic, turn off multi-nic optimizations. */
-            if (num_nics == 1) {
-                MPIDI_OFI_COMM(MPIR_Process.comm_world).enable_striping = 0;
-            }
-        } else {
-            MPIR_ERR_CHKANDJUMP(num_nics != MPIDI_OFI_global.num_nics, mpi_errno, MPI_ERR_OTHER,
-                                "**ofi_num_nics");
-        }
-    }
-
-    /* FIXME: It would also be helpful to check that all of the NICs can communicate so we can fall
-     * back to other options if that is not the case (e.g., verbs are often configured with a
-     * different subnet for each "set" of nics). It's unknown how to write a good check for that. */
-
-    /* set rx_ctx_cnt and tx_ctx_cnt for the remaining (non-0) nics */
-    for (int nic = 1; nic < MPIDI_OFI_global.num_nics; nic++) {
-        set_sep_counters(nic);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int setup_additional_vcis(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-            /* vci 0 nic 0 already created */
-            if (vci > 0 || nic > 0) {
-                mpi_errno = create_vci_context(vci, nic);
-                if (mpi_errno != MPI_SUCCESS) {
-                    /* running out of vcis, reduce MPIDI_OFI_global.num_vcis */
-                    if (vci > 0) {
-                        MPIDI_OFI_global.num_vcis = vci;
-                        /* FIXME: destroy already created vci_context */
-                        mpi_errno = MPI_SUCCESS;
-                        goto fn_exit;
-                    } else {
-                        MPIR_ERR_CHECK(mpi_errno);
-                    }
-                }
-            }
-        }
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* static functions needed by finalize */
@@ -1200,7 +1087,7 @@ static int open_local_av(struct fid_domain *p_domain, struct fid_av **p_av);
  *
  * Each nic will restart its vci indexing. This allows each VNI to use any nic if desired.
  */
-static int create_vci_context(int vci, int nic)
+int MPIDI_OFI_create_vci_context(int vci, int nic)
 {
     int mpi_errno = MPI_SUCCESS;
 
