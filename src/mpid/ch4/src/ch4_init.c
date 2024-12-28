@@ -509,19 +509,13 @@ int MPID_Init(int requested, int *provided)
     MPIR_Assert(MPIR_CVAR_CH4_NUM_VCIS >= 1);   /* number of vcis used in implicit vci hashing */
     MPIR_Assert(MPIR_CVAR_CH4_RESERVE_VCIS >= 0);       /* maximum number of vcis can be reserved */
 
-    MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
-    MPIDI_global.n_total_vcis = MPIDI_global.n_vcis + MPIR_CVAR_CH4_RESERVE_VCIS;
+    MPIDI_global.n_vcis = 1;
+    MPIDI_global.n_total_vcis = 1;
     MPIDI_global.n_reserved_vcis = 0;
     MPIDI_global.share_reserved_vcis = false;
 
-    MPIDI_global.all_num_vcis = MPL_malloc(sizeof(int) * MPIR_Process.size, MPL_MEM_OTHER);
+    MPIDI_global.all_num_vcis = MPL_calloc(MPIR_Process.size, size(int), MPL_MEM_OTHER);
     MPIR_Assert(MPIDI_global.all_num_vcis);
-    for (int i = 0; i < MPIR_Process.size; i++) {
-        MPIDI_global.all_num_vcis[i] = MPIDI_global.n_vcis;
-    }
-
-    MPIR_Assert(MPIDI_global.n_total_vcis <= MPIDI_CH4_MAX_VCIS);
-    MPIR_Assert(MPIDI_global.n_total_vcis <= MPIR_REQUEST_NUM_POOLS);
 
     for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
         /* Initialize registered host buffer pool to be used as temporary unpack buffers */
@@ -673,24 +667,21 @@ int MPIDI_world_post_init(void)
      *        this restriction, then we can move MPIDI_NM_init_vcis to
      *        MPIDI_world_pre_init.
      */
+    int n_total_vcis = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
+    MPIR_Assert(n_total_vcis <= MPIDI_CH4_MAX_VCIS);
+    MPIR_Assert(n_total_vcis <= MPIR_REQUEST_NUM_POOLS);
+
     int num_vcis_actual;
-    mpi_errno = MPIDI_NM_init_vcis(MPIDI_global.n_total_vcis, &num_vcis_actual);
+    mpi_errno = MPIDI_NM_init_vcis(n_total_vcis, &num_vcis_actual);
     MPIR_ERR_CHECK(mpi_errno);
 
 #if MPIDI_CH4_MAX_VCIS == 1
     MPIR_Assert(num_vcis_actual == 1);
 #else
     MPIR_Assert(num_vcis_actual > 0 && num_vcis_actual <= MPIDI_global.n_total_vcis);
-    int diff = MPIDI_global.n_total_vcis - num_vcis_actual;
-    /* we can shrink implicit vcis down to 1, then n_reserved_vcis down to 0 */
-    MPIDI_global.n_total_vcis -= diff;
-    if (MPIDI_global.n_vcis > diff + 1) {
-        MPIDI_global.n_vcis -= diff;
-    } else {
-        diff -= (MPIDI_global.n_vcis - 1);
-        MPIDI_global.n_vcis = 1;
-        MPIDI_global.n_reserved_vcis -= diff;
-    }
+
+    MPIDI_global.n_total_vcis = num_vcis_actual;
+    MPIDI_global.n_vcis = MPL_MIN(MPIR_CVAR_CH4_NUM_VCIS, MPIDI_global.n_total_vcis);
 
     mpi_errno = MPIR_Allgather_fallback(&MPIDI_global.n_vcis, 1, MPIR_INT_INTERNAL,
                                         MPIDI_global.all_num_vcis, 1, MPIR_INT_INTERNAL,
