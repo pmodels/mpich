@@ -8,37 +8,7 @@
 #include "ofi_init.h"
 #include "mpidu_bc.h"
 
-/* NOTE on av insertion order:
- *
- * Each nic-vci is an endpoint with a unique address, and inside libfabric maintains
- * one av table. Thus to fully store the address mapping, we'll need a multi-dim table as
- *     av_table[src_nic][src_vci][dest_rank][dest_nic][dest_vci]
- * Note, this table is for illustration, and different from MPIDI_OFI_addr_t.
- *
- * However, if we insert the address carefully, we can manage to make the av table inside
- * each endpoint *identical*. Then, we can omit the dimension of [src_nic][src_vci].
- *
- * To achieve that, we use the following 3-step process (described with above illustrative av_table).
- *
- * Step 1. insert and store       av_table[ 0 ][ 0 ][rank][ 0 ][ 0 ]
- *
- * Step 2. insert and store       av_table[ 0 ][ 0 ][rank][nic][vci]
- *
- * Step 3. insert (but not store) av_table[nic][vci][rank][nic][vci]
- *
- * The step 1 is done in addr_exchange_root_vci. Step 2 and 3 are done in addr_exchange_all_vcis.
- * Step 3 populates av tables inside libfabric for all non-zero endpoints, but they should be
- * identical to the table in root endpoint, thus no need to store them in mpich. Thus the table is
- * reduced to
- *      av_table[rank] -> dest[nic][vci]
- *
- * With single-nic and single-vci, only step 1 is needed.
- *
- * We do step 1 during world-init, and step 2 & 3 during post-init. The separation
- * isolates multi-nic/vci complications from bootstrapping phase.
- */
-
-/* Step 1: exchange root contexts */
+/* exchange root contexts */
 int MPIDI_OFI_addr_exchange_root_ctx(void)
 {
     int mpi_errno = MPI_SUCCESS;

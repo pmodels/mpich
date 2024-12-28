@@ -815,8 +815,6 @@ int MPIDI_OFI_post_init(void)
         dump_dynamic_settings();
     }
 
-    mpi_errno = MPIDI_OFI_comm_set_vcis(MPIR_Process.comm_world);
-
   fn_exit:
     return mpi_errno;
   fn_fail:

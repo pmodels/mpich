@@ -119,12 +119,21 @@ int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
         MPIDI_global.all_num_vcis[granks[i]] = all_num_vcis[i];
     }
 
-    comm->vcis_enabled = true;
+    /* setup vcis in netmod and shm */
+    mpi_errno = MPIDI_NM_comm_set_vcis(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_comm_set_vcis(comm, MPIDI_global.n_total_vcis);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
 
     for (int vci = 1; vci < MPIDI_global.n_total_vcis; vci++) {
         mpi_errno = MPIDI_init_per_vci(vci);
         MPIR_ERR_CHECK(mpi_errno);
     }
+
+    /* enable multiple vcis */
+    comm->vcis_enabled = true;
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
