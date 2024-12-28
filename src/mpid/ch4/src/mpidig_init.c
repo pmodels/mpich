@@ -79,26 +79,47 @@ void MPIDIG_am_tag_recv_reg_cb(int tag_recv_id, MPIDIG_am_tag_recv_cb tag_recv_c
     MPIR_FUNC_EXIT;
 }
 
+int MPIDIG_init_per_vci(int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_global.per_vci[vci].posted_list = NULL;
+    MPIDI_global.per_vci[vci].unexp_list = NULL;
+
+    mpi_errno = MPIDU_genq_private_pool_create(MPIDIU_REQUEST_POOL_CELL_SIZE,
+                                               MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK,
+                                               0 /* unlimited */ ,
+                                               host_alloc, host_free,
+                                               &MPIDI_global.per_vci[vci].request_pool);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_global.per_vci[vci].cmpl_list = NULL;
+    MPL_atomic_store_uint64(&MPIDI_global.per_vci[vci].exp_seq_no, 0);
+    MPL_atomic_store_uint64(&MPIDI_global.per_vci[vci].nxt_seq_no, 0);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDIG_destroy_per_vci(int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDU_genq_private_pool_destroy(MPIDI_global.per_vci[vci].request_pool);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDIG_am_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
-
-    for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
-        MPIDI_global.per_vci[vci].posted_list = NULL;
-        MPIDI_global.per_vci[vci].unexp_list = NULL;
-
-        mpi_errno = MPIDU_genq_private_pool_create(MPIDIU_REQUEST_POOL_CELL_SIZE,
-                                                   MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK,
-                                                   0 /* unlimited */ ,
-                                                   host_alloc, host_free,
-                                                   &MPIDI_global.per_vci[vci].request_pool);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        MPIDI_global.per_vci[vci].cmpl_list = NULL;
-        MPL_atomic_store_uint64(&MPIDI_global.per_vci[vci].exp_seq_no, 0);
-        MPL_atomic_store_uint64(&MPIDI_global.per_vci[vci].nxt_seq_no, 0);
-    }
 
     MPIDI_global.part_posted_list = NULL;
     MPIDI_global.part_unexp_list = NULL;
@@ -180,9 +201,6 @@ void MPIDIG_am_finalize(void)
     MPIR_FUNC_ENTER;
 
     MPIDIU_map_destroy(MPIDI_global.win_map);
-    for (int vci = 0; vci < MPIDI_global.n_total_vcis; vci++) {
-        MPIDU_genq_private_pool_destroy(MPIDI_global.per_vci[vci].request_pool);
-    }
 
     MPIR_FUNC_EXIT;
 }
