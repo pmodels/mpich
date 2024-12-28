@@ -152,6 +152,8 @@ void MPIDIG_am_tag_recv_reg_cb(int tag_recv_id, MPIDIG_am_tag_recv_cb tag_recv_c
 
 int MPIDIG_am_init(void);
 void MPIDIG_am_finalize(void);
+int MPIDIG_init_per_vci(int vci);
+int MPIDIG_destroy_per_vci(int vci);
 
 /* am protocol prototypes */
 
