@@ -13,12 +13,11 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
 
     MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
 
-    int nic = 0;                /* dynamic process only use nic 0 */
     int vci = 0;                /* dynamic process only use vci 0 */
     int ctx_idx = 0;
     int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
     int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
-    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci);
+    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), 0, vci);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
 
@@ -144,8 +143,7 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
     int n_new_procs = 0;
     int n_avts;
     char *curr_upid;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(0, 0);
 
     MPIR_CHKLMEM_DECL(2);
 
@@ -174,8 +172,9 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
             }
             for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
                 sz = MPIDI_OFI_global.addrnamelen;
+                MPIDI_av_entry_t *av = &MPIDIU_get_av(k, j);
                 MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av,
-                                                MPIDI_OFI_TO_PHYS(k, j, nic), &tbladdr, &sz), 0,
+                                                MPIDI_OFI_AV_ROOT_ADDR(av), &tbladdr, &sz), 0,
                                    avlookup);
                 if (sz == addrname_len && !memcmp(tbladdr, addrname, addrname_len)) {
                     remote_gpids[i] = MPIDIU_GPID_CREATE(k, j);
@@ -210,7 +209,7 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
             MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av, addrname,
                                             1, &addr, 0ULL, NULL), 0, avmap);
             MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[nic][0] = addr;
+            MPIDI_OFI_AV_ROOT_ADDR(&MPIDIU_get_av(avtid, i)) = addr;
 
             int node_id;
             mpi_errno = MPIR_nodeid_lookup(hostname, &node_id);
@@ -233,8 +232,7 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     int mpi_errno = MPI_SUCCESS;
     int i;
     char *temp_buf = NULL;
-    int nic = 0;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
+    int ctx_idx = MPIDI_OFI_get_ctx_index(0, 0);
 
     MPIR_CHKPMEM_DECL(2);
 
@@ -265,8 +263,9 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
         idx += hostname_len + 1;
 
         size_t sz = MPIDI_OFI_global.addrnamelen;;
-        MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, i));
-        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av, av->dest[nic][0],
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, i);
+        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av,
+                                        MPIDI_OFI_AV_ROOT_ADDR(av),
                                         temp_buf + idx, &sz), 0, avlookup);
         idx += (int) sz;
 
