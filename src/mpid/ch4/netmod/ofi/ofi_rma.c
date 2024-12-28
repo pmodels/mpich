@@ -64,6 +64,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     struct iovec iov;
     size_t origin_bytes;
     int vci = MPIDI_WIN(win, am_vci);
+    int vci_target = MPIDI_WIN_TARGET_VCI(win, target_rank);
 
     /* used for GPU buffer registration */
     MPIR_Datatype_get_size_macro(origin_datatype, origin_bytes);
@@ -113,8 +114,6 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
 
         msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
 
-        int vci = MPIDI_WIN(win, am_vci);
-        int vci_target = MPIDI_WIN_TARGET_VCI(win, target_rank);
         msg.desc = desc;
         msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         msg.context = NULL;
