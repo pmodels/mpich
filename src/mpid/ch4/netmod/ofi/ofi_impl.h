@@ -33,8 +33,22 @@ ATTRIBUTE((unused));
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 #define MPIDI_OFI_COMM_TO_INDEX(comm,rank) \
     MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
-#define MPIDI_OFI_TO_PHYS(avtid, lpid, _nic) \
-    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest[_nic][0]
+
+#define MPIDI_OFI_AV_ROOT_ADDR(av)      MPIDI_OFI_AV(av).root_dest
+
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+#define MPIDI_OFI_AV_ADDR_ROOT(av) \
+    MPIDI_OFI_AV(av).root_dest
+#define MPIDI_OFI_AV_ADDR_NONROOT(av, vci, nic) \
+    MPIDI_OFI_AV(av).all_dest[(vci)*MPIDI_OFI_global.num_nics+(nic)]
+#else /* scalable endpoints - all vci share the same addr */
+#define MPIDI_OFI_AV_ADDR_ROOT(av, vci, nic) \
+    MPIDI_OFI_AV(av).root_dest
+#define MPIDI_OFI_AV_ADDR_NONROOT(av, vci, nic) \
+    MPIDI_OFI_AV(av).all_dest[nic]
+#endif
+#define MPIDI_OFI_AV_ADDR(av, vci, nic) \
+    ((vci==0 && nic==0) ? MPIDI_OFI_AV_ADDR_ROOT(av) : MPIDI_OFI_AV_ADDR_NONROOT(av, vci, nic))
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
@@ -446,16 +460,16 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][vci], 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV_ADDR(av, vci, nic), 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        return MPIDI_OFI_AV(av).dest[nic][vci];
+        return MPIDI_OFI_AV_ADDR(av, vci, nic);
     }
 #else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][0], vci, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV_ADDR(av, vci, nic), vci, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         MPIR_Assert(vci == 0);
-        return MPIDI_OFI_AV(av).dest[nic][0];
+        return MPIDI_OFI_AV_ADDR(av, vci, nic);
     }
 #endif
 }

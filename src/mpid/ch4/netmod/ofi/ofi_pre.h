@@ -311,11 +311,8 @@ typedef struct {
 #define MPIDI_OFI_MAX_NICS 8
 
 typedef struct {
-#ifdef MPIDI_OFI_VNI_USE_DOMAIN
-    fi_addr_t dest[MPIDI_OFI_MAX_NICS][MPIDI_CH4_MAX_VCIS];     /* [nic][vci] */
-#else
-    fi_addr_t dest[MPIDI_OFI_MAX_NICS][1];
-#endif
+    fi_addr_t root_dest;
+    fi_addr_t *all_dest;        /* to be allocated into an array of [nic * vci] */
 } MPIDI_OFI_addr_t;
 
 #endif /* OFI_PRE_H_INCLUDED */
