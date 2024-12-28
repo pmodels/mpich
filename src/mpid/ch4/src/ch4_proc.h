@@ -115,6 +115,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
     return *idx;
 }
 
+#define MPIDIU_COMM_AV(comm, rank) MPIDIU_get_av(MPIDI_COMM(comm, map).avtid, rank)
+#define MPIDIU_DIRECT_AV(rank)     MPIDIU_av_entry(MPIDI_global.avt_mgr.av_table0, rank)
+
 MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
     MPIDI_av_entry_t *ret = NULL;
@@ -123,51 +126,48 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * co
     int lpid;
     switch (MPIDI_COMM(comm, map).mode) {
         case MPIDI_RANK_MAP_DIRECT:
-            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).avtid]->table[rank];
+            ret = MPIDIU_COMM_AV(comm, rank);
             break;
         case MPIDI_RANK_MAP_DIRECT_INTRA:
-            ret = &MPIDI_global.avt_mgr.av_table0->table[rank];
+            ret = MPIDIU_DIRECT_AV(rank);
             break;
         case MPIDI_RANK_MAP_OFFSET:
-            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).avtid]
-                ->table[rank + MPIDI_COMM(comm, map).reg.offset];
+            ret = MPIDIU_COMM_AV(comm, rank + MPIDI_COMM(comm, map).reg.offset);
             break;
         case MPIDI_RANK_MAP_OFFSET_INTRA:
-            ret = &MPIDI_global.avt_mgr.av_table0->table[rank + MPIDI_COMM(comm, map).reg.offset];
+            ret = MPIDIU_DIRECT_AV(rank + MPIDI_COMM(comm, map).reg.offset);
             break;
         case MPIDI_RANK_MAP_STRIDE:
             lpid = MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
                                             MPIDI_COMM(comm, map).reg.stride.offset);
-            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).avtid]->table[lpid];
+            ret = MPIDIU_COMM_AV(comm, lpid);
             break;
         case MPIDI_RANK_MAP_STRIDE_INTRA:
             lpid = MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
                                             MPIDI_COMM(comm, map).reg.stride.offset);
-            ret = &MPIDI_global.avt_mgr.av_table0->table[lpid];
+            ret = MPIDIU_DIRECT_AV(lpid);
             break;
         case MPIDI_RANK_MAP_STRIDE_BLOCK:
             lpid = MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
                                      MPIDI_COMM(comm, map).reg.stride.blocksize,
                                      MPIDI_COMM(comm, map).reg.stride.offset);
-            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).avtid]->table[lpid];
+            ret = MPIDIU_COMM_AV(comm, lpid);
             break;
         case MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA:
             lpid = MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
                                      MPIDI_COMM(comm, map).reg.stride.blocksize,
                                      MPIDI_COMM(comm, map).reg.stride.offset);
-            ret = &MPIDI_global.avt_mgr.av_table0->table[lpid];
+            ret = MPIDIU_DIRECT_AV(lpid);
             break;
         case MPIDI_RANK_MAP_LUT:
-            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).avtid]
-                ->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
+            ret = MPIDIU_COMM_AV(comm, MPIDI_COMM(comm, map).irreg.lut.lpid[rank]);
             break;
         case MPIDI_RANK_MAP_LUT_INTRA:
-            ret =
-                &MPIDI_global.avt_mgr.av_table0->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
+            ret = MPIDIU_DIRECT_AV(MPIDI_COMM(comm, map).irreg.lut.lpid[rank]);
             break;
         case MPIDI_RANK_MAP_MLUT:
-            ret = &MPIDI_global.avt_mgr.av_tables[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].avtid]
-                ->table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].lpid];
+            ret = MPIDIU_get_av(MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].avtid,
+                                MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].lpid);
             break;
         case MPIDI_RANK_MAP_NONE:
             MPIR_Assert(0);

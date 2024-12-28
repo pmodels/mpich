@@ -311,12 +311,9 @@ typedef struct {
 /* Maximum number of network interfaces CH4 can support. */
 #define MPIDI_OFI_MAX_NICS 8
 
+/* The actual addr array is dest[MPIDI_OFI_global.num_nics][MPIDI_OFI_global.max_vcis] */
 typedef struct {
-#ifdef MPIDI_OFI_VNI_USE_DOMAIN
-    fi_addr_t dest[MPIDI_OFI_MAX_NICS][MPIDI_CH4_MAX_VCIS];     /* [nic][vci] */
-#else
-    fi_addr_t dest[MPIDI_OFI_MAX_NICS][1];
-#endif
+    fi_addr_t dest[1];
 } MPIDI_OFI_addr_t;
 
 #endif /* OFI_PRE_H_INCLUDED */

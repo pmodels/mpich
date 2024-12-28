@@ -94,11 +94,11 @@ int MPIDIU_new_avt(int size, int *avtid)
     *avtid = get_next_avtid();
 
     /* note: zeroed so is_local default to 0, which is true for *avtid > 0 */
-    new_av_table = (MPIDI_av_table_t *) MPL_calloc(1, size * sizeof(MPIDI_av_entry_t)
+    new_av_table = (MPIDI_av_table_t *) MPL_calloc(1, size * MPIDI_global.av_entry_size
                                                    + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
     new_av_table->size = size;
     for (int i = 0; i < size; i++) {
-        new_av_table->table[i].node_id = -1;
+        MPIDIU_av_entry(new_av_table, i)->node_id = -1;
     }
     MPIDI_global.avt_mgr.av_tables[*avtid] = new_av_table;
 
@@ -163,7 +163,7 @@ int MPIDIU_avt_init(void)
 
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
-    size_t table_size = sizeof(MPIDI_av_table_t) + size * sizeof(MPIDI_av_entry_t);
+    size_t table_size = sizeof(MPIDI_av_table_t) + size * MPIDI_global.av_entry_size;
     MPIDI_global.avt_mgr.av_table0 = (MPIDI_av_table_t *) MPL_malloc(table_size, MPL_MEM_ADDRESS);
     MPIR_Assert(MPIDI_global.avt_mgr.av_table0);
 
@@ -178,9 +178,9 @@ int MPIDIU_avt_init(void)
     MPIR_cc_set(&MPIDI_global.avt_mgr.av_table0->ref_count, 1);
 
     for (int i = 0; i < size; i++) {
-        MPIDI_global.avt_mgr.av_table0->table[i].is_local =
-            (MPIR_Process.node_map[i] == MPIR_Process.node_map[rank]) ? 1 : 0;
-        MPIDI_global.avt_mgr.av_table0->table[i].node_id = MPIR_Process.node_map[i];
+        MPIDI_av_entry_t *av_entry = MPIDIU_av_entry(MPIDI_global.avt_mgr.av_table0, i);
+        av_entry->is_local = (MPIR_Process.node_map[i] == MPIR_Process.node_map[rank]) ? 1 : 0;
+        av_entry->node_id = MPIR_Process.node_map[i];
     }
 
     MPIDI_global.avt_mgr.av_tables[0] = MPIDI_global.avt_mgr.av_table0;
@@ -222,7 +222,7 @@ void MPIDIU_upidhash_add(const void *upid, int upid_len, int avtid, int lpid)
     t->upid_len = upid_len;
     HASH_ADD_KEYPTR(hh, upid_hash, t->upid, upid_len, t, MPL_MEM_OTHER);
 
-    MPIDIU_get_av(avtid, lpid).hash = t;
+    MPIDIU_get_av(avtid, lpid)->hash = t;
     /* Do not free avt while we use upidhash - FIXME: improve it */
     MPIDIU_avt_add_ref(avtid);
 }
