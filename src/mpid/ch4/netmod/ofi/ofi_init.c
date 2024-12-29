@@ -556,9 +556,6 @@ static int create_vci_context(int vci, int nic);
 static int destroy_vci_context(int vci, int nic);
 static int ofi_pvar_init(void);
 
-static int ofi_am_init(int vci);
-static int ofi_am_post_recv(int vci, int nic);
-
 static void *host_alloc(uintptr_t size);
 static void host_free(void *ptr);
 
@@ -652,7 +649,8 @@ static void set_sep_counters(int nic)
         /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
         int num_ctx_per_nic = 1;
 #else
-        int num_ctx_per_nic = MPIDI_OFI_global.num_vcis;
+        /* the actual needed number of vcis is not known yet. Use the CVAR. */
+        int num_ctx_per_nic = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
 #endif
         int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[nic]->domain_attr->tx_ctx_cnt,
                                   MPIDI_OFI_global.prov_use[nic]->domain_attr->rx_ctx_cnt);
@@ -746,6 +744,11 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_init_multi_nic(prov);
     MPIR_ERR_CHECK(mpi_errno);
 
+    for (int i = 0; i < MPIDI_OFI_global.num_nics; i++) {
+        /* if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS, set rx_ctx_cnt and tx_ctx_cnt */
+        set_sep_counters(i);
+    }
+
     mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -785,8 +788,8 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
 
     MPIDI_OFI_global.num_vcis = 1;
-    ofi_am_init(0);
-    ofi_am_post_recv(0, 0);
+    MPIDI_OFI_am_init(0);
+    MPIDI_OFI_am_post_recv(0, 0);
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
@@ -849,19 +852,7 @@ int MPIDI_OFI_post_init(void)
         dump_dynamic_settings();
     }
 
-    /* Since we allow different process to have different num_vcis, we always need run exchange. */
-    mpi_errno = MPIDI_OFI_addr_exchange_all_ctx();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    for (int vci = 1; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        ofi_am_init(vci);
-        ofi_am_post_recv(vci, 0);
-    }
-
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int check_num_nics(void)
@@ -1727,6 +1718,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_AM_HDR_POOL_CELL_SIZE: %d\n", (int) MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
     fprintf(stdout, "MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE: %d\n",
             (int) MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
+    fprintf(stdout, "======================================\n");
 }
 
 static void dump_dynamic_settings(void)
@@ -1739,7 +1731,7 @@ static void dump_dynamic_settings(void)
 
 /* static functions for AM */
 
-int ofi_am_init(int vci)
+int MPIDI_OFI_am_init(int vci)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1788,7 +1780,7 @@ int ofi_am_init(int vci)
     goto fn_exit;
 }
 
-int ofi_am_post_recv(int vci, int nic)
+int MPIDI_OFI_am_post_recv(int vci, int nic)
 {
     int mpi_errno = MPI_SUCCESS;
 
