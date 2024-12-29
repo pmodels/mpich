@@ -551,7 +551,6 @@ cvars:
 
 static int update_global_limits(struct fi_info *prov);
 static void dump_global_settings(void);
-static void dump_dynamic_settings(void);
 static int destroy_vci_context(int vci, int nic);
 static int ofi_pvar_init(void);
 
@@ -648,7 +647,8 @@ static void set_sep_counters(int nic)
         /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
         int num_ctx_per_nic = 1;
 #else
-        int num_ctx_per_nic = MPIDI_OFI_global.num_vcis;
+        /* the actual needed number of vcis is not known yet. Use the CVAR. */
+        int num_ctx_per_nic = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
 #endif
         int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[nic]->domain_attr->tx_ctx_cnt,
                                   MPIDI_OFI_global.prov_use[nic]->domain_attr->rx_ctx_cnt);
@@ -743,6 +743,11 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_init_multi_nic(prov);
     MPIR_ERR_CHECK(mpi_errno);
 
+    for (int i = 0; i < MPIDI_OFI_global.num_nics_available; i++) {
+        /* if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS, set rx_ctx_cnt and tx_ctx_cnt */
+        set_sep_counters(i);
+    }
+
     mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -812,14 +817,7 @@ int MPIDI_OFI_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
-        dump_dynamic_settings();
-    }
-
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* static functions needed by finalize */
@@ -1609,13 +1607,6 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_AM_HDR_POOL_CELL_SIZE: %d\n", (int) MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
     fprintf(stdout, "MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE: %d\n",
             (int) MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
-}
-
-static void dump_dynamic_settings(void)
-{
-    fprintf(stdout, "==== OFI dynamic settings ====\n");
-    fprintf(stdout, "num_vcis: %d\n", MPIDI_OFI_global.num_vcis);
-    fprintf(stdout, "num_nics: %d\n", MPIDI_OFI_global.num_nics);
     fprintf(stdout, "======================================\n");
 }
 
