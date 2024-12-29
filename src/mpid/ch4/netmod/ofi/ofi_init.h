@@ -11,6 +11,7 @@ int MPIDI_OFI_get_required_version(void);
 int MPIDI_OFI_find_provider(struct fi_info **prov_out);
 void MPIDI_OFI_find_provider_cleanup(void);
 int MPIDI_OFI_init_multi_nic(struct fi_info *prov);
+int MPIDI_OFI_vci_init(void);
 
 /* set hints based on MPIDI_OFI_global.settings */
 int MPIDI_OFI_init_hints(struct fi_info *hints);
