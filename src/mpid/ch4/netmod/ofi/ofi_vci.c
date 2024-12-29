@@ -25,6 +25,13 @@
  * endpoints to be inserted all at once.
  */
 
+int MPIDI_OFI_vci_init(void)
+{
+    MPIDI_OFI_global.num_nics = 1;
+    MPIDI_OFI_global.num_vcis = 1;
+    return MPI_SUCCESS;
+}
+
 /* Address exchange within comm and setup multiple vcis */
 
 static int addr_exchange_all_ctx(MPIR_Comm * comm);
