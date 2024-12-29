@@ -97,4 +97,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_rma_outstanding_req_flushall(MPIDI_POS
         MPL_free(req);
     }
 }
+
+int MPIDI_POSIX_init_vci(int vci);
+
 #endif /* POSIX_TYPES_H_INCLUDED */
