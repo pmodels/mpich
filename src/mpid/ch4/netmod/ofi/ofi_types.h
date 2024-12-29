@@ -460,6 +460,7 @@ typedef struct MPIDI_GPU_RDMA_queue_t {
 typedef struct {
     /* OFI objects */
     int avtid;
+    int num_nics_available;
     struct fi_info *prov_use[MPIDI_OFI_MAX_NICS];
     MPIDI_OFI_nic_info_t nic_info[MPIDI_OFI_MAX_NICS];
     struct fid_fabric *fabric;
