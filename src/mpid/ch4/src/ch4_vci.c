@@ -85,8 +85,8 @@ int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
     /* actually, only do it once for now */
     MPIR_Assert(MPIDI_global.n_total_vcis == 1);
 
-    /* get global ranks */
-    bool same_world = true;
+    /* TODO: check and assert that all processes are inside the comm world */
+
     int nprocs = comm->local_size;
     int *granks;
     MPIR_CHKLMEM_MALLOC(granks, nprocs * sizeof(int));
@@ -101,35 +101,30 @@ int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
         MPIR_Assert(MPIDI_global.all_num_vcis[granks[i]] == 0);
     }
 
-    /* set up local vcis */
-    int num_vcis_actual;
-    mpi_errno = MPIDI_NM_init_vcis(MPIDI_global.n_total_vcis, &num_vcis_actual);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIDI_global.n_total_vcis = num_vcis_actual;
-
-    /* gather the number of remote vcis */
+    /* setup vcis in netmod and shm */
+    /* Netmod will decide that actual number of vcis (and nics) and gather from all ranks in all_num_vcis */
     int *all_num_vcis;
     MPIR_CHKLMEM_MALLOC(all_num_vcis, nprocs * sizeof(int));
-    mpi_errno = MPIR_Allgather_impl(num_vcis_actual, 1, MPIR_INT_INTERNAL,
-                                    all_num_vcis, 1, MPIR_INT_INTERNAL, comm, MPIR_ERR_NONE);
+    mpi_errno = MPIDI_NM_comm_set_vcis(comm, num_vcis, all_num_vcis);
     MPIR_ERR_CHECK(mpi_errno);
 
-    for (int i = 0; i < nprocs; i++) {
-        MPIDI_global.all_num_vcis[granks[i]] = all_num_vcis[i];
-    }
-
-    /* setup vcis in netmod and shm */
-    mpi_errno = MPIDI_NM_comm_set_vcis(comm);
-    MPIR_ERR_CHECK(mpi_errno);
+    int n_total_vcis = all_num_vcis[comm->rank];
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_SHM_comm_set_vcis(comm, MPIDI_global.n_total_vcis);
+    mpi_errno = MPIDI_SHM_comm_set_vcis(comm, n_total_vcis);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    for (int vci = 1; vci < MPIDI_global.n_total_vcis; vci++) {
+    for (int vci = 1; vci < n_total_vcis; vci++) {
         mpi_errno = MPIDI_init_per_vci(vci);
         MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    /* update global vci settings */
+    MPIDI_global.n_total_vcis = all_num_vcis[comm->rank];
+    MPIDI_global.n_vcis = MPL_MIN(MPIR_CVAR_CH4_NUM_VCIS, MPIDI_global.n_total_vcis);
+    MPIDI_global.n_reserved_vcis = MPIDI_global.n_total_vcis - MPIDI_global.n_vcis;
+    for (int i = 0; i < nprocs; i++) {
+        MPIDI_global.all_num_vcis[granks[i]] = all_num_vcis[i];
     }
 
     /* enable multiple vcis */
