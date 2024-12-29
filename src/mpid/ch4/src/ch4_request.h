@@ -96,6 +96,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
             MPIDI_SHM_am_request_finalize(req);
 #endif
         }
+        MPIR_Invoke_callback(req, true);
         MPIDI_CH4_REQUEST_FREE(req);
     }
 
@@ -111,6 +112,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_Request_complete_fast(MPIR_Request * req)
         if (req->dev.completion_notification) {
             MPIR_cc_dec(req->dev.completion_notification);
         }
+        MPIR_Invoke_callback(req, true);
         MPIDI_CH4_REQUEST_FREE(req);
     }
 }
