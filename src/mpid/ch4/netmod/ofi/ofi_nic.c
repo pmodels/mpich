@@ -195,7 +195,7 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
         mpi_errno = setup_single_nic();
         MPIR_ERR_CHECK(mpi_errno);
     }
-    MPIR_Assert(MPIDI_OFI_global.num_nics > 0);
+    MPIR_Assert(MPIDI_OFI_global.num_nics_available > 0);
 
   fn_exit:
     return mpi_errno;
@@ -205,7 +205,7 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
 
 static int setup_single_nic(void)
 {
-    MPIDI_OFI_global.num_nics = 1;
+    MPIDI_OFI_global.num_nics_available = 1;
     MPIDI_OFI_global.nic_info[0].nic = MPIDI_OFI_global.prov_use[0];
     MPIDI_OFI_global.nic_info[0].id = 0;
     MPIDI_OFI_global.nic_info[0].close = 1;
@@ -217,7 +217,7 @@ static int setup_single_nic(void)
     MPIR_Info *info_ptr = NULL;
     MPIR_Info_get_ptr(MPI_INFO_ENV, info_ptr);
     snprintf(nics_str, 32, "%d", 1);
-    MPIR_Info_set_impl(info_ptr, "num_nics", nics_str);
+    MPIR_Info_set_impl(info_ptr, "num_nics_available", nics_str);
     snprintf(nics_str, 32, "%d", 1);
     MPIR_Info_set_impl(info_ptr, "num_close_nics", nics_str);
 
@@ -405,14 +405,14 @@ static int setup_multi_nic(int nic_count)
     for (int i = num_nics; i < nic_count; i++) {
         fi_freeinfo(MPIDI_OFI_global.prov_use[i]);
     }
-    MPIDI_OFI_global.num_nics = MPL_MIN(nic_count, num_nics);
+    MPIDI_OFI_global.num_nics_available = MPL_MIN(nic_count, num_nics);
 
     /* Set some info keys on MPI_INFO_ENV to reflect the number of available (close) NICs */
     char nics_str[32];
     MPIR_Info *info_ptr = NULL;
     MPIR_Info_get_ptr(MPI_INFO_ENV, info_ptr);
-    snprintf(nics_str, 32, "%d", MPIDI_OFI_global.num_nics);
-    MPIR_Info_set_impl(info_ptr, "num_nics", nics_str);
+    snprintf(nics_str, 32, "%d", MPIDI_OFI_global.num_nics_available);
+    MPIR_Info_set_impl(info_ptr, "num_nics_available", nics_str);
     snprintf(nics_str, 32, "%d", num_close_nics);
     MPIR_Info_set_impl(info_ptr, "num_close_nics", nics_str);
 
