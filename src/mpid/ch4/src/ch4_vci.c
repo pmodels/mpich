@@ -102,28 +102,19 @@ int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
         MPIR_Assert(MPIDI_global.all_num_vcis[granks[i]] == 0);
     }
 
-    /* set up local vcis */
-    int num_vcis_actual;
-    mpi_errno = MPIDI_NM_init_vcis(MPIDI_global.n_total_vcis, &num_vcis_actual);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIDI_global.n_total_vcis = num_vcis_actual;
-
-    /* gather the number of remote vcis */
+    /* setup vcis in netmod and shm */
+    /* Netmod will decide that actual number of vcis (and nics) and gather from all ranks in all_num_vcis */
     int *all_num_vcis;
     MPIR_CHKLMEM_MALLOC(all_num_vcis, int *, nprocs * sizeof(int), mpi_errno, MPL_MEM_OTHER,
                         MPL_MEM_OTHER);
-    mpi_errno = MPIR_Allgather_impl(num_vcis_actual, 1, MPI_INT,
-                                    all_num_vcis, 1, MPI_INT, comm, MPIR_ERR_NONE);
+    mpi_errno = MPIDI_NM_comm_set_vcis(comm, num_vcis, all_num_vcis);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIDI_global.n_total_vcis = all_num_vcis[comm->rank];
     for (int i = 0; i < nprocs; i++) {
         MPIDI_global.all_num_vcis[granks[i]] = all_num_vcis[i];
     }
 
-    /* setup vcis in netmod and shm */
-    mpi_errno = MPIDI_NM_comm_set_vcis(comm);
-    MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_comm_set_vcis(comm, MPIDI_global.n_total_vcis);
     MPIR_ERR_CHECK(mpi_errno);
