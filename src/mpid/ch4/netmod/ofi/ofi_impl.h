@@ -580,7 +580,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_sender_nic_index(MPIR_Comm * comm,
 {
     int nic_idx = 0;
 
-    if (MPIDI_OFI_COMM(comm).pref_nic) {
+    if (!comm->vcis_enabled) {
+        /* address exchange may not have performed on this comm */
+        nic_idx = 0;
+    } else if (MPIDI_OFI_COMM(comm).pref_nic) {
         nic_idx = MPIDI_OFI_COMM(comm).pref_nic[sender_rank];
     } else if (MPIDI_OFI_COMM(comm).enable_hashing) {
         /* TODO - We should use the per-communicator value for the maximum number of NICs in this
@@ -608,7 +611,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm
 {
     int nic_idx = 0;
 
-    if (MPIDI_OFI_COMM(comm).pref_nic) {
+    if (!comm->vcis_enabled) {
+        /* address exchange may not have performed on this comm */
+        nic_idx = 0;
+    } else if (MPIDI_OFI_COMM(comm).pref_nic) {
         nic_idx = MPIDI_OFI_COMM(comm).pref_nic[receiver_rank];
     } else if (MPIDI_OFI_COMM(comm).enable_hashing) {
         /* TODO - We should use the per-communicator value for the maximum number of NICs in this
