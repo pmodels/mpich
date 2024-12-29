@@ -725,6 +725,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = ofi_pvar_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIDI_OFI_vci_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* -------------------------------- */
     /* Set up the libfabric provider(s) */
     /* -------------------------------- */
@@ -732,8 +735,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* WB TODO - I assume that after this function is done, there will be an array of providers in
      * MPIDI_OFI_global.prov_use that will map to the VNI contexts below. We can also use it to
      * generate the addresses in the business card exchange. */
-    MPIDI_OFI_global.num_nics = 1;
-
     struct fi_info *prov = NULL;
     mpi_errno = MPIDI_OFI_find_provider(&prov);
     MPIR_ERR_CHECK(mpi_errno);
