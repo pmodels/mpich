@@ -90,15 +90,14 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
     int in_newcomm;             /* TRUE iff *newcomm should be populated */
     int new_context_id, remote_context_id;
     MPIR_Comm_map_t *mapper;
-    MPIR_CHKLMEM_DECL(4);
+    MPIR_CHKLMEM_DECL();
 
     rank = comm_ptr->rank;
     size = comm_ptr->local_size;
     remote_size = comm_ptr->remote_size;
 
     /* Step 1: Find out what color and keys all of the processes have */
-    MPIR_CHKLMEM_MALLOC(table, splittype *, size * sizeof(splittype), mpi_errno,
-                        "table", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(table, size * sizeof(splittype));
     table[rank].color = color;
     table[rank].key = key;
 
@@ -150,9 +149,7 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
          * local group - perform an (intercommunicator) all gather
          * of the color and rank information for the remote group.
          */
-        MPIR_CHKLMEM_MALLOC(remotetable, splittype *,
-                            remote_size * sizeof(splittype), mpi_errno,
-                            "remotetable", MPL_MEM_COMM);
+        MPIR_CHKLMEM_MALLOC(remotetable, remote_size * sizeof(splittype));
         /* This is an intercommunicator allgather */
 
         /* We must use a local splittype because we've already modified the
@@ -257,8 +254,7 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
          * extract the table into a smaller array and sort that.
          * Also, store in the "color" entry the rank in the input communicator
          * of the entry. */
-        MPIR_CHKLMEM_MALLOC(keytable, sorttype *, new_size * sizeof(sorttype),
-                            mpi_errno, "keytable", MPL_MEM_COMM);
+        MPIR_CHKLMEM_MALLOC(keytable, new_size * sizeof(sorttype));
         for (i = 0; i < new_size; i++) {
             keytable[i].key = table[first_entry].key;
             keytable[i].color = first_entry;
@@ -270,9 +266,7 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         MPIU_Sort_inttable(keytable, new_size);
 
         if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-            MPIR_CHKLMEM_MALLOC(remotekeytable, sorttype *,
-                                new_remote_size * sizeof(sorttype),
-                                mpi_errno, "remote keytable", MPL_MEM_COMM);
+            MPIR_CHKLMEM_MALLOC(remotekeytable, new_remote_size * sizeof(sorttype));
             for (i = 0; i < new_remote_size; i++) {
                 remotekeytable[i].key = remotetable[first_remote_entry].key;
                 remotekeytable[i].color = first_remote_entry;

@@ -41,7 +41,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
     MPI_Aint type_size, nbytes;
     int relative_dst, dst_tree_root, my_tree_root;
     int tree_root, nprocs_completed;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
     MPI_Aint true_extent, true_lb;
     void *tmp_buf;
 
@@ -67,7 +67,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
 
         tmp_buf = MPIR_get_contig_ptr(buffer, true_lb);
     } else {
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, nbytes);
 
         if (rank == root) {
             mpi_errno = MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE);

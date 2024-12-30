@@ -31,7 +31,7 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     int pof2, dst, src;
     int count, block;
     MPI_Datatype newtype;
-    MPIR_CHKLMEM_DECL(1);       /* displs */
+    MPIR_CHKLMEM_DECL();        /* displs */
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(sendbuf != MPI_IN_PLACE);       /* we do not handle in-place */
@@ -74,8 +74,7 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
      * communication */
 
     MPI_Aint *displs;
-    MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, comm_size * sizeof(MPI_Aint), mpi_errno, "displs",
-                        MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(displs, comm_size * sizeof(MPI_Aint));
 
     pof2 = 1;
     while (pof2 < comm_size) {

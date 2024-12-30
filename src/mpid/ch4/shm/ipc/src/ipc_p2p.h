@@ -42,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
     MPIDI_IPC_rts_t am_hdr;
-    MPIR_CHKLMEM_DECL(1);       /* we may need allocate hdr for non-contig case */
+    MPIR_CHKLMEM_DECL();        /* we may need allocate hdr for non-contig case */
 
     int flags = syncflag ? MPIDIG_AM_SEND_FLAGS_SYNC : MPIDIG_AM_SEND_FLAGS_NONE;
     MPIR_FUNC_ENTER;
@@ -120,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
         am_hdr.ipc_hdr.count = count;
 
         hdr_sz = sizeof(am_hdr) + flattened_sz;
-        MPIR_CHKLMEM_MALLOC(hdr, void *, hdr_sz, mpi_errno, "hdr", MPL_MEM_OTHER);
+        MPIR_CHKLMEM_MALLOC(hdr, hdr_sz);
         memcpy(hdr, &am_hdr, sizeof(am_hdr));
         memcpy((char *) hdr + sizeof(am_hdr), flattened_dt, flattened_sz);
 

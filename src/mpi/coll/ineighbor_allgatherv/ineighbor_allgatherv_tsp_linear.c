@@ -22,7 +22,7 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, MPI_
     int tag, vtx_id;
     MPI_Aint recvtype_extent;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -30,8 +30,8 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, MPI_
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_CHKLMEM_MALLOC(srcs, int *, indegree * sizeof(int), mpi_errno, "srcs", MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(dsts, int *, outdegree * sizeof(int), mpi_errno, "dsts", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(srcs, indegree * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(dsts, outdegree * sizeof(int));
     mpi_errno = MPIR_Topo_canon_nhb(comm_ptr,
                                     indegree, srcs, MPI_UNWEIGHTED,
                                     outdegree, dsts, MPI_UNWEIGHTED);

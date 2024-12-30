@@ -40,7 +40,7 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     int allgather_algo_type = MPIR_IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING;
     int redscat_algo_type = IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_HALVING;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -96,10 +96,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Start Step2"));
 
     if (in_step2) {
-        MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, sizeof(MPI_Aint) * nranks, mpi_errno, "cnts",
-                            MPL_MEM_COLL);
-        MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, sizeof(MPI_Aint) * nranks, mpi_errno, "displs",
-                            MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(cnts, sizeof(MPI_Aint) * nranks);
+        MPIR_CHKLMEM_MALLOC(displs, sizeof(MPI_Aint) * nranks);
         int idx = 0;
         rem = nranks - p_of_k;
 

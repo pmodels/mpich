@@ -36,7 +36,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     MPI_Aint recvd_size, curr_size = 0;
     MPI_Status status;
     MPI_Aint true_extent, true_lb;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -59,7 +59,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
         tmp_buf = MPIR_get_contig_ptr(buffer, true_lb);
     } else {
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, nbytes);
 
         if (rank == root) {
             mpi_errno = MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE);

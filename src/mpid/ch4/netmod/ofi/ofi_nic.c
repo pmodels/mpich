@@ -256,7 +256,7 @@ static int setup_multi_nic(int nic_count)
     int num_parents = 0;
     int local_rank = MPIR_Process.local_rank;
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
     bool pref_nic_set = false;
 
     MPIDI_OFI_global.num_nics = nic_count;
@@ -364,8 +364,7 @@ static int setup_multi_nic(int nic_count)
         /* When using this CVAR, the rank can only use 1 NIC. We do not reset num_close_nics again
          * in case a NIC is down and it needs to use another NIC. */
         MPIDI_OFI_nic_info_t *tmp_nic;
-        MPIR_CHKLMEM_MALLOC(tmp_nic, MPIDI_OFI_nic_info_t *, sizeof(MPIDI_OFI_nic_info_t),
-                            mpi_errno, "temporary nic info", MPL_MEM_ADDRESS);
+        MPIR_CHKLMEM_MALLOC(tmp_nic, sizeof(MPIDI_OFI_nic_info_t));
         int idx_to = 0;
         int idx_from = MPIR_CVAR_CH4_OFI_PREF_NIC;
         memcpy(tmp_nic, &nics[idx_from], sizeof(MPIDI_OFI_nic_info_t));
@@ -390,9 +389,7 @@ static int setup_multi_nic(int nic_count)
 
         if (old_idx != 0) {
             MPIDI_OFI_nic_info_t *old_nics;
-            MPIR_CHKLMEM_MALLOC(old_nics, MPIDI_OFI_nic_info_t *, sizeof(MPIDI_OFI_nic_info_t) *
-                                MPIDI_OFI_global.num_nics, mpi_errno, "temporary nic info",
-                                MPL_MEM_ADDRESS);
+            MPIR_CHKLMEM_MALLOC(old_nics, sizeof(MPIDI_OFI_nic_info_t) * MPIDI_OFI_global.num_nics);
             memcpy(old_nics, nics, sizeof(MPIDI_OFI_nic_info_t) * MPIDI_OFI_global.num_nics);
 
             /* Rotate the preferred NIC for each process starting at old_idx. */

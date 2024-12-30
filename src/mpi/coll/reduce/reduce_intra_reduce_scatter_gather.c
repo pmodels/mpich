@@ -47,7 +47,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
 
-    MPIR_CHKLMEM_DECL(4);
+    MPIR_CHKLMEM_DECL();
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -57,17 +57,14 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)),
-                        mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 
     /* If I'm not the root, then my recvbuf may not be valid, therefore
      * I have to allocate a temporary one */
     if (rank != root) {
-        MPIR_CHKLMEM_MALLOC(recvbuf, void *,
-                            count * (MPL_MAX(extent, true_extent)),
-                            mpi_errno, "receive buffer", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(recvbuf, count * (MPL_MAX(extent, true_extent)));
         recvbuf = (void *) ((char *) recvbuf - true_lb);
     }
 
@@ -136,10 +133,8 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
      * because if root is one of the excluded processes, we will
      * need them on the root later on below. */
     MPI_Aint *cnts, *disps;
-    MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "counts",
-                        MPL_MEM_BUFFER);
-    MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "displacements",
-                        MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(cnts, pof2 * sizeof(MPI_Aint));
+    MPIR_CHKLMEM_MALLOC(disps, pof2 * sizeof(MPI_Aint));
 
     if (newrank != -1) {
         for (i = 0; i < pof2; i++)

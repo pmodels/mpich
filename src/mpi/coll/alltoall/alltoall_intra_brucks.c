@@ -34,7 +34,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     MPI_Datatype newtype = MPI_DATATYPE_NULL;
     MPI_Aint newtype_sz;
     void *tmp_buf;
-    MPIR_CHKLMEM_DECL(6);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
@@ -49,7 +49,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     /* allocate temporary buffer */
     MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
     pack_size = recvcount * comm_size * recvtype_sz;
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, pack_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, pack_size);
 
     /* Do Phase 1 of the algorithim. Shift the data blocks on process i
      * upwards by a distance of i blocks. Store the result in recvbuf. */
@@ -74,8 +74,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
      * communication */
 
     MPI_Aint *displs;
-    MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, comm_size * sizeof(MPI_Aint), mpi_errno, "displs",
-                        MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(displs, comm_size * sizeof(MPI_Aint));
 
     pof2 = 1;
     while (pof2 < comm_size) {

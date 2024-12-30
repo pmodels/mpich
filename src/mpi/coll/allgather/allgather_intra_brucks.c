@@ -28,7 +28,7 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
     void *tmp_buf = NULL;
     int dst;
 
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
         goto fn_exit;
@@ -39,8 +39,7 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
     MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
 
     /* allocate a temporary buffer of the same size as recvbuf. */
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvcount * comm_size * recvtype_sz, mpi_errno,
-                        "tmp_buf", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, recvcount * comm_size * recvtype_sz);
 
     /* copy local data to the top of tmp_buf */
     if (sendbuf != MPI_IN_PLACE) {

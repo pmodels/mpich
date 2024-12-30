@@ -21,7 +21,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sen
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     MPI_Status status;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
@@ -48,9 +48,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, MPI_Aint sen
 
         if (rank == 0) {
             MPIR_Datatype_get_size_macro(sendtype, sendtype_sz);
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
-                                sendcount * local_size * sendtype_sz, mpi_errno,
-                                "tmp_buf", MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(tmp_buf, sendcount * local_size * sendtype_sz);
         } else {
             /* silence -Wmaybe-uninitialized due to MPIR_Gather by non-zero ranks */
             sendtype_sz = 0;

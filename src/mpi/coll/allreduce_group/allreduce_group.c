@@ -27,7 +27,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
     void *tmp_buf;
     int group_rank, group_size;
     int cdst, csrc;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     group_rank = group_ptr->rank;
     group_size = group_ptr->size;
@@ -39,8 +39,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)), mpi_errno,
-                        "temporary buffer", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);
@@ -150,10 +149,8 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, MPI_Aint count,
              * the buffer */
 
             MPI_Aint *cnts, *disps;
-            MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "counts",
-                                MPL_MEM_BUFFER);
-            MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno,
-                                "displacements", MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(cnts, pof2 * sizeof(MPI_Aint));
+            MPIR_CHKLMEM_MALLOC(disps, pof2 * sizeof(MPI_Aint));
 
             for (i = 0; i < (pof2 - 1); i++)
                 cnts[i] = count / pof2;

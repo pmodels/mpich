@@ -32,7 +32,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
     int pof2, received;
     MPI_Datatype sendtype, recvtype;
     int nprocs_completed, tmp_mask, tree_root, is_commutative;
-    MPIR_CHKLMEM_DECL(5);
+    MPIR_CHKLMEM_DECL();
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -42,7 +42,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(disps, comm_size * sizeof(int));
 
     total_count = 0;
     for (i = 0; i < comm_size; i++) {
@@ -61,15 +61,13 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
     }
 
     /* need to allocate temporary buffer to receive incoming data */
-    MPIR_CHKLMEM_MALLOC(tmp_recvbuf, void *, total_count * (MPL_MAX(true_extent, extent)),
-                        mpi_errno, "tmp_recvbuf", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_recvbuf, total_count * (MPL_MAX(true_extent, extent)));
     /* adjust for potential negative lower bound in datatype */
     tmp_recvbuf = (void *) ((char *) tmp_recvbuf - true_lb);
 
     /* need to allocate another temporary buffer to accumulate
      * results */
-    MPIR_CHKLMEM_MALLOC(tmp_results, void *, total_count * (MPL_MAX(true_extent, extent)),
-                        mpi_errno, "tmp_results", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_results, total_count * (MPL_MAX(true_extent, extent)));
     /* adjust for potential negative lower bound in datatype */
     tmp_results = (void *) ((char *) tmp_results - true_lb);
 

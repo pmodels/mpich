@@ -122,14 +122,11 @@ int MPIR_Type_create_subarray_impl(int ndims, const int array_of_sizes[],
 
     MPI_Aint *p_sizes, *p_subsizes, *p_starts;
     int *ints;
-    MPIR_CHKLMEM_DECL(4);
+    MPIR_CHKLMEM_DECL();
 
-    MPIR_CHKLMEM_MALLOC_ORJUMP(p_sizes, MPI_Aint *, ndims * sizeof(MPI_Aint), mpi_errno,
-                               "real array_of_sizes", MPL_MEM_BUFFER);
-    MPIR_CHKLMEM_MALLOC_ORJUMP(p_subsizes, MPI_Aint *, ndims * sizeof(MPI_Aint), mpi_errno,
-                               "real array_of_subsizes", MPL_MEM_BUFFER);
-    MPIR_CHKLMEM_MALLOC_ORJUMP(p_starts, MPI_Aint *, ndims * sizeof(MPI_Aint), mpi_errno,
-                               "real array_of_starts", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(p_sizes, ndims * sizeof(MPI_Aint));
+    MPIR_CHKLMEM_MALLOC(p_subsizes, ndims * sizeof(MPI_Aint));
+    MPIR_CHKLMEM_MALLOC(p_starts, ndims * sizeof(MPI_Aint));
     for (int i = 0; i < ndims; i++) {
         p_sizes[i] = array_of_sizes[i];
         p_subsizes[i] = array_of_subsizes[i];
@@ -141,8 +138,7 @@ int MPIR_Type_create_subarray_impl(int ndims, const int array_of_sizes[],
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Save contents */
-    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (3 * ndims + 2) * sizeof(int), mpi_errno,
-                               "content description", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(ints, (3 * ndims + 2) * sizeof(int));
 
     ints[0] = ndims;
     for (int i = 0; i < ndims; i++) {
@@ -177,15 +173,14 @@ int MPIR_Type_create_subarray_large_impl(int ndims, const MPI_Aint array_of_size
     int mpi_errno = MPI_SUCCESS;
 
     MPI_Aint *counts;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     mpi_errno = MPIR_Type_create_subarray(ndims, array_of_sizes, array_of_subsizes, array_of_starts,
                                           order, oldtype, newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Save contents */
-    MPIR_CHKLMEM_MALLOC_ORJUMP(counts, MPI_Aint *, (3 * ndims) * sizeof(MPI_Aint), mpi_errno,
-                               "content description", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(counts, (3 * ndims) * sizeof(MPI_Aint));
 
     int ints[2];
     ints[0] = ndims;

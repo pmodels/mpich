@@ -128,14 +128,12 @@ int MPIR_Comm_join_impl(int fd, MPIR_Comm ** p_intercomm_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *intercomm_ptr;
     char *local_port, *remote_port;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKLMEM_MALLOC(local_port, char *, PORT_SIZE, mpi_errno, "local port name",
-                        MPL_MEM_DYNAMIC);
-    MPIR_CHKLMEM_MALLOC(remote_port, char *, PORT_SIZE, mpi_errno, "remote port name",
-                        MPL_MEM_DYNAMIC);
+    MPIR_CHKLMEM_MALLOC(local_port, PORT_SIZE);
+    MPIR_CHKLMEM_MALLOC(remote_port, PORT_SIZE);
 
     MPL_VG_MEM_INIT(local_port, PORT_SIZE * sizeof(char));
 

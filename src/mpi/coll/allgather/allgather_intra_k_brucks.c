@@ -47,9 +47,8 @@ MPIR_Allgather_intra_k_brucks(const void *sendbuf, MPI_Aint sendcount,
 
     int delta = 1;
     void *tmp_recvbuf = NULL;
-    MPIR_CHKLMEM_DECL(2);
-    MPIR_CHKLMEM_MALLOC(reqs, MPIR_Request **, (2 * (k - 1) * sizeof(MPIR_Request *)), mpi_errno,
-                        "reqs", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_DECL();
+    MPIR_CHKLMEM_MALLOC(reqs, (2 * (k - 1) * sizeof(MPIR_Request *)));
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
                                              "Allgather_brucks_radix_k algorithm: num_ranks: %d, k: %d",

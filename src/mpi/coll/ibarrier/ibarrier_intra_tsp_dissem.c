@@ -15,7 +15,7 @@ int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_
     int nphases = 0;
     int tag, vtx_id;
     int *recv_ids = NULL;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -35,7 +35,7 @@ int MPIR_TSP_Ibarrier_sched_intra_k_dissemination(MPIR_Comm * comm, int k, MPIR_
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "dissem barrier - number of phases = %d\n", nphases));
 
-    MPIR_CHKLMEM_MALLOC(recv_ids, int *, sizeof(int) * nphases * (k - 1), mpi_errno, "recv_ids", MPL_MEM_COLL); /* to store size of subtree of each child */
+    MPIR_CHKLMEM_MALLOC(recv_ids, sizeof(int) * nphases * (k - 1));
     shift = 1;
     for (i = 0; i < nphases; i++) {
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,

@@ -40,7 +40,7 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS, dst, rank;
     MPIR_Request **reqarray;
     MPI_Status *starray;
-    MPIR_CHKLMEM_DECL(6);
+    MPIR_CHKLMEM_DECL();
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -58,11 +58,9 @@ int MPIR_Alltoall_intra_scattered(const void *sendbuf,
     if (bblock == 0)
         bblock = comm_size;
 
-    MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, 2 * bblock * sizeof(MPIR_Request *), mpi_errno,
-                        "reqarray", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(reqarray, 2 * bblock * sizeof(MPIR_Request *));
 
-    MPIR_CHKLMEM_MALLOC(starray, MPI_Status *, 2 * bblock * sizeof(MPI_Status), mpi_errno,
-                        "starray", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(starray, 2 * bblock * sizeof(MPI_Status));
 
     for (ii = 0; ii < comm_size; ii += bblock) {
         ss = comm_size - ii < bblock ? comm_size - ii : bblock;

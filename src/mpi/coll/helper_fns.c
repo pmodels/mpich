@@ -307,7 +307,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     void *tmpbuf = NULL;
     MPI_Aint tmpbuf_size = 0;
     MPI_Aint actual_pack_bytes = 0;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -321,8 +321,7 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
 
     if (count > 0 && dest != MPI_PROC_NULL) {
         MPIR_Pack_size(count, datatype, &tmpbuf_size);
-        MPIR_CHKLMEM_MALLOC(tmpbuf, void *, tmpbuf_size, mpi_errno, "temporary send buffer",
-                            MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmpbuf, tmpbuf_size);
 
         mpi_errno =
             MPIR_Typerep_pack(buf, count, datatype, 0, tmpbuf, tmpbuf_size, &actual_pack_bytes,
@@ -465,7 +464,7 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
     int i;
     MPI_Status status_static_array[MPIC_REQUEST_PTR_ARRAY_SIZE];
     MPI_Status *status_array = statuses;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -475,8 +474,7 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status * statuses)
 
     if (numreq > MPIC_REQUEST_PTR_ARRAY_SIZE) {
         if (statuses == MPI_STATUSES_IGNORE) {
-            MPIR_CHKLMEM_MALLOC(status_array, MPI_Status *, numreq * sizeof(MPI_Status), mpi_errno,
-                                "status objects", MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(status_array, numreq * sizeof(MPI_Status));
         }
     }
 

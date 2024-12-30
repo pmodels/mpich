@@ -11,7 +11,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
                         MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
     int rank = comm_ptr->rank;
     MPI_Status status;
     void *tempbuf = NULL, *localfulldata = NULL, *prefulldata = NULL;
@@ -23,19 +23,16 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_CHKLMEM_MALLOC(tempbuf, void *, count * (MPL_MAX(extent, true_extent)),
-                        mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tempbuf, count * (MPL_MAX(extent, true_extent)));
     tempbuf = (void *) ((char *) tempbuf - true_lb);
 
     /* Create prefulldata and localfulldata on local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        MPIR_CHKLMEM_MALLOC(prefulldata, void *, count * (MPL_MAX(extent, true_extent)),
-                            mpi_errno, "prefulldata for scan", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(prefulldata, count * (MPL_MAX(extent, true_extent)));
         prefulldata = (void *) ((char *) prefulldata - true_lb);
 
         if (comm_ptr->node_comm != NULL) {
-            MPIR_CHKLMEM_MALLOC(localfulldata, void *, count * (MPL_MAX(extent, true_extent)),
-                                mpi_errno, "localfulldata for scan", MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(localfulldata, count * (MPL_MAX(extent, true_extent)));
             localfulldata = (void *) ((char *) localfulldata - true_lb);
         }
     }

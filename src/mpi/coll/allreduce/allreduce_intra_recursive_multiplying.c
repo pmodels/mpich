@@ -43,14 +43,13 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
         pofk *= k;
     }
 
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
     void *tmp_buf;
 
     /*Allocate for nb requests */
     MPIR_Request **reqs;
     int num_reqs = 0;
-    MPIR_CHKLMEM_MALLOC(reqs, MPIR_Request **, (2 * (k - 1) * sizeof(MPIR_Request *)), mpi_errno,
-                        "reqs", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(reqs, (2 * (k - 1) * sizeof(MPIR_Request *)));
 
     /* need to allocate temporary buffer to store incoming data */
     MPI_Aint true_extent, true_lb, extent;
@@ -65,8 +64,7 @@ int MPIR_Allreduce_intra_recursive_multiplying(const void *sendbuf,
         }
     }
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, (k - 1) * single_size, mpi_errno,
-                        "temporary buffer", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, (k - 1) * single_size);
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);

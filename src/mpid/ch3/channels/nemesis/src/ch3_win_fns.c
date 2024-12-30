@@ -129,7 +129,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_wi
 
     MPIDI_SHM_Win_t *elem = shm_wins_list;
 
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
     MPIR_FUNC_ENTER;
 
     *matched_win = NULL;
@@ -141,9 +141,8 @@ static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_wi
 
     comm_size = (*win_ptr)->comm_ptr->local_size;
 
-    MPIR_CHKLMEM_MALLOC(node_ranks, int *, node_size * sizeof(int), mpi_errno, "node_ranks", MPL_MEM_RMA);
-    MPIR_CHKLMEM_MALLOC(node_ranks_in_shm_node, int *, node_size * sizeof(int),
-                        mpi_errno, "node_ranks_in_shm_comm", MPL_MEM_RMA);
+    MPIR_CHKLMEM_MALLOC(node_ranks, node_size * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(node_ranks_in_shm_node, node_size * sizeof(int));
 
     for (i = 0; i < node_size; i++) {
         node_ranks[i] = i;
@@ -251,7 +250,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
     MPI_Aint *base_shm_offs;
 
     MPIR_CHKPMEM_DECL(1);
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
     MPIR_FUNC_ENTER;
 
     if ((*win_ptr)->comm_ptr->node_comm == NULL) {
@@ -260,8 +259,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
 
     node_size = (*win_ptr)->comm_ptr->node_comm->local_size;
 
-    MPIR_CHKLMEM_MALLOC(base_shm_offs, MPI_Aint *, node_size * sizeof(MPI_Aint),
-                        mpi_errno, "base_shm_offs", MPL_MEM_RMA);
+    MPIR_CHKLMEM_MALLOC(base_shm_offs, node_size * sizeof(MPI_Aint));
 
     /* Return the first matched shared window.
      * It is noted that the shared windows including all local processes are
@@ -308,7 +306,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     int i, k;
     int mpi_errno = MPI_SUCCESS;
     int mpl_err = 0;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -382,8 +380,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
 
     (*win_ptr)->basic_info_table = (MPIDI_Win_basic_info_t *) ((*win_ptr)->info_shm_base_addr);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 4 * comm_size * sizeof(MPI_Aint),
-                        mpi_errno, "tmp_buf", MPL_MEM_RMA);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, 4 * comm_size * sizeof(MPI_Aint));
 
     tmp_buf[4 * comm_rank] = MPIR_Ptr_to_aint(base);
     tmp_buf[4 * comm_rank + 1] = size;
@@ -431,7 +428,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
     MPI_Aint *node_sizes;
     int noncontig = FALSE;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -472,8 +469,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
 
     /* get the sizes of the windows and window objectsof
      * all processes.  allocate temp. buffer for communication */
-    MPIR_CHKLMEM_MALLOC(node_sizes, MPI_Aint *, node_size * sizeof(MPI_Aint), mpi_errno,
-                        "node_sizes", MPL_MEM_RMA);
+    MPIR_CHKLMEM_MALLOC(node_sizes, node_size * sizeof(MPI_Aint));
 
     node_sizes[node_rank] = (MPI_Aint) size;
 

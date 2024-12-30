@@ -29,7 +29,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
     MPIR_Request **reqs = NULL;
     MPI_Status *statuses = NULL;
     MPIR_Treealgo_tree_t my_tree;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -55,7 +55,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         sendbuf = (char *) buffer + true_lb;
     } else {
-        MPIR_CHKLMEM_MALLOC(sendbuf, void *, nbytes, mpi_errno, "sendbuf", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(sendbuf, nbytes);
         if (rank == root) {
             mpi_errno = MPIR_Typerep_pack(buffer, count, datatype, 0, sendbuf, nbytes,
                                           &actual_packed_unpacked_bytes, MPIR_TYPEREP_FLAG_NONE);
@@ -95,12 +95,10 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
     }
 
     if (is_nb) {
-        MPIR_CHKLMEM_MALLOC(reqs, MPIR_Request **,
-                            sizeof(MPIR_Request *) * (num_children * num_chunks + num_chunks),
-                            mpi_errno, "request array", MPL_MEM_COLL);
-        MPIR_CHKLMEM_MALLOC(statuses, MPI_Status *,
-                            sizeof(MPI_Status) * (num_children * num_chunks + num_chunks),
-                            mpi_errno, "status array", MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(reqs,
+                            sizeof(MPIR_Request *) * (num_children * num_chunks + num_chunks));
+        MPIR_CHKLMEM_MALLOC(statuses,
+                            sizeof(MPI_Status) * (num_children * num_chunks + num_chunks));
     }
 
     if (tree_type != MPIR_TREE_TYPE_KARY && my_tree.parent != -1)

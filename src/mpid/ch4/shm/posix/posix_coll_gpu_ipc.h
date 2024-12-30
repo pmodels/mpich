@@ -201,7 +201,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
                                                                    MPIR_Errflag_t errflag)
 {
     MPIR_FUNC_ENTER;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -231,8 +231,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
 
     /* map ipc_handles to remote_bufs */
     void **remote_bufs = NULL;
-    MPIR_CHKLMEM_MALLOC(remote_bufs, void **, sizeof(void *) * comm_size, mpi_errno, "Remote bufs",
-                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(remote_bufs, sizeof(void *) * comm_size);
     for (int i = 0; i < comm_size; i++) {
         if (i != my_rank) {
             int remote_dev =
@@ -246,8 +245,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_alltoall_gpu_ipc_read(const void *s
     }
     /* use imemcpy to copy the data concurrently */
     MPL_gpu_request *reqs = NULL;
-    MPIR_CHKLMEM_MALLOC(reqs, MPL_gpu_request *, sizeof(MPL_gpu_request) * comm_size, mpi_errno,
-                        "Memcpy requests", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(reqs, sizeof(MPL_gpu_request) * comm_size);
     for (int i = 0; i < comm_size; i++) {
         int target = (my_rank + 1 + i) % comm_size;
         char *temp_recv = (char *) recv_mem_addr + target * data_sz;
@@ -295,7 +293,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
                                                                     MPIR_Errflag_t errflag)
 {
     MPIR_FUNC_ENTER;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -325,8 +323,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
 
     /* map ipc_handles to remote_bufs */
     void **remote_bufs = NULL;
-    MPIR_CHKLMEM_MALLOC(remote_bufs, void **, sizeof(void *) * comm_size, mpi_errno, "Remote bufs",
-                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(remote_bufs, sizeof(void *) * comm_size);
     for (int i = 0; i < comm_size; i++) {
         if (i != my_rank) {
             int remote_dev =
@@ -340,8 +337,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgather_gpu_ipc_read(const void *
     }
     /* use imemcpy to copy the data concurrently */
     MPL_gpu_request *reqs = NULL;
-    MPIR_CHKLMEM_MALLOC(reqs, MPL_gpu_request *, sizeof(MPL_gpu_request) * comm_size, mpi_errno,
-                        "Memcpy requests", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(reqs, sizeof(MPL_gpu_request) * comm_size);
     for (int i = 0; i < comm_size; i++) {
         int target = (my_rank + 1 + i) % comm_size;
         char *temp_recv = (char *) recv_mem_addr + target * data_sz;
@@ -390,7 +386,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
                                                                      MPIR_Errflag_t errflag)
 {
     MPIR_FUNC_ENTER;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -421,8 +417,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
 
     /* map ipc_handles to remote_bufs */
     void **remote_bufs = NULL;
-    MPIR_CHKLMEM_MALLOC(remote_bufs, void **, sizeof(void *) * comm_size, mpi_errno, "Remote bufs",
-                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(remote_bufs, sizeof(void *) * comm_size);
     for (int i = 0; i < comm_size; i++) {
         if (i != my_rank) {
             int remote_dev =
@@ -436,8 +431,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allgatherv_gpu_ipc_read(const void 
     }
     /* use imemcpy to copy the data concurrently */
     MPL_gpu_request *reqs = NULL;
-    MPIR_CHKLMEM_MALLOC(reqs, MPL_gpu_request *, sizeof(MPL_gpu_request) * comm_size, mpi_errno,
-                        "Memcpy requests", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(reqs, sizeof(MPL_gpu_request) * comm_size);
     MPI_Aint recvtype_extent;
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     for (int i = 0; i < comm_size; i++) {

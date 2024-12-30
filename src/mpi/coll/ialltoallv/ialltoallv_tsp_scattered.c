@@ -21,7 +21,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
     int tag;
     int *vtcs, *recv_id, *send_id;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_Assert(!(sendbuf == MPI_IN_PLACE));
 
@@ -42,9 +42,9 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const MPI_Ain
         bblock = size;
 
     /* vtcs is twice the batch size to store both send and recv ids */
-    MPIR_CHKLMEM_MALLOC(vtcs, int *, 2 * batch_size * sizeof(int), mpi_errno, "vtcs", MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(recv_id, int *, bblock * sizeof(int), mpi_errno, "recv_id", MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(send_id, int *, bblock * sizeof(int), mpi_errno, "send_id", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(vtcs, 2 * batch_size * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(recv_id, bblock * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(send_id, bblock * sizeof(int));
 
     /* Get datatype info of sendtype and recvtype */
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);

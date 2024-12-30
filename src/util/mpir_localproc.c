@@ -143,7 +143,7 @@ int MPIR_Find_external(MPIR_Comm * comm, int *external_size_p, int *external_ran
     int *external_ranks, *internode_table;
     int node_id;
 
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
     MPIR_CHKPMEM_DECL(2);
 
     /* Scan through the list of processes in comm and add one
@@ -164,7 +164,7 @@ int MPIR_Find_external(MPIR_Comm * comm, int *external_size_p, int *external_ran
     if (MPIR_Process.node_hostnames) {
         num_nodes = utarray_len(MPIR_Process.node_hostnames);
     }
-    MPIR_CHKLMEM_MALLOC(nodes, int *, sizeof(int) * num_nodes, mpi_errno, "nodes", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(nodes, sizeof(int) * num_nodes);
 
     /* nodes maps node_id to rank in external_ranks of leader for that node */
     for (i = 0; i < num_nodes; ++i)
