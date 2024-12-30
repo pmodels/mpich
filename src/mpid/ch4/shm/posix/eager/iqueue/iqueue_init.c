@@ -101,7 +101,7 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     int nprocs = MPIR_Process.local_size;
 
     int pool_size = MPIDU_genq_shmem_pool_size(cell_size, num_cells, nprocs, num_free_queue);
-    int terminal_size = num_proc * sizeof(MPIDU_genq_shmem_queue_u);
+    int terminal_size = nprocs * sizeof(MPIDU_genq_shmem_queue_u);
 
     int slab_size = pool_size + terminal_size;
 
@@ -133,27 +133,23 @@ int MPIDI_POSIX_iqueue_post_init(void)
     return mpi_errno;
 }
 
-int MPIDI_POSIX_iqueue_set_vcis(MPIR_Comm * comm)
+int MPIDI_POSIX_iqueue_set_vcis(MPIR_Comm * comm, int max_vcis)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(comm == MPIR_Process.comm_world);       /* TODO: relax this */
-    MPIR_Assert(MPIDI_POSIX_eager_iqueue_global.all_slab == NULL);
+    MPIR_Assert(MPIDI_POSIX_eager_iqueue_global.all_vci_slab == NULL);
 
-    int max_vcis = MPIDI_POSIX_global.num_vcis;
-    MPIDI_POSIX_eager_iqueue_global.max_vcis = max_vcis;
     MPIDU_Init_shm_barrier();
 
     MPIDI_POSIX_eager_iqueue_global.max_vcis = max_vcis;
     int slab_size = MPIDI_POSIX_eager_iqueue_global.slab_size * max_vcis * max_vcis;
     /* Create the shared memory regions for all vcis */
-    /* TODO: do shm alloc in a comm */
     void *slab;
-    mpi_errno = MPIDU_Init_shm_alloc(slab_size, (void *) &slab);
+    mpi_errno = MPIDU_Init_shm_comm_alloc(comm, slab_size, (void *) &slab);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_POSIX_eager_iqueue_global.all_slab = slab;
+    MPIDI_POSIX_eager_iqueue_global.all_vci_slab = slab;
 
     for (int vci_src = 0; vci_src < max_vcis; vci_src++) {
         for (int vci_dst = 0; vci_dst < max_vcis; vci_dst++) {
@@ -167,8 +163,12 @@ int MPIDI_POSIX_iqueue_set_vcis(MPIR_Comm * comm)
         }
     }
 
-    mpi_errno = MPIDU_Init_shm_barrier();
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDI_POSIX_eager_iqueue_global.max_vcis = max_vcis;
+
+    if (comm->node_comm) {
+        mpi_errno = MPIR_Barrier_impl(comm->node_comm, MPIR_ERR_NONE);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -182,34 +182,36 @@ int MPIDI_POSIX_iqueue_finalize(void)
 
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_POSIX_eager_iqueue_global.max_vcis.root_slab) {
+    if (MPIDI_POSIX_eager_iqueue_global.root_slab) {
         MPIDI_POSIX_eager_iqueue_transport_t *transport;
-        transport = MPIDI_POSIX_eager_iqueue_get_transport(vci_src, vci_dst);
+        transport = MPIDI_POSIX_eager_iqueue_get_transport(0, 0);
 
         mpi_errno = MPIDU_genq_shmem_pool_destroy(transport->cell_pool);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_eager_iqueue_global.max_vcis.root_slab);
+        mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_eager_iqueue_global.root_slab);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_POSIX_eager_iqueue_global.max_vcis.root_slab = NULL;
+        MPIDI_POSIX_eager_iqueue_global.root_slab = NULL;
     }
 
-    if (!MPIDI_POSIX_eager_iqueue_global.max_vcis.all_slab) {
-        goto fn_exit;
-    }
-    int max_vcis = MPIDI_POSIX_eager_iqueue_global.max_vcis;
-    for (int vci_src = 0; vci_src < max_vcis; vci_src++) {
-        for (int vci_dst = 0; vci_dst < max_vcis; vci_dst++) {
-            MPIDI_POSIX_eager_iqueue_transport_t *transport;
-            transport = MPIDI_POSIX_eager_iqueue_get_transport(vci_src, vci_dst);
+    if (MPIDI_POSIX_eager_iqueue_global.all_vci_slab) {
+        int max_vcis = MPIDI_POSIX_eager_iqueue_global.max_vcis;
+        for (int vci_src = 0; vci_src < max_vcis; vci_src++) {
+            for (int vci_dst = 0; vci_dst < max_vcis; vci_dst++) {
+                if (vci_src == 0 && vci_dst == 0) {
+                    continue;
+                }
+                MPIDI_POSIX_eager_iqueue_transport_t *transport;
+                transport = MPIDI_POSIX_eager_iqueue_get_transport(vci_src, vci_dst);
 
-            mpi_errno = MPIDU_genq_shmem_pool_destroy(transport->cell_pool);
-            MPIR_ERR_CHECK(mpi_errno);
+                mpi_errno = MPIDU_genq_shmem_pool_destroy(transport->cell_pool);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         }
+        mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_eager_iqueue_global.all_vci_slab);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIDI_POSIX_eager_iqueue_global.all_vci_slab = NULL;
     }
-    mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_eager_iqueue_global.max_vcis.all_slab);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIDI_POSIX_eager_iqueue_global.max_vcis.all_slab = NULL;
 
   fn_exit:
     MPIR_FUNC_EXIT;
