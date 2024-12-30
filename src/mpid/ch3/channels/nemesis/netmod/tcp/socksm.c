@@ -548,7 +548,7 @@ static int recv_id_or_tmpvc_info(sockconn_t * const sc, int *got_sc_eof)
 #endif
 
     MPIR_CHKPMEM_DECL(1);
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -575,8 +575,7 @@ static int recv_id_or_tmpvc_info(sockconn_t * const sc, int *got_sc_eof)
         iov[0].iov_len = sizeof(sc->pg_rank);
         pg_id_len = hdr.datalen - sizeof(MPIDI_nem_tcp_idinfo_t);
         if (pg_id_len != 0) {
-            MPIR_CHKLMEM_MALLOC(pg_id, char *, pg_id_len, mpi_errno, "sockconn pg_id",
-                                MPL_MEM_OTHER);
+            MPIR_CHKLMEM_MALLOC(pg_id, pg_id_len);
             iov[1].iov_base = (void *) pg_id;
             iov[1].iov_len = pg_id_len;
             ++iov_cnt;
@@ -777,7 +776,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 #endif
 
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -832,7 +831,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
 
             val_max_sz = MPIR_pmi_max_val_size();
 
-            MPIR_CHKLMEM_MALLOC(bc, char *, val_max_sz, mpi_errno, "bc", MPL_MEM_OTHER);
+            MPIR_CHKLMEM_MALLOC(bc, val_max_sz);
 
             sc->is_tmpvc = FALSE;
 

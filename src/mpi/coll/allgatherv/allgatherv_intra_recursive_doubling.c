@@ -36,7 +36,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
     void *tmp_buf;
     int mask, dst_tree_root, my_tree_root, nprocs_completed, k, tmp_mask, tree_root;
     MPI_Aint position, send_offset, recv_offset, offset;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -58,8 +58,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
-                        total_count * recvtype_sz, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, total_count * recvtype_sz);
 
     /* copy local data into right location in tmp_buf */
     position = 0;

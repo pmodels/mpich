@@ -54,7 +54,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
     MPI_Aint extent = 0;        /* Datatype extent */
     MPI_Datatype types[2], tmp_type;
     int copy_offset = 0, copy_blks = 0;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
@@ -98,7 +98,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Data
         tmp_buf_size = 0;
 
     if (tmp_buf_size) {
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, tmp_buf_size);
     }
 
     if (rank == root) {

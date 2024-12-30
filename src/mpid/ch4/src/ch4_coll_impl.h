@@ -950,7 +950,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
     MPI_Aint extent = 0;
     void *ori_recvbuf = recvbuf;
 
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
     /* TODO: we can safe the last send/recv if --
      *     1. if node_comm is the same size as original comm, fallback
      *     2. if root is in node_roots_comm but not rank 0, reduce to root rather than 0
@@ -963,8 +963,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPIR_Datatype_get_extent_macro(datatype, extent);
 
-        MPIR_CHKLMEM_MALLOC(recvbuf, void *, count * (MPL_MAX(extent, true_extent)),
-                            mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(recvbuf, count * (MPL_MAX(extent, true_extent)));
         /* adjust for potential negative lower bound in datatype */
         recvbuf = (void *) ((char *) recvbuf - true_lb);
     }
@@ -1034,7 +1033,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
     MPI_Aint true_extent = 0;
     MPI_Aint extent = 0;
 
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     void *tmp_buf = NULL;
 
@@ -1044,8 +1043,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPIR_Datatype_get_extent_macro(datatype, extent);
 
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)),
-                            mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *) ((char *) tmp_buf - true_lb);
     }
@@ -1678,26 +1676,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
     MPI_Aint extent = 0;
     int noneed = 1;             /* noneed=1 means no need to bcast tempbuf and
                                  * reduce tempbuf & recvbuf */
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_CHKLMEM_MALLOC(tempbuf, void *, count * (MPL_MAX(extent, true_extent)),
-                        mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tempbuf, count * (MPL_MAX(extent, true_extent)));
     tempbuf = (void *) ((char *) tempbuf - true_lb);
 
     /* Create prefulldata and localfulldata on local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        MPIR_CHKLMEM_MALLOC(prefulldata, void *, count * (MPL_MAX(extent, true_extent)),
-                            mpi_errno, "prefulldata for scan", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(prefulldata, count * (MPL_MAX(extent, true_extent)));
         prefulldata = (void *) ((char *) prefulldata - true_lb);
 
         if (comm_ptr->node_comm != NULL) {
-            MPIR_CHKLMEM_MALLOC(localfulldata, void *, count * (MPL_MAX(extent, true_extent)),
-                                mpi_errno, "localfulldata for scan", MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(localfulldata, count * (MPL_MAX(extent, true_extent)));
             localfulldata = (void *) ((char *) localfulldata - true_lb);
         }
     }

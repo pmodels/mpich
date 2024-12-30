@@ -27,7 +27,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
     MPI_Datatype dtype;
 
     MPIR_Treealgo_tree_t my_tree;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -52,7 +52,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
     dtype = datatype;
 
     if (!is_contig) {
-        MPIR_CHKLMEM_MALLOC(send_buf, void *, nbytes, mpi_errno, "send_buf", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(send_buf, nbytes);
 
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
@@ -120,10 +120,8 @@ int MPIR_Bcast_intra_tree(void *buffer,
     }
 
     if (is_nb) {
-        MPIR_CHKLMEM_MALLOC(reqs, MPIR_Request **, sizeof(MPIR_Request *) * num_children,
-                            mpi_errno, "request array", MPL_MEM_COLL);
-        MPIR_CHKLMEM_MALLOC(statuses, MPI_Status *, sizeof(MPI_Status) * num_children,
-                            mpi_errno, "status array", MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(reqs, sizeof(MPIR_Request *) * num_children);
+        MPIR_CHKLMEM_MALLOC(statuses, sizeof(MPI_Status) * num_children);
     }
 
     if ((parent != -1 && tree_type != MPIR_TREE_TYPE_KARY)

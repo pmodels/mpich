@@ -113,7 +113,7 @@ int MPIDU_Init_shm_init(void)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -163,8 +163,7 @@ int MPIDU_Init_shm_init(void)
         } else {
             /* non-root prepare to recv */
             serialized_hnd_size = MPIR_pmi_max_val_size();
-            MPIR_CHKLMEM_MALLOC(serialized_hnd, char *, serialized_hnd_size, mpi_errno, "val",
-                                MPL_MEM_OTHER);
+            MPIR_CHKLMEM_MALLOC(serialized_hnd, serialized_hnd_size);
         }
     }
     /* All processes need call MPIR_pmi_bcast. This is because we may need call MPIR_pmi_barrier

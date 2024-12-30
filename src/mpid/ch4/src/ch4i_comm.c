@@ -933,7 +933,7 @@ int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int
     int mpi_errno = MPI_SUCCESS;
     uint32_t gpidmaskPrealloc[128];
     uint32_t *gpidmask;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -970,8 +970,7 @@ int MPIDI_check_disjoint_gpids(uint64_t gpids1[], int n1, uint64_t gpids2[], int
 
     uint64_t mask_size = (max_gpid / 32) + 1;
     if (mask_size > 128) {
-        MPIR_CHKLMEM_MALLOC(gpidmask, uint32_t *, mask_size * sizeof(uint32_t),
-                            mpi_errno, "gpidmask", MPL_MEM_COMM);
+        MPIR_CHKLMEM_MALLOC(gpidmask, mask_size * sizeof(uint32_t));
     } else {
         gpidmask = gpidmaskPrealloc;
     }

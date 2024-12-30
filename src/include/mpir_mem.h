@@ -105,22 +105,28 @@ extern "C" {
 
     /* CHKPMEM_REGISTER is used for memory allocated within another routine */
 
-#define MPIR_CHKLMEM_DECL(n_)                                   \
-    void *(mpiu_chklmem_stk_[n_]) = { NULL };                   \
-    int mpiu_chklmem_stk_sp_=0;                                 \
-    MPIR_AssertDeclValue(const int mpiu_chklmem_stk_sz_,n_)
+#define MPIR_CHKLMEM_MAX 10
+#define MPIR_CHKLMEM_DECL() \
+    void *(mpiu_chklmem_stk_[MPIR_CHKLMEM_MAX]) = { NULL }; \
+    int mpiu_chklmem_stk_sp_=0; \
 
-#define MPIR_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
-    {                                                                   \
-        pointer_ = (type_)MPL_malloc(nbytes_,class_);                   \
-        if (pointer_) {                                                 \
-            MPIR_Assert(mpiu_chklmem_stk_sp_<mpiu_chklmem_stk_sz_);     \
-            mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = (void *) pointer_; \
-        } else if (nbytes_ > 0) {                                       \
-            MPIR_CHKMEM_SETERR(rc_,nbytes_,name_);                      \
-            stmt_;                                                      \
-        }                                                               \
-    }
+#define MPIR_CHKLMEM_REGISTER(pointer_) \
+    do { \
+        MPIR_Assert(mpiu_chklmem_stk_sp_<MPIR_CHKLMEM_MAX); \
+        mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = pointer_; \
+    } while (0)
+
+#define MPIR_CHKLMEM_MALLOC(pointer_,nbytes_) \
+    do { \
+        pointer_ = MPL_malloc(nbytes_,MPL_MEM_LOCAL); \
+        if (pointer_) { \
+            MPIR_Assert(mpiu_chklmem_stk_sp_<MPIR_CHKLMEM_MAX); \
+            mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = pointer_; \
+        } else if (nbytes_ > 0) { \
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem"); \
+        } \
+    } while (0)
+
 #define MPIR_CHKLMEM_FREEALL()                                          \
     do {                                                                \
         while (mpiu_chklmem_stk_sp_ > 0) {                              \
@@ -128,10 +134,6 @@ extern "C" {
         }                                                               \
     } while (0)
 
-#define MPIR_CHKLMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_,class_)    \
-    MPIR_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_)
-#define MPIR_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_) \
-    MPIR_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,goto fn_fail)
 
 /* Persistent memory that we may want to recover if something goes wrong */
 #define MPIR_CHKPMEM_DECL(n_)                                   \
