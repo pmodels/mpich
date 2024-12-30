@@ -11,7 +11,7 @@
 
 int MPIDI_POSIX_iqueue_init(int rank, int size);
 int MPIDI_POSIX_iqueue_post_init(void);
-int MPIDI_POSIX_iqueue_set_vcis(MPIR_Comm * comm);
+int MPIDI_POSIX_iqueue_set_vcis(MPIR_Comm * comm, int num_vcis);
 int MPIDI_POSIX_iqueue_finalize(void);
 
 #ifdef POSIX_EAGER_INLINE
