@@ -147,12 +147,10 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
 
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
-    MPIR_CHKLMEM_MALLOC(new_avt_procs, int *, sizeof(int) * size, mpi_errno, "new_avt_procs",
-                        MPL_MEM_ADDRESS);
-    MPIR_CHKLMEM_MALLOC(new_upids, char **, sizeof(char *) * size, mpi_errno, "new_upids",
-                        MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(new_avt_procs, sizeof(int) * size);
+    MPIR_CHKLMEM_MALLOC(new_upids, sizeof(char *) * size);
 
     n_avts = MPIDIU_get_n_avts();
 

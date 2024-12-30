@@ -127,10 +127,9 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
     MPIR_Request **reqs;
     int num_reqs = 0;
 
-    MPIR_CHKLMEM_DECL(4);
+    MPIR_CHKLMEM_DECL();
 
-    MPIR_CHKLMEM_MALLOC(reqs, MPIR_Request **, (2 * (k - 1) * sizeof(MPIR_Request *)), mpi_errno,
-                        "reqs", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(reqs, (2 * (k - 1) * sizeof(MPIR_Request *)));
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
 
@@ -182,8 +181,7 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
     }
 #endif
     /* temporary buffer used for rotation, so used as sendbuf when inplace is true */
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvcnt * size * r_extent, mpi_errno, "tmp_buf",
-                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, recvcnt * size * r_extent);
 
     if (is_inplace) {
         mpi_errno =
@@ -214,10 +212,8 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
     /* Step 2: Allocate buffer space for packing/receiving data for every phase */
     delta = 1;
 
-    MPIR_CHKLMEM_MALLOC(tmp_sbuf, void **, sizeof(void *) * (k - 1), mpi_errno, "tmp_sbuf",
-                        MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(tmp_rbuf, void **, sizeof(void *) * (k - 1), mpi_errno, "tmp_rbuf",
-                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(tmp_sbuf, sizeof(void *) * (k - 1));
+    MPIR_CHKLMEM_MALLOC(tmp_rbuf, sizeof(void *) * (k - 1));
 
     for (j = 0; j < k - 1; j++) {
         tmp_sbuf[j] = (void *) MPL_malloc(r_extent * recvcnt * p_of_k, MPL_MEM_COLL);

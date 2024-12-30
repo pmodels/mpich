@@ -354,7 +354,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
     void *ori_local_buf = local_buf;
     MPI_Datatype ori_datatype = datatype;
 
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
     /* Register the vertices */
     root_datacopy_type_id =
         MPIR_TSP_sched_new_type(sched, MPIDI_POSIX_NB_RG_root_datacopy_issue,
@@ -401,8 +401,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_nb_release_gather_ibcast_impl(void *loc
     MPIR_Algo_calculate_pipeline_chunk_info(MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE, 1,
                                             nbytes, &num_chunks, &chunk_count_floor,
                                             &chunk_count_ceil);
-    MPIR_CHKLMEM_MALLOC(sixth_vtx_id, int *, num_chunks * sizeof(int), mpi_errno, "sixth_vtx_ids",
-                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(sixth_vtx_id, num_chunks * sizeof(int));
 
     /* Do pipelined release-gather */
     /* A schedule gets created in the form of a forest, where each tree has 6 vertices (to perform

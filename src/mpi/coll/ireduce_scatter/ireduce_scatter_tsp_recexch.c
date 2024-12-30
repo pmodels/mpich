@@ -151,7 +151,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     MPI_Aint *displs;
     int tag, vtx_id;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -177,8 +177,7 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
         return mpi_errno;
     }
 
-    MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, nranks * sizeof(MPI_Aint),
-                        mpi_errno, "displs buffer", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(displs, nranks * sizeof(MPI_Aint));
     displs[0] = 0;
     for (i = 1; i < nranks; i++) {
         displs[i] = displs[i - 1] + recvcounts[i - 1];

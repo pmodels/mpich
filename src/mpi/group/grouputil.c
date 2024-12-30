@@ -359,12 +359,11 @@ int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
     MPII_Group_pmap_t *vmap = 0;
     int vsize = comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM ? comm_ptr->local_size :
         comm_ptr->remote_size;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_Assert(group_ptr != NULL);
 
-    MPIR_CHKLMEM_MALLOC(vmap, MPII_Group_pmap_t *,
-                        vsize * sizeof(MPII_Group_pmap_t), mpi_errno, "", MPL_MEM_GROUP);
+    MPIR_CHKLMEM_MALLOC(vmap, vsize * sizeof(MPII_Group_pmap_t));
     /* Initialize the vmap */
     for (i = 0; i < vsize; i++) {
         MPID_Comm_get_lpid(comm_ptr, i, &vmap[i].lpid, FALSE);

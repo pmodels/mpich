@@ -459,7 +459,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
     int scalable_fence_enabled = 0;
     int *rma_target_marks = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -523,8 +523,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 
     /* Perform basic algorithm by calling reduce-scatter */
     if (!scalable_fence_enabled) {
-      MPIR_CHKLMEM_MALLOC(rma_target_marks, int *, comm_size * sizeof(int),
-                            mpi_errno, "rma_target_marks", MPL_MEM_RMA);
+      MPIR_CHKLMEM_MALLOC(rma_target_marks, comm_size * sizeof(int));
         for (i = 0; i < comm_size; i++)
             rma_target_marks[i] = 0;
 
@@ -656,7 +655,7 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
 {
     int *post_ranks_in_win_grp;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -690,15 +689,12 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
         win_comm_ptr = win_ptr->comm_ptr;
         rank = win_ptr->comm_ptr->rank;
 
-        MPIR_CHKLMEM_MALLOC(post_ranks_in_win_grp, int *,
-                            post_grp_size * sizeof(int), mpi_errno, "post_ranks_in_win_grp", MPL_MEM_RMA);
+        MPIR_CHKLMEM_MALLOC(post_ranks_in_win_grp, post_grp_size * sizeof(int));
         mpi_errno = fill_ranks_in_win_grp(win_ptr, post_grp_ptr, post_ranks_in_win_grp);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPIR_CHKLMEM_MALLOC(req, MPIR_Request **, post_grp_size * sizeof(MPIR_Request *),
-                            mpi_errno, "req", MPL_MEM_RMA);
-        MPIR_CHKLMEM_MALLOC(status, MPI_Status *, post_grp_size * sizeof(MPI_Status),
-                            mpi_errno, "status", MPL_MEM_RMA);
+        MPIR_CHKLMEM_MALLOC(req, post_grp_size * sizeof(MPIR_Request *));
+        MPIR_CHKLMEM_MALLOC(status, post_grp_size * sizeof(MPI_Status));
 
         /* Send a 0-byte message to the source processes */
         for (i = 0; i < post_grp_size; i++) {
@@ -774,7 +770,7 @@ static int start_req_complete(MPIR_Request * req)
 int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
     MPIR_CHKPMEM_DECL(1);
 
     MPIR_FUNC_ENTER;
@@ -811,11 +807,8 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
         /* post IRECVs */
         if (win_ptr->shm_allocated == TRUE) {
             int node_comm_size = comm_ptr->node_comm->local_size;
-            MPIR_CHKLMEM_MALLOC(intra_start_req, MPIR_Request **,
-                                node_comm_size * sizeof(MPIR_Request *), mpi_errno, "intra_start_req", MPL_MEM_RMA);
-            MPIR_CHKLMEM_MALLOC(intra_start_status, MPI_Status *,
-                                node_comm_size * sizeof(MPI_Status),
-                                mpi_errno, "intra_start_status", MPL_MEM_RMA);
+            MPIR_CHKLMEM_MALLOC(intra_start_req, node_comm_size * sizeof(MPIR_Request *));
+            MPIR_CHKLMEM_MALLOC(intra_start_status, node_comm_size * sizeof(MPI_Status));
         }
 
         intra_cnt = 0;

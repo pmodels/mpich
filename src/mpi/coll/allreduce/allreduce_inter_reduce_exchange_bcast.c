@@ -17,17 +17,16 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbu
                                                MPI_Datatype datatype, MPI_Op op,
                                                MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     if (comm_ptr->rank == 0) {
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPIR_Datatype_get_extent_macro(datatype, extent);
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)), mpi_errno,
-                            "temporary buffer", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *) ((char *) tmp_buf - true_lb);
     }

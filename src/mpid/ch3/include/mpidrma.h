@@ -1048,12 +1048,11 @@ static inline int fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * group_p
     int mpi_errno = MPI_SUCCESS;
     int i, *ranks_in_grp;
     MPIR_Group *win_grp_ptr;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKLMEM_MALLOC(ranks_in_grp, int *, group_ptr->size * sizeof(int),
-                        mpi_errno, "ranks_in_grp", MPL_MEM_RMA);
+    MPIR_CHKLMEM_MALLOC(ranks_in_grp, group_ptr->size * sizeof(int));
     for (i = 0; i < group_ptr->size; i++)
         ranks_in_grp[i] = i;
 

@@ -501,7 +501,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     bool symheap_flag = true, global_symheap_flag = false;
 
     MPIR_CHKPMEM_DECL(2);
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
     MPIR_FUNC_ENTER;
 
     win = *win_ptr;
@@ -529,8 +529,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
-        MPIR_CHKLMEM_MALLOC(shm_offsets, MPI_Aint *, shm_comm_ptr->local_size * sizeof(MPI_Aint),
-                            mpi_errno, "shm offset", MPL_MEM_RMA);
+        MPIR_CHKLMEM_MALLOC(shm_offsets, shm_comm_ptr->local_size * sizeof(MPI_Aint));
 
         for (i = 0; i < shm_comm_ptr->local_size; i++) {
             shm_offsets[i] = (MPI_Aint) total_shm_size;

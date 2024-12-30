@@ -427,15 +427,14 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
     int *in_vtcs;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     /* assign a new vertex */
     *vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
 
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__SINK;
 
-    MPIR_CHKLMEM_MALLOC(in_vtcs, int *, sizeof(int) * (*vtx_id),
-                        mpi_errno, "in_vtcs buffer", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(in_vtcs, sizeof(int) * (*vtx_id));
     /* record incoming vertices */
     sched_fence = ut_type_array(&sched->vtcs, vtx_t *) + *vtx_id - 1;
     MPIR_ERR_CHKANDJUMP(sched_fence == NULL, mpi_errno, MPI_ERR_OTHER, "**nofence");

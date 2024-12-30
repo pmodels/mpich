@@ -34,7 +34,7 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
     int mpi_errno = MPI_SUCCESS, i, k, comm_size, rank;
     MPI_Aint *tmp_buf;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -51,8 +51,7 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
 
     /* get the addresses of the windows, window objects, and completion
      * counters of all processes.  allocate temp. buffer for communication */
-    MPIR_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 4 * comm_size * sizeof(MPI_Aint),
-                        mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, 4 * comm_size * sizeof(MPI_Aint));
 
     /* FIXME: If we wanted to validate the transfer as within range at the
      * origin, we'd also need the window size. */

@@ -48,7 +48,7 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int *recv_id = NULL;
     MPI_Aint *recv_index = NULL;
     int *scount_lookup = NULL;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
     void *tmp_recvbuf = NULL;
     int **s_counts = NULL;
     int **r_counts = NULL;
@@ -96,14 +96,11 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
         p_of_k = 1;
 
     /* if nphases=0 then no recv_id needed */
-    MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * nphases * (k - 1), mpi_errno, "recv_id",
-                        MPL_MEM_COLL);
-    MPIR_CHKLMEM_MALLOC(scount_lookup, int *, sizeof(int) * nphases, mpi_errno, "scount_lookup",
-                        MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(recv_id, sizeof(int) * nphases * (k - 1));
+    MPIR_CHKLMEM_MALLOC(scount_lookup, sizeof(int) * nphases);
 
     /* To store the index to receive in various phases and steps within */
-    MPIR_CHKLMEM_MALLOC(recv_index, MPI_Aint *, sizeof(MPI_Aint) * nphases * (k - 1), mpi_errno,
-                        "recv_index", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(recv_index, sizeof(MPI_Aint) * nphases * (k - 1));
 
     for (i = 0; i < size; i++)
         total_recvcount += recvcounts[i];

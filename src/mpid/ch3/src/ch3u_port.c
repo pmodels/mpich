@@ -586,7 +586,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
     int recvcontext_id = MPIR_INVALID_CONTEXT_ID;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -621,9 +621,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 
 	/* Make an array to translate local ranks to process group index 
 	   and rank */
-	MPIR_CHKLMEM_MALLOC(local_translation,pg_translation*,
-			    local_comm_size*sizeof(pg_translation),
-			    mpi_errno,"local_translation", MPL_MEM_DYNAMIC);
+	MPIR_CHKLMEM_MALLOC(local_translation, local_comm_size*sizeof(pg_translation));
 
 	/* Make a list of the local communicator's process groups and encode 
 	   them in strings to be sent to the other side.
@@ -667,12 +665,8 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
     remote_comm_size = recv_ints[1];
     context_id	     = recv_ints[2];
 
-    MPIR_CHKLMEM_MALLOC(remote_pg,MPIDI_PG_t**,
-			n_remote_pgs * sizeof(MPIDI_PG_t*),
-			mpi_errno,"remote_pg", MPL_MEM_DYNAMIC);
-    MPIR_CHKLMEM_MALLOC(remote_translation,pg_translation*,
-			remote_comm_size * sizeof(pg_translation),
-			mpi_errno,"remote_translation", MPL_MEM_DYNAMIC);
+    MPIR_CHKLMEM_MALLOC(remote_pg, n_remote_pgs * sizeof(MPIDI_PG_t*));
+    MPIR_CHKLMEM_MALLOC(remote_translation, remote_comm_size * sizeof(pg_translation));
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"allocated remote process groups");
 
     /* Exchange the process groups and their corresponding KVSes */
@@ -982,14 +976,12 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
     pg_translation *local_translation = 0;
     pg_node *pg_list, *pg_next, *pg_head = 0;
     int rank, i, peer_comm_size;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     peer_comm_size = comm_p->local_size;
     rank            = comm_p->rank;
 
-    MPIR_CHKLMEM_MALLOC(local_translation,pg_translation*,
-			peer_comm_size*sizeof(pg_translation),
-			mpi_errno,"local_translation", MPL_MEM_DYNAMIC);
+    MPIR_CHKLMEM_MALLOC(local_translation, peer_comm_size*sizeof(pg_translation));
     
     if (rank == root) {
 	/* Get the process groups known to the *peercomm* */
@@ -1135,7 +1127,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
     pg_translation *local_translation = NULL, *remote_translation = NULL;
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -1161,9 +1153,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
 
 	/* Make an array to translate local ranks to process group index and 
 	   rank */
-	MPIR_CHKLMEM_MALLOC(local_translation,pg_translation*,
-			    local_comm_size*sizeof(pg_translation),
-			    mpi_errno,"local_translation", MPL_MEM_DYNAMIC);
+	MPIR_CHKLMEM_MALLOC(local_translation, local_comm_size*sizeof(pg_translation));
 
 	/* Make a list of the local communicator's process groups and encode 
 	   them in strings to be sent to the other side.
@@ -1196,12 +1186,8 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
     n_remote_pgs     = recv_ints[0];
     remote_comm_size = recv_ints[1];
     context_id       = recv_ints[2];
-    MPIR_CHKLMEM_MALLOC(remote_pg,MPIDI_PG_t**,
-			n_remote_pgs * sizeof(MPIDI_PG_t*),
-			mpi_errno,"remote_pg", MPL_MEM_DYNAMIC);
-    MPIR_CHKLMEM_MALLOC(remote_translation,pg_translation*,
-			remote_comm_size * sizeof(pg_translation),
-			mpi_errno, "remote_translation", MPL_MEM_DYNAMIC);
+    MPIR_CHKLMEM_MALLOC(remote_pg, n_remote_pgs * sizeof(MPIDI_PG_t*));
+    MPIR_CHKLMEM_MALLOC(remote_translation, remote_comm_size * sizeof(pg_translation));
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TERSE,(MPL_DBG_FDEST,"[%d]accept:remote process groups: %d\nremote comm size: %d\n", rank, n_remote_pgs, remote_comm_size));
 
     /* Exchange the process groups and their corresponding KVSes */

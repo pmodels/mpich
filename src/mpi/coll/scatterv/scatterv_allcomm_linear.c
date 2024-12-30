@@ -27,7 +27,7 @@ int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const MPI_Aint * sendcount
     int i, reqs;
     MPIR_Request **reqarray;
     MPI_Status *starray;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
@@ -39,10 +39,8 @@ int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const MPI_Aint * sendcount
 
         MPIR_Datatype_get_extent_macro(sendtype, extent);
 
-        MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, comm_size * sizeof(MPIR_Request *),
-                            mpi_errno, "reqarray", MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(starray, MPI_Status *, comm_size * sizeof(MPI_Status), mpi_errno,
-                            "starray", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(reqarray, comm_size * sizeof(MPIR_Request *));
+        MPIR_CHKLMEM_MALLOC(starray, comm_size * sizeof(MPI_Status));
 
         reqs = 0;
         for (i = 0; i < comm_size; i++) {

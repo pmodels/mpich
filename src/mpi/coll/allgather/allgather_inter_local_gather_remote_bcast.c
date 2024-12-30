@@ -22,7 +22,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, MPI_Aint
     void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
 
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     local_size = comm_ptr->local_size;
     remote_size = comm_ptr->remote_size;
@@ -32,8 +32,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, MPI_Aint
         /* In each group, rank 0 allocates temp. buffer for local
          * gather */
         MPIR_Datatype_get_size_macro(sendtype, sendtype_sz);
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, sendcount * sendtype_sz * local_size, mpi_errno,
-                            "tmp_buf", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, sendcount * sendtype_sz * local_size);
     } else {
         /* silence -Wmaybe-uninitialized due to MPIR_{Gather,Bcast} calls by non-zero ranks */
         sendtype_sz = 0;

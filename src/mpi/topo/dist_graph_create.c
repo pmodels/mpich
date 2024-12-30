@@ -23,7 +23,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     int *buf = NULL;
 
     int comm_size = comm_ptr->local_size;
-    MPIR_CHKLMEM_DECL(8);
+    MPIR_CHKLMEM_DECL();
     MPIR_CHKPMEM_DECL(1);
 
     /* following the spirit of the old topo interface, attributes do not
@@ -39,16 +39,12 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
      * rout is an array of comm_size containing pointers to arrays of
      * rout_sizes[x].  rout[x] is the locally known number of edges out of this
      * process to rank x. */
-    MPIR_CHKLMEM_MALLOC(rout, int **, comm_size * sizeof(int *), mpi_errno, "rout", MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(rin, int **, comm_size * sizeof(int *), mpi_errno, "rin", MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(rin_sizes, int *, comm_size * sizeof(int), mpi_errno, "rin_sizes",
-                        MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(rout_sizes, int *, comm_size * sizeof(int), mpi_errno, "rout_sizes",
-                        MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(rin_idx, int *, comm_size * sizeof(int), mpi_errno, "rin_idx",
-                        MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(rout_idx, int *, comm_size * sizeof(int), mpi_errno, "rout_idx",
-                        MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(rout, comm_size * sizeof(int *));
+    MPIR_CHKLMEM_MALLOC(rin, comm_size * sizeof(int *));
+    MPIR_CHKLMEM_MALLOC(rin_sizes, comm_size * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(rout_sizes, comm_size * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(rin_idx, comm_size * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(rout_idx, comm_size * sizeof(int));
 
     memset(rout, 0, comm_size * sizeof(int *));
     memset(rin, 0, comm_size * sizeof(int *));
@@ -123,8 +119,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     }
 
     int *rs;
-    MPIR_CHKLMEM_MALLOC(rs, int *, 2 * comm_size * sizeof(int), mpi_errno, "red-scat source buffer",
-                        MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(rs, 2 * comm_size * sizeof(int));
     for (int i = 0; i < comm_size; ++i) {
         rs[2 * i] = (rin_sizes[i] ? 1 : 0);
         rs[2 * i + 1] = (rout_sizes[i] ? 1 : 0);
@@ -143,8 +138,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     /* must be 2*comm_size requests because we will possibly send inbound and
      * outbound edges to everyone in our communicator */
     MPIR_Request **reqs;
-    MPIR_CHKLMEM_MALLOC(reqs, MPIR_Request **, 2 * comm_size * sizeof(MPIR_Request *), mpi_errno,
-                        "temp request array", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(reqs, 2 * comm_size * sizeof(MPIR_Request *));
     for (int i = 0; i < comm_size; ++i) {
         if (rin_sizes[i]) {
             /* send edges where i is a destination to process i */

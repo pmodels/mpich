@@ -22,7 +22,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS;
     MPI_Status status;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
@@ -49,9 +49,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
 
         if (rank == 0) {
             MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
-                                recvcount * local_size * recvtype_sz, mpi_errno,
-                                "tmp_buf", MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(tmp_buf, recvcount * local_size * recvtype_sz);
 
             mpi_errno = MPIC_Recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
                                   root, MPIR_SCATTER_TAG, comm_ptr, &status);
