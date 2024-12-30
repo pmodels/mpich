@@ -130,24 +130,20 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
 int MPIDI_POSIX_iqueue_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
+    return mpi_errno;
+}
 
-    /* gather max_vcis */
-    int max_vcis;
-    if (MPIR_Process.local_size == 1) {
-        max_vcis = MPIDI_POSIX_global.num_vcis;
-    } else {
-        max_vcis = 0;
-        MPIDU_Init_shm_put(&MPIDI_POSIX_global.num_vcis, sizeof(int));
-        MPIDU_Init_shm_barrier();
-        for (int i = 0; i < MPIR_Process.local_size; i++) {
-            int num;
-            MPIDU_Init_shm_get(i, sizeof(int), &num);
-            if (max_vcis < num) {
-                max_vcis = num;
-            }
-        }
-        MPIDU_Init_shm_barrier();
-    }
+int MPIDI_POSIX_iqueue_set_vcis(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_ENTER;
+
+    MPIR_Assert(comm == MPIR_Process.comm_world);       /* TODO: relax this */
+    MPIR_Assert(MPIDI_POSIX_eager_iqueue_global.all_slab == NULL);
+
+    int max_vcis = MPIDI_POSIX_global.num_vcis;
+    MPIDI_POSIX_eager_iqueue_global.max_vcis = max_vcis;
+    MPIDU_Init_shm_barrier();
 
     MPIDI_POSIX_eager_iqueue_global.max_vcis = max_vcis;
     int slab_size = MPIDI_POSIX_eager_iqueue_global.slab_size * max_vcis * max_vcis;
