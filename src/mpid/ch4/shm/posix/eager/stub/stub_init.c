@@ -20,6 +20,12 @@ int MPIDI_POSIX_stub_post_init(void)
     return MPI_SUCCESS;
 }
 
+int MPIDI_POSIX_stub_set_vcis(MPIR_Comm * comm)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
 int MPIDI_POSIX_stub_finalize()
 {
     MPIR_Assert(0);
