@@ -10,7 +10,7 @@
 
 int MPIDI_POSIX_stub_init(int rank, int size);
 int MPIDI_POSIX_stub_post_init(void);
-int MPIDI_POSIX_stub_set_vcis(MPIR_Comm * comm);
+int MPIDI_POSIX_stub_set_vcis(MPIR_Comm * comm, int num_vcis);
 int MPIDI_POSIX_stub_finalize(void);
 
 #ifdef POSIX_EAGER_INLINE
