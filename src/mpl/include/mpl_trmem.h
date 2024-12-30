@@ -49,6 +49,7 @@ typedef enum {
     MPL_MEM_DEBUG,              /* Data for the debugging information */
     MPL_MEM_PM,                 /* Data for process managers */
     MPL_MEM_COLL,               /* Memory related to collective operations */
+    MPL_MEM_LOCAL,              /* Temporary allocation that will be freed after the operation */
     MPL_MEM_USER,               /* User memory allocations */
     MPL_MEM_OTHER,              /* Other small memory allocations */
     MPL_MAX_MEMORY_CLASS
