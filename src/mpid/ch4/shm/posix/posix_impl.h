@@ -28,6 +28,7 @@
         } \
     } while (0)
 
+int MPIDI_POSIX_init_vci(int vci);
 void MPIDI_POSIX_delay_shm_mutex_destroy(int rank, MPL_proc_mutex_t * shm_mutex_ptr);
 
 #endif /* POSIX_IMPL_H_INCLUDED */
