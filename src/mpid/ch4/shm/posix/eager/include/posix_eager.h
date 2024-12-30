@@ -12,7 +12,7 @@
 
 typedef int (*MPIDI_POSIX_eager_init_t) (int rank, int size);
 typedef int (*MPIDI_POSIX_eager_post_init_t) (void);
-typedef int (*MPIDI_POSIX_eager_set_vcis_t) (MPIR_Comm * comm);
+typedef int (*MPIDI_POSIX_eager_set_vcis_t) (MPIR_Comm * comm, int num_vcis);
 typedef int (*MPIDI_POSIX_eager_finalize_t) (void);
 
 typedef int (*MPIDI_POSIX_eager_send_t) (int grank, MPIDI_POSIX_am_header_t * msg_hdr,
@@ -61,7 +61,7 @@ extern char MPIDI_POSIX_eager_strings[][MPIDI_MAX_POSIX_EAGER_STRING_LEN];
 
 int MPIDI_POSIX_eager_init(int rank, int size);
 int MPIDI_POSIX_eager_post_init(void);
-int MPIDI_POSIX_eager_set_vcis(MPIR_Comm * comm);
+int MPIDI_POSIX_eager_set_vcis(MPIR_Comm * comm, int num_vcis);
 int MPIDI_POSIX_eager_finalize(void);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr,
