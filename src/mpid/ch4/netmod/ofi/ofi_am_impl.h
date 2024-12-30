@@ -573,7 +573,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(vci_src, nic);
     fi_addr_t dst_addr = MPIDI_OFI_comm_to_phys(comm, rank, nic, vci_dst);
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -595,7 +595,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
     }
 
     buff_len = sizeof(msg_hdr) + am_hdr_sz;
-    MPIR_CHKLMEM_MALLOC(buff, char *, buff_len, mpi_errno, "buff", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(buff, buff_len);
     memcpy(buff, &msg_hdr, sizeof(msg_hdr));
     memcpy(buff + sizeof(msg_hdr), am_hdr, am_hdr_sz);
 

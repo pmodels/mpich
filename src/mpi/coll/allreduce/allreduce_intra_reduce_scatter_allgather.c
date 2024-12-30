@@ -45,7 +45,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
                                                   MPI_Op op,
                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int mask, dst, pof2, newrank, rem, newdst, i, send_idx, recv_idx, last_idx;
@@ -59,8 +59,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)), mpi_errno,
-                        "temporary buffer", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);
@@ -126,10 +125,8 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
 
     if (newrank != -1) {
         MPI_Aint *cnts, *disps;
-        MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "counts",
-                            MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "displacements",
-                            MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(cnts, pof2 * sizeof(MPI_Aint));
+        MPIR_CHKLMEM_MALLOC(disps, pof2 * sizeof(MPI_Aint));
 
         for (i = 0; i < pof2; i++)
             cnts[i] = count / pof2;

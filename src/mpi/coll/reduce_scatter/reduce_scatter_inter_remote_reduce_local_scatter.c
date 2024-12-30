@@ -18,12 +18,13 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
                                                           MPIR_Comm * comm_ptr,
                                                           MPIR_Errflag_t errflag)
 {
-    int rank, mpi_errno, root, local_size, total_count, i;
+    int mpi_errno = MPI_SUCCESS;
+    int rank, root, local_size, total_count, i;
     MPI_Aint true_extent, true_lb = 0, extent;
     void *tmp_buf = NULL;
     MPI_Aint *disps = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     rank = comm_ptr->rank;
     local_size = comm_ptr->local_size;
@@ -36,8 +37,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
         /* In each group, rank 0 allocates a temp. buffer for the
          * reduce */
 
-        MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, local_size * sizeof(MPI_Aint), mpi_errno, "disps",
-                            MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(disps, local_size * sizeof(MPI_Aint));
 
         total_count = 0;
         for (i = 0; i < local_size; i++) {
@@ -48,8 +48,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPIR_Datatype_get_extent_macro(datatype, extent);
 
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, total_count * (MPL_MAX(extent, true_extent)),
-                            mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, total_count * (MPL_MAX(extent, true_extent)));
 
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *) ((char *) tmp_buf - true_lb);

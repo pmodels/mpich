@@ -39,7 +39,7 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
     MPI_Aint tmp_buf_size = 0;
     void *tmp_buf = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKLMEM_DECL(4);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
@@ -68,7 +68,7 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
      * receive data of max size (nbytes*comm_size)/2 */
     if (relative_rank && !(relative_rank % 2)) {
         tmp_buf_size = (nbytes * comm_size) / 2;
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, tmp_buf_size);
     }
 
     /* if the root is not rank 0, we reorder the sendbuf in order of
@@ -78,8 +78,7 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, MPI_Aint sendcount, MPI_Dat
     if (rank == root) {
         if (root != 0) {
             tmp_buf_size = nbytes * comm_size;
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf",
-                                MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(tmp_buf, tmp_buf_size);
 
             if (recvbuf != MPI_IN_PLACE)
                 mpi_errno = MPIR_Localcopy(((char *) sendbuf + extent * sendcount * rank),

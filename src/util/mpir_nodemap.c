@@ -275,7 +275,7 @@ static int pmi_publish_node_id(int sz, int myrank)
     int key_max_sz;
     char hostname[MAX_HOSTNAME_LEN];
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     /* set hostname */
 
@@ -287,7 +287,7 @@ static int pmi_publish_node_id(int sz, int myrank)
 
     /* Allocate space for pmi key */
     key_max_sz = MPIR_pmi_max_key_size();
-    MPIR_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key", MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(key, key_max_sz);
 
     /* Put my hostname id */
     if (sz > 1) {

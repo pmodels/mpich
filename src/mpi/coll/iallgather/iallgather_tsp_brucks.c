@@ -34,7 +34,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     int i_recv = 0;
     int *recv_id = NULL;
     void *tmp_recvbuf = NULL;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -66,8 +66,7 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
     if (MPL_ipow(k, nphases) == size)
         p_of_k = 1;
 
-    MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * nphases * (k - 1),
-                        mpi_errno, "recv_id buffer", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(recv_id, sizeof(int) * nphases * (k - 1));
 
     if (rank == 0)
         tmp_recvbuf = recvbuf;

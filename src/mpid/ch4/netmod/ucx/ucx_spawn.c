@@ -156,12 +156,10 @@ int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
     int *new_avt_procs;
     char **new_upids;
     int vci = 0;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
-    MPIR_CHKLMEM_MALLOC(new_avt_procs, int *, sizeof(int) * size, mpi_errno, "new_avt_procs",
-                        MPL_MEM_ADDRESS);
-    MPIR_CHKLMEM_MALLOC(new_upids, char **, sizeof(char *) * size, mpi_errno, "new_upids",
-                        MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(new_avt_procs, sizeof(int) * size);
+    MPIR_CHKLMEM_MALLOC(new_upids, sizeof(char *) * size);
 
     char *curr_upid = remote_upids;
     for (int i = 0; i < size; i++) {

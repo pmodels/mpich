@@ -32,7 +32,7 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     MPIR_Request **send_reqs = NULL, **recv_reqs = NULL;
     int num_sreq = 0, num_rreq = 0, total_phases = 0;
     void *tmp_recvbuf = NULL;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_Assert(k > 1);
 
@@ -123,10 +123,8 @@ int MPIR_Allreduce_intra_k_reduce_scatter_allgather(const void *sendbuf,
     /* Main recursive exchange step */
     if (in_step2) {
         MPI_Aint *cnts = NULL, *displs = NULL;
-        MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, sizeof(MPI_Aint) * nranks, mpi_errno, "cnts",
-                            MPL_MEM_COLL);
-        MPIR_CHKLMEM_MALLOC(displs, MPI_Aint *, sizeof(MPI_Aint) * nranks, mpi_errno, "displs",
-                            MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(cnts, sizeof(MPI_Aint) * nranks);
+        MPIR_CHKLMEM_MALLOC(displs, sizeof(MPI_Aint) * nranks);
         idx = 0;
         rem = nranks - p_of_k;
 
