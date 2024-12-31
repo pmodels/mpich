@@ -27,7 +27,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     int num_dependencies;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
     MPI_Aint *child_data_offset;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -66,8 +66,8 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
 
     num_children = my_tree.num_children;
-    MPIR_CHKLMEM_MALLOC(child_subtree_size, int *, sizeof(int) * num_children, mpi_errno, "child_subtree_size buffer", MPL_MEM_COLL);   /* to store size of subtree of each child */
-    MPIR_CHKLMEM_MALLOC(child_data_offset, MPI_Aint *, sizeof(MPI_Aint) * num_children, mpi_errno, "child_data_offset buffer", MPL_MEM_COLL);   /* to store the offset of the data to be sent to each child  */
+    MPIR_CHKLMEM_MALLOC(child_subtree_size, sizeof(int) * num_children);
+    MPIR_CHKLMEM_MALLOC(child_data_offset, sizeof(MPI_Aint) * num_children);
 
     /* calculate size of subtree of each child */
 
@@ -130,8 +130,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, MPI_Aint sendcount,
         tmp_buf = (void *) sendbuf;
     }
 
-    MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
-                        mpi_errno, "recv_id buffer", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(recv_id, sizeof(int) * num_children);
     /* Leaf nodes send to parent */
     if (num_children == 0) {
         mpi_errno =

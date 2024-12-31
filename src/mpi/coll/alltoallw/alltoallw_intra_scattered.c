@@ -33,7 +33,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
     int outstanding_requests;
     int ii, ss, bblock;
     MPI_Aint type_size;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
@@ -50,10 +50,8 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const MPI_Aint sendcount
     if (bblock == 0)
         bblock = comm_size;
 
-    MPIR_CHKLMEM_MALLOC(starray, MPI_Status *, 2 * bblock * sizeof(MPI_Status), mpi_errno,
-                        "starray", MPL_MEM_BUFFER);
-    MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, 2 * bblock * sizeof(MPIR_Request *), mpi_errno,
-                        "reqarray", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(starray, 2 * bblock * sizeof(MPI_Status));
+    MPIR_CHKLMEM_MALLOC(reqarray, 2 * bblock * sizeof(MPIR_Request *));
 
     /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
     for (ii = 0; ii < comm_size; ii += bblock) {

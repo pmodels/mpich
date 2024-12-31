@@ -147,12 +147,10 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
 
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
-    MPIR_CHKLMEM_MALLOC(new_avt_procs, int *, sizeof(int) * size, mpi_errno, "new_avt_procs",
-                        MPL_MEM_ADDRESS);
-    MPIR_CHKLMEM_MALLOC(new_upids, char **, sizeof(char *) * size, mpi_errno, "new_upids",
-                        MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(new_avt_procs, sizeof(int) * size);
+    MPIR_CHKLMEM_MALLOC(new_upids, sizeof(char *) * size);
 
     n_avts = MPIDIU_get_n_avts();
 
@@ -236,12 +234,10 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
 
-    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKPMEM_DECL();
 
-    MPIR_CHKPMEM_MALLOC((*local_upid_size), int *, comm->local_size * sizeof(int),
-                        mpi_errno, "local_upid_size", MPL_MEM_ADDRESS);
-    MPIR_CHKPMEM_MALLOC(temp_buf, char *, comm->local_size * MPIDI_OFI_global.addrnamelen,
-                        mpi_errno, "temp_buf", MPL_MEM_BUFFER);
+    MPIR_CHKPMEM_MALLOC((*local_upid_size), comm->local_size * sizeof(int), MPL_MEM_ADDRESS);
+    MPIR_CHKPMEM_MALLOC(temp_buf, comm->local_size * MPIDI_OFI_global.addrnamelen, MPL_MEM_BUFFER);
 
     int buf_size = 0;
     int idx = 0;
@@ -275,7 +271,6 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
 
     *local_upids = temp_buf;
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
   fn_fail:

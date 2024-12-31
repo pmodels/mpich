@@ -125,11 +125,9 @@ int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_CHKPMEM_DECL(2);
-    MPIR_CHKPMEM_MALLOC((*local_upid_size), int *, comm->local_size * sizeof(int),
-                        mpi_errno, "local_upid_size", MPL_MEM_ADDRESS);
-    MPIR_CHKPMEM_MALLOC((*local_upids), char *, comm->local_size * MPID_MAX_BC_SIZE,
-                        mpi_errno, "temp_buf", MPL_MEM_BUFFER);
+    MPIR_CHKPMEM_DECL();
+    MPIR_CHKPMEM_MALLOC((*local_upid_size), comm->local_size * sizeof(int), MPL_MEM_ADDRESS);
+    MPIR_CHKPMEM_MALLOC((*local_upids), comm->local_size * MPID_MAX_BC_SIZE, MPL_MEM_BUFFER);
 
     int offset = 0;
     for (int i = 0; i < comm->local_size; i++) {
@@ -139,7 +137,6 @@ int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
         offset += t->upid_len;
     }
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -156,12 +153,10 @@ int MPIDI_UCX_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
     int *new_avt_procs;
     char **new_upids;
     int vci = 0;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
-    MPIR_CHKLMEM_MALLOC(new_avt_procs, int *, sizeof(int) * size, mpi_errno, "new_avt_procs",
-                        MPL_MEM_ADDRESS);
-    MPIR_CHKLMEM_MALLOC(new_upids, char **, sizeof(char *) * size, mpi_errno, "new_upids",
-                        MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(new_avt_procs, sizeof(int) * size);
+    MPIR_CHKLMEM_MALLOC(new_upids, sizeof(char *) * size);
 
     char *curr_upid = remote_upids;
     for (int i = 0; i < size; i++) {

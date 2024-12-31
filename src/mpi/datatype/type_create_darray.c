@@ -287,11 +287,10 @@ static int MPIR_Type_create_darray(int size, int rank, int ndims,
     MPI_Aint *st_offsets, orig_extent, disps[3];
     MPI_Datatype type_old, type_new = MPI_DATATYPE_NULL, tmp_type;
 
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     /* calculate position in Cartesian grid as MPI would (row-major ordering) */
-    MPIR_CHKLMEM_MALLOC_ORJUMP(coords, int *, ndims * sizeof(int), mpi_errno,
-                               "position is Cartesian grid", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(coords, ndims * sizeof(int));
 
     MPIR_Datatype_get_extent_macro(oldtype, orig_extent);
     procs = size;
@@ -302,8 +301,7 @@ static int MPIR_Type_create_darray(int size, int rank, int ndims,
         tmp_rank = tmp_rank % procs;
     }
 
-    MPIR_CHKLMEM_MALLOC_ORJUMP(st_offsets, MPI_Aint *, ndims * sizeof(MPI_Aint), mpi_errno,
-                               "st_offsets", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(st_offsets, ndims * sizeof(MPI_Aint));
 
     type_old = oldtype;
 
@@ -451,10 +449,9 @@ int MPIR_Type_create_darray_impl(int size, int rank, int ndims,
 
     MPI_Aint *real_array_of_gsizes;
     int *ints;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
-    MPIR_CHKLMEM_MALLOC_ORJUMP(real_array_of_gsizes, MPI_Aint *, ndims * sizeof(MPI_Aint),
-                               mpi_errno, "real_array_of_gsizes", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(real_array_of_gsizes, ndims * sizeof(MPI_Aint));
     for (int i = 0; i < ndims; i++) {
         real_array_of_gsizes[i] = array_of_gsizes[i];
     }
@@ -469,8 +466,7 @@ int MPIR_Type_create_darray_impl(int size, int rank, int ndims,
      */
 
     /* Save contents */
-    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (4 * ndims + 4) * sizeof(int), mpi_errno,
-                               "content description", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(ints, (4 * ndims + 4) * sizeof(int));
 
     ints[0] = size;
     ints[1] = rank;
@@ -514,17 +510,15 @@ int MPIR_Type_create_darray_large_impl(int size, int rank, int ndims,
 
     int *ints;
     MPI_Aint *counts;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     mpi_errno = MPIR_Type_create_darray(size, rank, ndims, array_of_gsizes, array_of_distribs,
                                         array_of_dargs, array_of_psizes, order, oldtype, newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Save contents */
-    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (3 * ndims + 4) * sizeof(int), mpi_errno,
-                               "content ints array", MPL_MEM_BUFFER);
-    MPIR_CHKLMEM_MALLOC_ORJUMP(counts, MPI_Aint *, ndims * sizeof(MPI_Aint), mpi_errno,
-                               "content counts array", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(ints, (3 * ndims + 4) * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(counts, ndims * sizeof(MPI_Aint));
 
     ints[0] = size;
     ints[1] = rank;

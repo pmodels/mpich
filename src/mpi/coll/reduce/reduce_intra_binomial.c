@@ -21,7 +21,7 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
     int mask, relrank, source, lroot;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
@@ -32,17 +32,14 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf,
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)),
-                        mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(extent, true_extent)));
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 
     /* If I'm not the root, then my recvbuf may not be valid, therefore
      * I have to allocate a temporary one */
     if (rank != root) {
-        MPIR_CHKLMEM_MALLOC(recvbuf, void *,
-                            count * (MPL_MAX(extent, true_extent)),
-                            mpi_errno, "receive buffer", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(recvbuf, count * (MPL_MAX(extent, true_extent)));
         recvbuf = (void *) ((char *) recvbuf - true_lb);
     }
 

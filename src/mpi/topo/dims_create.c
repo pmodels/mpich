@@ -224,7 +224,8 @@ static int ndivisors_from_factor(int nf, const Factors * factors)
 
 static int factor_to_divisors(int nf, Factors * factors, int ndiv, int divs[])
 {
-    int i, powers[MAX_FACTORS], curbase[MAX_FACTORS], nd, idx, val, mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    int i, powers[MAX_FACTORS], curbase[MAX_FACTORS], nd, idx, val;
 
     MPIR_T_PVAR_TIMER_START(DIMS, dims_getdivs);
     for (i = 0; i < nf; i++) {
@@ -262,11 +263,11 @@ static int factor_to_divisors(int nf, Factors * factors, int ndiv, int divs[])
      */
     if (nf > 1) {
         int gap, j, j1, j2, k, j1max, j2max;
-        MPIR_CHKLMEM_DECL(1);
+        MPIR_CHKLMEM_DECL();
         int *divs2;
         int *restrict d1, *restrict d2;
 
-        MPIR_CHKLMEM_MALLOC(divs2, int *, nd * sizeof(int), mpi_errno, "divs2", MPL_MEM_COMM);
+        MPIR_CHKLMEM_MALLOC(divs2, nd * sizeof(int));
 
         MPIR_T_PVAR_TIMER_START(DIMS, dims_sort);
         /* handling the first set of pairs separately saved about 20%;
@@ -393,9 +394,9 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
             MPL_msg_printf("%d%c", trydims[i], (i + 1 < nd) ? 'x' : '\n');
     }
     if (idx > 1) {
-        MPIR_CHKLMEM_DECL(1);
+        MPIR_CHKLMEM_DECL();
         int *newdivs;
-        MPIR_CHKLMEM_MALLOC(newdivs, int *, ndivs * sizeof(int), mpi_errno, "divs", MPL_MEM_COMM);
+        MPIR_CHKLMEM_MALLOC(newdivs, ndivs * sizeof(int));
 
         /* At least 3 divisors to set (0...idx).  We try all choices
          * recursively, but stop looking when we can easily tell that
@@ -551,14 +552,15 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
 
 int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
 {
+    int mpi_errno = MPI_SUCCESS;
     Factors f[MAX_FACTORS];
     int nf, nprimes = 0, i, j, k, val, nextidx;
     int ndivs, curbal;
     int trydims[MAX_DIMS];
-    int dims_needed, dims_product, mpi_errno;
+    int dims_needed, dims_product;
     int chosen[MAX_DIMS], foundDecomp;
     int *divs;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     /* Initialize pvars and cvars if this is the first call */
     if (MPIR_DIMS_initPCVars) {
@@ -751,8 +753,7 @@ int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
      * have already trimmed off some large factors */
     /* First, find all of the divisors given by the remaining factors */
     ndivs = ndivisors_from_factor(nf, (const Factors *) f);
-    MPIR_CHKLMEM_MALLOC(divs, int *, ((unsigned int) ndivs) * sizeof(int), mpi_errno, "divs",
-                        MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(divs, ((unsigned int) ndivs) * sizeof(int));
     ndivs = factor_to_divisors(nf, f, ndivs, divs);
     if (MPIR_CVAR_DIMS_VERBOSE) {
         for (i = 0; i < ndivs; i++) {

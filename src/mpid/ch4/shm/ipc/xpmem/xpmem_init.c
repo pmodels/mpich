@@ -26,7 +26,7 @@ int MPIDI_XPMEM_init_world(void)
     }
 
     MPIR_FUNC_ENTER;
-    MPIR_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL();
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_XPMEMI_DBG_GENERAL = MPL_dbg_class_alloc("SHM_IPC_XPMEM", "shm_ipc_xpmem");

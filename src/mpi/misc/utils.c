@@ -63,7 +63,7 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     MPI_Aint sendsize, recvsize, sdata_sz, rdata_sz, copy_sz;
     char *buf = NULL;
     MPL_pointer_attr_t send_attr, recv_attr;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -160,7 +160,7 @@ static int do_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
         } else if (MPL_gpu_attr_is_strict_dev(&send_attr) || MPL_gpu_attr_is_strict_dev(&recv_attr)) {
             MPL_gpu_malloc_host((void **) &buf, COPY_BUFFER_SZ);
         } else {
-            MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf", MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(buf, COPY_BUFFER_SZ);
         }
 
         sfirst = sendoffset;

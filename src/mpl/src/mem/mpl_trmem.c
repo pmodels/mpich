@@ -132,6 +132,7 @@ static const char *allocation_class_strings[] = {
     "MPL_MEM_DEBUG",
     "MPL_MEM_PM",
     "MPL_MEM_COLL",
+    "MPL_MEM_LOCAL",
     "MPL_MEM_USER",
     "MPL_MEM_OTHER"
 };
@@ -1192,4 +1193,3 @@ void MPL_Memcpy_stream(void *dest, const void *src, size_t n)
 #endif /* HAVE_SSE2 */
 
 #endif
-

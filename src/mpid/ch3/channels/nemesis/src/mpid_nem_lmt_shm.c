@@ -154,7 +154,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec 
 {
     int mpi_errno = MPI_SUCCESS;
     int done = FALSE;
-    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKPMEM_DECL();
     MPID_nem_lmt_shm_wait_element_t *e;
     int queue_initially_empty;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
@@ -187,7 +187,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec 
 
     queue_initially_empty = LMT_SHM_Q_EMPTY(vc_ch->lmt_queue) && vc_ch->lmt_active_lmt == NULL;
 
-    MPIR_CHKPMEM_MALLOC (e, MPID_nem_lmt_shm_wait_element_t *, sizeof (MPID_nem_lmt_shm_wait_element_t), mpi_errno, "lmt wait queue element", MPL_MEM_BUFFER);
+    MPIR_CHKPMEM_MALLOC (e, sizeof (MPID_nem_lmt_shm_wait_element_t), MPL_MEM_BUFFER);
     e->progress = lmt_shm_recv_progress;
     e->req = req;
     LMT_SHM_Q_ENQUEUE(&vc_ch->lmt_queue, e); /* MT: not thread safe */
@@ -206,7 +206,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec 
 
         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "lmt recv not finished:  enqueue");
 
-        MPIR_CHKPMEM_MALLOC (pe, lmt_shm_prog_element_t *, sizeof (lmt_shm_prog_element_t), mpi_errno, "lmt progress queue element", MPL_MEM_BUFFER);
+        MPIR_CHKPMEM_MALLOC (pe, sizeof (lmt_shm_prog_element_t), MPL_MEM_BUFFER);
         pe->vc = vc;
         LMT_SHM_L_ADD(pe);
         MPID_nem_local_lmt_pending = TRUE;
@@ -232,7 +232,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec 
     int queue_initially_empty;
     MPID_nem_lmt_shm_wait_element_t *e;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-    MPIR_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -274,7 +274,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec 
 
     queue_initially_empty = LMT_SHM_Q_EMPTY(vc_ch->lmt_queue) && vc_ch->lmt_active_lmt == NULL;
 
-    MPIR_CHKPMEM_MALLOC (e, MPID_nem_lmt_shm_wait_element_t *, sizeof (MPID_nem_lmt_shm_wait_element_t), mpi_errno, "lmt wait queue element", MPL_MEM_BUFFER);
+    MPIR_CHKPMEM_MALLOC (e, sizeof (MPID_nem_lmt_shm_wait_element_t), MPL_MEM_BUFFER);
     e->progress = lmt_shm_send_progress;
     e->req = req;
     LMT_SHM_Q_ENQUEUE(&vc_ch->lmt_queue, e); /* MT: not thread safe */
@@ -291,7 +291,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec 
         /* lmt send didn't finish, enqueue it to be completed later */
         lmt_shm_prog_element_t *pe;
 
-        MPIR_CHKPMEM_MALLOC (pe, lmt_shm_prog_element_t *, sizeof (lmt_shm_prog_element_t), mpi_errno, "lmt progress queue element", MPL_MEM_BUFFER);
+        MPIR_CHKPMEM_MALLOC (pe, sizeof (lmt_shm_prog_element_t), MPL_MEM_BUFFER);
         pe->vc = vc;
         LMT_SHM_L_ADD(pe);
         MPID_nem_local_lmt_pending = TRUE;

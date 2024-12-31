@@ -213,7 +213,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
     MPIR_Comm *comm = MPIR_Process.comm_world;
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     int max_vcis;
     int *all_num_vcis;
@@ -223,8 +223,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
     all_num_vcis = NULL;
 #else
     /* Allgather num_vcis */
-    MPIR_CHKLMEM_MALLOC(all_num_vcis, void *, sizeof(int) * size,
-                        mpi_errno, "all_num_vcis", MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(all_num_vcis, sizeof(int) * size);
     mpi_errno = MPIR_Allgather_fallback(&MPIDI_OFI_global.num_vcis, 1, MPI_INT,
                                         all_num_vcis, 1, MPI_INT, comm, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
@@ -249,7 +248,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
     int name_len = MPIDI_OFI_global.addrnamelen;
     int my_len = max_vcis * num_nics * name_len;
     char *all_names;
-    MPIR_CHKLMEM_MALLOC(all_names, char *, size * my_len, mpi_errno, "all_names", MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(all_names, size * my_len);
     char *my_names = all_names + rank * my_len;
 
     /* put in my addrnames */
@@ -284,8 +283,7 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
 
     int *is_node_roots = NULL;
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
-        MPIR_CHKLMEM_MALLOC(is_node_roots, int *, size * sizeof(int),
-                            mpi_errno, "is_node_roots", MPL_MEM_ADDRESS);
+        MPIR_CHKLMEM_MALLOC(is_node_roots, size * sizeof(int));
         for (int r = 0; r < size; r++) {
             is_node_roots[r] = 0;
         }

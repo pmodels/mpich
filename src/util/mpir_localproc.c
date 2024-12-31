@@ -40,15 +40,13 @@ int MPIR_Find_local(MPIR_Comm * comm, int *local_size_p, int *local_rank_p,
     int *local_ranks = NULL, *intranode_table = NULL;
     int node_id = -1, my_node_id = -1;
 
-    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKPMEM_DECL();
 
     /* local_ranks will be realloc'ed later to the appropriate size (currently unknown) */
     /* FIXME: realloc doesn't guarantee that the allocated area will be
      * shrunk - so using realloc is not an appropriate strategy. */
-    MPIR_CHKPMEM_MALLOC(local_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno,
-                        "local_ranks", MPL_MEM_COMM);
-    MPIR_CHKPMEM_MALLOC(intranode_table, int *, sizeof(int) * comm->remote_size, mpi_errno,
-                        "intranode_table", MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(local_ranks, sizeof(int) * comm->remote_size, MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(intranode_table, sizeof(int) * comm->remote_size, MPL_MEM_COMM);
 
     for (i = 0; i < comm->remote_size; ++i)
         intranode_table[i] = -1;
@@ -143,8 +141,8 @@ int MPIR_Find_external(MPIR_Comm * comm, int *external_size_p, int *external_ran
     int *external_ranks, *internode_table;
     int node_id;
 
-    MPIR_CHKLMEM_DECL(1);
-    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
+    MPIR_CHKPMEM_DECL();
 
     /* Scan through the list of processes in comm and add one
      * process from each node to the list of "external" processes.  We
@@ -155,16 +153,14 @@ int MPIR_Find_external(MPIR_Comm * comm, int *external_size_p, int *external_ran
     /* external_ranks will be realloc'ed later to the appropriate size (currently unknown) */
     /* FIXME: realloc doesn't guarantee that the allocated area will be
      * shrunk - so using realloc is not an appropriate strategy. */
-    MPIR_CHKPMEM_MALLOC(external_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno,
-                        "external_ranks", MPL_MEM_COMM);
-    MPIR_CHKPMEM_MALLOC(internode_table, int *, sizeof(int) * comm->remote_size, mpi_errno,
-                        "internode_table", MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(external_ranks, sizeof(int) * comm->remote_size, MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(internode_table, sizeof(int) * comm->remote_size, MPL_MEM_COMM);
 
     int num_nodes = MPIR_Process.num_nodes;
     if (MPIR_Process.node_hostnames) {
         num_nodes = utarray_len(MPIR_Process.node_hostnames);
     }
-    MPIR_CHKLMEM_MALLOC(nodes, int *, sizeof(int) * num_nodes, mpi_errno, "nodes", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(nodes, sizeof(int) * num_nodes);
 
     /* nodes maps node_id to rank in external_ranks of leader for that node */
     for (i = 0; i < num_nodes; ++i)

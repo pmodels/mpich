@@ -16,7 +16,7 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
     int i, send_idx, recv_idx, last_idx, mask, newdst, dst;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
 #ifdef HAVE_ERROR_CHECKING
     /* we only support builtin datatypes for now, breaking up user types to do
@@ -92,10 +92,8 @@ int MPIR_Iallreduce_intra_sched_reduce_scatter_allgather(const void *sendbuf, vo
          * "2*pof2"-sized memory allocation */
 
         MPI_Aint *cnts, *disps;
-        MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "counts",
-                            MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "displacements",
-                            MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(cnts, pof2 * sizeof(MPI_Aint));
+        MPIR_CHKLMEM_MALLOC(disps, pof2 * sizeof(MPI_Aint));
 
         MPIR_Assert(count >= pof2);     /* the cnts calculations assume this */
         for (i = 0; i < (pof2 - 1); i++)

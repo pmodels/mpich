@@ -23,14 +23,14 @@ int MPIR_Ineighbor_allgatherv_allcomm_sched_linear(const void *sendbuf, MPI_Aint
     int k, l;
     int *srcs, *dsts;
     MPI_Aint recvtype_extent;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_CHKLMEM_MALLOC(srcs, int *, indegree * sizeof(int), mpi_errno, "srcs", MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(dsts, int *, outdegree * sizeof(int), mpi_errno, "dsts", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(srcs, indegree * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(dsts, outdegree * sizeof(int));
     mpi_errno = MPIR_Topo_canon_nhb(comm_ptr,
                                     indegree, srcs, MPI_UNWEIGHTED,
                                     outdegree, dsts, MPI_UNWEIGHTED);

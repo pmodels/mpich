@@ -42,7 +42,7 @@ static int get_tree_attributes(hwloc_topology_t hwloc_topology, netloc_topology_
     int prev_width = 0;
     int edges_go_across_levels = 0;
     int out_degree_mismatch_at_level = 0;
-    MPIR_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL();
 
     network_attr->type = MPIR_NETTOPO_TYPE__INVALID;
 
@@ -54,9 +54,8 @@ static int get_tree_attributes(hwloc_topology_t hwloc_topology, netloc_topology_
         int host_node_at_leaf_level;
 
         /* Traversal order never exceeds the total number of nodes */
-        MPIR_CHKPMEM_MALLOC(traversal_order, netloc_node_t **,
-                            sizeof(netloc_node_t *) * topology->num_nodes, mpi_errno,
-                            "traversal_order", MPL_MEM_OTHER);
+        MPIR_CHKPMEM_MALLOC(traversal_order, sizeof(netloc_node_t *) * topology->num_nodes,
+                            MPL_MEM_OTHER);
 
         hti = netloc_dt_lookup_table_iterator_t_construct(*host_nodes);
 
@@ -161,9 +160,8 @@ static int get_tree_attributes(hwloc_topology_t hwloc_topology, netloc_topology_
             /* Indexed by node id, visited_node_list[i] > -1 indicates that the
              * node i has been visited */
 
-            MPIR_CHKPMEM_MALLOC(network_attr->u.tree.node_levels, int *,
-                                sizeof(int) * topology->num_nodes, mpi_errno,
-                                "network_attr->u.tree.node_levels", MPL_MEM_OTHER);
+            MPIR_CHKPMEM_MALLOC(network_attr->u.tree.node_levels, sizeof(int) * topology->num_nodes,
+                                MPL_MEM_OTHER);
 
             for (i = 0; i < topology->num_nodes; i++) {
                 network_attr->u.tree.node_levels[i] = -1;
@@ -304,13 +302,12 @@ static int get_tree_attributes(hwloc_topology_t hwloc_topology, netloc_topology_
     }
 
   fn_exit:
-    MPIR_CHKPMEM_COMMIT();
-    MPIR_CHKPMEM_REAP();
     MPL_free(host_nodes);
     MPL_free(nodes);
     return mpi_errno;
 
   fn_fail:
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -1558,11 +1555,10 @@ int MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Netloc_network_attributes attrib
     int max_level = 0;
     netloc_node_t **traversal_order;
     int start_index, end_index, i, j, node_index, num_nodes;
-    MPIR_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL();
 
-    MPIR_CHKPMEM_MALLOC(traversal_order, netloc_node_t **,
-                        sizeof(netloc_node_t *) * topology->num_nodes, mpi_errno,
-                        "traversal_order", MPL_MEM_OTHER);
+    MPIR_CHKPMEM_MALLOC(traversal_order, sizeof(netloc_node_t *) * topology->num_nodes,
+                        MPL_MEM_OTHER);
 
     /* Assign index to nodes via breadth first traversal starting from nodes with maximum level,
      * corresponding to the top level switches */
