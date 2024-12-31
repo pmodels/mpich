@@ -132,13 +132,12 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
     MPIDI_PG_t * pg = NULL, *pgnext;
     int p;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
     
-    MPIR_CHKPMEM_MALLOC(pg,MPIDI_PG_t*,sizeof(MPIDI_PG_t),mpi_errno,"pg", MPL_MEM_GROUP);
-    MPIR_CHKPMEM_MALLOC(pg->vct,MPIDI_VC_t *,sizeof(MPIDI_VC_t)*vct_sz,
-			mpi_errno,"pg->vct", MPL_MEM_GROUP);
+    MPIR_CHKPMEM_MALLOC(pg, sizeof(MPIDI_PG_t), MPL_MEM_GROUP);
+    MPIR_CHKPMEM_MALLOC(pg->vct, sizeof(MPIDI_VC_t)*vct_sz, MPL_MEM_GROUP);
 
     if (MPIR_CVAR_CH3_PG_VERBOSE) {
 	fprintf( stdout, "Creating a process group of size %d\n", vct_sz );
@@ -708,11 +707,11 @@ static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
     int mpi_errno = MPI_SUCCESS;
     char *str = NULL, *pg_id;
     int  i, len=0;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
     MPIDI_ConnInfo *connInfo = (MPIDI_ConnInfo *)pg->connData;
 
     /* Create this from the string array */
-    MPIR_CHKPMEM_MALLOC(str, char *, connInfo->toStringLen, mpi_errno, "str", MPL_MEM_STRINGS);
+    MPIR_CHKPMEM_MALLOC(str, connInfo->toStringLen, MPL_MEM_STRINGS);
 
 #if defined(MPICH_DEBUG_MEMINIT)
     memset(str, 0, connInfo->toStringLen);

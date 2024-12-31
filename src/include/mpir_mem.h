@@ -103,12 +103,11 @@ extern "C" {
 #define MPIR_CHKMEM_SETERR(rc_,nbytes_,name_) rc_=MPI_ERR_OTHER
 #endif                          /* HAVE_ERROR_CHECKING */
 
-    /* CHKPMEM_REGISTER is used for memory allocated within another routine */
 
 #define MPIR_CHKLMEM_MAX 10
 #define MPIR_CHKLMEM_DECL() \
     void *(mpiu_chklmem_stk_[MPIR_CHKLMEM_MAX]) = { NULL }; \
-    int mpiu_chklmem_stk_sp_=0; \
+    int mpiu_chklmem_stk_sp_=0;
 
 #define MPIR_CHKLMEM_REGISTER(pointer_) \
     do { \
@@ -136,66 +135,50 @@ extern "C" {
 
 
 /* Persistent memory that we may want to recover if something goes wrong */
-#define MPIR_CHKPMEM_DECL(n_)                                   \
-    void *(mpiu_chkpmem_stk_[n_]) = { NULL };                   \
-    int mpiu_chkpmem_stk_sp_=0;                                 \
-    MPIR_AssertDeclValue(const int mpiu_chkpmem_stk_sz_,n_)
-#define MPIR_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
-    {                                                                   \
-        pointer_ = (type_)MPL_malloc(nbytes_,class_);                   \
-        if (pointer_) {                                                 \
-            MPIR_Assert(mpiu_chkpmem_stk_sp_<mpiu_chkpmem_stk_sz_);     \
-            mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_;       \
-        } else if (nbytes_ > 0) {                                       \
-            MPIR_CHKMEM_SETERR(rc_,nbytes_,name_);                      \
-            stmt_;                                                      \
-        }                                                               \
-    }
-#define MPIR_CHKPMEM_REGISTER(pointer_)                         \
-    {                                                           \
-        MPIR_Assert(mpiu_chkpmem_stk_sp_<mpiu_chkpmem_stk_sz_); \
-        mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_;   \
-    }
-#define MPIR_CHKPMEM_REAP()                                             \
-    {                                                                   \
-        while (mpiu_chkpmem_stk_sp_ > 0) {                              \
-            MPL_free(mpiu_chkpmem_stk_[--mpiu_chkpmem_stk_sp_]);        \
-        }                                                               \
-    }
-#define MPIR_CHKPMEM_COMMIT()                   \
-    mpiu_chkpmem_stk_sp_ = 0
-#define MPIR_CHKPMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_,class_)    \
-    MPIR_CHKPMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_)
-#define MPIR_CHKPMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_) \
-    MPIR_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,goto fn_fail)
+#define MPIR_CHKPMEM_MAX 10
+#define MPIR_CHKPMEM_DECL() \
+    void *(mpiu_chkpmem_stk_[MPIR_CHKPMEM_MAX]) = { NULL }; \
+    int mpiu_chkpmem_stk_sp_=0;
 
-/* now the CALLOC version for zeroed memory */
-#define MPIR_CHKPMEM_CALLOC(pointer_,type_,nbytes_,rc_,name_,class_)    \
-    MPIR_CHKPMEM_CALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_)
-#define MPIR_CHKPMEM_CALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_) \
-    MPIR_CHKPMEM_CALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,goto fn_fail)
-#define MPIR_CHKPMEM_CALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
-    do {                                                                \
-        pointer_ = (type_)MPL_calloc(1, (nbytes_), (class_));           \
-        if (pointer_) {                                                 \
-            MPIR_Assert(mpiu_chkpmem_stk_sp_<mpiu_chkpmem_stk_sz_);     \
-            mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_;       \
-        }                                                               \
-        else if (nbytes_ > 0) {                                         \
-            MPIR_CHKMEM_SETERR(rc_,nbytes_,name_);                      \
-            stmt_;                                                      \
-        }                                                               \
+#define MPIR_CHKPMEM_MALLOC(pointer_,nbytes_,class_) \
+    do { \
+        pointer_ = MPL_malloc(nbytes_,class_); \
+        if (pointer_) { \
+            MPIR_Assert(mpiu_chkpmem_stk_sp_<MPIR_CHKPMEM_MAX); \
+            mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_; \
+        } else if (nbytes_ > 0) { \
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem"); \
+        } \
     } while (0)
 
-/* A special version for routines that only allocate one item */
-#define MPIR_CHKPMEM_MALLOC1(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
-    {                                                                   \
-        pointer_ = (type_)MPL_malloc(nbytes_,class_);                   \
-        if (!(pointer_) && (nbytes_ > 0)) {                             \
-            MPIR_CHKMEM_SETERR(rc_,nbytes_,name_);                      \
-            stmt_;                                                      \
-        }                                                               \
-    }
+#define MPIR_CHKPMEM_REGISTER(pointer_) \
+    do { \
+        MPIR_Assert(mpiu_chkpmem_stk_sp_<MPIR_CHKPMEM_MAX); \
+        mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_; \
+    } while (0)
+
+#define MPIR_CHKPMEM_REAP() \
+    do { \
+        while (mpiu_chkpmem_stk_sp_ > 0) { \
+            MPL_free(mpiu_chkpmem_stk_[--mpiu_chkpmem_stk_sp_]); \
+        } \
+    } while (0)
+
+/* NOTE: unnecessary to commit if all memory allocations need be freed at fail */
+#define MPIR_CHKPMEM_COMMIT() \
+    mpiu_chkpmem_stk_sp_ = 0
+
+/* now the CALLOC version for zeroed memory */
+#define MPIR_CHKPMEM_CALLOC(pointer_,nbytes_,class_) \
+    do { \
+        pointer_ = MPL_calloc(1, nbytes_, class_); \
+        if (pointer_) { \
+            MPIR_Assert(mpiu_chkpmem_stk_sp_<MPIR_CHKPMEM_MAX); \
+            mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_; \
+        } else if (nbytes_ > 0) { \
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem"); \
+        } \
+    } while (0)
 
 /* Provides a easy way to use realloc safely and avoid the temptation to use
  * realloc unsafely (direct ptr assignment).  Zero-size reallocs returning NULL

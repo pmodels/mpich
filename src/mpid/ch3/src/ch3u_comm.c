@@ -387,11 +387,11 @@ int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPIR_Comm *, void
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt", MPL_MEM_OTHER);
+    MPIR_CHKPMEM_MALLOC(elt, sizeof(hook_elt), MPL_MEM_OTHER);
 
     elt->hook_fn = hook_fn;
     elt->param = param;
@@ -411,11 +411,11 @@ int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPIR_Comm *, voi
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt", MPL_MEM_OTHER);
+    MPIR_CHKPMEM_MALLOC(elt, sizeof(hook_elt), MPL_MEM_OTHER);
 
     elt->hook_fn = hook_fn;
     elt->param = param;

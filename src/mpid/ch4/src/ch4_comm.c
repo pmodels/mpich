@@ -413,7 +413,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
      */
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
     MPIR_CHKLMEM_DECL();
 
     cts_tag = 0 | MPIR_TAG_COLL_BIT;
@@ -462,8 +462,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                         (MPL_DBG_FDEST, "local size = %d, remote size = %d, pure_intracomm = %d",
                          local_size, *remote_size, pure_intracomm));
 
-        MPIR_CHKPMEM_MALLOC((*remote_gpids), uint64_t *, (*remote_size) * sizeof(uint64_t),
-                            mpi_errno, "remote_gpids", MPL_MEM_ADDRESS);
+        MPIR_CHKPMEM_MALLOC((*remote_gpids), (*remote_size) * sizeof(uint64_t), MPL_MEM_ADDRESS);
         MPIR_CHKLMEM_MALLOC(local_gpids, local_size * sizeof(uint64_t));
         for (i = 0; i < local_size; i++) {
             MPIDIU_comm_rank_to_pid(local_comm, i, &lpid, &avtid);
@@ -578,7 +577,6 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
                                                  remote_upid_size, remote_upids, remote_gpids);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     MPL_free(local_upid_size);
     MPL_free(local_upids);
@@ -603,7 +601,7 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
     int *_remote_upid_size = NULL;
     char *_remote_upids = NULL;
 
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
     MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
@@ -642,8 +640,7 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
         *is_low_group = map_info[2];
         pure_intracomm = map_info[3];
 
-        MPIR_CHKPMEM_MALLOC((*remote_gpids), uint64_t *, (*remote_size) * sizeof(uint64_t),
-                            mpi_errno, "remote_gpids", MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC((*remote_gpids), (*remote_size) * sizeof(uint64_t), MPL_MEM_ADDRESS);
         if (!pure_intracomm) {
             MPIR_CHKLMEM_MALLOC(_remote_upid_size, (*remote_size) * sizeof(int));
             mpi_errno = MPIR_Bcast_allcomm_auto(_remote_upid_size, *remote_size, MPI_INT,
@@ -661,7 +658,6 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
         }
     }
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
