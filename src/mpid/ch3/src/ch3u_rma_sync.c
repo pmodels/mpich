@@ -771,7 +771,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -787,9 +787,8 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
 
     win_ptr->start_grp_size = group_ptr->size;
 
-    MPIR_CHKPMEM_MALLOC(win_ptr->start_ranks_in_win_grp, int *,
+    MPIR_CHKPMEM_MALLOC(win_ptr->start_ranks_in_win_grp,
                         win_ptr->start_grp_size * sizeof(int),
-                        mpi_errno, "win_ptr->start_ranks_in_win_grp",
                         MPL_MEM_RMA);
 
     mpi_errno = fill_ranks_in_win_grp(win_ptr, group_ptr, win_ptr->start_ranks_in_win_grp);

@@ -143,12 +143,11 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Connection_t * conn = NULL;
-    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_MALLOC(conn,MPIDI_CH3I_Connection_t*,
-			sizeof(MPIDI_CH3I_Connection_t),mpi_errno,"conn", MPL_MEM_DYNAMIC);
+    MPIR_CHKPMEM_MALLOC(conn, sizeof(MPIDI_CH3I_Connection_t), MPL_MEM_DYNAMIC);
     conn->pg_id = NULL;
 
     *connp = conn;
@@ -171,7 +170,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t * vc;
     MPIDI_CH3I_VC *vcch;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
     char host_description[MAX_HOST_DESCRIPTION_LEN];
     int port, port_name_tag;
     MPL_sockaddr_t ifaddr;
@@ -182,7 +181,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
 
     /* First, create a new vc (we may use this to pass to a generic
        connection routine) */
-    MPIR_CHKPMEM_MALLOC(vc,MPIDI_VC_t *,sizeof(MPIDI_VC_t),mpi_errno,"vc", MPL_MEM_DYNAMIC);
+    MPIR_CHKPMEM_MALLOC(vc, sizeof(MPIDI_VC_t), MPL_MEM_DYNAMIC);
     /* FIXME - where does this vc get freed? */
 
     *new_vc = vc;

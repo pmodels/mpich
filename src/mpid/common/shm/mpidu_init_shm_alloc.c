@@ -43,14 +43,13 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
     int num_local = MPIR_Process.local_size;
     MPIDU_shm_seg_t *memory = NULL;
     memory_list_t *memory_node = NULL;
-    MPIR_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
     MPIR_Assert(segment_len > 0);
 
-    MPIR_CHKPMEM_MALLOC(memory, MPIDU_shm_seg_t *, sizeof(*memory), mpi_errno, "memory_handle",
-                        MPL_MEM_OTHER);
+    MPIR_CHKPMEM_MALLOC(memory, sizeof(*memory), MPL_MEM_SHM);
 
     mpl_err = MPL_shm_hnd_init(&(memory->hnd));
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
@@ -63,8 +62,7 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
     if (num_local == 1) {
         char *addr;
 
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
-                            "segment", MPL_MEM_SHM);
+        MPIR_CHKPMEM_MALLOC(addr, segment_len + MPIDU_SHM_CACHE_LINE_LEN, MPL_MEM_SHM);
 
         memory->base_addr = addr;
         current_addr =
@@ -116,13 +114,11 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
 
     *ptr = current_addr;
 
-    MPIR_CHKPMEM_MALLOC(memory_node, memory_list_t *, sizeof(*memory_node), mpi_errno,
-                        "memory_node", MPL_MEM_OTHER);
+    MPIR_CHKPMEM_MALLOC(memory_node, sizeof(*memory_node), MPL_MEM_SHM);
     memory_node->ptr = *ptr;
     memory_node->memory = memory;
     LL_APPEND(memory_head, memory_tail, memory_node);
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;

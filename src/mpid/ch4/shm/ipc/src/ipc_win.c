@@ -68,7 +68,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
     MPIDI_IPCI_ipc_attr_t ipc_attr;
 
     MPIR_FUNC_ENTER;
-    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKPMEM_DECL();
     MPIR_CHKLMEM_DECL();
 
     /* Skip IPC initialization if no local process */
@@ -119,9 +119,8 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
      * initializes shared table for win_allocate and win_allocate_shared because
      * their shm region are ensured by POSIX. The other window types can only
      * optionally initialize it in shmmod .*/
-    MPIR_CHKPMEM_CALLOC(MPIDIG_WIN(win, shared_table), MPIDIG_win_shared_info_t *,
-                        sizeof(MPIDIG_win_shared_info_t) * shm_comm_ptr->local_size,
-                        mpi_errno, "shared table", MPL_MEM_RMA);
+    MPIR_CHKPMEM_CALLOC(MPIDIG_WIN(win, shared_table),
+                        sizeof(MPIDIG_win_shared_info_t) * shm_comm_ptr->local_size, MPL_MEM_RMA);
     shared_table = MPIDIG_WIN(win, shared_table);
 
     MPIR_CHKLMEM_MALLOC(ipc_shared_table, sizeof(win_shared_info_t) * shm_comm_ptr->local_size);

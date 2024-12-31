@@ -128,14 +128,13 @@ static int MPIR_Topology_copy_internal(void *attr_in, void *attr_out, int *flag)
 {
     MPIR_Topology *old_topology = (MPIR_Topology *) attr_in;
     MPIR_Topology *copy_topology = NULL;
-    MPIR_CHKPMEM_DECL(5);
+    MPIR_CHKPMEM_DECL();
     int mpi_errno = 0;
 
     *flag = 0;
     *(void **) attr_out = NULL;
 
-    MPIR_CHKPMEM_MALLOC(copy_topology, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno,
-                        "copy_topology", MPL_MEM_OTHER);
+    MPIR_CHKPMEM_MALLOC(copy_topology, sizeof(MPIR_Topology), MPL_MEM_COMM);
 
     MPL_VG_MEM_INIT(copy_topology, sizeof(MPIR_Topology));
 
@@ -186,7 +185,6 @@ static int MPIR_Topology_copy_internal(void *attr_in, void *attr_out, int *flag)
 
     *(void **) attr_out = (void *) copy_topology;
     *flag = 1;
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     /* Return mpi_errno in case one of the copy array functions failed */
     return mpi_errno;

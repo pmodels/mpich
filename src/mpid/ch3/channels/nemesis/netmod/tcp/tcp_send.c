@@ -23,8 +23,7 @@ static struct {
 #define ALLOC_Q_ELEMENT(e) do {                                                                                                         \
         if (S_EMPTY (free_buffers))                                                                                                     \
         {                                                                                                                               \
-            MPIR_CHKPMEM_MALLOC (*(e), MPID_nem_tcp_send_q_element_t *, sizeof(MPID_nem_tcp_send_q_element_t),      \
-                                 mpi_errno, "send queue element", MPL_MEM_BUFFER);                                                      \
+            MPIR_CHKPMEM_MALLOC (*(e), sizeof(MPID_nem_tcp_send_q_element_t), MPL_MEM_BUFFER); \
         }                                                                                                                               \
         else                                                                                                                            \
         {                                                                                                                               \
@@ -40,15 +39,13 @@ int MPID_nem_tcp_send_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIR_CHKPMEM_DECL(NUM_PREALLOC_SENDQ);
+    MPIR_CHKPMEM_DECL();
 
     /* preallocate sendq elements */
     for (i = 0; i < NUM_PREALLOC_SENDQ; ++i) {
         MPID_nem_tcp_send_q_element_t *e;
 
-        MPIR_CHKPMEM_MALLOC(e, MPID_nem_tcp_send_q_element_t *,
-                            sizeof(MPID_nem_tcp_send_q_element_t), mpi_errno, "send queue element",
-                            MPL_MEM_BUFFER);
+        MPIR_CHKPMEM_MALLOC(e, sizeof(MPID_nem_tcp_send_q_element_t), MPL_MEM_BUFFER);
         S_PUSH(&free_buffers, e);
     }
 
