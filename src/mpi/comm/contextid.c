@@ -890,10 +890,9 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = NULL;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
-    MPIR_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state",
-                        MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(st, sizeof(struct gcn_state), MPL_MEM_COMM);
     st->ctx0 = ctx0;
     st->ctx1 = ctx1;
     if (gcn_cid_kind == MPIR_COMM_KIND__INTRACOMM) {
@@ -921,7 +920,6 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(s);
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */

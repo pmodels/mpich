@@ -366,7 +366,7 @@ int MPIDI_SHM_gen_tree(int k_val, int *shared_region, int *max_entries_per_level
     const int package_tree_sz = num_packages > num_ranks ? num_packages : num_ranks;
     int *package_leaders = NULL;
 
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     mpi_errno = MPIDI_SHM_topotree_allocate(&tree, num_ranks, k_val);
     MPIR_ERR_CHECK(mpi_errno);
@@ -374,8 +374,7 @@ int MPIDI_SHM_gen_tree(int k_val, int *shared_region, int *max_entries_per_level
     mpi_errno = MPIDI_SHM_topotree_allocate(&package_tree, package_tree_sz, k_val);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_CHKPMEM_CALLOC(package_leaders, int *, num_packages * sizeof(int), mpi_errno,
-                        "intra_node_package_leaders", MPL_MEM_OTHER);
+    MPIR_CHKPMEM_CALLOC(package_leaders, num_packages * sizeof(int), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!package_leaders, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     /* We pick package leaders as the first rank in each package */

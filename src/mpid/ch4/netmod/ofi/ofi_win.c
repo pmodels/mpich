@@ -869,7 +869,7 @@ int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
     MPIR_FUNC_ENTER;
     win_init_am(win);
 
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     /* This hook is called by CH4 generic call after CH4 initialization */
     if (MPIDI_OFI_ENABLE_RMA) {
@@ -889,9 +889,8 @@ int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
                                 "**mpl_gavl_create");
 
             /* Initialize AVL trees for remote registered regions */
-            MPIR_CHKPMEM_MALLOC(MPIDI_OFI_WIN(win).dwin_target_mrs, MPL_gavl_tree_t *,
-                                sizeof(MPL_gavl_tree_t) * win->comm_ptr->local_size, mpi_errno,
-                                "AVL tree for remote dynamic win memory regions", MPL_MEM_RMA);
+            MPIR_CHKPMEM_MALLOC(MPIDI_OFI_WIN(win).dwin_target_mrs,
+                                sizeof(MPL_gavl_tree_t) * win->comm_ptr->local_size, MPL_MEM_RMA);
             int i;
             for (i = 0; i < win->comm_ptr->local_size; i++) {
                 mpl_err = MPL_gavl_tree_create(dwin_free_target_mr,
@@ -905,8 +904,6 @@ int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
             MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_DYNAMIC_MR;
         }
     }
-
-    MPIR_CHKPMEM_COMMIT();
 
   fn_exit:
     MPIR_FUNC_EXIT;

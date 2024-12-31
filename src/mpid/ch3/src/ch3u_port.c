@@ -814,7 +814,7 @@ static int ExtractLocalPGInfo( MPIR_Comm *comm_p,
 {
     pg_node        *pg_list = 0, *pg_iter, *pg_trailer;
     int            i, cur_index = 0, local_comm_size, mpi_errno = 0;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -830,8 +830,7 @@ static int ExtractLocalPGInfo( MPIR_Comm *comm_p,
        group id, size and all its KVS values */
     
     cur_index = 0;
-    MPIR_CHKPMEM_MALLOC(pg_list,pg_node*,sizeof(pg_node),mpi_errno,
-			"pg_list", MPL_MEM_ADDRESS);
+    MPIR_CHKPMEM_MALLOC(pg_list, sizeof(pg_node), MPL_MEM_ADDRESS);
     
     pg_list->pg_id = MPL_strdup(comm_p->dev.vcrt->vcr_table[0]->pg->id);
     pg_list->index = cur_index++;
@@ -1694,9 +1693,8 @@ static int MPIDI_CH3I_Port_connreq_create(MPIDI_VC_t * vc, MPIDI_CH3I_Port_connr
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Port_connreq_t *connreq = NULL;
 
-    MPIR_CHKPMEM_DECL(1);
-    MPIR_CHKPMEM_MALLOC(connreq, MPIDI_CH3I_Port_connreq_t *, sizeof(MPIDI_CH3I_Port_connreq_t),
-                        mpi_errno, "comm_conn", MPL_MEM_DYNAMIC);
+    MPIR_CHKPMEM_DECL();
+    MPIR_CHKPMEM_MALLOC(connreq, sizeof(MPIDI_CH3I_Port_connreq_t), MPL_MEM_DYNAMIC);
 
     connreq->vc = vc;
     MPIDI_CH3I_PORT_CONNREQ_SET_STAT(connreq, INITED);
@@ -1755,9 +1753,8 @@ int MPIDI_CH3I_Port_init(int port_name_tag)
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_DECL(1);
-    MPIR_CHKPMEM_MALLOC(port, MPIDI_CH3I_Port_t *, sizeof(MPIDI_CH3I_Port_t),
-                        mpi_errno, "comm_port", MPL_MEM_DYNAMIC);
+    MPIR_CHKPMEM_DECL();
+    MPIR_CHKPMEM_MALLOC(port, sizeof(MPIDI_CH3I_Port_t), MPL_MEM_DYNAMIC);
 
     port->port_name_tag = port_name_tag;
     port->accept_connreq_q.head = port->accept_connreq_q.tail = 0;

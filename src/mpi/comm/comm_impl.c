@@ -192,7 +192,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
     int i, j;
     int n;
     int *mapping = 0;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -200,7 +200,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
     *mapping_comm = comm_ptr;
 
     n = group_ptr->size;
-    MPIR_CHKPMEM_MALLOC(mapping, int *, n * sizeof(int), mpi_errno, "mapping", MPL_MEM_ADDRESS);
+    MPIR_CHKPMEM_MALLOC(mapping, n * sizeof(int), MPL_MEM_COMM);
 
     /* Make sure that the processes for this group are contained within
      * the input communicator.  Also identify the mapping from the ranks of
@@ -275,7 +275,6 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
     *mapping_out = mapping;
     MPL_VG_CHECK_MEM_IS_DEFINED(*mapping_out, n * sizeof(**mapping_out));
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;

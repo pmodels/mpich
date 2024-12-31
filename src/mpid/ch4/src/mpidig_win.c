@@ -500,7 +500,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     bool symheap_mapfail_flag = false, shm_mapfail_flag = false;
     bool symheap_flag = true, global_symheap_flag = false;
 
-    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKPMEM_DECL();
     MPIR_CHKLMEM_DECL();
     MPIR_FUNC_ENTER;
 
@@ -511,9 +511,9 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
      * we need to count the total size on a node for shared memory allocation. */
     if (shm_comm_ptr != NULL) {
         MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
-        MPIR_CHKPMEM_MALLOC(MPIDIG_WIN(win, shared_table), MPIDIG_win_shared_info_t *,
+        MPIR_CHKPMEM_MALLOC(MPIDIG_WIN(win, shared_table),
                             sizeof(MPIDIG_win_shared_info_t) * shm_comm_ptr->local_size,
-                            mpi_errno, "shared table", MPL_MEM_RMA);
+                            MPL_MEM_SHM);
         shared_table = MPIDIG_WIN(win, shared_table);
         shared_table[shm_comm_ptr->rank].size = size;
         shared_table[shm_comm_ptr->rank].disp_unit = disp_unit;
@@ -603,8 +603,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
 
         /* If only single process on a node or shm segment allocation fails, try malloc. */
         if ((shm_comm_ptr == NULL || shm_mapfail_flag) && size > 0) {
-            MPIR_CHKPMEM_MALLOC(*base_ptr, void *, size, mpi_errno, "(*win_ptr)->base",
-                                MPL_MEM_RMA);
+            MPIR_CHKPMEM_MALLOC(*base_ptr, size, MPL_MEM_SHM);
             MPL_VG_MEM_INIT(*base_ptr, size);
         }
     }

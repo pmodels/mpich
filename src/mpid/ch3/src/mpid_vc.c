@@ -58,11 +58,11 @@ int MPIDI_VCRT_Create(int size, struct MPIDI_VCRT **vcrt_ptr)
 {
     MPIDI_VCRT_t * vcrt;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_MALLOC(vcrt, MPIDI_VCRT_t *, sizeof(MPIDI_VCRT_t) + (size - 1) * sizeof(MPIDI_VC_t *),	mpi_errno, "**nomem", MPL_MEM_ADDRESS);
+    MPIR_CHKPMEM_MALLOC(vcrt, sizeof(MPIDI_VCRT_t) + (size - 1) * sizeof(MPIDI_VC_t *), MPL_MEM_ADDRESS);
     vcrt->handle = HANDLE_SET_KIND(0, HANDLE_KIND_INVALID);
     MPIR_Object_set_ref(vcrt, 1);
     vcrt->size = size;

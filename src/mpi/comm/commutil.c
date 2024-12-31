@@ -430,12 +430,11 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper;
-    MPIR_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper",
-                        MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(mapper, sizeof(MPIR_Comm_map_t), MPL_MEM_COMM);
 
     mapper->type = MPIR_COMM_MAP_TYPE__IRREGULAR;
     mapper->src_comm = src_comm;
@@ -446,9 +445,7 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
         mapper->src_mapping = src_mapping;
         mapper->free_mapping = 0;
     } else {
-        MPIR_CHKPMEM_MALLOC(mapper->src_mapping, int *,
-                            src_mapping_size * sizeof(int), mpi_errno, "mapper mapping",
-                            MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC(mapper->src_mapping, src_mapping_size * sizeof(int), MPL_MEM_COMM);
         mapper->free_mapping = 1;
     }
 
@@ -460,7 +457,6 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
         *map = mapper;
 
   fn_exit:
-    MPIR_CHKPMEM_COMMIT();
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -472,12 +468,11 @@ int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_d
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper",
-                        MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(mapper, sizeof(MPIR_Comm_map_t), MPL_MEM_COMM);
 
     mapper->type = MPIR_COMM_MAP_TYPE__DUP;
     mapper->src_comm = src_comm;
@@ -488,7 +483,6 @@ int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_d
     LL_APPEND(newcomm->mapper_head, newcomm->mapper_tail, mapper);
 
   fn_exit:
-    MPIR_CHKPMEM_COMMIT();
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -1326,7 +1320,7 @@ int MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_bal
     int *ranks_per_node;
     *num_nodes = 0;
 
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     if (!MPIR_Comm_is_parent_comm(comm)) {
         *node_balanced = false;
@@ -1342,8 +1336,7 @@ int MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_bal
     /* number of nodes is max_node_id + 1 */
     (*num_nodes)++;
 
-    MPIR_CHKPMEM_CALLOC(ranks_per_node, int *,
-                        *num_nodes * sizeof(int), mpi_errno, "ranks per node", MPL_MEM_OTHER);
+    MPIR_CHKPMEM_CALLOC(ranks_per_node, *num_nodes * sizeof(int), MPL_MEM_OTHER);
 
     for (i = 0; i < comm->local_size; i++) {
         ranks_per_node[comm->internode_table[i]]++;
