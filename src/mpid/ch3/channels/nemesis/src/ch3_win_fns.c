@@ -249,7 +249,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
     int i, node_size;
     MPI_Aint *base_shm_offs;
 
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
     MPIR_CHKLMEM_DECL();
     MPIR_FUNC_ENTER;
 
@@ -271,8 +271,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
         goto fn_exit;
 
     (*win_ptr)->shm_allocated = TRUE;
-    MPIR_CHKPMEM_MALLOC((*win_ptr)->shm_base_addrs, void **,
-                        node_size * sizeof(void *), mpi_errno, "(*win_ptr)->shm_base_addrs", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC((*win_ptr)->shm_base_addrs, node_size * sizeof(void *), MPL_MEM_SHM);
 
     /* Compute the base address of shm buffer on each process.
      * shm_base_addrs[i] = my_shm_base_addr + off[i] */
@@ -427,7 +426,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
     MPIR_Comm *node_comm_ptr;
     MPI_Aint *node_sizes;
     int noncontig = FALSE;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
     MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
@@ -464,8 +463,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
     MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
     /* allocate memory for the base addresses, disp_units, and
      * completion counters of all processes */
-    MPIR_CHKPMEM_MALLOC((*win_ptr)->shm_base_addrs, void **,
-                        node_size * sizeof(void *), mpi_errno, "(*win_ptr)->shm_base_addrs", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC((*win_ptr)->shm_base_addrs, node_size * sizeof(void *), MPL_MEM_SHM);
 
     /* get the sizes of the windows and window objectsof
      * all processes.  allocate temp. buffer for communication */

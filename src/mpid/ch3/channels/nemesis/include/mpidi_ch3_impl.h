@@ -209,11 +209,10 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_SHM_Win_t *tmp_ptr;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     /* FIXME: We should use a pool allocator here */
-    MPIR_CHKPMEM_MALLOC(tmp_ptr, MPIDI_SHM_Win_t *, sizeof(MPIDI_SHM_Win_t),
-                        mpi_errno, "SHM window entry", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(tmp_ptr, sizeof(MPIDI_SHM_Win_t), MPL_MEM_SHM);
 
     tmp_ptr->next = NULL;
     tmp_ptr->win = win;

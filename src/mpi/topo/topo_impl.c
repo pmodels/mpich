@@ -30,7 +30,7 @@ int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
     int i, newsize, rank, nranks;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Topology *cart_ptr = NULL;
-    MPIR_CHKPMEM_DECL(4);
+    MPIR_CHKPMEM_DECL();
 
     /* Check for invalid arguments */
     newsize = 1;
@@ -56,8 +56,7 @@ int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
             MPIR_ERR_CHECK(mpi_errno);
 
             /* Create the topology structure */
-            MPIR_CHKPMEM_MALLOC(cart_ptr, MPIR_Topology *, sizeof(MPIR_Topology),
-                                mpi_errno, "cart_ptr", MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(cart_ptr, sizeof(MPIR_Topology), MPL_MEM_COMM);
 
             cart_ptr->kind = MPI_CART;
             cart_ptr->topo.cart.nnodes = 1;
@@ -66,12 +65,9 @@ int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
             /* make mallocs of size 1 int so that they get freed as part of the
              * normal free mechanism */
 
-            MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims, int *, sizeof(int),
-                                mpi_errno, "cart.dims", MPL_MEM_COMM);
-            MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic, int *, sizeof(int),
-                                mpi_errno, "cart.periodic", MPL_MEM_COMM);
-            MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.position, int *, sizeof(int),
-                                mpi_errno, "cart.position", MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims, sizeof(int), MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic, sizeof(int), MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.position, sizeof(int), MPL_MEM_COMM);
         } else {
             *comm_cart_ptr = NULL;
             goto fn_exit;
@@ -110,18 +106,14 @@ int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
         }
 
         /* Create the topololgy structure */
-        MPIR_CHKPMEM_MALLOC(cart_ptr, MPIR_Topology *, sizeof(MPIR_Topology),
-                            mpi_errno, "cart_ptr", MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC(cart_ptr, sizeof(MPIR_Topology), MPL_MEM_COMM);
 
         cart_ptr->kind = MPI_CART;
         cart_ptr->topo.cart.nnodes = newsize;
         cart_ptr->topo.cart.ndims = ndims;
-        MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims, int *, ndims * sizeof(int),
-                            mpi_errno, "cart.dims", MPL_MEM_COMM);
-        MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic, int *, ndims * sizeof(int),
-                            mpi_errno, "cart.periodic", MPL_MEM_COMM);
-        MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.position, int *, ndims * sizeof(int),
-                            mpi_errno, "cart.position", MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims, ndims * sizeof(int), MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic, ndims * sizeof(int), MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.position, ndims * sizeof(int), MPL_MEM_COMM);
         nranks = newsize;
         for (i = 0; i < ndims; i++) {
             cart_ptr->topo.cart.dims[i] = dims[i];
@@ -304,7 +296,7 @@ int MPIR_Cart_sub_impl(MPIR_Comm * comm_ptr, const int remain_dims[], MPIR_Comm 
     MPIR_Comm *newcomm_ptr;
     MPIR_Topology *topo_ptr, *toponew_ptr;
     int ndims, key, color, ndims_in_subcomm, nnodes_in_subcomm, i, j, rank;
-    MPIR_CHKPMEM_DECL(4);
+    MPIR_CHKPMEM_DECL();
 
     /* Check that the communicator already has a Cartesian topology */
     topo_ptr = MPIR_Topology_get(comm_ptr);
@@ -356,22 +348,18 @@ int MPIR_Cart_sub_impl(MPIR_Comm * comm_ptr, const int remain_dims[], MPIR_Comm 
         *p_newcomm_ptr = newcomm_ptr;
 
         /* Save the topology of this new communicator */
-        MPIR_CHKPMEM_MALLOC(toponew_ptr, MPIR_Topology *, sizeof(MPIR_Topology),
-                            mpi_errno, "toponew_ptr", MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC(toponew_ptr, sizeof(MPIR_Topology), MPL_MEM_COMM);
 
         toponew_ptr->kind = MPI_CART;
         toponew_ptr->topo.cart.ndims = ndims_in_subcomm;
         toponew_ptr->topo.cart.nnodes = nnodes_in_subcomm;
         if (ndims_in_subcomm) {
-            MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.dims, int *,
-                                ndims_in_subcomm * sizeof(int), mpi_errno, "cart.dims",
-                                MPL_MEM_COMM);
-            MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.periodic, int *,
-                                ndims_in_subcomm * sizeof(int), mpi_errno, "cart.periodic",
-                                MPL_MEM_COMM);
-            MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.position, int *,
-                                ndims_in_subcomm * sizeof(int), mpi_errno, "cart.position",
-                                MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.dims,
+                                ndims_in_subcomm * sizeof(int), MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.periodic,
+                                ndims_in_subcomm * sizeof(int), MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.position,
+                                ndims_in_subcomm * sizeof(int), MPL_MEM_COMM);
         } else {
             toponew_ptr->topo.cart.dims = 0;
             toponew_ptr->topo.cart.periodic = 0;
@@ -488,7 +476,7 @@ int MPIR_Graph_create_impl(MPIR_Comm * comm_ptr, int nnodes,
     int i, nedges;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Topology *graph_ptr = NULL;
-    MPIR_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL();
 
     /* Create a new communicator */
     if (reorder) {
@@ -520,16 +508,13 @@ int MPIR_Graph_create_impl(MPIR_Comm * comm_ptr, int nnodes,
     }
 
     nedges = indx[nnodes - 1];
-    MPIR_CHKPMEM_MALLOC(graph_ptr, MPIR_Topology *, sizeof(MPIR_Topology),
-                        mpi_errno, "graph_ptr", MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(graph_ptr, sizeof(MPIR_Topology), MPL_MEM_COMM);
 
     graph_ptr->kind = MPI_GRAPH;
     graph_ptr->topo.graph.nnodes = nnodes;
     graph_ptr->topo.graph.nedges = nedges;
-    MPIR_CHKPMEM_MALLOC(graph_ptr->topo.graph.index, int *,
-                        nnodes * sizeof(int), mpi_errno, "graph.index", MPL_MEM_COMM);
-    MPIR_CHKPMEM_MALLOC(graph_ptr->topo.graph.edges, int *,
-                        nedges * sizeof(int), mpi_errno, "graph.edges", MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(graph_ptr->topo.graph.index, nnodes * sizeof(int), MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(graph_ptr->topo.graph.edges, nedges * sizeof(int), MPL_MEM_COMM);
     for (i = 0; i < nnodes; i++)
         graph_ptr->topo.graph.index[i] = indx[i];
     for (i = 0; i < nedges; i++)

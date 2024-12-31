@@ -438,15 +438,14 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched *s;
-    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
     *sp = NULL;
 
     /* this mem will be freed by the progress engine when the request is completed */
-    MPIR_CHKPMEM_MALLOC(s, struct MPIDU_Sched *, sizeof(struct MPIDU_Sched), mpi_errno,
-                        "schedule object", MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(s, sizeof(struct MPIDU_Sched), MPL_MEM_COMM);
 
     s->size = MPIDU_SCHED_INITIAL_ENTRIES;
     s->idx = 0;
@@ -461,13 +460,11 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp, enum MPIR_Sched_kind kind)
     s->prev = NULL;     /* only needed for sanity checks */
 
     /* this mem will be freed by the progress engine when the request is completed */
-    MPIR_CHKPMEM_MALLOC(s->entries, struct MPIDU_Sched_entry *,
-                        MPIDU_SCHED_INITIAL_ENTRIES * sizeof(struct MPIDU_Sched_entry), mpi_errno,
-                        "schedule entries vector", MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(s->entries, MPIDU_SCHED_INITIAL_ENTRIES * sizeof(struct MPIDU_Sched_entry),
+                        MPL_MEM_COMM);
 
     /* TODO in a debug build, defensively mark all entries as status=INVALID */
 
-    MPIR_CHKPMEM_COMMIT();
     *sp = s;
   fn_exit:
     MPIR_FUNC_EXIT;

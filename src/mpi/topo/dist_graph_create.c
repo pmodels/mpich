@@ -24,7 +24,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
 
     int comm_size = comm_ptr->local_size;
     MPIR_CHKLMEM_DECL();
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     /* following the spirit of the old topo interface, attributes do not
      * propagate to the new communicator (see MPI-2.1 pp. 243 line 11) */
@@ -159,8 +159,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
 
     /* Create the topology structure */
     MPIR_Topology *topo_ptr = NULL;
-    MPIR_CHKPMEM_MALLOC(topo_ptr, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "topo_ptr",
-                        MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(topo_ptr, sizeof(MPIR_Topology), MPL_MEM_COMM);
     topo_ptr->kind = MPI_DIST_GRAPH;
     dist_graph_ptr = &topo_ptr->topo.dist_graph;
     dist_graph_ptr->indegree = 0;
@@ -300,7 +299,7 @@ int MPIR_Dist_graph_create_adjacent_impl(MPIR_Comm * comm_ptr,
                                          MPIR_Comm ** comm_dist_graph_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKPMEM_DECL(5);
+    MPIR_CHKPMEM_DECL();
 
     /* Implementation based on Torsten Hoefler's reference implementation
      * attached to MPI-2.2 ticket #33. */
@@ -312,8 +311,7 @@ int MPIR_Dist_graph_create_adjacent_impl(MPIR_Comm * comm_ptr,
 
     /* Create the topology structure */
     MPIR_Topology *topo_ptr;
-    MPIR_CHKPMEM_MALLOC(topo_ptr, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "topo_ptr",
-                        MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(topo_ptr, sizeof(MPIR_Topology), MPL_MEM_COMM);
     topo_ptr->kind = MPI_DIST_GRAPH;
     MPII_Dist_graph_topology *dist_graph_ptr = &topo_ptr->topo.dist_graph;
     dist_graph_ptr->indegree = indegree;
@@ -325,23 +323,19 @@ int MPIR_Dist_graph_create_adjacent_impl(MPIR_Comm * comm_ptr,
     dist_graph_ptr->is_weighted = (sourceweights != MPI_UNWEIGHTED);
 
     if (indegree > 0) {
-        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in, int *, indegree * sizeof(int), mpi_errno,
-                            "dist_graph_ptr->in", MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in, indegree * sizeof(int), MPL_MEM_COMM);
         MPIR_Memcpy(dist_graph_ptr->in, sources, indegree * sizeof(int));
         if (dist_graph_ptr->is_weighted) {
-            MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in_weights, int *, indegree * sizeof(int),
-                                mpi_errno, "dist_graph_ptr->in_weights", MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in_weights, indegree * sizeof(int), MPL_MEM_COMM);
             MPIR_Memcpy(dist_graph_ptr->in_weights, sourceweights, indegree * sizeof(int));
         }
     }
 
     if (outdegree > 0) {
-        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out, int *, outdegree * sizeof(int), mpi_errno,
-                            "dist_graph_ptr->out", MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out, outdegree * sizeof(int), MPL_MEM_COMM);
         MPIR_Memcpy(dist_graph_ptr->out, destinations, outdegree * sizeof(int));
         if (dist_graph_ptr->is_weighted) {
-            MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out_weights, int *, outdegree * sizeof(int),
-                                mpi_errno, "dist_graph_ptr->out_weights", MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out_weights, outdegree * sizeof(int), MPL_MEM_COMM);
             MPIR_Memcpy(dist_graph_ptr->out_weights, destweights, outdegree * sizeof(int));
         }
     }
