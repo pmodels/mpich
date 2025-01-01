@@ -116,18 +116,22 @@ int MPIDI_POSIX_iqueue_post_init(void)
     int mpi_errno = MPI_SUCCESS;
 
     /* gather max_vcis */
-    int max_vcis = 0;
-    max_vcis = 0;
-    MPIDU_Init_shm_put(&MPIDI_POSIX_global.num_vcis, sizeof(int));
-    MPIDU_Init_shm_barrier();
-    for (int i = 0; i < MPIR_Process.local_size; i++) {
-        int num;
-        MPIDU_Init_shm_get(i, sizeof(int), &num);
-        if (max_vcis < num) {
-            max_vcis = num;
+    int max_vcis;
+    if (MPIR_Process.local_size == 1) {
+        max_vcis = MPIDI_POSIX_global.num_vcis;
+    } else {
+        max_vcis = 0;
+        MPIDU_Init_shm_put(&MPIDI_POSIX_global.num_vcis, sizeof(int));
+        MPIDU_Init_shm_barrier();
+        for (int i = 0; i < MPIR_Process.local_size; i++) {
+            int num;
+            MPIDU_Init_shm_get(i, sizeof(int), &num);
+            if (max_vcis < num) {
+                max_vcis = num;
+            }
         }
+        MPIDU_Init_shm_barrier();
     }
-    MPIDU_Init_shm_barrier();
 
     MPIDI_POSIX_eager_iqueue_global.max_vcis = max_vcis;
 
