@@ -60,6 +60,11 @@
 
 # Make check target will run ROMIO tests.
 
+# Add back handle conversion macros (f2c/c2f) to preserve ABI
+  compatibility with older MPICH libraries
+
+# Fix compilation issue with g++ in -std=gnu++20 mode
+
 ===============================================================================
                                Changes in 4.2
 ===============================================================================
