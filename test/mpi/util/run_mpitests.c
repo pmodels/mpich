@@ -67,10 +67,12 @@ int main(int argc, char **argv)
             MPI_Reduce(&ret, &toterrs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
             if (wrank == 0) {
                 fprintf(test_out, "%s: %d\n", name, toterrs);
+                fflush(test_out);
             }
         } else {
             if (wrank == 0) {
                 fprintf(test_out, "%s: not found\n", name);
+                fflush(test_out);
             }
         }
     }
