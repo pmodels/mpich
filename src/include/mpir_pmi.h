@@ -25,7 +25,11 @@
 #endif
 
 #ifdef ENABLE_PMIX
+#ifdef PMI_FROM_3RD_PARTY
 #include <pmix.h>
+#else
+#include <pmix/pmix.h>
+#endif
 #endif
 
 /* Domain options for init-time collectives */
