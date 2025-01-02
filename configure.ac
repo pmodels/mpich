@@ -1603,11 +1603,6 @@ case "$with_pmilib" in
 
     PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${main_top_builddir}/src/pmi/include], [CPPFLAGS])
-
-    if test "$pac_have_pmix" = "no" ; then
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/include/pmix], [CPPFLAGS])
-        PAC_APPEND_FLAG([-I${main_top_builddir}/src/pmi/include/pmix], [CPPFLAGS])
-    fi
     ;;
   slurm)
     PAC_SET_HEADER_LIB_PATH([slurm])
