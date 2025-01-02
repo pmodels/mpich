@@ -111,10 +111,10 @@ int MPIR_pmi_build_nodemap_fallback(int sz, int myrank, int *out_nodemap);
 /* A fallback for PMIx_Load_topology. */
 typedef struct MPIR_pmi_topology {
     const char *source;
-    void *topology;  /* assume hwloc_topology_t is a pointer */
+    void *topology;             /* assume hwloc_topology_t is a pointer */
 } MPIR_pmi_topology_t;
 
-int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t *topo);
+int MPIR_pmi_load_hwloc_topology(MPIR_pmi_topology_t * topo);
 #endif
 
 #endif /* MPIR_PMI_H_INCLUDED */
