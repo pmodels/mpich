@@ -41,18 +41,17 @@ Output Parameters:
 int MPI_File_get_position(MPI_File fh, MPI_Offset * offset)
 {
     int error_code;
-    ADIO_File adio_fh;
-    static char myname[] = "MPI_FILE_GET_POSITION";
+    ROMIO_THREAD_CS_ENTER();
 
-    adio_fh = MPIO_File_resolve(fh);
-
-    /* --BEGIN ERROR HANDLING-- */
-    MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
-    MPIO_CHECK_NOT_SEQUENTIAL_MODE(adio_fh, myname, error_code);
-    /* --END ERROR HANDLING-- */
-
-    ADIOI_Get_position(adio_fh, offset);
+    error_code = MPIR_File_get_position_impl(fh, offset);
+    if (error_code) {
+        goto fn_fail;
+    }
 
   fn_exit:
-    return MPI_SUCCESS;
+    ROMIO_THREAD_CS_EXIT();
+    return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }

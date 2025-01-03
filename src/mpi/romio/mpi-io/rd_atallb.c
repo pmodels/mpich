@@ -58,12 +58,19 @@ int MPI_File_read_at_all_begin(MPI_File fh, MPI_Offset offset, void *buf,
                                int count, MPI_Datatype datatype)
 {
     int error_code;
-    static char myname[] = "MPI_FILE_READ_AT_ALL_BEGIN";
+    ROMIO_THREAD_CS_ENTER();
 
-    error_code = MPIOI_File_read_all_begin(fh, offset,
-                                           ADIO_EXPLICIT_OFFSET, buf, count, datatype, myname);
+    error_code = MPIR_File_read_at_all_begin_impl(fh, offset, buf, count, datatype);
+    if (error_code) {
+        goto fn_fail;
+    }
 
+  fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }
 
 /* large count function */
@@ -87,10 +94,17 @@ int MPI_File_read_at_all_begin_c(MPI_File fh, MPI_Offset offset, void *buf,
                                  MPI_Count count, MPI_Datatype datatype)
 {
     int error_code;
-    static char myname[] = "MPI_FILE_READ_AT_ALL_BEGIN";
+    ROMIO_THREAD_CS_ENTER();
 
-    error_code = MPIOI_File_read_all_begin(fh, offset,
-                                           ADIO_EXPLICIT_OFFSET, buf, count, datatype, myname);
+    error_code = MPIR_File_read_at_all_begin_impl(fh, offset, buf, count, datatype);
+    if (error_code) {
+        goto fn_fail;
+    }
 
+  fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }
