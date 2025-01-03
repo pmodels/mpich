@@ -51,7 +51,7 @@ typedef struct {
     int *local_ranks;
     int *local_procs;
     int local_rank_0;
-    int num_vcis;
+    int num_vcis;               /* num_vcis in POSIX need >= MPIDI_global.n_total_vcis */
     int *local_rank_dist;
     MPIDI_POSIX_topo_info_t topo;
 } MPIDI_POSIX_global_t;

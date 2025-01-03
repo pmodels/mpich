@@ -229,6 +229,11 @@ int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    if (comm == MPIR_Process.comm_world) {
+        int n_total_vcis = MPIDI_global.n_vcis + MPIR_CVAR_CH4_RESERVE_VCIS;
+        mpi_errno = MPIDI_Comm_set_vcis(comm, n_total_vcis);
+    }
+
     /* prune selection tree */
     if (MPIDI_global.csel_root) {
         mpi_errno = MPIR_Csel_prune(MPIDI_global.csel_root, comm, &MPIDI_COMM(comm, csel_comm));

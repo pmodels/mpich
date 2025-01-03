@@ -149,7 +149,7 @@ static void *create_container(struct json_object *obj)
     return cnt;
 }
 
-static int init_vci(int vci)
+int MPIDI_POSIX_init_vci(int vci)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -255,7 +255,7 @@ int MPIDI_POSIX_init_world(void)
 
     MPIDI_POSIX_global.num_vcis = 1;
 
-    mpi_errno = init_vci(0);
+    mpi_errno = MPIDI_POSIX_init_vci(0);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);
@@ -278,15 +278,6 @@ int MPIDI_POSIX_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_topo_info_t *local_rank_topo = NULL;
-
-    MPIDI_POSIX_global.num_vcis = MPIDI_global.n_total_vcis;
-    for (int i = 1; i < MPIDI_POSIX_global.num_vcis; i++) {
-        mpi_errno = init_vci(i);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    mpi_errno = MPIDI_POSIX_eager_post_init();
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* gather topo info from local procs and calculate distance */
     if (MPIR_CVAR_CH4_SHM_POSIX_TOPO_ENABLE && MPIR_Process.local_size > 1) {

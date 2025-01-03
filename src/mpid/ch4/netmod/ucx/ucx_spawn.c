@@ -27,7 +27,7 @@ int MPIDI_UCX_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
     int vci = 0;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
 
     int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
     int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
@@ -68,7 +68,7 @@ int MPIDI_UCX_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     return mpi_errno;
 }
 
@@ -80,7 +80,7 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
     uint64_t tag_mask = 0xffffffffffffffff;
     int vci = 0;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
 
     bool done = false;
     ucp_request_param_t param = {
@@ -117,7 +117,7 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     return mpi_errno;
 }
 

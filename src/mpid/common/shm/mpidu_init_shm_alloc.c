@@ -135,6 +135,111 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
     /* --END ERROR HANDLING-- */
 }
 
+int MPIDU_Init_shm_comm_alloc(MPIR_Comm * comm, size_t len, void **ptr)
+{
+    int mpi_errno = MPI_SUCCESS, mpl_err = 0;
+    void *current_addr;
+    size_t segment_len = len;
+    int local_rank = MPIR_Process.local_rank;
+    int num_local = MPIR_Process.local_size;
+    MPIDU_shm_seg_t *memory = NULL;
+    memory_list_t *memory_node = NULL;
+    MPIR_CHKPMEM_DECL(3);
+
+    MPIR_FUNC_ENTER;
+
+    MPIR_Comm *node_comm = comm->node_comm;
+    bool is_root, has_local;
+    if (node_comm) {
+        is_root = (node_comm->rank == 0);
+        has_local = (node_comm->local_size > 1);
+    } else {
+        is_root = true;
+        has_local = false;
+    }
+
+    MPIR_Assert(segment_len > 0);
+    MPIR_CHKPMEM_MALLOC(memory, MPIDU_shm_seg_t *, sizeof(*memory), mpi_errno, "memory_handle",
+                        MPL_MEM_OTHER);
+    mpl_err = MPL_shm_hnd_init(&(memory->hnd));
+    MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+
+    memory->segment_len = segment_len;
+
+    char *serialized_hnd = NULL;
+    int serialized_hnd_size = 0;
+    char serialized_hnd_buffer[MPIDU_INIT_SHM_BLOCK_SIZE];
+    bool need_attach;
+    if (is_root) {
+        if (MPIDU_Init_shm_atomic_count() == 0) {
+            /* We need to create the shm segment */
+            mpl_err = MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
+                                                    (void **) &(memory->base_addr), 0);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+
+            mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+            serialized_hnd_size = strlen(serialized_hnd) + 1;   /* add 1 for null char */
+
+            /* memory->hnd no longer needed */
+            mpl_err = MPL_shm_seg_remove(memory->hnd);
+            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
+
+            MPIDU_Init_shm_atomic_put(serialized_hnd, serialized_hnd_size);
+            need_attach = false;
+        } else {
+            /* Just retrieve the existing serialized handle */
+            MPIDU_Init_shm_atomic_get(serialized_hnd_buffer, MPIDU_INIT_SHM_BLOCK_SIZE);
+            serialized_hnd = serialized_hnd_buffer;
+            serialized_hnd_size = strlen(serialized_hnd) + 1;   /* add 1 for null char */
+            need_attach = true;
+        }
+        mpi_errno = MPIR_Bcast_impl(serialized_hnd, serialized_hnd_size, MPI_CHAR, 0, node_comm,
+                                    MPIR_ERR_NONE);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno = MPIR_Bcast_impl(serialized_hnd_buffer, MPIDU_INIT_SHM_BLOCK_SIZE, MPI_CHAR,
+                                    0, node_comm, MPIR_ERR_NONE);
+        MPIR_ERR_CHECK(mpi_errno);
+        serialized_hnd = serialized_hnd_buffer;
+        serialized_hnd_size = strlen(serialized_hnd) + 1;       /* add 1 for null char */
+        need_attach = true;
+    }
+    if (need_attach) {
+        mpl_err = MPL_shm_hnd_deserialize(memory->hnd, serialized_hnd, strlen(serialized_hnd));
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+
+        mpl_err = MPL_shm_seg_attach(memory->hnd, memory->segment_len,
+                                     (void **) &memory->base_addr, 0);
+        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
+    }
+
+    current_addr = memory->base_addr;
+    memory->symmetrical = 0;
+
+    mpi_errno = check_alloc(memory);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* assign sections of the shared memory segment to their pointers */
+    *ptr = current_addr;
+
+    MPIR_CHKPMEM_MALLOC(memory_node, memory_list_t *, sizeof(*memory_node), mpi_errno,
+                        "memory_node", MPL_MEM_OTHER);
+    memory_node->ptr = *ptr;
+    memory_node->memory = memory;
+    LL_APPEND(memory_head, memory_tail, memory_node);
+
+    MPIR_CHKPMEM_COMMIT();
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    MPL_shm_seg_remove(memory->hnd);
+    MPL_shm_hnd_finalize(&(memory->hnd));
+    MPIR_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
 /* MPIDU_SHM_Seg_free() free the shared memory segment */
 int MPIDU_Init_shm_free(void *ptr)
 {
