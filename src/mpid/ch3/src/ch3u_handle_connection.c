@@ -372,7 +372,7 @@ static int terminate_failed_VCs(MPIR_Group *new_failed_group)
         MPIDI_VC_t *vc;
         /* terminate the VC */
         /* FIXME: This won't work for dynamic procs */
-        MPIDI_PG_Get_vc(MPIDI_Process.my_pg, new_failed_group->lrank_to_lpid[i].lpid, &vc);
+        MPIDI_PG_Get_vc(MPIDI_Process.my_pg, MPIR_Group_rank_to_lpid(new_failed_group, i), &vc);
         mpi_errno = MPIDI_CH3_Connection_terminate(vc);
         MPIR_ERR_CHECK(mpi_errno);
     }
