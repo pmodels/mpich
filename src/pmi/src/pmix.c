@@ -7,7 +7,7 @@
 
 #include "pmi_config.h"
 
-#include "pmix.h"
+#include "pmix/pmix.h"
 #include "pmi_util.h"
 #include "pmi_wire.h"
 #include "pmi_msg.h"
