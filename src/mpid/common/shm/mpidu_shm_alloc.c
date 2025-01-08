@@ -6,7 +6,6 @@
 #include <mpidimpl.h>
 #include "mpl_shm.h"
 #include "mpidu_shm.h"
-#include "mpidu_shm_seg.h"
 
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
@@ -57,6 +56,16 @@ enum {
     SYMSHM_MAP_FAIL,            /* mapping failure when specified with a fixed start addr */
     SYMSHM_OTHER_FAIL           /* other failure reported by MPL shm */
 };
+
+typedef struct MPIDU_shm_seg {
+    size_t segment_len;
+    /* Handle to shm seg */
+    MPL_shm_hnd_t hnd;
+    /* Pointers */
+    char *base_addr;
+    /* Misc */
+    int symmetrical;
+} MPIDU_shm_seg_t;
 
 /* Linked list internally used to keep track
  * of allocate shared memory segments */
