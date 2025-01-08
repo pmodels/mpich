@@ -822,7 +822,8 @@ int MPIDI_OFI_send_ack(MPIR_Request * rreq, int context_id, void *hdr, int hdr_s
     int vci_dst = MPIDI_get_vci(DST_VCI_FROM_RECVER, comm, src_rank, dst_rank, tag);
     int nic = 0;
     int ctx_idx = MPIDI_OFI_get_ctx_index(vci_dst, nic);
-    fi_addr_t dest_addr = MPIDI_OFI_comm_to_phys(comm, src_rank, nic, vci_src);
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, src_rank);
+    fi_addr_t dest_addr = MPIDI_OFI_av_to_phys(av, vci_dst, nic, vci_src, nic);
     MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[ctx_idx].tx, hdr, hdr_sz,
                                     dest_addr, match_bits), vci_dst, tinject);
   fn_exit:

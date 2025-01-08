@@ -13,12 +13,11 @@ int MPIDI_OFI_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
 
     MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
 
-    int nic = 0;                /* dynamic process only use nic 0 */
     int vci = 0;                /* dynamic process only use vci 0 */
     int ctx_idx = 0;
     int avtid = MPIDIU_GPID_GET_AVTID(remote_lpid);
     int lpid = MPIDIU_GPID_GET_LPID(remote_lpid);
-    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci);
+    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys_root(&MPIDIU_get_av(avtid, lpid));
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
 
