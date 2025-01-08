@@ -100,7 +100,8 @@ static int get_huge_issue_read(MPIR_Request * rreq)
     int nic = 0;
     while (bytesLeft > 0) {
         int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic);
-        fi_addr_t addr = MPIDI_OFI_comm_to_phys(comm, info->origin_rank, nic, vci_remote);
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, info->origin_rank);
+        fi_addr_t addr = MPIDI_OFI_av_to_phys(av, vci_local, nic, vci_remote, nic);
         uint64_t remote_key = info->rma_keys[nic];
 
         MPI_Aint bytesToGet = MPL_MIN(chunk_size, bytesLeft);

@@ -96,9 +96,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
     /* Post recv for RTR from children */
     for (p = (int *) utarray_front(my_tree->children); p != NULL;
          p = (int *) utarray_next(my_tree->children, p)) {
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, *p);
         ret = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                    MPIDI_OFI_global.ctx[0].rx, &((*works)[i + j]),
-                                                   MPIDI_OFI_comm_to_phys(comm_ptr, *p, 0, 0),
+                                                   MPIDI_OFI_av_to_phys_root(av),
                                                    MPIDI_OFI_TRIGGERED_TAGGED_RECV, NULL, 0,
                                                    rtr_tag, comm_ptr, *p, 0, *rcv_cntr, *rcv_cntr,
                                                    false);
@@ -114,10 +115,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
         MPIR_ERR_POP(mpi_errno);
 
     if (!is_root) {     /* non-root nodes post recv for data from parents */
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, parent);
         mpi_errno = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                          MPIDI_OFI_global.ctx[0].rx, &((*works)[i]),
-                                                         MPIDI_OFI_comm_to_phys(comm_ptr, parent,
-                                                                                0, 0),
+                                                         MPIDI_OFI_av_to_phys_root(av),
                                                          MPIDI_OFI_TRIGGERED_TAGGED_RECV, buffer,
                                                          count * data_sz, tag, comm_ptr, parent, 0,
                                                          *rcv_cntr, *rcv_cntr, false);
@@ -132,10 +133,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
     if (!is_root) {     /* Non-root nodes send RTR to parents */
         uint64_t match_bits =
             MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag);
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, parent);
         MPIDI_OFI_CALL_RETRY(fi_tinject
                              (MPIDI_OFI_global.ctx[0].tx, NULL, 0,
-                              MPIDI_OFI_comm_to_phys(comm_ptr, parent, 0, 0), match_bits), 0,
-                             tinject);
+                              MPIDI_OFI_av_to_phys_root(av), match_bits), 0, tinject);
     }
 
     if (is_root) {
@@ -148,10 +149,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_tagged(void *buf
     /* Root and intermediate nodes send data to children */
     for (p = (int *) utarray_front(my_tree->children); p != NULL;
          p = (int *) utarray_next(my_tree->children, p)) {
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, *p);
         mpi_errno = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                          MPIDI_OFI_global.ctx[0].tx,
                                                          &((*works)[index + k]),
-                                                         MPIDI_OFI_comm_to_phys(comm_ptr, *p, 0, 0),
+                                                         MPIDI_OFI_av_to_phys_root(av),
                                                          MPIDI_OFI_TRIGGERED_TAGGED_SEND, buffer,
                                                          count * data_sz, tag, comm_ptr, *p,
                                                          threshold, *rcv_cntr, *snd_cntr, false);
@@ -243,12 +245,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_tagged(void *buffer
 
     /* Post recv for RTR from children */
     for (j = 0; j < num_children; j++) {
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, first_child + j);
         mpi_errno = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                          MPIDI_OFI_global.ctx[0].rx,
                                                          &((*works)[i + j]),
-                                                         MPIDI_OFI_comm_to_phys(comm_ptr,
-                                                                                first_child + j, 0,
-                                                                                0),
+                                                         MPIDI_OFI_av_to_phys_root(av),
                                                          MPIDI_OFI_TRIGGERED_TAGGED_RECV, NULL, 0,
                                                          rtr_tag, comm_ptr, first_child + j, 0,
                                                          *rcv_cntr, *rcv_cntr, false);
@@ -263,10 +264,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_tagged(void *buffer
         MPIR_ERR_POP(mpi_errno);
 
     if (!is_root) {     /* Non-root nodes post recv for data */
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, parent);
         mpi_errno = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                          MPIDI_OFI_global.ctx[0].rx, &((*works)[i]),
-                                                         MPIDI_OFI_comm_to_phys(comm_ptr, parent, 0,
-                                                                                0),
+                                                         MPIDI_OFI_av_to_phys_root(av),
                                                          MPIDI_OFI_TRIGGERED_TAGGED_RECV, buffer,
                                                          count * data_sz, tag, comm_ptr, parent, 0,
                                                          *rcv_cntr, *rcv_cntr, false);
@@ -281,10 +282,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_tagged(void *buffer
     if (!is_root) {     /* Non-root nodes send RTR to parents */
         s_match_bits =
             MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag);
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, parent);
         MPIDI_OFI_CALL_RETRY(fi_tinject
                              (MPIDI_OFI_global.ctx[0].tx, NULL, 0,
-                              MPIDI_OFI_comm_to_phys(comm_ptr, parent, 0, 0), s_match_bits), 0,
-                             tinject);
+                              MPIDI_OFI_av_to_phys_root(av), s_match_bits), 0, tinject);
     }
 
     if (is_root) {
@@ -296,12 +297,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_tagged(void *buffer
 
     /* Root and intremediate nodes send data to children */
     for (k = 0; k < num_children; k++) {
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, first_child + k);
         mpi_errno = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                          MPIDI_OFI_global.ctx[0].tx,
                                                          &((*works)[index + k]),
-                                                         MPIDI_OFI_comm_to_phys(comm_ptr,
-                                                                                first_child + k, 0,
-                                                                                0),
+                                                         MPIDI_OFI_av_to_phys_root(av),
                                                          MPIDI_OFI_TRIGGERED_TAGGED_SEND, buffer,
                                                          count * data_sz, tag, comm_ptr,
                                                          first_child + k, threshold, *rcv_cntr,
@@ -424,10 +424,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
     /* Post recv for RTR from children; this is needed to avoid unexpected messages */
     for (p = (int *) utarray_front(my_tree->children); p != NULL;
          p = (int *) utarray_next(my_tree->children, p)) {
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, *p);
         mpi_errno = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                          MPIDI_OFI_global.ctx[0].rx,
                                                          &((*works)[i + j]),
-                                                         MPIDI_OFI_comm_to_phys(comm_ptr, *p, 0, 0),
+                                                         MPIDI_OFI_av_to_phys_root(av),
                                                          MPIDI_OFI_TRIGGERED_TAGGED_RECV, NULL, 0,
                                                          rtr_tag, comm_ptr, *p, 0, *rcv_cntr,
                                                          *rcv_cntr, false);
@@ -443,10 +444,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
     if (!is_root) {     /* Non-root nodes send RTR to parents */
         s_match_bits =
             MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag);
-        MPIDI_OFI_CALL_RETRY(fi_tinject
-                             (MPIDI_OFI_global.ctx[0].tx, NULL, 0,
-                              MPIDI_OFI_comm_to_phys(comm_ptr, parent, 0, 0), s_match_bits), 0,
-                             tinject);
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, parent);
+        MPIDI_OFI_CALL_RETRY(fi_tinject(MPIDI_OFI_global.ctx[0].tx, NULL, 0,
+                                        MPIDI_OFI_av_to_phys_root(av), s_match_bits), 0, tinject);
     }
 
     if (is_root) {
@@ -458,9 +458,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_knomial_triggered_rma(void *buffer
     /* Root and intermediate nodes send data to children */
     for (p = (int *) utarray_front(my_tree->children); p != NULL;
          p = (int *) utarray_next(my_tree->children, p)) {
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, *p);
         mpi_errno = MPIDI_OFI_prepare_rma_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                       MPIDI_OFI_global.ctx[0].tx, &((*works)[i++]),
-                                                      MPIDI_OFI_comm_to_phys(comm_ptr, *p, 0, 0),
+                                                      MPIDI_OFI_av_to_phys_root(av),
                                                       buffer, fi_mr_key(*r_mr),
                                                       count * data_sz, threshold, *rcv_cntr,
                                                       *snd_cntr, MPIDI_OFI_TRIGGERED_RMA_WRITE,
@@ -567,12 +568,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_rma(void *buffer, i
 
     /* Post recv for RTR from children */
     for (j = 0; j < num_children; j++) {
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, first_child + j);
         mpi_errno = MPIDI_OFI_prepare_tagged_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                                          MPIDI_OFI_global.ctx[0].rx,
                                                          &((*works)[i + j]),
-                                                         MPIDI_OFI_comm_to_phys(comm_ptr,
-                                                                                first_child + j, 0,
-                                                                                0),
+                                                         MPIDI_OFI_av_to_phys_root(av),
                                                          MPIDI_OFI_TRIGGERED_TAGGED_RECV, NULL, 0,
                                                          rtr_tag, comm_ptr, first_child + j, 0,
                                                          *rcv_cntr, *rcv_cntr, false);
@@ -587,10 +587,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_rma(void *buffer, i
     if (!is_root) {     /* Non-root nodes send RTR to parents; this is needed to avoid unexpected messages */
         s_match_bits =
             MPIDI_OFI_init_sendtag(comm_ptr->context_id + context_offset, comm_ptr->rank, rtr_tag);
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, parent);
         MPIDI_OFI_CALL_RETRY(fi_tinject
                              (MPIDI_OFI_global.ctx[0].tx, NULL, 0,
-                              MPIDI_OFI_comm_to_phys(comm_ptr, parent, 0, 0), s_match_bits), 0,
-                             tinject);
+                              MPIDI_OFI_av_to_phys_root(av), s_match_bits), 0, tinject);
     }
 
     if (is_root) {
@@ -602,9 +602,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Ibcast_kary_triggered_rma(void *buffer, i
 
     /* Root and intremediate nodes send data to children */
     for (k = 0; k < num_children; k++) {
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm_ptr, first_child + k);
         MPIDI_OFI_prepare_rma_control_cmd(MPIDI_OFI_global.ctx[0].domain,
                                           MPIDI_OFI_global.ctx[0].tx, &((*works)[i + k]),
-                                          MPIDI_OFI_comm_to_phys(comm_ptr, first_child + k, 0, 0),
+                                          MPIDI_OFI_av_to_phys_root(av),
                                           buffer, fi_mr_key(*r_mr),
                                           count * data_sz, threshold, *rcv_cntr, *snd_cntr,
                                           MPIDI_OFI_TRIGGERED_RMA_WRITE, false);

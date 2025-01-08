@@ -245,10 +245,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         (origin_bytes <= MPIDI_OFI_global.max_buffered_write && !MPL_gpu_attr_is_dev(&attr))) {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
         MPIDI_OFI_win_cntr_incr(win);
+        fi_addr_t dest = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         MPIDI_OFI_CALL_RETRY(fi_inject_write(MPIDI_OFI_WIN(win).ep,
                                              MPIR_get_contig_ptr(origin_addr, origin_true_lb),
-                                             target_bytes,
-                                             MPIDI_OFI_av_to_phys(addr, nic_target, vci_target),
+                                             target_bytes, dest,
                                              target_mr.addr + target_true_lb,
                                              target_mr.mr_key), vci, rdma_inject_write);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
@@ -272,7 +272,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
             MPIDI_OFI_gpu_rma_register(iov.iov_base, iov.iov_len, &attr, win, nic_target, &desc);
 
         msg.desc = desc;
-        msg.addr = MPIDI_OFI_av_to_phys(addr, nic_target, vci_target);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -451,7 +451,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         msg.desc = desc;
         msg.msg_iov = &iov;
         msg.iov_count = 1;
-        msg.addr = MPIDI_OFI_av_to_phys(addr, nic_target, vci_target);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         msg.rma_iov = &riov;
         msg.rma_iov_count = 1;
         msg.context = NULL;
@@ -679,7 +679,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
     msg.msg_iov = &originv;
     msg.desc = desc;
     msg.iov_count = 1;
-    msg.addr = MPIDI_OFI_av_to_phys(av, nic_target, vci_target);
+    msg.addr = MPIDI_OFI_av_to_phys(av, vci, 0, vci_target, nic_target);
     msg.rma_iov = &targetv;
     msg.rma_iov_count = 1;
     msg.datatype = fi_dt;
@@ -805,7 +805,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
         msg.msg_iov = &originv;
         msg.desc = desc;
         msg.iov_count = 1;
-        msg.addr = MPIDI_OFI_av_to_phys(addr, nic_target, vci_target);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         msg.rma_iov = &targetv;
         msg.rma_iov_count = 1;
         msg.datatype = fi_dt;
@@ -951,7 +951,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         msg.msg_iov = &originv;
         msg.desc = desc;
         msg.iov_count = 1;
-        msg.addr = MPIDI_OFI_av_to_phys(addr, nic_target, vci_target);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         msg.rma_iov = &targetv;
         msg.rma_iov_count = 1;
         msg.datatype = fi_dt;
@@ -1182,7 +1182,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     msg.msg_iov = &originv;
     msg.desc = desc;
     msg.iov_count = 1;
-    msg.addr = MPIDI_OFI_av_to_phys(av, nic_target, vci_target);
+    msg.addr = MPIDI_OFI_av_to_phys(av, vci, 0, vci_target, nic_target);
     msg.rma_iov = &targetv;
     msg.rma_iov_count = 1;
     msg.datatype = fi_dt;
