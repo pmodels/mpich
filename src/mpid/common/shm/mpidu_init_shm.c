@@ -8,7 +8,6 @@
 #include "mpl_shm.h"
 #include "mpidimpl.h"
 #include "mpir_pmi.h"
-#include "mpidu_shm_seg.h"
 
 static int init_shm_initialized;
 
@@ -58,7 +57,10 @@ typedef struct Init_shm_barrier {
     MPL_atomic_int_t wait;
 } Init_shm_barrier_t;
 
-static MPIDU_shm_seg_t memory;
+static size_t init_shm_len;
+static MPL_shm_hnd_t init_shm_hnd;
+static char *init_shm_addr;
+
 static Init_shm_barrier_t *barrier;
 static void *baseaddr;
 
@@ -70,7 +72,7 @@ static int Init_shm_barrier_init(int is_root)
 
     MPIR_FUNC_ENTER;
 
-    barrier = (Init_shm_barrier_t *) memory.base_addr;
+    barrier = (Init_shm_barrier_t *) init_shm_addr;
     if (is_root) {
         MPL_atomic_store_int(&barrier->val, 0);
         MPL_atomic_store_int(&barrier->wait, 0);
@@ -136,20 +138,20 @@ int MPIDU_Init_shm_init(void)
         char *serialized_hnd = NULL;
         int serialized_hnd_size = 0;
 
-        mpl_err = MPL_shm_hnd_init(&(memory.hnd));
+        mpl_err = MPL_shm_hnd_init(&init_shm_hnd);
         MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
-        memory.segment_len = segment_len;
+        init_shm_len = segment_len;
 
         if (MPIDU_Init_shm_local_rank == 0) {
             /* root prepare shm segment */
-            mpl_err = MPL_shm_seg_create_and_attach(memory.hnd, memory.segment_len,
-                                                    (void **) &(memory.base_addr), 0);
+            mpl_err = MPL_shm_seg_create_and_attach(init_shm_hnd, init_shm_len,
+                                                    (void **) &(init_shm_addr), 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
             MPIR_Assert(MPIR_Process.node_local_map[0] == MPIR_Process.rank);
 
-            mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory.hnd, &serialized_hnd);
+            mpl_err = MPL_shm_hnd_get_serialized_by_ref(init_shm_hnd, &serialized_hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
             serialized_hnd_size = strlen(serialized_hnd) + 1;
             MPIR_Assert(serialized_hnd_size < MPIR_pmi_max_val_size());
@@ -169,11 +171,10 @@ int MPIDU_Init_shm_init(void)
 
         if (MPIDU_Init_shm_local_rank > 0) {
             /* non-root attach shm segment */
-            mpl_err = MPL_shm_hnd_deserialize(memory.hnd, serialized_hnd, strlen(serialized_hnd));
+            mpl_err = MPL_shm_hnd_deserialize(init_shm_hnd, serialized_hnd, strlen(serialized_hnd));
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
-            mpl_err = MPL_shm_seg_attach(memory.hnd, memory.segment_len,
-                                         (void **) &memory.base_addr, 0);
+            mpl_err = MPL_shm_seg_attach(init_shm_hnd, init_shm_len, (void **) &init_shm_addr, 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
 
             mpi_errno = Init_shm_barrier_init(FALSE);
@@ -184,13 +185,12 @@ int MPIDU_Init_shm_init(void)
         MPIR_ERR_CHECK(mpi_errno);
 
         if (MPIDU_Init_shm_local_rank == 0) {
-            /* memory->hnd no longer needed */
-            mpl_err = MPL_shm_seg_remove(memory.hnd);
+            /* init_shm_hnd no longer needed */
+            mpl_err = MPL_shm_seg_remove(init_shm_hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
         }
 
-        baseaddr = memory.base_addr + MPIDU_SHM_CACHE_LINE_LEN;
-        memory.symmetrical = 0;
+        baseaddr = init_shm_addr + MPIDU_SHM_CACHE_LINE_LEN;
 
         mpi_errno = Init_shm_barrier();
     }
@@ -215,10 +215,10 @@ int MPIDU_Init_shm_finalize(void)
         goto fn_exit;
     }
 
-    mpl_err = MPL_shm_seg_detach(memory.hnd, (void **) &(memory.base_addr), memory.segment_len);
+    mpl_err = MPL_shm_seg_detach(init_shm_hnd, (void **) &(init_shm_addr), init_shm_len);
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**detach_shar_mem");
 
-    MPL_shm_hnd_finalize(&(memory.hnd));
+    MPL_shm_hnd_finalize(&(init_shm_hnd));
 
     init_shm_initialized = 0;
 
