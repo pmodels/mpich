@@ -35,7 +35,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
     } else {
         int sender_nic = MPIDI_OFI_multx_sender_nic_index(comm, comm->recvcontext_id,
                                                           source, comm->rank, tag);
-        remote_proc = MPIDI_OFI_av_to_phys(addr, sender_nic, vci_src);
+        remote_proc = MPIDI_OFI_av_to_phys(addr, vci_dst, receiver_nic, vci_src, sender_nic);
     }
 
     if (message) {

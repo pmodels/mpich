@@ -129,11 +129,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
             .len = curr_len,
             .key = rma_key
         };
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, src_rank);
         struct fi_msg_rma msg = {
             .msg_iov = &iov,
             .desc = NULL,
             .iov_count = 1,
-            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, nic, vci_remote),
+            .addr = MPIDI_OFI_av_to_phys(av, vci_local, nic, vci_remote, nic),
             .rma_iov = &rma_iov,
             .rma_iov_count = 1,
             .context = &am_req->context,
