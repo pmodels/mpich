@@ -310,9 +310,14 @@ typedef struct {
 /* Maximum number of network interfaces CH4 can support. */
 #define MPIDI_OFI_MAX_NICS 8
 
+/* Imagine a dimension of [local_vci][local_nic][rank][vci][nic] -
+ * all local endpoints will share the same remote address due to the same insertion order
+ * and use of FI_AV_TABLE except the local root endpoint.
+ */
 typedef struct {
-    fi_addr_t root_dest;
-    fi_addr_t *all_dest;        /* to be allocated into an array of [nic * vci] */
+    fi_addr_t root_dest;        /* [0][0][r][0][0] */
+    fi_addr_t root_offset;      /* [0][0][r][vci][nic] - [*][*][r][vci][nic] */
+    fi_addr_t *all_dest;        /* [*][*][r][vci][nic] */
 } MPIDI_OFI_addr_t;
 
 #endif /* OFI_PRE_H_INCLUDED */
