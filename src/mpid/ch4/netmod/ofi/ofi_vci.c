@@ -230,12 +230,13 @@ static int addr_exchange_all_ctx(MPIR_Comm * comm, int *all_num_vcis)
 
     /* insert and store non-root nic/vci on the root context */
     for (int r = 0; r < nprocs; r++) {
+        fi_addr_t expect_addr = FI_ADDR_NOTAVAIL;
+        fi_addr_t root_offset = 0;
         GET_AV_AND_ADDRNAMES(r);
         /* for each remote endpoints */
         for (int nic = 0; nic < num_nics; nic++) {
             for (int vci = 0; vci < NUM_VCIS_FOR_RANK(r); vci++) {
                 /* for each local endpoints */
-                fi_addr_t expect_addr = FI_ADDR_NOTAVAIL;
                 for (int nic_local = 0; nic_local < num_nics; nic_local++) {
                     for (int vci_local = 0; vci_local < my_num_vcis; vci_local++) {
                         /* skip root */
@@ -244,18 +245,28 @@ static int addr_exchange_all_ctx(MPIR_Comm * comm, int *all_num_vcis)
                         }
                         int ctx_idx = MPIDI_OFI_get_ctx_index(vci_local, nic_local);
                         DO_AV_INSERT(ctx_idx, nic, vci);
-                        /* we expect all resulting addr to be the same */
+                        /* we expect all resulting addr to be the same except for local root endpoint, which
+                         * will have an offset */
                         if (expect_addr == FI_ADDR_NOTAVAIL) {
                             expect_addr = addr;
+                        } else if (nic_local == 0 && vci_local == 0) {
+                            if (root_offset == 0) {
+                                root_offset = addr - expect_addr;
+                            } else {
+                                MPIR_Assert(addr == expect_addr + root_offset);
+                            }
                         } else {
-                            MPIR_Assert(expect_addr == addr);
+                            MPIR_Assert(addr == expect_addr);
                         }
                     }
                 }
                 MPIR_Assert(expect_addr != FI_ADDR_NOTAVAIL);
-                MPIDI_OFI_AV_ADDR_NONROOT(av, vci, nic) = expect_addr;
+                MPIDI_OFI_AV_ADDR_NO_OFFSET(av, vci, nic) = expect_addr;
+                /* next */
+                expect_addr++;
             }
         }
+        MPIDI_OFI_AV(av).root_offset = root_offset;
     }
 
     mpi_errno = MPIR_Barrier_fallback(comm, MPIR_ERR_NONE);
