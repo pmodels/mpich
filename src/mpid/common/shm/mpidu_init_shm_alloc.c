@@ -6,7 +6,6 @@
 #include <mpidimpl.h>
 #include "mpl_shm.h"
 #include "mpidu_init_shm.h"
-#include "mpidu_shm_seg.h"
 
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
@@ -19,16 +18,24 @@
 #include <sys/shm.h>
 #endif
 
+struct memory_seg {
+    size_t segment_len;
+    MPL_shm_hnd_t hnd;
+    char *base_addr;
+    bool symmetrical;
+    bool is_shm;
+};
+
 typedef struct memory_list {
     void *ptr;
-    MPIDU_shm_seg_t *memory;
+    struct memory_seg *memory;
     struct memory_list *next;
 } memory_list_t;
 
 static memory_list_t *memory_head = NULL;
 static memory_list_t *memory_tail = NULL;
 
-static int check_alloc(MPIDU_shm_seg_t * memory);
+static int check_alloc(struct memory_seg *memory);
 
 /* MPIDU_Init_shm_alloc(len, ptr_p)
 
@@ -41,7 +48,7 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
     size_t segment_len = len;
     int local_rank = MPIR_Process.local_rank;
     int num_local = MPIR_Process.local_size;
-    MPIDU_shm_seg_t *memory = NULL;
+    struct memory_seg *memory = NULL;
     memory_list_t *memory_node = NULL;
     MPIR_CHKPMEM_DECL();
 
@@ -68,7 +75,8 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
         current_addr =
             (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
                       (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
-        memory->symmetrical = 1;
+        memory->symmetrical = true;
+        memory->is_shm = false;
     } else {
         if (local_rank == 0) {
             /* root prepare shm segment */
@@ -104,7 +112,8 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
         }
         current_addr = memory->base_addr;
-        memory->symmetrical = 0;
+        memory->symmetrical = false;
+        memory->is_shm = true;
 
         mpi_errno = check_alloc(memory);
         MPIR_ERR_CHECK(mpi_errno);
@@ -135,7 +144,7 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
 int MPIDU_Init_shm_free(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
-    MPIDU_shm_seg_t *memory = NULL;
+    struct memory_seg *memory = NULL;
     memory_list_t *el = NULL;
 
     MPIR_FUNC_ENTER;
@@ -188,7 +197,7 @@ int MPIDU_Init_shm_is_symm(void *ptr)
 /* check_alloc() checks to see whether the shared memory segment is
    allocated at the same virtual memory address at each process.
 */
-static int check_alloc(MPIDU_shm_seg_t * memory)
+static int check_alloc(struct memory_seg *memory)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_sym;
@@ -221,9 +230,9 @@ static int check_alloc(MPIDU_shm_seg_t * memory)
     }
 
     if (is_sym) {
-        memory->symmetrical = 1;
+        memory->symmetrical = true;
     } else {
-        memory->symmetrical = 0;
+        memory->symmetrical = false;
     }
 
     MPIR_FUNC_EXIT;
