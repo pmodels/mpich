@@ -39,16 +39,22 @@ ATTRIBUTE((unused));
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
 #define MPIDI_OFI_AV_ADDR_ROOT(av) \
     MPIDI_OFI_AV(av).root_dest
-#define MPIDI_OFI_AV_ADDR_NONROOT(av, vci, nic) \
+#define MPIDI_OFI_AV_ADDR_OFFSET(av, vci, nic) \
+    (MPIDI_OFI_AV(av).all_dest[(vci)*MPIDI_OFI_global.num_nics+(nic)] + MPIDI_OFI_AV(av).root_offset)
+#define MPIDI_OFI_AV_ADDR_NO_OFFSET(av, vci, nic) \
     MPIDI_OFI_AV(av).all_dest[(vci)*MPIDI_OFI_global.num_nics+(nic)]
 #else /* scalable endpoints - all vci share the same addr */
-#define MPIDI_OFI_AV_ADDR_ROOT(av, vci, nic) \
+#define MPIDI_OFI_AV_ADDR_ROOT(av) \
     MPIDI_OFI_AV(av).root_dest
-#define MPIDI_OFI_AV_ADDR_NONROOT(av, vci, nic) \
+#define MPIDI_OFI_AV_ADDR_OFFSET(av, vci, nic) \
+    (MPIDI_OFI_AV(av).all_dest[nic] + MPIDI_OFI_AV(av).root_offset)
+#define MPIDI_OFI_AV_ADDR_NO_OFFSET(av, vci, nic) \
     MPIDI_OFI_AV(av).all_dest[nic]
 #endif
-#define MPIDI_OFI_AV_ADDR(av, vci, nic) \
-    ((vci==0 && nic==0) ? MPIDI_OFI_AV_ADDR_ROOT(av) : MPIDI_OFI_AV_ADDR_NONROOT(av, vci, nic))
+#define MPIDI_OFI_AV_ADDR(av, local_vci, local_nic, vci, nic) \
+    ((local_vci==0 && local_nic==0) ? \
+        ((vci == 0 && nic == 0) ? MPIDI_OFI_AV_ADDR_ROOT(av) : MPIDI_OFI_AV_ADDR_OFFSET(av, vci, nic)) : \
+        MPIDI_OFI_AV_ADDR_NO_OFFSET(av, vci, nic))
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
@@ -458,18 +464,19 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
                                                         int local_vci, int local_nic,
                                                         int vci, int nic)
 {
+    fi_addr_t dest = MPIDI_OFI_AV_ADDR(av, local_vci, local_nic, vci, nic);
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV_ADDR(av, vci, nic), 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(dest, 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        return MPIDI_OFI_AV_ADDR(av, vci, nic);
+        return dest;
     }
 #else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV_ADDR(av, vci, nic), vci, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(dest, vci, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         MPIR_Assert(vci == 0);
-        return MPIDI_OFI_AV_ADDR(av, vci, nic);
+        return dest;
     }
 #endif
 }
