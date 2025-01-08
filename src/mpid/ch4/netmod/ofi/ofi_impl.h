@@ -440,7 +440,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
  *       on any local endpoints, as long as we are careful in the insertion order). Thus,
  *       we get away with simplified interface using just (nic, vci) pair.
  */
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, int nic, int vci)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
+                                                        int local_vci, int local_nic,
+                                                        int vci, int nic)
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
@@ -458,11 +460,10 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, i
 #endif
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank,
-                                                          int nic, int vci)
+/* a simpler version used where vci is not enabled, e.g. init and spawn */
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys_root(MPIDI_av_entry_t * av)
 {
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, rank);
-    return MPIDI_OFI_av_to_phys(av, nic, vci);
+    return MPIDI_OFI_av_to_phys(av, 0, 0, 0, 0);
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
