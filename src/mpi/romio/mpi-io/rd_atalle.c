@@ -40,10 +40,17 @@ Output Parameters:
 int MPI_File_read_at_all_end(MPI_File fh, void *buf, MPI_Status * status)
 {
     int error_code;
-    static char myname[] = "MPI_FILE_READ_AT_ALL_END";
+    ROMIO_THREAD_CS_ENTER();
 
+    error_code = MPIR_File_read_at_all_end_impl(fh, buf, status);
+    if (error_code) {
+        goto fn_fail;
+    }
 
-    error_code = MPIOI_File_read_all_end(fh, buf, myname, status);
-
+  fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }

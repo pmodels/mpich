@@ -715,7 +715,7 @@ typedef struct ADIOI_OneSidedStripeParms {
     ADIO_Offset *stripeWriteLens;
     int amountOfStripedDataExpected;    /* used to determine holes in this segment thereby requiring a rmw */
     /* These 2 elements enable ADIOI_OneSidedWriteAggregation to be called multiple times but only */
-    /* perform the potientially computationally costly flattening of the source buffer just once */
+    /* perform the potentially computationally costly flattening of the source buffer just once */
     MPI_Aint bufTypeExtent;
     ADIOI_Flatlist_node *flatBuf;
     /* These three elements track the state of the source buffer advancement through multiple calls */
@@ -785,68 +785,6 @@ void ADIOI_FAKE_IwriteStrided(ADIO_File fd, const void *buf, MPI_Aint count,
                               MPI_Datatype datatype, int file_ptr_type,
                               ADIO_Offset offset, ADIO_Request * request, int *error_code);
 void ADIOI_FAKE_IOComplete(ADIO_Request * request, ADIO_Status * status, int *error_code);
-
-
-/* File I/O common functionality */
-int MPIOI_File_read(MPI_File fh,
-                    MPI_Offset offset,
-                    int file_ptr_type,
-                    void *buf, MPI_Aint count, MPI_Datatype datatype, char *myname,
-                    MPI_Status * status);
-int MPIOI_File_write(MPI_File fh, MPI_Offset offset, int file_ptr_type, const void *buf,
-                     MPI_Aint count, MPI_Datatype datatype, char *myname, MPI_Status * status);
-int MPIOI_File_read_all(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *buf,
-                        MPI_Aint count, MPI_Datatype datatype, char *myname, MPI_Status * status);
-int MPIOI_File_write_all(MPI_File fh, MPI_Offset offset, int file_ptr_type, const void *buf,
-                         MPI_Aint count, MPI_Datatype datatype, char *myname, MPI_Status * status);
-int MPIOI_File_read_all_begin(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *buf,
-                              MPI_Aint count, MPI_Datatype datatype, char *myname);
-int MPIOI_File_write_all_begin(MPI_File fh, MPI_Offset offset, int file_ptr_type, const void *buf,
-                               MPI_Aint count, MPI_Datatype datatype, char *myname);
-int MPIOI_File_read_all_end(MPI_File fh, void *buf, char *myname, MPI_Status * status);
-int MPIOI_File_write_all_end(MPI_File fh, const void *buf, char *myname, MPI_Status * status);
-int MPIOI_File_iwrite(MPI_File fh,
-                      MPI_Offset offset,
-                      int file_ptr_type,
-                      const void *buf,
-                      MPI_Aint count, MPI_Datatype datatype, char *myname, MPI_Request * request);
-int MPIOI_File_iread(MPI_File fh,
-                     MPI_Offset offset,
-                     int file_ptr_type,
-                     void *buf,
-                     MPI_Aint count, MPI_Datatype datatype, char *myname, MPI_Request * request);
-int MPIOI_File_iwrite_all(MPI_File fh,
-                          MPI_Offset offset,
-                          int file_ptr_type,
-                          const void *buf,
-                          MPI_Aint count, MPI_Datatype datatype, char *myname,
-                          MPI_Request * request);
-int MPIOI_File_iread_all(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *buf,
-                         MPI_Aint count, MPI_Datatype datatype, char *myname,
-                         MPI_Request * request);
-
-int MPIOI_File_read_ordered(MPI_File fh, void *buf, MPI_Aint count,
-                            MPI_Datatype datatype, MPI_Status * status);
-int MPIOI_File_read_ordered_begin(MPI_File fh, void *buf, MPI_Aint count, MPI_Datatype datatype);
-int MPIOI_File_read_shared(MPI_File fh, void *buf, MPI_Aint count,
-                           MPI_Datatype datatype, MPI_Status * status);
-int MPIOI_File_iread_shared(MPI_File fh, void *buf, MPI_Aint count,
-                            MPI_Datatype datatype, MPI_Request * request);
-int MPIOI_File_write_ordered(MPI_File fh, const void *buf, MPI_Aint count,
-                             MPI_Datatype datatype, MPI_Status * status);
-int MPIOI_File_write_ordered_begin(MPI_File fh, const void *buf, MPI_Aint count,
-                                   MPI_Datatype datatype);
-int MPIOI_File_write_shared(MPI_File fh, const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                            MPI_Status * status);
-int MPIOI_File_iwrite_shared(MPI_File fh, const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                             MPIO_Request * request);
-
-typedef void (*MPIOI_VOID_FN) (void *);
-int MPIOI_Register_datarep(const char *datarep,
-                           MPIOI_VOID_FN * read_conversion_fn,
-                           MPIOI_VOID_FN * write_conversion_fn,
-                           MPI_Datarep_extent_function * dtype_file_extent_fn,
-                           void *extra_state, int is_large);
 
 /* Unix-style file locking */
 

@@ -61,21 +61,19 @@ int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void *buf,
                          int count, MPI_Datatype datatype, MPI_Status * status)
 {
     int error_code;
-    static char myname[] = "MPI_FILE_IREAD_AT";
-#ifdef MPI_hpux
-    int fl_xmpi;
+    ROMIO_THREAD_CS_ENTER();
 
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEREADATALL, TRDTBLOCK, fh, datatype, count);
-#endif /* MPI_hpux */
+    error_code = MPIR_File_read_at_all_impl(fh, offset, buf, count, datatype, status);
+    if (error_code) {
+        goto fn_fail;
+    }
 
-    error_code = MPIOI_File_read_all(fh, offset, ADIO_EXPLICIT_OFFSET, buf,
-                                     count, datatype, myname, status);
-
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count);
-#endif /* MPI_hpux */
-
+  fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }
 
 /* large count function */
@@ -101,19 +99,17 @@ int MPI_File_read_at_all_c(MPI_File fh, MPI_Offset offset, void *buf,
                            MPI_Count count, MPI_Datatype datatype, MPI_Status * status)
 {
     int error_code;
-    static char myname[] = "MPI_FILE_IREAD_AT";
-#ifdef MPI_hpux
-    int fl_xmpi;
+    ROMIO_THREAD_CS_ENTER();
 
-    HPMP_IO_START(fl_xmpi, BLKMPIFILEREADATALL, TRDTBLOCK, fh, datatype, count);
-#endif /* MPI_hpux */
+    error_code = MPIR_File_read_at_all_impl(fh, offset, buf, count, datatype, status);
+    if (error_code) {
+        goto fn_fail;
+    }
 
-    error_code = MPIOI_File_read_all(fh, offset, ADIO_EXPLICIT_OFFSET, buf,
-                                     count, datatype, myname, status);
-
-#ifdef MPI_hpux
-    HPMP_IO_END(fl_xmpi, fh, datatype, count);
-#endif /* MPI_hpux */
-
+  fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }

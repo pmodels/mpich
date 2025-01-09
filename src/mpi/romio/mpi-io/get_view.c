@@ -42,59 +42,17 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype,
                       MPI_Datatype * filetype, char *datarep)
 {
     int error_code;
-    ADIO_File adio_fh;
-    static char myname[] = "MPI_FILE_GET_VIEW";
-    int is_predef;
-    MPI_Datatype copy_etype, copy_filetype;
-
     ROMIO_THREAD_CS_ENTER();
 
-    adio_fh = MPIO_File_resolve(fh);
-
-    /* --BEGIN ERROR HANDLING-- */
-    MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
-
-    if (datarep == NULL) {
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, __LINE__, MPI_ERR_ARG, "**iodatarepnomem", 0);
-        error_code = MPIO_Err_return_file(adio_fh, error_code);
-        goto fn_exit;
-    }
-    /* --END ERROR HANDLING-- */
-
-    *disp = adio_fh->disp;
-    ADIOI_Strncpy(datarep,
-                  (adio_fh->is_external32 ? "external32" : "native"), MPI_MAX_DATAREP_STRING);
-
-    ADIOI_Type_ispredef(adio_fh->etype, &is_predef);
-    if (is_predef)
-        *etype = adio_fh->etype;
-    else {
-#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
-        MPI_Type_dup(adio_fh->etype, &copy_etype);
-#else
-        MPI_Type_contiguous(1, adio_fh->etype, &copy_etype);
-#endif
-
-        MPI_Type_commit(&copy_etype);
-        *etype = copy_etype;
-    }
-    ADIOI_Type_ispredef(adio_fh->filetype, &is_predef);
-    if (is_predef)
-        *filetype = adio_fh->filetype;
-    else {
-#ifdef MPIIMPL_HAVE_MPI_COMBINER_DUP
-        MPI_Type_dup(adio_fh->filetype, &copy_filetype);
-#else
-        MPI_Type_contiguous(1, adio_fh->filetype, &copy_filetype);
-#endif
-
-        MPI_Type_commit(&copy_filetype);
-        *filetype = copy_filetype;
+    error_code = MPIR_File_get_view_impl(fh, disp, etype, filetype, datarep);
+    if (error_code) {
+        goto fn_fail;
     }
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
-
-    return MPI_SUCCESS;
+    return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }

@@ -36,30 +36,17 @@ Input Parameters:
 int MPI_File_set_info(MPI_File fh, MPI_Info info)
 {
     int error_code;
-    static char myname[] = "MPI_FILE_SET_INFO";
-    ADIO_File adio_fh;
-
     ROMIO_THREAD_CS_ENTER();
 
-    adio_fh = MPIO_File_resolve(fh);
-
-    /* --BEGIN ERROR HANDLING-- */
-    MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
-    MPIO_CHECK_INFO_ALL(info, error_code, fh->comm);
-    /* --END ERROR HANDLING-- */
-
-    /* set new info */
-    ADIO_SetInfo(adio_fh, info, &error_code);
+    error_code = MPIR_File_set_info_impl(fh, info);
+    if (error_code) {
+        goto fn_fail;
+    }
 
   fn_exit:
-    /* --BEGIN ERROR HANDLING-- */
-    if (error_code != MPI_SUCCESS)
-        error_code = MPIO_Err_return_file(adio_fh, error_code);
-    /* --END ERROR HANDLING-- */
-
     ROMIO_THREAD_CS_EXIT();
-
     return error_code;
   fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
     goto fn_exit;
 }

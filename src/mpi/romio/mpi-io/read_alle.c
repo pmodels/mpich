@@ -40,46 +40,17 @@ Output Parameters:
 int MPI_File_read_all_end(MPI_File fh, void *buf, MPI_Status * status)
 {
     int error_code;
-    static char myname[] = "MPI_FILE_IREAD";
-
-    error_code = MPIOI_File_read_all_end(fh, buf, myname, status);
-
-    return error_code;
-}
-
-/* prevent multiple definitions of this routine */
-#ifdef MPIO_BUILD_PROFILING
-int MPIOI_File_read_all_end(MPI_File fh, void *buf, char *myname, MPI_Status * status)
-{
-    int error_code = MPI_SUCCESS;
-    ADIO_File adio_fh;
-
-    MPL_UNREFERENCED_ARG(buf);
-
     ROMIO_THREAD_CS_ENTER();
 
-    adio_fh = MPIO_File_resolve(fh);
-
-    /* --BEGIN ERROR HANDLING-- */
-    MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
-
-    if (!(adio_fh->split_coll_count)) {
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, __LINE__, MPI_ERR_IO, "**iosplitcollnone", 0);
-        error_code = MPIO_Err_return_file(adio_fh, error_code);
-        goto fn_exit;
+    error_code = MPIR_File_read_all_end_impl(fh, buf, status);
+    if (error_code) {
+        goto fn_fail;
     }
-    /* --END ERROR HANDLING-- */
-
-#ifdef HAVE_STATUS_SET_BYTES
-    if (status != MPI_STATUS_IGNORE)
-        *status = adio_fh->split_status;
-#endif
-    adio_fh->split_coll_count = 0;
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
-
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(fh, error_code);
+    goto fn_exit;
 }
-#endif

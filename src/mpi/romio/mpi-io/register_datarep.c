@@ -52,7 +52,7 @@ Input Parameters:
                  native representation (function)
 . write_conversion_fn - function invoked to convert from native representation to
                   file representation (function)
-. dtype_file_extent_fn - function invoked to get the exted of a datatype as represented
+. dtype_file_extent_fn - function invoked to get the extent of a datatype as represented
                   in the file (function)
 - extra_state - pointer to extra state that is passed to each of the
                 three functions
@@ -73,10 +73,21 @@ int MPI_Register_datarep(ROMIO_CONST char *datarep,
                          MPI_Datarep_conversion_function * write_conversion_fn,
                          MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
 {
-    int is_large = false;
-    return MPIOI_Register_datarep(datarep, (MPIOI_VOID_FN *) read_conversion_fn,
-                                  (MPIOI_VOID_FN *) write_conversion_fn,
-                                  dtype_file_extent_fn, extra_state, is_large);
+    int error_code;
+    ROMIO_THREAD_CS_ENTER();
+
+    error_code = MPIR_Register_datarep_impl(datarep, read_conversion_fn, write_conversion_fn,
+                                            dtype_file_extent_fn, extra_state);
+    if (error_code) {
+        goto fn_fail;
+    }
+
+  fn_exit:
+    ROMIO_THREAD_CS_EXIT();
+    return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+    goto fn_exit;
 }
 
 /* large count function */
@@ -92,7 +103,7 @@ Input Parameters:
                  native representation (function)
 . write_conversion_fn - function invoked to convert from native representation to
                   file representation (function)
-. dtype_file_extent_fn - function invoked to get the exted of a datatype as represented
+. dtype_file_extent_fn - function invoked to get the extent of a datatype as represented
                   in the file (function)
 - extra_state - pointer to extra state that is passed to each of the
                 three functions
@@ -113,100 +124,19 @@ int MPI_Register_datarep_c(ROMIO_CONST char *datarep,
                            MPI_Datarep_conversion_function_c * write_conversion_fn,
                            MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
 {
-    int is_large = true;
-    return MPIOI_Register_datarep(datarep, (MPIOI_VOID_FN *) read_conversion_fn,
-                                  (MPIOI_VOID_FN *) write_conversion_fn,
-                                  dtype_file_extent_fn, extra_state, is_large);
-}
-
-#ifdef MPIO_BUILD_PROFILING
-int MPIOI_Register_datarep(const char *datarep,
-                           MPIOI_VOID_FN * read_conversion_fn,
-                           MPIOI_VOID_FN * write_conversion_fn,
-                           MPI_Datarep_extent_function * dtype_file_extent_fn,
-                           void *extra_state, int is_large)
-{
     int error_code;
-    ADIOI_Datarep *adio_datarep;
-    static char myname[] = "MPI_REGISTER_DATAREP";
-
     ROMIO_THREAD_CS_ENTER();
 
-    /* --BEGIN ERROR HANDLING-- */
-    /* check datarep name (use strlen instead of strnlen because
-     * strnlen is not portable) */
-    if (datarep == NULL || strlen(datarep) < 1 || strlen(datarep) > MPI_MAX_DATAREP_STRING) {
-        error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                          MPIR_ERR_RECOVERABLE,
-                                          myname, __LINE__, MPI_ERR_ARG, "**datarepname", 0);
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-        goto fn_exit;
+    error_code = MPIR_Register_datarep_large_impl(datarep, read_conversion_fn, write_conversion_fn,
+                                                  dtype_file_extent_fn, extra_state);
+    if (error_code) {
+        goto fn_fail;
     }
-    /* --END ERROR HANDLING-- */
-
-    MPIR_MPIOInit(&error_code);
-    if (error_code != MPI_SUCCESS)
-        goto fn_exit;
-
-    /* --BEGIN ERROR HANDLING-- */
-    /* check datarep isn't already registered */
-    for (adio_datarep = ADIOI_Datarep_head; adio_datarep; adio_datarep = adio_datarep->next) {
-        if (!strncmp(datarep, adio_datarep->name, MPI_MAX_DATAREP_STRING)) {
-            error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                              MPIR_ERR_RECOVERABLE,
-                                              myname, __LINE__,
-                                              MPI_ERR_DUP_DATAREP,
-                                              "**datarepused", "**datarepused %s", datarep);
-            error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-            goto fn_exit;
-        }
-    }
-
-    /* Check Non-NULL Read and Write conversion function pointer */
-    /* Read and Write conversions are currently not supported.   */
-    if ((read_conversion_fn != NULL) || (write_conversion_fn != NULL)) {
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, __LINE__,
-                                          MPI_ERR_CONVERSION, "**drconvnotsupported", 0);
-
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-        goto fn_exit;
-    }
-
-    /* check extent function pointer */
-    if (dtype_file_extent_fn == NULL) {
-        error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                          MPIR_ERR_RECOVERABLE,
-                                          myname, __LINE__, MPI_ERR_ARG, "**datarepextent", 0);
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-        goto fn_exit;
-    }
-    /* --END ERROR HANDLING-- */
-
-    adio_datarep = ADIOI_Malloc(sizeof(ADIOI_Datarep));
-    adio_datarep->name = ADIOI_Strdup(datarep);
-    adio_datarep->state = extra_state;
-    adio_datarep->is_large = is_large;
-    if (is_large) {
-        adio_datarep->u.large.read_conv_fn =
-            (MPI_Datarep_conversion_function_c *) read_conversion_fn;
-        adio_datarep->u.large.write_conv_fn =
-            (MPI_Datarep_conversion_function_c *) write_conversion_fn;
-    } else {
-        adio_datarep->u.small.read_conv_fn = (MPI_Datarep_conversion_function *) read_conversion_fn;
-        adio_datarep->u.small.write_conv_fn =
-            (MPI_Datarep_conversion_function *) write_conversion_fn;
-    }
-    adio_datarep->extent_fn = dtype_file_extent_fn;
-    adio_datarep->next = ADIOI_Datarep_head;
-
-    ADIOI_Datarep_head = adio_datarep;
-
-    error_code = MPI_SUCCESS;
 
   fn_exit:
     ROMIO_THREAD_CS_EXIT();
-
     return error_code;
+  fn_fail:
+    error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+    goto fn_exit;
 }
-#endif
