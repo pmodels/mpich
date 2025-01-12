@@ -13,6 +13,8 @@
 MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN];
 MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC];
 
+MPI_Datatype MPIR_Internal_types[MPIR_DATATYPE_N_BUILTIN];
+
 MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_DATATYPE,
     sizeof(MPIR_Datatype), MPIR_Datatype_direct,
     MPIR_DATATYPE_PREALLOC,
@@ -138,6 +140,14 @@ static void predefined_index_init(void)
     }
 }
 
+static void internal_types_init(void)
+{
+    /* TODO: to be update in later commits */
+    for (int i = 0; i < MPIR_DATATYPE_N_BUILTIN; i++) {
+        MPIR_Internal_types[i] = MPI_DATATYPE_NULL;
+    }
+}
+
 static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
 {
     int i;
@@ -232,6 +242,7 @@ int MPIR_Datatype_init_predefined(void)
 
     MPIR_Add_finalize(pairtypes_finalize_cb, 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
     predefined_index_init();
+    internal_types_init();
 
   fn_fail:
     return mpi_errno;

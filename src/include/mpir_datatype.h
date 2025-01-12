@@ -14,6 +14,168 @@
 #define MPIR_DATATYPE_PAIRTYPE 5
 #define MPIR_DATATYPE_N_PREDEFINED (MPIR_DATATYPE_N_BUILTIN + MPIR_DATATYPE_PAIRTYPE)
 
+/* For internal communication and reduction, many of the builtin-datatypes are
+ * equivalent. Thus, we can make equivalent swap so internally we only need
+ * support a finite essential types */
+
+/* Internal datatypes */
+/* The handle bit pattern: 0xAABBCCDD, where -
+ *   AA - 0x4c, works with HANDLE_IS_BUILTIN()
+ *   BB - type, one of MPIR_TYPE_{FIXED,SIGNED,UNSIGNED,FLOAT,COMPLEX,FLOAT_ALT} | [PAIRTYPE MASK]
+ *   CC - type size, works with MPIR_Datatype_get_basic_size()
+ *   DD - the index of the builtin type that the internal type is swapped from; 0x00 otherwise.
+ */
+
+#define MPIR_TYPE_INTERNAL_MASK  0x800000       /* all internal types have this bit on */
+#define MPIR_TYPE_PAIR_MASK      0x400000       /* builtin pairtypes such as MPIR_2INT32 */
+#define MPIR_TYPE_TYPE_MASK      0x0f0000       /* e.g. FIXED, SIGNED, UNSIGNED, FLOAT, COMPLEX, etc. */
+#define MPIR_TYPE_INDEX_MASK     0x0000ff
+
+/* Internally we support FIXED, SIGNED, UNSIGNED, FLOAT, and COMPLEX.
+ * Other types can be added when supported, e.g. bfloat16 or logicals that
+ * doesn't follow the C convention of zero/nonzero.
+ */
+#define MPIR_TYPE_FIXED           0x000000      /* communication-only, op not supported */
+#define MPIR_TYPE_SIGNED          0x010000      /* including C boolean */
+#define MPIR_TYPE_UNSIGNED        0x020000
+#define MPIR_TYPE_FLOAT           0x030000      /* IEEE754 floating point */
+#define MPIR_TYPE_COMPLEX         0x040000      /* 2 C native floating point */
+#define MPIR_TYPE_ALT_FLOAT       0x050000      /* e.g. 2-byte Bfloat, 16-byte C long double */
+#define MPIR_TYPE_ALT_COMPLEX     0x060000      /* e.g. 2-byte Bfloat, 16-byte C long double */
+#define MPIR_TYPE_FORTRAN_LOGICAL 0x070000      /* Fortran logical may need conversions at op */
+
+#define MPIR_FIXED0             ((MPI_Datatype)0x4c800000)      /* 0-size, internally equivalent to MPI_DATATYPE_NULL */
+#define MPIR_FIXED8             ((MPI_Datatype)0x4c800100)
+#define MPIR_FIXED16            ((MPI_Datatype)0x4c800200)
+#define MPIR_FIXED32            ((MPI_Datatype)0x4c800400)
+#define MPIR_FIXED64            ((MPI_Datatype)0x4c800800)
+#define MPIR_FIXED128           ((MPI_Datatype)0x4c801000)
+#define MPIR_INT8               ((MPI_Datatype)0x4c810100)
+#define MPIR_INT16              ((MPI_Datatype)0x4c810200)
+#define MPIR_INT32              ((MPI_Datatype)0x4c810400)
+#define MPIR_INT64              ((MPI_Datatype)0x4c810800)
+#define MPIR_INT128             ((MPI_Datatype)0x4c811000)
+#define MPIR_UINT8              ((MPI_Datatype)0x4c820100)
+#define MPIR_UINT16             ((MPI_Datatype)0x4c820200)
+#define MPIR_UINT32             ((MPI_Datatype)0x4c820400)
+#define MPIR_UINT64             ((MPI_Datatype)0x4c820800)
+#define MPIR_UINT128            ((MPI_Datatype)0x4c821000)
+#define MPIR_FLOAT8             ((MPI_Datatype)0x4c830100)
+#define MPIR_FLOAT16            ((MPI_Datatype)0x4c830200)
+#define MPIR_FLOAT32            ((MPI_Datatype)0x4c830400)
+#define MPIR_FLOAT64            ((MPI_Datatype)0x4c830800)
+#define MPIR_FLOAT128           ((MPI_Datatype)0x4c831000)
+#define MPIR_COMPLEX8           ((MPI_Datatype)0x4c840200)
+#define MPIR_COMPLEX16          ((MPI_Datatype)0x4c840400)
+#define MPIR_COMPLEX32          ((MPI_Datatype)0x4c840800)
+#define MPIR_COMPLEX64          ((MPI_Datatype)0x4c841000)
+#define MPIR_COMPLEX128         ((MPI_Datatype)0x4c842000)
+#define MPIR_ALT_FLOAT96        ((MPI_Datatype)0x4c850c00)      /* long double (80-bit extended precision) on i386 */
+#define MPIR_ALT_FLOAT128       ((MPI_Datatype)0x4c851000)      /* long double (80-bit extended precision) on x86-64 */
+#define MPIR_ALT_COMPLEX96      ((MPI_Datatype)0x4c861800)      /* long double complex on i386 */
+#define MPIR_ALT_COMPLEX128     ((MPI_Datatype)0x4c862000)      /* long double complex on x86-64 */
+#define MPIR_FORTRAN_LOGICAL8   ((MPI_Datatype)0x4c870100)
+#define MPIR_FORTRAN_LOGICAL16  ((MPI_Datatype)0x4c870200)
+#define MPIR_FORTRAN_LOGICAL32  ((MPI_Datatype)0x4c870400)
+#define MPIR_FORTRAN_LOGICAL64  ((MPI_Datatype)0x4c870800)
+#define MPIR_FORTRAN_LOGICAL128 ((MPI_Datatype)0x4c871000)
+
+/* Pair types support communication and MPI_MINLOC and MPI_MAXLOC ops. The value type
+ * is SIGNED, UNSIGNED, FLOAT. The index type may be a SIGNED integer that is different
+ * from the value type (internally a struct type) or * the same as the value type (builtin
+ * pairtype).
+ *
+ * Struct pairtypes are created at init with handles like 0x800000[idx].
+ * They are listed in global mpi_pairtypes[idx].
+ *
+ * Builtin pairtypes internally use the same handle pattern a mask bit MPIR_TYPE_PAIR_MASK
+ *
+ * Examples:
+ *     0x8c000000 - MPI_FLOAT_INT, and mpi_pairtypes[0].value_type = 0x4c000483
+ *     0x8c000003 - MPI_SHORT_INT, and mpi_pairtypes[3].value_type = 0x4c000281
+ *
+ *     0x4cc10800 - MPI_2INT, MPI_2INTEGER
+ *     0x4cc30800 - MPI_2REAL
+ */
+
+/* builtin pair types - MPI_2INT, MPI_2INTEGER, etc. They have the MPIR_TYPE_PAIR_MASK on.
+ * NOTE: value index types such as MPI_FLOAT_INT internally are not builtin */
+#define MPIR_2INT8              ((MPI_Datatype)0x4cc10200)
+#define MPIR_2INT16             ((MPI_Datatype)0x4cc10400)
+#define MPIR_2INT32             ((MPI_Datatype)0x4cc10800)
+#define MPIR_2INT64             ((MPI_Datatype)0x4cc11000)
+#define MPIR_2INT128            ((MPI_Datatype)0x4cc12000)
+#define MPIR_2UINT8             ((MPI_Datatype)0x4cc20200)
+#define MPIR_2UINT16            ((MPI_Datatype)0x4cc20400)
+#define MPIR_2UINT32            ((MPI_Datatype)0x4cc20800)
+#define MPIR_2UINT64            ((MPI_Datatype)0x4cc21000)
+#define MPIR_2UINT128           ((MPI_Datatype)0x4cc22000)
+#define MPIR_2FLOAT8            ((MPI_Datatype)0x4cc30200)
+#define MPIR_2FLOAT16           ((MPI_Datatype)0x4cc30400)
+#define MPIR_2FLOAT32           ((MPI_Datatype)0x4cc30800)
+#define MPIR_2FLOAT64           ((MPI_Datatype)0x4cc31000)
+#define MPIR_2FLOAT128          ((MPI_Datatype)0x4cc32000)
+
+/* Define following to simplify configure logic */
+#define MPIR_INT0               MPI_DATATYPE_NULL
+#define MPIR_UINT0              MPI_DATATYPE_NULL
+#define MPIR_FLOAT0             MPI_DATATYPE_NULL
+#define MPIR_COMPLEX0           MPI_DATATYPE_NULL
+#define MPIR_ALT_FLOAT0         MPI_DATATYPE_NULL
+#define MPIR_FORTRAN_LOGICAL0   MPI_DATATYPE_NULL
+#define MPIR_2INT0              MPI_DATATYPE_NULL
+#define MPIR_2UINT0             MPI_DATATYPE_NULL
+#define MPIR_2FLOAT0            MPI_DATATYPE_NULL
+
+struct MPIR_Datatype_builtin_entry {
+    MPI_Datatype dtype;
+    MPI_Datatype internal_type;
+    const char *name;
+};
+extern struct MPIR_Datatype_builtin_entry MPIR_Internal_types[];
+
+/* Swap input builtin datatype with an equivalent internal type */
+#define MPIR_DATATYPE_REPLACE_BUILTIN(type) \
+    do { \
+        if (HANDLE_IS_BUILTIN(type) && ((type) & 0xff)) { \
+            (type) = MPIR_Internal_types[(type) & 0xff].internal_type; \
+        } \
+    } while (0)
+
+/* The original (builtin) type is needed for calling user op or reporting errors.
+ * Note this works even if type has not been swapped since we just access from its index */
+#define MPIR_DATATYPE_GET_ORIG_BUILTIN(type)  MPIR_Internal_types[(type) & 0xff].dtype
+
+/* The "raw" internal type have index bits set to 0 */
+#define MPIR_DATATYPE_GET_RAW_INTERNAL(type)  ((type) & 0xffffff00)
+
+struct MPIR_pairtype {
+    MPI_Datatype value_type;
+    /* index_type is always MPI_INT */
+};
+extern struct MPIR_pairtype MPIR_pairtypes[];
+extern int MPIR_num_pairtypes;
+
+MPL_STATIC_INLINE_PREFIX bool MPIR_Datatype_is_pairtype(MPI_Datatype datatype)
+{
+    if (HANDLE_IS_BUILTIN(datatype) && (datatype & MPIR_TYPE_PAIR_MASK)) {
+        return true;
+    } else if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_DIRECT) {
+        if ((datatype & 0xff) < MPIR_num_pairtypes) {
+            return true;
+        }
+    }
+    return false;
+}
+
+MPL_STATIC_INLINE_PREFIX MPI_Datatype MPIR_Pairtype_get_value_type(MPI_Datatype datatype)
+{
+    MPIR_Assert(HANDLE_GET_KIND(datatype) == HANDLE_KIND_DIRECT);
+    int idx = (datatype & 0xff);
+    MPIR_Assert(idx < MPIR_num_pairtypes);
+    return MPIR_pairtypes[idx].value_type;
+}
+
 /*S
   MPIR_Datatype_contents - Holds envelope and contents data for a given
                            datatype
@@ -206,7 +368,8 @@ void MPII_Datatype_printf(MPI_Datatype type, int depth, MPI_Aint displacement, i
 #define MPIR_Datatype_is_float(a, is_float) do { \
     MPI_Datatype basic_type; \
     MPIR_Datatype_get_basic_type(a, basic_type); \
-    if (basic_type == MPI_FLOAT || basic_type == MPI_DOUBLE) { \
+    int type = basic_type & MPIR_TYPE_TYPE_MASK; \
+    if (type == MPIR_TYPE_FLOAT || type == MPIR_TYPE_ALT_FLOAT) { \
         is_float = true; \
     } else { \
         is_float = false; \
