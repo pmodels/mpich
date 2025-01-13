@@ -796,7 +796,7 @@ if ($routine_list ne "") {
 	    'INTEGER8', 'INTEGER16', 'WCHAR', 'SIGNED_CHAR', 
 	    'UNSIGNED_LONG_LONG' );
 
-@typeclasses = ( 'TYPECLASS_REAL', 'TYPECLASS_INTEGER', 'TYPECLASS_COMPLEX' );
+@typeclasses = ( 'TYPECLASS_REAL', 'TYPECLASS_INTEGER', 'TYPECLASS_COMPLEX' );  # TODO: add 'TYPECLASS_LOGICAL'
 
 
 #

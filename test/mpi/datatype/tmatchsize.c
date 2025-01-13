@@ -154,6 +154,20 @@ int main(int argc, char *argv[])
         }
     }
 
+#if MTEST_HAVE_MIN_MPI_VERSION(5,0) /* TODO: remove this branch */ || defined(MPICH)
+    err = MPI_Type_match_size(MPIX_TYPECLASS_LOGICAL, 1, &newtype);
+    if (err) {
+        errs++;
+        MTestPrintErrorMsg("Logical: ", err);
+    } else {
+        MPI_Type_size(newtype, &dsize);
+        if (dsize != 1) {
+            errs++;
+            printf("Unexpected size for logical\n");
+        }
+    }
+#endif
+
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
 }

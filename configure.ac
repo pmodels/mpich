@@ -2947,6 +2947,26 @@ if test "$enable_f77" = yes ; then
     # mpir_get_fsize at run time.
     # For the size-defined types (e.g., integer*2), we assume that if the
     # compiler allows it, it has the stated size.
+    AC_CACHE_CHECK([whether logical*1 is supported],pac_cv_fort_logical1,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      logical*1 i])],
+         pac_cv_fort_logical1=yes,
+         pac_cv_fort_logical1=no)])
+    AC_CACHE_CHECK([whether logical*2 is supported],pac_cv_fort_logical2,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      logical*2 i])],
+        pac_cv_fort_logical2=yes,
+        pac_cv_fort_logical2=no)])
+    AC_CACHE_CHECK([whether logical*4 is supported],pac_cv_fort_logical4,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      logical*4 i])],
+        pac_cv_fort_logical4=yes,
+        pac_cv_fort_logical4=no)])
+    AC_CACHE_CHECK([whether logical*8 is supported],pac_cv_fort_logical8,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      logical*8 i])],
+        pac_cv_fort_logical8=yes,
+        pac_cv_fort_logical8=no)])
+    AC_CACHE_CHECK([whether logical*16 is supported],pac_cv_fort_logical16,[
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      logical*16 i])],
+        pac_cv_fort_logical16=yes,
+        pac_cv_fort_logical16=no)])
     AC_CACHE_CHECK([whether integer*1 is supported],pac_cv_fort_integer1,[
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*1 i])],
          pac_cv_fort_integer1=yes,
@@ -3030,6 +3050,12 @@ if test "$enable_f77" = yes ; then
     PAC_F77_CHECK_FIXED_INTEGER(4)
     PAC_F77_CHECK_FIXED_INTEGER(8)
     PAC_F77_CHECK_FIXED_INTEGER(16)
+
+    PAC_F77_CHECK_FIXED_LOGICAL(1)
+    PAC_F77_CHECK_FIXED_LOGICAL(2)
+    PAC_F77_CHECK_FIXED_LOGICAL(4)
+    PAC_F77_CHECK_FIXED_LOGICAL(8)
+    PAC_F77_CHECK_FIXED_LOGICAL(16)
 
     # We also need to check the size of MPI_Aint vs MPI_Fint, and
     # define AINT_LARGER_THAN_FINT if aint is larger (this
@@ -3176,10 +3202,15 @@ else
 
     # set following sizes to 0 will disable the corresponding datatype
     pac_cv_f77_sizeof_character=0
+    pac_cv_f77_sizeof_logical=0
     pac_cv_f77_sizeof_integer=0
     pac_cv_f77_sizeof_real=0
     pac_cv_f77_sizeof_double_precision=0
-    pac_cv_f77_sizeof_logical=0
+    pac_cv_f77_sizeof_logical1=0
+    pac_cv_f77_sizeof_logical2=0
+    pac_cv_f77_sizeof_logical4=0
+    pac_cv_f77_sizeof_logical8=0
+    pac_cv_f77_sizeof_logical16=0
     pac_cv_f77_sizeof_integer1=0
     pac_cv_f77_sizeof_integer2=0
     pac_cv_f77_sizeof_integer4=0
@@ -3517,6 +3548,11 @@ PAC_SET_MPI_TYPE(43, MPI_AINT_DATATYPE, $MPI_SIZEOF_AINT)
 PAC_SET_MPI_TYPE(44, MPI_OFFSET_DATATYPE, $MPI_SIZEOF_OFFSET)
 PAC_SET_MPI_TYPE(45, MPI_COUNT_DATATYPE, $MPI_SIZEOF_COUNT)
 PAC_SET_MPI_TYPE(46, MPIX_C_FLOAT16, 2)
+PAC_SET_MPI_TYPE(47, MPI_LOGICAL1, $pac_cv_f77_sizeof_logical1)
+PAC_SET_MPI_TYPE(48, MPI_LOGICAL2, $pac_cv_f77_sizeof_logical2)
+PAC_SET_MPI_TYPE(49, MPI_LOGICAL4, $pac_cv_f77_sizeof_logical4)
+PAC_SET_MPI_TYPE(4a, MPI_LOGICAL8, $pac_cv_f77_sizeof_logical8)
+PAC_SET_MPI_TYPE(4b, MPI_LOGICAL16, $pac_cv_f77_sizeof_logical16)
 AC_MSG_RESULT([done])
 
 # aliases

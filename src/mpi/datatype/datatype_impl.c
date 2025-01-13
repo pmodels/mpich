@@ -317,6 +317,11 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
         MPI_COMPLEX, MPI_DOUBLE_COMPLEX,
         MPI_C_COMPLEX, MPI_C_DOUBLE_COMPLEX, MPI_C_LONG_DOUBLE_COMPLEX,
     };
+    static MPI_Datatype bool_types[] = {
+        MPI_LOGICAL1, MPI_LOGICAL2, MPI_LOGICAL4, MPI_LOGICAL8, MPI_LOGICAL16,
+        MPI_LOGICAL,
+        MPI_C_BOOL,
+    };
     MPI_Datatype matched_datatype = MPI_DATATYPE_NULL;
     int i;
     MPI_Aint tsize;
@@ -380,6 +385,24 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
                     MPIR_Datatype_get_size_macro(complex_types[i], tsize);
                     if (tsize == size) {
                         matched_datatype = complex_types[i];
+                        break;
+                    }
+                }
+            }
+            break;
+        case MPIX_TYPECLASS_LOGICAL:
+            {
+                int nBoolTypes = sizeof(bool_types) / sizeof(MPI_Datatype);
+#ifdef HAVE_ERROR_CHECKING
+                tname = "MPIX_TYPECLASS_LOGICAL";
+#endif
+                for (i = 0; i < nBoolTypes; i++) {
+                    if (bool_types[i] == MPI_DATATYPE_NULL) {
+                        continue;
+                    }
+                    MPIR_Datatype_get_size_macro(bool_types[i], tsize);
+                    if (tsize == size) {
+                        matched_datatype = bool_types[i];
                         break;
                     }
                 }

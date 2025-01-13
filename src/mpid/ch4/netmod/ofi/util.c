@@ -277,7 +277,13 @@ int MPIDI_OFI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, en
     } else if (dt == MPI_UNSIGNED_CHAR || dt == MPI_UNSIGNED_SHORT || dt == MPI_UNSIGNED ||
                dt == MPI_UNSIGNED_LONG || dt == MPI_UNSIGNED_LONG_LONG ||
                dt == MPI_UINT8_T || dt == MPI_UINT16_T || dt == MPI_UINT32_T ||
-               dt == MPI_UINT64_T || dt == MPI_C_BOOL || dt == MPI_LOGICAL) {
+               dt == MPI_UINT64_T || dt == MPI_C_BOOL ||
+               /* TODO: Should MPI_LOGICAL* be handled as unsigned?
+                * These datatypes corresponds to Fortran LOGICAL
+                * types. Therefore it may make more sense to be
+                * handled similarly as INTEGER in the previous branch. */
+               dt == MPI_LOGICAL || dt == MPI_LOGICAL1 || dt == MPI_LOGICAL2 ||
+               dt == MPI_LOGICAL4 || dt == MPI_LOGICAL8) {
         switch (dt_size) {
             case 1:
                 *fi_dt = FI_UINT8;

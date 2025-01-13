@@ -223,6 +223,11 @@ typedef int MPI_Datatype;
 #define MPI_INTEGER4          ((MPI_Datatype)@MPI_INTEGER4@)
 #define MPI_INTEGER8          ((MPI_Datatype)@MPI_INTEGER8@)
 #define MPI_INTEGER16         ((MPI_Datatype)@MPI_INTEGER16@)
+#define MPI_LOGICAL1          ((MPI_Datatype)@MPI_LOGICAL1@)
+#define MPI_LOGICAL2          ((MPI_Datatype)@MPI_LOGICAL2@)
+#define MPI_LOGICAL4          ((MPI_Datatype)@MPI_LOGICAL4@)
+#define MPI_LOGICAL8          ((MPI_Datatype)@MPI_LOGICAL8@)
+#define MPI_LOGICAL16         ((MPI_Datatype)@MPI_LOGICAL16@)
 
 /* C99 fixed-width datatypes */
 #define MPI_INT8_T            ((MPI_Datatype)@MPI_INT8_T@)
@@ -562,6 +567,7 @@ extern int * const MPI_WEIGHTS_EMPTY MPICH_API_PUBLIC;
 #define MPI_TYPECLASS_REAL 1
 #define MPI_TYPECLASS_INTEGER 2
 #define MPI_TYPECLASS_COMPLEX 3
+#define MPIX_TYPECLASS_LOGICAL 4
 
 #define MPI_LOCK_EXCLUSIVE  234
 #define MPI_LOCK_SHARED     235

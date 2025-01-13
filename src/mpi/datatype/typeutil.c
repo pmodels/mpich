@@ -96,6 +96,11 @@ static mpi_names_t mpi_dtypes[] = {
     type_name_entry(MPI_INTEGER4),
     type_name_entry(MPI_INTEGER8),
     type_name_entry(MPI_INTEGER16),
+    type_name_entry(MPI_LOGICAL1),
+    type_name_entry(MPI_LOGICAL2),
+    type_name_entry(MPI_LOGICAL4),
+    type_name_entry(MPI_LOGICAL8),
+    type_name_entry(MPI_LOGICAL16),
 
     /* C++ types */
     type_name_entry(MPI_CXX_BOOL),
@@ -287,7 +292,9 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
         return ALIGNOF_CHAR;
     } else if (type == MPI_LOGICAL || type == MPI_INTEGER || type == MPI_2INTEGER ||
                type == MPI_INTEGER1 || type == MPI_INTEGER2 || type == MPI_INTEGER4 ||
-               type == MPI_INTEGER8 || type == MPI_INTEGER16) {
+               type == MPI_INTEGER8 || type == MPI_INTEGER16 ||
+               type == MPI_LOGICAL1 || type == MPI_LOGICAL2 || type == MPI_LOGICAL4 ||
+               type == MPI_LOGICAL8 || type == MPI_LOGICAL16) {
         if (size == sizeof(int8_t))
             return ALIGNOF_INT8_T;
         else if (size == sizeof(int16_t))

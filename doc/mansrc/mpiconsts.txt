@@ -87,7 +87,12 @@ standard.
 - MPI_DOUBLE_COMPLEX - 'complex*16' (or 'complex*32') where supported.
 
   The following datatypes are optional
-+I MPI_INTEGER1  - 'integer*1' if supported
++I MPI_LOGICAL1  - 'logical*1' if supported
+. MPI_LOGICAL2  - 'logical*2' if supported
+. MPI_LOGICAL4  - 'logical*4' if supported
+. MPI_LOGICAL8  - 'logical*8' if supported
+. MPI_LOGICAL16 - 'logical*16' if supported
+. MPI_INTEGER1  - 'integer*1' if supported
 . MPI_INTEGER2  - 'integer*2' if supported
 . MPI_INTEGER4  - 'integer*4' if supported
 . MPI_INTEGER8  - 'integer*8' if supported
@@ -135,9 +140,10 @@ standard.
  MPI Datatype Type Classes:
  MPI Type classes used with routines to return Fortran types with defined
  precision and range
-+I MPI_TYPECLASS_REAL    - 'REAL'
-. MPI_TYPECLASS_INTEGER - 'INTEGER'
-- MPI_TYPECLASS_COMPLEX - 'COMPLEX'
++I MPIX_TYPECLASS_LOGICAL    - 'LOGICAL'
+. MPI_TYPECLASS_INTEGER    - 'INTEGER'
+. MPI_TYPECLASS_REAL       - 'REAL'
+- MPI_TYPECLASS_COMPLEX    - 'COMPLEX'
 
  MPI Darray and Subarray Values:
  These values are used to create a datatype with the 'DARRAY' and 'SUBARRAY'
