@@ -582,6 +582,11 @@ def process_func_parameters(func):
                 t += temp_p['name']
                 impl_arg_list.append(temp_p['name'])
                 impl_param_list.append(get_impl_param(func, temp_p))
+                if temp_p['kind'] == "DATATYPE":
+                    datatype_in_list.append(temp_p)
+                    if temp_p['length']:
+                        # use an internal array for type swap
+                        impl_arg_list[-1] += '_i'
             validation_list.append({'kind': group_kind, 'name': t})
             # -- pointertag_list
             if re.search(r'alltoallw', func_name, re.IGNORECASE):
@@ -831,11 +836,9 @@ def process_func_parameters(func):
             else:
                 impl_arg_list.append(name + "_ptr")
                 impl_param_list.append("%s *%s_ptr" % (mpir_type, name))
-        elif kind == "DATATYPE" and p['param_direction'] == 'in':
-            datatype_in_list.append(p)
-            impl_arg_list.append(name + "_i")
-            impl_param_list.append(get_impl_param(func, p))
         else:
+            if kind == "DATATYPE" and p['param_direction'] == 'in' and not is_type_create(func):
+                datatype_in_list.append(p)
             impl_arg_list.append(name)
             impl_param_list.append(get_impl_param(func, p))
         i += 1
@@ -1514,17 +1517,7 @@ def dump_function_normal(func):
     if '_handle_ptr_list' in func:
         for p in func['_handle_ptr_list']:
             dump_handle_ptr_var(func, p)
-    if func["_need_coll_v_swap"]:
-        # get count array dimensions at the top
-        if RE.match(r'mpi_i?neighbor_', func['name'], re.IGNORECASE):
-            dump_validate_get_topo_size(func)
-        else:
-            dump_validate_get_comm_size(func)
 
-    if '_datatype_in_list' in func:
-        for p in func['_datatype_in_list']:
-            G.out.append("MPI_Datatype %s_in = %s;" % (p['name'], p['name']))
-            G.out.append("MPIR_DATATYPE_REPLACE_BUILTIN(%s_in);" % p['name'])
     if '_comm_from_request' in func:
         G.out.append("MPIR_Comm *comm_ptr = NULL;")
     if 'code-declare' in func:
@@ -1564,6 +1557,14 @@ def dump_function_normal(func):
     if 'code-handle_ptr' in func:
         for l in func['code-handle_ptr']:
             G.out.append(l)
+
+    if func["_need_coll_v_swap"]:
+        # get count array dimensions at the top
+        if RE.match(r'mpi_i?neighbor_', func['name'], re.IGNORECASE):
+            dump_validate_get_topo_size(func)
+        else:
+            dump_validate_get_comm_size(func)
+
     if func['_need_validation']:
         G.out.append("")
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
@@ -1591,6 +1592,32 @@ def dump_function_normal(func):
         G.out.append("}")
         G.out.append("#endif \x2f* HAVE_ERROR_CHECKING */")
         G.out.append("")
+
+    if '_datatype_in_list' in func:
+        for p in func['_datatype_in_list']:
+            if not p['length']:
+                # save original datatype for error report
+                G.out.append("MPIR_DATATYPE_REPLACE_BUILTIN(%s);" % p['name'])
+            else:
+                # alltoallw, use an internal datatype array since we can't modify the input array
+                n = 'comm_size'
+                if re.match(r'.*neighbor_i?alltoallw', func['name'], re.IGNORECASE):
+                    if p['name'] == 'sendtypes':
+                        n = 'outdegree'
+                    else:
+                        n = 'indegree'
+                G.out.append("MPI_Datatype *%s_i;" % p['name'])
+                if p['name'] == 'sendtypes':
+                    dump_if_open("sendbuf != MPI_IN_PLACE")
+                G.out.append("MPIR_CHKLMEM_MALLOC(%s_i, %s * sizeof(MPI_Datatype));" % (p['name'], n))
+                G.out.append("for (int i = 0; i < %s; i++) {" % n)
+                G.out.append("    %s_i[i] = %s[i];" % (p['name'], p['name']))
+                G.out.append("    MPIR_DATATYPE_REPLACE_BUILTIN(%s_i[i]);" % p['name'])
+                G.out.append("}")
+                if p['name'] == 'sendtypes':
+                    dump_else()
+                    G.out.append("%s_i = NULL;" % p['name'])
+                    dump_if_close()
 
     check_early_returns(func)
     G.out.append("")
@@ -2882,6 +2909,7 @@ def dump_validate_op(op, dt, is_coll):
     G.out.append("    MPIR_Op_valid_ptr(op_ptr, mpi_errno);")
     if dt:
         G.out.append("} else {")
+        G.out.append("    MPIR_DATATYPE_REPLACE_BUILTIN(%s);" % dt)
         G.out.append("    mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(%s)) (%s);" % (op, dt))
         # check predefined datatype and replace with basic_type if necessary
         G.out.append("    if (mpi_errno != MPI_SUCCESS) {")
@@ -2930,6 +2958,10 @@ def dump_validate_get_topo_size(func):
         func['_got_topo_size'] = 1
 
 # ---- supporting routines (reusable) ----
+
+def is_type_create(func):
+    last_p = func['c_parameters'][-1]
+    return (last_p['kind'] == 'DATATYPE' and last_p['param_direction'] == 'out')
 
 def get_function_args(func):
     arg_list = []
