@@ -65,6 +65,11 @@
 
 # Fix compilation issue with g++ in -std=gnu++20 mode
 
+# Fix bug in MPI_ANY_SOURCE handling observed using the libfabric CXI
+  provider
+
+# Add NIC information to error messages in ch4:ofi netmod
+
 ===============================================================================
                                Changes in 4.2
 ===============================================================================

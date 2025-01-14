@@ -38,6 +38,10 @@ ATTRIBUTE((unused));
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
+#define MPIDI_OFI_NIC_NAME(nic)    (MPIDI_OFI_global.prov_use[nic] ? \
+                                    MPIDI_OFI_global.prov_use[nic]->domain_attr->name : "(n/a)")
+#define MPIDI_OFI_DEFAULT_NIC_NAME (MPIDI_OFI_NIC_NAME(0))
+
 int MPIDI_OFI_progress_uninlined(int vci);
 int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 
@@ -55,18 +59,16 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 #define MPIDI_OFI_PROGRESS_WHILE(cond, vci) \
     while (cond) MPIDI_OFI_PROGRESS(vci)
 
-#define MPIDI_OFI_ERR  MPIR_ERR_CHKANDJUMP4
-#define MPIDI_OFI_CALL(FUNC,STR)                                     \
+#define MPIDI_OFI_ERR  MPIR_ERR_CHKANDJUMP2
+#define MPIDI_OFI_CALL(FUNC,STR)                            \
     do {                                                    \
         ssize_t _ret = FUNC;                                \
         MPIDI_OFI_ERR(_ret<0,                       \
                               mpi_errno,                    \
                               MPI_ERR_OTHER,                \
                               "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %d %s %s",  \
-                              __SHORT_FILE__,               \
-                              __LINE__,                     \
-                              __func__,                       \
+                              "**ofid_"#STR" %s %s",        \
+                              MPIDI_OFI_DEFAULT_NIC_NAME,   \
                               fi_strerror(-_ret));          \
     } while (0)
 
@@ -81,10 +83,8 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                               mpi_errno,                    \
                               MPI_ERR_OTHER,                \
                               "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %d %s %s",  \
-                              __SHORT_FILE__,               \
-                              __LINE__,                     \
-                              __func__,                       \
+                              "**ofid_"#STR" %s %s",        \
+                              MPIDI_OFI_DEFAULT_NIC_NAME,   \
                               fi_strerror(-_ret));          \
         if (_retry > 0) { \
             _retry--; \
@@ -94,9 +94,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
          * operation can be avoided since we are inside a finite loop. */ \
-        MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_);			  \
-        mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_);			     \
+        mpi_errno = MPIDI_OFI_retry_progress(vci_, _retry); \
         MPIR_ERR_CHECK(mpi_errno);                               \
     } while (1);                                            \
     } while (0)
@@ -113,9 +111,7 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                 _retry--; \
                 MPIR_ERR_CHKANDJUMP(_retry == 0, mpi_errno, MPIX_ERR_EAGAIN, "**eagain"); \
             } \
-            MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_); \
-            mpi_errno = MPIDI_OFI_retry_progress(); \
-            MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_); \
+            mpi_errno = MPIDI_OFI_retry_progress(vci_, _retry); \
         } \
     } while (0)
 
@@ -129,10 +125,8 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                                    mpi_errno,                           \
                                    MPI_ERR_OTHER,                       \
                                    "**ofid_"#STR,                        \
-                                   "**ofid_"#STR" %s %d %s %s",          \
-                                   __SHORT_FILE__,                      \
-                                   __LINE__,                            \
-                                   __func__,                              \
+                                   "**ofid_"#STR" %s %s",               \
+                                   MPIDI_OFI_DEFAULT_NIC_NAME,          \
                                    fi_strerror(-_ret));                 \
             mpi_errno = MPIDI_OFI_progress_do_queue(vci_);              \
             if (mpi_errno != MPI_SUCCESS)                                \
@@ -176,10 +170,8 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
                               mpi_errno,                    \
                               MPI_ERR_OTHER,                \
                               "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %d %s %s",  \
-                              __SHORT_FILE__,               \
-                              __LINE__,                     \
-                              __func__,                     \
+                              "**ofid_"#STR" %s %s",        \
+                              MPIDI_OFI_DEFAULT_NIC_NAME,   \
                               fi_strerror(-_ret));          \
     } while (0)
 
@@ -299,7 +291,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_mr_bind(struct fi_info *prov, struct fid_
 #define MPIDI_OFI_LOCAL_MR_KEY 0
 #define MPIDI_OFI_COLL_MR_KEY 1
 #define MPIDI_OFI_INVALID_MR_KEY 0xFFFFFFFFFFFFFFFFULL
-int MPIDI_OFI_retry_progress(void);
+int MPIDI_OFI_retry_progress(int vci, int retry);
 int MPIDI_OFI_recv_huge_event(int vci, struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 int MPIDI_OFI_recv_huge_control(int vci, MPIR_Context_id_t comm_id, int rank, int tag,
                                 MPIDI_OFI_huge_remote_info_t * info);
