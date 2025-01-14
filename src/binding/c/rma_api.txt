@@ -57,6 +57,8 @@ MPI_Accumulate:
     MPIR_Datatype_get_basic_type(target_datatype, target_elem);
     if ((origin_count > 0 && origin_elem != MPI_DATATYPE_NULL) ||
         (target_count > 0 && target_elem != MPI_DATATYPE_NULL)) {
+        MPIR_DATATYPE_REPLACE_BUILTIN(origin_elem);
+        MPIR_DATATYPE_REPLACE_BUILTIN(target_elem);
         MPIR_ERR_CHKANDJUMP(origin_elem != target_elem, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
     }
