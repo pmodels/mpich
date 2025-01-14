@@ -1505,6 +1505,13 @@ def dump_function_normal(func):
     if '_handle_ptr_list' in func:
         for p in func['_handle_ptr_list']:
             dump_handle_ptr_var(func, p)
+    if func["_need_coll_v_swap"]:
+        # get count array dimensions at the top
+        if RE.match(r'mpi_i?neighbor_', func['name'], re.IGNORECASE):
+            dump_validate_get_topo_size(func)
+        else:
+            dump_validate_get_comm_size(func)
+
     if '_datatype_in_list' in func:
         for p in func['_datatype_in_list']:
             G.out.append("MPI_Datatype %s_in = %s;" % (p['name'], p['name']))
@@ -1829,18 +1836,10 @@ def dump_coll_v_swap(func):
 
     # -------------------------
     def get_comm_size_n(intra_only):
-        G.out.append("int n;")
-        if intra_only:
-            G.out.append("n = comm_ptr->local_size;")
+        if '_got_comm_size' not in func:
+            raise Exception("Missing comm_size in function %s\n" % func['name'])
         else:
-            cond = "(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)"
-            G.out.append("n = %s ? comm_ptr->remote_size : comm_ptr->local_size;" % cond)
-        G.out.append("#ifdef ENABLE_THREADCOMM")
-        dump_if_open("comm_ptr->threadcomm")
-        G.out.append("int intracomm_size = comm_ptr->local_size;")
-        G.out.append("n = comm_ptr->threadcomm->rank_offset_table[intracomm_size - 1];")
-        dump_if_close()
-        G.out.append("#endif")
+            G.out.append("int n = comm_size;")
 
     def get_comm_rank_r():
         G.out.append("int r;")
@@ -1854,8 +1853,6 @@ def dump_coll_v_swap(func):
     # -------------------------
     if RE.match(r'mpi_i?neighbor_', func['name'], re.IGNORECASE):
         # neighborhood collectives
-        G.out.append("int indegree, outdegree, weighted;")
-        G.out.append("mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);")
         if RE.search(r'allgatherv', func['name'], re.IGNORECASE):
             allocate_tmp_array("indegree * 2")
             swap_one("indegree", "recvcounts")
