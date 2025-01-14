@@ -554,6 +554,7 @@ def process_func_parameters(func):
     # Note: we'll attach the lists to func at the end
     validation_list, handle_ptr_list, impl_arg_list, impl_param_list = [], [], [], []
     pointertag_list = []  # needed to annotate MPICH_ATTR_POINTER_WITH_TYPE_TAG
+    datatype_in_list = [] # needed to swap builtin types to internal types
 
     # init to empty list or we will have double entries due to being called twice (small and large)
     func['_has_handle_out'] = []
@@ -824,6 +825,10 @@ def process_func_parameters(func):
             else:
                 impl_arg_list.append(name + "_ptr")
                 impl_param_list.append("%s *%s_ptr" % (mpir_type, name))
+        elif kind == "DATATYPE" and p['param_direction'] == 'in':
+            datatype_in_list.append(p)
+            impl_arg_list.append(name + "_i")
+            impl_param_list.append(get_impl_param(func, p))
         else:
             impl_arg_list.append(name)
             impl_param_list.append(get_impl_param(func, p))
@@ -840,6 +845,8 @@ def process_func_parameters(func):
     if len(handle_ptr_list):
         func['_handle_ptr_list'] = handle_ptr_list
         func['_need_validation'] = 1
+    if len(datatype_in_list):
+        func['_datatype_in_list'] = datatype_in_list
     if 'code-error_check' in func:
         func['_need_validation'] = 1
     func['_impl_arg_list'] = impl_arg_list
@@ -1498,6 +1505,10 @@ def dump_function_normal(func):
     if '_handle_ptr_list' in func:
         for p in func['_handle_ptr_list']:
             dump_handle_ptr_var(func, p)
+    if '_datatype_in_list' in func:
+        for p in func['_datatype_in_list']:
+            G.out.append("MPI_Datatype %s_in = %s;" % (p['name'], p['name']))
+            G.out.append("MPIR_DATATYPE_REPLACE_BUILTIN(%s_in);" % p['name'])
     if '_comm_from_request' in func:
         G.out.append("MPIR_Comm *comm_ptr = NULL;")
     if 'code-declare' in func:
