@@ -1106,7 +1106,7 @@ def dump_abi_wrappers(func, is_large):
         G.out.append("int ret = " + static_call + ";")
         for l in post_filters:
             G.out.append(l)
-        if re.match(r'MPI_(Init|Init_thread|Session_init)$', func_name, re.IGNORECASE):
+        if re.match(r'MPI_(Init|Init_thread|Session_init)|MPI_T_init_thread$', func_name, re.IGNORECASE):
             G.out.append("ABI_init_builtins();")
         G.out.append("return ret;")
     G.out.append("DEDENT")
