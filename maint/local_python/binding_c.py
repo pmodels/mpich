@@ -27,12 +27,18 @@ def dump_mpi_c(func, is_large=False):
     check_large_parameters(func)
 
     # whether we need potentially swap the counts array argument
+    func["_need_CHKLMEM"] = False
     func["_need_coll_v_swap"] = False
     func["_need_type_create_swap"] = False
     if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
         func["_need_coll_v_swap"] = True
+        func["_need_CHKLMEM"] = True
     elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
         func["_need_type_create_swap"] = True
+        if is_large:
+            func["_need_CHKLMEM"] = True
+    elif func["_poly_in_arrays"]:
+        func["_need_CHKLMEM"] = True
 
     process_func_parameters(func)
 
@@ -1441,6 +1447,12 @@ def get_static_call_internal(func, is_large):
     return static_call
 
 def check_large_parameters(func):
+    func['_poly_in_list'] = []
+    func['_poly_in_arrays'] = []
+    func['_poly_out_list'] = []
+    func['_poly_inout_list'] = []
+    func['_poly_need_filter'] = False
+
     if not func['_has_poly']:
         func['_poly_impl'] = "separate"
         return
@@ -1458,11 +1470,6 @@ def check_large_parameters(func):
         func['_poly_impl'] = "use-aint"
 
     # Gather large parameters. Potentially we need copy in & out
-    func['_poly_in_list'] = []
-    func['_poly_in_arrays'] = []
-    func['_poly_out_list'] = []
-    func['_poly_inout_list'] = []
-    func['_poly_need_filter'] = False
     for p in func['c_parameters']:
         if RE.match(r'POLY', p['kind']):
             if p['param_direction'] == 'out':
@@ -1502,6 +1509,8 @@ def dump_function_normal(func):
                 G.out.append("MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
     # ----
     G.out.append("int mpi_errno = MPI_SUCCESS;")
+    if func['_need_CHKLMEM']:
+        G.out.append("MPIR_CHKLMEM_DECL();")
     if '_handle_ptr_list' in func:
         for p in func['_handle_ptr_list']:
             dump_handle_ptr_var(func, p)
@@ -1616,6 +1625,8 @@ def dump_function_normal(func):
     G.out.append("fn_exit:")
     for l in func['_clean_up']:
         G.out.append(l)
+    if func['_need_CHKLMEM']:
+        G.out.append("MPIR_CHKLMEM_FREEALL();")
     G.out.append("MPIR_FUNC_TERSE_EXIT;")
     dump_global_cs_exit()
 
@@ -1710,18 +1721,11 @@ def dump_poly_post_filter(func):
                 else:
                     G.out.append("*%s = %s;" % (p['name'], val))
 
-    def filter_array(int_max):
-        if func["_need_coll_v_swap"]:
-            dump_coll_v_exit(func)
-        elif func["_need_type_create_swap"]:
-            dump_type_create_exit(func)
-
     # ----
     int_max = None
     if not func['_is_large']:
         int_max = "INT_MAX"
     filter_output(int_max)
-    filter_array(int_max)
 
 def dump_type_create_swap(func):
     for p in func['_poly_in_arrays']:
@@ -1729,16 +1733,13 @@ def dump_type_create_swap(func):
         if RE.search(r'create_(d|sub)array', func['name'], re.IGNORECASE):
             n = "ndims"
         new_name = p['name'] + '_c'
-        G.out.append("MPI_Aint *%s = MPL_malloc(%s * sizeof(MPI_Aint), MPL_MEM_OTHER);" % (new_name, n))
+        G.out.append("MPI_Aint *%s;" % new_name)
+        G.out.append("MPIR_CHKLMEM_MALLOC(%s, %s * sizeof(MPI_Aint));" % (new_name, n))
         dump_for_open("i", n)
         check_aint_fits(func['_is_large'], "%s[i]" % p['name'])
         G.out.append("%s[i] = %s[i];" % (new_name, p['name']))
         dump_for_close()
         replace_impl_arg_list(func['_impl_arg_list'], p['name'], new_name)
-
-def dump_type_create_exit(func):
-    for p in func['_poly_in_arrays']:
-        G.out.append("MPL_free(%s_c);" % p['name'])
 
 def push_impl_decl(func, impl_name=None):
     if not impl_name:
@@ -1822,7 +1823,8 @@ def dump_coll_v_swap(func):
 
     # -- swapping routines
     def allocate_tmp_array(n):
-        G.out.append("MPI_Aint *tmp_array = MPL_malloc(%s * sizeof(MPI_Aint), MPL_MEM_OTHER);" % n)
+        G.out.append("MPI_Aint *tmp_array;")
+        G.out.append("MPIR_CHKLMEM_MALLOC(tmp_array, %s * sizeof(MPI_Aint));" % n)
     def swap_one(n, counts):
         dump_for_open("i", n)
         check_fit("%s[i]" % counts)
@@ -1921,9 +1923,6 @@ def dump_coll_v_swap(func):
 
             replace_arg(counts, 'tmp_array')
             replace_arg('displs', 'tmp_array + n')
-
-def dump_coll_v_exit(func):
-    G.out.append("MPL_free(tmp_array);")
 
 def dump_body_topo_fns(func, method):
     comm_ptr = func['_has_comm'] + "_ptr"
