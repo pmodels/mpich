@@ -112,11 +112,12 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                 vtcs[0] = step1_id;
             } else {
                 /* wait for the previous sends to complete */
-                MPIR_Localcopy(send_id, k - 1, MPI_INT, vtcs, k - 1, MPI_INT);
+                MPIR_Localcopy(send_id, k - 1, MPIR_INT_INTERNAL, vtcs, k - 1, MPIR_INT_INTERNAL);
                 nvtcs = k - 1;
                 if (is_commutative && per_nbr_buffer == 1) {
                     /* wait for all the previous reductions to complete */
-                    MPIR_Localcopy(reduce_id, k - 1, MPI_INT, vtcs + nvtcs, k - 1, MPI_INT);
+                    MPIR_Localcopy(reduce_id, k - 1, MPIR_INT_INTERNAL,
+                                   vtcs + nvtcs, k - 1, MPIR_INT_INTERNAL);
                     nvtcs += k - 1;
                 } else {        /* if it is not commutative or if there is only one recv buffer */
                     /* just wait for the last reduce to complete as reductions happen in sequential order */
@@ -141,8 +142,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
                     nvtcs = 1;
                     vtcs[0] = step1_id;
                 } else {        /* wait for all the previous receives to have completed */
-                    MPIR_Localcopy(recv_id, phase * (k - 1), MPI_INT, vtcs, phase * (k - 1),
-                                   MPI_INT);
+                    MPIR_Localcopy(recv_id, phase * (k - 1), MPIR_INT_INTERNAL,
+                                   vtcs, phase * (k - 1), MPIR_INT_INTERNAL);
                     nvtcs = phase * (k - 1);
                 }
             } else {
@@ -240,13 +241,13 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
         for (i = 0; i < step1_nrecvs; i++) {
             if (count == 0) {
                 nvtcs = step2_nphases * (k - 1);
-                MPIR_Localcopy(recv_id, step2_nphases * (k - 1), MPI_INT, vtcs,
-                               step2_nphases * (k - 1), MPI_INT);
+                MPIR_Localcopy(recv_id, step2_nphases * (k - 1), MPIR_INT_INTERNAL, vtcs,
+                               step2_nphases * (k - 1), MPIR_INT_INTERNAL);
             } else if (is_commutative && per_nbr_buffer == 1) {
                 /* If commutative, wait for all the prev reduce calls to complete
                  * since they can happen in any order */
                 nvtcs = k - 1;
-                MPIR_Localcopy(reduce_id, k - 1, MPI_INT, vtcs, k - 1, MPI_INT);
+                MPIR_Localcopy(reduce_id, k - 1, MPIR_INT_INTERNAL, vtcs, k - 1, MPIR_INT_INTERNAL);
             } else {
                 /* If non commutative, wait for the last reduce to complete, as they happen in sequential order */
                 nvtcs = 1;

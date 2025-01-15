@@ -83,7 +83,8 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     rkey_sizes = (MPI_Aint *) MPL_malloc(sizeof(MPI_Aint) * comm_ptr->local_size, MPL_MEM_OTHER);
     rkey_sizes[comm_ptr->rank] = (MPI_Aint) rkey_size;
     mpi_errno =
-        MPIR_Allgather(MPI_IN_PLACE, 1, MPI_AINT, rkey_sizes, 1, MPI_AINT, comm_ptr, MPIR_ERR_NONE);
+        MPIR_Allgather(MPI_IN_PLACE, 1, MPIR_AINT_INTERNAL,
+                       rkey_sizes, 1, MPIR_AINT_INTERNAL, comm_ptr, MPIR_ERR_NONE);
 
     MPIR_ERR_CHECK(mpi_errno);
 

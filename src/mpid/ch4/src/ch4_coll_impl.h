@@ -1764,10 +1764,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
 
     if (comm_ptr->node_comm != NULL) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, errflag);
+        mpi_errno = MPIDI_SHM_mpi_bcast(&noneed, 1, MPIR_INT_INTERNAL, 0, comm_ptr->node_comm,
+                                        errflag);
         MPIR_ERR_CHECK(mpi_errno);
 #else
-        mpi_errno = MPIDI_NM_mpi_bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, errflag);
+        mpi_errno = MPIDI_NM_mpi_bcast(&noneed, 1, MPIR_INT_INTERNAL, 0, comm_ptr->node_comm,
+                                       errflag);
         MPIR_ERR_CHECK(mpi_errno);
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
     }

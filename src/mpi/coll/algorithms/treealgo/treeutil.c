@@ -757,8 +757,8 @@ int MPII_Treeutil_tree_topology_aware_k_init(MPIR_Comm * comm, int k, int root, 
                 /* rank level - build a tree on the ranks */
                 /* Do an allgather to know the current num_children on each rank */
                 MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-                MPIR_Allgather_impl(&(ct->num_children), 1, MPI_INT, num_childrens, 1, MPI_INT,
-                                    comm, errflag);
+                MPIR_Allgather_impl(&(ct->num_children), 1, MPIR_INT_INTERNAL,
+                                    num_childrens, 1, MPIR_INT_INTERNAL, comm, errflag);
                 if (mpi_errno) {
                     goto fn_fail;
                 }
@@ -1129,7 +1129,7 @@ int MPII_Treeutil_tree_topology_wave_init(MPIR_Comm * comm, int k, int root, boo
     heap_vector minHeaps;
     heap_vector_init(&minHeaps);
 
-    /* To build hierarchy of ranks, swiches and groups */
+    /* To build hierarchy of ranks, switches and groups */
     int dim = MPIR_Process.coords_dims - 1;
     for (dim = MPIR_Process.coords_dims - 1; dim >= 0; --dim)
         tree_ut_hierarchy_init(&hierarchy[dim]);
