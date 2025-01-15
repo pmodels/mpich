@@ -216,7 +216,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     }
 
     /* Check if any process fails to register. If so, release local MR and force AM path. */
-    MPIR_Allreduce(&rc, &allrc, 1, MPI_INT, MPI_MIN, comm_ptr, MPIR_ERR_NONE);
+    MPIR_Allreduce(&rc, &allrc, 1, MPIR_INT_INTERNAL, MPI_MIN, comm_ptr, MPIR_ERR_NONE);
     if (allrc < 0) {
         if (rc >= 0 && MPIDI_OFI_WIN(win).mr)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), fi_close);
@@ -965,7 +965,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     }
 
     /* Check if any process fails to register. If so, release local MR and force AM path. */
-    MPIR_Allreduce(&rc, &allrc, 1, MPI_INT, MPI_MIN, comm_ptr, MPIR_ERR_NONE);
+    MPIR_Allreduce(&rc, &allrc, 1, MPIR_INT_INTERNAL, MPI_MIN, comm_ptr, MPIR_ERR_NONE);
     if (allrc < 0) {
         if (rc >= 0)
             MPIDI_OFI_CALL(fi_close(&mr->fid), fi_close);

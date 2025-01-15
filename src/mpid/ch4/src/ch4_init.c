@@ -702,8 +702,8 @@ int MPIDI_world_post_init(void)
         MPIDI_global.n_reserved_vcis -= diff;
     }
 
-    mpi_errno = MPIR_Allgather_fallback(&MPIDI_global.n_vcis, 1, MPI_INT,
-                                        MPIDI_global.all_num_vcis, 1, MPI_INT,
+    mpi_errno = MPIR_Allgather_fallback(&MPIDI_global.n_vcis, 1, MPIR_INT_INTERNAL,
+                                        MPIDI_global.all_num_vcis, 1, MPIR_INT_INTERNAL,
                                         MPIR_Process.comm_world, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 #endif

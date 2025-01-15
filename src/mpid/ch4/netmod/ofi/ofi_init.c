@@ -876,7 +876,7 @@ static int check_num_nics(void)
     MPIDI_OFI_global.num_vcis = MPIDI_OFI_global.num_nics = 1;
 
     /* Confirm that all processes have the same number of NICs */
-    mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPI_INT,
+    mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPIR_INT_INTERNAL,
                                             MPI_MIN, MPIR_Process.comm_world, MPIR_ERR_NONE);
     MPIDI_OFI_global.num_vcis = tmp_num_vcis;
     MPIDI_OFI_global.num_nics = tmp_num_nics;

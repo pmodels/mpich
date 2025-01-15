@@ -113,8 +113,8 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         local_comm_ptr = comm_ptr;
     }
     /* Gather information on the local group of processes */
-    mpi_errno =
-        MPIR_Allgather(MPI_IN_PLACE, 2, MPI_INT, table, 2, MPI_INT, local_comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 2, MPIR_INT_INTERNAL, table, 2, MPIR_INT_INTERNAL,
+                               local_comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Step 2: How many processes have our same color? */
@@ -160,7 +160,7 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
          * same color */
         mypair.color = color;
         mypair.key = key;
-        mpi_errno = MPIR_Allgather(&mypair, 2, MPI_INT, remotetable, 2, MPI_INT,
+        mpi_errno = MPIR_Allgather(&mypair, 2, MPIR_INT_INTERNAL, remotetable, 2, MPIR_INT_INTERNAL,
                                    comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
