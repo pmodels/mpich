@@ -224,8 +224,8 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
 #else
     /* Allgather num_vcis */
     MPIR_CHKLMEM_MALLOC(all_num_vcis, sizeof(int) * size);
-    mpi_errno = MPIR_Allgather_fallback(&MPIDI_OFI_global.num_vcis, 1, MPI_INT,
-                                        all_num_vcis, 1, MPI_INT, comm, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Allgather_fallback(&MPIDI_OFI_global.num_vcis, 1, MPIR_INT_INTERNAL,
+                                        all_num_vcis, 1, MPIR_INT_INTERNAL, comm, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     max_vcis = 0;
