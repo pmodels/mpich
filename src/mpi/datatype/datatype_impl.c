@@ -199,14 +199,12 @@ int MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * e
 
 int MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent)
 {
-    MPIR_Datatype *datatype_ptr = NULL;
-
-    MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-
     if (HANDLE_IS_BUILTIN(datatype)) {
         *lb = 0;
         *extent = MPIR_Datatype_get_basic_size(datatype);
     } else {
+        MPIR_Datatype *datatype_ptr = NULL;
+        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
         *lb = datatype_ptr->lb;
         *extent = datatype_ptr->extent; /* derived, should be same as ub - lb */
     }
@@ -230,14 +228,12 @@ int MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
 int MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb,
                                      MPI_Count * true_extent)
 {
-    MPIR_Datatype *datatype_ptr = NULL;
-
-    MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-
     if (HANDLE_IS_BUILTIN(datatype)) {
         *true_lb = 0;
         *true_extent = MPIR_Datatype_get_basic_size(datatype);
     } else {
+        MPIR_Datatype *datatype_ptr = NULL;
+        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
         *true_lb = datatype_ptr->true_lb;
         *true_extent = datatype_ptr->true_ub - datatype_ptr->true_lb;
     }
