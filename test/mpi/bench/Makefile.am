@@ -12,6 +12,8 @@ LDADD += -lm
 noinst_PROGRAMS = \
     p2p_latency \
     p2p_bw \
+    get_bw \
+    put_bw \
     barrier \
     bcast
 
