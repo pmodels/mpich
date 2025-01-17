@@ -139,6 +139,8 @@ AC_DEFUN([PAC_CONFIG_HWLOC],[
         if test -n "$hwloc_darwin_ldflags" ; then
             echo "hwloc_darwin_ldflags = $hwloc_darwin_ldflags"
             PAC_APPEND_FLAG([$hwloc_darwin_ldflags], [LDFLAGS])
+            # we also need these flags for linking in the wrapper scripts
+            PAC_APPEND_FLAG([$hwloc_darwin_ldflags], [WRAPPER_DEPENDENCY_LDFLAGS])
         fi
     fi
 ])
