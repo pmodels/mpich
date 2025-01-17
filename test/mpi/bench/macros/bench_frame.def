@@ -39,12 +39,22 @@ subcode: bench_frame
             printf("! Failed to allocate buffer (size=%d)\n", MAX_BUFSIZE)
             return 1
 
+        $(if:IS_RMA)
+            $global MPI_Win win
+            $if grank == 0
+                MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win)
+            $else
+                MPI_Win_create(buf, MAX_BUFSIZE, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win)
+
         $if grank == 0
             printf("TEST $(_pagename):\n")
             $call @report_header
         $call main
         $if grank == 0
             printf("\n")
+
+        $(if:IS_RMA)
+            MPI_Win_free(&win);
 
         $(if:HAS_MTEST)
             MTest_Finalize(0);
