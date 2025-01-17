@@ -15,18 +15,12 @@ void MPIR_MAXF(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 {
     MPI_Aint i, len = *Len;
 
-    switch (*type) {
+    switch (MPIR_DATATYPE_GET_RAW_INTERNAL(*type)) {
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPL_MAX)
             /* no semicolons by necessity */
-            MPIR_OP_TYPE_GROUP(C_INTEGER)
-                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+            MPIR_OP_TYPE_GROUP(INTEGER)
                 MPIR_OP_TYPE_GROUP(FLOATING_POINT)
-                /* extra types that are not required to be supported by the MPI Standard */
-                MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
-                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
-                MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
-#undef MPIR_OP_TYPE_MACRO
         default:
             MPIR_Assert(0);
             break;
@@ -36,17 +30,11 @@ void MPIR_MAXF(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 
 int MPIR_MAXF_check_dtype(MPI_Datatype type)
 {
-    switch (type) {
+    switch (MPIR_DATATYPE_GET_RAW_INTERNAL(type)) {
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) case (mpi_type_):
-            MPIR_OP_TYPE_GROUP(C_INTEGER)
-                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+            MPIR_OP_TYPE_GROUP(INTEGER)
                 MPIR_OP_TYPE_GROUP(FLOATING_POINT)
-                /* extra types that are not required to be supported by the MPI Standard */
-                MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
-                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
-                MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
-#undef MPIR_OP_TYPE_MACRO
                 return MPI_SUCCESS;
             /* --BEGIN ERROR HANDLING-- */
         default:
