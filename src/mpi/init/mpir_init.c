@@ -195,8 +195,6 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
      * other and can be initialized in any order. */
     /**********************************************************************/
 
-    mpi_errno = MPII_init_gpu();
-    MPIR_ERR_CHECK(mpi_errno);
     MPIR_context_id_init();
     MPIR_Typerep_init();
     MPII_thread_mutex_create();
@@ -207,6 +205,10 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPII_nettopo_init();
     MPII_init_windows();
     MPII_init_binding_cxx();
+
+    /* gpu init must come after pmi to avoid spamming debug messages */
+    mpi_errno = MPII_init_gpu();
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPII_init_local_proc_attrs(&required);
     MPIR_ERR_CHECK(mpi_errno);
