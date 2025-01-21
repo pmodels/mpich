@@ -66,18 +66,19 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt
                                                                  MPI_Aint * count,
                                                                  MPI_Aint * dtsize)
 {
-    int op_index, dt_index;
-
     MPIR_FUNC_ENTER;
 
-    dt_index = MPIR_Datatype_predefined_get_index(dt);
-    MPIR_Assert(dt_index < MPIR_DATATYPE_N_PREDEFINED);
+    int ret1 = MPIDI_OFI_datatype_to_ofi(dt, fi_dt);
+    int ret2 = MPIDI_OFI_op_to_ofi(op, fi_op);
+    if (ret1 == -1 || ret2 == -1) {
+        *count = 0;
+        return;
+    }
 
-    op_index = MPIDIU_win_acc_op_get_index(op);
-    MPIR_Assert(op_index < MPIDIG_ACCU_NUM_OP);
+    int op_index, dt_index;
+    dt_index = (int) *fi_dt;
+    op_index = (int) *fi_op;
 
-    *fi_dt = (enum fi_datatype) MPIDI_OFI_global.win_op_table[dt_index][op_index].dt;
-    *fi_op = (enum fi_op) MPIDI_OFI_global.win_op_table[dt_index][op_index].op;
     *dtsize = MPIDI_OFI_global.win_op_table[dt_index][op_index].dtsize;
 
     switch (query_type) {

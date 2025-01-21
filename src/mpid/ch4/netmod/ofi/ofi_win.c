@@ -33,13 +33,9 @@ static void load_acc_hint(MPIR_Win * win)
     /* We translate the atomic op hints to max count allowed for all possible atomics with each
      * datatype. We do not need more specific info (e.g., <datatype, op>, because any process may use
      * the op with accumulate or get_accumulate.*/
-    for (i = 0; i < MPIR_DATATYPE_N_PREDEFINED; i++) {
+    for (i = 0; i < FI_DATATYPE_LAST; i++) {
         MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[i] = 0;
         bool first_valid_op = true;
-
-        MPI_Datatype dt = MPIR_Datatype_predefined_get_type(i);
-        if (dt == MPI_DATATYPE_NULL)
-            continue;   /* skip disabled datatype */
 
         for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
             uint64_t max_count = 0;

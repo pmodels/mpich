@@ -241,12 +241,9 @@ static bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
     return valid_flag;
 }
 
-int MPIDI_OFI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
+int MPIDI_OFI_datatype_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt)
 {
     *fi_dt = FI_DATATYPE_LAST;
-
-    if (fi_op != NULL)
-        *fi_op = FI_ATOMIC_OP_LAST;
 
     int dt_size;
     MPIR_Datatype_get_size_macro(dt, dt_size);
@@ -310,9 +307,14 @@ int MPIDI_OFI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, en
         goto fn_fail;
     }
 
-    if (fi_op == NULL)
-        goto fn_exit;
+  fn_exit:
+    return MPI_SUCCESS;
+  fn_fail:
+    return -1;
+}
 
+int MPIDI_OFI_op_to_ofi(MPI_Op op, enum fi_op *fi_op)
+{
     *fi_op = FI_ATOMIC_OP_LAST;
 
     switch (op) {
@@ -338,22 +340,13 @@ int MPIDI_OFI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, en
             *fi_op = FI_BXOR;
             break;
         case MPI_LAND:
-            /* FIXME: ignore all fp types? */
-            if (!isLONG_DOUBLE(dt)) {
-                *fi_op = FI_LAND;
-            }
+            *fi_op = FI_LAND;
             break;
         case MPI_LOR:
-            /* FIXME: ignore all fp types? */
-            if (!isLONG_DOUBLE(dt)) {
-                *fi_op = FI_LOR;
-            }
+            *fi_op = FI_LOR;
             break;
         case MPI_LXOR:
-            /* FIXME: ignore all fp types? */
-            if (!isLONG_DOUBLE(dt)) {
-                *fi_op = FI_LXOR;
-            }
+            *fi_op = FI_LXOR;
             break;
         case MPI_REPLACE:
             *fi_op = FI_ATOMIC_WRITE;
@@ -368,7 +361,6 @@ int MPIDI_OFI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, en
             /* no matching op */
             goto fn_fail;
     }
-
   fn_exit:
     return MPI_SUCCESS;
   fn_fail:
@@ -386,6 +378,9 @@ int MPIDI_OFI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, en
 
 static void create_dt_map(struct fid_ep *ep)
 {
+    MPIR_Assert(MPIDI_OFI_DT_MAX > FI_DATATYPE_LAST);
+    MPIR_Assert(MPIDI_OFI_OP_MAX > FI_ATOMIC_OP_LAST);
+
     int i, j;
     size_t dtsize[FI_DATATYPE_LAST];
     dtsize[FI_INT8] = sizeof(int8_t);
@@ -409,22 +404,12 @@ static void create_dt_map(struct fid_ep *ep)
 
     memset(MPIDI_OFI_global.win_op_table, 0, sizeof(MPIDI_OFI_global.win_op_table));
 
-    for (i = 0; i < MPIR_DATATYPE_N_PREDEFINED; i++) {
-        MPI_Datatype dt = MPIR_Datatype_predefined_get_type(i);
+    for (i = 0; i < FI_DATATYPE_LAST; i++) {
+        enum fi_datatype fi_dt = (enum fi_datatype) i;
 
-        /* MPICH sets predefined datatype handles to MPI_DATATYPE_NULL if they are not
-         * supported on the target platform. Skip it. */
-        if (dt == MPI_DATATYPE_NULL)
-            continue;
+        for (j = 0; j < FI_ATOMIC_OP_LAST; j++) {
+            enum fi_op fi_op = (enum fi_op) j;
 
-        for (j = 0; j < MPIDIG_ACCU_NUM_OP; j++) {
-            MPI_Op op = MPIDIU_win_acc_get_op(j);
-            enum fi_datatype fi_dt = (enum fi_datatype) -1;
-            enum fi_op fi_op = (enum fi_op) -1;
-
-            MPIDI_OFI_mpi_to_ofi(dt, &fi_dt, op, &fi_op);
-            MPIR_Assert(fi_dt != (enum fi_datatype) -1);
-            MPIR_Assert(fi_op != (enum fi_op) -1);
             _TBL.dt = fi_dt;
             _TBL.op = fi_op;
             _TBL.atomic_valid = 0;
