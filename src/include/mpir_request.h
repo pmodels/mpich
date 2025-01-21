@@ -8,6 +8,24 @@
 
 #include "mpir_process.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_PROGRESS_TIMEOUT
+      category    : CH4
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Sets the timeout in seconds to dump outstanding requests when progress wait is not making progress for some time.
+
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* NOTE-R1: MPIR_REQUEST_KIND__MPROBE signifies that this is a request created by
  * MPI_Mprobe or MPI_Improbe.  Since we use MPI_Request objects as our
  * MPI_Message objects, we use this separate kind in order to provide stronger
@@ -329,23 +347,23 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
     int iter = 0; \
     bool progress_timed_out = false; \
     MPL_time_t time_start; \
-    if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
+    if (MPIR_CVAR_PROGRESS_TIMEOUT > 0) { \
         MPL_wtime(&time_start); \
     }
 
 #define DEBUG_PROGRESS_CHECK \
-    if (MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT > 0) { \
+    if (MPIR_CVAR_PROGRESS_TIMEOUT > 0) { \
         iter++; \
         if (iter == 0xffff) {\
             double time_diff = 0.0; \
             MPL_time_t time_cur; \
             MPL_wtime(&time_cur); \
             MPL_wtime_diff(&time_start, &time_cur, &time_diff); \
-            if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT && !progress_timed_out) { \
+            if (time_diff > MPIR_CVAR_PROGRESS_TIMEOUT && !progress_timed_out) { \
                 MPIR_Request_debug(); \
                 MPL_backtrace_show(stdout); \
                 progress_timed_out = true; \
-            } else if (time_diff > MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT * 2) { \
+            } else if (time_diff > MPIR_CVAR_PROGRESS_TIMEOUT * 2) { \
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**timeout"); \
             } \
             iter = 0; \
