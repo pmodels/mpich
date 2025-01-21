@@ -50,6 +50,16 @@ cvars:
         If true, the OFI addressing information will be stored with an FI_AV_TABLE.
         If false, an FI_AV_MAP will be used.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_SHARED_AV
+      category    : CH4_OFI
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, it will try open shared av at initialization.
+
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS
       category    : CH4_OFI
       type        : int
@@ -1420,7 +1430,7 @@ static int create_vci_domain(struct fid_domain **p_domain, struct fid_av **p_av,
      * Otherwise, set MPIDI_OFI_global.got_named_av and
      * copy the map_addr.
      */
-    if (try_open_shared_av(domain, p_av, nic)) {
+    if (MPIR_CVAR_CH4_OFI_ENABLE_SHARED_AV && try_open_shared_av(domain, p_av, nic)) {
         MPIDI_OFI_global.got_named_av = 1;
     } else {
         mpi_errno = open_local_av(domain, p_av);
