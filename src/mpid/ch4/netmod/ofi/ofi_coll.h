@@ -74,8 +74,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MP
         case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_trigger_tree_tagged:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
                                            MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS &&
-                                           MPIDI_OFI_mpi_to_ofi(datatype, &fi_dt, MPI_OP_NULL,
-                                                                NULL) != -1, mpi_errno,
+                                           MPIDI_OFI_datatype_to_ofi(datatype, &fi_dt) != -1,
+                                           mpi_errno,
                                            "Bcast triggered_tagged cannot be applied.\n");
             mpi_errno =
                 MPIDI_OFI_Bcast_intra_triggered_tagged(buffer, count, datatype, root, comm,
@@ -85,9 +85,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MP
         case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_trigger_tree_rma:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_ENABLE_TRIGGERED &&
                                            MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS &&
-                                           MPIDI_OFI_mpi_to_ofi(datatype, &fi_dt, MPI_OP_NULL,
-                                                                NULL) != -1, mpi_errno,
-                                           "Bcast triggered_rma cannot be applied.\n");
+                                           MPIDI_OFI_datatype_to_ofi(datatype, &fi_dt) != -1,
+                                           mpi_errno, "Bcast triggered_rma cannot be applied.\n");
             mpi_errno =
                 MPIDI_OFI_Bcast_intra_triggered_rma(buffer, count, datatype, root, comm,
                                                     MPIR_Bcast_tree_type,
