@@ -53,16 +53,6 @@ cvars:
         in MPI_Waitall and MPI_Testall implementation. A large number
         is likely to cause more cache misses.
 
-    - name        : MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT
-      category    : CH4
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Sets the timeout in seconds to dump outstanding requests when progress wait is not making progress for some time.
-
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
