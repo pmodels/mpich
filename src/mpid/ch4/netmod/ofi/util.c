@@ -209,15 +209,6 @@ int MPIDI_OFI_control_handler(void *am_hdr, void *data, MPI_Aint data_sz,
     return mpi_errno;
 }
 
-
-/* MPI Datatype Processing for RMA */
-#define isFLOAT(x) ((x) == MPI_FLOAT || (x) == MPI_REAL)
-#define isDOUBLE(x) ((x) == MPI_DOUBLE || (x) == MPI_DOUBLE_PRECISION)
-#define isLONG_DOUBLE(x) ((x) == MPI_LONG_DOUBLE)
-#define isSINGLE_COMPLEX(x) ((x) == MPI_COMPLEX || (x) == MPI_C_FLOAT_COMPLEX)
-#define isDOUBLE_COMPLEX(x) ((x) == MPI_DOUBLE_COMPLEX || (x) == MPI_COMPLEX8 || \
-                              (x) == MPI_C_DOUBLE_COMPLEX)
-
 static bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
 {
     bool valid_flag = false;
@@ -245,69 +236,55 @@ int MPIDI_OFI_datatype_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt)
 {
     *fi_dt = FI_DATATYPE_LAST;
 
-    int dt_size;
-    MPIR_Datatype_get_size_macro(dt, dt_size);
-
-    if (dt == MPI_BYTE || dt == MPI_CHAR || dt == MPI_SIGNED_CHAR || dt == MPI_SHORT ||
-        dt == MPI_INT || dt == MPI_LONG || dt == MPI_LONG_LONG ||
-        dt == MPI_INT8_T || dt == MPI_INT16_T || dt == MPI_INT32_T || dt == MPI_INT64_T ||
-        dt == MPI_INTEGER || dt == MPI_INTEGER1 || dt == MPI_INTEGER2 ||
-        dt == MPI_INTEGER4 || dt == MPI_INTEGER8 ||
-        dt == MPI_AINT || dt == MPI_COUNT || dt == MPI_OFFSET) {
-        switch (dt_size) {
-            case 1:
-                *fi_dt = FI_INT8;
-                break;
-            case 2:
-                *fi_dt = FI_INT16;
-                break;
-            case 4:
-                *fi_dt = FI_INT32;
-                break;
-            case 8:
-                *fi_dt = FI_INT64;
-                break;
-            default:
-                /* no matching type */
-                goto fn_fail;
-        }
-    } else if (dt == MPI_UNSIGNED_CHAR || dt == MPI_UNSIGNED_SHORT || dt == MPI_UNSIGNED ||
-               dt == MPI_UNSIGNED_LONG || dt == MPI_UNSIGNED_LONG_LONG ||
-               dt == MPI_UINT8_T || dt == MPI_UINT16_T || dt == MPI_UINT32_T ||
-               dt == MPI_UINT64_T || dt == MPI_C_BOOL || dt == MPI_LOGICAL) {
-        switch (dt_size) {
-            case 1:
-                *fi_dt = FI_UINT8;
-                break;
-            case 2:
-                *fi_dt = FI_UINT16;
-                break;
-            case 4:
-                *fi_dt = FI_UINT32;
-                break;
-            case 8:
-                *fi_dt = FI_UINT64;
-                break;
-            default:
-                /* no matching type */
-                goto fn_fail;
-        }
-    } else if (isFLOAT(dt)) {
-        *fi_dt = FI_FLOAT;
-    } else if (isDOUBLE(dt)) {
-        *fi_dt = FI_DOUBLE;
-    } else if (isLONG_DOUBLE(dt)) {
-        *fi_dt = FI_LONG_DOUBLE;
-    } else if (isSINGLE_COMPLEX(dt)) {
-        *fi_dt = FI_FLOAT_COMPLEX;
-    } else if (isDOUBLE_COMPLEX(dt)) {
-        *fi_dt = FI_DOUBLE_COMPLEX;
-    } else {
-        /* no matching type */
+    if (!HANDLE_IS_BUILTIN(dt)) {
         goto fn_fail;
     }
 
-  fn_exit:
+    switch (MPIR_DATATYPE_GET_RAW_INTERNAL(dt)) {
+        case MPIR_INT8:
+            *fi_dt = FI_INT8;
+            break;
+        case MPIR_INT16:
+            *fi_dt = FI_INT16;
+            break;
+        case MPIR_INT32:
+            *fi_dt = FI_INT32;
+            break;
+        case MPIR_INT64:
+            *fi_dt = FI_INT64;
+            break;
+        case MPIR_UINT8:
+            *fi_dt = FI_UINT8;
+            break;
+        case MPIR_UINT16:
+            *fi_dt = FI_UINT16;
+            break;
+        case MPIR_UINT32:
+            *fi_dt = FI_UINT32;
+            break;
+        case MPIR_UINT64:
+            *fi_dt = FI_UINT64;
+            break;
+        case MPIR_FLOAT32:
+            *fi_dt = FI_FLOAT;
+            break;
+        case MPIR_FLOAT64:
+            *fi_dt = FI_DOUBLE;
+            break;
+        case MPIR_FLOAT128:
+            *fi_dt = FI_LONG_DOUBLE;
+            break;
+        case MPIR_COMPLEX32:
+            *fi_dt = FI_FLOAT_COMPLEX;
+            break;
+        case MPIR_COMPLEX64:
+            *fi_dt = FI_DOUBLE_COMPLEX;
+            break;
+        default:
+            /* no matching type */
+            goto fn_fail;
+    }
+
     return MPI_SUCCESS;
   fn_fail:
     return -1;
@@ -361,10 +338,88 @@ int MPIDI_OFI_op_to_ofi(MPI_Op op, enum fi_op *fi_op)
             /* no matching op */
             goto fn_fail;
     }
-  fn_exit:
+
     return MPI_SUCCESS;
   fn_fail:
     return -1;
+}
+
+/* we also need inverse conversion for check_mpi_acc_valid(dt, op) */
+
+static MPI_Datatype datatype_from_ofi(enum fi_datatype fi_dt)
+{
+    /* order from libfabric man page */
+    switch (fi_dt) {
+        case FI_INT8:
+            return MPIR_INT8;
+        case FI_UINT8:
+            return MPIR_UINT8;
+        case FI_INT16:
+            return MPIR_INT16;
+        case FI_UINT16:
+            return MPIR_UINT16;
+        case FI_INT32:
+            return MPIR_INT32;
+        case FI_UINT32:
+            return MPIR_UINT32;
+        case FI_INT64:
+            return MPIR_INT64;
+        case FI_UINT64:
+            return MPIR_UINT64;
+        case FI_INT128:
+            return MPIR_INT128;
+        case FI_UINT128:
+            return MPIR_UINT128;
+        case FI_FLOAT:
+            return MPIR_FLOAT32;
+        case FI_DOUBLE:
+            return MPIR_FLOAT64;
+        case FI_FLOAT_COMPLEX:
+            return MPIR_COMPLEX32;
+        case FI_DOUBLE_COMPLEX:
+            return MPIR_COMPLEX64;
+        case FI_LONG_DOUBLE:
+            return MPIR_LONG_DOUBLE_INTERNAL;
+        case FI_LONG_DOUBLE_COMPLEX:
+            return MPIR_C_LONG_DOUBLE_COMPLEX_INTERNAL;
+        default:
+            return MPI_DATATYPE_NULL;
+    }
+}
+
+static MPI_Op op_from_ofi(enum fi_op fi_op)
+{
+    /* order from libfabric man page */
+    switch (fi_op) {
+        case FI_MIN:
+            return MPI_MIN;
+        case FI_MAX:
+            return MPI_MAX;
+        case FI_SUM:
+            return MPI_SUM;
+        case FI_PROD:
+            return MPI_PROD;
+        case FI_LOR:
+            return MPI_LOR;
+        case FI_LAND:
+            return MPI_LAND;
+        case FI_BOR:
+            return MPI_BOR;
+        case FI_BAND:
+            return MPI_BAND;
+        case FI_LXOR:
+            return MPI_LXOR;
+        case FI_BXOR:
+            return MPI_BXOR;
+        case FI_ATOMIC_WRITE:
+            return MPI_REPLACE;
+        case FI_ATOMIC_READ:
+            return MPI_NO_OP;
+        case FI_CSWAP:
+            return MPI_OP_NULL;
+        default:
+            return MPI_OP_NULL;
+    }
 }
 
 #define _TBL MPIDI_OFI_global.win_op_table[i][j]
@@ -406,9 +461,11 @@ static void create_dt_map(struct fid_ep *ep)
 
     for (i = 0; i < FI_DATATYPE_LAST; i++) {
         enum fi_datatype fi_dt = (enum fi_datatype) i;
+        MPI_Datatype dt = datatype_from_ofi(fi_dt);
 
         for (j = 0; j < FI_ATOMIC_OP_LAST; j++) {
             enum fi_op fi_op = (enum fi_op) j;
+            MPI_Op op = op_from_ofi(fi_op);
 
             _TBL.dt = fi_dt;
             _TBL.op = fi_op;
