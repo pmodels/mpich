@@ -309,7 +309,8 @@ int MPIDI_OFI_mr_key_allocator_init(void);
 uint64_t MPIDI_OFI_mr_key_alloc(int key_type, uint64_t requested_key);
 void MPIDI_OFI_mr_key_free(int key_type, uint64_t index);
 void MPIDI_OFI_mr_key_allocator_destroy(void);
-int MPIDI_OFI_mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op);
+int MPIDI_OFI_datatype_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt);
+int MPIDI_OFI_op_to_ofi(MPI_Op op, enum fi_op *fi_op);
 
 /* RMA */
 #define MPIDI_OFI_INIT_CHUNK_CONTEXT(win,sigreq)                        \
