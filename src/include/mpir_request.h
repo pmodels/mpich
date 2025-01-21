@@ -319,6 +319,12 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
         } \
     } while (0)
 
+#else
+
+#define MPIR_REQUEST_SET_INFO(req, ...) do { } while (0)
+#define MPIR_REQUEST_DEBUG(req) do { } while (0)
+#endif
+
 #define DEBUG_PROGRESS_START \
     int iter = 0; \
     bool progress_timed_out = false; \
@@ -345,14 +351,6 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
             iter = 0; \
         } \
     }
-
-#else
-
-#define MPIR_REQUEST_SET_INFO(req, ...) do { } while (0)
-#define MPIR_REQUEST_DEBUG(req) do { } while (0)
-#define DEBUG_PROGRESS_START do {} while (0)
-#define DEBUG_PROGRESS_CHECK do {} while (0)
-#endif
 
 void MPII_init_request(void);
 
