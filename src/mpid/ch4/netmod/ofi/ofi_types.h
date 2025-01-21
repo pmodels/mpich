@@ -455,6 +455,8 @@ typedef struct MPIDI_GPU_RDMA_queue_t {
 
 /* Global state data */
 #define MPIDI_KVSAPPSTRLEN 1024
+#define MPIDI_OFI_DT_MAX 30     /* must >= FI_DATATYPE_LAST */
+#define MPIDI_OFI_OP_MAX 30     /* must >= FI_ATOMIC_OP_LAST */
 typedef struct {
     /* OFI objects */
     int avtid;
@@ -499,7 +501,7 @@ typedef struct {
     void *win_map;
     /* OFI atomics limitation of each pair of <dtype, op> returned by the
      * OFI provider at MPI initialization.*/
-    MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDIG_ACCU_NUM_OP];
+    MPIDI_OFI_atomic_valid_t win_op_table[MPIDI_OFI_DT_MAX][MPIDI_OFI_OP_MAX];
 
     /* Registration list for GPU RDMA */
     MPIDI_GPU_RDMA_queue_t *gdr_mrs;
@@ -556,12 +558,12 @@ typedef struct {
 } MPIDI_OFI_send_control_t;
 
 typedef struct MPIDI_OFI_win_acc_hint {
-    uint64_t dtypes_max_count[MPIR_DATATYPE_N_PREDEFINED];      /* translate CH4 which_accumulate_ops hints to
-                                                                 * atomicity support of all OFI datatypes. A datatype
-                                                                 * is supported only when all enabled ops are valid atomic
-                                                                 * provided by the OFI provider (recorded in MPIDI_OFI_global.win_op_table).
-                                                                 * Invalid <dtype, op> defined in MPI standard are excluded.
-                                                                 * This structure is prepared at window creation time. */
+    uint64_t dtypes_max_count[MPIDI_OFI_DT_MAX];        /* translate CH4 which_accumulate_ops hints to
+                                                         * atomicity support of all OFI datatypes. A datatype
+                                                         * is supported only when all enabled ops are valid atomic
+                                                         * provided by the OFI provider (recorded in MPIDI_OFI_global.win_op_table).
+                                                         * Invalid <dtype, op> defined in MPI standard are excluded.
+                                                         * This structure is prepared at window creation time. */
 } MPIDI_OFI_win_acc_hint_t;
 
 enum {
