@@ -167,7 +167,7 @@ int MPIDI_Self_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
         /* comm will be released by MPIR_Request_free(sreq) */
         MPIR_Datatype_release_if_not_builtin(sreq->dev.ch4.self.datatype);
         MPIR_Request_complete(sreq);
-        MPIR_cc_set(&rreq->cc, 0);
+        MPIR_Request_complete_nofree(rreq);
         MPII_UNEXPQ_FORGET(sreq);
     } else {
         ENQUEUE_SELF_RECV(rreq, buf, count, datatype, tag, comm->context_id);
@@ -257,7 +257,7 @@ int MPIDI_Self_imrecv(char *buf, MPI_Aint count, MPI_Datatype datatype,
     /* comm will be released by MPIR_Request_free(sreq) */
     MPIR_Datatype_release_if_not_builtin(sreq->dev.ch4.self.datatype);
     MPIR_Request_complete(sreq);
-    MPIR_cc_set(&rreq->cc, 0);
+    MPIR_Request_complete_nofree(rreq);
 
     *request = rreq;
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SELF_MUTEX);

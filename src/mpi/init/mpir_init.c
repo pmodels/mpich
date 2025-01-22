@@ -120,6 +120,7 @@ static int init_counter;
  */
 
 /* ------------ Init ------------------- */
+void MPIR_Continue_global_init();
 
 int MPIR_Init_impl(int *argc, char ***argv)
 {
@@ -205,6 +206,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     MPII_nettopo_init();
     MPII_init_windows();
     MPII_init_binding_cxx();
+    MPIR_Continue_global_init();
 
     /* gpu init must come after pmi to avoid spamming debug messages */
     mpi_errno = MPII_init_gpu();
@@ -379,6 +381,8 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
 
 /* ------------ Finalize ------------------- */
 
+void MPIR_Continue_global_finalize();
+
 int MPII_Finalize(MPIR_Session * session_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -482,6 +486,7 @@ int MPII_Finalize(MPIR_Session * session_ptr)
     MPIR_Process.memory_alloc_kinds = NULL;
 
     /* All memory should be freed at this point */
+    MPIR_Continue_global_finalize();
     MPII_finalize_memory_tracing();
 
     MPII_thread_mutex_destroy();
