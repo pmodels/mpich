@@ -42,6 +42,9 @@
 #endif
 
 #ifdef ROMIO_DAOS
+#include <daos_prop.h>  // daos_cont_layout_t and daos_pro_t
+#include <daos_obj_class.h>     // daos_oclass_id_t
+#include <daos_cont.h>  // DAOS_CONT_HINT_MAX_LEN
 #include <daos_uns.h>
 #endif
 
