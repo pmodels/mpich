@@ -151,89 +151,41 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
     if (type == MPI_DATATYPE_NULL)
         return 1;
 
-    int size = MPIR_Datatype_get_basic_size(type);
-
-    if (type == MPI_CHAR || type == MPI_UNSIGNED_CHAR || type == MPI_SIGNED_CHAR) {
-        return ALIGNOF_CHAR;
-    } else if (type == MPI_BYTE || type == MPI_UINT8_T || type == MPI_INT8_T ||
-               type == MPI_PACKED || type == MPI_LB || type == MPI_UB) {
-        return ALIGNOF_INT8_T;
-    } else if (type == MPI_WCHAR) {
-        return ALIGNOF_WCHAR_T;
-    } else if (type == MPI_SHORT || type == MPI_UNSIGNED_SHORT) {
-        return ALIGNOF_SHORT;
-    } else if (type == MPI_INT || type == MPI_UNSIGNED || type == MPI_2INT) {
-        return ALIGNOF_INT;
-    } else if (type == MPI_LONG || type == MPI_UNSIGNED_LONG) {
-        return ALIGNOF_LONG;
-    } else if (type == MPI_FLOAT || type == MPI_C_COMPLEX) {
-        return ALIGNOF_FLOAT;
-    } else if (type == MPI_DOUBLE || type == MPI_C_DOUBLE_COMPLEX) {
-        return ALIGNOF_DOUBLE;
-    } else if (type == MPI_LONG_DOUBLE || type == MPI_C_LONG_DOUBLE_COMPLEX) {
-        return ALIGNOF_LONG_DOUBLE;
-    } else if (type == MPI_LONG_LONG_INT || type == MPI_UNSIGNED_LONG_LONG) {
-        return ALIGNOF_LONG_LONG;
-    } else if (type == MPI_INT16_T || type == MPI_UINT16_T) {
-        return ALIGNOF_INT16_T;
-    } else if (type == MPI_INT32_T || type == MPI_UINT32_T) {
-        return ALIGNOF_INT32_T;
-    } else if (type == MPI_INT64_T || type == MPI_UINT64_T) {
-        return ALIGNOF_INT64_T;
-    } else if (type == MPI_C_BOOL) {
-        return ALIGNOF_BOOL;
-    } else if (type == MPI_AINT || type == MPI_OFFSET || type == MPI_COUNT) {
-        if (size == sizeof(int8_t))
+    /* mask off the index bits and MPIR_TYPE_PAIR_MASK */
+    switch (MPIR_DATATYPE_GET_RAW_INTERNAL(type) & ~MPIR_TYPE_PAIR_MASK) {
+        case MPIR_FIXED8:
+        case MPIR_INT8:
+        case MPIR_UINT8:
+        case MPIR_FLOAT8:
             return ALIGNOF_INT8_T;
-        else if (size == sizeof(int16_t))
+        case MPIR_FIXED16:
+        case MPIR_INT16:
+        case MPIR_UINT16:
+        case MPIR_FLOAT16:
             return ALIGNOF_INT16_T;
-        else if (size == sizeof(int32_t))
+        case MPIR_FIXED32:
+        case MPIR_INT32:
+        case MPIR_UINT32:
             return ALIGNOF_INT32_T;
-        else if (size == sizeof(int64_t))
+        case MPIR_FIXED64:
+        case MPIR_INT64:
+        case MPIR_UINT64:
             return ALIGNOF_INT64_T;
-#ifdef HAVE_FORTRAN_BINDING
-    } else if (type == MPI_CHARACTER) {
-        return ALIGNOF_CHAR;
-    } else if (type == MPI_LOGICAL || type == MPI_INTEGER || type == MPI_2INTEGER ||
-               type == MPI_INTEGER1 || type == MPI_INTEGER2 || type == MPI_INTEGER4 ||
-               type == MPI_INTEGER8 || type == MPI_INTEGER16) {
-        if (size == sizeof(int8_t))
-            return ALIGNOF_INT8_T;
-        else if (size == sizeof(int16_t))
-            return ALIGNOF_INT16_T;
-        else if (size == sizeof(int32_t))
-            return ALIGNOF_INT32_T;
-        else if (size == sizeof(int64_t))
-            return ALIGNOF_INT64_T;
-    } else if (type == MPI_COMPLEX || type == MPI_DOUBLE_COMPLEX || type == MPI_REAL ||
-               type == MPI_DOUBLE_PRECISION || type == MPI_2REAL || type == MPI_2DOUBLE_PRECISION ||
-               type == MPI_REAL4 || type == MPI_REAL8 || type == MPI_REAL16) {
-        if (size == sizeof(float))
+        case MPIR_FLOAT32:
+        case MPIR_COMPLEX32:
             return ALIGNOF_FLOAT;
-        else if (size == sizeof(double))
+        case MPIR_FLOAT64:
+        case MPIR_COMPLEX64:
             return ALIGNOF_DOUBLE;
-        else if (size == sizeof(long double))
+        case MPIR_ALT_FLOAT96:
+        case MPIR_ALT_FLOAT128:
+        case MPIR_ALT_COMPLEX96:
+        case MPIR_ALT_COMPLEX128:
             return ALIGNOF_LONG_DOUBLE;
-    } else if (type == MPI_COMPLEX8 || type == MPI_COMPLEX16 || type == MPI_COMPLEX32) {
-        if (size / 2 == sizeof(float))
-            return ALIGNOF_FLOAT;
-        else if (size / 2 == sizeof(double))
-            return ALIGNOF_DOUBLE;
-        else if (size / 2 == sizeof(long double))
-            return ALIGNOF_LONG_DOUBLE;
-#endif /* HAVE_FORTRAN_BINDING */
-
-    } else if (type == MPI_CXX_BOOL) {
-        return ALIGNOF_BOOL;
-    } else if (type == MPI_CXX_FLOAT_COMPLEX) {
-        return ALIGNOF_FLOAT;
-    } else if (type == MPI_CXX_DOUBLE_COMPLEX) {
-        return ALIGNOF_DOUBLE;
-    } else if (type == MPI_CXX_LONG_DOUBLE_COMPLEX) {
-        return ALIGNOF_LONG_DOUBLE;
+        default:
+            /* handle error cases? */
+            return 1;
     }
-
-    return 1;
 }
 
 /* If an attribute is added to a predefined type, we free the attributes
