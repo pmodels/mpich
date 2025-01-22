@@ -1,2 +1,3 @@
 p2p_latency 2 resultTest=TestBench
 p2p_bw 2 resultTest=TestBench
+bcast 16 resultTest=TestBench

@@ -1,0 +1,6 @@
+include: macros/bench_frame.def
+include: macros/bench_coll.def
+
+page: barrier, bench_frame
+    $for 0:10
+        bench_barrier(comm)

@@ -16,7 +16,7 @@
 
 macros:
     MIN_PROCS: 2
-    MAX_BUFSIZE: 5000000  # 5 MB
+    MEM_TYPES: sendrecv
 
 subcode: _autoload
     $register_name(src) int
@@ -25,7 +25,7 @@ subcode: _autoload
     $register_name(size) int
     $define TAG 0
     $define SYNC_TAG 100
-    $define MAX_BUFSIZE 5000000
+    $define MAX_BUFSIZE $(MAX_BUFSIZE)
     $define NUM_REPEAT 20
 
 subcode: report_header

@@ -3,13 +3,14 @@ include: macros/bench_p2p.def
 include: macros/mtest.def
 
 subcode: _autoload
-    $define WINDOW_SIZE 64
+    $define WINDOW_SIZE $(WINDOW_SIZE)
 
 page: p2p_bw, bench_frame
+    WINDOW_SIZE: 64
     MULTIPLICITY: WINDOW_SIZE
     data: buf, size, MPI_CHAR
 
-    $for int size = 1; size < MAX_BUFSIZE; size *= 2
+    &call foreach_size
         bench_p2p(comm, 0, 1, buf, size)
 
     subcode: send_side
@@ -25,3 +26,39 @@ page: p2p_bw, bench_frame
             MPI_Irecv($(data), src, TAG, comm, &reqs[j])
         MPI_Waitall(WINDOW_SIZE, reqs, MPI_STATUSES_IGNORE)
         MPI_Send(NULL, 0, MPI_DATATYPE_NULL, src, TAG, comm)
+
+page: get_bw, bench_frame
+    IS_RMA: 1
+    WINDOW_SIZE: 100
+    MULTIPLICITY: WINDOW_SIZE
+
+    $for int size = 1; size < MAX_BUFSIZE; size *= 2
+        bench_p2p(comm, 0, 1, buf, size)
+
+    subcode: send_side
+        MPI_Win_fence(0, win)
+        $for j=0:WINDOW_SIZE
+            MPI_Get(buf, size, MPI_CHAR, dst, 0, size, MPI_CHAR, win)
+        MPI_Win_fence(0, win)
+
+    subcode: recv_side
+        MPI_Win_fence(0, win)
+        MPI_Win_fence(0, win)
+
+page: put_bw, bench_frame
+    IS_RMA: 1
+    WINDOW_SIZE: 100
+    MULTIPLICITY: WINDOW_SIZE
+
+    $for int size = 1; size < MAX_BUFSIZE; size *= 2
+        bench_p2p(comm, 0, 1, buf, size)
+
+    subcode: send_side
+        MPI_Win_fence(0, win)
+        $for j=0:WINDOW_SIZE
+            MPI_Put(buf, size, MPI_CHAR, dst, 0, size, MPI_CHAR, win)
+        MPI_Win_fence(0, win)
+
+    subcode: recv_side
+        MPI_Win_fence(0, win)
+        MPI_Win_fence(0, win)
