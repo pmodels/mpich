@@ -1304,7 +1304,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                                                &(offset_list[startingOffsetListIndex]),
                                                &(len_list[startingOffsetListIndex]),
                                                segmentContigAccessCount,
-                                               buf + totalDataWrittenLastRound, datatype,
+                                               (char *) buf + totalDataWrittenLastRound, datatype,
                                                error_code, segmentFirstFileOffset,
                                                segmentLastFileOffset, currentValidDataIndex,
                                                segment_stripe_start, segment_stripe_end,
