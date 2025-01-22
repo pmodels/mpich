@@ -105,7 +105,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
     uint64_t total_size;
     daos_size_t buf_size;
 #if CHECK_DAOS_API_VERSION(1, 4)
-    daos_size_t pool_len, cont_len;
+    daos_size_t pool_len = 0, cont_len = 0;
 #else
     daos_size_t pool_len = 37, cont_len = 37;
 #endif
