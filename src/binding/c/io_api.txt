@@ -1,0 +1,208 @@
+# vim: set ft=c:
+
+MPI_File_open:
+    .desc: Opens a file
+    .skip: validate-amode
+
+MPI_File_close:
+    .desc: Closes a file
+
+MPI_File_delete:
+    .desc: Deletes a file
+
+MPI_File_c2f:
+    .desc: Translates a C file handle to a Fortran file handle
+    .impl: direct
+{
+#ifndef HAVE_ROMIO
+    return 0;
+#else
+    return MPIR_File_c2f_impl(file);
+#endif
+}
+
+MPI_File_f2c:
+    .desc: Translates a Fortran file handle to a C file handle
+    .impl: direct
+{
+#ifndef HAVE_ROMIO
+    return 0;
+#else
+    return MPIR_File_f2c_impl(file);
+#endif
+}
+
+MPI_File_sync:
+    .desc: Causes all previous writes to be transferred
+
+MPI_File_get_amode:
+    .desc: Returns the file access mode
+    .skip: global_cs
+
+MPI_File_get_atomicity:
+    .desc: Returns the atomicity mode
+    .skip: global_cs
+
+MPI_File_get_byte_offset:
+    .desc: Returns the absolute byte position in
+    .skip: global_cs
+
+MPI_File_get_type_extent:
+    .desc: Returns the extent of datatype in the file
+    .poly_impl: use_aint
+
+MPI_File_get_group:
+    .desc: Returns the group of processes that
+
+MPI_File_get_info:
+    .desc: Returns the hints for a file that are actually being used by MPI
+
+MPI_File_get_position:
+    .desc: Returns the current position of the
+
+MPI_File_get_position_shared:
+    .desc: Returns the current position of the
+
+MPI_File_get_size:
+    .desc: Returns the file size
+    .skip: global_cs
+
+MPI_File_get_view:
+    .desc: Returns the file view
+
+MPI_File_iread_all:
+    .desc: Nonblocking collective read using individual file pointer
+
+MPI_File_iread_at_all:
+    .desc: Nonblocking collective read using explicit offset
+
+MPI_File_iread_at:
+    .desc: Nonblocking read using explicit offset
+
+MPI_File_iread:
+    .desc: Nonblocking read using individual file pointer
+
+MPI_File_iread_shared:
+    .desc: Nonblocking read using shared file pointer
+
+MPI_File_iwrite_all:
+    .desc: Nonblocking collective write using individual file pointer
+
+MPI_File_iwrite_at_all:
+    .desc: Nonblocking collective write using explicit offset
+
+MPI_File_iwrite_at:
+    .desc: Nonblocking write using explicit offset
+
+MPI_File_iwrite:
+    .desc: Nonblocking write using individual file pointer
+
+MPI_File_iwrite_shared:
+    .desc: Nonblocking write using shared file pointer
+
+MPI_File_open:
+    .desc: Opens a file
+
+MPI_File_preallocate:
+    .desc: Preallocates storage space for a file
+
+MPI_File_read_at_all_begin:
+    .desc: Begin a split collective read using explicit offset
+
+MPI_File_read_at_all_end:
+    .desc: Complete a split collective read using
+
+MPI_File_read_all_begin:
+    .desc: Begin a split collective read using individual file pointer
+
+MPI_File_read_all:
+    .desc: Collective read using individual file pointer
+
+MPI_File_read_all_end:
+    .desc: Complete a split collective read using
+
+MPI_File_read_at_all:
+    .desc: Collective read using explicit offset
+
+MPI_File_read_at:
+    .desc: Read using explicit offset
+
+MPI_File_read:
+    .desc: Read using individual file pointer
+
+MPI_File_read_ordered_begin:
+    .desc: Begin a split collective read using shared file pointer
+
+MPI_File_read_ordered:
+    .desc: Collective read using shared file pointer
+
+MPI_File_read_ordered_end:
+    .desc: Complete a split collective read using shared file pointer
+
+MPI_File_read_shared:
+    .desc: Read using shared file pointer
+
+MPI_File_seek:
+    .desc: Updates the individual file pointer
+    .skip: validate-whence
+
+MPI_File_seek_shared:
+    .desc: Updates the shared file pointer
+    .skip: validate-whence
+
+MPI_File_set_atomicity:
+    .desc: Sets the atomicity mode
+
+MPI_File_set_info:
+    .desc: Sets new values for the hints associated with a file
+
+MPI_File_set_size:
+    .desc: Sets the file size
+
+MPI_File_set_view:
+    .desc: Sets the file view
+{ -- error_check -- disp
+    if (disp != MPI_DISPLACEMENT_CURRENT) {
+        MPIR_ERRTEST_ARGNEG(disp, "disp", mpi_errno);
+    }
+}
+
+MPI_File_write_at_all_begin:
+    .desc: Begin a split collective write using
+
+MPI_File_write_at_all_end:
+    .desc: Complete a split collective write using explicit offset
+
+MPI_File_write_all_begin:
+    .desc: Begin a split collective write using
+
+MPI_File_write_all:
+    .desc: Collective write using individual file pointer
+
+MPI_File_write_all_end:
+    .desc: Complete a split collective write using individual file pointer
+
+MPI_File_write_at_all:
+    .desc: Collective write using explicit offset
+
+MPI_File_write_at:
+    .desc: Write using explicit offset
+
+MPI_File_write:
+    .desc: Write using individual file pointer
+
+MPI_File_write_ordered_begin:
+    .desc: Begin a split collective write using shared file pointer
+
+MPI_File_write_ordered:
+    .desc: Collective write using shared file pointer
+
+MPI_File_write_ordered_end:
+    .desc: Complete a split collective write using shared file pointer
+
+MPI_File_write_shared:
+    .desc: Write using shared file pointer
+
+MPI_Register_datarep:
+    .desc: Register a set of user-provided data conversion
+    .poly_impl: separate

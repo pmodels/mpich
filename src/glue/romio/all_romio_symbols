@@ -138,7 +138,9 @@ while (<FD>) {
 
     print OUTFD "${tab}{\n";
     for ($x = 0; $x <= $#arglist; $x++) {
-	print OUTFD "${tab}${tab}$arglist[$x]";
+        my $a = $arglist[$x];
+        $a =~ s/MPIO_Request/MPI_Request/;
+	print OUTFD "${tab}${tab}$a";
 	if ($arglist[$x] =~ /\*/) {
 	    print OUTFD " = NULL;\n";
 	}
