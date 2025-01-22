@@ -111,7 +111,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count,
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *fd_start = NULL,
         *fd_end = NULL, *end_offsets = NULL;
     ADIO_Offset *gpfs_offsets0 = NULL, *gpfs_offsets = NULL;
-    ADIO_Offset *count_sizes;
+    ADIO_Offset *count_sizes = NULL;
     int ii;
 
     MPI_Aint *buf_idx = NULL;
