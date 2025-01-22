@@ -1607,7 +1607,7 @@ static int update_lru_mapped_order(void *ipc_buf, int dev_id)
         }
 
         /* Add to the map for constant access during reorder */
-        MPL_ze_ipc_lru_map_t *map_entry =
+        map_entry =
             (MPL_ze_ipc_lru_map_t *) MPL_calloc(1, sizeof(MPL_ze_ipc_lru_map_t), MPL_MEM_OTHER);
         if (map_entry == NULL) {
             mpl_err = MPL_ERR_GPU_NOMEM;
