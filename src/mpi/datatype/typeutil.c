@@ -98,6 +98,11 @@ struct MPIR_Datatype_builtin_entry MPIR_Internal_types[] = {
     type_name_entry(OFFSET,             MULTI),           /* 0x44 */
     type_name_entry(COUNT,              MULTI),           /* 0x45 */
     type_name_x(C_FLOAT16,              FLOATING_POINT),  /* 0x46 */
+    type_name_entry(LOGICAL1,           LOGICAL),         /* 0x47 */
+    type_name_entry(LOGICAL2,           LOGICAL),         /* 0x48 */
+    type_name_entry(LOGICAL4,           LOGICAL),         /* 0x49 */
+    type_name_entry(LOGICAL8,           LOGICAL),         /* 0x4a */
+    type_name_entry(LOGICAL16,          LOGICAL),         /* 0x4b */
     /* *INDENT-ON* */
 };
 
