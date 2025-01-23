@@ -11,7 +11,7 @@ from local_python import RE
 import os
 
 def main():
-    # currently support -no-real128, -no-mpiio, -fint-size, -aint-size, -count-size, -cint-size
+    # currently support -no-real128, -fint-size, -aint-size, -count-size, -cint-size
     G.parse_cmdline()
 
     binding_dir = G.get_srcdir_path("src/binding")
