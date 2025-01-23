@@ -288,34 +288,35 @@ int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size)
     return mpi_errno;
 }
 
+static MPI_Datatype type_match_size(MPI_Datatype type_list[], int nTypes, int size)
+{
+    for (int i = 0; i < nTypes; i++) {
+        MPI_Aint tsize;
+        MPIR_Datatype_get_size_macro(type_list[i], tsize);
+        if (tsize == size) {
+            return type_list[i];
+        }
+    }
+    return MPI_DATATYPE_NULL;
+}
+
+
 int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
 {
     int mpi_errno = MPI_SUCCESS;
-#ifdef HAVE_ERROR_CHECKING
-    const char *tname = NULL;
-#endif
+
     /* Note that all of the datatype have values, even if the type is
      * not available. We test for that case separately.  We also
      * prefer the Fortran types to the C type, if they are available */
     static MPI_Datatype real_types[] = {
         MPI_REAL2, MPI_REAL4, MPI_REAL8, MPI_REAL16,
-        MPI_REAL, MPI_DOUBLE_PRECISION,
-        MPI_FLOAT, MPI_DOUBLE, MPI_LONG_DOUBLE
     };
     static MPI_Datatype int_types[] = {
         MPI_INTEGER1, MPI_INTEGER2, MPI_INTEGER4, MPI_INTEGER8, MPI_INTEGER16,
-        MPI_INTEGER,
-        MPI_CHAR, MPI_SHORT, MPI_INT,
-        MPI_LONG, MPI_LONG_LONG
     };
     static MPI_Datatype complex_types[] = {
         MPI_COMPLEX4, MPI_COMPLEX8, MPI_COMPLEX16, MPI_COMPLEX32,
-        MPI_COMPLEX, MPI_DOUBLE_COMPLEX,
-        MPI_C_COMPLEX, MPI_C_DOUBLE_COMPLEX, MPI_C_LONG_DOUBLE_COMPLEX,
     };
-    MPI_Datatype matched_datatype = MPI_DATATYPE_NULL;
-    int i;
-    MPI_Aint tsize;
 
     /* The following implementation follows the suggestion in the
      * MPI-2 standard.
@@ -326,79 +327,48 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
      * any particular choice of MPI datatype; e.g., it is not required
      * to return MPI_INTEGER4 if a 4-byte integer is requested.
      */
+    int n;
+    MPI_Datatype matched_datatype = MPI_DATATYPE_NULL;
+    bool op_supported = false;
+#ifdef HAVE_ERROR_CHECKING
+    const char *tname = NULL;
+#endif
+
     switch (typeclass) {
         case MPI_TYPECLASS_REAL:
-            {
-                int nRealTypes = sizeof(real_types) / sizeof(MPI_Datatype);
+            n = sizeof(real_types) / sizeof(MPI_Datatype);
+            matched_datatype = type_match_size(real_types, n, size);
+            op_supported = MPIR_SUM_check_dtype(matched_datatype);
 #ifdef HAVE_ERROR_CHECKING
-                tname = "MPI_TYPECLASS_REAL";
+            tname = "MPI_TYPECLASS_REAL";
 #endif
-                for (i = 0; i < nRealTypes; i++) {
-                    if (real_types[i] == MPI_DATATYPE_NULL) {
-                        continue;
-                    }
-                    MPIR_Datatype_get_size_macro(real_types[i], tsize);
-                    if (tsize == size) {
-                        matched_datatype = real_types[i];
-                        break;
-                    }
-                }
-            }
             break;
         case MPI_TYPECLASS_INTEGER:
-            {
-                int nIntTypes = sizeof(int_types) / sizeof(MPI_Datatype);
+            n = sizeof(int_types) / sizeof(MPI_Datatype);
+            matched_datatype = type_match_size(int_types, n, size);
+            op_supported = MPIR_SUM_check_dtype(matched_datatype);
 #ifdef HAVE_ERROR_CHECKING
-                tname = "MPI_TYPECLASS_INTEGER";
+            tname = "MPI_TYPECLASS_INTEGER";
 #endif
-                for (i = 0; i < nIntTypes; i++) {
-                    if (int_types[i] == MPI_DATATYPE_NULL) {
-                        continue;
-                    }
-                    MPIR_Datatype_get_size_macro(int_types[i], tsize);
-                    if (tsize == size) {
-                        matched_datatype = int_types[i];
-                        break;
-                    }
-                }
-            }
             break;
         case MPI_TYPECLASS_COMPLEX:
-            {
-                int nComplexTypes = sizeof(complex_types) / sizeof(MPI_Datatype);
+            n = sizeof(complex_types) / sizeof(MPI_Datatype);
+            matched_datatype = type_match_size(complex_types, n, size);
+            op_supported = MPIR_SUM_check_dtype(matched_datatype);
 #ifdef HAVE_ERROR_CHECKING
-                tname = "MPI_TYPECLASS_COMPLEX";
+            tname = "MPI_TYPECLASS_COMPLEX";
 #endif
-                for (i = 0; i < nComplexTypes; i++) {
-                    if (complex_types[i] == MPI_DATATYPE_NULL) {
-                        continue;
-                    }
-                    MPIR_Datatype_get_size_macro(complex_types[i], tsize);
-                    if (tsize == size) {
-                        matched_datatype = complex_types[i];
-                        break;
-                    }
-                }
-            }
             break;
         default:
-            /* --BEGIN ERROR HANDLING-- */
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, break, "**typematchnoclass");
-            /* --END ERROR HANDLING-- */
     }
 
-    if (mpi_errno == MPI_SUCCESS) {
-        if (matched_datatype == MPI_DATATYPE_NULL) {
-            /* --BEGIN ERROR HANDLING-- */
-            MPIR_ERR_SETANDSTMT2(mpi_errno, MPI_ERR_ARG,;, "**typematchsize",
-                                 "**typematchsize %s %d", tname, size);
-            /* --END ERROR HANDLING-- */
-        } else {
-            *datatype = matched_datatype;
-        }
+    if (!op_supported) {
+        MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_ARG, "**typematchsize", "**typematchsize %s %d",
+                             tname, size);
+    } else {
+        *datatype = matched_datatype;
     }
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
 
   fn_exit:
     return mpi_errno;
