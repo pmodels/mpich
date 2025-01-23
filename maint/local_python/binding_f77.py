@@ -1027,6 +1027,12 @@ def dump_mpif_h(f):
         print("       SAVE /MPIPRIV1/, /MPIPRIV2/, /MPIPRIVC/", file=Out)
 
 def load_mpi_h_in(f):
+    def hex_to_signed_int(s):
+        val = int(s, 16)
+        if val >= 0x80000000:
+            val = val - 0x100000000
+        return val
+
     # load constants into G.mpih_defines
     with open(f, "r") as In:
         for line in In:
@@ -1037,9 +1043,9 @@ def load_mpi_h_in(f):
                 (name, val) = RE.m.group(1, 2)
                 if re.match(r'MPI_FILE_NULL', name):
                     val = 0
-                elif re.match(r'MPI_(LONG_LONG|C_COMPLEX)', name):
+                elif re.match(r'MPI_(LONG_LONG|C_FLOAT_COMPLEX)', val):
                     # datatype aliases
-                    val = "@F77_%s@" % name
+                    val = G.mpih_defines[val]
                 elif re.match(r'\(?\(MPI_Datatype\)\@(MPIR?_\w+)\@\)?', val):
                     # datatypes
                     if re.match(r'MPI_(AINT|OFFSET|COUNT)', name):
@@ -1050,7 +1056,7 @@ def load_mpi_h_in(f):
                         val = "@F77_%s@" % name
                 elif RE.match(r'\(+MPI_\w+\)\(?0x([0-9a-fA-F]+)', val):
                     # handle constants
-                    val = int(RE.m.group(1), 16)
+                    val = hex_to_signed_int(RE.m.group(1))
                 elif RE.match(r'0x([0-9a-fA-F]+)', val):
                     # direct hex constants (KEYVAL constants)
                     val = int(RE.m.group(1), 16)
