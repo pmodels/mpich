@@ -1682,6 +1682,12 @@ def dump_compile_constants_f90(f):
         print("end module mpi_f08_compile_constants", file=Out)
 
 def load_mpi_h_in(f):
+    def hex_to_signed_int(s):
+        val = int(s, 16)
+        if val >= 0x80000000:
+            val = val - 0x100000000
+        return val
+
     # load constants into G.mpih_defines
     with open(f, "r") as In:
         for line in In:
@@ -1692,17 +1698,16 @@ def load_mpi_h_in(f):
                 (name, val) = RE.m.group(1, 2)
                 if re.match(r'MPI_FILE_NULL', name):
                     val = "MPI_File(0)"
-                elif re.match(r'MPI_(LONG_LONG|C_COMPLEX)', name):
+                elif re.match(r'MPI_(LONG_LONG|C_FLOAT_COMPLEX)', val):
                     # datatype aliases
-                    val = "DATATYPE"
+                    val = G.mpih_defines[val]
                 elif re.match(r'\(?\(MPI_Datatype\)\@(MPIR?_\w+)\@\)?', val):
                     val = "DATATYPE"
                 elif RE.match(r'\(+(MPI_\w+)\)\(?0x([0-9a-fA-F]+)', val):
                     # handle constants
-                    T = RE.m.group(1)
-                    val = int(RE.m.group(2), 16)
-                    val = "%s(%d) ! 0x%08x" % (T, val, val)
-
+                    (T, V) = RE.m.group(1, 2)
+                    val = hex_to_signed_int(V)
+                    val = "%s(%d) ! 0x%s" % (T, hex_to_signed_int(V), V)
                 elif RE.match(r'0x([0-9a-fA-F]+)', val):
                     # direct hex constants (KEYVAL constants)
                     val = int(RE.m.group(1), 16)
