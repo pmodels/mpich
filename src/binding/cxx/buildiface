@@ -1254,12 +1254,6 @@ typedef int MPI_File;\
     # Begin the class, writing the common operations (destructors etc.)
     &BeginClass( $class );
 
-    # Hack to ifdef out the file routines
-    if ($class eq "file") {
-	# Define the file type only if supported.
-	print $OUTFD "#if \@HAVE_CXX_IO\@\n";
-    }
-
     foreach $mpilevel (@mpilevels) {
 	if ($mpilevel eq "post") {
 	    $printed_extra_fnc = 1;
@@ -1307,11 +1301,6 @@ typedef int MPI_File;\
 	&$extrafnc( $OUTFD );
     }
 
-    # Hack to ifdef out the file routines
-    if ($class eq "file") {
-	# Define the file type only if supported.
-	print $OUTFD "#endif\n";
-    }
     &EndClass;
 
     # Special case.  Once we define a Datatype, add this typedef
@@ -1347,11 +1336,9 @@ typedef int MPI_File;\
     # Only define these typedefs when MPI-IO is available (this is the same
     # test as used for the rest of the I/O routines );
 print $OUTFD "\
-#if \@HAVE_CXX_IO\@
 typedef int Datarep_extent_function( const Datatype&, Aint&, void *);
 typedef int Datarep_conversion_function( void *, Datatype &, int, void *,
                 Offset, void * );
-#endif
 \n";
 
     print $OUTFD "\n";
@@ -1995,13 +1982,6 @@ extern Datatype TWOINTEGER;
 	else            { print $OUTFD ";\n"; }
     }
 
-    print $OUTFD "// Include these only if MPI-IO is available\n";
-    if ($giveValue) {
-        print $OUTFD "#ifdef HAVE_ROMIO\n";
-    } else {
-        print $OUTFD "#if \@HAVE_CXX_IO\@\n";
-    }
-
     # Other file constants
     foreach $int (MAX_DATAREP_STRING) {
         print $OUTFD "${extern}const int $int";
@@ -2021,7 +2001,6 @@ extern Datatype TWOINTEGER;
 	if ($giveValue) { print $OUTFD " = MPI_MODE_$int;\n"; }
 	else            { print $OUTFD ";\n"; }
     }
-    print $OUTFD "#endif // IO\n";
 
     # Some modes are for RMA, not I/O
     foreach $int (NOCHECK,NOPRECEDE, NOPUT, NOSTORE, NOSUCCEED) {
@@ -2654,7 +2633,6 @@ void Win::Call_errhandler( int errorcode ) const
     MPI_Win_call_errhandler( (MPI_Win) the_real_win, errorcode );
 }
 
-#ifdef HAVE_ROMIO
 void File::Call_errhandler( int errorcode ) const
 {
     // we must free the Errhandler object returned from Get_errhandler because
@@ -2671,7 +2649,6 @@ void File::Call_errhandler( int errorcode ) const
     }
     MPI_File_call_errhandler( (MPI_File) the_real_file, errorcode );
 }
-#endif // IO
 
 // Helper function to invoke the comm_world C++ error handler.
 void MPIR_Call_world_errhand( int err )
@@ -2685,7 +2662,6 @@ EOT
     # The data rep conversion functions need to be wrapped in C code
     # Only define this routine when MPI-IO is available (this is the same
     # test as used for the rest of the I/O routines );
-print $OUTFD "#ifdef HAVE_ROMIO\n";
     print $OUTFD "
 extern \"C\" {
 //
@@ -2747,7 +2723,6 @@ void Register_datarep( const char *datarep,
        routine for ldata will never be freed */
 }
 ";
-print $OUTFD "#endif\n";
 
 
     print $OUTFD "\

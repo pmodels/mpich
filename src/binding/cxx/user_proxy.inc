@@ -32,9 +32,7 @@ struct CXX_errhan_state {
     union {
         MPI::Comm::Errhandler_function * comm_err_fn;
         MPI::Win::Errhandler_function * win_err_fn;
-#ifdef HAVE_ROMIO        
         MPI::File::Errhandler_function * file_err_fn;
-#endif
         // MPI::Session::Errhandler_function * session_err_fn;
     } u;
 };
@@ -60,14 +58,12 @@ static void CXX_win_errhan_proxy(MPI_Win win, int error_code, void *extra_state)
     p->u.win_err_fn(h, &error_code);
 }
 
-#ifdef HAVE_ROMIO        
 static void CXX_file_errhan_proxy(MPI_File file, int error_code, void *extra_state)
 {
     CXX_errhan_state *p = (CXX_errhan_state *) extra_state;
     MPI::File h = file;
     p->u.file_err_fn(h, &error_code);
 }
-#endif
 
 static void CXX_errhan_free(void *extra_state)
 {
@@ -100,7 +96,6 @@ Errhandler Win::Create_errhandler(MPI::Win::Errhandler_function *f)
     return e1;
 }
 
-#ifdef HAVE_ROMIO        
 Errhandler File::Create_errhandler(MPI::File::Errhandler_function *f)
 {
     CXX_errhan_state *p = new(CXX_errhan_state);
@@ -113,4 +108,3 @@ Errhandler File::Create_errhandler(MPI::File::Errhandler_function *f)
     e1.the_real_errhandler = eh;
     return e1;
 }
-#endif
