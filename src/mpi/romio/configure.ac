@@ -106,6 +106,7 @@ FROM_OMPI=${FROM_OMPI:-no}
 if test "$FROM_OMPI" = 1 ; then FROM_OMPI=yes ; fi
 
 AM_CONDITIONAL([BUILD_BINDING], [test "$FROM_MPICH" != "yes"])
+AM_CONDITIONAL([INSTALL_HEADERS], [test "$FROM_MPICH" != "yes"])
 
 # MPL
 AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
