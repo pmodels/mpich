@@ -1402,9 +1402,9 @@ if test "$enable_romio" = "yes" ; then
        # This test used -e under Linux, but not all test programs understand
        # -e
        if test ! -d lib ; then mkdir lib ; fi
-       # tell mpi.h to include mpio.h
-       HAVE_ROMIO='#include "mpio.h"'
-       # tell mpicxx.h that we have IO
+       # define ROMIO_VERSION in mpi.h so application can check whether ROMIO is included
+       ROMIO_VERSION='#define ROMIO_VERSION 126'
+
        romio_subdir_args=""
        if test "$enable_mpi_abi" = "yes" ; then
            romio_subdir_args="--enable-mpi-abi"
@@ -1414,7 +1414,7 @@ if test "$enable_romio" = "yes" ; then
        AC_MSG_WARN([ROMIO src directory is not available])
    fi
 fi
-AC_SUBST(HAVE_ROMIO)
+AC_SUBST(ROMIO_VERSION)
 
 AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 #

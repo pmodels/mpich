@@ -43,6 +43,8 @@
 #define MPICH         1
 #define MPICH_HAS_C2F  1
 
+@ROMIO_VERSION@
+
 /* MPICH_VERSION is the version string. MPICH_NUMVERSION is the
  * numeric version that can be used in numeric comparisons.
  *
