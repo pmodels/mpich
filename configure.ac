@@ -1383,7 +1383,6 @@ if test "$with_cross" != "no" ; then
 fi
 
 # This goes here because we need the top_srcdir
-HAVE_CXX_IO=0
 if test "$enable_romio" = "yes" ; then
    if test -d $use_top_srcdir/src/mpi/romio ; then
        AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
@@ -1406,7 +1405,6 @@ if test "$enable_romio" = "yes" ; then
        # tell mpi.h to include mpio.h
        HAVE_ROMIO='#include "mpio.h"'
        # tell mpicxx.h that we have IO
-       HAVE_CXX_IO=1
        romio_subdir_args=""
        if test "$enable_mpi_abi" = "yes" ; then
            romio_subdir_args="--enable-mpi-abi"
@@ -1417,7 +1415,6 @@ if test "$enable_romio" = "yes" ; then
    fi
 fi
 AC_SUBST(HAVE_ROMIO)
-AC_SUBST(HAVE_CXX_IO)
 
 AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 #
