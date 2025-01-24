@@ -111,6 +111,7 @@ MPI_File_read_at_all_begin:
 
 MPI_File_read_at_all_end:
     .desc: Complete a split collective read using
+    .skip: validate-buf
 
 MPI_File_read_all_begin:
     .desc: Begin a split collective read using individual file pointer
@@ -120,6 +121,7 @@ MPI_File_read_all:
 
 MPI_File_read_all_end:
     .desc: Complete a split collective read using
+    .skip: validate-buf
 
 MPI_File_read_at_all:
     .desc: Collective read using explicit offset
@@ -138,6 +140,7 @@ MPI_File_read_ordered:
 
 MPI_File_read_ordered_end:
     .desc: Complete a split collective read using shared file pointer
+    .skip: validate-buf
 
 MPI_File_read_shared:
     .desc: Read using shared file pointer
@@ -172,6 +175,7 @@ MPI_File_write_at_all_begin:
 
 MPI_File_write_at_all_end:
     .desc: Complete a split collective write using explicit offset
+    .skip: validate-buf
 
 MPI_File_write_all_begin:
     .desc: Begin a split collective write using
@@ -181,6 +185,7 @@ MPI_File_write_all:
 
 MPI_File_write_all_end:
     .desc: Complete a split collective write using individual file pointer
+    .skip: validate-buf
 
 MPI_File_write_at_all:
     .desc: Collective write using explicit offset
@@ -199,6 +204,7 @@ MPI_File_write_ordered:
 
 MPI_File_write_ordered_end:
     .desc: Complete a split collective write using shared file pointer
+    .skip: validate-buf
 
 MPI_File_write_shared:
     .desc: Write using shared file pointer
