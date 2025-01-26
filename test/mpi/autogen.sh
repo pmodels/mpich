@@ -64,7 +64,7 @@ check_copy() {
 
 generate_benchmarks() {
     MYDEF_BOOT=$PWD/../../modules/mydef_boot
-    if test -d $MYDEF_BOOT ; then
+    if test -d $MYDEF_BOOT/bin ; then
         echo "Generating benchmark tests"
         export PATH=$MYDEF_BOOT/bin:$PATH
         export PERL5LIB=$MYDEF_BOOT/lib/perl5

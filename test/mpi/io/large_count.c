@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         if (rank == 0) {
             printf("nprocs=%d NVARS=%d LEN=%d\n", nprocs, NVARS, LEN);
             printf("Expecting file size=%lld bytes (%.1f MB, %.1f GB)\n",
-                   fsize, (float) fsize / 1048576, (float) fsize / 1073741824);
+                   (long long) fsize, (float) fsize / 1048576, (float) fsize / 1073741824);
             printf("Each global variable is of size %d bytes (%.1f MB)\n",
                    gsize[0] * gsize[1], (float) gsize[0] * gsize[1] / 1048576);
             printf("Each process writes %zd bytes (%.1f MB, %.1f GB)\n",
