@@ -53,7 +53,7 @@ AM_CPPFLAGS += $(MPI_H_INCLUDE)
 AM_CPPFLAGS += -I$(top_builddir)/include -I$(top_srcdir)/include $(external_includes)
 # nodist_ b/c these are created by config.status and should not be distributed
 if INSTALL_HEADERS
-nodist_include_HEADERS += include/mpio.h include/mpiof.h
+nodist_include_HEADERS += include/mpio.h
 endif
 
 # ------------------------------------------------------------------------
