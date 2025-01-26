@@ -4,7 +4,6 @@
 ##
 
 include $(top_srcdir)/mpi-io/glue/Makefile.mk
-include $(top_srcdir)/mpi-io/fortran/Makefile.mk
 
 AM_CPPFLAGS += -I$(top_builddir)/mpi-io -I$(top_srcdir)/mpi-io
 noinst_HEADERS += mpi-io/mpioimpl.h mpi-io/mpioprof.h

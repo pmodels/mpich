@@ -32,16 +32,6 @@ FTESTS = fcoll_test fperf fmisc pfcoll_test
 
 check_PROGRAMS = $(CTESTS)
 
-if BUILD_F77_TESTS
-
-check_PROGRAMS += $(FTESTS)
-nodist_fperf_SOURCES = fperf.f
-nodist_fcoll_test_SOURCES = fcoll_test.f
-nodist_fmisc_SOURCES = fmisc.f
-nodist_pfcoll_test_SOURCES = pfcoll_test.f
-
-endif BUILD_F77_TESTS
-
 TESTS_ENVIRONMENT = export srcdir="$(srcdir)";
 
 TESTS = $(check_PROGRAMS)

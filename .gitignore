@@ -166,7 +166,6 @@ Makefile.am-stamp
 /src/binding/fortran/use_mpi/mpi_base.f90.in
 /src/binding/fortran/use_mpi/mpi_constants.f90.in
 /src/mpi/romio/include/mpio.h
-/src/mpi/romio/include/mpiof.h
 /src/mpid/ch3/channels/nemesis/include/mpid_nem_net_module_defs.h
 /src/packaging/envmods/mpich2.module
 /src/packaging/pkgconfig/mpich2-c.pc
@@ -508,18 +507,10 @@ Makefile.am-stamp
 
 # /src/mpi/romio/mpi-io/
 
-# /src/mpi/romio/mpi-io/fortran/
-/src/mpi/romio/mpi-io/fortran/g77
-/src/mpi/romio/mpi-io/fortran/intel
-
 # /src/mpi/romio/test/
 /src/mpi/romio/test/runtests
 /src/mpi/romio/test/misc.c
-/src/mpi/romio/test/fmisc.f
 /src/mpi/romio/test/large_file.c
-/src/mpi/romio/test/fcoll_test.f
-/src/mpi/romio/test/fperf.f
-/src/mpi/romio/test/pfcoll_test.f
 /src/mpi/romio/test/romiotests
 
 # /src/mpi/romio/test-internal/
