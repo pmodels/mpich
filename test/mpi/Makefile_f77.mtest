@@ -15,7 +15,9 @@ AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
 
 # This is right for many platforms, but not all.  The right fix involves a
 # configure test, but this version is no worse than the simplemake version was.
-AM_FFLAGS = -I.
+# Add -w to suppress all warnings. Compilers such as gfortrans warns even with
+# -fallow-argument-mismatch.
+AM_FFLAGS = -I. -w
 
 LDADD = $(top_builddir)/util/libmtest_f77.la
 mtest_c_objects = $(top_builddir)/util/libmtest_single.la

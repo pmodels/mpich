@@ -156,11 +156,12 @@ int main(int argc, char **argv)
             printf("Output file name = %s\n", filename);
             printf("nprocs=%d nvars=%d len=%d\n", nprocs, nvars, len);
             printf("Expecting file size=%lld bytes (%.1f MB, %.1f GB)\n",
-                   fsize * 2, (float) fsize * 2 / 1048576, (float) fsize * 2 / 1073741824);
-            printf("Each global variable is of size %d bytes (%.1f MB)\n",
-                   gsize[0] * gsize[1], (float) gsize[0] * gsize[1] / 1048576);
-            printf("Each process writes %zd bytes (%.1f MB, %.1f GB)\n",
-                   buf_len, (float) buf_len / 1048576, (float) buf_len / 1073741824);
+                   (long long) fsize * 2, (float) fsize * 2 / 1048576,
+                   (float) fsize * 2 / 1073741824);
+            printf("Each global variable is of size %d bytes (%.1f MB)\n", gsize[0] * gsize[1],
+                   (float) gsize[0] * gsize[1] / 1048576);
+            printf("Each process writes %zd bytes (%.1f MB, %.1f GB)\n", buf_len,
+                   (float) buf_len / 1048576, (float) buf_len / 1073741824);
             printf("** For nonblocking I/O test, the amount is twice\n");
             printf("-------------------------------------------------------\n");
         }
