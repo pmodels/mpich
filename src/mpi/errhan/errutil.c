@@ -1407,6 +1407,7 @@ static const char *GetDTypeString(MPI_Datatype d)
 
     combiner = MPIR_Type_get_combiner(d);
     if (combiner == MPI_COMBINER_NAMED) {
+        d = MPIR_DATATYPE_GET_ORIG_BUILTIN(d);
         str = MPIR_Datatype_builtin_to_string(d);
         if (str == NULL) {
             snprintf(default_str, sizeof(default_str), "dtype=0x%08x", d);
