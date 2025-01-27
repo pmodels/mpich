@@ -89,7 +89,7 @@ static external32_basic_size_t external32_basic_size_array[] = {
 MPI_Aint MPII_Typerep_get_basic_size_external32(MPI_Datatype el_type)
 {
     for (int i = 0; i < COUNT_OF(external32_basic_size_array); i++) {
-        if (external32_basic_size_array[i].el_type == el_type) {
+        if (external32_basic_size_array[i].el_type == MPIR_DATATYPE_GET_ORIG_BUILTIN(el_type)) {
             return external32_basic_size_array[i].el_size;
         }
     }
@@ -98,7 +98,7 @@ MPI_Aint MPII_Typerep_get_basic_size_external32(MPI_Datatype el_type)
 
 bool MPII_Typerep_basic_type_is_complex(MPI_Datatype el_type)
 {
-    switch (el_type) {
+    switch (MPIR_DATATYPE_GET_ORIG_BUILTIN(el_type)) {
         case MPI_C_COMPLEX:
         case MPI_C_DOUBLE_COMPLEX:
         case MPI_C_LONG_DOUBLE_COMPLEX:
@@ -120,7 +120,7 @@ bool MPII_Typerep_basic_type_is_complex(MPI_Datatype el_type)
 
 bool MPII_Typerep_basic_type_is_unsigned(MPI_Datatype el_type)
 {
-    switch (el_type) {
+    switch (MPIR_DATATYPE_GET_ORIG_BUILTIN(el_type)) {
         case MPI_PACKED:
         case MPI_BYTE:
         case MPI_WCHAR:
