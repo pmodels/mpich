@@ -100,14 +100,16 @@ int main(int argc, char *argv[])
                 && !(check_buf[dest] == 1 && check_buf[origin_shm] == 0 &&
                      check_buf[origin_am] == 0)) {
 
-                printf
-                    ("Wrong results: target result = %d, origin_shm result = %d, origin_am result = %d\n",
-                     check_buf[dest], check_buf[origin_shm], check_buf[origin_am]);
+                if (errs < 10) {
+                    printf
+                        ("Wrong results: target result = %d, origin_shm result = %d, origin_am result = %d\n",
+                         check_buf[dest], check_buf[origin_shm], check_buf[origin_am]);
 
-                printf
-                    ("Expected results (1): target result = 1, origin_shm result = 0, origin_am result = 0\n");
-                printf
-                    ("Expected results (2): target result = 0, origin_shm result = 0, origin_am result = 1\n");
+                    printf
+                        ("Expected results (1): target result = 1, origin_shm result = 0, origin_am result = 0\n");
+                    printf
+                        ("Expected results (2): target result = 0, origin_shm result = 0, origin_am result = 1\n");
+                }
 
                 errs++;
             }

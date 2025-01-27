@@ -27,7 +27,7 @@ static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype * dataty
 
     if (*datatype != MPI_INT) {
         ++uop_errs;
-        printf("invalid datatype passed to user_op");
+        printf("invalid datatype passed to user_op\n");
         return;
     }
 
