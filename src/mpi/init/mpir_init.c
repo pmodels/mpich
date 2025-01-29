@@ -305,7 +305,7 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     /* pairtypes might need device hooks to be activated so the device
      * can keep track of their creation.  that's why we need to do
      * this after the device initialization.  */
-    mpi_errno = MPIR_Datatype_commit_pairtypes();
+    mpi_errno = MPIR_Datatype_init_pairtypes();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPII_post_init_memory_tracing();
@@ -447,6 +447,9 @@ int MPII_Finalize(MPIR_Session * session_ptr)
 #endif
 
     mpi_errno = MPII_Coll_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Datatype_finalize_pairtypes();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Call the low-priority (post Finalize) callbacks */

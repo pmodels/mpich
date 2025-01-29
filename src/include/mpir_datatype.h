@@ -308,8 +308,9 @@ extern MPI_Datatype MPIR_Datatype_index_to_predefined[MPIR_DATATYPE_N_PREDEFINED
 
 void MPIR_Datatype_free(MPIR_Datatype * ptr);
 void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flattened_sz);
-int MPIR_Datatype_commit_pairtypes(void);
 int MPIR_Datatype_init_predefined(void);
+int MPIR_Datatype_init_pairtypes(void);
+int MPIR_Datatype_finalize_pairtypes(void);
 int MPIR_Datatype_builtintype_alignment(MPI_Datatype type);
 
 /* internal debugging functions */
@@ -713,35 +714,6 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Type_get_combiner(MPI_Datatype datatype)
     }
 }
 
-MPL_STATIC_INLINE_PREFIX MPI_Datatype MPIR_Datatype_predefined_get_type(uint32_t index)
-{
-    MPIR_Assert(index < MPIR_DATATYPE_N_PREDEFINED);
-    return MPIR_Datatype_index_to_predefined[index];
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIR_Datatype_predefined_get_index(MPI_Datatype datatype)
-{
-    int dtype_index = 0;
-    switch (HANDLE_GET_KIND(datatype)) {
-        case HANDLE_KIND_BUILTIN:
-            /* Predefined builtin index mask for dtype. See MPIR_Datatype_get_ptr. */
-            dtype_index = datatype & 0x000000ff;
-            MPIR_Assert(dtype_index < MPIR_DATATYPE_N_BUILTIN);
-            break;
-        case HANDLE_KIND_DIRECT:
-            /* pairtype */
-            dtype_index = HANDLE_INDEX(datatype) + MPIR_DATATYPE_N_BUILTIN;
-            MPIR_Assert(dtype_index < MPIR_DATATYPE_N_BUILTIN + MPIR_DATATYPE_N_BUILTIN);
-            break;
-        default:
-            /* should be called only by builtin or pairtype */
-            MPIR_Assert(HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN ||
-                        HANDLE_GET_KIND(datatype) == HANDLE_KIND_DIRECT);
-            break;
-    }
-    return dtype_index;
-}
-
 /* This routine is used to install an attribute free routine for datatypes
    at finalize-time */
 void MPII_Datatype_attr_finalize(void);
@@ -753,7 +725,6 @@ void MPIR_Pack_size(MPI_Aint incount, MPI_Datatype datatype, MPI_Aint * size);
 
 /* Datatype functions */
 int MPII_Type_zerolen(MPI_Datatype * newtype);
-int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
 
 int MPIR_Type_contiguous(MPI_Aint count, MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_vector(MPI_Aint count, MPI_Aint blocklength, MPI_Aint stride, bool strideinbytes,

@@ -633,34 +633,3 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
 
     return MPI_SUCCESS;
 }
-
-int MPIR_Typerep_create_pairtype(MPI_Datatype type, MPIR_Datatype * newtype)
-{
-    int alignsize;
-    switch (type) {
-        case MPI_FLOAT_INT:
-            alignsize = MPL_MAX(ALIGNOF_FLOAT, ALIGNOF_INT);
-            break;
-        case MPI_DOUBLE_INT:
-            alignsize = MPL_MAX(ALIGNOF_DOUBLE, ALIGNOF_INT);
-            break;
-        case MPI_LONG_INT:
-            alignsize = ALIGNOF_LONG;
-            break;
-        case MPI_SHORT_INT:
-            alignsize = ALIGNOF_INT;
-            break;
-        case MPI_LONG_DOUBLE_INT:
-            alignsize = MPL_MAX(ALIGNOF_LONG_DOUBLE, ALIGNOF_INT);
-            break;
-        default:
-            /* --BEGIN ERROR HANDLING-- */
-            return MPIR_Err_create_code(MPI_SUCCESS,
-                                        MPIR_ERR_RECOVERABLE,
-                                        "MPIR_Type_create_pairtype",
-                                        __LINE__, MPI_ERR_OTHER, "**dtype", 0);
-            /* --END ERROR HANDLING-- */
-    }
-    newtype->alignsize = alignsize;
-    return MPI_SUCCESS;
-}
