@@ -354,11 +354,3 @@ int MPIR_Typerep_create_struct(MPI_Aint count, const MPI_Aint * array_of_blockle
   fn_fail:
     goto fn_exit;
 }
-
-int MPIR_Typerep_create_pairtype(MPI_Datatype type, MPIR_Datatype * newtype)
-{
-    MPIR_FUNC_ENTER;
-
-    MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
-}

@@ -19,52 +19,6 @@
         types[1] = mt2_;                                                \
     }
 
-/*@
-create_pairtype - create dataloop for a pairtype
-
-   Arguments:
-+  MPI_Datatype type - the pairtype
-
-.N Errors
-.N Returns 0 on success, -1 on failure.
-
-   Note:
-   This function simply creates the appropriate input parameters for
-   use with Dataloop_create_struct and then calls that function.
-
-   This same function could be used to create dataloops for any type
-   that actually consists of two distinct elements.
-@*/
-static int create_pairtype(MPI_Datatype type)
-{
-    MPI_Aint blocks[2] = { 1, 1 };
-    MPI_Aint disps[2];
-    MPI_Datatype types[2];
-
-    MPIR_Assert(type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT ||
-                type == MPI_LONG_INT || type == MPI_SHORT_INT ||
-                type == MPI_LONG_DOUBLE_INT || type == MPI_2INT);
-
-    MPIR_Datatype *typeptr;
-    MPIR_Datatype_get_ptr(type, typeptr);
-
-    if (type == MPI_FLOAT_INT) {
-        PAIRTYPE_CONTENTS(MPI_FLOAT, float, MPI_INT, int);
-    } else if (type == MPI_DOUBLE_INT) {
-        PAIRTYPE_CONTENTS(MPI_DOUBLE, double, MPI_INT, int);
-    } else if (type == MPI_LONG_INT) {
-        PAIRTYPE_CONTENTS(MPI_LONG, long, MPI_INT, int);
-    } else if (type == MPI_SHORT_INT) {
-        PAIRTYPE_CONTENTS(MPI_SHORT, short, MPI_INT, int);
-    } else if (type == MPI_LONG_DOUBLE_INT) {
-        PAIRTYPE_CONTENTS(MPI_LONG_DOUBLE, long double, MPI_INT, int);
-    } else if (type == MPI_2INT) {
-        PAIRTYPE_CONTENTS(MPI_INT, int, MPI_INT, int);
-    }
-
-    return MPIR_Dataloop_create_struct(2, blocks, disps, types, (void **) &typeptr->typerep.handle);
-}
-
 void MPIR_Typerep_commit(MPI_Datatype type)
 {
     MPI_Datatype *types;
@@ -84,18 +38,13 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     }
     void **dlp_p = (void **) &typeptr->typerep.handle;
 
-    if (type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT || type == MPI_LONG_INT ||
-        type == MPI_SHORT_INT || type == MPI_LONG_DOUBLE_INT || type == MPI_2INT) {
-        create_pairtype(type);
-        goto clean_exit;
-    }
-
     int combiner = MPIR_Type_get_combiner(type);
 
     /* some named types do need dataloops; handle separately. */
     if (combiner == MPI_COMBINER_NAMED) {
-        MPIR_Assert(0);
-        goto clean_exit;
+        MPIR_Assert(!HANDLE_IS_BUILTIN(type));
+        /* The only non-builtin named types are builtin pairtypes, internally same as struct types */
+        combiner = MPI_COMBINER_STRUCT;
     } else if (combiner == MPI_COMBINER_F90_REAL || combiner == MPI_COMBINER_F90_COMPLEX ||
                combiner == MPI_COMBINER_F90_INTEGER) {
         MPI_Datatype f90basetype;
