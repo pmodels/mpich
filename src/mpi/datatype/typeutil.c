@@ -19,9 +19,6 @@ MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_DATATYPE,
     NULL, {0}
 };
 
-MPI_Datatype MPIR_Datatype_index_to_predefined[MPIR_DATATYPE_N_PREDEFINED];
-
-static int pairtypes_finalize_cb(void *dummy);
 static int datatype_attr_finalize_cb(void *dummy);
 
 #define type_name_entry(x_) { MPI_##x_, MPIR_##x_##_INTERNAL, "MPI_" #x_ }
@@ -104,60 +101,6 @@ struct MPIR_Datatype_builtin_entry MPIR_Internal_types[] = {
     /* *INDENT-ON* */
 };
 
-#if 0
-static mpi_names_t mpi_pairtypes[] = {
-    type_name_entry(MPI_FLOAT_INT),
-    type_name_entry(MPI_DOUBLE_INT),
-    type_name_entry(MPI_LONG_INT),
-    type_name_entry(MPI_SHORT_INT),
-    type_name_entry(MPI_LONG_DOUBLE_INT),
-};
-
-static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
-{
-    int i;
-    MPIR_Datatype *dptr;
-
-    for (i = 0; i < sizeof(mpi_pairtypes) / sizeof(mpi_pairtypes[0]); i++) {
-        if (mpi_pairtypes[i].dtype != MPI_DATATYPE_NULL) {
-            MPIR_Datatype_get_ptr(mpi_pairtypes[i].dtype, dptr);
-            MPIR_Datatype_free(dptr);
-            mpi_pairtypes[i].dtype = MPI_DATATYPE_NULL;
-        }
-    }
-    return 0;
-}
-
-static void init_pairtypes(void)
-{
-    for (i = 0; i < sizeof(mpi_pairtypes) / sizeof(mpi_pairtypes[0]); ++i) {
-        /* types based on 'long long' and 'long double', may be disabled at
-         * configure time, and their values set to MPI_DATATYPE_NULL.  skip any
-         * such types. */
-        if (mpi_pairtypes[i].dtype == MPI_DATATYPE_NULL)
-            continue;
-        /* XXX: this allocation strategy isn't right if one or more of the
-         * pairtypes is MPI_DATATYPE_NULL.  in fact, the assert below will
-         * fail if any type other than the las in the list is equal to
-         * MPI_DATATYPE_NULL.  obviously, this should be fixed, but I need
-         * to talk to Rob R. first. -- BRT */
-        /* XXX DJG it does work, but only because MPI_LONG_DOUBLE_INT is the
-         * only one that is ever optional and it comes last */
-
-        dptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
-
-        MPIR_Assert(dptr);
-        MPIR_Assert(dptr->handle == mpi_pairtypes[i].dtype);
-        /* this is a redundant alternative to the previous statement */
-        MPIR_Assert(HANDLE_INDEX(mpi_pairtypes[i].dtype) == i);
-
-        mpi_errno = MPIR_Type_create_pairtype(mpi_pairtypes[i].dtype, (MPIR_Datatype *) dptr);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPL_strncpy(dptr->name, mpi_pairtypes[i].name, MPI_MAX_OBJECT_NAME);
-    }
-}
-#endif
-
 /* Call this routine to associate a MPIR_Datatype with each predefined
    datatype. */
 int MPIR_Datatype_init_predefined(void)
@@ -183,7 +126,7 @@ int MPIR_Datatype_init_predefined(void)
                                              MPIR_ERR_FATAL, __func__,
                                              __LINE__, MPI_ERR_INTERN,
                                              "**typeinitbadmem", "**typeinitbadmem %d", i);
-            return mpi_errno;
+            goto fn_fail;
         }
         /* --END ERROR HANDLING-- */
 
@@ -198,17 +141,6 @@ int MPIR_Datatype_init_predefined(void)
         dptr->contents = NULL;  /* should never get referenced? */
         MPL_strncpy(dptr->name, MPIR_Internal_types[i].name, MPI_MAX_OBJECT_NAME);
     }
-
-    /* Setup pairtypes. The following assertions ensure that:
-     * - this function is called before other types are allocated
-     * - there are enough spaces in the direct block to hold our types
-     * - we actually get the values we expect (otherwise errors regarding
-     *   these types could be terribly difficult to track down!)
-     */
-    MPIR_Assert(MPIR_Datatype_mem.initialized == 0);
-    MPIR_Assert(MPIR_DATATYPE_PREALLOC >= 5);
-
-    /* FIXME: setup pairtypes in later commits */
 
   fn_fail:
     return mpi_errno;
@@ -302,28 +234,6 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
     }
 
     return 1;
-}
-
-int MPIR_Datatype_commit_pairtypes(void)
-{
-    /* commit pairtypes */
-    for (int i = 0; i < sizeof(mpi_pairtypes) / sizeof(mpi_pairtypes[0]); i++) {
-        if (mpi_pairtypes[i].dtype != MPI_DATATYPE_NULL) {
-            int err;
-
-            err = MPIR_Type_commit_impl(&mpi_pairtypes[i].dtype);
-
-            /* --BEGIN ERROR HANDLING-- */
-            if (err) {
-                return MPIR_Err_create_code(MPI_SUCCESS,
-                                            MPIR_ERR_RECOVERABLE,
-                                            __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-            }
-            /* --END ERROR HANDLING-- */
-        }
-    }
-
-    return MPI_SUCCESS;
 }
 
 /* If an attribute is added to a predefined type, we free the attributes
