@@ -24,7 +24,6 @@ error() {
 ########################################################################
 
 genpup_args=
-gentests_args=
 
 if test -n "$YAKSA_AUTOGEN_PUP_NESTING" ; then
     genpup_args=$YAKSA_AUTOGEN_PUP_NESTING
@@ -34,9 +33,6 @@ for arg in "$@" ; do
     case $arg in
         -pup-max-nesting=*|--pup-max-nesting=*)
             genpup_args="$genpup_args $arg"
-            ;;
-        -skip-test-complex)
-            gentests_args="$gentests_args $arg"
             ;;
         *)
             error "unknown argument $arg"
@@ -59,14 +55,6 @@ for x in seq cuda ze hip ; do
 	exit 1
     fi
 done
-
-# tests
-./maint/gentests.py ${gentests_args}
-if test "$?" != "0" ; then
-    echo "test generation failed"
-    exit 1
-fi
-
 
 ########################################################################
 ## Autotools
