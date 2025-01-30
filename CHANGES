@@ -7,6 +7,11 @@
 # Rename MPIR_CVAR_DEBUG_PROGRESS_TIMEOUT to MPIR_CVAR_PROGRESS_TIMEOUT, and
   enable it whether or not --enable-g=progress is used in configure.
 
+# MPICH now generates the MPI-IO bindings when ROMIO is build inside MPICH. It
+  remains the same for using ROMIO outside MPICH.
+
+# Yaksa is now maintained inside MPICH rather than as an external submodule.  
+
 ===============================================================================
                                Changes in 4.3
 ===============================================================================
