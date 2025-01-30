@@ -40,8 +40,6 @@ endif !EMBEDDED_BUILD
 
 include $(top_srcdir)/src/Makefile.mk
 
-testlists=
-include $(top_srcdir)/test/Makefile.mk
 include $(top_srcdir)/examples/Makefile.mk
 
 examples: $(example_list)
@@ -49,7 +47,3 @@ examples: $(example_list)
 doxygen:
 	mkdir -p doc
 	doxygen Doxyfile
-
-testing:
-	@$(top_srcdir)/test/runtests.py --summary=$(top_builddir)/test/summary.junit.xml \
-                $(testlists)
