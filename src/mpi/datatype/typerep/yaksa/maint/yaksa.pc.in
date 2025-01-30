@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: Yaksa
+Description: A High Performance Noncontiguous Datatype Processing Engine
+Version: @YAKSA_VERSION@
+URL: http://www.mpich.org/yaksa
+Requires:
+Libs: -L${libdir} -lyaksa
+Libs.private: @LIBS@
+Cflags: -I${includedir}

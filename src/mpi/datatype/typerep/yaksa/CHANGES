@@ -1,0 +1,49 @@
+===============================================================================
+                               Changes in 0.3
+===============================================================================
+
+# Default to detecting the CUDA device capabilities at configure
+  time. If no device is found on the build system, build all "major"
+  CUDA capabilities to cut down on build time and library size. (thanks
+  to Jeff Hammond for contributing)
+
+# Add support for mixed memory types (thanks to ParTec AG for
+  contributing)
+
+# Add HIP backend for stream APIs
+
+# Add automatic HIP SM detection
+
+# Add automatic CUDA SM detection
+
+# Add support for user-specified CUDA compiler
+
+# Add support in --ze-native option to compile for multiple devices
+
+# Add support for --pup-max-nesting < 2 in genpup.py
+
+# Add support for --ze-revision-id to pass to ocloc compiler
+
+# Other bug fixes and code cleanup
+
+===============================================================================
+                               Changes in 0.2
+===============================================================================
+
+# Add support for reduction operations (e.g. sum, prod, min, max, ...)
+
+# Add support for AMD GPUs via HIP backend
+
+# Add "nogpu" info hint to avoid unnecessary pointer attribute queries
+
+# Add stream-based pack/unpack APIs
+
+# Add blocking pack/unpack APIs
+
+# Add support for NVIDIA HPC SDK compilers
+
+# Improve compile time for Level Zero kernels
+
+# Extend tests to support subdevices (tiles) of Intel GPUs
+
+# Many bug fixes and code cleanups

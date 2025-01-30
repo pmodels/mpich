@@ -1,0 +1,84 @@
+            DTPools Release 2.0
+
+DTPools is a datatype library used to test yaksa routines with
+different datatype combinations. DTPools' interface is used to create pools
+of datatypes, each having a specified signature (i.e., native type + count).
+Every pool supports different datatype layouts (defined internally by the
+library). For a list of the available layouts, go to section: "4. Supported
+Derived Datatype layouts".
+
+This README is organized as follows:
+
+1. DTPools API
+2. Testing with DTPools
+3. TODOs
+4. Environment variables
+
+----------------------------------------------------------------------------
+
+1. DTPools API
+==============
+
+Follows a list of DTPools interfaces used for datatype testing:
+
+* int DTP_pool_create(const char *base_type_str, int base_type_count, int seed, DTP_pool_s *dtp)
+  Create a new basic pool with defined datatype signature.
+  - base_type_str:    base type to use (e.g., YAKSA_TYPE__INT or YAKSA_TYPE__INT:4,YAKSA_TYPE__FLOAT:2)
+  - base_type_count:  number of base type elements in the pool signature
+  - seed:             seed for randomly generating objects
+  - dtp:              datatype pool object
+
+* int DTP_pool_free(DTP_pool_s dtp)
+  Free a previously created datatype pool.
+  - dtp:  datatype pool object
+
+* int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s *obj, uintptr_t maxbufsize)
+  Create a datatype object inside the specified pool.
+  - dtp:         datatype pool object
+  - obj:         Created object
+  - maxbufsize:  Maximum buffer size that an object can use
+
+* int DTP_obj_free(DTP_obj_s obj)
+  Free a previously created datatype object inside the specified pool.
+  - obj:      object to be freed
+
+* int DTP_obj_buf_alloc(DTP_obj_s obj)
+  - obj:      object for which the buffer needs to be allocated
+
+* int DTP_obj_buf_free(DTP_obj_s obj)
+  - obj:      object for which the buffer needs to be freed
+
+* int DTP_obj_buf_init(DTP_obj_s obj, int val_start, int val_stride, int val_count)
+  Initialize the buffer elements using start, stride and count.
+  - obj:         DTP object
+  - val_start:   start of initialization value for buffer
+  - val_stride:  increment for next element in buffer
+  - val_count:   total number of elements to be initialized in buffer
+
+* int DTP_obj_buf_check(DTP_obj_s obj, int val_start, int val_stride, int val_count)
+  Checks whether the received buffer (used in communication routine) matches the sent buffer.
+  - obj:         object to be checked
+  - val_start:   start of checking value for buffer at index obj_idx
+  - val_stride:  increment for next checked element in buffer
+  - val_count:   total number of elements to be checked in buffer
+
+
+----------------------------------------------------------------------------
+
+2. TODOs
+========
+
+1. Allow a tree for structures, not just a linear list
+
+----------------------------------------------------------------------------
+
+3. Environment Variables
+========================
+
+1. DTP_MAX_BUFSIZE: Sets the maximum buffer size that can be allocated
+for an object.  DTPools will search for an object with a smaller
+buffer size for a few iterations, and give up if it cannot find such
+an object.
+
+2. DTP_MAX_TREE_DEPTH: Sets the maximum datatype tree depth that an
+object can have.
