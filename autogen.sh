@@ -228,8 +228,7 @@ set_externals() {
         fi
 
         if [ "yes" = "$do_yaksa" ] ; then
-            check_submodule_presence "modules/yaksa"
-            externals="${externals} modules/yaksa"
+            externals="${externals} src/mpi/datatype/typerep/yaksa"
         fi
     fi
 }
@@ -594,7 +593,7 @@ autogen_external() {
     if [ -d "$_dir" -o -L "$_dir" ] ; then
         echo "------------------------------------------------------------------------"
         echo "running third-party initialization in $_dir"
-        if test "$_dir" = "modules/yaksa" -a -n "$yaksa_depth" ; then
+        if test "$_dir" = "src/mpi/datatype/typerep/yaksa" -a -n "$yaksa_depth" ; then
             (cd $_dir && ./autogen.sh --pup-max-nesting=$yaksa_depth) || exit 1
         else
             (cd $_dir && ./autogen.sh) || exit 1
