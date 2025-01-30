@@ -488,9 +488,9 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         /* printf( "About to sendrecv in intercomm_create\n" );fflush(stdout);*/
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,"rank %d sendrecv to rank %d", peer_comm_ptr->rank,
                                        remote_leader));
-        mpi_errno = MPIC_Sendrecv( &local_size,  1, MPI_INT,
+        mpi_errno = MPIC_Sendrecv( &local_size,  1, MPIR_INT_INTERNAL,
                                       remote_leader, cts_tag,
-                                      remote_size, 1, MPI_INT,
+                                      remote_size, 1, MPIR_INT_INTERNAL,
                                       remote_leader, cts_tag,
                                       peer_comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
@@ -508,9 +508,9 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         MPIR_ERR_CHECK(mpi_errno);
 
         /* Exchange the lpid arrays */
-        mpi_errno = MPIC_Sendrecv( local_gpids, local_size*sizeof(MPIDI_Gpid), MPI_BYTE,
+        mpi_errno = MPIC_Sendrecv( local_gpids, local_size*sizeof(MPIDI_Gpid), MPIR_BYTE_INTERNAL,
                                       remote_leader, cts_tag,
-                                      remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE,
+                                      remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPIR_BYTE_INTERNAL,
                                       remote_leader, cts_tag, peer_comm_ptr,
                                       MPI_STATUS_IGNORE, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
@@ -554,7 +554,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         comm_info[0] = *remote_size;
         comm_info[1] = *is_low_group;
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"About to bcast on local_comm");
-        mpi_errno = MPIR_Bcast( comm_info, 2, MPI_INT, local_leader, local_comm_ptr, MPIR_ERR_NONE );
+        mpi_errno = MPIR_Bcast( comm_info, 2, MPIR_INT_INTERNAL, local_leader, local_comm_ptr, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, MPIR_ERR_NONE );
@@ -566,7 +566,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
     {
         /* we're the other processes */
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"About to receive bcast on local_comm");
-        mpi_errno = MPIR_Bcast( comm_info, 2, MPI_INT, local_leader, local_comm_ptr, MPIR_ERR_NONE );
+        mpi_errno = MPIR_Bcast( comm_info, 2, MPIR_INT_INTERNAL, local_leader, local_comm_ptr, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
         *remote_size = comm_info[0];
         MPIR_CHKLMEM_MALLOC(remote_gpids,MPIDI_Gpid*,(*remote_size)*sizeof(MPIDI_Gpid), mpi_errno,"remote_gpids", MPL_MEM_DYNAMIC);
@@ -580,7 +580,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
     }
 
     /* Finish up by giving the device the opportunity to update
-       any other infomration among these processes.  Note that the
+       any other information among these processes.  Note that the
        new intercomm has not been set up; in fact, we haven't yet
        attempted to set up the connection tables.
 
@@ -736,7 +736,7 @@ int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
     }
 
     /* See if everyone is happy */
-    mpi_errno = MPIR_Allreduce( MPI_IN_PLACE, &allfound, 1, MPI_INT, MPI_LAND, comm_ptr, MPIR_ERR_NONE );
+    mpi_errno = MPIR_Allreduce( MPI_IN_PLACE, &allfound, 1, MPIR_INT_INTERNAL, MPI_LAND, comm_ptr, MPIR_ERR_NONE );
     MPIR_ERR_CHECK(mpi_errno);
     
     if (allfound) return MPI_SUCCESS;
