@@ -23,14 +23,14 @@ void MPIR_LXOR(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_LLXOR)
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_LLXOR)
             /* no semicolons by necessity */
             MPIR_OP_TYPE_GROUP(C_INTEGER)
 
                 /* MPI_LOGICAL requires special handling (MPIR_{TO,FROM}_FLOG) */
 #if defined(HAVE_FORTRAN_BINDING)
 #undef MPIR_OP_TYPE_MACRO_HAVE_FORTRAN
-#define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_, c_type_, type_name_)  \
+#define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_, c_type_)  \
         case (mpi_type_): {                                                \
                 c_type_ * restrict a = (c_type_ *)inoutvec;                \
                 c_type_ * restrict b = (c_type_ *)invec;                   \
@@ -44,7 +44,7 @@ void MPIR_LXOR(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
                 MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
                 /* now revert _HAVE_FORTRAN macro to default */
 #undef MPIR_OP_TYPE_MACRO_HAVE_FORTRAN
-#define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_)
+#define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_, c_type_) MPIR_OP_TYPE_MACRO(mpi_type_, c_type_)
 #else
                 /* if we don't have Fortran support then we don't have to jump through
                  * any hoops, simply expand the group */
@@ -67,7 +67,7 @@ int MPIR_LXOR_check_dtype(MPI_Datatype type)
 {
     switch (type) {
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) case (mpi_type_):
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) case (mpi_type_):
             MPIR_OP_TYPE_GROUP(C_INTEGER)
                 MPIR_OP_TYPE_GROUP(LOGICAL)     /* no special handling needed in check_dtype code */
                 MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)

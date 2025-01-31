@@ -16,7 +16,7 @@ void MPIR_MINF(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPL_MIN)
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPL_MIN)
             /* no semicolons by necessity */
             MPIR_OP_TYPE_GROUP(C_INTEGER)
                 MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
@@ -37,7 +37,7 @@ int MPIR_MINF_check_dtype(MPI_Datatype type)
 {
     switch (type) {
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) case (mpi_type_):
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) case (mpi_type_):
             MPIR_OP_TYPE_GROUP(C_INTEGER)
                 MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
                 MPIR_OP_TYPE_GROUP(FLOATING_POINT)
