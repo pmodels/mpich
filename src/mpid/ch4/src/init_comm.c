@@ -33,6 +33,17 @@ int MPIDI_create_init_comm(MPIR_Comm ** comm)
         init_comm->remote_size = node_roots_comm_size;
         init_comm->local_size = node_roots_comm_size;
         init_comm->coll.pof2 = MPL_pof2(node_roots_comm_size);
+
+        MPIR_Lpid *map;
+        map = MPL_malloc(node_roots_comm_size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
+        MPIR_ERR_CHKANDJUMP(!map, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        for (i = 0; i < node_roots_comm_size; ++i) {
+            map[i] = MPIR_Process.node_root_map[i];
+        }
+        mpi_errno = MPIR_Group_create_map(node_roots_comm_size, node_roots_comm_rank, NULL,
+                                          map, &init_comm->local_group);
+        MPIR_ERR_CHECK(mpi_errno);
+
         MPIDI_COMM(init_comm, map).mode = MPIDI_RANK_MAP_LUT_INTRA;
         mpi_errno = MPIDIU_alloc_lut(&lut, node_roots_comm_size);
         MPIR_ERR_CHECK(mpi_errno);
@@ -47,8 +58,8 @@ int MPIDI_create_init_comm(MPIR_Comm ** comm)
         mpi_errno = MPIDIG_init_comm(init_comm);
         MPIR_ERR_CHECK(mpi_errno);
         /* hacky, consider a separate MPIDI_{NM,SHM}_init_comm_hook
-	 * to initialize the init_comm, e.g. to eliminate potential
-	 * runtime features for stability during init */
+         * to initialize the init_comm, e.g. to eliminate potential
+         * runtime features for stability during init */
         mpi_errno = MPIDI_NM_mpi_comm_commit_pre_hook(init_comm);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -67,6 +78,7 @@ void MPIDI_destroy_init_comm(MPIR_Comm ** comm_ptr)
     if (*comm_ptr != NULL) {
         comm = *comm_ptr;
         MPIDIU_release_lut(MPIDI_COMM(comm, map).irreg.lut.t);
+        MPIR_Group_release(comm->local_group);
         MPIDIG_destroy_comm(comm);
         MPIR_Object_release_ref(comm, &in_use);
         MPIR_Assertp(in_use == 0);

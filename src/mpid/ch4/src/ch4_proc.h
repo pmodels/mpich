@@ -9,7 +9,7 @@
 #include "ch4_types.h"
 
 /* There are 3 terms referencing processes:
- * upid, or "unversal process id", is netmod layer address (addrname)
+ * upid, or "universal process id", is netmod layer address (addrname)
  * lpid, or "local process id", is av entry index in an ch4-layer table
  * gpid, or "global process id", is av table index plus av entry index
  *
@@ -33,8 +33,8 @@ void MPIDIU_upidhash_add(const void *upid, int upid_len, int avtid, int lpid);
 MPIDI_upid_hash *MPIDIU_upidhash_find(const void *upid, int upid_len);
 void MPIDIU_upidhash_free(void);
 #endif
-int MPIDIU_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids,
-                          uint64_t * remote_gpids);
+int MPIDIU_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids,
+                          MPIR_Lpid * remote_lpids);
 int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size);
 int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut);
 int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size);
@@ -262,7 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rank_is_local(int rank, MPIR_Comm * comm)
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     /* Ask the netmod for locality information. If it decided not to build it,
-     * it will call back up to the MPIDIU function to get the infomration. */
+     * it will call back up to the MPIDIU function to get the information. */
     ret = MPIDI_NM_rank_is_local(rank, comm);
 #else
     ret = MPIDIU_av_is_local(MPIDIU_comm_rank_to_av(comm, rank));
