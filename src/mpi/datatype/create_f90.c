@@ -51,16 +51,19 @@ int MPIR_Type_create_f90_integer_impl(int range, MPI_Datatype * newtype)
             int bytes = f90_integer_map[i].bytes;
             switch (bytes) {
                 case 1:
-                    basetype = MPI_INTEGER1;
+                    basetype = MPIR_INT8;
                     break;
                 case 2:
-                    basetype = MPI_INTEGER2;
+                    basetype = MPIR_INT16;
                     break;
                 case 4:
-                    basetype = MPI_INTEGER4;
+                    basetype = MPIR_INT32;
                     break;
                 case 8:
-                    basetype = MPI_INTEGER8;
+                    basetype = MPIR_INT64;
+                    break;
+                case 16:
+                    basetype = MPIR_INT128;
                     break;
                 default:
                     break;
@@ -94,8 +97,8 @@ int MPIR_Type_create_f90_real_impl(int precision, int range, MPI_Datatype * newt
 
     static int setupPredefTypes = 1;
     static realModel f90_real_model[2] = {
-        {MPIR_F90_REAL_MODEL, MPI_REAL},
-        {MPIR_F90_DOUBLE_MODEL, MPI_DOUBLE_PRECISION}
+        {MPIR_F90_REAL_MODEL, MPIR_REAL_INTERNAL},
+        {MPIR_F90_DOUBLE_MODEL, MPIR_DOUBLE_PRECISION_INTERNAL}
     };
 
     /* MPI 2.1, Section 16.2, page 473 lines 12-27 make it clear that
@@ -147,8 +150,8 @@ int MPIR_Type_create_f90_complex_impl(int precision, int range, MPI_Datatype * n
 
     static int setupPredefTypes = 1;
     static realModel f90_real_model[2] = {
-        {MPIR_F90_REAL_MODEL, MPI_COMPLEX},
-        {MPIR_F90_DOUBLE_MODEL, MPI_DOUBLE_COMPLEX}
+        {MPIR_F90_REAL_MODEL, MPIR_COMPLEX_INTERNAL},
+        {MPIR_F90_DOUBLE_MODEL, MPIR_DOUBLE_COMPLEX_INTERNAL}
     };
 
     /* MPI 2.1, Section 16.2, page 473 lines 12-27 make it clear that
