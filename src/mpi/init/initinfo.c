@@ -75,6 +75,18 @@ static char *get_feature_list(void)
     ADD_FEATURE("threadcomm");
 #endif
 
+#ifdef MPL_HAVE_CUDA
+    ADD_FEATURE("cuda");
+#endif
+
+#ifdef MPL_HAVE_HIP
+    ADD_FEATURE("hip");
+#endif
+
+#ifdef MPL_HAVE_ZE
+    ADD_FEATURE("ze");
+#endif
+
     return strbuf;
 }
 

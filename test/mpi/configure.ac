@@ -490,6 +490,24 @@ if test "$MPI_IS_MPICH" = "yes" ; then
             enable_threadcomm=no
         fi
 
+        if grep 'MPICH features:.*cuda' conftest.output > /dev/null ; then
+            enable_cuda=yes
+            with_cuda=$(grep 'MPICH configure:' conftest.output | sed -n 's/.*--with-cuda=\([^ ]*\).*/\1/p')
+            AC_MSG_NOTICE([Detected MPICH with CUDA support])
+        fi
+
+        if grep 'MPICH features:.*hip' conftest.output > /dev/null ; then
+            enable_hip=yes
+            with_hip=$(grep 'MPICH configure:' conftest.output | sed -n 's/.*--with-hip=\([^ ]*\).*/\1/p')
+            AC_MSG_NOTICE([Detected MPICH with HIP support])
+        fi
+
+        if grep 'MPICH features:.*ze' conftest.output > /dev/null ; then
+            enable_ze=yes
+            with_ze=$(grep 'MPICH configure:' conftest.output | sed -n 's/.*--with-ze=\([^ ]*\).*/\1/p')
+            AC_MSG_NOTICE([Detected MPICH with ZE support])
+        fi
+
         # enable_checkerrors
         if test "$enable_checkerrors" != "no" ; then
             if grep 'disable-error-checking\|enable-error-checking=no' conftest.output > /dev/null ; then
@@ -767,105 +785,111 @@ PAC_PUSH_FLAG([LDFLAGS])
 PAC_PUSH_FLAG([LIBS])
 
 # Check CUDA availability
-PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
-cuda_CPPFLAGS=""
-cuda_LDFLAGS=""
-cuda_LIBS=""
-cudadir=
-AC_SUBST(cudadir)
-AC_ARG_VAR([NVCC], [nvcc compiler to use])
-if test "X${pac_have_cuda}" = "Xyes" ; then
-    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
-    have_gpu="yes"
-    if test -n "${with_cuda}" -a "$with_cuda" != "no" ; then
-        cuda_CPPFLAGS="-I${with_cuda}/include"
-        if test -d ${with_cuda}/lib64 ; then
-            cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
-        else
-            cuda_LDFLAGS="-L${with_cuda}/lib"
-        fi
-    fi
-
-    if test -z "$NVCC" ; then
-        if test -n "${with_cuda}" -a "$with_cuda" != "no" ; then
-            AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found], [$with_cuda/bin:$PATH])
-        else
-            AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found])
-        fi
-        if test "$NVCC" != "nvcc_not_found" -a -n "$save_CXX" ; then
-            NVCC="$NVCC -ccbin $save_CXX"
-        fi
-    fi
-    cuda_LIBS="-lcudart"
-
-    cudadir="cuda"
-fi
-AM_CONDITIONAL([HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
-AC_SUBST([cuda_CPPFLAGS])
-AC_SUBST([cuda_LDFLAGS])
-AC_SUBST([cuda_LIBS])
-
-if test "$have_gpu" = "no" ; then
-    # Check Level Zero availability when no other GPU library is available
-    PAC_CHECK_HEADER_LIB_OPTIONAL([ze],[level_zero/ze_api.h],[ze_loader],[zeInit])
-    ze_CPPFLAGS=""
-    ze_LDFLAGS=""
-    ze_LIBS=""
-    if test "X${pac_have_ze}" = "Xyes" ; then
-        AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
+if test "$enable_cuda" = "yes" ; then
+    PAC_CHECK_HEADER_LIB_OPTIONAL([cuda],[cuda_runtime_api.h],[cudart],[cudaStreamSynchronize])
+    cuda_CPPFLAGS=""
+    cuda_LDFLAGS=""
+    cuda_LIBS=""
+    cudadir=
+    AC_SUBST(cudadir)
+    AC_ARG_VAR([NVCC], [nvcc compiler to use])
+    if test "X${pac_have_cuda}" = "Xyes" ; then
+        AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
         have_gpu="yes"
-        if test -n "${with_ze}" -a "$with_ze" != "no" ; then
-            ze_CPPFLAGS="-I${with_ze}/include"
-            if test -d ${with_ze}/lib64 ; then
-                ze_LDFLAGS="-L${with_ze}/lib64 -L${with_ze}/lib"
+        if test -n "${with_cuda}" -a "$with_cuda" != "no" ; then
+            cuda_CPPFLAGS="-I${with_cuda}/include"
+            if test -d ${with_cuda}/lib64 ; then
+                cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
             else
-                ze_LDFLAGS="-L${with_ze}/lib"
+                cuda_LDFLAGS="-L${with_cuda}/lib"
             fi
         fi
-        ze_LIBS="-lze_loader"
+
+        if test -z "$NVCC" ; then
+            if test -n "${with_cuda}" -a "$with_cuda" != "no" ; then
+                AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found], [$with_cuda/bin:$PATH])
+            else
+                AC_PATH_PROG([NVCC], [nvcc], [nvcc_not_found])
+            fi
+            if test "$NVCC" != "nvcc_not_found" -a -n "$save_CXX" ; then
+                NVCC="$NVCC -ccbin $save_CXX"
+            fi
+        fi
+        cuda_LIBS="-lcudart"
+
+        cudadir="cuda"
+        AC_SUBST([cuda_CPPFLAGS])
+        AC_SUBST([cuda_LDFLAGS])
+        AC_SUBST([cuda_LIBS])
     fi
-    AC_SUBST([ze_CPPFLAGS])
-    AC_SUBST([ze_LDFLAGS])
-    AC_SUBST([ze_LIBS])
+fi
+AM_CONDITIONAL([HAVE_CUDA],[test "X${pac_have_cuda}" = "Xyes"])
+
+if test "$enable_ze" = "yes" ; then
+    if test "$have_gpu" = "no" ; then
+        # Check Level Zero availability when no other GPU library is available
+        PAC_CHECK_HEADER_LIB_OPTIONAL([ze],[level_zero/ze_api.h],[ze_loader],[zeInit])
+        ze_CPPFLAGS=""
+        ze_LDFLAGS=""
+        ze_LIBS=""
+        if test "X${pac_have_ze}" = "Xyes" ; then
+            AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
+            have_gpu="yes"
+            if test -n "${with_ze}" -a "$with_ze" != "no" ; then
+                ze_CPPFLAGS="-I${with_ze}/include"
+                if test -d ${with_ze}/lib64 ; then
+                    ze_LDFLAGS="-L${with_ze}/lib64 -L${with_ze}/lib"
+                else
+                    ze_LDFLAGS="-L${with_ze}/lib"
+                fi
+                ze_LIBS="-lze_loader"
+            fi
+        fi
+        AC_SUBST([ze_CPPFLAGS])
+        AC_SUBST([ze_LDFLAGS])
+        AC_SUBST([ze_LIBS])
+    fi
 fi
 AM_CONDITIONAL([HAVE_ZE],[test "X${pac_have_ze}" = "Xyes"])
 
 # Check HIP availability
-hipdir=
-AC_SUBST(hipdir)
-AC_ARG_VAR([HIPCC], [hipcc compiler to use])
-if test "$have_gpu" = "no" ; then
-    AC_DEFINE([__HIP_PLATFORM_AMD__],[1],[AMD GPU HIP available])
-    PAC_CHECK_HEADER_LIB_OPTIONAL([hip],[hip/hip_runtime_api.h],[amdhip64],[hipStreamSynchronize])
-    hip_CPPFLAGS=""
-    hip_LDFLAGS=""
-    hip_LIBS=""
-    if test "X$pac_have_hip" = "Xyes" ; then
-       AC_DEFINE([HAVE_HIP],[1],[Define if HIP is available])
-       have_gpu="yes"
-       if test -n "${with_hip}" -a "$with_hip" != "no" ; then
-          hip_CPPFLAGS="-I${with_hip}/include"
-          if test -d ${with_hip}/lib64 ; then
-              hip_LDFLAGS="-L${with_hip}/lib64 -L${with_hip}/lib"
-          else
-              hip_LDFLAGS="-L${with_hip}/lib"
-          fi
-       fi
-       hip_LIBS="-lamdhip64"
-
-       if test -z "$HIPCC" ; then
+if test "$enable_hip" = "yes" ; then
+    hipdir=
+    AC_SUBST(hipdir)
+    AC_ARG_VAR([HIPCC], [hipcc compiler to use])
+    if test "$have_gpu" = "no" ; then
+        AC_DEFINE([__HIP_PLATFORM_AMD__],[1],[AMD GPU HIP available])
+        PAC_CHECK_HEADER_LIB_OPTIONAL([hip],[hip/hip_runtime_api.h],[amdhip64],[hipStreamSynchronize])
+        hip_CPPFLAGS=""
+        hip_LDFLAGS=""
+        hip_LIBS=""
+        if test "X$pac_have_hip" = "Xyes" ; then
+           AC_DEFINE([HAVE_HIP],[1],[Define if HIP is available])
+           have_gpu="yes"
            if test -n "${with_hip}" -a "$with_hip" != "no" ; then
-               AC_PATH_PROG([HIPCC], [hipcc], [hipcc_not_found], [$with_hip/bin:$PATH])
-           else
-               AC_PATH_PROG([HIPCC], [hipcc], [hipcc_not_found])
+              hip_CPPFLAGS="-I${with_hip}/include"
+              if test -d ${with_hip}/lib64 ; then
+                  hip_LDFLAGS="-L${with_hip}/lib64 -L${with_hip}/lib"
+              else
+                  hip_LDFLAGS="-L${with_hip}/lib"
+              fi
            fi
-       fi
+           hip_LIBS="-lamdhip64"
 
-       hipdir="hip"
+           if test -z "$HIPCC" ; then
+               if test -n "${with_hip}" -a "$with_hip" != "no" ; then
+                   AC_PATH_PROG([HIPCC], [hipcc], [hipcc_not_found], [$with_hip/bin:$PATH])
+               else
+                   AC_PATH_PROG([HIPCC], [hipcc], [hipcc_not_found])
+               fi
+           fi
+
+           hipdir="hip"
+        fi
+        AC_SUBST([hip_CPPFLAGS])
+        AC_SUBST([hip_LDFLAGS])
+        AC_SUBST([hip_LIBS])
     fi
-    AC_SUBST([hip_CPPFLAGS])
-    AC_SUBST([hip_LDFLAGS])
-    AC_SUBST([hip_LIBS])
 fi
 AM_CONDITIONAL([HAVE_HIP],[test "X${pac_have_hip}" = "Xyes"])
 
