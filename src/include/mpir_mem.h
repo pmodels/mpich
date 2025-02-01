@@ -110,6 +110,12 @@ extern "C" {
     int mpiu_chklmem_stk_sp_=0;                                 \
     MPIR_AssertDeclValue(const int mpiu_chklmem_stk_sz_,n_)
 
+#define MPIR_CHKLMEM_ADD(pointer_) \
+    do { \
+        MPIR_Assert(mpiu_chklmem_stk_sp_<mpiu_chklmem_stk_sz_);     \
+        mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = (void *) (pointer_); \
+    } while (0)
+
 #define MPIR_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
     {                                                                   \
         pointer_ = (type_)MPL_malloc(nbytes_,class_);                   \

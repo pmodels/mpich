@@ -87,21 +87,22 @@ int MPIR_Comm_get_failed_impl(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_p
         /* create failed_group */
         int n = utarray_len(failed_procs);
 
-        MPIR_Group *new_group;
-        mpi_errno = MPIR_Group_create(n, &new_group);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Lpid *map = MPL_malloc(n * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
 
-        new_group->rank = MPI_UNDEFINED;
+        MPIR_Group *new_group;
+
+        int myrank = MPI_UNDEFINED;
         for (int i = 0; i < utarray_len(failed_procs); i++) {
             int *p = (int *) utarray_eltptr(failed_procs, i);
-            new_group->lrank_to_lpid[i].lpid = *p;
+            map[i] = *p;
             /* if calling process is part of the group, set the rank */
             if (*p == MPIR_Process.rank) {
-                new_group->rank = i;
+                myrank = i;
             }
         }
-        new_group->size = n;
-        new_group->idx_of_first_lpid = -1;
+
+        mpi_errno = MPIR_Group_create_map(n, myrank, comm_ptr->session_ptr, map, &new_group);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_Group *comm_group;
         MPIR_Comm_group_impl(comm_ptr, &comm_group);

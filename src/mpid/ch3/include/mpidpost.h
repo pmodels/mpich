@@ -45,7 +45,7 @@
       }
 .ve
 
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   A multi-threaded implementation might save the current value of a request 
   completion counter in the state.
 @*/
@@ -66,7 +66,7 @@ void MPIDI_CH3_Progress_start(MPID_Progress_state * state);
   NOTE:
   MPIDI_CH3_Progress_start/end() need to be called.
   
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   A multi-threaded implementation would return immediately if the a request 
   had been completed between the call to
   MPIDI_CH3_Progress_start() and MPIDI_CH3_Progress_wait().  This could be 
@@ -110,7 +110,7 @@ int MPIDI_CH3_Progress_test(void);
   Return value:
   An mpi error code.
   
-  IMPLEMENTORS:
+  IMPLEMENTERS:
   This routine is similar to MPIDI_CH3_Progress_test but may not be as 
   thorough in its attempt to satisfy all outstanding
   communication.
@@ -182,18 +182,16 @@ static inline int MPID_Progress_test(MPID_Progress_state * state) /* state is un
 int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
                              MPIDI_Gpid local_gpids[], int *singlePG );
 int MPIDI_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIDI_Gpid *gpid );
-int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid gpid[], uint64_t lpid[] );
+int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid gpid[], MPIR_Lpid lpid[] );
 int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
                             int nPGids, const MPIDI_Gpid gpids[],
                             int root );
-int MPID_Intercomm_exchange_map( MPIR_Comm *local_comm_ptr, int local_leader,
-                                 MPIR_Comm *peer_comm_ptr, int remote_leader,
-                                 int *remote_size, uint64_t **remote_lpids,
-                                 int *is_low_group);
+int MPID_Intercomm_exchange(MPIR_Comm *local_comm_ptr, int local_leader,
+                            MPIR_Comm *peer_comm_ptr, int remote_leader,
+                            int tag, int context_id, int *remote_context_id,
+                            int *remote_size, MPIR_Lpid **remote_lpids, int timeout);
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
-                                      int size, const uint64_t lpids[] );
-
-#define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
+                                      int size, const MPIR_Lpid lpids[] );
 
 /* ULFM support */
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm_ptr)
