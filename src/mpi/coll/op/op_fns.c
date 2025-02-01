@@ -11,6 +11,8 @@
 
 #define MPIR_LSUM(a,b) ((a)+(b))
 
+static void bfloat16_sum(void *invec, void *inoutvec, MPI_Aint len);
+
 void MPIR_SUM(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 {
     MPI_Aint i, len = *Len;
@@ -35,6 +37,9 @@ void MPIR_SUM(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
             break;                                         \
         }
                 MPIR_OP_TYPE_GROUP(COMPLEX)
+        case MPIR_BFLOAT16:
+            bfloat16_sum(invec, inoutvec, len);
+            break;
         default:
             MPIR_Assert(0);
             break;
@@ -441,4 +446,40 @@ void MPIR_REPLACE(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * ty
     return;
   fn_fail:
     goto fn_exit;
+}
+
+/* -- internal static routines -- */
+
+/* BFloat16 - software arithemetics
+ * TODO: add hardware support, e.g. via AVX512 intrinsics
+ */
+static float bfloat16_load(void *p)
+{
+    uint32_t u = ((uint32_t) (*(uint16_t *) p) << 16);
+    float v;
+    memcpy(&v, &u, sizeof(float));
+    return v;
+}
+
+static void bfloat16_store(void *p, float v)
+{
+    uint32_t u;
+    memcpy(&u, &v, sizeof(float));
+    if (u & 0x8000) {
+        /* round up */
+        *(uint16_t *) p = (u >> 16) + 1;
+    } else {
+        /* truncation */
+        *(uint16_t *) p = (u >> 16);
+    }
+
+}
+
+static void bfloat16_sum(void *invec, void *inoutvec, MPI_Aint len)
+{
+    for (MPI_Aint i = 0; i < len * 2; i += 2) {
+        float a = bfloat16_load((char *) inoutvec + i);
+        float b = bfloat16_load((char *) invec + i);
+        bfloat16_store((char *) inoutvec + i, a + b);
+    }
 }

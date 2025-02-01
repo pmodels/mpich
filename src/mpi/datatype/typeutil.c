@@ -103,6 +103,7 @@ struct MPIR_Datatype_builtin_entry MPIR_Internal_types[] = {
     type_name_entry(LOGICAL4,           LOGICAL),         /* 0x49 */
     type_name_entry(LOGICAL8,           LOGICAL),         /* 0x4a */
     type_name_entry(LOGICAL16,          LOGICAL),         /* 0x4b */
+    type_name_x(BFLOAT16,               FLOATING_POINT),  /* 0x4c */
     /* *INDENT-ON* */
 };
 
@@ -169,6 +170,7 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
         case MPIR_INT16:
         case MPIR_UINT16:
         case MPIR_FLOAT16:
+        case MPIR_BFLOAT16:
             return ALIGNOF_INT16_T;
         case MPIR_FIXED32:
         case MPIR_INT32:
@@ -190,7 +192,7 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
         case MPIR_ALT_COMPLEX128:
             return ALIGNOF_LONG_DOUBLE;
         default:
-            /* handle error cases? */
+            MPIR_Assert(0);
             return 1;
     }
 }
