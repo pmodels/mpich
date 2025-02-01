@@ -259,6 +259,8 @@ typedef int MPI_Datatype;
 #define MPI_LOGICAL4      ((MPI_Datatype)0x4c000449)
 #define MPI_LOGICAL8      ((MPI_Datatype)0x4c00084a)
 #define MPI_LOGICAL16     ((MPI_Datatype)0x4c00104b)
+/* other */
+#define MPIX_BFLOAT16     ((MPI_Datatype)0x4c00024c)
 
 /* Communicators */
 typedef int MPI_Comm;
