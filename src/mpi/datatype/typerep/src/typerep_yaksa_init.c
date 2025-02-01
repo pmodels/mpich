@@ -52,6 +52,7 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
 
         case MPIR_FIXED16:
         case MPIR_FLOAT16:
+        case MPIR_BFLOAT16:
         case MPIR_COMPLEX8:
             yaksa_type = TYPEREP_YAKSA_TYPE__FIXED2;
             break;

@@ -72,6 +72,7 @@
 #define MPIR_COMPLEX32          ((MPI_Datatype)0x4c840800)
 #define MPIR_COMPLEX64          ((MPI_Datatype)0x4c841000)
 #define MPIR_COMPLEX128         ((MPI_Datatype)0x4c842000)
+#define MPIR_BFLOAT16           ((MPI_Datatype)0x4c850200)      /* bfloat16, use MPIR_TYPE_ALT_FLOAT */
 #define MPIR_ALT_FLOAT96        ((MPI_Datatype)0x4c850c00)      /* long double (80-bit extended precision) on i386 */
 #define MPIR_ALT_FLOAT128       ((MPI_Datatype)0x4c851000)      /* long double (80-bit extended precision) on x86-64 */
 #define MPIR_ALT_COMPLEX96      ((MPI_Datatype)0x4c861800)      /* long double complex on i386 */
