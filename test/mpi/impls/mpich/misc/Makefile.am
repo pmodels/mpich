@@ -12,4 +12,5 @@ EXTRA_DIST = testlist
 ## correctly
 noinst_PROGRAMS = \
 	type_iov \
+	type_float16 \
 	gpu_query
