@@ -723,6 +723,16 @@ AC_CACHE_CHECK([whether long long is supported],pac_cv_have_long_long,[
 if test "$pac_cv_have_long_long" = yes ; then
     AC_DEFINE(HAVE_LONG_LONG,1,[Define if compiler supports long long])
 fi
+
+#
+# Check for _Float16
+AC_MSG_CHECKING([whether _Float16 is supported])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[_Float16 a;])],[pac_cv_have_float16=yes],[pac_cv_have_float16=no])
+AC_MSG_RESULT($pac_cv_have_float16)
+if test "$pac_cv_have_float16" = "yes" ; then
+    AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
+fi
+
 #
 # Check for const and restrict (used in some of the performance tests)
 AC_C_CONST
