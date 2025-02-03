@@ -1383,7 +1383,6 @@ if test "$with_cross" != "no" ; then
 fi
 
 # This goes here because we need the top_srcdir
-HAVE_CXX_IO=0
 if test "$enable_romio" = "yes" ; then
    if test -d $use_top_srcdir/src/mpi/romio ; then
        AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
@@ -1403,10 +1402,9 @@ if test "$enable_romio" = "yes" ; then
        # This test used -e under Linux, but not all test programs understand
        # -e
        if test ! -d lib ; then mkdir lib ; fi
-       # tell mpi.h to include mpio.h
-       HAVE_ROMIO='#include "mpio.h"'
-       # tell mpicxx.h that we have IO
-       HAVE_CXX_IO=1
+       # define ROMIO_VERSION in mpi.h so application can check whether ROMIO is included
+       ROMIO_VERSION='#define ROMIO_VERSION 126'
+
        romio_subdir_args=""
        if test "$enable_mpi_abi" = "yes" ; then
            romio_subdir_args="--enable-mpi-abi"
@@ -1416,8 +1414,7 @@ if test "$enable_romio" = "yes" ; then
        AC_MSG_WARN([ROMIO src directory is not available])
    fi
 fi
-AC_SUBST(HAVE_ROMIO)
-AC_SUBST(HAVE_CXX_IO)
+AC_SUBST(ROMIO_VERSION)
 
 AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 #
@@ -3383,17 +3380,14 @@ AC_DEFINE_UNQUOTED([MPIR_OFFSET_MAX],[$MPIR_OFFSET_MAX],[limits.h _MAX constant 
 MPI_OFFSET_TYPEDEF="typedef $MPI_OFFSET MPI_Offset;"
 AC_SUBST(MPI_OFFSET_TYPEDEF)
 #
-# Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT
-# The value for this comes from ROMIO, and is needed in mpif.h.in
+# Fortran type for an Offset type (needed to define MPI_DISPLACEMENT_CURRENT)
+# and is needed in mpif.h.in.
 # First, we check that this works with both Fortran compilers (if
 # they are defined)
 #
-# If there is no FORTRAN_MPI_OFFSET type (because ROMIO is disabled),
-# just use INTEGER
-if test -z "$FORTRAN_MPI_OFFSET" ; then
-    FORTRAN_MPI_OFFSET=INTEGER
-fi
 if test "$enable_f77" = yes -a "$enable_f90" = yes ; then
+    FORTRAN_MPI_OFFSET="INTEGER(KIND=$OFFSET_KIND)"
+
     AC_LANG_PUSH([Fortran 77])
     AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 77])
     AC_COMPILE_IFELSE([

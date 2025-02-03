@@ -106,6 +106,7 @@ FROM_OMPI=${FROM_OMPI:-no}
 if test "$FROM_OMPI" = 1 ; then FROM_OMPI=yes ; fi
 
 AM_CONDITIONAL([BUILD_BINDING], [test "$FROM_MPICH" != "yes"])
+AM_CONDITIONAL([INSTALL_HEADERS], [test "$FROM_MPICH" != "yes"])
 
 # MPL
 AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
@@ -1555,10 +1556,6 @@ if test "$NOF77" = 0 -a "$FROM_MPICH" != yes ; then
 fi
 AC_SUBST(EXTRA_SRC_DIRS)
 AC_SUBST(FILE_SYS_DIRS)
-
-#
-CFLAGS="$CFLAGS -DHAVE_ROMIOCONF_H"
-#
 
 AC_MSG_NOTICE([setting SYSDEP_INC to $SYSDEP_INC])
 AC_SUBST(SYSDEP_INC)

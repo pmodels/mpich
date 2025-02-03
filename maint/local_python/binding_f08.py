@@ -1182,16 +1182,18 @@ def dump_mpi_f08_types():
                     else:
                         G.out.append("    res = (f08%MPI_VAL /= f)")
                     G.out.append("END FUNCTION %s" % func_name)
-        # e.g. MPI_Comm_f2c
+
+    def dump_handle_f2c():
+        # e.g. MPI_Comm_f2c/c2f
+        G.out.append("INTERFACE")
+        G.out.append("INDENT")
         for a in G.handle_list:
-            if a == "MPI_File":
-                continue
             if RE.match(r'MPIX?_(\w+)', a):
                 c_name = "c_" + RE.m.group(1)
             for p in [("f", "c"), ("c", "f")]:
                 func_name = "%s_%s2%s" % (a, p[0], p[1])
                 G.out.append("")
-                G.out.append("FUNCTION %s(x) result(res)" % func_name)
+                G.out.append("FUNCTION %s(x) bind(C, name=\"P%s\") result(res)" % (func_name, func_name))
                 G.out.append("    USE mpi_c_interface_types, ONLY: %s" % c_name)
                 if p[0] == "f":
                     G.out.append("    INTEGER, VALUE :: x")
@@ -1199,25 +1201,7 @@ def dump_mpi_f08_types():
                 else:
                     G.out.append("    INTEGER(%s), VALUE :: x" % c_name)
                     G.out.append("    INTEGER :: res")
-                G.out.append("    res = x")
                 G.out.append("END FUNCTION %s" % func_name)
-
-    def dump_file_interface():
-        G.out.append("")
-        G.out.append("INTERFACE")
-        G.out.append("INDENT")
-        for p in [("f", "c"), ("c", "f")]:
-            func_name = "MPI_File_%s2%s" % (p[0], p[1])
-            G.out.append("")
-            G.out.append("FUNCTION %s(x) bind(C, name=\"%s\") result(res)" % (func_name, func_name))
-            G.out.append("    USE mpi_c_interface_types, ONLY: c_File")
-            if p[0] == "f":
-                G.out.append("    INTEGER, VALUE :: x")
-                G.out.append("    INTEGER(c_File) :: res")
-            else:
-                G.out.append("    INTEGER(c_File), VALUE :: x")
-                G.out.append("    INTEGER :: res")
-            G.out.append("END FUNCTION MPI_File_%s2%s" % (p[0], p[1]))
         G.out.append("DEDENT")
         G.out.append("END INTERFACE")
 
@@ -1270,8 +1254,7 @@ def dump_mpi_f08_types():
     G.out.append("")
     G.out.append("private :: c_int, c_Count, c_Status")
     dump_handle_types()
-    if "no-mpiio" not in G.opts:
-        dump_file_interface()
+    dump_handle_f2c()
     dump_status_type()
     dump_status_interface()
     dump_handle_interface()

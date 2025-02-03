@@ -490,6 +490,13 @@ if test "$MPI_IS_MPICH" = "yes" ; then
             enable_threadcomm=no
         fi
 
+        # disable-romio
+        if test "$enable_romio" != "no" ; then
+            if grep 'disable-romio\|enable-romio=no' conftest.output > /dev/null ; then
+                enable_romio=no
+            fi
+        fi
+
         # enable_checkerrors
         if test "$enable_checkerrors" != "no" ; then
             if grep 'disable-error-checking\|enable-error-checking=no' conftest.output > /dev/null ; then
@@ -1565,11 +1572,6 @@ if test "$enable_cxx" = yes ; then
         AC_MSG_WARN([The compiler $CXX does not support C++ namespaces.  This may cause problems for the tests])
     fi
     AC_LANG_POP([C++])
-
-    dnl for util/mtest_cxx.cxx
-    if test "$mpi_io_works" = "yes" ; then
-        AC_DEFINE(HAVE_MPI_IO,1,[Define if MPI-IO (really ROMIO) is included])
-    fi
 fi
 
 AC_LANG_C
@@ -1591,6 +1593,9 @@ if test "$enable_romio" != no -a "$mpi_io_works" = yes ; then
     if test "$pac_cv_have_mpio_request" = no ; then
         AC_DEFINE(MPIO_USES_MPI_REQUEST,,[Define if MPI IO uses MPI_Request])
     fi
+
+    dnl for util/mtest_cxx.cxx, comm/cmsplit_type.c
+    AC_DEFINE(HAVE_MPI_IO,1,[Define if MPI-IO (really ROMIO) is included])
 fi
 AC_SUBST(iodir)
 
