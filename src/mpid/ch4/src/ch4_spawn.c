@@ -70,7 +70,7 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
         bcast_ints[0] = total_num_processes;
         bcast_ints[1] = mpi_errno;
     }
-    mpi_errno = MPIR_Bcast(bcast_ints, 2, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Bcast(bcast_ints, 2, MPIR_INT_INTERNAL, root, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     if (comm_ptr->rank != root) {
         total_num_processes = bcast_ints[0];
@@ -89,8 +89,8 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
 
     int should_accept = 1;
     if (errcodes != MPI_ERRCODES_IGNORE) {
-        mpi_errno =
-            MPIR_Bcast(pmi_errcodes, total_num_processes, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Bcast(pmi_errcodes, total_num_processes, MPIR_INT_INTERNAL,
+                               root, comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         for (int i = 0; i < total_num_processes; i++) {
@@ -391,12 +391,14 @@ static int dynamic_intercomm_create(const char *port_name, MPIR_Info * info, int
       bcast_tag_and_errno:
         bcast_ints[0] = tag;
         bcast_ints[1] = mpi_errno;
-        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPIR_INT_INTERNAL, root, comm_ptr,
+                                            MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno = bcast_ints[1];
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPI_INT, root, comm_ptr, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Bcast_allcomm_auto(bcast_ints, 2, MPIR_INT_INTERNAL, root, comm_ptr,
+                                            MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
         if (bcast_ints[1]) {
             /* errno from root cannot be directly returned */

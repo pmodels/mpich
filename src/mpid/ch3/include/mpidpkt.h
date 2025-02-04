@@ -40,34 +40,24 @@ typedef union {
 
 /* Union over all types (integer, logical, and multi-language types) that are
    allowed in a CAS operation.  This is used to allocate enough space in the
-   packet header for immediate data.  */
+   packet header for immediate data. Therefore, we just need a few types that
+   capture the maximum type size */
 typedef union {
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) c_type_ cas_##type_name_;
-    MPIR_OP_TYPE_GROUP(C_INTEGER)
-    MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
-    MPIR_OP_TYPE_GROUP(LOGICAL)
-    MPIR_OP_TYPE_GROUP(BYTE)
-    MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
-    MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
-    MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
-    MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
-#undef MPIR_OP_TYPE_MACRO
+    long long dummy_ll;
+#ifdef MPIR_INT128_CTYPE
+    MPIR_INT128_CTYPE dummy128;
+#endif
 } MPIDI_CH3_CAS_Immed_u;
 
 /* Union over all types (all predefined types) that are allowed in a
-   Fetch-and-op operation.  This can be too large for the packet header, so we
-   limit the immediate space in the header to FOP_IMMED_INTS. */
-
-/* *INDENT-OFF* */
-/* Indentation turned off because "indent" is getting confused with
- * the lack of a semi-colon in the fields below */
+   Fetch-and-op operation. we just need a few types that capture the maximum
+   type size */
 typedef union {
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) c_type_ fop##type_name_;
-    MPIR_OP_TYPE_GROUP_ALL_BASIC
-    MPIR_OP_TYPE_GROUP_ALL_EXTRA
-#undef MPIR_OP_TYPE_MACRO
+    long long dummy_ll[2];  /* array of 2 for complex types */
+#ifdef HAVE_LONG_DOUBLE
+    long double dummy_ld[2];
+#endif
 } MPIDI_CH3_FOP_Immed_u;
-/* *INDENT-ON* */
 
 /*
  * Predefined packet types.  This simplifies some of the code.
@@ -606,7 +596,7 @@ MPIDI_CH3_PKT_DEFS
 
 
 /* This macro judges if the RMA operation is a read operation,
- * which means, it will triffer the issuing of response data from
+ * which means, it will trigger the issuing of response data from
  * the target to the origin */
 #define MPIDI_CH3I_RMA_PKT_IS_READ_OP(pkt_)                             \
     ((pkt_).type == MPIDI_CH3_PKT_GET_ACCUM_IMMED ||                    \

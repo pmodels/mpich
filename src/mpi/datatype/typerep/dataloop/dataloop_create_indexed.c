@@ -49,7 +49,7 @@ int MPIR_Dataloop_create_indexed(MPI_Aint icount,
 
     /* if count is zero, handle with contig code, call it an int */
     if (count == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPIR_INT_INTERNAL, (void **) dlp_p);
         return err;
     }
 
@@ -76,7 +76,7 @@ int MPIR_Dataloop_create_indexed(MPI_Aint icount,
 
     /* if contig_count is zero (no data), handle with contig code */
     if (contig_count == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPIR_INT_INTERNAL, (void **) dlp_p);
         return err;
     }
 

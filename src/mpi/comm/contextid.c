@@ -458,11 +458,11 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
         if (group_ptr != NULL) {
             int coll_tag = tag | MPIR_TAG_COLL_BIT;     /* Shift tag into the tagged coll space */
             mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
-                                             MPI_INT, MPI_BAND, comm_ptr, group_ptr, coll_tag,
-                                             MPIR_ERR_NONE);
+                                             MPIR_INT_INTERNAL, MPI_BAND, comm_ptr, group_ptr,
+                                             coll_tag, MPIR_ERR_NONE);
         } else {
             mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
-                                            MPI_INT, MPI_BAND, comm_ptr, MPIR_ERR_NONE);
+                                            MPIR_INT_INTERNAL, MPI_BAND, comm_ptr, MPIR_ERR_NONE);
         }
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -556,10 +556,11 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
 
             if (group_ptr != NULL) {
                 int coll_tag = tag | MPIR_TAG_COLL_BIT; /* Shift tag into the tagged coll space */
-                mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN,
-                                                 comm_ptr, group_ptr, coll_tag, MPIR_ERR_NONE);
+                mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL,
+                                                 MPI_MIN, comm_ptr, group_ptr, coll_tag,
+                                                 MPIR_ERR_NONE);
             } else {
-                mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, &minfree, 1, MPI_INT,
+                mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL,
                                                 MPI_MIN, comm_ptr, MPIR_ERR_NONE);
             }
 
@@ -731,7 +732,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
              */
             /* FIXME: study and resolve */
             /*
-             * mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN, st->comm_ptr, MPIR_ERR_NONE);
+             * mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPIR_INT_INTERNAL, MPI_MIN, st->comm_ptr, MPIR_ERR_NONE);
              * MPIR_ERR_CHECK(mpi_errno);
              */
             if (minfree > 0) {
@@ -753,7 +754,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
                  *      Therefore, we set tag_up as lower bound for the operation. tag_ub is used by
                  *      most of the other blocking operations, but tag is always >0, so this
                  *      should be fine.
-                 *  2.) We need odering between multiple idup operations on the same communicator.
+                 *  2.) We need ordering between multiple idup operations on the same communicator.
                  *       The problem here is that the iallreduce operations of the first iteration
                  *       are not necessarily completed in the same order as they are issued, also on the
                  *       same communicator. To avoid deadlocks, we cannot add the elements to the
@@ -834,7 +835,8 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
     }
 
     mpi_errno = MPIR_Iallreduce_intra_sched_auto(MPI_IN_PLACE, st->local_mask,
-                                                 MPIR_MAX_CONTEXT_MASK + 1, MPI_UINT32_T, MPI_BAND,
+                                                 MPIR_MAX_CONTEXT_MASK + 1,
+                                                 MPIR_UINT32_T_INTERNAL, MPI_BAND,
                                                  st->comm_ptr, st->s);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(st->s);

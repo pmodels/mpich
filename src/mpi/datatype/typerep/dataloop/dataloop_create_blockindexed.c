@@ -45,7 +45,7 @@ int MPIR_Dataloop_create_blockindexed(MPI_Aint icount,
 
     /* if count or blklen are zero, handle with contig code, call it a int */
     if (count == 0 || blklen == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPIR_INT_INTERNAL, (void **) dlp_p);
         return err;
     }
 

@@ -81,6 +81,21 @@ static MPI_Datatype int_types[] = {
 #endif
 };
 
+static bool is_multi_type(MPI_Datatype dt)
+{
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+    if (dt == MPI_AINT || dt == MPI_OFFSET) {
+        return true;
+    }
+#endif
+#if MTEST_HAVE_MIN_MPI_VERSION(3,0)
+    if (dt == MPI_COUNT) {
+        return true;
+    }
+#endif
+    return false;
+}
+
 static MPI_Datatype float_types[] = {
     MPI_FLOAT,
     MPI_DOUBLE,
@@ -623,13 +638,15 @@ static int test_allred(mtest_mem_type_e evenmem, mtest_mem_type_e oddmem)
         errs += prod_test_1(mpi_type, category, memtype);
         errs += max_test_1(mpi_type, category, memtype);
         errs += min_test_1(mpi_type, category, memtype);
-        errs += lor_test_1(mpi_type, category, memtype);
-        errs += lor_test_2(mpi_type, category, memtype);
-        errs += lxor_test_1(mpi_type, category, memtype);
-        errs += lxor_test_2(mpi_type, category, memtype);
-        errs += lxor_test_3(mpi_type, category, memtype);
-        errs += land_test_1(mpi_type, category, memtype);
-        errs += land_test_2(mpi_type, category, memtype);
+        if (!is_multi_type(mpi_type)) {
+            errs += lor_test_1(mpi_type, category, memtype);
+            errs += lor_test_2(mpi_type, category, memtype);
+            errs += lxor_test_1(mpi_type, category, memtype);
+            errs += lxor_test_2(mpi_type, category, memtype);
+            errs += lxor_test_3(mpi_type, category, memtype);
+            errs += land_test_1(mpi_type, category, memtype);
+            errs += land_test_2(mpi_type, category, memtype);
+        }
         errs += bor_test_1(mpi_type, category, memtype);
         errs += band_test_1(mpi_type, category, memtype);
         errs += band_test_2(mpi_type, category, memtype);

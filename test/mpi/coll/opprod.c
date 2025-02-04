@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
     int errs = 0;
     int rank, size, maxsize, result[6] = { 1, 1, 2, 6, 24, 120 };
     MPI_Comm comm;
-    char cinbuf[3], coutbuf[3];
     signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
     d_complex dinbuf[3], doutbuf[3];
@@ -51,34 +50,6 @@ int main(int argc, char *argv[])
      * product is n!.  This grows very fast, so we'll only use the first
      * five (1! = 1, 2! = 2, 3! = 6, 4! = 24, 5! = 120), with n!
      * stored in the array result[n] */
-
-#ifndef USE_STRICT_MPI
-    /* char */
-    MTestPrintfMsg(10, "Reduce of MPI_CHAR\n");
-    cinbuf[0] = (rank < maxsize && rank > 0) ? rank : 1;
-    cinbuf[1] = 0;
-    cinbuf[2] = (rank > 1);
-
-    coutbuf[0] = 0;
-    coutbuf[1] = 1;
-    coutbuf[2] = 1;
-    MPI_Reduce(cinbuf, coutbuf, 3, MPI_CHAR, MPI_PROD, 0, comm);
-    if (rank == 0) {
-        if (coutbuf[0] != (char) result[maxsize - 1]) {
-            errs++;
-            fprintf(stderr, "char PROD(rank) test failed (%d!=%d)\n",
-                    (int) coutbuf[0], (int) result[maxsize]);
-        }
-        if (coutbuf[1]) {
-            errs++;
-            fprintf(stderr, "char PROD(0) test failed\n");
-        }
-        if (size > 1 && coutbuf[2]) {
-            errs++;
-            fprintf(stderr, "char PROD(>) test failed\n");
-        }
-    }
-#endif /* USE_STRICT_MPI */
 
     /* signed char */
     MTestPrintfMsg(10, "Reduce of MPI_SIGNED_CHAR\n");

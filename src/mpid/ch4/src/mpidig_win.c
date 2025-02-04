@@ -392,7 +392,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     if (!comm_ptr->node_comm)
         no_local = true;
 
-    mpi_errno = MPIR_Allreduce(&no_local, &all_no_local, 1, MPI_C_BOOL,
+    mpi_errno = MPIR_Allreduce(&no_local, &all_no_local, 1, MPIR_C_BOOL_INTERNAL,
                                MPI_LAND, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
     if (all_no_local)
@@ -560,7 +560,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
          *   thus all process can be assigned to a page aligned start address.
          * - user sets alloc_shared_noncontig=true, thus we can internally make
          *   the size aligned on each process. */
-        mpi_errno = MPIR_Allreduce(&symheap_flag, &global_symheap_flag, 1, MPI_C_BOOL,
+        mpi_errno = MPIR_Allreduce(&symheap_flag, &global_symheap_flag, 1, MPIR_C_BOOL_INTERNAL,
                                    MPI_LAND, comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
     } else

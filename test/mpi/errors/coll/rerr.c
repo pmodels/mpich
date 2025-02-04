@@ -14,7 +14,8 @@ int verbose = 0;
 
 int main(int argc, char *argv[])
 {
-    int a, b, ierr, errs = 0;
+    int ierr, errs = 0;
+    float a, b;
     char str[MPI_MAX_ERROR_STRING + 1];
     int slen;
 
@@ -30,10 +31,10 @@ int main(int argc, char *argv[])
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-    ierr = MTest_Reduce(is_blocking, &a, &b, 1, MPI_BYTE, MPI_MAX, 0, MPI_COMM_WORLD);
+    ierr = MTest_Reduce(is_blocking, &a, &b, 1, MPI_FLOAT, MPI_LAND, 0, MPI_COMM_WORLD);
     if (ierr == MPI_SUCCESS) {
         errs++;
-        printf("Did not detect invalid type/op pair (byte,max) in Allreduce\n");
+        printf("Did not detect invalid type/op pair (float,land) in Allreduce\n");
     } else {
         if (verbose) {
             MPI_Error_string(ierr, str, &slen);

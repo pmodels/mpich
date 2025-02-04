@@ -34,11 +34,6 @@ void MPIR_EQUAL(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type
     }
 }
 
-int MPIR_EQUAL_check_dtype(MPI_Datatype type)
-{
-    return MPI_SUCCESS;
-}
-
 #define PREPARE_EQUAL_LOCAL_BUF \
     MPI_Aint type_sz, byte_count; \
     MPIR_Datatype_get_size_macro(datatype, type_sz); \

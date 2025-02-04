@@ -62,7 +62,7 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
     tmp_buf[4 * rank + 3] = (MPI_Aint) (*win_ptr)->handle;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                               tmp_buf, 4, MPI_AINT, (*win_ptr)->comm_ptr, MPIR_ERR_NONE);
+                               tmp_buf, 4, MPIR_AINT_INTERNAL, (*win_ptr)->comm_ptr, MPIR_ERR_NONE);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     MPIR_ERR_CHECK(mpi_errno);
 

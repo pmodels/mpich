@@ -44,38 +44,6 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 
-#ifndef USE_STRICT_MPI
-    /* char */
-    MTestPrintfMsg(10, "Reduce of MPI_CHAR\n");
-    cinbuf[0] = 0xff;
-    cinbuf[1] = 0;
-    cinbuf[2] = (rank > 0) ? 0x3c : 0xc3;
-
-    coutbuf[0] = 0;
-    coutbuf[1] = 1;
-    coutbuf[2] = 1;
-    rc = MPI_Reduce(cinbuf, coutbuf, 3, MPI_CHAR, MPI_BOR, 0, comm);
-    if (rc) {
-        MTestPrintErrorMsg("MPI_BOR and MPI_CHAR", rc);
-        errs++;
-    } else {
-        if (rank == 0) {
-            if (coutbuf[0] != (char) 0xff) {
-                errs++;
-                fprintf(stderr, "char BOR(1) test failed\n");
-            }
-            if (coutbuf[1]) {
-                errs++;
-                fprintf(stderr, "char BOR(0) test failed\n");
-            }
-            if (coutbuf[2] != (char) 0xff && size > 1) {
-                errs++;
-                fprintf(stderr, "char BOR(>) test failed\n");
-            }
-        }
-    }
-#endif /* USE_STRICT_MPI */
-
     /* signed char */
     MTestPrintfMsg(10, "Reduce of MPI_SIGNED_CHAR\n");
     scinbuf[0] = 0xff;

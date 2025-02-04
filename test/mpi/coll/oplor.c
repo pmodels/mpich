@@ -22,7 +22,6 @@ int main(int argc, char *argv[])
     int errs = 0, err;
     int rank, size;
     MPI_Comm comm;
-    char cinbuf[3], coutbuf[3];
     signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
 
@@ -39,38 +38,6 @@ int main(int argc, char *argv[])
      * the error, we can provide a higher quality, more specific message.
      */
     MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
-
-#ifndef USE_STRICT_MPI
-    /* char */
-    MTestPrintfMsg(10, "Reduce of MPI_CHAR\n");
-    cinbuf[0] = 1;
-    cinbuf[1] = 0;
-    cinbuf[2] = (rank > 0);
-
-    coutbuf[0] = 0;
-    coutbuf[1] = 1;
-    coutbuf[2] = 1;
-    err = MPI_Reduce(cinbuf, coutbuf, 3, MPI_CHAR, MPI_LOR, 0, comm);
-    if (err) {
-        errs++;
-        MTestPrintErrorMsg("MPI_LOR and MPI_CHAR", err);
-    } else {
-        if (rank == 0) {
-            if (!coutbuf[0]) {
-                errs++;
-                fprintf(stderr, "char OR(1) test failed\n");
-            }
-            if (coutbuf[1]) {
-                errs++;
-                fprintf(stderr, "char OR(0) test failed\n");
-            }
-            if (!coutbuf[2] && size > 1) {
-                errs++;
-                fprintf(stderr, "char OR(>) test failed\n");
-            }
-        }
-    }
-#endif /* USE_STRICT_MPI */
 
     /* signed char */
     MTestPrintfMsg(10, "Reduce of MPI_SIGNED_CHAR\n");

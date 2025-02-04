@@ -54,35 +54,35 @@ int main(int argc, char **argv)
     if (c_out[0] != ((float) sum) * complex < float >(1, 2)) {
         errs++;
         cout << "c_out[0] was " << c_out[0] << " expected " <<
-            ((float) sum) * complex < float >(1, 2);
+            ((float) sum) * complex < float >(1, 2) << endl;
     }
     if (c_out[1] != ((float) sum) * complex < float >(-1, 4)) {
         errs++;
         cout << "c_out[1] was " << c_out[1] << " expected " <<
-            ((float) sum) * complex < float >(-1, 4);
+            ((float) sum) * complex < float >(-1, 4) << endl;
     }
     comm.Allreduce(cd, cd_out, 2, MPI::DOUBLE_COMPLEX, MPI::SUM);
     if (cd_out[0] != ((double) sum) * complex < double >(1, 2)) {
         errs++;
         cout << "cd_out[0] was " << cd_out[0] << " expected " <<
-            ((double) sum) * complex < double >(1, 2);
+            ((double) sum) * complex < double >(1, 2) << endl;
     }
     if (cd_out[1] != ((double) sum) * complex < double >(-1, 4)) {
         errs++;
         cout << "cd_out[1] was " << cd_out[1] << " expected " <<
-            ((double) sum) * complex < double >(-1, 4);
+            ((double) sum) * complex < double >(-1, 4) << endl;
     }
 #ifdef HAVE_LONG_DOUBLE
     comm.Allreduce(cld, cld_out, 2, MPI::LONG_DOUBLE_COMPLEX, MPI::SUM);
     if (cld_out[0] != ((long double) sum) * complex < long double >(1, 2)) {
         errs++;
         cout << "cld_out[0] was " << cld_out[0] << " expected " <<
-            ((long double) sum) * complex < long double >(1, 2);
+            ((long double) sum) * complex < long double >(1, 2) << endl;
     }
     if (cld_out[1] != ((long double) sum) * complex < long double >(-1, 4)) {
         errs++;
         cout << "cld_out[1] was " << cld_out[1] << " expected " <<
-            ((long double) sum) * complex < long double >(-1, 4);
+            ((long double) sum) * complex < long double >(-1, 4) << endl;
     }
 #endif
 

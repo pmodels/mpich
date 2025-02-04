@@ -51,49 +51,17 @@ static MPI_Count MPIR_Type_get_basic_type_elements(MPI_Count * bytes_p,
         usable_bytes = MPL_MIN(*bytes_p, count * MPIR_Datatype_get_basic_size(datatype));
     }
 
-    switch (datatype) {
-            /* we don't get valid fortran datatype handles in all cases... */
-#ifdef HAVE_FORTRAN_BINDING
-        case MPI_2REAL:
-            type1_sz = type2_sz = MPIR_Datatype_get_basic_size(MPI_REAL);
-            break;
-        case MPI_2DOUBLE_PRECISION:
-            type1_sz = type2_sz = MPIR_Datatype_get_basic_size(MPI_DOUBLE_PRECISION);
-            break;
-        case MPI_2INTEGER:
-            type1_sz = type2_sz = MPIR_Datatype_get_basic_size(MPI_INTEGER);
-            break;
-#endif
-        case MPI_2INT:
-            type1_sz = type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
-            break;
-        case MPI_FLOAT_INT:
-            type1_sz = MPIR_Datatype_get_basic_size(MPI_FLOAT);
-            type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
-            break;
-        case MPI_DOUBLE_INT:
-            type1_sz = MPIR_Datatype_get_basic_size(MPI_DOUBLE);
-            type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
-            break;
-        case MPI_LONG_INT:
-            type1_sz = MPIR_Datatype_get_basic_size(MPI_LONG);
-            type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
-            break;
-        case MPI_SHORT_INT:
-            type1_sz = MPIR_Datatype_get_basic_size(MPI_SHORT);
-            type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
-            break;
-        case MPI_LONG_DOUBLE_INT:
-            type1_sz = MPIR_Datatype_get_basic_size(MPI_LONG_DOUBLE);
-            type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
-            break;
-        default:
-            /* all other types.  this is more complicated than
-             * necessary for handling these types, but it puts us in the
-             * same code path for all the basics, so we stick with it.
-             */
-            type1_sz = type2_sz = MPIR_Datatype_get_basic_size(datatype);
-            break;
+    if (MPIR_Datatype_is_pairtype(datatype)) {
+        if (HANDLE_IS_BUILTIN(datatype)) {
+            /* e.g. MPI_2INT */
+            type1_sz = type2_sz = MPIR_Datatype_get_basic_size(datatype) / 2;
+        } else {
+            MPI_Datatype value_type = MPIR_Pairtype_get_value_type(datatype);
+            type1_sz = MPIR_Datatype_get_basic_size(value_type);
+            type2_sz = MPIR_Datatype_get_basic_size(MPIR_INT_INTERNAL);
+        }
+    } else {
+        type1_sz = type2_sz = MPIR_Datatype_get_basic_size(datatype);
     }
 
     /* determine the number of elements in the region */

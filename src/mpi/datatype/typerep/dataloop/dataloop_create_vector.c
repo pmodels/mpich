@@ -46,7 +46,7 @@ int MPIR_Dataloop_create_vector(MPI_Aint icount,
      */
     if (count == 0 || blocklength == 0) {
 
-        mpi_errno = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
+        mpi_errno = MPIR_Dataloop_create_contiguous(0, MPIR_INT_INTERNAL, (void **) dlp_p);
         goto fn_exit;
     }
 

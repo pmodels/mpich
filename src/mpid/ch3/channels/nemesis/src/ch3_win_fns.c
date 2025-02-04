@@ -201,7 +201,8 @@ static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_wi
         base_shm_offs[node_rank] = (MPI_Aint) ((*win_ptr)->base)
             - (MPI_Aint) (shm_win->shm_base_addr);
         mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                                        base_shm_offs, 1, MPI_AINT, node_comm_ptr, MPIR_ERR_NONE);
+                                   base_shm_offs, 1, MPIR_AINT_INTERNAL,
+                                   node_comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         base_diff = 0;
@@ -390,8 +391,8 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     tmp_buf[4 * comm_rank + 2] = (MPI_Aint) disp_unit;
     tmp_buf[4 * comm_rank + 3] = (MPI_Aint) (*win_ptr)->handle;
 
-    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, tmp_buf, 4, MPI_AINT,
-                                    (*win_ptr)->comm_ptr, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, tmp_buf, 4, MPIR_AINT_INTERNAL,
+                               (*win_ptr)->comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (node_rank == 0) {

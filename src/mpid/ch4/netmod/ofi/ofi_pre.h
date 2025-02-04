@@ -297,9 +297,8 @@ typedef struct {
                                          * One AVL tree per process. */
     MPL_gavl_tree_t dwin_mrs;   /* Single AVL tree to store locally attached MRs */
 
-    /* Accumulate related info. The struct internally uses MPIR_DATATYPE_N_PREDEFINED
-     * defined in ofi_types.h to allocate the max_count array. The struct
-     * size is unknown when we load ofi_pre.h, thus we only set a pointer here. */
+    /* Accumulate related info. The struct internally allocate the max_count array indexed by
+     * fi_datatype. The struct size is unknown when we load ofi_pre.h, thus we only set a pointer here. */
     struct MPIDI_OFI_win_acc_hint *acc_hint;
 
     /* Counter to track whether or not to kick the progress engine when the OFI provider does not

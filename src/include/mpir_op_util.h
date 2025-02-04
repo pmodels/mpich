@@ -6,7 +6,7 @@
 #ifndef MPIR_OP_UTIL_H_INCLUDED
 #define MPIR_OP_UTIL_H_INCLUDED
 
-/* The MPI Standard (MPI-2.1, sec 5.9.2) defines which predfined reduction
+/* The MPI Standard (MPI-2.1, sec 5.9.2) defines which predefined reduction
    operators are valid by groups of types:
      C integer
      Fortran integer
@@ -17,19 +17,19 @@
 
    We define an "x-macro" for each type group.  Immediately prior to
    instantiating any of these macros you should define a valid
-   MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_).  The primary use for this
+   MPIR_OP_TYPE_MACRO(mpi_type_,c_type_).  The primary use for this
    is to expand a given group's list into a sequence of case statements.  The
    macro MPIR_OP_TYPE_REDUCE_CASE is available as a convenience to generate a
    case block that performs a reduction with the given operator.  */
 
 #if 0   /* sample usage: */
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_,c_type_,MPIR_MAX)
+#define MPIR_OP_TYPE_MACRO(mpi_type_,c_type_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_,c_type_,MPIR_MAX)
 /* or */
-#define MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_) case (mpi_type_):
+#define MPIR_OP_TYPE_MACRO(mpi_type_,c_type_) case (mpi_type_):
 
-MPIR_OP_TYPE_GROUP(C_INTEGER)
-    MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+MPIR_OP_TYPE_GROUP(INTEGER)
+    MPIR_OP_TYPE_GROUP(FLOATING_POINT)
 #undef MPIR_OP_TYPE_MACRO
 #endif
 /* op_macro_ is a 2-arg macro or function that performs the reduction
@@ -57,196 +57,130 @@ MPIR_OP_TYPE_GROUP(C_INTEGER)
 /* These macros are used to disable non-existent types.  They evaluate to
    nothing if the particular feature test is false, otherwise they evaluate to
    the standard macro to be expanded like any other type. */
-/* first define all wrapper macros as empty for possibly non-existent types */
-#define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX8(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_LONG_LONG(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_INTEGER1_CTYPE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_INTEGER2_CTYPE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_INTEGER4_CTYPE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_INTEGER8_CTYPE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_INTEGER16_CTYPE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_REAL4_CTYPE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_REAL8_CTYPE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_CXX_BOOL(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_INT8_T(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_INT16_T(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_INT32_T(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_INT64_T(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_UINT8_T(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_UINT16_T(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_UINT32_T(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_UINT64_T(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_C_BOOL(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_C_FLOAT_COMPLEX(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_C_DOUBLE_COMPLEX(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_C_LONG_DOUBLE_COMPLEX(mpi_type_,c_type_,type_name_)
-/* then redefine them to be valid based on other preprocessor definitions */
-#if defined(HAVE_FORTRAN_BINDING)
-#undef MPIR_OP_TYPE_MACRO_HAVE_FORTRAN
-#undef MPIR_OP_TYPE_MACRO_HAVE_COMPLEX8
-#undef MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16
-#define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-/* These two shouldn't really be gated on HAVE_FORTRAN_BINDING alone.  There
-   should instead be an individual test like HAVE_LONG_DOUBLE, etc. */
-#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX8(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#if defined(MPIR_INT128_CTYPE)
+#undef MPIR_OP_TYPE_MACRO_HAVE_INT128
+#define MPIR_OP_TYPE_MACRO_HAVE_INT128(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_INT128(mpi_type_,c_type_)
 #endif
-#if defined(HAVE_LONG_LONG_INT)
-#undef MPIR_OP_TYPE_MACRO_HAVE_LONG_LONG
-#define MPIR_OP_TYPE_MACRO_HAVE_LONG_LONG(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_LONG_DOUBLE)
-#undef MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE
-#define MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_FLOAT16)
+#if defined(MPIR_FLOAT16_CTYPE)
 #undef MPIR_OP_TYPE_MACRO_HAVE_FLOAT16
-#define MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#define MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(mpi_type_,c_type_)
 #endif
-/* Fortran fixed width integer type support */
-#if defined(MPIR_INTEGER1_CTYPE)
-#undef MPIR_OP_TYPE_MACRO_HAVE_INTEGER1_CTYPE
-#define MPIR_OP_TYPE_MACRO_HAVE_INTEGER1_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#if defined(MPIR_FLOAT128_CTYPE)
+#undef MPIR_OP_TYPE_MACRO_HAVE_FLOAT128
+#define MPIR_OP_TYPE_MACRO_HAVE_FLOAT128(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_FLOAT128(mpi_type_,c_type_)
 #endif
-#if defined(MPIR_INTEGER2_CTYPE)
-#undef MPIR_OP_TYPE_MACRO_HAVE_INTEGER2_CTYPE
-#define MPIR_OP_TYPE_MACRO_HAVE_INTEGER2_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+/* non IEEE 784 alterante float (e.g. long double) */
+#if defined(MPIR_ALT_FLOAT96_CTYPE)
+#undef MPIR_OP_TYPE_MACRO_HAVE_ALT_FLOAT96
+#define MPIR_OP_TYPE_MACRO_HAVE_ALT_FLOAT96(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_ALT_FLOAT96(mpi_type_,c_type_)
 #endif
-#if defined(MPIR_INTEGER4_CTYPE)
-#undef MPIR_OP_TYPE_MACRO_HAVE_INTEGER4_CTYPE
-#define MPIR_OP_TYPE_MACRO_HAVE_INTEGER4_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#if defined(MPIR_ALT_FLOAT128_CTYPE)
+#undef MPIR_OP_TYPE_MACRO_HAVE_ALT_FLOAT128
+#define MPIR_OP_TYPE_MACRO_HAVE_ALT_FLOAT128(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_ALT_FLOAT128(mpi_type_,c_type_)
 #endif
-#if defined(MPIR_INTEGER8_CTYPE)
-#undef MPIR_OP_TYPE_MACRO_HAVE_INTEGER8_CTYPE
-#define MPIR_OP_TYPE_MACRO_HAVE_INTEGER8_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+/* complex types */
+#if defined(MPIR_COMPLEX16_CTYPE)
+#define MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX16(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX16(mpi_type_,c_type_)
+#if defined(MPIR_FLOAT16_CTYPE)
+#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(mpi_type_,c_type_)
 #endif
-#if defined(MPIR_INTEGER16_CTYPE)
-#undef MPIR_OP_TYPE_MACRO_HAVE_INTEGER16_CTYPE
-#define MPIR_OP_TYPE_MACRO_HAVE_INTEGER16_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
 #endif
-/* Fortran fixed width floating point type support */
-#if defined(MPIR_REAL4_CTYPE)
-#undef MPIR_OP_TYPE_MACRO_HAVE_REAL4_CTYPE
-#define MPIR_OP_TYPE_MACRO_HAVE_REAL4_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#if defined(MPIR_COMPLEX32_CTYPE)
+#define MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX32(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX32(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX32(mpi_type_,c_type_)
+#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX32(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
-#if defined(MPIR_REAL8_CTYPE)
-#undef MPIR_OP_TYPE_MACRO_HAVE_REAL8_CTYPE
-#define MPIR_OP_TYPE_MACRO_HAVE_REAL8_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#if defined(MPIR_COMPLEX64_CTYPE)
+#define MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX64(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX64(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX64(mpi_type_,c_type_)
+#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX64(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
-#if defined(MPIR_REAL16_CTYPE)
-#undef MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE
-#define MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#if defined(MPIR_COMPLEX128_CTYPE)
+#define MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX128(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX128(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX128(mpi_type_,c_type_)
+#if defined(MPIR_FLOAT128_CTYPE)
+#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX128(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_COMPLEX128(mpi_type_,c_type_)
 #endif
-/* general C++ types */
-#if defined(HAVE_CXX_BOOL)
-#undef MPIR_OP_TYPE_MACRO_HAVE_CXX_BOOL
-#define MPIR_OP_TYPE_MACRO_HAVE_CXX_BOOL(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
 #endif
-/* C++ complex types */
-#if defined(HAVE_CXX_COMPLEX)
-#undef MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX
-#define MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+/* alternative complex types */
+#if defined(MPIR_ALT_COMPLEX96_CTYPE)   /* long double complex on i386 */
+#define MPIR_OP_TYPE_MACRO_HAVE_C_ALT_COMPLEX96(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#define MPIR_OP_TYPE_MACRO_HAVE_ALT_COMPLEX96(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_C_ALT_COMPLEX96(mpi_type_,c_type_)
+#if defined(MPIR_ALT_FLOAT128_CTYPE)
+#define MPIR_OP_TYPE_MACRO_HAVE_ALT_COMPLEX96(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_ALT_COMPLEX96(mpi_type_,c_type_)
 #endif
-/* also test against MPI_DATATYPE_NULL for extra safety, 0x0c000000 is the uncasted value. */
-#if defined(HAVE_CXX_COMPLEX) && defined(HAVE_CXX_LONG_DOUBLE_COMPLEX)
-#undef MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX
-#define MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
 #endif
-/* C99 fixed-width types */
-#if defined(HAVE_INT8_T)
-#undef MPIR_OP_TYPE_MACRO_HAVE_INT8_T
-#define MPIR_OP_TYPE_MACRO_HAVE_INT8_T(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+#if defined(MPIR_ALT_COMPLEX128_CTYPE)  /* long double complex on x86-64 */
+#define MPIR_OP_TYPE_MACRO_HAVE_C_ALT_COMPLEX128(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#define MPIR_OP_TYPE_MACRO_HAVE_ALT_COMPLEX128(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_C_ALT_COMPLEX128(mpi_type_,c_type_)
+#if defined(MPIR_ALT_FLOAT128_CTYPE)
+#define MPIR_OP_TYPE_MACRO_HAVE_ALT_COMPLEX128(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#else
+#define MPIR_OP_TYPE_MACRO_HAVE_ALT_COMPLEX128(mpi_type_,c_type_)
 #endif
-#if defined(HAVE_INT16_T)
-#undef MPIR_OP_TYPE_MACRO_HAVE_INT16_T
-#define MPIR_OP_TYPE_MACRO_HAVE_INT16_T(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_INT32_T)
-#undef MPIR_OP_TYPE_MACRO_HAVE_INT32_T
-#define MPIR_OP_TYPE_MACRO_HAVE_INT32_T(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_INT64_T)
-#undef MPIR_OP_TYPE_MACRO_HAVE_INT64_T
-#define MPIR_OP_TYPE_MACRO_HAVE_INT64_T(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_UINT8_T)
-#undef MPIR_OP_TYPE_MACRO_HAVE_UINT8_T
-#define MPIR_OP_TYPE_MACRO_HAVE_UINT8_T(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_UINT16_T)
-#undef MPIR_OP_TYPE_MACRO_HAVE_UINT16_T
-#define MPIR_OP_TYPE_MACRO_HAVE_UINT16_T(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_UINT32_T)
-#undef MPIR_OP_TYPE_MACRO_HAVE_UINT32_T
-#define MPIR_OP_TYPE_MACRO_HAVE_UINT32_T(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_UINT64_T)
-#undef MPIR_OP_TYPE_MACRO_HAVE_UINT64_T
-#define MPIR_OP_TYPE_MACRO_HAVE_UINT64_T(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-/* C boolean */
-#if defined(HAVE__BOOL)
-#undef MPIR_OP_TYPE_MACRO_HAVE_C_BOOL
-#define MPIR_OP_TYPE_MACRO_HAVE_C_BOOL(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-/* C complex types */
-/* Add another layer of indirection and make all of these macros evaluate to a
-   common MPIR_OP_C_COMPLEX_TYPE_MACRO macro which in turn evaluates to the
-   standard MPIR_OP_TYPE_MACRO.  This lets us override behavior for these
-   natively handled types with a single macro redefinition instead of 3. */
-#undef MPIR_OP_C_COMPLEX_TYPE_MACRO
-#define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#if defined(HAVE_FLOAT__COMPLEX)
-#undef MPIR_OP_TYPE_MACRO_HAVE_C_FLOAT_COMPLEX
-#define MPIR_OP_TYPE_MACRO_HAVE_C_FLOAT_COMPLEX(mpi_type_,c_type_,type_name_) MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_DOUBLE__COMPLEX)
-#undef MPIR_OP_TYPE_MACRO_HAVE_C_DOUBLE_COMPLEX
-#define MPIR_OP_TYPE_MACRO_HAVE_C_DOUBLE_COMPLEX(mpi_type_,c_type_,type_name_) MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-#endif
-#if defined(HAVE_LONG_DOUBLE__COMPLEX)
-#undef MPIR_OP_TYPE_MACRO_HAVE_C_LONG_DOUBLE_COMPLEX
-#define MPIR_OP_TYPE_MACRO_HAVE_C_LONG_DOUBLE_COMPLEX(mpi_type_,c_type_,type_name_) MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_,type_name_)
 #endif
 /* C types needed to support some of the complex types.
 
    FIXME These are a hack in most cases, but they seem to work in practice
    and it's what we were doing prior to the mpir_op_util.h refactoring. */
-typedef struct {
-    float re;
-    float im;
-} s_complex;
-
-#if defined(HAVE_FORTRAN_BINDING)
-typedef struct {
-    MPIR_FC_REAL_CTYPE re;
-    MPIR_FC_REAL_CTYPE im;
-} s_fc_complex;
-
-typedef struct {
-    MPIR_FC_DOUBLE_CTYPE re;
-    MPIR_FC_DOUBLE_CTYPE im;
-} d_fc_complex;
+#if defined(MPIR_FLOAT16_CTYPE)
+struct my_complex4 {
+    MPIR_FLOAT16_CTYPE re;
+    MPIR_FLOAT16_CTYPE im;
+};
 #endif
 
-typedef struct {
+struct my_complex8 {
+    float re;
+    float im;
+};
+
+struct my_complex16 {
     double re;
     double im;
-} d_complex;
+};
 
-#if defined(HAVE_LONG_DOUBLE)
-typedef struct {
+#if defined(MPIR_FLOAT128_CTYPE)
+struct my_complex32 {
+    MPIR_FLOAT128_CTYPE re;
+    MPIR_FLOAT128_CTYPE im;
+};
+#endif
+
+#if defined(MPIR_ALT_FLOAT96_CTYPE) || defined(MPIR_ALT_FLOAT128_CTYPE)
+struct my_ld_complex {
     long double re;
     long double im;
-} ld_complex;
+};
 #endif
 
 /* -------------------------------------------------------------------- */
@@ -258,107 +192,61 @@ typedef struct {
    in this list are not a problem. */
 
 /* c integer group */
-#define MPIR_OP_TYPE_GROUP_C_INTEGER                                                                                  \
-    MPIR_OP_TYPE_MACRO(MPI_INT, int, mpir_typename_int)                                                               \
-    MPIR_OP_TYPE_MACRO(MPI_LONG, long, mpir_typename_long)                                                            \
-    MPIR_OP_TYPE_MACRO(MPI_SHORT, short, mpir_typename_short)                                                         \
-    MPIR_OP_TYPE_MACRO(MPI_UNSIGNED_SHORT, unsigned short, mpir_typename_unsigned_short)                              \
-    MPIR_OP_TYPE_MACRO(MPI_UNSIGNED, unsigned, mpir_typename_unsigned)                                                \
-    MPIR_OP_TYPE_MACRO(MPI_UNSIGNED_LONG, unsigned long, mpir_typename_unsigned_long)                                 \
-    MPIR_OP_TYPE_MACRO_HAVE_LONG_LONG(MPI_LONG_LONG, long long, mpir_typename_long_long)                              \
-    MPIR_OP_TYPE_MACRO_HAVE_LONG_LONG(MPI_UNSIGNED_LONG_LONG, unsigned long long, mpir_typename_unsigned_long_long)   \
-    MPIR_OP_TYPE_MACRO(MPI_SIGNED_CHAR, signed char, mpir_typename_signed_char)                                       \
-    MPIR_OP_TYPE_MACRO(MPI_UNSIGNED_CHAR, unsigned char, mpir_typename_unsigned_char)                                 \
-    MPIR_OP_TYPE_MACRO_HAVE_INT8_T(MPI_INT8_T, int8_t, mpir_typename_int8_t)                                          \
-    MPIR_OP_TYPE_MACRO_HAVE_INT16_T(MPI_INT16_T, int16_t, mpir_typename_int16_t)                                      \
-    MPIR_OP_TYPE_MACRO_HAVE_INT32_T(MPI_INT32_T, int32_t, mpir_typename_int32_t)                                      \
-    MPIR_OP_TYPE_MACRO_HAVE_INT64_T(MPI_INT64_T, int64_t, mpir_typename_int64_t)                                      \
-    MPIR_OP_TYPE_MACRO_HAVE_UINT8_T(MPI_UINT8_T, uint8_t, mpir_typename_uint8_t)                                      \
-    MPIR_OP_TYPE_MACRO_HAVE_UINT16_T(MPI_UINT16_T, uint16_t, mpir_typename_uint16_t)                                  \
-    MPIR_OP_TYPE_MACRO_HAVE_UINT32_T(MPI_UINT32_T, uint32_t, mpir_typename_uint32_t)                                  \
-    MPIR_OP_TYPE_MACRO_HAVE_UINT64_T(MPI_UINT64_T, uint64_t, mpir_typename_uint64_t)                                  \
-        /* The MPI Standard doesn't include these types in the C integer group for
-         * predefined operations but MPICH supports them when possible. */
-#define MPIR_OP_TYPE_GROUP_C_INTEGER_EXTRA      \
-    MPIR_OP_TYPE_MACRO(MPI_CHAR, char, mpir_typename_char)
+#define MPIR_OP_TYPE_GROUP_INTEGER                                                                                  \
+    MPIR_OP_TYPE_MACRO(MPIR_INT8, MPIR_INT8_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_INT16, MPIR_INT16_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_INT32, MPIR_INT32_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_INT64, MPIR_INT64_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_INT128(MPIR_INT128, MPIR_INT128_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_UINT8, MPIR_UINT8_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_UINT16, MPIR_UINT16_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_UINT32, MPIR_UINT32_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_UINT64, MPIR_UINT64_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_INT128(MPIR_UINT128, MPIR_UINT128_CTYPE)
 
-/* fortran integer group */
-#define MPIR_OP_TYPE_GROUP_FORTRAN_INTEGER                                            \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_INTEGER, MPI_Fint, mpir_typename_integer)     \
-    MPIR_OP_TYPE_MACRO(MPI_AINT, MPI_Aint, mpir_typename_aint)                        \
-    MPIR_OP_TYPE_MACRO(MPI_OFFSET, MPI_Offset, mpir_typename_offset)                  \
-    MPIR_OP_TYPE_MACRO(MPI_COUNT, MPI_Count, mpir_typename_count)
-/* The MPI Standard doesn't include these types in the Fortran integer group for
-   predefined operations but MPICH supports them when possible. */
-#define MPIR_OP_TYPE_GROUP_FORTRAN_INTEGER_EXTRA                                                      \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_CHARACTER, char, mpir_typename_character)                     \
-    MPIR_OP_TYPE_MACRO_HAVE_INTEGER1_CTYPE(MPI_INTEGER1, MPIR_INTEGER1_CTYPE, mpir_typename_integer1) \
-    MPIR_OP_TYPE_MACRO_HAVE_INTEGER2_CTYPE(MPI_INTEGER2, MPIR_INTEGER2_CTYPE, mpir_typename_integer2) \
-    MPIR_OP_TYPE_MACRO_HAVE_INTEGER4_CTYPE(MPI_INTEGER4, MPIR_INTEGER4_CTYPE, mpir_typename_integer4) \
-    MPIR_OP_TYPE_MACRO_HAVE_INTEGER8_CTYPE(MPI_INTEGER8, MPIR_INTEGER8_CTYPE, mpir_typename_integer8) \
-    MPIR_OP_TYPE_MACRO_HAVE_INTEGER16_CTYPE(MPI_INTEGER16, MPIR_INTEGER16_CTYPE, mpir_typename_integer16)
 
 /* floating point group */
 /* FIXME: REAL need not be float, nor DOUBLE_PRECISION be double.
    Fortran types are not synonyms for the C types */
 #define MPIR_OP_TYPE_GROUP_FLOATING_POINT                                                                             \
-    MPIR_OP_TYPE_MACRO(MPI_FLOAT, float, mpir_typename_float)                                                         \
-    MPIR_OP_TYPE_MACRO(MPI_DOUBLE, double, mpir_typename_double)                                                      \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_REAL, MPIR_FC_REAL_CTYPE, mpir_typename_real)                                 \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_DOUBLE_PRECISION, MPIR_FC_DOUBLE_CTYPE, mpir_typename_double_precision)       \
-    MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE(MPI_LONG_DOUBLE, long double, mpir_typename_long_double)
+    MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(MPIR_FLOAT16, MPIR_FLOAT16_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_FLOAT32, MPIR_FLOAT32_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_FLOAT64, MPIR_FLOAT64_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_FLOAT128(MPIR_FLOAT128, MPIR_FLOAT128_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_ALT_FLOAT96(MPIR_ALT_FLOAT96, MPIR_ALT_FLOAT96_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_ALT_FLOAT128(MPIR_ALT_FLOAT128, MPIR_ALT_FLOAT128_CTYPE)
 
-/* The MPI Standard doesn't include these types in the floating point group for
- * predefined operations but MPICH supports them when possible. */
-#define MPIR_OP_TYPE_GROUP_FLOATING_POINT_EXTRA                                               \
-    MPIR_OP_TYPE_MACRO_HAVE_REAL4_CTYPE(MPI_REAL4, MPIR_REAL4_CTYPE, mpir_typename_real4)     \
-    MPIR_OP_TYPE_MACRO_HAVE_REAL8_CTYPE(MPI_REAL8, MPIR_REAL8_CTYPE, mpir_typename_real8)     \
-    MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE(MPI_REAL16, MPIR_REAL16_CTYPE, mpir_typename_real16) \
-    MPIR_OP_TYPE_MACRO_HAVE_FLOAT16(MPIX_C_FLOAT16, _Float16, mpir_typename_float16)
-
-/* logical group */
-/* FIXME Is MPI_Fint really OK here? */
-#define MPIR_OP_TYPE_GROUP_LOGICAL                                                    \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_LOGICAL, MPI_Fint, mpir_typename_logical)     \
-    MPIR_OP_TYPE_MACRO_HAVE_C_BOOL(MPI_C_BOOL, _Bool, mpir_typename_c_bool)           \
-    MPIR_OP_TYPE_MACRO_HAVE_CXX_BOOL(MPI_CXX_BOOL, MPIR_CXX_BOOL_CTYPE, mpir_typename_cxx_bool_value)
-#define MPIR_OP_TYPE_GROUP_LOGICAL_EXTRA        /* empty, provided for consistency */
 
 /* complex group */
-#define MPIR_OP_TYPE_GROUP_COMPLEX                                                                                    \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_COMPLEX, s_fc_complex, mpir_typename_complex)                                 \
-    MPIR_OP_TYPE_MACRO_HAVE_C_FLOAT_COMPLEX(MPI_C_FLOAT_COMPLEX, float _Complex, mpir_typename_c_float_complex)       \
-    MPIR_OP_TYPE_MACRO_HAVE_C_DOUBLE_COMPLEX(MPI_C_DOUBLE_COMPLEX, double _Complex, mpir_typename_c_double_complex)   \
-    MPIR_OP_TYPE_MACRO_HAVE_C_LONG_DOUBLE_COMPLEX(MPI_C_LONG_DOUBLE_COMPLEX, long double _Complex, mpir_typename_c_long_double_complex)
-#define MPIR_OP_TYPE_GROUP_COMPLEX_EXTRA                                                                                      \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_DOUBLE_COMPLEX, d_fc_complex, mpir_typename_double_complex)                           \
-    MPIR_OP_TYPE_MACRO_HAVE_COMPLEX8(MPI_COMPLEX8, s_complex, mpir_typename_complex8)                                         \
-    MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(MPI_COMPLEX16, d_complex, mpir_typename_complex16)                                      \
-    MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(MPI_CXX_FLOAT_COMPLEX, s_complex, mpir_typename_cxx_complex_value)                   \
-    MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(MPI_CXX_DOUBLE_COMPLEX, d_complex, mpir_typename_cxx_double_complex_value)     \
-    MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX(MPI_CXX_LONG_DOUBLE_COMPLEX, ld_complex, mpir_typename_cxx_long_double_complex_value)
+/* the C_COMPLEX uses C native complex, while the other group does it manually */
+#define MPIR_OP_TYPE_GROUP_C_COMPLEX \
+    MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX16(MPIR_COMPLEX16, MPIR_COMPLEX16_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX32(MPIR_COMPLEX32, MPIR_COMPLEX32_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX64(MPIR_COMPLEX64, MPIR_COMPLEX64_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_C_COMPLEX128(MPIR_COMPLEX128, MPIR_COMPLEX128_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_C_ALT_COMPLEX96(MPIR_ALT_COMPLEX96, MPIR_ALT_COMPLEX96_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_C_ALT_COMPLEX128(MPIR_ALT_COMPLEX128, MPIR_ALT_COMPLEX128_CTYPE)
 
-/* byte group */
-#define MPIR_OP_TYPE_GROUP_BYTE         \
-    MPIR_OP_TYPE_MACRO(MPI_BYTE, unsigned char, mpir_typename_byte)
-#define MPIR_OP_TYPE_GROUP_BYTE_EXTRA   /* empty, provided for consistency */
+#define MPIR_OP_TYPE_GROUP_COMPLEX \
+    MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(MPIR_COMPLEX16, struct my_complex4) \
+    MPIR_OP_TYPE_MACRO_HAVE_COMPLEX32(MPIR_COMPLEX32, struct my_complex8) \
+    MPIR_OP_TYPE_MACRO_HAVE_COMPLEX64(MPIR_COMPLEX64, struct my_complex16) \
+    MPIR_OP_TYPE_MACRO_HAVE_COMPLEX128(MPIR_COMPLEX128, struct my_complex32) \
+    MPIR_OP_TYPE_MACRO_HAVE_ALT_COMPLEX96(MPIR_ALT_COMPLEX96, struct my_ld_complex) \
+    MPIR_OP_TYPE_MACRO_HAVE_ALT_COMPLEX128(MPIR_ALT_COMPLEX128, struct my_ld_complex)
+
+/* fortran logical group */
+#define MPIR_OP_TYPE_GROUP_FORTRAN_LOGICAL \
+    MPIR_OP_TYPE_MACRO(MPIR_FORTRAN_LOGICAL8, MPIR_INT8_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_FORTRAN_LOGICAL16, MPIR_INT16_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_FORTRAN_LOGICAL32, MPIR_INT32_CTYPE) \
+    MPIR_OP_TYPE_MACRO(MPIR_FORTRAN_LOGICAL64, MPIR_INT64_CTYPE) \
+    MPIR_OP_TYPE_MACRO_HAVE_INT128(MPIR_FORTRAN_LOGICAL128, MPIR_INT128_CTYPE)
 
 /* convenience macro that just is all non-extra groups concatenated */
-#define MPIR_OP_TYPE_GROUP_ALL_BASIC    \
-    MPIR_OP_TYPE_GROUP(C_INTEGER)       \
-    MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER) \
+#define MPIR_OP_TYPE_GROUP_ALL \
+    MPIR_OP_TYPE_GROUP(INTEGER)       \
     MPIR_OP_TYPE_GROUP(FLOATING_POINT)  \
-    MPIR_OP_TYPE_GROUP(LOGICAL)         \
     MPIR_OP_TYPE_GROUP(COMPLEX)         \
-    MPIR_OP_TYPE_GROUP(BYTE)
-
-/* this macro includes just the extra type groups */
-#define MPIR_OP_TYPE_GROUP_ALL_EXTRA          \
-    MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)       \
-    MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA) \
-    MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)  \
-    MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)         \
-    MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)         \
-    MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
 
 #endif /* MPIR_OP_UTIL_H_INCLUDED */

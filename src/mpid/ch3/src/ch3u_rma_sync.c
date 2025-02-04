@@ -538,8 +538,8 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 
         win_ptr->at_completion_counter += comm_size;
 
-        mpi_errno = MPIR_Reduce_scatter_block(MPI_IN_PLACE, rma_target_marks, 1,
-                                              MPI_INT, MPI_SUM, win_ptr->comm_ptr, MPIR_ERR_NONE);
+        mpi_errno = MPIR_Reduce_scatter_block(MPI_IN_PLACE, rma_target_marks, 1, MPIR_INT_INTERNAL,
+                                              MPI_SUM, win_ptr->comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         win_ptr->at_completion_counter -= comm_size;
@@ -706,7 +706,7 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
 
             if (dst != rank) {
                 MPIR_Request *req_ptr;
-                mpi_errno = MPID_Isend(&i, 0, MPI_INT, dst, SYNC_POST_TAG, win_comm_ptr, 0, &req_ptr);
+                mpi_errno = MPID_Isend(&i, 0, MPIR_INT_INTERNAL, dst, SYNC_POST_TAG, win_comm_ptr, 0, &req_ptr);
                 MPIR_ERR_CHECK(mpi_errno);
                 req[i] = req_ptr;
             }
@@ -828,7 +828,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
                 MPIDI_Comm_get_vc(comm_ptr, rank, &orig_vc);
                 MPIDI_Comm_get_vc(comm_ptr, src, &target_vc);
 
-                mpi_errno = MPID_Irecv(NULL, 0, MPI_INT, src, SYNC_POST_TAG,
+                mpi_errno = MPID_Irecv(NULL, 0, MPIR_INT_INTERNAL, src, SYNC_POST_TAG,
                                        comm_ptr, 0, &req_ptr);
                 MPIR_ERR_CHECK(mpi_errno);
 
