@@ -333,7 +333,6 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
      */
     int n;
     MPI_Datatype matched_datatype = MPI_DATATYPE_NULL;
-    bool op_supported = false;
 #ifdef HAVE_ERROR_CHECKING
     const char *tname = NULL;
 #endif
@@ -342,7 +341,6 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
         case MPI_TYPECLASS_REAL:
             n = sizeof(real_types) / sizeof(MPI_Datatype);
             matched_datatype = type_match_size(real_types, n, size);
-            op_supported = MPIR_SUM_check_dtype(matched_datatype);
 #ifdef HAVE_ERROR_CHECKING
             tname = "MPI_TYPECLASS_REAL";
 #endif
@@ -350,7 +348,6 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
         case MPI_TYPECLASS_INTEGER:
             n = sizeof(int_types) / sizeof(MPI_Datatype);
             matched_datatype = type_match_size(int_types, n, size);
-            op_supported = MPIR_SUM_check_dtype(matched_datatype);
 #ifdef HAVE_ERROR_CHECKING
             tname = "MPI_TYPECLASS_INTEGER";
 #endif
@@ -358,7 +355,6 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
         case MPI_TYPECLASS_COMPLEX:
             n = sizeof(complex_types) / sizeof(MPI_Datatype);
             matched_datatype = type_match_size(complex_types, n, size);
-            op_supported = MPIR_SUM_check_dtype(matched_datatype);
 #ifdef HAVE_ERROR_CHECKING
             tname = "MPI_TYPECLASS_COMPLEX";
 #endif
@@ -366,7 +362,6 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
         case MPI_TYPECLASS_LOGICAL:
             n = sizeof(logical_types) / sizeof(MPI_Datatype);
             matched_datatype = type_match_size(logical_types, n, size);
-            op_supported = MPIR_LAND_check_dtype(matched_datatype);
 #ifdef HAVE_ERROR_CHECKING
             tname = "MPI_TYPECLASS_LOGICAL";
 #endif
@@ -375,7 +370,7 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, break, "**typematchnoclass");
     }
 
-    if (!op_supported) {
+    if (matched_datatype == MPI_DATATYPE_NULL) {
         MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_ARG, "**typematchsize", "**typematchsize %s %d",
                              tname, size);
     } else {
