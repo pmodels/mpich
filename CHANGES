@@ -1,4 +1,10 @@
 ===============================================================================
+                               Changes in 5.0
+===============================================================================
+# MPIR_CHKLMEM_ and MPIR_CHKPMEM_ macros are simplified, removing non-essential
+  argument such as type case and custom error messages.
+
+===============================================================================
                                Changes in 4.3
 ===============================================================================
 # Support MPI memory allocation kinds side document.
