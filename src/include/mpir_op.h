@@ -181,22 +181,6 @@ void MPIR_REPLACE(void *, void *, MPI_Aint *, MPI_Datatype *);
 void MPIR_NO_OP(void *, void *, MPI_Aint *, MPI_Datatype *);
 void MPIR_EQUAL(void *, void *, MPI_Aint *, MPI_Datatype *);
 
-int MPIR_MAXF_check_dtype(MPI_Datatype);
-int MPIR_MINF_check_dtype(MPI_Datatype);
-int MPIR_SUM_check_dtype(MPI_Datatype);
-int MPIR_PROD_check_dtype(MPI_Datatype);
-int MPIR_LAND_check_dtype(MPI_Datatype);
-int MPIR_BAND_check_dtype(MPI_Datatype);
-int MPIR_LOR_check_dtype(MPI_Datatype);
-int MPIR_BOR_check_dtype(MPI_Datatype);
-int MPIR_LXOR_check_dtype(MPI_Datatype);
-int MPIR_BXOR_check_dtype(MPI_Datatype);
-int MPIR_MAXLOC_check_dtype(MPI_Datatype);
-int MPIR_MINLOC_check_dtype(MPI_Datatype);
-int MPIR_REPLACE_check_dtype(MPI_Datatype);
-int MPIR_NO_OP_check_dtype(MPI_Datatype);
-int MPIR_EQUAL_check_dtype(MPI_Datatype);
-
 #define MPIR_Op_add_ref_if_not_builtin(op)               \
     do {                                                 \
         if (!HANDLE_IS_BUILTIN((op))) {\
@@ -222,11 +206,7 @@ int MPIR_EQUAL_check_dtype(MPI_Datatype);
 typedef void (MPIR_op_function) (void *, void *, MPI_Aint *, MPI_Datatype *);
 extern MPIR_op_function *MPIR_Op_table[];
 
-typedef int (MPIR_Op_check_dtype_fn) (MPI_Datatype);
-extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
-
 #define MPIR_OP_HDL_TO_FN(op) MPIR_Op_table[((op)&0xf)]
-#define MPIR_OP_HDL_TO_DTYPE_FN(op) MPIR_Op_check_dtype_table[((op)&0xf)]
 
 int MPIR_Op_is_commutative(MPI_Op);
 

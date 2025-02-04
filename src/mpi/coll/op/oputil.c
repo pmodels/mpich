@@ -26,25 +26,6 @@ MPIR_op_function *MPIR_Op_table[] = {
     MPIR_EQUAL
 };
 
-MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
-    NULL,
-    MPIR_MAXF_check_dtype,
-    MPIR_MINF_check_dtype,
-    MPIR_SUM_check_dtype,
-    MPIR_PROD_check_dtype,
-    MPIR_LAND_check_dtype,
-    MPIR_BAND_check_dtype,
-    MPIR_LOR_check_dtype,
-    MPIR_BOR_check_dtype,
-    MPIR_LXOR_check_dtype,
-    MPIR_BXOR_check_dtype,
-    MPIR_MINLOC_check_dtype,
-    MPIR_MAXLOC_check_dtype,
-    MPIR_REPLACE_check_dtype,
-    MPIR_NO_OP_check_dtype,
-    MPIR_EQUAL_check_dtype
-};
-
 typedef struct op_name {
     MPI_Op op;
     const char *short_name;     /* used in info */

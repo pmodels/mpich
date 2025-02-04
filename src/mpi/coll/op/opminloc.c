@@ -76,14 +76,3 @@ void MPIR_MINLOC(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * typ
         }
     }
 }
-
-int MPIR_MINLOC_check_dtype(MPI_Datatype type)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (!MPIR_Datatype_is_pairtype(type)) {
-        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_MINLOC");
-    }
-
-    return mpi_errno;
-}

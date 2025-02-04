@@ -40,21 +40,3 @@ void MPIR_LAND(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
             break;
     }
 }
-
-
-int MPIR_LAND_check_dtype(MPI_Datatype type)
-{
-    switch (MPIR_DATATYPE_GET_RAW_INTERNAL(type)) {
-#undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) case (mpi_type_):
-            MPIR_OP_TYPE_GROUP(INTEGER)
-                MPIR_OP_TYPE_GROUP(FORTRAN_LOGICAL)
-                return MPI_SUCCESS;
-            /* --BEGIN ERROR HANDLING-- */
-        default:
-            return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                        MPI_ERR_OP, "**opundefined", "**opundefined %s",
-                                        "MPI_LAND");
-            /* --END ERROR HANDLING-- */
-    }
-}

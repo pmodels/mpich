@@ -20,9 +20,3 @@ void MPIR_REPLACE(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * ty
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
-
-int MPIR_REPLACE_check_dtype(MPI_Datatype type)
-{
-    return MPI_SUCCESS;
-}
