@@ -76,14 +76,3 @@ void MPIR_MAXLOC(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * typ
         }
     }
 }
-
-int MPIR_MAXLOC_check_dtype(MPI_Datatype type)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (!MPIR_Datatype_is_pairtype(type)) {
-        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_MAXLOC");
-    }
-
-    return mpi_errno;
-}
