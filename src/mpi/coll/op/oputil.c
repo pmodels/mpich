@@ -89,25 +89,3 @@ const char *MPIR_Op_builtin_get_shortname(MPI_Op op)
     }
     return "";
 }
-
-/* for some predefined datatypes, e.g. from MPI_Type_create_f90_xxx, we need
- * use its basic type for operations */
-MPI_Datatype MPIR_Op_get_alt_datatype(MPI_Op op, MPI_Datatype datatype)
-{
-    MPI_Datatype alt_dt = MPI_DATATYPE_NULL;
-    if (!HANDLE_IS_BUILTIN(datatype)) {
-        MPIR_Datatype *dt_ptr;
-        MPIR_Datatype_get_ptr(datatype, dt_ptr);
-
-        if (dt_ptr && dt_ptr->contents) {
-            int combiner = dt_ptr->contents->combiner;
-            if (combiner == MPI_COMBINER_F90_REAL ||
-                combiner == MPI_COMBINER_F90_COMPLEX || combiner == MPI_COMBINER_F90_INTEGER) {
-                if (MPIR_op_dt_check(op, dt_ptr->basic_type)) {
-                    alt_dt = dt_ptr->basic_type;
-                }
-            }
-        }
-    }
-    return alt_dt;
-}
