@@ -31,6 +31,8 @@
 #define MPIR_TYPE_TYPE_MASK      0x0f0000       /* e.g. FIXED, SIGNED, UNSIGNED, FLOAT, COMPLEX, etc. */
 #define MPIR_TYPE_INDEX_MASK     0x0000ff
 
+#define MPIR_DATATYPE_IS_INTERNAL(datatype) (((datatype) & 0x4c800000) == 0x4c800000)
+
 /* Internally we support FIXED, SIGNED, UNSIGNED, FLOAT, and COMPLEX.
  * Other types can be added when supported, e.g. bfloat16 or logicals that
  * doesn't follow the C convention of zero/nonzero.
@@ -128,9 +130,22 @@
 #define MPIR_2UINT0             MPI_DATATYPE_NULL
 #define MPIR_2FLOAT0            MPI_DATATYPE_NULL
 
+/* Datatype groups according to MPI standard, ref MPI-4.1 section 6.9.2 */
+typedef enum {
+    MPIR_DT_GROUP_NULL = 0,
+    MPIR_DT_GROUP_C_INTEGER,
+    MPIR_DT_GROUP_FORTRAN_INTEGER,
+    MPIR_DT_GROUP_FLOATING_POINT,
+    MPIR_DT_GROUP_LOGICAL,
+    MPIR_DT_GROUP_COMPLEX,
+    MPIR_DT_GROUP_BYTE,
+    MPIR_DT_GROUP_MULTI,
+} MPIR_DT_GROUP_t;
+
 struct MPIR_Datatype_builtin_entry {
     MPI_Datatype dtype;
     MPI_Datatype internal_type;
+    MPIR_DT_GROUP_t group;
     const char *name;
 };
 extern struct MPIR_Datatype_builtin_entry MPIR_Internal_types[];
@@ -140,6 +155,27 @@ extern struct MPIR_Datatype_builtin_entry MPIR_Internal_types[];
     do { \
         if (HANDLE_IS_BUILTIN(type) && ((type) & 0xff)) { \
             (type) = MPIR_Internal_types[(type) & 0xff].internal_type; \
+        } \
+    } while (0)
+
+/* Swap input builtin datatype or one of the MPI_Type_create_f90_xxx type with an equivalent internal type */
+#define MPIR_DATATYPE_REPLACE_BUILTIN_FOR_OP(type, op) \
+    do { \
+        if (HANDLE_IS_BUILTIN(type)) { \
+            if ((type) & 0xff) { \
+                (type) = MPIR_Internal_types[(type) & 0xff].internal_type; \
+            } \
+        } else if (HANDLE_IS_BUILTIN(op)) { \
+            MPIR_Datatype *dt_ptr; \
+            MPIR_Datatype_get_ptr((type), dt_ptr); \
+            MPIR_Assert(dt_ptr); \
+            switch (dt_ptr->contents->combiner) { \
+                case MPI_COMBINER_F90_INTEGER: \
+                case MPI_COMBINER_F90_REAL: \
+                case MPI_COMBINER_F90_COMPLEX: \
+                    (type) = dt_ptr->basic_type; \
+                    break; \
+            } \
         } \
     } while (0)
 
@@ -714,6 +750,157 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Type_get_combiner(MPI_Datatype datatype)
         return dtp->contents->combiner;
     }
 }
+
+/* Check whether a datatype/op combination is valid.
+ * * MPIR_op_dt_check          - used in binding-layer where dt is a user-input mpi datatype.
+ * * MPIR_Internal_op_dt_check - used internally where dt is an internal type.
+ */
+MPL_STATIC_INLINE_PREFIX bool MPIR_op_dt_check(MPI_Op op, MPI_Datatype dt)
+{
+    if (!HANDLE_IS_BUILTIN(op)) {
+        return false;
+    } else if (op == MPI_MINLOC || op == MPI_MAXLOC) {
+        MPIR_DATATYPE_REPLACE_BUILTIN(dt);
+        return MPIR_Datatype_is_pairtype(dt);
+    } else if (op == MPI_NO_OP || op == MPI_REPLACE || op == MPIX_EQUAL) {
+        return true;
+    }
+
+    MPIR_DT_GROUP_t dt_group = MPIR_DT_GROUP_NULL;
+    if (HANDLE_IS_BUILTIN(dt)) {
+        if (MPIR_Internal_types[dt & 0xff].internal_type != MPI_DATATYPE_NULL) {
+            dt_group = MPIR_Internal_types[dt & 0xff].group;
+        }
+    } else {
+        /* check types from MPI_Type_create_F90_xxx */
+        MPIR_Datatype *dt_ptr;
+        MPIR_Datatype_get_ptr(dt, dt_ptr);
+        MPIR_Assert(dt_ptr);
+        switch (dt_ptr->contents->combiner) {
+            case MPI_COMBINER_F90_INTEGER:
+                dt_group = MPIR_TYPE_SIGNED;
+                break;
+            case MPI_COMBINER_F90_REAL:
+                dt_group = MPIR_TYPE_FLOAT;
+                break;
+            case MPI_COMBINER_F90_COMPLEX:
+                dt_group = MPIR_TYPE_COMPLEX;
+                break;
+        }
+    }
+
+    if (dt_group == MPIR_DT_GROUP_NULL) {
+        return false;
+    }
+
+    switch (op) {
+        case MPI_MAX:
+        case MPI_MIN:
+            switch (dt_group) {
+                case MPIR_DT_GROUP_C_INTEGER:
+                case MPIR_DT_GROUP_FORTRAN_INTEGER:
+                case MPIR_DT_GROUP_FLOATING_POINT:
+                case MPIR_DT_GROUP_MULTI:
+                    return true;
+                default:
+                    return false;
+            }
+        case MPI_SUM:
+        case MPI_PROD:
+            switch (dt_group) {
+                case MPIR_DT_GROUP_C_INTEGER:
+                case MPIR_DT_GROUP_FORTRAN_INTEGER:
+                case MPIR_DT_GROUP_FLOATING_POINT:
+                case MPIR_DT_GROUP_COMPLEX:
+                case MPIR_DT_GROUP_MULTI:
+                    return true;
+                default:
+                    return false;
+            }
+        case MPI_LAND:
+        case MPI_LOR:
+        case MPI_LXOR:
+            switch (dt_group) {
+                case MPIR_DT_GROUP_C_INTEGER:
+                case MPIR_DT_GROUP_LOGICAL:
+                    return true;
+                default:
+                    return false;
+            }
+        case MPI_BAND:
+        case MPI_BOR:
+        case MPI_BXOR:
+            switch (dt_group) {
+                case MPIR_DT_GROUP_C_INTEGER:
+                case MPIR_DT_GROUP_FORTRAN_INTEGER:
+                case MPIR_DT_GROUP_BYTE:
+                case MPIR_DT_GROUP_MULTI:
+                    return true;
+                default:
+                    return false;
+            }
+        default:
+            return false;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIR_Internal_op_dt_check(MPI_Op op, MPI_Datatype dt)
+{
+    if (!HANDLE_IS_BUILTIN(op)) {
+        return false;
+    } else if (op == MPI_MINLOC || op == MPI_MAXLOC) {
+        return MPIR_Datatype_is_pairtype(dt);
+    } else if (op == MPI_NO_OP || op == MPI_REPLACE || op == MPIX_EQUAL) {
+        return true;
+    }
+
+    MPIR_Assert(MPIR_DATATYPE_IS_INTERNAL(dt));
+
+    int dt_type = dt & 0x0f0000;
+
+    switch (op) {
+        case MPI_MAX:
+        case MPI_MIN:
+            switch (dt_type) {
+                case MPIR_TYPE_SIGNED:
+                case MPIR_TYPE_UNSIGNED:
+                case MPIR_TYPE_FLOAT:
+                case MPIR_TYPE_ALT_FLOAT:
+                    return true;
+                default:
+                    return false;
+            }
+        case MPI_SUM:
+        case MPI_PROD:
+            switch (dt_type) {
+                case MPIR_TYPE_SIGNED:
+                case MPIR_TYPE_UNSIGNED:
+                case MPIR_TYPE_FLOAT:
+                case MPIR_TYPE_COMPLEX:
+                case MPIR_TYPE_ALT_FLOAT:
+                case MPIR_TYPE_ALT_COMPLEX:
+                    return true;
+                default:
+                    return false;
+            }
+        case MPI_LAND:
+        case MPI_LOR:
+        case MPI_LXOR:
+        case MPI_BAND:
+        case MPI_BOR:
+        case MPI_BXOR:
+            switch (dt_type) {
+                case MPIR_TYPE_SIGNED:
+                case MPIR_TYPE_UNSIGNED:
+                    return true;
+                default:
+                    return false;
+            }
+        default:
+            return false;
+    }
+}
+
 
 /* This routine is used to install an attribute free routine for datatypes
    at finalize-time */
