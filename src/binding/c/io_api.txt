@@ -212,3 +212,6 @@ MPI_File_write_shared:
 MPI_Register_datarep:
     .desc: Register a set of user-provided data conversion
     .poly_impl: separate
+{ -- error_check -- read_conversion_fn, write_conversion_fn
+    /* both read_conversion_fn and write_conversion_fn may be MPI_CONVERSION_FN_NULL, which could be NULL */
+}
