@@ -56,7 +56,7 @@ int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
     int mask, dst, is_commutative, flag;
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
@@ -67,14 +67,12 @@ int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
 
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_CHKLMEM_MALLOC(partial_scan, void *, (count * (MPL_MAX(true_extent, extent))), mpi_errno,
-                        "partial_scan", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(partial_scan, count * (MPL_MAX(true_extent, extent)));
     /* adjust for potential negative lower bound in datatype */
     partial_scan = (void *) ((char *) partial_scan - true_lb);
 
     /* need to allocate temporary buffer to store incoming data */
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, (count * (MPL_MAX(true_extent, extent))), mpi_errno,
-                        "tmp_buf", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, count * (MPL_MAX(true_extent, extent)));
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 

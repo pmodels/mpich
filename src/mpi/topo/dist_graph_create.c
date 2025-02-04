@@ -23,8 +23,8 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     int *buf = NULL;
 
     int comm_size = comm_ptr->local_size;
-    MPIR_CHKLMEM_DECL(8);
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
+    MPIR_CHKPMEM_DECL();
 
     /* following the spirit of the old topo interface, attributes do not
      * propagate to the new communicator (see MPI-2.1 pp. 243 line 11) */
@@ -39,16 +39,12 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
      * rout is an array of comm_size containing pointers to arrays of
      * rout_sizes[x].  rout[x] is the locally known number of edges out of this
      * process to rank x. */
-    MPIR_CHKLMEM_MALLOC(rout, int **, comm_size * sizeof(int *), mpi_errno, "rout", MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(rin, int **, comm_size * sizeof(int *), mpi_errno, "rin", MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(rin_sizes, int *, comm_size * sizeof(int), mpi_errno, "rin_sizes",
-                        MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(rout_sizes, int *, comm_size * sizeof(int), mpi_errno, "rout_sizes",
-                        MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(rin_idx, int *, comm_size * sizeof(int), mpi_errno, "rin_idx",
-                        MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(rout_idx, int *, comm_size * sizeof(int), mpi_errno, "rout_idx",
-                        MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(rout, comm_size * sizeof(int *));
+    MPIR_CHKLMEM_MALLOC(rin, comm_size * sizeof(int *));
+    MPIR_CHKLMEM_MALLOC(rin_sizes, comm_size * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(rout_sizes, comm_size * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(rin_idx, comm_size * sizeof(int));
+    MPIR_CHKLMEM_MALLOC(rout_idx, comm_size * sizeof(int));
 
     memset(rout, 0, comm_size * sizeof(int *));
     memset(rin, 0, comm_size * sizeof(int *));
@@ -123,8 +119,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     }
 
     int *rs;
-    MPIR_CHKLMEM_MALLOC(rs, int *, 2 * comm_size * sizeof(int), mpi_errno, "red-scat source buffer",
-                        MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(rs, 2 * comm_size * sizeof(int));
     for (int i = 0; i < comm_size; ++i) {
         rs[2 * i] = (rin_sizes[i] ? 1 : 0);
         rs[2 * i + 1] = (rout_sizes[i] ? 1 : 0);
@@ -143,8 +138,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
     /* must be 2*comm_size requests because we will possibly send inbound and
      * outbound edges to everyone in our communicator */
     MPIR_Request **reqs;
-    MPIR_CHKLMEM_MALLOC(reqs, MPIR_Request **, 2 * comm_size * sizeof(MPIR_Request *), mpi_errno,
-                        "temp request array", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(reqs, 2 * comm_size * sizeof(MPIR_Request *));
     for (int i = 0; i < comm_size; ++i) {
         if (rin_sizes[i]) {
             /* send edges where i is a destination to process i */
@@ -165,8 +159,7 @@ int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
 
     /* Create the topology structure */
     MPIR_Topology *topo_ptr = NULL;
-    MPIR_CHKPMEM_MALLOC(topo_ptr, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "topo_ptr",
-                        MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(topo_ptr, sizeof(MPIR_Topology), MPL_MEM_COMM);
     topo_ptr->kind = MPI_DIST_GRAPH;
     dist_graph_ptr = &topo_ptr->topo.dist_graph;
     dist_graph_ptr->indegree = 0;
@@ -306,7 +299,7 @@ int MPIR_Dist_graph_create_adjacent_impl(MPIR_Comm * comm_ptr,
                                          MPIR_Comm ** comm_dist_graph_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKPMEM_DECL(5);
+    MPIR_CHKPMEM_DECL();
 
     /* Implementation based on Torsten Hoefler's reference implementation
      * attached to MPI-2.2 ticket #33. */
@@ -318,8 +311,7 @@ int MPIR_Dist_graph_create_adjacent_impl(MPIR_Comm * comm_ptr,
 
     /* Create the topology structure */
     MPIR_Topology *topo_ptr;
-    MPIR_CHKPMEM_MALLOC(topo_ptr, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "topo_ptr",
-                        MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC(topo_ptr, sizeof(MPIR_Topology), MPL_MEM_COMM);
     topo_ptr->kind = MPI_DIST_GRAPH;
     MPII_Dist_graph_topology *dist_graph_ptr = &topo_ptr->topo.dist_graph;
     dist_graph_ptr->indegree = indegree;
@@ -331,23 +323,19 @@ int MPIR_Dist_graph_create_adjacent_impl(MPIR_Comm * comm_ptr,
     dist_graph_ptr->is_weighted = (sourceweights != MPI_UNWEIGHTED);
 
     if (indegree > 0) {
-        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in, int *, indegree * sizeof(int), mpi_errno,
-                            "dist_graph_ptr->in", MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in, indegree * sizeof(int), MPL_MEM_COMM);
         MPIR_Memcpy(dist_graph_ptr->in, sources, indegree * sizeof(int));
         if (dist_graph_ptr->is_weighted) {
-            MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in_weights, int *, indegree * sizeof(int),
-                                mpi_errno, "dist_graph_ptr->in_weights", MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in_weights, indegree * sizeof(int), MPL_MEM_COMM);
             MPIR_Memcpy(dist_graph_ptr->in_weights, sourceweights, indegree * sizeof(int));
         }
     }
 
     if (outdegree > 0) {
-        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out, int *, outdegree * sizeof(int), mpi_errno,
-                            "dist_graph_ptr->out", MPL_MEM_COMM);
+        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out, outdegree * sizeof(int), MPL_MEM_COMM);
         MPIR_Memcpy(dist_graph_ptr->out, destinations, outdegree * sizeof(int));
         if (dist_graph_ptr->is_weighted) {
-            MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out_weights, int *, outdegree * sizeof(int),
-                                mpi_errno, "dist_graph_ptr->out_weights", MPL_MEM_COMM);
+            MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out_weights, outdegree * sizeof(int), MPL_MEM_COMM);
             MPIR_Memcpy(dist_graph_ptr->out_weights, destweights, outdegree * sizeof(int));
         }
     }

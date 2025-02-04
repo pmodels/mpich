@@ -122,7 +122,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 #endif
 
-    MPIR_CHKPMEM_DECL(8);
+    MPIR_CHKPMEM_DECL();
 
     /* TODO add compile-time asserts (rather than run-time) and convert most of these */
 
@@ -158,7 +158,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_ERR_CHECK(mpi_errno);
 
 #ifdef MEM_REGION_IN_HEAP
-    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region_ptr, MPID_nem_mem_region_t *, sizeof(MPID_nem_mem_region_t), mpi_errno, "mem_region", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region_ptr, sizeof(MPID_nem_mem_region_t), MPL_MEM_SHM);
 #endif /* MEM_REGION_IN_HEAP */
 
     MPID_nem_mem_region.rank           = pg_rank;
@@ -166,10 +166,10 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPID_nem_mem_region.num_procs      = num_procs;
     MPID_nem_mem_region.local_procs    = local_procs;
     MPID_nem_mem_region.local_rank     = local_rank;
-    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.local_ranks, int *, num_procs * sizeof(int), mpi_errno, "mem_region local ranks", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.local_ranks, num_procs * sizeof(int), MPL_MEM_SHM);
     MPID_nem_mem_region.ext_procs      = num_procs - num_local ;
     if (MPID_nem_mem_region.ext_procs > 0)
-        MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.ext_ranks, int *, MPID_nem_mem_region.ext_procs * sizeof(int), mpi_errno, "mem_region ext ranks", MPL_MEM_SHM);
+        MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.ext_ranks, MPID_nem_mem_region.ext_procs * sizeof(int), MPL_MEM_SHM);
     MPID_nem_mem_region.next           = NULL;
 
     for (idx = 0 ; idx < num_procs; idx++)
@@ -276,8 +276,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPID_nem_mem_region.Elements = (void *) ((char *) cells_p + local_rank * MPID_NEM_NUM_CELLS * MPID_NEM_CELL_LEN);
 
     /* Tables of pointers to shared memory Qs */
-    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.FreeQ, MPID_nem_queue_ptr_t *, num_procs * sizeof(MPID_nem_queue_ptr_t), mpi_errno, "FreeQ", MPL_MEM_SHM);
-    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.RecvQ, MPID_nem_queue_ptr_t *, num_procs * sizeof(MPID_nem_queue_ptr_t), mpi_errno, "RecvQ", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.FreeQ, num_procs * sizeof(MPID_nem_queue_ptr_t), MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.RecvQ, num_procs * sizeof(MPID_nem_queue_ptr_t), MPL_MEM_SHM);
 
     /* Init table entry for our Qs */
     MPID_nem_mem_region.FreeQ[pg_rank] = &free_queues_p[local_rank];
@@ -350,8 +350,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     
     /* Allocate table of pointers to fastboxes */
-    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.mailboxes.in,  MPID_nem_fastbox_t **, num_local * sizeof(MPID_nem_fastbox_t *), mpi_errno, "fastboxes", MPL_MEM_SHM);
-    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.mailboxes.out, MPID_nem_fastbox_t **, num_local * sizeof(MPID_nem_fastbox_t *), mpi_errno, "fastboxes", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.mailboxes.in, num_local * sizeof(MPID_nem_fastbox_t *), MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.mailboxes.out, num_local * sizeof(MPID_nem_fastbox_t *), MPL_MEM_SHM);
 
     MPIR_Assert(num_local > 0);
 
@@ -438,7 +438,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
     
@@ -454,7 +454,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     vc_ch->ckpt_restart_vc    = NULL;
 #endif
     vc_ch->pending_pkt_len    = 0;
-    MPIR_CHKPMEM_MALLOC (vc_ch->pending_pkt, MPIDI_CH3_Pkt_t *, sizeof (MPIDI_CH3_Pkt_t), mpi_errno, "pending_pkt", MPL_MEM_BUFFER);
+    MPIR_CHKPMEM_MALLOC (vc_ch->pending_pkt, sizeof (MPIDI_CH3_Pkt_t), MPL_MEM_BUFFER);
 
     /* We do different things for vcs in the COMM_WORLD pg vs other pgs
        COMM_WORLD vcs may use shared memory, and already have queues allocated
@@ -656,12 +656,12 @@ static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
     int i;
     int num_local = 0;
     int our_node_id;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_Assert(our_pg_rank < pg->size);
     our_node_id = pg->vct[our_pg_rank].node_id;
 
-    MPIR_CHKPMEM_MALLOC(procs, int *, pg->size * sizeof(int), mpi_errno, "local process index array", MPL_MEM_ADDRESS);
+    MPIR_CHKPMEM_MALLOC(procs, pg->size * sizeof(int), MPL_MEM_ADDRESS);
 
     for (i = 0; i < pg->size; ++i) {
         if (our_node_id == pg->vct[i].node_id) {

@@ -42,7 +42,7 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
     int newroot, newdst_tree_root, newroot_tree_root;
     void *tmp_buf = NULL;
     MPI_Aint true_lb, true_extent, extent;
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL();
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -139,10 +139,8 @@ int MPIR_Ireduce_intra_sched_reduce_scatter_gather(const void *sendbuf, void *re
      * because if root is one of the excluded processes, we will
      * need them on the root later on below. */
     MPI_Aint *cnts, *disps;
-    MPIR_CHKLMEM_MALLOC(cnts, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "counts",
-                        MPL_MEM_BUFFER);
-    MPIR_CHKLMEM_MALLOC(disps, MPI_Aint *, pof2 * sizeof(MPI_Aint), mpi_errno, "displacements",
-                        MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(cnts, pof2 * sizeof(MPI_Aint));
+    MPIR_CHKLMEM_MALLOC(disps, pof2 * sizeof(MPI_Aint));
 
     last_idx = send_idx = 0;    /* suppress spurious compiler warnings */
 

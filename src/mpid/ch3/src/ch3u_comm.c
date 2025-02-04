@@ -53,7 +53,7 @@ int MPIDI_CH3I_Comm_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 #if defined HAVE_HCOLL && MPID_CH3I_CH_HCOLL_BCOL
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 #endif
 
     MPIR_FUNC_ENTER;
@@ -83,7 +83,7 @@ int MPIDI_CH3I_Comm_init(void)
             char *envstr;
             int size = strlen("HCOLL_BCOL=") + strlen(MPID_CH3I_CH_HCOLL_BCOL) + 1;
 
-            MPIR_CHKLMEM_MALLOC(envstr, char *, size, mpi_errno, "**malloc", MPL_MEM_COMM);
+            MPIR_CHKLMEM_MALLOC(envstr, size);
             snprintf(envstr, size, "HCOLL_BCOL=%s", MPID_CH3I_CH_HCOLL_BCOL);
 
             r = MPL_putenv(envstr);
@@ -387,11 +387,11 @@ int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPIR_Comm *, void
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt", MPL_MEM_OTHER);
+    MPIR_CHKPMEM_MALLOC(elt, sizeof(hook_elt), MPL_MEM_OTHER);
 
     elt->hook_fn = hook_fn;
     elt->param = param;
@@ -411,11 +411,11 @@ int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPIR_Comm *, voi
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt", MPL_MEM_OTHER);
+    MPIR_CHKPMEM_MALLOC(elt, sizeof(hook_elt), MPL_MEM_OTHER);
 
     elt->hook_fn = hook_fn;
     elt->param = param;

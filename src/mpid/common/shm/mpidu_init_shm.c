@@ -112,8 +112,8 @@ static int Init_shm_barrier(void)
 int MPIDU_Init_shm_init(void)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
-    MPIR_CHKPMEM_DECL(1);
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -133,8 +133,7 @@ int MPIDU_Init_shm_init(void)
     if (local_size == 1) {
         char *addr;
 
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
-                            "segment", MPL_MEM_SHM);
+        MPIR_CHKPMEM_MALLOC(addr, segment_len + MPIDU_SHM_CACHE_LINE_LEN, MPL_MEM_SHM);
 
         memory.base_addr = addr;
         baseaddr =
@@ -163,8 +162,7 @@ int MPIDU_Init_shm_init(void)
         } else {
             /* non-root prepare to recv */
             serialized_hnd_size = MPIR_pmi_max_val_size();
-            MPIR_CHKLMEM_MALLOC(serialized_hnd, char *, serialized_hnd_size, mpi_errno, "val",
-                                MPL_MEM_OTHER);
+            MPIR_CHKLMEM_MALLOC(serialized_hnd, serialized_hnd_size);
         }
     }
     /* All processes need call MPIR_pmi_bcast. This is because we may need call MPIR_pmi_barrier
@@ -201,7 +199,6 @@ int MPIDU_Init_shm_init(void)
     }
 
     mpi_errno = Init_shm_barrier();
-    MPIR_CHKPMEM_COMMIT();
 
     init_shm_initialized = 1;
 

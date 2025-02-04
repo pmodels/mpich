@@ -68,8 +68,8 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
     MPIDI_IPCI_ipc_attr_t ipc_attr;
 
     MPIR_FUNC_ENTER;
-    MPIR_CHKPMEM_DECL(2);
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKPMEM_DECL();
+    MPIR_CHKLMEM_DECL();
 
     /* Skip IPC initialization if no local process */
     if (!shm_comm_ptr)
@@ -119,14 +119,11 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
      * initializes shared table for win_allocate and win_allocate_shared because
      * their shm region are ensured by POSIX. The other window types can only
      * optionally initialize it in shmmod .*/
-    MPIR_CHKPMEM_CALLOC(MPIDIG_WIN(win, shared_table), MPIDIG_win_shared_info_t *,
-                        sizeof(MPIDIG_win_shared_info_t) * shm_comm_ptr->local_size,
-                        mpi_errno, "shared table", MPL_MEM_RMA);
+    MPIR_CHKPMEM_CALLOC(MPIDIG_WIN(win, shared_table),
+                        sizeof(MPIDIG_win_shared_info_t) * shm_comm_ptr->local_size, MPL_MEM_RMA);
     shared_table = MPIDIG_WIN(win, shared_table);
 
-    MPIR_CHKLMEM_MALLOC(ipc_shared_table, win_shared_info_t *,
-                        sizeof(win_shared_info_t) * shm_comm_ptr->local_size,
-                        mpi_errno, "IPC temporary shared table", MPL_MEM_RMA);
+    MPIR_CHKLMEM_MALLOC(ipc_shared_table, sizeof(win_shared_info_t) * shm_comm_ptr->local_size);
 
     memset(&ipc_shared_table[shm_comm_ptr->rank], 0, sizeof(win_shared_info_t));
     ipc_shared_table[shm_comm_ptr->rank].size = win->size;
@@ -176,8 +173,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
     }
 
     /* Attach remote memory regions based on its IPC type */
-    MPIR_CHKLMEM_MALLOC(ranks_in_shm_grp, int *, shm_comm_ptr->local_size * sizeof(int) * 2,
-                        mpi_errno, "ranks in shm group", MPL_MEM_RMA);
+    MPIR_CHKLMEM_MALLOC(ranks_in_shm_grp, shm_comm_ptr->local_size * sizeof(int) * 2);
     mpi_errno = get_node_ranks(shm_comm_ptr, ranks_in_shm_grp,
                                &ranks_in_shm_grp[shm_comm_ptr->local_size]);
     MPIR_ERR_CHECK(mpi_errno);

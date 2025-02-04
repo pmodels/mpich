@@ -192,7 +192,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
     int i, j;
     int n;
     int *mapping = 0;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -200,7 +200,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
     *mapping_comm = comm_ptr;
 
     n = group_ptr->size;
-    MPIR_CHKPMEM_MALLOC(mapping, int *, n * sizeof(int), mpi_errno, "mapping", MPL_MEM_ADDRESS);
+    MPIR_CHKPMEM_MALLOC(mapping, n * sizeof(int), MPL_MEM_COMM);
 
     /* Make sure that the processes for this group are contained within
      * the input communicator.  Also identify the mapping from the ranks of
@@ -275,7 +275,6 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
     *mapping_out = mapping;
     MPL_VG_CHECK_MEM_IS_DEFINED(*mapping_out, n * sizeof(**mapping_out));
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -406,7 +405,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
     MPIR_Comm *mapping_comm = NULL;
     int remote_size = -1;
     int rinfo[2];
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -479,9 +478,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         }
         remote_size = rinfo[1];
 
-        MPIR_CHKLMEM_MALLOC(remote_mapping, int *,
-                            remote_size * sizeof(int),
-                            mpi_errno, "remote_mapping", MPL_MEM_ADDRESS);
+        MPIR_CHKLMEM_MALLOC(remote_mapping, remote_size * sizeof(int));
 
         /* Populate and exchange the ranks */
         mpi_errno = MPIC_Sendrecv(mapping, group_ptr->size, MPI_INT, 0, 0,
@@ -504,9 +501,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
             (*newcomm_ptr)->context_id = rinfo[0];
         }
         remote_size = rinfo[1];
-        MPIR_CHKLMEM_MALLOC(remote_mapping, int *,
-                            remote_size * sizeof(int),
-                            mpi_errno, "remote_mapping", MPL_MEM_ADDRESS);
+        MPIR_CHKLMEM_MALLOC(remote_mapping, remote_size * sizeof(int));
         mpi_errno = MPIR_Bcast(remote_mapping, remote_size, MPI_INT, 0,
                                comm_ptr->local_comm, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);

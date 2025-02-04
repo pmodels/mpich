@@ -58,11 +58,11 @@ int MPIDI_VCRT_Create(int size, struct MPIDI_VCRT **vcrt_ptr)
 {
     MPIDI_VCRT_t * vcrt;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
-    MPIR_CHKPMEM_MALLOC(vcrt, MPIDI_VCRT_t *, sizeof(MPIDI_VCRT_t) + (size - 1) * sizeof(MPIDI_VC_t *),	mpi_errno, "**nomem", MPL_MEM_ADDRESS);
+    MPIR_CHKPMEM_MALLOC(vcrt, sizeof(MPIDI_VCRT_t) + (size - 1) * sizeof(MPIDI_VC_t *), MPL_MEM_ADDRESS);
     vcrt->handle = HANDLE_SET_KIND(0, HANDLE_KIND_INVALID);
     MPIR_Object_set_ref(vcrt, 1);
     vcrt->size = size;
@@ -402,7 +402,7 @@ static int check_disjoint_lpids(uint64_t lpids1[], int n1, uint64_t lpids2[], in
     int mpi_errno = MPI_SUCCESS;
     uint32_t lpidmaskPrealloc[N_STATIC_LPID32];
     uint32_t *lpidmask;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     /* Find the max lpid */
     for (i=0; i<n1; i++) {
@@ -417,8 +417,7 @@ static int check_disjoint_lpids(uint64_t lpids1[], int n1, uint64_t lpids2[], in
     mask_size = (maxlpid / 32) + 1;
 
     if (mask_size > N_STATIC_LPID32) {
-        MPIR_CHKLMEM_MALLOC(lpidmask,uint32_t*,mask_size*sizeof(uint32_t),
-                            mpi_errno,"lpidmask", MPL_MEM_DYNAMIC);
+        MPIR_CHKLMEM_MALLOC(lpidmask, mask_size*sizeof(uint32_t));
     }
     else {
         lpidmask = lpidmaskPrealloc;
@@ -471,7 +470,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
     MPIDI_Gpid *local_gpids=NULL, *remote_gpids=NULL;
     int comm_info[2];
     int cts_tag;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     cts_tag = 0 | MPIR_TAG_COLL_BIT;
 
@@ -499,10 +498,10 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
                                        *remote_size ));
         /* With this information, we can now send and receive the
            global process ids from the peer. */
-        MPIR_CHKLMEM_MALLOC(remote_gpids,MPIDI_Gpid*,(*remote_size)*sizeof(MPIDI_Gpid), mpi_errno,"remote_gpids", MPL_MEM_DYNAMIC);
+        MPIR_CHKLMEM_MALLOC(remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid));
         *remote_lpids = (uint64_t*) MPL_malloc((*remote_size)*sizeof(uint64_t), MPL_MEM_ADDRESS);
-        MPIR_CHKLMEM_MALLOC(local_gpids,MPIDI_Gpid*,local_size*sizeof(MPIDI_Gpid), mpi_errno,"local_gpids", MPL_MEM_DYNAMIC);
-        MPIR_CHKLMEM_MALLOC(local_lpids,uint64_t*,local_size*sizeof(uint64_t), mpi_errno,"local_lpids", MPL_MEM_DYNAMIC);
+        MPIR_CHKLMEM_MALLOC(local_gpids, local_size*sizeof(MPIDI_Gpid));
+        MPIR_CHKLMEM_MALLOC(local_lpids, local_size*sizeof(uint64_t));
 
         mpi_errno = MPIDI_GPID_GetAllInComm( local_comm_ptr, local_size, local_gpids, &singlePG );
         MPIR_ERR_CHECK(mpi_errno);
@@ -569,7 +568,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         mpi_errno = MPIR_Bcast( comm_info, 2, MPI_INT, local_leader, local_comm_ptr, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
         *remote_size = comm_info[0];
-        MPIR_CHKLMEM_MALLOC(remote_gpids,MPIDI_Gpid*,(*remote_size)*sizeof(MPIDI_Gpid), mpi_errno,"remote_gpids", MPL_MEM_DYNAMIC);
+        MPIR_CHKLMEM_MALLOC(remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid));
         *remote_lpids = (uint64_t*) MPL_malloc((*remote_size)*sizeof(uint64_t), MPL_MEM_ADDRESS);
         mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, MPIR_ERR_NONE );

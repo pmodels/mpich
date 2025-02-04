@@ -30,7 +30,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     int is_contig;
     MPI_Aint type_size;
     void *tmp_buf = NULL;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_THREADCOMM_RANK_SIZE(comm_ptr, rank, comm_size);
 
@@ -47,7 +47,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
         goto fn_exit;   /* nothing to do */
 
     if (!is_contig) {
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, nbytes);
 
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {

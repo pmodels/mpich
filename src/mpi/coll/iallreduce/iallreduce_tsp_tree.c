@@ -33,7 +33,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     int tag, vtx_id;
     int root = 0;
     MPIR_Errflag_t errflag ATTRIBUTE((unused)) = MPIR_ERR_NONE;
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL();
 
     MPIR_FUNC_ENTER;
 
@@ -98,13 +98,10 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, MPI
     }
 
     /* initialize arrays to store graph vertex indices */
-    MPIR_CHKLMEM_MALLOC(vtcs, int *, sizeof(int) * (num_children + 1),
-                        mpi_errno, "vtcs buffer", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(vtcs, sizeof(int) * (num_children + 1));
     if (num_children > 0) {
-        MPIR_CHKLMEM_MALLOC(reduce_id, int *, sizeof(int) * num_children,
-                            mpi_errno, "reduce_id buffer", MPL_MEM_COLL);
-        MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
-                            mpi_errno, "recv_id buffer", MPL_MEM_COLL);
+        MPIR_CHKLMEM_MALLOC(reduce_id, sizeof(int) * num_children);
+        MPIR_CHKLMEM_MALLOC(recv_id, sizeof(int) * num_children);
     }
 
     /* do pipelined allreduce */
