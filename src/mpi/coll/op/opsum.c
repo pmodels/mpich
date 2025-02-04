@@ -53,30 +53,6 @@ void MPIR_SUM(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
     }
 }
 
-
-int MPIR_SUM_check_dtype(MPI_Datatype type)
-{
-    switch (MPIR_DATATYPE_GET_RAW_INTERNAL(type)) {
-#undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) case (mpi_type_):
-            MPIR_OP_TYPE_GROUP(INTEGER)
-                MPIR_OP_TYPE_GROUP(FLOATING_POINT)
-                MPIR_OP_TYPE_GROUP(C_COMPLEX)
-                MPIR_OP_TYPE_GROUP(COMPLEX)
-#undef MPIR_OP_TYPE_MACRO
-        case MPIR_BFLOAT16:
-#ifndef MPIR_FLOAT16_CTYPE
-        case MPIR_FLOAT16:
-#endif
-            return MPI_SUCCESS;
-            /* --BEGIN ERROR HANDLING-- */
-        default:
-            return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                        MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_SUM");
-            /* --END ERROR HANDLING-- */
-    }
-}
-
 /* BFloat16 - software arithemetics
  * TODO: add hardware support, e.g. via AVX512 intrinsics
  */
