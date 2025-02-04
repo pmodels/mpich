@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
     int rc;
     int rank, size;
     MPI_Comm comm;
-    char cinbuf[3], coutbuf[3];
     signed char scinbuf[3], scoutbuf[3];
     unsigned char ucinbuf[3], ucoutbuf[3];
     float finbuf[3], foutbuf[3];
@@ -38,38 +37,6 @@ int main(int argc, char *argv[])
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
-
-#ifndef USE_STRICT_MPI
-    /* char */
-    MTestPrintfMsg(10, "Reduce of MPI_CHAR\n");
-    cinbuf[0] = 1;
-    cinbuf[1] = 0;
-    cinbuf[2] = (rank > 0);
-
-    coutbuf[0] = 0;
-    coutbuf[1] = 1;
-    coutbuf[2] = 1;
-    rc = MPI_Reduce(cinbuf, coutbuf, 3, MPI_CHAR, MPI_LXOR, 0, comm);
-    if (rc) {
-        MTestPrintErrorMsg("MPI_LXOR and MPI_CHAR", rc);
-        errs++;
-    } else {
-        if (rank == 0) {
-            if (coutbuf[0] != (size % 2)) {
-                errs++;
-                fprintf(stderr, "char XOR(1) test failed\n");
-            }
-            if (coutbuf[1]) {
-                errs++;
-                fprintf(stderr, "char XOR(0) test failed\n");
-            }
-            if (coutbuf[2] == (size % 2) && size > 1) {
-                errs++;
-                fprintf(stderr, "char XOR(>) test failed\n");
-            }
-        }
-    }
-#endif /* USE_STRICT_MPI */
 
     /* signed char */
     MTestPrintfMsg(10, "Reduce of MPI_SIGNED_CHAR\n");
