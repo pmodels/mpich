@@ -230,10 +230,6 @@ extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 
 int MPIR_Op_is_commutative(MPI_Op);
 
-/* for some predefined datatypes, e.g. from MPI_Type_create_f90_xxx, we need
- * use its basic type for operations */
-MPI_Datatype MPIR_Op_get_alt_datatype(MPI_Op op, MPI_Datatype datatype);
-
 int MPIR_Reduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datatype,
                       int *is_equal, int root, MPIR_Comm * comm_ptr);
 int MPIR_Allreduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datatype,
