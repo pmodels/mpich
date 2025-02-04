@@ -28,7 +28,8 @@ static int datatype_attr_finalize_cb(void *dummy);
 struct MPIR_Datatype_builtin_entry MPIR_Internal_types[] = {
     /* *INDENT-OFF* */
     type_name_null,                                       /* 0x00 */
-    type_name_entry(CHAR,               NULL),            /* 0x01 */
+    /* NOTE: allowing MPI_CHAR with builtin-op is non-standard */
+    type_name_entry(CHAR,    C_INTEGER /* NULL */),       /* 0x01 */
     type_name_entry(UNSIGNED_CHAR,      C_INTEGER),       /* 0x02 */
     type_name_entry(SHORT,              C_INTEGER),       /* 0x03 */
     type_name_entry(UNSIGNED_SHORT,     C_INTEGER),       /* 0x04 */

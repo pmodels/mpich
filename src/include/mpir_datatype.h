@@ -823,6 +823,9 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_op_dt_check(MPI_Op op, MPI_Datatype dt)
             switch (dt_group) {
                 case MPIR_DT_GROUP_C_INTEGER:
                 case MPIR_DT_GROUP_LOGICAL:
+                    /* NOTE: allowing e.g. MPI_AINT here is non-standard but provided
+                     * for MPICH backward compatibility */
+                case MPIR_DT_GROUP_MULTI:
                     return true;
                 default:
                     return false;
