@@ -178,7 +178,7 @@ cp -v path/to/{mpich,hydra,libpmi,mpich-testsuite}-X.Y.Z.tar.gz downloads/X.Y.Z/
     Shortlog can be generated with, e.g.,
 
 ```
-git log --no-merges --format="format:[%cd] %s" --date=short v3.4.2..v4.0a2 > shortlog
+git log --no-merges --format=reference --date=short v4.2.3..v4.3.0 > shortlog
 ```
 
   - For full release update documentation as well: README.txt,
