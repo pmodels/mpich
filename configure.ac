@@ -406,7 +406,7 @@ AC_ARG_ENABLE(g,
                    performance impacts.  Recommended for typical development.
         progress - Enable debugging progress status
         yes      - synonym for "most" (*not* "all")
-        all      - All of the above choices
+        all      - Most of the above choices
 ],,enable_g=none)
 
 AC_ARG_ENABLE([mpit-pvars],
@@ -1290,6 +1290,7 @@ for option in $enable_g ; do
 	perform_dbgmutex=yes
 	perform_handlealloc=yes
         perform_handle=yes
+        perform_dbgprogress=yes
 	;;
 	*)
 	IFS=$save_IFS
