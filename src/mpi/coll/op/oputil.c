@@ -103,7 +103,7 @@ MPI_Datatype MPIR_Op_get_alt_datatype(MPI_Op op, MPI_Datatype datatype)
             int combiner = dt_ptr->contents->combiner;
             if (combiner == MPI_COMBINER_F90_REAL ||
                 combiner == MPI_COMBINER_F90_COMPLEX || combiner == MPI_COMBINER_F90_INTEGER) {
-                if (MPI_SUCCESS == (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (dt_ptr->basic_type)) {
+                if (MPIR_op_dt_check(op, dt_ptr->basic_type)) {
                     alt_dt = dt_ptr->basic_type;
                 }
             }

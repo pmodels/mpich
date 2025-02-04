@@ -219,10 +219,7 @@ static bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
 
     /* Predefined reduce operation, NO_OP, REPLACE */
     if (op != MPI_OP_NULL) {
-        int mpi_errno;
-        mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (dtype);
-        if (mpi_errno == MPI_SUCCESS)
-            valid_flag = TRUE;
+        valid_flag = MPIR_Internal_op_dt_check(op, dtype);
     } else {
         /* Compare and swap */
         if (MPIR_Type_is_rma_atomic(dtype))

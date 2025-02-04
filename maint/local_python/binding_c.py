@@ -587,6 +587,8 @@ def process_func_parameters(func):
                     if temp_p['length']:
                         # use an internal array for type swap
                         impl_arg_list[-1] += '_i'
+                elif temp_p['kind'] == "OPERATION":
+                    func['_has_op'] = temp_p['name']
             validation_list.append({'kind': group_kind, 'name': t})
             # -- pointertag_list
             if re.search(r'alltoallw', func_name, re.IGNORECASE):
@@ -1596,8 +1598,10 @@ def dump_function_normal(func):
     if '_datatype_in_list' in func:
         for p in func['_datatype_in_list']:
             if not p['length']:
-                # save original datatype for error report
-                G.out.append("MPIR_DATATYPE_REPLACE_BUILTIN(%s);" % p['name'])
+                if '_has_op' in func:
+                    G.out.append("MPIR_DATATYPE_REPLACE_BUILTIN_FOR_OP(%s, %s);" % (p['name'], func['_has_op']))
+                else:
+                    G.out.append("MPIR_DATATYPE_REPLACE_BUILTIN(%s);" % p['name'])
             else:
                 # alltoallw, use an internal datatype array since we can't modify the input array
                 n = 'comm_size'
@@ -2911,15 +2915,9 @@ def dump_validate_op(op, dt, is_coll):
     G.out.append("    MPIR_Op_valid_ptr(op_ptr, mpi_errno);")
     if dt:
         G.out.append("} else {")
-        G.out.append("    MPIR_DATATYPE_REPLACE_BUILTIN(%s);" % dt)
-        G.out.append("    mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(%s)) (%s);" % (op, dt))
-        # check predefined datatype and replace with basic_type if necessary
-        G.out.append("    if (mpi_errno != MPI_SUCCESS) {")
-        G.out.append("        MPI_Datatype alt_dt = MPIR_Op_get_alt_datatype(%s, %s);" % (op, dt))
-        G.out.append("        if (alt_dt != MPI_DATATYPE_NULL) {")
-        G.out.append("            %s = alt_dt;" % dt)
-        G.out.append("            mpi_errno = MPI_SUCCESS;")
-        G.out.append("        }")
+        G.out.append("    if (!MPIR_op_dt_check(%s, %s)) {" % (op, dt))
+        G.out.append("        MPIR_ERR_SET(mpi_errno, MPI_ERR_OP, \"**opundefined\");")
+        G.out.append("        goto fn_fail;")
         G.out.append("    }")
     G.out.append("}")
     dump_error_check("")
