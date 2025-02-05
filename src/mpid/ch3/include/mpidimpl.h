@@ -456,16 +456,22 @@ void MPIDI_DBG_PrintVCState(MPIDI_VC_t *vc);
 /*--------------------
   BEGIN PACKET SECTION
   --------------------*/
-#if !defined(MPICH_DEBUG_MEMINIT)
+#ifdef MPICH_DEBUG_MEMINIT
+#define MPIDI_PKT_INIT_VAL (0xfc)
+#else
+#define MPIDI_PKT_INIT_VAL (0)
+#endif
+#ifdef NVALGRIND
 #   define MPIDI_Pkt_init(pkt_, type_)		\
     {						\
 	(pkt_)->type = (type_);			\
     }
 #else
-#   define MPIDI_Pkt_init(pkt_, type_)				\
-    {								\
-	memset((void *) (pkt_), 0xfc, sizeof(MPIDI_CH3_Pkt_t));	\
-	(pkt_)->type = (type_);					\
+#   define MPIDI_Pkt_init(pkt_, type_)              \
+    {                                               \
+        memset((void *) (pkt_), MPIDI_PKT_INIT_VAL, \
+               sizeof(MPIDI_CH3_Pkt_t));            \
+        (pkt_)->type = (type_);                     \
     }
 #endif
 
