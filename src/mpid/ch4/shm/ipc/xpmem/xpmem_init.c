@@ -52,9 +52,8 @@ int MPIDI_XPMEM_init_world(void)
 
     /* Initialize segmap for every local processes */
     MPIDI_XPMEMI_global.segmaps = NULL;
-    MPIR_CHKPMEM_MALLOC(MPIDI_XPMEMI_global.segmaps, MPIDI_XPMEMI_segmap_t *,
-                        sizeof(MPIDI_XPMEMI_segmap_t) * MPIR_Process.local_size,
-                        mpi_errno, "xpmem segmaps", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(MPIDI_XPMEMI_global.segmaps,
+                        sizeof(MPIDI_XPMEMI_segmap_t) * MPIR_Process.local_size, MPL_MEM_SHM);
     for (i = 0; i < MPIR_Process.local_size; i++) {
         MPIDU_Init_shm_get(i, sizeof(xpmem_segid_t), &MPIDI_XPMEMI_global.segmaps[i].remote_segid);
         MPIR_ERR_CHKANDJUMP(MPIDI_XPMEMI_global.segmaps[i].remote_segid == -1, mpi_errno,
