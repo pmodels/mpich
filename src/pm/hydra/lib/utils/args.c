@@ -328,7 +328,6 @@ HYD_status HYDU_parse_hostfile(const char *hostfile, void *data,
 
         linep = line;
 
-        strtok(linep, "#");
         while (isspace(*linep))
             linep++;
 

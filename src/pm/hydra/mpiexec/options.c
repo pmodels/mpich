@@ -646,7 +646,8 @@ static void config_help_fn(void)
     printf("-configfile: Configuration file for MPMD launch argument information\n\n");
     printf("Notes:\n");
     printf("  * The config file contains information very similar to a command-line\n");
-    printf("    launch, except ':' is replaced with a new line character\n");
+    printf("    launch, except ':' is replaced with a new line character. Use '\'\n");
+    printf("    partial lines.\n");
 }
 
 static HYD_status config_fn(char *arg, char ***argv)
