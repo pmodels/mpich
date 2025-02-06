@@ -397,7 +397,7 @@ void MPII_Dataloop_alloc_and_copy(int kind,
     new_loop_sz += loop_sz + off_sz + blk_sz + ptr_sz + extent_sz + old_loop_sz;
 
     /* allocate space */
-    new_loop = (MPII_Dataloop *) MPL_malloc(new_loop_sz, MPL_MEM_DATATYPE);
+    new_loop = (MPII_Dataloop *) MPL_calloc(1, new_loop_sz, MPL_MEM_DATATYPE);
     if (new_loop == NULL) {
         *new_loop_p = NULL;
         return;
