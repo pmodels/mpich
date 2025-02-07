@@ -17,4 +17,5 @@ mpi_core_sources +=											\
     src/mpi/coll/allreduce/allreduce_intra_recexch.c    \
     src/mpi/coll/allreduce/allreduce_intra_ring.c	\
     src/mpi/coll/allreduce/allreduce_intra_k_reduce_scatter_allgather.c    \
+    src/mpi/coll/allreduce/allreduce_intra_ccl.c	\
     src/mpi/coll/allreduce/allreduce_inter_reduce_exchange_bcast.c

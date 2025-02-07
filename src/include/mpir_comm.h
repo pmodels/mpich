@@ -122,6 +122,7 @@ struct MPIR_Comm {
     MPIR_Group *local_group;    /* Groups in communicator. */
     MPIR_Comm_kind_t comm_kind; /* MPIR_COMM_KIND__INTRACOMM or MPIR_COMM_KIND__INTERCOMM */
     MPID_Thread_mutex_t mutex;
+    struct MPIR_CCLcomm *cclcomm;       /* Not NULL only if CCL subcommunication is enabled */
 
     /* -- unset unless (attr | MPIR_COMM_ATTR__HIERARCHY) -- */
     int hierarchy_flags;        /* bit flags for hierarchy charateristics. See bit definitions below. */
