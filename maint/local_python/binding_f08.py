@@ -879,6 +879,10 @@ def dump_interface_function(func, name, c_name, is_large):
 def dump_mpi_f08(func, is_large):
     f08_mapping = get_kind_map('F08', is_large)
 
+    def dump_ignore_tkr_d(name, out):
+        if G.opts['ignore-tkr-d'] == 'dir': # e.g. nvfortran
+            out.append("!DIR$ IGNORE_TKR(d) " + name)
+
     uses = {}
     f_param_list = []
     decl_list = []
@@ -889,6 +893,8 @@ def dump_mpi_f08(func, is_large):
         f_param_list.append(p['name'])
         decl = get_F_decl(p, f08_mapping)
         decl_list.append(decl)
+        if 'ignore-tkr-d' in G.opts and p['kind'] == 'BUFFER':
+            dump_ignore_tkr_d(p['name'], decl_list)
         check_decl_uses(decl, uses)
     if 'return' not in func:
         f_param_list.append("ierror")
