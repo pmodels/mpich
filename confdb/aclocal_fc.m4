@@ -1269,6 +1269,30 @@ AC_DEFUN([PAC_FC_CHECK_IGNORE_TKR],[
 ])
 
 dnl
+dnl PAC_FC_CHECK_DEVICE_BUFFER check whether device attribute
+dnl (nvfortran extension) is available (may need FCFLAGS -cuda).
+dnl Set pac_fc_has_device to yes if supported, otherwise, no.
+dnl
+AC_DEFUN([PAC_FC_CHECK_DEVICE_BUFFER],[
+    AC_LANG_PUSH(Fortran)
+    AC_MSG_CHECKING([whether device attribute is available])
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+        program main
+            INTERFACE A
+                SUBROUTINE A1(buf)
+                TYPE(*), DIMENSION(..), INTENT(in) :: buf
+                END SUBROUTINE
+                SUBROUTINE A2(buf)
+                TYPE(*), DIMENSION(..), DEVICE, INTENT(in) :: buf
+                END SUBROUTINE
+            END INTERFACE
+        end
+    ])],[pac_fc_has_device=yes],[pac_fc_has_device=no])
+    AC_MSG_RESULT([$pac_fc_ignore_tkr])
+    AC_LANG_POP(Fortran)
+])
+
+dnl
 dnl PAC_FC_ISO_C_BINDING check whether ISO_C_BINDING is supported.
 dnl set pac_fc_iso_c_binding to yes if it's supported, otherwise, no.
 dnl
