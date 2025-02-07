@@ -11,7 +11,7 @@ from local_python import RE
 import os
 
 def main():
-    # currently support -no-real128, -fint-size, -aint-size, -count-size, -cint-size
+    # currently support -no-real128, -has-device, -fint-size, -aint-size, -count-size, -cint-size
     G.parse_cmdline()
 
     binding_dir = G.get_srcdir_path("src/binding")
@@ -58,6 +58,11 @@ def main():
         dump_f08_wrappers_f(func, False)
         if func['_need_large']:
             dump_f08_wrappers_f(func, True)
+        
+        if 'has-device' in G.opts and need_cdesc(func):
+            dump_f08_wrappers_f(func, False, True)
+            if func['_need_large']:
+                dump_f08_wrappers_f(func, True, True)
     f = "%s/wrappers_f/f08ts.f90" % f08_dir
     dump_f90_file(f, G.out)
 
@@ -109,10 +114,19 @@ def main():
         func_name = get_function_name(func, False)
         G.out.append("INTERFACE %s" % func_name)
         G.out.append("INDENT")
+
         dump_mpi_f08(func, False)
         if func['_need_large'] and '_need_large_separate' not in func:
             G.out.append("")
             dump_mpi_f08(func, True)
+
+        if "has-device" in G.opts and need_cdesc(func):
+            # interface for device buffer
+            dump_mpi_f08(func, False, True)
+            if func['_need_large'] and '_need_large_separate' not in func:
+                G.out.append("")
+                dump_mpi_f08(func, True, True)
+
         G.out.append("DEDENT")
         G.out.append("END INTERFACE %s" % func_name)
 

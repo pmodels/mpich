@@ -162,7 +162,7 @@ def dump_f08_wrappers_c(func, is_large):
         G.out.append("#endif")
     G.out.append("}")
 
-def dump_f08_wrappers_f(func, is_large):
+def dump_f08_wrappers_f(func, is_large, is_device=False):
     c_mapping = get_kind_map('C', is_large)
     f08_mapping = get_kind_map('F08', is_large)
 
@@ -187,9 +187,13 @@ def dump_f08_wrappers_f(func, is_large):
     if need_cdesc(func):
         f08ts_name = get_f08ts_name(func, is_large)
         c_func_name = get_cdesc_name(func, is_large)
+        if is_device:
+            f08ts_name += "_device"
     else:
         f08ts_name = get_f08_name(func, is_large)
         c_func_name = get_f08_c_name(func, is_large)
+        if is_device:
+            f08ts_name += "_device"
     uses[c_func_name] = 1
 
     if RE.match(r'MPI_(Init|Init_thread)$', func['name'], re.IGNORECASE):
@@ -629,7 +633,7 @@ def dump_f08_wrappers_f(func, is_large):
         if p['kind'] == "ATTRIBUTE_VAL":
             has_attribute_val = True
         f_param_list.append(p['name'])
-        f_decl = get_F_decl(p, f08_mapping)
+        f_decl = get_F_decl(p, f08_mapping, is_device)
         if is_alltoallvw and p['name'] == 'sendbuf':
             f_decl = re.sub(r' ::', ', TARGET ::', f_decl)
         f_decl_list.append(f_decl)
@@ -876,7 +880,7 @@ def dump_interface_function(func, name, c_name, is_large):
     G.out.append("END FUNCTION %s" % name)
 
 # dump the interface block in `mpi_f08.f90`
-def dump_mpi_f08(func, is_large):
+def dump_mpi_f08(func, is_large, is_device=False):
     f08_mapping = get_kind_map('F08', is_large)
 
     uses = {}
@@ -887,7 +891,7 @@ def dump_mpi_f08(func, is_large):
         if f08_param_need_skip(p, f08_mapping):
             continue
         f_param_list.append(p['name'])
-        decl = get_F_decl(p, f08_mapping)
+        decl = get_F_decl(p, f08_mapping, is_device)
         decl_list.append(decl)
         check_decl_uses(decl, uses)
     if 'return' not in func:
@@ -901,6 +905,8 @@ def dump_mpi_f08(func, is_large):
         name = get_f08ts_name(func, is_large)
     else:
         name = get_f08_name(func, is_large)
+    if is_device:
+        name += '_device'
     if 'return' not in func:
         dump_fortran_line("SUBROUTINE %s(%s)" % (name, ', '.join(f_param_list)))
     else:
@@ -1366,7 +1372,7 @@ def get_F_procedure_type(p, is_large):
         return p['func_type']
     return s
 
-def get_F_decl(p, mapping):
+def get_F_decl(p, mapping, is_device=False):
     if p['kind'] == 'STRING':
         if p['length']:
             s = "CHARACTER(len=%s)" % p['length']
@@ -1378,6 +1384,10 @@ def get_F_decl(p, mapping):
         s = "PROCEDURE(%s)" % get_F_procedure_type(p, re.match(r'BIG', mapping['_name']))
     else:
         s = mapping[p['kind']]
+
+    # device
+    if is_device and p['kind'] == 'BUFFER' and p['param_direction'] == 'in':
+        s += ", DEVICE"
 
     # intent
     if p['kind'] == 'BUFFER' and p['param_direction'] == 'out':
