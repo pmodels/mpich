@@ -3,6 +3,8 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+include $(top_srcdir)/src/util/ccl/Makefile.mk
+
 mpi_core_sources +=   \
     src/util/mpir_assert.c     \
     src/util/mpir_cvars.c      \
