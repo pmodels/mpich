@@ -312,6 +312,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->revoked = 0;
 
     comm_p->threadcomm = NULL;
+    comm_p->cclcomm = NULL;
     MPIR_stream_comm_init(comm_p);
 
     comm_p->persistent_requests = NULL;
@@ -1065,6 +1066,13 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 
     MPIR_Assert(MPIR_Object_get_ref(comm_ptr) == 0);    /* sanity check */
     MPIR_Assert(!(comm_ptr->attr & MPIR_COMM_ATTR__SUBCOMM));
+
+#ifdef ENABLE_CCLCOMM
+    /* Delete any CCL communicators */
+    if (comm_ptr->cclcomm) {
+        MPIR_CCLcomm_free(comm_ptr);
+    }
+#endif
 
     /* Remove the attributes, executing the attribute delete routine.
      * Do this only if the attribute functions are defined.
