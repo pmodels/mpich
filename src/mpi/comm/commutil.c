@@ -313,6 +313,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->mapper_tail = NULL;
 
     comm_p->threadcomm = NULL;
+    comm_p->cclcomm = NULL;
     MPIR_stream_comm_init(comm_p);
 
     comm_p->persistent_requests = NULL;
