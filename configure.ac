@@ -4212,6 +4212,7 @@ fi
 
 if test "$enable_f08" = "yes" ; then
     PAC_FC_CHECK_REAL128
+    PAC_FC_CHECK_IGNORE_TKR_D
     if test -z "$PYTHON" ; then
         if test -f src/binding/fortran/use_mpi_f08/mpi_f08.f90 ; then
             AC_MSG_NOTICE([Using pre-generated Fortran mpi_f08 binding source. To prevent issues, install Python 3 and rerun configure.])
@@ -4222,6 +4223,9 @@ if test "$enable_f08" = "yes" ; then
         cmd_f08="$PYTHON $srcdir/maint/gen_binding_f08.py"
         if test "$pac_fc_has_real128" = "no" ; then
             cmd_f08="$cmd_f08 -no-real128"
+        fi
+        if test "$pac_fc_ignore_tkr_d" != "no" ; then
+            cmd_f08="$cmd_f08 -ignore-tkr-d=$pac_fc_ignore_tkr_d"
         fi
         if test "$enable_romio" = "no" ; then
             cmd_f08="$cmd_f08 -no-mpiio"
