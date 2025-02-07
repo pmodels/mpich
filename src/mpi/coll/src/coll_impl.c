@@ -143,6 +143,16 @@ static MPIR_Tree_type_t get_tree_type_from_string_with_topo(const char *tree_str
     return tree_type;
 }
 
+int get_ccl_from_string(const char *ccl_str)
+{
+    int ccl = -1;
+    if (0 == strcmp(ccl_str, "auto"))
+        ccl = MPIR_CVAR_ALLREDUCE_CCL_auto;
+    else if (0 == strcmp(ccl_str, "nccl"))
+        ccl = MPIR_CVAR_ALLREDUCE_CCL_nccl;
+    return ccl;
+}
+
 int MPII_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
