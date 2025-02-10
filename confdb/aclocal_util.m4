@@ -1,3 +1,11 @@
+dnl PAC_APPEND_CSV - Append value to comma separated list
+dnl Usage: PAC_APPEND_CSV([foo], [bar])
+AC_DEFUN([PAC_APPEND_CSV],[
+    AS_IF([test -n "$$2"],
+          [$2="$$2, $1"],
+          [$2=$1])
+])
+
 dnl Nesting safe macros for saving variables
 dnl Usage: PAC_PUSH_FLAG(CFLAGS)
 AC_DEFUN([PAC_PUSH_FLAG],[
