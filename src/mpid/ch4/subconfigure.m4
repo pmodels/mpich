@@ -410,7 +410,6 @@ AC_DEFUN([PAC_CH4_CONFIG_SUMMARY], [
         t_ipc="$t_ipc gpudirect"
     fi
     cat <<EOF
-***
 *** device      : ch4:${t_netmod}
 *** ipc feature : ${t_ipc}
 *** gpu support : ${t_gpu}

@@ -2047,6 +2047,7 @@ if test "$enable_f77" = "yes" ; then
     AC_SUBST(WRAPPER_EXTRA_F77_FLAGS)
 
     bindings="$bindings f77"
+    PAC_APPEND_CSV([mpif.h], [fortran_bindings])
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
     # Also define the name FORTRAN_BINDING for use in #if @FORTRAN_BINDING@..
     FORTRAN_BINDING=1
@@ -2080,6 +2081,7 @@ bashWorks=$bashWorks)
 if test "$enable_f90" = "yes" ; then
     bindingsubsystems="$bindingsubsystems src/binding/fortran/use_mpi"
     bindings="$bindings f90"
+    PAC_APPEND_CSV([use mpi], [fortran_bindings])
 fi
 
 if test "$enable_f08" = "yes" ; then
@@ -2089,6 +2091,7 @@ AM_CONDITIONAL([BUILD_F08_BINDING], [test "$enable_f08" = "yes"])
 
 if test "$enable_f08" = "yes" ; then
     bindings="$bindings f08"
+    PAC_APPEND_CSV([use mpi_f08], [fortran_bindings])
     AC_DEFINE(HAVE_F08_BINDING, 1, [Define to 1 if we have Fortran 2008 binding])
 fi
 
@@ -4273,19 +4276,31 @@ if test "$enable_f08" = "yes" ; then
 fi
 AC_OUTPUT
 
-echo '*****************************************************'
+# TODO: add info about MPI ABI
+cat <<EOF
+*****************************************************
+***
+*** MPICH $MPICH_VERSION ($MPICH_RELEASE_DATE)
+***
+*** Language Support
+*** ----------------
+*** C       : yes
+*** C++     : $enable_cxx
+*** Fortran : $fortran_bindings
+***
+*** Device Configuration
+*** --------------------
+EOF
 if test ${device_name} = "ch4" ; then
     PAC_CH4_CONFIG_SUMMARY()
 elif test ${DEVICE} = "ch3:nemesis" ; then
 cat <<EOF
-***
 *** device configuration: ch3:nemesis
 *** nemesis networks: ${nemesis_networks}
 ***
 EOF
 else
 cat <<EOF
-***
 *** device configuration: ${DEVICE}
 ***
 EOF
