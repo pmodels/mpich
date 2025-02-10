@@ -47,7 +47,7 @@
  * in principle, but 64-bit is simpler since we can trivially combine
  * (world_idx, world_rank).
  */
-typedef uint64_t MPIR_Lpid;
+typedef int64_t MPIR_Lpid;
 
 struct MPIR_Pmap {
     int size;                   /* same as group->size, duplicate here so Pmap is logically complete */

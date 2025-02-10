@@ -129,7 +129,10 @@ int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
          * for others it is implied */
         *new_group_ptr = MPIR_Group_empty;
     } else {
-        MPIR_Assert(stride > 0 && blocksize > 0);
+        /* NOTE: stride may be negative */
+        MPIR_Assert(offset >= 0);
+        MPIR_Assert(stride != 0);
+        MPIR_Assert(blocksize > 0);
 
         MPIR_Group *newgrp;
         mpi_errno = MPIR_Group_create(size, &newgrp);
