@@ -1,5 +1,48 @@
 # vim: set ft=c:
 
+MPI_Abi_is_supported:
+    flag: LOGICAL, direction=out, [true if the standard ABI is supported, false otherwise]
+    .desc: Return whether the standard ABI is supported
+    .impl: direct
+{
+    *flag = 0;
+    return MPI_SUCCESS;
+}
+{ -- is_abi --
+    *flag = 1;
+    return MPI_SUCCESS;
+}
+
+MPI_Abi_get_info:
+    info: INFO, direction=out, [info object]
+    .desc: Return an info object that provides information related to the ABI
+    .impl: direct
+{
+    *info = MPI_INFO_NULL;
+    return MPI_SUCCESS;
+}
+{ -- is_abi --
+    *info = MPI_INFO_NULL;
+    return MPI_SUCCESS;
+}
+
+MPI_Abi_get_version:
+    abi_major: VERSION, direction=out, [version number]
+    abi_minor: VERSION, direction=out, [subversion number]
+    .desc: Return the standard ABI version
+    .impl: direct
+{
+    *abi_major = -1;
+    *abi_minor = -1;
+    return MPI_SUCCESS;
+}
+{ -- is_abi --
+    *abi_major = 1;
+    *abi_minor = 0;
+    return MPI_SUCCESS;
+}
+
+
 MPI_Comm_toint:
     .return: INTEGER
     comm: COMMUNICATOR

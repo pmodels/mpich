@@ -156,6 +156,9 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                     stage = "code-"+RE.m.group(1)
                     if stage not in cur_func:
                         cur_func[stage] = []
+                    # abi specific functions always require direct body routines for both
+                    if RE.m.group(1) == "is_abi" and 'body' not in cur_func:
+                        print("WARNING: code-is_abi provided but missing non-abi body code")
                     # "error_check" may include list of parameters checked
                     # "handle_ptr" may include list of parameters converted
                     cur_func[stage + "-tail"] = RE.m.group(2).replace(' ','').split(',')
