@@ -159,21 +159,21 @@ typedef struct MPI_ABI_Datatype* MPI_Datatype;
 #define MPI_UINT32_T                   ((MPI_Datatype)0x00000251)
 #define MPI_INT64_T                    ((MPI_Datatype)0x00000258)
 #define MPI_UINT64_T                   ((MPI_Datatype)0x00000259)
-#define MPIX_LOGICAL1                  ((MPI_Datatype)0x000002c0)
+#define MPI_LOGICAL1                   ((MPI_Datatype)0x000002c0)
 #define MPI_INTEGER1                   ((MPI_Datatype)0x000002c1)
 #define MPI_CHARACTER                  ((MPI_Datatype)0x000002c3)
-#define MPIX_LOGICAL2                  ((MPI_Datatype)0x000002c8)
+#define MPI_LOGICAL2                   ((MPI_Datatype)0x000002c8)
 #define MPI_INTEGER2                   ((MPI_Datatype)0x000002c9)
 #define MPI_REAL2                      ((MPI_Datatype)0x000002ca)
-#define MPIX_LOGICAL4                  ((MPI_Datatype)0x000002d0)
+#define MPI_LOGICAL4                   ((MPI_Datatype)0x000002d0)
 #define MPI_INTEGER4                   ((MPI_Datatype)0x000002d1)
 #define MPI_REAL4                      ((MPI_Datatype)0x000002d2)
 #define MPI_COMPLEX4                   ((MPI_Datatype)0x000002d3)
-#define MPIX_LOGICAL8                  ((MPI_Datatype)0x000002d8)
+#define MPI_LOGICAL8                   ((MPI_Datatype)0x000002d8)
 #define MPI_INTEGER8                   ((MPI_Datatype)0x000002d9)
 #define MPI_REAL8                      ((MPI_Datatype)0x000002da)
 #define MPI_COMPLEX8                   ((MPI_Datatype)0x000002db)
-#define MPIX_LOGICAL16                 ((MPI_Datatype)0x000002e0)
+#define MPI_LOGICAL16                  ((MPI_Datatype)0x000002e0)
 #define MPI_INTEGER16                  ((MPI_Datatype)0x000002e1)
 #define MPI_REAL16                     ((MPI_Datatype)0x000002e2)
 #define MPI_COMPLEX16                  ((MPI_Datatype)0x000002e3)
@@ -590,6 +590,8 @@ extern MPI_F08_status* MPI_F08_STATUS_IGNORE;
 extern MPI_F08_status* MPI_F08_STATUSES_IGNORE;
 
 /* MPI functions */
+int MPI_Abi_get_info(MPI_Info *info);
+int MPI_Abi_get_version(int *abi_major, int *abi_minor);
 int MPI_Abort(MPI_Comm comm, int errorcode);
 int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
 int MPI_Accumulate_c(const void *origin_addr, MPI_Count origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, MPI_Count target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
@@ -1180,6 +1182,29 @@ MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 double MPI_Wtick(void);
 double MPI_Wtime(void);
 
+MPI_Comm MPI_Comm_fromint(int comm);
+int MPI_Comm_toint(MPI_Comm comm);
+MPI_Errhandler MPI_Errhandler_fromint(int errhandler);
+int MPI_Errhandler_toint(MPI_Errhandler errhandler);
+MPI_File MPI_File_fromint(int file);
+int MPI_File_toint(MPI_File file);
+MPI_Group MPI_Group_fromint(int group);
+int MPI_Group_toint(MPI_Group group);
+MPI_Info MPI_Info_fromint(int info);
+int MPI_Info_toint(MPI_Info info);
+MPI_Message MPI_Message_fromint(int message);
+int MPI_Message_toint(MPI_Message message);
+MPI_Op MPI_Op_fromint(int op);
+int MPI_Op_toint(MPI_Op op);
+MPI_Request MPI_Request_fromint(int request);
+int MPI_Request_toint(MPI_Request request);
+MPI_Session MPI_Session_fromint(int session);
+int MPI_Session_toint(MPI_Session session);
+MPI_Datatype MPI_Type_fromint(int datatype);
+int MPI_Type_toint(MPI_Datatype datatype);
+MPI_Win MPI_Win_fromint(int win);
+int MPI_Win_toint(MPI_Win win);
+
 int MPI_Status_c2f(const MPI_Status *c_status, MPI_Fint *f_status);
 int MPI_Status_f2c(const MPI_Fint *f_status, MPI_Status *c_status);
 int MPI_Status_c2f08(const MPI_Status *c_status, MPI_F08_status *f08_status);
@@ -1190,8 +1215,6 @@ MPI_Fint MPI_Comm_c2f(MPI_Comm comm);
 MPI_Comm MPI_Comm_f2c(MPI_Fint comm);
 MPI_Fint MPI_Errhandler_c2f(MPI_Errhandler errhandler);
 MPI_Errhandler MPI_Errhandler_f2c(MPI_Fint errhandler);
-MPI_Fint MPI_Type_c2f(MPI_Datatype datatype);
-MPI_Datatype MPI_Type_f2c(MPI_Fint datatype);
 MPI_Fint MPI_File_c2f(MPI_File file);
 MPI_File MPI_File_f2c(MPI_Fint file);
 MPI_Fint MPI_Group_c2f(MPI_Group group);
@@ -1206,6 +1229,8 @@ MPI_Fint MPI_Request_c2f(MPI_Request request);
 MPI_Request MPI_Request_f2c(MPI_Fint request);
 MPI_Fint MPI_Session_c2f(MPI_Session session);
 MPI_Session MPI_Session_f2c(MPI_Fint session);
+MPI_Fint MPI_Type_c2f(MPI_Datatype datatype);
+MPI_Datatype MPI_Type_f2c(MPI_Fint datatype);
 MPI_Fint MPI_Win_c2f(MPI_Win win);
 MPI_Win MPI_Win_f2c(MPI_Fint win);
 
@@ -1263,6 +1288,8 @@ int MPI_T_source_get_num(int *num_sources);
 int MPI_T_source_get_timestamp(int source_index, MPI_Count *timestamp);
 
 /* PMPI functions */
+int PMPI_Abi_get_info(MPI_Info *info);
+int PMPI_Abi_get_version(int *abi_major, int *abi_minor);
 int PMPI_Abort(MPI_Comm comm, int errorcode);
 int PMPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
 int PMPI_Accumulate_c(const void *origin_addr, MPI_Count origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, MPI_Count target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
@@ -1852,6 +1879,29 @@ MPI_Aint PMPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 double PMPI_Wtick(void);
 double PMPI_Wtime(void);
 
+MPI_Comm PMPI_Comm_fromint(int comm);
+int PMPI_Comm_toint(MPI_Comm comm);
+MPI_Errhandler PMPI_Errhandler_fromint(int errhandler);
+int PMPI_Errhandler_toint(MPI_Errhandler errhandler);
+MPI_File PMPI_File_fromint(int file);
+int PMPI_File_toint(MPI_File file);
+MPI_Group PMPI_Group_fromint(int group);
+int PMPI_Group_toint(MPI_Group group);
+MPI_Info PMPI_Info_fromint(int info);
+int PMPI_Info_toint(MPI_Info info);
+MPI_Message PMPI_Message_fromint(int message);
+int PMPI_Message_toint(MPI_Message message);
+MPI_Op PMPI_Op_fromint(int op);
+int PMPI_Op_toint(MPI_Op op);
+MPI_Request PMPI_Request_fromint(int request);
+int PMPI_Request_toint(MPI_Request request);
+MPI_Session PMPI_Session_fromint(int session);
+int PMPI_Session_toint(MPI_Session session);
+MPI_Datatype PMPI_Type_fromint(int datatype);
+int PMPI_Type_toint(MPI_Datatype datatype);
+MPI_Win PMPI_Win_fromint(int win);
+int PMPI_Win_toint(MPI_Win win);
+
 int PMPI_Status_c2f(const MPI_Status *c_status, MPI_Fint *f_status);
 int PMPI_Status_f2c(const MPI_Fint *f_status, MPI_Status *c_status);
 int PMPI_Status_c2f08(const MPI_Status *c_status, MPI_F08_status *f08_status);
@@ -1862,8 +1912,6 @@ MPI_Fint PMPI_Comm_c2f(MPI_Comm comm);
 MPI_Comm PMPI_Comm_f2c(MPI_Fint comm);
 MPI_Fint PMPI_Errhandler_c2f(MPI_Errhandler errhandler);
 MPI_Errhandler PMPI_Errhandler_f2c(MPI_Fint errhandler);
-MPI_Fint PMPI_Type_c2f(MPI_Datatype datatype);
-MPI_Datatype PMPI_Type_f2c(MPI_Fint datatype);
 MPI_Fint PMPI_File_c2f(MPI_File file);
 MPI_File PMPI_File_f2c(MPI_Fint file);
 MPI_Fint PMPI_Group_c2f(MPI_Group group);
@@ -1878,6 +1926,8 @@ MPI_Fint PMPI_Request_c2f(MPI_Request request);
 MPI_Request PMPI_Request_f2c(MPI_Fint request);
 MPI_Fint PMPI_Session_c2f(MPI_Session session);
 MPI_Session PMPI_Session_f2c(MPI_Fint session);
+MPI_Fint PMPI_Type_c2f(MPI_Datatype datatype);
+MPI_Datatype PMPI_Type_f2c(MPI_Fint datatype);
 MPI_Fint PMPI_Win_c2f(MPI_Win win);
 MPI_Win PMPI_Win_f2c(MPI_Fint win);
 
