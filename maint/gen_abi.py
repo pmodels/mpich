@@ -56,6 +56,8 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 if T == "MPI_Datatype":
                     idx = int(val, 0) & G.datatype_mask
                     G.abi_datatypes[idx] = name
+                    if re.match(r'MPI_LOGICAL\d+', name):
+                        G.abi_datatypes[idx] = "MPI_DATATYPE_NULL"
                 elif T == "MPI_Op":
                     idx = int(val, 0) & G.op_mask
                     G.abi_ops[idx] = name

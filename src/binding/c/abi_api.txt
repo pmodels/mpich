@@ -55,11 +55,13 @@ MPI_Abi_get_info:
     PUSH_TYPE_INFO(MPI_INTEGER4, "mpi_integer4_supported");
     PUSH_TYPE_INFO(MPI_INTEGER8, "mpi_integer8_supported");
     PUSH_TYPE_INFO(MPI_INTEGER16, "mpi_integer16_supported");
+    /*
     PUSH_TYPE_INFO(MPI_LOGICAL1, "mpi_logical1_supported");
     PUSH_TYPE_INFO(MPI_LOGICAL2, "mpi_logical2_supported");
     PUSH_TYPE_INFO(MPI_LOGICAL4, "mpi_logical4_supported");
     PUSH_TYPE_INFO(MPI_LOGICAL8, "mpi_logical8_supported");
     PUSH_TYPE_INFO(MPI_LOGICAL16, "mpi_logical16_supported");
+    */
     PUSH_TYPE_INFO(MPI_REAL2, "mpi_real2_supported");
     PUSH_TYPE_INFO(MPI_REAL4, "mpi_real4_supported");
     PUSH_TYPE_INFO(MPI_REAL8, "mpi_real8_supported");
