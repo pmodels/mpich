@@ -29,7 +29,12 @@ int MPIR_Group_init(void)
     MPIR_Group_builtin[0].size = 0;
     MPIR_Group_builtin[0].rank = MPI_UNDEFINED;
     MPIR_Group_builtin[0].session_ptr = NULL;
-    memset(&MPIR_Group_builtin[0].pmap, 0, sizeof(struct MPIR_Pmap));
+
+    MPIR_Group_builtin[0].pmap.size = 0;
+    MPIR_Group_builtin[0].pmap.use_map = false;
+    MPIR_Group_builtin[0].pmap.u.stride.offset = 0;
+    MPIR_Group_builtin[0].pmap.u.stride.stride = 1;
+    MPIR_Group_builtin[0].pmap.u.stride.blocksize = 1;
 
     return mpi_errno;
 }
