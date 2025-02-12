@@ -332,7 +332,6 @@ int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
         /* FIXME: MPID_Comm_get_lpid to be removed */
         uint64_t dev_lpid;
         MPID_Comm_get_lpid(comm_ptr, i, &dev_lpid, FALSE);
-        MPIR_Assert((dev_lpid >> 32) == 0);
         vmap[i] = dev_lpid;
     }
 
