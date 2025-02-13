@@ -8,19 +8,20 @@
 
 #include <nccl.h>
 
-typedef struct MPIR_CCLcomm {
-    MPIR_OBJECT_HEADER;
-    MPIR_Comm *comm;
-    ncclUniqueId id;
-    ncclComm_t ncclcomm;
-    cudaStream_t stream;
-} MPIR_CCLcomm;
+#define ENABLE_CCLCOMM 1 //Temporary, needs to get put in configure
 
-int MPIR_CCL_red_op_is_supported(MPI_Op op);
+#ifdef ENABLE_CCLCOMM
+    typedef struct MPIR_CCLcomm {
+        MPIR_OBJECT_HEADER;
+        MPIR_Comm *comm;
+        ncclUniqueId id;
+        ncclComm_t ncclcomm;
+        cudaStream_t stream;
+    } MPIR_CCLcomm;
 
-int MPIR_CCL_datatype_is_supported(MPI_Datatype datatype);
+    int MPIR_CCL_red_op_is_supported(MPI_Op op);
 
-int MPIR_CCL_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
-                        MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag);
+    int MPIR_CCL_datatype_is_supported(MPI_Datatype datatype);
+#endif /* ENABLE_CCLCOMM */
 
 #endif /* MPIR_CCLCOMM_H_INCLUDED */
