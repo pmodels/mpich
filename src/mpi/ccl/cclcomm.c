@@ -8,12 +8,12 @@
 #define CUDA_ERR_CHECK(ret) if (unlikely((ret) != cudaSuccess)) goto fn_fail
 
 /*
- * CCLcomm functions, currently tied to NCCL
+ * NCCL-specific functions
  */
 
-int MPIR_CCLcomm_init(MPIR_Comm * comm, int rank)
+int MPIR_NCCL_comm_init(MPIR_Comm * comm, int rank)
 {
-    int mpi_errno = MPI_SUCCESS;
+  int mpi_errno = MPI_SUCCESS;
     cudaError_t ret;
     int comm_size = comm->local_size;
 
@@ -45,7 +45,7 @@ int MPIR_CCLcomm_init(MPIR_Comm * comm, int rank)
     goto fn_exit;
 }
 
-int MPIR_CCLcomm_free(MPIR_Comm * comm)
+int MPIR_NCCL_comm_free(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     cudaError_t ret;
@@ -67,10 +67,6 @@ int MPIR_CCLcomm_free(MPIR_Comm * comm)
   fn_fail:
     goto fn_exit;
 }
-
-/*
- * NCCL-specific functions
- */
 
 int MPIR_NCCL_red_op_is_supported(MPI_Op op)
 {
@@ -239,20 +235,30 @@ int MPIR_NCCL_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_
 }
 
 /*
- * CCL wrapper functions
+ * CCLcomm wrapper functions, currently tied to NCCL
  */
+
+int MPIR_CCLcomm_init(MPIR_Comm * comm, int rank)
+{
+    return MPIR_NCCL_comm_init(comm, rank);
+}
+
+int MPIR_CCLcomm_free(MPIR_Comm * comm)
+{
+  return MPIR_NCCL_comm_free(comm);
+}
 
 int MPIR_CCL_red_op_is_supported(MPI_Op op)
 {
-  MPIR_NCCL_red_op_is_supported(op);
+  return MPIR_NCCL_red_op_is_supported(op);
 }
 
 int MPIR_CCL_datatype_is_supported(MPI_Datatype datatype)
 {
-  MPIR_NCCL_datatype_is_supported(datatype);
+  return MPIR_NCCL_datatype_is_supported(datatype);
 }
 
-int MPIR_CCL_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
+int MPIR_Allreduce_intra_ccl(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_Datatype datatype,
                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
 {
   return MPIR_NCCL_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
