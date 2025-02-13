@@ -29,6 +29,10 @@ void MPIR_MINF(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 
 int MPIR_MINF_check_dtype(MPI_Datatype type)
 {
+    if (HANDLE_IS_BUILTIN(type) && MPIR_DATATYPE_GET_ORIG_BUILTIN(type) == MPI_BYTE) {
+        return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                    MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_MIN");
+    }
     switch (MPIR_DATATYPE_GET_RAW_INTERNAL(type)) {
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) case (mpi_type_):
