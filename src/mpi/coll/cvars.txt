@@ -1402,6 +1402,7 @@ cvars:
         recexch                  - Force generic transport recursive exchange algorithm
         ring                     - Force ring algorithm
         k_reduce_scatter_allgather - Force reduce scatter allgather algorithm
+        ccl                      - Force CCL algorithm
     
     - name        : MPIR_CVAR_ALLREDUCE_RECURSIVE_MULTIPLYING_KVAL
       category    : COLLECTIVE
