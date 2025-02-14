@@ -438,11 +438,10 @@ int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *ps
     int mpi_errno = MPI_SUCCESS;
 
     if (MPL_stricmp(pset_name, "mpi://WORLD") == 0) {
-        mpi_errno = MPIR_Group_create_stride(MPIR_Process.size, MPIR_Process.rank, session_ptr,
-                                             0, 1, 1, new_group_ptr);
+        mpi_errno = MPIR_Group_dup(MPIR_GROUP_WORLD_PTR, session_ptr, new_group_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else if (MPL_stricmp(pset_name, "mpi://SELF") == 0) {
-        mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, 0, 1, 1, new_group_ptr);
+        mpi_errno = MPIR_Group_dup(MPIR_GROUP_SELF_PTR, session_ptr, new_group_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* TODO: Implement pset struct, locate pset struct ptr */

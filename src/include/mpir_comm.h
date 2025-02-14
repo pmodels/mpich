@@ -166,9 +166,9 @@ struct MPIR_Comm {
     int rank;                   /* Value of MPI_Comm_rank */
     MPIR_Attribute *attributes; /* List of attributes */
     int local_size;             /* Value of MPI_Comm_size for local group */
-    MPIR_Group *local_group,    /* Groups in communicator. */
-    *remote_group;              /* The local and remote groups are the
-                                 * same for intra communicators */
+    MPIR_Group *local_group;    /* Groups in communicator. */
+    MPIR_Group *remote_group;   /* The remote group in a inter communicator.
+                                 * Must be NULL in a intra communicator. */
     MPIR_Comm_kind_t comm_kind; /* MPIR_COMM_KIND__INTRACOMM or MPIR_COMM_KIND__INTERCOMM */
     char name[MPI_MAX_OBJECT_NAME];     /* Required for MPI-2 */
     MPIR_Errhandler *errhandler;        /* Pointer to the error handler structure */
@@ -379,7 +379,7 @@ int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
 /* peer intercomm is an internal 1-to-1 intercomm used for connecting dynamic processes */
 int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
-                               uint64_t remote_lpid, int is_low_group, MPIR_Comm ** newcomm);
+                               MPIR_Lpid remote_lpid, int is_low_group, MPIR_Comm ** newcomm);
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
