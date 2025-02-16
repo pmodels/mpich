@@ -161,11 +161,12 @@ void MPIR_context_id_init(void)
     }
     /* The first two values are already used (comm_world, comm_self).
      * The third value is also used for the internal-only copy of
-     * comm_world, if needed by mpid. */
+     * comm_world, if needed by mpid.
+     * The fourth value is reserved for MPIR_Comm_create_group_session */
 #ifdef MPID_NEEDS_ICOMM_WORLD
-    context_mask[0] = 0xFFFFFFF8;
+    context_mask[0] = 0xFFFFFFF0;
 #else
-    context_mask[0] = 0xFFFFFFFC;
+    context_mask[0] = 0xFFFFFFF4;
 #endif
 
 #ifdef MPICH_DEBUG_HANDLEALLOC
