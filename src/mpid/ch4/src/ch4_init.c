@@ -497,8 +497,6 @@ int MPID_Init(int requested, int *provided)
         }
     }
 
-    MPIDIU_avt_init();
-
     MPIDIU_map_create((void **) &(MPIDI_global.win_map), MPL_MEM_RMA);
     MPIDI_global.csel_root = NULL;
     MPIDI_global.csel_root_gpu = NULL;
@@ -565,6 +563,10 @@ int MPID_Init(int requested, int *provided)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
     }
+
+    /* Init av table after init_local since av_entry_size may depend on the number of nics and vcis */
+    MPIR_Assert(MPIDI_global.av_entry_size > 0);
+    MPIDIU_avt_init();
 
     /* Use the minimum tag_bits from the netmod and shmod */
     MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);

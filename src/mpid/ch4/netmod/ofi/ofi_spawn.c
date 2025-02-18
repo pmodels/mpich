@@ -18,7 +18,7 @@ int MPIDI_OFI_dynamic_send(uint64_t remote_gpid, int tag, const void *buf, int s
     int ctx_idx = 0;
     int avtid = MPIDIU_GPID_GET_AVTID(remote_gpid);
     int lpid = MPIDIU_GPID_GET_LPID(remote_gpid);
-    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci);
+    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(MPIDIU_get_av(avtid, lpid), nic, vci);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
@@ -167,10 +167,10 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
         int addrname_len = remote_upid_size[i] - hostname_len - 1;
 
         for (k = 0; k < n_avts; k++) {
-            if (MPIDIU_get_av_table(k) == NULL) {
+            if (MPIDIU_av_table(k) == NULL) {
                 continue;
             }
-            for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
+            for (j = 0; j < MPIDIU_av_table(k)->size; j++) {
                 sz = MPIDI_OFI_global.addrnamelen;
                 MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av,
                                                 MPIDI_OFI_TO_PHYS(k, j, nic), &tbladdr, &sz), 0,
@@ -208,12 +208,12 @@ int MPIDI_OFI_upids_to_gpids(int size, int *remote_upid_size, char *remote_upids
             MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av, addrname,
                                             1, &addr, 0ULL, NULL), 0, avmap);
             MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[nic][0] = addr;
+            MPIDI_OFI_AV_ADDR(MPIDIU_get_av(avtid, i), nic, 0) = addr;
 
             int node_id;
             mpi_errno = MPIR_nodeid_lookup(hostname, &node_id);
             MPIR_ERR_CHECK(mpi_errno);
-            MPIDIU_get_av(avtid, i).node_id = node_id;
+            MPIDIU_get_av(avtid, i)->node_id = node_id;
 
             remote_gpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
         }
@@ -261,8 +261,8 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
         idx += hostname_len + 1;
 
         size_t sz = MPIDI_OFI_global.addrnamelen;;
-        MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, i));
-        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av, av->dest[nic][0],
+        fi_addr_t addr = MPIDI_OFI_AV_ADDR(MPIDIU_comm_rank_to_av(comm, i), nic, 0);
+        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av, addr,
                                         temp_buf + idx, &sz), 0, avlookup);
         idx += (int) sz;
 

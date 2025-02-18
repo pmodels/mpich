@@ -393,7 +393,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_MAX_NICS
       category    : CH4
       type        : int
-      default     : -1
+      default     : 1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -401,7 +401,7 @@ cvars:
         If set to positive number, this cvar determines the maximum number of physical nics
         to use (if more than one is available). If the number is -1, underlying netmod or
         shmmod automatically uses an optimal number depending on what is detected on the
-        system up to the limit determined by MPIDI_MAX_NICS (in ofi_types.h).
+        system.
 
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_MULTI_NIC_STRIPING
       category    : CH4
@@ -785,8 +785,12 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIR_CVAR_CH4_PACK_BUFFER_SIZE);
 
     MPIDI_OFI_global.num_vcis = 1;
+    MPIDI_OFI_global.max_vcis = MPIDI_global.n_total_vcis;
     ofi_am_init(0);
     ofi_am_post_recv(0, 0);
+
+    MPIDI_global.av_entry_size = sizeof(MPIDI_av_entry_t) +
+        sizeof(fi_addr_t) * (MPIDI_OFI_global.num_nics * MPIDI_OFI_global.max_vcis - 1);
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
@@ -953,7 +957,7 @@ static int flush_send(int dst, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 {
     int mpi_errno = MPI_SUCCESS;
 
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, dst), nic, vci);
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_get_av(0, dst), nic, vci);
     static int data = 0;
     uint64_t match_bits =
         MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0, MPIDI_OFI_FLUSH_TAG);
@@ -984,7 +988,7 @@ static int flush_recv(int src, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 {
     int mpi_errno = MPI_SUCCESS;
 
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, src), nic, vci);
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_get_av(0, src), nic, vci);
     uint64_t mask_bits = 0;
     uint64_t match_bits =
         MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0, MPIDI_OFI_FLUSH_TAG);
@@ -1565,10 +1569,10 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av, i
         /* directly references the mapped fi_addr_t array instead               */
         fi_addr_t *mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (int i = 0; i < MPIR_Process.size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[nic][0] = mapped_table[i];
+            MPIDI_OFI_AV_ADDR(MPIDIU_get_av(0, i), nic, 0) = mapped_table[i];
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%" PRIu64,
-                             i, (void *) &MPIDIU_get_av(0, i), mapped_table[i]));
+                             i, (void *) MPIDIU_get_av(0, i), mapped_table[i]));
         }
         ret = 1;
     }
