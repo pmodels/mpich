@@ -19,6 +19,9 @@
 #include <sys/shm.h>
 #endif
 
+extern int MPIDU_Init_shm_local_size;
+extern int MPIDU_Init_shm_local_rank;
+
 typedef struct memory_list {
     void *ptr;
     MPIDU_shm_seg_t *memory;
@@ -39,8 +42,6 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     void *current_addr;
     size_t segment_len = len;
-    int local_rank = MPIR_Process.local_rank;
-    int num_local = MPIR_Process.local_size;
     MPIDU_shm_seg_t *memory = NULL;
     memory_list_t *memory_node = NULL;
     MPIR_CHKPMEM_DECL();
@@ -48,6 +49,12 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
     MPIR_FUNC_ENTER;
 
     MPIR_Assert(segment_len > 0);
+
+    if (MPIDU_Init_shm_local_size == 1) {
+        *ptr = MPL_aligned_alloc(MPL_CACHELINE_SIZE, len, MPL_MEM_SHM);
+        MPIR_ERR_CHKANDJUMP(!*ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        goto fn_exit;
+    }
 
     MPIR_CHKPMEM_MALLOC(memory, sizeof(*memory), MPL_MEM_SHM);
 
@@ -58,19 +65,9 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
 
     char *serialized_hnd = NULL;
     int serialized_hnd_size = 0;
-    /* if there is only one process on this processor, don't use shared memory */
-    if (num_local == 1) {
-        char *addr;
 
-        MPIR_CHKPMEM_MALLOC(addr, segment_len + MPIDU_SHM_CACHE_LINE_LEN, MPL_MEM_SHM);
-
-        memory->base_addr = addr;
-        current_addr =
-            (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
-                      (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
-        memory->symmetrical = 1;
-    } else {
-        if (local_rank == 0) {
+    {
+        if (MPIDU_Init_shm_local_rank == 0) {
             /* root prepare shm segment */
             mpl_err = MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
                                                     (void **) &(memory->base_addr), 0);
@@ -98,7 +95,7 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
 
         MPIDU_Init_shm_barrier();
 
-        if (local_rank == 0) {
+        if (MPIDU_Init_shm_local_rank == 0) {
             /* memory->hnd no longer needed */
             mpl_err = MPL_shm_seg_remove(memory->hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
@@ -124,8 +121,10 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPL_shm_seg_remove(memory->hnd);
-    MPL_shm_hnd_finalize(&(memory->hnd));
+    if (MPIDU_Init_shm_local_size > 1) {
+        MPL_shm_seg_remove(memory->hnd);
+        MPL_shm_hnd_finalize(&(memory->hnd));
+    }
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
@@ -140,6 +139,11 @@ int MPIDU_Init_shm_free(void *ptr)
 
     MPIR_FUNC_ENTER;
 
+    if (MPIDU_Init_shm_local_size == 1) {
+        MPL_free(ptr);
+        goto fn_exit;
+    }
+
     /* retrieve memory handle for baseaddr */
     LL_FOREACH(memory_head, el) {
         if (el->ptr == ptr) {
@@ -152,17 +156,14 @@ int MPIDU_Init_shm_free(void *ptr)
 
     MPIR_Assert(memory != NULL);
 
-    if (MPIR_Process.local_size == 1)
-        MPL_free(memory->base_addr);
-    else {
-        mpl_err = MPL_shm_seg_detach(memory->hnd, (void **) &(memory->base_addr),
-                                     memory->segment_len);
-        MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**detach_shar_mem");
-    }
+    mpl_err = MPL_shm_seg_detach(memory->hnd, (void **) &(memory->base_addr), memory->segment_len);
+    MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**detach_shar_mem");
 
   fn_exit:
-    MPL_shm_hnd_finalize(&(memory->hnd));
-    MPL_free(memory);
+    if (MPIDU_Init_shm_local_size > 1) {
+        MPL_shm_hnd_finalize(&(memory->hnd));
+        MPL_free(memory);
+    }
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -173,6 +174,10 @@ int MPIDU_Init_shm_is_symm(void *ptr)
 {
     int ret = -1;
     memory_list_t *el;
+
+    if (MPIDU_Init_shm_local_size == 1) {
+        return 1;
+    }
 
     /* retrieve memory handle for baseaddr */
     LL_FOREACH(memory_head, el) {
@@ -196,7 +201,7 @@ static int check_alloc(MPIDU_shm_seg_t * memory)
 
     MPIR_FUNC_ENTER;
 
-    if (MPIR_Process.local_rank == 0) {
+    if (MPIDU_Init_shm_local_rank == 0) {
         MPIDU_Init_shm_put(memory->base_addr, sizeof(void *));
     }
 
