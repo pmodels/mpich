@@ -203,11 +203,7 @@ static void ipc_track_cache_free(void *obj)
 static int ipc_track_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
                                   MPL_gpu_ipc_mem_handle_t * handle_out, bool * found)
 {
-    int mpi_errno = MPI_SUCCESS;
-
-    void *obj;
-    int mpl_err = MPL_gavl_tree_search(gavl_tree, addr, len, &obj);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_search");
+    void *obj = MPL_gavl_tree_search(gavl_tree, addr, len);
 
     if (obj) {
         *handle_out = *((MPL_gpu_ipc_mem_handle_t *) obj);
@@ -216,10 +212,7 @@ static int ipc_track_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, u
         *found = false;
     }
 
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPI_SUCCESS;
 }
 
 static int ipc_track_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
@@ -257,15 +250,9 @@ static void ipc_mapped_cache_free(void *obj)
 static int ipc_mapped_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
                                    void **mapped_base_addr_out)
 {
-    int mpi_errno = MPI_SUCCESS;
+    *mapped_base_addr_out = MPL_gavl_tree_search(gavl_tree, addr, len);
 
-    int mpl_err = MPL_gavl_tree_search(gavl_tree, addr, len, mapped_base_addr_out);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_search");
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPI_SUCCESS;
 }
 
 static int ipc_mapped_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
