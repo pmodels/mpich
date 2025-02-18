@@ -95,13 +95,23 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int rank)
     goto fn_exit;
 }
 
-int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_free_queue,
-                                 uintptr_t num_proc, int rank, uintptr_t num_free_queue,
+int MPIDU_genq_shmem_pool_size(int cell_size, int cells_per_free_queue,
+                               int num_proc, int num_free_queue)
+{
+    int aligned_cell_size = RESIZE_TO_MAX_ALIGN(cell_size);
+    int cell_alloc_size = sizeof(MPIDU_genqi_shmem_cell_header_s) + aligned_cell_size;
+    int total_cells_size = num_proc * num_free_queue * cells_per_free_queue * cell_alloc_size;
+    int free_queue_size = num_proc * num_free_queue * sizeof(MPIDU_genq_shmem_queue_u);
+    return total_cells_size + free_queue_size;
+}
+
+int MPIDU_genq_shmem_pool_create(void *slab, int slab_size,
+                                 int cell_size, int cells_per_free_queue,
+                                 int num_proc, int rank, int num_free_queue,
                                  int *queue_types, MPIDU_genq_shmem_pool_t * pool)
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_pool_s *pool_obj;
-    uintptr_t slab_size = 0;
     uintptr_t aligned_cell_size = 0;
 
     MPIR_FUNC_ENTER;
@@ -117,15 +127,13 @@ int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_free_q
     pool_obj->num_free_queue = num_free_queue;
     pool_obj->rank = rank;
     pool_obj->gpu_registered = false;
+    pool_obj->slab = slab;
 
     /* the global_block_index is at the end of the slab to avoid extra need of alignment */
     int total_cells_size = num_proc * num_free_queue * cells_per_free_queue
         * pool_obj->cell_alloc_size;
     int free_queue_size = num_proc * num_free_queue * sizeof(MPIDU_genq_shmem_queue_u);
-    slab_size = total_cells_size + free_queue_size;
-
-    rc = MPIDU_Init_shm_alloc(slab_size, &pool_obj->slab);
-    MPIR_ERR_CHECK(rc);
+    MPIR_Assertp(slab_size >= total_cells_size + free_queue_size);
 
     pool_obj->cell_header_base = (MPIDU_genqi_shmem_cell_header_s *) pool_obj->slab;
     pool_obj->free_queues =
@@ -140,16 +148,12 @@ int MPIDU_genq_shmem_pool_create(uintptr_t cell_size, uintptr_t cells_per_free_q
     rc = cell_block_alloc(pool_obj, rank);
     MPIR_ERR_CHECK(rc);
 
-    rc = MPIDU_Init_shm_barrier();
-    MPIR_ERR_CHECK(rc);
-
     *pool = (MPIDU_genq_shmem_pool_t) pool_obj;
 
   fn_exit:
     MPIR_FUNC_EXIT;
     return rc;
   fn_fail:
-    MPIDU_Init_shm_free(pool_obj->slab);
     MPL_free(pool_obj);
     goto fn_exit;
 }
@@ -166,7 +170,6 @@ int MPIDU_genq_shmem_pool_destroy(MPIDU_genq_shmem_pool_t pool)
     if (pool_obj->gpu_registered) {
         MPIR_gpu_unregister_host(pool_obj->slab);
     }
-    MPIDU_Init_shm_free(pool_obj->slab);
 
     /* free self */
     MPL_free(pool_obj);

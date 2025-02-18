@@ -28,13 +28,7 @@ static void request_init_callback(void *request)
 
 }
 
-static void init_num_vcis(void)
-{
-    /* TODO: check capabilities, abort if we can't support the requested number of vcis. */
-    MPIDI_UCX_global.num_vcis = MPIDI_global.n_total_vcis;
-}
-
-static int init_worker(int vci)
+int MPIDI_UCX_init_worker(int vci)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -147,63 +141,6 @@ static int initial_address_exchange(void)
     goto fn_exit;
 }
 
-static int all_vcis_address_exchange(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    int size = MPIR_Process.size;
-    int rank = MPIR_Process.rank;
-    int num_vcis = MPIDI_UCX_global.num_vcis;
-
-    /* ucx address lengths are non-uniform, use MPID_MAX_BC_SIZE */
-    size_t name_len = MPID_MAX_BC_SIZE;
-
-    int my_len = num_vcis * name_len;
-    char *all_names = MPL_malloc(size * my_len, MPL_MEM_ADDRESS);
-    MPIR_Assert(all_names);
-
-    char *my_names = all_names + rank * my_len;
-
-    /* put in my addrnames */
-    for (int i = 0; i < num_vcis; i++) {
-        char *vci_addrname = my_names + i * name_len;
-        memcpy(vci_addrname, MPIDI_UCX_global.ctx[i].if_address,
-               MPIDI_UCX_global.ctx[i].addrname_len);
-    }
-    /* Allgather */
-    MPIR_Comm *comm = MPIR_Process.comm_world;
-    mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_BYTE,
-                                            all_names, my_len, MPI_BYTE, comm, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* insert the addresses */
-    ucp_ep_params_t ep_params;
-    for (int vci_local = 0; vci_local < num_vcis; vci_local++) {
-        for (int r = 0; r < size; r++) {
-            MPIDI_UCX_addr_t *av = &MPIDI_UCX_AV(&MPIDIU_get_av(0, r));
-            for (int vci_remote = 0; vci_remote < num_vcis; vci_remote++) {
-                if (vci_local == 0 && vci_remote == 0) {
-                    /* don't overwrite existing addr, or bad things will happen */
-                    continue;
-                }
-                int idx = r * num_vcis + vci_remote;
-                ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-                ep_params.address = (ucp_address_t *) (all_names + idx * name_len);
-
-                ucs_status_t ucx_status;
-                ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[vci_local].worker,
-                                           &ep_params, &av->dest[vci_local][vci_remote]);
-                MPIDI_UCX_CHK_STATUS(ucx_status);
-            }
-        }
-    }
-  fn_exit:
-    MPL_free(all_names);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIDI_UCX_init_local(int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -213,7 +150,7 @@ int MPIDI_UCX_init_local(int *tag_bits)
     uint64_t features = 0;
     ucp_params_t ucp_params;
 
-    init_num_vcis();
+    MPIDI_UCX_global.num_vcis = 1;
 
     /* unable to support extended context id in current match bit configuration */
     MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_ID_BITS);
@@ -233,7 +170,7 @@ int MPIDI_UCX_init_local(int *tag_bits)
         UCP_PARAM_FIELD_REQUEST_SIZE |
         UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT;
 
-    if (MPIDI_UCX_global.num_vcis > 1) {
+    if (MPICH_IS_THREADED) {
         ucp_params.mt_workers_shared = 1;
         ucp_params.field_mask |= UCP_PARAM_FIELD_MT_WORKERS_SHARED;
     }
@@ -271,7 +208,7 @@ int MPIDI_UCX_init_world(void)
     int mpi_errno = MPI_SUCCESS;
 
     /* initialize worker for vci 0 */
-    mpi_errno = init_worker(0);
+    mpi_errno = MPIDI_UCX_init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = initial_address_exchange();
@@ -286,64 +223,11 @@ int MPIDI_UCX_init_world(void)
     goto fn_exit;
 }
 
-int MPIDI_UCX_init_vcis(int num_vcis, int *num_vcis_actual)
-{
-    int mpi_errno = MPI_SUCCESS;
-    *num_vcis_actual = num_vcis;
-    return mpi_errno;
-}
-
-/* static functions for MPIDI_UCX_post_init */
-static void flush_cb(void *request, ucs_status_t status)
-{
-}
-
-static void flush_all(void)
-{
-    void *reqs[MPIDI_CH4_MAX_VCIS];
-    for (int vci = 0; vci < MPIDI_UCX_global.num_vcis; vci++) {
-        reqs[vci] = ucp_worker_flush_nb(MPIDI_UCX_global.ctx[vci].worker, 0, &flush_cb);
-    }
-    for (int vci = 0; vci < MPIDI_UCX_global.num_vcis; vci++) {
-        if (reqs[vci] == NULL) {
-            continue;
-        } else if (UCS_PTR_IS_ERR(reqs[vci])) {
-            continue;
-        } else {
-            ucs_status_t status;
-            do {
-                MPID_Progress_test(NULL);
-                status = ucp_request_check_status(reqs[vci]);
-            } while (status == UCS_INPROGRESS);
-            ucp_request_release(reqs[vci]);
-        }
-    }
-}
-
 int MPIDI_UCX_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIDI_UCX_global.num_vcis == 1) {
-        goto fn_exit;
-    }
-
-    for (int i = 1; i < MPIDI_UCX_global.num_vcis; i++) {
-        mpi_errno = init_worker(i);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-    mpi_errno = all_vcis_address_exchange();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Flush all pending wireup operations or it may interfere with RMA flush_ops count.
-     * Since this require progress in non-zero vcis, we need switch on is_initialized. */
-    MPIDI_global.is_initialized = 1;
-    flush_all();
-
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_UCX_mpi_finalize_hook(void)
