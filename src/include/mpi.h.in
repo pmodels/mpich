@@ -783,6 +783,14 @@ enum MPIR_Combiner_enum {
 #define MPIX_GPU_SUPPORT_ZE    (1)
 #define MPIX_GPU_SUPPORT_HIP   (2)
 
+/* MPIX_Query_pointer_attr */
+enum MPIX_Pointer_type {
+    MPIX_POINTER_UNREGISTERED_HOST = 0,
+    MPIX_POINTER_REGISTERED_HOST,
+    MPIX_POINTER_DEV,
+    MPIX_POINTER_MANAGED
+};
+
 /* feature advertisement */
 #define MPIIMPL_ADVERTISES_FEATURES 1
 #define MPIIMPL_HAVE_MPI_INFO 1
