@@ -11,7 +11,7 @@ typedef void *MPL_gavl_tree_t;
 int MPL_gavl_tree_create(void (*free_fn) (void *), MPL_gavl_tree_t * gavl_tree);
 int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
                          const void *val);
-int MPL_gavl_tree_destory(MPL_gavl_tree_t gavl_tree);
+int MPL_gavl_tree_destroy(MPL_gavl_tree_t gavl_tree);
 int MPL_gavl_tree_delete_range(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len);
 int MPL_gavl_tree_delete_start_addr(MPL_gavl_tree_t gavl_tree, const void *addr);
 MPL_STATIC_INLINE_PREFIX int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr,

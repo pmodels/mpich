@@ -1093,9 +1093,9 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
             !MPIDI_OFI_WIN(win).mr && MPIDIG_WIN(win, info_args).coll_attach) {
             int i;
             for (i = 0; i < win->comm_ptr->local_size; i++)
-                MPL_gavl_tree_destory(MPIDI_OFI_WIN(win).dwin_target_mrs[i]);
+                MPL_gavl_tree_destroy(MPIDI_OFI_WIN(win).dwin_target_mrs[i]);
             MPL_free(MPIDI_OFI_WIN(win).dwin_target_mrs);
-            MPL_gavl_tree_destory(MPIDI_OFI_WIN(win).dwin_mrs);
+            MPL_gavl_tree_destroy(MPIDI_OFI_WIN(win).dwin_mrs);
         }
 
     }

@@ -310,12 +310,12 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
 }
 
 /*
- * MPL_gavl_tree_destory
+ * MPL_gavl_tree_destroy
  * Description: free all nodes and buffer objects in the tree and tree itself.
  * Parameters:
  * gavl_tree        - (IN)  gavl tree object
  */
-int MPL_gavl_tree_destory(MPL_gavl_tree_t gavl_tree)
+int MPL_gavl_tree_destroy(MPL_gavl_tree_t gavl_tree)
 {
     int mpl_err = MPL_SUCCESS;
     MPLI_gavl_tree_s *tree_ptr = (MPLI_gavl_tree_s *) gavl_tree;
