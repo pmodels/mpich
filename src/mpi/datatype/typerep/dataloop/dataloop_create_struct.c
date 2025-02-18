@@ -55,7 +55,7 @@ int MPIR_Dataloop_create_struct(MPI_Aint count,
 
     /* if count is zero, handle with contig code, call it a int */
     if (count == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPIR_INT_INTERNAL, (void **) dlp_p);
         return err;
     }
 
@@ -97,7 +97,7 @@ int MPIR_Dataloop_create_struct(MPI_Aint count,
      */
 
     if (nr_basics == 0 && nr_derived == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPIR_INT_INTERNAL, (void **) dlp_p);
         return err;
     }
 
@@ -315,7 +315,7 @@ static int create_flattened_struct(MPI_Aint count,
      * do: store a simple contig of zero ints and call it done.
      */
     if (nr_blks == 0) {
-        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPIR_INT_INTERNAL, (void **) dlp_p);
         return err;
 
     }
