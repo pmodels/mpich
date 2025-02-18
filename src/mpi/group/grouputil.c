@@ -29,7 +29,12 @@ int MPIR_Group_init(void)
     MPIR_Group_builtin[0].size = 0;
     MPIR_Group_builtin[0].rank = MPI_UNDEFINED;
     MPIR_Group_builtin[0].session_ptr = NULL;
-    memset(&MPIR_Group_builtin[0].pmap, 0, sizeof(struct MPIR_Pmap));
+
+    MPIR_Group_builtin[0].pmap.size = 0;
+    MPIR_Group_builtin[0].pmap.use_map = false;
+    MPIR_Group_builtin[0].pmap.u.stride.offset = 0;
+    MPIR_Group_builtin[0].pmap.u.stride.stride = 1;
+    MPIR_Group_builtin[0].pmap.u.stride.blocksize = 1;
 
     return mpi_errno;
 }
@@ -327,7 +332,6 @@ int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
         /* FIXME: MPID_Comm_get_lpid to be removed */
         uint64_t dev_lpid;
         MPID_Comm_get_lpid(comm_ptr, i, &dev_lpid, FALSE);
-        MPIR_Assert((dev_lpid >> 32) == 0);
         vmap[i] = dev_lpid;
     }
 
