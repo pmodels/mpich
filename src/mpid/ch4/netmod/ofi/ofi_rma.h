@@ -140,13 +140,12 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_prepare_target_mr(int target_rank,
     if (winattr & MPIDI_WINATTR_NM_DYNAMIC_MR) {
         /* Special path for dynamic window with per-attach memory registration. */
         offset = target_disp;   /* dynamic win is always with disp_unit=1 */
-        void *target_mr_found = NULL;
         uint64_t target_addr = (uintptr_t) MPI_BOTTOM + offset;
         /* Return valid node only when [target_addr:target_extent] matches within a
          * single region. If it crosses two regions, NULL is returned. */
-        MPL_gavl_tree_search(MPIDI_OFI_WIN(win).dwin_target_mrs[target_rank],
-                             (const void *) (uintptr_t) target_addr, target_extent,
-                             &target_mr_found);
+        void *target_mr_found =
+            MPL_gavl_tree_search(MPIDI_OFI_WIN(win).dwin_target_mrs[target_rank],
+                                 (const void *) (uintptr_t) target_addr, target_extent);
 
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "target_mr found %d addr 0x%" PRIx64 ", extent 0x%lx",
