@@ -14,8 +14,8 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
 int MPL_gavl_tree_destroy(MPL_gavl_tree_t gavl_tree);
 int MPL_gavl_tree_delete_range(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len);
 int MPL_gavl_tree_delete_start_addr(MPL_gavl_tree_t gavl_tree, const void *addr);
-MPL_STATIC_INLINE_PREFIX int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr,
-                                                  uintptr_t len, void **val);
+MPL_STATIC_INLINE_PREFIX void *MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr,
+                                                    uintptr_t len);
 
 /*
  * We assume AVL tree height will not exceed 64. AVL tree with 64 height in worst case
@@ -132,20 +132,17 @@ MPL_STATIC_INLINE_PREFIX int MPLI_gavl_start_addr_cmp_func(MPLI_gavl_tree_node_s
  * len              - (IN) input buffer length
  * val              - (OUT) matched buffer object
  */
-MPL_STATIC_INLINE_PREFIX int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr,
-                                                  uintptr_t len, void **val)
+MPL_STATIC_INLINE_PREFIX void *MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr,
+                                                    uintptr_t len)
 {
-    int mpl_err = MPL_SUCCESS;
     MPLI_gavl_tree_node_s *cur_node;
     MPLI_gavl_tree_s *tree_ptr = (MPLI_gavl_tree_s *) gavl_tree;
 
-    *val = NULL;
     cur_node = tree_ptr->root;
     while (cur_node) {
         int cmp_ret = MPLI_gavl_subset_cmp_func(cur_node, (uintptr_t) addr, len);
         if (cmp_ret == MPLI_GAVL_BUFFER_MATCH) {
-            *val = (void *) cur_node->val;
-            break;
+            return (void *) cur_node->val;
         } else if (cmp_ret == MPLI_GAVL_SEARCH_LEFT) {
             cur_node = cur_node->u.s.left;
         } else {
@@ -153,7 +150,7 @@ MPL_STATIC_INLINE_PREFIX int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, con
         }
     }
 
-    return mpl_err;
+    return NULL;
 }
 
 #endif /* MPL_GAVL_H_INCLUDED  */
