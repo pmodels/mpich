@@ -105,7 +105,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     for (i = 0; i < MPIR_Process.local_size; i++) {
         /* should be called before xpmem_release
          * MPIDI_XPMEMI_segtree_delete_all will call xpmem_detach */
-        MPL_gavl_tree_destory(MPIDI_XPMEMI_global.segmaps[i].segcache_ubuf);
+        MPL_gavl_tree_destroy(MPIDI_XPMEMI_global.segmaps[i].segcache_ubuf);
         if (MPIDI_XPMEMI_global.segmaps[i].apid != -1) {
             XPMEM_TRACE("finalize: release apid: node_rank %d, 0x%lx\n",
                         i, (uint64_t) MPIDI_XPMEMI_global.segmaps[i].apid);
