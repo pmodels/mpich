@@ -16,11 +16,6 @@
 #define CUDA_ERR_CHECK(ret) if (unlikely((ret) != cudaSuccess)) goto fn_fail
 #define CU_ERR_CHECK(ret) if (unlikely((ret) != CUDA_SUCCESS)) goto fn_fail
 
-typedef struct gpu_free_hook {
-    void (*free_hook) (void *dptr);
-    struct gpu_free_hook *next;
-} gpu_free_hook_s;
-
 static int gpu_initialized = 0;
 static int device_count = -1;
 static int max_dev_id = -1;
@@ -30,16 +25,6 @@ static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
 
 static int *local_to_global_map;        /* [device_count] */
 static int *global_to_local_map;        /* [max_dev_id + 1]   */
-
-static gpu_free_hook_s *free_hook_chain = NULL;
-
-static CUresult CUDAAPI(*sys_cuMemFree) (CUdeviceptr dptr);
-static cudaError_t CUDARTAPI(*sys_cudaFree) (void *dptr);
-typedef CUresult(*cuMemFree_t) (CUdeviceptr dptr);
-typedef cudaError_t CUDARTAPI(*cudaFree_t) (void *dptr);
-
-static int gpu_mem_hook_init();
-static MPL_initlock_t free_hook_mutex = MPL_INITLOCK_INITIALIZER;
 
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
@@ -160,7 +145,10 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
     int mpl_err = MPL_SUCCESS;
     cudaError_t ret;
 
-    ret = cudaIpcGetMemHandle(ipc_handle, (void *) ptr);
+    ret = cudaIpcGetMemHandle(&ipc_handle->handle, (void *) ptr);
+    CUDA_ERR_CHECK(ret);
+
+    ret = cuPointerGetAttribute(&ipc_handle->id, CU_POINTER_ATTRIBUTE_BUFFER_ID, (CUdeviceptr) ptr);
     CUDA_ERR_CHECK(ret);
 
   fn_exit:
@@ -183,7 +171,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, vo
 
     cudaGetDevice(&prev_devid);
     cudaSetDevice(dev_id);
-    ret = cudaIpcOpenMemHandle(ptr, *ipc_handle, cudaIpcMemLazyEnablePeerAccess);
+    ret = cudaIpcOpenMemHandle(ptr, ipc_handle->handle, cudaIpcMemLazyEnablePeerAccess);
     CUDA_ERR_CHECK(ret);
 
   fn_exit:
@@ -210,7 +198,13 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
 
 bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
 {
-    return true;
+    CUresult ret;
+    unsigned long long buffer_id;
+
+    ret = cuPointerGetAttribute(&buffer_id, CU_POINTER_ATTRIBUTE_BUFFER_ID, (CUdeviceptr) ptr);
+    assert(ret == cudaSuccess);
+
+    return buffer_id == handle->id;
 }
 
 int MPL_gpu_malloc_host(void **ptr, size_t size)
@@ -364,14 +358,6 @@ int MPL_gpu_init(int debug_summary)
         max_dev_id = device_count - 1;
     }
 
-    /* gpu shm module would cache gpu handle to accelerate intra-node
-     * communication; we must register hooks for memory-related functions
-     * in cuda, such as cudaFree and cuMemFree, to track user behaviors on
-     * the memory buffer and invalidate cached handle/buffer respectively
-     * for result correctness. */
-    MPL_initlock_lock(&free_hook_mutex);
-    gpu_mem_hook_init();
-    MPL_initlock_unlock(&free_hook_mutex);
     gpu_initialized = 1;
 
     if (MPL_gpu_info.debug_summary) {
@@ -398,16 +384,6 @@ int MPL_gpu_finalize(void)
 
     MPL_free(local_to_global_map);
     MPL_free(global_to_local_map);
-
-    gpu_free_hook_s *prev;
-    MPL_initlock_lock(&free_hook_mutex);
-    while (free_hook_chain) {
-        prev = free_hook_chain;
-        free_hook_chain = free_hook_chain->next;
-        MPL_free(prev);
-    }
-    free_hook_chain = NULL;
-    MPL_initlock_unlock(&free_hook_mutex);
 
     /* Reset initialization state */
     gpu_initialized = 0;
@@ -471,91 +447,10 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
     goto fn_exit;
 }
 
-static void gpu_free_hooks_cb(void *dptr)
-{
-    gpu_free_hook_s *current = free_hook_chain;
-    if (dptr != NULL) {
-        /* we call gpu hook only when dptr != NULL */
-        while (current) {
-            current->free_hook(dptr);
-            current = current->next;
-        }
-    }
-    return;
-}
-
-typedef void (*funcptr_t) (void);
-static int gpu_mem_hook_init()
-{
-    void *libcuda_handle;
-    void *libcudart_handle;
-
-    libcuda_handle = dlopen("libcuda.so", RTLD_LAZY | RTLD_GLOBAL);
-    assert(libcuda_handle);
-    libcudart_handle = dlopen("libcudart.so", RTLD_LAZY | RTLD_GLOBAL);
-    assert(libcudart_handle);
-
-    sys_cuMemFree = (cuMemFree_t) dlsym(libcuda_handle, CUDA_SYMBOL_STRING(cuMemFree));
-    assert(sys_cuMemFree);
-    sys_cudaFree = (cudaFree_t) dlsym(libcudart_handle, CUDA_SYMBOL_STRING(cudaFree));
-    assert(sys_cudaFree);
-
-    return MPL_SUCCESS;
-}
-
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
 {
-    gpu_free_hook_s *hook_obj = MPL_malloc(sizeof(gpu_free_hook_s), MPL_MEM_OTHER);
-    assert(hook_obj);
-    hook_obj->free_hook = free_hook;
-    hook_obj->next = NULL;
-
-    MPL_initlock_lock(&free_hook_mutex);
-    if (!free_hook_chain)
-        free_hook_chain = hook_obj;
-    else {
-        hook_obj->next = free_hook_chain;
-        free_hook_chain = hook_obj;
-    }
-    MPL_initlock_unlock(&free_hook_mutex);
-
+    /* free hooks not used */
     return MPL_SUCCESS;
-}
-
-#ifdef HAVE_VISIBILITY
-__attribute__ ((visibility("default")))
-#endif
-CUresult CUDAAPI cuMemFree(CUdeviceptr dptr)
-{
-    CUresult result;
-    MPL_initlock_lock(&free_hook_mutex);
-    if (!sys_cuMemFree) {
-        gpu_mem_hook_init();
-    }
-
-    gpu_free_hooks_cb((void *) dptr);
-    result = sys_cuMemFree(dptr);
-
-    MPL_initlock_unlock(&free_hook_mutex);
-    return (result);
-}
-
-#ifdef HAVE_VISIBILITY
-__attribute__ ((visibility("default")))
-#endif
-cudaError_t CUDARTAPI cudaFree(void *dptr)
-{
-    cudaError_t result;
-    MPL_initlock_lock(&free_hook_mutex);
-    if (!sys_cudaFree) {
-        gpu_mem_hook_init();
-    }
-
-    gpu_free_hooks_cb(dptr);
-    result = sys_cudaFree(dptr);
-
-    MPL_initlock_unlock(&free_hook_mutex);
-    return result;
 }
 
 int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,

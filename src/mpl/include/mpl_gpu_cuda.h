@@ -9,7 +9,10 @@
 #include "cuda.h"
 #include "cuda_runtime_api.h"
 
-typedef cudaIpcMemHandle_t MPL_gpu_ipc_mem_handle_t;
+typedef struct {
+    cudaIpcMemHandle_t handle;
+    unsigned long long id;
+} MPL_gpu_ipc_mem_handle_t;
 typedef int MPL_gpu_device_handle_t;
 typedef struct cudaPointerAttributes MPL_gpu_device_attr;
 typedef int MPL_gpu_request;
