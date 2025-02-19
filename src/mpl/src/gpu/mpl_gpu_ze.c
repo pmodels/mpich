@@ -2004,6 +2004,11 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
     goto fn_exit;
 }
 
+bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
+{
+    return true;
+}
+
 /* at finalize, to free a cache entry in ipc_cache_removal cache */
 static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id)
 {
