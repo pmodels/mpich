@@ -236,6 +236,24 @@ static int ipc_track_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, u
     goto fn_exit;
 }
 
+static int ipc_track_cache_remove(const void *addr, uintptr_t len, int local_dev_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int mpl_err;
+
+    for (int i = 0; i < MPIR_Process.local_size; ++i) {
+        MPL_gavl_tree_t track_tree = MPIDI_GPUI_global.ipc_handle_track_trees[i][local_dev_id];
+        mpl_err = MPL_gavl_tree_delete_range(track_tree, addr, len);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**mpl_gavl_delete_range");
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* -- mapped_track_tree -- */
 
 static void ipc_mapped_cache_free(void *obj)
@@ -377,6 +395,7 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                               MPIDI_IPCI_ipc_handle_t * ipc_handle)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpl_err;
 
     int local_dev_id, global_dev_id;
     local_dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr->u.gpu.gpu_attr);
@@ -399,12 +418,22 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
         MPIR_ERR_CHECK(mpi_errno);
 
         if (found) {
-            handle_status = MPIDI_GPU_IPC_HANDLE_VALID;
-            goto fn_done;
+            if (MPL_gpu_ipc_handle_is_valid(&handle, pbase)) {
+                handle_status = MPIDI_GPU_IPC_HANDLE_VALID;
+                goto fn_done;
+            } else {
+                /* remove and destroy invalid handle */
+                mpi_errno = ipc_track_cache_remove(pbase, len, local_dev_id);
+                MPIR_ERR_CHECK(mpi_errno);
+
+                mpl_err = MPL_gpu_ipc_handle_destroy(pbase, &ipc_attr->u.gpu.gpu_attr);
+                MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                    "**gpu_ipc_handle_destroy");
+            }
         }
     }
 
-    int mpl_err = MPL_gpu_ipc_handle_create(pbase, &ipc_attr->u.gpu.gpu_attr.device_attr, &handle);
+    mpl_err = MPL_gpu_ipc_handle_create(pbase, &ipc_attr->u.gpu.gpu_attr.device_attr, &handle);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                         "**gpu_ipc_handle_create");
     if (need_cache) {
