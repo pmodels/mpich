@@ -235,6 +235,11 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
     goto fn_exit;
 }
 
+bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
+{
+    return true;
+}
+
 int MPL_gpu_malloc_host(void **ptr, size_t size)
 {
     int mpl_err = MPL_SUCCESS;
