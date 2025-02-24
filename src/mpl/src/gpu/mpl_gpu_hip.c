@@ -11,11 +11,6 @@
 #define HIP_ERR_CHECK(ret) if (unlikely((ret) != hipSuccess)) goto fn_fail
 #define HI_ERR_CHECK(ret) if (unlikely((ret) != HIP_SUCCESS)) goto fn_fail
 
-typedef struct gpu_free_hook {
-    void (*free_hook) (void *dptr);
-    struct gpu_free_hook *next;
-} gpu_free_hook_s;
-
 static int gpu_initialized = 0;
 static int device_count = -1;
 static int max_dev_id = -1;
@@ -25,13 +20,6 @@ static char affinity_env[MAX_GPU_STR_LEN] = { 0 };
 
 static int *local_to_global_map;        /* [device_count] */
 static int *global_to_local_map;        /* [max_dev_id + 1]   */
-
-static gpu_free_hook_s *free_hook_chain = NULL;
-
-static hipError_t(*sys_hipFree) (void *dptr);
-
-static int gpu_mem_hook_init();
-static MPL_initlock_t free_hook_mutex = MPL_INITLOCK_INITIALIZER;
 
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id)
 {
@@ -187,7 +175,11 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
     int mpl_err = MPL_SUCCESS;
     hipError_t ret;
 
-    ret = hipIpcGetMemHandle(ipc_handle, (void *) ptr);
+    ret = hipIpcGetMemHandle(&ipc_handle->handle, (void *) ptr);
+    HIP_ERR_CHECK(ret);
+
+    ret = hipPointerGetAttribute(&ipc_handle->id, HIP_POINTER_ATTRIBUTE_BUFFER_ID,
+                                 (hipDeviceptr_t) ptr);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
@@ -210,7 +202,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * ipc_handle, int dev_id, vo
 
     hipGetDevice(&prev_devid);
     hipSetDevice(dev_id);
-    ret = hipIpcOpenMemHandle(ptr, *ipc_handle, hipIpcMemLazyEnablePeerAccess);
+    ret = hipIpcOpenMemHandle(ptr, ipc_handle->handle, hipIpcMemLazyEnablePeerAccess);
     HIP_ERR_CHECK(ret);
 
   fn_exit:
@@ -237,7 +229,13 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
 
 bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
 {
-    return true;
+    hipError_t ret;
+    uint32_t buffer_id;
+
+    ret = hipPointerGetAttribute(&buffer_id, HIP_POINTER_ATTRIBUTE_BUFFER_ID, (hipDeviceptr_t) ptr);
+    assert(ret == hipSuccess);
+
+    return buffer_id == handle->id;
 }
 
 int MPL_gpu_malloc_host(void **ptr, size_t size)
@@ -376,12 +374,6 @@ int MPL_gpu_init(int debug_summary)
         max_dev_id = device_count - 1;
     }
 
-    /* gpu shm module would cache gpu handle to accelerate intra-node
-     * communication; we must register hooks for memory-related functions
-     * in hip, such as hipFree, to track user behaviors on
-     * the memory buffer and invalidate cached handle/buffer respectively
-     * for result correctness. */
-    gpu_mem_hook_init();
     gpu_initialized = 1;
 
     if (MPL_gpu_info.debug_summary) {
@@ -408,16 +400,6 @@ int MPL_gpu_finalize(void)
 
     MPL_free(local_to_global_map);
     MPL_free(global_to_local_map);
-
-    gpu_free_hook_s *prev;
-    MPL_initlock_lock(&free_hook_mutex);
-    while (free_hook_chain) {
-        prev = free_hook_chain;
-        free_hook_chain = free_hook_chain->next;
-        MPL_free(prev);
-    }
-    free_hook_chain = NULL;
-    MPL_initlock_unlock(&free_hook_mutex);
 
     /* Reset initialization state */
     gpu_initialized = 0;
@@ -463,64 +445,10 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
     goto fn_exit;
 }
 
-static void gpu_free_hooks_cb(void *dptr)
-{
-    gpu_free_hook_s *current = free_hook_chain;
-    if (dptr != NULL) {
-        /* we call gpu hook only when dptr != NULL */
-        while (current) {
-            current->free_hook(dptr);
-            current = current->next;
-        }
-    }
-    return;
-}
-
-static int gpu_mem_hook_init()
-{
-    void *libhip_handle;
-    void *libhiprt_handle;
-
-    libhip_handle = dlopen("libamdhip64.so", RTLD_LAZY | RTLD_GLOBAL);
-    assert(libhip_handle);
-    sys_hipFree = (void *) dlsym(libhip_handle, "hipFree");
-    assert(sys_hipFree);
-    return MPL_SUCCESS;
-}
-
 int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
 {
-    gpu_free_hook_s *hook_obj = MPL_malloc(sizeof(gpu_free_hook_s), MPL_MEM_OTHER);
-    assert(hook_obj);
-    hook_obj->free_hook = free_hook;
-    hook_obj->next = NULL;
-
-    MPL_initlock_lock(&free_hook_mutex);
-    if (!free_hook_chain)
-        free_hook_chain = hook_obj;
-    else {
-        hook_obj->next = free_hook_chain;
-        free_hook_chain = hook_obj;
-    }
-    MPL_initlock_unlock(&free_hook_mutex);
-
+    /* free hooks not used */
     return MPL_SUCCESS;
-}
-
-hipError_t hipFree(void *dptr)
-{
-    hipError_t result;
-    MPL_initlock_lock(&free_hook_mutex);
-
-    if (!sys_hipFree) {
-        gpu_mem_hook_init();
-    }
-
-    gpu_free_hooks_cb(dptr);
-    result = sys_hipFree(dptr);
-
-    MPL_initlock_unlock(&free_hook_mutex);
-    return result;
 }
 
 int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
