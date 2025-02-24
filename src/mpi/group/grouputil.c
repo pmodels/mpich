@@ -6,6 +6,32 @@
 #include "mpiimpl.h"
 #include "group.h"
 
+/* Global world list.
+ * world_idx, part of MPIR_Lpid, points to this array */
+#define MPIR_MAX_WORLDS 1024
+static int num_worlds = 0;
+struct MPIR_World MPIR_Worlds[MPIR_MAX_WORLDS];
+
+int MPIR_add_world(const char *namespace, int num_procs)
+{
+    int world_idx = num_worlds++;
+
+    MPL_strncpy(MPIR_Worlds[world_idx].namespace, namespace, MPIR_NAMESPACE_MAX);
+    MPIR_Worlds[world_idx].num_procs = num_procs;
+
+    return world_idx;
+}
+
+int MPIR_find_world(const char *namespace)
+{
+    for (int i = 0; i < num_worlds; i++) {
+        if (strncmp(MPIR_Worlds[i].namespace, namespace, MPIR_NAMESPACE_MAX) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 /* Preallocated group objects */
 MPIR_Group MPIR_Group_builtin[MPIR_GROUP_N_BUILTIN];
 MPIR_Group MPIR_Group_direct[MPIR_GROUP_PREALLOC];
@@ -22,7 +48,9 @@ int MPIR_Group_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(MPIR_GROUP_N_BUILTIN == 1);     /* update this func if this ever triggers */
+    MPIR_Assert(MPIR_GROUP_N_BUILTIN == 3);     /* update this func if this ever triggers */
+
+    struct MPIR_Pmap *pmap;
 
     MPIR_Group_builtin[0].handle = MPI_GROUP_EMPTY;
     MPIR_Object_set_ref(&MPIR_Group_builtin[0], 1);
@@ -36,17 +64,51 @@ int MPIR_Group_init(void)
     MPIR_Group_builtin[0].pmap.u.stride.stride = 1;
     MPIR_Group_builtin[0].pmap.u.stride.blocksize = 1;
 
+    MPIR_Group_builtin[1].handle = MPIR_GROUP_WORLD;
+    MPIR_Object_set_ref(&MPIR_Group_builtin[1], 1);
+    MPIR_Group_builtin[1].size = MPIR_Process.size;
+    MPIR_Group_builtin[1].rank = MPIR_Process.rank;
+    MPIR_Group_builtin[1].session_ptr = NULL;
+    pmap = &MPIR_Group_builtin[1].pmap;
+    pmap->size = MPIR_Process.size;
+    pmap->use_map = false;
+    pmap->u.stride.offset = 0;
+    pmap->u.stride.stride = 1;
+    pmap->u.stride.blocksize = 1;
+
+    MPIR_Group_builtin[2].handle = MPIR_GROUP_SELF;
+    MPIR_Object_set_ref(&MPIR_Group_builtin[2], 1);
+    MPIR_Group_builtin[2].size = 1;
+    MPIR_Group_builtin[2].rank = 0;
+    MPIR_Group_builtin[2].session_ptr = NULL;
+    pmap = &MPIR_Group_builtin[2].pmap;
+    pmap->size = 1;
+    pmap->use_map = false;
+    pmap->u.stride.offset = MPIR_Process.rank;
+    pmap->u.stride.stride = 1;
+    pmap->u.stride.blocksize = 1;
+
     return mpi_errno;
 }
 
+void MPIR_Group_finalize(void)
+{
+    num_worlds = 0;
+}
 
 int MPIR_Group_release(MPIR_Group * group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int inuse;
 
+    /* MPIR_Group_empty was not properly reference counted - FIXME */
+    if (group_ptr == MPIR_Group_empty) {
+        goto fn_exit;
+    }
+
+    int inuse;
     MPIR_Group_release_ref(group_ptr, &inuse);
     if (!inuse) {
+        MPIR_Assert(!HANDLE_IS_BUILTIN(group_ptr->handle));
         /* Only if refcount is 0 do we actually free. */
         if (group_ptr->pmap.use_map) {
             MPL_free(group_ptr->pmap.u.map);
@@ -57,6 +119,8 @@ int MPIR_Group_release(MPIR_Group * group_ptr)
         }
         MPIR_Handle_obj_free(&MPIR_Group_mem, group_ptr);
     }
+
+  fn_exit:
     return mpi_errno;
 }
 
@@ -88,6 +152,41 @@ int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
     (*new_group_ptr)->pmap.size = nproc;
 
     return mpi_errno;
+}
+
+/* Internally the only reason to duplicate a group is to copy from NULL session to a new session.
+ * Otherwise, we can just use the same group and increment the reference count.
+ */
+int MPIR_Group_dup(MPIR_Group * old_group, MPIR_Session * session_ptr, MPIR_Group ** new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Group *new_group;
+
+    new_group = (MPIR_Group *) MPIR_Handle_obj_alloc(&MPIR_Group_mem);
+    if (!new_group) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPIR_Group_dup",
+                                         __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+        goto fn_fail;
+    }
+    MPIR_Object_set_ref(new_group, 1);
+
+    /* initialize fields */
+    new_group->size = old_group->size;
+    new_group->rank = old_group->rank;
+    MPIR_Group_set_session_ptr(new_group, session_ptr);
+    memcpy(&new_group->pmap, &old_group->pmap, sizeof(struct MPIR_Pmap));
+    if (old_group->pmap.use_map) {
+        new_group->pmap.u.map = MPL_malloc(old_group->size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
+        MPIR_ERR_CHKANDJUMP(!new_group->pmap.u.map, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        memcpy(new_group->pmap.u.map, old_group->pmap.u.map, old_group->size * sizeof(MPIR_Lpid));
+    }
+
+    *new_group_ptr = new_group;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static bool check_map_is_strided(int size, MPIR_Lpid * map,
@@ -330,9 +429,7 @@ int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr)
     MPIR_CHKLMEM_MALLOC(vmap, vsize * sizeof(MPIR_Lpid));
     for (int i = 0; i < vsize; i++) {
         /* FIXME: MPID_Comm_get_lpid to be removed */
-        uint64_t dev_lpid;
-        MPID_Comm_get_lpid(comm_ptr, i, &dev_lpid, FALSE);
-        vmap[i] = dev_lpid;
+        MPID_Comm_get_lpid(comm_ptr, i, &vmap[i], FALSE);
     }
 
     for (int rank = 0; rank < group_ptr->size; rank++) {

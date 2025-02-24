@@ -182,16 +182,17 @@ static inline int MPID_Progress_test(MPID_Progress_state * state) /* state is un
 int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
                              MPIDI_Gpid local_gpids[], int *singlePG );
 int MPIDI_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIDI_Gpid *gpid );
-int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid gpid[], uint64_t lpid[] );
+int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid gpid[], MPIR_Lpid lpid[] );
 int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
                             int nPGids, const MPIDI_Gpid gpids[],
                             int root );
 int MPID_Intercomm_exchange_map( MPIR_Comm *local_comm_ptr, int local_leader,
                                  MPIR_Comm *peer_comm_ptr, int remote_leader,
-                                 int *remote_size, uint64_t **remote_lpids,
+                                 int *remote_size, MPIR_Lpid **remote_lpids,
                                  int *is_low_group);
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
-                                      int size, const uint64_t lpids[] );
+                                      int size, const MPIR_Lpid lpids[] );
+int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, MPIR_Lpid *lpid_ptr, bool is_remote);
 
 #define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
 

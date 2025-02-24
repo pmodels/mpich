@@ -486,6 +486,7 @@ int MPII_Finalize(MPIR_Session * session_ptr)
 
     MPII_thread_mutex_destroy();
     MPIR_Typerep_finalize();
+    MPIR_Group_finalize();
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__UNINITIALIZED);
 
   fn_exit:

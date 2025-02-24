@@ -504,7 +504,7 @@ static int MPII_Treeutil_hierarchy_populate(MPIR_Comm * comm, int rank, int nran
         MPIR_Assert(upper_level != NULL);
 
         /* Get wrank from the communicator as the coords are stored with wrank */
-        uint64_t temp = 0;
+        MPIR_Lpid temp = 0;
         MPID_Comm_get_lpid(comm, r, &temp, FALSE);
         int wrank = (int) temp;
         if (wrank < 0)

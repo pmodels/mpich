@@ -544,6 +544,13 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
 
     MPIR_Coll_comm_init(tmp_comm);
 
+    MPIR_Lpid local_lpid = tmp_comm->dev.local_vcrt->vcr_table[0]->lpid;
+    MPIR_Lpid remote_lpid = tmp_comm->dev.vcrt->vcr_table[0]->lpid;
+    mpi_errno = MPIR_Group_create_stride(1, 0, commself_ptr->session_ptr, local_lpid, 1, 1,
+                                         &tmp_comm->local_group);
+    mpi_errno = MPIR_Group_create_stride(1, 0, commself_ptr->session_ptr, remote_lpid, 1, 1,
+                                         &tmp_comm->remote_group);
+
     /* Even though this is a tmp comm and we don't call
        MPI_Comm_commit, we still need to call the creation hook
        because the destruction hook will be called in comm_release */
@@ -1322,8 +1329,6 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
     intercomm->remote_size  = remote_comm_size;
     intercomm->local_size   = comm_ptr->local_size;
     intercomm->rank         = comm_ptr->rank;
-    intercomm->local_group  = NULL;
-    intercomm->remote_group = NULL;
     intercomm->comm_kind    = MPIR_COMM_KIND__INTERCOMM;
     intercomm->local_comm   = NULL;
 
@@ -1340,6 +1345,21 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
 	MPIDI_PG_Dup_vcr(remote_pg[remote_translation[i].pg_index], 
 			 remote_translation[i].pg_rank, &intercomm->dev.vcrt->vcr_table[i]);
     }
+
+    intercomm->local_group  = comm_ptr->local_group;
+    MPIR_Group_add_ref(comm_ptr->local_group);
+
+    MPIR_Lpid *remote_map;
+    remote_map = MPL_malloc(remote_comm_size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
+    MPIR_ERR_CHKANDJUMP(!remote_map, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    for (i=0; i < intercomm->remote_size; i++) {
+        MPIDI_PG_t *pg = remote_pg[remote_translation[i].pg_index];
+        int rank = remote_translation[i].pg_rank;
+        remote_map[i] = pg->vct[rank].lpid;
+    }
+    mpi_errno = MPIR_Group_create_map(remote_comm_size, MPI_UNDEFINED, comm_ptr->session_ptr,
+                                      remote_map, &intercomm->remote_group);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Comm_commit(intercomm);
     MPIR_ERR_CHECK(mpi_errno);
