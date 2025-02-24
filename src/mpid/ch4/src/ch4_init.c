@@ -445,6 +445,7 @@ int MPID_Init(int requested, int *provided)
     MPIDI_CH4_DBG_MAP = MPL_dbg_class_alloc("CH4_MAP", "ch4_map");
     MPIDI_CH4_DBG_COMM = MPL_dbg_class_alloc("CH4_COMM", "ch4_comm");
     MPIDI_CH4_DBG_MEMORY = MPL_dbg_class_alloc("CH4_MEMORY", "ch4_memory");
+    MPIDI_CH4_DBG_IPC = MPL_dbg_class_alloc("CH4_IPC", "ch4_ipc");
 #endif
 
 #ifdef HAVE_SIGNAL
