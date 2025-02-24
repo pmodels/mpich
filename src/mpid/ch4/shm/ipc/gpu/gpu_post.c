@@ -206,9 +206,11 @@ static int ipc_track_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, u
     void *obj = MPL_gavl_tree_search(gavl_tree, addr, len);
 
     if (obj) {
+        MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "cached gpu ipc handle HIT for %p", addr);
         *handle_out = *((MPL_gpu_ipc_mem_handle_t *) obj);
         *found = true;
     } else {
+        MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "cached gpu ipc handle MISS for %p", addr);
         *found = false;
     }
 
@@ -219,6 +221,8 @@ static int ipc_track_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, u
                                   MPL_gpu_ipc_mem_handle_t handle)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "caching NEW gpu ipc handle for %p", addr);
 
     MPL_gpu_ipc_mem_handle_t *cache_obj = MPL_malloc(sizeof(handle), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!cache_obj, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -240,6 +244,8 @@ static int ipc_track_cache_remove(const void *addr, uintptr_t len, int local_dev
 {
     int mpi_errno = MPI_SUCCESS;
     int mpl_err;
+
+    MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "removing STALE gpu ipc handle for %p", addr);
 
     for (int i = 0; i < MPIR_Process.local_size; ++i) {
         MPL_gavl_tree_t track_tree = MPIDI_GPUI_global.ipc_handle_track_trees[i][local_dev_id];
