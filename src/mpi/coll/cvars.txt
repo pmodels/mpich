@@ -1539,6 +1539,18 @@ cvars:
         This CVAR controls whether the recv is posted for one phase or two phases
         in recexch algos. By default, we post the recvs for 2 phases.
 
+    - name        : MPIR_CVAR_ALLREDUCE_CCL
+      category    : COLLECTIVE
+      type        : enum
+      default     : auto
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        CCL to use for CCL allreduce
+        auto - Internal algorithm selection (use the value from the .json tuning file)
+        nccl - Force NCCL
+
     - name        : MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum

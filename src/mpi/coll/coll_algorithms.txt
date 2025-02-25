@@ -357,6 +357,8 @@ allreduce-intra:
         extra_params: k, single_phase_recv
         cvar_params: RECEXCH_KVAL, RECEXCH_SINGLE_PHASE_RECV
     ccl
+        extra_params: ccl
+        cvar_params: CCL
 allreduce-inter:
     reduce_exchange_bcast
 iallreduce-intra:
