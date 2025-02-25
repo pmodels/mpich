@@ -167,16 +167,21 @@ int MPIDI_IPC_mpi_socks_init(void)
     pid = getpid();
     len = sizeof(sockaddr);
 
-    /* Send PID in order to locally generate named-socket locations */
-    mpi_errno = MPIDU_Init_shm_put(&pid, sizeof(pid_t));
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDU_Init_shm_barrier();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    for (i = 0; i < MPIR_Process.local_size; ++i) {
-        mpi_errno = MPIDU_Init_shm_get(i, sizeof(pid_t), &MPIDI_IPCI_global_fd_pids[i]);
+    if (MPIR_Process.local_size == 1) {
+        /* FIXME: should we skip the whole function? */
+        MPIDI_IPCI_global_fd_pids[0] = pid;
+    } else {
+        /* Send PID in order to locally generate named-socket locations */
+        mpi_errno = MPIDU_Init_shm_put(&pid, sizeof(pid_t));
         MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPIDU_Init_shm_barrier();
+        MPIR_ERR_CHECK(mpi_errno);
+
+        for (i = 0; i < MPIR_Process.local_size; ++i) {
+            mpi_errno = MPIDU_Init_shm_get(i, sizeof(pid_t), &MPIDI_IPCI_global_fd_pids[i]);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
     /* Create servers for lower ranks */

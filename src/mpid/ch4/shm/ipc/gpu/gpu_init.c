@@ -54,7 +54,7 @@ int MPIDI_GPU_init_world(void)
      * between all node-local processes. */
     int my_max_dev_id, node_max_dev_id = -1;
     int my_max_subdev_id, node_max_subdev_id = -1;
-    MPIDI_GPU_device_info_t local_gpu_info, remote_gpu_info;
+    MPIDI_GPU_device_info_t local_gpu_info;
 
     MPIDI_GPUI_global.initialized = 0;
     mpl_err = MPL_gpu_get_dev_count(&device_count, &my_max_dev_id, &my_max_subdev_id);
@@ -62,21 +62,27 @@ int MPIDI_GPU_init_world(void)
     if (device_count < 0)
         goto fn_exit;
 
-    local_gpu_info.max_dev_id = remote_gpu_info.max_dev_id = my_max_dev_id;
-    local_gpu_info.max_subdev_id = remote_gpu_info.max_subdev_id = my_max_subdev_id;
+    local_gpu_info.max_dev_id = my_max_dev_id;
+    local_gpu_info.max_subdev_id = my_max_subdev_id;
 
-    MPIDU_Init_shm_put(&local_gpu_info, sizeof(MPIDI_GPU_device_info_t));
-    MPIDU_Init_shm_barrier();
+    if (MPIR_Process.local_size == 1) {
+        node_max_dev_id = my_max_dev_id;
+        node_max_subdev_id = my_max_subdev_id;
+    } else {
+        MPIDU_Init_shm_put(&local_gpu_info, sizeof(MPIDI_GPU_device_info_t));
+        MPIDU_Init_shm_barrier();
 
-    /* get node max device id */
-    for (int i = 0; i < MPIR_Process.local_size; i++) {
-        MPIDU_Init_shm_get(i, sizeof(MPIDI_GPU_device_info_t), &remote_gpu_info);
-        if (remote_gpu_info.max_dev_id > node_max_dev_id)
-            node_max_dev_id = remote_gpu_info.max_dev_id;
-        if (remote_gpu_info.max_subdev_id > node_max_subdev_id)
-            node_max_subdev_id = remote_gpu_info.max_subdev_id;
+        /* get node max device id */
+        for (int i = 0; i < MPIR_Process.local_size; i++) {
+            MPIDI_GPU_device_info_t remote_gpu_info;
+            MPIDU_Init_shm_get(i, sizeof(MPIDI_GPU_device_info_t), &remote_gpu_info);
+            if (remote_gpu_info.max_dev_id > node_max_dev_id)
+                node_max_dev_id = remote_gpu_info.max_dev_id;
+            if (remote_gpu_info.max_subdev_id > node_max_subdev_id)
+                node_max_subdev_id = remote_gpu_info.max_subdev_id;
+        }
+        MPIDU_Init_shm_barrier();
     }
-    MPIDU_Init_shm_barrier();
 
     /* Initialize the local and global device mappings */
     MPL_gpu_init_device_mappings(node_max_dev_id, node_max_subdev_id);
