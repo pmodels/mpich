@@ -781,7 +781,7 @@ def process_func_parameters(func):
                 pass
             else:
                 validation_list.append({'kind': "ARGNULL", 'name': name})
-        elif RE.match(r'(ERROR_CLASS|ERROR_CODE|FILE|ATTRIBUTE_VAL|EXTRA_STATE|LOGICAL|MATH)', kind):
+        elif RE.match(r'(ERROR_CLASS|ERROR_CODE|FILE|ATTRIBUTE_VAL|EXTRA_STATE|LOGICAL|MATH|ASYNC_THING|INTEGER)', kind):
             # no validation for these kinds
             pass
         elif RE.match(r'F90_(COMM|ERRHANDLER|FILE|GROUP|INFO|MESSAGE|OP|REQUEST|SESSION|DATATYPE|WIN)', kind):
@@ -2052,8 +2052,7 @@ def dump_body_of_routine(func):
                 for l in func['code-large_count']:
                     G.out.append(l)
             else:
-                for l in func['body']:
-                    G.out.append(l)
+                dump_function_direct(func)
         elif 'impl' in func:
             if RE.match(r'mpid', func['impl'], re.IGNORECASE):
                 dump_body_impl(func, "mpid")
@@ -2123,7 +2122,10 @@ def dump_function_replace(func, repl_call):
     G.out.append("return mpi_errno;")
 
 def dump_function_direct(func):
-    for l in func['body']:
+    body = func['body']
+    if '_is_abi' in func and 'code-is_abi' in func:
+        body = func['code-is_abi']
+    for l in body:
         G.out.append(l)
 
 # -- fn_fail ----
