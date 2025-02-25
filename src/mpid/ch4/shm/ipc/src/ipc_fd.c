@@ -58,6 +58,11 @@ static int MPIDI_IPC_mpi_fd_cleanup(void)
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     int i;
 
+    if (!MPIDI_IPCI_global_fd_pids || !MPIDI_IPCI_global_fd_socks) {
+        /* skip if not initialized */
+        goto fn_exit;
+    }
+
     /* Close sockets */
     for (i = 0; i < MPIR_Process.local_size; ++i) {
         if (MPIDI_IPCI_global_fd_socks[i] != -1) {
@@ -150,6 +155,11 @@ int MPIDI_IPC_mpi_socks_init(void)
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     pid_t pid;
     int enable = 1;
+
+    if (MPIR_Process.local_size == 1) {
+        /* skip if not needed */
+        goto fn_exit;
+    }
 
     memset(&sockaddr, 0, sizeof(sockaddr));
 
@@ -322,6 +332,8 @@ int MPIDI_IPC_mpi_fd_send(int rank, int fd, void *payload, size_t payload_len)
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     char empty_buf;
 
+    MPIR_Assert(rank != MPIR_Process.local_rank);
+
     /* Setup a payload if provided */
     if (payload == NULL) {
         iov.iov_base = &empty_buf;
@@ -368,6 +380,8 @@ int MPIDI_IPC_mpi_fd_recv(int rank, int *fd, void *payload, size_t payload_len, 
     char strerrbuf[MPIR_STRERROR_BUF_SIZE] ATTRIBUTE((unused));
     char empty_buf;
     bool trunc_check;
+
+    MPIR_Assert(rank != MPIR_Process.local_rank);
 
     /* Setup a payload if provided */
     if (payload == NULL) {
