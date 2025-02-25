@@ -120,7 +120,6 @@ static int MPIR_NCCL_datatype_is_supported(MPI_Datatype dtype)
     case MPIR_FLOAT16:
     case MPIR_FLOAT32:
     case MPIR_FLOAT64:
-    case MPIR_BFLOAT16:
         return 1;
     default:
         return 0;
@@ -159,9 +158,6 @@ static int MPIR_NCCL_get_datatype(MPI_Datatype dtype, ncclDataType_t *nccl_dtype
         break;
     case MPIR_FLOAT64:
         *nccl_dtype = ncclFloat64;
-        break;
-    case MPIR_BFLOAT16:
-        *nccl_dtype = ncclBfloat16;
         break;
     default:
         goto fn_fail;
