@@ -62,6 +62,10 @@ int MPIDI_GPU_init_world(void)
     if (device_count < 0)
         goto fn_exit;
 
+    if (MPIR_Process.local_size == 1) {
+        goto fn_exit;
+    }
+
     local_gpu_info.max_dev_id = remote_gpu_info.max_dev_id = my_max_dev_id;
     local_gpu_info.max_subdev_id = remote_gpu_info.max_subdev_id = my_max_subdev_id;
 
