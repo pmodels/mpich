@@ -80,6 +80,10 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
 
+        if (HANDLE_IS_BUILTIN(datatype)) {
+            datatype = MPIR_DATATYPE_GET_ORIG_BUILTIN(datatype);
+            MPIR_Assert(datatype != MPI_DATATYPE_NULL);
+        }
         if (op_ptr->kind == MPIR_OP_KIND__USER_X) {
             call_user_op_x(inbuf, inoutbuf, count, datatype, op_ptr->function, op_ptr->extra_state);
         } else if (op_ptr->kind == MPIR_OP_KIND__USER_LARGE) {

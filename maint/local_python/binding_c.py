@@ -27,12 +27,18 @@ def dump_mpi_c(func, is_large=False):
     check_large_parameters(func)
 
     # whether we need potentially swap the counts array argument
+    func["_need_CHKLMEM"] = False
     func["_need_coll_v_swap"] = False
     func["_need_type_create_swap"] = False
     if RE.search(r'((all)?gatherv|scatterv|alltoall[vw]|reduce_scatter)(_init)?\b', func['name'], re.IGNORECASE):
         func["_need_coll_v_swap"] = True
+        func["_need_CHKLMEM"] = True
     elif RE.search(r'(h?indexed(_block)?|struct|(d|sub)array)', func['name'], re.IGNORECASE):
         func["_need_type_create_swap"] = True
+        if is_large:
+            func["_need_CHKLMEM"] = True
+    elif func["_poly_in_arrays"]:
+        func["_need_CHKLMEM"] = True
 
     process_func_parameters(func)
 
@@ -554,6 +560,7 @@ def process_func_parameters(func):
     # Note: we'll attach the lists to func at the end
     validation_list, handle_ptr_list, impl_arg_list, impl_param_list = [], [], [], []
     pointertag_list = []  # needed to annotate MPICH_ATTR_POINTER_WITH_TYPE_TAG
+    datatype_in_list = [] # needed to swap builtin types to internal types
 
     # init to empty list or we will have double entries due to being called twice (small and large)
     func['_has_handle_out'] = []
@@ -575,6 +582,11 @@ def process_func_parameters(func):
                 t += temp_p['name']
                 impl_arg_list.append(temp_p['name'])
                 impl_param_list.append(get_impl_param(func, temp_p))
+                if temp_p['kind'] == "DATATYPE":
+                    datatype_in_list.append(temp_p)
+                    if temp_p['length']:
+                        # use an internal array for type swap
+                        impl_arg_list[-1] += '_i'
             validation_list.append({'kind': group_kind, 'name': t})
             # -- pointertag_list
             if re.search(r'alltoallw', func_name, re.IGNORECASE):
@@ -825,6 +837,8 @@ def process_func_parameters(func):
                 impl_arg_list.append(name + "_ptr")
                 impl_param_list.append("%s *%s_ptr" % (mpir_type, name))
         else:
+            if kind == "DATATYPE" and p['param_direction'] == 'in' and not is_type_create(func):
+                datatype_in_list.append(p)
             impl_arg_list.append(name)
             impl_param_list.append(get_impl_param(func, p))
         i += 1
@@ -840,6 +854,8 @@ def process_func_parameters(func):
     if len(handle_ptr_list):
         func['_handle_ptr_list'] = handle_ptr_list
         func['_need_validation'] = 1
+    if len(datatype_in_list):
+        func['_datatype_in_list'] = datatype_in_list
     if 'code-error_check' in func:
         func['_need_validation'] = 1
     func['_impl_arg_list'] = impl_arg_list
@@ -1434,6 +1450,12 @@ def get_static_call_internal(func, is_large):
     return static_call
 
 def check_large_parameters(func):
+    func['_poly_in_list'] = []
+    func['_poly_in_arrays'] = []
+    func['_poly_out_list'] = []
+    func['_poly_inout_list'] = []
+    func['_poly_need_filter'] = False
+
     if not func['_has_poly']:
         func['_poly_impl'] = "separate"
         return
@@ -1451,11 +1473,6 @@ def check_large_parameters(func):
         func['_poly_impl'] = "use-aint"
 
     # Gather large parameters. Potentially we need copy in & out
-    func['_poly_in_list'] = []
-    func['_poly_in_arrays'] = []
-    func['_poly_out_list'] = []
-    func['_poly_inout_list'] = []
-    func['_poly_need_filter'] = False
     for p in func['c_parameters']:
         if RE.match(r'POLY', p['kind']):
             if p['param_direction'] == 'out':
@@ -1495,9 +1512,12 @@ def dump_function_normal(func):
                 G.out.append("MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
     # ----
     G.out.append("int mpi_errno = MPI_SUCCESS;")
+    if func['_need_CHKLMEM']:
+        G.out.append("MPIR_CHKLMEM_DECL();")
     if '_handle_ptr_list' in func:
         for p in func['_handle_ptr_list']:
             dump_handle_ptr_var(func, p)
+
     if '_comm_from_request' in func:
         G.out.append("MPIR_Comm *comm_ptr = NULL;")
     if 'code-declare' in func:
@@ -1537,6 +1557,14 @@ def dump_function_normal(func):
     if 'code-handle_ptr' in func:
         for l in func['code-handle_ptr']:
             G.out.append(l)
+
+    if func["_need_coll_v_swap"]:
+        # get count array dimensions at the top
+        if RE.match(r'mpi_i?neighbor_', func['name'], re.IGNORECASE):
+            dump_validate_get_topo_size(func)
+        else:
+            dump_validate_get_comm_size(func)
+
     if func['_need_validation']:
         G.out.append("")
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
@@ -1564,6 +1592,32 @@ def dump_function_normal(func):
         G.out.append("}")
         G.out.append("#endif \x2f* HAVE_ERROR_CHECKING */")
         G.out.append("")
+
+    if '_datatype_in_list' in func:
+        for p in func['_datatype_in_list']:
+            if not p['length']:
+                # save original datatype for error report
+                G.out.append("MPIR_DATATYPE_REPLACE_BUILTIN(%s);" % p['name'])
+            else:
+                # alltoallw, use an internal datatype array since we can't modify the input array
+                n = 'comm_size'
+                if re.match(r'.*neighbor_i?alltoallw', func['name'], re.IGNORECASE):
+                    if p['name'] == 'sendtypes':
+                        n = 'outdegree'
+                    else:
+                        n = 'indegree'
+                G.out.append("MPI_Datatype *%s_i;" % p['name'])
+                if p['name'] == 'sendtypes':
+                    dump_if_open("sendbuf != MPI_IN_PLACE")
+                G.out.append("MPIR_CHKLMEM_MALLOC(%s_i, %s * sizeof(MPI_Datatype));" % (p['name'], n))
+                G.out.append("for (int i = 0; i < %s; i++) {" % n)
+                G.out.append("    %s_i[i] = %s[i];" % (p['name'], p['name']))
+                G.out.append("    MPIR_DATATYPE_REPLACE_BUILTIN(%s_i[i]);" % p['name'])
+                G.out.append("}")
+                if p['name'] == 'sendtypes':
+                    dump_else()
+                    G.out.append("%s_i = NULL;" % p['name'])
+                    dump_if_close()
 
     check_early_returns(func)
     G.out.append("")
@@ -1598,6 +1652,8 @@ def dump_function_normal(func):
     G.out.append("fn_exit:")
     for l in func['_clean_up']:
         G.out.append(l)
+    if func['_need_CHKLMEM']:
+        G.out.append("MPIR_CHKLMEM_FREEALL();")
     G.out.append("MPIR_FUNC_TERSE_EXIT;")
     dump_global_cs_exit()
 
@@ -1692,18 +1748,11 @@ def dump_poly_post_filter(func):
                 else:
                     G.out.append("*%s = %s;" % (p['name'], val))
 
-    def filter_array(int_max):
-        if func["_need_coll_v_swap"]:
-            dump_coll_v_exit(func)
-        elif func["_need_type_create_swap"]:
-            dump_type_create_exit(func)
-
     # ----
     int_max = None
     if not func['_is_large']:
         int_max = "INT_MAX"
     filter_output(int_max)
-    filter_array(int_max)
 
 def dump_type_create_swap(func):
     for p in func['_poly_in_arrays']:
@@ -1711,16 +1760,13 @@ def dump_type_create_swap(func):
         if RE.search(r'create_(d|sub)array', func['name'], re.IGNORECASE):
             n = "ndims"
         new_name = p['name'] + '_c'
-        G.out.append("MPI_Aint *%s = MPL_malloc(%s * sizeof(MPI_Aint), MPL_MEM_OTHER);" % (new_name, n))
+        G.out.append("MPI_Aint *%s;" % new_name)
+        G.out.append("MPIR_CHKLMEM_MALLOC(%s, %s * sizeof(MPI_Aint));" % (new_name, n))
         dump_for_open("i", n)
         check_aint_fits(func['_is_large'], "%s[i]" % p['name'])
         G.out.append("%s[i] = %s[i];" % (new_name, p['name']))
         dump_for_close()
         replace_impl_arg_list(func['_impl_arg_list'], p['name'], new_name)
-
-def dump_type_create_exit(func):
-    for p in func['_poly_in_arrays']:
-        G.out.append("MPL_free(%s_c);" % p['name'])
 
 def push_impl_decl(func, impl_name=None):
     if not impl_name:
@@ -1804,7 +1850,8 @@ def dump_coll_v_swap(func):
 
     # -- swapping routines
     def allocate_tmp_array(n):
-        G.out.append("MPI_Aint *tmp_array = MPL_malloc(%s * sizeof(MPI_Aint), MPL_MEM_OTHER);" % n)
+        G.out.append("MPI_Aint *tmp_array;")
+        G.out.append("MPIR_CHKLMEM_MALLOC(tmp_array, %s * sizeof(MPI_Aint));" % n)
     def swap_one(n, counts):
         dump_for_open("i", n)
         check_fit("%s[i]" % counts)
@@ -1818,18 +1865,10 @@ def dump_coll_v_swap(func):
 
     # -------------------------
     def get_comm_size_n(intra_only):
-        G.out.append("int n;")
-        if intra_only:
-            G.out.append("n = comm_ptr->local_size;")
+        if '_got_comm_size' not in func:
+            raise Exception("Missing comm_size in function %s\n" % func['name'])
         else:
-            cond = "(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)"
-            G.out.append("n = %s ? comm_ptr->remote_size : comm_ptr->local_size;" % cond)
-        G.out.append("#ifdef ENABLE_THREADCOMM")
-        dump_if_open("comm_ptr->threadcomm")
-        G.out.append("int intracomm_size = comm_ptr->local_size;")
-        G.out.append("n = comm_ptr->threadcomm->rank_offset_table[intracomm_size - 1];")
-        dump_if_close()
-        G.out.append("#endif")
+            G.out.append("int n = comm_size;")
 
     def get_comm_rank_r():
         G.out.append("int r;")
@@ -1843,8 +1882,6 @@ def dump_coll_v_swap(func):
     # -------------------------
     if RE.match(r'mpi_i?neighbor_', func['name'], re.IGNORECASE):
         # neighborhood collectives
-        G.out.append("int indegree, outdegree, weighted;")
-        G.out.append("mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);")
         if RE.search(r'allgatherv', func['name'], re.IGNORECASE):
             allocate_tmp_array("indegree * 2")
             swap_one("indegree", "recvcounts")
@@ -1913,9 +1950,6 @@ def dump_coll_v_swap(func):
 
             replace_arg(counts, 'tmp_array')
             replace_arg('displs', 'tmp_array + n')
-
-def dump_coll_v_exit(func):
-    G.out.append("MPL_free(tmp_array);")
 
 def dump_body_topo_fns(func, method):
     comm_ptr = func['_has_comm'] + "_ptr"
@@ -2875,6 +2909,7 @@ def dump_validate_op(op, dt, is_coll):
     G.out.append("    MPIR_Op_valid_ptr(op_ptr, mpi_errno);")
     if dt:
         G.out.append("} else {")
+        G.out.append("    MPIR_DATATYPE_REPLACE_BUILTIN(%s);" % dt)
         G.out.append("    mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(%s)) (%s);" % (op, dt))
         # check predefined datatype and replace with basic_type if necessary
         G.out.append("    if (mpi_errno != MPI_SUCCESS) {")
@@ -2923,6 +2958,10 @@ def dump_validate_get_topo_size(func):
         func['_got_topo_size'] = 1
 
 # ---- supporting routines (reusable) ----
+
+def is_type_create(func):
+    last_p = func['c_parameters'][-1]
+    return (last_p['kind'] == 'DATATYPE' and last_p['param_direction'] == 'out')
 
 def get_function_args(func):
     arg_list = []

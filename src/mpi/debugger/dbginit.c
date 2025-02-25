@@ -246,7 +246,7 @@ void MPII_Wait_for_debugger(void)
             PMPI_Recv(msg, 2, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPIR_proctable[i].pid = msg[1];
             MPIR_proctable[i].host_name = (char *) MPL_malloc(msg[0] + 1, MPL_MEM_DEBUG);
-            PMPI_Recv(MPIR_proctable[i].host_name, msg[0] + 1, MPI_CHAR,
+            PMPI_Recv(MPIR_proctable[i].host_name, msg[0] + 1, MPIR_CHAR_INTERNAL,
                       i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPIR_proctable[i].host_name[msg[0]] = 0;
         }
@@ -273,7 +273,7 @@ void MPII_Wait_for_debugger(void)
 
             /* Deliver to the root process the proctable information */
             PMPI_Ssend(msg, 2, MPI_INT, 0, 0, MPI_COMM_WORLD);
-            PMPI_Ssend(hostname, hostlen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+            PMPI_Ssend(hostname, hostlen, MPIR_CHAR_INTERNAL, 0, 0, MPI_COMM_WORLD);
         }
     }
 #endif /* MPIU_PROCTABLE_NEEDED */
