@@ -1150,6 +1150,11 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 
     MPIR_Assert(MPIR_Object_get_ref(comm_ptr) == 0);    /* sanity check */
 
+    /* Delete any CCL communicators */
+    if (comm_ptr->cclcomm) {
+        MPIR_CCLcomm_free(comm_ptr);
+    }
+
     /* Remove the attributes, executing the attribute delete routine.
      * Do this only if the attribute functions are defined.
      * This must be done first, because if freeing the attributes

@@ -397,6 +397,9 @@ typedef struct {
                 int k;
                 bool single_phase_recv;
             } intra_k_reduce_scatter_allgather;
+            struct {
+                int ccl;
+            } intra_ccl;
         } allreduce;
         struct {
             struct {
