@@ -471,63 +471,58 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         goto fn_exit;
     }
 
-    /* FIXME: the branch was kept to minimize line changes. Remove the if-check. */
-    if (group_ptr->rank != MPI_UNDEFINED) {
-        /* Get the new communicator structure and context id */
-        mpi_errno = MPIR_Comm_create(newcomm_ptr);
-        if (mpi_errno)
-            goto fn_fail;
+    /* Get the new communicator structure and context id */
+    mpi_errno = MPIR_Comm_create(newcomm_ptr);
+    if (mpi_errno)
+        goto fn_fail;
 
-        (*newcomm_ptr)->context_id = rinfo[0];
-        (*newcomm_ptr)->remote_size = rinfo[1];
-        (*newcomm_ptr)->recvcontext_id = new_context_id;
-        (*newcomm_ptr)->rank = group_ptr->rank;
-        (*newcomm_ptr)->comm_kind = comm_ptr->comm_kind;
-        /* Since the group has been provided, let the new communicator know
-         * about the group */
-        (*newcomm_ptr)->local_comm = 0;
-        (*newcomm_ptr)->local_group = group_ptr;
-        MPIR_Group_add_ref(group_ptr);
+    (*newcomm_ptr)->context_id = rinfo[0];
+    (*newcomm_ptr)->remote_size = rinfo[1];
+    (*newcomm_ptr)->recvcontext_id = new_context_id;
+    (*newcomm_ptr)->rank = group_ptr->rank;
+    (*newcomm_ptr)->comm_kind = comm_ptr->comm_kind;
+    /* Since the group has been provided, let the new communicator know
+     * about the group */
+    (*newcomm_ptr)->local_comm = 0;
+    (*newcomm_ptr)->local_group = group_ptr;
+    MPIR_Group_add_ref(group_ptr);
 
-        (*newcomm_ptr)->local_size = group_ptr->size;
-        (*newcomm_ptr)->remote_group = 0;
+    (*newcomm_ptr)->local_size = group_ptr->size;
+    (*newcomm_ptr)->remote_group = 0;
 
-        (*newcomm_ptr)->is_low_group = comm_ptr->is_low_group;
+    (*newcomm_ptr)->is_low_group = comm_ptr->is_low_group;
 
-        MPIR_Comm_set_session_ptr(*newcomm_ptr, session_ptr);
+    MPIR_Comm_set_session_ptr(*newcomm_ptr, session_ptr);
+
+    /* Now, everyone has the remote_mapping, and can apply that to
+     * the network address mapping. */
+
+    /* Setup the communicator's network addresses from the local mapping. */
+    mpi_errno = MPII_Comm_create_map(group_ptr->size,
+                                     remote_size,
+                                     mapping, remote_mapping, mapping_comm, *newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* create remote_group.
+     * FIXME: we can directly exchange group maps once we get rid of comm mappers */
+    MPIR_Group *remote_group;
+
+    MPIR_Lpid *remote_map;
+    remote_map = MPL_malloc(remote_size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
+    MPIR_ERR_CHKANDJUMP(!remote_map, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    MPIR_Group *mapping_group = mapping_comm->remote_group;
+    MPIR_Assert(mapping_group);
+    for (int i = 0; i < remote_size; i++) {
+        remote_map[i] = MPIR_Group_rank_to_lpid(mapping_group, remote_mapping[i]);
     }
+    mpi_errno = MPIR_Group_create_map(remote_size, MPI_UNDEFINED, session_ptr, remote_map,
+                                      &remote_group);
+    (*newcomm_ptr)->remote_group = remote_group;
 
-    if (group_ptr->rank != MPI_UNDEFINED) {
-        /* Now, everyone has the remote_mapping, and can apply that to
-         * the network address mapping. */
-
-        /* Setup the communicator's network addresses from the local mapping. */
-        mpi_errno = MPII_Comm_create_map(group_ptr->size,
-                                         remote_size,
-                                         mapping, remote_mapping, mapping_comm, *newcomm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        /* create remote_group.
-         * FIXME: we can directly exchange group maps once we get rid of comm mappers */
-        MPIR_Group *remote_group;
-
-        MPIR_Lpid *remote_map;
-        remote_map = MPL_malloc(remote_size * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
-        MPIR_ERR_CHKANDJUMP(!remote_map, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-        MPIR_Group *mapping_group = mapping_comm->remote_group;
-        MPIR_Assert(mapping_group);
-        for (int i = 0; i < remote_size; i++) {
-            remote_map[i] = MPIR_Group_rank_to_lpid(mapping_group, remote_mapping[i]);
-        }
-        mpi_errno = MPIR_Group_create_map(remote_size, MPI_UNDEFINED, session_ptr, remote_map,
-                                          &remote_group);
-        (*newcomm_ptr)->remote_group = remote_group;
-
-        (*newcomm_ptr)->tainted = comm_ptr->tainted;
-        mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+    (*newcomm_ptr)->tainted = comm_ptr->tainted;
+    mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
