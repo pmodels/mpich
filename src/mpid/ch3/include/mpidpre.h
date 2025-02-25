@@ -182,10 +182,6 @@ typedef struct MPIDI_CH3I_comm
                              * waiting for a revoke message before we can release
                              * the context id */
 
-    int is_disconnected;    /* set to TRUE if this communicator was
-                             * disconnected as a part of
-                             * MPI_COMM_DISCONNECT; FALSE otherwise. */
-
     struct MPIDI_VCRT *vcrt;          /* virtual connection reference table */
     struct MPIDI_VCRT *local_vcrt;    /* local virtual connection reference table */
 
@@ -194,6 +190,11 @@ typedef struct MPIDI_CH3I_comm
     MPIDI_CH3I_CH_comm_t ch;
 }
 MPIDI_CH3I_comm_t;
+
+/* add vcrt to MPIR_Group so we can inherit it whenever possible */
+#define MPID_DEV_GROUP_DECL  struct MPIDI_VCRT *ch3_vcrt;
+int MPID_Group_init_hook(MPIR_Group * group_ptr);
+int MPID_Group_free_hook(MPIR_Group * group_ptr);
 
 #define MPID_DEV_COMM_DECL MPIDI_CH3I_comm_t dev;
 
@@ -480,7 +481,7 @@ typedef struct MPIDI_Request {
      *   4. The callback function can complete other requests, thus
      *      calling those requests' callback functions.  However, the
      *      recursion depth of request completion function is limited.
-     *      If we ever need deeper recurisve calls, we need to change
+     *      If we ever need deeper recursive calls, we need to change
      *      to an iterative design instead of a recursive design for
      *      request completion.
      *

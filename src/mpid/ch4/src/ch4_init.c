@@ -820,7 +820,7 @@ int MPID_Finalize(void)
 
     MPIDU_genq_private_pool_destroy(MPIDI_global.gpu_coll_pool);
 
-    MPIDIU_avt_destroy();
+    MPIDIU_avt_finalize();
 
     mpi_errno = MPIDU_Init_shm_finalize();
     MPIR_ERR_CHECK(mpi_errno);
@@ -1071,26 +1071,6 @@ int MPID_Free_mem(void *user_buf)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr, int idx, MPIR_Lpid * lpid_ptr, bool is_remote)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int avtid = 0, lpid = 0;
-    MPIR_FUNC_ENTER;
-
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-        MPIDIU_comm_rank_to_pid(comm_ptr, idx, &lpid, &avtid);
-    else if (is_remote)
-        MPIDIU_comm_rank_to_pid(comm_ptr, idx, &lpid, &avtid);
-    else {
-        MPIDIU_comm_rank_to_pid_local(comm_ptr, idx, &lpid, &avtid);
-    }
-
-    *lpid_ptr = MPIDIU_GPID_CREATE(avtid, lpid);
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
 }
 
 int MPID_Get_node_id(MPIR_Comm * comm, int rank, int *id_p)
