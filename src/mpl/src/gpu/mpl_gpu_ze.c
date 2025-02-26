@@ -115,6 +115,7 @@ static physical_device_state *physical_device_states = NULL;
 
 typedef struct {
     const void *ptr;
+    uint64_t mem_id;
     int dev_id;
     int handles[2];
     uint32_t nhandles;
@@ -2884,6 +2885,21 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
             MPL_ze_gem_hash_entry_t *entry = NULL;
             HASH_FIND_PTR(gem_hash, &ptr, entry);
 
+            /* invalid entry */
+            if (entry && entry->mem_id != mem_id) {
+                HASH_DEL(gem_hash, entry);
+                /* close GEM handle */
+                for (int i = 0; i < entry->nhandles; i++) {
+                    status =
+                        close_handle(physical_device_states[entry->dev_id].fd, entry->handles[i]);
+                    if (status) {
+                        break;
+                    }
+                }
+                MPL_free(entry);
+                entry = NULL;
+            }
+
             if (entry == NULL) {
                 int shared_dev_id = get_physical_device(local_dev_id);
                 for (int i = 0; i < nfds; i++) {
@@ -2904,6 +2920,7 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
                 }
 
                 entry->ptr = ptr;
+                entry->mem_id = mem_id;
                 entry->dev_id = shared_dev_id;
                 for (int i = 0; i < nfds; i++)
                     entry->handles[i] = handles[i];
