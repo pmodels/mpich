@@ -2602,12 +2602,6 @@ int MPL_gpu_test(MPL_gpu_request * req, int *completed)
     goto fn_exit;
 }
 
-int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
-{
-    /* free hooks not used */
-    return MPL_SUCCESS;
-}
-
 int MPL_gpu_launch_hostfn(int stream, MPL_gpu_hostfn fn, void *data)
 {
     return -1;

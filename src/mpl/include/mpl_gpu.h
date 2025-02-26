@@ -115,7 +115,6 @@ int MPL_gpu_query_is_same_dev(int dev1, int dev2);
 
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
                               MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle);
-/* Used in ipc_handle_free_hook. Needed for fd-based ipc mechanism. */
 int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr);
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id, void **ptr);
 int MPL_gpu_ipc_handle_unmap(void *ptr);
@@ -139,7 +138,6 @@ int MPL_gpu_get_dev_id_from_attr(MPL_pointer_attr_t * attr);
 int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len);
 int MPL_gpu_get_root_device(int dev_id);
 
-int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr));
 int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id, int *subdevice_id);
 int MPL_gpu_get_dev_list(int *dev_count, char ***dev_list, bool is_subdev);
 int MPL_gpu_dev_affinity_to_env(int dev_count, char **dev_list, char **env);
