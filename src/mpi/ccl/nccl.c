@@ -109,8 +109,7 @@ fn_fail:
 
 static int MPIR_NCCL_datatype_is_supported(MPI_Datatype dtype)
 {
-    dtype = dtype & ~MPIR_TYPE_INDEX_MASK;
-    switch (dtype) {
+    switch (MPIR_DATATYPE_GET_RAW_INTERNAL(dtype)) {
     case MPIR_INT8:
     case MPIR_UINT8:
     case MPIR_INT32:
@@ -130,8 +129,7 @@ static int MPIR_NCCL_get_datatype(MPI_Datatype dtype, ncclDataType_t *nccl_dtype
 {
     int mpi_errno = MPI_SUCCESS;
 
-    dtype = dtype & ~MPIR_TYPE_INDEX_MASK;
-    switch (dtype) {
+    switch (MPIR_DATATYPE_GET_RAW_INTERNAL(dtype)) {
     // Ignoring ncclChar b/c MPICH treats MPI_CHAR as MPIR_INT8 internally
     case MPIR_INT8:
         *nccl_dtype = ncclInt8;
