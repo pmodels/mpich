@@ -115,6 +115,7 @@ static physical_device_state *physical_device_states = NULL;
 
 typedef struct {
     const void *ptr;
+    uint64_t mem_id;
     int dev_id;
     int handles[2];
     uint32_t nhandles;
@@ -193,12 +194,6 @@ typedef struct {
 
 static MPL_ze_mem_id_entry_t *mem_id_cache = NULL;
 
-typedef struct gpu_free_hook {
-    void (*free_hook) (void *dptr);
-    struct gpu_free_hook *next;
-} gpu_free_hook_s;
-static MPL_initlock_t free_hook_mutex = MPL_INITLOCK_INITIALIZER;
-
 pid_t mypid;
 
 /* *INDENT-OFF* */
@@ -224,7 +219,6 @@ static int handle_to_fd(int dev_fd, int handle, int *fd);
 static int close_handle(int dev_fd, int handle);
 static int parse_affinity_mask(void);
 static void get_max_dev_id(int *max_dev_id, int *max_subdev_id);
-static int gpu_mem_hook_init(void);
 static int remove_ipc_handle_entry(MPL_ze_mapped_buffer_entry_t * cache_entry, int dev_id);
 static int update_lru_mapped_order(void *ipc_buf, int dev_id);
 static int MPL_event_pool_add_new_pool(void);
@@ -232,10 +226,6 @@ static void MPL_event_pool_destroy(void);
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
 static int search_physical_devices(ze_pci_address_ext_t pci);
 #endif
-
-/* For zeMemFree callbacks */
-static gpu_free_hook_s *free_hook_chain = NULL;
-static ze_result_t ZE_APICALL(*sys_zeMemFree) (ze_context_handle_t hContext, void *dptr) = NULL;
 
 #define ZE_ERR_CHECK(ret) \
     do { \
@@ -644,8 +634,6 @@ int MPL_gpu_init(int debug_summary)
             ipc_curr_mapped_entries[i] = 0;
             ipc_max_entries[i] = max_cache_entries;
         }
-
-        MPL_gpu_free_hook_register(MPL_ze_ipc_remove_cache_handle);
     } else {
         MPL_gpu_info.specialized_cache = false;
     }
@@ -658,9 +646,6 @@ int MPL_gpu_init(int debug_summary)
 
     mypid = getpid();
 
-    MPL_initlock_lock(&free_hook_mutex);
-    gpu_mem_hook_init();
-    MPL_initlock_unlock(&free_hook_mutex);
     gpu_initialized = 1;
 
     if (MPL_gpu_info.debug_summary) {
@@ -1405,16 +1390,6 @@ int MPL_gpu_finalize(void)
 
     MPL_free(physical_device_states);
 
-    gpu_free_hook_s *prev;
-    MPL_initlock_lock(&free_hook_mutex);
-    while (free_hook_chain) {
-        prev = free_hook_chain;
-        free_hook_chain = free_hook_chain->next;
-        MPL_free(prev);
-    }
-    free_hook_chain = NULL;
-    MPL_initlock_unlock(&free_hook_mutex);
-
     for (i = 0; i < local_ze_device_count; i++) {
         MPL_ze_device_entry_t *device_state = device_states + i;
         for (j = 0; j < device_state->numQueueGroups; j++) {
@@ -2006,7 +1981,20 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
 
 bool MPL_gpu_ipc_handle_is_valid(MPL_gpu_ipc_mem_handle_t * handle, void *ptr)
 {
-    return true;
+    ze_result_t ret;
+    ze_device_handle_t device = NULL;
+    ze_memory_allocation_properties_t ptr_attr = {
+        .stype = ZE_STRUCTURE_TYPE_MEMORY_ALLOCATION_PROPERTIES,
+        .pNext = NULL,
+        .type = 0,
+        .id = 0,
+        .pageSize = 0,
+    };
+
+    ret = zeMemGetAllocProperties(ze_context, ptr, &ptr_attr, &device);
+    assert(ret == ZE_RESULT_SUCCESS);
+
+    return handle->data.mem_id == ptr_attr.id;
 }
 
 /* at finalize, to free a cache entry in ipc_cache_removal cache */
@@ -2614,49 +2602,6 @@ int MPL_gpu_test(MPL_gpu_request * req, int *completed)
     goto fn_exit;
 }
 
-static void gpu_free_hooks_cb(void *dptr)
-{
-    gpu_free_hook_s *current = free_hook_chain;
-    if (dptr != NULL) {
-        /* we call gpu hook only when dptr != NULL */
-        while (current) {
-            current->free_hook(dptr);
-            current = current->next;
-        }
-    }
-    return;
-}
-
-MPL_STATIC_INLINE_PREFIX int gpu_mem_hook_init(void)
-{
-    void *libze_handle = dlopen("libze_loader.so", RTLD_LAZY | RTLD_GLOBAL);
-    assert(libze_handle);
-
-    sys_zeMemFree = (void *) dlsym(libze_handle, "zeMemFree");
-    assert(sys_zeMemFree);
-
-    return MPL_SUCCESS;
-}
-
-int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
-{
-    gpu_free_hook_s *hook_obj = MPL_malloc(sizeof(gpu_free_hook_s), MPL_MEM_OTHER);
-    assert(hook_obj);
-    hook_obj->free_hook = free_hook;
-    hook_obj->next = NULL;
-
-    MPL_initlock_lock(&free_hook_mutex);
-    if (!free_hook_chain)
-        free_hook_chain = hook_obj;
-    else {
-        hook_obj->next = free_hook_chain;
-        free_hook_chain = hook_obj;
-    }
-    MPL_initlock_unlock(&free_hook_mutex);
-
-    return MPL_SUCCESS;
-}
-
 int MPL_gpu_launch_hostfn(int stream, MPL_gpu_hostfn fn, void *data)
 {
     return -1;
@@ -2690,24 +2635,6 @@ void MPL_gpu_event_complete(MPL_gpu_event_t * var)
 bool MPL_gpu_event_is_complete(MPL_gpu_event_t * var)
 {
     return (*var) <= 0;
-}
-
-#ifdef HAVE_VISIBILITY
-__attribute__ ((visibility("default")))
-#endif
-ze_result_t ZE_APICALL zeMemFree(ze_context_handle_t hContext, void *dptr)
-{
-    ze_result_t result;
-    MPL_initlock_lock(&free_hook_mutex);
-    if (!sys_zeMemFree) {
-        gpu_mem_hook_init();
-    }
-
-    gpu_free_hooks_cb(dptr);
-    result = sys_zeMemFree(hContext, dptr);
-
-    MPL_initlock_unlock(&free_hook_mutex);
-    return (result);
 }
 
 /* ZE-Specific Functions */
@@ -2918,31 +2845,6 @@ void MPL_ze_set_fds(int num_fds, int *fds, int *bdfs)
 #endif
 }
 
-/* zeMemFree hook function */
-void MPL_ze_ipc_remove_cache_handle(void *dptr)
-{
-    int mpl_err = MPL_SUCCESS;
-    MPL_pointer_attr_t attr;
-
-    mpl_err = MPL_gpu_query_pointer_attr(dptr, &attr);
-
-    if (attr.type == MPL_GPU_POINTER_DEV) {
-        void *pbase = NULL;
-        uintptr_t len;
-        mpl_err = MPL_gpu_get_buffer_bounds(dptr, &pbase, &len);
-        if (mpl_err != MPL_SUCCESS) {
-            goto fn_fail;
-        }
-        mpl_err = MPL_gpu_ipc_handle_destroy(pbase, &attr);
-    }
-
-  fn_exit:
-    return;
-  fn_fail:
-    fprintf(stderr, "Error > failed to complete MPL_ze_ipc_remove_cache_handle\n");
-    goto fn_exit;
-}
-
 int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, int local_dev_id,
                              int use_shared_fd, MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle)
 {
@@ -2977,6 +2879,21 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
             MPL_ze_gem_hash_entry_t *entry = NULL;
             HASH_FIND_PTR(gem_hash, &ptr, entry);
 
+            /* invalid entry */
+            if (entry && entry->mem_id != mem_id) {
+                HASH_DEL(gem_hash, entry);
+                /* close GEM handle */
+                for (int i = 0; i < entry->nhandles; i++) {
+                    status =
+                        close_handle(physical_device_states[entry->dev_id].fd, entry->handles[i]);
+                    if (status) {
+                        break;
+                    }
+                }
+                MPL_free(entry);
+                entry = NULL;
+            }
+
             if (entry == NULL) {
                 int shared_dev_id = get_physical_device(local_dev_id);
                 for (int i = 0; i < nfds; i++) {
@@ -2997,6 +2914,7 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
                 }
 
                 entry->ptr = ptr;
+                entry->mem_id = mem_id;
                 entry->dev_id = shared_dev_id;
                 for (int i = 0; i < nfds; i++)
                     entry->handles[i] = handles[i];
