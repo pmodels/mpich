@@ -70,9 +70,7 @@ int MPIDI_XPMEMI_seg_regist(int node_rank, uintptr_t size,
         MPL_ROUND_UP_ALIGN(size + ((uintptr_t) remote_vaddr - seg_low),
                            MPIDI_XPMEMI_global.sys_page_sz);
 
-    mpl_err = MPL_gavl_tree_search(segcache, remote_vaddr, size, (void **) &seg);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_search");
-
+    seg = MPL_gavl_tree_search(segcache, remote_vaddr, size);
     if (seg == NULL) {
         struct xpmem_addr xpmem_addr;
         void *att_vaddr;
