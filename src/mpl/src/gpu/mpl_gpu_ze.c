@@ -107,6 +107,7 @@ static uint32_t *subdevice_count = NULL;
 /* For drmfd */
 typedef struct _physical_device_state {
     int fd;
+    int local_dev_id;
     int domain, bus, device, function;
 } physical_device_state;
 
@@ -116,7 +117,7 @@ static physical_device_state *physical_device_states = NULL;
 typedef struct {
     const void *ptr;
     uint64_t mem_id;
-    int dev_id;
+    int shared_dev_id;
     int handles[2];
     uint32_t nhandles;
     UT_hash_handle hh;
@@ -189,6 +190,7 @@ static int *ipc_max_entries = NULL;
 typedef struct {
     void *ptr;
     uint64_t mem_id;
+    int dev_id;
     UT_hash_handle hh;
 } MPL_ze_mem_id_entry_t;
 
@@ -1651,6 +1653,67 @@ static int update_lru_mapped_order(void *ipc_buf, int dev_id)
     goto fn_exit;
 }
 
+static int remove_stale_sender_cache(const void *ptr, uint64_t mem_id, int local_dev_id)
+{
+    int status, mpl_err = MPL_SUCCESS;
+
+    if (physical_device_states != NULL) {
+        /* drmfd */
+        MPL_ze_gem_hash_entry_t *entry = NULL;
+        HASH_FIND_PTR(gem_hash, &ptr, entry);
+        if (entry) {
+            if (entry->mem_id != mem_id ||
+                physical_device_states[entry->shared_dev_id].local_dev_id != local_dev_id) {
+                goto fn_fail;
+            }
+            HASH_DEL(gem_hash, entry);
+
+            /* close GEM handle */
+            for (int i = 0; i < entry->nhandles; i++) {
+                status =
+                    close_handle(physical_device_states[entry->shared_dev_id].fd,
+                                 entry->handles[i]);
+                if (status) {
+                    break;
+                }
+            }
+
+            MPL_free(entry);
+        }
+    }
+
+    if (likely(MPL_gpu_info.specialized_cache)) {
+        MPL_ze_ipc_handle_entry_t *cache_entry = NULL;
+        MPL_ze_mem_id_entry_t *memid_entry = NULL;
+
+        if (local_dev_id == -1) {
+            goto fn_fail;
+        }
+
+        HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &mem_id, sizeof(uint64_t), cache_entry);
+        if (cache_entry) {
+            free_ipc_handle_cache(cache_entry);
+            HASH_DELETE(hh, ipc_cache_tracked[local_dev_id], cache_entry);
+            MPL_free(cache_entry);
+        }
+
+        HASH_FIND(hh, mem_id_cache, &ptr, sizeof(void *), memid_entry);
+        if (memid_entry) {
+            if (memid_entry->mem_id != mem_id || memid_entry->dev_id != local_dev_id) {
+                goto fn_fail;
+            }
+            HASH_DELETE(hh, mem_id_cache, memid_entry);
+            MPL_free(memid_entry);
+        }
+    }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    mpl_err = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
 /* given a local device pointer, create an IPC handle */
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
                               MPL_gpu_ipc_mem_handle_t * ipc_handle)
@@ -1678,18 +1741,11 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
         mem_id = ptr_attr->prop.id;
         HASH_FIND(hh, mem_id_cache, &pbase, sizeof(void *), memid_entry);
 
-        if (memid_entry && memid_entry->mem_id != mem_id) {
-            HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &memid_entry->mem_id, sizeof(uint64_t),
-                      cache_entry);
-            if (cache_entry) {
-                free_ipc_handle_cache(cache_entry);
-                HASH_DELETE(hh, ipc_cache_tracked[local_dev_id], cache_entry);
-                MPL_free(cache_entry);
-                cache_entry = NULL;
+        if (memid_entry && (memid_entry->mem_id != mem_id || memid_entry->dev_id != local_dev_id)) {
+            mpl_err = remove_stale_sender_cache(ptr, memid_entry->mem_id, memid_entry->dev_id);
+            if (mpl_err != MPL_SUCCESS) {
+                goto fn_fail;
             }
-
-            HASH_DELETE(hh, mem_id_cache, memid_entry);
-            MPL_free(memid_entry);
             memid_entry = NULL;
         }
 
@@ -1735,6 +1791,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
                 memset(memid_entry, 0, sizeof(MPL_ze_mem_id_entry_t));
                 memid_entry->ptr = pbase;
                 memid_entry->mem_id = mem_id;
+                memid_entry->dev_id = local_dev_id;
                 HASH_ADD(hh, mem_id_cache, ptr, sizeof(void *), memid_entry, MPL_MEM_OTHER);
             }
         }
@@ -1750,45 +1807,16 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
 /* ptr must be a local device pointer and base address */
 int MPL_gpu_ipc_handle_destroy(const void *ptr, MPL_pointer_attr_t * gpu_attr)
 {
-    int status, mpl_err = MPL_SUCCESS;
-    MPL_ze_ipc_handle_entry_t *cache_entry = NULL;
+    int mpl_err = MPL_SUCCESS;
     int dev_id;
     uint64_t mem_id;
 
-    if (physical_device_states != NULL) {
-        MPL_ze_gem_hash_entry_t *entry = NULL;
-        HASH_FIND_PTR(gem_hash, &ptr, entry);
-
-        if (entry) {
-            HASH_DEL(gem_hash, entry);
-
-            /* close GEM handle */
-            for (int i = 0; i < entry->nhandles; i++) {
-                status = close_handle(physical_device_states[entry->dev_id].fd, entry->handles[i]);
-                if (status) {
-                    break;
-                }
-            }
-
-            MPL_free(entry);
-        }
+    mem_id = gpu_attr->device_attr.prop.id;
+    dev_id = device_to_dev_id(gpu_attr->device);
+    if (dev_id == -1) {
+        goto fn_fail;
     }
-
-    if (likely(MPL_gpu_info.specialized_cache)) {
-        dev_id = device_to_dev_id(gpu_attr->device);
-        if (dev_id == -1) {
-            goto fn_fail;
-        }
-
-        mem_id = gpu_attr->device_attr.prop.id;
-        HASH_FIND(hh, ipc_cache_tracked[dev_id], &mem_id, sizeof(uint64_t), cache_entry);
-
-        if (cache_entry != NULL) {
-            free_ipc_handle_cache(cache_entry);
-            HASH_DELETE(hh, ipc_cache_tracked[dev_id], cache_entry);
-            MPL_free(cache_entry);
-        }
-    }
+    mpl_err = remove_stale_sender_cache(ptr, mem_id, dev_id);
 
   fn_exit:
     return mpl_err;
@@ -1894,7 +1922,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t * mpl_ipc_handle, int dev_id
     goto fn_exit;
 }
 
-/* free a cache entry in mmap_cache_removal */
+/* free a cache entry in mmap_cache_removal in finalize stage */
 int MPL_ze_mmap_handle_unmap(void *ptr, int dev_id)
 {
     int mpl_err = MPL_SUCCESS;
@@ -1986,7 +2014,9 @@ int MPL_gpu_ipc_handle_unmap(void *ptr)
                 for (int i = 0; i < cache_entry->nfds; ++i) {
                     close(cache_entry->fds[i]);
                 }
-
+                if (cache_entry->ipc_buf != ptr) {
+                    goto fn_fail;
+                }
                 HASH_DEL(ipc_cache_mapped[dev_id], cache_entry);
                 MPL_free(cache_entry);
                 cache_entry = NULL;
@@ -2912,6 +2942,7 @@ void MPL_ze_set_fds(int num_fds, int *fds, int *bdfs)
                                              MPL_MEM_OTHER);
     for (int i = 0; i < num_fds; i++) {
         physical_device_states[i].fd = fds[i];
+        physical_device_states[i].local_dev_id = -1;
 #ifdef ZE_PCI_PROPERTIES_EXT_NAME
         physical_device_states[i].domain = bdfs[4 * i];
         physical_device_states[i].bus = bdfs[4 * i + 1];
@@ -2928,6 +2959,7 @@ void MPL_ze_set_fds(int num_fds, int *fds, int *bdfs)
         MPL_ze_device_entry_t *device_state = device_states + d;
         device_state->sys_device_index = search_physical_devices(device_state->pci);
         assert(device_state->sys_device_index != -1);
+        physical_device_states[device_state->sys_device_index].local_dev_id = d;
     }
 #endif
 }
@@ -2992,8 +3024,16 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
             HASH_FIND_PTR(gem_hash, &ptr, entry);
 
             /* invalid entry */
-            if (entry && entry->mem_id != mem_id) {
-                MPL_ze_ipc_remove_cache_handle(ptr);
+            if (entry &&
+                (entry->mem_id != mem_id ||
+                 physical_device_states[entry->shared_dev_id].local_dev_id != local_dev_id)) {
+                mpl_err =
+                    remove_stale_sender_cache(ptr, entry->mem_id,
+                                              physical_device_states[entry->
+                                                                     shared_dev_id].local_dev_id);
+                if (mpl_err != MPL_SUCCESS) {
+                    goto fn_fail;
+                }
                 entry = NULL;
             }
 
@@ -3018,7 +3058,7 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 
                 entry->ptr = ptr;
                 entry->mem_id = mem_id;
-                entry->dev_id = shared_dev_id;
+                entry->shared_dev_id = shared_dev_id;
                 for (int i = 0; i < nfds; i++)
                     entry->handles[i] = handles[i];
                 entry->nhandles = nfds;
@@ -3027,7 +3067,7 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
 
             for (int i = 0; i < entry->nhandles; i++)
                 h.fds[i] = entry->handles[i];
-            h.dev_id = entry->dev_id;
+            h.dev_id = entry->shared_dev_id;
         } else {
             for (int i = 0; i < nfds; i++) {
                 memcpy(&h.fds[i], &ze_ipc_handle[i], sizeof(int));
@@ -3263,7 +3303,7 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
     if (likely(MPL_gpu_info.specialized_cache)) {
         HASH_FIND(hh, mem_id_cache, &pbase, sizeof(void *), memid_entry);
 
-        if (memid_entry && memid_entry->mem_id != mem_id) {
+        if (memid_entry && (memid_entry->mem_id != mem_id || memid_entry->dev_id != local_dev_id)) {
             HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &memid_entry->mem_id, sizeof(uint64_t),
                       cache_entry);
             if (cache_entry) {
@@ -3355,6 +3395,7 @@ int MPL_ze_mmap_device_pointer(void *dptr, MPL_gpu_device_attr * attr,
                 memset(memid_entry, 0, sizeof(MPL_ze_mem_id_entry_t));
                 memid_entry->ptr = pbase;
                 memid_entry->mem_id = mem_id;
+                memid_entry->dev_id = local_dev_id;
                 HASH_ADD(hh, mem_id_cache, ptr, sizeof(void *), memid_entry, MPL_MEM_OTHER);
             }
         }
