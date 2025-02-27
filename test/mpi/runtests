@@ -765,6 +765,22 @@ sub run_mpitests {
             }
         }
         close($in);
+        {
+            my @inline;
+            while (<$out>) {
+                print "        $_" if $g_opt{verbose};
+                push @inline, $_;
+            }
+            if (@inline) {
+                my $runtime = 0;
+                my $test_opt = {name=>"run_mpitests", np=>$np, dir=>".", args=>[], envs=>[] };
+                RunPreMsg($test_opt);
+                print "run_mpitests: stray output in finalize\n";
+                show_failed_test_detail($test_opt, \@inline);
+                RunTestFailed($test_opt, join('', @inline), $runtime);
+                RunPostMsg($test_opt);
+            }
+        }
         close($out);
         waitpid($pid, 0); # TODO: check $?
         if ($flag_aborted) {
