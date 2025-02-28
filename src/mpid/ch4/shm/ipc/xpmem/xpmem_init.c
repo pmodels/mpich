@@ -25,6 +25,10 @@ int MPIDI_XPMEM_init_world(void)
         goto fn_exit;
     }
 
+    if (MPIR_Process.local_size == 1) {
+        goto fn_exit;
+    }
+
     MPIR_FUNC_ENTER;
     MPIR_CHKPMEM_DECL();
 
