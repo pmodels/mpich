@@ -149,14 +149,6 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
     int mpi_errno = MPI_SUCCESS;
     int nic_count = 0;
 
-#ifdef HAVE_LIBFABRIC_NIC
-    int max_nics = MPIR_CVAR_CH4_OFI_MAX_NICS;
-    if (MPIR_CVAR_CH4_OFI_MAX_NICS == 0 || MPIR_CVAR_CH4_OFI_MAX_NICS <= -2) {
-        /* Invalid values for the CVAR will default to single nic */
-        max_nics = 1;
-    }
-#endif
-
     /* Count the number of NICs */
     struct fi_info *pref_prov = NULL;
     for (struct fi_info * p = prov; p; p = p->next) {
@@ -178,7 +170,7 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
             MPIDI_OFI_global.prov_use[nic_count] = fi_dupinfo(p);
             MPIR_Assert(MPIDI_OFI_global.prov_use[nic_count]);
             nic_count++;
-            if (nic_count == max_nics) {
+            if (nic_count == MPIDI_OFI_MAX_NICS) {
                 break;
             }
         }
@@ -214,7 +206,6 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov)
 static int setup_single_nic(void)
 {
     MPIDI_OFI_global.num_nics = 1;
-    MPIDI_OFI_global.num_close_nics = 1;
     MPIDI_OFI_global.nic_info[0].nic = MPIDI_OFI_global.prov_use[0];
     MPIDI_OFI_global.nic_info[0].id = 0;
     MPIDI_OFI_global.nic_info[0].close = 1;
@@ -257,41 +248,44 @@ static int setup_multi_nic(int nic_count)
     int local_rank = MPIR_Process.local_rank;
     MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
     MPIR_CHKLMEM_DECL();
+
+    int num_nics = 1;
+    if (MPIR_CVAR_CH4_OFI_MAX_NICS == -1) {
+        /* use all nics */
+        num_nics = nic_count;
+    } else if (MPIR_CVAR_CH4_OFI_MAX_NICS > 1) {
+        /* use multiple nics */
+        num_nics = MPL_MIN(MPIR_CVAR_CH4_OFI_MAX_NICS, nic_count);
+    } else {
+        /* default single nic (will selelct closest nic if nic_count > 1) */
+        num_nics = 1;
+    }
+
     bool pref_nic_set = false;
-
-    MPIDI_OFI_global.num_nics = nic_count;
-
-    if (MPIR_CVAR_CH4_OFI_PREF_NIC > -1 && MPIR_CVAR_CH4_OFI_PREF_NIC < MPIDI_OFI_global.num_nics) {
+    if (MPIR_CVAR_CH4_OFI_PREF_NIC > -1 && MPIR_CVAR_CH4_OFI_PREF_NIC < nic_count) {
         pref_nic_set = true;
     }
 
     /* Initially sort the NICs by name. This way all intranode ranks have a consistent view. */
-    qsort(MPIDI_OFI_global.prov_use, MPIDI_OFI_global.num_nics, sizeof(struct fi_info *),
-          compare_nic_names);
-
-    /* Limit the number of physical NICs depending on the CVAR */
-    if (MPIR_CVAR_CH4_OFI_MAX_NICS > 0 && MPIDI_OFI_global.num_nics > MPIR_CVAR_CH4_OFI_MAX_NICS) {
-        for (int i = MPIR_CVAR_CH4_OFI_MAX_NICS; i < MPIDI_OFI_global.num_nics; ++i) {
-            fi_freeinfo(MPIDI_OFI_global.prov_use[i]);
-        }
-        MPIDI_OFI_global.num_nics = MPIR_CVAR_CH4_OFI_MAX_NICS;
-    }
+    qsort(MPIDI_OFI_global.prov_use, nic_count, sizeof(struct fi_info *), compare_nic_names);
 
     int num_numa_nodes = MPIR_hwtopo_get_num_numa_nodes();
     bool is_snc4_with_cxi_nics = false;
 
     if ((num_numa_nodes == 8 || num_numa_nodes == 16))
-        if (MPIDI_OFI_global.num_nics > 1)
+        if (nic_count > 1)
             if (strstr(MPIDI_OFI_global.prov_use[0]->domain_attr->name, "cxi"))
                 is_snc4_with_cxi_nics = true;
 
+    int num_close_nics = 0;
+
     /* Special case of nic assignment for SPR in SNC4 mode */
     if (is_snc4_with_cxi_nics && !pref_nic_set) {
-        for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
+        for (int i = 0; i < nic_count; ++i) {
             nics[i].nic = MPIDI_OFI_global.prov_use[i];
             nics[i].id = i;
             /* Set the preference of all NICs to least preferable (lower is more preferable) */
-            nics[i].prefer = MPIDI_OFI_global.num_nics + 1;
+            nics[i].prefer = nic_count + 1;
             nics[i].count = 0;
             nics[i].num_close_ranks = 0;
 
@@ -310,10 +304,10 @@ static int setup_multi_nic(int nic_count)
             }
         }
         /* Use num_parents to determine nic closeness */
-        for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
+        for (int i = 0; i < nic_count; ++i) {
             nics[i].close = is_nic_close_snc4(&nics[i], num_parents);
             if (nics[i].close)
-                MPIDI_OFI_global.num_close_nics++;
+                num_close_nics++;
         }
 
     } else {
@@ -321,15 +315,15 @@ static int setup_multi_nic(int nic_count)
 
         /* Now go through every NIC and set initial information
          * from current process's perspective */
-        for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
+        for (int i = 0; i < nic_count; ++i) {
             nics[i].nic = MPIDI_OFI_global.prov_use[i];
             nics[i].id = i;
             /* Determine NIC's "closeness" to current process */
             nics[i].close = is_nic_close(nics[i].nic);
             if (nics[i].close)
-                MPIDI_OFI_global.num_close_nics++;
+                num_close_nics++;
             /* Set the preference of all NICs to least preferable (lower is more preferable) */
-            nics[i].prefer = MPIDI_OFI_global.num_nics + 1;
+            nics[i].prefer = nic_count + 1;
             nics[i].count = 0;
             nics[i].num_close_ranks = 0;
             /* Determine NIC's first normal parent topology
@@ -354,10 +348,10 @@ static int setup_multi_nic(int nic_count)
 
     /* If there were zero NICs on my socket, then just consider every NIC close
      * and share them among all ranks with a similar view */
-    if (MPIDI_OFI_global.num_close_nics == 0) {
-        for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i)
+    if (num_close_nics == 0) {
+        for (int i = 0; i < nic_count; ++i)
             nics[i].close = 1;
-        MPIDI_OFI_global.num_close_nics = MPIDI_OFI_global.num_nics;
+        num_close_nics = nic_count;
     }
 
     if (pref_nic_set) {
@@ -376,37 +370,42 @@ static int setup_multi_nic(int nic_count)
         if (is_snc4_with_cxi_nics) {
             /* Use a separate sorting function for snc4 nics in order to just compare
              * closeness followed by nic name */
-            qsort(nics, MPIDI_OFI_global.num_nics, sizeof(nics[0]), compare_nics_snc4);
+            qsort(nics, nic_count, sizeof(nics[0]), compare_nics_snc4);
         } else {
-            qsort(nics, MPIDI_OFI_global.num_nics, sizeof(nics[0]), compare_nics);
+            qsort(nics, nic_count, sizeof(nics[0]), compare_nics);
         }
 
         /* Because we cannot communicate with the other local processes to avoid collisions with the
          * same NICs, just shift NICs that have multiple close NICs around according to their local
          * rank. This will likely give the same result as long as processes have been bound properly. */
-        int old_idx = (MPIDI_OFI_global.num_close_nics == 0) ? 0 :
-            local_rank % MPIDI_OFI_global.num_close_nics;
+        int old_idx = (num_close_nics == 0) ? 0 : local_rank % num_close_nics;
 
         if (old_idx != 0) {
             MPIDI_OFI_nic_info_t *old_nics;
-            MPIR_CHKLMEM_MALLOC(old_nics, sizeof(MPIDI_OFI_nic_info_t) * MPIDI_OFI_global.num_nics);
-            memcpy(old_nics, nics, sizeof(MPIDI_OFI_nic_info_t) * MPIDI_OFI_global.num_nics);
+            MPIR_CHKLMEM_MALLOC(old_nics, sizeof(MPIDI_OFI_nic_info_t) * nic_count);
+            memcpy(old_nics, nics, sizeof(MPIDI_OFI_nic_info_t) * nic_count);
 
             /* Rotate the preferred NIC for each process starting at old_idx. */
-            for (int new_idx = 0; new_idx < MPIDI_OFI_global.num_close_nics; new_idx++) {
+            for (int new_idx = 0; new_idx < num_close_nics; new_idx++) {
                 if (new_idx != old_idx)
                     memcpy(&nics[new_idx], &old_nics[old_idx], sizeof(MPIDI_OFI_nic_info_t));
 
-                if (++old_idx >= MPIDI_OFI_global.num_close_nics)
+                if (++old_idx >= num_close_nics)
                     old_idx = 0;
             }
         }
     }
 
     /* Reorder the prov_use array based on nic_info array */
-    for (int i = 0; i < MPIDI_OFI_global.num_nics; ++i) {
+    for (int i = 0; i < nic_count; ++i) {
         MPIDI_OFI_global.prov_use[i] = nics[i].nic;
     }
+
+    /* Set globals */
+    for (int i = num_nics; i < nic_count; i++) {
+        fi_freeinfo(MPIDI_OFI_global.prov_use[i]);
+    }
+    MPIDI_OFI_global.num_nics = MPL_MIN(nic_count, num_nics);
 
     /* Set some info keys on MPI_INFO_ENV to reflect the number of available (close) NICs */
     char nics_str[32];
@@ -414,7 +413,7 @@ static int setup_multi_nic(int nic_count)
     MPIR_Info_get_ptr(MPI_INFO_ENV, info_ptr);
     snprintf(nics_str, 32, "%d", MPIDI_OFI_global.num_nics);
     MPIR_Info_set_impl(info_ptr, "num_nics", nics_str);
-    snprintf(nics_str, 32, "%d", MPIDI_OFI_global.num_close_nics);
+    snprintf(nics_str, 32, "%d", num_close_nics);
     MPIR_Info_set_impl(info_ptr, "num_close_nics", nics_str);
 
   fn_exit:
