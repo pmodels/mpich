@@ -492,7 +492,6 @@ typedef struct {
     MPIDI_OFI_per_vci_t per_vci[MPIDI_CH4_MAX_VCIS];
     int num_vcis;
     int num_nics;
-    int num_close_nics;
     int num_comms_enabled_striping;     /* Number of active communicators with striping enabled */
     int num_comms_enabled_hashing;      /* Number of active communicators with hashingenabled */
     bool am_bufs_registered;    /* whether active message buffers are GPU registered */
