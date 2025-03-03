@@ -208,6 +208,11 @@ int MPIR_NCCL_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_
     ret = cudaSetDevice(recv_attr.device_attr.device);
     CUDA_ERR_CHECK(ret);
 
+    /* Handle in-place operations (NCCL does not define an "in-place" value) */
+    if (sendbuf == MPI_IN_PLACE) {
+        sendbuf = recvbuf;
+    }
+
     /* Finally make the NCCL call */
     ret = ncclAllReduce(sendbuf, recvbuf, count, ncclDatatype, ncclOp, ncclcomm->ncclcomm,
                         ncclcomm->stream);
