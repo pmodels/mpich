@@ -1,0 +1,298 @@
+# vim: set ft=c:
+
+MPI_Abi_is_supported:
+    flag: LOGICAL, direction=out, [true if the standard ABI is supported, false otherwise]
+    .desc: Return whether the standard ABI is supported
+    .impl: direct
+{
+    *flag = 0;
+    return MPI_SUCCESS;
+}
+{ -- is_abi --
+    *flag = 1;
+    return MPI_SUCCESS;
+}
+
+MPI_Abi_get_info:
+    info: INFO, direction=out, [info object]
+    .desc: Return an info object that provides information related to the ABI
+    .impl: direct
+{
+    *info = MPI_INFO_NULL;
+    return MPI_SUCCESS;
+}
+{ -- is_abi --
+    int mpi_errno = MPI_SUCCESS;
+    *info = MPI_INFO_NULL;
+
+    MPIR_Info *info_ptr;
+    mpi_errno = MPIR_Info_alloc(&info_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPI_Aint size;
+    char str[10];
+#define PUSH_TYPE_INFO(type, keyname) \
+    do { \
+        MPIR_Type_size_impl(type, &size); \
+        snprintf(str, 10, "%d", (int) size); \
+        MPIR_Info_push(info_ptr, keyname, str); \
+    } while (0)
+    PUSH_TYPE_INFO(MPI_AINT, "mpi_aint_size");
+    PUSH_TYPE_INFO(MPI_COUNT, "mpi_count_size");
+    PUSH_TYPE_INFO(MPI_OFFSET, "mpi_offset_size");
+    PUSH_TYPE_INFO(MPI_INTEGER, "mpi_integer_size");
+    PUSH_TYPE_INFO(MPI_REAL, "mpi_real_size");
+    PUSH_TYPE_INFO(MPI_DOUBLE_PRECISION, "mpi_double_precision_size");
+#undef PUSH_TYPE_INFO
+#define PUSH_TYPE_INFO(type, keyname) \
+    do { \
+        MPIR_Type_size_impl(type, &size); \
+        snprintf(str, 10, "%d", (size > 0) ? 1 : 0); \
+        MPIR_Info_push(info_ptr, keyname, str); \
+    } while (0)
+    PUSH_TYPE_INFO(MPI_INTEGER1, "mpi_integer1_supported");
+    PUSH_TYPE_INFO(MPI_INTEGER2, "mpi_integer2_supported");
+    PUSH_TYPE_INFO(MPI_INTEGER4, "mpi_integer4_supported");
+    PUSH_TYPE_INFO(MPI_INTEGER8, "mpi_integer8_supported");
+    PUSH_TYPE_INFO(MPI_INTEGER16, "mpi_integer16_supported");
+    /*
+    PUSH_TYPE_INFO(MPI_LOGICAL1, "mpi_logical1_supported");
+    PUSH_TYPE_INFO(MPI_LOGICAL2, "mpi_logical2_supported");
+    PUSH_TYPE_INFO(MPI_LOGICAL4, "mpi_logical4_supported");
+    PUSH_TYPE_INFO(MPI_LOGICAL8, "mpi_logical8_supported");
+    PUSH_TYPE_INFO(MPI_LOGICAL16, "mpi_logical16_supported");
+    */
+    PUSH_TYPE_INFO(MPI_REAL2, "mpi_real2_supported");
+    PUSH_TYPE_INFO(MPI_REAL4, "mpi_real4_supported");
+    PUSH_TYPE_INFO(MPI_REAL8, "mpi_real8_supported");
+    PUSH_TYPE_INFO(MPI_REAL16, "mpi_real16_supported");
+    PUSH_TYPE_INFO(MPI_COMPLEX4, "mpi_complex4_supported");
+    PUSH_TYPE_INFO(MPI_COMPLEX8, "mpi_complex8_supported");
+    PUSH_TYPE_INFO(MPI_COMPLEX16, "mpi_complex16_supported");
+    PUSH_TYPE_INFO(MPI_COMPLEX32, "mpi_complex32_supported");
+    PUSH_TYPE_INFO(MPI_DOUBLE_COMPLEX, "mpi_double_complex_supported");
+#undef PUSH_TYPE_INFO
+    *info = info_ptr->handle;
+
+  fn_fail:
+    return MPI_SUCCESS;
+}
+
+MPI_Abi_get_version:
+    abi_major: VERSION, direction=out, [version number]
+    abi_minor: VERSION, direction=out, [subversion number]
+    .desc: Return the standard ABI version
+    .impl: direct
+{
+    *abi_major = -1;
+    *abi_minor = -1;
+    return MPI_SUCCESS;
+}
+{ -- is_abi --
+    *abi_major = 1;
+    *abi_minor = 0;
+    return MPI_SUCCESS;
+}
+
+
+MPI_Comm_toint:
+    .return: INTEGER
+    comm: COMMUNICATOR
+    .desc: converts MPI_Comm to an integer handle
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) comm;
+}
+
+MPI_Comm_fromint:
+    .return: COMMUNICATOR
+    comm: INTEGER
+    .desc: converts an integer handle to MPI_Comm
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Comm) comm;
+}
+
+MPI_Errhandler_toint:
+    .return: INTEGER
+    errhandler: ERRHANDLER
+    .desc: converts MPI_Errhandler to an integer handle
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) errhandler;
+}
+
+MPI_Errhandler_fromint:
+    .return: ERRHANDLER
+    errhandler: INTEGER
+    .desc: converts an integer handle to MPI_Errhandler
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Errhandler) errhandler;
+}
+
+# MPI_File_fromint and MPI_File_toint are defined in io_api.txt
+
+MPI_Group_toint:
+    .return: INTEGER
+    group: GROUP
+    .desc: converts MPI_Group to an integer handle
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) group;
+}
+
+MPI_Group_fromint:
+    .return: GROUP
+    group: INTEGER
+    .desc: converts an integer handle to MPI_Group
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Group) group;
+}
+
+MPI_Info_toint:
+    .return: INTEGER
+    info: INFO
+    .desc: converts MPI_Info to an integer handle
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) info;
+}
+
+MPI_Info_fromint:
+    .return: INFO
+    info: INTEGER
+    .desc: converts an integer handle to MPI_Info
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Info) info;
+}
+
+MPI_Message_toint:
+    .return: INTEGER
+    message: MESSAGE
+    .desc: converts MPI_Message to an integer handle
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) message;
+}
+
+MPI_Message_fromint:
+    .return: MESSAGE
+    message: INTEGER
+    .desc: converts an integer handle to MPI_Message
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Message) message;
+}
+
+MPI_Op_toint:
+    .return: INTEGER
+    op: OPERATION
+    .desc: converts MPI_Op to an integer handle
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) op;
+}
+
+MPI_Op_fromint:
+    .return: OPERATION
+    op: INTEGER
+    .desc: converts an integer handle to MPI_Op
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Op) op;
+}
+
+MPI_Request_toint:
+    .return: INTEGER
+    request: REQUEST
+    .desc: converts MPI_Request to an integer handle
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) request;
+}
+
+MPI_Request_fromint:
+    .return: REQUEST
+    request: INTEGER
+    .desc: converts an integer handle to MPI_Request
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Request) request;
+}
+
+MPI_Session_toint:
+    .request: INTEGER
+    session: SESSION
+    .desc: converts MPI_Session to an integer handle
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) session;
+}
+
+MPI_Session_fromint:
+    .return: SESSION
+    session: INTEGER
+    .desc: converts an integer handle to MPI_Session
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Session) session;
+}
+
+MPI_Type_toint:
+    .return: INTEGER
+    datatype: DATATYPE
+    .desc: converts MPI_Type to an integer handle
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) datatype;
+}
+
+MPI_Type_fromint:
+    .return: DATATYPE
+    datatype: INTEGER
+    .desc: converts an integer handle to MPI_Type
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Datatype) datatype;
+}
+
+MPI_Win_toint:
+    .return: INTEGER
+    win: WINDOW
+    .desc: converts MPI_Win to an integer handle
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (int) win;
+}
+
+MPI_Win_fromint:
+    .return: WINDOW
+    win: INTEGER
+    .desc: converts an integer handle to MPI_Win
+    .impl: direct
+    .skip: Fortran, Errors
+{
+    return (MPI_Win) win;
+}
