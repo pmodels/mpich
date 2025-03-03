@@ -2706,6 +2706,10 @@ fi
 # types as well.  In addition, allow the device to suppress support for these
 # optional C types by setting MPID_NO_LONG_DOUBLE and/or MPID_NO_LONG_LONG
 # to yes.
+#
+# TODO: we need test the binary format of long double. One idea is to directly
+#       check the hex value of e.g. 0.375.
+#
 if test "$MPID_NO_LONG_DOUBLE" != "yes" && test "X$enable_long_double" != "Xno" ; then
     AC_CACHE_CHECK([whether long double is supported],
     pac_cv_have_long_double,[
@@ -3470,7 +3474,13 @@ AC_DEFINE_UNQUOTED([MPIR_FLOAT_INTERNAL],         [MPIR_FLOAT$len], [Internal ty
 len=`expr $ac_cv_sizeof_double \* 8`
 AC_DEFINE_UNQUOTED([MPIR_DOUBLE_INTERNAL],        [MPIR_FLOAT$len], [Internal type for MPI_DOUBLE])
 len=`expr $ac_cv_sizeof_long_double \* 8`
-AC_DEFINE_UNQUOTED([MPIR_LONG_DOUBLE_INTERNAL],   [MPIR_ALT_FLOAT$len], [Internal type for MPI_LONG_DOUBLE])
+if test "$len" = 64 ; then
+    # long double is an alias of double, e.g. arm64
+    internal_type=MPIR_FLOAT$len
+else
+    internal_type=MPIR_ALT_FLOAT$len
+fi
+AC_DEFINE_UNQUOTED([MPIR_LONG_DOUBLE_INTERNAL],   [$internal_type], [Internal type for MPI_LONG_DOUBLE])
 AC_DEFINE_UNQUOTED([MPIR_BYTE_INTERNAL],          [MPIR_UINT8], [Internal type for MPI_BYTE])
 len=`expr $ac_cv_sizeof_wchar_t \* 8`
 AC_DEFINE_UNQUOTED([MPIR_WCHAR_INTERNAL],         [MPIR_INT$len], [Internal type for MPI_WCHAR])
@@ -3523,7 +3533,13 @@ AC_DEFINE_UNQUOTED([MPIR_CXX_FLOAT_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Intern
 len=`expr $ac_cv_sizeof_DoubleComplex / 2 \* 8`
 AC_DEFINE_UNQUOTED([MPIR_CXX_DOUBLE_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_CXX_DOUBLE_COMPLEX])
 len=`expr $ac_cv_sizeof_LongDoubleComplex / 2 \* 8`
-AC_DEFINE_UNQUOTED([MPIR_CXX_LONG_DOUBLE_COMPLEX_INTERNAL],[MPIR_ALT_COMPLEX$len], [Internal type for MPI_CXX_LONG_DOUBLE_COMPLEX])
+if test "$len" = 64 ; then
+    # long double is an alias of double, e.g. arm64
+    internal_type=MPIR_COMPLEX$len
+else
+    internal_type=MPIR_ALT_COMPLEX$len
+fi
+AC_DEFINE_UNQUOTED([MPIR_CXX_LONG_DOUBLE_COMPLEX_INTERNAL],[$internal_type], [Internal type for MPI_CXX_LONG_DOUBLE_COMPLEX])
 AC_DEFINE_UNQUOTED([MPIR_INT8_T_INTERNAL],   [MPIR_INT8], [Internal type for MPI_INT8_T])
 AC_DEFINE_UNQUOTED([MPIR_INT16_T_INTERNAL],  [MPIR_INT16], [Internal type for MPI_INT16_T])
 AC_DEFINE_UNQUOTED([MPIR_INT32_T_INTERNAL],  [MPIR_INT32], [Internal type for MPI_INT32_T])
@@ -3539,7 +3555,13 @@ AC_DEFINE_UNQUOTED([MPIR_C_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type 
 len=`expr $ac_cv_sizeof_double__Complex / 2 \* 8`
 AC_DEFINE_UNQUOTED([MPIR_C_DOUBLE_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_C_DOUBLE_COMPLEX])
 len=`expr $ac_cv_sizeof_long_double__Complex / 2 \* 8`
-AC_DEFINE_UNQUOTED([MPIR_C_LONG_DOUBLE_COMPLEX_INTERNAL],[MPIR_ALT_COMPLEX$len], [Internal type for MPI_C_LONG_DOUBLE_COMPLEX])
+if test "$len" = 64 ; then
+    # long double is an alias of double, e.g. arm64
+    internal_type=MPIR_COMPLEX$len
+else
+    internal_type=MPIR_ALT_COMPLEX$len
+fi
+AC_DEFINE_UNQUOTED([MPIR_C_LONG_DOUBLE_COMPLEX_INTERNAL],[$internal_type], [Internal type for MPI_C_LONG_DOUBLE_COMPLEX])
 len=`expr $MPI_SIZEOF_AINT \* 8`
 AC_DEFINE_UNQUOTED([MPIR_AINT_INTERNAL],  [MPIR_INT$len], [Internal type for MPI_AINT_DATATYPE])
 len=`expr $MPI_SIZEOF_OFFSET \* 8`
