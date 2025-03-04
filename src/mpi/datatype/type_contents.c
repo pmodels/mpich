@@ -72,10 +72,7 @@ int MPIR_Type_get_contents_impl(MPI_Datatype datatype, int max_integers, int max
     }
 
     for (int i = 0; i < cp->nr_types; i++) {
-        if (!HANDLE_IS_BUILTIN(array_of_datatypes[i])) {
-            MPIR_Datatype_get_ptr(array_of_datatypes[i], dtp);
-            MPIR_Datatype_ptr_add_ref(dtp);
-        }
+        MPIR_Datatype_add_ref_if_not_builtin(array_of_datatypes[i]);
     }
 
     return mpi_errno;
@@ -125,10 +122,7 @@ int MPIR_Type_get_contents_large_impl(MPI_Datatype datatype, MPI_Aint max_intege
     }
 
     for (int i = 0; i < cp->nr_types; i++) {
-        if (!HANDLE_IS_BUILTIN(array_of_datatypes[i])) {
-            MPIR_Datatype_get_ptr(array_of_datatypes[i], dtp);
-            MPIR_Datatype_ptr_add_ref(dtp);
-        }
+        MPIR_Datatype_add_ref_if_not_builtin(array_of_datatypes[i]);
     }
 
     return mpi_errno;
