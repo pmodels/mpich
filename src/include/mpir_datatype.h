@@ -554,7 +554,6 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint struct_sz, ints_sz, aints_sz, counts_sz, types_sz, contents_size;
     MPIR_Datatype_contents *cp;
-    MPIR_Datatype *old_dtp;
     char *ptr;
 
     struct_sz = sizeof(MPIR_Datatype_contents);
@@ -634,11 +633,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
 
     /* increment reference counts on all the derived types used here */
     for (MPI_Aint i = 0; i < nr_types; i++) {
-        if (!HANDLE_IS_BUILTIN(array_of_types[i])) {
-            MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
-            MPIR_Datatype_valid_ptr(old_dtp, mpi_errno);
-            MPIR_Datatype_ptr_add_ref(old_dtp);
-        }
+        MPIR_Datatype_add_ref_if_not_builtin(array_of_types[i]);
     }
 
     return mpi_errno;
@@ -692,11 +687,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
     MPIR_Datatype_access_contents(cp, &ints, &aints, &counts, &types);
 
     for (int i = 0; i < cp->nr_types; i++) {
-        if (!HANDLE_IS_BUILTIN(types[i])) {
-            MPIR_Datatype *old_dtp;
-            MPIR_Datatype_get_ptr(types[i], old_dtp);
-            MPIR_Datatype_ptr_release(old_dtp);
-        }
+        MPIR_Datatype_release_if_not_builtin(types[i]);
     }
 
     MPL_free(cp);
