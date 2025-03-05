@@ -110,9 +110,6 @@ int MPIDI_GPU_init_world(void)
     mpi_errno = MPIDI_FD_mpi_init_hook();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_GPUI_create_ipc_mapped_trees();
-    MPIR_ERR_CHECK(mpi_errno);
-
     mpi_errno = MPIDI_GPUI_create_ipc_track_trees();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -137,25 +134,18 @@ int MPIDI_GPU_mpi_finalize_hook(void)
         MPL_free(MPIDI_GPUI_global.local_ranks);
     }
 
-    if (MPIDI_GPUI_global.ipc_handle_mapped_trees) {
-        for (int i = 0; i < MPIR_Process.local_size; ++i) {
-            if (MPIDI_GPUI_global.ipc_handle_mapped_trees[i]) {
-                for (int j = 0; j < (MPIDI_GPUI_global.global_max_dev_id + 1); ++j) {
-                    if (MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]) {
-                        for (int k = 0; k < MPIDI_GPUI_global.local_device_count; ++k) {
-                            if (MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j][k])
-                                MPL_gavl_tree_destroy(MPIDI_GPUI_global.ipc_handle_mapped_trees[i]
-                                                      [j]
-                                                      [k]);
-                        }
-                    }
-                    MPL_free(MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]);
-                }
+    struct MPIDI_GPUI_map_cache_entry *entry, *tmp;
+    HASH_ITER(hh, MPIDI_GPUI_global.ipc_map_cache, entry, tmp) {
+        HASH_DEL(MPIDI_GPUI_global.ipc_map_cache, entry);
+        for (int i = 0; i < MPIDI_GPUI_global.local_device_count; i++) {
+            if (entry->mapped_addrs[i]) {
+                int mpl_err = MPL_gpu_ipc_handle_unmap((void *) entry->mapped_addrs[i]);
+                MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                    "**gpu_ipc_handle_unmap");
             }
-            MPL_free(MPIDI_GPUI_global.ipc_handle_mapped_trees[i]);
         }
+        MPL_free(entry);
     }
-    MPL_free(MPIDI_GPUI_global.ipc_handle_mapped_trees);
 
     if (MPIDI_GPUI_global.ipc_handle_track_trees) {
         for (int i = 0; i < MPIR_Process.local_size; ++i) {
