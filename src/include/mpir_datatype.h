@@ -816,6 +816,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_op_dt_check(MPI_Op op, MPI_Datatype dt)
             switch (dt_group) {
                 case MPIR_DT_GROUP_C_INTEGER:
                 case MPIR_DT_GROUP_LOGICAL:
+                case MPIR_DT_GROUP_MULTI:
                     return true;
                 default:
                     return false;
