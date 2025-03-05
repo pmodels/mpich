@@ -81,6 +81,14 @@ int MPIR_find_world(const char *namespace);
  */
 typedef int64_t MPIR_Lpid;
 
+#define MPIR_LPID_WORLD_INDEX(lpid) ((lpid) >> 32)
+#define MPIR_LPID_WORLD_RANK(lpid)  ((lpid) & 0xffffffff)
+#define MPIR_LPID_FROM(world_idx, world_rank) (((uint64_t)(world_idx) << 32) | (world_rank))
+/* A dynamic mask is used for temporary lpid during establishing dynamic connections.
+ *     dynamic_lpid = MPIR_LPID_DYNAMIC_MASK | index_to_dynamic_av_table
+ */
+#define MPIR_LPID_DYNAMIC_MASK ((MPIR_Lpid)0x1 << 63)
+
 struct MPIR_Pmap {
     int size;                   /* same as group->size, duplicate here so Pmap is logically complete */
     bool use_map;
@@ -142,12 +150,26 @@ int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_L
 int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
                              MPIR_Lpid offset, MPIR_Lpid stride, MPIR_Lpid blocksize,
                              MPIR_Group ** new_group_ptr);
-MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank);
 int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid);
 
 int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr);
 void MPIR_Group_set_session_ptr(MPIR_Group * group_ptr, MPIR_Session * session_out);
 int MPIR_Group_init(void);
 void MPIR_Group_finalize(void);
+
+MPL_STATIC_INLINE_PREFIX MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank)
+{
+    if (rank < 0 || rank >= group->pmap.size) {
+        return MPI_UNDEFINED;
+    }
+
+    if (group->pmap.use_map) {
+        return group->pmap.u.map[rank];
+    } else {
+        MPIR_Lpid i_blk = rank / group->pmap.u.stride.blocksize;
+        MPIR_Lpid r_blk = rank % group->pmap.u.stride.blocksize;
+        return group->pmap.u.stride.offset + i_blk * group->pmap.u.stride.stride + r_blk;
+    }
+}
 
 #endif /* MPIR_GROUP_H_INCLUDED */

@@ -296,6 +296,15 @@ void MPIR_stream_comm_free(MPIR_Comm * comm_ptr);
 int MPIR_Comm_copy_stream(MPIR_Comm * oldcomm, MPIR_Comm * newcomm);
 int MPIR_get_local_gpu_stream(MPIR_Comm * comm_ptr, MPL_gpu_stream_t * gpu_stream);
 
+MPL_STATIC_INLINE_PREFIX MPIR_Lpid MPIR_comm_rank_to_lpid(MPIR_Comm * comm_ptr, int rank)
+{
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        return MPIR_Group_rank_to_lpid(comm_ptr->local_group, rank);
+    } else {
+        return MPIR_Group_rank_to_lpid(comm_ptr->remote_group, rank);
+    }
+}
+
 MPL_STATIC_INLINE_PREFIX MPIR_Stream *MPIR_stream_comm_get_local_stream(MPIR_Comm * comm_ptr)
 {
     if (comm_ptr->stream_comm_type == MPIR_STREAM_COMM_SINGLE) {
