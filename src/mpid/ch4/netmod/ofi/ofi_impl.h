@@ -33,8 +33,28 @@ ATTRIBUTE((unused));
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 #define MPIDI_OFI_COMM_TO_INDEX(comm,rank) \
     MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
-#define MPIDI_OFI_TO_PHYS(avtid, lpid, _nic) \
-    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest[_nic][0]
+
+#define MPIDI_OFI_AV_ROOT_ADDR(av)      MPIDI_OFI_AV(av).root_dest
+
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+#define MPIDI_OFI_AV_ADDR_ROOT(av) \
+    MPIDI_OFI_AV(av).root_dest
+#define MPIDI_OFI_AV_ADDR_OFFSET(av, vci, nic) \
+    (MPIDI_OFI_AV(av).all_dest[(vci)*MPIDI_OFI_global.num_nics+(nic)] + MPIDI_OFI_AV(av).root_offset)
+#define MPIDI_OFI_AV_ADDR_NO_OFFSET(av, vci, nic) \
+    MPIDI_OFI_AV(av).all_dest[(vci)*MPIDI_OFI_global.num_nics+(nic)]
+#else /* scalable endpoints - all vci share the same addr */
+#define MPIDI_OFI_AV_ADDR_ROOT(av) \
+    MPIDI_OFI_AV(av).root_dest
+#define MPIDI_OFI_AV_ADDR_OFFSET(av, vci, nic) \
+    (MPIDI_OFI_AV(av).all_dest[nic] + MPIDI_OFI_AV(av).root_offset)
+#define MPIDI_OFI_AV_ADDR_NO_OFFSET(av, vci, nic) \
+    MPIDI_OFI_AV(av).all_dest[nic]
+#endif
+#define MPIDI_OFI_AV_ADDR(av, local_vci, local_nic, vci, nic) \
+    ((local_vci==0 && local_nic==0) ? \
+        ((vci == 0 && nic == 0) ? MPIDI_OFI_AV_ADDR_ROOT(av) : MPIDI_OFI_AV_ADDR_OFFSET(av, vci, nic)) : \
+        MPIDI_OFI_AV_ADDR_NO_OFFSET(av, vci, nic))
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
@@ -139,9 +159,9 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 #define MPIDI_OFI_VCI_PROGRESS(vci_)                                    \
     do {                                                                \
         int made_progress = 0; \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_));                \
         mpi_errno = MPIDI_NM_progress(vci_, &made_progress); \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);                 \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_));                 \
         MPIR_ERR_CHECK(mpi_errno);                                      \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
@@ -149,23 +169,23 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 #define MPIDI_OFI_VCI_PROGRESS_WHILE(vci_, cond)                            \
     do {                                                                    \
         int made_progress = 0; \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                    \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_));                    \
         while (cond) {                                                      \
             mpi_errno = MPIDI_NM_progress(vci_, &made_progress);                        \
             if (mpi_errno) {                                                \
-                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);             \
+                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_));             \
                 MPIR_ERR_POP(mpi_errno);                                    \
             }                                                               \
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
         }                                                                   \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);                     \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_));                     \
     } while (0)
 
 #define MPIDI_OFI_VCI_CALL(FUNC,vci_,STR)                   \
     do {                                                    \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_));    \
         ssize_t _ret = FUNC;                                \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);     \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_));     \
         MPIDI_OFI_ERR(_ret<0,                               \
                               mpi_errno,                    \
                               MPI_ERR_OTHER,                \
@@ -178,14 +198,14 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
 #define MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_)            \
     do {                                                        \
         if (!MPIDI_VCI_IS_EXPLICIT(vci_) && MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {      \
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_));    \
         }                                                       \
     } while (0)
 
 #define MPIDI_OFI_THREAD_CS_EXIT_VCI_OPTIONAL(vci_)         \
     do {                                                    \
         if (!MPIDI_VCI_IS_EXPLICIT(vci_) && MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {  \
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock); \
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_)); \
         }                                                   \
     } while (0)
 
@@ -440,29 +460,31 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
  *       on any local endpoints, as long as we are careful in the insertion order). Thus,
  *       we get away with simplified interface using just (nic, vci) pair.
  */
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, int nic, int vci)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
+                                                        int local_vci, int local_nic,
+                                                        int vci, int nic)
 {
+    fi_addr_t dest = MPIDI_OFI_AV_ADDR(av, local_vci, local_nic, vci, nic);
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][vci], 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(dest, 0, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        return MPIDI_OFI_AV(av).dest[nic][vci];
+        return dest;
     }
 #else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][0], vci, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(dest, vci, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         MPIR_Assert(vci == 0);
-        return MPIDI_OFI_AV(av).dest[nic][0];
+        return dest;
     }
 #endif
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank,
-                                                          int nic, int vci)
+/* a simpler version used where vci is not enabled, e.g. init and spawn */
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys_root(MPIDI_av_entry_t * av)
 {
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, rank);
-    return MPIDI_OFI_av_to_phys(av, nic, vci);
+    return MPIDI_OFI_av_to_phys(av, 0, 0, 0, 0);
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
@@ -565,7 +587,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_sender_nic_index(MPIR_Comm * comm,
 {
     int nic_idx = 0;
 
-    if (MPIDI_OFI_COMM(comm).pref_nic) {
+    if (!comm->vcis_enabled) {
+        /* address exchange may not have performed on this comm */
+        nic_idx = 0;
+    } else if (MPIDI_OFI_COMM(comm).pref_nic) {
         nic_idx = MPIDI_OFI_COMM(comm).pref_nic[sender_rank];
     } else if (MPIDI_OFI_COMM(comm).enable_hashing) {
         /* TODO - We should use the per-communicator value for the maximum number of NICs in this
@@ -593,7 +618,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_multx_receiver_nic_index(MPIR_Comm * comm
 {
     int nic_idx = 0;
 
-    if (MPIDI_OFI_COMM(comm).pref_nic) {
+    if (!comm->vcis_enabled) {
+        /* address exchange may not have performed on this comm */
+        nic_idx = 0;
+    } else if (MPIDI_OFI_COMM(comm).pref_nic) {
         nic_idx = MPIDI_OFI_COMM(comm).pref_nic[receiver_rank];
     } else if (MPIDI_OFI_COMM(comm).enable_hashing) {
         /* TODO - We should use the per-communicator value for the maximum number of NICs in this

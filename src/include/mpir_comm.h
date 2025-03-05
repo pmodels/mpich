@@ -212,11 +212,8 @@ struct MPIR_Comm {
      * because context_id is non-sequential and can't be used to identify user-level
      * communicators (due to sub-comms). */
     int seq;
-    /* Certain comm and its offsprings should be restricted to sequence 0 due to
-     * various restrictions. E.g. multiple-vci doesn't support dynamic process,
-     * nor intercomms (even after its merge).
-     */
-    int tainted;
+    /* Whether multiple-vci is enabled. This is ONLY inherited in Comm_dup and Comm_split */
+    bool vcis_enabled;
 
 
     int hints[MPIR_COMM_HINT_MAX];      /* Hints to the communicator

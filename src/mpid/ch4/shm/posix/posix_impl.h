@@ -17,17 +17,18 @@
 #define MPIDI_POSIX_THREAD_CS_ENTER_VCI(vci) \
     do { \
         if (!MPIDI_VCI_IS_EXPLICIT(vci)) { \
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock); \
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci)); \
         } \
     } while (0)
 
 #define MPIDI_POSIX_THREAD_CS_EXIT_VCI(vci) \
     do { \
         if (!MPIDI_VCI_IS_EXPLICIT(vci)) { \
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock); \
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci)); \
         } \
     } while (0)
 
+int MPIDI_POSIX_init_vci(int vci);
 void MPIDI_POSIX_delay_shm_mutex_destroy(int rank, MPL_proc_mutex_t * shm_mutex_ptr);
 
 #endif /* POSIX_IMPL_H_INCLUDED */

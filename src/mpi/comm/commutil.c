@@ -22,7 +22,7 @@ MPIR_Object_alloc_t MPIR_Comm_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_COMM,
     sizeof(MPIR_Comm),
     MPIR_Comm_direct,
     MPIR_COMM_PREALLOC,
-    NULL, {0}
+    {0}
 };
 
 /* Communicator creation functions */
@@ -289,7 +289,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->bsendbuffer = NULL;
     comm_p->name[0] = '\0';
     comm_p->seq = 0;    /* default to 0, to be updated at Comm_commit */
-    comm_p->tainted = 0;
+    comm_p->vcis_enabled = false;
     memset(comm_p->hints, 0, sizeof(comm_p->hints));
     for (int i = 0; i < next_comm_hint_index; i++) {
         if (MPIR_comm_hint_list[i].key) {
@@ -416,9 +416,6 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     intercomm_ptr->local_comm = localcomm_ptr;
 
     /* sets up the SMP-aware sub-communicators and tables */
-    /* This routine maybe used inside MPI_Comm_idup, so we can't synchronize
-     * seq using blocking collectives, thus mark as tainted. */
-    localcomm_ptr->tainted = 1;
     mpi_errno = MPIR_Comm_commit(localcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -597,13 +594,13 @@ static void propagate_hints_to_subcomm(MPIR_Comm * comm, MPIR_Comm * subcomm)
     subcomm->hints[MPIR_COMM_HINT_VCI] = comm->hints[MPIR_COMM_HINT_VCI];
 }
 
-static void propagate_tainted_to_subcomms(MPIR_Comm * comm)
+static void propagate_vcis_enabled(MPIR_Comm * comm)
 {
     if (comm->node_comm != NULL)
-        comm->node_comm->tainted = comm->tainted;
+        comm->node_comm->vcis_enabled = comm->vcis_enabled;
 
     if (comm->node_roots_comm != NULL)
-        comm->node_roots_comm->tainted = comm->tainted;
+        comm->node_roots_comm->vcis_enabled = comm->vcis_enabled;
 }
 
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
@@ -734,7 +731,7 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    propagate_tainted_to_subcomms(comm);
+    propagate_vcis_enabled(comm);
 
     comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
 
@@ -840,7 +837,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !comm->tainted) {
+    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && comm->vcis_enabled) {
         mpi_errno = init_comm_seq(comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -1038,7 +1035,7 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
         MPII_Comm_set_hints(newcomm_ptr, info, true);
     }
 
-    newcomm_ptr->tainted = comm_ptr->tainted;
+    newcomm_ptr->vcis_enabled = comm_ptr->vcis_enabled;
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -1121,9 +1118,8 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** out
     newcomm_ptr->attributes = 0;
     *outcomm_ptr = newcomm_ptr;
 
-    /* inherit tainted flag */
-    newcomm_ptr->tainted = comm_ptr->tainted;
-    propagate_tainted_to_subcomms(newcomm_ptr);
+    newcomm_ptr->vcis_enabled = comm_ptr->vcis_enabled;
+    propagate_vcis_enabled(newcomm_ptr);
 
   fn_fail:
     MPIR_FUNC_EXIT;
