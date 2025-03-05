@@ -117,7 +117,9 @@ int MPIR_Datatype_init_predefined(void)
         if (d == MPI_DATATYPE_NULL)
             continue;
 
-        MPIR_Internal_types[i].internal_type |= i;
+        if (MPIR_Internal_types[i].internal_type != MPI_DATATYPE_NULL) {
+            MPIR_Internal_types[i].internal_type |= i;
+        }
 
         MPIR_Datatype_get_ptr(d, dptr);
         /* --BEGIN ERROR HANDLING-- */
