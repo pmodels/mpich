@@ -487,11 +487,9 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
 					  MPIDI_VC_t *vc_ptr, int is_low_group, int context_id_offset)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Comm *tmp_comm, *commself_ptr;
+    MPIR_Comm *tmp_comm;
 
     MPIR_FUNC_ENTER;
-
-    MPIR_Comm_get_ptr( MPI_COMM_SELF, commself_ptr );
 
     /* WDG-old code allocated a context id that was then discarded */
     mpi_errno = MPIR_Comm_create(&tmp_comm);
@@ -524,11 +522,6 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
     /* No pg structure needed since vc has already been set up 
        (connection has been established). */
 
-    /* Point local vcrt at those of commself_ptr */
-    /* FIXME: Explain why */
-    tmp_comm->dev.local_vcrt = commself_ptr->dev.vcrt;
-    MPIDI_VCRT_Add_ref(commself_ptr->dev.vcrt);
-
     /* No pg needed since connection has already been formed. 
        FIXME - ensure that the comm_release code does not try to
        free an unallocated pg */
@@ -542,27 +535,28 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
     /* FIXME: Why do we do a dup here? */
     MPIDI_VCR_Dup(vc_ptr, &tmp_comm->dev.vcrt->vcr_table[0]);
 
-    MPIR_Coll_comm_init(tmp_comm);
-
-    MPIR_Lpid local_lpid = tmp_comm->dev.local_vcrt->vcr_table[0]->lpid;
-    MPIR_Lpid remote_lpid = tmp_comm->dev.vcrt->vcr_table[0]->lpid;
-    mpi_errno = MPIR_Group_create_stride(1, 0, commself_ptr->session_ptr, local_lpid, 1, 1,
-                                         &tmp_comm->local_group);
-    mpi_errno = MPIR_Group_create_stride(1, 0, commself_ptr->session_ptr, remote_lpid, 1, 1,
-                                         &tmp_comm->remote_group);
-
-    /* Even though this is a tmp comm and we don't call
-       MPI_Comm_commit, we still need to call the creation hook
-       because the destruction hook will be called in comm_release */
-    mpi_errno = MPID_Comm_commit_pre_hook(tmp_comm);
-    MPIR_ERR_CHECK(mpi_errno);
-    
     *comm_pptr = tmp_comm;
 
 fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
 fn_fail:
+    goto fn_exit;
+}
+
+static int MPIDI_CH3I_Release_tmp_comm(MPIR_Comm *tmp_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDI_VCRT_Release(tmp_comm->dev.vcrt);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Free_contextid(tmp_comm->recvcontext_id);
+    MPIR_Handle_obj_free(&MPIR_Comm_mem, tmp_comm);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
     goto fn_exit;
 }
 
@@ -746,7 +740,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
         MPIR_ERR_CHECK(mpi_errno);
 
         /* All communication with remote root done. Release the communicator. */
-        MPIR_Comm_release(tmp_comm);
+        MPIDI_CH3I_Release_tmp_comm(tmp_comm);
     }
 
     /*printf("connect:barrier\n");fflush(stdout);*/
@@ -1268,7 +1262,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
         MPIR_ERR_CHECK(mpi_errno);
 
         /* All communication with remote root done. Release the communicator. */
-        MPIR_Comm_release(tmp_comm);
+        MPIDI_CH3I_Release_tmp_comm(tmp_comm);
     }
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Barrier");
@@ -1331,20 +1325,6 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
     intercomm->rank         = comm_ptr->rank;
     intercomm->comm_kind    = MPIR_COMM_KIND__INTERCOMM;
     intercomm->local_comm   = NULL;
-
-    /* Point local vcrt at those of incoming intracommunicator */
-    intercomm->dev.local_vcrt = comm_ptr->dev.vcrt;
-    MPIDI_VCRT_Add_ref(comm_ptr->dev.vcrt);
-
-    /* Set up VC reference table */
-    mpi_errno = MPIDI_VCRT_Create(intercomm->remote_size, &intercomm->dev.vcrt);
-    if (mpi_errno != MPI_SUCCESS) {
-	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**init_vcrt");
-    }
-    for (i=0; i < intercomm->remote_size; i++) {
-	MPIDI_PG_Dup_vcr(remote_pg[remote_translation[i].pg_index], 
-			 remote_translation[i].pg_rank, &intercomm->dev.vcrt->vcr_table[i]);
-    }
 
     intercomm->local_group  = comm_ptr->local_group;
     MPIR_Group_add_ref(comm_ptr->local_group);

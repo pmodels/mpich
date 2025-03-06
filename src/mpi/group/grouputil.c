@@ -117,6 +117,9 @@ int MPIR_Group_release(MPIR_Group * group_ptr)
             /* Release session */
             MPIR_Session_release(group_ptr->session_ptr);
         }
+#ifdef MPID_DEV_GROUP_DECL
+        mpi_errno = MPID_Group_free_hook(group_ptr);
+#endif
         MPIR_Handle_obj_free(&MPIR_Group_mem, group_ptr);
     }
 
@@ -150,6 +153,9 @@ int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
     (*new_group_ptr)->session_ptr = NULL;
     memset(&(*new_group_ptr)->pmap, 0, sizeof(struct MPIR_Pmap));
     (*new_group_ptr)->pmap.size = nproc;
+#ifdef MPID_DEV_GROUP_DECL
+    mpi_errno = MPID_Group_init_hook(*new_group_ptr);
+#endif
 
     return mpi_errno;
 }
@@ -182,6 +188,9 @@ int MPIR_Group_dup(MPIR_Group * old_group, MPIR_Session * session_ptr, MPIR_Grou
     }
 
     *new_group_ptr = new_group;
+#ifdef MPID_DEV_GROUP_DECL
+    mpi_errno = MPID_Group_init_hook(*new_group_ptr);
+#endif
 
   fn_exit:
     return mpi_errno;
@@ -204,6 +213,8 @@ int MPIR_Group_create_map(int size, int rank, MPIR_Session * session_ptr, MPIR_L
          * for others it is implied */
         MPL_free(map);
         *new_group_ptr = MPIR_Group_empty;
+        MPIR_Group_add_ref(*new_group_ptr);
+        goto fn_exit;
     } else {
         MPIR_Group *newgrp;
         mpi_errno = MPIR_Group_create(size, &newgrp);
@@ -270,16 +281,10 @@ int MPIR_Group_create_stride(int size, int rank, MPIR_Session * session_ptr,
 }
 
 static int pmap_lpid_to_rank(struct MPIR_Pmap *pmap, MPIR_Lpid lpid);
-static MPIR_Lpid pmap_rank_to_lpid(struct MPIR_Pmap *pmap, int rank);
 
 int MPIR_Group_lpid_to_rank(MPIR_Group * group, MPIR_Lpid lpid)
 {
     return pmap_lpid_to_rank(&group->pmap, lpid);
-}
-
-MPIR_Lpid MPIR_Group_rank_to_lpid(MPIR_Group * group, int rank)
-{
-    return pmap_rank_to_lpid(&group->pmap, rank);
 }
 
 #ifdef HAVE_ERROR_CHECKING
@@ -518,21 +523,6 @@ static bool check_map_is_strided(int size, MPIR_Lpid * map,
             *blocksize_out = blocksize;
             return true;
         }
-    }
-}
-
-static MPIR_Lpid pmap_rank_to_lpid(struct MPIR_Pmap *pmap, int rank)
-{
-    if (rank < 0 || rank >= pmap->size) {
-        return MPI_UNDEFINED;
-    }
-
-    if (pmap->use_map) {
-        return pmap->u.map[rank];
-    } else {
-        MPIR_Lpid i_blk = rank / pmap->u.stride.blocksize;
-        MPIR_Lpid r_blk = rank % pmap->u.stride.blocksize;
-        return pmap->u.stride.offset + i_blk * pmap->u.stride.stride + r_blk;
     }
 }
 
