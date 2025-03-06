@@ -1,18 +1,5 @@
 # vim: set ft=c:
 
-MPI_Abi_is_supported:
-    flag: LOGICAL, direction=out, [true if the standard ABI is supported, false otherwise]
-    .desc: Return whether the standard ABI is supported
-    .impl: direct
-{
-    *flag = 0;
-    return MPI_SUCCESS;
-}
-{ -- is_abi --
-    *flag = 1;
-    return MPI_SUCCESS;
-}
-
 MPI_Abi_get_info:
     info: INFO, direction=out, [info object]
     .desc: Return an info object that provides information related to the ABI
