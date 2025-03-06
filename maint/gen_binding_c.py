@@ -136,6 +136,9 @@ def main():
                     pass
                 else:
                     continue
+            elif re.match(r'.*_(f2c|c2f|c2f08|f082c|f2f08|f082f)', func['name']):
+                continue
+
             dump_func_abi(func)
             if '_replaces' in func:
                 for t_func in func['_replaces']:
