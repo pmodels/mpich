@@ -76,8 +76,8 @@ MPI_Abi_get_version:
     return MPI_SUCCESS;
 }
 { -- is_abi --
-    *abi_major = 1;
-    *abi_minor = 0;
+    *abi_major = MPI_ABI_VERSION;
+    *abi_minor = MPI_ABI_SUBVERSION;
     return MPI_SUCCESS;
 }
 
