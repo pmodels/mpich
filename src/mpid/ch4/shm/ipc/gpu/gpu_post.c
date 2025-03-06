@@ -123,53 +123,15 @@ cvars:
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
 
-/* handle_track_tree caches local MPL_gpu_ipc_mem_handle_t */
-
-static void ipc_track_cache_free(void *handle_obj);
-int MPIDI_GPUI_create_ipc_track_trees(void)
+static int ipc_track_cache_search(const void *addr, MPL_gpu_ipc_mem_handle_t * handle_out,
+                                  bool * found)
 {
-    int mpi_errno = MPI_SUCCESS;
+    struct MPIDI_GPUI_handle_cache_entry *entry;
 
-    int num_ranks = MPIR_Process.local_size;
-    int num_gdevs = MPIDI_GPUI_global.global_max_dev_id + 1;
-
-#define TREES MPIDI_GPUI_global.ipc_handle_track_trees
-    TREES = MPL_calloc(sizeof(MPL_gavl_tree_t *), num_ranks, MPL_MEM_OTHER);
-    MPIR_ERR_CHKANDJUMP(!TREES, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    for (int i = 0; i < num_ranks; i++) {
-        TREES[i] = MPL_calloc(sizeof(MPL_gavl_tree_t), num_gdevs, MPL_MEM_OTHER);
-        MPIR_ERR_CHKANDJUMP(!TREES[i], mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-        for (int j = 0; j < num_gdevs; j++) {
-            int mpl_err = MPL_gavl_tree_create(ipc_track_cache_free, &TREES[i][j]);
-            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                "**mpl_gavl_create");
-        }
-    }
-#undef TREES
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* -- handle_track_tree -- */
-
-static void ipc_track_cache_free(void *obj)
-{
-    MPL_free(obj);
-}
-
-static int ipc_track_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
-                                  MPL_gpu_ipc_mem_handle_t * handle_out, bool * found)
-{
-    void *obj = MPL_gavl_tree_search(gavl_tree, addr, len);
-
-    if (obj) {
+    HASH_FIND_PTR(MPIDI_GPUI_global.ipc_handle_cache, &addr, entry);
+    if (entry) {
         MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "cached gpu ipc handle HIT for %p", addr);
-        *handle_out = *((MPL_gpu_ipc_mem_handle_t *) obj);
+        *handle_out = entry->handle;
         *found = true;
     } else {
         MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "cached gpu ipc handle MISS for %p", addr);
@@ -179,21 +141,18 @@ static int ipc_track_cache_search(MPL_gavl_tree_t gavl_tree, const void *addr, u
     return MPI_SUCCESS;
 }
 
-static int ipc_track_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
-                                  MPL_gpu_ipc_mem_handle_t handle)
+static int ipc_track_cache_insert(const void *addr, MPL_gpu_ipc_mem_handle_t handle)
 {
     int mpi_errno = MPI_SUCCESS;
+    struct MPIDI_GPUI_handle_cache_entry *entry;
 
     MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "caching NEW gpu ipc handle for %p", addr);
 
-    MPL_gpu_ipc_mem_handle_t *cache_obj = MPL_malloc(sizeof(handle), MPL_MEM_OTHER);
-    MPIR_ERR_CHKANDJUMP(!cache_obj, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    *cache_obj = handle;
-
-    int mpl_err;
-    mpl_err = MPL_gavl_tree_insert(gavl_tree, addr, len, cache_obj);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_insert");
+    entry = MPL_malloc(sizeof(struct MPIDI_GPUI_handle_cache_entry), MPL_MEM_SHM);
+    MPIR_ERR_CHKANDJUMP(!entry, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    entry->base_addr = addr;
+    entry->handle = handle;
+    HASH_ADD_PTR(MPIDI_GPUI_global.ipc_handle_cache, base_addr, entry, MPL_MEM_SHM);
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -202,18 +161,17 @@ static int ipc_track_cache_insert(MPL_gavl_tree_t gavl_tree, const void *addr, u
     goto fn_exit;
 }
 
-static int ipc_track_cache_remove(const void *addr, uintptr_t len, int local_dev_id)
+static int ipc_track_cache_remove(const void *addr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpl_err;
+    struct MPIDI_GPUI_handle_cache_entry *entry;
 
     MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "removing STALE gpu ipc handle for %p", addr);
 
-    for (int i = 0; i < MPIR_Process.local_size; ++i) {
-        MPL_gavl_tree_t track_tree = MPIDI_GPUI_global.ipc_handle_track_trees[i][local_dev_id];
-        mpl_err = MPL_gavl_tree_delete_range(track_tree, addr, len);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                            "**mpl_gavl_delete_range");
+    HASH_FIND_PTR(MPIDI_GPUI_global.ipc_handle_cache, &addr, entry);
+    if (entry) {
+        HASH_DEL(MPIDI_GPUI_global.ipc_handle_cache, entry);
+        MPL_free(entry);
     }
 
   fn_exit:
@@ -425,11 +383,9 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
 
     MPL_gpu_ipc_mem_handle_t handle;
     int handle_status;
-    MPL_gavl_tree_t track_tree = NULL;
     if (need_cache) {
         bool found = false;
-        track_tree = MPIDI_GPUI_global.ipc_handle_track_trees[remote_rank][local_dev_id];
-        mpi_errno = ipc_track_cache_search(track_tree, pbase, len, &handle, &found);
+        mpi_errno = ipc_track_cache_search(pbase, &handle, &found);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (found) {
@@ -438,7 +394,7 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
                 goto fn_done;
             } else {
                 /* remove and destroy invalid handle */
-                mpi_errno = ipc_track_cache_remove(pbase, len, local_dev_id);
+                mpi_errno = ipc_track_cache_remove(pbase);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 mpl_err = MPL_gpu_ipc_handle_destroy(pbase, &ipc_attr->u.gpu.gpu_attr);
@@ -452,7 +408,7 @@ int MPIDI_GPU_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * ipc_attr,
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                         "**gpu_ipc_handle_create");
     if (need_cache) {
-        mpi_errno = ipc_track_cache_insert(track_tree, pbase, len, handle);
+        mpi_errno = ipc_track_cache_insert(pbase, handle);
         MPIR_ERR_CHECK(mpi_errno);
     }
     handle_status = MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED;
