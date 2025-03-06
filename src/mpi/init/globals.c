@@ -16,6 +16,7 @@ MPIR_Process_t MPIR_Process = {
 
 MPIR_Thread_info_t MPIR_ThreadInfo;
 
+#ifndef BUILD_MPI_ABI
 /* These are initialized as null (avoids making these into common symbols).
    If the Fortran binding is supported, these can be initialized to
    their Fortran values (MPI only requires that they be valid between
@@ -28,3 +29,4 @@ MPI_F08_status MPIR_F08_MPI_STATUSES_IGNORE_OBJ[1] MPICH_API_PUBLIC;
 MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUS_IGNORE MPL_USED = &MPIR_F08_MPI_STATUS_IGNORE_OBJ;
 MPIU_DLL_SPEC MPI_F08_status *MPI_F08_STATUSES_IGNORE MPL_USED =
     &MPIR_F08_MPI_STATUSES_IGNORE_OBJ[0];
+#endif

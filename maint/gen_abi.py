@@ -87,6 +87,11 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 # replace param prefix
                 out.append(re.sub(re_Handle, r'ABI_\1', line.rstrip()))
 
+        # internal code still used MPI_Fint (TODO: future cleanup)
+        out.append("typedef int MPI_Fint;")
+        out.append("typedef struct MPI_F08_status_dummy MPI_F08_status;")
+        out.append("#undef HAVE_FORTRAN_BINDING")
+
     # ----
     output_lines = []
     gen_mpi_abi_internal_h(output_lines)
@@ -125,6 +130,9 @@ def dump_romio_abi_internal_h(romio_abi_internal_h):
             else:
                 # replace param prefix
                 out.append(line.rstrip())
+
+        # internal code still used MPI_Fint (TODO: future cleanup)
+        out.append("typedef int MPI_Fint;")
 
     def add_romio_visibility(out):
         out.append("#if defined(HAVE_VISIBILITY)")
@@ -209,6 +217,9 @@ def dump_io_abi_internal_h(io_abi_internal_h):
             else:
                 # replace param prefix
                 out.append(line.rstrip())
+
+        # internal code still used MPI_Fint (TODO: future cleanup)
+        out.append("typedef int MPI_Fint;")
 
     def add_mpich_visibility(out):
         out.append("#if defined(HAVE_VISIBILITY)")
