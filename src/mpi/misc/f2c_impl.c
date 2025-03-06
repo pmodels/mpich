@@ -5,6 +5,8 @@
 
 #include "mpiimpl.h"
 
+#ifndef BUILD_MPI_ABI
+
 int MPIR_Status_f2c_impl(const MPI_Fint * f_status, MPI_Status * c_status)
 {
     if (f_status == MPI_F_STATUS_IGNORE || f_status == MPI_F_STATUSES_IGNORE) {
@@ -98,3 +100,5 @@ int MPIR_Status_c2f08_impl(const MPI_Status * c_status, MPI_F08_status * f08_sta
 #endif
     return MPI_SUCCESS;
 }
+
+#endif /* BUILD_MPI_ABI */
