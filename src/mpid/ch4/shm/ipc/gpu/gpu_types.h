@@ -17,6 +17,12 @@ struct MPIDI_GPUI_map_cache_entry {
     const void *mapped_addrs[]; /* array of base addresses indexed by device id */
 };
 
+struct MPIDI_GPUI_handle_cache_entry {
+    UT_hash_handle hh;
+    const void *base_addr;
+    MPL_gpu_ipc_mem_handle_t handle;
+};
+
 typedef struct {
     int *local_ranks;
     int *local_procs;
@@ -24,7 +30,7 @@ typedef struct {
     int global_max_dev_id;
     int initialized;
     struct MPIDI_GPUI_map_cache_entry *ipc_map_cache;
-    MPL_gavl_tree_t **ipc_handle_track_trees;
+    struct MPIDI_GPUI_handle_cache_entry *ipc_handle_cache;
 } MPIDI_GPUI_global_t;
 
 extern MPIDI_GPUI_global_t MPIDI_GPUI_global;
