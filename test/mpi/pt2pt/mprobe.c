@@ -645,6 +645,7 @@ int main(int argc, char **argv)
     /* TODO threaded tests are also needed, but they should go in a separate
      * program */
 
+#ifndef MPI_ABI_VERSION
     /* simple test to ensure that c2f/f2c routines are present (initially missed
      * in MPICH impl) */
     {
@@ -661,6 +662,7 @@ int main(int argc, char **argv)
         check(f_handle != 0xdeadbeef);
         check(msg == MPI_MESSAGE_NULL);
     }
+#endif
 
   epilogue:
     MTest_Finalize(errs);
