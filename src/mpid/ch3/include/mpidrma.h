@@ -811,12 +811,10 @@ static inline int do_accumulate_op(void *source_buf, MPI_Aint source_count, MPI_
         MPIR_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
     }
 
-    if ((HANDLE_IS_BUILTIN(acc_op))
-        && ((*MPIR_OP_HDL_TO_DTYPE_FN(acc_op)) (source_dtp) == MPI_SUCCESS)){
+    if (MPIR_Internal_op_dt_check(acc_op, source_dtp)) {
         /* get the function by indexing into the op table */
         uop = MPIR_OP_HDL_TO_FN(acc_op);
-    }
-    else {
+    } else {
         /* --BEGIN ERROR HANDLING-- */
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                          __func__, __LINE__, MPI_ERR_OP,
