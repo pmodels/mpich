@@ -60,14 +60,16 @@ int MPIR_Ialltoallv_intra_sched_inplace(const void *sendbuf, const MPI_Aint send
                 mpi_errno = MPIR_Sched_send(((char *) recvbuf + rdispls[dst] * recvtype_extent),
                                             recvcounts[dst], recvtype, dst, comm_ptr, s);
                 MPIR_ERR_CHECK(mpi_errno);
-                mpi_errno = MPIR_Sched_recv(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
-                                            dst, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Sched_recv(tmp_buf, recvcounts[dst] * recvtype_sz, MPIR_BYTE_INTERNAL, dst,
+                                    comm_ptr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
-                mpi_errno = MPIR_Sched_copy(tmp_buf, recvcounts[dst] * recvtype_sz, MPI_BYTE,
-                                            ((char *) recvbuf + rdispls[dst] * recvtype_extent),
-                                            recvcounts[dst], recvtype, s);
+                mpi_errno =
+                    MPIR_Sched_copy(tmp_buf, recvcounts[dst] * recvtype_sz, MPIR_BYTE_INTERNAL,
+                                    ((char *) recvbuf + rdispls[dst] * recvtype_extent),
+                                    recvcounts[dst], recvtype, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }

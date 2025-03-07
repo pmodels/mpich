@@ -147,10 +147,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
 
     MPI_Aint packsize = 0;
-    if (dtype != MPI_PACKED)
-        MPIR_Pack_size(count, dtype, &packsize);
-    else
-        packsize = count;
+    MPIR_Pack_size(count, dtype, &packsize);
 
     MPII_BsendBuffer *bsendbuffer;
     if (comm_ptr->bsendbuffer) {
@@ -361,7 +358,8 @@ static int bsend_isend_auto(struct MPII_BsendBuffer_auto *automatic, MPI_Aint pa
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == packsize);
 
-    mpi_errno = MPID_Isend(elt->buf, packsize, MPI_PACKED, dest, tag, comm_ptr, 0, &elt->req);
+    mpi_errno =
+        MPID_Isend(elt->buf, packsize, MPIR_BYTE_INTERNAL, dest, tag, comm_ptr, 0, &elt->req);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct bsend_auto_elem **head_p = (void *) &(automatic->active_list);
@@ -571,7 +569,7 @@ static int bsend_isend_user(struct MPII_BsendBuffer_user *user, MPI_Aint packsiz
              * either primitive or contiguous types, and just
              * use MPIR_Memcpy and the provided datatype */
             msg->count = 0;
-            if (dtype != MPI_PACKED) {
+            if (1) {
                 MPI_Aint actual_pack_bytes;
                 void *pbuf = (void *) ((char *) p->msg.msgbuf + p->msg.count);
                 mpi_errno =
@@ -585,7 +583,7 @@ static int bsend_isend_user(struct MPII_BsendBuffer_user *user, MPI_Aint packsiz
             }
             /* Try to send the message.  We must use MPID_Isend
              * because this call must not block */
-            mpi_errno = MPID_Isend(msg->msgbuf, msg->count, MPI_PACKED,
+            mpi_errno = MPID_Isend(msg->msgbuf, msg->count, MPIR_BYTE_INTERNAL,
                                    dest, tag, comm_ptr, 0, &p->request);
             MPIR_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Bsend internal error: isend returned err");
 

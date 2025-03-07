@@ -45,8 +45,8 @@ int MPIR_Iallgather_inter_sched_local_gather_remote_bcast(const void *sendbuf, M
 
     if (sendcount != 0) {
         mpi_errno = MPIR_Igather_intra_sched_auto(sendbuf, sendcount, sendtype,
-                                                  tmp_buf, sendcount * sendtype_sz, MPI_BYTE, 0,
-                                                  newcomm_ptr, s);
+                                                  tmp_buf, sendcount * sendtype_sz,
+                                                  MPIR_BYTE_INTERNAL, 0, newcomm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
@@ -58,7 +58,7 @@ int MPIR_Iallgather_inter_sched_local_gather_remote_bcast(const void *sendbuf, M
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
             mpi_errno = MPIR_Ibcast_inter_sched_auto(tmp_buf, sendcount * local_size * sendtype_sz,
-                                                     MPI_BYTE, root, comm_ptr, s);
+                                                     MPIR_BYTE_INTERNAL, root, comm_ptr, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -87,7 +87,7 @@ int MPIR_Iallgather_inter_sched_local_gather_remote_bcast(const void *sendbuf, M
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
             mpi_errno = MPIR_Ibcast_inter_sched_auto(tmp_buf, sendcount * local_size * sendtype_sz,
-                                                     MPI_BYTE, root, comm_ptr, s);
+                                                     MPIR_BYTE_INTERNAL, root, comm_ptr, s);
             MPIR_ERR_CHECK(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);

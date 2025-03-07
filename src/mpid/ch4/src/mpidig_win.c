@@ -523,8 +523,8 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
                                    0,
                                    MPI_DATATYPE_NULL,
                                    shared_table,
-                                   sizeof(MPIDIG_win_shared_info_t), MPI_BYTE, shm_comm_ptr,
-                                   MPIR_ERR_NONE);
+                                   sizeof(MPIDIG_win_shared_info_t), MPIR_BYTE_INTERNAL,
+                                   shm_comm_ptr, MPIR_ERR_NONE);
         MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;

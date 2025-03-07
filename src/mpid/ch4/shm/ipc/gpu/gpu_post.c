@@ -724,7 +724,7 @@ int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_
     MPIR_Datatype *src_dt_ptr = NULL;
     if (ipc_hdr->is_contig) {
         src_count = src_data_sz;
-        src_dt = MPI_BYTE;
+        src_dt = MPIR_BYTE_INTERNAL;
     } else {
         /* TODO: get sender datatype and call MPIR_Typerep_op with mapped_device set to dev_id */
         void *flattened_type = ipc_hdr + 1;

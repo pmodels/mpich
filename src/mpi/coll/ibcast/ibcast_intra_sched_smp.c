@@ -12,7 +12,7 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint recv_size;
     struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
-    MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
+    MPIR_Get_count_impl(&ibcast_state->status, MPIR_BYTE_INTERNAL, &recv_size);
     if (ibcast_state->n_bytes != recv_size || ibcast_state->status.MPI_ERROR != MPI_SUCCESS) {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
                                          __func__, __LINE__, MPI_ERR_OTHER,

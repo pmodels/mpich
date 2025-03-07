@@ -55,12 +55,13 @@ int MPIR_Ialltoall_intra_sched_inplace(const void *sendbuf, MPI_Aint sendcount,
 
                 /* pack to tmp_buf */
                 mpi_errno = MPIR_Sched_copy(((char *) recvbuf + peer * recvcount * recvtype_extent),
-                                            recvcount, recvtype, tmp_buf, nbytes, MPI_BYTE, s);
+                                            recvcount, recvtype, tmp_buf, nbytes,
+                                            MPIR_BYTE_INTERNAL, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
                 /* now simultaneously send from tmp_buf and recv to recvbuf */
-                mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, peer, comm_ptr, s);
+                mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, peer, comm_ptr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 mpi_errno = MPIR_Sched_recv(((char *) recvbuf + peer * recvcount * recvtype_extent),
                                             recvcount, recvtype, peer, comm_ptr, s);
