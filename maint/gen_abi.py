@@ -53,7 +53,11 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 out.append("    %s reserved[%d];" % (T, n - 2))
             elif RE.match(r'#define\s+(MPI_\w+)\s+\(?\((MPI_\w+)\)\s*(0x\w+)\)?', line):
                 (name, T, val) = RE.m.group(1,2,3)
-                if T == "MPI_Datatype":
+                if T == "MPI_File":
+                    # Both ROMIO and ABI use pointers, thus we can directly replace constants
+                    out.append(line.rstrip())
+                    continue
+                elif T == "MPI_Datatype":
                     idx = int(val, 0) & G.datatype_mask
                     G.abi_datatypes[idx] = name
                     if re.match(r'MPI_LOGICAL\d+', name):
@@ -86,6 +90,11 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
             else:
                 # replace param prefix
                 out.append(re.sub(re_Handle, r'ABI_\1', line.rstrip()))
+
+        # internal code still used MPI_Fint (TODO: future cleanup)
+        out.append("typedef int MPI_Fint;")
+        out.append("typedef struct MPI_F08_status_dummy MPI_F08_status;")
+        out.append("#undef HAVE_FORTRAN_BINDING")
 
     # ----
     output_lines = []
@@ -125,6 +134,9 @@ def dump_romio_abi_internal_h(romio_abi_internal_h):
             else:
                 # replace param prefix
                 out.append(line.rstrip())
+
+        # internal code still used MPI_Fint (TODO: future cleanup)
+        out.append("typedef int MPI_Fint;")
 
     def add_romio_visibility(out):
         out.append("#if defined(HAVE_VISIBILITY)")
@@ -209,6 +221,9 @@ def dump_io_abi_internal_h(io_abi_internal_h):
             else:
                 # replace param prefix
                 out.append(line.rstrip())
+
+        # internal code still used MPI_Fint (TODO: future cleanup)
+        out.append("typedef int MPI_Fint;")
 
     def add_mpich_visibility(out):
         out.append("#if defined(HAVE_VISIBILITY)")
