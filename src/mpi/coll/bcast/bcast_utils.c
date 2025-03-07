@@ -66,10 +66,11 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
             } else {
                 mpi_errno = MPIC_Recv(((char *) tmp_buf +
                                        relative_rank * scatter_size),
-                                      recv_size, MPI_BYTE, src, MPIR_BCAST_TAG, comm_ptr, &status);
+                                      recv_size, MPIR_BYTE_INTERNAL, src, MPIR_BCAST_TAG, comm_ptr,
+                                      &status);
                 MPIR_ERR_CHECK(mpi_errno);
                 /* query actual size of data received */
-                MPIR_Get_count_impl(&status, MPI_BYTE, &curr_size);
+                MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &curr_size);
             }
             break;
         }
@@ -93,7 +94,8 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                     dst -= comm_size;
                 mpi_errno = MPIC_Send(((char *) tmp_buf +
                                        scatter_size * (relative_rank + mask)),
-                                      send_size, MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, errflag);
+                                      send_size, MPIR_BYTE_INTERNAL, dst, MPIR_BCAST_TAG, comm_ptr,
+                                      errflag);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 curr_size -= send_size;

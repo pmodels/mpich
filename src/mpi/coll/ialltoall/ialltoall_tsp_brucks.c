@@ -281,7 +281,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             unpack_ninvtcs = 1;
 
             mpi_errno =
-                MPIR_TSP_sched_isend(tmp_sbuf[i][j - 1], packsize, MPI_BYTE, dst, tag,
+                MPIR_TSP_sched_isend(tmp_sbuf[i][j - 1], packsize, MPIR_BYTE_INTERNAL, dst, tag,
                                      comm, sched, 1, &packids[j - 1], &sendids[j - 1]);
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -290,7 +290,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
                 recv_ninvtcs = 1;
             }
             mpi_errno =
-                MPIR_TSP_sched_irecv(tmp_rbuf[i][j - 1], packsize, MPI_BYTE,
+                MPIR_TSP_sched_irecv(tmp_rbuf[i][j - 1], packsize, MPIR_BYTE_INTERNAL,
                                      src, tag, comm, sched, recv_ninvtcs, recv_invtcs,
                                      &recvids[j - 1]);
             MPIR_ERR_CHECK(mpi_errno);
@@ -304,8 +304,8 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, MPI_Aint sendcount,
             MPIR_ERR_CHECK(mpi_errno);
             num_unpacks_in_last_phase++;
         }
-        MPIR_Localcopy(unpackids, sizeof(int) * (k - 1), MPI_BYTE,
-                       pack_invtcs, sizeof(int) * (k - 1), MPI_BYTE);
+        MPIR_Localcopy(unpackids, sizeof(int) * (k - 1), MPIR_BYTE_INTERNAL,
+                       pack_invtcs, sizeof(int) * (k - 1), MPIR_BYTE_INTERNAL);
         pack_ninvtcs = k - 1;
 
         delta *= k;
