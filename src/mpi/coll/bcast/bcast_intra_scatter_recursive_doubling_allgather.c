@@ -70,7 +70,8 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
         MPIR_CHKLMEM_MALLOC(tmp_buf, nbytes);
 
         if (rank == root) {
-            mpi_errno = MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE);
+            mpi_errno =
+                MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPIR_BYTE_INTERNAL);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -116,15 +117,16 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
 
         if (relative_dst < comm_size) {
             mpi_errno = MPIC_Sendrecv(((char *) tmp_buf + send_offset),
-                                      curr_size, MPI_BYTE, dst, MPIR_BCAST_TAG,
+                                      curr_size, MPIR_BYTE_INTERNAL, dst, MPIR_BCAST_TAG,
                                       ((char *) tmp_buf + recv_offset),
                                       (nbytes - recv_offset < 0 ? 0 : nbytes - recv_offset),
-                                      MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                                      MPIR_BYTE_INTERNAL, dst, MPIR_BCAST_TAG, comm_ptr, &status,
+                                      errflag);
             MPIR_ERR_CHECK(mpi_errno);
             if (mpi_errno) {
                 recv_size = 0;
             } else
-                MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
+                MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recv_size);
             curr_size += recv_size;
         }
 
@@ -183,7 +185,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                     /* printf("Rank %d, send to %d, offset %d, size %d\n", rank, dst, offset, recv_size);
                      * fflush(stdout); */
                     mpi_errno = MPIC_Send(((char *) tmp_buf + offset),
-                                          recv_size, MPI_BYTE, dst,
+                                          recv_size, MPIR_BYTE_INTERNAL, dst,
                                           MPIR_BCAST_TAG, comm_ptr, errflag);
                     /* recv_size was set in the previous
                      * receive. that's the amount of data to be
@@ -199,14 +201,15 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                      * relative_rank, dst); */
                     mpi_errno = MPIC_Recv(((char *) tmp_buf + offset),
                                           nbytes - offset < 0 ? 0 : nbytes - offset,
-                                          MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status);
+                                          MPIR_BYTE_INTERNAL, dst, MPIR_BCAST_TAG, comm_ptr,
+                                          &status);
                     /* nprocs_completed is also equal to the no. of processes
                      * whose data we don't have */
                     MPIR_ERR_CHECK(mpi_errno);
                     if (mpi_errno) {
                         recv_size = 0;
                     } else
-                        MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
+                        MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recv_size);
                     curr_size += recv_size;
                     /* printf("Rank %d, recv from %d, offset %d, size %d\n", rank, dst, offset, recv_size);
                      * fflush(stdout); */
@@ -231,7 +234,8 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
 
     if (!is_contig) {
         if (rank != root) {
-            mpi_errno = MPIR_Localcopy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype);
+            mpi_errno =
+                MPIR_Localcopy(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, buffer, count, datatype);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

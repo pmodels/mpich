@@ -51,7 +51,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
             MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
             MPIR_CHKLMEM_MALLOC(tmp_buf, recvcount * local_size * recvtype_sz);
 
-            mpi_errno = MPIC_Recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
+            mpi_errno = MPIC_Recv(tmp_buf, recvcount * local_size * recvtype_sz, MPIR_BYTE_INTERNAL,
                                   root, MPIR_SCATTER_TAG, comm_ptr, &status);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
@@ -66,7 +66,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, MPI_Aint s
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do the usual scatter on this intracommunicator */
-        mpi_errno = MPIR_Scatter(tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
+        mpi_errno = MPIR_Scatter(tmp_buf, recvcount * recvtype_sz, MPIR_BYTE_INTERNAL,
                                  recvbuf, recvcount, recvtype, 0, newcomm_ptr, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }

@@ -510,9 +510,9 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
             for (i = 0; i < *remote_size; i++)
                 upid_recv_size += remote_upid_size[i];
             MPIR_CHKLMEM_MALLOC(remote_upids, upid_recv_size * sizeof(char));
-            mpi_errno = MPIC_Sendrecv(local_upids, upid_send_size, MPI_BYTE,
+            mpi_errno = MPIC_Sendrecv(local_upids, upid_send_size, MPIR_BYTE_INTERNAL,
                                       remote_leader, cts_tag,
-                                      remote_upids, upid_recv_size, MPI_BYTE,
+                                      remote_upids, upid_recv_size, MPIR_BYTE_INTERNAL,
                                       remote_leader, cts_tag,
                                       peer_comm, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
@@ -521,9 +521,11 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
             MPIDIU_upids_to_lpids(*remote_size, remote_upid_size, remote_upids, *remote_lpids);
         } else {
             /* Stage 1.1f only exchange GPIDS if no dynamic process involved */
-            mpi_errno = MPIC_Sendrecv(local_lpids, local_size, MPI_UINT64_T,
+            MPI_Aint local_bytes = sizeof(local_lpids[0]) * local_size;
+            MPI_Aint remote_bytes = sizeof(local_lpids[0]) * (*remote_size);
+            mpi_errno = MPIC_Sendrecv(local_lpids, local_bytes, MPIR_BYTE_INTERNAL,
                                       remote_leader, cts_tag,
-                                      *remote_lpids, *remote_size, MPI_UINT64_T,
+                                      *remote_lpids, remote_bytes, MPIR_BYTE_INTERNAL,
                                       remote_leader, cts_tag,
                                       peer_comm, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
@@ -622,9 +624,6 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
 
     MPIR_FUNC_ENTER;
 
-    MPIR_Assert(sizeof(MPIR_Lpid) == 8);
-    MPI_Datatype lpid_datatype = MPI_UINT64_T;
-
     if (local_comm->rank == local_leader) {
         if (!pure_intracomm) {
             for (i = 0; i < (*remote_size); i++) {
@@ -643,11 +642,12 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
             mpi_errno = MPIR_Bcast_allcomm_auto(remote_upid_size, *remote_size, MPIR_INT_INTERNAL,
                                                 local_leader, local_comm, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
-            mpi_errno = MPIR_Bcast_allcomm_auto(remote_upids, upid_recv_size, MPI_BYTE,
+            mpi_errno = MPIR_Bcast_allcomm_auto(remote_upids, upid_recv_size, MPIR_BYTE_INTERNAL,
                                                 local_leader, local_comm, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            mpi_errno = MPIR_Bcast_allcomm_auto(*remote_lpids, *remote_size, lpid_datatype,
+            MPI_Aint remote_bytes = sizeof(MPIR_Lpid) * (*remote_size);
+            mpi_errno = MPIR_Bcast_allcomm_auto(*remote_lpids, remote_bytes, MPIR_BYTE_INTERNAL,
                                                 local_leader, local_comm, MPIR_ERR_NONE);
         }
     } else {
@@ -666,13 +666,14 @@ int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, i
                                                 local_leader, local_comm, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_CHKLMEM_MALLOC(_remote_upids, upid_recv_size * sizeof(char));
-            mpi_errno = MPIR_Bcast_allcomm_auto(_remote_upids, upid_recv_size, MPI_BYTE,
+            mpi_errno = MPIR_Bcast_allcomm_auto(_remote_upids, upid_recv_size, MPIR_BYTE_INTERNAL,
                                                 local_leader, local_comm, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIDIU_upids_to_lpids(*remote_size, _remote_upid_size, _remote_upids, *remote_lpids);
         } else {
-            mpi_errno = MPIR_Bcast_allcomm_auto(*remote_lpids, *remote_size, lpid_datatype,
+            MPI_Aint remote_bytes = sizeof(MPIR_Lpid) * (*remote_size);
+            mpi_errno = MPIR_Bcast_allcomm_auto(*remote_lpids, remote_bytes, MPIR_BYTE_INTERNAL,
                                                 local_leader, local_comm, MPIR_ERR_NONE);
         }
     }

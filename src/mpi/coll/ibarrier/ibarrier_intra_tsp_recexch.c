@@ -13,10 +13,10 @@ int MPIR_TSP_Ibarrier_sched_intra_recexch(MPIR_Comm * comm, int k, MPIR_TSP_sche
     MPIR_FUNC_ENTER;
 
     mpi_errno =
-        MPIR_TSP_Iallreduce_sched_intra_recexch(MPI_IN_PLACE, recvbuf, 0, MPI_BYTE, MPI_SUM,
-                                                comm,
-                                                MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
-                                                k, sched);
+        MPIR_TSP_Iallreduce_sched_intra_recexch(MPI_IN_PLACE, recvbuf, 0, MPIR_BYTE_INTERNAL,
+                                                MPI_SUM, comm,
+                                                MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER, k,
+                                                sched);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

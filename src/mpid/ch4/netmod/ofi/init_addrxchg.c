@@ -263,8 +263,8 @@ int MPIDI_OFI_addr_exchange_all_ctx(void)
         }
     }
     /* Allgather */
-    mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPI_BYTE,
-                                        all_names, my_len, MPI_BYTE, comm, MPIR_ERR_NONE);
+    mpi_errno = MPIR_Allgather_fallback(MPI_IN_PLACE, 0, MPIR_BYTE_INTERNAL,
+                                        all_names, my_len, MPIR_BYTE_INTERNAL, comm, MPIR_ERR_NONE);
 
     /* Step 2: insert and store non-root nic/vci on the root context */
     int root_ctx_idx = MPIDI_OFI_get_ctx_index(0, 0);
