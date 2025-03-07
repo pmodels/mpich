@@ -135,6 +135,8 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
 
     MPIR_FUNC_ENTER;
 
+    MPIR_DATATYPE_ASSERT_BUILTIN(datatype);
+
     /* Return immediately for dummy process */
     if (unlikely(dest == MPI_PROC_NULL)) {
         goto fn_exit;
@@ -176,6 +178,8 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     MPIR_Request *request_ptr = NULL;
 
     MPIR_FUNC_ENTER;
+
+    MPIR_DATATYPE_ASSERT_BUILTIN(datatype);
 
     /* Return immediately for dummy process */
     if (unlikely(source == MPI_PROC_NULL)) {
@@ -226,6 +230,9 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     MPIR_Request *recv_req_ptr = NULL, *send_req_ptr = NULL;
 
     MPIR_FUNC_ENTER;
+
+    MPIR_DATATYPE_ASSERT_BUILTIN(sendtype);
+    MPIR_DATATYPE_ASSERT_BUILTIN(recvtype);
 
     MPIR_ERR_CHKANDJUMP1((sendcount < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", sendcount);
