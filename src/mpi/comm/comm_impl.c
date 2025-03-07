@@ -346,7 +346,7 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         mpi_errno = MPII_Comm_create_map(n, 0, mapping, NULL, mapping_comm, *newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
-        (*newcomm_ptr)->tainted = comm_ptr->tainted;
+        (*newcomm_ptr)->vcis_enabled = comm_ptr->vcis_enabled;
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
@@ -520,7 +520,7 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
                                       &remote_group);
     (*newcomm_ptr)->remote_group = remote_group;
 
-    (*newcomm_ptr)->tainted = comm_ptr->tainted;
+    (*newcomm_ptr)->vcis_enabled = comm_ptr->vcis_enabled;
     mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -613,7 +613,7 @@ int MPIR_Comm_create_group_impl(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, in
         mpi_errno = MPII_Comm_create_map(n, 0, mapping, NULL, mapping_comm, *newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
-        (*newcomm_ptr)->tainted = comm_ptr->tainted;
+        (*newcomm_ptr)->vcis_enabled = comm_ptr->vcis_enabled;
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
@@ -1066,7 +1066,6 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     }
     MPID_THREAD_CS_EXIT(VCI, local_comm_ptr->mutex);
 
-    (*new_intercomm_ptr)->tainted = 1;
     mpi_errno = MPIR_Comm_commit(*new_intercomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -1121,7 +1120,6 @@ int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
                                          &(*newcomm)->remote_group);
     MPIR_ERR_CHECK(mpi_errno);
 
-    (*newcomm)->tainted = 1;
     mpi_errno = MPIR_Comm_commit(*newcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -1279,7 +1277,6 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
      * operations within the context id algorithm, since we already
      * have a valid (almost - see comm_create_hook) communicator.
      */
-    (*new_intracomm_ptr)->tainted = 1;
     mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -1312,7 +1309,6 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
     mpi_errno = create_and_map(comm_ptr, local_high, (*new_intracomm_ptr));
     MPIR_ERR_CHECK(mpi_errno);
 
-    (*new_intracomm_ptr)->tainted = 1;
     mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));
     MPIR_ERR_CHECK(mpi_errno);
 

@@ -20,7 +20,7 @@ int MPIDI_OFI_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
     int lpid = MPIDIU_GPID_GET_LPID(remote_lpid);
     fi_addr_t remote_addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(avtid, lpid), nic, vci);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
 
     MPIDI_OFI_dynamic_process_request_t req;
     req.done = 0;
@@ -69,7 +69,7 @@ int MPIDI_OFI_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -91,7 +91,7 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, 0, MPI_ANY_SOURCE, tag);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci));
 
     MPL_time_t time_start, time_now;
     double time_gap;
@@ -126,7 +126,7 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     }
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci));
     return mpi_errno;
   fn_fail:
     goto fn_exit;
