@@ -53,7 +53,11 @@ def dump_mpi_abi_internal_h(mpi_abi_internal_h):
                 out.append("    %s reserved[%d];" % (T, n - 2))
             elif RE.match(r'#define\s+(MPI_\w+)\s+\(?\((MPI_\w+)\)\s*(0x\w+)\)?', line):
                 (name, T, val) = RE.m.group(1,2,3)
-                if T == "MPI_Datatype":
+                if T == "MPI_File":
+                    # Both ROMIO and ABI use pointers, thus we can directly replace constants
+                    out.append(line.rstrip())
+                    continue
+                elif T == "MPI_Datatype":
                     idx = int(val, 0) & G.datatype_mask
                     G.abi_datatypes[idx] = name
                     if re.match(r'MPI_LOGICAL\d+', name):
