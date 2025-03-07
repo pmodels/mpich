@@ -96,6 +96,8 @@ int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    comm->vcis_enabled = true;
+
     for (int vci = 1; vci < MPIDI_global.n_total_vcis; vci++) {
         mpi_errno = MPIDI_init_per_vci(vci);
         MPIR_ERR_CHECK(mpi_errno);
