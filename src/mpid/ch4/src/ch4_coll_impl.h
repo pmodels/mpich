@@ -190,10 +190,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
     if (comm->node_comm != NULL) {
         int i = 0;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_bcast(&i, 1, MPI_BYTE, 0, comm->node_comm, errflag);
+        mpi_errno = MPIDI_SHM_mpi_bcast(&i, 1, MPIR_BYTE_INTERNAL, 0, comm->node_comm, errflag);
         MPIR_ERR_CHECK(mpi_errno);
 #else
-        mpi_errno = MPIDI_NM_mpi_bcast(&i, 1, MPI_BYTE, 0, comm->node_comm, errflag);
+        mpi_errno = MPIDI_NM_mpi_bcast(&i, 1, MPIR_BYTE_INTERNAL, 0, comm->node_comm, errflag);
         MPIR_ERR_CHECK(mpi_errno);
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
@@ -259,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, M
             MPIR_Datatype_get_size_macro(datatype, type_size);
             nbytes = type_size * count;
             /* check that we received as much as we expected */
-            MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
+            MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recvd_size);
             MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
                                  "**collective_size_mismatch",
                                  "**collective_size_mismatch %d %d", recvd_size, nbytes);
@@ -473,7 +473,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, M
             MPIR_Datatype_get_size_macro(datatype, type_size);
             nbytes = type_size * count;
             /* check that we received as much as we expected */
-            MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
+            MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recvd_size);
             MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
                                  "**collective_size_mismatch",
                                  "**collective_size_mismatch %d %d", recvd_size, nbytes);

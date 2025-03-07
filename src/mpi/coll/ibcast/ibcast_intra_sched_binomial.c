@@ -51,7 +51,8 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
     if (!is_contig) {
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
-            mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);
+            mpi_errno =
+                MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPIR_BYTE_INTERNAL, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
@@ -91,7 +92,7 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
             if (src < 0)
                 src += comm_size;
             if (!is_contig)
-                mpi_errno = MPIR_Sched_recv_status(tmp_buf, nbytes, MPI_BYTE, src,
+                mpi_errno = MPIR_Sched_recv_status(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, src,
                                                    comm_ptr, &ibcast_state->status, s);
             else
                 mpi_errno = MPIR_Sched_recv_status(buffer, count, datatype, src,
@@ -125,7 +126,7 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
             if (dst >= comm_size)
                 dst -= comm_size;
             if (!is_contig)
-                mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, dst, comm_ptr, s);
+                mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, dst, comm_ptr, s);
             else
                 mpi_errno = MPIR_Sched_send(buffer, count, datatype, dst, comm_ptr, s);
             MPIR_ERR_CHECK(mpi_errno);
@@ -139,7 +140,8 @@ int MPIR_Ibcast_intra_sched_binomial(void *buffer, MPI_Aint count, MPI_Datatype 
     if (!is_contig) {
         if (rank != root) {
             MPIR_SCHED_BARRIER(s);
-            mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, s);
+            mpi_errno =
+                MPIR_Sched_copy(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, buffer, count, datatype, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }

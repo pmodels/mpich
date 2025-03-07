@@ -81,8 +81,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
 
         if (rank == root) {
             mpi_errno =
-                MPIR_TSP_sched_localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, sched,
-                                         0, NULL, &vtx_id);
+                MPIR_TSP_sched_localcopy(buffer, count, datatype, tmp_buf, nbytes,
+                                         MPIR_BYTE_INTERNAL, sched, 0, NULL, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
             mpi_errno = MPIR_TSP_sched_fence(sched);
             MPIR_ERR_CHECK(mpi_errno);
@@ -149,14 +149,14 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
             MPIR_ERR_POP(mpi_errno);
         ibcast_state->n_bytes = recv_size;
         mpi_errno =
-            MPIR_TSP_sched_irecv_status((char *) tmp_buf + displs[rank], recv_size, MPI_BYTE,
-                                        my_tree.parent, tag, comm, &ibcast_state->status, sched, 0,
-                                        NULL, &recv_id);
+            MPIR_TSP_sched_irecv_status((char *) tmp_buf + displs[rank], recv_size,
+                                        MPIR_BYTE_INTERNAL, my_tree.parent, tag, comm,
+                                        &ibcast_state->status, sched, 0, NULL, &recv_id);
         MPIR_TSP_sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, sched, 1, &recv_id,
                           &vtx_id);
 #else
         mpi_errno =
-            MPIR_TSP_sched_irecv((char *) tmp_buf + displs[rank], recv_size, MPI_BYTE,
+            MPIR_TSP_sched_irecv((char *) tmp_buf + displs[rank], recv_size, MPIR_BYTE_INTERNAL,
                                  my_tree.parent, tag, comm, sched, 0, NULL, &recv_id);
 #endif
         MPIR_ERR_CHECK(mpi_errno);
@@ -173,7 +173,7 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
             num_send_dependencies = 0;
 
         mpi_errno = MPIR_TSP_sched_isend((char *) tmp_buf + displs[child],
-                                         child_subtree_size[i], MPI_BYTE,
+                                         child_subtree_size[i], MPIR_BYTE_INTERNAL,
                                          child, tag, comm, sched, num_send_dependencies, &recv_id,
                                          &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
@@ -187,14 +187,15 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
     if (allgatherv_algo == MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_tsp_ring)
         /* Schedule Allgatherv ring */
         mpi_errno =
-            MPIR_TSP_Iallgatherv_sched_intra_ring(MPI_IN_PLACE, cnts[rank], MPI_BYTE, tmp_buf,
-                                                  cnts, displs, MPI_BYTE, comm, sched);
+            MPIR_TSP_Iallgatherv_sched_intra_ring(MPI_IN_PLACE, cnts[rank], MPIR_BYTE_INTERNAL,
+                                                  tmp_buf, cnts, displs, MPIR_BYTE_INTERNAL, comm,
+                                                  sched);
     else
         /* Schedule Allgatherv recexch */
         mpi_errno =
-            MPIR_TSP_Iallgatherv_sched_intra_recexch(MPI_IN_PLACE, cnts[rank], MPI_BYTE, tmp_buf,
-                                                     cnts, displs, MPI_BYTE, comm, 0, allgatherv_k,
-                                                     sched);
+            MPIR_TSP_Iallgatherv_sched_intra_recexch(MPI_IN_PLACE, cnts[rank], MPIR_BYTE_INTERNAL,
+                                                     tmp_buf, cnts, displs, MPIR_BYTE_INTERNAL,
+                                                     comm, 0, allgatherv_k, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!is_contig) {
@@ -204,8 +205,8 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, MPI_Aint count
                 MPIR_ERR_POP(mpi_errno);
 
             mpi_errno =
-                MPIR_TSP_sched_localcopy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, sched,
-                                         1, &sink_id, &vtx_id);
+                MPIR_TSP_sched_localcopy(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, buffer, count,
+                                         datatype, sched, 1, &sink_id, &vtx_id);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

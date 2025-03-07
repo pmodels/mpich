@@ -46,7 +46,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, MPI_Aint
 
     if (sendcount != 0) {
         mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype, tmp_buf, sendcount * sendtype_sz,
-                                MPI_BYTE, 0, newcomm_ptr, errflag);
+                                MPIR_BYTE_INTERNAL, 0, newcomm_ptr, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -57,7 +57,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, MPI_Aint
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
             mpi_errno = MPIR_Bcast(tmp_buf, sendcount * sendtype_sz * local_size,
-                                   MPI_BYTE, root, comm_ptr, errflag);
+                                   MPIR_BYTE_INTERNAL, root, comm_ptr, errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -81,7 +81,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast(const void *sendbuf, MPI_Aint
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
             mpi_errno = MPIR_Bcast(tmp_buf, sendcount * sendtype_sz * local_size,
-                                   MPI_BYTE, root, comm_ptr, errflag);
+                                   MPIR_BYTE_INTERNAL, root, comm_ptr, errflag);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }

@@ -539,7 +539,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"About to bcast on local_comm");
         mpi_errno = MPIR_Bcast( comm_info, 2, MPIR_INT_INTERNAL, local_leader, local_comm_ptr, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE, local_leader,
+        mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPIR_BYTE_INTERNAL, local_leader,
                                      local_comm_ptr, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"end of bcast on local_comm of size %d",
@@ -554,7 +554,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         *remote_size = comm_info[0];
         MPIR_CHKLMEM_MALLOC(remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid));
         *remote_lpids = MPL_malloc((*remote_size)*sizeof(MPIR_Lpid), MPL_MEM_ADDRESS);
-        mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE, local_leader,
+        mpi_errno = MPIR_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPIR_BYTE_INTERNAL, local_leader,
                                      local_comm_ptr, MPIR_ERR_NONE );
         MPIR_ERR_CHECK(mpi_errno);
 

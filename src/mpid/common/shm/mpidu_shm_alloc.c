@@ -289,7 +289,7 @@ static int map_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, int
                 if (*map_result_ptr != SYMSHM_SUCCESS)
                     goto map_fail;
 
-                mpi_errno = MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_BYTE, 0,
+                mpi_errno = MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPIR_BYTE_INTERNAL, 0,
                                        shm_comm_ptr, MPIR_ERR_NONE);
                 MPIR_ERR_CHECK(mpi_errno);
 
@@ -307,7 +307,7 @@ static int map_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, int
                 /* if rank 0 mapped successfully, others on the node attach shared memory region */
 
                 /* get serialized handle from rank 0 and deserialize it */
-                mpi_errno = MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_BYTE, 0,
+                mpi_errno = MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPIR_BYTE_INTERNAL, 0,
                                        shm_comm_ptr, MPIR_ERR_NONE);
                 MPIR_ERR_CHECK(mpi_errno);
 
@@ -494,8 +494,8 @@ static int shm_alloc(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg)
         if (shm_fail_flag)
             serialized_hnd = &mpl_err_hnd[0];
 
-        mpi_errno = MPIR_Bcast_impl(serialized_hnd, MPL_SHM_GHND_SZ, MPI_BYTE, 0, shm_comm_ptr,
-                                    MPIR_ERR_NONE);
+        mpi_errno = MPIR_Bcast_impl(serialized_hnd, MPL_SHM_GHND_SZ, MPIR_BYTE_INTERNAL, 0,
+                                    shm_comm_ptr, MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (shm_fail_flag)

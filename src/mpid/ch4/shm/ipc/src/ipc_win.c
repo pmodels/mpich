@@ -89,7 +89,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         /* FIXME: the rank should be remote rank for tracking caching, not local rank
          *        Here we can skip the tracking, e.g. just use MPI_PROC_NULL
          */
-        mpi_errno = MPIDI_GPU_get_ipc_attr(win->base, win->size, MPI_BYTE,
+        mpi_errno = MPIDI_GPU_get_ipc_attr(win->base, win->size, MPIR_BYTE_INTERNAL,
                                            MPI_PROC_NULL, shm_comm_ptr, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
         if (ipc_attr.ipc_type == MPIDI_IPCI_TYPE__SKIP) {
@@ -102,7 +102,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 #endif
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     if (!done) {
-        mpi_errno = MPIDI_XPMEM_get_ipc_attr(win->base, win->size, MPI_BYTE, &ipc_attr);
+        mpi_errno = MPIDI_XPMEM_get_ipc_attr(win->base, win->size, MPIR_BYTE_INTERNAL, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
         done = (ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE);
     }
@@ -151,7 +151,8 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                                0,
                                MPI_DATATYPE_NULL,
                                ipc_shared_table,
-                               sizeof(win_shared_info_t), MPI_BYTE, shm_comm_ptr, MPIR_ERR_NONE);
+                               sizeof(win_shared_info_t), MPIR_BYTE_INTERNAL, shm_comm_ptr,
+                               MPIR_ERR_NONE);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -209,7 +210,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                         shared_table[i].ipc_handle = handle;
                         int dev_id = MPL_gpu_get_dev_id_from_attr(&ipc_attr.u.gpu.gpu_attr);
                         int map_dev_id = MPIDI_GPU_ipc_get_map_dev(handle.global_dev_id, dev_id,
-                                                                   MPI_BYTE);
+                                                                   MPIR_BYTE_INTERNAL);
                         int fast_copy = 0;
                         if (shared_table[i].size <= MPIR_CVAR_GPU_FAST_COPY_MAX_SIZE) {
                             mpi_errno = MPIDI_GPU_ipc_handle_map(ipc_shared_table[i].ipc_handle.gpu,

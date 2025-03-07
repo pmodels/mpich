@@ -28,7 +28,7 @@ int MPIR_Barrier_intra_smp(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
      * anything) */
     if (comm_ptr->node_comm != NULL) {
         int i = 0;
-        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, 0, comm_ptr->node_comm, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPIR_BYTE_INTERNAL, 0, comm_ptr->node_comm, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

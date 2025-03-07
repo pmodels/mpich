@@ -103,7 +103,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_complete(MPIR_Request * rreq, int ev
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer))) {
         MPI_Aint count = MPIR_STATUS_GET_COUNT(rreq->status);
         mpi_errno = MPIR_Localcopy_gpu(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer), count,
-                                       MPI_BYTE, 0, NULL,
+                                       MPIR_BYTE_INTERNAL, 0, NULL,
                                        MPIDI_OFI_REQUEST(rreq, buf),
                                        MPIDI_OFI_REQUEST(rreq, count),
                                        MPIDI_OFI_REQUEST(rreq, datatype), 0, NULL,

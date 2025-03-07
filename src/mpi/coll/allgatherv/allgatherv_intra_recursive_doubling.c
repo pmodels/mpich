@@ -67,7 +67,8 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
                                    ((char *) tmp_buf + position *
-                                    recvtype_sz), recvcounts[rank] * recvtype_sz, MPI_BYTE);
+                                    recvtype_sz), recvcounts[rank] * recvtype_sz,
+                                   MPIR_BYTE_INTERNAL);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* if in_place specified, local data is found in recvbuf */
@@ -75,7 +76,8 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                     displs[rank] * recvtype_extent),
                                    recvcounts[rank], recvtype,
                                    ((char *) tmp_buf + position *
-                                    recvtype_sz), recvcounts[rank] * recvtype_sz, MPI_BYTE);
+                                    recvtype_sz), recvcounts[rank] * recvtype_sz,
+                                   MPIR_BYTE_INTERNAL);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -107,11 +109,11 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                 recv_offset += recvcounts[j];
 
             mpi_errno = MPIC_Sendrecv(((char *) tmp_buf + send_offset * recvtype_sz),
-                                      curr_cnt * recvtype_sz, MPI_BYTE, dst,
+                                      curr_cnt * recvtype_sz, MPIR_BYTE_INTERNAL, dst,
                                       MPIR_ALLGATHERV_TAG,
                                       ((char *) tmp_buf + recv_offset * recvtype_sz),
-                                      (total_count - recv_offset) * recvtype_sz, MPI_BYTE, dst,
-                                      MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
+                                      (total_count - recv_offset) * recvtype_sz, MPIR_BYTE_INTERNAL,
+                                      dst, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
             MPIR_ERR_CHECK(mpi_errno);
             if (mpi_errno) {
                 last_recv_cnt = 0;
@@ -174,7 +176,8 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
 
                     mpi_errno = MPIC_Send(((char *) tmp_buf + offset * recvtype_sz),
                                           last_recv_cnt * recvtype_sz,
-                                          MPI_BYTE, dst, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
+                                          MPIR_BYTE_INTERNAL, dst, MPIR_ALLGATHERV_TAG, comm_ptr,
+                                          errflag);
                     MPIR_ERR_CHECK(mpi_errno);
                     /* last_recv_cnt was set in the previous
                      * receive. that's the amount of data to be
@@ -191,7 +194,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                         offset += recvcounts[j];
 
                     mpi_errno = MPIC_Recv(((char *) tmp_buf + offset * recvtype_sz),
-                                          (total_count - offset) * recvtype_sz, MPI_BYTE,
+                                          (total_count - offset) * recvtype_sz, MPIR_BYTE_INTERNAL,
                                           dst, MPIR_ALLGATHERV_TAG, comm_ptr, &status);
                     MPIR_ERR_CHECK(mpi_errno);
                     if (mpi_errno) {
@@ -219,7 +222,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
             /* not necessary to copy if in_place and
              * j==rank. otherwise copy. */
             mpi_errno = MPIR_Localcopy(((char *) tmp_buf + position * recvtype_sz),
-                                       recvcounts[j] * recvtype_sz, MPI_BYTE,
+                                       recvcounts[j] * recvtype_sz, MPIR_BYTE_INTERNAL,
                                        ((char *) recvbuf + displs[j] * recvtype_extent),
                                        recvcounts[j], recvtype);
             MPIR_ERR_CHECK(mpi_errno);

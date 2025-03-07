@@ -61,7 +61,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
             MPIR_ERR_CHECK(mpi_errno);
         }
         count = count * type_size;
-        dtype = MPI_BYTE;
+        dtype = MPIR_BYTE_INTERNAL;
     }
 
     if (tree_type == MPIR_TREE_TYPE_KARY) {
@@ -130,7 +130,7 @@ int MPIR_Bcast_intra_tree(void *buffer,
         mpi_errno = MPIC_Recv(send_buf, count, dtype, src, MPIR_BCAST_TAG, comm_ptr, &status);
         MPIR_ERR_CHECK(mpi_errno);
         /* check that we received as much as we expected */
-        MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
+        MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recvd_size);
         MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
                              "**collective_size_mismatch",
                              "**collective_size_mismatch %d %d", (int) recvd_size, (int) nbytes);

@@ -949,8 +949,8 @@ static int MPIDI_OFI_gpu_progress_send(void)
             mpi_errno =
                 MPIR_Ilocalcopy_gpu((char *) send_task->send_buf, send_task->count,
                                     send_task->datatype, send_task->offset, &send_task->attr,
-                                    host_buf, chunk_sz, MPI_BYTE, 0, NULL, MPL_GPU_COPY_D2H,
-                                    engine_type, commit, &yreq);
+                                    host_buf, chunk_sz, MPIR_BYTE_INTERNAL, 0, NULL,
+                                    MPL_GPU_COPY_D2H, engine_type, commit, &yreq);
             MPIR_ERR_CHECK(mpi_errno);
             actual_pack_bytes = chunk_sz;
             task =

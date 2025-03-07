@@ -135,6 +135,8 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
 
     MPIR_FUNC_ENTER;
 
+    MPIR_DATATYPE_ASSERT_BUILTIN(datatype);
+
     /* Return immediately for dummy process */
     if (unlikely(dest == MPI_PROC_NULL)) {
         goto fn_exit;
@@ -176,6 +178,8 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     MPIR_Request *request_ptr = NULL;
 
     MPIR_FUNC_ENTER;
+
+    MPIR_DATATYPE_ASSERT_BUILTIN(datatype);
 
     /* Return immediately for dummy process */
     if (unlikely(source == MPI_PROC_NULL)) {
@@ -226,6 +230,9 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     MPIR_Request *recv_req_ptr = NULL, *send_req_ptr = NULL;
 
     MPIR_FUNC_ENTER;
+
+    MPIR_DATATYPE_ASSERT_BUILTIN(sendtype);
+    MPIR_DATATYPE_ASSERT_BUILTIN(recvtype);
 
     MPIR_ERR_CHKANDJUMP1((sendcount < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", sendcount);
@@ -345,7 +352,8 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
         MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
         MPIR_PT2PT_ATTR_SET_ERRFLAG(attr, errflag);
-        DO_MPID_ISEND(tmpbuf, actual_pack_bytes, MPI_PACKED, dest, sendtag, comm_ptr, attr, &sreq);
+        DO_MPID_ISEND(tmpbuf, actual_pack_bytes, MPIR_BYTE_INTERNAL, dest, sendtag, comm_ptr, attr,
+                      &sreq);
         MPIR_ERR_CHECK(mpi_errno);
         if (mpi_errno != MPI_SUCCESS) {
             /* --BEGIN ERROR HANDLING-- */

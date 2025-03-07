@@ -51,7 +51,8 @@ int MPIR_Bcast_intra_binomial(void *buffer,
 
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
-            mpi_errno = MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE);
+            mpi_errno =
+                MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPIR_BYTE_INTERNAL);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -90,7 +91,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             if (src < 0)
                 src += comm_size;
             if (!is_contig)
-                mpi_errno = MPIC_Recv(tmp_buf, nbytes, MPI_BYTE, src,
+                mpi_errno = MPIC_Recv(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, src,
                                       MPIR_BCAST_TAG, comm_ptr, status_p);
             else
                 mpi_errno = MPIC_Recv(buffer, count, datatype, src,
@@ -98,7 +99,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             MPIR_ERR_CHECK(mpi_errno);
 #ifdef HAVE_ERROR_CHECKING
             /* check that we received as much as we expected */
-            MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
+            MPIR_Get_count_impl(status_p, MPIR_BYTE_INTERNAL, &recvd_size);
             MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
                                  "**collective_size_mismatch",
                                  "**collective_size_mismatch %d %d",
@@ -127,7 +128,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             if (dst >= comm_size)
                 dst -= comm_size;
             if (!is_contig)
-                mpi_errno = MPIC_Send(tmp_buf, nbytes, MPI_BYTE, dst,
+                mpi_errno = MPIC_Send(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, dst,
                                       MPIR_BCAST_TAG, comm_ptr, errflag);
             else
                 mpi_errno = MPIC_Send(buffer, count, datatype, dst,
@@ -139,7 +140,8 @@ int MPIR_Bcast_intra_binomial(void *buffer,
 
     if (!is_contig) {
         if (rank != root) {
-            mpi_errno = MPIR_Localcopy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype);
+            mpi_errno =
+                MPIR_Localcopy(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, buffer, count, datatype);
             MPIR_ERR_CHECK(mpi_errno);
 
         }
