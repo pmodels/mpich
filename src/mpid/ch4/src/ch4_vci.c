@@ -66,35 +66,59 @@ int MPIDI_vci_finalize(void)
     goto fn_exit;
 }
 
+/* enable multiple vcis for this comm.
+ * The number of vcis below MPIR_CVAR_CH4_NUM_VCIS will be used for implicit vcis.
+ * The number of vcis above MPIR_CVAR_CH4_NUM_VCIS will be used as explicit (reserved) vcis.
+ * The netmod may create less than the requested number of vcis.
+ */
 int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKLMEM_DECL();
 
-    /* FIXME: currently ofi require each process to have the same number of nics,
-     *        thus need access to world_comm for collectives. We should remove
-     *        this restriction, then we can move MPIDI_NM_init_vcis to
-     *        MPIDI_world_pre_init.
-     */
-    MPIR_Assert(n_total_vcis <= MPIDI_CH4_MAX_VCIS);
-    MPIR_Assert(n_total_vcis <= MPIR_REQUEST_NUM_POOLS);
+    /* for now, intracomm only. I believe we can enable it for intercomm in the future */
+    MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
+    /* make sure multiple vcis are not previously enabled. Or it will mess up the
+     * internal communication during setting up vcis. */
+    MPIR_Assert(!comm->vcis_enabled);
+    /* actually, only do it once for now */
+    MPIR_Assert(MPIDI_global.n_total_vcis == 1);
+
+    /* get global ranks */
+    int nprocs = comm->local_size;
+    int *granks;
+    MPIR_CHKLMEM_MALLOC(granks, nprocs * sizeof(int));
+    for (int i = 0; i < nprocs; i++) {
+        int avtid;
+        MPIDIU_comm_rank_to_pid(comm, i, &granks[i], &avtid);
+        MPIR_Assert(avtid == 0);
+    }
+
+    /* for now, we only allow setup setup vcis for each remote once */
+    for (int i = 0; i < nprocs; i++) {
+        MPIR_Assert(MPIDI_global.all_num_vcis[granks[i]] == 0);
+    }
+
+    /* set up local vcis */
     int num_vcis_actual;
-    mpi_errno = MPIDI_NM_init_vcis(n_total_vcis, &num_vcis_actual);
+    mpi_errno = MPIDI_NM_init_vcis(num_vcis, &num_vcis_actual);
     MPIR_ERR_CHECK(mpi_errno);
-
-#if MPIDI_CH4_MAX_VCIS == 1
-    MPIR_Assert(num_vcis_actual == 1);
-#else
-    MPIR_Assert(num_vcis_actual > 0 && num_vcis_actual <= MPIDI_global.n_total_vcis);
 
     MPIDI_global.n_total_vcis = num_vcis_actual;
     MPIDI_global.n_vcis = MPL_MIN(MPIR_CVAR_CH4_NUM_VCIS, MPIDI_global.n_total_vcis);
+    MPIDI_global.n_reserved_vcis = MPIDI_global.n_total_vcis - MPIDI_global.n_vcis;
 
-    mpi_errno = MPIR_Allgather_fallback(&MPIDI_global.n_vcis, 1, MPIR_INT_INTERNAL,
-                                        MPIDI_global.all_num_vcis, 1, MPIR_INT_INTERNAL,
-                                        MPIR_Process.comm_world, MPIR_ERR_NONE);
+    /* gather the number of remote vcis */
+    int *all_num_vcis;
+    MPIR_CHKLMEM_MALLOC(all_num_vcis, nprocs * sizeof(int));
+    mpi_errno = MPIR_Allgather_impl(&num_vcis_actual, 1, MPIR_INT_INTERNAL,
+                                    all_num_vcis, 1, MPIR_INT_INTERNAL, comm, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
-#endif
+
+    for (int i = 0; i < nprocs; i++) {
+        MPIDI_global.all_num_vcis[granks[i]] = all_num_vcis[i];
+    }
 
     comm->vcis_enabled = true;
 
@@ -104,6 +128,7 @@ int MPIDI_Comm_set_vcis(MPIR_Comm * comm, int num_vcis)
     }
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
