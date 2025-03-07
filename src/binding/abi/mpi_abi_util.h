@@ -326,18 +326,12 @@ static inline ABI_Win ABI_Win_from_mpi(MPI_Win in)
 
 static inline MPI_File ABI_File_to_mpi(ABI_File in)
 {
-    if (in == ABI_FILE_NULL) {
-        return MPI_FILE_NULL;
-    }
     /* Both MPI_File in mpich and ABI_File are pointers */
     return (MPI_File) in;
 }
 
 static inline ABI_File ABI_File_from_mpi(MPI_File in)
 {
-    if (in == MPI_FILE_NULL) {
-        return ABI_FILE_NULL;
-    }
     /* Both MPI_File in mpich and ABI_File are pointers */
     return (ABI_File) in;
 }

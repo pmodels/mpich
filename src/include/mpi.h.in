@@ -277,7 +277,10 @@ typedef int MPI_Session;
 /* ROMIO uses a pointer for MPI_File objects.  This must be the same definition
    as in src/mpi/romio/include/mpio.h.in  */
 typedef struct ADIOI_FileD *MPI_File;
+/* When building MPI_ABI, directly use ABI MPI_FILE_NULL */
+#ifndef BUILD_MPI_ABI
 #define MPI_FILE_NULL ((MPI_File)0)
+#endif
 
 /* Collective operations */
 typedef int MPI_Op;
