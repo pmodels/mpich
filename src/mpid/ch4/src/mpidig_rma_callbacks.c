@@ -547,8 +547,8 @@ static int ack_get_acc(MPIR_Request * rreq)
     CH4_CALL(am_isend_reply(rreq->u.rma.win->comm_ptr, MPIDIG_REQUEST(rreq, u.target.origin_rank),
                             MPIDIG_GET_ACC_ACK, &ack_msg, sizeof(ack_msg),
                             MPIDIG_REQUEST(rreq, req->areq.data),
-                            MPIDIG_REQUEST(rreq, req->areq.result_data_sz), MPI_BYTE, local_vci,
-                            remote_vci, rreq), MPIDI_REQUEST(rreq, is_local), mpi_errno);
+                            MPIDIG_REQUEST(rreq, req->areq.result_data_sz), MPIR_BYTE_INTERNAL,
+                            local_vci, remote_vci, rreq), MPIDI_REQUEST(rreq, is_local), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_EXIT;

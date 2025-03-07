@@ -343,7 +343,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno =
-            MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+            MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPIR_CHAR_INTERNAL, 0, node_comm_ptr,
                        MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -360,7 +360,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
 
         /* get serialized handle from rank 0 and deserialize it */
         mpi_errno =
-            MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+            MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPIR_CHAR_INTERNAL, 0, node_comm_ptr,
                        MPIR_ERR_NONE);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -473,7 +473,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
     node_sizes[node_rank] = (MPI_Aint) size;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                               node_sizes, sizeof(MPI_Aint), MPI_BYTE,
+                               node_sizes, sizeof(MPI_Aint), MPIR_BYTE_INTERNAL,
                                node_comm_ptr, MPIR_ERR_NONE);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     MPIR_ERR_CHECK(mpi_errno);
@@ -512,9 +512,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
                                                     &serialized_hnd_ptr);
             MPIR_ERR_CHECK(mpi_errno);
 
-            mpi_errno =
-                MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
-                                MPIR_ERR_NONE);
+            mpi_errno = MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPIR_CHAR_INTERNAL, 0,
+                                   node_comm_ptr, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* wait for other processes to attach to win */
@@ -529,9 +528,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             char serialized_hnd[MPL_SHM_GHND_SZ] = { 0 };
 
             /* get serialized handle from rank 0 and deserialize it */
-            mpi_errno =
-                MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
-                           MPIR_ERR_NONE);
+            mpi_errno = MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPIR_CHAR_INTERNAL, 0,
+                                   node_comm_ptr, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno =
@@ -571,9 +569,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
                                                     &serialized_hnd_ptr);
             MPIR_ERR_CHECK(mpi_errno);
 
-            mpi_errno =
-                MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
-                           MPIR_ERR_NONE);
+            mpi_errno = MPIR_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPIR_CHAR_INTERNAL, 0,
+                                   node_comm_ptr, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* wait for other processes to attach to win */
@@ -588,9 +585,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             char serialized_hnd[MPL_SHM_GHND_SZ] = { 0 };
 
             /* get serialized handle from rank 0 and deserialize it */
-            mpi_errno =
-                MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
-                           MPIR_ERR_NONE);
+            mpi_errno = MPIR_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPIR_CHAR_INTERNAL, 0,
+                                   node_comm_ptr, MPIR_ERR_NONE);
             MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno =

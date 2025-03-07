@@ -97,7 +97,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, MPI_Aint count,
      * reduce it with recvbuf to get final result if necessary. */
 
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, errflag);
+        mpi_errno = MPIR_Bcast(&noneed, 1, MPIR_INT_INTERNAL, 0, comm_ptr->node_comm, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

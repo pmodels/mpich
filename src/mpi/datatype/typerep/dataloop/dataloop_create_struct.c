@@ -250,7 +250,7 @@ static int create_basic_all_bytes_struct(MPI_Aint count,
         }
     }
     err = MPIR_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
-                                       MPI_BYTE, (void **) dlp_p);
+                                       MPIR_BYTE_INTERNAL, (void **) dlp_p);
 
     MPL_free(tmp_blklens);
     MPL_free(tmp_disps);
@@ -385,7 +385,7 @@ static int create_flattened_struct(MPI_Aint count,
 #endif
 
     err = MPIR_Dataloop_create_indexed(nr_blks, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
-                                       MPI_BYTE, (void **) dlp_p);
+                                       MPIR_BYTE_INTERNAL, (void **) dlp_p);
 
     MPL_free(tmp_blklens);
     MPL_free(tmp_disps);

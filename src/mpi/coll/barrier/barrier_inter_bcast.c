@@ -40,22 +40,22 @@ int MPIR_Barrier_inter_bcast(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag)
     if (comm_ptr->is_low_group) {
         /* bcast to right */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPIR_BYTE_INTERNAL, root, comm_ptr, errflag);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* receive bcast from right */
         root = 0;
-        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPIR_BYTE_INTERNAL, root, comm_ptr, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* receive bcast from left */
         root = 0;
-        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPIR_BYTE_INTERNAL, root, comm_ptr, errflag);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* bcast to left */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPIR_BYTE_INTERNAL, root, comm_ptr, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
   fn_exit:

@@ -80,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, MPI_Aint ori
             am_hdr.target_datatype = target_datatype;
         } else {
             am_hdr.target_count = target_data_sz;
-            am_hdr.target_datatype = MPI_BYTE;
+            am_hdr.target_datatype = MPIR_BYTE_INTERNAL;
         }
         am_hdr.flattened_sz = 0;
         MPIR_Datatype_get_true_lb(target_datatype, &am_hdr.target_true_lb);
@@ -134,8 +134,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, MPI_Aint ori
         MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
         CH4_CALL(am_isend(target_rank, win->comm_ptr, MPIDIG_PUT_DT_REQ, &am_hdr, sizeof(am_hdr),
-                          flattened_dt, flattened_sz, MPI_BYTE, vci, vci_target, sreq), is_local,
-                 mpi_errno);
+                          flattened_dt, flattened_sz, MPIR_BYTE_INTERNAL, vci, vci_target, sreq),
+                 is_local, mpi_errno);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -210,7 +210,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
         am_hdr.target_datatype = target_datatype;
     } else {
         am_hdr.target_count = target_data_sz;
-        am_hdr.target_datatype = MPI_BYTE;
+        am_hdr.target_datatype = MPIR_BYTE_INTERNAL;
     }
     am_hdr.greq_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
@@ -241,7 +241,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, MPI_Aint origin_co
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
     CH4_CALL(am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
-                      flattened_dt, flattened_sz, MPI_BYTE, vci, vci_target, sreq),
+                      flattened_dt, flattened_sz, MPIR_BYTE_INTERNAL, vci, vci_target, sreq),
              MPIDI_rank_is_local(target_rank, win->comm_ptr), mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -371,8 +371,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, MPI_A
         MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
         CH4_CALL(am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_DT_REQ, &am_hdr, sizeof(am_hdr),
-                          flattened_dt, flattened_sz, MPI_BYTE, vci, vci_target, sreq), is_local,
-                 mpi_errno);
+                          flattened_dt, flattened_sz, MPIR_BYTE_INTERNAL, vci, vci_target, sreq),
+                 is_local, mpi_errno);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -525,7 +525,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
         MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
         CH4_CALL(am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_DT_REQ,
-                          &am_hdr, sizeof(am_hdr), flattened_dt, flattened_sz, MPI_BYTE,
+                          &am_hdr, sizeof(am_hdr), flattened_dt, flattened_sz, MPIR_BYTE_INTERNAL,
                           vci, vci_target, sreq), is_local, mpi_errno);
     }
     MPIR_ERR_CHECK(mpi_errno);

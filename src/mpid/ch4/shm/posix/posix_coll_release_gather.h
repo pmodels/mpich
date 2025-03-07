@@ -81,14 +81,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (!is_contig || type_size >= MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE) {
-        /* Convert to MPI_BYTE datatype */
+        /* Convert to MPIR_BYTE_INTERNAL datatype */
         count = type_size * count;
-        datatype = MPI_BYTE;
+        datatype = MPIR_BYTE_INTERNAL;
         type_size = 1;
 
         if (!is_contig) {
             buffer = MPL_malloc(count, MPL_MEM_COLL);
-            /* Reset true_lb based on the new datatype (MPI_BYTE) */
+            /* Reset true_lb based on the new datatype (MPIR_BYTE_INTERNAL) */
             true_lb = 0;
             if (my_rank == root) {
                 /* Root packs the data before sending, for non contiguous datatypes */
@@ -121,7 +121,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
 
         mpi_errno =
             MPIDI_POSIX_mpi_release_gather_release(MPIR_get_contig_ptr(buffer, offset + true_lb),
-                                                   chunk_count, MPI_BYTE, root, comm_ptr,
+                                                   chunk_count, MPIR_BYTE_INTERNAL, root, comm_ptr,
                                                    errflag,
                                                    MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST);
         MPIR_ERR_CHECK(mpi_errno);

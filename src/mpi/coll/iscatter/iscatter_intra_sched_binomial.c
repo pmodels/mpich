@@ -16,7 +16,7 @@ struct shared_state {
 static int get_count(MPIR_Comm * comm, int tag, void *state)
 {
     struct shared_state *ss = state;
-    MPIR_Get_count_impl(&ss->status, MPI_BYTE, &ss->curr_count);
+    MPIR_Get_count_impl(&ss->status, MPIR_BYTE_INTERNAL, &ss->curr_count);
     return MPI_SUCCESS;
 }
 
@@ -125,18 +125,19 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
             if (recvbuf != MPI_IN_PLACE)
                 mpi_errno = MPIR_Sched_copy(((char *) sendbuf + extent * sendcount * rank),
                                             sendcount * (comm_size - rank), sendtype,
-                                            tmp_buf, ss->nbytes * (comm_size - rank), MPI_BYTE, s);
+                                            tmp_buf, ss->nbytes * (comm_size - rank),
+                                            MPIR_BYTE_INTERNAL, s);
             else
                 mpi_errno =
                     MPIR_Sched_copy(((char *) sendbuf + extent * sendcount * (rank + 1)),
                                     sendcount * (comm_size - rank - 1), sendtype,
                                     ((char *) tmp_buf + ss->nbytes),
-                                    ss->nbytes * (comm_size - rank - 1), MPI_BYTE, s);
+                                    ss->nbytes * (comm_size - rank - 1), MPIR_BYTE_INTERNAL, s);
             MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno = MPIR_Sched_copy(sendbuf, sendcount * rank, sendtype,
                                         ((char *) tmp_buf + ss->nbytes * (comm_size - rank)),
-                                        ss->nbytes * rank, MPI_BYTE, s);
+                                        ss->nbytes * rank, MPIR_BYTE_INTERNAL, s);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIR_SCHED_BARRIER(s);
@@ -166,7 +167,7 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
                 /* the recv size is larger than what may be sent in
                  * some cases. query amount of data actually received */
                 mpi_errno =
-                    MPIR_Sched_recv_status(tmp_buf, tmp_buf_size, MPI_BYTE, src, comm_ptr,
+                    MPIR_Sched_recv_status(tmp_buf, tmp_buf_size, MPIR_BYTE_INTERNAL, src, comm_ptr,
                                            &ss->status, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
@@ -217,7 +218,7 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
 
                 /* mask is also the size of this process's subtree */
                 mpi_errno = MPIR_Sched_send_defer(((char *) tmp_buf + ss->nbytes * mask),
-                                                  &ss->send_subtree_count, MPI_BYTE, dst,
+                                                  &ss->send_subtree_count, MPIR_BYTE_INTERNAL, dst,
                                                   comm_ptr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
@@ -237,7 +238,9 @@ int MPIR_Iscatter_intra_sched_binomial(const void *sendbuf, MPI_Aint sendcount,
     } else if (!(relative_rank % 2) && (recvbuf != MPI_IN_PLACE)) {
         /* for non-zero root and non-leaf nodes, copy from tmp_buf
          * into recvbuf */
-        mpi_errno = MPIR_Sched_copy(tmp_buf, ss->nbytes, MPI_BYTE, recvbuf, recvcount, recvtype, s);
+        mpi_errno =
+            MPIR_Sched_copy(tmp_buf, ss->nbytes, MPIR_BYTE_INTERNAL, recvbuf, recvcount, recvtype,
+                            s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }

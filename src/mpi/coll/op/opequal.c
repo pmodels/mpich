@@ -20,7 +20,7 @@ struct equal_data {
 void MPIR_EQUAL(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 {
     MPIR_Assert(*Len >= EQUAL_DATA_OVERHEAD);
-    MPIR_Assert(*type == MPI_BYTE);
+    MPIR_Assert(*type == MPIR_BYTE_INTERNAL);
 
     struct equal_data *in = invec;
     struct equal_data *inout = inoutvec;
@@ -63,10 +63,11 @@ int MPIR_Reduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datatype
 
     /* Not all algorithm will work. In particular, we can't split the message */
     if (comm_ptr->rank == root) {
-        mpi_errno = MPIR_Reduce_intra_binomial(MPI_IN_PLACE, local_buf, byte_count, MPI_BYTE,
-                                               MPIX_EQUAL, root, comm_ptr, MPIR_ERR_NONE);
+        mpi_errno =
+            MPIR_Reduce_intra_binomial(MPI_IN_PLACE, local_buf, byte_count, MPIR_BYTE_INTERNAL,
+                                       MPIX_EQUAL, root, comm_ptr, MPIR_ERR_NONE);
     } else {
-        mpi_errno = MPIR_Reduce_intra_binomial(local_buf, NULL, byte_count, MPI_BYTE,
+        mpi_errno = MPIR_Reduce_intra_binomial(local_buf, NULL, byte_count, MPIR_BYTE_INTERNAL,
                                                MPIX_EQUAL, root, comm_ptr, MPIR_ERR_NONE);
     }
     MPIR_ERR_CHECK(mpi_errno);
@@ -92,7 +93,7 @@ int MPIR_Allreduce_equal(const void *sendbuf, MPI_Aint count, MPI_Datatype datat
 
     /* Not all algorithm will work. In particular, we can't split the message */
     mpi_errno = MPIR_Allreduce_intra_recursive_doubling(MPI_IN_PLACE, local_buf,
-                                                        byte_count, MPI_BYTE,
+                                                        byte_count, MPIR_BYTE_INTERNAL,
                                                         MPIX_EQUAL, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 

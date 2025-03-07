@@ -63,7 +63,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
         }
     }
 
-    /* treat all cases as MPI_BYTE */
+    /* treat all cases as MPIR_BYTE_INTERNAL */
     MPIR_Algo_calculate_pipeline_chunk_info(chunk_size, 1, nbytes, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
 
@@ -115,7 +115,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
 
                 if (src != -1) {        /* post receive from parent */
                     mpi_errno =
-                        MPIC_Irecv((char *) sendbuf + offset, msgsize, MPI_BYTE,
+                        MPIC_Irecv((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL,
                                    src, MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++]);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
@@ -128,7 +128,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 MPI_Aint msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
                 if (src != -1) {
                     mpi_errno =
-                        MPIC_Irecv((char *) sendbuf + offset, msgsize, MPI_BYTE,
+                        MPIC_Irecv((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL,
                                    src, MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++]);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
@@ -146,7 +146,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
             if (src != -1) {
                 mpi_errno = MPIC_Wait(reqs[i]);
                 MPIR_ERR_CHECK(mpi_errno);
-                MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
+                MPIR_Get_count_impl(&reqs[i]->status, MPIR_BYTE_INTERNAL, &recvd_size);
                 MPIR_ERR_CHKANDJUMP2(recvd_size != msgsize, mpi_errno, MPI_ERR_OTHER,
                                      "**collective_size_mismatch",
                                      "**collective_size_mismatch %d %d",
@@ -157,7 +157,7 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
             if (src != -1) {
                 mpi_errno = MPIC_Wait(reqs[i]);
                 MPIR_ERR_CHECK(mpi_errno);
-                MPIR_Get_count_impl(&reqs[i]->status, MPI_BYTE, &recvd_size);
+                MPIR_Get_count_impl(&reqs[i]->status, MPIR_BYTE_INTERNAL, &recvd_size);
                 MPIR_ERR_CHKANDJUMP2(recvd_size != msgsize, mpi_errno, MPI_ERR_OTHER,
                                      "**collective_size_mismatch",
                                      "**collective_size_mismatch %d %d",
@@ -167,10 +167,10 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
             /* Receive message from parent */
             if (src != -1) {
                 mpi_errno =
-                    MPIC_Recv((char *) sendbuf + offset, msgsize, MPI_BYTE,
+                    MPIC_Recv((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL,
                               src, MPIR_BCAST_TAG, comm_ptr, &status);
                 MPIR_ERR_CHECK(mpi_errno);
-                MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
+                MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recvd_size);
                 MPIR_ERR_CHKANDJUMP2(recvd_size != msgsize, mpi_errno, MPI_ERR_OTHER,
                                      "**collective_size_mismatch",
                                      "**collective_size_mismatch %d %d",
@@ -188,11 +188,11 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
 
                 if (!is_nb) {
                     mpi_errno =
-                        MPIC_Send((char *) sendbuf + offset, msgsize, MPI_BYTE, dst,
+                        MPIC_Send((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL, dst,
                                   MPIR_BCAST_TAG, comm_ptr, errflag);
                 } else {
                     mpi_errno =
-                        MPIC_Isend((char *) sendbuf + offset, msgsize, MPI_BYTE, dst,
+                        MPIC_Isend((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL, dst,
                                    MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
                 }
                 MPIR_ERR_CHECK(mpi_errno);
@@ -204,11 +204,12 @@ int MPIR_Bcast_intra_pipelined_tree(void *buffer,
                 p = (int *) utarray_eltptr(my_tree.children, j);
                 dst = *p;
                 if (!is_nb) {
-                    mpi_errno = MPIC_Send((char *) sendbuf + offset, msgsize, MPI_BYTE, dst,
-                                          MPIR_BCAST_TAG, comm_ptr, errflag);
+                    mpi_errno =
+                        MPIC_Send((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL, dst,
+                                  MPIR_BCAST_TAG, comm_ptr, errflag);
                 } else {
                     mpi_errno =
-                        MPIC_Isend((char *) sendbuf + offset, msgsize, MPI_BYTE, dst,
+                        MPIC_Isend((char *) sendbuf + offset, msgsize, MPIR_BYTE_INTERNAL, dst,
                                    MPIR_BCAST_TAG, comm_ptr, &reqs[num_req++], errflag);
                 }
                 MPIR_ERR_CHECK(mpi_errno);

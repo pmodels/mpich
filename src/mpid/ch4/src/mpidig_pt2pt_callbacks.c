@@ -254,9 +254,9 @@ static int create_unexp_rreq(int rank, int tag, int context_id,
 
     *req = rreq;
 
-    /* for unexpected message, always recv as MPI_BYTE into unexpected buffer. They will be
+    /* for unexpected message, always recv as MPIR_BYTE_INTERNAL into unexpected buffer. They will be
      * set to the recv side datatype and count when it is matched */
-    MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
+    MPIDIG_REQUEST(rreq, datatype) = MPIR_BYTE_INTERNAL;
     MPIDIG_REQUEST(rreq, count) = data_sz;
     MPIDIG_REQUEST(rreq, buffer) = NULL;        /* default */
     MPIDIG_REQUEST(rreq, u.recv.context_id) = context_id;

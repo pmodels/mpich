@@ -52,7 +52,7 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
             MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
             mpi_errno =
-                MPIR_Sched_recv(tmp_buf, recvcount * local_size * recvtype_sz, MPI_BYTE,
+                MPIR_Sched_recv(tmp_buf, recvcount * local_size * recvtype_sz, MPIR_BYTE_INTERNAL,
                                 root, comm_ptr, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
@@ -69,7 +69,7 @@ int MPIR_Iscatter_inter_sched_remote_send_local_scatter(const void *sendbuf, MPI
 
         /* now do the usual scatter on this intracommunicator */
         mpi_errno =
-            MPIR_Iscatter_intra_sched_auto(tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
+            MPIR_Iscatter_intra_sched_auto(tmp_buf, recvcount * recvtype_sz, MPIR_BYTE_INTERNAL,
                                            recvbuf, recvcount, recvtype, 0, newcomm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);

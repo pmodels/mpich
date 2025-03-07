@@ -12,7 +12,7 @@ int MPII_Ibcast_sched_test_length(MPIR_Comm * comm, int tag, void *state)
     MPI_Aint recv_size;
     struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
 
-    MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
+    MPIR_Get_count_impl(&ibcast_state->status, MPIR_BYTE_INTERNAL, &recv_size);
     if (ibcast_state->n_bytes != recv_size || ibcast_state->status.MPI_ERROR != MPI_SUCCESS) {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
                                          __func__, __LINE__, MPI_ERR_OTHER,
@@ -54,7 +54,7 @@ int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state)
     MPI_Aint recv_size;
     struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
 
-    MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
+    MPIR_Get_count_impl(&ibcast_state->status, MPIR_BYTE_INTERNAL, &recv_size);
     ibcast_state->curr_bytes += recv_size;
 
     return mpi_errno;
@@ -110,7 +110,7 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr,
 
             if (recv_size > 0) {
                 mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + relative_rank * scatter_size),
-                                            recv_size, MPI_BYTE, src, comm_ptr, s);
+                                            recv_size, MPIR_BYTE_INTERNAL, src, comm_ptr, s);
                 MPIR_ERR_CHECK(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
@@ -135,7 +135,7 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr,
                     dst -= comm_size;
                 mpi_errno =
                     MPIR_Sched_send(((char *) tmp_buf + scatter_size * (relative_rank + mask)),
-                                    send_size, MPI_BYTE, dst, comm_ptr, s);
+                                    send_size, MPIR_BYTE_INTERNAL, dst, comm_ptr, s);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 curr_size -= send_size;

@@ -120,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                     MPIC_Recv((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
                               datatype, root, MPIR_BCAST_TAG, comm_ptr, &status);
                 MPIR_ERR_CHECK(mpi_errno);
-                MPIR_Get_count_impl(&status, MPI_BYTE, &recv_bytes);
+                MPIR_Get_count_impl(&status, MPIR_BYTE_INTERNAL, &recv_bytes);
                 MPIR_Typerep_copy(bcast_data_addr, &recv_bytes, sizeof(int),
                                   MPIR_TYPEREP_FLAG_NONE);
                 /* It is necessary to copy the errflag as well to handle the case when non-root
