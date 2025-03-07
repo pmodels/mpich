@@ -659,10 +659,6 @@ int MPIDI_world_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int n_total_vcis = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
-    mpi_errno = MPIDI_Comm_set_vcis(MPIR_Process.comm_world, n_total_vcis);
-    MPIR_ERR_CHECK(mpi_errno);
-
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_post_init();
     MPIR_ERR_CHECK(mpi_errno);
@@ -670,7 +666,6 @@ int MPIDI_world_post_init(void)
     mpi_errno = MPIDI_NM_post_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_Process.comm_world->vcis_enabled = true;
     MPIDI_global.is_initialized = 1;
 
   fn_exit:
