@@ -383,6 +383,9 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
     MPIR_FUNC_ENTER;
 
+    MPIR_DATATYPE_ASSERT_BUILTIN(sendtype);
+    MPIR_DATATYPE_ASSERT_BUILTIN(recvtype);
+
     mpi_errno =
         do_localcopy(sendbuf, sendcount, sendtype, 0, recvbuf, recvcount, recvtype, 0,
                      LOCALCOPY_BLOCKING, NULL);
@@ -402,6 +405,9 @@ int MPIR_Ilocalcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendty
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+
+    MPIR_DATATYPE_ASSERT_BUILTIN(sendtype);
+    MPIR_DATATYPE_ASSERT_BUILTIN(recvtype);
 
     mpi_errno = do_localcopy(sendbuf, sendcount, sendtype, 0, recvbuf, recvcount, recvtype,
                              0, LOCALCOPY_NONBLOCKING, typerep_req);
@@ -447,6 +453,9 @@ int MPIR_Localcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sen
 
     MPIR_FUNC_ENTER;
 
+    MPIR_DATATYPE_ASSERT_BUILTIN(sendtype);
+    MPIR_DATATYPE_ASSERT_BUILTIN(recvtype);
+
 #ifdef MPL_HAVE_GPU
     mpi_errno =
         do_localcopy_gpu(sendbuf, sendcount, sendtype, sendoffset, sendattr, recvbuf, recvcount,
@@ -475,6 +484,9 @@ int MPIR_Ilocalcopy_gpu(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype se
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_ENTER;
+
+    MPIR_DATATYPE_ASSERT_BUILTIN(sendtype);
+    MPIR_DATATYPE_ASSERT_BUILTIN(recvtype);
 
 #ifdef MPL_HAVE_GPU
     mpi_errno =
