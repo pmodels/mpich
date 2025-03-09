@@ -640,24 +640,6 @@ static void host_free_registered(void *ptr)
     MPL_free(ptr);
 }
 
-static void set_sep_counters(int nic)
-{
-    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-#ifdef MPIDI_OFI_VNI_USE_DOMAIN
-        /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
-        int num_ctx_per_nic = 1;
-#else
-        /* the actual needed number of vcis is not known yet. Use the CVAR. */
-        int num_ctx_per_nic = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
-#endif
-        int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[nic]->domain_attr->tx_ctx_cnt,
-                                  MPIDI_OFI_global.prov_use[nic]->domain_attr->rx_ctx_cnt);
-        num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
-        MPIDI_OFI_global.prov_use[nic]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
-        MPIDI_OFI_global.prov_use[nic]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
-    }
-}
-
 int MPIDI_OFI_init_local(int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -742,9 +724,22 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_init_multi_nic(prov);
     MPIR_ERR_CHECK(mpi_errno);
 
-    for (int i = 0; i < MPIDI_OFI_global.num_nics; i++) {
-        /* if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS, set rx_ctx_cnt and tx_ctx_cnt */
-        set_sep_counters(i);
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+        /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
+        int num_ctx_per_nic = 1;
+#else
+        /* the actual needed number of vcis is not known yet. Use the CVAR. */
+        int num_ctx_per_nic = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
+#endif
+        int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[0]->domain_attr->tx_ctx_cnt,
+                                  MPIDI_OFI_global.prov_use[0]->domain_attr->rx_ctx_cnt);
+        num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
+        for (int i = 0; i < MPIDI_OFI_global.num_nics; i++) {
+            /* set rx_ctx_cnt and tx_ctx_cnt in ep_attr */
+            MPIDI_OFI_global.prov_use[i]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
+            MPIDI_OFI_global.prov_use[i]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
+        }
     }
 
     mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
