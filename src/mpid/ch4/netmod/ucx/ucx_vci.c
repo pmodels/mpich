@@ -29,6 +29,10 @@ int MPIDI_UCX_comm_set_vcis(MPIR_Comm * comm, int num_vcis, int *all_num_vcis)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+    if (MPIR_CVAR_DEBUG_SUMMARY && comm->rank == 0) {
+        printf("num_vcis: %d\n", MPIDI_UCX_global.num_vcis);
+    }
+
   fn_exit:
     return mpi_errno;
   fn_fail:
