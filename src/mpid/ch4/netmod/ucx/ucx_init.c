@@ -252,7 +252,6 @@ int MPIDI_UCX_init_local(int *tag_bits)
         printf("==== UCX netmod Capability ====\n");
         printf("MPIDI_UCX_CONTEXT_ID_BITS: %d\n", MPIDI_UCX_CONTEXT_ID_BITS);
         printf("MPIDI_UCX_RANK_BITS: %d\n", MPIDI_UCX_RANK_BITS);
-        printf("num_vcis: %d\n", MPIDI_UCX_global.num_vcis);
         printf("tag_bits: %d\n", *tag_bits);
         printf("===============================\n");
     }

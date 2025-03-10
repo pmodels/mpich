@@ -551,7 +551,6 @@ cvars:
 
 static int update_global_limits(struct fi_info *prov);
 static void dump_global_settings(void);
-static void dump_dynamic_settings(void);
 static int create_vci_context(int vci, int nic);
 static int destroy_vci_context(int vci, int nic);
 static int ofi_pvar_init(void);
@@ -847,10 +846,6 @@ int MPIDI_OFI_init_vcis(int num_vcis, int *num_vcis_actual)
 int MPIDI_OFI_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    if (MPIR_CVAR_DEBUG_SUMMARY && MPIR_Process.rank == 0) {
-        dump_dynamic_settings();
-    }
 
     return mpi_errno;
 }
@@ -1718,14 +1713,6 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_AM_HDR_POOL_CELL_SIZE: %d\n", (int) MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
     fprintf(stdout, "MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE: %d\n",
             (int) MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
-    fprintf(stdout, "======================================\n");
-}
-
-static void dump_dynamic_settings(void)
-{
-    fprintf(stdout, "==== OFI dynamic settings ====\n");
-    fprintf(stdout, "num_vcis: %d\n", MPIDI_OFI_global.num_vcis);
-    fprintf(stdout, "num_nics: %d\n", MPIDI_OFI_global.num_nics);
     fprintf(stdout, "======================================\n");
 }
 

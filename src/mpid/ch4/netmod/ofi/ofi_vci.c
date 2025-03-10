@@ -30,6 +30,13 @@ int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_vcis, int *all_num_vcis)
         MPIDI_OFI_am_post_recv(vci, 0);
     }
 
+    if (MPIR_CVAR_DEBUG_SUMMARY && comm->rank == 0) {
+        fprintf(stdout, "==== OFI dynamic settings ====\n");
+        fprintf(stdout, "num_vcis: %d\n", MPIDI_OFI_global.num_vcis);
+        fprintf(stdout, "num_nics: %d\n", MPIDI_OFI_global.num_nics);
+        fprintf(stdout, "======================================\n");
+    }
+
   fn_exit:
     return mpi_errno;
   fn_fail:
