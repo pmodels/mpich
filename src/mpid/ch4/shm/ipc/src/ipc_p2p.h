@@ -37,14 +37,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
                                                  int context_offset, MPIDI_av_entry_t * addr,
                                                  MPIDI_IPCI_ipc_attr_t ipc_attr,
                                                  int vci_src, int vci_dst, MPIR_Request ** request,
-                                                 bool syncflag, int errflag)
+                                                 int errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
     MPIDI_IPC_rts_t am_hdr;
     MPIR_CHKLMEM_DECL();        /* we may need allocate hdr for non-contig case */
 
-    int flags = syncflag ? MPIDIG_AM_SEND_FLAGS_SYNC : MPIDIG_AM_SEND_FLAGS_NONE;
     MPIR_FUNC_ENTER;
 
     /* Create send request */
@@ -99,12 +98,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     am_hdr.hdr.rndv_hdr_sz = sizeof(MPIDI_IPC_hdr);
     am_hdr.hdr.sreq_ptr = sreq;
     am_hdr.hdr.error_bits = errflag;
-    am_hdr.hdr.flags = flags;
+    am_hdr.hdr.flags = MPIDIG_AM_SEND_FLAGS_NONE;
     MPIDIG_AM_SEND_SET_RNDV(am_hdr.hdr.flags, MPIDIG_RNDV_IPC);
-
-    if (flags & MPIDIG_AM_SEND_FLAGS_SYNC) {
-        MPIR_cc_inc(sreq->cc_ptr);      /* expecting SSEND_ACK */
-    }
 
     int is_local = 1;
     void *hdr;
