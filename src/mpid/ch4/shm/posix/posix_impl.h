@@ -17,14 +17,14 @@
 #define MPIDI_POSIX_THREAD_CS_ENTER_VCI(vci) \
     do { \
         if (!MPIDI_VCI_IS_EXPLICIT(vci)) { \
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock); \
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci)); \
         } \
     } while (0)
 
 #define MPIDI_POSIX_THREAD_CS_EXIT_VCI(vci) \
     do { \
         if (!MPIDI_VCI_IS_EXPLICIT(vci)) { \
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock); \
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci)); \
         } \
     } while (0)
 

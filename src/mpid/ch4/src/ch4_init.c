@@ -75,26 +75,6 @@ cvars:
         direct (default)
         lockless
 
-    - name        : MPIR_CVAR_CH4_NUM_VCIS
-      category    : CH4
-      type        : int
-      default     : 1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Sets the number of VCIs to be implicitly used (should be a subset of MPIDI_CH4_MAX_VCIS).
-
-    - name        : MPIR_CVAR_CH4_RESERVE_VCIS
-      category    : CH4
-      type        : int
-      default     : 0
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Sets the number of VCIs that user can explicitly allocate (should be a subset of MPIDI_CH4_MAX_VCIS).
-
     - name        : MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE
       category    : COLLECTIVE
       type        : string
@@ -420,6 +400,43 @@ static void register_comm_hints(void)
                             MPIR_COMM_HINT_TYPE_INT, 0, MPIDI_VCI_INVALID);
 }
 
+int MPIDI_init_per_vci(int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+    /* Initialize registered host buffer pool to be used as temporary unpack buffers */
+    mpi_errno = MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_PACK_BUFFER_SIZE,
+                                               MPIR_CVAR_CH4_NUM_PACK_BUFFERS_PER_CHUNK,
+                                               MPIR_CVAR_CH4_MAX_NUM_PACK_BUFFERS,
+                                               host_alloc_registered,
+                                               host_free_registered,
+                                               &MPIDI_global.per_vci[vci].pack_buf_pool);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDIG_init_per_vci(vci);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_destroy_per_vci(int vci)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDU_genq_private_pool_destroy(MPIDI_global.per_vci[vci].pack_buf_pool);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDIG_destroy_per_vci(vci);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPID_Init(int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -504,48 +521,11 @@ int MPID_Init(int requested, int *provided)
     MPIDI_global.csel_root = NULL;
     MPIDI_global.csel_root_gpu = NULL;
 
-    /* Initialize multiple VCIs */
-    /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
-    MPIR_Assert(MPIR_CVAR_CH4_NUM_VCIS >= 1);   /* number of vcis used in implicit vci hashing */
-    MPIR_Assert(MPIR_CVAR_CH4_RESERVE_VCIS >= 0);       /* maximum number of vcis can be reserved */
+    mpi_errno = MPIDI_vci_init();
+    MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
-    MPIDI_global.n_total_vcis = MPIDI_global.n_vcis + MPIR_CVAR_CH4_RESERVE_VCIS;
-    MPIDI_global.n_reserved_vcis = 0;
-    MPIDI_global.share_reserved_vcis = false;
-
-    MPIDI_global.all_num_vcis = MPL_malloc(sizeof(int) * MPIR_Process.size, MPL_MEM_OTHER);
-    MPIR_Assert(MPIDI_global.all_num_vcis);
-    for (int i = 0; i < MPIR_Process.size; i++) {
-        MPIDI_global.all_num_vcis[i] = MPIDI_global.n_vcis;
-    }
-
-    MPIR_Assert(MPIDI_global.n_total_vcis <= MPIDI_CH4_MAX_VCIS);
-    MPIR_Assert(MPIDI_global.n_total_vcis <= MPIR_REQUEST_NUM_POOLS);
-
-    for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
-        int err;
-        MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
-        MPIR_Assert(err == 0);
-
-        /* NOTE: 1-1 vci-pool mapping */
-        /* For lockless, use a separate set of mutexes */
-        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_LOCKLESS)
-            MPIR_Request_register_pool_lock(i, &MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[i]);
-        else
-            MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
-
-        /* Initialize registered host buffer pool to be used as temporary unpack buffers */
-        mpi_errno = MPIDU_genq_private_pool_create(MPIR_CVAR_CH4_PACK_BUFFER_SIZE,
-                                                   MPIR_CVAR_CH4_NUM_PACK_BUFFERS_PER_CHUNK,
-                                                   MPIR_CVAR_CH4_MAX_NUM_PACK_BUFFERS,
-                                                   host_alloc_registered,
-                                                   host_free_registered,
-                                                   &MPIDI_global.per_vci[i].pack_buf_pool);
-        MPIR_ERR_CHECK(mpi_errno);
-
-    }
-
+    mpi_errno = MPIDI_init_per_vci(0);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* internally does per-vci am initialization */
     MPIDIG_am_init();
@@ -679,36 +659,6 @@ int MPIDI_world_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* FIXME: currently ofi require each process to have the same number of nics,
-     *        thus need access to world_comm for collectives. We should remove
-     *        this restriction, then we can move MPIDI_NM_init_vcis to
-     *        MPIDI_world_pre_init.
-     */
-    int num_vcis_actual;
-    mpi_errno = MPIDI_NM_init_vcis(MPIDI_global.n_total_vcis, &num_vcis_actual);
-    MPIR_ERR_CHECK(mpi_errno);
-
-#if MPIDI_CH4_MAX_VCIS == 1
-    MPIR_Assert(num_vcis_actual == 1);
-#else
-    MPIR_Assert(num_vcis_actual > 0 && num_vcis_actual <= MPIDI_global.n_total_vcis);
-    int diff = MPIDI_global.n_total_vcis - num_vcis_actual;
-    /* we can shrink implicit vcis down to 1, then n_reserved_vcis down to 0 */
-    MPIDI_global.n_total_vcis -= diff;
-    if (MPIDI_global.n_vcis > diff + 1) {
-        MPIDI_global.n_vcis -= diff;
-    } else {
-        diff -= (MPIDI_global.n_vcis - 1);
-        MPIDI_global.n_vcis = 1;
-        MPIDI_global.n_reserved_vcis -= diff;
-    }
-
-    mpi_errno = MPIR_Allgather_fallback(&MPIDI_global.n_vcis, 1, MPIR_INT_INTERNAL,
-                                        MPIDI_global.all_num_vcis, 1, MPIR_INT_INTERNAL,
-                                        MPIR_Process.comm_world, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
-#endif
-
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_post_init();
     MPIR_ERR_CHECK(mpi_errno);
@@ -722,43 +672,6 @@ int MPIDI_world_post_init(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPID_Allocate_vci(int *vci, bool is_shared)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    *vci = 0;
-#if MPIDI_CH4_MAX_VCIS == 1
-    MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ch4nostream");
-#else
-
-    if (MPIDI_global.n_vcis + MPIDI_global.n_reserved_vcis >= MPIDI_global.n_total_vcis) {
-        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**outofstream");
-    } else {
-        MPIDI_global.n_reserved_vcis++;
-        for (int i = MPIDI_global.n_vcis; i < MPIDI_global.n_total_vcis; i++) {
-            if (!MPIDI_VCI(i).allocated) {
-                MPIDI_VCI(i).allocated = true;
-                *vci = i;
-                break;
-            }
-        }
-    }
-#endif
-    if (is_shared) {
-        MPIDI_global.share_reserved_vcis = true;
-    }
-    return mpi_errno;
-}
-
-int MPID_Deallocate_vci(int vci)
-{
-    MPIR_Assert(vci < MPIDI_global.n_total_vcis && vci >= MPIDI_global.n_vcis);
-    MPIR_Assert(MPIDI_VCI(vci).allocated);
-    MPIDI_VCI(vci).allocated = false;
-    MPIDI_global.n_reserved_vcis--;
-    return MPI_SUCCESS;
 }
 
 int MPID_Stream_create_hook(MPIR_Stream * stream)
@@ -835,15 +748,12 @@ int MPID_Finalize(void)
         MPIR_Assert(err == 0);
     }
 
-    for (int i = 0; i < MPIDI_global.n_total_vcis; i++) {
-        MPIDU_genq_private_pool_destroy(MPIDI_global.per_vci[i].pack_buf_pool);
 
-        int err;
-        MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
-        MPIR_Assert(err == 0);
-    }
+    mpi_errno = MPIDI_destroy_per_vci(0);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    MPL_free(MPIDI_global.all_num_vcis);
+    mpi_errno = MPIDI_vci_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
 
     memset(&MPIDI_global, 0, sizeof(MPIDI_global));
 

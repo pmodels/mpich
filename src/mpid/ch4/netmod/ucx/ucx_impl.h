@@ -30,14 +30,14 @@
 #define MPIDI_UCX_THREAD_CS_ENTER_VCI(vci) \
     do { \
         if (!MPIDI_VCI_IS_EXPLICIT(vci)) { \
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock); \
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci)); \
         } \
     } while (0)
 
 #define MPIDI_UCX_THREAD_CS_EXIT_VCI(vci) \
     do { \
         if (!MPIDI_VCI_IS_EXPLICIT(vci)) { \
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock); \
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci)); \
         } \
     } while (0)
 
@@ -147,5 +147,8 @@ void MPIDI_UCX_am_isend_callback_nbx(void *request, ucs_status_t status, void *u
 void MPIDI_UCX_am_recv_callback_nbx(void *request, ucs_status_t status, size_t length,
                                     void *user_data);
 #endif
+
+int MPIDI_UCX_init_worker(int vci);
+int MPIDI_UCX_all_vcis_address_exchange(void);
 
 #endif /* UCX_IMPL_H_INCLUDED */

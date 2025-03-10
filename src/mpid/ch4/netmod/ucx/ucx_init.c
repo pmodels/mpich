@@ -28,13 +28,9 @@ static void request_init_callback(void *request)
 
 }
 
-static void init_num_vcis(void)
-{
-    /* TODO: check capabilities, abort if we can't support the requested number of vcis. */
-    MPIDI_UCX_global.num_vcis = MPIDI_global.n_total_vcis;
-}
+static void flush_all(void);
 
-static int init_worker(int vci)
+int MPIDI_UCX_init_worker(int vci)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -147,7 +143,7 @@ static int initial_address_exchange(void)
     goto fn_exit;
 }
 
-static int all_vcis_address_exchange(void)
+int MPIDI_UCX_all_vcis_address_exchange(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -197,6 +193,10 @@ static int all_vcis_address_exchange(void)
             }
         }
     }
+
+    /* Flush all pending wireup operations or it may interfere with RMA flush_ops count. */
+    flush_all();
+
   fn_exit:
     MPL_free(all_names);
     return mpi_errno;
@@ -213,7 +213,7 @@ int MPIDI_UCX_init_local(int *tag_bits)
     uint64_t features = 0;
     ucp_params_t ucp_params;
 
-    init_num_vcis();
+    MPIDI_UCX_global.num_vcis = 1;
 
     /* unable to support extended context id in current match bit configuration */
     MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_ID_BITS);
@@ -252,7 +252,6 @@ int MPIDI_UCX_init_local(int *tag_bits)
         printf("==== UCX netmod Capability ====\n");
         printf("MPIDI_UCX_CONTEXT_ID_BITS: %d\n", MPIDI_UCX_CONTEXT_ID_BITS);
         printf("MPIDI_UCX_RANK_BITS: %d\n", MPIDI_UCX_RANK_BITS);
-        printf("num_vcis: %d\n", MPIDI_UCX_global.num_vcis);
         printf("tag_bits: %d\n", *tag_bits);
         printf("===============================\n");
     }
@@ -271,7 +270,7 @@ int MPIDI_UCX_init_world(void)
     int mpi_errno = MPI_SUCCESS;
 
     /* initialize worker for vci 0 */
-    mpi_errno = init_worker(0);
+    mpi_errno = MPIDI_UCX_init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = initial_address_exchange();
@@ -324,26 +323,9 @@ int MPIDI_UCX_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIDI_UCX_global.num_vcis == 1) {
-        goto fn_exit;
-    }
-
-    for (int i = 1; i < MPIDI_UCX_global.num_vcis; i++) {
-        mpi_errno = init_worker(i);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-    mpi_errno = all_vcis_address_exchange();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Flush all pending wireup operations or it may interfere with RMA flush_ops count.
-     * Since this require progress in non-zero vcis, we need switch on is_initialized. */
     MPIDI_global.is_initialized = 1;
-    flush_all();
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_UCX_mpi_finalize_hook(void)

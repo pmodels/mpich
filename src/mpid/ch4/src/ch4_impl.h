@@ -13,6 +13,10 @@
 #include "ch4_self.h"
 #include "ch4_vci.h"
 
+int MPIDI_vci_init(void);
+int MPIDI_vci_finalize(void);
+int MPIDI_init_per_vci(int vci);
+int MPIDI_destroy_per_vci(int vci);
 int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm, int local_leader, int *remote_size,
                                      int *is_low_group, int pure_intracomm,
                                      int *remote_upid_size, char *remote_upids,
@@ -419,7 +423,7 @@ do { \
         mpi_errno = MPIDI_progress_test_vci(vci);   \
         MPIR_ERR_CHECK(mpi_errno); \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
-        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI(vci).lock);                 \
+        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI_LOCK(vci));                 \
         DEBUG_PROGRESS_CHECK; \
     } \
 } while (0)
@@ -431,7 +435,7 @@ do { \
         mpi_errno = MPIDI_progress_test_vci(vci); \
         MPIR_ERR_CHECK(mpi_errno); \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
-        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI(vci).lock);                 \
+        MPID_THREAD_CS_YIELD(VCI, MPIDI_VCI_LOCK(vci));                 \
         DEBUG_PROGRESS_CHECK; \
     } while (cond); \
 } while (0)
