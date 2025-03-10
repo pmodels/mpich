@@ -6,11 +6,6 @@
 #ifndef MPIR_CCLCOMM_H_INCLUDED
 #define MPIR_CCLCOMM_H_INCLUDED
 
-
-
-#define ENABLE_CCLCOMM 1 // Temporary, needs to get put in configure
-#define ENABLE_NCCL 1 // Temporary, needs to get put in configure
-
 #ifdef ENABLE_CCLCOMM
 
 #include <nccl.h>

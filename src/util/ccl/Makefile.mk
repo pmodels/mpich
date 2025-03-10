@@ -4,6 +4,6 @@
 ##
 
 mpi_core_sources += \
-    src/mpi/ccl/cclcomm.c   \
-    src/mpi/ccl/ccl_impl.c  \
-    src/mpi/ccl/nccl.c
+    src/util/ccl/cclcomm.c   \
+    src/util/ccl/ccl_impl.c  \
+    src/util/ccl/nccl.c
