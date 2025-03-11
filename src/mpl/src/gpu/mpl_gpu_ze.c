@@ -28,6 +28,11 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include "uthash.h"
 #include "utlist.h"
 
+/* support logging for cache hits and misses */
+#if defined (MPL_USE_DBG_LOGGING)
+extern MPL_dbg_class MPIDI_CH4_DBG_IPC;
+#endif /* MPL_USE_DBG_LOGGING */
+
 /* Latest Level-zero Specification:
  * http://spec.oneapi.com/level-zero/latest/index.html
  */
@@ -1690,6 +1695,8 @@ static int remove_stale_sender_cache(const void *ptr, uint64_t mem_id, int local
             goto fn_fail;
         }
 
+        MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "removing STALE gpu ipc handle for %p", ptr);
+
         HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &mem_id, sizeof(uint64_t), cache_entry);
         if (cache_entry) {
             free_ipc_handle_cache(cache_entry);
@@ -1754,14 +1761,17 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
     }
 
     if (cache_entry && cache_entry->handle_cached) {
+        MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "cached gpu ipc handle HIT for %p", pbase);
         memcpy(ipc_handle, &cache_entry->ipc_handle, sizeof(MPL_gpu_ipc_mem_handle_t));
     } else {
+        MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "cached gpu ipc handle MISS for %p", pbase);
         mpl_err = MPL_ze_ipc_handle_create(pbase, ptr_attr, local_dev_id, true, ipc_handle);
         if (mpl_err != MPL_SUCCESS) {
             goto fn_fail;
         }
 
         if (likely(MPL_gpu_info.specialized_cache)) {
+            MPL_DBG_MSG_P(MPIDI_CH4_DBG_IPC, VERBOSE, "caching NEW gpu ipc handle for %p", pbase);
             if (cache_entry) {
                 /* In the case where there was an entry, but no ipc handle yet */
                 cache_entry->handle_cached = true;
