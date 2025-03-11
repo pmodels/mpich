@@ -18,4 +18,11 @@ typedef enum MPIDI_IPCI_type {
     MPIDI_IPCI_TYPE__GPU
 } MPIDI_IPCI_type_t;
 
+typedef struct {
+    MPIDI_IPCI_type_t ipc_type;
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    MPIDI_GPU_ipc_attr_t gpu_attr;
+#endif
+} MPIDI_IPC_am_request_t;
+
 #endif /* IPC_PRE_H_INCLUDED */
