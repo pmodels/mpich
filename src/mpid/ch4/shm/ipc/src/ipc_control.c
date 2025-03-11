@@ -16,6 +16,14 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 
     MPIR_FUNC_ENTER;
 
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    /* cleanup any GPU resources created as part of the IPC */
+    if (MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) == MPIDI_IPCI_TYPE__GPU) {
+        mpi_errno = MPIDI_GPU_send_complete(sreq);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+#endif
+
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
     MPID_Request_complete(sreq);
 
@@ -23,8 +31,11 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
         *req = NULL;
     }
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_IPC_rndv_cb(MPIR_Request * rreq)
