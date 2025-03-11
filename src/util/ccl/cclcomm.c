@@ -17,6 +17,10 @@ int MPIR_CCLcomm_init(MPIR_Comm * comm)
     cclcomm->comm = comm;
     comm->cclcomm = cclcomm;
 
+    #ifdef ENABLE_NCCL
+    cclcomm->ncclcomm = 0; // Initialize the ncclcomm to 0
+    #endif /*ENABLE_NCCL */
+
 fn_exit:
     return mpi_errno;
 fn_fail:
