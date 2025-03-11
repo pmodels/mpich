@@ -58,6 +58,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
     MPIDIG_REQUEST(sreq, datatype) = datatype;
     MPIDIG_REQUEST(sreq, u.send.dest) = rank;
     MPIDIG_REQUEST(sreq, count) = count;
+    MPIDI_SHM_REQUEST(sreq, ipc.ipc_type) = ipc_attr.ipc_type;
 
     am_hdr.ipc_hdr.ipc_type = ipc_attr.ipc_type;
     switch (ipc_attr.ipc_type) {
@@ -74,6 +75,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
         case MPIDI_IPCI_TYPE__GPU:
             MPIDI_GPU_fill_ipc_handle(&ipc_attr, &(am_hdr.ipc_hdr.ipc_handle));
+            MPIDI_SHM_REQUEST(sreq, ipc.gpu_attr) = ipc_attr.u.gpu;
             break;
 #endif
         default:
