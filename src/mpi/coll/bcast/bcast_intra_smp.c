@@ -6,7 +6,7 @@
 #include "mpiimpl.h"
 
 /* FIXME This function uses some heuristsics based off of some testing on a
- * cluster at Argonne.  We need a better system for detrmining and controlling
+ * cluster at Argonne.  We need a better system for determining and controlling
  * the cutoff points for these algorithms.  If I've done this right, you should
  * be able to make changes along these lines almost exclusively in this function
  * and some new functions. [goodell@ 2008/01/07] */

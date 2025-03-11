@@ -51,7 +51,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     pack_size = recvcount * comm_size * recvtype_sz;
     MPIR_CHKLMEM_MALLOC(tmp_buf, pack_size);
 
-    /* Do Phase 1 of the algorithim. Shift the data blocks on process i
+    /* Do Phase 1 of the algorithm. Shift the data blocks on process i
      * upwards by a distance of i blocks. Store the result in recvbuf. */
     mpi_errno = MPIR_Localcopy((char *) sendbuf +
                                rank * sendcount * sendtype_extent,

@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
     /*
      * FIXME: this implementation of MPID_Irsend is identical to that of MPID_Isend.
      * Need to support irsend protocol, i.e., check if receive is posted on the
-     * reveiver side before the send is posted.
+     * receiver side before the send is posted.
      */
 
     int mpi_errno = MPI_SUCCESS;

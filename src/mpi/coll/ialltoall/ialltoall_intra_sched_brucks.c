@@ -51,7 +51,7 @@ int MPIR_Ialltoall_intra_sched_brucks(const void *sendbuf, MPI_Aint sendcount,
     tmp_buf = MPIR_Sched_alloc_state(s, nbytes);
     MPIR_ERR_CHKANDJUMP(!tmp_buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    /* Do Phase 1 of the algorithim. Shift the data blocks on process i
+    /* Do Phase 1 of the algorithm. Shift the data blocks on process i
      * upwards by a distance of i blocks. Store the result in recvbuf. */
     mpi_errno = MPIR_Sched_copy(((char *) sendbuf + rank * sendcount * sendtype_extent),
                                 (comm_size - rank) * sendcount, sendtype,
