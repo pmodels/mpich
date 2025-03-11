@@ -3867,7 +3867,7 @@ if test $GPU_SUPPORT = "CUDA" ; then
     PAC_CHECK_HEADER_LIB_OPTIONAL([nccl], [nccl.h], [nccl], [ncclCommInitAll])
     if test "$pac_have_nccl" = "yes" ; then
         have_ccl=yes
-        AC_DEFINE([HAVE_NCCL], 1, [define if have libnccl])
+        AC_DEFINE([ENABLE_NCCL], 1, [define if have libnccl])
     fi
 fi
 
