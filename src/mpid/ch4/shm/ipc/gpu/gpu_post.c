@@ -716,4 +716,24 @@ int MPIDI_GPU_copy_data_async(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_
   fn_fail:
     goto fn_exit;
 }
+
+int MPIDI_GPU_send_complete(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_disabled ||
+        (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE == MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE_specialized &&
+         MPIR_CVAR_CH4_IPC_GPU_MAX_CACHE_ENTRIES == 0)) {
+        void *pbase = MPIDI_SHM_REQUEST(sreq, ipc.gpu_attr.bounds_base);
+        MPL_pointer_attr_t *gpu_attr = &MPIDI_SHM_REQUEST(sreq, ipc.gpu_attr.gpu_attr);
+        int mpl_err = MPL_gpu_ipc_handle_destroy(pbase, gpu_attr);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**gpu_ipc_handle_destroy");
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 #endif /* MPIDI_CH4_SHM_ENABLE_GPU */
