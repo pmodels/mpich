@@ -301,11 +301,9 @@ static void coll_handle_complete(void *handle)
 
 static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec)
 {
-#ifdef MPIDCH4_H_INCLUDED
-    return MPIDIU_rank_to_lpid(ec.rank, (MPIR_Comm *) grp_h);
-#else
-    return ((struct MPIDI_VC *) ec.handle)->pg_rank;
-#endif
+    MPIR_Lpid lpid = MPIR_comm_rank_to_lpid((MPIR_Comm *) grp_h, ec.rank);
+    MPIR_Assert(MPIR_LPID_WORLD_INDEX(lpid) == 0);
+    return MPIR_LPID_WORLD_RANK(lpid);
 }
 
 #if HCOLL_API >= HCOLL_VERSION(3,6)

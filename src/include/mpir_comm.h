@@ -31,44 +31,6 @@ typedef enum MPIR_Comm_hierarchy_kind_t {
     MPIR_COMM_HIERARCHY_KIND__MULTI_LEADS = 4,  /* is the multi_leaders_comm for a node */
 } MPIR_Comm_hierarchy_kind_t;
 
-typedef enum {
-    MPIR_COMM_MAP_TYPE__DUP,
-    MPIR_COMM_MAP_TYPE__IRREGULAR
-} MPIR_Comm_map_type_t;
-
-/* direction of mapping: local to local, local to remote, remote to
- * local, remote to remote */
-typedef enum {
-    MPIR_COMM_MAP_DIR__L2L,
-    MPIR_COMM_MAP_DIR__L2R,
-    MPIR_COMM_MAP_DIR__R2L,
-    MPIR_COMM_MAP_DIR__R2R
-} MPIR_Comm_map_dir_t;
-
-typedef struct MPIR_Comm_map {
-    MPIR_Comm_map_type_t type;
-
-    struct MPIR_Comm *src_comm;
-
-    /* mapping direction for intercomms, which contain local and
-     * remote groups */
-    MPIR_Comm_map_dir_t dir;
-
-    /* only valid for irregular map type */
-    int src_mapping_size;
-    int *src_mapping;
-    int free_mapping;           /* we allocated the mapping */
-
-    struct MPIR_Comm_map *next;
-} MPIR_Comm_map_t;
-
-int MPIR_Comm_map_irregular(struct MPIR_Comm *newcomm, struct MPIR_Comm *src_comm,
-                            int *src_mapping, int src_mapping_size,
-                            MPIR_Comm_map_dir_t dir, MPIR_Comm_map_t ** map);
-int MPIR_Comm_map_dup(struct MPIR_Comm *newcomm, struct MPIR_Comm *src_comm,
-                      MPIR_Comm_map_dir_t dir);
-int MPIR_Comm_map_free(struct MPIR_Comm *comm);
-
 /* Communicator info hint */
 #define MPIR_COMM_HINT_TYPE_BOOL 0
 #define MPIR_COMM_HINT_TYPE_INT  1
@@ -251,12 +213,6 @@ struct MPIR_Comm {
     hcoll_comm_priv_t hcoll_priv;
 #endif                          /* HAVE_HCOLL */
 
-    /* the mapper is temporarily filled out in order to allow the
-     * device to setup its network addresses.  it will be freed after
-     * the device has initialized the comm. */
-    MPIR_Comm_map_t *mapper_head;
-    MPIR_Comm_map_t *mapper_tail;
-
     enum { MPIR_STREAM_COMM_NONE, MPIR_STREAM_COMM_SINGLE, MPIR_STREAM_COMM_MULTIPLEX }
         stream_comm_type;
     union {
@@ -383,10 +339,6 @@ int MPIR_Comm_commit(MPIR_Comm *);
 
 int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
-/* peer intercomm is an internal 1-to-1 intercomm used for connecting dynamic processes */
-int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
-                               MPIR_Lpid remote_lpid, int is_low_group, MPIR_Comm ** newcomm);
-
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 
@@ -426,6 +378,10 @@ int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Inf
 int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
                                       MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
 
+int MPIR_Intercomm_create_timeout(MPIR_Comm * local_comm_ptr, int local_leader,
+                                  MPIR_Comm * peer_comm_ptr, int remote_leader,
+                                  int tag, int timeout, MPIR_Comm ** new_intercomm_ptr);
+
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and
    a private (non-user accessible) dup of comm world that is provided
    if needed in MPI_Finalize.  Having a separate version of comm_world
@@ -454,16 +410,6 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
 int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
 
 int MPII_Setup_intercomm_localcomm(MPIR_Comm *);
-
-/* comm_create helper functions, used by both comm_create and comm_create_group */
-int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
-                                       MPIR_Comm * comm_ptr,
-                                       int **mapping_out, MPIR_Comm ** mapping_comm);
-
-int MPII_Comm_create_map(int local_n,
-                         int remote_n,
-                         int *local_mapping,
-                         int *remote_mapping, MPIR_Comm * mapping_comm, MPIR_Comm * newcomm);
 
 int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info, bool in_comm_create);
 int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
