@@ -1653,6 +1653,8 @@ static int update_lru_mapped_order(void *ipc_buf, int dev_id)
     goto fn_exit;
 }
 
+/* remove stale cache entry associated with ptr,
+ * mem_id, local_dev_id are ptr's real property */
 static int remove_stale_sender_cache(const void *ptr, uint64_t mem_id, int local_dev_id)
 {
     int status, mpl_err = MPL_SUCCESS;
@@ -1662,12 +1664,6 @@ static int remove_stale_sender_cache(const void *ptr, uint64_t mem_id, int local
         MPL_ze_gem_hash_entry_t *entry = NULL;
         HASH_FIND_PTR(gem_hash, &ptr, entry);
         if (entry) {
-            if (entry->mem_id != mem_id ||
-                physical_device_states[entry->shared_dev_id].local_dev_id != local_dev_id) {
-                goto fn_fail;
-            }
-            HASH_DEL(gem_hash, entry);
-
             /* close GEM handle */
             for (int i = 0; i < entry->nhandles; i++) {
                 status =
@@ -1678,6 +1674,7 @@ static int remove_stale_sender_cache(const void *ptr, uint64_t mem_id, int local
                 }
             }
 
+            HASH_DEL(gem_hash, entry);
             MPL_free(entry);
         }
     }
@@ -1690,19 +1687,20 @@ static int remove_stale_sender_cache(const void *ptr, uint64_t mem_id, int local
             goto fn_fail;
         }
 
-        HASH_FIND(hh, ipc_cache_tracked[local_dev_id], &mem_id, sizeof(uint64_t), cache_entry);
-        if (cache_entry) {
-            free_ipc_handle_cache(cache_entry);
-            HASH_DELETE(hh, ipc_cache_tracked[local_dev_id], cache_entry);
-            MPL_free(cache_entry);
-        }
-
         HASH_FIND(hh, mem_id_cache, &ptr, sizeof(void *), memid_entry);
         if (memid_entry) {
-            if (memid_entry->mem_id != mem_id || memid_entry->dev_id != local_dev_id) {
-                goto fn_fail;
-            }
             HASH_DELETE(hh, mem_id_cache, memid_entry);
+
+            HASH_FIND(hh, ipc_cache_tracked[memid_entry->dev_id], &mem_id, sizeof(uint64_t),
+                      cache_entry);
+            if (cache_entry) {
+                /* call putIpcHandle only if this ptr is still valid */
+                if (memid_entry->mem_id == mem_id && memid_entry->dev_id == local_dev_id) {
+                    free_ipc_handle_cache(cache_entry);
+                }
+                HASH_DELETE(hh, ipc_cache_tracked[memid_entry->dev_id], cache_entry);
+                MPL_free(cache_entry);
+            }
             MPL_free(memid_entry);
         }
     }
@@ -1742,7 +1740,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr,
         HASH_FIND(hh, mem_id_cache, &pbase, sizeof(void *), memid_entry);
 
         if (memid_entry && (memid_entry->mem_id != mem_id || memid_entry->dev_id != local_dev_id)) {
-            mpl_err = remove_stale_sender_cache(ptr, memid_entry->mem_id, memid_entry->dev_id);
+            mpl_err = remove_stale_sender_cache(ptr, mem_id, local_dev_id);
             if (mpl_err != MPL_SUCCESS) {
                 goto fn_fail;
             }
@@ -3027,10 +3025,7 @@ int MPL_ze_ipc_handle_create(const void *ptr, MPL_gpu_device_attr * ptr_attr, in
             if (entry &&
                 (entry->mem_id != mem_id ||
                  physical_device_states[entry->shared_dev_id].local_dev_id != local_dev_id)) {
-                mpl_err =
-                    remove_stale_sender_cache(ptr, entry->mem_id,
-                                              physical_device_states[entry->
-                                                                     shared_dev_id].local_dev_id);
+                mpl_err = remove_stale_sender_cache(ptr, mem_id, local_dev_id);
                 if (mpl_err != MPL_SUCCESS) {
                     goto fn_fail;
                 }
