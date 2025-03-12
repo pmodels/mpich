@@ -99,9 +99,9 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     rkey_recv_buff = MPL_malloc(cntr, MPL_MEM_OTHER);
 
     /* allgather */
-    mpi_errno = MPIR_Allgatherv(rkey_buffer, rkey_size, MPI_BYTE,
-                                rkey_recv_buff, rkey_sizes, recv_disps, MPI_BYTE, comm_ptr,
-                                MPIR_ERR_NONE);
+    mpi_errno = MPIR_Allgatherv(rkey_buffer, rkey_size, MPIR_BYTE_INTERNAL,
+                                rkey_recv_buff, rkey_sizes, recv_disps, MPIR_BYTE_INTERNAL,
+                                comm_ptr, MPIR_ERR_NONE);
 
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -141,8 +141,8 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     share_data[comm_ptr->rank].addr = (MPI_Aint) * base_ptr;
 
     mpi_errno =
-        MPIR_Allgather(MPI_IN_PLACE, sizeof(struct ucx_share), MPI_BYTE, share_data,
-                       sizeof(struct ucx_share), MPI_BYTE, comm_ptr, MPIR_ERR_NONE);
+        MPIR_Allgather(MPI_IN_PLACE, sizeof(struct ucx_share), MPIR_BYTE_INTERNAL, share_data,
+                       sizeof(struct ucx_share), MPIR_BYTE_INTERNAL, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     for (i = 0; i < comm_ptr->local_size; i++) {

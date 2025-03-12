@@ -6,7 +6,7 @@
 #include "mpiimpl.h"
 
 /* FIXME This function uses some heuristsics based off of some testing on a
- * cluster at Argonne.  We need a better system for detrmining and controlling
+ * cluster at Argonne.  We need a better system for determining and controlling
  * the cutoff points for these algorithms.  If I've done this right, you should
  * be able to make changes along these lines almost exclusively in this function
  * and some new functions. [goodell@ 2008/01/07] */
@@ -49,7 +49,7 @@ int MPIR_Bcast_intra_smp(void *buffer, MPI_Aint count, MPI_Datatype datatype, in
                 MPIR_ERR_CHECK(mpi_errno);
 #ifdef HAVE_ERROR_CHECKING
                 /* check that we received as much as we expected */
-                MPIR_Get_count_impl(status_p, MPI_BYTE, &recvd_size);
+                MPIR_Get_count_impl(status_p, MPIR_BYTE_INTERNAL, &recvd_size);
                 MPIR_ERR_CHKANDJUMP2(recvd_size != nbytes, mpi_errno, MPI_ERR_OTHER,
                                      "**collective_size_mismatch",
                                      "**collective_size_mismatch %d %d",

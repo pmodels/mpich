@@ -227,6 +227,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    MPIR_DATATYPE_ASSERT_BUILTIN(datatype);
     if (MPIR_is_self_comm(comm)) {
         mpi_errno = MPIDI_Self_irecv(buf, count, datatype, rank, tag, comm, attr, request);
     } else {

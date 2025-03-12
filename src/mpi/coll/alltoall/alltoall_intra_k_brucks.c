@@ -246,13 +246,13 @@ int MPIR_Alltoall_intra_k_brucks(const void *sendbuf,
             }
 
             mpi_errno =
-                MPIC_Irecv(tmp_rbuf[j - 1], packsize, MPI_BYTE, src, MPIR_ALLTOALL_TAG, comm,
-                           &reqs[num_reqs++]);
+                MPIC_Irecv(tmp_rbuf[j - 1], packsize, MPIR_BYTE_INTERNAL, src, MPIR_ALLTOALL_TAG,
+                           comm, &reqs[num_reqs++]);
             MPIR_ERR_CHECK(mpi_errno);
 
             mpi_errno =
-                MPIC_Isend(tmp_sbuf[j - 1], packsize, MPI_BYTE, dst, MPIR_ALLTOALL_TAG, comm,
-                           &reqs[num_reqs++], errflag);
+                MPIC_Isend(tmp_sbuf[j - 1], packsize, MPIR_BYTE_INTERNAL, dst, MPIR_ALLTOALL_TAG,
+                           comm, &reqs[num_reqs++], errflag);
             if (mpi_errno) {
                 MPIR_ERR_POP(mpi_errno);
             }

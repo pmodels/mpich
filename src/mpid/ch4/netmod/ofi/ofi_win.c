@@ -240,7 +240,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0,
                                MPI_DATATYPE_NULL,
-                               winfo, sizeof(*winfo), MPI_BYTE, comm_ptr, MPIR_ERR_NONE);
+                               winfo, sizeof(*winfo), MPIR_BYTE_INTERNAL, comm_ptr, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
@@ -984,7 +984,7 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
     target_mrs[comm_ptr->rank].size = (uintptr_t) size;
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0,
                                MPI_DATATYPE_NULL,
-                               target_mrs, sizeof(dwin_target_mr_t), MPI_BYTE, comm_ptr,
+                               target_mrs, sizeof(dwin_target_mr_t), MPIR_BYTE_INTERNAL, comm_ptr,
                                MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -1039,7 +1039,7 @@ int MPIDI_OFI_mpi_win_detach_hook(MPIR_Win * win, const void *base)
      * that all processes collectively call detach. */
     target_bases[comm_ptr->rank] = base;
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                               target_bases, sizeof(const void *), MPI_BYTE, comm_ptr,
+                               target_bases, sizeof(const void *), MPIR_BYTE_INTERNAL, comm_ptr,
                                MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 

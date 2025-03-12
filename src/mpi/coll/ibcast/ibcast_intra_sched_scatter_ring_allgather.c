@@ -72,7 +72,8 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
         tmp_buf = MPIR_get_contig_ptr(buffer, true_lb);
     } else {
         if (rank == root) {
-            mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);
+            mpi_errno =
+                MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPIR_BYTE_INTERNAL, s);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
@@ -119,11 +120,11 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
         right_disp = rel_j * scatter_size;
 
         mpi_errno = MPIR_Sched_send(((char *) tmp_buf + right_disp),
-                                    right_count, MPI_BYTE, right, comm_ptr, s);
+                                    right_count, MPIR_BYTE_INTERNAL, right, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
         /* sendrecv, no barrier here */
         mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + left_disp),
-                                           left_count, MPI_BYTE, left, comm_ptr,
+                                           left_count, MPIR_BYTE_INTERNAL, left, comm_ptr,
                                            &ibcast_state->status, s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -138,7 +139,8 @@ int MPIR_Ibcast_intra_sched_scatter_ring_allgather(void *buffer, MPI_Aint count,
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!is_contig && rank != root) {
-        mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, s);
+        mpi_errno =
+            MPIR_Sched_copy(tmp_buf, nbytes, MPIR_BYTE_INTERNAL, buffer, count, datatype, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

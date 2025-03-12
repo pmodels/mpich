@@ -147,10 +147,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
 
     MPI_Aint packsize = 0;
-    if (dtype != MPI_PACKED)
-        MPIR_Pack_size(count, dtype, &packsize);
-    else
-        packsize = count;
+    MPIR_Pack_size(count, dtype, &packsize);
 
     MPII_BsendBuffer *bsendbuffer;
     if (comm_ptr->bsendbuffer) {
@@ -361,7 +358,8 @@ static int bsend_isend_auto(struct MPII_BsendBuffer_auto *automatic, MPI_Aint pa
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(actual_pack_bytes == packsize);
 
-    mpi_errno = MPID_Isend(elt->buf, packsize, MPI_PACKED, dest, tag, comm_ptr, 0, &elt->req);
+    mpi_errno =
+        MPID_Isend(elt->buf, packsize, MPIR_BYTE_INTERNAL, dest, tag, comm_ptr, 0, &elt->req);
     MPIR_ERR_CHECK(mpi_errno);
 
     struct bsend_auto_elem **head_p = (void *) &(automatic->active_list);
@@ -563,29 +561,18 @@ static int bsend_isend_user(struct MPII_BsendBuffer_user *user, MPI_Aint packsiz
                                                       "found buffer of size " MPI_AINT_FMT_DEC_SPEC
                                                       " with address %p", packsize, p));
             /* Found a segment */
-            MPII_Bsend_msg_t *msg;
-            msg = &p->msg;
-
             /* Pack the data into the buffer */
-            /* We may want to optimize for the special case of
-             * either primitive or contiguous types, and just
-             * use MPIR_Memcpy and the provided datatype */
-            msg->count = 0;
-            if (dtype != MPI_PACKED) {
-                MPI_Aint actual_pack_bytes;
-                void *pbuf = (void *) ((char *) p->msg.msgbuf + p->msg.count);
-                mpi_errno =
-                    MPIR_Typerep_pack(buf, count, dtype, 0, pbuf, packsize, &actual_pack_bytes,
-                                      MPIR_TYPEREP_FLAG_NONE);
-                MPIR_ERR_CHECK(mpi_errno);
-                p->msg.count += actual_pack_bytes;
-            } else {
-                MPIR_Memcpy(p->msg.msgbuf, buf, count);
-                p->msg.count = count;
-            }
+            MPI_Aint actual_pack_bytes;
+            void *pbuf = p->msg.msgbuf;
+            mpi_errno = MPIR_Typerep_pack(buf, count, dtype, 0, pbuf, packsize, &actual_pack_bytes,
+                                          MPIR_TYPEREP_FLAG_NONE);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_Assert(actual_pack_bytes == packsize);
+            p->msg.count = actual_pack_bytes;
+
             /* Try to send the message.  We must use MPID_Isend
              * because this call must not block */
-            mpi_errno = MPID_Isend(msg->msgbuf, msg->count, MPI_PACKED,
+            mpi_errno = MPID_Isend(p->msg.msgbuf, p->msg.count, MPIR_BYTE_INTERNAL,
                                    dest, tag, comm_ptr, 0, &p->request);
             MPIR_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Bsend internal error: isend returned err");
 

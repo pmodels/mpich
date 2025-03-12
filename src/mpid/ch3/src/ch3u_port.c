@@ -929,7 +929,7 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 	    if (pg_str == NULL) {
 		MPIR_ERR_POP(mpi_errno);
 	    }
-	    mpi_errno = MPIC_Recv(pg_str, j, MPI_CHAR, 0, recvtag++,
+	    mpi_errno = MPIC_Recv(pg_str, j, MPIR_CHAR_INTERNAL, 0, recvtag++,
 				  tmp_comm, MPI_STATUS_IGNORE);
 	    *recvtag_p = recvtag;
 	    MPIR_ERR_CHECK(mpi_errno);
@@ -948,7 +948,7 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 	    }
 	}
 	/*printf("accept:broadcasting string of length %d\n", j);fflush(stdout);*/
-	mpi_errno = MPIR_Bcast_allcomm_auto(pg_str, j, MPI_CHAR, root, comm_ptr, MPIR_ERR_NONE);
+	mpi_errno = MPIR_Bcast_allcomm_auto(pg_str, j, MPIR_CHAR_INTERNAL, root, comm_ptr, MPIR_ERR_NONE);
 	MPIR_ERR_CHECK(mpi_errno);
 	/* Then reconstruct the received process group.  This step
 	   also initializes the created process group */
@@ -1019,7 +1019,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
                 goto fn_exit;
             }
 	}
-	mpi_errno = MPIR_Bcast( pg_str, len, MPI_CHAR, root, comm_p, MPIR_ERR_NONE);
+	mpi_errno = MPIR_Bcast( pg_str, len, MPIR_CHAR_INTERNAL, root, comm_p, MPIR_ERR_NONE);
         if (mpi_errno) {
             if (rank != root)
                 MPL_free( pg_str );
@@ -1080,7 +1080,7 @@ static int SendPGtoPeerAndFree( MPIR_Comm *tmp_comm, int *sendtag_p,
 	MPIR_ERR_CHECK(mpi_errno);
 	
 	/* printf("connect:sending string length %d\n", i);fflush(stdout); */
-	mpi_errno = MPIC_Send(pg_iter->str, i, MPI_CHAR, 0, sendtag++,
+	mpi_errno = MPIC_Send(pg_iter->str, i, MPIR_CHAR_INTERNAL, 0, sendtag++,
 			      tmp_comm, MPIR_ERR_NONE);
 	*sendtag_p = sendtag;
 	MPIR_ERR_CHECK(mpi_errno);

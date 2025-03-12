@@ -149,6 +149,9 @@ extern struct MPIR_Datatype_builtin_entry MPIR_Internal_types[];
 /* The "raw" internal type have index bits set to 0 */
 #define MPIR_DATATYPE_GET_RAW_INTERNAL(type)  ((type) & 0xffffff00)
 
+/* Assertion that internally we should not see external builtin types */
+#define MPIR_DATATYPE_ASSERT_BUILTIN(type)  MPIR_Assert(((type) & 0xffff0000) != 0x4c000000)
+
 struct MPIR_pairtype {
     MPI_Datatype value_type;
     /* index_type is always MPI_INT */
