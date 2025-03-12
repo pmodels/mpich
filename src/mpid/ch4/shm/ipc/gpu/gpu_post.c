@@ -280,9 +280,6 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     MPIR_FUNC_ENTER;
 
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
-    if (buf == MPI_BOTTOM) {
-        goto fn_exit;
-    }
 
     MPIR_Datatype *dt_ptr;
     bool dt_contig;

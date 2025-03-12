@@ -45,9 +45,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CMA_get_ipc_attr(const void *buf, MPI_Aint co
     MPIR_FUNC_ENTER;
 
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
-    if (buf == MPI_BOTTOM) {
-        goto fn_exit;
-    }
 #ifdef MPIDI_CH4_SHM_ENABLE_CMA
     if (MPIR_CVAR_CH4_CMA_ENABLE) {
         MPI_Aint data_sz, num_blocks;
