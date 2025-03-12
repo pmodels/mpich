@@ -33,7 +33,7 @@ int MPIDI_OFI_vci_init(void)
 }
 
 /* Address exchange within comm and setup multiple vcis */
-static int addr_exchange_all_ctx(MPIR_Comm * comm);
+static int addr_exchange_all_ctx(MPIR_Comm * comm, int *all_num_vcis);
 
 int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_vcis, int *all_num_vcis)
 {
@@ -50,7 +50,7 @@ int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_vcis, int *all_num_vcis)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Since we allow different process to have different num_vcis, we always need run exchange. */
-    mpi_errno = addr_exchange_all_ctx(comm);
+    mpi_errno = addr_exchange_all_ctx(comm, all_num_vcis);
     MPIR_ERR_CHECK(mpi_errno);
 
     for (int vci = 1; vci < MPIDI_OFI_global.num_vcis; vci++) {
@@ -250,7 +250,7 @@ static int get_av_table_index(int rank, int nic, int vci, int *all_num_vcis)
     }
 }
 
-static int addr_exchange_all_ctx(MPIR_Comm * comm)
+static int addr_exchange_all_ctx(MPIR_Comm * comm, int *all_num_vcis)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
@@ -259,26 +259,12 @@ static int addr_exchange_all_ctx(MPIR_Comm * comm)
     int size = comm->local_size;
     int rank = comm->rank;
 
-    int max_vcis;
-    int *all_num_vcis;
-
-#if !defined(MPIDI_OFI_VNI_USE_DOMAIN) || MPIDI_CH4_MAX_VCIS == 1
-    max_vcis = 1;
-    all_num_vcis = NULL;
-#else
-    /* Allgather num_vcis */
-    MPIR_CHKLMEM_MALLOC(all_num_vcis, sizeof(int) * size);
-    mpi_errno = MPIR_Allgather_fallback(&MPIDI_OFI_global.num_vcis, 1, MPIR_INT_INTERNAL,
-                                        all_num_vcis, 1, MPIR_INT_INTERNAL, comm, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    max_vcis = 0;
+    int max_vcis = 0;
     for (int i = 0; i < size; i++) {
         if (max_vcis < NUM_VCIS_FOR_RANK(i)) {
             max_vcis = NUM_VCIS_FOR_RANK(i);
         }
     }
-#endif
 
     int num_vcis = NUM_VCIS_FOR_RANK(rank);
     int num_nics = MPIDI_OFI_global.num_nics;
