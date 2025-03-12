@@ -38,6 +38,8 @@ typedef enum {
     CSEL_NODE_TYPE__OPERATOR__AVG_MSG_SIZE_LT,
     CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LE,
     CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT,
+    CSEL_NODE_TYPE__OPERATOR__PER_PROC_MSG_SIZE_LE,
+    CSEL_NODE_TYPE__OPERATOR__PER_PROC_MSG_SIZE_LT,
 
     CSEL_NODE_TYPE__OPERATOR__COUNT_LE,
     CSEL_NODE_TYPE__OPERATOR__COUNT_LT_POW2,
@@ -89,6 +91,12 @@ typedef struct csel_node {
         struct {
             int val;
         } total_msg_size_lt;
+        struct {
+            int val;
+        } per_proc_msg_size_le;
+        struct {
+            int val;
+        } per_proc_msg_size_lt;
         struct {
             int val;
         } count_le;
@@ -196,6 +204,12 @@ static void print_tree(csel_node_s * node)
             break;
         case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT:
             nprintf("total_msg_size < %d\n", node->u.total_msg_size_lt.val);
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__PER_PROC_MSG_SIZE_LE:
+            nprintf("avg_msg_size <= %d\n", node->u.avg_msg_size_le.val);
+            break;
+        case CSEL_NODE_TYPE__OPERATOR__PER_PROC_MSG_SIZE_LT:
+            nprintf("avg_msg_size < %d\n", node->u.avg_msg_size_lt.val);
             break;
         case CSEL_NODE_TYPE__CONTAINER:
             nprintf("container\n");
@@ -488,6 +502,12 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
         } else if (!strncmp(ckey, "total_msg_size<", strlen("total_msg_size<"))) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT;
             tmp->u.total_msg_size_lt.val = atoi(ckey + strlen("total_msg_size<"));
+        } else if (!strncmp(ckey, "per_proc_msg_size<=", strlen("per_proc_msg_size<="))) {
+            tmp->type = CSEL_NODE_TYPE__OPERATOR__PER_PROC_MSG_SIZE_LE;
+            tmp->u.avg_msg_size_le.val = atoi(ckey + strlen("per_proc_msg_size<="));
+        } else if (!strncmp(ckey, "per_proc_msg_size<", strlen("per_proc_msg_size<"))) {
+            tmp->type = CSEL_NODE_TYPE__OPERATOR__PER_PROC_MSG_SIZE_LT;
+            tmp->u.avg_msg_size_lt.val = atoi(ckey + strlen("per_proc_msg_size<"));
         } else if (!strcmp(ckey, "is_commutative=yes")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__IS_COMMUTATIVE;
             tmp->u.is_commutative.val = true;
@@ -1177,6 +1197,11 @@ static inline MPI_Aint get_total_msgsize(MPIR_Csel_coll_sig_s coll_info)
     return total_bytes;
 }
 
+static inline MPI_Aint get_perproc_msgsize(MPIR_Csel_coll_sig_s coll_info)
+{
+    return get_avg_msgsize(coll_info) / coll_info.comm_ptr->local_size;
+}
+
 void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
 {
     csel_s *csel = (csel_s *) csel_;
@@ -1273,6 +1298,20 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
 
             case CSEL_NODE_TYPE__OPERATOR__TOTAL_MSG_SIZE_LT:
                 if (get_total_msgsize(coll_info) < node->u.total_msg_size_lt.val)
+                    node = node->success;
+                else
+                    node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__PER_PROC_MSG_SIZE_LE:
+                if (get_perproc_msgsize(coll_info) <= node->u.per_proc_msg_size_le.val)
+                    node = node->success;
+                else
+                    node = node->failure;
+                break;
+
+            case CSEL_NODE_TYPE__OPERATOR__PER_PROC_MSG_SIZE_LT:
+                if (get_perproc_msgsize(coll_info) < node->u.per_proc_msg_size_lt.val)
                     node = node->success;
                 else
                     node = node->failure;
