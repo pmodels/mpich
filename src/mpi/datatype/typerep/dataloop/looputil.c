@@ -102,12 +102,16 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
 
 static inline int is_float_type(MPI_Datatype el_type)
 {
-    return ((el_type == MPI_FLOAT) || (el_type == MPI_DOUBLE) ||
-            (el_type == MPI_LONG_DOUBLE) ||
-            (el_type == MPI_DOUBLE_PRECISION) ||
-            (el_type == MPI_COMPLEX) || (el_type == MPI_DOUBLE_COMPLEX));
-/*             (el_type == MPI_REAL4) || (el_type == MPI_REAL8) || */
-/*             (el_type == MPI_REAL16)); */
+    bool is_float;
+    MPIR_Datatype_is_float(el_type, is_float);
+    return is_float;
+}
+
+static inline int is_complex_type(MPI_Datatype el_type)
+{
+    bool is_complex;
+    MPIR_Datatype_is_complex(el_type, is_complex);
+    return is_complex;
 }
 
 static int external32_basic_convert(char *dest_buf,
@@ -683,7 +687,7 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1)) {
         MPIR_Memcpy(paramp->u.pack.pack_buffer, ((char *) bufp) + rel_off, *blocks_p);
-    } else if (MPII_Typerep_basic_type_is_complex(el_type)) {
+    } else if (is_complex_type(el_type)) {
         /* treat as 2x floating point */
         external32_float_convert(paramp->u.pack.pack_buffer,
                                  ((char *) bufp) + rel_off,
