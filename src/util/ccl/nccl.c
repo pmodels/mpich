@@ -218,6 +218,10 @@ int MPIR_NCCL_Allreduce(const void *sendbuf, void *recvbuf, MPI_Aint count, MPI_
                         ncclcomm->stream);
     CUDA_ERR_CHECK(ret);
 
+    /* Ensure the communication completes */
+    ret = cudaStreamSynchronize(ncclcomm->stream);
+    CUDA_ERR_CHECK(ret);
+
 fn_exit:
     return mpi_errno;
 fn_fail:
