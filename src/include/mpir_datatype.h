@@ -416,6 +416,17 @@ void MPII_Datatype_printf(MPI_Datatype type, int depth, MPI_Aint displacement, i
     } \
 } while (0)
 
+#define MPIR_Datatype_is_complex(a, is_complex) do { \
+    MPI_Datatype basic_type; \
+    MPIR_Datatype_get_basic_type(a, basic_type); \
+    int type = basic_type & MPIR_TYPE_TYPE_MASK; \
+    if (type == MPIR_TYPE_COMPLEX || type == MPIR_TYPE_ALT_COMPLEX) { \
+        is_complex = true; \
+    } else { \
+        is_complex = false; \
+    } \
+} while (0)
+
 #define MPIR_Datatype_get_ptr(a,ptr)   MPIR_Getb_ptr(Datatype,DATATYPE,a,0x000000ff,ptr)
 
 /* Note: Probably there is some clever way to build all of these from a macro.
