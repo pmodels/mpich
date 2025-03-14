@@ -25,7 +25,8 @@ int MPIDI_IPC_ack_target_msg_cb(void *am_hdr, void *data, MPI_Aint in_data_sz,
 #endif
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
-    MPID_Request_complete(sreq);
+    mpi_errno = MPID_Request_complete(sreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (attr & MPIDIG_AM_ATTR__IS_ASYNC) {
         *req = NULL;
