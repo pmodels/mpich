@@ -163,7 +163,7 @@ if BUILD_PROFILING_LIB
 # don't contribute any PMPI symbols.
 lib_LTLIBRARIES += lib/lib@PMPIABILIBNAME@.la
 lib_lib@PMPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_f77_sources) $(mpi_core_sources)
-lib_lib@PMPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@PMPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABI_ABIVERSIONFLAGS)
 lib_lib@PMPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI $(abi_cppflags)
 lib_lib@PMPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs)
 EXTRA_lib_lib@PMPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs)
@@ -173,7 +173,7 @@ EXTRA_lib_lib@PMPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs)
 # confused. (see https://bugzilla.redhat.com/show_bug.cgi?id=91110)
 lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
 lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources)
-lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(ABI_ABIVERSIONFLAGS)
 lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI $(abi_cppflags)
 lib_lib@MPIABILIBNAME@_la_LIBADD = lib/lib@PMPIABILIBNAME@.la $(mpi_convenience_libs)
 
@@ -185,7 +185,7 @@ else !BUILD_PROFILING_LIB
 
 lib_LTLIBRARIES += lib/lib@MPIABILIBNAME@.la
 lib_lib@MPIABILIBNAME@_la_SOURCES = $(mpi_abi_sources) $(mpi_core_sources)
-lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@MPIABILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABI_ABIVERSIONFLAGS)
 lib_lib@MPIABILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) $(abi_cppflags)
 lib_lib@MPIABILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
 EXTRA_lib_lib@MPIABILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)

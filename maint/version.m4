@@ -40,4 +40,7 @@ m4_define([MPICH_RELEASE_DATE_m4],[unreleased development copy])dnl
 # last version 4.3.0 - 17:0:5
 m4_define([libmpi_so_version_m4],[0:0:0])dnl
 
+# libmpi_abi.so version
+m4_define([libmpi_abi_so_version_m4],[1:0:0])dnl
+
 [#] end of __file__
