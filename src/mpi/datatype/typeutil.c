@@ -21,83 +21,83 @@ MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, 0, 0, 0, MPIR_DATATYPE,
 
 static int datatype_attr_finalize_cb(void *dummy);
 
-#define type_name_entry(x_) { MPI_##x_, MPIR_##x_##_INTERNAL, "MPI_" #x_ }
-#define type_name_x(x_) { MPIX_##x_, MPIR_##x_##_INTERNAL, "MPIX_" #x_ }
-#define type_name_null {MPI_DATATYPE_NULL, MPI_DATATYPE_NULL, NULL}
+#define type_name_entry(x_, g_) { MPI_##x_, MPIR_##x_##_INTERNAL, MPIR_DT_GROUP_##g_, "MPI_" #x_ }
+#define type_name_x(x_, g_) { MPIX_##x_, MPIR_##x_##_INTERNAL, MPIR_DT_GROUP_##g_, "MPIX_" #x_ }
+#define type_name_null {MPI_DATATYPE_NULL, MPI_DATATYPE_NULL, MPIR_DT_GROUP_NULL, NULL}
 
 struct MPIR_Datatype_builtin_entry MPIR_Internal_types[] = {
     /* *INDENT-OFF* */
-    type_name_null,                           /* 0x00 */
-    type_name_entry(CHAR),                    /* 0x01 */
-    type_name_entry(UNSIGNED_CHAR),           /* 0x02 */
-    type_name_entry(SHORT),                   /* 0x03 */
-    type_name_entry(UNSIGNED_SHORT),          /* 0x04 */
-    type_name_entry(INT),                     /* 0x05 */
-    type_name_entry(UNSIGNED),                /* 0x06 */
-    type_name_entry(LONG),                    /* 0x07 */
-    type_name_entry(UNSIGNED_LONG),           /* 0x08 */
-    type_name_entry(LONG_LONG_INT),           /* 0x09 */
-    type_name_entry(FLOAT),                   /* 0x0a */
-    type_name_entry(DOUBLE),                  /* 0x0b */
-    type_name_entry(LONG_DOUBLE),             /* 0x0c */
-    type_name_entry(BYTE),                    /* 0x0d */
-    type_name_entry(WCHAR),                   /* 0x0e */
-    type_name_entry(PACKED),                  /* 0x0f */
-    type_name_entry(LB),                      /* 0x10 */
-    type_name_entry(UB),                      /* 0x11 */
-    type_name_null,                           /* 0x12 */
-    type_name_null,                           /* 0x13 */
-    type_name_null,                           /* 0x14 */
-    type_name_null,                           /* 0x15 */
-    type_name_entry(2INT),                    /* 0x16 */
-    type_name_null,                           /* 0x17 */
-    type_name_entry(SIGNED_CHAR),             /* 0x18 */
-    type_name_entry(UNSIGNED_LONG_LONG),      /* 0x19 */
-    type_name_entry(CHARACTER),               /* 0x1a */
-    type_name_entry(INTEGER),                 /* 0x1b */
-    type_name_entry(REAL),                    /* 0x1c */
-    type_name_entry(LOGICAL),                 /* 0x1d */
-    type_name_entry(COMPLEX),                 /* 0x1e */
-    type_name_entry(DOUBLE_PRECISION),        /* 0x1f */
-    type_name_entry(2INTEGER),                /* 0x20 */
-    type_name_entry(2REAL),                   /* 0x21 */
-    type_name_entry(DOUBLE_COMPLEX),          /* 0x22 */
-    type_name_entry(2DOUBLE_PRECISION),       /* 0x23 */
-    type_name_null,                           /* 0x24 */
-    type_name_null,                           /* 0x25 */
-    type_name_entry(REAL2),                   /* 0x26 */
-    type_name_entry(REAL4),                   /* 0x27 */
-    type_name_entry(COMPLEX8),                /* 0x28 */
-    type_name_entry(REAL8),                   /* 0x29 */
-    type_name_entry(COMPLEX16),               /* 0x2a */
-    type_name_entry(REAL16),                  /* 0x2b */
-    type_name_entry(COMPLEX32),               /* 0x2c */
-    type_name_entry(INTEGER1),                /* 0x2d */
-    type_name_entry(COMPLEX4),                /* 0x2e */
-    type_name_entry(INTEGER2),                /* 0x2f */
-    type_name_entry(INTEGER4),                /* 0x30 */
-    type_name_entry(INTEGER8),                /* 0x31 */
-    type_name_entry(INTEGER16),               /* 0x32 */
-    type_name_entry(CXX_BOOL),                /* 0x33 */
-    type_name_entry(CXX_FLOAT_COMPLEX),       /* 0x34 */
-    type_name_entry(CXX_DOUBLE_COMPLEX),      /* 0x35 */
-    type_name_entry(CXX_LONG_DOUBLE_COMPLEX), /* 0x36 */
-    type_name_entry(INT8_T),                  /* 0x37 */
-    type_name_entry(INT16_T),                 /* 0x38 */
-    type_name_entry(INT32_T),                 /* 0x39 */
-    type_name_entry(INT64_T),                 /* 0x3a */
-    type_name_entry(UINT8_T),                 /* 0x3b */
-    type_name_entry(UINT16_T),                /* 0x3c */
-    type_name_entry(UINT32_T),                /* 0x3d */
-    type_name_entry(UINT64_T),                /* 0x3e */
-    type_name_entry(C_BOOL),                  /* 0x3f */
-    type_name_entry(C_COMPLEX),               /* 0x40 */
-    type_name_entry(C_DOUBLE_COMPLEX),        /* 0x41 */
-    type_name_entry(C_LONG_DOUBLE_COMPLEX),   /* 0x42 */
-    type_name_entry(AINT),                    /* 0x43 */
-    type_name_entry(OFFSET),                  /* 0x44 */
-    type_name_entry(COUNT),                   /* 0x45 */
-    type_name_x(C_FLOAT16),                   /* 0x46 */
+    type_name_null,                                       /* 0x00 */
+    type_name_entry(CHAR,               C_INTEGER),       /* 0x01 */
+    type_name_entry(UNSIGNED_CHAR,      C_INTEGER),       /* 0x02 */
+    type_name_entry(SHORT,              C_INTEGER),       /* 0x03 */
+    type_name_entry(UNSIGNED_SHORT,     C_INTEGER),       /* 0x04 */
+    type_name_entry(INT,                C_INTEGER),       /* 0x05 */
+    type_name_entry(UNSIGNED,           C_INTEGER),       /* 0x06 */
+    type_name_entry(LONG,               C_INTEGER),       /* 0x07 */
+    type_name_entry(UNSIGNED_LONG,      C_INTEGER),       /* 0x08 */
+    type_name_entry(LONG_LONG_INT,      C_INTEGER),       /* 0x09 */
+    type_name_entry(FLOAT,              FLOATING_POINT),  /* 0x0a */
+    type_name_entry(DOUBLE,             FLOATING_POINT),  /* 0x0b */
+    type_name_entry(LONG_DOUBLE,        FLOATING_POINT),  /* 0x0c */
+    type_name_entry(BYTE,               BYTE),            /* 0x0d */
+    type_name_entry(WCHAR,              NULL),            /* 0x0e */
+    type_name_entry(PACKED,             NULL),            /* 0x0f */
+    type_name_entry(LB,                 NULL),            /* 0x10 */
+    type_name_entry(UB,                 NULL),            /* 0x11 */
+    type_name_null,                                       /* 0x12 */
+    type_name_null,                                       /* 0x13 */
+    type_name_null,                                       /* 0x14 */
+    type_name_null,                                       /* 0x15 */
+    type_name_entry(2INT,               NULL),            /* 0x16 */
+    type_name_null,                                       /* 0x17 */
+    type_name_entry(SIGNED_CHAR,        C_INTEGER),       /* 0x18 */
+    type_name_entry(UNSIGNED_LONG_LONG, C_INTEGER),       /* 0x19 */
+    type_name_entry(CHARACTER,          NULL),            /* 0x1a */
+    type_name_entry(INTEGER,            FORTRAN_INTEGER), /* 0x1b */
+    type_name_entry(REAL,               FLOATING_POINT),  /* 0x1c */
+    type_name_entry(LOGICAL,            LOGICAL),         /* 0x1d */
+    type_name_entry(COMPLEX,            COMPLEX),         /* 0x1e */
+    type_name_entry(DOUBLE_PRECISION,   FLOATING_POINT),  /* 0x1f */
+    type_name_entry(2INTEGER,           NULL),            /* 0x20 */
+    type_name_entry(2REAL,              NULL),            /* 0x21 */
+    type_name_entry(DOUBLE_COMPLEX,     COMPLEX),         /* 0x22 */
+    type_name_entry(2DOUBLE_PRECISION,  NULL),            /* 0x23 */
+    type_name_null,                                       /* 0x24 */
+    type_name_null,                                       /* 0x25 */
+    type_name_entry(REAL2,              FLOATING_POINT),  /* 0x26 */
+    type_name_entry(REAL4,              FLOATING_POINT),  /* 0x27 */
+    type_name_entry(COMPLEX8,           COMPLEX),         /* 0x28 */
+    type_name_entry(REAL8,              FLOATING_POINT),  /* 0x29 */
+    type_name_entry(COMPLEX16,          COMPLEX),         /* 0x2a */
+    type_name_entry(REAL16,             FLOATING_POINT),  /* 0x2b */
+    type_name_entry(COMPLEX32,          COMPLEX),         /* 0x2c */
+    type_name_entry(INTEGER1,           FORTRAN_INTEGER), /* 0x2d */
+    type_name_entry(COMPLEX4,           COMPLEX),         /* 0x2e */
+    type_name_entry(INTEGER2,           FORTRAN_INTEGER), /* 0x2f */
+    type_name_entry(INTEGER4,           FORTRAN_INTEGER), /* 0x30 */
+    type_name_entry(INTEGER8,           FORTRAN_INTEGER), /* 0x31 */
+    type_name_entry(INTEGER16,          FORTRAN_INTEGER), /* 0x32 */
+    type_name_entry(CXX_BOOL,           LOGICAL),         /* 0x33 */
+    type_name_entry(CXX_FLOAT_COMPLEX,  COMPLEX),         /* 0x34 */
+    type_name_entry(CXX_DOUBLE_COMPLEX, COMPLEX),         /* 0x35 */
+    type_name_entry(CXX_LONG_DOUBLE_COMPLEX, COMPLEX),    /* 0x36 */
+    type_name_entry(INT8_T,             C_INTEGER),       /* 0x37 */
+    type_name_entry(INT16_T,            C_INTEGER),       /* 0x38 */
+    type_name_entry(INT32_T,            C_INTEGER),       /* 0x39 */
+    type_name_entry(INT64_T,            C_INTEGER),       /* 0x3a */
+    type_name_entry(UINT8_T,            C_INTEGER),       /* 0x3b */
+    type_name_entry(UINT16_T,           C_INTEGER),       /* 0x3c */
+    type_name_entry(UINT32_T,           C_INTEGER),       /* 0x3d */
+    type_name_entry(UINT64_T,           C_INTEGER),       /* 0x3e */
+    type_name_entry(C_BOOL,             LOGICAL),         /* 0x3f */
+    type_name_entry(C_COMPLEX,          COMPLEX),         /* 0x40 */
+    type_name_entry(C_DOUBLE_COMPLEX,   COMPLEX),         /* 0x41 */
+    type_name_entry(C_LONG_DOUBLE_COMPLEX, COMPLEX),      /* 0x42 */
+    type_name_entry(AINT,               MULTI),           /* 0x43 */
+    type_name_entry(OFFSET,             MULTI),           /* 0x44 */
+    type_name_entry(COUNT,              MULTI),           /* 0x45 */
+    type_name_x(C_FLOAT16,              FLOATING_POINT),  /* 0x46 */
     /* *INDENT-ON* */
 };
 
@@ -117,7 +117,9 @@ int MPIR_Datatype_init_predefined(void)
         if (d == MPI_DATATYPE_NULL)
             continue;
 
-        MPIR_Internal_types[i].internal_type |= i;
+        if (MPIR_Internal_types[i].internal_type != MPI_DATATYPE_NULL) {
+            MPIR_Internal_types[i].internal_type |= i;
+        }
 
         MPIR_Datatype_get_ptr(d, dptr);
         /* --BEGIN ERROR HANDLING-- */

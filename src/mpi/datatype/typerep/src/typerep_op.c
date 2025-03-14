@@ -22,8 +22,7 @@ int MPII_Typerep_op_fallback(void *source_buf, MPI_Aint source_count, MPI_Dataty
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (source_dtp);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(MPIR_Internal_op_dt_check(op, source_dtp));
 
     /* unpack source buffer if necessary */
     bool source_unpacked = false;
