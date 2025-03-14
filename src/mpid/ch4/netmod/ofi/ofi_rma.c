@@ -64,6 +64,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     struct iovec iov;
     size_t origin_bytes;
     int vci = MPIDI_WIN(win, am_vci);
+    int vci_target = MPIDI_WIN_TARGET_VCI(win, target_rank);
 
     /* used for GPU buffer registration */
     MPIR_Datatype_get_size_macro(origin_datatype, origin_bytes);
@@ -95,9 +96,9 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
     }
 
     void *desc = NULL;
-    int nic = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);;
+    int nic_target = MPIDI_OFI_get_pref_nic(win->comm_ptr, target_rank);;
 
-    MPIDI_OFI_gpu_rma_register(origin_addr, origin_bytes, NULL, win, nic, &desc);
+    MPIDI_OFI_gpu_rma_register(origin_addr, origin_bytes, NULL, win, nic_target, &desc);
 
     int i = 0, j = 0;
     size_t msg_len;
@@ -114,7 +115,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, MPI_Aint origin_count,
         msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
 
         msg.desc = desc;
-        msg.addr = MPIDI_OFI_av_to_phys(addr, nic, vci);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, vci, 0, vci_target, nic_target);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -207,7 +208,8 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, nic_target, vci_target);
+        msg.addr =
+            MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, vci, 0, vci_target, nic_target);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -292,7 +294,8 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, nic_target, vci_target);
+        msg.addr =
+            MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, vci, 0, vci_target, nic_target);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;

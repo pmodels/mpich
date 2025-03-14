@@ -11,6 +11,7 @@ int MPIDI_OFI_get_required_version(void);
 int MPIDI_OFI_find_provider(struct fi_info **prov_out);
 void MPIDI_OFI_find_provider_cleanup(void);
 int MPIDI_OFI_init_multi_nic(struct fi_info *prov);
+int MPIDI_OFI_vci_init(void);
 
 /* set hints based on MPIDI_OFI_global.settings */
 int MPIDI_OFI_init_hints(struct fi_info *hints);
@@ -32,8 +33,8 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov);
 /* Determine if NIC has already been included in others */
 bool MPIDI_OFI_nic_already_used(const struct fi_info *prov, struct fi_info **others, int nic_count);
 
+int MPIDI_OFI_create_vci_context(int vci, int nic);
 int MPIDI_OFI_addr_exchange_root_ctx(void);
-int MPIDI_OFI_addr_exchange_all_ctx(void);
 int MPIDI_OFI_am_init(int vci);
 int MPIDI_OFI_am_post_recv(int vci, int nic);
 
