@@ -16,6 +16,7 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
 {
     int i;
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Group *node_group_ptr;
     MPIR_Group *shm_group_ptr;
 
     MPIR_FUNC_ENTER;
@@ -26,19 +27,16 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
     mpi_errno = MPIR_Comm_group_impl(shm_comm_ptr, &shm_group_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Get node group if it is not yet initialized */
-    if (!MPIDI_IPCI_global.node_group_ptr) {
-        mpi_errno = MPIR_Comm_group_impl(MPIR_Process.comm_world->node_comm,
-                                         &MPIDI_IPCI_global.node_group_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+    mpi_errno = MPIR_Comm_group_impl(MPIR_Process.comm_world->node_comm, &node_group_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Group_translate_ranks_impl(shm_group_ptr, shm_comm_ptr->local_size,
-                                                shm_ranks, MPIDI_IPCI_global.node_group_ptr,
-                                                node_ranks);
+                                                shm_ranks, node_group_ptr, node_ranks);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Group_free_impl(shm_group_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Group_free_impl(node_group_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

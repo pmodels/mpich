@@ -7,6 +7,10 @@
 #include "ipc_noinline.h"
 #include "ipc_types.h"
 
+#ifdef MPL_USE_DBG_LOGGING
+MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
+#endif
+
 int MPIDI_IPC_init_local(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -16,8 +20,6 @@ int MPIDI_IPC_init_local(void)
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_IPCI_DBG_GENERAL = MPL_dbg_class_alloc("SHM_IPC", "shm_ipc");
 #endif
-
-    MPIDI_IPCI_global.node_group_ptr = NULL;
 
     MPIDIG_am_rndv_reg_cb(MPIDIG_RNDV_IPC, &MPIDI_IPC_rndv_cb);
     MPIDIG_am_reg_cb(MPIDI_IPC_ACK, NULL, &MPIDI_IPC_ack_target_msg_cb);
@@ -90,11 +92,6 @@ int MPIDI_IPC_mpi_finalize_hook(void)
     mpi_errno = MPIDI_GPU_mpi_finalize_hook();
     MPIR_ERR_CHECK(mpi_errno);
 #endif
-
-    if (MPIDI_IPCI_global.node_group_ptr) {
-        mpi_errno = MPIR_Group_free_impl(MPIDI_IPCI_global.node_group_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
