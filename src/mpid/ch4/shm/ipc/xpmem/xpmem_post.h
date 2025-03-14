@@ -26,7 +26,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD
       category    : CH4
       type        : int
-      default     : 1024
+      default     : 65536
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
