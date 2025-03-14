@@ -29,8 +29,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-MPIDI_IPCI_global_t MPIDI_IPCI_global;
-
 #ifdef MPL_USE_DBG_LOGGING
 MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
 #endif
