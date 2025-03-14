@@ -453,6 +453,16 @@ cvars:
                                         name_);                         \
             goto fn_fail;                                               \
         }                                                               \
+        if (HANDLE_IS_BUILTIN(datatype) &&                              \
+            MPIR_Internal_types[(datatype) & 0xff].internal_type == MPI_DATATYPE_NULL) \
+        {                                                               \
+            err_ = MPIR_Err_create_code(MPI_SUCCESS,                    \
+                                        MPIR_ERR_RECOVERABLE,           \
+                                        __func__, __LINE__,               \
+                                        MPI_ERR_TYPE,                   \
+                                        "**dtype", 0);                  \
+            goto fn_fail;                                               \
+        }                                                               \
     }
 
 #define MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype_, err_)                   \
