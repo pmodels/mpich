@@ -228,6 +228,17 @@ static void parse_container_params(struct json_object *obj, MPII_Csel_container_
                 }
             }
             break;
+        
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_ccl:
+            {
+                json_object_object_foreach(obj, key, val) {
+                    ckey = MPL_strdup_no_spaces(key);
+                    if (!strncmp(ckey, "ccl=", strlen("ccl=")))
+                        cnt->u.allreduce.intra_ccl.ccl = get_ccl_from_string(ckey + strlen("ccl="));
+                    MPL_free(ckey);
+                }
+            }
+            break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_tsp_scatterv_recexch_allgatherv:
             {
