@@ -22,6 +22,11 @@ of MPI_INT. Commonly used types include MPI_BYTE, MPI_CHAR, MPI_AINT, use
 MPIR_BYTE_INTERNAL, MPIR_CHAR_INTERNAL, MPIR_AINT_INTERNAL instead. There is no
 impact to users.
 
+# Added MPI_LOGICAL1, MPI_LOGICAL2, MPI_LOGICAL4, MPI_LOGICAL8, and MPI_LOGICAL16.
+
+# Added MPIX_BFLOAT16, and added software reduction support for MPIX_BFLOAT16
+  and MPIX_C_FLOAT16.
+
 ===============================================================================
                                Changes in 4.3
 ===============================================================================
