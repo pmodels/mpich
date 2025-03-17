@@ -317,9 +317,6 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
     static MPI_Datatype complex_types[] = {
         MPI_COMPLEX4, MPI_COMPLEX8, MPI_COMPLEX16, MPI_COMPLEX32,
     };
-    static MPI_Datatype logical_types[] = {
-        MPI_LOGICAL1, MPI_LOGICAL2, MPI_LOGICAL4, MPI_LOGICAL8, MPI_LOGICAL16,
-    };
 
     /* The following implementation follows the suggestion in the
      * MPI-2 standard.
@@ -356,13 +353,6 @@ int MPIR_Type_match_size_impl(int typeclass, int size, MPI_Datatype * datatype)
             matched_datatype = type_match_size(complex_types, n, size);
 #ifdef HAVE_ERROR_CHECKING
             tname = "MPI_TYPECLASS_COMPLEX";
-#endif
-            break;
-        case MPI_TYPECLASS_LOGICAL:
-            n = sizeof(logical_types) / sizeof(MPI_Datatype);
-            matched_datatype = type_match_size(logical_types, n, size);
-#ifdef HAVE_ERROR_CHECKING
-            tname = "MPI_TYPECLASS_LOGICAL";
 #endif
             break;
         default:
