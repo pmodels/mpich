@@ -330,6 +330,20 @@ MPI_Type_size:
     .desc: Return the number of bytes occupied by entries in the datatype
     .skip: global_cs
     .poly_impl: use_aint
+{ -- error_check -- datatype
+    /* allow MPI_DATATYPE_NULL */
+    if (HANDLE_GET_MPI_KIND(datatype) != MPIR_DATATYPE) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**dtype");
+    }
+    if (!HANDLE_IS_BUILTIN(datatype)) {
+        MPIR_Datatype *datatype_ptr ATTRIBUTE((unused)) = NULL;
+        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
+        MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+    }
+}
 
 MPI_Type_size_x:
     .desc: Return the number of bytes occupied by entries in the datatype
