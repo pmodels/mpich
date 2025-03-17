@@ -337,7 +337,8 @@ static int addr_exchange_all_ctx(MPIR_Comm * comm, int *all_num_vcis)
                     }
                 }
                 MPIR_Assert(expect_addr != FI_ADDR_NOTAVAIL);
-                MPIDI_OFI_AV_ADDR_NO_OFFSET(av, vci, nic) = expect_addr;
+                /* all_dest[*] */
+                MPIDI_OFI_AV_ADDR_NONROOT(av, vci, nic) = expect_addr;
                 /* next */
                 expect_addr++;
             }
