@@ -165,27 +165,41 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
         case MPIR_INT8:
         case MPIR_UINT8:
         case MPIR_FLOAT8:
+        case MPIR_COMPLEX8:
+        case MPIR_FORTRAN_LOGICAL8:
             return ALIGNOF_INT8_T;
         case MPIR_FIXED16:
         case MPIR_INT16:
         case MPIR_UINT16:
         case MPIR_FLOAT16:
+        case MPIR_COMPLEX16:
         case MPIR_BFLOAT16:
+        case MPIR_FORTRAN_LOGICAL16:
             return ALIGNOF_INT16_T;
         case MPIR_FIXED32:
         case MPIR_INT32:
         case MPIR_UINT32:
+        case MPIR_FORTRAN_LOGICAL32:
             return ALIGNOF_INT32_T;
         case MPIR_FIXED64:
         case MPIR_INT64:
         case MPIR_UINT64:
+        case MPIR_FORTRAN_LOGICAL64:
             return ALIGNOF_INT64_T;
+        case MPIR_FIXED128:
+        case MPIR_INT128:
+        case MPIR_UINT128:
+        case MPIR_FORTRAN_LOGICAL128:
+            return MAX_ALIGNMENT;       /* ALIGNOF_INT128_T */
         case MPIR_FLOAT32:
         case MPIR_COMPLEX32:
             return ALIGNOF_FLOAT;
         case MPIR_FLOAT64:
         case MPIR_COMPLEX64:
             return ALIGNOF_DOUBLE;
+        case MPIR_FLOAT128:
+        case MPIR_COMPLEX128:
+            return MAX_ALIGNMENT;       /* ALIGNOF_FLOAT128_T */
         case MPIR_ALT_FLOAT96:
         case MPIR_ALT_FLOAT128:
         case MPIR_ALT_COMPLEX96:
