@@ -26,6 +26,7 @@ typedef struct {
     xpmem_segid_t segid;        /* my local segid associated with entire address space */
     MPIDI_XPMEMI_segmap_t *segmaps;     /* remote seg info for every local processes. */
     size_t sys_page_sz;
+    bool initialized;
 } MPIDI_XPMEMI_global_t;
 
 extern MPIDI_XPMEMI_global_t MPIDI_XPMEMI_global;

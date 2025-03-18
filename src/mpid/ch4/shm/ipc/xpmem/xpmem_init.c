@@ -26,8 +26,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static int xpmem_initialized = 0;
-
 int MPIDI_XPMEM_init_local(void)
 {
     return MPI_SUCCESS;
@@ -93,7 +91,7 @@ int MPIDI_XPMEM_init_world(void)
     }
     MPIDU_Init_shm_barrier();
 
-    xpmem_initialized = 1;
+    MPIDI_XPMEMI_global.initialized = true;
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -107,7 +105,7 @@ int MPIDI_XPMEM_init_world(void)
      * kernel module to be loaded at runtime. If XPMEM is not available, disable its use via the
      * special CVAR value. */
     XPMEM_TRACE("init: xpmem_make failed. Disabling XPMEM support");
-    MPIR_CVAR_CH4_XPMEM_ENABLE = 0;
+    MPIDI_XPMEMI_global.initialized = false;
 
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
@@ -119,7 +117,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     int i, ret = 0;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_XPMEMI_global.segid == -1 || !xpmem_initialized) {
+    if (MPIDI_XPMEMI_global.segid == -1 || !MPIDI_XPMEMI_global.initialized) {
         /* if XPMEM was disabled at runtime, return */
         goto fn_exit;
     }
@@ -144,7 +142,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     /* success(0) or failure(-1) */
     MPIR_ERR_CHKANDJUMP(ret == -1, mpi_errno, MPI_ERR_OTHER, "**xpmem_remove");
 
-    xpmem_initialized = 0;
+    MPIDI_XPMEMI_global.initialized = false;
 
   fn_exit:
     MPIR_FUNC_EXIT;

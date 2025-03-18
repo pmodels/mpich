@@ -5,8 +5,10 @@
 #ifndef XPMEM_POST_H_INCLUDED
 #define XPMEM_POST_H_INCLUDED
 
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 #include "ch4_impl.h"
 #include "ipc_types.h"
+#include "xpmem_types.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -27,7 +29,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint count,
                                                       MPI_Datatype datatype,
                                                       MPIDI_IPCI_ipc_attr_t * ipc_attr)
@@ -41,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint 
     int dt_contig;
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, true_lb);
 
-    if (!MPIR_CVAR_CH4_XPMEM_ENABLE || buf == MPI_BOTTOM ||
+    if (!MPIDI_XPMEMI_global.initialized || buf == MPI_BOTTOM ||
         data_sz < MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD) {
         goto fn_exit;
     } else {
