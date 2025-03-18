@@ -8,6 +8,24 @@
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_XPMEM_ENABLE
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        To manually disable XPMEM set to 0. The environment variable is valid only when the XPMEM
+        submodule is enabled.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 static int xpmem_initialized = 0;
 
 int MPIDI_XPMEM_init_local(void)

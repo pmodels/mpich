@@ -12,17 +12,6 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_CH4_XPMEM_ENABLE
-      category    : CH4
-      type        : int
-      default     : 1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        To manually disable XPMEM set to 0. The environment variable is valid only when the XPMEM
-        submodule is enabled.
-
     - name        : MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD
       category    : CH4
       type        : int
