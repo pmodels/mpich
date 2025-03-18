@@ -249,8 +249,6 @@ extern MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[REQUEST_POOL_MAX]
 
 /* per-VCI structure -- using union to force minimum size */
 typedef struct MPIDI_per_vci {
-    MPID_Thread_mutex_t lock;
-
     MPIR_Request *posted_list;
     MPIR_Request *unexp_list;
     MPIDU_genq_private_pool_t request_pool;
