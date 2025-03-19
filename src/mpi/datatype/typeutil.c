@@ -164,48 +164,60 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
         case MPIR_FIXED8:
         case MPIR_INT8:
         case MPIR_UINT8:
-        case MPIR_FLOAT8:
         case MPIR_COMPLEX8:
         case MPIR_FORTRAN_LOGICAL8:
-            return ALIGNOF_INT8_T;
+            return MPIR_INT8_ALIGN;
         case MPIR_FIXED16:
         case MPIR_INT16:
         case MPIR_UINT16:
-        case MPIR_FLOAT16:
-        case MPIR_COMPLEX16:
-        case MPIR_BFLOAT16:
         case MPIR_FORTRAN_LOGICAL16:
-            return ALIGNOF_INT16_T;
+            return MPIR_INT16_ALIGN;
         case MPIR_FIXED32:
         case MPIR_INT32:
         case MPIR_UINT32:
         case MPIR_FORTRAN_LOGICAL32:
-            return ALIGNOF_INT32_T;
+            return MPIR_INT32_ALIGN;
         case MPIR_FIXED64:
         case MPIR_INT64:
         case MPIR_UINT64:
         case MPIR_FORTRAN_LOGICAL64:
-            return ALIGNOF_INT64_T;
+            return MPIR_INT64_ALIGN;
+#ifdef MPIR_INT128_ALIGN
         case MPIR_FIXED128:
         case MPIR_INT128:
         case MPIR_UINT128:
         case MPIR_FORTRAN_LOGICAL128:
-            return MAX_ALIGNMENT;       /* ALIGNOF_INT128_T */
+            return MPIR_INT128_ALIGN;
+#endif
+#ifdef MPIR_FLOAT16_ALIGN
+        case MPIR_FLOAT16:
+        case MPIR_COMPLEX16:
+        case MPIR_BFLOAT16:
+            return MPIR_FLOAT16_ALIGN;
+#endif
         case MPIR_FLOAT32:
         case MPIR_COMPLEX32:
-            return ALIGNOF_FLOAT;
+            return MPIR_FLOAT32_ALIGN;
         case MPIR_FLOAT64:
         case MPIR_COMPLEX64:
-            return ALIGNOF_DOUBLE;
+            return MPIR_FLOAT64_ALIGN;
+#ifdef MPIR_FLOAT128_ALIGN
         case MPIR_FLOAT128:
         case MPIR_COMPLEX128:
-            return MAX_ALIGNMENT;       /* ALIGNOF_FLOAT128_T */
+            return MPIR_FLOAT128_ALIGN;
+#endif
+#ifdef MPIR_ALT_FLOAT96_ALIGN
         case MPIR_ALT_FLOAT96:
-        case MPIR_ALT_FLOAT128:
         case MPIR_ALT_COMPLEX96:
+            return MPIR_ALT_FLOAT96_ALIGN;
+#endif
+#ifdef MPIR_ALT_FLOAT128_ALIGN
         case MPIR_ALT_COMPLEX128:
-            return ALIGNOF_LONG_DOUBLE;
+        case MPIR_ALT_FLOAT128:
+            return MPIR_ALT_FLOAT128_ALIGN;
+#endif
         default:
+            /* FIXME: throw error */
             MPIR_Assert(0);
             return 1;
     }

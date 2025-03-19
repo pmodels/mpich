@@ -75,8 +75,8 @@ typedef struct {
     } while (0)
 
 /* long double */
-#ifdef HAVE_FLOAT128
-#define EXTERNAL_LONG_DOUBLE_TYPE __float128
+#ifdef MPIR_FLOAT128_CTYPE
+#define EXTERNAL_LONG_DOUBLE_TYPE MPIR_FLOAT128_CTYPE
 #else
 #define EXTERNAL_LONG_DOUBLE_TYPE long double
 #endif
