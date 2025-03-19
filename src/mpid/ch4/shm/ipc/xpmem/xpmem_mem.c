@@ -42,15 +42,15 @@ static void seg_free(void *seg);
  * Output parameters:
  * - vaddr: corresponding start address of the remote buffer in local
  *          virtual address space. */
-int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t handle, void **vaddr)
+int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t * handle, void **vaddr)
 {
     int mpi_errno = MPI_SUCCESS;
     /* map the true data range, assuming no data outside true_lb/true_ub */
-    void *addr = MPIR_get_contig_ptr(handle.addr, handle.true_lb);
+    void *addr = MPIR_get_contig_ptr(handle->addr, handle->true_lb);
     void *addr_out;
-    int node_rank = handle.src_lrank;
-    uintptr_t size = handle.range;
-    void *remote_vaddr = MPIR_get_contig_ptr(handle.addr, handle.true_lb);
+    int node_rank = handle->src_lrank;
+    uintptr_t size = handle->range;
+    void *remote_vaddr = MPIR_get_contig_ptr(handle->addr, handle->true_lb);
     MPIDI_XPMEMI_segmap_t *segmap = &MPIDI_XPMEMI_global.segmaps[node_rank];
     MPL_gavl_tree_t segcache = segmap->segcache_ubuf;
     MPIDI_XPMEMI_seg_t *seg = NULL;
@@ -90,6 +90,7 @@ int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t handle, void **vaddr)
         seg_low = seg->remote_align_addr;
         att_vaddr = (void *) seg->att_vaddr;
     }
+    handle->att_vaddr = att_vaddr;
 
     /* return mapped vaddr without round down */
     addr_out = (void *) ((uintptr_t) remote_vaddr - seg_low + att_vaddr);
@@ -98,17 +99,39 @@ int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t handle, void **vaddr)
                 node_rank, (uint64_t) segmap->apid, size, seg_size,
                 remote_vaddr, seg_low, (void *) att_vaddr, addr_out);
 
-    if (handle.is_contig) {
+    if (handle->is_contig) {
         /* We'll do MPIR_Typerep_unpack */
         *vaddr = addr_out;
     } else {
         /* We'll do MPIR_Localcopy */
-        *vaddr = MPIR_get_contig_ptr(addr_out, -handle.true_lb);
+        *vaddr = MPIR_get_contig_ptr(addr_out, -handle->true_lb);
     }
 
   fn_fail:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+}
+
+int MPIDI_XPMEM_ipc_handle_unmap(MPIDI_XPMEM_ipc_handle_t * handle)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ret;
+
+    MPIR_FUNC_ENTER;
+
+    /* skip unmap if cache enabled */
+    if (MPIR_CVAR_CH4_XPMEM_SEG_CACHE_ENABLE) {
+        goto fn_exit;
+    }
+
+    ret = xpmem_detach((void *) handle->att_vaddr);
+    MPIR_ERR_CHKANDJUMP(ret != 0, mpi_errno, MPI_ERR_OTHER, "**xpmem_detach");
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /*** segment cache routines ***/

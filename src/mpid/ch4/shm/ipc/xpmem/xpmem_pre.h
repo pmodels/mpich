@@ -12,6 +12,7 @@ typedef struct {
     int is_contig;
     const void *addr;
     MPI_Aint true_lb, range;
+    const void *att_vaddr;
 } MPIDI_XPMEM_ipc_handle_t;
 
 /* local struct used for query and preparing memory handle.

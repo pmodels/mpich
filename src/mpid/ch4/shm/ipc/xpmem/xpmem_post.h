@@ -89,7 +89,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_XPMEM_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t 
 int MPIDI_XPMEM_init_local(void);
 int MPIDI_XPMEM_init_world(void);
 int MPIDI_XPMEM_mpi_finalize_hook(void);
-int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t mem_handle, void **vaddr);
+int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t * mem_handle, void **vaddr);
+int MPIDI_XPMEM_ipc_handle_unmap(MPIDI_XPMEM_ipc_handle_t * handle);
 #endif
 
 #endif /* XPMEM_POST_H_INCLUDED */
