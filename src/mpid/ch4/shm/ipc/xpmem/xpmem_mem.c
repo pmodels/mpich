@@ -6,6 +6,24 @@
 #include "mpidimpl.h"
 #include "xpmem_post.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_XPMEM_SEG_CACHE_ENABLE
+      category    : CH4
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Enable mapped segment cache on receiver side to avoid mapping overhead
+        per operation.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 static MPIDI_XPMEMI_seg_t *seg_search(MPL_gavl_tree_t segcache, void *addr, uintptr_t size);
 static void seg_insert(MPL_gavl_tree_t segcache, uintptr_t seg_low, uintptr_t seg_size,
                        void *att_vaddr);
@@ -102,8 +120,10 @@ int MPIDI_XPMEMI_segtree_init(MPL_gavl_tree_t * tree)
     int mpi_errno = MPI_SUCCESS, ret;
     MPIR_FUNC_ENTER;
 
-    ret = MPL_gavl_tree_create(seg_free, tree);
-    MPIR_ERR_CHKANDJUMP(ret != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**xpmem_segtree_init");
+    if (MPIR_CVAR_CH4_XPMEM_SEG_CACHE_ENABLE) {
+        ret = MPL_gavl_tree_create(seg_free, tree);
+        MPIR_ERR_CHKANDJUMP(ret != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**xpmem_segtree_init");
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -117,8 +137,11 @@ int MPIDI_XPMEMI_segtree_finalize(MPL_gavl_tree_t tree)
     int mpi_errno = MPI_SUCCESS, ret;
     MPIR_FUNC_ENTER;
 
-    ret = MPL_gavl_tree_destroy(tree);
-    MPIR_ERR_CHKANDJUMP(ret != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**xpmem_segtree_finalize");
+    if (MPIR_CVAR_CH4_XPMEM_SEG_CACHE_ENABLE) {
+        ret = MPL_gavl_tree_destroy(tree);
+        MPIR_ERR_CHKANDJUMP(ret != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**xpmem_segtree_finalize");
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -129,17 +152,23 @@ int MPIDI_XPMEMI_segtree_finalize(MPL_gavl_tree_t tree)
 
 static MPIDI_XPMEMI_seg_t *seg_search(MPL_gavl_tree_t segcache, void *addr, uintptr_t size)
 {
-    return MPL_gavl_tree_search(segcache, addr, size);
+    if (MPIR_CVAR_CH4_XPMEM_SEG_CACHE_ENABLE) {
+        return MPL_gavl_tree_search(segcache, addr, size);
+    }
+
+    return NULL;
 }
 
 static void seg_insert(MPL_gavl_tree_t segcache, uintptr_t seg_low, uintptr_t seg_size,
                        void *att_vaddr)
 {
-    MPIDI_XPMEMI_seg_t *seg = MPL_malloc(sizeof(MPIDI_XPMEMI_seg_t), MPL_MEM_OTHER);
-    MPIR_Assert(seg != NULL);
-    seg->remote_align_addr = seg_low;
-    seg->att_vaddr = (uintptr_t) att_vaddr;
-    MPL_gavl_tree_insert(segcache, (void *) seg_low, seg_size, (void *) seg);
+    if (MPIR_CVAR_CH4_XPMEM_SEG_CACHE_ENABLE) {
+        MPIDI_XPMEMI_seg_t *seg = MPL_malloc(sizeof(MPIDI_XPMEMI_seg_t), MPL_MEM_OTHER);
+        MPIR_Assert(seg != NULL);
+        seg->remote_align_addr = seg_low;
+        seg->att_vaddr = (uintptr_t) att_vaddr;
+        MPL_gavl_tree_insert(segcache, (void *) seg_low, seg_size, (void *) seg);
+    }
 }
 
 static void seg_free(void *seg)
