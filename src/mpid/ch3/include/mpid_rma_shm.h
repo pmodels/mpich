@@ -44,184 +44,40 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
         /* The below list of datatypes is based on those specified in the MPI-3
          * standard on page 665. */
         switch (stype) {
-        case MPI_CHAR:
-            ASSIGN_COPY(src, dest, scount, char);
-
-        case MPI_SHORT:
-            ASSIGN_COPY(src, dest, scount, signed short int);
-
-        case MPI_INT:
-            ASSIGN_COPY(src, dest, scount, signed int);
-
-        case MPI_LONG:
-            ASSIGN_COPY(src, dest, scount, signed long int);
-
-        case MPI_LONG_LONG_INT:        /* covers MPI_LONG_LONG too */
-            ASSIGN_COPY(src, dest, scount, signed long long int);
-
-        case MPI_SIGNED_CHAR:
-            ASSIGN_COPY(src, dest, scount, signed char);
-
-        case MPI_UNSIGNED_CHAR:
-            ASSIGN_COPY(src, dest, scount, unsigned char);
-
-        case MPI_UNSIGNED_SHORT:
-            ASSIGN_COPY(src, dest, scount, unsigned short int);
-
-        case MPI_UNSIGNED:
-            ASSIGN_COPY(src, dest, scount, unsigned int);
-
-        case MPI_UNSIGNED_LONG:
-            ASSIGN_COPY(src, dest, scount, unsigned long int);
-
-        case MPI_UNSIGNED_LONG_LONG:
-            ASSIGN_COPY(src, dest, scount, unsigned long long int);
-
-        case MPI_FLOAT:
-            ASSIGN_COPY(src, dest, scount, float);
-
-        case MPI_DOUBLE:
-            ASSIGN_COPY(src, dest, scount, double);
-
-        case MPI_LONG_DOUBLE:
+        case MPIR_INT8:
+        case MPIR_UINT8:
+            ASSIGN_COPY(src, dest, scount, MPIR_INT8_CTYPE);
+        case MPIR_INT16:
+        case MPIR_UINT16:
+            ASSIGN_COPY(src, dest, scount, MPIR_INT16_CTYPE);
+        case MPIR_INT32:
+        case MPIR_UINT32:
+            ASSIGN_COPY(src, dest, scount, MPIR_INT32_CTYPE);
+        case MPIR_INT64:
+        case MPIR_UINT64:
+            ASSIGN_COPY(src, dest, scount, MPIR_INT64_CTYPE);
+#ifdef MPIR_INT128_CTYPE
+        case MPIR_INT128:
+        case MPIR_UINT128:
+            ASSIGN_COPY(src, dest, scount, MPIR_INT128_CTYPE);
+#endif
+#ifdef MPIR_FLOAT16_CTYPE
+        case MPIR_FLOAT16:
+            ASSIGN_COPY(src, dest, scount, MPIR_FLOAT16_CTYPE);
+#endif
+        case MPIR_FLOAT32:
+            ASSIGN_COPY(src, dest, scount, MPIR_FLOAT32_CTYPE);
+        case MPIR_FLOAT64:
+            ASSIGN_COPY(src, dest, scount, MPIR_FLOAT64_CTYPE);
+#ifdef MPIR_FLOAT128_CTYPE
+        case MPIR_FLOAT128:
+            ASSIGN_COPY(src, dest, scount, MPIR_FLOAT128_CTYPE);
+#endif
+        case MPIR_ALT_FLOAT96:
+        case MPIR_ALT_FLOAT128:
             ASSIGN_COPY(src, dest, scount, long double);
 
-#if 0
-            /* FIXME: we need a configure check to define HAVE_WCHAR_T before
-             * this can be enabled */
-        case MPI_WCHAR:
-            ASSIGN_COPY(src, dest, scount, wchar_t);
-#endif
-
-#if 0
-            /* FIXME: we need a configure check to define HAVE_C_BOOL before
-             * this can be enabled */
-        case MPI_C_BOOL:
-            ASSIGN_COPY(src, dest, scount, _Bool);
-#endif
-
-#if HAVE_INT8_T
-        case MPI_INT8_T:
-            ASSIGN_COPY(src, dest, scount, int8_t);
-#endif /* HAVE_INT8_T */
-
-#if HAVE_INT16_T
-        case MPI_INT16_T:
-            ASSIGN_COPY(src, dest, scount, int16_t);
-#endif /* HAVE_INT16_T */
-
-#if HAVE_INT32_T
-        case MPI_INT32_T:
-            ASSIGN_COPY(src, dest, scount, int32_t);
-#endif /* HAVE_INT32_T */
-
-#if HAVE_INT64_T
-        case MPI_INT64_T:
-            ASSIGN_COPY(src, dest, scount, int64_t);
-#endif /* HAVE_INT64_T */
-
-#if HAVE_UINT8_T
-        case MPI_UINT8_T:
-            ASSIGN_COPY(src, dest, scount, uint8_t);
-#endif /* HAVE_UINT8_T */
-
-#if HAVE_UINT16_T
-        case MPI_UINT16_T:
-            ASSIGN_COPY(src, dest, scount, uint16_t);
-#endif /* HAVE_UINT16_T */
-
-#if HAVE_UINT32_T
-        case MPI_UINT32_T:
-            ASSIGN_COPY(src, dest, scount, uint32_t);
-#endif /* HAVE_UINT32_T */
-
-#if HAVE_UINT64_T
-        case MPI_UINT64_T:
-            ASSIGN_COPY(src, dest, scount, uint64_t);
-#endif /* HAVE_UINT64_T */
-
-        case MPI_AINT:
-            ASSIGN_COPY(src, dest, scount, MPI_Aint);
-
-        case MPI_COUNT:
-            ASSIGN_COPY(src, dest, scount, MPI_Count);
-
-        case MPI_OFFSET:
-            ASSIGN_COPY(src, dest, scount, MPI_Offset);
-
-#if 0
-            /* FIXME: we need a configure check to define HAVE_C_COMPLEX before
-             * this can be enabled */
-        case MPI_C_COMPLEX:    /* covers MPI_C_FLOAT_COMPLEX as well */
-            ASSIGN_COPY(src, dest, scount, float _Complex);
-#endif
-
-#if 0
-            /* FIXME: we need a configure check to define HAVE_C_DOUPLE_COMPLEX
-             * before this can be enabled */
-        case MPI_C_DOUBLE_COMPLEX:
-            ASSIGN_COPY(src, dest, scount, double _Complex);
-#endif
-
-#if 0
-            /* FIXME: we need a configure check to define
-             * HAVE_C_LONG_DOUPLE_COMPLEX before this can be enabled */
-        case MPI_C_LONG_DOUBLE_COMPLEX:
-            ASSIGN_COPY(src, dest, scount, long double _Complex);
-#endif
-
-#if 0
-            /* Types that don't have a direct equivalent */
-        case MPI_BYTE:
-        case MPI_PACKED:
-#endif
-
-#if 0   /* Fortran types */
-        case MPI_INTEGER:
-        case MPI_REAL:
-        case MPI_DOUBLE_PRECISION:
-        case MPI_COMPLEX:
-        case MPI_LOGICAL:
-        case MPI_CHARACTER:
-#endif
-
-#if 0   /* C++ types */
-        case MPI_CXX_BOOL:
-        case MPI_CXX_FLOAT_COMPLEX:
-        case MPI_CXX_DOUBLE_COMPLEX:
-        case MPI_CXX_LONG_DOUBLE_COMPLEX:
-#endif
-
-#if 0   /* Optional Fortran types */
-        case MPI_DOUBLE_COMPLEX:
-        case MPI_INTEGER1:
-        case MPI_INTEGER2:
-        case MPI_INTEGER4:
-        case MPI_INTEGER8:
-        case MPI_INTEGER16:
-        case MPI_REAL2:
-        case MPI_REAL4:
-        case MPI_REAL8:
-        case MPI_REAL16:
-        case MPI_COMPLEX4:
-        case MPI_COMPLEX8:
-        case MPI_COMPLEX16:
-        case MPI_COMPLEX32:
-#endif
-
-#if 0   /* C datatypes for reduction functions */
-        case MPI_FLOAT_INT:
-        case MPI_DOUBLE_INT:
-        case MPI_LONG_INT:
-        case MPI_2INT:
-        case MPI_LONG_DOUBLE_INT:
-#endif
-
-#if 0   /* Fortran datatypes for reduction functions */
-        case MPI_2REAL:
-        case MPI_2DOUBLE_PRECISION:
-        case MPI_2INTEGER:
-#endif
+        /* FIXME: native complex types */
 
         default:
             /* Just to make sure the switch statement is not empty */
