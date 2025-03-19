@@ -27,6 +27,21 @@ int MPIDI_XPMEMI_segtree_init(MPL_gavl_tree_t * tree)
     goto fn_exit;
 }
 
+int MPIDI_XPMEMI_segtree_finalize(MPL_gavl_tree_t tree)
+{
+    int mpi_errno = MPI_SUCCESS, ret;
+    MPIR_FUNC_ENTER;
+
+    ret = MPL_gavl_tree_destroy(tree);
+    MPIR_ERR_CHKANDJUMP(ret != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**xpmem_segtree_finalize");
+
+  fn_exit:
+    MPIR_FUNC_EXIT;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* Registers a segment into cache for the specified remote buffer.
  * It internally rounds down the low address and rounds up the size to
  * ensure the cached segment is page aligned. Specific tree is given to

@@ -956,6 +956,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **xpmem_release: xpmem_release failed
 **xpmem_remove: xpmem_remove failed
 **xpmem_segtree_init: xpmem_segtree_init failed
+**xpmem_segtree_finalize: xpmem_segtree_finalize failed
 
 ## GPU related error messages
 **gpu_query_ptr: gpu_query_pointer_attr failed
