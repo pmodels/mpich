@@ -6,7 +6,6 @@
 #include "mpidimpl.h"
 #include "xpmem_post.h"
 #include "mpidu_init_shm.h"
-#include "xpmem_seg.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===

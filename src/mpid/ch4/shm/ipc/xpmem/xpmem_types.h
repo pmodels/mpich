@@ -37,4 +37,7 @@ extern MPL_dbg_class MPIDI_XPMEMI_DBG_GENERAL;
 #define XPMEM_TRACE(...) \
     MPL_DBG_MSG_FMT(MPIDI_XPMEMI_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "XPMEM "__VA_ARGS__))
 
+int MPIDI_XPMEMI_segtree_init(MPL_gavl_tree_t * tree);
+int MPIDI_XPMEMI_segtree_finalize(MPL_gavl_tree_t tree);
+
 #endif /* XPMEM_TYPES_H_INCLUDED */
