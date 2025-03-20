@@ -35,11 +35,11 @@
 #endif
 
 #ifndef BUILD_MPI_ABI
-#define MPI_VERSION    4
-#define MPI_SUBVERSION 1
+#define MPI_VERSION    5
+#define MPI_SUBVERSION 0
 #endif /* BUILD_MPI_ABI */
 
-#define MPICH_NAME     4
+#define MPICH_NAME     5
 #define MPICH         1
 #define MPICH_HAS_C2F  1
 
