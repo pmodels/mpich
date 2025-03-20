@@ -1,6 +1,8 @@
 ===============================================================================
                                Changes in 5.0
 ===============================================================================
+# MPI_VERSION/MPI_SUBVERSION updated to 5 and 0.
+
 # MPIR_CHKLMEM_ and MPIR_CHKPMEM_ macros are simplified, removing non-essential
   argument such as type case and custom error messages.
 
