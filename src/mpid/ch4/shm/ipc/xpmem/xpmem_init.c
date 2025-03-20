@@ -6,9 +6,24 @@
 #include "mpidimpl.h"
 #include "xpmem_post.h"
 #include "mpidu_init_shm.h"
-#include "xpmem_seg.h"
 
-static int xpmem_initialized = 0;
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_XPMEM_ENABLE
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        To manually disable XPMEM set to 0. The environment variable is valid only when the XPMEM
+        submodule is enabled.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 int MPIDI_XPMEM_init_local(void)
 {
@@ -75,7 +90,7 @@ int MPIDI_XPMEM_init_world(void)
     }
     MPIDU_Init_shm_barrier();
 
-    xpmem_initialized = 1;
+    MPIDI_XPMEMI_global.initialized = true;
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -89,7 +104,7 @@ int MPIDI_XPMEM_init_world(void)
      * kernel module to be loaded at runtime. If XPMEM is not available, disable its use via the
      * special CVAR value. */
     XPMEM_TRACE("init: xpmem_make failed. Disabling XPMEM support");
-    MPIR_CVAR_CH4_XPMEM_ENABLE = 0;
+    MPIDI_XPMEMI_global.initialized = false;
 
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
@@ -101,7 +116,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     int i, ret = 0;
     MPIR_FUNC_ENTER;
 
-    if (MPIDI_XPMEMI_global.segid == -1 || !xpmem_initialized) {
+    if (MPIDI_XPMEMI_global.segid == -1 || !MPIDI_XPMEMI_global.initialized) {
         /* if XPMEM was disabled at runtime, return */
         goto fn_exit;
     }
@@ -109,7 +124,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     for (i = 0; i < MPIR_Process.local_size; i++) {
         /* should be called before xpmem_release
          * MPIDI_XPMEMI_segtree_delete_all will call xpmem_detach */
-        MPL_gavl_tree_destroy(MPIDI_XPMEMI_global.segmaps[i].segcache_ubuf);
+        MPIDI_XPMEMI_segtree_finalize(MPIDI_XPMEMI_global.segmaps[i].segcache_ubuf);
         if (MPIDI_XPMEMI_global.segmaps[i].apid != -1) {
             XPMEM_TRACE("finalize: release apid: node_rank %d, 0x%lx\n",
                         i, (uint64_t) MPIDI_XPMEMI_global.segmaps[i].apid);
@@ -126,7 +141,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     /* success(0) or failure(-1) */
     MPIR_ERR_CHKANDJUMP(ret == -1, mpi_errno, MPI_ERR_OTHER, "**xpmem_remove");
 
-    xpmem_initialized = 0;
+    MPIDI_XPMEMI_global.initialized = false;
 
   fn_exit:
     MPIR_FUNC_EXIT;

@@ -5,24 +5,15 @@
 #ifndef XPMEM_POST_H_INCLUDED
 #define XPMEM_POST_H_INCLUDED
 
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 #include "ch4_impl.h"
 #include "ipc_types.h"
+#include "xpmem_types.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_CH4_XPMEM_ENABLE
-      category    : CH4
-      type        : int
-      default     : 1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        To manually disable XPMEM set to 0. The environment variable is valid only when the XPMEM
-        submodule is enabled.
-
     - name        : MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD
       category    : CH4
       type        : int
@@ -38,7 +29,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint count,
                                                       MPI_Datatype datatype,
                                                       MPIDI_IPCI_ipc_attr_t * ipc_attr)
@@ -52,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint 
     int dt_contig;
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, true_lb);
 
-    if (!MPIR_CVAR_CH4_XPMEM_ENABLE || buf == MPI_BOTTOM ||
+    if (!MPIDI_XPMEMI_global.initialized || buf == MPI_BOTTOM ||
         data_sz < MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD) {
         goto fn_exit;
     } else {
@@ -99,7 +89,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_XPMEM_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t 
 int MPIDI_XPMEM_init_local(void);
 int MPIDI_XPMEM_init_world(void);
 int MPIDI_XPMEM_mpi_finalize_hook(void);
-int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t mem_handle, void **vaddr);
+int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t * mem_handle, void **vaddr);
+int MPIDI_XPMEM_ipc_handle_unmap(MPIDI_XPMEM_ipc_handle_t * handle);
 #endif
 
 #endif /* XPMEM_POST_H_INCLUDED */

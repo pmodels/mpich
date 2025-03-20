@@ -240,12 +240,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPC_hdr * ipc_hdr,
             {
                 void *src_buf = NULL;
                 /* map */
-                mpi_errno = MPIDI_XPMEM_ipc_handle_map(ipc_hdr->ipc_handle.xpmem, &src_buf);
+                mpi_errno = MPIDI_XPMEM_ipc_handle_map(&ipc_hdr->ipc_handle.xpmem, &src_buf);
                 MPIR_ERR_CHECK(mpi_errno);
                 /* copy */
                 mpi_errno = MPIDI_IPCI_copy_data(ipc_hdr, rreq, src_buf, src_data_sz);
                 MPIR_ERR_CHECK(mpi_errno);
-                /* skip unmap */
+                /* unmap */
+                mpi_errno = MPIDI_XPMEM_ipc_handle_unmap(&ipc_hdr->ipc_handle.xpmem);
+                MPIR_ERR_CHECK(mpi_errno);
             }
             break;
 #endif

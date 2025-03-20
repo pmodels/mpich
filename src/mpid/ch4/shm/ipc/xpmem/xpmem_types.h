@@ -26,6 +26,7 @@ typedef struct {
     xpmem_segid_t segid;        /* my local segid associated with entire address space */
     MPIDI_XPMEMI_segmap_t *segmaps;     /* remote seg info for every local processes. */
     size_t sys_page_sz;
+    bool initialized;
 } MPIDI_XPMEMI_global_t;
 
 extern MPIDI_XPMEMI_global_t MPIDI_XPMEMI_global;
@@ -35,5 +36,8 @@ extern MPL_dbg_class MPIDI_XPMEMI_DBG_GENERAL;
 #endif
 #define XPMEM_TRACE(...) \
     MPL_DBG_MSG_FMT(MPIDI_XPMEMI_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "XPMEM "__VA_ARGS__))
+
+int MPIDI_XPMEMI_segtree_init(MPL_gavl_tree_t * tree);
+int MPIDI_XPMEMI_segtree_finalize(MPL_gavl_tree_t tree);
 
 #endif /* XPMEM_TYPES_H_INCLUDED */
