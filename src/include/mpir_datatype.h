@@ -782,13 +782,13 @@ MPL_STATIC_INLINE_PREFIX bool MPIR_op_dt_check(MPI_Op op, MPI_Datatype dt)
         MPIR_Assert(dt_ptr);
         switch (dt_ptr->contents->combiner) {
             case MPI_COMBINER_F90_INTEGER:
-                dt_group = MPIR_TYPE_SIGNED;
+                dt_group = MPIR_DT_GROUP_FORTRAN_INTEGER;
                 break;
             case MPI_COMBINER_F90_REAL:
-                dt_group = MPIR_TYPE_FLOAT;
+                dt_group = MPIR_DT_GROUP_FLOATING_POINT;
                 break;
             case MPI_COMBINER_F90_COMPLEX:
-                dt_group = MPIR_TYPE_COMPLEX;
+                dt_group = MPIR_DT_GROUP_COMPLEX;
                 break;
         }
     }
