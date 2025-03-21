@@ -551,7 +551,6 @@ cvars:
 
 static int update_global_limits(struct fi_info *prov);
 static void dump_global_settings(void);
-static int create_vci_context(int vci, int nic);
 static int destroy_vci_context(int vci, int nic);
 static int ofi_pvar_init(void);
 
@@ -641,24 +640,6 @@ static void host_free_registered(void *ptr)
     MPL_free(ptr);
 }
 
-static void set_sep_counters(int nic)
-{
-    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-#ifdef MPIDI_OFI_VNI_USE_DOMAIN
-        /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
-        int num_ctx_per_nic = 1;
-#else
-        /* the actual needed number of vcis is not known yet. Use the CVAR. */
-        int num_ctx_per_nic = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
-#endif
-        int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[nic]->domain_attr->tx_ctx_cnt,
-                                  MPIDI_OFI_global.prov_use[nic]->domain_attr->rx_ctx_cnt);
-        num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
-        MPIDI_OFI_global.prov_use[nic]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
-        MPIDI_OFI_global.prov_use[nic]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
-    }
-}
-
 int MPIDI_OFI_init_local(int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -726,6 +707,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = ofi_pvar_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIDI_OFI_vci_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* -------------------------------- */
     /* Set up the libfabric provider(s) */
     /* -------------------------------- */
@@ -733,8 +717,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* WB TODO - I assume that after this function is done, there will be an array of providers in
      * MPIDI_OFI_global.prov_use that will map to the VNI contexts below. We can also use it to
      * generate the addresses in the business card exchange. */
-    MPIDI_OFI_global.num_nics = 1;
-
     struct fi_info *prov = NULL;
     mpi_errno = MPIDI_OFI_find_provider(&prov);
     MPIR_ERR_CHECK(mpi_errno);
@@ -743,9 +725,22 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_init_multi_nic(prov);
     MPIR_ERR_CHECK(mpi_errno);
 
-    for (int i = 0; i < MPIDI_OFI_global.num_nics; i++) {
-        /* if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS, set rx_ctx_cnt and tx_ctx_cnt */
-        set_sep_counters(i);
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+        /* Note: currently we request a single tx and rx ctx under MPIDI_OFI_VNI_USE_DOMAIN */
+        int num_ctx_per_nic = 1;
+#else
+        /* the actual needed number of vcis is not known yet. Use the CVAR. */
+        int num_ctx_per_nic = MPIR_CVAR_CH4_NUM_VCIS + MPIR_CVAR_CH4_RESERVE_VCIS;
+#endif
+        int max_by_prov = MPL_MIN(MPIDI_OFI_global.prov_use[0]->domain_attr->tx_ctx_cnt,
+                                  MPIDI_OFI_global.prov_use[0]->domain_attr->rx_ctx_cnt);
+        num_ctx_per_nic = MPL_MIN(num_ctx_per_nic, max_by_prov);
+        for (int i = 0; i < MPIDI_OFI_global.num_nics; i++) {
+            /* set rx_ctx_cnt and tx_ctx_cnt in ep_attr */
+            MPIDI_OFI_global.prov_use[i]->ep_attr->tx_ctx_cnt = num_ctx_per_nic;
+            MPIDI_OFI_global.prov_use[i]->ep_attr->rx_ctx_cnt = num_ctx_per_nic;
+        }
     }
 
     mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
@@ -772,12 +767,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     /* Create transport level communication contexts.                           */
     /* ------------------------------------------------------------------------ */
 
-    /* set rx_ctx_cnt and tx_ctx_cnt for nic 0 */
-    set_sep_counters(0);
-
     /* Creating the context for vci 0 and nic 0.
      * This code maybe moved to a later stage */
-    mpi_errno = create_vci_context(0, 0);
+    mpi_errno = MPIDI_OFI_create_vci_context(0, 0);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* index datatypes for RMA atomics. */
@@ -813,120 +805,11 @@ int MPIDI_OFI_init_world(void)
     goto fn_exit;
 }
 
-static int check_num_nics(void);
-static int setup_additional_vcis(void);
-
-int MPIDI_OFI_init_vcis(int num_vcis, int *num_vcis_actual)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* Multiple vci without using domain require MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS */
-#ifndef MPIDI_OFI_VNI_USE_DOMAIN
-    MPIR_Assert(num_vcis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
-#endif
-
-    MPIDI_OFI_global.num_vcis = num_vcis;
-
-    /* All processes must have the same number of NICs */
-    mpi_errno = check_num_nics();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* may update MPIDI_OFI_global.num_vcis */
-    mpi_errno = setup_additional_vcis();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    *num_vcis_actual = MPIDI_OFI_global.num_vcis;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIDI_OFI_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
     return mpi_errno;
-}
-
-static int check_num_nics(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    int num_nics = MPIDI_OFI_global.num_nics;
-    int tmp_num_vcis = MPIDI_OFI_global.num_vcis;
-    int tmp_num_nics = MPIDI_OFI_global.num_nics;
-
-    /* Set the number of NICs and VNIs to 1 temporarily to avoid problems during the collective */
-    MPIDI_OFI_global.num_vcis = MPIDI_OFI_global.num_nics = 1;
-
-    /* Confirm that all processes have the same number of NICs */
-    mpi_errno = MPIR_Allreduce_allcomm_auto(&tmp_num_nics, &num_nics, 1, MPIR_INT_INTERNAL,
-                                            MPI_MIN, MPIR_Process.comm_world, MPIR_ERR_NONE);
-    MPIDI_OFI_global.num_vcis = tmp_num_vcis;
-    MPIDI_OFI_global.num_nics = tmp_num_nics;
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* If the user did not ask to fallback to fewer NICs, throw an error if someone is missing a
-     * NIC. */
-    if (tmp_num_nics != num_nics) {
-        if (MPIR_CVAR_OFI_USE_MIN_NICS) {
-            MPIDI_OFI_global.num_nics = num_nics;
-
-            /* If we fall down to 1 nic, turn off multi-nic optimizations. */
-            if (num_nics == 1) {
-                MPIDI_OFI_COMM(MPIR_Process.comm_world).enable_striping = 0;
-            }
-        } else {
-            MPIR_ERR_CHKANDJUMP(num_nics != MPIDI_OFI_global.num_nics, mpi_errno, MPI_ERR_OTHER,
-                                "**ofi_num_nics");
-        }
-    }
-
-    /* FIXME: It would also be helpful to check that all of the NICs can communicate so we can fall
-     * back to other options if that is not the case (e.g., verbs are often configured with a
-     * different subnet for each "set" of nics). It's unknown how to write a good check for that. */
-
-    /* set rx_ctx_cnt and tx_ctx_cnt for the remaining (non-0) nics */
-    for (int nic = 1; nic < MPIDI_OFI_global.num_nics; nic++) {
-        set_sep_counters(nic);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int setup_additional_vcis(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    for (int vci = 0; vci < MPIDI_OFI_global.num_vcis; vci++) {
-        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
-            /* vci 0 nic 0 already created */
-            if (vci > 0 || nic > 0) {
-                mpi_errno = create_vci_context(vci, nic);
-                if (mpi_errno != MPI_SUCCESS) {
-                    /* running out of vcis, reduce MPIDI_OFI_global.num_vcis */
-                    if (vci > 0) {
-                        MPIDI_OFI_global.num_vcis = vci;
-                        /* FIXME: destroy already created vci_context */
-                        mpi_errno = MPI_SUCCESS;
-                        goto fn_exit;
-                    } else {
-                        MPIR_ERR_CHECK(mpi_errno);
-                    }
-                }
-            }
-        }
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* static functions needed by finalize */
@@ -939,7 +822,7 @@ static int flush_send(int dst, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 {
     int mpi_errno = MPI_SUCCESS;
 
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, dst), nic, vci);
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, dst), vci, nic, vci, nic);
     static int data = 0;
     uint64_t match_bits =
         MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0, MPIDI_OFI_FLUSH_TAG);
@@ -970,7 +853,7 @@ static int flush_recv(int src, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 {
     int mpi_errno = MPI_SUCCESS;
 
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, src), nic, vci);
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, src), vci, nic, vci, nic);
     uint64_t mask_bits = 0;
     uint64_t match_bits =
         MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0, MPIDI_OFI_FLUSH_TAG);
@@ -1112,6 +995,13 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         fi_freeinfo(MPIDI_OFI_global.prov_use[i]);
     }
 
+    /* free av entries for multiple vcis and nics */
+    for (i = 0; i < MPIR_Process.size; i++) {
+        MPIDI_av_entry_t *av = &MPIDIU_get_av(0, i);
+        MPL_free(MPIDI_OFI_AV(av).all_dest);
+        MPIDI_OFI_AV(av).all_dest = NULL;
+    }
+
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
 
     if (MPIDI_OFI_ENABLE_AM) {
@@ -1182,7 +1072,7 @@ static int create_sep_tx(struct fid_ep *ep, int idx, struct fid_ep **p_tx,
                          struct fid_cq *cq, struct fid_cntr *cntr, int nic);
 static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx, struct fid_cq *cq,
                          int nic);
-static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av, int nic);
+static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av);
 static int open_local_av(struct fid_domain *p_domain, struct fid_av **p_av);
 
 /* This function creates a vci context which includes all of the OFI-level objects needed to
@@ -1193,7 +1083,7 @@ static int open_local_av(struct fid_domain *p_domain, struct fid_av **p_av);
  *
  * Each nic will restart its vci indexing. This allows each VNI to use any nic if desired.
  */
-static int create_vci_context(int vci, int nic)
+int MPIDI_OFI_create_vci_context(int vci, int nic)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1416,7 +1306,7 @@ static int create_vci_domain(struct fid_domain **p_domain, struct fid_av **p_av,
      * Otherwise, set MPIDI_OFI_global.got_named_av and
      * copy the map_addr.
      */
-    if (MPIR_CVAR_CH4_OFI_ENABLE_SHARED_AV && try_open_shared_av(domain, p_av, nic)) {
+    if (MPIR_CVAR_CH4_OFI_ENABLE_SHARED_AV && nic == 0 && try_open_shared_av(domain, p_av)) {
         MPIDI_OFI_global.got_named_av = 1;
     } else {
         mpi_errno = open_local_av(domain, p_av);
@@ -1521,14 +1411,10 @@ static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx, struc
     goto fn_exit;
 }
 
-static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av, int nic)
+static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
 {
     int ret = 0;
 
-    /* It's not possible to use shared address vectors with more than one domain in a single
-     * process. If we're trying to do that (for example if we are using MPIDI_OFI_VNI_USE_DOMAIN or
-     * we have multiple VNIs because of multi-nic), attempt to open up the shared AV in one VNI and
-     * then copy the results to the others later. */
     struct fi_av_attr av_attr;
     memset(&av_attr, 0, sizeof(av_attr));
     if (MPIDI_OFI_ENABLE_AV_TABLE) {
@@ -1551,7 +1437,7 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av, i
         /* directly references the mapped fi_addr_t array instead               */
         fi_addr_t *mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (int i = 0; i < MPIR_Process.size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[nic][0] = mapped_table[i];
+            MPIDI_OFI_AV_ADDR_ROOT(&MPIDIU_get_av(0, i)) = mapped_table[i];
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%" PRIu64,
                              i, (void *) &MPIDIU_get_av(0, i), mapped_table[i]));

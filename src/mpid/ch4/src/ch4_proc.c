@@ -164,7 +164,7 @@ int MPIDIU_avt_init(void)
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
     size_t table_size = sizeof(MPIDI_av_table_t) + size * sizeof(MPIDI_av_entry_t);
-    MPIDI_global.avt_mgr.av_table0 = (MPIDI_av_table_t *) MPL_malloc(table_size, MPL_MEM_ADDRESS);
+    MPIDI_global.avt_mgr.av_table0 = MPL_calloc(1, table_size, MPL_MEM_ADDRESS);
     MPIR_Assert(MPIDI_global.avt_mgr.av_table0);
 
 #if MPIDI_CH4_AVTABLE_USE_DDR
