@@ -30,6 +30,7 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
 
     switch (MPIR_DATATYPE_GET_RAW_INTERNAL(type)) {
         case MPIR_INT8:
+        case MPIR_FORTRAN_LOGICAL8:
             yaksa_type = YAKSA_TYPE__INT8_T;
             break;
 
@@ -43,6 +44,7 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
             break;
 
         case MPIR_INT16:
+        case MPIR_FORTRAN_LOGICAL16:
             yaksa_type = YAKSA_TYPE__INT16_T;
             break;
 
@@ -52,11 +54,13 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
 
         case MPIR_FIXED16:
         case MPIR_FLOAT16:
+        case MPIR_BFLOAT16:
         case MPIR_COMPLEX8:
             yaksa_type = TYPEREP_YAKSA_TYPE__FIXED2;
             break;
 
         case MPIR_INT32:
+        case MPIR_FORTRAN_LOGICAL32:
             yaksa_type = YAKSA_TYPE__INT32_T;
             break;
 
@@ -70,6 +74,7 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
             break;
 
         case MPIR_INT64:
+        case MPIR_FORTRAN_LOGICAL64:
             yaksa_type = YAKSA_TYPE__INT64_T;
             break;
 
@@ -111,6 +116,7 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
         case MPIR_INT128:
         case MPIR_UINT128:
         case MPIR_FLOAT128:
+        case MPIR_FORTRAN_LOGICAL128:
             yaksa_type = TYPEREP_YAKSA_TYPE__FIXED16;
             break;
 

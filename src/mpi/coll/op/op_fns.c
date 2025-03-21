@@ -11,6 +11,9 @@
 
 #define MPIR_LSUM(a,b) ((a)+(b))
 
+static void bfloat16_sum(void *invec, void *inoutvec, MPI_Aint len);
+static void f16_sum(void *invec, void *inoutvec, MPI_Aint len);
+
 void MPIR_SUM(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
 {
     MPI_Aint i, len = *Len;
@@ -35,6 +38,14 @@ void MPIR_SUM(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * type)
             break;                                         \
         }
                 MPIR_OP_TYPE_GROUP(COMPLEX)
+        case MPIR_BFLOAT16:
+            bfloat16_sum(invec, inoutvec, len);
+            break;
+#ifndef MPIR_FLOAT16_CTYPE
+        case MPIR_FLOAT16:
+            f16_sum(invec, inoutvec, len);
+            break;
+#endif
         default:
             MPIR_Assert(0);
             break;
@@ -441,4 +452,76 @@ void MPIR_REPLACE(void *invec, void *inoutvec, MPI_Aint * Len, MPI_Datatype * ty
     return;
   fn_fail:
     goto fn_exit;
+}
+
+/* -- internal static routines -- */
+
+/* BFloat16 - software arithemetics
+ * TODO: add hardware support, e.g. via AVX512 intrinsics
+ */
+static float bfloat16_load(void *p)
+{
+    uint32_t u = ((uint32_t) (*(uint16_t *) p) << 16);
+    float v;
+    memcpy(&v, &u, sizeof(float));
+    return v;
+}
+
+static void bfloat16_store(void *p, float v)
+{
+    uint32_t u;
+    memcpy(&u, &v, sizeof(float));
+    if (u & 0x8000) {
+        /* round up */
+        *(uint16_t *) p = (u >> 16) + 1;
+    } else {
+        /* truncation */
+        *(uint16_t *) p = (u >> 16);
+    }
+
+}
+
+static void bfloat16_sum(void *invec, void *inoutvec, MPI_Aint len)
+{
+    for (MPI_Aint i = 0; i < len * 2; i += 2) {
+        float a = bfloat16_load((char *) inoutvec + i);
+        float b = bfloat16_load((char *) invec + i);
+        bfloat16_store((char *) inoutvec + i, a + b);
+    }
+}
+
+/* IEEE half-precision 16-bit float - software arithemetics
+ */
+static float f16_load(void *p)
+{
+    uint16_t a = *(uint16_t *) p;
+    /* expand exponent from 5 bit to 8 bit, fraction from 10 bit to 23 bit */
+    uint32_t u = ((uint32_t) ((a & 0x8000) | ((((a & 0x3c00) >> 10) + 0x70) << 7)) << 16) |
+        ((uint32_t) (a & 0x3ff) << 13);
+    float v;
+    memcpy(&v, &u, sizeof(float));
+    return v;
+}
+
+static void f16_store(void *p, float v)
+{
+    uint32_t u;
+    memcpy(&u, &v, sizeof(float));
+    /* shrink exponent from 8 bit to 5 bit, fraction from 23 bit to 10 bit */
+    uint16_t a = ((u & 0x80000000) >> 16) | ((((u & 0x7f800000) >> 23) - 0x70) << 10) |
+        ((u & 0x7fffff) >> 16);
+    if (u & 0x1000) {
+        /* round up */
+        a += 1;
+    }
+    *(uint16_t *) p = a;
+}
+
+static void f16_sum(void *invec, void *inoutvec, MPI_Aint len)
+{
+    for (MPI_Aint i = 0; i < len * 2; i += 2) {
+        float a = f16_load((char *) inoutvec + i);
+        float b = f16_load((char *) invec + i);
+        f16_store((char *) inoutvec + i, a + b);
+    }
 }

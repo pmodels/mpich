@@ -2730,19 +2730,6 @@ if test "$MPID_NO_LONG_LONG" != "yes" ; then
         AC_DEFINE(HAVE_LONG_LONG_INT,1,[Define if long long is supported])
     fi
 fi
-# Add HAVE_FLOAT16 detection
-if test "$MPID_NO_FLOAT16" != "yes" ; then
-    AC_CACHE_CHECK([whether _Float16 is supported],
-    pac_cv_have_float16,[
-    # The compiler might optimize out _Float16 usage and give a false
-    # positive for this test (observed with clang 6 on Linux with -O2).
-    # We use volatile as a way to disable optimizations.
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([],[volatile _Float16 a=1; return (int)a;])],
-    pac_cv_have_float16=yes,pac_cv_have_float16=no)])
-    if test "$pac_cv_have_float16" = "yes" ; then
-        AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
-    fi
-fi
 
 # ----------------------------------------------------------------------------
 AC_CHECK_ALIGNOF([max_align_t],[0],[#include <stddef.h>])
@@ -2788,29 +2775,12 @@ AC_CHECK_SIZEOF(wchar_t, 0, [
 #endif
 ])
 
-AC_CHECK_SIZEOF(__float128, 0)
-if test "$ac_cv_sizeof___float128" = "16" ; then
-    AC_DEFINE(HAVE_FLOAT128, 1, [Define if __float128 is supported])
-fi
-
 AC_CHECK_SIZEOF(float_int, 0, [typedef struct { float a; int b; } float_int; ])
 AC_CHECK_SIZEOF(double_int, 0, [typedef struct { double a; int b; } double_int; ])
 AC_CHECK_SIZEOF(long_int, 0, [typedef struct { long a; int b; } long_int; ])
 AC_CHECK_SIZEOF(short_int, 0, [typedef struct { short a; int b; } short_int; ])
 AC_CHECK_SIZEOF(two_int, 0, [typedef struct { int a; int b; } two_int; ])
 AC_CHECK_SIZEOF(long_double_int, 0, [typedef struct { long double a; int b;} long_double_int; ])
-
-# alignments for basic types
-AC_CHECK_ALIGNOF(char)
-AC_CHECK_ALIGNOF(float)
-AC_CHECK_ALIGNOF(double)
-AC_CHECK_ALIGNOF(long)
-AC_CHECK_ALIGNOF(long long)
-AC_CHECK_ALIGNOF(long double)
-AC_CHECK_ALIGNOF(short)
-AC_CHECK_ALIGNOF(int)
-AC_CHECK_ALIGNOF(bool)
-AC_CHECK_ALIGNOF(wchar_t)
 
 # sys/bitypes.h defines the int16_t etc. on some systems (e.g., OSF1).
 # Include it when testing for these types
@@ -2828,37 +2798,6 @@ AC_CHECK_SIZEOF(uint8_t)
 AC_CHECK_SIZEOF(uint16_t)
 AC_CHECK_SIZEOF(uint32_t)
 AC_CHECK_SIZEOF(uint64_t)
-
-AC_CHECK_ALIGNOF(int8_t)
-AC_CHECK_ALIGNOF(int16_t)
-AC_CHECK_ALIGNOF(int32_t)
-AC_CHECK_ALIGNOF(int64_t)
-
-if test "$ac_cv_sizeof_int8_t" -eq 1 ; then
-    AC_DEFINE(HAVE_INT8_T,1,[Define if int8_t is supported by the C compiler])
-fi
-if test "$ac_cv_sizeof_int16_t" -eq 2 ; then
-    AC_DEFINE(HAVE_INT16_T,1,[Define if int16_t is supported by the C compiler])
-fi
-if test "$ac_cv_sizeof_int32_t" -eq 4 ; then
-    AC_DEFINE(HAVE_INT32_T,1,[Define if int32_t is supported by the C compiler])
-fi
-if test "$ac_cv_sizeof_int64_t" -eq 8 ; then
-    AC_DEFINE(HAVE_INT64_T,1,[Define if int64_t is supported by the C compiler])
-fi
-
-if test "$ac_cv_sizeof_uint8_t" -eq 1 ; then
-    AC_DEFINE(HAVE_UINT8_T,1,[Define if uint8_t is supported by the C compiler])
-fi
-if test "$ac_cv_sizeof_uint16_t" -eq 2 ; then
-    AC_DEFINE(HAVE_UINT16_T,1,[Define if uint16_t is supported by the C compiler])
-fi
-if test "$ac_cv_sizeof_uint32_t" -eq 4 ; then
-    AC_DEFINE(HAVE_UINT32_T,1,[Define if uint32_t is supported by the C compiler])
-fi
-if test "$ac_cv_sizeof_uint64_t" -eq 8 ; then
-    AC_DEFINE(HAVE_UINT64_T,1,[Define if uint64_t is supported by the C compiler])
-fi
 
 # Other C99 types.
 AC_CHECK_HEADERS([stdbool.h complex.h])
@@ -2884,7 +2823,6 @@ AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
 #endif
   ])
 ])
-AC_CHECK_SIZEOF([_Float16])
 
 # we need really could just use the result of AC_CHECK_SIZEOF, but having a
 # HAVE_typename macro is useful for consistency
@@ -2912,57 +2850,105 @@ template and manually set the correct values.])
     fi
 done
 
-# Generate _CTYPE for internal types
+# Generate _CTYPE and _ALIGN for internal types
 
-for i in 1 2 4 8 16 ; do
-    AC_MSG_CHECKING([for C type matching $i-byte integer])
-    get_c_int_type $i
-    AC_MSG_RESULT($pac_retval)
-    if test $pac_retval != "unavailable" ; then
-        len=`expr $i \* 8`
-        AC_DEFINE_UNQUOTED([MPIR_INT${len}_CTYPE],[$pac_retval], [The C type for MPIR_INT${len}])
-        AC_DEFINE_UNQUOTED([MPIR_UINT${len}_CTYPE],[$pac_retval], [The C type for MPIR_UINT${len}])
-    fi
-done
+if test "$ac_cv_sizeof_int8_t" -eq 1 ; then
+    AC_DEFINE_UNQUOTED([MPIR_INT8_CTYPE],[int8_t], [The C type for MPIR_INT8])
+    AC_DEFINE_UNQUOTED([MPIR_UINT8_CTYPE],[uint8_t], [The C type for MPIR_UINT8])
+    AC_CHECK_ALIGNOF(int8_t)
+    AC_DEFINE_UNQUOTED([MPIR_INT8_ALIGN],[$ac_cv_alignof_int8_t], [The alignment for MPIR_INT8])
+fi
 
-for i in 2 4 8 16; do
-    AC_MSG_CHECKING([for C type matching $i-byte float])
-    get_c_float_type $i
-    AC_MSG_RESULT($pac_retval)
-    if test $pac_retval != "unavailable" ; then
-        len=`expr $i \* 8`
-        AC_DEFINE_UNQUOTED([MPIR_FLOAT${len}_CTYPE],[$pac_retval], [The C type for MPIR_FLOAT${len}])
+if test "$ac_cv_sizeof_int16_t" -eq 2 ; then
+    AC_DEFINE_UNQUOTED([MPIR_INT16_CTYPE],[int16_t], [The C type for MPIR_INT16])
+    AC_DEFINE_UNQUOTED([MPIR_UINT16_CTYPE],[uint16_t], [The C type for MPIR_UINT16])
+    AC_CHECK_ALIGNOF(int16_t)
+    AC_DEFINE_UNQUOTED([MPIR_INT16_ALIGN],[$ac_cv_alignof_int16_t], [The alignment for MPIR_INT16])
+fi
+
+if test "$ac_cv_sizeof_int32_t" -eq 4 ; then
+    AC_DEFINE_UNQUOTED([MPIR_INT32_CTYPE],[int32_t], [The C type for MPIR_INT32])
+    AC_DEFINE_UNQUOTED([MPIR_UINT32_CTYPE],[uint32_t], [The C type for MPIR_UINT32])
+    AC_CHECK_ALIGNOF(int32_t)
+    AC_DEFINE_UNQUOTED([MPIR_INT32_ALIGN],[$ac_cv_alignof_int32_t], [The alignment for MPIR_INT32])
+fi
+
+if test "$ac_cv_sizeof_int64_t" -eq 8 ; then
+    AC_DEFINE_UNQUOTED([MPIR_INT64_CTYPE],[int64_t], [The C type for MPIR_INT64])
+    AC_DEFINE_UNQUOTED([MPIR_UINT64_CTYPE],[uint64_t], [The C type for MPIR_UINT64])
+    AC_CHECK_ALIGNOF(int64_t)
+    AC_DEFINE_UNQUOTED([MPIR_INT64_ALIGN],[$ac_cv_alignof_int64_t], [The alignment for MPIR_INT64])
+fi
+
+if test "$MPID_NO_INT128" != "yes" ; then
+    AC_CHECK_SIZEOF(__int128)
+    if test "$ac_cv_sizeof___int128" -eq 16 ; then
+        AC_DEFINE_UNQUOTED([MPIR_INT128_CTYPE],[__int128], [The C type for MPIR_INT128])
+        AC_DEFINE_UNQUOTED([MPIR_UINT128_CTYPE],[unsigned __int128], [The C type for MPIR_UINT128])
+        AC_CHECK_ALIGNOF(__int128)
+        AC_DEFINE_UNQUOTED([MPIR_INT128_ALIGN],[$ac_cv_alignof___int128], [The alignment for MPIR_INT128])
     fi
-done
+fi
+
+if test "$MPID_NO_FLOAT16" != "yes" ; then
+    AC_CHECK_SIZEOF(_Float16)
+    AC_CHECK_SIZEOF(__fp16)
+    if test "$ac_cv_sizeof__Float16" -eq 2 ; then
+        AC_DEFINE_UNQUOTED([MPIR_FLOAT16_CTYPE],[_Float16], [The C type for MPIR_FLOAT16])
+        AC_CHECK_ALIGNOF(_Float16)
+        AC_DEFINE_UNQUOTED([MPIR_FLOAT16_ALIGN],[$ac_cv_alignof__Float16], [The alignment for MPIR_FLOAT16])
+    elif test "$ac_cv_sizeof___fp16" -eq 2 ; then
+        # enable it on ARM with -mfp16-format
+        AC_DEFINE_UNQUOTED([MPIR_FLOAT16_CTYPE],[__fp16], [The C type for MPIR_FLOAT16])
+        AC_CHECK_ALIGNOF(__fp16)
+        AC_DEFINE_UNQUOTED([MPIR_FLOAT16_ALIGN],[$ac_cv_alignof___fp16], [The alignment for MPIR_FLOAT16])
+    fi
+fi
+
+if test "$ac_cv_sizeof_float" -eq 4 ; then
+    AC_DEFINE_UNQUOTED([MPIR_FLOAT32_CTYPE],[float], [The C type for MPIR_FLOAT32])
+    AC_CHECK_ALIGNOF(float)
+    AC_DEFINE_UNQUOTED([MPIR_FLOAT32_ALIGN],[$ac_cv_alignof_float], [The alignment for MPIR_FLOAT32])
+fi
+
+if test "$ac_cv_sizeof_double" -eq 8 ; then
+    AC_DEFINE_UNQUOTED([MPIR_FLOAT64_CTYPE],[double], [The C type for MPIR_FLOAT64])
+    AC_CHECK_ALIGNOF(double)
+    AC_DEFINE_UNQUOTED([MPIR_FLOAT64_ALIGN],[$ac_cv_alignof_double], [The alignment for MPIR_FLOAT64])
+fi
+
+if test "$MPID_NO_FLOAT128" != "yes" ; then
+    AC_CHECK_SIZEOF(__float128)
+    if test "$ac_cv_sizeof___float128" -eq 16 ; then
+        AC_DEFINE_UNQUOTED([MPIR_FLOAT128_CTYPE],[__float128], [The C type for MPIR_FLOAT128])
+        AC_CHECK_ALIGNOF(__float128)
+        AC_DEFINE_UNQUOTED([MPIR_FLOAT128_ALIGN],[$ac_cv_alignof___float128], [The alignment for MPIR_FLOAT64])
+    fi
+fi
 
 if test "$ac_cv_sizeof_long_double" -gt 0 ; then
     len=`expr $ac_cv_sizeof_long_double \* 8`
     AC_DEFINE_UNQUOTED([MPIR_ALT_FLOAT${len}_CTYPE],[long double], [The C type for MPIR_ALT_FLOAT${len}])
+    AC_CHECK_ALIGNOF(long double)
+    AC_DEFINE_UNQUOTED([MPIR_ALT_FLOAT${len}_ALIGN],[$ac_cv_alignof_long_double], [The alignment for MPIR_ALT_FLOAT${len}])
+fi
+
+if test "$ac_cv_sizeof_float__Complex" -eq 8 ; then
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX32_CTYPE], [float _Complex], [The C type for MPIR_COMPLEX32])
+fi
+if test "$ac_cv_sizeof_double__Complex" -eq 16 ; then
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX64_CTYPE], [double _Complex], [The C type for MPIR_COMPLEX64])
+fi
+if test "$ac_cv_sizeof_long_double__Complex" -gt 0 ; then
+    len=`expr $ac_cv_sizeof_long_double \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_ALT_COMPLEX${len}_CTYPE], [long double _Complex], [The C type for MPIR_ALT_COMPLEX${len}])
 fi
 
 # autoheader won't recognize keys with variable expansion, so -
-AH_TEMPLATE([MPIR_INT8_CTYPE], [The C type for MPIR_INT8])
-AH_TEMPLATE([MPIR_INT16_CTYPE], [The C type for MPIR_INT16])
-AH_TEMPLATE([MPIR_INT32_CTYPE], [The C type for MPIR_INT32])
-AH_TEMPLATE([MPIR_INT64_CTYPE], [The C type for MPIR_INT64])
-AH_TEMPLATE([MPIR_INT128_CTYPE], [The C type for MPIR_INT128])
-AH_TEMPLATE([MPIR_UINT8_CTYPE], [The C type for MPIR_UINT8])
-AH_TEMPLATE([MPIR_UINT16_CTYPE], [The C type for MPIR_UINT16])
-AH_TEMPLATE([MPIR_UINT32_CTYPE], [The C type for MPIR_UINT32])
-AH_TEMPLATE([MPIR_UINT64_CTYPE], [The C type for MPIR_UINT64])
-AH_TEMPLATE([MPIR_UINT128_CTYPE], [The C type for MPIR_UINT128])
-AH_TEMPLATE([MPIR_FLOAT8_CTYPE], [The C type for MPIR_FLOAT8])
-AH_TEMPLATE([MPIR_FLOAT16_CTYPE], [The C type for MPIR_FLOAT16])
-AH_TEMPLATE([MPIR_FLOAT32_CTYPE], [The C type for MPIR_FLOAT32])
-AH_TEMPLATE([MPIR_FLOAT64_CTYPE], [The C type for MPIR_FLOAT64])
-AH_TEMPLATE([MPIR_FLOAT128_CTYPE], [The C type for MPIR_FLOAT128])
 AH_TEMPLATE([MPIR_ALT_FLOAT96_CTYPE], [The C type for MPIR_ALT_FLOAT96])
 AH_TEMPLATE([MPIR_ALT_FLOAT128_CTYPE], [The C type for MPIR_ALT_FLOAT128])
-dnl optionally define the following to use C native complex types in reduction op
-AH_TEMPLATE([MPIR_COMPLEX16_CTYPE], [The C type for MPIR_COMPLEX16])
-AH_TEMPLATE([MPIR_COMPLEX32_CTYPE], [The C type for MPIR_COMPLEX32])
-AH_TEMPLATE([MPIR_COMPLEX64_CTYPE], [The C type for MPIR_COMPLEX64])
-AH_TEMPLATE([MPIR_COMPLEX128_CTYPE], [The C type for MPIR_COMPLEX128])
+AH_TEMPLATE([MPIR_ALT_FLOAT96_ALIGN], [The alignment for MPIR_ALT_FLOAT96])
+AH_TEMPLATE([MPIR_ALT_FLOAT128_ALIGN], [The alignment for MPIR_ALT_FLOAT128])
 AH_TEMPLATE([MPIR_ALT_COMPLEX96_CTYPE], [The C type for MPIR_ALT_COMPLEX96])
 AH_TEMPLATE([MPIR_ALT_COMPLEX128_CTYPE], [The C type for MPIR_ALT_COMPLEX128])
 
@@ -3495,53 +3481,87 @@ AC_DEFINE_UNQUOTED([MPIR_2INT_INTERNAL],          [MPIR_2INT$len], [Internal typ
 AC_DEFINE_UNQUOTED([MPIR_SIGNED_CHAR_INTERNAL],   [MPIR_INT8], [Internal type for MPI_SIGNED_CHAR])
 len=`expr $ac_cv_sizeof_long_long \* 8`
 AC_DEFINE_UNQUOTED([MPIR_UNSIGNED_LONG_LONG_INTERNAL],[MPIR_INT$len], [Internal type for MPI_UNSIGNED_LONG_LONG])
-len=`expr $pac_cv_f77_sizeof_character \* 8`
-AC_DEFINE_UNQUOTED([MPIR_CHARACTER_INTERNAL],     [MPIR_INT$len], [Internal type for MPI_CHARACTER])
-len=`expr $pac_cv_f77_sizeof_integer \* 8`
-AC_DEFINE_UNQUOTED([MPIR_INTEGER_INTERNAL],       [MPIR_INT$len], [Internal type for MPI_INTEGER])
-len=`expr $pac_cv_f77_sizeof_real \* 8`
-AC_DEFINE_UNQUOTED([MPIR_REAL_INTERNAL],          [MPIR_INT$len], [Internal type for MPI_REAL])
-len=`expr $pac_cv_f77_sizeof_logical \* 8`
-AC_DEFINE_UNQUOTED([MPIR_LOGICAL_INTERNAL],       [MPIR_FORTRAN_LOGICAL$len], [Internal type for MPI_LOGICAL])
-len=`expr $pac_cv_f77_sizeof_real \* 8`
-AC_DEFINE_UNQUOTED([MPIR_COMPLEX_INTERNAL],       [MPIR_COMPLEX$len], [Internal type for MPI_COMPLEX])
-len=`expr $pac_cv_f77_sizeof_double_precision \* 8`
-AC_DEFINE_UNQUOTED([MPIR_DOUBLE_PRECISION_INTERNAL],[MPIR_FLOAT$len], [Internal type for MPI_DOUBLE_PRECISION])
-len=`expr $pac_cv_f77_sizeof_integer \* 8`
-AC_DEFINE_UNQUOTED([MPIR_2INTEGER_INTERNAL],      [MPIR_2INT$len], [Internal type for MPI_2INTEGER])
-len=`expr $pac_cv_f77_sizeof_real \* 8`
-AC_DEFINE_UNQUOTED([MPIR_2REAL_INTERNAL],         [MPIR_2FLOAT$len], [Internal type for MPI_2REAL])
-len=`expr $pac_cv_f77_sizeof_double_precision \* 8`
-AC_DEFINE_UNQUOTED([MPIR_DOUBLE_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_DOUBLE_COMPLEX])
-AC_DEFINE_UNQUOTED([MPIR_2DOUBLE_PRECISION_INTERNAL],[MPIR_2FLOAT$len], [Internal type for MPI_2DOUBLE_PRECISION])
-# skip MPI_2COMPLEX, MPI_2DOUBLE_COMPLEX
-AC_DEFINE_UNQUOTED([MPIR_REAL2_INTERNAL],         [MPIR_FLOAT16], [Internal type for MPI_REAL2])
-AC_DEFINE_UNQUOTED([MPIR_REAL4_INTERNAL],         [MPIR_FLOAT32], [Internal type for MPI_REAL4])
-AC_DEFINE_UNQUOTED([MPIR_COMPLEX8_INTERNAL],      [MPIR_COMPLEX32], [Internal type for MPI_COMPLEX8])
-AC_DEFINE_UNQUOTED([MPIR_REAL8_INTERNAL],         [MPIR_FLOAT64], [Internal type for MPI_REAL8])
-AC_DEFINE_UNQUOTED([MPIR_COMPLEX16_INTERNAL],     [MPIR_COMPLEX64], [Internal type for MPI_COMPLEX16])
-AC_DEFINE_UNQUOTED([MPIR_REAL16_INTERNAL],        [MPIR_FLOAT128], [Internal type for MPI_REAL16])
-AC_DEFINE_UNQUOTED([MPIR_COMPLEX32_INTERNAL],     [MPIR_COMPLEX128], [Internal type for MPI_COMPLEX32])
-AC_DEFINE_UNQUOTED([MPIR_INTEGER1_INTERNAL],      [MPIR_INT8], [Internal type for MPI_INTEGER1])
-AC_DEFINE_UNQUOTED([MPIR_COMPLEX4_INTERNAL],      [MPIR_COMPLEX16], [Internal type for MPI_COMPLEX4])
-AC_DEFINE_UNQUOTED([MPIR_INTEGER2_INTERNAL],      [MPIR_INT16], [Internal type for MPI_INTEGER2])
-AC_DEFINE_UNQUOTED([MPIR_INTEGER4_INTERNAL],      [MPIR_INT32], [Internal type for MPI_INTEGER4])
-AC_DEFINE_UNQUOTED([MPIR_INTEGER8_INTERNAL],      [MPIR_INT64], [Internal type for MPI_INTEGER8])
-AC_DEFINE_UNQUOTED([MPIR_INTEGER16_INTERNAL],     [MPIR_INT128], [Internal type for MPI_INTEGER16])
-len=`expr $ac_cv_sizeof_bool \* 8`
-AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_INTERNAL],      [MPIR_INT$len], [Internal type for MPI_CXX_BOOL])
-len=`expr $ac_cv_sizeof_Complex / 2 \* 8`
-AC_DEFINE_UNQUOTED([MPIR_CXX_FLOAT_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_CXX_FLOAT_COMPLEX])
-len=`expr $ac_cv_sizeof_DoubleComplex / 2 \* 8`
-AC_DEFINE_UNQUOTED([MPIR_CXX_DOUBLE_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_CXX_DOUBLE_COMPLEX])
-len=`expr $ac_cv_sizeof_LongDoubleComplex / 2 \* 8`
-if test "$len" = 64 ; then
-    # long double is an alias of double, e.g. arm64
-    internal_type=MPIR_COMPLEX$len
+if test "$enable_f77" = "yes" ; then
+    len=`expr $pac_cv_f77_sizeof_character \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_CHARACTER_INTERNAL],     [MPIR_INT$len], [Internal type for MPI_CHARACTER])
+    len=`expr $pac_cv_f77_sizeof_integer \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER_INTERNAL],       [MPIR_INT$len], [Internal type for MPI_INTEGER])
+    len=`expr $pac_cv_f77_sizeof_real \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_REAL_INTERNAL],          [MPIR_INT$len], [Internal type for MPI_REAL])
+    len=`expr $pac_cv_f77_sizeof_logical \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL_INTERNAL],       [MPIR_FORTRAN_LOGICAL$len], [Internal type for MPI_LOGICAL])
+    len=`expr $pac_cv_f77_sizeof_real \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX_INTERNAL],       [MPIR_COMPLEX$len], [Internal type for MPI_COMPLEX])
+    len=`expr $pac_cv_f77_sizeof_double_precision \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_DOUBLE_PRECISION_INTERNAL],[MPIR_FLOAT$len], [Internal type for MPI_DOUBLE_PRECISION])
+    len=`expr $pac_cv_f77_sizeof_integer \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_2INTEGER_INTERNAL],      [MPIR_2INT$len], [Internal type for MPI_2INTEGER])
+    len=`expr $pac_cv_f77_sizeof_real \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_2REAL_INTERNAL],         [MPIR_2FLOAT$len], [Internal type for MPI_2REAL])
+    len=`expr $pac_cv_f77_sizeof_double_precision \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_DOUBLE_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_DOUBLE_COMPLEX])
+    AC_DEFINE_UNQUOTED([MPIR_2DOUBLE_PRECISION_INTERNAL],[MPIR_2FLOAT$len], [Internal type for MPI_2DOUBLE_PRECISION])
+    # skip MPI_2COMPLEX, MPI_2DOUBLE_COMPLEX
+    AC_DEFINE_UNQUOTED([MPIR_REAL2_INTERNAL],         [MPIR_FLOAT16], [Internal type for MPI_REAL2])
+    AC_DEFINE_UNQUOTED([MPIR_REAL4_INTERNAL],         [MPIR_FLOAT32], [Internal type for MPI_REAL4])
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX8_INTERNAL],      [MPIR_COMPLEX32], [Internal type for MPI_COMPLEX8])
+    AC_DEFINE_UNQUOTED([MPIR_REAL8_INTERNAL],         [MPIR_FLOAT64], [Internal type for MPI_REAL8])
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX16_INTERNAL],     [MPIR_COMPLEX64], [Internal type for MPI_COMPLEX16])
+    AC_DEFINE_UNQUOTED([MPIR_REAL16_INTERNAL],        [MPIR_FLOAT128], [Internal type for MPI_REAL16])
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX32_INTERNAL],     [MPIR_COMPLEX128], [Internal type for MPI_COMPLEX32])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER1_INTERNAL],      [MPIR_INT8], [Internal type for MPI_INTEGER1])
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX4_INTERNAL],      [MPIR_COMPLEX16], [Internal type for MPI_COMPLEX4])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER2_INTERNAL],      [MPIR_INT16], [Internal type for MPI_INTEGER2])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER4_INTERNAL],      [MPIR_INT32], [Internal type for MPI_INTEGER4])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER8_INTERNAL],      [MPIR_INT64], [Internal type for MPI_INTEGER8])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER16_INTERNAL],     [MPIR_INT128], [Internal type for MPI_INTEGER16])
 else
-    internal_type=MPIR_ALT_COMPLEX$len
+    AC_DEFINE_UNQUOTED([MPIR_CHARACTER_INTERNAL],     [MPI_DATATYPE_NULL], [Internal type for MPI_CHARACTER])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER_INTERNAL],       [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER])
+    AC_DEFINE_UNQUOTED([MPIR_REAL_INTERNAL],          [MPI_DATATYPE_NULL], [Internal type for MPI_REAL])
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL_INTERNAL],       [MPI_DATATYPE_NULL], [Internal type for MPI_LOGICAL])
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX_INTERNAL],       [MPI_DATATYPE_NULL], [Internal type for MPI_COMPLEX])
+    AC_DEFINE_UNQUOTED([MPIR_DOUBLE_PRECISION_INTERNAL],[MPI_DATATYPE_NULL], [Internal type for MPI_DOUBLE_PRECISION])
+    AC_DEFINE_UNQUOTED([MPIR_2INTEGER_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_2INTEGER])
+    AC_DEFINE_UNQUOTED([MPIR_2REAL_INTERNAL],         [MPI_DATATYPE_NULL], [Internal type for MPI_2REAL])
+    AC_DEFINE_UNQUOTED([MPIR_DOUBLE_COMPLEX_INTERNAL],[MPI_DATATYPE_NULL], [Internal type for MPI_DOUBLE_COMPLEX])
+    AC_DEFINE_UNQUOTED([MPIR_2DOUBLE_PRECISION_INTERNAL],[MPI_DATATYPE_NULL], [Internal type for MPI_2DOUBLE_PRECISION])
+    # skip MPI_2COMPLEX, MPI_2DOUBLE_COMPLEX
+    AC_DEFINE_UNQUOTED([MPIR_REAL2_INTERNAL],         [MPI_DATATYPE_NULL], [Internal type for MPI_REAL2])
+    AC_DEFINE_UNQUOTED([MPIR_REAL4_INTERNAL],         [MPI_DATATYPE_NULL], [Internal type for MPI_REAL4])
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX8_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_COMPLEX8])
+    AC_DEFINE_UNQUOTED([MPIR_REAL8_INTERNAL],         [MPI_DATATYPE_NULL], [Internal type for MPI_REAL8])
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX16_INTERNAL],     [MPI_DATATYPE_NULL], [Internal type for MPI_COMPLEX16])
+    AC_DEFINE_UNQUOTED([MPIR_REAL16_INTERNAL],        [MPI_DATATYPE_NULL], [Internal type for MPI_REAL16])
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX32_INTERNAL],     [MPI_DATATYPE_NULL], [Internal type for MPI_COMPLEX32])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER1_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER1])
+    AC_DEFINE_UNQUOTED([MPIR_COMPLEX4_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_COMPLEX4])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER2_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER2])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER4_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER4])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER8_INTERNAL],      [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER8])
+    AC_DEFINE_UNQUOTED([MPIR_INTEGER16_INTERNAL],     [MPI_DATATYPE_NULL], [Internal type for MPI_INTEGER16])
 fi
-AC_DEFINE_UNQUOTED([MPIR_CXX_LONG_DOUBLE_COMPLEX_INTERNAL],[$internal_type], [Internal type for MPI_CXX_LONG_DOUBLE_COMPLEX])
+if test -n "$CXX" ; then
+    len=`expr $ac_cv_sizeof_bool \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_INTERNAL],      [MPIR_INT$len], [Internal type for MPI_CXX_BOOL])
+    len=`expr $ac_cv_sizeof_Complex / 2 \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_CXX_FLOAT_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_CXX_FLOAT_COMPLEX])
+    len=`expr $ac_cv_sizeof_DoubleComplex / 2 \* 8`
+    AC_DEFINE_UNQUOTED([MPIR_CXX_DOUBLE_COMPLEX_INTERNAL],[MPIR_COMPLEX$len], [Internal type for MPI_CXX_DOUBLE_COMPLEX])
+    len=`expr $ac_cv_sizeof_LongDoubleComplex / 2 \* 8`
+    if test "$len" = 64 ; then
+        # long double is an alias of double, e.g. arm64
+        internal_type=MPIR_COMPLEX$len
+    else
+        internal_type=MPIR_ALT_COMPLEX$len
+    fi
+    AC_DEFINE_UNQUOTED([MPIR_CXX_LONG_DOUBLE_COMPLEX_INTERNAL],[$internal_type], [Internal type for MPI_CXX_LONG_DOUBLE_COMPLEX])
+else
+    AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_INTERNAL],          [MPI_DATATYPE_NULL], [Internal type for MPI_CXX_BOOL])
+    AC_DEFINE_UNQUOTED([MPIR_CXX_FLOAT_COMPLEX_INTERNAL], [MPI_DATATYPE_NULL], [Internal type for MPI_CXX_FLOAT_COMPLEX])
+    AC_DEFINE_UNQUOTED([MPIR_CXX_DOUBLE_COMPLEX_INTERNAL],[MPI_DATATYPE_NULL], [Internal type for MPI_CXX_DOUBLE_COMPLEX])
+    AC_DEFINE_UNQUOTED([MPIR_CXX_LONG_DOUBLE_COMPLEX_INTERNAL],[MPI_DATATYPE_NULL], [Internal type for MPI_CXX_LONG_DOUBLE_COMPLEX])
+fi
 AC_DEFINE_UNQUOTED([MPIR_INT8_T_INTERNAL],   [MPIR_INT8], [Internal type for MPI_INT8_T])
 AC_DEFINE_UNQUOTED([MPIR_INT16_T_INTERNAL],  [MPIR_INT16], [Internal type for MPI_INT16_T])
 AC_DEFINE_UNQUOTED([MPIR_INT32_T_INTERNAL],  [MPIR_INT32], [Internal type for MPI_INT32_T])
@@ -3571,6 +3591,20 @@ AC_DEFINE_UNQUOTED([MPIR_OFFSET_INTERNAL],[MPIR_INT$len], [Internal type for MPI
 len=`expr $MPI_SIZEOF_COUNT \* 8`
 AC_DEFINE_UNQUOTED([MPIR_COUNT_INTERNAL], [MPIR_INT$len], [Internal type for MPI_COUNT_DATATYPE])
 AC_DEFINE_UNQUOTED([MPIR_C_FLOAT16_INTERNAL], [MPIR_FLOAT16], [Internal type for MPIX_C_FLOAT16])
+if test "$enable_f77" = "yes" ; then
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL1_INTERNAL],  [MPIR_FORTRAN_LOGICAL8], [Internal type for MPI_LOGICAL1])
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL2_INTERNAL],  [MPIR_FORTRAN_LOGICAL16], [Internal type for MPI_LOGICAL2])
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL4_INTERNAL],  [MPIR_FORTRAN_LOGICAL32], [Internal type for MPI_LOGICAL4])
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL8_INTERNAL],  [MPIR_FORTRAN_LOGICAL64], [Internal type for MPI_LOGICAL8])
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL16_INTERNAL], [MPIR_FORTRAN_LOGICAL128],[Internal type for MPI_LOGICAL16])
+else
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL1_INTERNAL],  [MPI_DATATYPE_NULL], [Internal type for MPI_LOGICAL1])
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL2_INTERNAL],  [MPI_DATATYPE_NULL], [Internal type for MPI_LOGICAL2])
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL4_INTERNAL],  [MPI_DATATYPE_NULL], [Internal type for MPI_LOGICAL4])
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL8_INTERNAL],  [MPI_DATATYPE_NULL], [Internal type for MPI_LOGICAL8])
+    AC_DEFINE_UNQUOTED([MPIR_LOGICAL16_INTERNAL], [MPI_DATATYPE_NULL],[Internal type for MPI_LOGICAL16])
+fi
+AC_DEFINE_UNQUOTED([MPIR_BFLOAT16_INTERNAL],  [MPIR_BFLOAT16],[Internal type for MPIX_BFLOAT16])
 AC_MSG_RESULT([done])
 
 # ------------------------------------------------------------------------
