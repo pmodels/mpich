@@ -376,27 +376,6 @@ void MPIDIU_upidhash_free(void)
 }
 #endif
 
-/* convert upid to gpid by netmod.
- * For ofi netmod, it inserts the address and fills an av entry.
- */
-int MPIDIU_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids,
-                          MPIR_Lpid * remote_lpids)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_ENTER;
-
-    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
-    mpi_errno = MPIDI_NM_upids_to_lpids(size, remote_upid_size, remote_upids, remote_lpids);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -16,6 +16,9 @@ int MPIDI_OFI_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
+#endif
 
     int vci = 0;                /* dynamic process only use vci 0 */
     int ctx_idx = 0;
@@ -70,6 +73,9 @@ int MPIDI_OFI_dynamic_recv(int tag, void *buf, int size, int timeout)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_Assert(MPIDI_OFI_ENABLE_TAGGED);
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
+#endif
 
     int vci = 0;                /* dynamic process only use vci 0 */
     int ctx_idx = 0;
@@ -238,6 +244,9 @@ int MPIDI_OFI_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids
     int ctx_idx = MPIDI_OFI_get_ctx_index(0, 0);
 
     MPIR_CHKLMEM_DECL();
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
+#endif
 
     MPIR_CHKLMEM_MALLOC(new_avt_procs, sizeof(int) * size);
     MPIR_CHKLMEM_MALLOC(new_upids, sizeof(char *) * size);
@@ -263,9 +272,8 @@ int MPIDI_OFI_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids
             for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
                 sz = MPIDI_OFI_global.addrnamelen;
                 MPIDI_av_entry_t *av = &MPIDIU_get_av(k, j);
-                MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av,
-                                                MPIDI_OFI_AV_ADDR_ROOT(av), &tbladdr, &sz), 0,
-                                   avlookup);
+                MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av,
+                                            MPIDI_OFI_AV_ADDR_ROOT(av), &tbladdr, &sz), avlookup);
                 if (sz == addrname_len && !memcmp(tbladdr, addrname, addrname_len)) {
                     remote_lpids[i] = MPIDIU_GPID_CREATE(k, j);
                     found = 1;
@@ -296,8 +304,8 @@ int MPIDI_OFI_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids
             char *addrname = hostname + strlen(hostname) + 1;
 
             fi_addr_t addr;
-            MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av, addrname,
-                                            1, &addr, 0ULL, NULL), 0, avmap);
+            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av, addrname,
+                                        1, &addr, 0ULL, NULL), avmap);
             MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV_ADDR_ROOT(&MPIDIU_get_av(avtid, i)) = addr;
 
@@ -325,6 +333,9 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     int ctx_idx = MPIDI_OFI_get_ctx_index(0, 0);
 
     MPIR_CHKPMEM_DECL();
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
+#endif
 
     MPIR_CHKPMEM_MALLOC((*local_upid_size), comm->local_size * sizeof(int), MPL_MEM_ADDRESS);
     MPIR_CHKPMEM_MALLOC(temp_buf, comm->local_size * MPIDI_OFI_global.addrnamelen, MPL_MEM_BUFFER);
@@ -352,9 +363,8 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
 
         size_t sz = MPIDI_OFI_global.addrnamelen;;
         MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, i);
-        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av,
-                                        MPIDI_OFI_AV_ADDR_ROOT(av),
-                                        temp_buf + idx, &sz), 0, avlookup);
+        MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av,
+                                    MPIDI_OFI_AV_ADDR_ROOT(av), temp_buf + idx, &sz), avlookup);
         idx += (int) sz;
 
         (*local_upid_size)[i] = upid_len;
@@ -373,6 +383,9 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
 {
     int mpi_errno = MPI_SUCCESS;
 
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
+#endif
     const char *hostname = upid;
     MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(lpid);
 
