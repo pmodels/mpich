@@ -28,6 +28,9 @@ int MPIDI_UCX_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
 
     uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
     int vci = 0;
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(vci));
+#endif
 
     ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(MPIDIU_lpid_to_av_slow(remote_lpid), vci, vci);
 
@@ -76,6 +79,9 @@ int MPIDI_UCX_dynamic_recv(int tag, void *buf, int size, int timeout)
     uint64_t ucx_tag = MPIDI_UCX_DYNPROC_MASK + tag;
     uint64_t tag_mask = 0xffffffffffffffff;
     int vci = 0;
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(vci));
+#endif
 
     bool done = false;
     ucp_request_param_t param = {
@@ -206,6 +212,9 @@ int MPIDI_UCX_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
 {
     int mpi_errno = MPI_SUCCESS;
 
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
+#endif
     MPIR_CHKPMEM_DECL();
     MPIR_CHKPMEM_MALLOC((*local_upid_size), comm->local_size * sizeof(int), MPL_MEM_ADDRESS);
     MPIR_CHKPMEM_MALLOC((*local_upids), comm->local_size * MPID_MAX_BC_SIZE, MPL_MEM_BUFFER);
@@ -230,6 +239,9 @@ int MPIDI_UCX_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(lpid);
 
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
+#endif
     bool is_dynamic = (lpid & MPIR_LPID_DYNAMIC_MASK);
     bool do_insert = false;
     if (is_dynamic) {
@@ -278,6 +290,9 @@ int MPIDI_UCX_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids
     int vci = 0;
     MPIR_CHKLMEM_DECL();
 
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
+#endif
     MPIR_CHKLMEM_MALLOC(new_avt_procs, sizeof(int) * size);
     MPIR_CHKLMEM_MALLOC(new_upids, sizeof(char *) * size);
 

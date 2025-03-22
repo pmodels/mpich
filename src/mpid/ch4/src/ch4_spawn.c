@@ -235,7 +235,9 @@ int MPID_Open_port(MPIR_Info * info_ptr, char *port_name, int len)
     mpi_errno = get_port_name_tag(&tag);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
     mpi_errno = MPIDI_NM_get_local_upids(MPIR_Process.comm_self, &addrname_size, &addrname);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     MPIR_ERR_CHECK(mpi_errno);
 
     int err;
@@ -291,16 +293,25 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
     int mpi_errno = MPI_SUCCESS;
     int context_id, recvcontext_id;
     MPIR_Lpid remote_lpid;
+    bool need_unlock = false;
 
     mpi_errno = MPIR_Get_contextid_sparse(MPIR_Process.comm_self, &recvcontext_id, FALSE);
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* We enter the LOCK to ensure the dynamic exchange don't get interleaved.
+     * NOTE: most other functions enter lock at NM-layer except the the functions defined
+     *       in e.g. ofi_spawn.c and ucx_spawn.c. So only those functions are allowed
+     *       inside the CS.
+     */
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
+    need_unlock = true;
 
     struct dynproc_conn_hdr hdr;
     if (is_sender) {
         /* insert remote address */
         int addrname_len = len;
         MPIR_Lpid *remote_lpids = &remote_lpid;
-        mpi_errno = MPIDIU_upids_to_lpids(1, &addrname_len, remote_addrname, remote_lpids);
+        mpi_errno = MPIDI_NM_upids_to_lpids(1, &addrname_len, remote_addrname, remote_lpids);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* fill hdr with context_id and addrname */
@@ -334,7 +345,7 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
         /* insert remote address */
         int addrname_len = hdr.addrname_len;
         MPIR_Lpid *remote_lpids = &remote_lpid;
-        mpi_errno = MPIDIU_upids_to_lpids(1, &addrname_len, hdr.addrname, remote_lpids);
+        mpi_errno = MPIDI_NM_upids_to_lpids(1, &addrname_len, hdr.addrname, remote_lpids);
         MPIR_ERR_CHECK(mpi_errno);
 
         /* send remote context_id */
@@ -342,6 +353,8 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
         mpi_errno = MPIDI_NM_dynamic_send(remote_lpid, tag, &hdr, sizeof(hdr.context_id), timeout);
         MPIR_ERR_CHECK(mpi_errno);
     }
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
+    need_unlock = false;
 
     /* create peer intercomm */
     mpi_errno = MPIR_peer_intercomm_create(context_id, recvcontext_id,
@@ -353,6 +366,9 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
   fn_fail:
     if (recvcontext_id) {
         MPIR_Free_contextid(recvcontext_id);
+    }
+    if (need_unlock) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     }
     goto fn_exit;
 }
