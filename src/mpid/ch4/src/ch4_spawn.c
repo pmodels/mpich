@@ -315,6 +315,7 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
         hdr.addrname_len = addrname_size[0];
 
         /* send remote context_id + addrname */
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
 
         int hdr_sz = sizeof(hdr) - MPIDI_DYNPROC_NAME_MAX + hdr.addrname_len;
         mpi_errno = MPIDI_NM_dynamic_send(remote_lpid, tag, &hdr, hdr_sz, timeout);
@@ -325,11 +326,15 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
         mpi_errno = MPIDI_NM_dynamic_recv(tag, &hdr, sizeof(hdr), timeout);
         MPIR_ERR_CHECK(mpi_errno);
         context_id = hdr.context_id;
+
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     } else {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
         /* recv remote address */
         mpi_errno = MPIDI_NM_dynamic_recv(tag, &hdr, sizeof(hdr), timeout);
         MPIR_ERR_CHECK(mpi_errno);
         context_id = hdr.context_id;
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
 
         /* insert remote address */
         int addrname_len = hdr.addrname_len;
@@ -337,10 +342,12 @@ static int peer_intercomm_create(char *remote_addrname, int len, int tag,
         mpi_errno = MPIDIU_upids_to_lpids(1, &addrname_len, hdr.addrname, remote_lpids);
         MPIR_ERR_CHECK(mpi_errno);
 
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(0));
         /* send remote context_id */
         hdr.context_id = recvcontext_id;
         mpi_errno = MPIDI_NM_dynamic_send(remote_lpid, tag, &hdr, sizeof(hdr.context_id), timeout);
         MPIR_ERR_CHECK(mpi_errno);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(0));
     }
 
     /* create peer intercomm */
