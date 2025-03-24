@@ -11,6 +11,7 @@ static void dynamic_send_cb(void *request, ucs_status_t status, void *user_data)
 {
     bool *done = user_data;
     *done = true;
+    ucp_request_release(request);
 }
 
 static void dynamic_recv_cb(void *request, ucs_status_t status,
@@ -18,6 +19,7 @@ static void dynamic_recv_cb(void *request, ucs_status_t status,
 {
     bool *done = user_data;
     *done = true;
+    /* request always released in MPIDI_UCX_dynamic_recv due to its blocking design */
 }
 
 int MPIDI_UCX_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int size, int timeout)
@@ -30,7 +32,7 @@ int MPIDI_UCX_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
     MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(vci));
 #endif
 
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(MPIDIU_lpid_to_av(remote_lpid), vci, vci);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(MPIDIU_lpid_to_av_slow(remote_lpid), vci, vci);
 
     bool done = false;
     ucp_request_param_t param = {

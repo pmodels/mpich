@@ -92,13 +92,13 @@ int MPIDI_check_disjoint_lpids(MPIR_Lpid lpids1[], int n1, MPIR_Lpid lpids2[], i
         uint64_t n = shrink(lpids2[i], num_low_bits);
         int idx = n / 32;
         int bit = n % 32;
-        if (gpidmask[idx] & (1 << bit)) {
+        if (gpidmask[idx] & (1ULL << bit)) {
             MPIR_ERR_SET1(mpi_errno, MPI_ERR_COMM,
                           "**dupprocesses", "**dupprocesses %d", (int) lpids2[i]);
             goto fn_fail;
         }
         /* Add a check on duplicates *within* group 2 */
-        gpidmask[idx] = gpidmask[idx] | (1 << bit);
+        gpidmask[idx] = gpidmask[idx] | (1ULL << bit);
         MPIR_Assert(idx < mask_size);
     }
 
