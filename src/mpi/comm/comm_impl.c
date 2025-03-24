@@ -781,7 +781,6 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
     goto fn_exit;
 }
 
-#if 0
 /* arbitrarily determine which group is the low_group by comparing
  * world namespaces and world ranks */
 static int determine_low_group(MPIR_Lpid remote_lpid, bool * is_low_group_out)
@@ -811,7 +810,6 @@ static int determine_low_group(MPIR_Lpid remote_lpid, bool * is_low_group_out)
 
     return mpi_errno;
 }
-#endif
 
 int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
                                MPIR_Comm * peer_comm_ptr, int remote_leader, int tag,
@@ -857,34 +855,8 @@ int MPIR_Intercomm_create_timeout(MPIR_Comm * local_comm_ptr, int local_leader,
     MPIR_ERR_CHECK(mpi_errno);
 
     bool is_low_group;
-#if 0
     mpi_errno = determine_low_group(remote_lpids[0], &is_low_group);
     MPIR_ERR_CHECK(mpi_errno);
-#else
-    if (local_comm_ptr->rank == local_leader) {
-        if (MPIR_LPID_WORLD_INDEX(remote_lpids[0]) == 0) {
-            is_low_group = (MPIR_Process.rank < MPIR_LPID_WORLD_RANK(remote_lpids[0]));
-        } else {
-            char remote_namespace[MPIR_NAMESPACE_MAX];
-            mpi_errno = MPIC_Sendrecv(MPIR_Worlds[0].namespace, MPIR_NAMESPACE_MAX,
-                                      MPIR_CHAR_INTERNAL, remote_leader, tag,
-                                      remote_namespace, MPIR_NAMESPACE_MAX, MPIR_CHAR_INTERNAL,
-                                      remote_leader, tag, peer_comm_ptr, MPI_STATUS_IGNORE,
-                                      MPIR_ERR_NONE);
-            MPIR_ERR_CHECK(mpi_errno);
-            int cmp_result;
-            cmp_result = strncmp(MPIR_Worlds[0].namespace, remote_namespace, MPIR_NAMESPACE_MAX);
-            MPIR_Assert(cmp_result != 0);
-            if (cmp_result < 0)
-                is_low_group = false;
-            else
-                is_low_group = true;
-        }
-    }
-    mpi_errno = MPIR_Bcast_impl(&is_low_group, 1, MPIR_C_BOOL_INTERNAL,
-                                local_leader, local_comm_ptr, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
-#endif
 
     /* At last, we now have the information that we need to build the
      * intercommunicator */
