@@ -18,6 +18,8 @@ categories :
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+static bool ucx_initialized = false;
+
 static void request_init_callback(void *request)
 {
 
@@ -211,6 +213,8 @@ int MPIDI_UCX_init_world(void)
     mpi_errno = initial_address_exchange();
     MPIR_ERR_CHECK(mpi_errno);
 
+    ucx_initialized = true;
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -231,13 +235,12 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (!MPIDI_global.is_initialized) {
-        /* Nothing to do */
-        return mpi_errno;
-    }
-
     ucs_status_ptr_t ucp_request;
-    ucs_status_ptr_t *pending;
+    ucs_status_ptr_t *pending = NULL;
+
+    if (!ucx_initialized) {
+        goto fn_exit;
+    }
 
     int n = MPIDI_UCX_global.num_vcis;
     pending = MPL_malloc(sizeof(ucs_status_ptr_t) * MPIR_Process.size * n * n, MPL_MEM_OTHER);
