@@ -549,6 +549,8 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+static bool ofi_initialized = false;
+
 static int update_global_limits(struct fi_info *prov);
 static void dump_global_settings(void);
 static int destroy_vci_context(int vci, int nic);
@@ -799,6 +801,8 @@ int MPIDI_OFI_init_world(void)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+    ofi_initialized = true;
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -879,10 +883,14 @@ static int flush_send_queue(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    if (!ofi_initialized) {
+        goto fn_exit;
+    }
+
     MPIDI_OFI_dynamic_process_request_t *reqs;
     /* TODO - Iterate over each NIC in addition to each VNI when multi-NIC within the same
      * process is implemented. */
-    int num_vcis = (MPIDI_global.is_initialized ? MPIDI_OFI_global.num_vcis : 1);
+    int num_vcis = MPIDI_OFI_global.num_vcis;
     int num_reqs = num_vcis * 2;
     reqs = MPL_malloc(sizeof(MPIDI_OFI_dynamic_process_request_t) * num_reqs, MPL_MEM_OTHER);
 
@@ -937,12 +945,9 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIDI_OFI_mr_key_allocator_destroy();
 
     if (strcmp("sockets", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0) {
-        /* sockets provider need flush any last lightweight send. Only do it if we initialized
-         * world. Sockets provider can't even send self messages otherwise. */
-        if (MPIDI_global.is_initialized) {
-            mpi_errno = flush_send_queue();
-            MPIR_ERR_CHECK(mpi_errno);
-        }
+        /* sockets provider need flush any last lightweight send. */
+        mpi_errno = flush_send_queue();
+        MPIR_ERR_CHECK(mpi_errno);
     } else if (MPIR_CVAR_NO_COLLECTIVE_FINALIZE) {
         /* skip collective work arounds */
     } else if (strcmp("verbs;ofi_rxm", MPIDI_OFI_global.prov_use[0]->fabric_attr->prov_name) == 0
@@ -980,12 +985,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     /* Tearing down endpoints in reverse order they were created */
     for (int nic = MPIDI_OFI_global.num_nics - 1; nic >= 0; nic--) {
         for (int vci = MPIDI_OFI_global.num_vcis - 1; vci >= 0; vci--) {
-            if (MPIDI_global.is_initialized || (vci == 0 && nic == 0)) {
-                /* If the user has not freed all MPI objects, ofi might not shut down cleanly.
-                 * We intentionally ignore errors to avoid crashing in finalize. Debug builds
-                 * will warn about unfreed objects/memory. */
-                (void) destroy_vci_context(vci, nic);
-            }
+            /* If the user has not freed all MPI objects, ofi might not shut down cleanly.
+             * We intentionally ignore errors to avoid crashing in finalize. Debug builds
+             * will warn about unfreed objects/memory. */
+            (void) destroy_vci_context(vci, nic);
         }
     }
 
