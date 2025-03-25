@@ -69,7 +69,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *buf, MPI_Aint 
     if (!MPIR_CVAR_CH4_XPMEM_ENABLE || buf == MPI_BOTTOM ||
         data_sz < MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD ||
         (MPIR_CVAR_CH4_IPC_XPMEM_P2P_UPPER_THRESHOLD > 0 &&
-         data_sz > MPIR_CVAR_CH4_IPC_XPMEM_P2P_UPPER_THRESHOLD)) {
+         data_sz > MPIR_CVAR_CH4_IPC_XPMEM_P2P_UPPER_THRESHOLD) ||
+        (MPIDI_IPCI_is_repeat_addr(buf) < 5)) {
         goto fn_exit;
     } else {
         ipc_attr->ipc_type = MPIDI_IPCI_TYPE__XPMEM;
