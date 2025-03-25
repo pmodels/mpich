@@ -374,8 +374,9 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_buffer_info");
 
     /* Don't create or search for an ipc handle if the buffer doesn't meet the threshold
-     * requirement */
-    if (bounds_len < MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD && !MPIDI_IPCI_is_repeat_addr(bounds_base)) {
+     * requirement or it isn't a repeat address */
+    if (bounds_len < MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD &&
+        (MPIDI_IPCI_is_repeat_addr(bounds_base) < 1)) {
         goto fn_exit;
     }
 
