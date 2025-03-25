@@ -40,8 +40,6 @@ Non Native API:
   mpi_finalize_hook : int
       NM : void
      SHM : void
-  init_vcis: int
-      NM : num_vcis, num_vcis_actual
   post_init : int
       NM : void
      SHM : void
