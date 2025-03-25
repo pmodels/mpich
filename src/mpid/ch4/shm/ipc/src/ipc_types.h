@@ -61,6 +61,6 @@ extern MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;
 
 extern MPIDI_IPCI_global_t MPIDI_IPCI_global;
 
-bool MPIDI_IPCI_is_repeat_addr(void *addr);
+int MPIDI_IPCI_is_repeat_addr(const void *addr);
 
 #endif /* IPC_TYPES_H_INCLUDED */
