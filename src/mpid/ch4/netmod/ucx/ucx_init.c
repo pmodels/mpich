@@ -286,13 +286,6 @@ int MPIDI_UCX_init_world(void)
     goto fn_exit;
 }
 
-int MPIDI_UCX_init_vcis(int num_vcis, int *num_vcis_actual)
-{
-    int mpi_errno = MPI_SUCCESS;
-    *num_vcis_actual = num_vcis;
-    return mpi_errno;
-}
-
 /* static functions for MPIDI_UCX_post_init */
 static void flush_cb(void *request, ucs_status_t status)
 {

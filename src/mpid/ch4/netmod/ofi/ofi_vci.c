@@ -33,6 +33,7 @@ int MPIDI_OFI_vci_init(void)
 }
 
 /* Address exchange within comm and setup multiple vcis */
+static int init_vcis(int num_vcis, int *num_vcis_actual);
 static int addr_exchange_all_ctx(MPIR_Comm * comm, int *all_num_vcis);
 
 int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_vcis, int *all_num_vcis)
@@ -41,7 +42,7 @@ int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_vcis, int *all_num_vcis)
 
     /* set up local vcis */
     int num_vcis_actual;
-    mpi_errno = MPIDI_OFI_init_vcis(num_vcis, &num_vcis_actual);
+    mpi_errno = init_vcis(num_vcis, &num_vcis_actual);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* gather the number of remote vcis */
@@ -71,12 +72,12 @@ int MPIDI_OFI_comm_set_vcis(MPIR_Comm * comm, int num_vcis, int *all_num_vcis)
     goto fn_exit;
 }
 
-/* MPIDI_OFI_init_vcis: locally create multiple vcis */
+/* init_vcis: locally create multiple vcis */
 
 static int check_num_nics(void);
 static int setup_additional_vcis(void);
 
-int MPIDI_OFI_init_vcis(int num_vcis, int *num_vcis_actual)
+static int init_vcis(int num_vcis, int *num_vcis_actual)
 {
     int mpi_errno = MPI_SUCCESS;
 
