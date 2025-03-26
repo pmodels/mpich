@@ -87,3 +87,4 @@ MPI_ERR_SESSION      **session
 MPI_ERR_PROC_ABORTED **proc_aborted
 MPI_ERR_VALUE_TOO_LARGE **valuetoolarge
 MPI_ERR_ERRHANDLER   **errhandler
+MPI_ERR_ABI          **abi
