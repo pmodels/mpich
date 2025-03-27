@@ -23,8 +23,7 @@ void MPID_nem_dbg_dump_cell (volatile struct MPID_nem_cell *cell)
 
 #define state_case(suffix)             \
     case MPIDI_VC_STATE_##suffix:       \
-        return "MPIDI_VC_STATE_" #suffix; \
-        break
+        return "MPIDI_VC_STATE_" #suffix
 
 static const char *vc_state_to_str(MPIDI_VC_State_t state)
 {
@@ -37,7 +36,7 @@ static const char *vc_state_to_str(MPIDI_VC_State_t state)
         state_case(CLOSED);
         state_case(INACTIVE_CLOSED);
         state_case(MORIBUND);
-        default: return "(invalid state)"; break;
+        default: return "(invalid state)";
     }
 }
 #undef state_case
