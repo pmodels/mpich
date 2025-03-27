@@ -288,11 +288,68 @@ PMI_API_PUBLIC int PMI_Barrier(void)
     PMIU_cmd_init_zero(&pmicmd);
 
     if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
-        PMIU_msg_set_query(&pmicmd, USE_WIRE_VER, PMIU_CMD_BARRIER, no_static);
+        PMIU_msg_set_query_barrier(&pmicmd, USE_WIRE_VER, no_static, NULL);
 
         pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
         PMIU_ERR_POP(pmi_errno);
     }
+
+  fn_exit:
+    PMIU_cmd_free_buf(&pmicmd);
+    return pmi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+PMI_API_PUBLIC int PMI_Barrier_group(const int *group, int count)
+{
+    int pmi_errno = PMI_SUCCESS;
+
+    struct PMIU_cmd pmicmd;
+    PMIU_cmd_init_zero(&pmicmd);
+
+    if (PMI_initialized == PMI_UNINITIALIZED) {
+        pmi_errno = PMI_ERR_INIT;
+        goto fn_fail;
+    } else if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
+        /* NOOP for singleton barrier */
+        goto fn_exit;
+    } else if (PMI_server_version != 1 || PMI_server_subversion < 2) {
+        /* server doesn't support PMI 1.2 */
+        /* NOTE: there isn't a PMI api for checking server versions. As a workaround,
+         *       user can use the return from PMI_Barrier_group(PMI_GROUP_SELF, 0)
+         *       to check whether it is supported.
+         */
+        pmi_errno = PMI_FAIL;
+        goto fn_fail;
+    } else if (group == PMI_GROUP_SELF) {
+        /* NOOP for self barrier */
+        goto fn_exit;
+    }
+
+    char *group_str;
+    if (group == PMI_GROUP_WORLD) {
+        group_str = NULL;
+    } else if (group == PMI_GROUP_NODE) {
+        group_str = MPL_strdup("NODE");
+    } else {
+        /* convert the int array into a comma-separated int list */
+        group_str = MPL_malloc(count * 8, MPL_MEM_OTHER);       /* assume each integer fits in 8 chars */
+        char *s = group_str;
+        for (int i = 0; i < count; i++) {
+            int n = sprintf(s, "%d,", group[i]);
+            s += n;
+        }
+        /* overwrite the last comma */
+        s[-1] = '\0';
+    }
+
+    PMIU_msg_set_query_barrier(&pmicmd, USE_WIRE_VER, no_static, group_str);
+
+    pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
+    PMIU_ERR_POP(pmi_errno);
+
+    MPL_free(group_str);
 
   fn_exit:
     PMIU_cmd_free_buf(&pmicmd);

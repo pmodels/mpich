@@ -22,7 +22,7 @@ class RE:
 
 def main():
     # run from pmi top_srcdir
-    load_pmi_txt("maint/pmi-1.1.txt", "1.1")
+    load_pmi_txt("maint/pmi-1.2.txt", "1.2")
     load_pmi_txt("maint/pmi-2.0.txt", "2.0")
 
     dump_all()
