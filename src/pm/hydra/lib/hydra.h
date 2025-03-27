@@ -526,6 +526,23 @@ HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);
 HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
                                int *in, int *out, int *err, int *pid, int idx);
 
+/* barrier */
+#define HYD_GROUP_ALL ((int *)0)
+
+struct HYD_barrier {
+    const char *name;           /* a string identifying process set. Support -
+                                 *   - WORLD, NODE, or
+                                 *   - 0,1,4,...   (CSV list of ranks)
+                                 */
+    int num_procs;
+    int barrier_count;
+
+    int *proc_list;             /* needed for sending "barrier_out". Accepts HYD_GROUP_ALL */
+    bool has_upstream;
+
+    UT_hash_handle hh;
+};
+
 /* others */
 int HYDU_dceil(int x, int y);
 HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD_node **node_list);

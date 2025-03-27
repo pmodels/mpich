@@ -69,6 +69,7 @@ struct pmip_pg *PMIP_new_pg(int pgid, int proxy_id)
     }
 
     pg->kvs = NULL;
+    pg->barriers = NULL;
 
     static UT_icd my_icd = { sizeof(char *), NULL, NULL, NULL };
     utarray_new(pg->kvs_batch, &my_icd, MPL_MEM_OTHER);

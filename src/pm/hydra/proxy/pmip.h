@@ -107,7 +107,8 @@ struct pmip_pg {
      * server at barrier_in. */
     UT_array *kvs_batch;
 
-    /* for barrier_in */
+    /* for barrier_in. Use uthash to support group barriers */
+    struct HYD_barrier *barriers;
     int barrier_count;
 
     /* environment */
