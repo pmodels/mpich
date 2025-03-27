@@ -10,15 +10,6 @@
 static int handle_unexp_cmpl(MPIR_Request * rreq);
 static int recv_target_cmpl_cb(MPIR_Request * rreq);
 
-static int can_do_tag(MPIR_Request * rreq)
-{
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    return MPIDI_NM_am_can_do_tag();
-#else
-    return MPIDI_REQUEST(rreq, is_local) ? MPIDI_SHM_am_can_do_tag() : MPIDI_NM_am_can_do_tag();
-#endif
-}
-
 int MPIDIG_do_cts(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -30,13 +21,18 @@ int MPIDIG_do_cts(MPIR_Request * rreq)
     MPIDIG_send_cts_msg_t am_hdr;
     am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr));
     am_hdr.rreq_ptr = rreq;
-    if (can_do_tag(rreq)) {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    int is_local = MPIDI_REQUEST(rreq, is_local);
+#else
+    int is_local = 0;
+#endif
+    if (MPIDIG_can_do_tag(is_local)) {
         am_hdr.tag = MPIDIG_get_next_am_tag(rreq->comm);
         CH4_CALL(am_tag_recv(source_rank, rreq->comm,
                              MPIDIG_TAG_RECV_COMPLETE, am_hdr.tag,
                              MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
                              MPIDIG_REQUEST(rreq, datatype), remote_vci, local_vci, rreq),
-                 MPIDI_REQUEST(rreq, is_local), mpi_errno);
+                 is_local, mpi_errno);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         am_hdr.tag = -1;
@@ -48,7 +44,7 @@ int MPIDIG_do_cts(MPIR_Request * rreq)
 
     CH4_CALL(am_send_hdr_reply(rreq->comm, source_rank, MPIDIG_SEND_CTS,
                                &am_hdr, sizeof(am_hdr), local_vci, remote_vci),
-             MPIDI_REQUEST(rreq, is_local), mpi_errno);
+             is_local, mpi_errno);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

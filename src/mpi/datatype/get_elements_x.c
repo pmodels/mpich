@@ -64,6 +64,12 @@ static MPI_Count MPIR_Type_get_basic_type_elements(MPI_Count * bytes_p,
         type1_sz = type2_sz = MPIR_Datatype_get_basic_size(datatype);
     }
 
+    if (type1_sz + type2_sz == 0) {
+        /* this is likely a struct type with mixed basic elements. Let's just bail for now */
+        *bytes_p = 0;
+        return 0;
+    }
+
     /* determine the number of elements in the region */
     elements = 2 * (usable_bytes / (type1_sz + type2_sz));
     if (usable_bytes % (type1_sz + type2_sz) >= type1_sz)
