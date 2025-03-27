@@ -190,12 +190,27 @@ typedef struct {
     MPIDI_av_entry_t table[];
 } MPIDI_av_table_t;
 
+/* dynamic av is used for building inter communicators, such as MPID_Comm_connect/accept,
+ * when we need temoprarily establish communication betweer peer group leaders.
+ * Because the entries are expected to be released once the intercomm is committed, we expect
+ * the dynamic av table size to remain finite.
+ * We keep the upid along with the av entry to avoid later duplicate av insertion.
+ * */
+#define MPIDIU_DYNAMIC_AV_MAX 100
+typedef struct {
+    int size;
+    const char *upids[MPIDIU_DYNAMIC_AV_MAX];
+    int upid_sizes[MPIDIU_DYNAMIC_AV_MAX];
+    MPIDI_av_entry_t *table;
+} MPIDI_dyn_av_table_t;
+
 typedef struct {
     int max_n_avts;
     int n_avts;
     int n_free;
     MPIDI_av_table_t *av_table0;
     MPIDI_av_table_t **av_tables;
+    MPIDI_dyn_av_table_t dynamic_av_table;
 } MPIDIU_avt_manager;
 
 #define MPIDIU_get_av_table(avtid) (MPIDI_global.avt_mgr.av_tables[(avtid)])

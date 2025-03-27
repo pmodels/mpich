@@ -73,8 +73,7 @@ static int comm_create_local_group(MPIR_Comm * comm_ptr)
     MPIR_Lpid *map = MPL_malloc(n * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
 
     for (int i = 0; i < n; i++) {
-        mpi_errno = MPID_Comm_get_lpid(comm_ptr, i, &map[i], FALSE);
-        MPIR_ERR_CHECK(mpi_errno);
+        map[i] = MPIR_Group_rank_to_lpid(comm_ptr->local_group, i);
     }
 
     mpi_errno = MPIR_Group_create_map(n, comm_ptr->rank, comm_ptr->session_ptr, map,
@@ -238,8 +237,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
             /* FIXME : BUBBLE SORT */
             mapping[i] = -1;
             for (j = 0; j < comm_ptr->local_size; j++) {
-                MPIR_Lpid comm_lpid;
-                MPID_Comm_get_lpid(comm_ptr, j, &comm_lpid, FALSE);
+                MPIR_Lpid comm_lpid = MPIR_Group_rank_to_lpid(comm_ptr->local_group, j);
                 if (comm_lpid == MPIR_Group_rank_to_lpid(group_ptr, i)) {
                     mapping[i] = j;
                     break;
@@ -918,8 +916,7 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
         MPIR_Lpid *map = MPL_malloc(n * sizeof(MPIR_Lpid), MPL_MEM_GROUP);
 
         for (int i = 0; i < n; i++) {
-            mpi_errno = MPID_Comm_get_lpid(comm_ptr, i, &map[i], TRUE);
-            MPIR_ERR_CHECK(mpi_errno);
+            map[i] = MPIR_Group_rank_to_lpid(comm_ptr->remote_group, i);
         }
         mpi_errno = MPIR_Group_create_map(n, MPI_UNDEFINED, comm_ptr->session_ptr, map,
                                           &comm_ptr->remote_group);
@@ -952,27 +949,48 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
     goto fn_exit;
 }
 
+#if 0
+/* arbitrarily determine which group is the low_group by comparing
+ * world namespaces and world ranks */
+static int determine_low_group(MPIR_Lpid remote_lpid, bool * is_low_group_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int my_world_idx = 0;
+    int my_world_rank = MPIR_Process.rank;
+    int remote_world_idx = MPIR_LPID_WORLD_INDEX(remote_lpid);
+    int remote_world_rank = MPIR_LPID_WORLD_RANK(remote_lpid);
+
+    if (my_world_idx == remote_world_idx) {
+        /* same world, just compare world ranks */
+        MPIR_Assert(my_world_idx == 0);
+        *is_low_group_out = (my_world_rank < remote_world_rank);
+    } else {
+        /* different world, compare namespace */
+        int cmp_result = strncmp(MPIR_Worlds[my_world_idx].namespace,
+                                 MPIR_Worlds[remote_world_idx].namespace,
+                                 MPIR_NAMESPACE_MAX);
+        MPIR_Assert(cmp_result != 0);
+        if (cmp_result < 0)
+            *is_low_group_out = false;
+        else
+            *is_low_group_out = true;
+    }
+
+    return mpi_errno;
+}
+#endif
+
 int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
                                MPIR_Comm * peer_comm_ptr, int remote_leader, int tag,
                                MPIR_Comm ** new_intercomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int final_context_id, recvcontext_id;
     int remote_size = 0;
     MPIR_Lpid *remote_lpids = NULL;
-    int comm_info[3];
-    int is_low_group = 0;
     MPIR_Session *session_ptr = local_comm_ptr->session_ptr;
 
     MPIR_FUNC_ENTER;
-
-    /* Shift tag into the tagged coll space */
-    tag |= MPIR_TAG_COLL_BIT;
-
-    mpi_errno = MPID_Intercomm_exchange_map(local_comm_ptr, local_leader,
-                                            peer_comm_ptr, remote_leader,
-                                            &remote_size, &remote_lpids, &is_low_group);
-    MPIR_ERR_CHECK(mpi_errno);
 
     /*
      * Create the contexts.  Each group will have a context for sending
@@ -980,49 +998,53 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
      * we know that the local and remote groups are disjoint, this
      * step will complete
      */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
-                    (MPL_DBG_FDEST, "About to get contextid (local_size=%d) on rank %d",
-                     local_comm_ptr->local_size, local_comm_ptr->rank));
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
      * calling routine already holds the single critical section */
     /* TODO: Make sure this is tag-safe */
+    int recvcontext_id;
     mpi_errno = MPIR_Get_contextid_sparse(local_comm_ptr, &recvcontext_id, FALSE);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(recvcontext_id != 0);
-    MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST, "Got contextid=%d", recvcontext_id));
 
-    /* Leaders can now swap context ids and then broadcast the value
-     * to the local group of processes */
+    /* Shift tag into the tagged coll space */
+    tag |= MPIR_TAG_COLL_BIT;
+
+    int remote_context_id;
+    mpi_errno = MPID_Intercomm_exchange(local_comm_ptr, local_leader,
+                                        peer_comm_ptr, remote_leader, tag,
+                                        recvcontext_id, &remote_context_id,
+                                        &remote_size, &remote_lpids);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    bool is_low_group;
+#if 0
+    mpi_errno = determine_low_group(remote_lpids[0], &is_low_group);
+    MPIR_ERR_CHECK(mpi_errno);
+#else
     if (local_comm_ptr->rank == local_leader) {
-        int remote_context_id;
-
-        mpi_errno =
-            MPIC_Sendrecv(&recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
-                          &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
-                          peer_comm_ptr, MPI_STATUS_IGNORE, MPIR_ERR_NONE);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        final_context_id = remote_context_id;
-
-        /* Now, send all of our local processes the remote_lpids,
-         * along with the final context id */
-        comm_info[0] = final_context_id;
-        MPL_DBG_MSG(MPIR_DBG_COMM, VERBOSE, "About to bcast on local_comm");
-        mpi_errno = MPIR_Bcast(comm_info, 1, MPIR_INT_INTERNAL, local_leader,
-                               local_comm_ptr, MPIR_ERR_NONE);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "end of bcast on local_comm of size %d",
-                      local_comm_ptr->local_size);
-    } else {
-        /* we're the other processes */
-        MPL_DBG_MSG(MPIR_DBG_COMM, VERBOSE, "About to receive bcast on local_comm");
-        mpi_errno = MPIR_Bcast(comm_info, 1, MPIR_INT_INTERNAL, local_leader,
-                               local_comm_ptr, MPIR_ERR_NONE);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        /* Extract the context and group sign information */
-        final_context_id = comm_info[0];
+        if (MPIR_LPID_WORLD_INDEX(remote_lpids[0]) == 0) {
+            is_low_group = (MPIR_Process.rank < MPIR_LPID_WORLD_RANK(remote_lpids[0]));
+        } else {
+            char remote_namespace[MPIR_NAMESPACE_MAX];
+            mpi_errno = MPIC_Sendrecv(MPIR_Worlds[0].namespace, MPIR_NAMESPACE_MAX,
+                                      MPIR_CHAR_INTERNAL, remote_leader, tag,
+                                      remote_namespace, MPIR_NAMESPACE_MAX, MPIR_CHAR_INTERNAL,
+                                      remote_leader, tag, peer_comm_ptr, MPI_STATUS_IGNORE,
+                                      MPIR_ERR_NONE);
+            MPIR_ERR_CHECK(mpi_errno);
+            int cmp_result;
+            cmp_result = strncmp(MPIR_Worlds[0].namespace, remote_namespace, MPIR_NAMESPACE_MAX);
+            MPIR_Assert(cmp_result != 0);
+            if (cmp_result < 0)
+                is_low_group = false;
+            else
+                is_low_group = true;
+        }
     }
+    mpi_errno = MPIR_Bcast_impl(&is_low_group, 1, MPIR_C_BOOL_INTERNAL,
+                                local_leader, local_comm_ptr, MPIR_ERR_NONE);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
 
     /* At last, we now have the information that we need to build the
      * intercommunicator */
@@ -1030,10 +1052,9 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     /* All processes in the local_comm now build the communicator */
 
     mpi_errno = MPIR_Comm_create(new_intercomm_ptr);
-    if (mpi_errno)
-        goto fn_fail;
+    MPIR_ERR_CHECK(mpi_errno);
 
-    (*new_intercomm_ptr)->context_id = final_context_id;
+    (*new_intercomm_ptr)->context_id = remote_context_id;
     (*new_intercomm_ptr)->recvcontext_id = recvcontext_id;
     (*new_intercomm_ptr)->remote_size = remote_size;
     (*new_intercomm_ptr)->local_size = local_comm_ptr->local_size;
@@ -1055,6 +1076,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     /* construct remote_group */
     mpi_errno = MPIR_Group_create_map(remote_size, MPI_UNDEFINED, session_ptr, remote_lpids,
                                       &(*new_intercomm_ptr)->remote_group);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Comm_set_session_ptr(*new_intercomm_ptr, session_ptr);
 
@@ -1113,10 +1135,9 @@ int MPIR_peer_intercomm_create(int context_id, int recvcontext_id,
 
     MPIR_Session *session_ptr = NULL;   /* Can we just use NULL session since peer_intercomm is always temporary? */
     MPIR_Lpid my_lpid = MPIR_Group_rank_to_lpid(comm_self->local_group, 0);
-    mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, my_lpid, 1, 1,
-                                         &(*newcomm)->local_group);
+    mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, my_lpid, 1, &(*newcomm)->local_group);
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, remote_lpid, 1, 1,
+    mpi_errno = MPIR_Group_create_stride(1, 0, session_ptr, remote_lpid, 1,
                                          &(*newcomm)->remote_group);
     MPIR_ERR_CHECK(mpi_errno);
 

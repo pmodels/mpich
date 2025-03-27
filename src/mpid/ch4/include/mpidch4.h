@@ -26,7 +26,6 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *, MPIR_Group **, int);
 int MPID_Comm_revoke(MPIR_Comm *, int);
 int MPID_Comm_failure_ack(MPIR_Comm *);
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm *) MPL_STATIC_INLINE_SUFFIX;
-int MPID_Comm_get_lpid(MPIR_Comm *, int, MPIR_Lpid *, bool);
 int MPID_CS_finalize(void);
 int MPID_Finalize(void);
 int MPID_Get_universe_size(int *);
@@ -167,7 +166,10 @@ int MPID_Type_commit_hook(MPIR_Datatype *);
 int MPID_Type_free_hook(MPIR_Datatype *);
 int MPID_Op_commit_hook(MPIR_Op *);
 int MPID_Op_free_hook(MPIR_Op *);
-int MPID_Intercomm_exchange_map(MPIR_Comm *, int, MPIR_Comm *, int, int *, MPIR_Lpid **, int *);
+int MPID_Intercomm_exchange(MPIR_Comm * local_comm, int local_leader,
+                            MPIR_Comm * peer_comm, int remote_leader, int tag,
+                            int context_id, int *remote_context_id_out,
+                            int *remote_size_out, MPIR_Lpid ** remote_lpids_out);
 int MPID_Create_intercomm_from_lpids(MPIR_Comm *, int, const MPIR_Lpid[]);
 int MPID_Comm_commit_pre_hook(MPIR_Comm *);
 int MPID_Comm_free_hook(MPIR_Comm *);

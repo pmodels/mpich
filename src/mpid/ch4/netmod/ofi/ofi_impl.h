@@ -171,20 +171,6 @@ int MPIDI_OFI_handle_cq_error(int vci, int nic, ssize_t ret);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_));                     \
     } while (0)
 
-#define MPIDI_OFI_VCI_CALL(FUNC,vci_,STR)                   \
-    do {                                                    \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_LOCK(vci_));    \
-        ssize_t _ret = FUNC;                                \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_LOCK(vci_));     \
-        MPIDI_OFI_ERR(_ret<0,                               \
-                              mpi_errno,                    \
-                              MPI_ERR_OTHER,                \
-                              "**ofid_"#STR,                \
-                              "**ofid_"#STR" %s %s",        \
-                              MPIDI_OFI_DEFAULT_NIC_NAME,   \
-                              fi_strerror(-_ret));          \
-    } while (0)
-
 #define MPIDI_OFI_THREAD_CS_ENTER_VCI_OPTIONAL(vci_)            \
     do {                                                        \
         if (!MPIDI_VCI_IS_EXPLICIT(vci_) && MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_LOCKLESS) {      \
