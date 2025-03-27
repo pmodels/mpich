@@ -7,7 +7,7 @@
 #define PMI_H_INCLUDED
 
 #define PMI_VERSION    1
-#define PMI_SUBVERSION 1
+#define PMI_SUBVERSION 2
 
 #define PMI_MAX_PORT_NAME 1024
 
@@ -57,6 +57,10 @@ D*/
 #define PMI_ERR_INVALID_NUM_PARSED  11
 #define PMI_ERR_INVALID_KEYVALP     12
 #define PMI_ERR_INVALID_SIZE        13
+
+#define PMI_GROUP_WORLD      ((int *)0)
+#define PMI_GROUP_SELF       ((int *)1)
+#define PMI_GROUP_NODE       ((int *)2)
 
 /* PMI Group functions */
 
@@ -240,6 +244,27 @@ have called 'PMI_Barrier()'. 'PMI_Barrier' automatically applies 'PMI_KVS_Commit
 
 @*/
     int PMI_Barrier(void);
+
+/*@
+PMI_Barrier_group - barrier across a subset of process group
+
+Return values:
++ PMI_SUCCESS - barrier successfully finished
+- PMI_FAIL - barrier failed
+
+Notes:
+This function is a collective call across all processes in the subset
+of process group specified by the function parameters. The parameters are
+an integer array of process world ranks and a count of the number of
+processes in the group. Special constants, including PMI_GROUP_WORLD,
+PMI_GROUP_NODE, can be used to represent commonly used special groups.
+When such constants are used, the count parameter is ignored.
+
+This function will not return until all the processes in the group have
+called. Upon return, previous KVS keys via PMI_Put will be available for
+subsequent PMI_Get for the processes within the group.
+@*/
+    int PMI_Barrier_group(const int *group, int count);
 
 /*@
 PMI_Abort - abort the process group associated with this process
