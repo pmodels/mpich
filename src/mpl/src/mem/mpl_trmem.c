@@ -1023,7 +1023,7 @@ void MPL_direct_free(void *ptr)
 }
 #endif
 
-#ifdef MPL_HAVE__MM256_STREAM_SI256
+#ifdef MPL_HAVE_AVX
 #include <string.h>
 #include <immintrin.h>
 
