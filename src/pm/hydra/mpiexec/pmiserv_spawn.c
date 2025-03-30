@@ -257,7 +257,8 @@ static HYD_status do_spawn(void)
     HYDU_ERR_POP(status, "error create rankmap\n");
 
     status = HYDU_create_proxy_list(pg->pg_process_count, exec_list, node_list,
-                                    pg->pgid, pg->rankmap, &pg->proxy_count, &pg->proxy_list);
+                                    pg->pgid, pg->rankmap,
+                                    &pg->min_node_id, &pg->proxy_count, &pg->proxy_list);
     HYDU_ERR_POP(status, "error creating proxy list\n");
     HYDU_free_exec_list(exec_list);
 
