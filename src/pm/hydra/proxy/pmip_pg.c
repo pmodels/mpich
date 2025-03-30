@@ -264,3 +264,45 @@ void PMIP_bcast_signal(int sig)
         }
     }
 }
+
+int PMIP_pg_local_to_global_id(struct pmip_pg *pg, int local_id)
+{
+    int rem1, rem2, layer, ret;
+
+    if (local_id < pg->global_core_map.local_filler)
+        ret = pg->pmi_id_map.filler_start + local_id;
+    else {
+        rem1 = local_id - pg->global_core_map.local_filler;
+        layer = rem1 / pg->global_core_map.local_count;
+        rem2 = rem1 - (layer * pg->global_core_map.local_count);
+
+        ret = pg->pmi_id_map.non_filler_start + (layer * pg->global_core_map.global_count) + rem2;
+    }
+
+    return ret;
+}
+
+int PMIP_pg_global_to_local_id(struct pmip_pg *pg, int global_id)
+{
+    if (global_id < pg->pmi_id_map.filler_start) {
+        return -1;
+    } else if (global_id < pg->pmi_id_map.non_filler_start) {
+        int rem1 = global_id - pg->pmi_id_map.filler_start;
+        if (rem1 < pg->global_core_map.local_filler) {
+            return rem1;
+        } else {
+            return -1;
+        }
+    } else {
+        int rem1 = global_id - pg->pmi_id_map.non_filler_start;
+        int layer = rem1 / pg->global_core_map.global_count;
+        int rem2 = rem1 - layer * pg->global_core_map.global_count;
+
+        if (rem2 < pg->global_core_map.local_count) {
+            return pg->global_core_map.local_filler + (layer * pg->global_core_map.local_count)
+                + rem2;
+        } else {
+            return -1;
+        }
+    }
+}
