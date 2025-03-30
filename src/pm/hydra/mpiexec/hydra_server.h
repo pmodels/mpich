@@ -30,6 +30,7 @@ struct HYD_pg {
     bool is_active;
 
     int spawner_pgid;
+    int min_node_id;
 
     /* user-specified node-list */
     struct HYD_node *user_node_list;
