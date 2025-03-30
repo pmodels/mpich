@@ -215,8 +215,8 @@ HYD_status fn_init(struct pmip_downstream *p, struct PMIU_cmd *pmi)
     HYDU_ASSERT(!pmi_errno, status);
 
     struct PMIU_cmd pmi_response;
-    if (pmi_version == 1 && pmi_subversion <= 1) {
-        pmi_errno = PMIU_msg_set_response_init(pmi, &pmi_response, is_static, 1, 1);
+    if (pmi_version == 1 && pmi_subversion <= 2) {
+        pmi_errno = PMIU_msg_set_response_init(pmi, &pmi_response, is_static, 1, 2);
         HYDU_ASSERT(!pmi_errno, status);
     } else if (pmi_version == 2 && pmi_subversion == 0) {
         pmi_errno = PMIU_msg_set_response_init(pmi, &pmi_response, is_static, 2, 0);
