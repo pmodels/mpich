@@ -566,7 +566,6 @@ static HYD_status singleton_init(struct pmip_pg *pg, int singleton_pid, int sing
 static HYD_status launch_procs(struct pmip_pg *pg);
 static void init_pg_params(struct pmip_pg *pg);
 static HYD_status verify_pg_params(struct pmip_pg *pg);
-static int local_to_global_id(struct pmip_pg *pg, int local_id);
 
 static HYD_status handle_launch_procs(struct pmip_pg *pg)
 {
@@ -771,7 +770,7 @@ static HYD_status launch_procs(struct pmip_pg *pg)
          * PORT. */
         p->pmi_fd = HYD_FD_UNSET;
         p->pmi_fd_active = 0;
-        p->pmi_rank = local_to_global_id(pg, i);
+        p->pmi_rank = PMIP_pg_local_to_global_id(pg, i);
     }
 
     if (HYD_pmcd_pmip.user_global.pmi_port) {
@@ -1091,21 +1090,4 @@ static HYD_status verify_pg_params(struct pmip_pg *pg)
     return status;
   fn_fail:
     goto fn_exit;
-}
-
-static int local_to_global_id(struct pmip_pg *pg, int local_id)
-{
-    int rem1, rem2, layer, ret;
-
-    if (local_id < pg->global_core_map.local_filler)
-        ret = pg->pmi_id_map.filler_start + local_id;
-    else {
-        rem1 = local_id - pg->global_core_map.local_filler;
-        layer = rem1 / pg->global_core_map.local_count;
-        rem2 = rem1 - (layer * pg->global_core_map.local_count);
-
-        ret = pg->pmi_id_map.non_filler_start + (layer * pg->global_core_map.global_count) + rem2;
-    }
-
-    return ret;
 }
