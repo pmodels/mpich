@@ -281,6 +281,12 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     goto fn_exit;
 }
 
+/* The av table is initially zeroed (via calloc). Only one entry can be ligitimately 0,
+ * that is recorded in MPIDI_OFI_global.lpid0; so we need double check against that.
+ */
+#define AV_ENTRY_IS_UNSET(av) \
+    MPIDI_OFI_AV_ADDR_ROOT(av) == 0 && lpid != MPIDI_OFI_global.lpid0
+
 int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -292,9 +298,14 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
     MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(lpid);
 
     bool do_insert = false;
+    bool new_av_entry = false;
     if (lpid & MPIR_LPID_DYNAMIC_MASK) {
+        /* dynamic entry */
         do_insert = true;
-    } else if (MPIDI_OFI_AV_ADDR_ROOT(av) == 0 && lpid != MPIDI_OFI_global.lpid0) {
+    } else if (AV_ENTRY_IS_UNSET(av)) {
+        /* new av entry */
+        new_av_entry = true;
+
         MPIDI_av_entry_t *dynamic_av = MPIDIU_find_dynamic_av(upid, upid_len);
         if (dynamic_av) {
             /* just copy it over */
@@ -308,6 +319,9 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
         mpi_errno = MPIR_nodeid_lookup(hostname, &node_id);
         MPIR_ERR_CHECK(mpi_errno);
         av->node_id = node_id;
+    } else {
+        /* A known entry, nothing to do */
+        goto fn_exit;
     }
 
     if (do_insert) {
@@ -318,7 +332,8 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
         MPIR_Assert(MPIDI_OFI_AV_ADDR_ROOT(av) != FI_ADDR_NOTAVAIL);
     }
 
-    if (MPIDI_OFI_AV_ADDR_ROOT(av) == 0) {
+    /* remember the lpid if the entry is 0 */
+    if (new_av_entry && MPIDI_OFI_AV_ADDR_ROOT(av) == 0) {
         MPIDI_OFI_global.lpid0 = lpid;
     }
 
