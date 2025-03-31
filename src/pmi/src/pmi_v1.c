@@ -32,6 +32,9 @@
 #define USE_WIRE_VER  PMIU_WIRE_V1
 static const bool no_static = false;
 
+static int PMI_server_version = 0;
+static int PMI_server_subversion = 0;
+
 /* ALL GLOBAL VARIABLES MUST BE INITIALIZED TO AVOID POLLUTING THE
    LIBRARY WITH COMMON SYMBOLS */
 static int PMI_kvsname_max = 0;
@@ -41,6 +44,7 @@ static int PMI_vallen_max = 0;
 static int PMI_spawned = 0;
 
 /* Function prototypes for internal routines */
+static int PMII_init(int *server_version_p, int *server_subversion_p);
 static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max);
 static int PMII_Set_from_port(int id);
 
@@ -159,7 +163,11 @@ PMI_API_PUBLIC int PMI_Init(int *spawned)
     }
 #endif
 
-    PMII_getmaxes(&PMI_kvsname_max, &PMI_keylen_max, &PMI_vallen_max);
+    pmi_errno = PMII_init(&PMI_server_version, &PMI_server_subversion);
+    PMIU_ERR_POP(pmi_errno);
+
+    pmi_errno = PMII_getmaxes(&PMI_kvsname_max, &PMI_keylen_max, &PMI_vallen_max);
+    PMIU_ERR_POP(pmi_errno);
 
     /* FIXME: This is something that the PM should tell the process,
      * rather than deliver it through the environment */
@@ -652,13 +660,9 @@ PMI_API_PUBLIC
 
 /***************** Internal routines not part of PMI interface ***************/
 
-/* to get all maxes in one message */
-/* FIXME: This mixes init with get maxes */
-static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
+static int PMII_init(int *server_version_p, int *server_subversion_p)
 {
     int pmi_errno = PMI_SUCCESS;
-
-    /* init */
 
     struct PMIU_cmd pmicmd;
     PMIU_msg_set_query_init(&pmicmd, USE_WIRE_VER, no_static, PMI_VERSION, PMI_SUBVERSION);
@@ -666,12 +670,24 @@ static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
     PMIU_ERR_POP(pmi_errno);
 
-    int server_version, server_subversion;
-    pmi_errno = PMIU_msg_get_response_init(&pmicmd, &server_version, &server_subversion);
+    pmi_errno = PMIU_msg_get_response_init(&pmicmd, server_version_p, server_subversion_p);
+    PMIU_ERR_POP(pmi_errno);
 
-    /* maxes */
-
+  fn_exit:
     PMIU_cmd_free_buf(&pmicmd);
+    return pmi_errno;
+  fn_fail:
+    /* FIXME: is abort the right behavior? */
+    PMI_Abort(-1, "PMI_Init failed");
+    goto fn_exit;
+}
+
+/* to get all maxes in one message */
+static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
+{
+    int pmi_errno = PMI_SUCCESS;
+
+    struct PMIU_cmd pmicmd;
     PMIU_msg_set_query(&pmicmd, USE_WIRE_VER, PMIU_CMD_MAXES, no_static);
 
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
@@ -684,8 +700,6 @@ static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
     PMIU_cmd_free_buf(&pmicmd);
     return pmi_errno;
   fn_fail:
-    /* FIXME: is abort the right behavior? */
-    PMI_Abort(-1, "PMI_Init failed");
     goto fn_exit;
 }
 
@@ -898,11 +912,13 @@ static int PMII_singinit(void)
    a singleton init */
 static int PMIi_InitIfSingleton(void)
 {
+    int pmi_errno = PMI_SUCCESS;
     int rc;
     static int firstcall = 1;
 
-    if (PMI_initialized != SINGLETON_INIT_BUT_NO_PM || !firstcall)
-        return PMI_SUCCESS;
+    if (PMI_initialized != SINGLETON_INIT_BUT_NO_PM || !firstcall) {
+        goto fn_exit;
+    }
 
     /* We only try to init as a singleton the first time */
     firstcall = 0;
@@ -910,15 +926,21 @@ static int PMIi_InitIfSingleton(void)
     /* First, start (if necessary) an mpiexec, connect to it,
      * and start the singleton init handshake */
     rc = PMII_singinit();
+    if (rc < 0) {
+        pmi_errno = PMI_FAIL;
+        goto fn_fail;
+    }
 
-    if (rc < 0)
-        return PMI_FAIL;
     PMI_initialized = SINGLETON_INIT_WITH_PM;   /* do this right away */
     PMI_size = 1;
     PMI_rank = 0;
     PMI_spawned = 0;
 
-    PMII_getmaxes(&PMI_kvsname_max, &PMI_keylen_max, &PMI_vallen_max);
+    pmi_errno = PMII_init(&PMI_server_version, &PMI_server_subversion);
+    PMIU_ERR_POP(pmi_errno);
+
+    pmi_errno = PMII_getmaxes(&PMI_kvsname_max, &PMI_keylen_max, &PMI_vallen_max);
+    PMIU_ERR_POP(pmi_errno);
 
     if (cached_singinit_inuse) {
         /* if we cached a key-value put, push it up to the server */
@@ -927,7 +949,10 @@ static int PMIi_InitIfSingleton(void)
         PMI_Barrier();
     }
 
+  fn_exit:
     return PMI_SUCCESS;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int accept_one_connection(int list_sock)
