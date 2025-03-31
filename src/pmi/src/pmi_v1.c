@@ -722,7 +722,11 @@ static int PMII_init(int *server_version_p, int *server_subversion_p)
     int pmi_errno = PMI_SUCCESS;
 
     struct PMIU_cmd pmicmd;
-    PMIU_msg_set_query_init(&pmicmd, USE_WIRE_VER, no_static, PMI_VERSION, PMI_SUBVERSION);
+    /* use version 1.1 for backward compatibility. Server should reply higher subversion
+     * if it supports extensions. Client should check server versions for graceful fallback
+     * on 1.2 and later features.
+     */
+    PMIU_msg_set_query_init(&pmicmd, USE_WIRE_VER, no_static, 1, 1);
 
     pmi_errno = PMIU_cmd_get_response(PMI_fd, &pmicmd);
     PMIU_ERR_POP(pmi_errno);
