@@ -151,6 +151,5 @@ void MPIDI_UCX_am_recv_callback_nbx(void *request, ucs_status_t status, size_t l
 #endif
 
 int MPIDI_UCX_init_worker(int vci);
-int MPIDI_UCX_all_vcis_address_exchange(void);
 
 #endif /* UCX_IMPL_H_INCLUDED */
