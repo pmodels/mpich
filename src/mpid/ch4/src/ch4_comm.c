@@ -142,12 +142,12 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     mpi_errno = MPIDIG_init_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_NM_mpi_comm_commit_pre_hook(comm);
-    MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_SHM_mpi_comm_commit_pre_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
+    mpi_errno = MPIDI_NM_mpi_comm_commit_pre_hook(comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIDIG_COMM(comm, posted_head_ptr) = &(MPIDI_global.per_vci[0].posted_list);
