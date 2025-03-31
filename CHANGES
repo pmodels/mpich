@@ -15,12 +15,19 @@
 # Yaksa is now maintained inside MPICH rather than as an external submodule.  
 
 # Added internal builtin datatypes and external builtin datatypes are mapped to
-internal types. For example, both MPI_INT and MPI_INT32_T are mapped to internal
-type MPIR_INT32. NOTE: direct usage of external MPI types are disallowed
-in MPICH internally. For example, use MPIR_INT_INTERNAL to replace direct usage
-of MPI_INT. Commonly used types include MPI_BYTE, MPI_CHAR, MPI_AINT, use
-MPIR_BYTE_INTERNAL, MPIR_CHAR_INTERNAL, MPIR_AINT_INTERNAL instead. There is no
-impact to users.
+  internal types. For example, both MPI_INT and MPI_INT32_T are mapped to internal
+  type MPIR_INT32. NOTE: direct usage of external MPI types are disallowed
+  in MPICH internally. For example, use MPIR_INT_INTERNAL to replace direct usage
+  of MPI_INT. Commonly used types include MPI_BYTE, MPI_CHAR, MPI_AINT, use
+  MPIR_BYTE_INTERNAL, MPIR_CHAR_INTERNAL, MPIR_AINT_INTERNAL instead. There is no
+  impact to users.
+
+# ADI: MPID_Comm_get_lpid removed. Lpids are looked up from the local_group and
+  remote_group in the MPIR_Comm struct.
+
+# ADI: MPID_Intercomm_exchange_map renamed to MPID_Intercomm_exchange and
+  parameters now include tag, context_id, and will perform context_id exchange
+  and lpid exchange.
 
 # Added MPI_LOGICAL1, MPI_LOGICAL2, MPI_LOGICAL4, MPI_LOGICAL8, and MPI_LOGICAL16.
 
