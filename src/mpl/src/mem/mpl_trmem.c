@@ -1107,89 +1107,11 @@ void MPL_Memcpy_stream(void *dest, const void *src, size_t n)
 }
 
 #else
-
-#ifdef MPL_HAVE__MM_STREAM_SI128
-#include <string.h>
-#include <emmintrin.h>
-
-void MPL_Memcpy_stream(void *dest, const void *src, size_t n)
-{
-    /* Anything less than 256 bytes is not worth optimizing */
-    if (n <= 256) {
-        memcpy(dest, src, n);
-        return;
-    }
-
-    char *d = (char *) dest;
-    const char *s = (const char *) src;
-
-    /* Copy the first 63 bytes or less (if the address isn't 64-byte aligned) using a regular memcpy
-     * to make the rest faster */
-    if (((uintptr_t) d) & 63) {
-        const uintptr_t t = 64 - (((uintptr_t) d) & 63);
-        memcpy(d, s, t);
-        d += t;
-        s += t;
-        n -= t;
-    }
-
-    /* Copy 128 bytes at a time by unrolling a series of 16-byte streaming (non-temporal) write. */
-    while (n >= 128) {
-        __m128i xmm0 = _mm_loadu_si128((__m128i const *) (s + (16 * 0)));
-        __m128i xmm1 = _mm_loadu_si128((__m128i const *) (s + (16 * 1)));
-        __m128i xmm2 = _mm_loadu_si128((__m128i const *) (s + (16 * 2)));
-        __m128i xmm3 = _mm_loadu_si128((__m128i const *) (s + (16 * 3)));
-        __m128i xmm4 = _mm_loadu_si128((__m128i const *) (s + (16 * 4)));
-        __m128i xmm5 = _mm_loadu_si128((__m128i const *) (s + (16 * 5)));
-        __m128i xmm6 = _mm_loadu_si128((__m128i const *) (s + (16 * 6)));
-        __m128i xmm7 = _mm_loadu_si128((__m128i const *) (s + (16 * 7)));
-        _mm_stream_si128((__m128i *) (d + (16 * 0)), xmm0);
-        _mm_stream_si128((__m128i *) (d + (16 * 1)), xmm1);
-        _mm_stream_si128((__m128i *) (d + (16 * 2)), xmm2);
-        _mm_stream_si128((__m128i *) (d + (16 * 3)), xmm3);
-        _mm_stream_si128((__m128i *) (d + (16 * 4)), xmm4);
-        _mm_stream_si128((__m128i *) (d + (16 * 5)), xmm5);
-        _mm_stream_si128((__m128i *) (d + (16 * 6)), xmm6);
-        _mm_stream_si128((__m128i *) (d + (16 * 7)), xmm7);
-        d += 128;
-        s += 128;
-        n -= 128;
-    }
-
-    /* Once there are fewer than 128 bytes left to be copied, copy a chunk of 64
-     * bytes (if applicable). */
-    if (n >= 64) {
-        __m128i xmm0 = _mm_loadu_si128((__m128i const *) (s + (16 * 0)));
-        __m128i xmm1 = _mm_loadu_si128((__m128i const *) (s + (16 * 1)));
-        __m128i xmm2 = _mm_loadu_si128((__m128i const *) (s + (16 * 2)));
-        __m128i xmm3 = _mm_loadu_si128((__m128i const *) (s + (16 * 3)));
-        _mm_stream_si128((__m128i *) (d + (16 * 0)), xmm0);
-        _mm_stream_si128((__m128i *) (d + (16 * 1)), xmm1);
-        _mm_stream_si128((__m128i *) (d + (16 * 2)), xmm2);
-        _mm_stream_si128((__m128i *) (d + (16 * 3)), xmm3);
-        d += 64;
-        s += 64;
-        n -= 64;
-    }
-
-    /* If there is any data left, copy it using a regular memcpy */
-    if (n > 0) {
-        _mm_prefetch(s, 0);
-        memcpy(d, s, (n & 63));
-    }
-
-    /* A memory fence is required after the streaming stores above. */
-    _mm_sfence();
-}
-
-#else
 #include <string.h>
 
 void MPL_Memcpy_stream(void *dest, const void *src, size_t n)
 {
     memcpy(dest, src, n);
 }
-
-#endif /* HAVE_SSE2 */
 
 #endif
