@@ -49,6 +49,10 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
                       MPI_Op op);
 
 int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag);
+int MPIR_Allgather_intra_smp_no_order(const void *sendbuf, MPI_Aint sendcount,
+                                      MPI_Datatype sendtype,
+                                      void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t errflag);
 
 /* TSP auto */
 int MPIR_TSP_Iallreduce_sched_intra_tsp_auto(const void *sendbuf, void *recvbuf, MPI_Aint count,
