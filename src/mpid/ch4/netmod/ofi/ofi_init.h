@@ -40,4 +40,6 @@ int MPIDI_OFI_am_post_recv(int vci, int nic);
 
 bool MPIDI_OFI_nic_is_up(struct fi_info *prov);
 
+int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm);
+
 #endif /* OFI_INIT_H_INCLUDED */
