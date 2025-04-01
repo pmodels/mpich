@@ -672,18 +672,9 @@ static int get_max_procs(int cb_nodes, char *yylval, char **token_ptr)
  *
  * Returns a token of types defined at top of this file.
  */
-#if defined(BGQPLATFORM)
-/* On BlueGene, the ',' character shows up in get_processor_name, so we have to
- * use a different delimiter */
-#define COLON ':'
-#define COMMA ';'
-#define DELIMS ":;"
-#else
-/* these tokens work for every other platform */
 #define COLON ':'
 #define COMMA ','
 #define DELIMS ":,"
-#endif
 
 static int cb_config_list_lex(char *yylval, char **token_ptr)
 {

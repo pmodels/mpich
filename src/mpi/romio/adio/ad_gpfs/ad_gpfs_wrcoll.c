@@ -13,10 +13,6 @@
 #include "ad_gpfs.h"
 #include "ad_gpfs_aggrs.h"
 
-#ifdef BGQPLATFORM
-#include "bg/ad_bg_pset.h"
-#endif
-
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
 #endif
@@ -522,53 +518,6 @@ static void gpfs_wr_access_end(int fd, ADIO_Offset offset, ADIO_Offset length)
     ADIOI_Assert(rc == 0);
 }
 
-#ifdef BGQPLATFORM
-/* my_start, my_end: this processes file domain.  coudd be -1,-1 for "no i/o"
- * fd_start, fd_end: arrays of length fd->hints->cb_nodes specifying all file domains */
-static int gpfs_find_access_for_ion(ADIO_File fd,
-                                    ADIO_Offset my_start, ADIO_Offset my_end,
-                                    ADIO_Offset * fd_start, ADIO_Offset * fd_end,
-                                    ADIO_Offset * start, ADIO_Offset * end)
-{
-    int my_ionode = BGQ_IO_node_id();
-    int *rank_to_ionode;
-    int i, nprocs, rank;
-    ADIO_Offset group_start = LLONG_MAX, group_end = 0;
-
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &rank);
-
-    rank_to_ionode = ADIOI_Calloc(nprocs, sizeof(int));
-    MPI_Allgather(&my_ionode, 1, MPI_INT, rank_to_ionode, 1, MPI_INT, fd->comm);
-
-    /* rank_to_ionode now contains a mapping from MPI rank to IO node */
-    /* fd->hints->ranklist[] contains a list of MPI ranks that are aggregators */
-    /* fd_start[] and fd_end[] contain a list of file domains. */
-
-    /* what we really want to do is take all the file domains associated
-     * with a given i/o node and find the begin/end of that range.
-     *
-     * Because gpfs_fcntl hints are expected to be released, we'll pass this
-     * start/end back to the caller, who will both declare and free this range
-     */
-    if (my_start == -1 || my_end == -1) {
-        ADIOI_Free(rank_to_ionode);
-        return 0;       /* no work to do */
-    }
-
-    for (i = 0; i < fd->hints->cb_nodes; i++) {
-        if (my_ionode == rank_to_ionode[fd->hints->ranklist[i]]) {
-            group_start = MPL_MIN(fd_start[i], group_start);
-            group_end = MPL_MAX(fd_end[i], group_end);
-        }
-    }
-    *start = group_start;
-    *end = group_end;
-    ADIOI_Free(rank_to_ionode);
-    return 1;
-}
-#endif // BGQPLATFORM
-
 
 /* If successful, error_code is set to MPI_SUCCESS.  Otherwise an error
  * code is created and returned in error_code.
@@ -661,19 +610,6 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     }
 
     ADIO_Offset st_loc_ion = 0, end_loc_ion = 0, needs_gpfs_access_cleanup = 0;
-#ifdef BGQPLATFORM
-    if (ntimes > 0) {   /* only set the gpfs hint if we have io - ie this rank is
-                         * an aggregator -- otherwise will fail for deferred open */
-
-        if (getenv("ROMIO_GPFS_DECLARE_ION_ACCESS") != NULL) {
-            if (gpfs_find_access_for_ion(fd, st_loc, end_loc, fd_start, fd_end,
-                                         &st_loc_ion, &end_loc_ion)) {
-                gpfs_wr_access_start(fd->fd_sys, st_loc_ion, end_loc_ion - st_loc_ion);
-                needs_gpfs_access_cleanup = 1;
-            }
-        }
-    }
-#endif
 
     MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX, fd->comm);
 
