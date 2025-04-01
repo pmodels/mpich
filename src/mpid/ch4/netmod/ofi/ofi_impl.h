@@ -44,6 +44,12 @@ ATTRIBUTE((unused));
     MPIDI_OFI_AV(av).all_dest[nic]
 #endif
 
+/* The av table is initially zeroed (via calloc). Only one entry can be ligitimately 0,
+ * that is recorded in MPIDI_OFI_global.lpid0; so we need double check against that.
+ */
+#define MPIDI_OFI_AV_IS_UNSET(av, lpid) \
+    MPIDI_OFI_AV_ADDR_ROOT(av) == 0 && (lpid) != MPIDI_OFI_global.lpid0
+
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
 #define MPIDI_OFI_NIC_NAME(nic)    (MPIDI_OFI_global.prov_use[nic] ? \
