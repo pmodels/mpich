@@ -121,7 +121,7 @@ double gpfsmpio_prof_cr[GPFSMPIO_CIO_LAST + 1];
 
 void ad_gpfs_get_env_vars(void)
 {
-    char *x, *dummy;
+    char *x;
 
     gpfsmpio_comm = 0;
     x = getenv("GPFSMPIO_COMM");
@@ -135,20 +135,6 @@ void ad_gpfs_get_env_vars(void)
     x = getenv("GPFSMPIO_TUNEBLOCKING");
     if (x)
         gpfsmpio_tuneblocking = atoi(x);
-    bglocklessmpio_f_type = PVFS2_SUPER_MAGIC;
-    x = getenv("BGLOCKLESSMPIO_F_TYPE");
-    if (x)
-        bglocklessmpio_f_type = strtol(x, &dummy, 0);
-    DBG_FPRINTF(stderr, "BGLOCKLESSMPIO_F_TYPE=%ld/%#lX\n",
-                bglocklessmpio_f_type, bglocklessmpio_f_type);
-    /* note: this value will be 'sanity checked' in ADIOI_BG_persInfo_init(),
-     * when we know a bit more about what "largest possible value" and
-     * "smallest possible value" should be */
-    gpfsmpio_bg_nagg_pset = ADIOI_BG_NAGG_PSET_DFLT;
-    x = getenv("GPFSMPIO_NAGG_PSET");
-    if (x)
-        gpfsmpio_bg_nagg_pset = atoi(x);
-
     gpfsmpio_p2pcontig = 0;
     x = getenv("GPFSMPIO_P2PCONTIG");
     if (x)
@@ -163,12 +149,6 @@ void ad_gpfs_get_env_vars(void)
     x = getenv("GPFSMPIO_DEVNULLIO");
     if (x)
         gpfsmpio_devnullio = atoi(x);
-
-    gpfsmpio_bridgeringagg = 0;
-    x = getenv("GPFSMPIO_BRIDGERINGAGG");
-    if (x)
-        gpfsmpio_bridgeringagg = atoi(x);
-
 }
 
 /* report timing breakdown for MPI I/O collective call */
