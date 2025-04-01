@@ -281,12 +281,6 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     goto fn_exit;
 }
 
-/* The av table is initially zeroed (via calloc). Only one entry can be ligitimately 0,
- * that is recorded in MPIDI_OFI_global.lpid0; so we need double check against that.
- */
-#define AV_ENTRY_IS_UNSET(av) \
-    MPIDI_OFI_AV_ADDR_ROOT(av) == 0 && lpid != MPIDI_OFI_global.lpid0
-
 int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -302,7 +296,7 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
     if (lpid & MPIR_LPID_DYNAMIC_MASK) {
         /* dynamic entry */
         do_insert = true;
-    } else if (AV_ENTRY_IS_UNSET(av)) {
+    } else if (MPIDI_OFI_AV_IS_UNSET(av, lpid)) {
         /* new av entry */
         new_av_entry = true;
 
