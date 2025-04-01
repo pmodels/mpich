@@ -382,7 +382,7 @@ int MPIDI_GPU_get_ipc_attr(const void *buf, MPI_Aint count, MPI_Datatype datatyp
 
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__GPU;
     if (remote_rank != MPI_PROC_NULL) {
-        remote_rank = MPIDI_GPUI_global.local_ranks[MPIDIU_rank_to_lpid(remote_rank, comm)];
+        remote_rank = MPIDI_GPUI_global.local_ranks[MPIDIU_get_grank(remote_rank, comm)];
     }
 
     ipc_attr->u.gpu.remote_rank = remote_rank;

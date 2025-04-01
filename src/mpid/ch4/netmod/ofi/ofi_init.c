@@ -712,6 +712,9 @@ int MPIDI_OFI_init_local(int *tag_bits)
     mpi_errno = MPIDI_OFI_vci_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* A way to tell which av is empty */
+    MPIDI_OFI_global.lpid0 = MPIR_LPID_INVALID;
+
     /* -------------------------------- */
     /* Set up the libfabric provider(s) */
     /* -------------------------------- */
@@ -826,7 +829,7 @@ static int flush_send(int dst, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 {
     int mpi_errno = MPI_SUCCESS;
 
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, dst), vci, nic, vci, nic);
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_lpid_to_av(dst), vci, nic, vci, nic);
     static int data = 0;
     uint64_t match_bits =
         MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0, MPIDI_OFI_FLUSH_TAG);
@@ -857,7 +860,7 @@ static int flush_recv(int src, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 {
     int mpi_errno = MPI_SUCCESS;
 
-    fi_addr_t addr = MPIDI_OFI_av_to_phys(&MPIDIU_get_av(0, src), vci, nic, vci, nic);
+    fi_addr_t addr = MPIDI_OFI_av_to_phys(MPIDIU_lpid_to_av(src), vci, nic, vci, nic);
     uint64_t mask_bits = 0;
     uint64_t match_bits =
         MPIDI_OFI_init_sendtag(MPIDI_OFI_FLUSH_CONTEXT_ID, 0, MPIDI_OFI_FLUSH_TAG);
@@ -1000,7 +1003,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     /* free av entries for multiple vcis and nics */
     for (i = 0; i < MPIR_Process.size; i++) {
-        MPIDI_av_entry_t *av = &MPIDIU_get_av(0, i);
+        MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(i);
         MPL_free(MPIDI_OFI_AV(av).all_dest);
         MPIDI_OFI_AV(av).all_dest = NULL;
     }
@@ -1440,10 +1443,10 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
         /* directly references the mapped fi_addr_t array instead               */
         fi_addr_t *mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (int i = 0; i < MPIR_Process.size; i++) {
-            MPIDI_OFI_AV_ADDR_ROOT(&MPIDIU_get_av(0, i)) = mapped_table[i];
+            MPIDI_OFI_AV_ADDR_ROOT(MPIDIU_lpid_to_av(i)) = mapped_table[i];
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%" PRIu64,
-                             i, (void *) &MPIDIU_get_av(0, i), mapped_table[i]));
+                             i, (void *) MPIDIU_lpid_to_av(i), mapped_table[i]));
         }
         ret = 1;
     }

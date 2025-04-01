@@ -102,10 +102,6 @@ int MPIDIU_new_avt(int size, int *avtid)
     }
     MPIDI_global.avt_mgr.av_tables[*avtid] = new_av_table;
 
-    MPIR_cc_set(&MPIDI_global.avt_mgr.av_tables[*avtid]->ref_count, 0);
-
-    /* TODO: to support dynamic processes and dynamic av insertions, we need device hooks to initialize table with invalid entries */
-
     MPIR_FUNC_EXIT;
     return mpi_errno;
 }
@@ -124,33 +120,6 @@ int MPIDIU_free_avt(int avtid)
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_EXIT;
     return mpi_errno;
-}
-
-int MPIDIU_avt_add_ref(int avtid)
-{
-    MPIR_FUNC_ENTER;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " incr avtid=%d", avtid));
-    MPIR_cc_inc(&MPIDI_global.avt_mgr.av_tables[avtid]->ref_count);
-
-    MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
-}
-
-int MPIDIU_avt_release_ref(int avtid)
-{
-    int in_use;
-
-    MPIR_FUNC_ENTER;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " decr avtid=%d", avtid));
-    MPIR_cc_decr(&MPIDI_global.avt_mgr.av_tables[avtid]->ref_count, &in_use);
-    if (!in_use) {
-        MPIDIU_free_avt(avtid);
-    }
-
-    MPIR_FUNC_EXIT;
-    return MPI_SUCCESS;
 }
 
 static void init_dynamic_av_table(void);
@@ -180,7 +149,6 @@ int MPIDIU_avt_init(void)
 #endif
 
     MPIDI_global.avt_mgr.av_table0->size = size;
-    MPIR_cc_set(&MPIDI_global.avt_mgr.av_table0->ref_count, 1);
 
     for (int i = 0; i < size; i++) {
         MPIDI_global.avt_mgr.av_table0->table[i].is_local =
@@ -196,14 +164,13 @@ int MPIDIU_avt_init(void)
     return mpi_errno;
 }
 
-int MPIDIU_avt_destroy(void)
+int MPIDIU_avt_finalize(void)
 {
     MPIR_FUNC_ENTER;
 
     for (int i = 0; i < MPIDI_global.avt_mgr.n_avts; i++) {
         if (MPIDI_global.avt_mgr.av_tables[i] != NULL) {
-            MPIDIU_avt_release_ref(i);
-            /*TODO: Check all references is cleared and the entry is set to NULL */
+            MPIDIU_free_avt(i);
         }
     }
 
@@ -338,23 +305,20 @@ MPIDI_av_entry_t *MPIDIU_lpid_to_av_slow(MPIR_Lpid lpid)
 }
 
 #ifdef MPIDI_BUILD_CH4_UPID_HASH
-/* Store the upid, avtid, lpid in a hash to support get_local_upids and upids_to_lupids */
+/* Store the upid, avtid, lpid in a hash to support get_local_upids and insert_upid */
 static MPIDI_upid_hash *upid_hash = NULL;
 
-void MPIDIU_upidhash_add(const void *upid, int upid_len, int avtid, int lpid)
+void MPIDIU_upidhash_add(const void *upid, int upid_len, MPIR_Lpid lpid)
 {
     MPIDI_upid_hash *t;
     t = MPL_malloc(sizeof(MPIDI_upid_hash), MPL_MEM_OTHER);
-    t->avtid = avtid;
     t->lpid = lpid;
     t->upid = MPL_malloc(upid_len, MPL_MEM_OTHER);
     memcpy(t->upid, upid, upid_len);
     t->upid_len = upid_len;
     HASH_ADD_KEYPTR(hh, upid_hash, t->upid, upid_len, t, MPL_MEM_OTHER);
 
-    MPIDIU_get_av(avtid, lpid).hash = t;
-    /* Do not free avt while we use upidhash - FIXME: improve it */
-    MPIDIU_avt_add_ref(avtid);
+    MPIDIU_lpid_to_av(lpid)->hash = t;
 }
 
 MPIDI_upid_hash *MPIDIU_upidhash_find(const void *upid, int upid_len)
@@ -369,98 +333,8 @@ void MPIDIU_upidhash_free(void)
     MPIDI_upid_hash *cur, *tmp;
     HASH_ITER(hh, upid_hash, cur, tmp) {
         HASH_DEL(upid_hash, cur);
-        MPIDIU_avt_release_ref(cur->avtid);
         MPL_free(cur->upid);
         MPL_free(cur);
     }
 }
 #endif
-
-int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_rank_map_lut_t *new_lut = NULL;
-
-    MPIR_FUNC_ENTER;
-
-    new_lut = (MPIDI_rank_map_lut_t *) MPL_malloc(sizeof(MPIDI_rank_map_lut_t)
-                                                  + size * sizeof(MPIDI_lpid_t), MPL_MEM_ADDRESS);
-    if (new_lut == NULL) {
-        *lut = NULL;
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-    }
-
-    MPIR_cc_set(&new_lut->ref_count, 1);
-    *lut = new_lut;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
-                    (MPL_DBG_FDEST, "alloc lut %p, size %lu, refcount=%d",
-                     new_lut, size * sizeof(MPIDI_lpid_t), MPIR_cc_get(&new_lut->ref_count)));
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int in_use = 0;
-
-    MPIR_FUNC_ENTER;
-
-    MPIR_cc_decr(&lut->ref_count, &in_use);
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "dec ref to lut %p", lut));
-    if (!in_use) {
-        MPL_free(lut);
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "free lut %p", lut));
-    }
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}
-
-int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_rank_map_mlut_t *new_mlut = NULL;
-
-    MPIR_FUNC_ENTER;
-
-    new_mlut = (MPIDI_rank_map_mlut_t *) MPL_malloc(sizeof(MPIDI_rank_map_mlut_t)
-                                                    + size * sizeof(MPIDI_gpid_t), MPL_MEM_ADDRESS);
-    if (new_mlut == NULL) {
-        *mlut = NULL;
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-    }
-
-    MPIR_cc_set(&new_mlut->ref_count, 1);
-    *mlut = new_mlut;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
-                    (MPL_DBG_FDEST, "alloc mlut %p, size %lu, refcount=%d",
-                     new_mlut, size * sizeof(MPIDI_gpid_t), MPIR_cc_get(&new_mlut->ref_count)));
-  fn_exit:
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int in_use = 0;
-
-    MPIR_FUNC_ENTER;
-
-    MPIR_cc_decr(&mlut->ref_count, &in_use);
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "dec ref to mlut %p", mlut));
-    if (!in_use) {
-        MPL_free(mlut);
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "free mlut %p", mlut));
-    }
-
-    MPIR_FUNC_EXIT;
-    return mpi_errno;
-}

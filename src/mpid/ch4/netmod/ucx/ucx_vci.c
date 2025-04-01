@@ -75,7 +75,7 @@ static int all_vcis_address_exchange(MPIR_Comm * comm)
     ucp_ep_params_t ep_params;
     for (int vci_local = 0; vci_local < num_vcis; vci_local++) {
         for (int r = 0; r < size; r++) {
-            MPIDI_UCX_addr_t *av = &MPIDI_UCX_AV(&MPIDIU_get_av(0, r));
+            MPIDI_UCX_addr_t *av = &MPIDI_UCX_AV(MPIDIU_lpid_to_av(r));
             for (int vci_remote = 0; vci_remote < num_vcis; vci_remote++) {
                 if (vci_local == 0 && vci_remote == 0) {
                     /* don't overwrite existing addr, or bad things will happen */

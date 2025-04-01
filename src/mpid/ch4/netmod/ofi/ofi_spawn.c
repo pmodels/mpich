@@ -22,9 +22,7 @@ int MPIDI_OFI_dynamic_send(MPIR_Lpid remote_lpid, int tag, const void *buf, int 
 
     int vci = 0;                /* dynamic process only use vci 0 */
     int ctx_idx = 0;
-    int avtid = MPIDIU_GPID_GET_AVTID(remote_lpid);
-    int lpid = MPIDIU_GPID_GET_LPID(remote_lpid);
-    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys_root(&MPIDIU_get_av(avtid, lpid));
+    fi_addr_t remote_addr = MPIDI_OFI_av_to_phys_root(MPIDIU_lpid_to_av_slow(remote_lpid));
 
     MPIDI_OFI_dynamic_process_request_t req;
     req.done = 0;
@@ -229,102 +227,6 @@ static int cancel_dynamic_request(MPIDI_OFI_dynamic_process_request_t * dynamic_
     goto fn_exit;
 }
 
-/* the following functions are "proc" functions, but because they are only used during dynamic
- * process spawning, having them here provides better context */
-
-int MPIDI_OFI_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids,
-                             MPIR_Lpid * remote_lpids)
-{
-    int i, mpi_errno = MPI_SUCCESS;
-    int *new_avt_procs;
-    char **new_upids;
-    int n_new_procs = 0;
-    int n_avts;
-    char *curr_upid;
-    int ctx_idx = MPIDI_OFI_get_ctx_index(0, 0);
-
-    MPIR_CHKLMEM_DECL();
-#ifdef MPICH_DEBUG_MUTEX
-    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
-#endif
-
-    MPIR_CHKLMEM_MALLOC(new_avt_procs, sizeof(int) * size);
-    MPIR_CHKLMEM_MALLOC(new_upids, sizeof(char *) * size);
-
-    n_avts = MPIDIU_get_n_avts();
-
-    curr_upid = remote_upids;
-    for (i = 0; i < size; i++) {
-        int j, k;
-        char tbladdr[FI_NAME_MAX];
-        int found = 0;
-        size_t sz = 0;
-
-        char *hostname = curr_upid;
-        int hostname_len = strlen(hostname);
-        char *addrname = hostname + hostname_len + 1;
-        int addrname_len = remote_upid_size[i] - hostname_len - 1;
-
-        for (k = 0; k < n_avts; k++) {
-            if (MPIDIU_get_av_table(k) == NULL) {
-                continue;
-            }
-            for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
-                sz = MPIDI_OFI_global.addrnamelen;
-                MPIDI_av_entry_t *av = &MPIDIU_get_av(k, j);
-                MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av,
-                                            MPIDI_OFI_AV_ADDR_ROOT(av), &tbladdr, &sz), avlookup);
-                if (sz == addrname_len && !memcmp(tbladdr, addrname, addrname_len)) {
-                    remote_lpids[i] = MPIDIU_GPID_CREATE(k, j);
-                    found = 1;
-                    break;
-                }
-            }
-            if (found) {
-                break;
-            }
-        }
-
-        if (!found) {
-            new_avt_procs[n_new_procs] = i;
-            new_upids[n_new_procs] = curr_upid;
-            n_new_procs++;
-        }
-        curr_upid += remote_upid_size[i];
-    }
-
-    /* create new av_table, insert processes */
-    if (n_new_procs > 0) {
-        int avtid;
-        mpi_errno = MPIDIU_new_avt(n_new_procs, &avtid);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        for (i = 0; i < n_new_procs; i++) {
-            char *hostname = new_upids[i];
-            char *addrname = hostname + strlen(hostname) + 1;
-
-            fi_addr_t addr;
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[ctx_idx].av, addrname,
-                                        1, &addr, 0ULL, NULL), avmap);
-            MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV_ADDR_ROOT(&MPIDIU_get_av(avtid, i)) = addr;
-
-            int node_id;
-            mpi_errno = MPIR_nodeid_lookup(hostname, &node_id);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIDIU_get_av(avtid, i).node_id = node_id;
-
-            remote_lpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
-        }
-    }
-
-  fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **local_upids)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -379,6 +281,12 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
     goto fn_exit;
 }
 
+/* The av table is initially zeroed (via calloc). Only one entry can be ligitimately 0,
+ * that is recorded in MPIDI_OFI_global.lpid0; so we need double check against that.
+ */
+#define AV_ENTRY_IS_UNSET(av) \
+    MPIDI_OFI_AV_ADDR_ROOT(av) == 0 && lpid != MPIDI_OFI_global.lpid0
+
 int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -390,9 +298,14 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
     MPIDI_av_entry_t *av = MPIDIU_lpid_to_av_slow(lpid);
 
     bool do_insert = false;
+    bool new_av_entry = false;
     if (lpid & MPIR_LPID_DYNAMIC_MASK) {
+        /* dynamic entry */
         do_insert = true;
-    } else if (MPIDI_OFI_AV_ADDR_ROOT(av) == FI_ADDR_NOTAVAIL) {
+    } else if (AV_ENTRY_IS_UNSET(av)) {
+        /* new av entry */
+        new_av_entry = true;
+
         MPIDI_av_entry_t *dynamic_av = MPIDIU_find_dynamic_av(upid, upid_len);
         if (dynamic_av) {
             /* just copy it over */
@@ -406,6 +319,9 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
         mpi_errno = MPIR_nodeid_lookup(hostname, &node_id);
         MPIR_ERR_CHECK(mpi_errno);
         av->node_id = node_id;
+    } else {
+        /* A known entry, nothing to do */
+        goto fn_exit;
     }
 
     if (do_insert) {
@@ -414,6 +330,11 @@ int MPIDI_OFI_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
         MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, addrname,
                                     1, &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
         MPIR_Assert(MPIDI_OFI_AV_ADDR_ROOT(av) != FI_ADDR_NOTAVAIL);
+    }
+
+    /* remember the lpid if the entry is 0 */
+    if (new_av_entry && MPIDI_OFI_AV_ADDR_ROOT(av) == 0) {
+        MPIDI_OFI_global.lpid0 = lpid;
     }
 
   fn_exit:

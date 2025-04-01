@@ -268,70 +268,10 @@ int MPIDI_UCX_insert_upid(MPIR_Lpid lpid, const char *upid, int upid_len)
     }
 
     if (!is_dynamic) {
-        int avtid = MPIR_LPID_WORLD_INDEX(lpid);
-        int wrank = MPIR_LPID_WORLD_RANK(lpid);
-        MPIDIU_upidhash_add(upid, upid_len, avtid, wrank);
+        MPIDIU_upidhash_add(upid, upid_len, lpid);
     }
 
   fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIDI_UCX_upids_to_lpids(int size, int *remote_upid_size, char *remote_upids,
-                             MPIR_Lpid * remote_lpids)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    int n_new_procs = 0;
-    int *new_avt_procs;
-    char **new_upids;
-    int vci = 0;
-    MPIR_CHKLMEM_DECL();
-
-#ifdef MPICH_DEBUG_MUTEX
-    MPID_THREAD_ASSERT_IN_CS(VCI, MPIDI_VCI_LOCK(0));
-#endif
-    MPIR_CHKLMEM_MALLOC(new_avt_procs, sizeof(int) * size);
-    MPIR_CHKLMEM_MALLOC(new_upids, sizeof(char *) * size);
-
-    char *curr_upid = remote_upids;
-    for (int i = 0; i < size; i++) {
-        MPIDI_upid_hash *t = MPIDIU_upidhash_find(curr_upid, remote_upid_size[i]);
-        if (t) {
-            remote_lpids[i] = MPIDIU_GPID_CREATE(t->avtid, t->lpid);
-        } else {
-            new_avt_procs[n_new_procs] = i;
-            new_upids[n_new_procs] = curr_upid;
-            n_new_procs++;
-
-        }
-        curr_upid += remote_upid_size[i];
-    }
-
-    /* create new av_table, insert processes */
-    if (n_new_procs > 0) {
-        int avtid;
-        mpi_errno = MPIDIU_new_avt(n_new_procs, &avtid);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        for (int i = 0; i < n_new_procs; i++) {
-            ucp_ep_params_t ep_params;
-            ucs_status_t ucx_status;
-            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) new_upids[i];
-            ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[vci].worker, &ep_params,
-                                       &MPIDI_UCX_AV(&MPIDIU_get_av(avtid, i)).dest[0][0]);
-            MPIDI_UCX_CHK_STATUS(ucx_status);
-            MPIDIU_upidhash_add(new_upids[i], remote_upid_size[new_avt_procs[i]], avtid, i);
-
-            remote_lpids[new_avt_procs[i]] = MPIDIU_GPID_CREATE(avtid, i);
-        }
-    }
-
-  fn_exit:
-    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;

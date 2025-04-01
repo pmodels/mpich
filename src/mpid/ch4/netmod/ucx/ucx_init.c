@@ -96,9 +96,9 @@ static int initial_address_exchange(void)
             ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
             ucx_status =
                 ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0]);
+                              &MPIDI_UCX_AV(MPIDIU_lpid_to_av(node_roots[i])).dest[0][0]);
             MPIDI_UCX_CHK_STATUS(ucx_status);
-            MPIDIU_upidhash_add(ep_params.address, recv_bc_len, 0, node_roots[i]);
+            MPIDIU_upidhash_add(ep_params.address, recv_bc_len, node_roots[i]);
         }
         mpi_errno = MPIDU_bc_allgather(init_comm, MPIDI_UCX_global.ctx[0].if_address,
                                        (int) MPIDI_UCX_global.ctx[0].addrname_len, FALSE,
@@ -111,9 +111,9 @@ static int initial_address_exchange(void)
                 ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
                 ep_params.address = (ucp_address_t *) ((char *) table + rank_map[i] * recv_bc_len);
                 ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
-                                           &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0][0]);
+                                           &MPIDI_UCX_AV(MPIDIU_lpid_to_av(i)).dest[0][0]);
                 MPIDI_UCX_CHK_STATUS(ucx_status);
-                MPIDIU_upidhash_add(ep_params.address, recv_bc_len, 0, i);
+                MPIDIU_upidhash_add(ep_params.address, recv_bc_len, i);
             }
         }
         mpi_errno = MPIDU_bc_table_destroy();
@@ -124,9 +124,9 @@ static int initial_address_exchange(void)
             ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
             ucx_status =
                 ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0][0]);
+                              &MPIDI_UCX_AV(MPIDIU_lpid_to_av(i)).dest[0][0]);
             MPIDI_UCX_CHK_STATUS(ucx_status);
-            MPIDIU_upidhash_add(ep_params.address, recv_bc_len, 0, i);
+            MPIDIU_upidhash_add(ep_params.address, recv_bc_len, i);
         }
         mpi_errno = MPIDU_bc_table_destroy();
         MPIR_ERR_CHECK(mpi_errno);
@@ -253,7 +253,7 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
     int p = 0;
     for (int i = 0; i < MPIR_Process.size; i++) {
-        MPIDI_UCX_addr_t *av = &MPIDI_UCX_AV(&MPIDIU_get_av(0, i));
+        MPIDI_UCX_addr_t *av = &MPIDI_UCX_AV(MPIDIU_lpid_to_av(i));
         for (int vci_local = 0; vci_local < MPIDI_UCX_global.num_vcis; vci_local++) {
             for (int vci_remote = 0; vci_remote < MPIDI_UCX_global.num_vcis; vci_remote++) {
                 ucp_request = ucp_disconnect_nb(av->dest[vci_local][vci_remote]);

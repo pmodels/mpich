@@ -85,7 +85,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_am_header_t msg_hdr;
-    const int grank = MPIDIU_rank_to_lpid(rank, comm);
+    const int grank = MPIDIU_get_grank(rank, comm);
 
     MPIR_FUNC_ENTER;
 
@@ -180,7 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank, MPIR_Comm * comm,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_am_header_t msg_hdr;
-    const int grank = MPIDIU_rank_to_lpid(rank, comm);
+    const int grank = MPIDIU_get_grank(rank, comm);
 
     MPIR_FUNC_ENTER;
 

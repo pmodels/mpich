@@ -19,7 +19,6 @@
 
 #define MPIDI_UCX_COMM(comm)     ((comm)->dev.ch4.netmod.ucx)
 #define MPIDI_UCX_REQ(req)       ((req)->dev.ch4.netmod.ucx)
-#define COMM_TO_INDEX(comm,rank) MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
 #define MPIDI_UCX_COMM_TO_EP(comm,rank,vci_src,vci_dst) \
     MPIDI_UCX_AV(MPIDIU_comm_rank_to_av(comm, rank)).dest[vci_src][vci_dst]
 #define MPIDI_UCX_AV_TO_EP(av,vci_src,vci_dst) MPIDI_UCX_AV((av)).dest[vci_src][vci_dst]
@@ -152,6 +151,5 @@ void MPIDI_UCX_am_recv_callback_nbx(void *request, ucs_status_t status, size_t l
 #endif
 
 int MPIDI_UCX_init_worker(int vci);
-int MPIDI_UCX_all_vcis_address_exchange(void);
 
 #endif /* UCX_IMPL_H_INCLUDED */

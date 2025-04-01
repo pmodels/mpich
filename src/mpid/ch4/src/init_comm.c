@@ -21,7 +21,6 @@ int MPIDI_create_init_comm(MPIR_Comm ** comm)
         int node_roots_comm_size = MPIR_Process.num_nodes;
         int node_roots_comm_rank = MPIR_Process.node_map[world_rank];
         MPIR_Comm *init_comm = NULL;
-        MPIDI_rank_map_lut_t *lut = NULL;
 
         mpi_errno = MPIR_Comm_create(&init_comm);
         MPIR_ERR_CHECK(mpi_errno);
@@ -44,17 +43,6 @@ int MPIDI_create_init_comm(MPIR_Comm ** comm)
                                           map, &init_comm->local_group);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPIDI_COMM(init_comm, map).mode = MPIDI_RANK_MAP_LUT_INTRA;
-        mpi_errno = MPIDIU_alloc_lut(&lut, node_roots_comm_size);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_COMM(init_comm, map).size = node_roots_comm_size;
-        MPIDI_COMM(init_comm, map).avtid = 0;
-        MPIDI_COMM(init_comm, map).irreg.lut.t = lut;
-        MPIDI_COMM(init_comm, map).irreg.lut.lpid = lut->lpid;
-        MPIDI_COMM(init_comm, local_map).mode = MPIDI_RANK_MAP_NONE;
-        for (i = 0; i < node_roots_comm_size; ++i) {
-            lut->lpid[i] = MPIR_Process.node_root_map[i];
-        }
         mpi_errno = MPIDIG_init_comm(init_comm);
         MPIR_ERR_CHECK(mpi_errno);
         /* hacky, consider a separate MPIDI_{NM,SHM}_init_comm_hook
@@ -77,9 +65,8 @@ void MPIDI_destroy_init_comm(MPIR_Comm ** comm_ptr)
     MPIR_Comm *comm = NULL;
     if (*comm_ptr != NULL) {
         comm = *comm_ptr;
-        MPIDIU_release_lut(MPIDI_COMM(comm, map).irreg.lut.t);
-        MPIR_Group_release(comm->local_group);
         MPIDIG_destroy_comm(comm);
+        MPIR_Group_release(comm->local_group);
         MPIR_Object_release_ref(comm, &in_use);
         MPIR_Assertp(in_use == 0);
         MPII_COMML_FORGET(comm);

@@ -561,69 +561,6 @@ typedef struct MPIDIG_comm_t {
 #endif
 } MPIDIG_comm_t;
 
-#define MPIDI_CALC_STRIDE(rank, stride, blocksize, offset) \
-    ((rank) / (blocksize) * ((stride) - (blocksize)) + (rank) + (offset))
-
-#define MPIDI_CALC_STRIDE_SIMPLE(rank, stride, offset) \
-    ((rank) * (stride) + (offset))
-
-typedef enum {
-    MPIDI_RANK_MAP_DIRECT,
-    MPIDI_RANK_MAP_DIRECT_INTRA,
-    MPIDI_RANK_MAP_OFFSET,
-    MPIDI_RANK_MAP_OFFSET_INTRA,
-    MPIDI_RANK_MAP_STRIDE,
-    MPIDI_RANK_MAP_STRIDE_INTRA,
-    MPIDI_RANK_MAP_STRIDE_BLOCK,
-    MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA,
-    MPIDI_RANK_MAP_LUT,
-    MPIDI_RANK_MAP_LUT_INTRA,
-    MPIDI_RANK_MAP_MLUT,
-    MPIDI_RANK_MAP_NONE
-} MPIDI_rank_map_mode;
-
-typedef int MPIDI_lpid_t;
-typedef struct {
-    int avtid;
-    int lpid;
-} MPIDI_gpid_t;
-
-typedef struct {
-    MPIR_cc_t ref_count;
-    MPIDI_lpid_t lpid[];
-} MPIDI_rank_map_lut_t;
-
-typedef struct {
-    MPIR_cc_t ref_count;
-    MPIDI_gpid_t gpid[];
-} MPIDI_rank_map_mlut_t;
-
-typedef struct {
-    MPIDI_rank_map_mode mode;
-    int avtid;
-    int size;
-
-    union {
-        int offset;
-        struct {
-            int offset;
-            int stride;
-            int blocksize;
-        } stride;
-    } reg;
-
-    union {
-        struct {
-            MPIDI_rank_map_lut_t *t;
-            MPIDI_lpid_t *lpid;
-        } lut;
-        struct {
-            MPIDI_rank_map_mlut_t *t;
-            MPIDI_gpid_t *gpid;
-        } mlut;
-    } irreg;
-} MPIDI_rank_map_t;
-
 typedef struct MPIDI_Devcomm_t {
     struct {
         /* The first fields are used by the AM(MPIDIG) apis */
@@ -638,8 +575,6 @@ typedef struct MPIDI_Devcomm_t {
         MPIDI_SHM_COMM_DECL} shm;
 #endif
 
-        MPIDI_rank_map_t map;
-        MPIDI_rank_map_t local_map;
         struct MPIR_Comm *multi_leads_comm;
         /* sub communicators related for multi-leaders based implementation */
         struct MPIR_Comm *inter_node_leads_comm, *sub_node_comm, *intra_node_leads_comm;
@@ -685,8 +620,7 @@ typedef struct {
 typedef struct {
     void *upid;
     int upid_len;
-    int avtid;
-    int lpid;
+    MPIR_Lpid lpid;
     UT_hash_handle hh;
 } MPIDI_upid_hash;
 #endif
@@ -702,17 +636,6 @@ typedef struct MPIDI_av_entry {
 } MPIDI_av_entry_t;
 
 #define HAVE_DEV_COMM_HOOK
-
-/*
- * operation for (avtid, lpid) to/from gpid
- */
-#define MPIDIU_LPID_BITS                     32
-#define MPIDIU_LPID_MASK                     0xFFFFFFFFU
-#define MPIDIU_GPID_CREATE(avtid, lpid)      (((uint64_t) (avtid) << MPIDIU_LPID_BITS) | (lpid))
-#define MPIDIU_GPID_GET_AVTID(gpid)          ((gpid) >> MPIDIU_LPID_BITS)
-#define MPIDIU_GPID_GET_LPID(gpid)           ((gpid) & MPIDIU_LPID_MASK)
-
-#define MPIDI_DYNPROC_MASK                 (0x80000000U)
 
 int MPIDI_check_for_failed_procs(void);
 

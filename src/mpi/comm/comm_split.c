@@ -89,7 +89,6 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         first_entry = 0, first_remote_entry = 0, *last_ptr;
     int in_newcomm;             /* TRUE iff *newcomm should be populated */
     int new_context_id, remote_context_id;
-    MPIR_Comm_map_t *mapper;
     MPIR_CHKLMEM_DECL();
 
     rank = comm_ptr->rank;
@@ -277,18 +276,20 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
              * corresponding process in the input communicator */
             MPIU_Sort_inttable(remotekeytable, new_remote_size);
 
-            MPIR_Comm_map_irregular(*newcomm_ptr, comm_ptr, NULL,
-                                    new_size, MPIR_COMM_MAP_DIR__L2L, &mapper);
+            int *local_ranks;
+            local_ranks = MPL_malloc(new_size * sizeof(int), MPL_MEM_OTHER);
+            MPIR_ERR_CHKANDJUMP(!local_ranks, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
             for (i = 0; i < new_size; i++) {
-                mapper->src_mapping[i] = keytable[i].color;
+                local_ranks[i] = keytable[i].color;
                 if (keytable[i].color == comm_ptr->rank)
                     (*newcomm_ptr)->rank = i;
             }
 
-            mpi_errno = MPIR_Group_incl_impl(comm_ptr->local_group, new_size, mapper->src_mapping,
+            mpi_errno = MPIR_Group_incl_impl(comm_ptr->local_group, new_size, local_ranks,
                                              &(*newcomm_ptr)->local_group);
             MPIR_ERR_CHECK(mpi_errno);
+            MPL_free(local_ranks);
 
             /* For the remote group, the situation is more complicated.
              * We need to find the size of our "partner" group in the
@@ -305,16 +306,19 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
              * is required to return MPI_COMM_NULL instead of an intercomm
              * with an empty remote group. */
 
-            MPIR_Comm_map_irregular(*newcomm_ptr, comm_ptr, NULL,
-                                    new_remote_size, MPIR_COMM_MAP_DIR__R2R, &mapper);
+            int *remote_ranks;
+            remote_ranks = MPL_malloc(new_remote_size * sizeof(int), MPL_MEM_OTHER);
+            MPIR_ERR_CHKANDJUMP(!remote_ranks, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-            for (i = 0; i < new_remote_size; i++)
-                mapper->src_mapping[i] = remotekeytable[i].color;
+            for (i = 0; i < new_remote_size; i++) {
+                remote_ranks[i] = remotekeytable[i].color;
+            }
 
             mpi_errno = MPIR_Group_incl_impl(comm_ptr->remote_group,
-                                             new_remote_size, mapper->src_mapping,
+                                             new_remote_size, remote_ranks,
                                              &(*newcomm_ptr)->remote_group);
             MPIR_ERR_CHECK(mpi_errno);
+            MPL_free(remote_ranks);
 
             (*newcomm_ptr)->context_id = remote_context_id;
             (*newcomm_ptr)->remote_size = new_remote_size;
@@ -326,18 +330,20 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
             (*newcomm_ptr)->context_id = (*newcomm_ptr)->recvcontext_id;
             (*newcomm_ptr)->remote_size = new_size;
 
-            MPIR_Comm_map_irregular(*newcomm_ptr, comm_ptr, NULL,
-                                    new_size, MPIR_COMM_MAP_DIR__L2L, &mapper);
+            int *local_ranks;
+            local_ranks = MPL_malloc(new_size * sizeof(int), MPL_MEM_OTHER);
+            MPIR_ERR_CHKANDJUMP(!local_ranks, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
             for (i = 0; i < new_size; i++) {
-                mapper->src_mapping[i] = keytable[i].color;
+                local_ranks[i] = keytable[i].color;
                 if (keytable[i].color == comm_ptr->rank)
                     (*newcomm_ptr)->rank = i;
             }
 
-            mpi_errno = MPIR_Group_incl_impl(comm_ptr->local_group, new_size, mapper->src_mapping,
+            mpi_errno = MPIR_Group_incl_impl(comm_ptr->local_group, new_size, local_ranks,
                                              &(*newcomm_ptr)->local_group);
             MPIR_ERR_CHECK(mpi_errno);
+            MPL_free(local_ranks);
         }
 
         /* Inherit the error handler (if any) */
