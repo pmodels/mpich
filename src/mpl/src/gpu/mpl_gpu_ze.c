@@ -3480,40 +3480,18 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
     }
 #elif defined(MPL_HAVE_AVX)
     while (n >= 32) {
-        _mm256_storeu_si256((__m256i *) d, _mm256_loadu_si256((__m256i const *) s));
+        _mm256_storeu_si256((__m256i *) d, _mm256_stream_load_si256((__m256i const *) s));
         d += 32;
         s += 32;
         n -= 32;
     }
 #endif /* MPL_HAVE_AVX512F || MPL_HAVE_AVX */
-#elif defined(MPL_HAVE_AVX512F)
-    while (n >= 64) {
-        _mm512_storeu_si512((__m512i *) d, _mm512_loadu_si512((__m512i const *) s));
-        d += 64;
-        s += 64;
-        n -= 64;
-    }
-    if (n & 32) {
-        _mm256_storeu_si256((__m256i *) d, _mm256_loadu_si256((__m256i const *) s));
-        d += 32;
-        s += 32;
-        n -= 32;
-    }
-#elif defined(MPL_HAVE_AVX)
-    while (n >= 32) {
-        _mm256_storeu_si256((__m256i *) d, _mm256_loadu_si256((__m256i const *) s));
-        d += 32;
-        s += 32;
-        n -= 32;
-    }
 #else
     goto fallback;
 #endif
     if (n & 16) {
 #if defined(MPL_HAVE_AVX) || defined(MPL_HAVE_AVX512F)
         _mm_stream_si128((__m128i *) d, _mm_stream_load_si128((__m128i const *) s));
-#else
-        _mm_storeu_si128((__m128i *) d, _mm_loadu_si128((__m128i const *) s));
 #endif
         d += 16;
         s += 16;
