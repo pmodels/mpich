@@ -139,6 +139,10 @@ struct MPIR_Comm {
     struct MPIR_Threadcomm *threadcomm; /* Not NULL only if it's associated with a threadcomm */
 
     MPIR_Comm_hierarchy_kind_t hierarchy_kind;  /* flat, parent, node, or node_roots */
+    int local_rank;
+    int num_local;
+    int external_rank;
+    int num_external;
     struct MPIR_Comm *node_comm;        /* Comm of processes in this comm that are on
                                          * the same node as this process. */
     struct MPIR_Comm *node_roots_comm;  /* Comm of root processes for other nodes. */
