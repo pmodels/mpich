@@ -64,26 +64,10 @@ extern int gpfsmpio_timing;
 extern int gpfsmpio_timing_cw_level;
 extern int gpfsmpio_comm;
 extern int gpfsmpio_tuneblocking;
-extern long bglocklessmpio_f_type;
 extern int gpfsmpio_pthreadio;
 extern int gpfsmpio_p2pcontig;
 extern int gpfsmpio_balancecontig;
 extern int gpfsmpio_devnullio;
-extern int gpfsmpio_bridgeringagg;
-
-/* Default is, well, kind of complicated. Blue Gene /L and /P had "psets": one
- * i/o node and all compute nodes wired to it.  On Blue Gene /Q that
- * relationship is a lot more fluid.  There are still I/O nodes, and compute
- * nodes are assigned to an i/o node, but there are two routes to the i/o node,
- * via compute nodes designated as "bridge nodes".  In this code, what we used
- * to call a "pset" is actually "compute nodes associated with and including a
- * bridge node".  So, "nAgg" is roughly "number of aggregators per bridge", but
- * look closely at ADIOI_BG_persInfo_init() for the details */
-
-#define ADIOI_BG_NAGG_PSET_DFLT 16
-
-extern int gpfsmpio_bg_nagg_pset;
-
 
 /* set internal variables for tuning environment variables */
 void ad_gpfs_get_env_vars(void);

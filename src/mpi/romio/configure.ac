@@ -748,19 +748,6 @@ if test -n "$file_system_gpfs"; then
     AC_DEFINE(ROMIO_GPFS,1,[Define for ROMIO with GPFS])
 fi
 
-AM_CONDITIONAL([BUILD_AD_BG],[false])
-AM_CONDITIONAL([BUILD_AD_PE],[false])
-if test "$file_system_args" = "BGQ" -a -n "$file_system_gpfs"; then
-    AC_DEFINE(BGQPLATFORM,1,BGQ platform)
-    AM_CONDITIONAL([BUILD_AD_BG],[true])
-    dnl what if anything can make Blue Gene support aio?
-    disable_aio=yes
-fi
-if test "$file_system_args" = "PE" -a -n "$file_system_gpfs"; then
-    AC_DEFINE(PEPLATFORM,1,PE platform)
-    AM_CONDITIONAL([BUILD_AD_PE],[true])
-fi
-
 # echo "with_file_system is :"$with_file_system": file_system_args is :"$file_system_args": FILE_SYSTEM is :"$FILE_SYSTEM":"
 
 

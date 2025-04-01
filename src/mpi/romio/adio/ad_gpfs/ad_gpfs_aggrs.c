@@ -289,101 +289,6 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
     ADIO_Offset naggs_large = n_gpfs_blk - naggs * (n_gpfs_blk / naggs);
     ADIO_Offset naggs_small = naggs - naggs_large;
 
-#ifdef BGQPLATFORM
-    if (gpfsmpio_balancecontig == 1) {
-        /* File domains blocks are assigned to aggregators in a breadth-first
-         * fashion relative to the ions - additionally, file domains on the
-         * aggregators sharing the same bridgeset and ion have contiguous
-         * offsets. */
-
-        // initialize everything to small
-        for (i = 0; i < naggs; i++)
-            fd_size[i] = nb_cn_small * blksize;
-
-        // go thru and distribute the large across the bridges
-
-        /* bridelistoffset: agg rank list offsets using the bridgelist - each
-         * entry is created by adding up the indexes for the aggs from all
-         * previous bridges */
-        int *bridgelistoffset = ADIOI_Malloc(fd->hints->fs_hints.bg.numbridges * sizeof(int));
-        /* tmpbridgelistnum: copy of the bridgelistnum whose entries can be
-         * decremented to keep track of bridge assignments during the actual
-         * large block assignments to the agg rank list*/
-        int *tmpbridgelistnum = ADIOI_Malloc(fd->hints->fs_hints.bg.numbridges * sizeof(int));
-
-        int j;
-        for (j = 0; j < fd->hints->fs_hints.bg.numbridges; j++) {
-            int k, bridgerankoffset = 0;
-            for (k = 0; k < j; k++) {
-                bridgerankoffset += fd->hints->fs_hints.bg.bridgelistnum[k];
-            }
-            bridgelistoffset[j] = bridgerankoffset;
-        }
-
-        for (j = 0; j < fd->hints->fs_hints.bg.numbridges; j++)
-            tmpbridgelistnum[j] = fd->hints->fs_hints.bg.bridgelistnum[j];
-        int bridgeiter = 0;
-
-        /* distribute the large blocks across the aggs going breadth-first
-         * across the bridgelist - this distributes the fd sizes across the
-         * ions, so later in the file domain assignment when it iterates thru
-         * the ranklist the offsets will be contiguous within the bridge and
-         * ion as well */
-        for (j = 0; j < naggs_large; j++) {
-            int foundbridge = 0;
-            int numbridgelistpasses = 0;
-            while (!foundbridge) {
-                if (tmpbridgelistnum[bridgeiter] > 0) {
-                    foundbridge = 1;
-                    /*
-                     * printf("bridgeiter is %d tmpbridgelistnum[bridgeiter] is %d bridgelistoffset[bridgeiter] is %d\n",bridgeiter,tmpbridgelistnum[bridgeiter],bridgelistoffset[bridgeiter]);
-                     * printf("naggs is %d bridgeiter is %d bridgelistoffset[bridgeiter] is %d tmpbridgelistnum[bridgeiter] is %d\n",naggs, bridgeiter,bridgelistoffset[bridgeiter],tmpbridgelistnum[bridgeiter]);
-                     * printf("naggs is %d bridgeiter is %d setting fd_size[%d]\n",naggs, bridgeiter,bridgelistoffset[bridgeiter]+(fd->hints->bridgelistnum[bridgeiter]-tmpbridgelistnum[bridgeiter]));
-                     */
-                    int currentbridgelistnum =
-                        (fd->hints->fs_hints.bg.bridgelistnum[bridgeiter] -
-                         tmpbridgelistnum[bridgeiter]);
-                    int currentfdsizeindex = bridgelistoffset[bridgeiter] + currentbridgelistnum;
-                    fd_size[currentfdsizeindex] = (nb_cn_small + 1) * blksize;
-                    tmpbridgelistnum[bridgeiter]--;
-                }
-                if (bridgeiter == (fd->hints->fs_hints.bg.numbridges - 1)) {
-                    /* guard against infinite loop - should only ever make 1 pass
-                     * thru bridgelist */
-                    ADIOI_Assert(numbridgelistpasses == 0);
-                    numbridgelistpasses++;
-                    bridgeiter = 0;
-                } else
-                    bridgeiter++;
-            }
-        }
-        ADIOI_Free(tmpbridgelistnum);
-        ADIOI_Free(bridgelistoffset);
-
-    } else {
-        /* BG/L- and BG/P-style distribution of file domains: simple allocation of
-         * file domins to each aggregator */
-        for (i = 0; i < naggs; i++) {
-            if (i < naggs_large) {
-                fd_size[i] = (nb_cn_small + 1) * blksize;
-            } else {
-                fd_size[i] = nb_cn_small * blksize;
-            }
-        }
-    }
-#ifdef balancecontigtrace
-    int myrank;
-    MPI_Comm_rank(fd->comm, &myrank);
-    if (myrank == 0) {
-        fprintf(stderr, "naggs_small is %d nb_cn_small is %d\n", naggs_small, nb_cn_small);
-        for (i = 0; i < naggs; i++) {
-            fprintf(stderr, "fd_size[%d] set to %d agg rank is %d\n", i, fd_size[i],
-                    fd->hints->ranklist[i]);
-        }
-    }
-#endif
-
-#else // not BGQ platform
     for (i = 0; i < naggs; i++) {
         if (i < naggs_large) {
             fd_size[i] = (nb_cn_small + 1) * blksize;
@@ -391,9 +296,6 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
             fd_size[i] = nb_cn_small * blksize;
         }
     }
-
-#endif
-
 
 #if AGG_DEBUG
     DBG_FPRINTF(stderr, "%s(%d): "
