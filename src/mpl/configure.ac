@@ -263,42 +263,6 @@ if test "$force_enable_avx" = "yes" || test "$pac_cv_found_avx_runnable" = "yes"
     AC_DEFINE(HAVE_AVX,1,[Define if avx is available])
 fi
 
-# We should have correct -m options to CFLAGS at this stage. Only need to check if the
-# needed instructions can be compiled. This is necessary because in cross-compile, for
-# example, we may not have -mavx512f in CFLAGS, but a -march= flag is used.
-# TODO: extend this for cross-compile case
-AC_CACHE_CHECK([whether _mm_stream_si128 is supported], pac_cv_found__mm_stream_si128,[
-                AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-                                   #include <immintrin.h>
-                                   #include <stdlib.h>
-
-                                   int main(int argc, char **argv) {
-                                       int ret = 0;
-                                       char *source = NULL, *dest = NULL;
-                                       posix_memalign(&source, 64, 64);
-                                       posix_memalign(&dest, 64, 64);
-                                       for (int i = 0; i < 64; i++) source[i] = 'a';
-
-                                       __m128i xmm0 = _mm_loadu_si128((__m128i const *) source);
-                                       _mm_stream_si128((__m128i *) dest, xmm0);
-                                       _mm_sfence();
-
-                                       if (dest[0] == source[0]) ret = 0;
-                                       else ret = 1;
-
-                                       free(source);
-                                       free(dest);
-
-                                       return ret;
-                                   }
-                                   ]])], pac_cv_found__mm_stream_si128="yes",
-                                   pac_cv_found__mm_stream_si128"no",
-                                   pac_cv_found__mm_stream_si128="unknown")
-                ])
-if test "$pac_cv_found__mm_stream_si128" = "yes" ; then
-    AC_DEFINE(HAVE__MM_STREAM_SI128,1,[Define if _mm_stream_si128 is available])
-fi
-
 #######################################################################
 # valgrind support
 AC_ARG_WITH([valgrind],
