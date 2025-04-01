@@ -479,6 +479,82 @@ static void propagate_hints_to_subcomm(MPIR_Comm * comm, MPIR_Comm * subcomm)
     subcomm->hints[MPIR_COMM_HINT_VCI] = comm->hints[MPIR_COMM_HINT_VCI];
 }
 
+static int get_max_num_nodes(void)
+{
+    if (MPIR_Process.node_hostnames) {
+        return utarray_len(MPIR_Process.node_hostnames);
+    } else {
+        return MPIR_Process.num_nodes;
+    }
+}
+
+static int check_hierarchy(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_CHKLMEM_DECL();
+
+    int comm_size = comm->local_size;
+
+    /* node_map[rank] stores the (relabled) node_id */
+    int *node_map = MPL_malloc(comm_size * sizeof(int), MPL_MEM_COMM);
+    MPIR_ERR_CHKANDJUMP(!node_map, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    /* nodes[node_id] relabels node_id to 0..(num_nodes-1) */
+    int *nodes;
+    int max_nodes = get_max_num_nodes();
+    MPIR_CHKLMEM_MALLOC(nodes, max_nodes * sizeof(int));
+    for (int i = 0; i < max_nodes; i++) {
+        nodes[i] = -1;
+    }
+
+    /* populate node_map */
+    int num_nodes = 0;
+    int my_node_id = -1;
+    for (int i = 0; i < comm_size; i++) {
+        int node_id;
+        mpi_errno = MPID_Get_node_id(comm, i, &node_id);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (node_id == -1) {
+            /* Hierarchy not supported */
+            goto fn_fail;
+        }
+
+        if (nodes[node_id] == -1) {
+            nodes[node_id] = num_nodes++;
+        }
+        node_map[i] = nodes[node_id];
+        if (i == comm->rank) {
+            my_node_id = nodes[node_id];
+        }
+    }
+
+    /* get local node */
+    int num_local = 0;
+    int local_rank = 0;
+    for (int i = 0; i < comm_size; i++) {
+        if (node_map[i] == my_node_id) {
+            num_local++;
+            if (i == comm->rank) {
+                local_rank = num_local - 1;
+            }
+        }
+    }
+
+    comm->local_rank = local_rank;
+    comm->num_local = num_local;
+    comm->num_external = num_nodes;
+    comm->external_rank = my_node_id;
+    comm->node_map = node_map;
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    MPL_free(node_map);
+    goto fn_exit;
+}
+
 int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs,
                         MPIR_Comm ** subcomm_out)
 {
@@ -555,52 +631,57 @@ int MPIR_Subcomm_free(MPIR_Comm * subcomm)
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    int num_local = -1, num_external = -1;
-    int local_rank = -1, external_rank = -1;
-    int *local_procs = NULL, *external_procs = NULL;
-
     MPIR_FUNC_ENTER;
+    MPIR_CHKLMEM_DECL();
 
-    MPIR_Assert(comm->node_comm == NULL);
-    MPIR_Assert(comm->node_roots_comm == NULL);
-
-    mpi_errno = MPIR_Find_local(comm, &num_local, &local_rank, &local_procs,
-                                &comm->intranode_table);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Find_external(comm, &num_external, &external_rank, &external_procs,
-                                   &comm->internode_table);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* defensive checks */
-    MPIR_Assert(num_local > 0);
-    MPIR_Assert(num_local > 1 || external_rank >= 0);
-    MPIR_Assert(external_rank < 0 || external_procs != NULL);
+    int comm_size = comm->local_size;
 
     /* if the node_roots_comm and comm would be the same size, then creating
      * the second communicator is useless and wasteful. */
-    if (num_external == comm->remote_size) {
-        MPIR_Assert(num_local == 1);
+    if (comm->num_external == comm_size) {
+        MPIR_Assert(comm->num_local == 1);
         goto fn_exit;
     }
 
     /* -- node_comm -- */
-    if (num_local > 1 && comm->node_comm == NULL) {
-        mpi_errno = MPIR_Subcomm_create(comm, num_local, local_rank, local_procs, &comm->node_comm);
+    if (comm->num_local > 1 && comm->node_comm == NULL) {
+        int *local_procs;
+        MPIR_CHKLMEM_MALLOC(local_procs, comm->num_local * sizeof(int));
+
+        int r = 0;
+        for (int i = 0; i < comm_size; i++) {
+            if (comm->node_map[i] == comm->external_rank) {
+                local_procs[r++] = i;
+            }
+        }
+
+        mpi_errno = MPIR_Subcomm_create(comm, comm->num_local, comm->local_rank,
+                                        local_procs, &comm->node_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* -- node_roots_comm -- */
-    if (local_rank == 0 && comm->node_roots_comm == NULL) {
-        mpi_errno = MPIR_Subcomm_create(comm, num_external, external_rank, external_procs,
-                                        &comm->node_roots_comm);
+    if (comm->local_rank == 0 && comm->node_roots_comm == NULL) {
+        int *external_procs;
+        MPIR_CHKLMEM_MALLOC(external_procs, comm->num_external * sizeof(int));
+
+        int r = 0;
+        for (int i = 0; i < comm_size; i++) {
+            if (comm->node_map[i] >= r) {
+                MPIR_Assert(comm->node_map[i] == r);
+                external_procs[r++] = i;
+            }
+        }
+
+        mpi_errno = MPIR_Subcomm_create(comm, comm->num_external, comm->external_rank,
+                                        external_procs, &comm->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
 
   fn_exit:
-    MPL_free(local_procs);
-    MPL_free(external_procs);
+    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_EXIT;
     return mpi_errno;
   fn_fail:
@@ -647,6 +728,9 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
+
+    mpi_errno = check_hierarchy(comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Notify device of communicator creation */
     mpi_errno = MPID_Comm_commit_pre_hook(comm);
