@@ -334,6 +334,9 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
 int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
 
 
+int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_rank, int sub_size, int *procs,
+                        int context_offset, MPIR_Comm ** subcomm_out);
+int MPIR_Subcomm_free(MPIR_Comm * subcomm);
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
 
