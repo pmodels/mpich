@@ -27,7 +27,6 @@ struct ADIOI_Fns_struct ADIO_GPFS_operations = {
     ADIOI_GEN_WriteStrided,     /* WriteStrided */
     ADIOI_GPFS_Close,   /* Close */
 #ifdef ROMIO_HAVE_WORKING_AIO
-#warning Consider BG support for NFS before enabling this.
     ADIOI_GEN_IreadContig,      /* IreadContig */
     ADIOI_GEN_IwriteContig,     /* IwriteContig */
 #else
@@ -44,13 +43,7 @@ struct ADIOI_Fns_struct ADIO_GPFS_operations = {
     ADIOI_GEN_Resize,   /* Resize */
     ADIOI_GEN_Delete,   /* Delete */
     ADIOI_GEN_Feature,  /* Features */
-#ifdef BGQPLATFORM
-    "GPFS+BGQ: IBM GPFS for Blue Gene",
-#elif PEPLATFORM
-    "GPFS+PE: IBM GPFS for PE",
-#else
     "GPFS: IBM GPFS",
-#endif
     ADIOI_GEN_IreadStridedColl, /* IreadStridedColl */
     ADIOI_GEN_IwriteStridedColl,        /* IwriteStridedColl */
 #if defined(F_SETLKW64)

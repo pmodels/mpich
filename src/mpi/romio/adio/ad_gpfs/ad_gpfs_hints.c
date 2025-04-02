@@ -18,10 +18,6 @@
 #define   ADIOI_GPFS_IND_RD_BUFFER_SIZE_DFLT    "4194304"
 #define   ADIOI_GPFS_IND_WR_BUFFER_SIZE_DFLT    "4194304"
 
-#ifdef BGQPLATFORM
-#define   ADIOI_BG_NAGG_IN_PSET_HINT_NAME   "bg_nodes_pset"
-#endif
-
 /** \page mpiio_vars MPIIO Configuration
  *
  * GPFS MPIIO configuration and performance tuning. Used by ad_gpfs ADIO.
@@ -44,13 +40,6 @@
  *     - key = ind_wr_buffer_size value = 4194304
  */
 
-#ifdef BGQPLATFORM
-/* Compute the aggregator-related parameters that are required in 2-phase collective IO of ADIO. */
-extern int ADIOI_BG_gen_agg_ranklist(ADIO_File fd, int n_proxy_per_pset);
-#elif PEPLATFORM
-extern int ADIOI_PE_gen_agg_ranklist(ADIO_File fd);
-#endif
-
 void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 {
 /* if fd->info is null, create a new info object.
@@ -64,8 +53,6 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     int flag, intval, nprocs = 0;
     static char myname[] = "ADIOI_GPFS_SETINFO";
     size_t len;
-
-    int did_anything = 0;
 
     if (fd->info == MPI_INFO_NULL)
         MPI_Info_create(&(fd->info));
@@ -107,11 +94,7 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         MPI_Comm_size(fd->comm, &nprocs);
         snprintf(value, MPI_MAX_INFO_VAL + 1, "%d", nprocs);
         ADIOI_Info_set(info, "cb_nodes", value);
-#ifdef BGQPLATFORM
-        fd->hints->cb_nodes = -1;
-#else
         fd->hints->cb_nodes = nprocs;
-#endif
 
         /* hint indicating that no indep. I/O will be performed on this file */
         ADIOI_Info_set(info, "romio_no_indep_rw", "false");
@@ -223,16 +206,6 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         ADIOI_Info_check_and_install_int(fd, users_info, "striping_unit",
                                          &(fd->hints->striping_unit), myname, error_code);
 
-#ifdef BGQPLATFORM
-        memset(value, 0, MPI_MAX_INFO_VAL + 1);
-        ADIOI_Info_get(users_info, ADIOI_BG_NAGG_IN_PSET_HINT_NAME, MPI_MAX_INFO_VAL, value, &flag);
-        if (flag && ((intval = atoi(value)) > 0)) {
-
-            did_anything = 1;
-            ADIOI_Info_set(info, ADIOI_BG_NAGG_IN_PSET_HINT_NAME, value);
-            fd->hints->cb_nodes = intval;
-        }
-#endif
     }
 
     /* note that we track i/o aggregators two ways:
@@ -254,15 +227,6 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
             return;
         }
         ADIOI_Strncpy(fd->hints->cb_config_list, ADIOI_CB_CONFIG_LIST_DFLT, len);
-    }
-
-    /* special CB aggregator assignment */
-    if (did_anything) {
-#ifdef BGQPLATFORM
-        ADIOI_BG_gen_agg_ranklist(fd, fd->hints->cb_nodes);
-#elif PEPLATFORM
-        ADIOI_PE_gen_agg_ranklist(fd);
-#endif
     }
 
     /* deferred_open won't be set by callers, but if the user doesn't
