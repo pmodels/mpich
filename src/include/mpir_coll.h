@@ -17,6 +17,8 @@
 #define MPIR_Allgather_fallback  MPIR_Allgather_intra_brucks
 #define MPIR_Allgatherv_fallback MPIR_Allgatherv_intra_brucks
 #define MPIR_Allreduce_fallback  MPIR_Allreduce_intra_recursive_doubling
+#define MPIR_Bcast_fallback      MPIR_Bcast_intra_binomial
+#define MPIR_Gather_fallback     MPIR_Gather_intra_binomial
 
 
 /* Internal point-to-point communication for collectives */
