@@ -92,51 +92,21 @@ int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm)
     };
     int rankname_len = sizeof(int) + addrnamelen;
 
-    struct rankname *my_rankname;
+    struct rankname *my_rankname, *all_ranknames;
     MPIR_CHKLMEM_MALLOC(my_rankname, rankname_len);
+    MPIR_CHKLMEM_MALLOC(all_ranknames, comm->local_size * rankname_len);
+
     my_rankname->rank = comm->rank;
     memcpy(my_rankname->name, addrname, addrnamelen);
 
-    /* allgather over node */
-    struct rankname *local_ranknames;
-    int local_len = local_size * rankname_len;
-    MPIR_CHKLMEM_MALLOC(local_ranknames, local_len);
-    mpi_errno = MPIR_Allgather_impl(my_rankname, rankname_len, MPIR_BYTE_INTERNAL,
-                                    local_ranknames, local_len, MPIR_BYTE_INTERNAL,
-                                    node_comm, MPIR_ERR_NONE);
+    comm->node_comm = node_comm;
+    comm->node_roots_comm = node_roots_comm;
+    mpi_errno = MPIR_Allgather_intra_smp_no_order(my_rankname, rankname_len, MPIR_BYTE_INTERNAL,
+                                                  all_ranknames, rankname_len, MPIR_BYTE_INTERNAL,
+                                                  comm, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
-
-    /* allgatherv over node roots */
-    char *all_ranknames;
-    int all_len = comm->local_size * rankname_len;
-    MPIR_CHKLMEM_MALLOC(all_ranknames, all_len);
-
-    if (local_rank == 0) {
-        MPI_Aint *counts, *displs;
-        MPIR_CHKLMEM_MALLOC(counts, external_size);
-        MPIR_CHKLMEM_MALLOC(displs, external_size);
-        /* TODO: we can replace this Allgather by locally compute over rank table */
-        MPI_Aint my_count = local_len;
-        mpi_errno = MPIR_Allgather_impl(&my_count, 1, MPIR_AINT_INTERNAL,
-                                        counts, 1, MPIR_AINT_INTERNAL, node_roots_comm,
-                                        MPIR_ERR_NONE);
-        MPI_Aint disp = 0;
-        for (int i = 0; i < external_size; i++) {
-            displs[i] = disp;
-            disp += counts[i];
-        }
-        MPIR_Assert(disp == all_len);
-
-        mpi_errno = MPIR_Allgatherv_impl(local_ranknames, local_len, MPIR_BYTE_INTERNAL,
-                                         all_ranknames, counts, displs, MPIR_BYTE_INTERNAL,
-                                         node_roots_comm, MPIR_ERR_NONE);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    /* bcast over node */
-    mpi_errno = MPIR_Bcast_impl(all_ranknames, all_len, MPIR_BYTE_INTERNAL,
-                                0, node_comm, MPIR_ERR_NONE);
-    MPIR_ERR_CHECK(mpi_errno);
+    comm->node_comm = NULL;
+    comm->node_roots_comm = NULL;
 
     /* av insert, skipping over existing entries */
     for (int i = 0; i < comm->local_size; i++) {
