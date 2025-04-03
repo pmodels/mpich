@@ -298,7 +298,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
         }
     }
 
-    comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
     comm_p->node_comm = NULL;
     comm_p->node_roots_comm = NULL;
 
@@ -599,8 +598,8 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
     int comm_size = comm->local_size;
 
-    /* if the node_roots_comm and comm would be the same size, then creating
-     * the second communicator is useless and wasteful. */
+    /* if the node_roots_comm and comm would be the same size,
+     * remove the hierarchical attribute (it is flat) */
     if (comm->num_external == comm_size) {
         MPIR_Assert(comm->num_local == 1);
         MPL_free(comm->node_map);
@@ -643,7 +642,6 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
     comm->attr |= MPIR_COMM_ATTR__HIERARCHY;
 
   fn_exit:
@@ -732,7 +730,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
    collective communication, for example. */
 bool MPIR_Comm_is_parent_comm(MPIR_Comm * comm)
 {
-    return (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
+    return (bool) (comm->attr & MPIR_COMM_ATTR__HIERARCHY);
 }
 
 /* Returns true if the communicator is node-aware and processes in all the nodes
@@ -755,7 +753,7 @@ bool MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_ba
 int MPIR_Get_internode_rank(MPIR_Comm * comm, int r)
 {
     /* TODO: optimize away node_map for special ones such as node_consecutive and balanced */
-    MPIR_Assert(comm->attr | MPIR_COMM_ATTR__HIERARCHY);
+    MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
     MPIR_Assert(comm->node_map);
 
     return comm->node_map[r];
@@ -765,7 +763,7 @@ int MPIR_Get_internode_rank(MPIR_Comm * comm, int r)
 int MPIR_Get_intranode_rank(MPIR_Comm * comm, int r)
 {
     /* TODO: optimize away node_map for special ones such as node_consecutive and balanced */
-    MPIR_Assert(comm->attr | MPIR_COMM_ATTR__HIERARCHY);
+    MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
     MPIR_Assert(comm->node_map);
 
     int node_id = comm->node_map[r];
