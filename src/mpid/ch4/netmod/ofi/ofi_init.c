@@ -800,7 +800,8 @@ int MPIDI_OFI_init_world(void)
     int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_global.got_named_av) {
-        mpi_errno = MPIDI_OFI_addr_exchange_root_ctx();
+        MPIR_Assert(MPIR_Process.comm_world);
+        mpi_errno = MPIDI_OFI_comm_addr_exchange(MPIR_Process.comm_world);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
