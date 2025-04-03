@@ -135,7 +135,6 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     MPIDI_COMM(comm, inter_node_leads_comm) = NULL;
     MPIDI_COMM(comm, sub_node_comm) = NULL;
     MPIDI_COMM(comm, intra_node_leads_comm) = NULL;
-    MPIDI_COMM(comm, spanned_num_nodes) = -1;
     MPIDI_COMM(comm, alltoall_comp_info) = NULL;
     MPIDI_COMM(comm, allgather_comp_info) = NULL;
     MPIDI_COMM(comm, allreduce_comp_info) = NULL;

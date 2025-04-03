@@ -578,7 +578,6 @@ typedef struct MPIDI_Devcomm_t {
         struct MPIR_Comm *multi_leads_comm;
         /* sub communicators related for multi-leaders based implementation */
         struct MPIR_Comm *inter_node_leads_comm, *sub_node_comm, *intra_node_leads_comm;
-        int spanned_num_nodes;  /* comm spans over these number of nodes */
         /* Pointers to store info of multi-leaders based compositions */
         struct MPIDI_Multileads_comp_info_t *alltoall_comp_info, *allgather_comp_info,
             *allreduce_comp_info;

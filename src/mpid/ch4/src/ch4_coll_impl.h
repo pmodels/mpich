@@ -1170,7 +1170,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_composition_alpha(const void *
         MPIR_Datatype_get_size_macro(recvtype, type_size);
     }
 
-    num_nodes = MPIDI_COMM(comm_ptr, spanned_num_nodes);
+    num_nodes = comm_ptr->num_external;
     if (sendbuf == MPI_IN_PLACE) {
         sendbuf = recvbuf;
         sendcount = recvcount;
