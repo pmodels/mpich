@@ -206,7 +206,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_wi
 
         base_diff = 0;
         for (i = 0; i < comm_size; ++i) {
-            int i_node_rank = (*win_ptr)->comm_ptr->intranode_table[i];
+            int i_node_rank = MPIR_Get_intranode_rank((*win_ptr)->comm_ptr, i);
             if (i_node_rank >= 0) {
                 MPIR_Assert(i_node_rank < node_size);
 
