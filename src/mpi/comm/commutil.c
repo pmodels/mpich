@@ -551,6 +551,14 @@ static int check_hierarchy(MPIR_Comm * comm)
     comm->node_comm = NULL;
     comm->node_roots_comm = NULL;
 
+    comm->is_node_consecutive = true;
+    for (int i = 1; i < comm_size; i++) {
+        if (node_map[i] < node_map[i - 1]) {
+            comm->is_node_consecutive = false;
+            break;
+        }
+    }
+
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
@@ -779,7 +787,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 /* Returns true if the given communicator is aware of node topology information,
    false otherwise.  Such information could be used to implement more efficient
    collective communication, for example. */
-int MPIR_Comm_is_parent_comm(MPIR_Comm * comm)
+bool MPIR_Comm_is_parent_comm(MPIR_Comm * comm)
 {
     return (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
 }
@@ -787,22 +795,17 @@ int MPIR_Comm_is_parent_comm(MPIR_Comm * comm)
 /* Returns true if the communicator is node-aware and processes in all the nodes
    are consecutive. For example, if node 0 contains "0, 1, 2, 3", node 1
    contains "4, 5, 6", and node 2 contains "7", we shall return true. */
-int MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
+bool MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
 {
-    int i = 0, curr_nodeidx = 0;
-    int *internode_table = comm->internode_table;
+    return (comm->attr & MPIR_COMM_ATTR__HIERARCHY) && comm->is_node_consecutive;
+}
 
-    if (!MPIR_Comm_is_parent_comm(comm))
-        return 0;
-
-    for (; i < comm->local_size; i++) {
-        if (internode_table[i] == curr_nodeidx + 1)
-            curr_nodeidx++;
-        else if (internode_table[i] != curr_nodeidx)
-            return 0;
-    }
-
-    return 1;
+/* Returns true if the communicator is node-aware and the number of processes in all the nodes are
+ * same */
+bool MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_balanced)
+{
+    return (comm->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+        (comm->num_local * comm->num_external == comm->local_size);
 }
 
 /* Duplicate a communicator without copying the streams. This is the common
@@ -1224,52 +1227,6 @@ int MPII_collect_info_key(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr, const char
   fn_fail:
     /* inconsistent info keys are ignored */
     *value_ptr = NULL;
-    goto fn_exit;
-}
-
-/* Returns true if the communicator is node-aware and the number of processes in all the nodes are
- * same */
-int MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_balanced)
-{
-    int i = 0;
-    int mpi_errno = MPI_SUCCESS;
-    int *ranks_per_node;
-    *num_nodes = 0;
-
-    MPIR_CHKPMEM_DECL();
-
-    if (!MPIR_Comm_is_parent_comm(comm)) {
-        *node_balanced = false;
-        goto fn_exit;
-    }
-
-    /* Find maximum value in the internode_table */
-    for (i = 0; i < comm->local_size; i++) {
-        if (comm->internode_table[i] > *num_nodes) {
-            *num_nodes = comm->internode_table[i];
-        }
-    }
-    /* number of nodes is max_node_id + 1 */
-    (*num_nodes)++;
-
-    MPIR_CHKPMEM_CALLOC(ranks_per_node, *num_nodes * sizeof(int), MPL_MEM_OTHER);
-
-    for (i = 0; i < comm->local_size; i++) {
-        ranks_per_node[comm->internode_table[i]]++;
-    }
-
-    for (i = 1; i < *num_nodes; i++) {
-        if (ranks_per_node[i - 1] != ranks_per_node[i]) {
-            *node_balanced = false;
-            goto fn_exit;
-        }
-    }
-
-    *node_balanced = true;
-  fn_exit:
-    MPIR_CHKPMEM_REAP();
-    return mpi_errno;
-  fn_fail:
     goto fn_exit;
 }
 

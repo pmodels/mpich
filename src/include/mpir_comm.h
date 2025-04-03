@@ -135,6 +135,7 @@ struct MPIR_Comm {
 
     /* -- unset unless (attr | MPIR_COMM_ATTR__HIERARCHY) -- */
     MPIR_Comm_hierarchy_kind_t hierarchy_kind;  /* flat, parent, node, or node_roots */
+    bool is_node_consecutive;   /* whether ranks are ordered by nodes */
     int local_rank;
     int num_local;
     int external_rank;
@@ -361,7 +362,7 @@ int MPIR_Subcomm_free(MPIR_Comm * subcomm);
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
 
-int MPIR_Comm_is_parent_comm(MPIR_Comm *);
+bool MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
@@ -426,8 +427,8 @@ extern struct MPIR_Commops *MPIR_Comm_fns;      /* Communicator creation functio
 
 int MPII_Comm_init(MPIR_Comm *);
 
-int MPII_Comm_is_node_consecutive(MPIR_Comm *);
-int MPII_Comm_is_node_balanced(MPIR_Comm *, int *, bool *);
+bool MPII_Comm_is_node_consecutive(MPIR_Comm *);
+bool MPII_Comm_is_node_balanced(MPIR_Comm *, int *, bool *);
 
 int MPII_Comm_dup(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr);
 int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
