@@ -121,6 +121,9 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
   S*/
 struct MPIR_Comm {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
+    int attr;                   /* if attr is 0, only the core set of fields are set.
+                                 * Other fields are set in Comm_commit along with corresponding attr bits */
+    /* -- core fields -- */
     MPID_Thread_mutex_t mutex;
     int context_id;             /* Send context id.  See notes */
     int recvcontext_id;         /* Recv context id (locally allocated).  See notes */
@@ -138,6 +141,7 @@ struct MPIR_Comm {
                                          * an intracomm for the local group */
     struct MPIR_Threadcomm *threadcomm; /* Not NULL only if it's associated with a threadcomm */
 
+    /* -- unset unless (attr | MPIR_COMM_ATTR__HIERARCHY) -- */
     MPIR_Comm_hierarchy_kind_t hierarchy_kind;  /* flat, parent, node, or node_roots */
     int local_rank;
     int num_local;
@@ -238,6 +242,9 @@ struct MPIR_Comm {
 #endif
      MPIR_Session * session_ptr;        /* Pointer to MPI session to which the communicator belongs */
 };
+
+/* Bit flags for comm->attr */
+#define MPIR_COMM_ATTR__HIERARCHY 0x1
 
 #define MPIR_is_self_comm(comm) \
     ((comm)->remote_size == 1 && (comm)->comm_kind == MPIR_COMM_KIND__INTRACOMM && \

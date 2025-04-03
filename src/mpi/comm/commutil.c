@@ -273,6 +273,8 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
 
     MPIR_Object_set_ref(comm_p, 1);
 
+    comm_p->attr = 0;
+
     /* initialize local and remote sizes to -1 to allow other parts of
      * the stack to detect errors more easily */
     comm_p->local_size = -1;
@@ -640,6 +642,7 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
     }
 
     comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
+    comm->attr |= MPIR_COMM_ATTR__HIERARCHY;
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
