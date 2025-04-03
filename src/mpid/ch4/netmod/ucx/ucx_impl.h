@@ -130,6 +130,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_target(int rank, MPIR_Win *
 
 int MPIDI_UCX_init_world(void);
 int MPIDI_UCX_init_worker(int vci);
+int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm);
 
 /* am handler for message sent by ucp_am_send_nb */
 ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
@@ -149,7 +150,5 @@ void MPIDI_UCX_am_isend_callback_nbx(void *request, ucs_status_t status, void *u
 void MPIDI_UCX_am_recv_callback_nbx(void *request, ucs_status_t status, size_t length,
                                     void *user_data);
 #endif
-
-int MPIDI_UCX_init_worker(int vci);
 
 #endif /* UCX_IMPL_H_INCLUDED */

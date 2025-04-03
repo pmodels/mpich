@@ -66,76 +66,102 @@ int MPIDI_UCX_init_worker(int vci)
     goto fn_exit;
 }
 
-static int initial_address_exchange(void)
+#define UCX_AV_INSERT(av, lpid, name) \
+    do { \
+        if (MPIDI_UCX_AV(av).dest[0][0] == NULL) { \
+            ucs_status_t ucx_status; \
+            ucp_ep_params_t ep_params; \
+            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS; \
+            ep_params.address = (ucp_address_t *) (name); \
+            ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params, &MPIDI_UCX_AV(av).dest[0][0]); \
+            MPIDI_UCX_CHK_STATUS(ucx_status); \
+            MPIDIU_upidhash_add(ep_params.address, addrnamelen, lpid); \
+        } \
+    } while (0)
+
+int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    ucs_status_t ucx_status;
-    MPIR_Comm *init_comm = NULL;
+    MPIR_CHKLMEM_DECL();
 
-    void *table;
-    int recv_bc_len;
-    int size = MPIR_Process.size;
-    int rank = MPIR_Process.rank;
-    mpi_errno = MPIDU_bc_table_create(rank, size, MPIR_Process.node_map,
-                                      MPIDI_UCX_global.ctx[0].if_address,
-                                      (int) MPIDI_UCX_global.ctx[0].addrname_len, FALSE,
-                                      MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &recv_bc_len);
+    /* only comm_world for now */
+    MPIR_Assert(comm == MPIR_Process.comm_world);
+
+    MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
+
+    char *addrname = (void *) MPIDI_UCX_global.ctx[0].if_address;
+    int addrnamelen = MPID_MAX_BC_SIZE; /* 4096 */
+    MPIR_Assert(MPIDI_UCX_global.ctx[0].addrname_len <= addrnamelen);
+
+    int local_rank = comm->local_rank;
+    int external_size = comm->num_external;
+
+    if (external_size == 1) {
+        /* skip root addrexch if we are the only node */
+        goto all_addrexch;
+    }
+
+    /* PMI allgather over node roots and av_insert to activate node_roots_comm */
+    if (local_rank == 0) {
+        char *roots_names;
+        MPIR_CHKLMEM_MALLOC(roots_names, external_size * addrnamelen);
+
+        MPIR_PMI_DOMAIN domain = MPIR_PMI_DOMAIN_NODE_ROOTS;
+        mpi_errno = MPIR_pmi_allgather(addrname, addrnamelen, roots_names, addrnamelen, domain);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* insert av and activate node_roots_comm */
+        MPIR_Comm *node_roots_comm = MPIR_Comm_get_node_roots_comm(comm);
+        for (int i = 0; i < external_size; i++) {
+            char *p = (char *) roots_names + i * addrnamelen;
+            MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(node_roots_comm, i);
+            MPIR_Lpid lpid = MPIR_comm_rank_to_lpid(node_roots_comm, i);
+            UCX_AV_INSERT(av, lpid, p);
+        }
+    } else {
+        /* just for the PMI_Barrier */
+        MPIR_PMI_DOMAIN domain = MPIR_PMI_DOMAIN_NODE_ROOTS;
+        mpi_errno = MPIR_pmi_allgather(addrname, addrnamelen, NULL, addrnamelen, domain);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  all_addrexch:
+    if (external_size == comm->local_size) {
+        /* if no local, we are done. */
+        goto fn_exit;
+    }
+
+    /* -- rest of the addr exchange over node_code and node_roots_comm -- */
+    /* since the orders will be rearranged by nodes, let's echange rank along with name */
+    struct rankname {
+        int rank;
+        char name[];
+    };
+    int rankname_len = sizeof(int) + addrnamelen;
+
+    struct rankname *my_rankname, *all_ranknames;
+    MPIR_CHKLMEM_MALLOC(my_rankname, rankname_len);
+    MPIR_CHKLMEM_MALLOC(all_ranknames, comm->local_size * rankname_len);
+
+    my_rankname->rank = comm->rank;
+    memcpy(my_rankname->name, addrname, addrnamelen);
+
+    /* Use an smp algorithm explicitly that only require a working node_comm and node_roots_comm. */
+    mpi_errno = MPIR_Allgather_intra_smp_no_order(my_rankname, rankname_len, MPIR_BYTE_INTERNAL,
+                                                  all_ranknames, rankname_len, MPIR_BYTE_INTERNAL,
+                                                  comm, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
-    ucp_ep_params_t ep_params;
-    if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
-        int *node_roots = MPIR_Process.node_root_map;
-        int num_nodes = MPIR_Process.num_nodes;
-        int *rank_map;
-
-        mpi_errno = MPIDI_create_init_comm(&init_comm);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        for (int i = 0; i < num_nodes; i++) {
-            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
-            ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
-                              &MPIDI_UCX_AV(MPIDIU_lpid_to_av(node_roots[i])).dest[0][0]);
-            MPIDI_UCX_CHK_STATUS(ucx_status);
-            MPIDIU_upidhash_add(ep_params.address, recv_bc_len, node_roots[i]);
-        }
-        mpi_errno = MPIDU_bc_allgather(init_comm, MPIDI_UCX_global.ctx[0].if_address,
-                                       (int) MPIDI_UCX_global.ctx[0].addrname_len, FALSE,
-                                       (void **) &table, &rank_map, &recv_bc_len);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        /* insert new addresses, skipping over node roots */
-        for (int i = 0; i < MPIR_Process.size; i++) {
-            if (rank_map[i] >= 0) {
-                ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-                ep_params.address = (ucp_address_t *) ((char *) table + rank_map[i] * recv_bc_len);
-                ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
-                                           &MPIDI_UCX_AV(MPIDIU_lpid_to_av(i)).dest[0][0]);
-                MPIDI_UCX_CHK_STATUS(ucx_status);
-                MPIDIU_upidhash_add(ep_params.address, recv_bc_len, i);
-            }
-        }
-        mpi_errno = MPIDU_bc_table_destroy();
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        for (int i = 0; i < size; i++) {
-            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
-            ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
-                              &MPIDI_UCX_AV(MPIDIU_lpid_to_av(i)).dest[0][0]);
-            MPIDI_UCX_CHK_STATUS(ucx_status);
-            MPIDIU_upidhash_add(ep_params.address, recv_bc_len, i);
-        }
-        mpi_errno = MPIDU_bc_table_destroy();
-        MPIR_ERR_CHECK(mpi_errno);
+    /* create av, skipping existing entries */
+    for (int i = 0; i < comm->local_size; i++) {
+        struct rankname *p = (struct rankname *) ((char *) all_ranknames + i * rankname_len);
+        MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, p->rank);
+        MPIR_Lpid lpid = MPIR_comm_rank_to_lpid(comm, p->rank);
+        UCX_AV_INSERT(av, lpid, p->name);
     }
 
   fn_exit:
-    if (init_comm && !mpi_errno) {
-        MPIDI_destroy_init_comm(&init_comm);
-    }
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -210,7 +236,7 @@ int MPIDI_UCX_init_world(void)
     mpi_errno = MPIDI_UCX_init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = initial_address_exchange();
+    mpi_errno = MPIDI_UCX_comm_addr_exchange(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
 
     ucx_initialized = true;
