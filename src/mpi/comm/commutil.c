@@ -273,6 +273,8 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
 
     MPIR_Object_set_ref(comm_p, 1);
 
+    comm_p->attr = 0;
+
     /* initialize local and remote sizes to -1 to allow other parts of
      * the stack to detect errors more easily */
     comm_p->local_size = -1;
@@ -546,6 +548,8 @@ static int check_hierarchy(MPIR_Comm * comm)
     comm->num_external = num_nodes;
     comm->external_rank = my_node_id;
     comm->node_map = node_map;
+    comm->node_comm = NULL;
+    comm->node_roots_comm = NULL;
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
@@ -640,6 +644,8 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
      * the second communicator is useless and wasteful. */
     if (comm->num_external == comm_size) {
         MPIR_Assert(comm->num_local == 1);
+        MPL_free(comm->node_map);
+        comm->node_map = NULL;
         goto fn_exit;
     }
 
@@ -679,6 +685,7 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
     }
 
     comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
+    comm->attr |= MPIR_COMM_ATTR__HIERARCHY;
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
