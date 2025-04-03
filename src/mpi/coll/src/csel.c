@@ -624,8 +624,7 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE:
-                if (comm_ptr->node_comm != NULL &&
-                    MPIR_Comm_size(comm_ptr) == MPIR_Comm_size(comm_ptr->node_comm))
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) && comm_ptr->num_external == 1)
                     node = node->success;
                 else
                     node = node->failure;
@@ -653,14 +652,16 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
-                if (comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+                    comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
-                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+                    comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
@@ -1223,8 +1224,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE:
-                if (comm_ptr->node_comm != NULL &&
-                    MPIR_Comm_size(comm_ptr) == MPIR_Comm_size(comm_ptr->node_comm))
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) && comm_ptr->num_external == 1)
                     node = node->success;
                 else
                     node = node->failure;
@@ -1323,14 +1323,16 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
-                if (comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+                    comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
-                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+                    comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
