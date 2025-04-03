@@ -244,7 +244,8 @@ struct MPIR_Comm {
 };
 
 /* Bit flags for comm->attr */
-#define MPIR_COMM_ATTR__HIERARCHY 0x1
+#define MPIR_COMM_ATTR__SUBCOMM   0x1
+#define MPIR_COMM_ATTR__HIERARCHY 0x2
 
 #define MPIR_is_self_comm(comm) \
     ((comm)->remote_size == 1 && (comm)->comm_kind == MPIR_COMM_KIND__INTRACOMM && \
