@@ -10,7 +10,6 @@ mpi_core_sources +=   \
     src/util/mpir_nodemap.c    \
     src/util/mpir_handlemem.c  \
     src/util/mpir_strerror.c   \
-    src/util/mpir_localproc.c  \
     src/util/mpir_netloc.c     \
     src/util/mpir_hwtopo.c     \
     src/util/mpir_nettopo.c    \

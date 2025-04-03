@@ -113,13 +113,6 @@ Notes:
 @*/
 void MPIR_Add_finalize(int (*routine) (void *), void *extra, int priority);
 
-/* Routines for determining local and remote processes */
-int MPIR_Find_local(struct MPIR_Comm *comm, int *local_size_p, int *local_rank_p,
-                    int **local_ranks_p, int **intranode_table);
-int MPIR_Find_external(struct MPIR_Comm *comm, int *external_size_p, int *external_rank_p,
-                       int **external_ranks_p, int **internode_table_p);
-int MPIR_Get_internode_rank(MPIR_Comm * comm_ptr, int r);
-int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
 
 #define MPIR_CAST(T, val) CAST_##T((val))
 #ifdef NDEBUG

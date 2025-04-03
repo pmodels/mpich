@@ -153,7 +153,6 @@ struct MPIR_Comm {
     int *internode_table;       /* internode_table[i] gives the rank in
                                  * node_roots_comm of rank i in this comm.
                                  * It is of size 'local_size'. */
-    int node_count;             /* number of nodes this comm is spread over */
 
     int is_low_group;           /* For intercomms only, this boolean is
                                  * set for all members of one of the
@@ -332,6 +331,23 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIR_Get_internode_rank(MPIR_Comm * comm, int r)
+{
+    /* TODO: optimize for special ones such as node_consecutive and balanced */
+    MPIR_Assert(comm->attr | MPIR_COMM_ATTR__HIERARCHY);
+    MPIR_Assert(comm->internode_table);
+
+    return comm->internode_table[r];
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Get_intranode_rank(MPIR_Comm * comm, int r)
+{
+    /* TODO: optimize for special ones such as node_consecutive and balanced */
+    MPIR_Assert(comm->attr | MPIR_COMM_ATTR__HIERARCHY);
+    MPIR_Assert(comm->intranode_table);
+
+    return comm->intranode_table[r];
+}
 
 int MPIR_Comm_create(MPIR_Comm **);
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
