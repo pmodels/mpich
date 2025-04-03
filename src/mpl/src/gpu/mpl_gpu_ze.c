@@ -3436,13 +3436,13 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
         if (mpl_err != MPL_SUCCESS)
             goto fn_fail;
     }
-#if defined(MPL_HAVE__MM512_STREAM_SI512) || defined(MPL_HAVE__MM256_STREAM_SI256)
+#if defined(MPL_HAVE_AVX512F) || defined(MPL_HAVE_AVX)
     /* fallback to MPL_Memcpy_stream if not 64-byte aligned */
     if (((uintptr_t) s) & 63 || ((uintptr_t) d) & 63) {
         MPL_Memcpy_stream(d, s, size);
         goto fn_exit;
     }
-#if defined(MPL_HAVE__MM512_STREAM_SI512)
+#if defined(MPL_HAVE_AVX512F)
     while (n >= 64) {
         _mm512_stream_si512((__m512i *) d, _mm512_stream_load_si512((__m512i const *) s));
         d += 64;
@@ -3455,42 +3455,20 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
         s += 32;
         n -= 32;
     }
-#elif defined(MPL_HAVE__MM256_STOREU_SI256)
+#elif defined(MPL_HAVE_AVX)
     while (n >= 32) {
-        _mm256_storeu_si256((__m256i *) d, _mm256_loadu_si256((__m256i const *) s));
+        _mm256_storeu_si256((__m256i *) d, _mm256_stream_load_si256((__m256i const *) s));
         d += 32;
         s += 32;
         n -= 32;
     }
-#endif /* MPL_HAVE__MM512_STREAM_SI512 */
-#elif defined(MPL_HAVE__MM512_STOREU_SI512)
-    while (n >= 64) {
-        _mm512_storeu_si512((__m512i *) d, _mm512_loadu_si512((__m512i const *) s));
-        d += 64;
-        s += 64;
-        n -= 64;
-    }
-    if (n & 32) {
-        _mm256_storeu_si256((__m256i *) d, _mm256_loadu_si256((__m256i const *) s));
-        d += 32;
-        s += 32;
-        n -= 32;
-    }
-#elif defined(MPL_HAVE__MM256_STOREU_SI256)
-    while (n >= 32) {
-        _mm256_storeu_si256((__m256i *) d, _mm256_loadu_si256((__m256i const *) s));
-        d += 32;
-        s += 32;
-        n -= 32;
-    }
+#endif /* MPL_HAVE_AVX512F || MPL_HAVE_AVX */
 #else
     goto fallback;
 #endif
     if (n & 16) {
-#if defined(MPL_HAVE__MM_STREAM_SI128)
+#if defined(MPL_HAVE_AVX) || defined(MPL_HAVE_AVX512F)
         _mm_stream_si128((__m128i *) d, _mm_stream_load_si128((__m128i const *) s));
-#else
-        _mm_storeu_si128((__m128i *) d, _mm_loadu_si128((__m128i const *) s));
 #endif
         d += 16;
         s += 16;
@@ -3517,7 +3495,7 @@ int MPL_gpu_fast_memcpy(void *src, MPL_pointer_attr_t * src_attr, void *dest,
     if (n == 1) {
         *(char *) d = *(char *) s;
     }
-#if defined(MPL_HAVE__MM512_STOREU_SI512) || defined(MPL_HAVE__MM512_STREAM_SI512) || defined(MPL_HAVE__MM256_STREAM_SI256) || defined(MPL_HAVE__MM256_STOREU_SI256)
+#if defined(MPL_HAVE_AVX512F) || defined(MPL_HAVE_AVX)
     _mm_sfence();
 #endif
     goto fn_exit;
