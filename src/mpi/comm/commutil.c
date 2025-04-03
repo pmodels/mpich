@@ -299,7 +299,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
         }
     }
 
-    comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
     comm_p->node_comm = NULL;
     comm_p->node_roots_comm = NULL;
     comm_p->intranode_table = NULL;
@@ -503,6 +502,8 @@ static int check_hierarchy(MPIR_Comm * comm)
         }
     }
 
+    comm->attr |= MPIR_COMM_ATTR__HIERARCHY;
+
     comm->local_rank = local_rank;
     comm->num_local = num_local;
     comm->num_external = num_nodes;
@@ -603,13 +604,6 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
     int comm_size = comm->local_size;
 
-    /* if the node_roots_comm and comm would be the same size, then creating
-     * the second communicator is useless and wasteful. */
-    if (comm->num_external == comm_size) {
-        MPIR_Assert(comm->num_local == 1);
-        goto fn_exit;
-    }
-
     /* -- node_comm -- */
     if (comm->num_local > 1 && comm->node_comm == NULL) {
         int *local_procs;
@@ -647,8 +641,7 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
-    comm->attr |= MPIR_COMM_ATTR__HIERARCHY;
+    comm->hierarchy_flags |= MPIR_COMM_HIERARCHY__PARENT;
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
@@ -710,7 +703,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     mpi_errno = MPIR_Coll_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+    if ((comm->attr & MPIR_COMM_ATTR__HIERARCHY) && (comm->num_external != comm->local_size)) {
         mpi_errno = MPIR_Comm_create_subcomms(comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -743,7 +736,8 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
    collective communication, for example. */
 int MPIR_Comm_is_parent_comm(MPIR_Comm * comm)
 {
-    return (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
+    return (comm->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+        (comm->hierarchy_flags & MPIR_COMM_HIERARCHY__PARENT);
 }
 
 /* Returns true if the communicator is node-aware and processes in all the nodes

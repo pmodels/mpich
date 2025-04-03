@@ -21,16 +21,6 @@ typedef enum MPIR_Comm_kind_t {
     MPIR_COMM_KIND__INTERCOMM = 1
 } MPIR_Comm_kind_t;
 
-/* ideally we could add these to MPIR_Comm_kind_t, but there's too much existing
- * code that assumes that the only valid values are INTRACOMM or INTERCOMM */
-typedef enum MPIR_Comm_hierarchy_kind_t {
-    MPIR_COMM_HIERARCHY_KIND__FLAT = 0, /* no hierarchy */
-    MPIR_COMM_HIERARCHY_KIND__PARENT = 1,       /* has subcommunicators */
-    MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS = 2,   /* is the subcomm for node roots */
-    MPIR_COMM_HIERARCHY_KIND__NODE = 3, /* is the subcomm for a node */
-    MPIR_COMM_HIERARCHY_KIND__MULTI_LEADS = 4,  /* is the multi_leaders_comm for a node */
-} MPIR_Comm_hierarchy_kind_t;
-
 /* Communicator info hint */
 #define MPIR_COMM_HINT_TYPE_BOOL 0
 #define MPIR_COMM_HINT_TYPE_INT  1
@@ -134,7 +124,6 @@ struct MPIR_Comm {
     MPID_Thread_mutex_t mutex;
 
     /* -- unset unless (attr | MPIR_COMM_ATTR__HIERARCHY) -- */
-    MPIR_Comm_hierarchy_kind_t hierarchy_kind;  /* flat, parent, node, or node_roots */
     int hierarchy_flags;        /* bit flags for hierarchy charateristics. See bit definitions below. */
     int local_rank;
     int num_local;
