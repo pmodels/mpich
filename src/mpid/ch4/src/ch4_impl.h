@@ -923,9 +923,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_win_rank_to_intra_rank(MPIR_Win * win, int r
                                                            MPIDI_winattr_t winattr)
 {
     if (winattr & MPIDI_WINATTR_DIRECT_INTRA_COMM)
-        return MPIR_Process.comm_world->intranode_table[rank];
+        return MPIR_Get_intranode_rank(MPIR_Process.comm_world, rank);
     else
-        return win->comm_ptr->intranode_table[rank];
+        return MPIR_Get_intranode_rank(win->comm_ptr, rank);
 }
 
 /* Wait until active message acc ops are done. */
