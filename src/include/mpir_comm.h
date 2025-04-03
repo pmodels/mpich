@@ -360,6 +360,32 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Get_intranode_rank(MPIR_Comm * comm, int r)
     return comm->intranode_table[r];
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
+{
+    return (comm->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+        (comm->hierarchy_flags & MPIR_COMM_HIERARCHY__NODE_CONSECUTIVE);
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPII_Comm_is_node_balanced(MPIR_Comm * comm)
+{
+    return (comm->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+        (comm->hierarchy_flags & MPIR_COMM_HIERARCHY__NODE_BALANCED);
+}
+
+/* node_canonical means node_balanced and node_consecutive */
+MPL_STATIC_INLINE_PREFIX bool MPII_Comm_is_node_canonical(MPIR_Comm * comm)
+{
+    return (comm->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+        (comm->hierarchy_flags & MPIR_COMM_HIERARCHY__NODE_BALANCED) &&
+        (comm->hierarchy_flags & MPIR_COMM_HIERARCHY__NODE_CONSECUTIVE);
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIR_Comm_is_parent_comm(MPIR_Comm * comm)
+{
+    return (comm->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+        (comm->hierarchy_flags & MPIR_COMM_HIERARCHY__PARENT);
+}
+
 int MPIR_Comm_create(MPIR_Comm **);
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
@@ -370,8 +396,6 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_rank, int sub_size, int *procs
 int MPIR_Subcomm_free(MPIR_Comm * subcomm);
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
-
-int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
@@ -435,9 +459,6 @@ extern struct MPIR_Commops *MPIR_Comm_fns;      /* Communicator creation functio
 /* internal functions */
 
 int MPII_Comm_init(MPIR_Comm *);
-
-int MPII_Comm_is_node_consecutive(MPIR_Comm *);
-int MPII_Comm_is_node_balanced(MPIR_Comm *, int *, bool *);
 
 int MPII_Comm_dup(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr);
 int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
