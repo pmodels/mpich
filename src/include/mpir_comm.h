@@ -144,14 +144,6 @@ struct MPIR_Comm {
     struct MPIR_Comm *node_comm;        /* Comm of processes in this comm that are on
                                          * the same node as this process. */
     struct MPIR_Comm *node_roots_comm;  /* Comm of root processes for other nodes. */
-    int *intranode_table;       /* intranode_table[i] gives the rank in
-                                 * node_comm of rank i in this comm or -1 if i
-                                 * is not in this process' node_comm.
-                                 * It is of size 'local_size'. */
-    int *internode_table;       /* internode_table[i] gives the rank in
-                                 * node_roots_comm of rank i in this comm.
-                                 * It is of size 'local_size'. */
-    int node_count;             /* number of nodes this comm is spread over */
 
     /* -- unset unless MPIR_COMM_KIND__INTERCOMM -- */
     int is_low_group;           /* For intercomms only, this boolean is
@@ -363,6 +355,8 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
 
 bool MPIR_Comm_is_parent_comm(MPIR_Comm *);
+int MPIR_Get_internode_rank(MPIR_Comm * comm_ptr, int r);
+int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)

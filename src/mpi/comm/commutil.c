@@ -301,8 +301,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
     comm_p->node_comm = NULL;
     comm_p->node_roots_comm = NULL;
-    comm_p->intranode_table = NULL;
-    comm_p->internode_table = NULL;
 
     /* abstractions bleed a bit here... :(*/
     comm_p->next_sched_tag = MPIR_FIRST_NBC_TAG;
@@ -418,58 +416,6 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     MPIR_FUNC_EXIT;
 
     return mpi_errno;
-}
-
-static int get_node_count(MPIR_Comm * comm, int *node_count)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct uniq_nodes {
-        int id;
-        UT_hash_handle hh;
-    } *node_list = NULL;
-    struct uniq_nodes *s, *tmp;
-
-    if (comm->comm_kind != MPIR_COMM_KIND__INTRACOMM) {
-        *node_count = comm->local_size;
-        goto fn_exit;
-    } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        *node_count = 1;
-        goto fn_exit;
-    } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS) {
-        *node_count = comm->local_size;
-        goto fn_exit;
-    }
-
-    /* go through the list of ranks and add the unique ones to the
-     * node_list array */
-    for (int i = 0; i < comm->local_size; i++) {
-        int node;
-
-        mpi_errno = MPID_Get_node_id(comm, i, &node);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        HASH_FIND_INT(node_list, &node, s);
-        if (s == NULL) {
-            s = (struct uniq_nodes *) MPL_malloc(sizeof(struct uniq_nodes), MPL_MEM_COLL);
-            MPIR_Assert(s);
-            s->id = node;
-            HASH_ADD_INT(node_list, id, s, MPL_MEM_COLL);
-        }
-    }
-
-    /* the final size of our hash table is our node count */
-    *node_count = HASH_COUNT(node_list);
-
-    /* free up everything */
-    HASH_ITER(hh, node_list, s, tmp) {
-        HASH_DEL(node_list, s);
-        MPL_free(s);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* Copy relevant hints to a given subcomm */
@@ -756,9 +702,6 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     mpi_errno = MPID_Comm_commit_pre_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = get_node_count(comm, &comm->node_count);
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Create collectives-specific infrastructure */
     mpi_errno = MPIR_Coll_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -806,6 +749,34 @@ bool MPII_Comm_is_node_balanced(MPIR_Comm * comm, int *num_nodes, bool * node_ba
 {
     return (comm->attr & MPIR_COMM_ATTR__HIERARCHY) &&
         (comm->num_local * comm->num_external == comm->local_size);
+}
+
+/* Return the rank of r in node_roots_comm */
+int MPIR_Get_internode_rank(MPIR_Comm * comm, int r)
+{
+    /* TODO: optimize away node_map for special ones such as node_consecutive and balanced */
+    MPIR_Assert(comm->attr | MPIR_COMM_ATTR__HIERARCHY);
+    MPIR_Assert(comm->node_map);
+
+    return comm->node_map[r];
+}
+
+/* Return the rank of r in node_comm */
+int MPIR_Get_intranode_rank(MPIR_Comm * comm, int r)
+{
+    /* TODO: optimize away node_map for special ones such as node_consecutive and balanced */
+    MPIR_Assert(comm->attr | MPIR_COMM_ATTR__HIERARCHY);
+    MPIR_Assert(comm->node_map);
+
+    int node_id = comm->node_map[r];
+    /* intranode rank is the number of procs before r that are on the same node */
+    int rank = 0;
+    for (int i = 0; i < r; i++) {
+        if (comm->node_map[i] == node_id) {
+            rank++;
+        }
+    }
+    return rank;
 }
 
 /* Duplicate a communicator without copying the streams. This is the common
@@ -1123,8 +1094,6 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
             MPIR_Subcomm_free(comm_ptr->node_comm);
         if (comm_ptr->node_roots_comm)
             MPIR_Subcomm_free(comm_ptr->node_roots_comm);
-        MPL_free(comm_ptr->intranode_table);
-        MPL_free(comm_ptr->internode_table);
 
         MPIR_stream_comm_free(comm_ptr);
 
