@@ -562,7 +562,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_win_shared_query_part(MPIR_Win * win, int ra
         *disp_unit = 0;
         *((void **) baseptr) = NULL;
     } else {
-        /* find shm_rank in node_comm. Q: can we rely on comm_ptr->intranode_table? */
+        /* find shm_rank in node_comm. Q: can we rely on MPIR_Get_intranode_rank(comm_ptr, rank)? */
         MPIR_Lpid lpid = MPIR_comm_rank_to_lpid(win->comm_ptr, rank);
         int shm_rank = MPIR_Group_lpid_to_rank(win->comm_ptr->node_comm->local_group, lpid);
         MPIR_Assert(shm_rank >= 0);
