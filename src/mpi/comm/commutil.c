@@ -559,6 +559,10 @@ static int check_hierarchy(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+/* subcomms are internal comms
+ * * always intracomm
+ * * never have hierarchical info (i.e. flat)
+ */
 int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs,
                         MPIR_Comm ** subcomm_out)
 {
@@ -569,10 +573,11 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs
     mpi_errno = MPIR_Comm_create(&subcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    subcomm->attr |= MPIR_COMM_ATTR__SUBCOMM;
+
     subcomm->context_id = comm->context_id;
     subcomm->recvcontext_id = subcomm->context_id;
     subcomm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
-    subcomm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__NODE;
 
     subcomm->rank = sub_rank;
     subcomm->local_size = sub_size;
@@ -1023,6 +1028,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
     MPIR_FUNC_ENTER;
 
     MPIR_Assert(MPIR_Object_get_ref(comm_ptr) == 0);    /* sanity check */
+    MPIR_Assert(!(comm_ptr->attr & MPIR_COMM_ATTR__SUBCOMM));
 
     /* Remove the attributes, executing the attribute delete routine.
      * Do this only if the attribute functions are defined.
