@@ -121,25 +121,17 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
   S*/
 struct MPIR_Comm {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
+
+    /* -- core fields, required by subcomm as well -- */
     int attr;                   /* if attr is 0, only the core set of fields are set.
                                  * Other fields are set in Comm_commit along with corresponding attr bits */
-    /* -- core fields -- */
-    MPID_Thread_mutex_t mutex;
     int context_id;             /* Send context id.  See notes */
     int recvcontext_id;         /* Recv context id (locally allocated).  See notes */
-    int remote_size;            /* Value of MPI_Comm_(remote)_size */
     int rank;                   /* Value of MPI_Comm_rank */
-    MPIR_Attribute *attributes; /* List of attributes */
     int local_size;             /* Value of MPI_Comm_size for local group */
     MPIR_Group *local_group;    /* Groups in communicator. */
-    MPIR_Group *remote_group;   /* The remote group in a inter communicator.
-                                 * Must be NULL in a intra communicator. */
     MPIR_Comm_kind_t comm_kind; /* MPIR_COMM_KIND__INTRACOMM or MPIR_COMM_KIND__INTERCOMM */
-    char name[MPI_MAX_OBJECT_NAME];     /* Required for MPI-2 */
-    MPIR_Errhandler *errhandler;        /* Pointer to the error handler structure */
-    struct MPIR_Comm *local_comm;       /* Defined only for intercomms, holds
-                                         * an intracomm for the local group */
-    struct MPIR_Threadcomm *threadcomm; /* Not NULL only if it's associated with a threadcomm */
+    MPID_Thread_mutex_t mutex;
 
     /* -- unset unless (attr | MPIR_COMM_ATTR__HIERARCHY) -- */
     MPIR_Comm_hierarchy_kind_t hierarchy_kind;  /* flat, parent, node, or node_roots */
@@ -159,13 +151,23 @@ struct MPIR_Comm {
                                  * It is of size 'local_size'. */
 
     int is_low_group;           /* For intercomms only, this boolean is
-                                 * set for all members of one of the
-                                 * two groups of processes and clear for
-                                 * the other.  It enables certain
-                                 * intercommunicator collective operations
-                                 * that wish to use half-duplex operations
-                                 * to implement a full-duplex operation */
+                                 * M* set for all members of one of the
+                                 * * two groups of processes and clear for
+                                 * * the other.  It enables certain
+                                 * * intercommunicator collective operations
+                                 * * that wish to use half-duplex operations
+                                 * * to implement a full-duplex operation */
+    int remote_size;            /* Value of MPI_Comm_(remote)_size */
+    MPIR_Group *remote_group;   /* The remote group in a inter communicator.
+                                 * Must be NULL in a intra communicator. */
+    struct MPIR_Comm *local_comm;       /* Defined only for intercomms, holds
+                                         * an intracomm for the local group */
 
+    /* -- user-level comm required -- */
+    char name[MPI_MAX_OBJECT_NAME];     /* Required for MPI-2 */
+    MPIR_Session *session_ptr;  /* Pointer to MPI session to which the communicator belongs */
+    MPIR_Errhandler *errhandler;        /* Pointer to the error handler structure */
+    MPIR_Attribute *attributes; /* List of attributes */
     struct MPIR_Comm *comm_next;        /* Provides a chain through all active
                                          * communicators */
     struct MPII_Topo_ops *topo_fns;     /* Pointer to a table of functions
@@ -177,6 +179,25 @@ struct MPIR_Comm {
 
     int revoked;                /* Flag to track whether the communicator
                                  * has been revoked */
+
+    /* -- extended features -- */
+    struct MPIR_Threadcomm *threadcomm; /* Not NULL only if it's associated with a threadcomm */
+
+    enum { MPIR_STREAM_COMM_NONE, MPIR_STREAM_COMM_SINGLE, MPIR_STREAM_COMM_MULTIPLEX }
+        stream_comm_type;
+    union {
+        struct {
+            struct MPIR_Stream *stream;
+            int *vci_table;
+        } single;
+        struct {
+            struct MPIR_Stream **local_streams;
+            MPI_Aint *vci_displs;       /* comm size + 1 */
+            int *vci_table;     /* comm size */
+        } multiplex;
+    } stream_comm;
+
+    /* -- optimization fields -- */
     /* A sequence number used for e.g. vci hashing. We can't directly use context_id
      * because context_id is non-sequential and can't be used to identify user-level
      * communicators (due to sub-comms). */
@@ -216,23 +237,10 @@ struct MPIR_Comm {
     } coll;
 
     void *csel_comm;            /* collective selector handle */
+
 #if defined HAVE_HCOLL
     hcoll_comm_priv_t hcoll_priv;
 #endif                          /* HAVE_HCOLL */
-
-    enum { MPIR_STREAM_COMM_NONE, MPIR_STREAM_COMM_SINGLE, MPIR_STREAM_COMM_MULTIPLEX }
-        stream_comm_type;
-    union {
-        struct {
-            struct MPIR_Stream *stream;
-            int *vci_table;
-        } single;
-        struct {
-            struct MPIR_Stream **local_streams;
-            MPI_Aint *vci_displs;       /* comm size + 1 */
-            int *vci_table;     /* comm size */
-        } multiplex;
-    } stream_comm;
 
     MPIR_Request *persistent_requests;
 
@@ -240,7 +248,6 @@ struct MPIR_Comm {
 #ifdef MPID_DEV_COMM_DECL
      MPID_DEV_COMM_DECL
 #endif
-     MPIR_Session * session_ptr;        /* Pointer to MPI session to which the communicator belongs */
 };
 
 /* Bit flags for comm->attr */
