@@ -135,6 +135,7 @@ struct MPIR_Comm {
 
     /* -- unset unless (attr | MPIR_COMM_ATTR__HIERARCHY) -- */
     MPIR_Comm_hierarchy_kind_t hierarchy_kind;  /* flat, parent, node, or node_roots */
+    int hierarchy_flags;        /* bit flags for hierarchy charateristics. See bit definitions below. */
     int local_rank;
     int num_local;
     int external_rank;
@@ -253,6 +254,12 @@ struct MPIR_Comm {
 /* Bit flags for comm->attr */
 #define MPIR_COMM_ATTR__SUBCOMM   0x1
 #define MPIR_COMM_ATTR__HIERARCHY 0x2
+
+#define MPIR_COMM_HIERARCHY__NO_LOCAL    0x1
+#define MPIR_COMM_HIERARCHY__SINGLE_NODE 0x2
+#define MPIR_COMM_HIERARCHY__NODE_CONSECUTIVE 0x4       /* ranks are ordered by nodes */
+#define MPIR_COMM_HIERARCHY__NODE_BALANCED    0x8       /* same number of ranks on every node */
+#define MPIR_COMM_HIERARCHY__PARENT      0x10   /* has node_comm and node_roots_comm */
 
 #define MPIR_is_self_comm(comm) \
     ((comm)->remote_size == 1 && (comm)->comm_kind == MPIR_COMM_KIND__INTRACOMM && \
