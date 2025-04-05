@@ -274,6 +274,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     MPIR_Object_set_ref(comm_p, 1);
 
     comm_p->attr = 0;
+    comm_p->hierarchy_flags = 0;
 
     /* initialize local and remote sizes to -1 to allow other parts of
      * the stack to detect errors more easily */
