@@ -513,10 +513,14 @@ static int check_hierarchy(MPIR_Comm * comm)
     comm->node_comm = NULL;
     comm->node_roots_comm = NULL;
 
+    comm->hierarchy_flags = 0;
+    bool skip_tables = false;
     if (num_nodes == 1) {
         comm->hierarchy_flags |= MPIR_COMM_HIERARCHY__SINGLE_NODE;
+        skip_tables = true;
     } else if (num_nodes == comm_size) {
         comm->hierarchy_flags |= MPIR_COMM_HIERARCHY__NO_LOCAL;
+        skip_tables = true;
     } else {
         /* check whether all ranks are ordered by node_id */
         bool is_node_consecutive = true;
@@ -551,12 +555,22 @@ static int check_hierarchy(MPIR_Comm * comm)
         if (is_node_balanced) {
             comm->hierarchy_flags |= MPIR_COMM_HIERARCHY__NODE_BALANCED;
         }
+        if (is_node_consecutive && is_node_balanced) {
+            skip_tables = true;
+        }
+    }
+
+    if (skip_tables) {
+        comm->internode_table = NULL;
+        comm->intranode_table = NULL;
+        goto fn_reap;
     }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
+  fn_reap:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
@@ -648,10 +662,17 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         int *local_procs;
         MPIR_CHKLMEM_MALLOC(local_procs, comm->num_local * sizeof(int));
 
-        int r = 0;
-        for (int i = 0; i < comm_size; i++) {
-            if (comm->internode_table[i] == comm->external_rank) {
-                local_procs[r++] = i;
+        if (comm->internode_table) {
+            int r = 0;
+            for (int i = 0; i < comm_size; i++) {
+                if (comm->internode_table[i] == comm->external_rank) {
+                    local_procs[r++] = i;
+                }
+            }
+        } else {
+            /* canonical or trivial */
+            for (int i = 0; i < comm->num_local; i++) {
+                local_procs[i] = comm->external_rank * comm->num_local + i;
             }
         }
 
@@ -666,11 +687,18 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
         int *external_procs;
         MPIR_CHKLMEM_MALLOC(external_procs, comm->num_external * sizeof(int));
 
-        int r = 0;
-        for (int i = 0; i < comm_size; i++) {
-            if (comm->internode_table[i] >= r) {
-                MPIR_Assert(comm->internode_table[i] == r);
-                external_procs[r++] = i;
+        if (comm->internode_table) {
+            int r = 0;
+            for (int i = 0; i < comm_size; i++) {
+                if (comm->internode_table[i] >= r) {
+                    MPIR_Assert(comm->internode_table[i] == r);
+                    external_procs[r++] = i;
+                }
+            }
+        } else {
+            /* canonical or trivial */
+            for (int i = 0; i < comm->num_external; i++) {
+                external_procs[i] = i * comm->num_local;
             }
         }
 
