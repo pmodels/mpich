@@ -26,9 +26,8 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int comm_size, rank;
+    int comm_size;
     comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
 
     /* Get extent of recv type, but send type is only valid if (sendbuf!=MPI_IN_PLACE) */
     MPI_Aint recv_extent;
