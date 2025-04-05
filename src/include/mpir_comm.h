@@ -344,20 +344,28 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Stream_comm_set_attr(MPIR_Comm * comm, int src
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Get_internode_rank(MPIR_Comm * comm, int r)
 {
-    /* TODO: optimize for special ones such as node_consecutive and balanced */
     MPIR_Assert(comm->attr | MPIR_COMM_ATTR__HIERARCHY);
-    MPIR_Assert(comm->internode_table);
-
-    return comm->internode_table[r];
+    if (comm->internode_table) {
+        return comm->internode_table[r];
+    } else {
+        /* canonical or trivial */
+        return r / comm->num_local;
+    }
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Get_intranode_rank(MPIR_Comm * comm, int r)
 {
-    /* TODO: optimize for special ones such as node_consecutive and balanced */
     MPIR_Assert(comm->attr | MPIR_COMM_ATTR__HIERARCHY);
-    MPIR_Assert(comm->intranode_table);
-
-    return comm->intranode_table[r];
+    if (comm->intranode_table) {
+        return comm->intranode_table[r];
+    } else {
+        /* canonical or trivial */
+        if ((comm->rank / comm->num_local) == (r / comm->num_local)) {
+            return r % comm->num_local;
+        } else {
+            return -1;
+        }
+    }
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
