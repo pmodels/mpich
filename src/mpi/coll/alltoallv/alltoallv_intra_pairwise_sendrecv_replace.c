@@ -4,6 +4,22 @@
  */
 
 #include "mpiimpl.h"
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ALLTOALLV_PAIRWISE_NEW
+      category    : COLLECTIVE
+      type        : boolean
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If on, use a new algorithm that orders bit-wise pairs on all processes.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 /* Algorithm: Pairwise sendrecv
  *
@@ -48,26 +64,54 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
      * maintaining a single buffer across the whole loop.  Something like
      * MADRE is probably the best solution for the MPI_IN_PLACE scenario. */
 
-    MPIR_Assert(comm_ptr->intranode_table);
-    /* -- 1st exchange within intranode -- */
-    for (int i = 0; i < comm_size; ++i) {
-        if (comm_ptr->intranode_table[i] == -1)
-            continue;
-        mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[i] * recv_extent),
-                                          recvcounts[i], recvtype, i, MPIR_ALLTOALLV_TAG,
-                                          i, MPIR_ALLTOALLV_TAG,
-                                          comm_ptr, MPI_STATUS_IGNORE, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-    /* -- 2nd exchange over internode -- */
-    for (int i = 0; i < comm_size; ++i) {
-        if (comm_ptr->intranode_table[i] > -1)
-            continue;
-        mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[i] * recv_extent),
-                                          recvcounts[i], recvtype, i, MPIR_ALLTOALLV_TAG,
-                                          i, MPIR_ALLTOALLV_TAG,
-                                          comm_ptr, MPI_STATUS_IGNORE, errflag);
-        MPIR_ERR_CHECK(mpi_errno);
+    if (MPIR_CVAR_ALLTOALLV_PAIRWISE_NEW) {
+        /* Ordering the pairs by flipping bits */
+        int max_mask = 1;
+        while (max_mask < comm_size) {
+            max_mask *= 2;
+        }
+        for (int mask = 0; mask < max_mask; mask++) {
+            int r = comm_ptr->rank ^ mask;
+            if (r >= comm_size) {
+                continue;
+            }
+            mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[r] * recv_extent),
+                                              recvcounts[r], recvtype, r, MPIR_ALLTOALLV_TAG,
+                                              r, MPIR_ALLTOALLV_TAG,
+                                              comm_ptr, MPI_STATUS_IGNORE, coll_attr);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    } else if (comm_ptr->intranode_table) {
+        /* -- 1st exchange within intranode -- */
+        for (int i = 0; i < comm_size; ++i) {
+            if (comm_ptr->intranode_table[i] == -1 || rank == i)
+                continue;
+            mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[i] * recv_extent),
+                                              recvcounts[i], recvtype, i, MPIR_ALLTOALLV_TAG,
+                                              i, MPIR_ALLTOALLV_TAG,
+                                              comm_ptr, MPI_STATUS_IGNORE, coll_attr);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        /* -- 2nd exchange over internode -- */
+        for (int i = 0; i < comm_size; ++i) {
+            if (comm_ptr->intranode_table[i] > -1)
+                continue;
+            mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[i] * recv_extent),
+                                              recvcounts[i], recvtype, i, MPIR_ALLTOALLV_TAG,
+                                              i, MPIR_ALLTOALLV_TAG,
+                                              comm_ptr, MPI_STATUS_IGNORE, coll_attr);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    } else {
+        for (int i = 0; i < comm_size; ++i) {
+            if (rank == i)
+                continue;
+            mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[i] * recv_extent),
+                                              recvcounts[i], recvtype, i, MPIR_ALLTOALLV_TAG,
+                                              i, MPIR_ALLTOALLV_TAG,
+                                              comm_ptr, MPI_STATUS_IGNORE, coll_attr);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
   fn_exit:
