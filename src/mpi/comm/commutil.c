@@ -470,13 +470,16 @@ static int get_node_count(MPIR_Comm * comm, int *node_count)
     goto fn_exit;
 }
 
-/* Copy relevant hints to a given subcomm */
-static void propagate_hints_to_subcomm(MPIR_Comm * comm, MPIR_Comm * subcomm)
+/* Copy relevant hints and settings to a given subcomm */
+static void propagate_subcomms(MPIR_Comm * comm, MPIR_Comm * subcomm)
 {
     /* Copy vci hints */
     subcomm->hints[MPIR_COMM_HINT_SENDER_VCI] = comm->hints[MPIR_COMM_HINT_SENDER_VCI];
     subcomm->hints[MPIR_COMM_HINT_RECEIVER_VCI] = comm->hints[MPIR_COMM_HINT_RECEIVER_VCI];
     subcomm->hints[MPIR_COMM_HINT_VCI] = comm->hints[MPIR_COMM_HINT_VCI];
+
+    subcomm->vcis_enabled = comm->vcis_enabled;
+    subcomm->seq = comm->seq;
 }
 
 int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs,
@@ -497,10 +500,6 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs
     subcomm->rank = sub_rank;
     subcomm->local_size = sub_size;
     subcomm->remote_size = sub_size;
-
-    subcomm->vcis_enabled = comm->vcis_enabled;
-    subcomm->seq = comm->seq;
-    propagate_hints_to_subcomm(comm, subcomm);
 
     /* construct local_group */
     MPIR_Group *parent_group = comm->local_group;
@@ -660,6 +659,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     mpi_errno = MPIR_Coll_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIR_Comm_create_subcomms(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     /* call post commit hooks */
     mpi_errno = MPID_Comm_commit_post_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -667,11 +671,13 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && comm->vcis_enabled) {
         mpi_errno = init_comm_seq(comm);
         MPIR_ERR_CHECK(mpi_errno);
-    }
 
-    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Comm_create_subcomms(comm);
-        MPIR_ERR_CHECK(mpi_errno);
+        if (comm->node_comm) {
+            propagate_subcomms(comm, comm->node_comm);
+        }
+        if (comm->node_roots_comm) {
+            propagate_subcomms(comm, comm->node_roots_comm);
+        }
     }
 
   fn_exit:
