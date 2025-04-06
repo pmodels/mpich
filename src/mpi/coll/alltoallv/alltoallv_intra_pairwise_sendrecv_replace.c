@@ -47,6 +47,7 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
      * maintaining a single buffer across the whole loop.  Something like
      * MADRE is probably the best solution for the MPI_IN_PLACE scenario. */
 
+#if 0
     MPIR_Assert(comm_ptr->intranode_table);
     /* -- 1st exchange within intranode -- */
     for (int i = 0; i < comm_size; ++i) {
@@ -68,6 +69,24 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const MP
                                           comm_ptr, MPI_STATUS_IGNORE, errflag);
         MPIR_ERR_CHECK(mpi_errno);
     }
+#else
+    /* Ordering the pairs by flipping bits */
+    int max_mask = 1;
+    while (max_mask < comm_size) {
+        max_mask *= 2;
+    }
+    for (int mask = 0; mask < max_mask; mask++) {
+        int r = comm_ptr->rank ^ mask;
+        if (r >= comm_size) {
+            continue;
+        }
+        mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[r] * recv_extent),
+                                          recvcounts[r], recvtype, r, MPIR_ALLTOALLV_TAG,
+                                          r, MPIR_ALLTOALLV_TAG,
+                                          comm_ptr, MPI_STATUS_IGNORE, errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+#endif
 
   fn_exit:
     return mpi_errno;
