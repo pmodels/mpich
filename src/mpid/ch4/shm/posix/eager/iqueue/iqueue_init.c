@@ -164,10 +164,11 @@ int MPIDI_POSIX_iqueue_set_vcis(MPIR_Comm * comm, int max_vcis)
 
     MPIDI_POSIX_eager_iqueue_global.max_vcis = max_vcis;
 
-    if (comm->node_comm) {
-        mpi_errno = MPIR_Barrier_impl(comm->node_comm, MPIR_ERR_NONE);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+    MPIR_Comm *node_comm = MPIR_Comm_get_node_comm(comm);
+    MPIR_Assert(node_comm);
+
+    mpi_errno = MPIR_Barrier_impl(node_comm, MPIR_ERR_NONE);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
