@@ -70,6 +70,8 @@ static int choose_posix_eager(void);
 static void *host_alloc(uintptr_t size);
 static void host_free(void *ptr);
 static void init_topo_info(void);
+static int posix_coll_init(void);
+static int posix_coll_finalize(void);
 
 static void *host_alloc(uintptr_t size)
 {
@@ -223,7 +225,13 @@ int MPIDI_POSIX_init_local(int *tag_bits /* unused */)
 
     choose_posix_eager();
 
+    mpi_errno = posix_coll_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int posix_world_initialized;
@@ -261,8 +269,18 @@ int MPIDI_POSIX_init_world(void)
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_POSIX_coll_init(rank, size);
+    /* Actually allocate the segment and assign regions to the pointers */
+    mpi_errno = MPIDU_Init_shm_alloc(sizeof(int), &MPIDI_POSIX_global.shm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDI_POSIX_shm_limit_counter = (MPL_atomic_uint64_t *) MPIDI_POSIX_global.shm_ptr;
+
+    mpi_errno = MPIDU_Init_shm_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Set the counter to 0 */
+    MPL_atomic_relaxed_store_uint64(MPIDI_POSIX_shm_limit_counter, 0);
+
 
     utarray_new(shm_mutex_free_list, &shm_mutex_icd, MPL_MEM_OTHER);
 
@@ -336,9 +354,6 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
         mpi_errno = MPIDI_POSIX_eager_finalize();
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIDI_POSIX_coll_finalize();
-        MPIR_ERR_CHECK(mpi_errno);
-
         struct shm_mutex_entry *p;
         for (p = (struct shm_mutex_entry *) utarray_front(shm_mutex_free_list); p != NULL;
              p = (struct shm_mutex_entry *) utarray_next(shm_mutex_free_list, p)) {
@@ -349,12 +364,20 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
             MPIR_ERR_CHECK(mpi_errno);
         }
         utarray_free(shm_mutex_free_list);
+
+        /* Destroy the shared counter which was used to track the amount of shared memory created
+         * per node for intra-node collectives */
+        mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_global.shm_ptr);
+
     }
 
     for (int vci = 0; vci < MPIDI_POSIX_global.num_vcis; vci++) {
         MPIDU_genq_private_pool_destroy(MPIDI_POSIX_global.per_vci[vci].am_hdr_buf_pool);
         MPL_free(MPIDI_POSIX_global.per_vci[vci].active_rreq);
     }
+
+    mpi_errno = posix_coll_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(MPIDI_POSIX_global.local_ranks);
     MPL_free(MPIDI_POSIX_global.local_rank_dist);
@@ -368,7 +391,7 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_coll_init(int rank, int size)
+static int posix_coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
@@ -395,18 +418,6 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     }
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_Init_shm_alloc(sizeof(int), &MPIDI_POSIX_global.shm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIDI_POSIX_shm_limit_counter = (MPL_atomic_uint64_t *) MPIDI_POSIX_global.shm_ptr;
-
-    mpi_errno = MPIDU_Init_shm_barrier();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Set the counter to 0 */
-    MPL_atomic_relaxed_store_uint64(MPIDI_POSIX_shm_limit_counter, 0);
-
   fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
@@ -414,16 +425,12 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_coll_finalize(void)
+static int posix_coll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     static MPL_atomic_uint64_t MPIDI_POSIX_dummy_shm_limit_counter;
 
     MPIR_FUNC_ENTER;
-
-    /* Destroy the shared counter which was used to track the amount of shared memory created
-     * per node for intra-node collectives */
-    mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_global.shm_ptr);
 
     /* MPIDI_POSIX_global.shm_ptr is freed but will be referenced during builtin
      * comm free; here we set MPIDI_POSIX_shm_limit_counter as dummy counter to
