@@ -31,6 +31,8 @@ int MPIR_init_comm_world(void)
     MPIR_Group_add_ref(MPIR_GROUP_WORLD_PTR);
     MPIR_Process.comm_world->remote_group = NULL;
 
+    MPIR_Process.comm_world->attr = MPIR_COMM_ATTR__BOOTSTRAP;  /* device need bootstrap this comm */
+
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
 
