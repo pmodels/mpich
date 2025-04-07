@@ -27,11 +27,6 @@ int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm)
     MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
 
     /* First, each get its own name */
-    MPIDI_OFI_global.addrnamelen = FI_NAME_MAX;
-    MPIDI_OFI_CALL(fi_getname
-                   ((fid_t) MPIDI_OFI_global.ctx[0].ep, MPIDI_OFI_global.addrname[0],
-                    &MPIDI_OFI_global.addrnamelen), getname);
-
     char *addrname = MPIDI_OFI_global.addrname[0];
     int addrnamelen = MPIDI_OFI_global.addrnamelen;
 
@@ -61,9 +56,6 @@ int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm)
                 MPIDI_OFI_CALL(fi_av_insert
                                (MPIDI_OFI_global.ctx[0].av, roots_names + i * addrnamelen, 1,
                                 &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
-                if (MPIDI_OFI_AV_ADDR_ROOT(av) == 0) {
-                    MPIDI_OFI_global.lpid0 = lpid;
-                }
             }
         }
     } else {
@@ -111,9 +103,6 @@ int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm)
         if (MPIDI_OFI_AV_IS_UNSET(av, lpid)) {
             MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, p->name, 1,
                                         &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
-            if (MPIDI_OFI_AV_ADDR_ROOT(av) == 0) {
-                MPIDI_OFI_global.lpid0 = lpid;
-            }
         }
     }
 
