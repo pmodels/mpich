@@ -278,15 +278,20 @@ int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
     need_init_builtin_comms = is_world_model;
 #endif
     if (need_init_builtin_comms) {
-        mpi_errno = MPIR_init_comm_world();
-        MPIR_ERR_CHECK(mpi_errno);
+        if (!MPIR_Process.comm_world) {
+            mpi_errno = MPIR_init_comm_world();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
 
-        mpi_errno = MPIR_init_comm_self();
-        MPIR_ERR_CHECK(mpi_errno);
-
+        if (!MPIR_Process.comm_self) {
+            mpi_errno = MPIR_init_comm_self();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
 #ifdef MPID_NEEDS_ICOMM_WORLD
-        mpi_errno = MPIR_init_icomm_world();
-        MPIR_ERR_CHECK(mpi_errno);
+        if (!MPIR_Process.icomm_world) {
+            mpi_errno = MPIR_init_icomm_world();
+            MPIR_ERR_CHECK(mpi_errno);
+        }
 #endif
     }
 
