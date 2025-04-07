@@ -22,6 +22,16 @@
   MPIR_BYTE_INTERNAL, MPIR_CHAR_INTERNAL, MPIR_AINT_INTERNAL instead. There is no
   impact to users.
 
+# Removed MPIR_Find_{local,external}. Added in MPIR_Comm struct with attr and
+  hierarchical fields to more efficiently query communicator's hierarchical
+  structure.
+
+# Use MPIR_Comm_get_{node,node_roots}_comm to obtain node_comm and node_roots_comm.
+  This provides the mechanism to create subcomms on demand. In general, use
+  MPIR_Subcomm_create to create subcomms. Subcomms are marked by
+  MPIR_COMM_ATTR__SUBCOMM bit in the attr field. They can be much more lightweight
+  than user-visible communicators.
+
 # ADI: MPID_Comm_get_lpid removed. Lpids are looked up from the local_group and
   remote_group in the MPIR_Comm struct.
 
