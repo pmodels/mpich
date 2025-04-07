@@ -474,8 +474,4 @@ extern MPL_dbg_class MPIDI_CH4_DBG_COMM;
 extern MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
 #endif /* MPL_USE_DBG_LOGGING */
 
-/* routines only used during init */
-int MPIDI_create_init_comm(MPIR_Comm ** comm_ptr);
-void MPIDI_destroy_init_comm(MPIR_Comm ** comm_ptr);
-
 #endif /* MPIDCH4_H_INCLUDED */
