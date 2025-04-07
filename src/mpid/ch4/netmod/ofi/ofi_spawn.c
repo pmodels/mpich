@@ -253,8 +253,7 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
             hostname = utarray_eltptr(MPIR_Process.node_hostnames, node_id);
             hostname_len = strlen(hostname);
         }
-        int upid_len = hostname_len + 1 + MPIDI_OFI_global.addrnamelen;
-        if (idx + upid_len > buf_size) {
+        if (idx + hostname_len + 1 + FI_NAME_MAX > buf_size) {
             buf_size += 1024;
             temp_buf = MPL_realloc(temp_buf, buf_size, MPL_MEM_OTHER);
             MPIR_Assert(temp_buf);
@@ -263,13 +262,13 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
         strcpy(temp_buf + idx, hostname);
         idx += hostname_len + 1;
 
-        size_t sz = MPIDI_OFI_global.addrnamelen;;
+        size_t sz = FI_NAME_MAX;
         MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, i);
         MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[ctx_idx].av,
                                     MPIDI_OFI_AV_ADDR_ROOT(av), temp_buf + idx, &sz), avlookup);
         idx += (int) sz;
 
-        (*local_upid_size)[i] = upid_len;
+        (*local_upid_size)[i] = hostname_len + 1 + sz;
     }
 
     *local_upids = temp_buf;
