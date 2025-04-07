@@ -404,6 +404,10 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_rank, int sub_size, int *procs
 int MPIR_Subcomm_free(MPIR_Comm * subcomm);
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
+/* we may not always construct comm->node_comm or comm->node_roots_comm. Use
+ * following routines if needed. */
+MPIR_Comm *MPIR_Comm_get_node_comm(MPIR_Comm * comm);
+MPIR_Comm *MPIR_Comm_get_node_roots_comm(MPIR_Comm * comm);
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
