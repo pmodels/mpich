@@ -5,7 +5,6 @@
 
 #include "mpidimpl.h"
 #include "ucx_impl.h"
-#include "mpidu_bc.h"
 
 static void dynamic_send_cb(void *request, ucs_status_t status, void *user_data)
 {

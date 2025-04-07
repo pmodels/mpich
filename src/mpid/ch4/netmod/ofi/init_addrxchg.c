@@ -6,7 +6,6 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 #include "ofi_init.h"
-#include "mpidu_bc.h"
 
 /* Perform address exchange and enable netmod communication over the comm. */
 

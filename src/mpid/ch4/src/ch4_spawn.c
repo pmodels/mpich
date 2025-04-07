@@ -4,7 +4,6 @@
  */
 
 #include "mpidimpl.h"
-#include "mpidu_bc.h"
 
 #define MPIDI_DYNPROC_NAME_MAX MPID_MAX_BC_SIZE
 

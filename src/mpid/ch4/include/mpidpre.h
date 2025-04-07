@@ -24,6 +24,8 @@
 #include "ch4_csel_container.h"
 
 #define MPID_TAG_DEV_BITS 0
+#define MPID_MAX_BC_SIZE 4096
+#define MPID_MAX_PORT_NAME MPID_MAX_BC_SIZE
 
 enum {
     MPIDI_CH4_MT_DIRECT,

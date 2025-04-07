@@ -13,8 +13,6 @@
 #include <signal.h>
 #endif
 
-#include "mpidu_bc.h"   /* MPID_MAX_PORT_NAME */
-
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
