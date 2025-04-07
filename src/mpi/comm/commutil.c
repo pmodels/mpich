@@ -718,6 +718,43 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+MPIR_Comm *MPIR_Comm_get_node_comm(MPIR_Comm * comm)
+{
+    MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
+    if (comm->num_external == 1) {
+        return comm;
+    } else if (comm->num_local == 1) {
+        if (!MPIR_Process.comm_self) {
+            int mpi_errno = MPIR_init_comm_self();
+            MPIR_Assertp(mpi_errno == MPI_SUCCESS);
+        }
+        return MPIR_Process.comm_self;
+    } else {
+        /* TODO: construct node_comm on-demand */
+        MPIR_Assert(comm->node_comm);
+        return comm->node_comm;
+    }
+}
+
+MPIR_Comm *MPIR_Comm_get_node_roots_comm(MPIR_Comm * comm)
+{
+    MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
+    MPIR_Assert(comm->local_rank == 0);
+    if (comm->num_external == comm->local_size) {
+        return comm;
+    } else if (comm->num_external == 1) {
+        if (!MPIR_Process.comm_self) {
+            int mpi_errno = MPIR_init_comm_self();
+            MPIR_Assertp(mpi_errno == MPI_SUCCESS);
+        }
+        return MPIR_Process.comm_self;
+    } else {
+        /* TODO: construct node_roots_comm on-demand */
+        MPIR_Assert(comm->node_roots_comm);
+        return comm->node_roots_comm;
+    }
+}
+
 /* static routines for MPIR_Comm_commit */
 static int init_comm_seq(MPIR_Comm * comm)
 {
