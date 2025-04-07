@@ -5,7 +5,6 @@
 
 #include "mpidimpl.h"
 #include "ucx_impl.h"
-#include "mpidu_bc.h"
 #include <ucp/api/ucp.h>
 
 /*

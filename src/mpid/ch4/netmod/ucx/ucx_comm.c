@@ -5,7 +5,6 @@
 
 #include "mpidimpl.h"
 #include "ucx_impl.h"
-#include "mpidu_bc.h"
 #ifdef HAVE_HCOLL
 #include "../../common/hcoll/hcoll.h"
 #endif

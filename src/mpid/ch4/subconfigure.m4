@@ -24,7 +24,6 @@ PAC_PROBE_HEADER_LIB(ucx,[ucp/api/ucp.h], [ucp], [ucp_config_read], [-lucs -lucm
 build_mpid_common_sched=yes
 build_mpid_common_datatype=yes
 build_mpid_common_thread=yes
-build_mpid_common_bc=yes
 build_mpid_common_genq=yes
 build_mpid_common_stream_workq=yes
 
