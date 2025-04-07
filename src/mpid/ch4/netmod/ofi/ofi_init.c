@@ -811,12 +811,11 @@ int MPIDI_OFI_init_world(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (!MPIDI_OFI_global.got_named_av) {
+    if (!MPIDI_OFI_global.got_named_av && MPIR_Process.size > 1) {
         MPIR_Assert(MPIR_Process.comm_world);
         mpi_errno = MPIDI_OFI_comm_addr_exchange(MPIR_Process.comm_world);
         MPIR_ERR_CHECK(mpi_errno);
     }
-
     ofi_initialized = true;
 
   fn_exit:
