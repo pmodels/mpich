@@ -135,7 +135,6 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     MPIDI_COMM(comm, inter_node_leads_comm) = NULL;
     MPIDI_COMM(comm, sub_node_comm) = NULL;
     MPIDI_COMM(comm, intra_node_leads_comm) = NULL;
-    MPIDI_COMM(comm, spanned_num_nodes) = -1;
     MPIDI_COMM(comm, alltoall_comp_info) = NULL;
     MPIDI_COMM(comm, allgather_comp_info) = NULL;
     MPIDI_COMM(comm, allreduce_comp_info) = NULL;
@@ -221,7 +220,7 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_ENTER;
 
     if (MPIDI_COMM(comm, multi_leads_comm) != NULL) {
-        MPIR_Comm_release(MPIDI_COMM(comm, multi_leads_comm));
+        MPIR_Subcomm_free(MPIDI_COMM(comm, multi_leads_comm));
     }
 
     if (MPIDI_COMM(comm, inter_node_leads_comm) != NULL) {
@@ -700,113 +699,38 @@ int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const MP
 }
 
 /* Create multi-leaders communicator */
-/* Create a comm with rank 0 of each node. A comm with rank 1 of each node and so on. Since these
+/* This routines assume a balanced and consecutive comm.
+ * Create a comm with rank 0 of each node. A comm with rank 1 of each node and so on. Since these
  * new comms do no overlap, it uses the same context id */
 int MPIDI_Comm_create_multi_leaders(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    int num_local = -1, num_external = -1;
-    int local_rank = -1, external_rank = -1, rank;
-    int i = 0;
-    int *local_procs = NULL, *external_procs = NULL;
-    int *intranode_table = NULL, *internode_table = NULL;
+    MPIR_CHKLMEM_DECL();
     MPIR_FUNC_TERSE_ENTER;
 
-    mpi_errno = MPIR_Find_local(comm, &num_local, &local_rank, &local_procs, &intranode_table);
-    if (mpi_errno) {
-        if (MPIR_Err_is_fatal(mpi_errno))
-            MPIR_ERR_POP(mpi_errno);
+    int num_local = comm->num_local;
+    int num_external = comm->num_external;
+    int local_rank = comm->local_rank;
+    int external_rank = comm->external_rank;
 
-        MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE,
-                      "MPIR_Find_local_and_external failed for comm_ptr=%p", comm);
-        if (intranode_table)
-            MPL_free(intranode_table);
+    /* balanced and node-consecutive */
+    MPIR_Assert(comm->local_size == num_local * num_external);
+    MPIR_Assert(local_rank == comm->rank % num_local);
+    MPIR_Assert(external_rank = comm->rank / num_local);
 
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
-
-    mpi_errno = MPIR_Find_external(comm, &num_external, &external_rank, &external_procs,
-                                   &internode_table);
-    if (mpi_errno) {
-        if (MPIR_Err_is_fatal(mpi_errno))
-            MPIR_ERR_POP(mpi_errno);
-
-        MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE,
-                      "MPIR_Find_local_and_external failed for comm_ptr=%p", comm);
-        if (internode_table)
-            MPL_free(internode_table);
-
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
-
-    MPIR_Assert(num_local > 0);
-    MPIR_Assert(num_local > 1 || external_rank >= 0);
-    MPIR_Assert(external_rank < 0 || external_procs != NULL);
-    rank = MPIR_Comm_rank(comm);
-
-    external_rank = comm->internode_table[rank];
-    for (i = 0; i < num_external; ++i) {
+    int *external_procs;
+    MPIR_CHKLMEM_MALLOC(external_procs, num_external * sizeof(int));
+    for (int i = 0; i < num_external; ++i) {
         external_procs[i] = i * num_local + local_rank;
     }
 
-    for (i = 0; i < num_local; i++) {
-        if (local_rank == i) {
-            mpi_errno = MPIR_Comm_create(&MPIDI_COMM(comm, multi_leads_comm));
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
-
-            MPIDI_COMM(comm, multi_leads_comm)->context_id =
-                comm->context_id + MPIR_CONTEXT_MULTILEADS_OFFSET;
-            MPIDI_COMM(comm, multi_leads_comm)->recvcontext_id =
-                MPIDI_COMM(comm, multi_leads_comm)->context_id;
-            MPIDI_COMM(comm, multi_leads_comm)->rank = internode_table[rank];
-            MPIDI_COMM(comm, multi_leads_comm)->comm_kind = MPIR_COMM_KIND__INTRACOMM;
-            MPIDI_COMM(comm, multi_leads_comm)->hierarchy_kind =
-                MPIR_COMM_HIERARCHY_KIND__MULTI_LEADS;
-            MPIDI_COMM(comm, multi_leads_comm)->local_comm = NULL;
-            MPIDI_COMM(comm, multi_leads_comm)->node_comm = NULL;
-            MPIDI_COMM(comm, multi_leads_comm)->node_roots_comm = NULL;
-            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create multi-leaders_comm=%p\n",
-                          MPIDI_COMM(comm, multi_leads_comm));
-
-            MPIDI_COMM(comm, multi_leads_comm)->local_size = num_external;
-            MPIDI_COMM(comm, multi_leads_comm)->coll.pof2 =
-                MPL_pof2(MPIDI_COMM(comm, multi_leads_comm)->local_size);
-            MPIDI_COMM(comm, multi_leads_comm)->remote_size = num_external;
-
-            mpi_errno = MPIR_Group_incl_impl(comm->local_group, num_external, external_procs,
-                                             &MPIDI_COMM(comm, multi_leads_comm)->local_group);
-            MPIR_ERR_CHECK(mpi_errno);
-
-            /* Notify device of communicator creation */
-            mpi_errno = MPID_Comm_commit_pre_hook(MPIDI_COMM(comm, multi_leads_comm));
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
-            /* don't call MPIR_Comm_commit here */
-
-            /* Create collectives-specific infrastructure */
-            mpi_errno = MPIR_Coll_comm_init(MPIDI_COMM(comm, multi_leads_comm));
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
-
-            mpi_errno = MPID_Comm_commit_post_hook(MPIDI_COMM(comm, multi_leads_comm));
-            if (mpi_errno)
-                MPIR_ERR_CHECK(mpi_errno);
-        }
-    }
+    mpi_errno = MPIR_Subcomm_create(comm, num_external, external_rank, external_procs,
+                                    MPIR_CONTEXT_MULTILEADS_OFFSET,
+                                    &MPIDI_COMM(comm, multi_leads_comm));
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    if (external_procs != NULL)
-        MPL_free(external_procs);
-    if (local_procs != NULL)
-        MPL_free(local_procs);
-    if (intranode_table != NULL)
-        MPL_free(intranode_table);
-    if (internode_table != NULL)
-        MPL_free(internode_table);
-
+    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_TERSE_EXIT;
     return mpi_errno;
   fn_fail:

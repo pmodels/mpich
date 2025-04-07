@@ -35,7 +35,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
 
         for (i = 0; i < comm_size; i++) {
             if (win_ptr->basic_info_table[i].size > 0) {
-                int local_i = win_ptr->comm_ptr->intranode_table[i];
+                int local_i = MPIR_Get_intranode_rank(win_ptr->comm_ptr, i);
                 MPIR_Assert(local_i >= 0 && local_i < win_ptr->comm_ptr->node_comm->local_size);
                 *size = win_ptr->basic_info_table[i].size;
                 *disp_unit = win_ptr->basic_info_table[i].disp_unit;
@@ -46,7 +46,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
 
     }
     else {
-        int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
+        int local_target_rank = MPIR_Get_intranode_rank(win_ptr->comm_ptr, target_rank);
         if (local_target_rank >= 0 && win_ptr->shm_base_addrs) {
             MPIR_Assert(local_target_rank < win_ptr->comm_ptr->node_comm->local_size);
             *size = win_ptr->basic_info_table[target_rank].size;

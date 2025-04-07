@@ -114,7 +114,7 @@ typedef struct csel_node {
             int val;
         } comm_avg_ppn_lt;
         struct {
-            MPIR_Comm_hierarchy_kind_t val;
+            bool val;
         } comm_hierarchy;
         struct {
             void *container;
@@ -213,16 +213,10 @@ static void print_tree(csel_node_s * node)
             nprintf("all blocks have the same count\n");
             break;
         case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:
-            if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__PARENT)
-                nprintf("communicator is the parent comm\n");
-            else if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS)
-                nprintf("communicator is the node_roots comm\n");
-            else if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__NODE)
-                nprintf("communicator is the node comm\n");
-            else if (node->u.comm_hierarchy.val == MPIR_COMM_HIERARCHY_KIND__FLAT)
-                nprintf("communicator is a flat comm\n");
+            if (node->u.comm_hierarchy.val)
+                nprintf("communicator has hierarchical structure\n");
             else
-                nprintf("communicator is of any hierarchy kind\n");
+                nprintf("communicator does not have hierarchical structure\n");
             break;
         case CSEL_NODE_TYPE__OPERATOR__IS_NODE_CONSECUTIVE:
             nprintf("process ranks are consecutive on the node\n");
@@ -526,16 +520,16 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
             tmp->u.comm_avg_ppn_le.val = atoi(ckey + strlen("comm_avg_ppn<"));
         } else if (!strcmp(ckey, "comm_hierarchy=parent")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
-            tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__PARENT;
+            tmp->u.comm_hierarchy.val = true;
         } else if (!strcmp(ckey, "comm_hierarchy=node_roots")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
-            tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS;
+            tmp->u.comm_hierarchy.val = false;
         } else if (!strcmp(ckey, "comm_hierarchy=node")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
-            tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__NODE;
+            tmp->u.comm_hierarchy.val = false;
         } else if (!strcmp(ckey, "comm_hierarchy=flat")) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY;
-            tmp->u.comm_hierarchy.val = MPIR_COMM_HIERARCHY_KIND__FLAT;
+            tmp->u.comm_hierarchy.val = false;
         } else if (key_is_any(ckey)) {
             tmp->type = CSEL_NODE_TYPE__OPERATOR__ANY;
         } else {
@@ -630,8 +624,7 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE:
-                if (comm_ptr->node_comm != NULL &&
-                    MPIR_Comm_size(comm_ptr) == MPIR_Comm_size(comm_ptr->node_comm))
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) && comm_ptr->num_external == 1)
                     node = node->success;
                 else
                     node = node->failure;
@@ -645,7 +638,7 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:
-                if (comm_ptr->hierarchy_kind == node->u.comm_hierarchy.val)
+                if (MPIR_Comm_is_parent_comm(comm_ptr) == node->u.comm_hierarchy.val)
                     node = node->success;
                 else
                     node = node->failure;
@@ -659,14 +652,16 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
-                if (comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+                    comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
-                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+                    comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
@@ -1229,8 +1224,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_SIZE_NODE_COMM_SIZE:
-                if (comm_ptr->node_comm != NULL &&
-                    MPIR_Comm_size(comm_ptr) == MPIR_Comm_size(comm_ptr->node_comm))
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) && comm_ptr->num_external == 1)
                     node = node->success;
                 else
                     node = node->failure;
@@ -1329,21 +1323,23 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LE:
-                if (comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+                    comm_ptr->local_size <= node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_AVG_PPN_LT:
-                if (comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->node_count)
+                if ((comm_ptr->attr & MPIR_COMM_ATTR__HIERARCHY) &&
+                    comm_ptr->local_size < node->u.comm_avg_ppn_le.val * comm_ptr->num_external)
                     node = node->success;
                 else
                     node = node->failure;
                 break;
 
             case CSEL_NODE_TYPE__OPERATOR__COMM_HIERARCHY:
-                if (coll_info.comm_ptr->hierarchy_kind == node->u.comm_hierarchy.val)
+                if (MPIR_Comm_is_parent_comm(comm_ptr) == node->u.comm_hierarchy.val)
                     node = node->success;
                 else
                     node = node->failure;

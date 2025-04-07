@@ -705,10 +705,11 @@ char MPIU_hostname[MAX_HOSTNAME_LEN] = "_UNKNOWN_"; /* '_' is an illegal char fo
 
 int MPID_Get_node_id(MPIR_Comm *comm, int rank, int *id_p)
 {
-    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        *id_p = comm->dev.vcrt->vcr_table[rank]->node_id;
+    MPIR_Lpid lpid = MPIR_comm_rank_to_lpid(comm, rank);
+    if (lpid >= 0 && lpid < MPIR_Process.size) {
+        *id_p = MPIR_Process.node_map[lpid];
     } else {
-        *id_p = comm->dev.local_vcrt->vcr_table[rank]->node_id;
+        *id_p = -1;
     }
     return MPI_SUCCESS;
 }
