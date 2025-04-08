@@ -519,13 +519,7 @@ typedef struct {
     MPIDI_OFI_gpu_pending_recv_t *gpu_recv_queue;
     MPIDI_OFI_gpu_pending_send_t *gpu_send_queue;
 
-    /* Process management and PMI globals */
-    int pname_set;
-    int pname_len;
-    char addrname[MPIDI_OFI_MAX_NICS][FI_NAME_MAX];
-    size_t addrnamelen;         /* OFI uses the same name length within a provider. */
-    char pname[MPI_MAX_PROCESSOR_NAME];
-    int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
+    int addrnamelen;            /* OFI uses the same name length within a provider. */
     /* To support dynamic av tables, we need a way to tell which entries are empty.
      * ch4 av tables are initialize to 0s. Thus we need know which "0" is valid. */
     MPIR_Lpid lpid0;
