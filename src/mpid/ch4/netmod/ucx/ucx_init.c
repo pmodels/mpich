@@ -290,11 +290,13 @@ int MPIDI_UCX_mpi_finalize_hook(void)
         MPIDI_UCX_addr_t *av = &MPIDI_UCX_AV(MPIDIU_lpid_to_av(i));
         for (int vci_local = 0; vci_local < MPIDI_UCX_global.num_vcis; vci_local++) {
             for (int vci_remote = 0; vci_remote < MPIDI_UCX_global.num_vcis; vci_remote++) {
-                ucp_request = ucp_disconnect_nb(av->dest[vci_local][vci_remote]);
-                MPIDI_UCX_CHK_REQUEST(ucp_request);
-                if (ucp_request != UCS_OK) {
-                    pending[p] = ucp_request;
-                    p++;
+                if (av->dest[vci_local][vci_remote]) {
+                    ucp_request = ucp_disconnect_nb(av->dest[vci_local][vci_remote]);
+                    MPIDI_UCX_CHK_REQUEST(ucp_request);
+                    if (ucp_request != UCS_OK) {
+                        pending[p] = ucp_request;
+                        p++;
+                    }
                 }
             }
         }
