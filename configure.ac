@@ -622,8 +622,7 @@ AC_ARG_WITH(name-publisher,
     [],
     with_namepublisher=$with_name_publisher,)
 
-AC_ARG_ENABLE(nolocal, AS_HELP_STRING([--enable-nolocal], [enables nolocal mode where shared-memory communication is disabled]),
-    AC_DEFINE(ENABLE_NO_LOCAL, 1, [Define to disable shared-memory communication]))
+AC_ARG_ENABLE(nolocal, AS_HELP_STRING([--enable-nolocal], [enables nolocal mode where shared-memory communication is disabled]),,[enable_nolocal=no])
 
 # options passed to sub configures
 AC_ARG_WITH([cuda], [AS_HELP_STRING([--with-cuda=[[PATH]]],PAC_WITH_LIB_HELP_STRING(cuda))])
@@ -3990,6 +3989,11 @@ if test "$enable_f77" = yes ; then
 fi
 
 # -----------------------------------------------------------------------------
+# enable_nolocal option may get overwritten by device subconfigure, e.g. with "with_ch4_shmmods=none"
+if test "$enable_nolocal" = "yes" ; then
+    AC_DEFINE(ENABLE_NO_LOCAL, 1, [Define to disable shared-memory communication])
+fi
+
 # Get the value of MPI_MAX_PROCESSOR_NAME
 if test -z "$MPID_MAX_PROCESSOR_NAME" ; then
     if test -z "$MPI_MAX_PROCESSOR_NAME" ; then
