@@ -9,8 +9,6 @@
 #include "mpidimpl.h"
 #include "mpir_pmi.h"
 
-static int init_shm_initialized;
-
 int MPIDU_Init_shm_local_size;
 int MPIDU_Init_shm_local_rank;
 
@@ -51,7 +49,28 @@ int MPIDU_Init_shm_query(int local_rank, void **target_addr)
     return MPI_SUCCESS;
 }
 
+bool MPIDU_Init_shm_atomic_key_exist(void)
+{
+    MPIR_Assert(0);
+    return false;
+}
+
+int MPIDU_Init_shm_atomic_put(void *orig, size_t len)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+int MPIDU_Init_shm_atomic_get(void *target, size_t len)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
 #else /* ENABLE_NO_LOCAL */
+
+static int init_shm_initialized;
+
 typedef struct Init_shm_barrier {
     MPL_atomic_int_t val;
     MPL_atomic_int_t wait;
