@@ -22,6 +22,7 @@ int MPIR_Allgather_intra_smp_no_order(const void *sendbuf, MPI_Aint sendcount,
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL();
 
+    int comm_size = comm_ptr->local_size;
     int local_size = comm_ptr->num_local;
     int local_rank = comm_ptr->local_rank;
     int external_size = comm_ptr->num_external;
@@ -43,11 +44,19 @@ int MPIR_Allgather_intra_smp_no_order(const void *sendbuf, MPI_Aint sendcount,
     if (local_rank == 0) {
         MPIR_CHKLMEM_MALLOC(counts, external_size * sizeof(MPI_Aint));
         MPIR_CHKLMEM_MALLOC(displs, external_size * sizeof(MPI_Aint));
-        MPI_Aint my_count = local_size;
-        mpi_errno = MPIR_Allgather_impl(&my_count, 1, MPIR_AINT_INTERNAL,
-                                        counts, 1, MPIR_AINT_INTERNAL,
-                                        node_roots_comm, MPIR_ERR_NONE);
-        MPIR_ERR_CHECK(mpi_errno);
+        if (comm_ptr->internode_table) {
+            for (int i = 0; i < external_size; i++) {
+                counts[i] = 0;
+            }
+            for (int i = 0; i < comm_size; i++) {
+                counts[comm_ptr->internode_table[i]]++;
+            }
+        } else {
+            /* canonical hierarchy */
+            for (int i = 0; i < external_size; i++) {
+                counts[i] = local_size;
+            }
+        }
 
         MPI_Aint cur_disp = 0;
         for (int i = 0; i < external_size; i++) {
