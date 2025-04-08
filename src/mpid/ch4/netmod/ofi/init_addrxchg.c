@@ -27,8 +27,9 @@ int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm)
     MPIR_Assert(comm->attr & MPIR_COMM_ATTR__HIERARCHY);
 
     /* First, each get its own name */
-    char *addrname = MPIDI_OFI_global.addrname[0];
-    int addrnamelen = MPIDI_OFI_global.addrnamelen;
+    char *addrname[FI_NAME_MAX];
+    size_t addrnamelen = FI_NAME_MAX;
+    MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, addrname, &addrnamelen), getname);
 
     int local_rank = comm->local_rank;
     int external_size = comm->num_external;
@@ -56,6 +57,7 @@ int MPIDI_OFI_comm_addr_exchange(MPIR_Comm * comm)
                 MPIDI_OFI_CALL(fi_av_insert
                                (MPIDI_OFI_global.ctx[0].av, roots_names + i * addrnamelen, 1,
                                 &MPIDI_OFI_AV_ADDR_ROOT(av), 0ULL, NULL), avmap);
+                MPIR_Assert(MPIDI_OFI_AV_ADDR_ROOT(av) != FI_ADDR_NOTAVAIL);
             }
         }
     } else {

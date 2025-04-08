@@ -240,7 +240,8 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, int **local_upid_size, char **lo
 #endif
 
     MPIR_CHKPMEM_MALLOC((*local_upid_size), comm->local_size * sizeof(int), MPL_MEM_ADDRESS);
-    MPIR_CHKPMEM_MALLOC(temp_buf, comm->local_size * MPIDI_OFI_global.addrnamelen, MPL_MEM_BUFFER);
+    int upid_size_estimate = MPIDI_OFI_global.addrnamelen + 20; /* 20 bytes as estimate for hostname */
+    MPIR_CHKPMEM_MALLOC(temp_buf, comm->local_size * upid_size_estimate, MPL_MEM_BUFFER);
 
     int buf_size = 0;
     int idx = 0;
