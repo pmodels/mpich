@@ -18,6 +18,19 @@ categories :
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+#define UCX_AV_INSERT(av, lpid, name) \
+    do { \
+        if (MPIDI_UCX_AV(av).dest[0][0] == NULL) { \
+            ucs_status_t ucx_status; \
+            ucp_ep_params_t ep_params; \
+            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS; \
+            ep_params.address = (ucp_address_t *) (name); \
+            ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params, &MPIDI_UCX_AV(av).dest[0][0]); \
+            MPIDI_UCX_CHK_STATUS(ucx_status); \
+            MPIDIU_upidhash_add(ep_params.address, addrnamelen, lpid); \
+        } \
+    } while (0)
+
 static bool ucx_initialized = false;
 
 static void request_init_callback(void *request)
@@ -66,19 +79,6 @@ int MPIDI_UCX_init_worker(int vci)
     goto fn_exit;
 }
 
-#define UCX_AV_INSERT(av, lpid, name) \
-    do { \
-        if (MPIDI_UCX_AV(av).dest[0][0] == NULL) { \
-            ucs_status_t ucx_status; \
-            ucp_ep_params_t ep_params; \
-            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS; \
-            ep_params.address = (ucp_address_t *) (name); \
-            ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params, &MPIDI_UCX_AV(av).dest[0][0]); \
-            MPIDI_UCX_CHK_STATUS(ucx_status); \
-            MPIDIU_upidhash_add(ep_params.address, addrnamelen, lpid); \
-        } \
-    } while (0)
-
 int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -107,6 +107,7 @@ int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm)
         MPIR_CHKLMEM_MALLOC(roots_names, external_size * addrnamelen);
 
         MPIR_PMI_DOMAIN domain = MPIR_PMI_DOMAIN_NODE_ROOTS;
+        /* FIXME: use the actual addrname_len rather than MPID_MAX_BC_SIZE */
         mpi_errno = MPIR_pmi_allgather(addrname, addrnamelen, roots_names, addrnamelen, domain);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -235,6 +236,13 @@ int MPIDI_UCX_init_world(void)
     /* initialize worker for vci 0 */
     mpi_errno = MPIDI_UCX_init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* insert self address */
+    MPIR_Lpid lpid = MPIR_Process.rank;
+    MPIDI_av_entry_t *av = MPIDIU_lpid_to_av(lpid);
+    char *addrname = (void *) MPIDI_UCX_global.ctx[0].if_address;
+    int addrnamelen = MPIDI_UCX_global.ctx[0].addrname_len;
+    UCX_AV_INSERT(av, lpid, addrname);
 
     mpi_errno = MPIDI_UCX_comm_addr_exchange(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
