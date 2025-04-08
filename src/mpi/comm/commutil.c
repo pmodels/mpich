@@ -586,7 +586,10 @@ int MPIR_Subcomm_create(MPIR_Comm * comm, int sub_size, int sub_rank, int *procs
     MPIR_Comm *subcomm;
     MPIR_FUNC_ENTER;
 
-    mpi_errno = MPIR_Comm_create(&subcomm);
+    subcomm = (MPIR_Comm *) MPIR_Handle_obj_alloc(&MPIR_Comm_mem);
+    MPIR_ERR_CHKANDJUMP(!subcomm, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    mpi_errno = MPII_Comm_init(subcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
     subcomm->attr |= MPIR_COMM_ATTR__SUBCOMM;
