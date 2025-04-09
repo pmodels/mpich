@@ -315,6 +315,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     MPIR_stream_comm_init(comm_p);
 
     comm_p->persistent_requests = NULL;
+    comm_p->csel_comm = NULL;
 
     /* mutex is only used in VCI granularity. But the overhead of
      * creation is low, so we always create it. */
