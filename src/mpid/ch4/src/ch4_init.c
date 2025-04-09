@@ -639,13 +639,6 @@ int MPIDI_world_pre_init(void)
     mpi_errno = MPIDU_Init_shm_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_SHM_init_world();
-    MPIR_ERR_CHECK(mpi_errno);
-#endif
-    mpi_errno = MPIDI_NM_init_world();
-    MPIR_ERR_CHECK(mpi_errno);
-
   fn_exit:
     return mpi_errno;
   fn_fail:

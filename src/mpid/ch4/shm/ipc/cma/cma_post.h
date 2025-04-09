@@ -102,7 +102,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CMA_fill_ipc_handle(MPIDI_IPCI_ipc_attr_t * 
 #endif
 }
 
-int MPIDI_CMA_init_world(void);
+int MPIDI_CMA_init_local(void);
+int MPIDI_CMA_comm_bootstrap(MPIR_Comm * comm);
 int MPIDI_CMA_mpi_finalize_hook(void);
 int MPIDI_CMA_copy_data(MPIDI_IPC_hdr * ipc_hdr, MPIR_Request * rreq, MPI_Aint src_data_sz);
 

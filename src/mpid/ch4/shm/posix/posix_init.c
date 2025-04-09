@@ -254,9 +254,11 @@ void MPIDI_POSIX_delay_shm_mutex_destroy(int rank, MPL_proc_mutex_t * shm_mutex_
     utarray_push_back(shm_mutex_free_list, &entry, MPL_MEM_OTHER);
 }
 
-int MPIDI_POSIX_init_world(void)
+int MPIDI_POSIX_comm_bootstrap(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(comm == MPIR_Process.comm_world);
 
     int rank = MPIR_Process.rank;
     int size = MPIR_Process.size;

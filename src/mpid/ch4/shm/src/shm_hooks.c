@@ -10,14 +10,22 @@
 
 int MPIDI_SHM_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
-    int ret;
-
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
-    ret = MPIDI_POSIX_mpi_comm_commit_pre_hook(comm);
+    if (comm == MPIR_Process.comm_world) {
+        mpi_errno = MPIDI_SHM_comm_bootstrap(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
+    mpi_errno = MPIDI_POSIX_mpi_comm_commit_pre_hook(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
     MPIR_FUNC_EXIT;
-    return ret;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_SHM_mpi_comm_commit_post_hook(MPIR_Comm * comm)

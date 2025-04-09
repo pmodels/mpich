@@ -549,8 +549,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static bool ofi_initialized = false;
-
 static int update_global_limits(struct fi_info *prov);
 static void dump_global_settings(void);
 static int destroy_vci_context(int vci, int nic);
@@ -807,23 +805,6 @@ int MPIDI_OFI_init_local(int *tag_bits)
     goto fn_exit;
 }
 
-int MPIDI_OFI_init_world(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (!MPIDI_OFI_global.got_named_av && MPIR_Process.size > 1) {
-        MPIR_Assert(MPIR_Process.comm_world);
-        mpi_errno = MPIDI_OFI_comm_addr_exchange(MPIR_Process.comm_world);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-    ofi_initialized = true;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 int MPIDI_OFI_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -897,10 +878,6 @@ static int flush_recv(int src, int nic, int vci, MPIDI_OFI_dynamic_process_reque
 static int flush_send_queue(void)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    if (!ofi_initialized) {
-        goto fn_exit;
-    }
 
     MPIDI_OFI_dynamic_process_request_t *reqs;
     /* TODO - Iterate over each NIC in addition to each VNI when multi-NIC within the same

@@ -14,12 +14,19 @@ int MPIDI_UCX_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_ENTER;
 
+    if (comm == MPIR_Process.comm_world) {
+        mpi_errno = MPIDI_UCX_comm_addr_exchange(MPIR_Process.comm_world);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 #if defined HAVE_HCOLL
     hcoll_comm_create(comm, NULL);
 #endif
 
+  fn_exit:
     MPIR_FUNC_EXIT;
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_UCX_mpi_comm_commit_post_hook(MPIR_Comm * comm)

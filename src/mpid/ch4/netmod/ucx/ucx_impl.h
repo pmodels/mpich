@@ -128,7 +128,6 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_target(int rank, MPIR_Win *
 
 #define MPIDI_UCX_WIN_AV_TO_EP(av, vci, vci_target) MPIDI_UCX_AV((av)).dest[vci][vci_target]
 
-int MPIDI_UCX_init_world(void);
 int MPIDI_UCX_init_worker(int vci);
 int MPIDI_UCX_comm_addr_exchange(MPIR_Comm * comm);
 

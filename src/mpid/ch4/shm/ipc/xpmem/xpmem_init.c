@@ -15,10 +15,12 @@ int MPIDI_XPMEM_init_local(void)
     return MPI_SUCCESS;
 }
 
-int MPIDI_XPMEM_init_world(void)
+int MPIDI_XPMEM_comm_bootstrap(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
+
+    MPIR_Assert(comm == MPIR_Process.comm_world);
 
     /* If the user has disabled XPMEM, don't even try to initialize it. */
     if (!MPIR_CVAR_CH4_XPMEM_ENABLE) {
