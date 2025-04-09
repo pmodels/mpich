@@ -11,7 +11,7 @@
 #include "../gpu/gpu_post.h"
 
 int MPIDI_IPC_init_local(void);
-int MPIDI_IPC_init_world(void);
+int MPIDI_IPC_comm_bootstrap(MPIR_Comm * comm);
 int MPIDI_IPC_mpi_finalize_hook(void);
 
 int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win);

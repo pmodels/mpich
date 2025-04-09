@@ -37,7 +37,7 @@ int MPIDI_GPU_init_local(void)
     return MPI_SUCCESS;
 }
 
-int MPIDI_GPU_init_world(void)
+int MPIDI_GPU_comm_bootstrap(comm)
 {
     int mpl_err, mpi_errno = MPI_SUCCESS;
     int device_count;
